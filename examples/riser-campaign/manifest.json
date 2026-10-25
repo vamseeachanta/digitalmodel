@@ -1,0 +1,6035 @@
+{
+  "data_provenance": [
+    {
+      "input_group": "field-development rows",
+      "status": "NOT_USED",
+      "source_id": null,
+      "licence_or_terms": "Not applicable: no rows used.",
+      "date": "2026-10-25",
+      "version": "not applicable",
+      "sha256": null,
+      "inputs": "No database rows are consumed; depths and floater classes are ASSUMED."
+    },
+    {
+      "input_group": "FPSO particulars",
+      "status": "ASSUMED",
+      "source_id": "public-fpso",
+      "licence_or_terms": "Public dimension facts only; original document and images are not redistributed.",
+      "date": "2026-10-25",
+      "version": "Undated public page; retrieved edition",
+      "sha256": "9cee1d839086e49569be059477419423e18be02dd501430502accf4bc2257c76",
+      "inputs": "Dimension context; assumed scale factors are defined in basis.md."
+    },
+    {
+      "input_group": "semi-submersible particulars",
+      "status": "ASSUMED",
+      "source_id": "public-semi",
+      "licence_or_terms": "Public dimension facts only; original document and images are not redistributed.",
+      "date": "2026-10-25",
+      "version": "NREL/TP-5000-60601, September 2014",
+      "sha256": "ccb0f7cdc001cfc41f3a32abc858c5ab0fca2564152b0ed81a0f56781913a1a0",
+      "inputs": "Dimension context; assumed scale factors are defined in basis.md."
+    },
+    {
+      "input_group": "spar particulars",
+      "status": "ASSUMED",
+      "source_id": "public-spar",
+      "licence_or_terms": "Public dimension facts only; original document and images are not redistributed.",
+      "date": "2026-10-25",
+      "version": "NREL/TP-500-47535, May 2010",
+      "sha256": "ba6922aae6a9869a3b3e6ce440acb4e8529710a5bd62e8d41a0bf19b0ed45a5a",
+      "inputs": "Dimension context; assumed scale factors are defined in basis.md."
+    },
+    {
+      "input_group": "TLP particulars",
+      "status": "ASSUMED",
+      "source_id": "public-tlp",
+      "licence_or_terms": "Public dimension facts only; original document and images are not redistributed.",
+      "date": "2026-10-25",
+      "version": "NREL/SR-500-45891, February 2010",
+      "sha256": "09d07ddd20b92b2de185fb8befb6f1871efe8ecad7539bbc5c843e5fd0d59e53",
+      "inputs": "Dimension context; assumed scale factors are defined in basis.md."
+    },
+    {
+      "input_group": "floater RAOs",
+      "status": "ASSUMED",
+      "source_id": "screening-basis",
+      "licence_or_terms": "Repository MIT licence; authored synthetic assumptions.",
+      "date": "2026-10-25",
+      "version": "screening-basis-v1",
+      "sha256": "7b3c6465bdcaafc995ba3659d16d98c43ffcec77079ed324650995c033ff8d77",
+      "inputs": "rao_sets[].generation records tool, version, amplitudes and scale factors; periods are in rows[].period_s."
+    },
+    {
+      "input_group": "metocean",
+      "status": "ASSUMED",
+      "source_id": "screening-basis",
+      "licence_or_terms": "Repository MIT licence; authored synthetic assumptions.",
+      "date": "2026-10-25",
+      "version": "screening-basis-v1",
+      "sha256": "7b3c6465bdcaafc995ba3659d16d98c43ffcec77079ed324650995c033ff8d77",
+      "inputs": "Case sea_states and current_profile; regular-wave sensitivity only, no site measurements."
+    },
+    {
+      "input_group": "riser properties",
+      "status": "ASSUMED",
+      "source_id": "screening-basis",
+      "licence_or_terms": "Repository MIT licence; authored synthetic assumptions.",
+      "date": "2026-10-25",
+      "version": "screening-basis-v1",
+      "sha256": "7b3c6465bdcaafc995ba3659d16d98c43ffcec77079ed324650995c033ff8d77",
+      "inputs": "Case pipe and buoyancy; assumed material constants, no strength grade assigned."
+    },
+    {
+      "input_group": "geometry and numerical settings",
+      "status": "ASSUMED",
+      "source_id": "screening-basis",
+      "licence_or_terms": "Repository MIT licence; authored synthetic assumptions.",
+      "date": "2026-10-25",
+      "version": "screening-basis-v1",
+      "sha256": "7b3c6465bdcaafc995ba3659d16d98c43ffcec77079ed324650995c033ff8d77",
+      "inputs": "Case depths, offsets, hang-off and grounded tail; campaign settings; inherited builder defaults are ASSUMED."
+    }
+  ],
+  "version": 1,
+  "criteria_version": "geometry-v1",
+  "intended_use": "SCREENING_INPUTS_ONLY",
+  "sources": [
+    {
+      "id": "public-fpso",
+      "document": "New-build FPSO hull technical description",
+      "section": "Key Figures",
+      "url": "https://www.modec.com/business/service/floater/fpso/hull/m350.html",
+      "retrieved_utc": "2026-10-25T11:54:22Z",
+      "http_status": 200,
+      "sha256": "9cee1d839086e49569be059477419423e18be02dd501430502accf4bc2257c76",
+      "use": "Public hull dimensions bound assumed scale factors; no particular operating asset is represented.",
+      "date": "2026-10-25",
+      "version": "Undated public page; retrieved edition",
+      "licence_or_terms": "Public dimension facts only; original document and images are not redistributed."
+    },
+    {
+      "id": "public-semi",
+      "document": "Semisubmersible reference-system definition; report 60601",
+      "section": "Section 3, Table 3-1",
+      "url": "https://docs.nlr.gov/docs/fy14osti/60601.pdf",
+      "retrieved_utc": "2026-10-25T11:54:23Z",
+      "http_status": 200,
+      "sha256": "ccb0f7cdc001cfc41f3a32abc858c5ab0fca2564152b0ed81a0f56781913a1a0",
+      "use": "Column spacing, diameters and draft bound an assumed envelope; not production-platform qualification.",
+      "date": "2026-10-25",
+      "version": "NREL/TP-5000-60601, September 2014",
+      "licence_or_terms": "Public dimension facts only; original document and images are not redistributed."
+    },
+    {
+      "id": "public-spar",
+      "document": "Spar reference-system definition; report 47535",
+      "section": "Section 3, Table 3-1",
+      "url": "https://docs.nlr.gov/docs/fy10osti/47535.pdf",
+      "retrieved_utc": "2026-10-25T11:54:24Z",
+      "http_status": 200,
+      "sha256": "ba6922aae6a9869a3b3e6ce440acb4e8529710a5bd62e8d41a0bf19b0ed45a5a",
+      "use": "Draft and diameters bound assumed scaled particulars; motions are not copied.",
+      "date": "2026-10-25",
+      "version": "NREL/TP-500-47535, May 2010",
+      "licence_or_terms": "Public dimension facts only; original document and images are not redistributed."
+    },
+    {
+      "id": "public-tlp",
+      "document": "Tension-leg platform model development and loads analysis; report 45891",
+      "section": "Section 3.2, Table 2",
+      "url": "https://docs.nlr.gov/docs/fy10osti/45891.pdf",
+      "retrieved_utc": "2026-10-25T11:54:26Z",
+      "http_status": 200,
+      "sha256": "09d07ddd20b92b2de185fb8befb6f1871efe8ecad7539bbc5c843e5fd0d59e53",
+      "use": "Draft and cylinder diameter bound assumed scaled particulars; tendons are not modelled.",
+      "date": "2026-10-25",
+      "version": "NREL/SR-500-45891, February 2010",
+      "licence_or_terms": "Public dimension facts only; original document and images are not redistributed."
+    },
+    {
+      "id": "screening-basis",
+      "document": "Authored campaign basis",
+      "section": "Assumed screening basis and parameter ranges",
+      "url": "basis.md#assumed-screening-basis-and-parameter-ranges",
+      "retrieved_utc": "not applicable: authored assumptions",
+      "http_status": 0,
+      "sha256": "7b3c6465bdcaafc995ba3659d16d98c43ffcec77079ed324650995c033ff8d77",
+      "use": "ASSUMED synthetic inputs and numerical criteria; public concept sources are context, not measured operating data.",
+      "date": "2026-10-25",
+      "version": "screening-basis-v1",
+      "licence_or_terms": "Repository MIT licence; authored synthetic assumptions."
+    }
+  ],
+  "settings": {
+    "basis": "ASSUMED",
+    "source_id": "screening-basis",
+    "gravity_m_s2": 9.80665,
+    "seawater_density_kg_m3": 1025,
+    "hangoff_angle_limit_deg": 45,
+    "closure_tolerance_m": 1e-06,
+    "segment_length_m": 5,
+    "seabed_stiffness_kn_m3": 100,
+    "stage_duration_s": [
+      20,
+      200
+    ],
+    "time_step_s": 0.1,
+    "drag_coefficient": 1.2,
+    "added_mass_coefficient": 1
+  },
+  "parameter_ranges": [
+    {
+      "basis": "ASSUMED",
+      "source_id": "public-fpso",
+      "floater_type": "FPSO",
+      "derivation": "README section Assumed screening basis and parameter ranges defines every scale factor and draft assumption.",
+      "bounds": {
+        "length_m": [
+          175,
+          350
+        ],
+        "beam_m": [
+          32,
+          64
+        ],
+        "draft_m": [
+          10,
+          20
+        ],
+        "moulded_depth_m": [
+          16.5,
+          33
+        ],
+        "column_diameter_m": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "public-semi",
+      "floater_type": "semi-submersible",
+      "derivation": "README section Assumed screening basis and parameter ranges defines every scale factor and draft assumption.",
+      "bounds": {
+        "length_m": [
+          74,
+          88.8
+        ],
+        "beam_m": [
+          74,
+          88.8
+        ],
+        "draft_m": [
+          20,
+          24
+        ],
+        "moulded_depth_m": [
+          32,
+          38.4
+        ],
+        "column_diameter_m": [
+          12,
+          14.4
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "public-spar",
+      "floater_type": "spar",
+      "derivation": "README section Assumed screening basis and parameter ranges defines every scale factor and draft assumption.",
+      "bounds": {
+        "length_m": [
+          9.4,
+          11.28
+        ],
+        "beam_m": [
+          9.4,
+          11.28
+        ],
+        "draft_m": [
+          120,
+          144
+        ],
+        "moulded_depth_m": [
+          130,
+          156
+        ],
+        "column_diameter_m": [
+          9.4,
+          11.28
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "public-tlp",
+      "floater_type": "TLP",
+      "derivation": "README section Assumed screening basis and parameter ranges defines every scale factor and draft assumption.",
+      "bounds": {
+        "length_m": [
+          18,
+          21.6
+        ],
+        "beam_m": [
+          18,
+          21.6
+        ],
+        "draft_m": [
+          47.89,
+          57.468
+        ],
+        "moulded_depth_m": [
+          57.89,
+          69.468
+        ],
+        "column_diameter_m": [
+          18,
+          21.6
+        ]
+      }
+    }
+  ],
+  "rao_sets": [
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "id": "fpso-small-assumed",
+      "floater_type": "FPSO",
+      "size_class": "small",
+      "translation_unit": "m/m",
+      "rotation_unit": "deg/m",
+      "phase_unit": "deg",
+      "phase_convention": "lags crest at reference origin",
+      "axes": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port",
+      "origin_m": [
+        0,
+        0,
+        0
+      ],
+      "heading_deg": 0,
+      "rows": [
+        {
+          "period_s": 5,
+          "amplitudes": [
+            0.015,
+            0.0,
+            0.04,
+            0.0,
+            0.04,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 8,
+          "amplitudes": [
+            0.09,
+            0.0,
+            0.24,
+            0.0,
+            0.24,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 12,
+          "amplitudes": [
+            0.21,
+            0.0,
+            0.56,
+            0.0,
+            0.56,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 16,
+          "amplitudes": [
+            0.27,
+            0.0,
+            0.72,
+            0.0,
+            0.72,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 20,
+          "amplitudes": [
+            0.3,
+            0.0,
+            0.8,
+            0.0,
+            0.8,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 25,
+          "amplitudes": [
+            0.3,
+            0.0,
+            0.8,
+            0.0,
+            0.8,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "generation": {
+        "tool": "explicit arithmetic table",
+        "tool_version": "synthetic-rao-v1",
+        "base_amplitudes": [
+          0.3,
+          0,
+          0.8,
+          0,
+          0.8,
+          0
+        ],
+        "period_factors": [
+          0.05,
+          0.3,
+          0.7,
+          0.9,
+          1,
+          1
+        ],
+        "size_factor": 1,
+        "formula": "amplitude = base_amplitude * period_factor * size_factor; phase = 0 deg; no hydrodynamic solver"
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "id": "fpso-large-assumed",
+      "floater_type": "FPSO",
+      "size_class": "large",
+      "translation_unit": "m/m",
+      "rotation_unit": "deg/m",
+      "phase_unit": "deg",
+      "phase_convention": "lags crest at reference origin",
+      "axes": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port",
+      "origin_m": [
+        0,
+        0,
+        0
+      ],
+      "heading_deg": 0,
+      "rows": [
+        {
+          "period_s": 5,
+          "amplitudes": [
+            0.012,
+            0.0,
+            0.032,
+            0.0,
+            0.032,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 8,
+          "amplitudes": [
+            0.072,
+            0.0,
+            0.192,
+            0.0,
+            0.192,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 12,
+          "amplitudes": [
+            0.168,
+            0.0,
+            0.448,
+            0.0,
+            0.448,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 16,
+          "amplitudes": [
+            0.216,
+            0.0,
+            0.576,
+            0.0,
+            0.576,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 20,
+          "amplitudes": [
+            0.24,
+            0.0,
+            0.64,
+            0.0,
+            0.64,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 25,
+          "amplitudes": [
+            0.24,
+            0.0,
+            0.64,
+            0.0,
+            0.64,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "generation": {
+        "tool": "explicit arithmetic table",
+        "tool_version": "synthetic-rao-v1",
+        "base_amplitudes": [
+          0.3,
+          0,
+          0.8,
+          0,
+          0.8,
+          0
+        ],
+        "period_factors": [
+          0.05,
+          0.3,
+          0.7,
+          0.9,
+          1,
+          1
+        ],
+        "size_factor": 0.8,
+        "formula": "amplitude = base_amplitude * period_factor * size_factor; phase = 0 deg; no hydrodynamic solver"
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "id": "semi-submersible-small-assumed",
+      "floater_type": "semi-submersible",
+      "size_class": "small",
+      "translation_unit": "m/m",
+      "rotation_unit": "deg/m",
+      "phase_unit": "deg",
+      "phase_convention": "lags crest at reference origin",
+      "axes": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port",
+      "origin_m": [
+        0,
+        0,
+        0
+      ],
+      "heading_deg": 0,
+      "rows": [
+        {
+          "period_s": 5,
+          "amplitudes": [
+            0.01,
+            0.0,
+            0.02,
+            0.0,
+            0.015,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 8,
+          "amplitudes": [
+            0.06,
+            0.0,
+            0.12,
+            0.0,
+            0.09,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 12,
+          "amplitudes": [
+            0.14,
+            0.0,
+            0.28,
+            0.0,
+            0.21,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 16,
+          "amplitudes": [
+            0.18,
+            0.0,
+            0.36,
+            0.0,
+            0.27,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 20,
+          "amplitudes": [
+            0.2,
+            0.0,
+            0.4,
+            0.0,
+            0.3,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 25,
+          "amplitudes": [
+            0.2,
+            0.0,
+            0.4,
+            0.0,
+            0.3,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "generation": {
+        "tool": "explicit arithmetic table",
+        "tool_version": "synthetic-rao-v1",
+        "base_amplitudes": [
+          0.2,
+          0,
+          0.4,
+          0,
+          0.3,
+          0
+        ],
+        "period_factors": [
+          0.05,
+          0.3,
+          0.7,
+          0.9,
+          1,
+          1
+        ],
+        "size_factor": 1,
+        "formula": "amplitude = base_amplitude * period_factor * size_factor; phase = 0 deg; no hydrodynamic solver"
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "id": "semi-submersible-large-assumed",
+      "floater_type": "semi-submersible",
+      "size_class": "large",
+      "translation_unit": "m/m",
+      "rotation_unit": "deg/m",
+      "phase_unit": "deg",
+      "phase_convention": "lags crest at reference origin",
+      "axes": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port",
+      "origin_m": [
+        0,
+        0,
+        0
+      ],
+      "heading_deg": 0,
+      "rows": [
+        {
+          "period_s": 5,
+          "amplitudes": [
+            0.008,
+            0.0,
+            0.016,
+            0.0,
+            0.012,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 8,
+          "amplitudes": [
+            0.048,
+            0.0,
+            0.096,
+            0.0,
+            0.072,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 12,
+          "amplitudes": [
+            0.112,
+            0.0,
+            0.224,
+            0.0,
+            0.168,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 16,
+          "amplitudes": [
+            0.144,
+            0.0,
+            0.288,
+            0.0,
+            0.216,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 20,
+          "amplitudes": [
+            0.16,
+            0.0,
+            0.32,
+            0.0,
+            0.24,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 25,
+          "amplitudes": [
+            0.16,
+            0.0,
+            0.32,
+            0.0,
+            0.24,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "generation": {
+        "tool": "explicit arithmetic table",
+        "tool_version": "synthetic-rao-v1",
+        "base_amplitudes": [
+          0.2,
+          0,
+          0.4,
+          0,
+          0.3,
+          0
+        ],
+        "period_factors": [
+          0.05,
+          0.3,
+          0.7,
+          0.9,
+          1,
+          1
+        ],
+        "size_factor": 0.8,
+        "formula": "amplitude = base_amplitude * period_factor * size_factor; phase = 0 deg; no hydrodynamic solver"
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "id": "spar-small-assumed",
+      "floater_type": "spar",
+      "size_class": "small",
+      "translation_unit": "m/m",
+      "rotation_unit": "deg/m",
+      "phase_unit": "deg",
+      "phase_convention": "lags crest at reference origin",
+      "axes": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port",
+      "origin_m": [
+        0,
+        0,
+        0
+      ],
+      "heading_deg": 0,
+      "rows": [
+        {
+          "period_s": 5,
+          "amplitudes": [
+            0.005,
+            0.0,
+            0.01,
+            0.0,
+            0.01,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 8,
+          "amplitudes": [
+            0.03,
+            0.0,
+            0.06,
+            0.0,
+            0.06,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 12,
+          "amplitudes": [
+            0.07,
+            0.0,
+            0.14,
+            0.0,
+            0.14,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 16,
+          "amplitudes": [
+            0.09,
+            0.0,
+            0.18,
+            0.0,
+            0.18,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 20,
+          "amplitudes": [
+            0.1,
+            0.0,
+            0.2,
+            0.0,
+            0.2,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 25,
+          "amplitudes": [
+            0.1,
+            0.0,
+            0.2,
+            0.0,
+            0.2,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "generation": {
+        "tool": "explicit arithmetic table",
+        "tool_version": "synthetic-rao-v1",
+        "base_amplitudes": [
+          0.1,
+          0,
+          0.2,
+          0,
+          0.2,
+          0
+        ],
+        "period_factors": [
+          0.05,
+          0.3,
+          0.7,
+          0.9,
+          1,
+          1
+        ],
+        "size_factor": 1,
+        "formula": "amplitude = base_amplitude * period_factor * size_factor; phase = 0 deg; no hydrodynamic solver"
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "id": "spar-large-assumed",
+      "floater_type": "spar",
+      "size_class": "large",
+      "translation_unit": "m/m",
+      "rotation_unit": "deg/m",
+      "phase_unit": "deg",
+      "phase_convention": "lags crest at reference origin",
+      "axes": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port",
+      "origin_m": [
+        0,
+        0,
+        0
+      ],
+      "heading_deg": 0,
+      "rows": [
+        {
+          "period_s": 5,
+          "amplitudes": [
+            0.004,
+            0.0,
+            0.008,
+            0.0,
+            0.008,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 8,
+          "amplitudes": [
+            0.024,
+            0.0,
+            0.048,
+            0.0,
+            0.048,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 12,
+          "amplitudes": [
+            0.056,
+            0.0,
+            0.112,
+            0.0,
+            0.112,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 16,
+          "amplitudes": [
+            0.072,
+            0.0,
+            0.144,
+            0.0,
+            0.144,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 20,
+          "amplitudes": [
+            0.08,
+            0.0,
+            0.16,
+            0.0,
+            0.16,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 25,
+          "amplitudes": [
+            0.08,
+            0.0,
+            0.16,
+            0.0,
+            0.16,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "generation": {
+        "tool": "explicit arithmetic table",
+        "tool_version": "synthetic-rao-v1",
+        "base_amplitudes": [
+          0.1,
+          0,
+          0.2,
+          0,
+          0.2,
+          0
+        ],
+        "period_factors": [
+          0.05,
+          0.3,
+          0.7,
+          0.9,
+          1,
+          1
+        ],
+        "size_factor": 0.8,
+        "formula": "amplitude = base_amplitude * period_factor * size_factor; phase = 0 deg; no hydrodynamic solver"
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "id": "tlp-small-assumed",
+      "floater_type": "TLP",
+      "size_class": "small",
+      "translation_unit": "m/m",
+      "rotation_unit": "deg/m",
+      "phase_unit": "deg",
+      "phase_convention": "lags crest at reference origin",
+      "axes": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port",
+      "origin_m": [
+        0,
+        0,
+        0
+      ],
+      "heading_deg": 0,
+      "rows": [
+        {
+          "period_s": 5,
+          "amplitudes": [
+            0.01,
+            0.0,
+            0.0025,
+            0.0,
+            0.0025,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 8,
+          "amplitudes": [
+            0.06,
+            0.0,
+            0.015,
+            0.0,
+            0.015,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 12,
+          "amplitudes": [
+            0.14,
+            0.0,
+            0.035,
+            0.0,
+            0.035,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 16,
+          "amplitudes": [
+            0.18,
+            0.0,
+            0.045,
+            0.0,
+            0.045,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 20,
+          "amplitudes": [
+            0.2,
+            0.0,
+            0.05,
+            0.0,
+            0.05,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 25,
+          "amplitudes": [
+            0.2,
+            0.0,
+            0.05,
+            0.0,
+            0.05,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "generation": {
+        "tool": "explicit arithmetic table",
+        "tool_version": "synthetic-rao-v1",
+        "base_amplitudes": [
+          0.2,
+          0,
+          0.05,
+          0,
+          0.05,
+          0
+        ],
+        "period_factors": [
+          0.05,
+          0.3,
+          0.7,
+          0.9,
+          1,
+          1
+        ],
+        "size_factor": 1,
+        "formula": "amplitude = base_amplitude * period_factor * size_factor; phase = 0 deg; no hydrodynamic solver"
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "id": "tlp-large-assumed",
+      "floater_type": "TLP",
+      "size_class": "large",
+      "translation_unit": "m/m",
+      "rotation_unit": "deg/m",
+      "phase_unit": "deg",
+      "phase_convention": "lags crest at reference origin",
+      "axes": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port",
+      "origin_m": [
+        0,
+        0,
+        0
+      ],
+      "heading_deg": 0,
+      "rows": [
+        {
+          "period_s": 5,
+          "amplitudes": [
+            0.008,
+            0.0,
+            0.002,
+            0.0,
+            0.002,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 8,
+          "amplitudes": [
+            0.048,
+            0.0,
+            0.012,
+            0.0,
+            0.012,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 12,
+          "amplitudes": [
+            0.112,
+            0.0,
+            0.028,
+            0.0,
+            0.028,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 16,
+          "amplitudes": [
+            0.144,
+            0.0,
+            0.036,
+            0.0,
+            0.036,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 20,
+          "amplitudes": [
+            0.16,
+            0.0,
+            0.04,
+            0.0,
+            0.04,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "period_s": 25,
+          "amplitudes": [
+            0.16,
+            0.0,
+            0.04,
+            0.0,
+            0.04,
+            0.0
+          ],
+          "phases_deg": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "generation": {
+        "tool": "explicit arithmetic table",
+        "tool_version": "synthetic-rao-v1",
+        "base_amplitudes": [
+          0.2,
+          0,
+          0.05,
+          0,
+          0.05,
+          0
+        ],
+        "period_factors": [
+          0.05,
+          0.3,
+          0.7,
+          0.9,
+          1,
+          1
+        ],
+        "size_factor": 0.8,
+        "formula": "amplitude = base_amplitude * period_factor * size_factor; phase = 0 deg; no hydrodynamic solver"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-small-500-scr",
+      "floater_type": "FPSO",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 175,
+        "beam_m": 32,
+        "draft_m": 10,
+        "moulded_depth_m": 16.5,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-small-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-small-500-lazy-wave",
+      "floater_type": "FPSO",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 175,
+        "beam_m": 32,
+        "draft_m": 10,
+        "moulded_depth_m": 16.5,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-small-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-small-1000-scr",
+      "floater_type": "FPSO",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 175,
+        "beam_m": 32,
+        "draft_m": 10,
+        "moulded_depth_m": 16.5,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-small-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-small-1000-lazy-wave",
+      "floater_type": "FPSO",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 175,
+        "beam_m": 32,
+        "draft_m": 10,
+        "moulded_depth_m": 16.5,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-small-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-small-1500-scr",
+      "floater_type": "FPSO",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 175,
+        "beam_m": 32,
+        "draft_m": 10,
+        "moulded_depth_m": 16.5,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-small-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-small-1500-lazy-wave",
+      "floater_type": "FPSO",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 175,
+        "beam_m": 32,
+        "draft_m": 10,
+        "moulded_depth_m": 16.5,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-small-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-large-500-scr",
+      "floater_type": "FPSO",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 350,
+        "beam_m": 64,
+        "draft_m": 20,
+        "moulded_depth_m": 33,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-large-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-large-500-lazy-wave",
+      "floater_type": "FPSO",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 350,
+        "beam_m": 64,
+        "draft_m": 20,
+        "moulded_depth_m": 33,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-large-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-large-1000-scr",
+      "floater_type": "FPSO",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 350,
+        "beam_m": 64,
+        "draft_m": 20,
+        "moulded_depth_m": 33,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-large-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-large-1000-lazy-wave",
+      "floater_type": "FPSO",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 350,
+        "beam_m": 64,
+        "draft_m": 20,
+        "moulded_depth_m": 33,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-large-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-large-1500-scr",
+      "floater_type": "FPSO",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 350,
+        "beam_m": 64,
+        "draft_m": 20,
+        "moulded_depth_m": 33,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-large-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "fpso-large-1500-lazy-wave",
+      "floater_type": "FPSO",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-fpso",
+        "length_m": 350,
+        "beam_m": 64,
+        "draft_m": 20,
+        "moulded_depth_m": 33,
+        "column_diameter_m": 0
+      },
+      "rao_set_id": "fpso-large-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-small-500-scr",
+      "floater_type": "semi-submersible",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 74,
+        "beam_m": 74,
+        "draft_m": 20,
+        "moulded_depth_m": 32,
+        "column_diameter_m": 12
+      },
+      "rao_set_id": "semi-submersible-small-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-small-500-lazy-wave",
+      "floater_type": "semi-submersible",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 74,
+        "beam_m": 74,
+        "draft_m": 20,
+        "moulded_depth_m": 32,
+        "column_diameter_m": 12
+      },
+      "rao_set_id": "semi-submersible-small-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-small-1000-scr",
+      "floater_type": "semi-submersible",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 74,
+        "beam_m": 74,
+        "draft_m": 20,
+        "moulded_depth_m": 32,
+        "column_diameter_m": 12
+      },
+      "rao_set_id": "semi-submersible-small-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-small-1000-lazy-wave",
+      "floater_type": "semi-submersible",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 74,
+        "beam_m": 74,
+        "draft_m": 20,
+        "moulded_depth_m": 32,
+        "column_diameter_m": 12
+      },
+      "rao_set_id": "semi-submersible-small-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-small-1500-scr",
+      "floater_type": "semi-submersible",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 74,
+        "beam_m": 74,
+        "draft_m": 20,
+        "moulded_depth_m": 32,
+        "column_diameter_m": 12
+      },
+      "rao_set_id": "semi-submersible-small-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-small-1500-lazy-wave",
+      "floater_type": "semi-submersible",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 74,
+        "beam_m": 74,
+        "draft_m": 20,
+        "moulded_depth_m": 32,
+        "column_diameter_m": 12
+      },
+      "rao_set_id": "semi-submersible-small-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-large-500-scr",
+      "floater_type": "semi-submersible",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 88.8,
+        "beam_m": 88.8,
+        "draft_m": 24,
+        "moulded_depth_m": 38.4,
+        "column_diameter_m": 14.4
+      },
+      "rao_set_id": "semi-submersible-large-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-large-500-lazy-wave",
+      "floater_type": "semi-submersible",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 88.8,
+        "beam_m": 88.8,
+        "draft_m": 24,
+        "moulded_depth_m": 38.4,
+        "column_diameter_m": 14.4
+      },
+      "rao_set_id": "semi-submersible-large-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-large-1000-scr",
+      "floater_type": "semi-submersible",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 88.8,
+        "beam_m": 88.8,
+        "draft_m": 24,
+        "moulded_depth_m": 38.4,
+        "column_diameter_m": 14.4
+      },
+      "rao_set_id": "semi-submersible-large-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-large-1000-lazy-wave",
+      "floater_type": "semi-submersible",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 88.8,
+        "beam_m": 88.8,
+        "draft_m": 24,
+        "moulded_depth_m": 38.4,
+        "column_diameter_m": 14.4
+      },
+      "rao_set_id": "semi-submersible-large-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-large-1500-scr",
+      "floater_type": "semi-submersible",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 88.8,
+        "beam_m": 88.8,
+        "draft_m": 24,
+        "moulded_depth_m": 38.4,
+        "column_diameter_m": 14.4
+      },
+      "rao_set_id": "semi-submersible-large-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "semi-submersible-large-1500-lazy-wave",
+      "floater_type": "semi-submersible",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-semi",
+        "length_m": 88.8,
+        "beam_m": 88.8,
+        "draft_m": 24,
+        "moulded_depth_m": 38.4,
+        "column_diameter_m": 14.4
+      },
+      "rao_set_id": "semi-submersible-large-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-small-500-scr",
+      "floater_type": "spar",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 9.4,
+        "beam_m": 9.4,
+        "draft_m": 120,
+        "moulded_depth_m": 130,
+        "column_diameter_m": 9.4
+      },
+      "rao_set_id": "spar-small-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-small-500-lazy-wave",
+      "floater_type": "spar",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 9.4,
+        "beam_m": 9.4,
+        "draft_m": 120,
+        "moulded_depth_m": 130,
+        "column_diameter_m": 9.4
+      },
+      "rao_set_id": "spar-small-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-small-1000-scr",
+      "floater_type": "spar",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 9.4,
+        "beam_m": 9.4,
+        "draft_m": 120,
+        "moulded_depth_m": 130,
+        "column_diameter_m": 9.4
+      },
+      "rao_set_id": "spar-small-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-small-1000-lazy-wave",
+      "floater_type": "spar",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 9.4,
+        "beam_m": 9.4,
+        "draft_m": 120,
+        "moulded_depth_m": 130,
+        "column_diameter_m": 9.4
+      },
+      "rao_set_id": "spar-small-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-small-1500-scr",
+      "floater_type": "spar",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 9.4,
+        "beam_m": 9.4,
+        "draft_m": 120,
+        "moulded_depth_m": 130,
+        "column_diameter_m": 9.4
+      },
+      "rao_set_id": "spar-small-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-small-1500-lazy-wave",
+      "floater_type": "spar",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 9.4,
+        "beam_m": 9.4,
+        "draft_m": 120,
+        "moulded_depth_m": 130,
+        "column_diameter_m": 9.4
+      },
+      "rao_set_id": "spar-small-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-large-500-scr",
+      "floater_type": "spar",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 11.28,
+        "beam_m": 11.28,
+        "draft_m": 144,
+        "moulded_depth_m": 156,
+        "column_diameter_m": 11.28
+      },
+      "rao_set_id": "spar-large-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-large-500-lazy-wave",
+      "floater_type": "spar",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 11.28,
+        "beam_m": 11.28,
+        "draft_m": 144,
+        "moulded_depth_m": 156,
+        "column_diameter_m": 11.28
+      },
+      "rao_set_id": "spar-large-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-large-1000-scr",
+      "floater_type": "spar",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 11.28,
+        "beam_m": 11.28,
+        "draft_m": 144,
+        "moulded_depth_m": 156,
+        "column_diameter_m": 11.28
+      },
+      "rao_set_id": "spar-large-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-large-1000-lazy-wave",
+      "floater_type": "spar",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 11.28,
+        "beam_m": 11.28,
+        "draft_m": 144,
+        "moulded_depth_m": 156,
+        "column_diameter_m": 11.28
+      },
+      "rao_set_id": "spar-large-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-large-1500-scr",
+      "floater_type": "spar",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 11.28,
+        "beam_m": 11.28,
+        "draft_m": 144,
+        "moulded_depth_m": 156,
+        "column_diameter_m": 11.28
+      },
+      "rao_set_id": "spar-large-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "spar-large-1500-lazy-wave",
+      "floater_type": "spar",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-spar",
+        "length_m": 11.28,
+        "beam_m": 11.28,
+        "draft_m": 144,
+        "moulded_depth_m": 156,
+        "column_diameter_m": 11.28
+      },
+      "rao_set_id": "spar-large-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-small-500-scr",
+      "floater_type": "TLP",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 18,
+        "beam_m": 18,
+        "draft_m": 47.89,
+        "moulded_depth_m": 57.89,
+        "column_diameter_m": 18
+      },
+      "rao_set_id": "tlp-small-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-small-500-lazy-wave",
+      "floater_type": "TLP",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 18,
+        "beam_m": 18,
+        "draft_m": 47.89,
+        "moulded_depth_m": 57.89,
+        "column_diameter_m": 18
+      },
+      "rao_set_id": "tlp-small-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-small-1000-scr",
+      "floater_type": "TLP",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 18,
+        "beam_m": 18,
+        "draft_m": 47.89,
+        "moulded_depth_m": 57.89,
+        "column_diameter_m": 18
+      },
+      "rao_set_id": "tlp-small-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-small-1000-lazy-wave",
+      "floater_type": "TLP",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 18,
+        "beam_m": 18,
+        "draft_m": 47.89,
+        "moulded_depth_m": 57.89,
+        "column_diameter_m": 18
+      },
+      "rao_set_id": "tlp-small-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-small-1500-scr",
+      "floater_type": "TLP",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 18,
+        "beam_m": 18,
+        "draft_m": 47.89,
+        "moulded_depth_m": 57.89,
+        "column_diameter_m": 18
+      },
+      "rao_set_id": "tlp-small-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-small-1500-lazy-wave",
+      "floater_type": "TLP",
+      "size_class": "small",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 18,
+        "beam_m": 18,
+        "draft_m": 47.89,
+        "moulded_depth_m": 57.89,
+        "column_diameter_m": 18
+      },
+      "rao_set_id": "tlp-small-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.2731,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-large-500-scr",
+      "floater_type": "TLP",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 21.6,
+        "beam_m": 21.6,
+        "draft_m": 57.468,
+        "moulded_depth_m": 69.468,
+        "column_diameter_m": 21.6
+      },
+      "rao_set_id": "tlp-large-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-large-500-lazy-wave",
+      "floater_type": "TLP",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 21.6,
+        "beam_m": 21.6,
+        "draft_m": 57.468,
+        "moulded_depth_m": 69.468,
+        "column_diameter_m": 21.6
+      },
+      "rao_set_id": "tlp-large-assumed",
+      "water_depth_m": 500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 166.66666666666666,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -10.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 10.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-large-1000-scr",
+      "floater_type": "TLP",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 21.6,
+        "beam_m": 21.6,
+        "draft_m": 57.468,
+        "moulded_depth_m": 69.468,
+        "column_diameter_m": 21.6
+      },
+      "rao_set_id": "tlp-large-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-large-1000-lazy-wave",
+      "floater_type": "TLP",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 21.6,
+        "beam_m": 21.6,
+        "draft_m": 57.468,
+        "moulded_depth_m": 69.468,
+        "column_diameter_m": 21.6
+      },
+      "rao_set_id": "tlp-large-assumed",
+      "water_depth_m": 1000,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 333.3333333333333,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -20.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 20.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-large-1500-scr",
+      "floater_type": "TLP",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 21.6,
+        "beam_m": 21.6,
+        "draft_m": 57.468,
+        "moulded_depth_m": 69.468,
+        "column_diameter_m": 21.6
+      },
+      "rao_set_id": "tlp-large-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "SCR",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": null,
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    },
+    {
+      "basis": "ASSUMED",
+      "source_id": "screening-basis",
+      "case_id": "tlp-large-1500-lazy-wave",
+      "floater_type": "TLP",
+      "size_class": "large",
+      "principal_particulars": {
+        "basis": "ASSUMED",
+        "source_id": "public-tlp",
+        "length_m": 21.6,
+        "beam_m": 21.6,
+        "draft_m": 57.468,
+        "moulded_depth_m": 69.468,
+        "column_diameter_m": 21.6
+      },
+      "rao_set_id": "tlp-large-assumed",
+      "water_depth_m": 1500,
+      "pipe": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "outer_diameter_m": 0.3239,
+        "wall_thickness_m": 0.0254,
+        "steel_density_kg_m3": 7850,
+        "contents_density_kg_m3": 800,
+        "youngs_modulus_pa": 207000000000.0,
+        "poisson_ratio": 0.3
+      },
+      "configuration": "lazy-wave",
+      "hangoff_angle_deg": 10,
+      "grounded_length_m": 500.0,
+      "buoyancy": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "buoyancy_factor": 2,
+        "sag_fraction": 0.1,
+        "hog_fraction": 0.4,
+        "module_density_kg_m3": 400
+      },
+      "offset_cases": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "nominal",
+          "x_m": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "near",
+          "x_m": -30.0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "far",
+          "x_m": 30.0
+        }
+      ],
+      "sea_states": [
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "mild",
+          "wave_height_m": 2,
+          "period_s": 8,
+          "direction_deg": 0
+        },
+        {
+          "basis": "ASSUMED",
+          "source_id": "screening-basis",
+          "id": "severe",
+          "wave_height_m": 6,
+          "period_s": 12,
+          "direction_deg": 0
+        }
+      ],
+      "current_profile": {
+        "basis": "ASSUMED",
+        "source_id": "screening-basis",
+        "surface_speed_m_s": 0.5,
+        "direction_deg": 0,
+        "points": [
+          {
+            "depth_fraction": 0,
+            "factor": 1
+          },
+          {
+            "depth_fraction": 0.5,
+            "factor": 0.5
+          },
+          {
+            "depth_fraction": 1,
+            "factor": 0.1
+          }
+        ]
+      }
+    }
+  ]
+}
