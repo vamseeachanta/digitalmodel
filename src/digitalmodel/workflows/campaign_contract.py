@@ -43,6 +43,33 @@ def _criteria(criteria_id, criteria_version, criteria_source):
                 criteria_source=criteria_source)
 
 
+def _criteria_stamps(criteria, changes):
+    """Reserve historical stamps and reject a contradictory migration chain."""
+    stamps = set()
+    previous = None
+    for change in changes:
+        if not isinstance(change, dict) or not {"old", "new"} <= change.keys():
+            raise ValueError("Incomplete criteria migration history")
+        old, new = change["old"], change["new"]
+        for record in (old, new):
+            if (not isinstance(record, dict)
+                    or set(record) != {"criteria_id", "criteria_version", "criteria_source"}):
+                raise ValueError("Invalid criteria migration record")
+            _criteria(**record)
+        if previous is None:
+            stamps.add((old["criteria_id"], old["criteria_version"]))
+        elif old != previous:
+            raise ValueError("Discontinuous criteria migration history")
+        stamp = (new["criteria_id"], new["criteria_version"])
+        if stamp in stamps:
+            raise ValueError("Reused criteria identity or version in migration history")
+        stamps.add(stamp)
+        previous = new
+    if previous is not None and previous != criteria:
+        raise ValueError("Governing criteria differ from migration history")
+    return stamps | {(criteria["criteria_id"], criteria["criteria_version"])}
+
+
 def _case_ids(ids):
     ids = list(ids)
     if not ids:
@@ -118,6 +145,7 @@ class Campaign:
             StopRecord(**dict(saved, disposition=StopDisposition(saved["disposition"])))
         criteria = document["criteria"]
         _criteria(**criteria)
+        _criteria_stamps(criteria, document["criteria_changes"])
         problems = validate_retention(document["retention"])
         if problems:
             raise ValueError("Invalid retention: " + "; ".join(problems))
@@ -137,6 +165,8 @@ class Campaign:
                 raise ValueError("Unknown case status")
             if row["qualified"] is not None and type(row["qualified"]) is not bool:
                 raise ValueError("qualified must be boolean or None")
+            if row.get("failure_class") is not None:
+                _text(row["failure_class"], "failure_class")
             if row["status"] != "completed" and row["qualified"] is True:
                 raise ValueError("Only native completed cases may qualify")
             if row["status"] in {"completed", "failed"}:
@@ -149,6 +179,11 @@ class Campaign:
                         or row["qualified"] is not expected
                         or evidence.get("process_alive") is not False):
                     raise ValueError("Result contradicts native terminal evidence")
+            elif (row["qualified"] is not None
+                  or row.get("failure_class") is not None
+                  or {"exit_code", "native_readback_ok", "criterion_met"} & row["evidence"].keys()
+                  or (row["status"] == "pending" and row["evidence"])):
+                raise ValueError("Nonterminal case contradicts recorded evidence")
         completed = {row["id"] for row in rows if row["status"] == "completed"}
         if not set(document["report_ids"]) <= completed:
             raise ValueError("Reports may reference only native completed cases")
@@ -160,7 +195,7 @@ class Campaign:
         self._validate()
         path = Path(path)
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
-                                         dir=path.parent, delete=False) as stream:
+                                         newline="\n", dir=path.parent, delete=False) as stream:
             json.dump(self._document, stream, indent=2, allow_nan=False)
             stream.write("\n")
             temporary = Path(stream.name)
@@ -310,10 +345,11 @@ class Campaign:
     def workbook_csv(self, *, criteria_id, criteria_version):
         """Export all rows, with explicit criteria columns, for workbook import."""
         rows = self.result_rows(criteria_id=criteria_id, criteria_version=criteria_version)
-        stream = io.StringIO()
+        stream = io.StringIO(newline="\n")
         fields = ["id", "status", "qualified", "qualification", "criteria_id", "criteria_version",
                   "criteria_source"]
-        writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore")
+        writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore",
+                                lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
         return stream.getvalue()
@@ -334,12 +370,12 @@ class Campaign:
 
         Completed rows require an explicit boolean or None decision. Pending,
         active and failed rows receive the new stamp but cannot qualify.
-        A changed acceptance basis requires a changed identity or version (§3).
+        A changed acceptance basis requires a never-used identity/version (§3).
         """
         new = _criteria(criteria_id, criteria_version, criteria_source)
         old = self._document["criteria"]
-        if (new["criteria_id"], new["criteria_version"]) == (
-                old["criteria_id"], old["criteria_version"]):
+        if (new["criteria_id"], new["criteria_version"]) in _criteria_stamps(
+                old, self._document["criteria_changes"]):
             raise ValueError("A criteria change requires a new identity or version")
         completed = {row["id"]: row for row in self._document["cases"]
                      if row["status"] == "completed"}

@@ -247,12 +247,12 @@ def test_load_rejects_mismatched_rows_and_unknown_schema(tmp_path):
     campaign = launch()
     document = campaign.document
     document["cases"][0]["criteria_version"] = "v0"
-    path.write_text(json.dumps(document))
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
     with pytest.raises(CriteriaVersionMismatch, match="a"):
         Campaign.load(path)
     document = campaign.document
     document["schema_version"] = "unknown"
-    path.write_text(json.dumps(document))
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="schema"):
         Campaign.load(path)
 
@@ -300,9 +300,100 @@ def test_checkpoint_rejects_inconsistent_result_evidence(alter):
         Campaign(document)
 
 
-def test_unknown_acceptance_is_visible_in_workbook_and_report():
+@pytest.mark.parametrize("status", ["pending", "running"])
+@pytest.mark.parametrize("evidence,qualified", [
+    (dict(exit_code=0, native_readback_ok=True, criterion_met=True,
+          process_alive=False), None),
+    (dict(exit_code=1, native_readback_ok=False, criterion_met=False,
+          process_alive=False), None),
+    ({"exit_code": None}, None),
+    ({"native_readback_ok": False}, None),
+    ({"criterion_met": None}, None),
+    ({}, False),
+])
+def test_load_rejects_nonterminal_results_before_replay(tmp_path, status, evidence, qualified):
+    document = launch(["a"]).document
+    document["cases"][0].update(status=status, evidence=evidence, qualified=qualified)
+    path = tmp_path / "campaign.json"
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
+    before = path.read_bytes()
+    calls = []
+
+    def execute(case_id, criteria):
+        calls.append(case_id)
+        return dict(criteria_id=criteria["criteria_id"],
+                    criteria_version=criteria["criteria_version"],
+                    exit_code=0, native_readback_ok=True, criterion_met=True)
+
+    with pytest.raises(ValueError, match="evidence"):
+        restored = Campaign.load(path)
+        restored.run_untouched(execute, checkpoint=path)
+    assert calls == []
+    assert path.read_bytes() == before
+
+
+def test_load_rejects_pending_progress_before_continuation(tmp_path):
+    campaign = launch(["a"])
+    campaign.observe("a", counter=4, now=10, process_alive=True)
+    document = campaign.document
+    document["cases"][0]["status"] = "pending"
+    path = tmp_path / "campaign.json"
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="evidence"):
+        Campaign.load(path)
+
+
+@pytest.mark.parametrize("status", ["pending", "running"])
+def test_load_rejects_nonterminal_failure_class_before_replay(tmp_path, status):
+    campaign = launch(["a"])
+    collect(campaign, exit_code=1, native_readback_ok=False, criterion_met=None,
+            failure_class="synthetic-input-error")
+    document = campaign.document
+    document["cases"][0].update(status=status, evidence={}, qualified=None)
+    path = tmp_path / "campaign.json"
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
+    before = path.read_bytes()
+    calls = []
+
+    def execute(case_id, criteria):
+        calls.append(case_id)
+        return dict(**CRITERIA, exit_code=0, native_readback_ok=True, criterion_met=True)
+
+    with pytest.raises(ValueError, match="evidence"):
+        Campaign.load(path).run_untouched(execute, checkpoint=path)
+    assert calls == []
+    assert path.read_bytes() == before
+
+
+@pytest.mark.parametrize("failure_class", ["", [], {}, 0])
+def test_load_rejects_invalid_terminal_failure_class(tmp_path, failure_class):
+    campaign = launch(["a"])
+    collect(campaign, exit_code=1, native_readback_ok=False, criterion_met=None)
+    document = campaign.document
+    document["cases"][0]["failure_class"] = failure_class
+    path = tmp_path / "campaign.json"
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="failure_class"):
+        Campaign.load(path)
+
+
+def test_checkpoint_and_workbook_use_utf8_and_lf(tmp_path):
+    campaign = launch(criteria_source="Synthetic basis \u2013 \u03b2")
+    path = tmp_path / "campaign.json"
+    campaign.save(path)
+    restored = Campaign.load(path)
+    workbook = restored.workbook_csv(**CRITERIA)
+    assert "Synthetic basis \u2013 \u03b2" in workbook
+    assert "\r" not in workbook
+    assert b"\r" not in path.read_bytes()
+
+
+def test_unknown_acceptance_is_visible_in_workbook_and_report(tmp_path):
     campaign = launch()
     collect(campaign, criterion_met=None)
+    path = tmp_path / "campaign.json"
+    campaign.save(path)
+    campaign = Campaign.load(path)
     workbook = list(csv.DictReader(io.StringIO(campaign.workbook_csv(**CRITERIA))))
     assert workbook[0]["qualification"] == "NOT_EVALUATED"
     assert campaign.report(**CRITERIA, next_action="Supply acceptance basis")["rows"][0][
@@ -328,6 +419,90 @@ def test_criteria_changes_retain_migration_history_after_restart(tmp_path):
     path = tmp_path / "campaign.json"
     campaign.save(path)
     assert Campaign.load(path).document["criteria_changes"] == [preview]
+
+
+@pytest.mark.parametrize("version", ["v1", "v2"])
+def test_historical_criteria_stamps_cannot_be_reassigned_after_reload(tmp_path, version):
+    campaign = launch()
+    for new_version in ("v2", "v3"):
+        preview = campaign.preview_criteria_change(
+            criteria_id="screen", criteria_version=new_version,
+            criteria_source="Basis " + new_version, qualifications={})
+        campaign.apply_criteria_change(preview, emit=lambda message: None)
+    path = tmp_path / "campaign.json"
+    campaign.save(path)
+    restored = Campaign.load(path)
+    before = restored.document
+    with pytest.raises(ValueError, match="identity or version"):
+        restored.preview_criteria_change(
+            criteria_id="screen", criteria_version=version,
+            criteria_source="Different basis", qualifications={})
+    assert restored.document == before
+    with pytest.raises(CriteriaVersionMismatch):
+        restored.result_rows(criteria_id="screen", criteria_version=version)
+
+
+@pytest.mark.parametrize("identity,version", [("screen", "v3"), ("other-screen", "v1")])
+def test_unused_criteria_stamps_remain_available_after_reload(tmp_path, identity, version):
+    campaign = launch()
+    preview = campaign.preview_criteria_change(
+        criteria_id="screen", criteria_version="v2", criteria_source="Revised basis",
+        qualifications={})
+    campaign.apply_criteria_change(preview, emit=lambda message: None)
+    path = tmp_path / "campaign.json"
+    campaign.save(path)
+    restored = Campaign.load(path)
+    preview = restored.preview_criteria_change(
+        criteria_id=identity, criteria_version=version,
+        criteria_source="New basis", qualifications={})
+    restored.apply_criteria_change(preview, emit=lambda message: None)
+    restored.save(path)
+    rows = Campaign.load(path).result_rows(criteria_id=identity, criteria_version=version)
+    assert all(row["criteria_source"] == "New basis" for row in rows)
+
+
+@pytest.mark.parametrize("corruption", ["reused_stamp", "broken_chain", "stale_current"])
+def test_load_rejects_inconsistent_criteria_history(tmp_path, corruption):
+    campaign = launch()
+    for version in ("v2", "v3"):
+        preview = campaign.preview_criteria_change(
+            criteria_id="screen", criteria_version=version,
+            criteria_source="Basis " + version, qualifications={})
+        campaign.apply_criteria_change(preview, emit=lambda message: None)
+    document = campaign.document
+    if corruption == "reused_stamp":
+        document["criteria_changes"][-1]["new"]["criteria_version"] = "v1"
+        document["criteria"]["criteria_version"] = "v1"
+        for row in document["cases"]:
+            row["criteria_version"] = "v1"
+    elif corruption == "broken_chain":
+        document["criteria_changes"][-1]["old"]["criteria_source"] = "Unrecorded basis"
+    else:
+        document["criteria"]["criteria_source"] = "Unrecorded basis"
+        for row in document["cases"]:
+            row["criteria_source"] = "Unrecorded basis"
+    path = tmp_path / "campaign.json"
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="criteria"):
+        Campaign.load(path)
+
+
+@pytest.mark.parametrize("field", ["old", "new"])
+@pytest.mark.parametrize("record", [
+    None, [], {}, dict(CRITERIA, criteria_source="Synthetic basis", extra=True),
+])
+def test_load_rejects_invalid_criteria_history_record(tmp_path, field, record):
+    campaign = launch()
+    preview = campaign.preview_criteria_change(
+        criteria_id="screen", criteria_version="v2", criteria_source="Revised basis",
+        qualifications={})
+    campaign.apply_criteria_change(preview, emit=lambda message: None)
+    document = campaign.document
+    document["criteria_changes"][0][field] = record
+    path = tmp_path / "campaign.json"
+    path.write_text(json.dumps(document), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="criteria"):
+        Campaign.load(path)
 
 
 def test_mutating_announcement_cannot_apply_a_stale_preview():

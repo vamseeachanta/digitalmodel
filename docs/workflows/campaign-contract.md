@@ -11,6 +11,7 @@ remains a separate, explicitly supplied decision.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-22 | Add persisted campaign evidence and consumer views to prevent stale criteria and liveness from being reported as results. |
+| Correction | 2026-10-24 | Reserve historical criteria stamps and reject contradictory checkpoint evidence to prevent stale consumers and case replay. |
 
 ## Source and numerical basis
 
@@ -68,15 +69,20 @@ solver-specific guards, including detection of shared failures. This interface
 adds no retry loop or failure-fraction threshold.
 
 `save` replaces the checkpoint atomically in its existing directory; `load`
-checks the schema, result stamps and terminal evidence. No work is launched by
+checks the schema, result stamps, migration history and evidence consistency.
+Pending and running rows reject terminal evidence, acceptance decisions and
+failure classifications; pending rows also reject progress evidence.
+No work is launched by
 loading a checkpoint. A single caller serializes checkpoint writes. The JSON
 layout is `schema_version: v1`; this software layout version is independent of
 the engineering criteria version.
 
 ## Changing criteria
 
-Use `preview_criteria_change` with a new criteria identity or version, its source
-and explicit re-evaluation decisions for exactly the native completed rows.
+Use `preview_criteria_change` with a never-used criteria identity/version pair,
+its source and explicit re-evaluation decisions for exactly the native completed
+rows. Historical pairs remain reserved after saving and loading; migration
+history must remain continuous and agree with the current governing criteria.
 The preview names every row whose stamp changes, every changed qualification,
 and every previously qualified row now withheld. Pending and failed rows also
 receive the new criteria stamp; they cannot become qualified by migration.
