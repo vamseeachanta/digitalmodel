@@ -293,3 +293,78 @@ def test_strict_merge_resolution_retains_depth_guard(tmp_path):
     assert not result.valid
     assert any("Unsupported YAML graph traversal limit" in issue.message
                for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("wrapper", ["{section}: [{{{entry}}}]\n",
+                                     "<<: {{{section}: [{{{entry}}}]}}\n",
+                                     "<<: [{{{section}: [{{{entry}}}]}}]\n"])
+@pytest.mark.parametrize("entry", [
+    "includefile: fragment.yml",
+    "<<: {includefile: fragment.yml}",
+    "<<: [{Custom: ignored}, {includefile: fragment.yml}]",
+    "<<: {<<: &include {includefile: fragment.yml}}, Custom: *include",
+])
+def test_effective_include_entries_are_supported(tmp_path, section, wrapper, entry):
+    """Direct, merged and nested entries obey the same include-list profile."""
+    (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
+    assert validate(tmp_path, wrapper.format(section=section, entry=entry)).valid
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("local_first", [True, False])
+@pytest.mark.parametrize("valid", [True, False])
+def test_local_include_value_overrides_merge(tmp_path, section, local_first, valid):
+    """A local invalid value cannot borrow a valid shadowed include value."""
+    (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
+    inherited, local = ("null", "fragment.yml") if valid else ("fragment.yml", "null")
+    merge = f"<<: {{includefile: {inherited}}}"
+    assignment = f"includefile: {local}"
+    entry = f"{assignment}, {merge}" if local_first else f"{merge}, {assignment}"
+    result = validate(tmp_path, f"{section}: [{{{entry}}}]\n")
+    assert result.valid is valid
+    if not valid:
+        assert any(issue.property == section and issue.line == 1 for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("invalid_first", [True, False])
+def test_first_include_merge_source_has_precedence(tmp_path, section, invalid_first):
+    (tmp_path / "fragment.yml").write_text("UnitsSystem: SI\n", encoding="utf-8")
+    first, second = ("null", "fragment.yml") if invalid_first else ("fragment.yml", "null")
+    text = f"{section}: [{{<<: [{{includefile: {first}}}, {{includefile: {second}}}]}}]\n"
+    result = validate(tmp_path, text)
+    assert result.valid is not invalid_first
+    if invalid_first:
+        assert any(issue.property == section and issue.line == 1 for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+@pytest.mark.parametrize("value", ["null", "true", "1", "''", "' '", "[]", "{}"])
+def test_invalid_effective_include_values_are_rejected(tmp_path, section, value):
+    result = validate(tmp_path, f"{section}: [{{<<: {{includefile: {value}}}}}]\n")
+    assert not result.valid
+    assert any(issue.property == section and issue.line == 1 for issue in result.errors)
+
+
+@pytest.mark.parametrize("section", ["General", "Environment"])
+def test_quoted_merge_key_does_not_inherit_include(tmp_path, section):
+    result = validate(tmp_path, f'{section}: [{{"<<": {{includefile: fragment.yml}}}}]\n')
+    assert not result.valid
+    assert any(issue.property == section and issue.line == 1 for issue in result.errors)
+
+
+def test_include_shape_resolution_preserves_source_graph():
+    """Resolution retains aliases, merge directives, ordering and source marks."""
+    import yaml
+
+    from digitalmodel.solvers.orcaflex.yaml_timestep_validation import _document_shape_issues
+
+    root = yaml.compose("""Defaults: &defaults {includefile: fragment.yml}
+<<: {General: [{<<: *defaults}]}
+Environment: [{<<: [*defaults, {includefile: null}]}]
+""", Loader=yaml.SafeLoader)
+    before = yaml.serialize(root)
+    assert _document_shape_issues(root) == []
+    assert yaml.serialize(root) == before
+    assert _document_shape_issues(root) == []

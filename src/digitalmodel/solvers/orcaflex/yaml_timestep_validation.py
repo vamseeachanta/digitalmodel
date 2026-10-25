@@ -143,8 +143,8 @@ def _mapping_key_issues(node):
     return issues
 
 
-def _effective_section_items(node, cache):
-    """Resolve section keys on an acyclic merge graph without mutating nodes."""
+def _effective_mapping_items(node, cache):
+    """Resolve string keys on an acyclic merge graph without mutating nodes."""
     if id(node) in cache:
         return cache[id(node)]
     sections = {}
@@ -154,13 +154,22 @@ def _effective_section_items(node, cache):
             # SafeLoader gives earlier merge-list entries precedence.
             for source in reversed(sources):
                 if isinstance(source, MappingNode):
-                    sections.update(_effective_section_items(source, cache))
+                    sections.update(_effective_mapping_items(source, cache))
     # Local assignments override all merges, regardless of source order.
     for key, value in node.value:
-        if key.tag == "tag:yaml.org,2002:str" and _key(key) in {"General", "Environment"}:
+        if key.tag == "tag:yaml.org,2002:str":
             sections[key.value] = (key, value)
     cache[id(node)] = sections
     return sections
+
+
+def _is_include_entry(node, cache):
+    if not isinstance(node, MappingNode):
+        return False
+    include = _effective_mapping_items(node, cache).get("includefile")
+    return bool(include and isinstance(include[1], ScalarNode)
+                and include[1].tag == "tag:yaml.org,2002:str"
+                and include[1].value.strip())
 
 
 def _document_shape_issues(root):
@@ -180,16 +189,15 @@ def _document_shape_issues(root):
     if not isinstance(root, MappingNode):
         return []
     issues = []
-    for key, value in _effective_section_items(root, {}).values():
+    cache = {}
+    for key, value in _effective_mapping_items(root, cache).values():
         name = _key(key)
+        if name not in {"General", "Environment"}:
+            continue
         if isinstance(value, MappingNode):
             continue
         if isinstance(value, SequenceNode) and value.value and all(
-            isinstance(item, MappingNode) and any(
-                _key(k) == "includefile" and isinstance(v, ScalarNode)
-                and v.tag == "tag:yaml.org,2002:str" and v.value.strip()
-                for k, v in item.value
-            ) for item in value.value
+            _is_include_entry(item, cache) for item in value.value
         ):
             continue
         issues.append(("error", f"{name} must be a mapping or a nonempty include list",
