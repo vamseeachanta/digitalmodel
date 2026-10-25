@@ -10,6 +10,12 @@ https://www.emerson.com/is/content/emerson/es/final-control/isolation-valves/doc
 (liquid equations and example rechecked 2026-10-18, pp. 113–115).
 The liquid worked arithmetic is in section 5.8.4.
 
+The attached-fittings choking relation in section 5.8.2 is also given in
+Emerson, Control Valve Sourcebook — Oil & Gas (2013), chapter 3, p. 3-5
+(flow equation on p. 3-3), available at
+https://www.emerson.com/is/content/emerson/en/final-control/pressure-management/jt-valves/documents/guide-control-valve-sourcebook-oil-gas-fisher-en-135836.pdf
+(both public sources rechecked 2026-10-25).
+
 The handbook describes the ISA-75.01 / IEC 60534-2-1 sizing method. This
 module does not certify standards compliance. Unit constants N1/N6, adjusted
 piping/recovery factors, gas choking ratio and fluid properties are required
@@ -73,11 +79,23 @@ def _liquid_choked_pressure_drop(
     _nonnegative(p_downstream=p_downstream, vapor_pressure=vapor_pressure)
     if p_downstream > p_upstream or vapor_pressure >= p_upstream:
         raise ValueError("forward flow and a liquid inlet are required")
-    # Squared FLP/Fp: Handbook, 6th ed. (2023), §5.8.2, p. 113.
-    recovery_ratio = recovery_factor / piping_factor
-    limit = recovery_ratio * recovery_ratio * (
-        p_upstream - critical_pressure_ratio * vapor_pressure
-    )
+    pressure_head = p_upstream - critical_pressure_ratio * vapor_pressure
+    _positive(choked_pressure_drop=pressure_head)
+    # Emerson, Control Valve Sourcebook — Oil & Gas (2013), ch. 3, p. 3-5;
+    # same attached-fittings relation as Handbook (2023), §5.8.2, p. 113.
+    # dp_max = (FLP/Fp)^2 * (p1-FF*pv). Keep the square's exponent separate
+    # so only the final differential can underflow or overflow. frexp gives
+    # x=m*2^e; hence the squared ratio contributes 2*(e_recovery-e_piping).
+    recovery_mantissa, recovery_exponent = math.frexp(recovery_factor)
+    piping_mantissa, piping_exponent = math.frexp(piping_factor)
+    head_mantissa, head_exponent = math.frexp(pressure_head)
+    try:
+        limit = math.ldexp(
+            (recovery_mantissa / piping_mantissa)**2 * head_mantissa,
+            2 * (recovery_exponent - piping_exponent) + head_exponent,
+        )
+    except OverflowError:
+        raise ValueError("choked_pressure_drop must be finite and positive") from None
     _positive(choked_pressure_drop=limit)
     return limit
 
@@ -116,6 +134,8 @@ def liquid_capacity(
     )
     drop = p_upstream - p_downstream
     effective = min(drop, limit)
+    if coefficient == 0 or effective == 0:
+        return ValveCapacity(0.0, effective, drop >= limit)
     rate = unit_constant * piping_factor * coefficient * math.sqrt(
         effective / specific_gravity
     )

@@ -69,7 +69,7 @@ def test_liquid_inverse_rejects_unrepresentable_coefficient(rate, unit_constant)
 
 
 def test_liquid_choking_overflow_is_a_value_error():
-    """Constructed FLP/Fp=1e200: its square overflows before limiting dp.
+    """Constructed FLP/Fp=1e200: the final differential 1e402 overflows.
 
     Domain failures shall use ValueError rather than leaking OverflowError.
     This is a representability check, not a permitted valve-factor range.
@@ -130,6 +130,45 @@ def test_true_zero_capacity_and_demand():
     assert required_liquid_coefficient(rate=0.0, **inputs) == 0.0
     with pytest.raises(ValueError, match="positive pressure drop"):
         required_liquid_coefficient(rate=1.0, **inputs)
+
+
+@pytest.mark.parametrize(
+    "coefficient, changes, effective, choked",
+    [(0.0, dict(specific_gravity=1e-310), 25.0, True),
+     (1e300, dict(p_downstream=100.0, unit_constant=1e10), 0.0, False)],
+)
+def test_true_zero_capacity_precedes_overflowing_products(
+    coefficient, changes, effective, choked,
+):
+    """Constructed zeros in q=N1*Fp*C*sqrt(dp_sizing/SG), §5.8.3.
+
+    C=0 makes q=0 even though 25/1e-310 overflows. With dp=0, q=0
+    even though N1*C=1e310 overflows. Neither zero is underflow.
+    The normalized fixture gives dp_max=25 and the stated choking flags.
+    """
+    inputs = liquid_inputs(**changes)
+    result = liquid_capacity(coefficient=coefficient, **inputs)
+    assert result.rate == 0.0
+    assert result.effective_drop == effective
+    assert result.choked is choked
+    assert required_liquid_coefficient(rate=0.0, **inputs) == 0.0
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [dict(recovery_factor=1e-200, p_upstream=1e300),
+     dict(recovery_factor=2.0**700, p_upstream=2.0**-1000)],
+)
+def test_zero_demand_preserves_representable_scaled_choking_drop(changes):
+    """Shared validation must retain representable limits at zero demand.
+
+    Hand calculation: dp_max=1e-400*1e300=1e-100 for the first case;
+    dp_max=2^1400*2^-1000=2^400 for the second. Both are finite and
+    positive despite the intermediate square's range, so required C=0.
+    """
+    inputs = liquid_inputs(**changes)
+    assert required_liquid_coefficient(rate=0.0, **inputs) == 0.0
+    assert liquid_capacity(coefficient=0.0, **inputs).rate == 0.0
 
 
 @pytest.mark.parametrize("downstream", [0.0, 100.0])
