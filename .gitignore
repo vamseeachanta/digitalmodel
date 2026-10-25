@@ -618,3 +618,9 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+
+# Standalone synthetic river-profile example; generated output stays ignored.
+!/docs/reports/modules/river_currents/
+/docs/reports/modules/river_currents/*
+!/docs/reports/modules/river_currents/build_worked_example.py
+!/docs/reports/modules/river_currents/README.md
