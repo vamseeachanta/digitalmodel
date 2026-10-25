@@ -201,5 +201,5 @@ def _write_summary(cfg: dict, output_cfg: dict, payload: Dict[str, Any]) -> Path
         directory = Path(cfg.get("_config_dir_path", Path.cwd())) / directory
     directory.mkdir(parents=True, exist_ok=True)
     summary_path = directory / output_cfg.get("summary_json", "pipelay_summary.json")
-    summary_path.write_text(text, encoding="utf-8")
+    summary_path.write_text(text, encoding="utf-8", newline="\n")
     return summary_path
