@@ -11,6 +11,7 @@ retained PLANE183 listing profile; this does not qualify other adapters.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-22 | Add an offline tensor and plot evidence audit to expose missing samples and peaks concealed by face reconstruction. |
+| 1 | 2026-10-24 | Bind plot surface and material-layer selection to audited samples so equal peaks cannot conceal a selection mismatch. |
 
 ## Slices and adapter coverage
 
@@ -158,11 +159,18 @@ design-code assessment.
 
 `validate_plot_evidence` requires retained result bytes before and after export,
 the export bytes, recorded SHA-256 digests, selected result set, pressure, native
-plot command, camera, surface, averaging, displacement command, legend endpoints
+plot command, camera, surface, layer, averaging, displacement command, legend endpoints
 and native raw equivalent-stress maximum. Supply the same source-result digest
 to `audit_tensors(source_result_sha256=...)` after independently binding the
 listing to that result file. Its raw tensor selection must match the plotted
-surface. The native maximum must reconcile within a supplied cited tolerance;
+surface and layer. The capture record's `layer` must be an integer: zero for
+`SOLID`, positive for `TOP`, `BOTTOM` or `MID`. The audit retains
+`sample_surface_layers` as sorted unique surface/layer pairs. Qualification
+requires exactly one pair matching the capture; missing audit selection metadata
+or multiple audited pairs refuse even when all layers have equal peaks.
+Supply an independently enumerated audit for the plotted selection rather than
+reconciling a single-layer capture against a maximum across several layers.
+The native maximum must reconcile within a supplied cited tolerance;
 the legend must contain that maximum. Optional `expected_legend` requires an
 identical scale for comparisons. No image bytes are edited or decoded.
 

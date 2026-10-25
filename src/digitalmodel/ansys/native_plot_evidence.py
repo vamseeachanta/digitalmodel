@@ -21,6 +21,7 @@ REQUIRED = (
     "native_command",
     "camera",
     "surface",
+    "layer",
     "averaging",
     "dscale_command",
     "legend_min",
@@ -92,6 +93,10 @@ def validate_plot_evidence(
         errors.append("Unaveraged plot state required")
     if tensor_audit.get("sample_surfaces") != (record["surface"],):
         errors.append("Plot surface differs from audited tensor selection")
+    if type(record["layer"]) is not int or tensor_audit.get(
+        "sample_surface_layers"
+    ) != ((record["surface"], record["layer"]),):
+        errors.append("Plot surface/layer differs from audited tensor selection")
     if not all(
         isinstance(record[f], str) and record[f].strip() for f in ("camera", "surface")
     ):

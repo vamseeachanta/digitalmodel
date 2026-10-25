@@ -399,6 +399,9 @@ def audit_tensors(
         linearized_abs_trace=linear_trace,
     )
     result["sample_surfaces"] = tuple(sorted({key.surface for key in rows}))
+    result["sample_surface_layers"] = tuple(
+        sorted({(key.surface, key.layer) for key in rows})
+    )
     result["equilibrium"] = _balance(equilibrium, result_set)
     for measure in MEASURES:
         if result["equilibrium"]["status"] != "PASS":

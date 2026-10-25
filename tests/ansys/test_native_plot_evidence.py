@@ -8,8 +8,8 @@ from hashlib import sha256
 import pytest
 
 from digitalmodel.ansys.native_plot_evidence import validate_plot_evidence
-from digitalmodel.ansys.native_tensor_audit import CitedLimit
-from tests.ansys.test_native_tensor_audit import RESULT, KEYS, audit, sample
+from digitalmodel.ansys.native_tensor_audit import CitedLimit, SampleKey, audit_tensors
+from tests.ansys.test_native_tensor_audit import RESULT, KEYS, PATH, audit, sample
 
 
 # All values are artificial fixture inputs, not engineering acceptance limits.
@@ -28,6 +28,7 @@ def evidence():
         "native_command": "PLESOL,S,EQV",
         "camera": "front",
         "surface": "SOLID",
+        "layer": 0,
         "averaging": "UNAVERAGED",
         "dscale_command": "/DSCALE,1,OFF",
         "legend_min": "0",
@@ -36,12 +37,13 @@ def evidence():
     }
 
 
-def validate(record=None, **kwargs):
+def validate(record=None, *, tensor_audit=None, **kwargs):
     """Uniaxial SX=6 gives VM=6 by sqrt((36+0+36)/2)."""
-    report = audit(
-        [sample(k, ("6", "0", "0", "0", "0", "0")) for k in KEYS],
-        source_result_sha256=DIGEST,
-    )
+    if tensor_audit is None:
+        tensor_audit = audit(
+            [sample(k, ("6", "0", "0", "0", "0", "0")) for k in KEYS],
+            source_result_sha256=DIGEST,
+        )
     return validate_plot_evidence(
         evidence() if record is None else record,
         result_before=RESULT_BYTES,
@@ -49,10 +51,89 @@ def validate(record=None, **kwargs):
         png=PNG_BYTES,
         result_set=RESULT,
         pressure_mpa="2",
-        tensor_audit=report,
+        tensor_audit=tensor_audit,
         peak_tolerance=CitedLimit("0", "Exact synthetic reconciliation"),
         **kwargs,
     )
+
+
+def shell_audit(layers=(1,), surface="TOP"):
+    """Every layer has SX=6, VM=sqrt((36+0+36)/2)=6; peaks cannot identify it."""
+    keys = tuple(SampleKey(1, n, surface, layer) for layer in layers for n in (1, 2, 3))
+    rows = [
+        replace(
+            sample(key, ("6", "0", "0", "0", "0", "0")),
+            surface_basis="explicit",
+            surface_reference="Synthetic surface and layer fields",
+        )
+        for key in keys
+    ]
+    paths = tuple(
+        replace(
+            PATH,
+            name=f"layer-{layer}",
+            points=tuple(zip(keys[i : i + 3], ("0", "1", "2"))),
+        )
+        for i, layer in zip(range(0, len(keys), 3), layers)
+    )
+    return audit_tensors(
+        rows, expected=keys, result_set=RESULT, paths=paths, source_result_sha256=DIGEST
+    )
+
+
+@pytest.mark.parametrize("surface", ("TOP", "BOTTOM", "MID"))
+@pytest.mark.parametrize("layer", (1, 2))
+def test_matching_shell_surface_and_material_layer_qualify(surface, layer):
+    record = dict(evidence(), surface=surface, layer=layer)
+    result = validate(record, tensor_audit=shell_audit((layer,), surface))
+    assert result["status"] == "COMPLETE"
+    assert result["native_peak_reconciliation"]["status"] == "PASS"
+
+
+@pytest.mark.parametrize("surface", ("TOP", "BOTTOM", "MID"))
+def test_shell_capture_requires_selected_material_layer(surface):
+    record = dict(evidence(), surface=surface)
+    record.pop("layer")
+    result = validate(record, tensor_audit=shell_audit(surface=surface))
+    assert result["status"] == "INCOMPLETE"
+    assert result["native_peak_reconciliation"]["status"] == "NOT_EVALUATED"
+    assert any("layer" in error for error in result["errors"])
+
+
+@pytest.mark.parametrize("layer", (None, "", "1", 0, -1, 2, True, 1.0, float("nan")))
+def test_invalid_or_mismatched_shell_layer_refuses_even_when_peaks_agree(layer):
+    record = dict(evidence(), surface="TOP", layer=layer)
+    result = validate(record, tensor_audit=shell_audit())
+    assert result["status"] == "INCOMPLETE"
+    assert result["native_peak_reconciliation"]["status"] == "NOT_EVALUATED"
+    assert any("layer" in error for error in result["errors"])
+
+
+@pytest.mark.parametrize("layer", (1, 2))
+def test_single_layer_plot_refuses_multiple_audited_layers_with_equal_peaks(layer):
+    report = shell_audit((1, 2))
+    assert report["raw_status"] == "COMPLETE"
+    assert report["raw_von_mises"] == 6
+    record = dict(evidence(), surface="TOP", layer=layer)
+    result = validate(record, tensor_audit=report)
+    assert result["status"] == "INCOMPLETE"
+    assert result["native_peak_reconciliation"]["status"] == "NOT_EVALUATED"
+    assert any("layer" in error for error in result["errors"])
+
+
+def test_missing_audited_surface_layer_identity_refuses():
+    report = shell_audit()
+    report.pop("sample_surface_layers", None)
+    record = dict(evidence(), surface="TOP", layer=1)
+    result = validate(record, tensor_audit=report)
+    assert result["status"] == "INCOMPLETE"
+    assert result["native_peak_reconciliation"]["status"] == "NOT_EVALUATED"
+
+
+@pytest.mark.parametrize("layer", (1, False, 0.0))
+def test_solid_plot_requires_integer_layer_zero(layer):
+    result = validate(dict(evidence(), layer=layer))
+    assert result["status"] == "INCOMPLETE"
 
 
 def test_plot_bytes_state_and_tensor_maximum_agree():
