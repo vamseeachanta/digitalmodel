@@ -6,6 +6,8 @@ by the shared checker once that tool reaches the base branch.
 """
 
 import ast
+import hashlib
+import json
 import os
 import re
 import subprocess
@@ -245,3 +247,82 @@ def test_implementation_map_pack_entries_match_routing():
             "code_pin": "3554b14fde67f44b1c52b81b6c72106282eaff29",
             "qa_family": "EC",
         }
+
+
+AUDIT_PATH = ROOT / "docs/registry/marine-agent-pack-audit.json"
+AUDIT_SHARD_DIR = AUDIT_PATH.with_suffix("")
+
+
+def _audit_static_findings(index):
+    """Read every indexed pack once, rejecting duplicate pack records."""
+    findings = {}
+    for entry in index["static_findings_shards"]:
+        shard = json.loads((ROOT / entry["path"]).read_text(encoding="utf-8"))
+        packs = shard["static_findings"]
+        assert not findings.keys() & packs.keys(), "duplicate pack across shards"
+        findings.update(packs)
+    return findings
+
+
+def test_audit_artifacts_fit_file_size_guard():
+    """Keep the index and all findings below the existing 1,000 KiB cap."""
+    for path in [AUDIT_PATH, *AUDIT_SHARD_DIR.glob("*.json")]:
+        assert path.stat().st_size <= 1000 * 1024, path.relative_to(ROOT)
+
+
+def test_audit_shard_manifest_matches_files():
+    """Require complete local references with matching bytes and code pins."""
+    index = json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
+    assert index["schema_version"] == 2
+    entries = index["static_findings_shards"]
+    paths = [entry["path"] for entry in entries]
+    assert paths and paths == sorted(set(paths))
+    assert set(paths) == {path.relative_to(ROOT).as_posix()
+                          for path in AUDIT_SHARD_DIR.glob("*.json")}
+    for entry in entries:
+        assert re.fullmatch(r"docs/registry/marine-agent-pack-audit/part-\d{3}\.json",
+                            entry["path"])
+        path = ROOT / entry["path"]
+        assert path.resolve().parent == AUDIT_SHARD_DIR.resolve()
+        data = path.read_bytes()
+        assert len(data) == entry["size_bytes"]
+        assert hashlib.sha256(data).hexdigest() == entry["sha256"]
+        shard = json.loads(data)
+        assert set(shard) == {"schema_version", "code_pin", "static_findings"}
+        assert shard["schema_version"] == 1
+        assert shard["code_pin"] == index["code_pin"]
+        assert shard["static_findings"]
+        assert len(shard["static_findings"]) == entry["pack_count"]
+
+
+def test_audit_shards_preserve_original_findings():
+    """Pin all original findings independently of the new index digests."""
+    index = json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
+    findings = {
+        "static_findings": _audit_static_findings(index),
+        "collection_findings": index["collection_findings"],
+        "base_ref_bound_corrections": index["base_ref_bound_corrections"],
+    }
+    canonical = json.dumps(findings, sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=False, allow_nan=False).encode("utf-8")
+    # Digest of the complete finding payload before the ledger was sharded.
+    expected = "1c8c83594f7e156570dc747632305d1b721302ca74f7c2bbb05de61d86f945b6"
+    assert hashlib.sha256(canonical).hexdigest() == expected
+    assert index["findings_sha256"] == expected
+
+
+def test_audit_summary_matches_sharded_findings():
+    """Reconcile every published count against the reconstructed evidence."""
+    index = json.loads(AUDIT_PATH.read_text(encoding="utf-8"))
+    findings = _audit_static_findings(index)
+    messages = [message for pack in findings.values() for message in pack]
+    counts = {key: sum(message.startswith(prefix) for message in messages)
+              for key, prefix in {
+                  "missing_qualified_rows": "missing public symbol:",
+                  "unmatched_section_2_tokens": "extra public symbol:",
+                  "out_of_bounds_locators": "out-of-bounds locator:",
+                  "packs_without_locators": "no evidence locators",
+              }.items()}
+    counts.update(base_packs=len(findings),
+                  collection_failures=len(index["collection_findings"]))
+    assert index["counts"] == counts
