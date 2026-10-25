@@ -27,8 +27,11 @@ from digitalmodel.subsea.vertical_riser.vertical_riser_components import Vertica
 
 
 # Known deviation: the implementation's uncited g = 9.81 differs from standard
-# gravity; overpull also uses a rounded pound-to-kilogram conversion. This
-# declared relative tolerance covers those known legacy deviations only;
+# gravity: 9.81 / 9.80665 - 1 ~= 3.42e-4. Overpull also uses a rounded
+# pound-to-kilogram conversion: 0.4536 * 9.81 / 4.448222 - 1 ~= 3.58e-4.
+# Both deviations are positive; for these nonnegative force terms, the
+# top-tension relative deviation is a weighted average, below 3.59e-4.
+# The 5e-4 relative tolerance covers those known legacy deviations only;
 # it is not an engineering acceptance limit.
 FORCE_REL_TOL = 5e-4
 
