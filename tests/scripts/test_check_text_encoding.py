@@ -237,6 +237,7 @@ def test_ruff_failure_fails_closed(tmp_path, monkeypatch):
 
 def test_workflow_is_pull_request_only_and_pins_ruff():
     import tomllib
+
     import yaml
 
     workflow = yaml.safe_load(
@@ -447,3 +448,59 @@ def test_source_physical_line_endings(tmp_path, line_ending):
     source = "value = 'é'; open(\n    'changed',\n)\n".replace("\n", line_ending)
     findings = check_source(tmp_path, source, {2})
     assert [(item["line"], item["code"]) for item in findings] == [(2, "PLW1514")]
+
+
+@pytest.mark.parametrize("line_ending", ["\n", "\r\n", "\r"])
+def test_git_output_preserves_line_endings(git_repo, line_ending):
+    source = "value = 1\n# Comment\n".replace("\n", line_ending)
+    (git_repo / "example.py").write_bytes(source.encode("utf-8"))
+    # Keep this assertion independent of Git checkout newline conversion settings.
+    blob = checker.git(
+        git_repo, "hash-object", "-w", "--no-filters", "example.py"
+    ).strip()
+    assert checker.git(git_repo, "cat-file", "-p", blob) == source
+
+
+@pytest.mark.parametrize("line_ending", ["\n", "\r\n", "\r", "\r\n\r"])
+def test_real_git_multiline_argument_line_endings(git_repo, line_ending, capsys):
+    source = "from pathlib import Path\nPath('data').write_text(\n    'old',\n)\n"
+    path = git_repo / "example.py"
+    path.write_bytes(source.replace("\n", line_ending).encode("utf-8"))
+    base = snapshot(git_repo)
+    path.write_bytes(
+        source.replace("'old'", "'new'").replace("\n", line_ending).encode("utf-8")
+    )
+    snapshot(git_repo, base)
+
+    result = checker.main(["--root", str(git_repo), "--base", base, "--json"])
+    output = capsys.readouterr()
+    if line_ending in {"\r", "\r\n\r"}:
+        assert result == 2
+        assert "bare CR line endings" in output.err
+        assert "example.py" in output.err
+        assert not output.out
+    else:
+        assert result == 1
+        findings = json.loads(output.out)
+        assert [(item["line"], item["code"]) for item in findings] == [(3, "PLW1514")]
+
+
+def test_literal_filename_does_not_include_other_file_hunks(git_repo):
+    bracketed = git_repo / "sample[1].py"
+    other = git_repo / "sample1.py"
+    source = "value = 1\n# Original comment\n" + "# Context\n" * 10 + "open('old')\n"
+    bracketed.write_text(source, encoding="utf-8", newline="\n")
+    other.write_text(source, encoding="utf-8", newline="\n")
+    base = snapshot(git_repo)
+    bracketed.write_text(
+        source.replace("Original", "Changed"), encoding="utf-8", newline="\n"
+    )
+    other.write_text(source.replace("'old'", "'new'"), encoding="utf-8", newline="\n")
+    snapshot(git_repo, base)
+
+    scope = checker.diff_scope(git_repo, base)
+    assert scope == {"sample[1].py": {2}, "sample1.py": {13}}
+    findings = checker.check_files(git_repo, scope)
+    assert [(item["path"], item["line"], item["code"]) for item in findings] == [
+        ("sample1.py", 13, "PLW1514")
+    ]

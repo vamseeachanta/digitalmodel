@@ -8,6 +8,8 @@ checks all tracked Python files for a separate cleanup audit. Ruff 0.15.1,
 pinned in uv.lock, must be available in the invoking Python environment.
 Multiline calls are checked when any line in the call changes. Encoding
 resolution follows Ruff, including its limits on inferred object types.
+Changed-line discovery rejects bare CR source endings because Git counts LF
+records while Python counts physical lines; LF and CRLF endings are supported.
 """
 
 import argparse
@@ -38,14 +40,12 @@ class ChangedLines(set):
 
 
 def git(root, *args):
-    """Return Git output without using the platform's default text codec."""
+    """Decode Git bytes explicitly, preserving CR and literal path arguments."""
     result = subprocess.run(
-        ["git", *args],
+        ["git", "--literal-pathspecs", *args],
         cwd=root,
         capture_output=True,
         check=False,
-        encoding="utf-8",
-        errors="strict",
         env={
             key: value
             for key, value in os.environ.items()
@@ -53,10 +53,11 @@ def git(root, *args):
         },
     )
     if result.returncode:
+        stderr = result.stderr.decode("utf-8")
         raise RuntimeError(
-            f"Git scope discovery failed: {result.stderr[-STDERR_TAIL_CHARS:].strip()}"
+            f"Git scope discovery failed: {stderr[-STDERR_TAIL_CHARS:].strip()}"
         )
-    return result.stdout
+    return result.stdout.decode("utf-8")
 
 
 def added_lines(patch):
@@ -111,6 +112,12 @@ def diff_scope(root, base):
         old = next(entries)
         path = next(entries) if status.startswith(("R", "C")) else old
         if path.endswith(".py"):
+            # A Git LF record can span several Python rows when bare CR occurs.
+            # Reject before hunk parsing, including changes with an empty scope.
+            if b"\r" in (root / path).read_bytes().replace(b"\r\n", b"\n"):
+                raise RuntimeError(
+                    f"Git scope discovery does not support bare CR line endings: {path}"
+                )
             patch = git(
                 root,
                 "diff",
