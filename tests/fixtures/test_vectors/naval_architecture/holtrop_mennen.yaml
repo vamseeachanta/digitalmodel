@@ -9,6 +9,12 @@ qualification:
     traced to an accessible primary worked example with method version, scale
     and rounding precision. Agreement cannot establish engineering accuracy.
   input_basis: "assumed, based on previous experience"
+  use_as_test_meaning: >-
+    true selects a row for reference-check reporting, not an engineering accuracy
+    assertion; false emits a DISABLED record without evaluating its targets.
+  tolerance_basis: >-
+    ct_tolerance_pct is unverified legacy metadata, not an enforced pass/fail
+    criterion while reference_status is unverified_approximate_fixture_values.
   required_sources:
     - "An approximate power prediction method (1982), equations and worked example"
     - "A statistical re-analysis of resistance and propulsion data (1984), revision equations"
@@ -83,6 +89,7 @@ test_cases:
       k1_plus_1_max: 1.25
     use_as_test: true
 
+references_role: "method references; values not traced to them"
 references:
   - "Holtrop, J. & Mennen, G.G.J. (1982). An approximate power prediction method."
   - "Holtrop, J. (1984). A statistical re-analysis of resistance and propulsion data."

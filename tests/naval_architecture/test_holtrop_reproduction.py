@@ -2,6 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Diagnostic reproduction preserves operating-point and oracle distinctions."""
 
+import hashlib
 import importlib.util
 from pathlib import Path
 
@@ -74,4 +75,40 @@ def test_report_accounts_for_each_enabled_reference():
         )
     assert any(
         path.endswith("holtrop_diagnostics.py") for path in report["source_sha256"]
+    )
+
+
+def test_source_digests_use_portable_keys_and_normalized_text(tmp_path, monkeypatch):
+    module = load_script()
+    paths = [
+        module.FIXTURE,
+        Path(module.hm.__file__),
+        Path(module.hc.__file__),
+        Path(module.hd.__file__),
+        Path(module.__file__),
+    ]
+    expected = {}
+    for path in paths:
+        relative = path.relative_to(module.ROOT)
+        normalized = path.read_text(encoding="utf-8").encode("utf-8")
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(normalized)
+        expected[relative.as_posix()] = hashlib.sha256(normalized).hexdigest()
+    monkeypatch.setattr(module, "FIXTURE", tmp_path / paths[0].relative_to(module.ROOT))
+    for source, path in zip((module.hm, module.hc, module.hd, module), paths[1:]):
+        monkeypatch.setattr(
+            source, "__file__", str(tmp_path / path.relative_to(module.ROOT))
+        )
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    lf_report = module.build_report()
+    for path in paths:
+        target = tmp_path / path.relative_to(SCRIPT.parents[2])
+        target.write_bytes(target.read_bytes().replace(b"\n", b"\r\n"))
+    crlf_report = module.build_report()
+    assert lf_report["source_sha256"] == crlf_report["source_sha256"] == expected
+    assert all("\\" not in key for key in crlf_report["source_sha256"])
+    assert (
+        crlf_report["source_sha256_basis"]
+        == "UTF-8 text with newlines normalized to LF"
     )

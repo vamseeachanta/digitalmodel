@@ -102,7 +102,7 @@ def diagnose(case: dict, speed: float | None = None) -> dict:
 
 
 def assess_fixture(fixture: dict) -> list[dict]:
-    """Account for each enabled row and expected key without asserting accuracy.
+    """Account for every row and enabled expected key without asserting accuracy.
 
     This deliberately supports only the unverified legacy reference state.
     Qualifying a reference requires a separate reviewed change that identifies
@@ -126,6 +126,14 @@ def assess_fixture(fixture: dict) -> list[dict]:
         if type(case.get("use_as_test")) is not bool:
             raise ValueError(f"{case_id}: use_as_test must be boolean")
         if not case["use_as_test"]:
+            records.append(
+                {
+                    "id": case_id,
+                    "status": "DISABLED",
+                    "reason": "use_as_test is false",
+                    "checks": {},
+                }
+            )
             continue
         outputs = case["outputs"]
         if not outputs or set(outputs) - _SUPPORTED_OUTPUTS:

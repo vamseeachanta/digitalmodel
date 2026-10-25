@@ -91,11 +91,24 @@ def test_malformed_fixture_is_rejected(fixture, mutation, message):
         diagnostics.assess_fixture(fixture)
 
 
-def test_disabled_rows_are_explicit_and_order_does_not_select_cases(fixture):
-    fixture["test_cases"][0]["use_as_test"] = False
+@pytest.mark.parametrize(
+    "disabled_id", ["series60_cb060", "tanker_cb080", "form_factor_validation"]
+)
+def test_disabled_rows_are_explicit_and_order_does_not_select_cases(
+    fixture, disabled_id
+):
+    disabled = next(case for case in fixture["test_cases"] if case["id"] == disabled_id)
+    disabled["use_as_test"] = False
+    disabled["inputs"] = {}  # A disabled row must not invoke the engine.
     report = diagnostics.assess_fixture(fixture)
-    assert {row["id"] for row in report} == {
-        row["id"] for row in fixture["test_cases"] if row["use_as_test"]
+    assert {row["id"] for row in report} == {row["id"] for row in fixture["test_cases"]}
+    assert len(report) == len(fixture["test_cases"])
+    record = next(row for row in report if row["id"] == disabled_id)
+    assert record == {
+        "id": disabled_id,
+        "status": "DISABLED",
+        "reason": "use_as_test is false",
+        "checks": {},
     }
     fixture["test_cases"].reverse()
     assert diagnostics.assess_fixture(fixture) == list(reversed(report))
@@ -134,24 +147,28 @@ def test_component_accounting_includes_every_optional_term(fixture, monkeypatch)
     assert row["effective_power_w"] == 201
 
 
-def test_real_component_sum_and_common_froude(fixture):
+@pytest.mark.parametrize("speed", [None, 3.0, 10.0])
+def test_real_component_sum_and_common_froude(fixture, speed):
     """Accounting identities, not a numerical accuracy acceptance limit."""
     for case in fixture["test_cases"]:
         if "speed_ms" not in case["inputs"]:
             continue
-        row = diagnostics.diagnose(case)
-        assert row["rt_n"] == row["component_sum_n"]
+        row = diagnostics.diagnose(case, speed=speed)
+        assert row["rt_n"] == pytest.approx(row["component_sum_n"], rel=1e-12)
         assert row["ct"] == pytest.approx(
             row["viscous_ct"] + row["wave_ct"] + row["ca"]
         )
 
 
-def test_common_froude_uses_different_speeds_for_different_lengths(fixture):
+@pytest.mark.parametrize("reverse", [False, True])
+def test_common_froude_uses_different_speeds_for_different_lengths(fixture, reverse):
     """Fn=V/sqrt(gL): set Fn=1/5 as a synthetic comparison point.
 
     Rearranging the definition gives V=sqrt(gL)/5. No expectation about
     cross-hull CT ordering or empirical separation is imposed.
     """
+    if reverse:
+        fixture["test_cases"].reverse()
     rows = [
         diagnostics.diagnose(
             case, speed=(diagnostics.hc.G * case["inputs"]["lwl"]) ** 0.5 / 5
@@ -160,4 +177,6 @@ def test_common_froude_uses_different_speeds_for_different_lengths(fixture):
         if "speed_ms" in case["inputs"]
     ]
     assert all(row["froude_number"] == pytest.approx(1 / 5) for row in rows)
-    assert rows[1]["speed_ms"] > rows[0]["speed_ms"]
+    shorter = min(rows, key=lambda row: row["lwl_m"])
+    longer = max(rows, key=lambda row: row["lwl_m"])
+    assert longer["speed_ms"] > shorter["speed_ms"]

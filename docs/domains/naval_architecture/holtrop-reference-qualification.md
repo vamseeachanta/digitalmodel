@@ -11,10 +11,11 @@ and approximate targets remain unchanged pending source qualification.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-20 | Account for unqualified fixture targets and expose every resistance component so missing evidence cannot be interpreted as agreement. |
+| 2 | 2026-10-25 | Expose disabled rows, define reporting flags and portable digest semantics, and identify unresolved equation defects beside the predictions. |
 
 ## Scope and source access
 
-This implements three bounded parts of issue #2020:
+This implements three bounded parts of issue [#2020](https://github.com/vamseeachanta/digitalmodel/issues/2020):
 
 1. Load every enabled fixture row, account for each expected key, and reject
    duplicate identifiers, unknown outputs and ambiguous enable flags.
@@ -22,6 +23,10 @@ This implements three bounded parts of issue #2020:
    terms, alongside the total returned by the existing engine.
 3. Provide this reproducible example and tests for reference qualification and
    independent component accounting.
+
+The issue acceptance criteria remain open. Reporting `NOT_EVALUATED` does not
+satisfy the required assertion of `ct_approx` within `ct_tolerance_pct`, correct
+the reported coefficient defects, or provide a qualified published example.
 
 The input basis is **assumed, based on previous experience**; the fixture does
 not establish measured hull data or a published Series 60 experiment.
@@ -75,6 +80,12 @@ The method computes the wetted area and each resistance component, then divides
 by the same `qS`. The following are **current diagnostic predictions**, rounded
 for display; they are not independent expected values or qualified performance.
 
+These predictions retain two equation defects reported on
+[#2020](https://github.com/vamseeachanta/digitalmodel/issues/2020): the `c12`
+branch for `T/L > 0.05` in the form factor, and the `100*CB/L` term in the
+half angle of entrance used by wave resistance. Neither is corrected here;
+the table's RT, effective power and CT include their effects.
+
 | Output | Fine form | Full form |
 | --- | --- | --- |
 | Wetted area (m²) | 2429.2 | 9598.8 |
@@ -109,12 +120,20 @@ agreement with a published hull example.
 ## Qualification contract and limits
 
 `assess_fixture` deliberately accepts only the explicit unverified reference
-state. It returns a record for each enabled row and a check for every declared
-output key, including the tolerance metadata and both form-factor band bounds.
-The tolerance has no computed engineering value. A number that exactly matches
-its target still returns `NOT_EVALUATED`. No target is silently accepted, removed
-or marked disabled. The command includes fixture, method, diagnostic and command
-source digests, allowing the calculation to be tied to the inspected bytes.
+state. `use_as_test: true` selects a row for diagnostic reporting and returns a
+check for every declared output key, including the tolerance metadata and both
+form-factor band bounds; it does not assert engineering accuracy.
+`use_as_test: false` returns a `DISABLED` record with a reason and no calculated
+checks. The tolerance has no computed engineering value and is not an enforced
+pass/fail criterion. A number that exactly matches its target still returns
+`NOT_EVALUATED`. No target is silently accepted or removed. The fixture's
+references describe methods; its values have not been traced to those references.
+
+The command includes fixture, method, diagnostic and command source digests.
+Keys use repository-relative POSIX paths. SHA-256 is calculated on UTF-8 text
+with newlines normalized to LF, so equivalent LF and CRLF checkouts share a
+digest. The `source_sha256_basis` field records this basis; these hashes identify
+normalized text rather than the exact bytes of a checkout.
 
 Coefficient corrections, a formulation-by-formulation source map, published
 worked-example expectations and rounding-derived tolerances remain later work.

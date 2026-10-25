@@ -68,8 +68,11 @@ def build_report():
         "qualification_status": "NOT_EVALUATED",
         "reference_checks": reference_checks,
         "purpose": "issue-2020 reproduction; not engineering acceptance",
+        "source_sha256_basis": "UTF-8 text with newlines normalized to LF",
         "source_sha256": {
-            str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
+            path.relative_to(ROOT).as_posix(): hashlib.sha256(
+                path.read_text(encoding="utf-8").encode("utf-8")
+            ).hexdigest()
             for path in paths
         },
         "constants": {"rho_kg_m3": hc.RHO_SW, "nu_m2_s": hc.NU_SW, "g_m_s2": hc.G},
