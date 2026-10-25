@@ -137,14 +137,13 @@ def prepare_matrix(
 
 
 def write_matrix_provenance(spec, backend, output_dir) -> None:
-    """Retain conversion evidence beside inputs without native-solver keys."""
+    """Refresh conversion evidence, including an empty list after removal."""
     records = []
     for index, body in enumerate(spec.get_bodies()):
         for kind in ("stiffness", "damping"):
             record = prepare_matrix(body.vessel, kind, backend)
             if record is not None:
                 records.append({"body_index": index, **record})
-    if records:
-        path = Path(output_dir) / "external-matrix-provenance.json"
-        path.write_text(json.dumps(records, indent=2, allow_nan=False) + "\n",
-                        encoding="utf-8")
+    path = Path(output_dir) / "external-matrix-provenance.json"
+    path.write_text(json.dumps(records, indent=2, allow_nan=False) + "\n",
+                    encoding="utf-8", newline="\n")

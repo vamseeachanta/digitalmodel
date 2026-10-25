@@ -7,6 +7,8 @@ Synthetic entries are independently chosen. kN = 1000 N follows the SI kilo
 prefix and OrcaWave help, Model / Units (accessed 2026-10-22).
 """
 
+import json
+
 import numpy as np
 import pytest
 import yaml
@@ -39,7 +41,7 @@ def test_orcawave_explicit_origin_and_all_four_blocks(tmp_path, point, native):
                           external_stiffness_reference_point=point,
                           external_damping_reference_point=point)
     path = OrcaWaveBackend().generate_single(spec, tmp_path)
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     body = yaml.safe_load(text)["Bodies"][0]
     for kind in ("Stiffness", "Damping"):
         assert f"BodyExternal{kind}MatrixOriginType: {native}" in text
@@ -88,27 +90,61 @@ def test_native_unknown_or_missing_reference_is_refused(tmp_path, point):
     from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
 
     path = OrcaWaveBackend().generate_single(synthetic_spec(), tmp_path)
-    data = yaml.safe_load(path.read_text())
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
     key = "BodyExternalDampingMatrixOriginType"
     if point is None:
         del data["Bodies"][0][key]
     else:
         data["Bodies"][0][key] = point
-    path.write_text(yaml.safe_dump(data))
+    path.write_text(yaml.safe_dump(data), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="origin"):
         OrcaWaveInputParser().parse(path)
 
 
 def test_provenance_records_native_and_normalized_values(tmp_path):
-    import json
-
     OrcaWaveBackend().generate_single(synthetic_spec(), tmp_path)
-    records = json.loads((tmp_path / "external-matrix-provenance.json").read_text())
+    records = json.loads((tmp_path / "external-matrix-provenance.json").read_text(
+        encoding="utf-8"))
     assert len(records) == 2
     assert records[0]["canonical_reference_point"] == "centre_of_gravity"
     assert records[0]["native_values"][0][0] == 0.002
     assert records[0]["normalized_values"][0][0] == 2.0
     assert records[0]["native_units_by_block"] == ["kN/m", "kN/rad", "kN.m/m", "kN.m/rad"]
+
+
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
+@pytest.mark.parametrize("generation", ["generate_single", "generate_modular"])
+@pytest.mark.parametrize("has_previous_matrix", [False, True], ids=["fresh", "reuse"])
+def test_empty_provenance_matches_current_native_input(
+    tmp_path, backend_type, generation, has_previous_matrix,
+):
+    """Omitting an empty write leaves evidence for a removed nonzero matrix."""
+    spec = synthetic_spec(external_stiffness=None, external_stiffness_units=None,
+                          external_stiffness_reference_point=None)
+    generate = getattr(backend_type(), generation)
+    provenance = tmp_path / "external-matrix-provenance.json"
+    if has_previous_matrix:
+        generate(spec, tmp_path)
+        records = json.loads(provenance.read_text(encoding="utf-8"))
+        assert len(records) == 1
+        assert records[0]["kind"] == "damping"
+        assert np.any(records[0]["native_values"])
+
+    spec.vessel.external_damping = None
+    spec.vessel.external_damping_units = None
+    spec.vessel.external_damping_reference_point = None
+    native_path = generate(spec, tmp_path)
+    if backend_type is OrcaWaveBackend:
+        body = yaml.safe_load(native_path.read_text(encoding="utf-8"))["Bodies"][0]
+        for kind in ("Stiffness", "Damping"):
+            key = next(k for k in body if k.startswith(f"BodyExternal{kind}Matrixx,"))
+            np.testing.assert_array_equal(body[key], np.zeros((6, 6)))
+    else:
+        paths = [native_path] if native_path.is_file() else native_path.glob("*.dat")
+        cards = "\n".join(path.read_text(encoding="utf-8") for path in paths)
+        assert not any(line[6:10] == "FIDP" for line in cards.splitlines())
+    assert json.loads(provenance.read_text(encoding="utf-8")) == []
+    assert provenance.read_bytes() == b"[]\n"
 
 
 def test_same_canonical_damping_has_equivalent_native_values(tmp_path):
@@ -125,7 +161,7 @@ def test_same_canonical_damping_has_equivalent_native_values(tmp_path):
                           external_stiffness_reference_point=None,
                           external_damping=origin.tolist())
     path = OrcaWaveBackend().generate_single(spec, tmp_path)
-    body = yaml.safe_load(path.read_text())["Bodies"][0]
+    body = yaml.safe_load(path.read_text(encoding="utf-8"))["Bodies"][0]
     key = next(k for k in body if k.startswith("BodyExternalDampingMatrixx,"))
     np.testing.assert_array_equal(body[key], origin / 1000.)
     assert body["BodyExternalDampingMatrixOriginType"] == "Body origin"
@@ -140,12 +176,12 @@ def test_native_unknown_units_are_refused(tmp_path, field, value):
     from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
 
     path = OrcaWaveBackend().generate_single(synthetic_spec(), tmp_path)
-    data = yaml.safe_load(path.read_text())
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
     if value is None:
         del data[field]
     else:
         data[field] = value
-    path.write_text(yaml.safe_dump(data))
+    path.write_text(yaml.safe_dump(data), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="explicit OrcaWave SI"):
         OrcaWaveInputParser().parse(path)
 
