@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Durable workflow: lifting lug / padeye strength screening.
 
 Checks a circular padeye (lifting lug) under a sling load against three
@@ -23,6 +26,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from digitalmodel.lifting_lug.mechanics import plate_demands_mpa
 from digitalmodel.orcaflex.installation_analysis import _SKL_BY_LEG_COUNT, _SKL_REFERENCE
 
 # AISC allowable-stress factors on yield.
@@ -74,21 +78,17 @@ def lug_checks(
     if yield_strength_mpa <= 0.0:
         raise ValueError("yield_strength_mpa must be positive")
 
-    p_n = design_load_kn * 1.0e3  # kN -> N
-    t = total_thickness_mm
-
-    bearing_area = pin_diameter_mm * t  # mm^2
-    net_tension_area = 2.0 * t * ligament_mm  # mm^2, two ligaments
-    shear_area = 2.0 * t * ligament_mm  # mm^2, two tear-out planes
-
-    sigma_bearing = p_n / bearing_area  # N/mm^2 = MPa
-    sigma_tension = p_n / net_tension_area
-    tau_shear = p_n / shear_area
+    # Circular outline: width is two radii and centre-to-edge distance is R.
+    # Share nominal demands with the typed assessment; legacy limits stay here.
+    demands = plate_demands_mpa(
+        design_load_kn, total_thickness_mm, pin_diameter_mm, hole_diameter_mm,
+        2.0 * outer_radius_mm, outer_radius_mm,
+    )
 
     checks = [
-        _check("pin_bearing", sigma_bearing, BEARING_FACTOR * yield_strength_mpa),
-        _check("net_tension", sigma_tension, TENSION_FACTOR * yield_strength_mpa),
-        _check("shear_tearout", tau_shear, SHEAR_FACTOR * yield_strength_mpa),
+        _check("pin_bearing", demands.pin_bearing, BEARING_FACTOR * yield_strength_mpa),
+        _check("net_tension", demands.net_tension, TENSION_FACTOR * yield_strength_mpa),
+        _check("shear_tearout", demands.shear_tearout, SHEAR_FACTOR * yield_strength_mpa),
     ]
     return checks
 

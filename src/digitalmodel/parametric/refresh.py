@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Atlas refresh automation (#799, epic #794).
 
 An atlas is a cache of a workflow's response surface. It becomes *stale* when
@@ -97,6 +100,7 @@ SOURCE_FILES: dict[str, list[str]] = {
     ],
     "lifting_lug": [
         "src/digitalmodel/lifting_lug/workflow.py",
+        "src/digitalmodel/lifting_lug/mechanics.py",
     ],
     "esp_pump_hydraulics": [
         "src/digitalmodel/production_engineering/esp_pump_hydraulics.py",

@@ -1,0 +1,26 @@
+{
+  "basis": "Synthetic planar pressure patches for independent arithmetic checks only",
+  "units": {"pressure": "Pa", "area_vector": "m^2", "centroid": "m"},
+  "origin_m": [0, 0, 0],
+  "frame": "common-cartesian",
+  "case_id": "synthetic-instant",
+  "source": [
+    {"pressure_pa": 2, "area_vector_m2": [0, 0, 3], "centroid_m": [4, 5, 0]}
+  ],
+  "mapped": [
+    {"pressure_pa": 2, "area_vector_m2": [0, 0, 1.5], "centroid_m": [3, 5, 0]},
+    {"pressure_pa": 2, "area_vector_m2": [0, 0, 1.5], "centroid_m": [5, 5, 0]}
+  ],
+  "shifted": [
+    {"pressure_pa": 2, "area_vector_m2": [0, 0, 3], "centroid_m": [5, 5, 0]}
+  ],
+  "criteria": {
+    "force_tolerance_n": [0, 0, 0],
+    "moment_tolerance_nm": [0, 0, 0],
+    "source": "Synthetic exact arithmetic criterion; no engineering acceptance limit"
+  },
+  "sources": [
+    "NASA, Aerodynamic Forces (2025), Variation in Pressure",
+    "OpenStax, University Physics Volume 1 (2016), section 10.6, equations 10.22 and 10.24"
+  ]
+}

@@ -65,6 +65,39 @@ def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
     }
 
 
+def test_load_explorer_registers_its_fetched_sidecar() -> None:
+    entry = next(
+        entry for entry in checker.GENERATORS
+        if entry.script == "scripts/capabilities/build_wall_thickness_3d_page.py"
+    )
+
+    assert "docs/api/structural/wall-thickness-3d-explorer.json" in entry.outputs
+
+
+@pytest.mark.parametrize("fault", ["changed", "missing", "uncommitted"])
+def test_load_explorer_sidecar_drift_is_detected(tmp_path, monkeypatch, fault):
+    entry = next(
+        entry for entry in checker.GENERATORS
+        if entry.script == "scripts/capabilities/build_wall_thickness_3d_page.py"
+    )
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    relative = "docs/api/structural/wall-thickness-3d-explorer.json"
+    repo, shadow = tmp_path / "repo", tmp_path / "shadow"
+    for root in (repo, shadow):
+        for output in {*entry.outputs, relative}:
+            path = root / output
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}", encoding="utf-8")
+    assert checker.compare_outputs(repo, shadow) == []
+    if fault == "changed":
+        (shadow / relative).write_text('{"changed": true}', encoding="utf-8")
+    else:
+        root = shadow if fault == "missing" else repo
+        (root / relative).unlink()
+
+    assert [path for path, _ in checker.compare_outputs(repo, shadow)] == [relative]
+
+
 def test_shadow_copies_inputs_instead_of_linking_live_checkout(
     tmp_path: Path,
 ) -> None:
@@ -96,8 +129,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 27  # includes the published pipeline assessment and manifest
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 29  # includes the fetched load-explorer sidecar
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
