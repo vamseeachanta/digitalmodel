@@ -7,6 +7,7 @@ the named records in the cited repository YAML, independent of the inventory.
 
 import hashlib
 import json
+import os
 import runpy
 from pathlib import Path
 
@@ -302,3 +303,126 @@ def test_standalone_does_not_probe_solver(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", guard)
     runpy.run_path(str(ROOT / "src/digitalmodel/solvers/orcaflex/corpus_inventory.py"))
+
+
+@pytest.mark.parametrize("pattern", [None, "blocked/*", "blocked/model.yml"])
+def test_unreadable_directory_aborts_before_manifest(tmp_path, monkeypatch, pattern):
+    """An unreadable subtree cannot produce an apparently complete census."""
+    root = tmp_path / "inputs"
+    root.mkdir()
+    (root / "readable.yml").write_bytes(b"General: {}\n")
+    blocked = root / "blocked"
+    blocked.mkdir()
+    (blocked / "model.yml").write_bytes(b"General: {}\n")
+    original = os.scandir
+
+    def denied(path):
+        if Path(path) == blocked:
+            raise PermissionError("Directory cannot be enumerated")
+        return original(path)
+
+    monkeypatch.setattr(os, "scandir", denied)
+    out = tmp_path / "output"
+    args = [str(root), "--output", str(out)]
+    if pattern is not None:
+        args.extend(["--select", pattern])
+    with pytest.raises(OSError):
+        main(args)
+    assert not out.exists()
+
+
+def test_directory_permissions_are_not_silently_ignored(tmp_path):
+    """Exercise actual directory permissions as well as injected failures."""
+    blocked = tmp_path / "blocked"
+    blocked.mkdir()
+    (blocked / "model.yml").write_bytes(b"General: {}\n")
+    blocked.chmod(0)
+    try:
+        try:
+            with os.scandir(blocked) as entries:
+                list(entries)
+        except PermissionError:
+            with pytest.raises(PermissionError):
+                build_inventory(tmp_path)
+        else:
+            # Privileged users and some platforms can still enumerate chmod(0).
+            assert len(build_inventory(tmp_path)) == 1
+    finally:
+        blocked.chmod(0o700)
+
+
+def test_manifest_bytes_ignore_platform_text_newlines(tmp_path, monkeypatch):
+    """Emulate Windows text output; both artifacts must still contain LF."""
+    original = Path.write_text
+
+    def windows_text(path, data, *args, **kwargs):
+        return original(path, data.replace("\n", "\r\n"), *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", windows_text)
+    write_inventory([], tmp_path)
+    manifest = (tmp_path / "manifest.json").read_bytes()
+    assert b"\r" not in manifest
+    assert manifest.endswith(b"\n")
+
+
+def test_checkout_conversion_preserves_counts_but_changes_evidence(tmp_path):
+    """Source hashes describe exact evidence bytes, including line endings."""
+    source = tmp_path / "model.yml"
+    lf = b"# Program: OrcaFlex 11.6b\nLines: [{Name: sample}]\n"
+    source.write_bytes(lf)
+    before = inspect_file(source, tmp_path)
+    crlf = lf.replace(b"\n", b"\r\n")
+    source.write_bytes(crlf)
+    after = inspect_file(source, tmp_path)
+    assert before["object_counts"] == after["object_counts"] == {"Lines": 1}
+    assert before["sha256"] == hashlib.sha256(lf).hexdigest()
+    assert after["sha256"] == hashlib.sha256(crlf).hexdigest()
+    assert before["sha256"] != after["sha256"]
+
+
+def test_selection_expansion_preserves_globs_and_deduplicates(tmp_path):
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    for name in ("first.yml", "second.yaml", ".hidden.yml", "ignored.txt"):
+        (nested / name).write_bytes(b"General: {}\n")
+    patterns = ["**/*.y*", "nested/[fs]*.y*", "absent/*.yml"]
+    rows = build_inventory(tmp_path, patterns)
+    assert [row["path"] for row in rows] == [
+        "nested/.hidden.yml",
+        "nested/first.yml",
+        "nested/second.yaml",
+    ]
+
+
+def test_unselected_unreadable_directory_does_not_block_selection(
+    tmp_path, monkeypatch
+):
+    (tmp_path / "selected.yml").write_bytes(b"General: {}\n")
+    blocked = tmp_path / "blocked"
+    blocked.mkdir()
+    original = os.scandir
+
+    def denied(path):
+        if Path(path) == blocked:
+            pytest.fail("Unselected directory was traversed")
+        return original(path)
+
+    monkeypatch.setattr(os, "scandir", denied)
+    assert len(build_inventory(tmp_path, ["selected.yml"])) == 1
+
+
+def test_failed_traversal_leaves_previous_artifacts_unchanged(tmp_path, monkeypatch):
+    root = tmp_path / "inputs"
+    root.mkdir()
+    out = tmp_path / "output"
+    write_inventory([], out)
+    before = {path.name: path.read_bytes() for path in out.iterdir()}
+
+    def denied(path):
+        raise PermissionError("Directory cannot be enumerated")
+
+    with monkeypatch.context() as patch:
+        patch.setattr(os, "scandir", denied)
+        with pytest.raises(PermissionError):
+            main([str(root), "--output", str(out)])
+    assert {path.name: path.read_bytes() for path in out.iterdir()} == before

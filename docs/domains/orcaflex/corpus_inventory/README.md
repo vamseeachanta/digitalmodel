@@ -10,6 +10,7 @@ record counts and unclassified sections. It contains no model parameter values.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Add a reproducible local census before measuring extraction coverage. |
+| 1 | 2026-10-25 | Fail on directory enumeration errors and write manifest bytes with explicit LF to expose coverage gaps and avoid output newline translation. |
 
 ## Regeneration
 
@@ -31,8 +32,15 @@ inventory; omitting object names does not anonymise an arbitrary input tree.
 `inventory.jsonl` is queryable one file per line. `manifest.json` fingerprints
 the table bytes with SHA-256; each row fingerprints its source bytes. The
 regression test regenerates both artifacts and compares their exact bytes.
-No absolute root, timestamp or raw header is included, so regeneration is stable.
+Both artifacts are written as UTF-8 bytes with LF line endings. Exact regeneration
+also requires unchanged source bytes: checkout newline conversion changes source
+digests even when counts are unchanged. Narrow checkout attributes are not yet
+defined for the sampled sources and artifacts; cross-platform checkout
+reproducibility remains unresolved. No native Windows test has been run.
 The manifest covers the selected files only; it does not attest the wider corpus.
+Directory enumeration errors abort the command before either artifact is written,
+including when an explicit selection traverses an unreadable directory. Existing
+output files are left in place on failure and do not represent the failed run.
 
 ## Meaning of the fields
 

@@ -8,8 +8,10 @@ resolved model objects, schema coverage, or successful solver loading.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
 import json
+import os
 import re
 from pathlib import Path
 
@@ -193,8 +195,33 @@ def inspect_file(path: Path, root: Path) -> dict:
     return _inspect_yaml(text, row)
 
 
+def _select_paths(directory: Path, parts: tuple[str, ...]) -> set[Path]:
+    """Expand a relative glob without suppressing directory access failures."""
+    if not parts:
+        return set()
+    head, *tail = parts
+    remaining = tuple(tail)
+    paths = _select_paths(directory, remaining) if head == "**" else set()
+    # Path.glob suppresses permission errors, including for explicit selections.
+    # scandir exposes them so the caller fails before writing a coverage manifest.
+    with os.scandir(directory) as entries:
+        for entry in entries:
+            path = directory / entry.name
+            is_directory = entry.is_dir(follow_symlinks=False)
+            if head == "**":
+                if is_directory:
+                    paths.update(_select_paths(path, parts))
+            elif fnmatch.fnmatchcase(entry.name, head):
+                if remaining:
+                    if is_directory:
+                        paths.update(_select_paths(path, remaining))
+                elif entry.is_file(follow_symlinks=False) or entry.is_symlink():
+                    paths.add(path)
+    return paths
+
+
 def build_inventory(root: Path, patterns: list[str] | None = None) -> list[dict]:
-    """Walk sorted candidates; selection patterns are relative to the root."""
+    """Select sorted candidates; traversal errors abort before any output."""
     root = root.resolve(strict=True)
     patterns = patterns or ["**/*"]
     if any(
@@ -205,18 +232,8 @@ def build_inventory(root: Path, patterns: list[str] | None = None) -> list[dict]
     paths = {
         path
         for pattern in patterns
-        for path in root.glob(pattern)
-        if path.suffix.lower() in SUFFIXES and (path.is_file() or path.is_symlink())
-    }
-    # Explicit patterns may traverse a symlink directory: do not follow it.
-    paths = {
-        path
-        for path in paths
-        if not any(
-            (root / parent).is_symlink()
-            for parent in path.relative_to(root).parents
-            if parent != Path(".")
-        )
+        for path in _select_paths(root, Path(pattern).parts)
+        if path.suffix.lower() in SUFFIXES
     }
     return [inspect_file(path, root) for path in sorted(paths)]
 
@@ -234,8 +251,8 @@ def write_inventory(rows: list[dict], output: Path) -> None:
         "files": len(rows),
         "scope": "selected local files; dependencies unresolved; no solver loading",
     }
-    (output / "manifest.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    (output / "manifest.json").write_bytes(
+        (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode("utf-8")
     )
 
 
