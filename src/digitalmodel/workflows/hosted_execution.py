@@ -142,8 +142,15 @@ def _snapshot(path: str, expected: str) -> int:
         if not stat.S_ISREG(metadata.st_mode) or not metadata.st_mode & 0o111:
             # Linux man-pages 6.19 inode(7), file mode: user/group/other execute bits.
             raise ValueError("selected executable must be a regular executable file")
-        flags = os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING | getattr(os, "MFD_EXEC", 0)
-        fd = os.memfd_create("hosted-executable", flags)
+        exec_flag = getattr(os, "MFD_EXEC", 0)
+        flags = os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING | exec_flag
+        try:
+            fd = os.memfd_create("hosted-executable", flags)
+        except OSError as error:
+            if error.errno != errno.EINVAL or not exec_flag:
+                raise
+            # Older kernels may not recognize a newer runtime's MFD_EXEC flag.
+            fd = os.memfd_create("hosted-executable", flags & ~exec_flag)
         try:
             with os.fdopen(os.dup(fd), "wb") as snapshot:
                 shutil.copyfileobj(stream, snapshot)
@@ -245,7 +252,7 @@ def run_witnessed(
             check=False,
         )
     except OSError as error:
-        if error.errno == errno.EACCES:
+        if error.errno == errno.EACCES and error.filename == plan.argv[0]:
             raise NotImplementedError(
                 "executable memfd launch is denied by the runtime or kernel policy"
             ) from error

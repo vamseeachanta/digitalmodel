@@ -219,17 +219,122 @@ def test_snapshot_requests_executable_memfd_when_defined(monkeypatch, harmless_t
 
 
 @requires_sealed_launch
+def test_snapshot_retries_without_exec_flag_on_older_kernel(monkeypatch, harmless_tool):
+    path, digest = harmless_tool
+    create = os.memfd_create
+    flags_seen = []
+    monkeypatch.setattr(os, "MFD_EXEC", 0x10, raising=False)
+
+    def older_kernel(name, flags):
+        flags_seen.append(flags)
+        if flags & os.MFD_EXEC:
+            raise OSError(errno.EINVAL, "unsupported flag")
+        return create(name, flags)
+
+    monkeypatch.setattr(os, "memfd_create", older_kernel)
+    with guards.witnessed_argv([str(path)], {0: digest}) as plan:
+        assert guards.run_witnessed(plan, timeout=2).returncode == 0
+        with pytest.raises(OSError):
+            os.write(plan.fds[0], b"tamper")
+    base_flags = os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING
+    assert flags_seen == [base_flags | os.MFD_EXEC, base_flags]
+
+
+@requires_sealed_launch
+@pytest.mark.parametrize(
+    ("exec_flag", "code"),
+    [(0x10, errno.EACCES), (0x10, errno.EPERM), (0, errno.EINVAL)],
+)
+def test_snapshot_does_not_retry_other_creation_errors(
+    monkeypatch, harmless_tool, exec_flag, code
+):
+    path, digest = harmless_tool
+    flags_seen = []
+    monkeypatch.setattr(os, "MFD_EXEC", exec_flag, raising=False)
+    error = OSError(code, "creation denied")
+
+    def deny_create(name, flags):
+        flags_seen.append(flags)
+        raise error
+
+    monkeypatch.setattr(os, "memfd_create", deny_create)
+    with pytest.raises(OSError) as caught:
+        with guards.witnessed_argv([str(path)], {0: digest}):
+            pytest.fail("creation failure accepted")
+    assert caught.value is error
+    assert flags_seen == [os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING | exec_flag]
+
+
+@requires_sealed_launch
+def test_snapshot_retries_creation_only_once(monkeypatch, harmless_tool):
+    path, digest = harmless_tool
+    flags_seen = []
+    monkeypatch.setattr(os, "MFD_EXEC", 0x10, raising=False)
+    error = OSError(errno.EINVAL, "unsupported flags")
+
+    def deny_create(name, flags):
+        flags_seen.append(flags)
+        raise error
+
+    monkeypatch.setattr(os, "memfd_create", deny_create)
+    with pytest.raises(OSError) as caught:
+        with guards.witnessed_argv([str(path)], {0: digest}):
+            pytest.fail("creation failure accepted")
+    assert caught.value is error
+    base_flags = os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING
+    assert flags_seen == [base_flags | os.MFD_EXEC, base_flags]
+
+
+@requires_sealed_launch
 def test_exec_permission_denial_explains_missing_support(monkeypatch, harmless_tool):
     path, digest = harmless_tool
 
     def deny_exec(*args, **kwargs):
-        raise PermissionError(errno.EACCES, "execution denied")
+        raise PermissionError(errno.EACCES, "execution denied", kwargs["executable"])
 
     with guards.witnessed_argv([str(path)], {0: digest}) as plan:
         monkeypatch.setattr(guards.subprocess, "run", deny_exec)
         with pytest.raises(NotImplementedError, match="executable memfd") as caught:
             guards.run_witnessed(plan, timeout=2)
         assert caught.value.__cause__.errno == errno.EACCES
+
+
+@requires_sealed_launch
+@pytest.mark.parametrize("filename", [None, "another-file"])
+def test_unattributed_permission_denial_is_preserved(
+    monkeypatch, harmless_tool, filename
+):
+    path, digest = harmless_tool
+    error = PermissionError(errno.EACCES, "access denied", filename)
+
+    def deny_launch(*args, **kwargs):
+        raise error
+
+    with guards.witnessed_argv([str(path)], {0: digest}) as plan:
+        monkeypatch.setattr(guards.subprocess, "run", deny_launch)
+        with pytest.raises(PermissionError) as caught:
+            guards.run_witnessed(plan, timeout=2)
+        assert caught.value is error
+
+
+@requires_sealed_launch
+def test_nonsearchable_working_directory_preserves_permission_error(
+    tmp_path, harmless_tool
+):
+    path, digest = harmless_tool
+    target = tmp_path / "nonsearchable"
+    target.mkdir()
+    fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        target.chmod(0o600)  # Readable directory without search permission.
+        with guards.witnessed_argv([str(path)], {0: digest}) as plan:
+            with pytest.raises(PermissionError) as caught:
+                guards.run_witnessed(plan, timeout=2, cwd_fd=fd)
+            assert caught.value.errno == errno.EACCES
+            assert caught.value.filename == f"/proc/self/fd/{fd}"
+    finally:
+        target.chmod(0o700)
+        os.close(fd)
 
 
 @requires_sealed_launch

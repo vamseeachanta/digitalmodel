@@ -11,6 +11,7 @@ solution or licensed solver result is produced by these infrastructure checks.
 | --- | --- | --- |
 | Initial | 2026-10-19 | Add reusable execution contracts to address pathname replacement, scalar coercion and nested checkout boundaries. |
 | 1 | 2026-10-19 | Enforce iterator ceilings and bounded requests, clarify executable memory-file failures, and skip incompatible utility aliases in tests. |
+| 2 | 2026-10-24 | Preserve working-directory permission errors and retry memory-file creation without an unsupported executable flag for older kernels. |
 
 ## Inputs, method and guarantees
 
@@ -47,8 +48,9 @@ solution or licensed solver result is produced by these infrastructure checks.
   descriptor-bound working directory. The required positive finite timeout
   bounds the direct child only. A nonzero exit is returned, not converted into
   success. The caller is responsible for process-tree containment and bounded log
-  retention. Execution permission denial raises `NotImplementedError` with a
-  runtime or kernel policy diagnostic.
+  retention. Permission denial attributed to the executable raises
+  `NotImplementedError` with a runtime or kernel policy diagnostic. Other
+  permission errors, including working-directory access failures, are preserved.
 
 ## Worked example: resource request
 
@@ -95,8 +97,11 @@ are required. Unsupported platforms or runtimes fail closed; no weaker pathname
 fallback is provided. Only ELF executables are accepted; scripts would add an
 unwitnessed interpreter. Copying must match the approved digest, even if the
 source is modified during the copy.
-When the runtime defines `MFD_EXEC`, snapshots request it explicitly. Otherwise,
-execution remains subject to the kernel's default memory-file execution policy.
+When the runtime defines `MFD_EXEC`, snapshots request it explicitly. If creation
+returns `EINVAL`, creation is retried once without that flag for older kernels.
+Other errors and a failed retry propagate. Without `MFD_EXEC`, execution remains
+subject to the kernel's default memory-file execution policy. Both paths retain
+the same sealing and digest checks; no pathname execution fallback is used.
 
 The caller must identify **every** nested executable position and use a local
 launcher that preserves these inherited descriptors. Remote MPI, launchers that
