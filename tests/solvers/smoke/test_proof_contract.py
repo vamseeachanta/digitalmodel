@@ -146,7 +146,7 @@ def test_postflight_detects_changed_input_and_preserves_diagnostics(evidence):
     from digitalmodel.infrastructure.solver_proof import audit_proof
 
     diagnostic = evidence["root"] / "failure.log"
-    diagnostic.write_text("retained diagnostic", encoding="utf-8")
+    diagnostic.write_text("retained diagnostic", encoding="utf-8", newline="\n")
     (evidence["root"] / "source.txt").write_bytes(b"changed after launch")
     audit = audit_proof(**evidence)
     assert audit["complete"] is False
@@ -183,7 +183,7 @@ def test_missing_artifact_never_completes_proof(evidence, name):
 def test_optional_diagnostics_do_not_enlarge_required_manifests(evidence):
     from digitalmodel.infrastructure.solver_proof import audit_proof
 
-    (evidence["root"] / "optional.log").write_text("diagnostics", encoding="utf-8")
+    (evidence["root"] / "optional.log").write_text("diagnostics", encoding="utf-8", newline="\n")
     audit = audit_proof(**evidence)
     assert audit["complete"] is True
     assert set(audit["input_hashes"]) == {"source.txt"}
@@ -225,6 +225,26 @@ def test_input_and_output_aliases_must_be_disjoint(evidence):
     assert audit_proof(**evidence)["complete"] is False
 
 
+@pytest.mark.parametrize("linked_input", ["source.txt", "extra.txt"])
+def test_input_and_output_hard_links_must_be_disjoint(evidence, linked_input):
+    """Every input identity must differ from every output identity."""
+    from digitalmodel.infrastructure.solver_proof import audit_proof
+
+    root = evidence["root"]
+    (root / "extra.txt").write_bytes(b"abc")
+    evidence["required_inputs"]["extra.txt"] = ABC_SHA256
+    evidence["child"]["input_hashes"]["extra.txt"] = ABC_SHA256
+    alias = root / "zz_alias.txt"
+    alias.hardlink_to(root / linked_input)
+    assert alias.samefile(root / linked_input)
+    evidence["required_outputs"].append("zz_alias.txt")
+    evidence["child"]["output_hashes"]["zz_alias.txt"] = ABC_SHA256
+
+    audit = audit_proof(**evidence)
+    assert audit["complete"] is False
+    assert "output_unreadable_or_invalid" in audit["failures"]
+
+
 @pytest.mark.parametrize("required", [None, [], {"source.txt": None}, {1: ABC_SHA256}])
 def test_malformed_declaration_retains_failure_report(evidence, required):
     from digitalmodel.infrastructure.solver_proof import audit_proof
@@ -237,7 +257,7 @@ def test_malformed_declaration_retains_failure_report(evidence, required):
 
 def test_offline_import_does_not_require_optional_solver_api(tmp_path):
     """The helper imports when the optional API and solver namespace are absent."""
-    source = Path(__file__).resolve().parents[2] / "src"
+    source = Path(__file__).resolve().parents[3] / "src"
     code = """
 import importlib.abc
 import sys
@@ -262,7 +282,7 @@ def test_worked_example_retains_both_dispositions(tmp_path):
     """NIST abc digest; empty observed tree passes, unobserved cleanup fails."""
     import json
 
-    example = Path(__file__).resolve().parents[2] / "examples/solver_proof_completeness.py"
+    example = Path(__file__).resolve().parents[3] / "examples/solver_proof_completeness.py"
     directory = tmp_path / "example"
     answers = runpy.run_path(str(example))["run_example"](directory)
     assert answers["observed"]["complete"] is True

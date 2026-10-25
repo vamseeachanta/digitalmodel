@@ -7,16 +7,19 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import runpy
+import shlex
 import signal
 import subprocess
 from types import SimpleNamespace
 from typing import Optional
 
 import pytest
+import yaml
 
 from digitalmodel.infrastructure.solver_proof import capture_inputs
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 AUDITED_REVISION = "e92a4e7ad2a7766f7c040ce4795b431d9da608fa"
 
 
@@ -81,7 +84,7 @@ def test_existing_detached_poll_cannot_establish_cleanup_when_signalling_is_deni
                      _process_alive=lambda pid: True, _last_iteration=lambda path: None)
     objects = _source_objects(source, {"PollResult", "poll_detached_run", "_terminate_group"}, namespace)
     record = {"pid": 1, "wallclock_budget_hours": 1, "started_epoch": 0, "log_file": "absent.log"}
-    (tmp_path / "detached_run.json").write_text(json.dumps(record), encoding="utf-8")
+    (tmp_path / "detached_run.json").write_text(json.dumps(record), encoding="utf-8", newline="\n")
     result = objects["poll_detached_run"](tmp_path)
     assert attempts == [signal.SIGTERM]
     assert result.terminated is True and result.running is False
@@ -90,7 +93,7 @@ def test_existing_detached_poll_cannot_establish_cleanup_when_signalling_is_deni
 
 def test_inventory_binds_every_candidate_to_the_audited_revision():
     """Each recorded digest is recomputed from Git bytes, not the inventory writer."""
-    inventory = json.loads((ROOT / "docs/reports/solver-proof-inventory.json").read_text())
+    inventory = json.loads((ROOT / "docs/reports/solver-proof-inventory.json").read_text(encoding="utf-8"))
     assert inventory["audited_revision"] == AUDITED_REVISION
     records = inventory["files"]
     assert records and len(records) == len({record["path"] for record in records})
@@ -106,3 +109,20 @@ def test_audit_artifacts_are_eligible_for_tracking(name):
     ignored = subprocess.run(["git", "check-ignore", "-q", "--", f"docs/reports/{name}"],
                              cwd=ROOT, env=env, check=False)
     assert ignored.returncode == 1
+
+
+@pytest.mark.parametrize("filename", ["test_proof_contract.py", "test_proof_inventory.py"])
+def test_proof_suites_are_collected_by_solver_smoke(filename):
+    """Both proof suites must be owned, selected and executed by the CI shard."""
+    detector = runpy.run_path(str(ROOT / "scripts/ci/detect_touched_domains.py"))
+    domains = detector["parse_domains"](ROOT / "tests/DOMAINS.md")
+    name = (Path(__file__).parent / filename).relative_to(ROOT).as_posix()
+    matches = detector["path_matches_root"]
+    assert [domain.name for domain in domains
+            if any(matches(name, root) for root in domain.roots)] == ["solver-smoke"]
+    assert [domain.name for domain in detector["touched_domains"]([name], domains)] == ["solver-smoke"]
+    gates = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8"))
+    gate = gates["gates"]["tests-solver-smoke"]
+    assert any(matches(name, root) for root in gate["test_roots"])
+    assert any(matches(name, token) for token in shlex.split(gate["command"])
+               if token.startswith("tests/"))

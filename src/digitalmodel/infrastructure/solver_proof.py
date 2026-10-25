@@ -48,13 +48,13 @@ def _read_digest(root, name):
         if any(getattr(info, key) != getattr(record, key)
                for key in keys for record in (before, after, final)):
             raise ValueError("input_changed_during_read")
-        return digest
+        return digest, (before.st_dev, before.st_ino)
     except OSError as error:
         raise ValueError("input_unreadable") from error
 
 
-def capture_inputs(root, required):
-    """Read every mandatory input and compare its independently pinned digest."""
+def _capture_inputs(root, required):
+    """Retain the identity from the same stable read as each mandatory digest."""
     if not isinstance(required, Mapping):
         raise ValueError("invalid_declaration")
     required = dict(required)
@@ -63,12 +63,18 @@ def capture_inputs(root, required):
     if any(not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value)
            for value in required.values()):
         raise ValueError("invalid_declaration")
-    observed = {}
+    observed, identities = {}, set()
     for name in sorted(names):
-        observed[name] = _read_digest(root, name)
+        observed[name], identity = _read_digest(root, name)
+        identities.add(identity)
         if observed[name] != required[name]:
             raise ValueError("input_substituted")
-    return observed
+    return observed, identities
+
+
+def capture_inputs(root, required):
+    """Read every mandatory input and compare its independently pinned digest."""
+    return _capture_inputs(root, required)[0]
 
 
 def _cleanup_confirmed(observation):
@@ -91,9 +97,9 @@ def audit_proof(root, required_inputs, required_outputs, child, cleanup):
     establish numerical correctness, physical settings or engineering fitness.
     Optional diagnostics are outside both mandatory hash manifests.
     """
-    failures, inputs, outputs = [], {}, {}
+    failures, inputs, outputs, input_identities = [], {}, {}, set()
     try:
-        inputs = capture_inputs(root, required_inputs)
+        inputs, input_identities = _capture_inputs(root, required_inputs)
     except ValueError as error:
         failures.append(str(error))
     if not isinstance(child, Mapping):
@@ -106,7 +112,11 @@ def audit_proof(root, required_inputs, required_outputs, child, cleanup):
         names = _names(required_outputs)
         if {name.casefold() for name in names} & {name.casefold() for name in inputs}:
             raise ValueError("input_output_overlap")
-        outputs = {name: _read_digest(root, name) for name in sorted(names)}
+        for name in sorted(names):
+            digest, identity = _read_digest(root, name)
+            if identity in input_identities:
+                raise ValueError("input_output_overlap")
+            outputs[name] = digest
     except (ValueError, TypeError):
         failures.append("output_unreadable_or_invalid")
     if not outputs or child.get("output_hashes") != outputs:
