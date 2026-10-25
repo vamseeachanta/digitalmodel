@@ -70,6 +70,11 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/generate_materials_report.py",
+        ("docs/reports/modules/materials/materials-module-report.html",
+         "docs/reports/modules/materials/changes.json"),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
