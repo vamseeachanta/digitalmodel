@@ -100,11 +100,13 @@
     changeList.append(paragraph);
   });
 
-  let notes = [], saved = true;
+  let notes = [], saved = true, generation = 0;
+  // "00" identifies the comments-file schema, independently of report revision.
   const status = document.getElementById("comments-status");
   const text = document.getElementById("comment-text");
   const section = document.getElementById("comment-section");
   const allowedSections = new Set(Array.from(section.options, option => option.value));
+  text.addEventListener("input", () => { generation += 1; });
   function renderNotes() {
     const list = document.getElementById("comments-list");
     list.replaceChildren();
@@ -123,6 +125,7 @@
       return;
     }
     notes.push({section: section.value, text: text.value.trim()});
+    generation += 1;
     text.value = "";
     saved = false;
     renderNotes();
@@ -133,6 +136,7 @@
       status.textContent = "Add the pending note before saving comments.";
       return;
     }
+    const exportGeneration = generation;
     const content = JSON.stringify({document: changes.document, revision: "00", notes}, null, 2) + "\n";
     const name = "seismic-analysis.comments.json";
     try {
@@ -152,7 +156,12 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         status.textContent = "A comments download was requested. Keep the downloaded file beside the report.";
       }
-      saved = true;
+      if (generation === exportGeneration) {
+        saved = true;
+      } else {
+        saved = false;
+        status.textContent = "Comments changed during export. Save the current comments to retain those edits.";
+      }
     } catch (error) {
       status.textContent = error.name === "AbortError"
         ? "Saving was cancelled. Comments remain unsaved."
@@ -165,11 +174,14 @@
       if (!file) return;
       if (!saved || text.value.trim()) throw new Error("pending notes");
       if (file.size > 1000000) throw new Error("size");
+      const loadGeneration = generation;
       const value = JSON.parse(await file.text());
+      if (generation !== loadGeneration || !saved || text.value.trim()) throw new Error("intervening edits");
       if (value.document !== changes.document || value.revision !== "00" || !Array.isArray(value.notes)
           || value.notes.length > 1000 || !value.notes.every(note => note && allowedSections.has(note.section)
           && typeof note.text === "string" && note.text.length <= 10000)) throw new Error("format");
       notes = value.notes.map(note => ({section: note.section, text: note.text}));
+      generation += 1;
       saved = true;
       renderNotes();
       status.textContent = "Saved comments were loaded.";

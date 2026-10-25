@@ -27,7 +27,7 @@ summary{cursor:pointer;color:var(--accent)}.comments-list{white-space:pre-wrap;o
 <div class="kicker">Seismic engineering</div>
 <h1>Seismic acceleration-record preprocessing analysis</h1>
 <p class="sub">Revision {{ revisions[-1].revision }} · {{ revisions[-1].date }}</p>
-<p>Draft for review</p>
+<p>Draft for maintainer review</p>
 </header>
 <nav aria-label="Contents"><p>
 {% for name in sections %}<a href="#section-{{ loop.index }}">{{ loop.index }}. {{ name }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
@@ -47,7 +47,8 @@ summary{cursor:pointer;color:var(--accent)}.comments-list{white-space:pre-wrap;o
 <h3>Revision history</h3>
 <table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
 <tbody><tr><td>00</td><td>2026-10-21</td><td>The public acceleration example, calculation basis and limits of use are issued to define the available preprocessing capability.</td></tr>
-<tr><td>01</td><td>2026-10-22</td><td>Portable rebuilds and informational dependency versions are introduced to avoid unrelated lockfile drift; computed baseline evidence and review wording are clarified.</td></tr></tbody>
+<tr><td>01</td><td>2026-10-22</td><td>Portable rebuilds and informational dependency versions are introduced to avoid unrelated lockfile drift; computed baseline evidence and review wording are clarified.</td></tr>
+{% for revision in revisions[2:] %}<tr><td>{{ revision.revision }}</td><td>{{ revision.date }}</td><td>{{ revision.changes|join(' ') }}</td></tr>{% endfor %}</tbody>
 <caption>Revision history. Issued revisions of the acceleration-record preprocessing analysis.</caption></table>
 </div>
 
@@ -190,7 +191,7 @@ result = compute_kinematics(
 print(result.summary)
 print(result.processing_chain)
 print(result.timeseries)</pre></details>
-<p id="ref-rebuild">Reproduction uses <code>PYTHONPATH=src uv run python scripts/reporting/build_seismic_module_report.py</code>. A disposable destination is accepted with <code>--output-dir</code>. Report checks are in <code>tests/seismic/test_module_report.py</code>. The Python environment requires the project dependencies, with the package source available. The installed numerical and template-library versions are recorded in the appendix as informational metadata; a difference from the repository lock does not block generation. Rebuild checks disregard only these recorded version values when comparing issued content.</p>
+<p id="ref-rebuild">Reproduction uses <code>PYTHONPATH=src uv run python scripts/reporting/build_seismic_module_report.py</code>. A disposable destination is accepted with <code>--output-dir</code>. Report checks are in <code>tests/seismic/test_module_report.py</code>. The Python environment requires the project dependencies, with the package source available. The report test suite additionally requires Node.js for its offline note-persistence checks; an absent interpreter is reported as a missing prerequisite rather than a skipped check. The installed numerical and template-library versions are recorded in the appendix as informational metadata; a difference from the repository lock does not block generation. Repeated builds in one runtime are required to match byte for byte. Across runtimes, processed acceleration, velocity and displacement are compared with absolute limits of 1 × 10<sup>−7</sup> m/s², 1 × 10<sup>−7</sup> m/s and 1 × 10<sup>−7</sup> m; filter gain is compared with an absolute limit of 1 × 10<sup>−8</sup>. Baseline mean and corrected acceleration use an absolute roundoff budget of 1 × 10<sup>−12</sup> m/s²; the unfiltered end-velocity diagnostic uses 1 × 10<sup>−10</sup> m/s. These smaller budgets cover binary64 reductions over the baseline window and record. Relative tolerance is zero. The motion budget is one thousandth of the scalar tables' smallest fixed-point motion increment; the gain budget is one hundred-thousandth of the chart's increment in its fixed-point display range. These absolute sample budgets can span several display increments in scientific-notation readouts near zero. They are software regression limits, not a bound on transfer-function sensitivity, physical accuracy or design acceptance. Agreement between the two tested numerical-library combinations does not establish these bounds for other operating systems, processors or library builds. Source digests, original inputs, discrete processing settings and other content remain exact; displayed results remain bound to their own embedded values. Only dependency-version metadata is disregarded.</p>
 <details id="ref-checks"><summary>Existing numerical-check inventory</summary>
 <table><thead><tr><th scope="col">Evidence locator</th><th scope="col">Check count</th><th scope="col">Scope</th></tr></thead><tbody>
 {% for row in inventory %}<tr><td><code>{{ row.path }}</code></td><td>{{ row.count }}</td><td>{{ row.tests|join('; ') }}</td></tr>{% endfor %}

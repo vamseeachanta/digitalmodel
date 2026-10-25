@@ -20,6 +20,7 @@ import numpy as np
 import yaml
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from markupsafe import Markup
+from scipy.integrate import trapezoid
 
 from digitalmodel.seismic import read_ascii_accelerogram
 from digitalmodel.seismic.readers.ascii import G0_M_S2
@@ -104,7 +105,7 @@ def numeric_evidence() -> dict:
         peak_displacement_m=float(result.timeseries.displacement_m.abs().max()),
         end_velocity_m_s=float(result.timeseries.velocity_m_s.iloc[-1]),
         end_displacement_m=float(result.timeseries.displacement_m.iloc[-1]),
-        unfiltered_end_velocity_m_s=float(np.trapz(
+        unfiltered_end_velocity_m_s=float(trapezoid(
             result.timeseries.corrected_acceleration_m_s2, result.timeseries.time_s
         )),
     )
@@ -170,6 +171,10 @@ def build(output_dir: Path = ROOT / OUTPUT) -> None:
             "Text digests, source locators and output line endings are made portable for rebuilds.",
             "Installed dependency versions are retained as metadata without lockfile gating.",
             "The initial-window mean and unfiltered end velocity are stated as baseline evidence.",
+        ]}, {"revision": "02", "date": "2026-10-24", "changes": [
+            "Cross-runtime numerical comparison budgets are separated from exact same-runtime rebuilds.",
+            "Review notes added during export remain unsaved, and intervening edits prevent import replacement.",
+            "The current revision is added to the visible history, and integration remains available with newer numerical libraries.",
         ]}],
     }
     environment = Environment(

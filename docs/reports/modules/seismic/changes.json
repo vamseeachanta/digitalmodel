@@ -18,6 +18,15 @@
         "Installed dependency versions are retained as metadata without lockfile gating.",
         "The initial-window mean and unfiltered end velocity are stated as baseline evidence."
       ]
+    },
+    {
+      "revision": "02",
+      "date": "2026-10-24",
+      "changes": [
+        "Cross-runtime numerical comparison budgets are separated from exact same-runtime rebuilds.",
+        "Review notes added during export remain unsaved, and intervening edits prevent import replacement.",
+        "The current revision is added to the visible history, and integration remains available with newer numerical libraries."
+      ]
     }
   ]
 }

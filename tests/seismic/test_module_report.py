@@ -1,17 +1,20 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Rebuild and independently check the public seismic module report."""
+"""Check the seismic report; Node.js is required for note persistence tests."""
 
 import importlib.util
 import hashlib
 import json
 import re
+import shutil
+import subprocess
 from pathlib import Path, PureWindowsPath
 
 import numpy as np
 import pytest
 import yaml
 from bs4 import BeautifulSoup
+from scipy.integrate import trapezoid
 
 from digitalmodel.seismic import AccelerogramRecord, read_ascii_accelerogram
 from digitalmodel.seismic.response_spectrum.calculations import compute_kinematics
@@ -22,6 +25,23 @@ from digitalmodel.signal_processing.signal_analysis.filters.frequency import Fre
 ROOT = Path(__file__).resolve().parents[2]
 REPORT_DIR = ROOT / "docs/reports/modules/seismic"
 EXAMPLE = ROOT / "examples/workflows/response-spectrum"
+# Motion budgets use 0.1% of the scalar tables' smallest fixed-point motion step
+# (0.0001 m or m/s), also applied to acceleration in m/s². Gain is dimensionless;
+# its 1e-8 budget uses 0.001% of the chart's 0.001 step in its fixed-point range.
+# Absolute sample budgets can span several scientific-notation readout steps.
+# These display-derived limits are independent of observed platform differences
+# and do not establish physical motion accuracy or design acceptance.
+MOTION_ATOL = 1e-7
+GAIN_ATOL = 1e-8
+# Roundoff budgets for baseline subtraction and the unfiltered integration
+# diagnostic are much smaller than their displayed steps. They cover binary64
+# reductions over the 20-sample baseline and 1560-sample record, respectively.
+BASELINE_ATOL = 1e-12
+UNFILTERED_VELOCITY_ATOL = 1e-10
+PROCESSED_METRICS = (
+    "filtered_peak_m_s2", "peak_velocity_m_s", "peak_displacement_m",
+    "end_velocity_m_s", "end_displacement_m",
+)
 
 
 def builder():
@@ -45,30 +65,277 @@ def expected_result():
 
 
 def report_content(html):
-    """Compare issued content while retaining informational version differences."""
+    """Check displayed binding before separating numeric and fixed content."""
     soup = BeautifulSoup(html, "html.parser")
     evidence = soup.find("script", id="seismic-evidence")
     payload = json.loads(evidence.string)
     payload.pop("versions")
-    evidence.string = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    assert payload["processing_chain"][0]["offset_m_s2"] == payload["metrics"]["baseline_offset_m_s2"]
+    for node in soup.select("[data-metric]"):
+        name = node["data-metric"]
+        shown = f"{payload['metrics'][name]:.{int(node['data-digits'])}f}".replace("-", "−")
+        assert node.get_text() == shown, "Displayed number is not bound to its evidence"
+        if name in (*PROCESSED_METRICS, "baseline_offset_m_s2", "unfiltered_end_velocity_m_s"):
+            node.string = ""
     for cell in soup.select("#dependency-versions tbody tr td:nth-child(2)"):
         cell.string = ""
+    return soup, payload
+
+
+def assert_report_agreement(actual, expected):
+    """Allow bounded processed results; retain exact sources, inputs and markup."""
+    left, right = report_content(actual), report_content(expected)
+    fields = [("metrics", name, MOTION_ATOL) for name in PROCESSED_METRICS]
+    fields += [("timeseries", name, MOTION_ATOL) for name in (
+        "filtered_acceleration_m_s2", "velocity_m_s", "displacement_m",
+    )]
+    fields.append(("filter_response", "gain", GAIN_ATOL))
+    fields += [("metrics", "baseline_offset_m_s2", BASELINE_ATOL),
+               ("timeseries", "corrected_acceleration_m_s2", BASELINE_ATOL),
+               ("metrics", "unfiltered_end_velocity_m_s", UNFILTERED_VELOCITY_ATOL)]
+    for group, name, tolerance in fields:
+        a, b = (np.asarray(payload[group].pop(name)) for _, payload in (left, right))
+        assert a.shape == b.shape, f"Changed shape: {group}.{name}"
+        assert np.isfinite(a).all() and np.isfinite(b).all(), f"Non-finite: {group}.{name}"
+        np.testing.assert_allclose(a, b, rtol=0, atol=tolerance, equal_nan=False,
+                                   err_msg=f"Cross-runtime regression budget: {group}.{name}")
+    for soup, payload in (left, right):
+        payload["processing_chain"][0].pop("offset_m_s2")
+        soup.find(id="seismic-evidence").string = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    if str(left[0]) != str(right[0]):
+        raise AssertionError("Issued metadata or content changed; rebuild with "
+                             "PYTHONPATH=src uv run python scripts/reporting/build_seismic_module_report.py")
+
+
+def changed_report(group, key, delta):
+    soup = BeautifulSoup((REPORT_DIR / "seismic-analysis.html").read_text(encoding="utf-8"), "html.parser")
+    script = soup.find(id="seismic-evidence")
+    payload = json.loads(script.string)
+    value = payload[group][key]
+    if isinstance(value, list):
+        value[int(np.argmax(np.abs(value)))] += delta
+    else:
+        payload[group][key] += delta
+    if group == "metrics" and key == "baseline_offset_m_s2":
+        payload["processing_chain"][0]["offset_m_s2"] = payload[group][key]
+    script.string = json.dumps(payload, ensure_ascii=False)
+    for node in soup.select("[data-metric]"):
+        value = payload["metrics"][node["data-metric"]]
+        node.string = f"{value:.{int(node['data-digits'])}f}".replace("-", "−")
     return str(soup)
 
 
-def test_rebuild_matches_issued_content_except_dependency_versions(tmp_path, monkeypatch):
+@pytest.mark.parametrize("group,key,delta", [
+    *[("metrics", name, 5e-8) for name in PROCESSED_METRICS],
+    ("timeseries", "displacement_m", 5e-8),
+    ("timeseries", "velocity_m_s", 5e-8),
+    ("timeseries", "filtered_acceleration_m_s2", 5e-8),
+    ("filter_response", "gain", 5e-9),
+    ("metrics", "baseline_offset_m_s2", 5e-13),
+    ("timeseries", "corrected_acceleration_m_s2", 5e-13),
+    ("metrics", "unfiltered_end_velocity_m_s", 5e-11),
+])
+def test_issued_comparison_allows_bounded_numerical_drift(group, key, delta):
+    assert_report_agreement(changed_report(group, key, delta),
+                            (REPORT_DIR / "seismic-analysis.html").read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("group,key,delta", [
+    *[("metrics", name, 1.1e-7) for name in PROCESSED_METRICS],
+    ("timeseries", "displacement_m", 1.1e-7),
+    ("timeseries", "velocity_m_s", 1.1e-7),
+    ("timeseries", "filtered_acceleration_m_s2", 1.1e-7),
+    ("filter_response", "gain", 1.1e-8),
+    ("timeseries", "acceleration_m_s2", 1e-12),
+    ("timeseries", "corrected_acceleration_m_s2", 2e-12),
+    ("metrics", "baseline_offset_m_s2", 2e-12),
+    ("metrics", "unfiltered_end_velocity_m_s", 2e-10),
+    ("timeseries", "time_s", 1e-12),
+    ("timeseries", "displacement_m", float("nan")),
+    ("timeseries", "displacement_m", float("inf")),
+    ("metrics", "end_displacement_m", float("nan")),
+    ("metrics", "end_displacement_m", float("inf")),
+])
+def test_issued_comparison_rejects_numerical_changes_outside_its_budget(group, key, delta):
+    with pytest.raises(AssertionError):
+        assert_report_agreement(changed_report(group, key, delta),
+                                (REPORT_DIR / "seismic-analysis.html").read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("fault", ["source", "processing", "markup", "display"])
+def test_issued_comparison_retains_exact_metadata_and_display_binding(fault):
+    original = (REPORT_DIR / "seismic-analysis.html").read_text(encoding="utf-8")
+    soup = BeautifulSoup(original, "html.parser")
+    script = soup.find(id="seismic-evidence")
+    payload = json.loads(script.string)
+    if fault == "source":
+        payload["sources"][0]["sha256"] = "0" * 64
+    elif fault == "processing":
+        payload["processing_chain"][1]["order"] += 1
+    elif fault == "display":
+        soup.select_one('[data-metric="end_displacement_m"]').string = "100.0000"
+    else:
+        soup.h1.string = "Changed analysis"
+    script.string = json.dumps(payload, ensure_ascii=False)
+    with pytest.raises(AssertionError):
+        assert_report_agreement(str(soup), original)
+
+
+NOTE_PERSISTENCE_PROBE = r"""
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const [script, phase, edit] = process.argv.slice(1);
+const elements = new Map();
+function element(id) {
+  if (!elements.has(id)) elements.set(id, {
+    value: '', textContent: '', children: [], options: [{value: 'section-1'}], listeners: {},
+    addEventListener(type, handler) { this.listeners[type] = handler; },
+    append(...nodes) { this.children.push(...nodes); },
+    replaceChildren() { this.children = []; }
+  });
+  return elements.get(id);
+}
+element('seismic-evidence').textContent = '{}';
+element('seismic-changes').textContent = JSON.stringify({document: 'Example analysis', revisions: []});
+element('comment-section').value = 'section-1';
+const window = {listeners: {}, addEventListener(type, handler) { this.listeners[type] = handler; }};
+const document = {
+  getElementById: element, querySelectorAll() { return []; },
+  querySelector() { return {textContent: '1. Summary'}; },
+  createElement() { return element(Symbol()); }, createTextNode(text) { return {textContent: text}; }
+};
+let release, entered, exported, paused = false, pauseEnabled = true;
+const blocked = new Promise(resolve => { release = resolve; });
+const reached = new Promise(resolve => { entered = resolve; });
+async function pause(stage) {
+  if (pauseEnabled && stage === phase && !paused) { paused = true; entered(); await blocked; }
+}
+window.showSaveFilePicker = async () => {
+  await pause('picker');
+  return {createWritable: async () => {
+    await pause('writable');
+    return {
+      write: async content => { exported = JSON.parse(content); await pause('write'); },
+      close: async () => { await pause('close'); }
+    };
+  }};
+};
+vm.runInNewContext(fs.readFileSync(script, 'utf8'), {document, window});
+function addNote(value) {
+  element('comment-text').value = value;
+  element('comment-text').listeners.input?.();
+  element('add-comment').listeners.click();
+}
+function warns() {
+  let warned = false;
+  window.listeners.beforeunload({preventDefault() { warned = true; }});
+  return warned;
+}
+async function mutate() {
+  if (edit === 'add' || edit === 'add_save') addNote('Intervening note');
+  if (edit === 'add_save') await element('save-comments').listeners.click();
+  if (edit === 'draft' || edit === 'draft_clear') {
+    element('comment-text').value = 'Pending draft';
+    element('comment-text').listeners.input?.();
+  }
+  if (edit === 'draft_clear') {
+    element('comment-text').value = '';
+    element('comment-text').listeners.input?.();
+  }
+  if (edit === 'load') {
+    const content = JSON.stringify({document: 'Example analysis', revision: '00',
+      notes: [{section: 'section-1', text: 'Imported note'}]});
+    await element('load-comments').listeners.change({target: {value: 'selected',
+      files: [{size: content.length, text: async () => content}]}});
+  }
+}
+(async () => {
+  if (phase === 'load') {
+    const content = JSON.stringify({document: 'Example analysis', revision: '00',
+      notes: [{section: 'section-1', text: 'Imported note'}]});
+    const target = {value: 'selected', files: [{size: content.length,
+      text: async () => { await pause('load'); return content; }}]};
+    const loading = element('load-comments').listeners.change({target});
+    await reached;
+    await mutate();
+    release();
+    await loading;
+    assert.equal(target.value, '');
+    if (edit === 'none') {
+      assert.equal(element('comments-list').children.length, 1);
+      assert.match(element('comments-list').children[0].children[1].textContent, /Imported note/);
+      assert.equal(warns(), false);
+    } else {
+      const count = edit.startsWith('add') ? 1 : 0;
+      assert.equal(element('comments-list').children.length, count, 'Load replaced intervening edits');
+      if (count) assert.match(element('comments-list').children[0].children[1].textContent, /Intervening note/);
+      assert.match(element('comments-status').textContent, /not loaded/);
+      if (edit === 'add' || edit === 'draft') assert.equal(warns(), true);
+    }
+  } else {
+    addNote('First note');
+    if (edit === 'load') {
+      pauseEnabled = false;
+      await element('save-comments').listeners.click();
+      pauseEnabled = true;
+    }
+    const saving = element('save-comments').listeners.click();
+    await reached;
+    await mutate();
+    release();
+    await saving;
+    if (edit !== 'add_save') assert.equal(exported.notes.length, 1, 'Export must retain its initial snapshot');
+    assert.equal(element('comments-list').children.length, edit.startsWith('add') ? 2 : 1);
+    if (edit === 'load') assert.match(element('comments-list').children[0].children[1].textContent, /Imported note/);
+    assert.equal(warns(), edit !== 'none', 'Intervening edits must remain unsaved');
+    if (edit.startsWith('add')) {
+      assert.match(element('comments-status').textContent, /changed|unsaved/);
+      await element('save-comments').listeners.click();
+      assert.equal(exported.notes.length, 2);
+      assert.equal(warns(), false, 'A subsequent complete save must clear the warning');
+    }
+  }
+})().catch(error => { console.error(error.message); process.exitCode = 1; });
+"""
+
+
+@pytest.mark.parametrize("phase,edit", [
+    *[(phase, edit) for phase in ("picker", "writable", "write", "close")
+      for edit in ("add", "draft", "add_save", "load")],
+    ("write", "none"),
+    *[("load", edit) for edit in ("add", "draft", "add_save", "draft_clear", "none")],
+])
+def test_note_persistence_preserves_intervening_edits(phase, edit):
+    node = shutil.which("node")
+    assert node, "Node.js is required for the offline note persistence regression"
+    result = subprocess.run(
+        [node, "-e", NOTE_PERSISTENCE_PROBE,
+         (ROOT / "scripts/reporting/templates/seismic_module_interactions.js").as_posix(), phase, edit],
+        capture_output=True, text=True, encoding="utf-8", check=False, timeout=15,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_rebuild_matches_issued_content_with_bounded_numerical_drift(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     builder().build(tmp_path)
     for name in ("seismic-analysis.html", "changes.json"):
         first = (tmp_path / name).read_bytes()
         if name.endswith(".html"):
-            assert report_content(first.decode("utf-8")) == report_content(
+            assert_report_agreement(first.decode("utf-8"),
                 (REPORT_DIR / name).read_text(encoding="utf-8")
             )
         else:
             assert first == (REPORT_DIR / name).read_bytes()
-        builder().build(tmp_path)
-        assert first == (tmp_path / name).read_bytes()
+
+
+def test_repeated_builds_are_byte_identical_in_one_runtime(tmp_path):
+    builder().build(tmp_path)
+    first = {name: (tmp_path / name).read_bytes() for name in ("seismic-analysis.html", "changes.json")}
+    builder().build(tmp_path)
+    for name, content in first.items():
+        assert content == (tmp_path / name).read_bytes()
 
 
 def test_every_worked_value_and_complete_plotted_array_matches_module(tmp_path):
@@ -91,10 +358,12 @@ def test_every_worked_value_and_complete_plotted_array_matches_module(tmp_path):
         peak_displacement_m=float(frame.displacement_m.abs().max()),
         end_velocity_m_s=float(frame.velocity_m_s.iloc[-1]),
         end_displacement_m=float(frame.displacement_m.iloc[-1]),
-        unfiltered_end_velocity_m_s=float(np.trapz(frame.corrected_acceleration_m_s2, frame.time_s)),
+        unfiltered_end_velocity_m_s=float(trapezoid(frame.corrected_acceleration_m_s2, frame.time_s)),
     )
     assert payload["metrics"] == expected
-    assert payload["metrics"]["pga_m_s2"] == pytest.approx(0.31882 * 9.80665, abs=0.000005)
+    # Hand anchors: 0.31882 g * 9.80665 m/s²/g = 3.12656 m/s² (rounded);
+    # 1/(2 * 0.02 s) = 25 Hz; 0.99 * 25 Hz = 24.75 Hz.
+    assert payload["metrics"]["pga_m_s2"] == pytest.approx(3.12656, abs=0.000005)
     assert payload["metrics"]["nyquist_hz"] == 25.0
     assert payload["metrics"]["high_hz"] == 24.75
     assert payload["processing_chain"] == result.processing_chain
@@ -141,6 +410,18 @@ def test_report_structure_sources_and_self_contained_controls(tmp_path):
     assert soup.select_one("header .sub").get_text() == (
         f"Revision {current['revision']} · {current['date']}"
     )
+    rows = soup.select("#revision-history tbody tr")
+    assert [row.select("td")[0].get_text() for row in rows] == [
+        revision["revision"] for revision in changes["revisions"]
+    ]
+    assert [row.select("td")[1].get_text() for row in rows] == [
+        revision["date"] for revision in changes["revisions"]
+    ]
+
+
+def test_report_does_not_require_removed_numpy_trapz(monkeypatch, tmp_path):
+    monkeypatch.delattr(np, "trapz", raising=False)
+    builder().build(tmp_path)
 
 
 def test_record_digest_mismatch_blocks_the_report(monkeypatch, tmp_path):
@@ -163,7 +444,7 @@ def test_dependency_versions_are_informational(monkeypatch, tmp_path):
     evidence = json.loads(BeautifulSoup(html, "html.parser").find(id="seismic-evidence").string)
     assert evidence["versions"]["scipy"] == "unlocked"
     assert "uv.lock" not in {source["path"] for source in evidence["sources"]}
-    assert report_content(html) == report_content(
+    assert_report_agreement(html,
         (REPORT_DIR / "seismic-analysis.html").read_text(encoding="utf-8")
     )
 
@@ -235,7 +516,10 @@ def test_filter_plot_and_source_digests_match_the_documented_calculation(tmp_pat
     assert evidence["metrics"]["high_hz"] < evidence["metrics"]["nyquist_hz"]
     for source in evidence["sources"]:
         content = (ROOT / source["path"]).read_bytes().replace(b"\r\n", b"\n")
-        assert hashlib.sha256(content).hexdigest() == source["sha256"]
+        assert hashlib.sha256(content).hexdigest() == source["sha256"], (
+            "Source digest changed; rebuild with PYTHONPATH=src uv run python "
+            "scripts/reporting/build_seismic_module_report.py"
+        )
 
 
 def test_house_styles_and_report_text(tmp_path):
@@ -250,7 +534,7 @@ def test_house_styles_and_report_text(tmp_path):
     for element in soup.select("style, script"):
         element.decompose()
     visible = soup.get_text(" ", strip=True)
-    assert "Draft for review" in visible
+    assert "Draft for maintainer review" in visible
     assert "maintains this derived analysis" in visible
     assert not re.search(r"\b(?:owner|agent|session|could|should|would|certified|compliant)\b", visible, re.I)
     assert not re.search(r"\b(?:we|our|my|I)\b", visible)
@@ -259,8 +543,8 @@ def test_house_styles_and_report_text(tmp_path):
 def test_documented_router_agrees_with_direct_call_without_engine(tmp_path):
     result, _ = expected_result()
     cfg = yaml.safe_load((EXAMPLE / "input.yml").read_text(encoding="utf-8"))
-    cfg["_config_dir_path"] = str(EXAMPLE)
-    cfg["response_spectrum"]["output_dir"] = str(tmp_path)
+    cfg["_config_dir_path"] = EXAMPLE.as_posix()
+    cfg["response_spectrum"]["output_dir"] = tmp_path.as_posix()
     payload = router(cfg)["response_spectrum"]
     assert payload["summary"] == result.summary
     assert payload["processing_chain"] == result.processing_chain
