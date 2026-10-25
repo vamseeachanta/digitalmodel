@@ -45,6 +45,13 @@ LABELS = {"riser-splash-zone": "Splash-zone detail", "riser-keel-joint": "Keel j
 CHANGES = {
     "report": "Spectral fatigue module analysis",
     "revisions": [{
+        "revision": "1", "date": "2026-10-25",
+        "changes": [
+            "Saved comments for matching report content are validated and merged to preserve earlier feedback.",
+            "Hand-calculated moment, damage and life checks distinguish reproduction from reference damage.",
+            "Rebuild comparisons allow numerical roundoff; text output uses explicit UTF-8 and LF.",
+        ],
+    }, {
         "revision": "0", "date": "2026-10-21",
         "changes": [
             "First issue: public example results are reproduced from the spectral fatigue workflow.",
@@ -87,7 +94,7 @@ def number(record: dict, locator: str, kind: str = "decimal") -> str:
 
 def definition_count(path: str) -> int:
     """Count test definitions rather than claiming independent benchmark coverage."""
-    tree = ast.parse((ROOT / path).read_text())
+    tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
     return sum(isinstance(node, ast.FunctionDef) and node.name.startswith("test_")
                for node in ast.walk(tree))
 
@@ -234,25 +241,42 @@ CHART_SCRIPT = r'''
 
 COMMENT_SCRIPT = r'''
 (() => {
-  const id = 'spectral-fatigue-module-analysis', revision = '0';
+  const id = 'spectral-fatigue-module-analysis';
+  const revision = JSON.parse(document.getElementById('change-data').textContent).revisions[0].revision;
   const el = id => document.getElementById(id);
   const sections = [...document.querySelectorAll('main section[id]')];
   const allowed = new Set(sections.map(s=>s.id));
-  let comments = [], directory = null, digest = null, loadedDigest = null;
+  let comments = [], directory = null, digest = null, loadedDigest = null, loadedRecord = {};
   const say = text => {el('comment-status').textContent=text;};
   const show = () => {el('comment-preview').textContent=comments.map(c=>`${c.section}: ${c.text}`).join('\n');};
   const hash = async bytes => [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');
+  const validate = (value, expectedDigest) => {
+    if(!value||value.report!==id||value.revision!==revision||value.calculation!==el('report-data').textContent||
+      !Array.isArray(value.comments)||value.comments.some(c=>!c||!allowed.has(c.section)||typeof c.text!=='string'||!c.text.trim())||
+      !(value.report_digest===null||(typeof value.report_digest==='string'&&/^[a-f0-9]{64}$/.test(value.report_digest))))
+      throw Error('Comment file does not match this report. Retain the original under a different filename before saving a new comment file; keep other revisions separately.');
+    if(expectedDigest&&value.report_digest!==expectedDigest)
+      throw Error('Saved comments have no matching report fingerprint. Retain the original under a new filename; load matching comments before selecting the folder again.');
+    return value.comments;
+  };
+  const merge = (retained, incoming) => {
+    const combined=[...retained], seen=new Set(retained.map(c=>JSON.stringify([c.section,c.text])));
+    incoming.forEach(c=>{const key=JSON.stringify([c.section,c.text]);if(!seen.has(key)){combined.push(c);seen.add(key);}});
+    return combined;
+  };
   sections.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.querySelector('h2,h3').textContent;el('comment-section').append(o);});
   el('comment-folder').onclick=async()=>{
     try {
       directory=null;digest=null;
-      if(!window.showDirectoryPicker) return say('Folder access is unavailable. Download comments and save the file beside this report.');
+      if(!window.showDirectoryPicker) return say('Folder access is unavailable. Load existing comments before downloading; save under a new filename to preserve the original.');
       const chosen=await window.showDirectoryPicker({mode:'readwrite'});
       const file=await (await chosen.getFileHandle('report.html')).getFile();
       const bytes=await file.arrayBuffer();
       const parsed=new DOMParser().parseFromString(new TextDecoder().decode(bytes),'text/html');
       if(parsed.getElementById('report-data')?.textContent!==el('report-data').textContent)
         throw Error('The selected folder contains a different calculation.');
+      if(parsed.getElementById('change-data')?.textContent!==el('change-data').textContent)
+        throw Error('The selected folder contains a different report revision.');
       const selectedDigest=await hash(bytes);
       if(loadedDigest&&loadedDigest!==selectedDigest) throw Error('Loaded comments belong to different report content.');
       digest=selectedDigest;directory=chosen;
@@ -269,29 +293,41 @@ COMMENT_SCRIPT = r'''
     try{
       const file=el('comment-load').files[0];if(!file)return;
       const value=JSON.parse(await file.text());
-      if(value.report!==id||value.revision!==revision||value.calculation!==el('report-data').textContent||!Array.isArray(value.comments)||
-        value.comments.some(c=>!allowed.has(c.section)||typeof c.text!=='string')||
-        (digest&&value.report_digest&&digest!==value.report_digest)) throw Error('Comment file does not match this report.');
-      loadedDigest=value.report_digest;
-      comments.push(...value.comments);show();say('Comments loaded. Save to retain the combined file.');
+      const loaded=validate(value,digest);
+      if(loadedDigest&&value.report_digest&&loadedDigest!==value.report_digest)
+        throw Error('Loaded comments belong to different report content.');
+      loadedDigest=value.report_digest||loadedDigest;
+      loadedRecord={...loadedRecord,...value};
+      comments=merge(comments,loaded);show();say('Comments loaded. Save to retain the combined file.');
     }catch(error){say(error.message);}
     el('comment-load').value='';
   };
   el('comment-save').onclick=async()=>{
     try{
-      const data=JSON.stringify({report:id,revision,report_digest:digest,calculation:el('report-data').textContent,comments},null,2)+'\n';
+      let combined=comments, retainedRecord=loadedRecord;
       if(directory){
         const current=await (await directory.getFileHandle('report.html')).getFile();
         if(await hash(await current.arrayBuffer())!==digest) throw Error('Report changed. Select its folder again.');
+        let retained=[];
+        try{
+          const existing=await (await directory.getFileHandle('report.comments.json')).getFile();
+          const value=JSON.parse(await existing.text());
+          retained=validate(value,digest);retainedRecord={...loadedRecord,...value};
+        }catch(error){if(error.name!=='NotFoundError')throw error;}
+        combined=merge(retained,comments);
+      }
+      const data=JSON.stringify({...retainedRecord,report:id,revision,report_digest:digest,calculation:el('report-data').textContent,comments:combined},null,2)+'\n';
+      if(directory){
         const handle=await directory.getFileHandle('report.comments.json',{create:true});
         const stream=await handle.createWritable();await stream.write(data);await stream.close();
         if(await (await handle.getFile()).text()!==data)throw Error('Saved comments differ from the requested content.');
+        comments=merge(combined,comments);show();
         return say('Comments saved beside report.html and read back.');
       }
       const url=URL.createObjectURL(new Blob([data],{type:'application/json'}));
-      const link=document.createElement('a');link.href=url;link.download='report.comments.json';link.click();
+      const link=document.createElement('a');link.href=url;link.download='report.comments.new.json';link.click();
       setTimeout(()=>URL.revokeObjectURL(url),1000);
-      say('Download requested. Save report.comments.json beside report.html and reload it to check persistence.');
+      say('Download requested. Load existing comments first to combine feedback; save under a new filename beside report.html and reload to check persistence.');
     }catch(error){say(error.message);}
   };
   const changes=JSON.parse(el('change-data').textContent);
@@ -321,7 +357,8 @@ def render(record: dict) -> str:
 <p>These values describe the current module, not the service life of an assessed structure. Basis: {example}, {implementation} and {theory}. The governing life comparison is shown below; the detailed results retain both location summaries.</p>'''))
     parts.append('''<div id="revision-history"><h3>Revision history</h3>
 <table><caption>Issue record</caption><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
-<tbody><tr><td>0</td><td>2026-10-21</td><td>First issue: the public calculation, evidence gaps and actions before design use are documented.</td></tr></tbody></table></div>''')
+<tbody><tr><td>0</td><td>2026-10-21</td><td>First issue: the public calculation, evidence gaps and actions before design use are documented.</td></tr>
+<tr><td>1</td><td>2026-10-25</td><td>Saved comments are preserved, and hand-calculated numerical checks are added to distinguish reproduction from reference damage.</td></tr></tbody></table></div>''')
     parts.append(section("introduction", f'''
 <p>Fatigue screening is performed from local stress power spectral density, without a time history or a rainflow count. The public workflow is evaluated from the supplied spectra through the reported life and governing location.</p>
 <p>The spectrum describes the distribution of stress variance over frequency. It does not describe riser geometry or calculate stress from waves. The example is openly documented in the repository and is used as a software demonstration; no measured structural response or independently published physical benchmark is supplied with it. Basis: {example}.</p>'''))
@@ -370,7 +407,8 @@ def render(record: dict) -> str:
     parts.append(section("findings", f'''
 <p>The main workflow is available and its calculation chain is exercised by repository tests. The evidence establishes software behavior within those tests, with defined limits on engineering interpretation.</p>
 <p>The estimator test file contains {n('evidence.estimator_test_definitions', 'integer')} test definitions covering moment properties, positive damage, stress sensitivity, method labels and selected inter-method relationships. The workflow test compares its narrow-band annual damage with a direct call to the same library. That is a wiring regression, not an independent physical validation. Basis: {tests}.</p>
-<p>The public example supplies stress spectra but no independent measured-life result or reference damage for the default estimator. Other fatigue test files exercise separate structural implementations; those results do not qualify this workflow automatically. No experimental accuracy band is established by the evidence reviewed here.</p>'''))
+<p>The public example supplies stress spectra but no independent measured-life result or qualified physical benchmark for the default estimator. A hand calculation from the open equations is retained in the report tests to distinguish reference damage from the reproduced implementation. It does not qualify structural life. Other fatigue test files exercise separate structural implementations; those results do not qualify this workflow automatically. No experimental accuracy band is established by the evidence reviewed here.</p>
+<p>The unqualified hand reference places both details below the required {n('summary.0.required_life_years')} years, including the keel joint that passes the reproduced workflow screen. Numerical correction and physical qualification remain outstanding. Basis: {tests} and {theory}.</p>'''))
     parts.append(section("limitations", f'''
 <p>The outputs are restricted to reproduction of the supplied scalar spectra. Engineering acceptance is not evaluated until the frequency convention, estimator coefficients and input suitability are resolved.</p>
 <p>Input guards are incomplete: frequency ordering, finite values, nonnegative spectra and occurrence fractions summing to unity are not checked. Positive occurrence fractions above unity are accepted. A zero-damage location is rejected by the workflow, so the current route does not return infinite life for a zero spectrum. Basis: {implementation}.</p>
@@ -432,12 +470,12 @@ def render(record: dict) -> str:
  ['Material, weld and environment', 'NOT_EVALUATED', 'Supply an applicable stress-life basis, environment, thickness and stress concentration treatment before design use.', example],
  ['Physical model and restraints', 'NOT_EVALUATED', 'Supply geometry, supports and the derivation of each local stress spectrum.', example],
  ['Fatigue factor and design life', 'ASSUMED - to be confirmed', 'Demonstration inputs are supplied; approve application-specific criteria before assessment.', example],
- ['Independent damage and convergence', 'NOT_EVALUATED', 'Provide reference damage and a frequency-grid convergence study after resolving the implementation differences.', tests + '; ' + theory],
+ ['Independent physical benchmark and convergence', 'NOT_EVALUATED', 'The tests retain a hand-calculated numerical reference; provide a qualified physical benchmark and frequency-grid convergence study after resolving the implementation differences.', tests + '; ' + theory],
  ], 'Data held and data needed. No missing physical quantity is assigned a guessed numeric value.')}
 <h3>QA pre-flight</h3>
 {table(['Check', 'Evidence and outcome', 'Source'], [
  ['Public entry point', 'The documented example reaches the occurrence-weighted life calculation; the generator calls the same public router directly.', example + '; ' + implementation],
- ['Numeric reproduction', 'Every displayed example value is bound to the embedded record; rebuild tests compare the record with direct workflow and estimator calls.', tests],
+ ['Numeric reproduction', 'Every displayed example value is bound to the embedded record; direct-call regressions are retained. Hand-calculated literals independently check moments, occurrence-weighted annual damage and life, with reference damage kept separate from reproduction.', tests],
  ['Analytical reference', 'The moment-rate convention and mixture coefficients are compared with the open equations. Engineering qualification remains pending.', theory],
  ['Existing regression evidence', 'Estimator tests establish properties and selected relationships; the workflow test checks agreement with its own library, not an external result.', tests],
  ['Presentation and comments', 'The report is self-contained. Comments are saved beside the selected report where folder access is supported; the fallback download requires selection of the same folder. Comprehensive visual review is not recorded.', 'This report'],
@@ -449,12 +487,12 @@ def render(record: dict) -> str:
 <title>Spectral fatigue module analysis</title>
 {house_style()}
 </head><body class="hs-doc">
-<header><h1>Spectral fatigue module analysis</h1><p>Draft for client review</p><p>Public example reproduction and limits of use</p></header>
+<header><h1>Spectral fatigue module analysis</h1><p>Draft for maintainer review</p><p>Public example reproduction and limits of use</p></header>
 <div class="layout"><nav aria-label="Contents"><ol>{contents}<li><a href="#appendix">Appendices</a></li></ol>
 <details><summary>Changes since the previous issue</summary><ul id="change-list"></ul></details></nav>
 <main>{''.join(parts)}
 <aside id="comments" aria-label="Report comments"><h2>Report comments</h2>
-<p>Choose the folder containing report.html to save comments beside it. Where folder access is unavailable, save the downloaded comments file in that folder. Reload saved comments to confirm persistence. Comments remain on this device.</p>
+<p>Choose the folder containing report.html to save comments beside it. Existing comments for matching report content are merged; identical section and text pairs are combined. Keep files from other report revisions or rebuilds with changed content separately. Where folder access is unavailable, load earlier comments before downloading and save under a new filename in the report folder. Save from one window at a time. Reload saved comments to confirm persistence. Comments remain on this device.</p>
 <button id="comment-folder" type="button">Choose report folder</button>
 <label>Section <select id="comment-section"></select></label>
 <label>Comment <textarea id="comment-text" maxlength="10000"></textarea></label>
@@ -474,8 +512,8 @@ def build(output_dir: Path, work_dir: Path) -> None:
     """Write only the report and its engineering change history."""
     record = calculate(work_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "report.html").write_text(render(record), encoding="utf-8")
-    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8")
+    (output_dir / "report.html").write_text(render(record), encoding="utf-8", newline="\n")
+    (output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

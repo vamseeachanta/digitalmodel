@@ -2,6 +2,15 @@
   "report": "Spectral fatigue module analysis",
   "revisions": [
     {
+      "revision": "1",
+      "date": "2026-10-25",
+      "changes": [
+        "Saved comments for matching report content are validated and merged to preserve earlier feedback.",
+        "Hand-calculated moment, damage and life checks distinguish reproduction from reference damage.",
+        "Rebuild comparisons allow numerical roundoff; text output uses explicit UTF-8 and LF."
+      ]
+    },
+    {
       "revision": "0",
       "date": "2026-10-21",
       "changes": [
