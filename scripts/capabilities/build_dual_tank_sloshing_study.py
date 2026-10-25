@@ -512,6 +512,7 @@ do not establish a design ranking.</p>
 <nav><a href="#geometry">Geometry</a> · <a href="#validation">Published validation</a> ·
 <a href="#curves">Computed curves</a> · <a href="#comparison">Single-tank comparison</a> ·
 <a href="#limits">Validity band</a> · <a href="#cfd-evidence">CFD evidence</a> · <a href="#forward">Way forward</a> · <a href="#left">Left</a></nav>
+<p><a href="generic-hull-roll-screening.html">Generic hull coupled roll screening estimate</a>.</p>
 <h2 id="geometry">Illustrative geometry</h2>
 <p>Invented round dimensions are selected independently of the
 <a href="../../../tests/hydrodynamics/test_utube_tank.py">published reference geometry</a>.
