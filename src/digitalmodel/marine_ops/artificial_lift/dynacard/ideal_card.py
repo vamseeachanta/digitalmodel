@@ -205,6 +205,9 @@ def _comparison_branch_profiles(position, load):
 
     Upstroke means increasing position in the supplied time order. Each
     branch must be monotone; multiple reversals cannot identify two strokes.
+    Exactly two direction changes are required around the closed cycle, with
+    no position tolerance or hysteresis. Extra reversals in downhole or noisy
+    cards therefore make the comparison unavailable.
     The computational grid uses BRANCH_RESAMPLE_POINTS, as the legacy metric
     does. Vertical load transfers have no position interval and contribute no
     branch samples. This avoids averaging opposite loads at stroke endpoints.
@@ -682,6 +685,12 @@ def calculate_shape_similarity(
     each is split into upstroke and downstroke branches, resampled onto a
     common normalised-position grid, and compared after load normalisation.
     See :func:`_closed_loop_shape_similarity` for the signed cosine definition.
+
+    Branches must be monotone, with exactly two direction changes around each
+    closed cycle. No position tolerance or hysteresis is applied. Downhole and
+    noisy cards with additional reversals are unavailable; this includes four
+    of the five cleansed downhole fixtures, while all five surface cards are
+    accepted (see test_similarity_availability_on_recorded_cards).
 
     This deliberately does NOT use an index-wise correlation coefficient. That
     metric ignored position entirely (so it depended on where the trace happened

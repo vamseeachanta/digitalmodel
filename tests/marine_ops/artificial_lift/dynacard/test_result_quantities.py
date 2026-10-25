@@ -193,3 +193,32 @@ def test_ambiguous_strokes_keep_only_legacy_classifier_score(context):
     assert result.load_deviation_rms is None
     assert 0 < result.legacy_shape_feature <= 1
     assert "legacy_shape_feature" not in result.model_dump()
+
+
+@pytest.mark.parametrize(
+    "fixture_number, downhole_available",
+    [(1, False), (2, False), (3, True), (4, False), (5, False)],
+)
+def test_similarity_availability_on_recorded_cards(fixture_number, downhole_available):
+    """Surface cycles are monotone; four downhole cycles have extra reversals.
+
+    An accepted card compared with itself has signed cosine one. Additional
+    position reversals make the two stroke branches ambiguous, even when
+    comparing a card with itself; unavailable must remain distinct from zero.
+    """
+    import json
+    from pathlib import Path
+
+    fixture = (Path(__file__).resolve().parents[1] / "test_data"
+               / f"cleansed_well_{fixture_number:03d}.json")
+    data = json.loads(fixture.read_text(encoding="utf-8"))
+    surface = CardData(position=data["cardData"]["Position"],
+                       load=data["cardData"]["Load"])
+    downhole = CardData(position=data["downholeCard"]["Position"],
+                        load=data["downholeCard"]["Load"])
+
+    assert calculate_shape_similarity(surface, surface) == pytest.approx(1)
+    if downhole_available:
+        assert calculate_shape_similarity(downhole, downhole) == pytest.approx(1)
+    else:
+        assert calculate_shape_similarity(downhole, downhole) is None
