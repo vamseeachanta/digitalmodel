@@ -2,10 +2,11 @@
 
 ## Summary
 
-A synthetic translational oscillator with constant effective mass, stiffness
-and linear damping gives an undamped natural frequency of 2.0 rad/s, a period
-of 3.1 s and a damping ratio of 0.2. These are hand-calculated results from the
-assumptions below and the shipped [E4](damping-basis.md#e4-resonance) and
+A public textbook spring-mass example with constant coefficients gives an
+undamped natural frequency of 7.0 rad/s, a period of 0.9 s and a damping ratio
+of 1.0. The input basis is [Calculus Volume 3, 2016 edition, section 7.3,
+Example 7.20][S1]. The independent arithmetic below also follows the shipped
+[E4](damping-basis.md#e4-resonance) and
 [E5](damping-basis.md#e5-critical-damping-and-additions) derivations. The example
 calls `critical_dof` on a grid that brackets the analytic root and compares its
 outputs with independent scalar arithmetic. Execution requires only Python,
@@ -17,28 +18,47 @@ temporary directory.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-25 | Added a synthetic oscillator and executable comparisons to demonstrate the offline resonance and damping interface. |
+| 2 | 2026-10-25 | Replaced assumed coefficients with a cited public worked example and derived the grids and numerical error budget to establish input provenance. |
 
 ## Inputs and numerical assumptions
 
-All dimensional inputs and frequency samples in this table are **assumed,
-synthetic demonstration values**; they are not measurements or design data.
-The mass labels follow the helper interface: `inertia` is the dry translational
-mass and `added_mass` is the constant added translational mass for `heave`.
+The physical coefficients are taken from [S1], whose worked solution is
+`q'' + 14*q' + 49*q = 0` for a 1 kg mass. They are textbook model inputs,
+not measurements or design data. The helper's `inertia` receives the source's
+lumped translational mass; `added_mass` is zero because the source equation
+contains no separate hydrodynamic mass. The `heave` key selects translation
+in the helper; it does not qualify this textbook model as hydrodynamic data.
 
-| Quantity | Symbol | Assumed value | Unit | Basis |
+| Quantity | Symbol | Value | Unit | Basis |
 | --- | --- | --- | --- | --- |
-| Dry mass | m | 3.0 | kg | Synthetic assumption |
-| Added mass | a | 2.0 | kg | Synthetic assumption |
-| Restoring stiffness | K | 20.0 | N/m | Synthetic assumption |
-| Linear damping | B | 4.0 | N s/m | Synthetic assumption, identical at every sample |
-| Bracketing angular-frequency grid | omega | [1.0, 1.5, 2.5, 3.0] | rad/s | Synthetic assumption; the root lies strictly between the middle samples |
-| Exclusion grid for refusal example | omega | [2.5, 3.0, 4.0] | rad/s | Synthetic assumption; all samples exceed the root |
-| Relative comparison tolerance | r | 1e-9 | dimensionless | Chosen numerical acceptance assumption |
-| Absolute comparison tolerance | e | 1e-12 | each compared quantity's SI unit | Chosen numerical acceptance assumption |
+| Lumped mass | m | 1.0 | kg | [S1], Example 7.20 |
+| Added mass | a | 0.0 | kg | Mapping of the single source mass, with no additional mass term |
+| Restoring stiffness | K | 49.0 | N/m | [S1], Example 7.20 worked solution |
+| Linear damping | B | 14.0 | N s/m | [S1], Example 7.20, identical at every sample |
+| Bracketing angular-frequency grid | omega | [3.5, 5.25, 8.75, 10.5] | rad/s | Derived as [1/2, 3/4, 5/4, 3/2] times the 7 rad/s analytic root |
+| Exclusion grid for refusal example | omega | [8.75, 10.5, 14.0] | rad/s | Derived as [5/4, 3/2, 2] times the same root |
+| Relative comparison tolerance | r | 1e-12 | dimensionless | Rounded-up propagated root-error budget below |
+| Absolute comparison tolerance | e | 0.0 | each compared quantity's SI unit | All expected outputs are nonzero; only relative error is used |
 
-The tolerances allow floating-point arithmetic and iterative root finding while
-remaining below the precision of the stated inputs. They describe numerical
-agreement for this example, not physical accuracy. Comparisons use
+The grids are computational sampling choices derived from the analytic root,
+not additional physical inputs. Half-root and quarter-root offsets place the
+root strictly inside the central interval; the exclusion grid starts above it.
+
+The [SciPy 1.14.1 reference, `brentq` parameters `xtol` and `rtol`][S2]
+specifies root error at most `xtol + rtol*abs(omega_n)`, with defaults
+`xtol = 2e-12 rad/s` and `rtol = 4*epsilon`, where binary64
+`epsilon = 2**-52`. At the exact 7 rad/s root, the relative error bound is
+`rho = 2e-12/7 + 4*epsilon`. Critical damping has the same relative
+sensitivity as frequency; period and damping ratio have reciprocal sensitivity
+bounded by `rho/(1-rho)`. A reserve of `32*epsilon` allows more rounded
+operations than the scalar expressions and constant interpolation outside the
+root solver require. The combined budget `rho/(1-rho) + 32*epsilon` is below
+`3e-13`; rounding upward to the next decimal power gives `r = 1e-12`.
+The test checks that budget against the installed solver defaults, so changed
+defaults cannot silently invalidate the stated criterion.
+
+These tolerances describe numerical agreement, not physical accuracy.
+Comparisons use
 `abs(actual - expected) <= max(r * abs(expected), e)`.
 
 No empirical physical constants or unit scale conversions are used. The factor
@@ -51,7 +71,8 @@ revision number, date and Python indexing values are metadata or control values.
 ## Derivation and independent arithmetic
 
 Let q be displacement in metres and t time in seconds. With effective mass
-M = m + a = 5.0 kg, the constant-coefficient equation is
+M = m + a = 1.0 kg, the constant-coefficient equation from [S1], section 7.3,
+equation (7.9), is
 
 \[
 M\ddot q + B\dot q + Kq = 0.
@@ -59,36 +80,40 @@ M\ddot q + B\dot q + Kq = 0.
 
 For the undamped natural frequency, set B to zero and substitute
 `q = Q exp(i*omega*t)`. A nonzero Q requires `K - M*omega**2 = 0`, so
-`omega_n = sqrt(K/M) = sqrt(20/5) = 2.0 rad/s`. This is E4 with constant added
-mass. The grid brackets the positive root because `M*omega**2 - K` is negative
-at 1.5 rad/s and positive at 2.5 rad/s. It is strictly increasing for positive
-omega, so this root is unique. The period is `2*pi/omega_n = pi s`, displayed
-as 3.1 s following E5. The helper's natural frequency is the **undamped**
+`omega_n = sqrt(K/M) = sqrt(49/1) = 7.0 rad/s`, as in [S1], equation (7.5).
+This is E4 with zero added mass. The grid brackets the positive root because
+`M*omega**2 - K` is negative at 5.25 rad/s and positive at 8.75 rad/s.
+It is strictly increasing for positive omega, so this root is unique.
+The period is `2*pi/omega_n = 2*pi/7 s`, displayed as 0.9 s following
+[S1], section 7.3, and E5. The helper's natural frequency is the **undamped**
 frequency; the damped transient frequency and forced-response peak are different
 quantities and are not evaluated here.
 
 For critical damping substitute `q = Q exp(s*t)`. The characteristic polynomial
 is `M*s**2 + B*s + K = 0`. A repeated root requires the discriminant
 `B**2 - 4*M*K = 0`; choosing nonnegative damping gives
-`B_critical = 2*sqrt(M*K) = 2*M*omega_n = 20.0 N s/m`, as in E5.
+`B_critical = 2*sqrt(M*K) = 2*M*omega_n = 14.0 N s/m`, as in
+[S1], section 7.3, Case 2, and E5.
 The critical repeated root is `s = -B_critical/(2*M) = -omega_n`.
-Thus `zeta = B/B_critical = 4/20 = 0.2`.
+Thus `zeta = B/B_critical = 14/14 = 1.0`: the source system is critically
+damped. Its transient response does not oscillate; the calculated natural
+period describes the undamped reference system only.
 
 The damping is constant but is still supplied as a sampled vector. At the
 in-grid root, linear interpolation gives
-`B_n = 4 + (4 - 4)*(2 - 1.5)/(2.5 - 1.5) = 4.0 N s/m`.
+`B_n = 14 + (14 - 14)*(7 - 5.25)/(8.75 - 5.25) = 14.0 N s/m`.
 Every sampled critical-damping ratio and the interpolated resonant ratio is
-therefore 0.2. This checks the interpolation path with a constant function;
+therefore 1.0. This checks the interpolation path with a constant function;
 it does not test a varying damping law.
 
 | Quantity | Independent calculation | Displayed result | Basis |
 | --- | --- | --- | --- |
-| Effective mass | m + a | 5.0 kg | Input assumptions |
-| Undamped natural frequency | sqrt(K/M) | 2.0 rad/s | E4 and input assumptions |
-| Natural period | 2*pi/omega_n | 3.1 s | E5 and input assumptions |
-| Critical damping | 2*sqrt(M*K) | 20.0 N s/m | E5 repeated-root condition |
-| Damping at natural frequency | Linear interpolation of constant B | 4.0 N s/m | Input assumptions and interpolation arithmetic above |
-| Sampled and resonant damping ratios | B/B_critical | 0.2 | E5 and input assumptions |
+| Effective mass | m + a | 1.0 kg | [S1] lumped mass |
+| Undamped natural frequency | sqrt(K/M) | 7.0 rad/s | [S1], equation (7.5), and E4 |
+| Natural period | 2*pi/omega_n | 0.9 s | [S1], section 7.3, and E5 |
+| Critical damping | 2*sqrt(M*K) | 14.0 N s/m | [S1], section 7.3, Case 2, and E5 |
+| Damping at natural frequency | Linear interpolation of constant B | 14.0 N s/m | [S1] coefficient and interpolation arithmetic above |
+| Sampled and resonant damping ratios | B/B_critical | 1.0 | [S1] coefficients and repeated-root condition |
 
 ## Executable example
 
@@ -108,11 +133,11 @@ import json
 import math
 from pathlib import Path
 
-parser = argparse.ArgumentParser(description="Synthetic offline oscillator")
+parser = argparse.ArgumentParser(description="Public textbook offline oscillator")
 parser.add_argument("source_root", type=Path)
 parser.add_argument("output_directory", type=Path)
-# Synthetic grid and coefficients: Inputs and numerical assumptions above.
-parser.add_argument("--omega", nargs="+", type=float, default=[1.0, 1.5, 2.5, 3.0])
+# Grid: [1/2, 3/4, 5/4, 3/2] * 7 rad/s; see the input basis above.
+parser.add_argument("--omega", nargs="+", type=float, default=[3.5, 5.25, 8.75, 10.5])
 args = parser.parse_args()
 
 helper_path = (
@@ -122,12 +147,14 @@ spec = importlib.util.spec_from_file_location("offline_damping", helper_path)
 helper = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(helper)
 
-dry_mass = 3.0
-added_mass = 2.0
-stiffness = 20.0
-damping = 4.0
-relative_tolerance = 1e-9
-absolute_tolerance = 1e-12
+# Calculus Volume 3 (2016), section 7.3, Example 7.20.
+dry_mass = 1.0
+added_mass = 0.0
+stiffness = 49.0
+damping = 14.0
+# Rounded-up brentq error budget derived above, not measurement uncertainty.
+relative_tolerance = 1e-12
+absolute_tolerance = 0.0
 
 # Independent scalar arithmetic from the differential equation and E4-E5.
 effective_mass = dry_mass + added_mass
@@ -172,14 +199,21 @@ for ratio in actual["critical_damping_ratio"]:
         raise AssertionError("Sampled damping ratio differs from E5")
 
 args.output_directory.mkdir(parents=True, exist_ok=True)
-report = {"omega_rad_s": omega.tolist(), "actual": actual, "expected": expected}
+report = {
+    "omega_rad_s": omega.tolist(), "actual": actual, "expected": expected,
+    "comparison": {
+        "relative_tolerance": relative_tolerance,
+        "absolute_tolerance": absolute_tolerance,
+    },
+}
 (args.output_directory / "resonance.json").write_text(
-    json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
+    json.dumps(report, indent=2, allow_nan=False) + "\n",
+    encoding="utf-8", newline="\n",
 )
 ```
 
 To demonstrate refusal without extrapolation, append
-`--omega 2.5 3.0 4.0` to the same invocation, using a fresh output directory.
+`--omega 8.75 10.5 14.0` to the same invocation, using a fresh output directory.
 The unchanged block raises
 `ValueError: heave: expected one resonance inside frequency grid; found 0`.
 It creates no output directory or result on that failure. The exclusion grid's
@@ -188,9 +222,9 @@ does not depend on an expected value read from the helper.
 
 ## Limits and way forward
 
-This example checks a synthetic, uncoupled, constant-coefficient linear
+This example checks a cited, uncoupled, constant-coefficient linear
 oscillator. It establishes neither frequency-dependent hydrodynamic accuracy
-nor nonlinear, stochastic, coupled-motion or solver validation. No executable,
+nor nonlinear, stochastic, coupled-motion or solver validation. No solver executable,
 licence check, external-force server or listing is used. The word resonance
 here refers only to the undamped E4 root. Only one positive in-grid root is
 permitted; there is no extrapolation or selection among multiple roots.
@@ -198,3 +232,14 @@ permitted; there is no extrapolation or selection among multiple roots.
 The existing damping audit tests remain the unit-test baseline. This worked
 example adds executable documentation rather than asserting missing unit
 coverage. A broader module report, builder and index remain separate work.
+
+## Sources
+
+[S1]: https://openstax.org/books/calculus-volume-3/pages/7-3-applications
+[S2]: https://docs.scipy.org/doc/scipy-1.14.1/reference/generated/scipy.optimize.brentq.html
+
+- [S1] OpenStax, *Calculus Volume 3*, 2016 edition, section 7.3
+  (Applications), Example 7.20 (Critically Damped Spring-Mass System),
+  equations (7.5) and (7.9), and Case 2. Accessed 2026-10-25.
+- [S2] *SciPy Reference Guide*, version 1.14.1, `scipy.optimize.brentq`,
+  Parameters: `xtol` and `rtol`. Accessed 2026-10-25.
