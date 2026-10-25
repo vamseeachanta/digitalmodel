@@ -74,6 +74,37 @@ def test_A03_incomplete_or_invalid_measurements(bad):
             operation()
 
 
+@pytest.mark.parametrize("bad", ["0.5", True, False, np.bool_(True)])
+@pytest.mark.parametrize("mixed", [False, True])
+def test_A03_workflow_rejects_raw_nonnumeric_measurements(bad, mixed):
+    from dataclasses import asdict
+    from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
+
+    grid = [[.5] * 5 for _ in range(5)] if mixed else [[bad] * 5 for _ in range(5)]
+    grid[2][2] = bad
+    cfg = {"basename": "ffs", "ffs_assessment": {
+        "component": asdict(component()), "grid": grid, "force_type": "GML",
+    }}
+    with pytest.raises(ValueError, match="reading|measurement"):
+        FFSWorkflow().router(cfg)
+    assert "ffs" not in cfg
+
+
+@pytest.mark.parametrize("container", [list, tuple])
+def test_A03_workflow_retains_qualified_numeric_measurements(container):
+    from dataclasses import asdict
+    from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
+
+    grid = container(container([.5] * 5) for _ in range(5))
+    cfg = {"basename": "ffs", "ffs_assessment": {
+        "component": asdict(component()), "grid": grid, "force_type": "GML",
+    }}
+    result = FFSWorkflow().router(cfg)["ffs"]
+    assert result["verdict"] == "ACCEPT"
+    assert result["passes"] is True
+    assert result["t_measured_min_in"] == pytest.approx(.5)
+
+
 @pytest.mark.parametrize("required", [0, -1, math.nan, math.inf])
 @pytest.mark.parametrize("kind", ["GML", "LML"])
 def test_A05_required_wall_is_positive_finite(required, kind):
@@ -196,6 +227,46 @@ def test_A15_applicability_preserves_independent_rejection():
     assert result.verdict == "REPLACE"
     assert not result.applicability.ok
     assert "unavailable" in result.governing_criterion
+
+
+@pytest.mark.parametrize("app", [
+    Applicability(True, ["UNSUPPORTED"], ["Criterion is unavailable"]),
+    Applicability(1), Applicability("true"), Applicability(np.bool_(True)),
+])
+def test_A16_inconsistent_applicability_cannot_clear_screening(app):
+    result = decide(1, .9, 5, "pressure", applicability=app)
+    assert result.verdict == "ESCALATE"
+    assert result.applicability.ok is False
+    assert result.applicability.flags
+    assert "engineering review" in result.governing_criterion
+
+
+@pytest.mark.parametrize("asset_class", ["mooring_chain", "jacket_member"])
+def test_A14_unknown_evidence_preserves_structured_escalation(asset_class):
+    app = Applicability(False, ["NOT_EVALUATED"], ["Capacity is not established"])
+    result = decide(math.nan, math.nan, math.nan, asset_class, applicability=app)
+    assert result.verdict == "ESCALATE"
+    assert result.applicability.ok is False
+    assert math.isnan(result.margin_allowable)
+    assert math.isnan(result.remaining_life_yr)
+    assert "Capacity is not established" in result.governing_criterion
+
+
+def test_A14_unknown_allowable_never_calls_derating():
+    def derate(margin, allowable):
+        pytest.fail("Unknown strength evidence must not enter a rating calculation")
+
+    result = decide(math.nan, math.nan, math.nan, "pressure", derate=derate,
+                    applicability=Applicability(False, ["NOT_EVALUATED"]))
+    assert result.verdict == "ESCALATE"
+    assert result.derated is None
+
+
+def test_A15_unknown_allowable_preserves_independent_replacement():
+    result = decide(.1, math.nan, math.nan, "pressure",
+                    applicability=Applicability(False, ["NOT_EVALUATED"]))
+    assert result.verdict == "REPLACE"
+    assert math.isnan(result.margin_allowable)
 
 
 def test_A15_pipeline_retains_supported_axial_failure():

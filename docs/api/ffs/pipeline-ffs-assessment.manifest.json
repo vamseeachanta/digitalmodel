@@ -832,7 +832,7 @@
     "src/digitalmodel/asset_integrity/_validation.py": "e1cf99187088739e31c5dcbcb67f8aac5c0010b2ab42bfc6cfccb7f06f41f79e",
     "src/digitalmodel/asset_integrity/applicability.py": "67f2ee9a56aac1f2548576c2de497d90b4f7b9bb405b50a8234ca394b5b7a1ab",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e8d363b1b519e83c1b412f75ab10a9ba3a3522d2c2141be162f53c7ac8691aa2",
-    "src/digitalmodel/asset_integrity/assessment/ffs_decision.py": "f1f9a0cf6032760c1e8e4a74c81d3135ad83d6b1e98e989f446ff91342d39360",
+    "src/digitalmodel/asset_integrity/assessment/ffs_decision.py": "343cb656962ea28dd4c28f304f82981683891d19ad6ab25177b7092d8565f851",
     "src/digitalmodel/asset_integrity/assessment/ffs_router.py": "ab035d49e557b67acacc942faf224f6d054312229f886f5b5ca82d52f57e3ac9",
     "src/digitalmodel/asset_integrity/assessment/grid_parser.py": "c8d98ceb97d4815a497b9f0edb6ea6122550b0052b231f1c27332901cbf03909",
     "src/digitalmodel/asset_integrity/assessment/level1_screener.py": "68ae7aaa41a72b06b8824f7b57c3b497c1753e094187df456632463b09d8d65a",

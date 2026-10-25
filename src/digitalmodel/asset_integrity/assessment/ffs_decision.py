@@ -61,7 +61,7 @@ from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Callable, Mapping, Optional, Union
 
-from digitalmodel.asset_integrity.applicability import Applicability
+from digitalmodel.asset_integrity.applicability import Applicability, merge
 from digitalmodel.asset_integrity._validation import finite_number
 from digitalmodel.units import Q_, ureg
 
@@ -389,15 +389,18 @@ def decide(
     app = applicability if applicability is not None else Applicability()
     if not isinstance(app, Applicability):
         raise ValueError("applicability must be an explicit validity record")
+    app = merge(app)
     b = bands or policy.bands
     m = _dimensionless(margin, "margin")
     m_a = _dimensionless(margin_allowable, "margin_allowable")
     life = _years(remaining_life_yr)
-    finite_number(m_a, "margin_allowable")
+    allowable_unknown = math.isnan(m_a) and not app.ok
+    if not allowable_unknown:
+        finite_number(m_a, "margin_allowable")
     for name, value in (("monitor_band", b.monitor_band), ("derate_floor", b.derate_floor),
                         ("repair_life_yr", b.repair_life_yr)):
         finite_number(value, name, positive=False)
-    if b.derate_floor > m_a:
+    if not allowable_unknown and b.derate_floor > m_a:
         raise ValueError("Decision band ordering requires derate_floor <= allowable")
     if life < 0:
         raise ValueError("remaining life must be nonnegative or explicitly unknown")
@@ -409,7 +412,8 @@ def decide(
         life = math.nan  # Unqualified infinity is unknown life, never unlimited.
     lbl = policy.margin_label
 
-    derating = derate(m, m_a) if derate is not None else None
+    derating = (derate(m, m_a) if derate is not None
+                and math.isfinite(m) and math.isfinite(m_a) else None)
     note = derating.note if derating is not None else policy.no_derate_note
 
     def _make(verdict: Verdict, criterion: str) -> Decision:
