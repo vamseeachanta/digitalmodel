@@ -47,6 +47,7 @@ orientation repair) are reused from ``kcs_geometry`` rather than reimplemented.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import math
@@ -791,11 +792,11 @@ class HullManifest:
             "notes": list(self.notes),
         }
         if self.tessellation is not None:
-            provenance["tessellation"] = dict(self.tessellation)
+            provenance["tessellation"] = copy.deepcopy(self.tessellation)
         if self.appendage_tessellation:
-            provenance["appendage_tessellation"] = {
-                name: dict(record) for name, record in self.appendage_tessellation.items()
-            }
+            provenance["appendage_tessellation"] = copy.deepcopy(
+                self.appendage_tessellation
+            )
         contract["provenance"] = provenance
         return contract
 
@@ -833,7 +834,8 @@ class Rhino3dmGeometry:
     ``source`` distinguishes cached Brep meshes, standalone mesh objects, their
     mixture, and an OpenCASCADE rebuild. Only the last route applies
     ``linear_deflection``. Face coverage counts selected Brep/Extrusion faces,
-    including faces without a cache; standalone meshes add no Brep faces.
+    including faces without a cache; a cached face is counted as meshed only
+    when extraction contributes triangles. Standalone meshes add no Brep faces.
     """
 
     triangles: List[Tri]
@@ -847,6 +849,7 @@ class Rhino3dmGeometry:
     cached_mesh_faces: int = 0
     brep_faces: int = 0
     linear_deflection: Optional[float] = None
+    fidelity: Optional[Dict[str, object]] = None
 
     def to_provenance(self) -> Dict[str, object]:
         """Describe observed execution; unused deflection is deliberately absent."""
@@ -860,6 +863,8 @@ class Rhino3dmGeometry:
             # BrepTessellation.linear_deflection is the effective value in file
             # units, including the kernel wrapper's derived default.
             record["linear_deflection"] = self.linear_deflection
+            if self.fidelity is not None:
+                record["fidelity"] = copy.deepcopy(self.fidelity)
         return record
 
 
@@ -992,10 +997,11 @@ def read_3dm_triangles(
         got: List[Tri] = []
         meshes, face_count = _meshes_and_face_count(obj.Geometry, rhino3dm)
         brep_faces += face_count
-        if face_count:
-            cached_faces += len(meshes)
         for mesh in meshes:
-            got.extend(_triangles_of_mesh(mesh))
+            extracted = _triangles_of_mesh(mesh)
+            if face_count and extracted:
+                cached_faces += 1
+            got.extend(extracted)
         if got:
             if type(obj.Geometry).__name__ == "Mesh":
                 used_mesh_object = True
@@ -1066,7 +1072,7 @@ def _tessellate_breps_of(
     asks for this, and so the kernel's several-hundred-megabyte import cost is
     not paid by the render-mesh path.
 
-    The fidelity report is copied into the geometry's notes rather than
+    The fidelity summary is copied into the geometry's provenance rather than
     discarded: a Brep tessellation that quietly ignored its trims is the single
     failure this whole route has to be defended against, and the evidence for
     "it did not" belongs in the manifest the caller keeps.
@@ -1103,6 +1109,19 @@ def _tessellate_breps_of(
         layers_available=layers_available or result.layers_available,
         source="occ-rebuild",
         linear_deflection=result.linear_deflection,
+        fidelity={
+            "within_reference_box": fidelity.within_reference_box,
+            "max_overshoot": fidelity.max_overshoot,
+            "max_trim_deviation": fidelity.max_trim_deviation,
+            "reference_bbox": (
+                [list(point) for point in fidelity.reference_bbox]
+                if fidelity.reference_bbox is not None else None
+            ),
+            "trim_bbox": (
+                [list(point) for point in fidelity.trim_bbox]
+                if fidelity.trim_bbox is not None else None
+            ),
+        } if fidelity is not None else None,
     )
 
 
@@ -1434,10 +1453,8 @@ def ingest_triangles(
         notes=note_list,
         regions=regions_block,
         transform=transform.to_dict(),
-        tessellation=dict(tessellation) if tessellation is not None else None,
-        appendage_tessellation={
-            name: dict(record) for name, record in (appendage_tessellation or {}).items()
-        },
+        tessellation=copy.deepcopy(tessellation),
+        appendage_tessellation=copy.deepcopy(appendage_tessellation or {}),
     )
     manifest.write(out / f"{stl_name}_manifest.json")
     return manifest

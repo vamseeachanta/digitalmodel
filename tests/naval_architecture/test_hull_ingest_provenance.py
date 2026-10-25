@@ -17,6 +17,7 @@ inputs; the stub's effective default is deliberately distinct from None.
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -117,7 +118,13 @@ def test_cached_manifest_never_claims_a_rebuild(reader_fixture, tmp_path, fallba
         "cached_mesh_face_coverage": {"meshed": 4, "total": 4},
     }
     assert manifest.displacement_m3 == pytest.approx(4.0)
+    assert "read 4 triangles via cached-render-mesh" in manifest.notes
     assert not any("were rebuilt" in note for note in manifest.notes)
+    unused_note = (
+        "CAD fallback was enabled but unused; linear_deflection was "
+        "not applied. Varying it does not test tessellation convergence."
+    )
+    assert (unused_note in manifest.notes) is fallback
     kernel.assert_not_called()
     on_disk = json.loads((tmp_path / "out" / "hull_manifest.json").read_text())
     assert on_disk["provenance"]["tessellation"] == record
@@ -145,7 +152,7 @@ def test_mesh_free_manifest_records_effective_kernel_deflection(
         "linear_deflection": 0.125,
     }
     assert any("were rebuilt" in note for note in manifest.notes)
-    assert not any("triangles from 4/1 objects" in note for note in manifest.notes)
+    assert "read 4 triangles via occ-rebuild" in manifest.notes
     kernel.assert_called_once_with(source, layers=None, linear_deflection=requested)
     assert manifest.displacement_m3 == pytest.approx(4.0)
     on_disk = json.loads((tmp_path / "out" / "hull_manifest.json").read_text())
@@ -253,3 +260,134 @@ def test_appendage_route_is_recorded_separately_from_the_hull(reader_fixture, tm
         "linear_deflection": 0.125,
     }
     kernel.assert_called_once_with(source, layers=["Excluded"], linear_deflection=None)
+
+
+@pytest.mark.parametrize("contributing_faces", [0, 2])
+def test_cached_coverage_counts_only_meshes_that_contribute_triangles(
+    reader_fixture, monkeypatch, contributing_faces
+):
+    """Four nonempty caches; extraction returns triangles for zero or two."""
+    source, kernel = reader_fixture(Brep(4))
+    extract = hi._triangles_of_mesh
+
+    def extract_selected(mesh):
+        triangles = extract(mesh)
+        return [tri for tri in triangles if tri in TRIANGLES[:contributing_faces]]
+
+    monkeypatch.setattr(hi, "_triangles_of_mesh", extract_selected)
+    geometry = hi.read_3dm_triangles(source, tessellate_breps=True)
+    assert geometry.to_provenance()["cached_mesh_face_coverage"] == {
+        "meshed": contributing_faces,
+        "total": 4,
+    }
+    if contributing_faces:
+        assert geometry.source == "cached-render-mesh"
+        assert len(geometry.triangles) == contributing_faces
+        kernel.assert_not_called()
+    else:
+        assert geometry.source == "occ-rebuild"
+        kernel.assert_called_once_with(source, layers=None, linear_deflection=None)
+
+
+def test_ingestion_copies_nested_hull_and_appendage_evidence(tmp_path):
+    hull = {
+        "source": "cached-render-mesh",
+        "cached_mesh_face_coverage": {"meshed": 4, "total": 4},
+    }
+    appendage = {
+        "source": "occ-rebuild",
+        "cached_mesh_face_coverage": {"meshed": 0, "total": 4},
+    }
+    manifest = hi.ingest_triangles(
+        TRIANGLES,
+        tmp_path,
+        declared_units="m",
+        forward="+x",
+        tessellation=hull,
+        appendage_tessellation={"fin": appendage},
+    )
+    hull["cached_mesh_face_coverage"]["meshed"] = 1
+    appendage["cached_mesh_face_coverage"]["total"] = 8
+    assert manifest.tessellation["cached_mesh_face_coverage"]["meshed"] == 4
+    assert manifest.appendage_tessellation["fin"]["cached_mesh_face_coverage"] == {
+        "meshed": 0,
+        "total": 4,
+    }
+
+
+def test_serialization_copies_nested_hull_and_appendage_evidence(tmp_path):
+    manifest = hi.ingest_triangles(
+        TRIANGLES,
+        tmp_path,
+        declared_units="m",
+        forward="+x",
+        tessellation={
+            "source": "cached-render-mesh",
+            "cached_mesh_face_coverage": {"meshed": 4, "total": 4},
+        },
+        appendage_tessellation={
+            "fin": {
+                "source": "occ-rebuild",
+                "cached_mesh_face_coverage": {"meshed": 0, "total": 4},
+            }
+        },
+    )
+    snapshot = manifest.to_dict()["provenance"]
+    snapshot["tessellation"]["cached_mesh_face_coverage"]["meshed"] = 1
+    snapshot["appendage_tessellation"]["fin"]["cached_mesh_face_coverage"]["total"] = 8
+    fresh = manifest.to_dict()["provenance"]
+    assert fresh["tessellation"]["cached_mesh_face_coverage"]["meshed"] == 4
+    assert fresh["appendage_tessellation"]["fin"]["cached_mesh_face_coverage"] == {
+        "meshed": 0,
+        "total": 4,
+    }
+    manifest.write(tmp_path / "copy.json")
+    assert json.loads((tmp_path / "copy.json").read_text())["provenance"] == fresh
+
+
+@pytest.mark.parametrize("reference_available", [False, True])
+def test_rebuild_preserves_fidelity_evidence(
+    reader_fixture, tmp_path, reference_available
+):
+    """Summary values come from TrimFidelity, in unchanged file units."""
+    source, kernel = reader_fixture(Brep(0))
+    box = ((0.0, 0.0, 0.0), (6.0, 2.0, 2.0))
+    reference = box if reference_available else None
+    fidelity = bt.TrimFidelity(
+        mesh_bbox=box,
+        reference_bbox=reference,
+        trim_bbox=reference,
+        overshoot={"x": 0.0},
+        trim_deviation={"x": 0.125} if reference_available else {},
+    )
+    kernel.return_value = replace(kernel.return_value, fidelity=fidelity)
+    manifest = hi.ingest_3dm(
+        source, tmp_path / "out", forward="+x", tessellate_breps=True
+    )
+    expected = {
+        "within_reference_box": fidelity.within_reference_box,
+        "max_overshoot": fidelity.max_overshoot,
+        "max_trim_deviation": fidelity.max_trim_deviation,
+        "reference_bbox": [list(point) for point in box] if reference_available else None,
+        "trim_bbox": [list(point) for point in box] if reference_available else None,
+    }
+    assert manifest.to_dict()["provenance"]["tessellation"]["fidelity"] == expected
+    on_disk = json.loads((tmp_path / "out" / "hull_manifest.json").read_text())
+    assert on_disk["provenance"]["tessellation"]["fidelity"] == expected
+
+
+def test_rebuild_still_rejects_reference_box_overshoot(reader_fixture, tmp_path):
+    source, kernel = reader_fixture(Brep(0))
+    box = ((0.0, 0.0, 0.0), (6.0, 2.0, 2.0))
+    kernel.return_value = replace(
+        kernel.return_value,
+        fidelity=bt.TrimFidelity(
+            mesh_bbox=box,
+            reference_bbox=box,
+            trim_bbox=box,
+            overshoot={"x": 0.125},
+        ),
+    )
+    with pytest.raises(hi.NotWatertightError, match="trim boundaries were not honoured"):
+        hi.ingest_3dm(source, tmp_path / "out", forward="+x", tessellate_breps=True)
+    assert not (tmp_path / "out" / "hull_manifest.json").exists()
