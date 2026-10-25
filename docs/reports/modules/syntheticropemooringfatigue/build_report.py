@@ -9,6 +9,20 @@ Run from the repository root, with PYTHONPATH=src:
 
 Only the HTML and changes panel are deliverables. Workflow CSV files are written
 under the required scratch argument. No engine or solver integration is imported.
+
+Plan-lite
+---------
+Scope: maintain one synthetic rope mooring fatigue analysis report for the public
+two-line example, with its change record and regression evidence.
+Numerical evidence: calculate from the unchanged public input, trace parameters
+to their input locations, and check all 40 calculated fields against independent
+arithmetic literals. Derive verdicts from returned margins and mechanisms.
+Validation: run the report suite, including boundary cases, JavaScript interactions
+and a byte-identical rebuild; run the focused engine and rope-atlas nodes and
+applicable repository file checks. Record unavailable dependencies explicitly.
+Exclusions: no workflow physics, coefficients, solver execution or design
+qualification. Material applicability, standard-edition equivalence and physical
+creep calibration remain NOT_EVALUATED; shared ignore-rule cleanup is separate.
 """
 
 from __future__ import annotations
