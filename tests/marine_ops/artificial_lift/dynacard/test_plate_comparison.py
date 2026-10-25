@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from digitalmodel.marine_ops.artificial_lift.dynacard import plate_comparison
 from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostic_plate import (
     load_diagnostic_plate,
 )
@@ -29,6 +30,7 @@ def test_inventory_retains_every_load_and_power_curve():
         for row in MANIFEST["curves"]
     ]
     assert report["source_sha256"] == MANIFEST["file"]["sha256"]
+    assert report["unscored_supplied_counts"] == {}
     assert all(row["status"] == "NOT_EVALUATED" for row in report["curves"])
     assert report["acceptance"]["status"] == "NOT_EVALUATED"
     assert report["field_accuracy"]["status"] == "NOT_EVALUATED"
@@ -51,6 +53,7 @@ def test_self_comparison_for_each_literal_mapping(entry):
     row = next(r for r in report["curves"] if r["label"] == curve.label
                and r["ordinate"] == "load")
     assert row["status"] == "MEASURED"
+    assert report["unscored_supplied_counts"] == {}
     assert row["count"] == 2  # Two identical copies supplied above.
     assert row["distances"] == pytest.approx([0, 0])
     assert row["median_distance"] == pytest.approx(0)
@@ -73,12 +76,26 @@ def test_power_and_ambiguous_labels_are_never_scored():
             assert row["nearest_load_label"] is None
 
 
-def test_no_exemplar_modes_are_named_without_aliasing():
+@pytest.mark.parametrize("count", [0, 1, 2])
+def test_no_exemplar_modes_are_named_without_aliasing(count):
     """Stuck-pump has no literal load exemplar in the source manifest."""
     card = CardData(position=[0, 1, 1, 0], load=[0, 0, 1, 1])
-    report = compare_diagnostic_plate(WORKBOOK, {"STUCK_PUMP": [card]})
+    report = compare_diagnostic_plate(WORKBOOK, {"STUCK_PUMP": [card] * count})
+    assert report["unscored_supplied_counts"] == {"STUCK_PUMP": count}
     assert "STUCK_PUMP" in report["modes_without_literal_exemplar"]
     assert all(row["status"] == "NOT_EVALUATED" for row in report["curves"])
+
+
+def test_unscored_counts_exclude_modes_with_literal_exemplars():
+    """Only supplied modes without a load exemplar need separate counts."""
+    card = CardData(position=[0, 1, 1, 0], load=[0, 0, 1, 1])
+    report = compare_diagnostic_plate(WORKBOOK, {
+        "NORMAL": [card], "STUCK_PUMP": [card, card], "GAS_LOCK": [],
+    })
+    assert report["unscored_supplied_counts"] == {"GAS_LOCK": 0, "STUCK_PUMP": 2}
+    normal = next(row for row in report["curves"] if row["fault_mode"] == "NORMAL")
+    assert normal["status"] == "MEASURED"
+    assert normal["count"] == 1
 
 
 def test_unknown_input_mode_is_rejected():
@@ -106,6 +123,26 @@ def test_changed_workbook_cannot_be_used(tmp_path):
     changed.write_bytes(b"not the retained workbook")
     with pytest.raises(ValueError, match="digest"):
         compare_diagnostic_plate(changed, {})
+
+
+def test_source_digest_describes_loaded_curves_after_workbook_changes(
+    tmp_path, monkeypatch,
+):
+    """A later replacement must not change the evidence for already loaded data."""
+    workbook = tmp_path / "plate.xls"
+    workbook.write_bytes(WORKBOOK.read_bytes())
+
+    def load_then_replace(path):
+        curves = load_diagnostic_plate(path)
+        workbook.write_bytes(b"replacement after verified load")
+        return curves
+
+    monkeypatch.setattr(plate_comparison, "load_diagnostic_plate", load_then_replace)
+    report = compare_diagnostic_plate(workbook, {})
+    assert report["source_sha256"] == MANIFEST["file"]["sha256"]
+    assert [(row["label"], row["ordinate"]) for row in report["curves"]] == [
+        (row["label"], row["ordinate"]) for row in MANIFEST["curves"]
+    ]
 
 
 def test_affine_scale_and_sample_origin_do_not_define_a_fault():

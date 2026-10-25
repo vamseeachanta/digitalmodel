@@ -13,6 +13,7 @@ field accuracy remain `NOT_EVALUATED`.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Added a reproducible comparison with the original workbook to expose per-class distances and exclusions. |
+| 2 | 2026-10-24 | Reused the verified workbook digest and exposed unscored supplied counts so provenance and sample exclusions remain explicit. |
 
 ## Source and inputs
 
@@ -110,6 +111,13 @@ Current modes without a literal load exemplar are `BENT_BARREL`,
 current generator registry minus the literal workbook mappings; the API and
 example compute it on every run.
 
+The API also reports `unscored_supplied_counts`, mapping each supplied mode
+without a literal load exemplar to its sample count. Explicitly empty lists
+appear with a count of zero; modes absent from the input are omitted from this
+mapping. These counts do not create measurements or fault equivalences. The
+reported source digest is the one verified by the loader against the bytes used
+for the curves, so replacing the workbook after loading cannot change it.
+
 ## Offline checks and later slices
 
 The new behavioural tests use the manifest's independently inventoried labels,
@@ -118,6 +126,8 @@ every coordinate difference is zero. A constructed square supplies an
 independent algebra check of axis scaling, reversal and phase alignment.
 Tests also cover empty samples, invalid modes, malformed card data, substituted
 workbooks and the example's explicit seed selection.
+Regression tests also cover workbook replacement after loading and unscored
+counts for empty, multiple and mixed supplied samples.
 
 The external labelled set remains quarantined pending provenance and publication
 authority. No data from that set is downloaded or mapped. Independent solver

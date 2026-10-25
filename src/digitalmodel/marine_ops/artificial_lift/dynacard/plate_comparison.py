@@ -15,7 +15,6 @@ No engineering equation or calibrated limit is introduced.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from statistics import median
@@ -24,7 +23,7 @@ from typing import Any
 from .benchmark.measurements import loop_distance
 from .benchmark.test_set_builder import validate_card
 from .card_generators import ALL_GENERATORS
-from .diagnostic_plate import load_diagnostic_plate
+from .diagnostic_plate import _SOURCE_SHA256, load_diagnostic_plate
 from .models import CardData
 
 
@@ -44,6 +43,8 @@ def compare_diagnostic_plate(
         JSON-compatible evidence with unrounded distances and medians. Nearest
         load labels describe geometry only; ambiguous labels may be nearest
         without establishing a fault equivalence. Power curves are excluded.
+        Unscored supplied counts retain every supplied mode without a literal
+        load exemplar, including explicitly empty sample lists.
 
     Raises:
         ValueError: If the source bytes, mode names or card arrays are invalid.
@@ -103,7 +104,8 @@ def compare_diagnostic_plate(
 
     return {
         "source_doi": "10.17632/hnfwm9mjs6.1",
-        "source_sha256": hashlib.sha256(Path(workbook).read_bytes()).hexdigest(),
+        # The loader verified this digest against the bytes used for the curves.
+        "source_sha256": _SOURCE_SHA256,
         "input_kind": "caller-declared synthetic cards",
         "metric": (
             "Per-axis normalisation, uniform arc-length resampling; minimum mean "
@@ -112,6 +114,10 @@ def compare_diagnostic_plate(
         ),
         "curves": rows,
         "modes_without_literal_exemplar": sorted(set(ALL_GENERATORS) - literal_modes),
+        "unscored_supplied_counts": {
+            mode: len(synthetic_cards[mode])
+            for mode in sorted(set(synthetic_cards) - literal_modes)
+        },
         "acceptance": {
             "status": "NOT_EVALUATED",
             "reason": "The source provides no shape-distance acceptance limit",
