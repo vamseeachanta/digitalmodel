@@ -4,7 +4,8 @@
 
 No binding is imported or detected. Native loadability and engineering qualification
 remain unevaluated: generic template coefficients and transfer-hose properties
-require review before any solver run. Criteria are required inputs, never defaults.
+require review before any solver run. Hose values and field-level sources must
+be supplied before model generation. Criteria are required inputs, never defaults.
 """
 
 from __future__ import annotations
@@ -36,7 +37,8 @@ LIMITS = (
     "Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. "
     "Generic tanker RAOs lack qualified wind/current/drift coefficients. "
     "The inherited tanker is excluded from statics and requires equilibrium configuration. "
-    "Transfer-hose properties are illustrative, with no manufacturer qualification. "
+    "Supplied transfer-hose properties require qualification; synthetic arithmetic fixtures "
+    "have no physical or manufacturer basis. "
     "Whole-line extrema must cover the analysis stage; time and mesh sensitivity, "
     "pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits "
     "require separate assessment. No environmental force or hawser load is inferred."
@@ -163,6 +165,46 @@ def _topology(model: dict, coupling: dict) -> dict[str, str]:
     return expected
 
 
+def _validate_hose_properties(coupling: dict) -> None:
+    """Reject unresolved hose values and sources before creating any output.
+
+    A source record is required for each field; its engineering applicability
+    must be reviewed separately. No numerical property is supplied by default.
+    """
+    hose = coupling.get("hose_line_type")
+    sources = coupling.get("hose_property_sources")
+    if not isinstance(hose, dict) or not isinstance(sources, dict):
+        raise ValueError("unresolved hose property values or field-level sources")
+    for field, size in (
+        ("OD", None),
+        ("ID", None),
+        ("MassPerUnitLength", None),
+        ("EA", None),
+        ("EI", 2),
+        ("GJ", None),
+        ("PoissonRatio", None),
+        ("Cd", 3),
+        ("Ca", 3),
+    ):
+        value = hose.get(field)
+        try:
+            _text(sources.get(field))
+            if size is None:
+                _number(value, positive=field in ("OD", "MassPerUnitLength", "EA"))
+            else:
+                if not isinstance(value, list) or len(value) != size:
+                    raise ValueError("incorrect component count")
+                for component in value:
+                    _number(component)
+        except ValueError as exc:
+            raise ValueError(
+                f"unresolved or invalid hose property {field}; "
+                "supply finite numerical values and a field-level source"
+            ) from exc
+    if hose["ID"] >= hose["OD"]:
+        raise ValueError("hose property ID must be less than OD")
+
+
 def prepare_campaign(config: dict, root: Path, output: Path) -> dict:
     """Build flattened native YAML, validating every case and recording digests.
 
@@ -187,6 +229,7 @@ def prepare_campaign(config: dict, root: Path, output: Path) -> dict:
             _angle(condition[key])
     coupling = config["coupling"]
     _text(coupling["source"])
+    _validate_hose_properties(coupling)
     sources: dict[str, str] = {}
     base = _load_generic(root / BASE, root, sources)
     base["VesselTypes"] = _load_generic(
@@ -402,15 +445,17 @@ def build_report(prepared: dict, assessment: dict) -> ReportSpec:
     cfg = prepared["input"]
     return ReportSpec(
         document=DocumentMeta(
-            number="C0000-RPT-001-00",
-            revision="00",
+            number="C0000-RPT-001-01",
+            revision="01",
             title="CALM buoy and single point mooring analysis",
             project="Generic worked example",
             client="Not applicable",
         ),
         provenance=Provenance()
         .add(
-            "input", "input.yml with explicit criteria", digest=prepared["input_sha256"]
+            "input",
+            "supplied configuration with explicit criteria",
+            digest=prepared["input_sha256"],
         )
         .add(
             "exported_extrema",
@@ -442,7 +487,12 @@ def build_report(prepared: dict, assessment: dict) -> ReportSpec:
                             "00",
                             cfg["report_date"],
                             "Initial offline workflow and worked example; solver evidence pending",
-                        ]
+                        ],
+                        [
+                            "01",
+                            "2026-10-25",
+                            "Require sourced hose inputs before generation; separate the synthetic arithmetic fixture",
+                        ],
                     ],
                 ),
             ),

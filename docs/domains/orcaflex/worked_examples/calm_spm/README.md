@@ -5,7 +5,10 @@
 This offline workflow prepares a generic buoy and tanker with six anchor legs,
 a hawser and a transfer hose. It generates a case table, validates native YAML
 structure, checks imported whole-line extrema against supplied limits and builds
-an analysis in the repository's standard report form. Native solver loadability,
+an analysis in the repository's standard report form. Engineering model generation
+requires supplied hose properties and a source record for each field; the
+engineering input deliberately leaves these unresolved. The committed report
+uses a separate synthetic arithmetic test fixture. Native solver loadability,
 static equilibrium, dynamic response and engineering acceptance are
 `NOT_EVALUATED`. No licensed solver or binding is used.
 
@@ -14,6 +17,7 @@ static equilibrium, dynamic response and engineering acceptance are
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 00 | 2026-10-20 | Added reproducible case preparation, arithmetic example and report; native response evidence remains pending. |
+| 01 | 2026-10-25 | Made hose values and field-level sources required before model generation; separated synthetic arithmetic inputs from engineering inputs. |
 
 ## Inputs and sources
 
@@ -26,7 +30,8 @@ All paths below are relative to `docs/domains/orcaflex/`.
 | Regular wave height 3.5 m, period 12.0 s, surface current 1.0 m/s and wind 12.0 m/s | The hybrid base's Environment section. Its Dean stream wave uses regular height, not significant wave height. The existing depth-varying current factors are retained. |
 | Eight headings, in 45.0 degree steps | Independent case construction: divide a full turn into eight equal sectors. This is a sensitivity selection, with no directional probability or return period. |
 | Three conditions | A constructed zero-load reference, aligned loads with the generic magnitudes, and the same magnitudes with constructed wind/current offsets of plus/minus 30.0 degrees. |
-| Tanker position, connection geometry and hose properties | Required inputs in `input.yml`, explicitly labelled independent numerical examples. They are neither measured properties nor manufacturer data. The selected tanker centre and connection give a horizontal separation of 150.0 − 50.0 = 100.0 m. |
+| Tanker position and connection geometry | Constructed geometry in `input.yml`. The selected tanker centre and connection give a horizontal separation of 150.0 − 50.0 = 100.0 m. |
+| Hose dimensions, mass, stiffnesses and coefficients | Unresolved required inputs in `input.yml`. Every numerical field in `coupling.hose_line_type` requires its corresponding field-level reference in `coupling.hose_property_sources`. No numerical defaults are provided. |
 | Acceptance criteria | `input.yml` supplies none. `arithmetic_criteria.yml` supplies constructed limits solely for the arithmetic example. No code factor, allowable tension or manufacturer MBR is assumed. |
 
 The reviewed inventory also includes `library/model_library/` entries
@@ -63,7 +68,24 @@ for MBR. Only constant MBR is supported; pressure or tension dependent limits
 require a separate assessment. No environmental force equation is applied and no
 hawser or anchor tension is predicted by the offline workflow.
 
-## Run the worked example
+## Required hose inputs
+
+`input.yml` is the engineering input template. Supply all nine hose properties:
+`OD`, `ID`, `MassPerUnitLength`, `EA`, `EI`, `GJ`, `PoissonRatio`, `Cd` and `Ca`.
+For each field, supply a nonempty reference under `coupling.hose_property_sources`
+that identifies the data document and its table, section or entry. Use traceable
+public example data or qualified user-supplied data. A general coupling source
+alone does not satisfy this requirement. Missing or null values and missing or
+blank field-level references are rejected before any output directory is created.
+The workflow checks numeric shape and finiteness; the supplied source's authority,
+units and applicability still require engineering review.
+
+After completing a copy of the engineering input, pass that file to the CLI in
+place of the arithmetic fixture below. Omit `--responses` and `--criteria` to
+leave response checks pending until actual exports and qualified criteria exist.
+The unmodified engineering input is expected to fail; no test data are substituted.
+
+## Run the arithmetic example
 
 Run from the repository root with the package's dependencies available. Set
 `CALM_OUTPUT` to an external output directory before running. No files need to be
@@ -73,21 +95,26 @@ written into the checkout.
 PYTHONPATH=src uv run --no-project --with pyyaml --with loguru --with numpy \
   --with scipy --with pydantic --with jinja2 --with plotly \
   python -m digitalmodel.solvers.orcaflex.calm_workflow \
-  docs/domains/orcaflex/worked_examples/calm_spm/input.yml \
+  tests/solvers/orcaflex/fixtures/calm_spm_arithmetic.yml \
   --repo-root . --output "$CALM_OUTPUT" \
   --responses docs/domains/orcaflex/worked_examples/calm_spm/hand_calculation.json \
   --criteria docs/domains/orcaflex/worked_examples/calm_spm/arithmetic_criteria.yml
 ```
 
+`tests/solvers/orcaflex/fixtures/calm_spm_arithmetic.yml` contains synthetic hose
+properties and explicit synthetic field-level source records solely to exercise
+model serialisation and scalar arithmetic. It has no physical or manufacturer
+basis and must not be used as a qualified engineering input. Its model digests
+bind the constructed response fixture only; they are not solver evidence.
+
 The outputs are `models/case-001.yml` through `models/case-024.yml`,
 `manifest.json` and `report.html`. Identical model files are reused on a repeated
 run; a different existing model is refused. The committed `report.html` and
-`manifest.json` were built using this example. Generated native models are kept
-outside the repository; their digests are in the manifest.
+`manifest.json` were regenerated using this arithmetic fixture. Generated native
+models are kept outside the repository; their digests are in the manifest.
 
-For preparation with all response checks pending, omit `--responses` and
-`--criteria`. Required engineering criteria must be established independently
-before supplying actual solver exports.
+Required engineering hose properties, their field-level references and criteria
+must be established independently before supplying actual solver exports.
 
 ## Independent answer
 
@@ -135,14 +162,16 @@ model qualification, which remains `NOT_EVALUATED`.
 
 Tests cover independent arithmetic, threshold equality, straight-hose behaviour,
 missing evidence, rejected inputs, deterministic relocation, model preservation,
-all-case YAML validation, the CLI and the standard report form. The input source
-records and public source locators are in `sources.json`.
+all-case YAML validation, unresolved hose values and sources, rejection before
+output creation, fixture separation, the CLI and the standard report form.
+The input source records and public source locators are in `sources.json`.
 
 The inherited generic buoy and tanker data require engineering review. In
 particular, tanker hydrodynamic and environmental load coefficients, inclusion in
 statics, line units, hose properties, pretension, equilibrium and realistic wave
-conditions remain unqualified. The required input fields are an illustration,
-not a transferable physical design.
+conditions remain unqualified. The engineering hose input fields remain unresolved.
+The separate arithmetic fixture supplies synthetic values solely for testing and
+is not a physical design.
 
 Later work requires reviewed, qualified inputs and separately authorized native
 runs on one recorded solver version. Export hawser and anchor-leg tension maxima

@@ -1,5 +1,7 @@
 # Generic illustrative inputs; no site return period or design limit is inferred.
 # Sources apply to every numeric field in the corresponding record.
+# Hose properties and their field-level sources are unresolved required inputs.
+# Model generation is refused until every hose value and source is supplied.
 report_date: '2026-10-20'
 # Constructed geometry: a full turn divided into eight equal sectors.
 headings_source: 'Independent case construction: eight equal sectors of a full turn; no directional probability is assumed'
@@ -30,7 +32,7 @@ conditions:
     current_offset_deg: -30
     wind_offset_deg: 30
 coupling:
-  source: 'Independent illustrative geometry: tanker centre at 150 m, connection at minus 50 m gives 100 m horizontal separation; unstretched hawser 120 m and hose 160 m. Hose properties below are constructed unit-scale numerical inputs, not manufacturer data or a physical hose design. Tanker type and response data come from templates/mooring_systems/calm_buoy/includes/04_vessel_types.yml and 06_vessels.yml'
+  source: 'Independent illustrative geometry: tanker centre at 150 m, connection at minus 50 m gives 100 m horizontal separation; unstretched hawser 120 m and hose 160 m. Hose properties below are unresolved; supply qualified numerical values and field-level references before generation. Tanker type and response data come from templates/mooring_systems/calm_buoy/includes/04_vessel_types.yml and 06_vessels.yml'
   InitialPosition: [150, 0, 0]
   Orientation: [0, 0, 0]
   hawser:
@@ -49,15 +51,25 @@ coupling:
   hose_line_type:
     Name: IllustrativeHose
     Category: General
-    OD: 0.3
-    ID: 0.2
-    MassPerUnitLength: 0.1
-    EA: 1000
-    EI: [1, 1]
-    GJ: 1
-    PoissonRatio: 0.3
-    Cd: [1, 0, 0]
-    Ca: [1, 0, 0]
+    OD: null
+    ID: null
+    MassPerUnitLength: null
+    EA: null
+    EI: null
+    GJ: null
+    PoissonRatio: null
+    Cd: null
+    Ca: null
+  hose_property_sources:
+    OD: null
+    ID: null
+    MassPerUnitLength: null
+    EA: null
+    EI: null
+    GJ: null
+    PoissonRatio: null
+    Cd: null
+    Ca: null
   hose:
     Name: TransferHose
     EndAConnection: CALM_Buoy

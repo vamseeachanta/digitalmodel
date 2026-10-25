@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>C0000-RPT-001-00 Rev 00 - CALM buoy and single point mooring analysis</title>
-<meta name="description" content="CALM buoy and single point mooring analysis (C0000-RPT-001-00 Rev 00) - Generic worked example / Not applicable">
+<title>C0000-RPT-001-01 Rev 01 - CALM buoy and single point mooring analysis</title>
+<meta name="description" content="CALM buoy and single point mooring analysis (C0000-RPT-001-01 Rev 01) - Generic worked example / Not applicable">
 <style>
   /* ============================ TOKENS ============================ */
   :root{
@@ -410,7 +410,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <header class="masthead" id="report-header">
   <div class="wrap">
     <span class="brand">digitalmodel</span>
-    <span class="docno num"><b>C0000-RPT-001-00</b> &middot; Rev 00</span>
+    <span class="docno num"><b>C0000-RPT-001-01</b> &middot; Rev 01</span>
     <div class="mh-legend chips" id="header-standards">
     </div>
   </div>
@@ -424,8 +424,8 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="kv">
         <div class="cap">Document</div>
         <table>
-          <tr><td>Document number</td><td>C0000-RPT-001-00</td></tr>
-          <tr><td>Revision</td><td>00</td></tr>
+          <tr><td>Document number</td><td>C0000-RPT-001-01</td></tr>
+          <tr><td>Revision</td><td>01</td></tr>
           <tr><td>Project</td><td>Generic worked example</td></tr>
           <tr><td>Client</td><td>Not applicable</td></tr>
         </table>
@@ -445,7 +445,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <table>
         <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
         <tbody>
-          <tr><td>00</td><td></td><td>Issued</td><td></td><td></td><td></td></tr>
+          <tr><td>01</td><td></td><td>Issued</td><td></td><td></td><td></td></tr>
         </tbody>
       </table>
     </div>
@@ -475,7 +475,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Summary</h2></div>
 
     <div class="prose">
-<p>Offline preparation of 24 generic combined-load cases. Imported scalar comparison: NOT_EVALUATED. Engineering acceptance and native solver results: NOT_EVALUATED. Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. Generic tanker RAOs lack qualified wind/current/drift coefficients. The inherited tanker is excluded from statics and requires equilibrium configuration. Transfer-hose properties are illustrative, with no manufacturer qualification. Whole-line extrema must cover the analysis stage; time and mesh sensitivity, pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits require separate assessment. No environmental force or hawser load is inferred.</p>
+<p>Offline preparation of 24 generic combined-load cases. Imported scalar comparison: NOT_EVALUATED. Engineering acceptance and native solver results: NOT_EVALUATED. Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. Generic tanker RAOs lack qualified wind/current/drift coefficients. The inherited tanker is excluded from statics and requires equilibrium configuration. Supplied transfer-hose properties require qualification; synthetic arithmetic fixtures have no physical or manufacturer basis. Whole-line extrema must cover the analysis stage; time and mesh sensitivity, pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits require separate assessment. No environmental force or hawser load is inferred.</p>
     </div>
     </section>
     <section id="revision-history">
@@ -490,6 +490,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
           </thead>
           <tbody>
             <tr><td>00</td><td>2026-10-20</td><td>Initial offline workflow and worked example; solver evidence pending</td></tr>
+            <tr><td>01</td><td>2026-10-25</td><td>Require sourced hose inputs before generation; separate the synthetic arithmetic fixture</td></tr>
           </tbody>
         </table>
       </div>
@@ -810,7 +811,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
         <table class="sources">
           <thead><tr><th>Kind</th><th>Identifier</th><th>Digest</th><th>Retrieved</th><th>Description</th></tr></thead>
           <tbody>
-            <tr><td>input</td><td>input.yml with explicit criteria</td><td>e7529dfe5e8dc80490c7d05b59e1d8ac88b3c176f1b34dcdba36292ab2761836</td><td></td><td></td></tr>
+            <tr><td>input</td><td>supplied configuration with explicit criteria</td><td>b8a256644fa34cbb5a4c4b88ef3589396a4a93cb70b414ac2da0153cff7b6508</td><td></td><td></td></tr>
             <tr><td>exported_extrema</td><td>response collection</td><td>ca93c177acbd6a2f9de38cd53a5fcd7b55be1c31184a66deb451411de66e5695</td><td></td><td></td></tr>
           </tbody>
         </table>
@@ -820,7 +821,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Input echo</h2></div>
       <p class="l1sub">Every input as received by the calculation, so the result can be reproduced.</p>
       <details class="input-echo" open>
-        <summary>64 input values</summary>
+        <summary>73 input values</summary>
         <div class="tbl-wrap">
           <table>
             <thead><tr><th>Key</th><th>Value</th></tr></thead>
@@ -854,6 +855,15 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
               <tr><td>coupling.hose_line_type.PoissonRatio</td><td>0.3</td></tr>
               <tr><td>coupling.hose_line_type.Cd</td><td>[1, 0, 0]</td></tr>
               <tr><td>coupling.hose_line_type.Ca</td><td>[1, 0, 0]</td></tr>
+              <tr><td>coupling.hose_property_sources.OD</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
+              <tr><td>coupling.hose_property_sources.ID</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
+              <tr><td>coupling.hose_property_sources.MassPerUnitLength</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
+              <tr><td>coupling.hose_property_sources.EA</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
+              <tr><td>coupling.hose_property_sources.EI</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
+              <tr><td>coupling.hose_property_sources.GJ</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
+              <tr><td>coupling.hose_property_sources.PoissonRatio</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
+              <tr><td>coupling.hose_property_sources.Cd</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
+              <tr><td>coupling.hose_property_sources.Ca</td><td>Synthetic arithmetic fixture only; no physical or manufacturer basis</td></tr>
               <tr><td>coupling.hose.Name</td><td>TransferHose</td></tr>
               <tr><td>coupling.hose.EndAConnection</td><td>CALM_Buoy</td></tr>
               <tr><td>coupling.hose.EndAX</td><td>0</td></tr>
@@ -903,7 +913,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div>
         <h3>Document</h3>
         <ul>
-          <li><span class="k">Number</span> C0000-RPT-001-00 &middot; Rev 00</li>
+          <li><span class="k">Number</span> C0000-RPT-001-01 &middot; Rev 01</li>
           <li><span class="k">Project</span> Generic worked example</li>
           <li><span class="k">Client</span> Not applicable</li>
         </ul>
@@ -925,7 +935,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       </div>
     </div>
     <div class="foot-bar">
-      <span>C0000-RPT-001-00 Rev 00 &middot; CALM buoy and single point mooring analysis</span>
+      <span>C0000-RPT-001-01 Rev 01 &middot; CALM buoy and single point mooring analysis</span>
       <span class="pdf" id="pdf-status">PDF: derivative of this HTML; render status in the manifest</span>
     </div>
   </div>

@@ -1,6 +1,6 @@
 {
   "preparation": {
-    "input_sha256": "e7529dfe5e8dc80490c7d05b59e1d8ac88b3c176f1b34dcdba36292ab2761836",
+    "input_sha256": "b8a256644fa34cbb5a4c4b88ef3589396a4a93cb70b414ac2da0153cff7b6508",
     "sources": {
       "docs/domains/orcaflex/templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml": "dddc8ac4b7847c1907fd308310a72a17165c6d5714a0ff6d5f42fae9c43a114c",
       "docs/domains/orcaflex/library/line_types/chain_84mm_r4.yml": "39e4080d2c804f9f8ea4b9896e377cb32a5602a204c4e2986a1d00bc9d2fa58a",
@@ -485,6 +485,17 @@
             0
           ]
         },
+        "hose_property_sources": {
+          "OD": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "ID": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "MassPerUnitLength": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "EA": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "EI": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "GJ": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "PoissonRatio": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "Cd": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "Ca": "Synthetic arithmetic fixture only; no physical or manufacturer basis"
+        },
         "hose": {
           "Name": "TransferHose",
           "EndAConnection": "CALM_Buoy",
@@ -548,7 +559,7 @@
         }
       }
     },
-    "known_limits": "Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. Generic tanker RAOs lack qualified wind/current/drift coefficients. The inherited tanker is excluded from statics and requires equilibrium configuration. Transfer-hose properties are illustrative, with no manufacturer qualification. Whole-line extrema must cover the analysis stage; time and mesh sensitivity, pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits require separate assessment. No environmental force or hawser load is inferred.",
+    "known_limits": "Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. Generic tanker RAOs lack qualified wind/current/drift coefficients. The inherited tanker is excluded from statics and requires equilibrium configuration. Supplied transfer-hose properties require qualification; synthetic arithmetic fixtures have no physical or manufacturer basis. Whole-line extrema must cover the analysis stage; time and mesh sensitivity, pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits require separate assessment. No environmental force or hawser load is inferred.",
     "native_solver_status": "NOT_EVALUATED"
   },
   "assessment": {
@@ -3822,6 +3833,6 @@
     ],
     "solver_version": null,
     "native_solver_status": "NOT_EVALUATED",
-    "known_limits": "Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. Generic tanker RAOs lack qualified wind/current/drift coefficients. The inherited tanker is excluded from statics and requires equilibrium configuration. Transfer-hose properties are illustrative, with no manufacturer qualification. Whole-line extrema must cover the analysis stage; time and mesh sensitivity, pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits require separate assessment. No environmental force or hawser load is inferred."
+    "known_limits": "Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. Generic tanker RAOs lack qualified wind/current/drift coefficients. The inherited tanker is excluded from statics and requires equilibrium configuration. Supplied transfer-hose properties require qualification; synthetic arithmetic fixtures have no physical or manufacturer basis. Whole-line extrema must cover the analysis stage; time and mesh sensitivity, pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits require separate assessment. No environmental force or hawser load is inferred."
   }
 }

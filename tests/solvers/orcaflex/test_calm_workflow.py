@@ -27,11 +27,23 @@ from digitalmodel.solvers.orcaflex.calm_workflow import (
 
 ROOT = Path(__file__).resolve().parents[3]
 EXAMPLE = ROOT / "docs/domains/orcaflex/worked_examples/calm_spm/input.yml"
+ARITHMETIC_INPUT = Path(__file__).parent / "fixtures/calm_spm_arithmetic.yml"
+HOSE_PROPERTIES = (
+    "OD",
+    "ID",
+    "MassPerUnitLength",
+    "EA",
+    "EI",
+    "GJ",
+    "PoissonRatio",
+    "Cd",
+    "Ca",
+)
 
 
 @pytest.fixture
 def cfg():
-    return yaml.safe_load(EXAMPLE.read_text())
+    return yaml.safe_load(ARITHMETIC_INPUT.read_text(encoding="utf-8"))
 
 
 @pytest.fixture
@@ -319,7 +331,7 @@ def test_committed_example_reproduces_report_and_manifest(cfg, prepared, tmp_pat
     assert (
         main(
             [
-                str(EXAMPLE),
+                str(ARITHMETIC_INPUT),
                 "--repo-root",
                 str(ROOT),
                 "--output",
@@ -365,3 +377,96 @@ def test_rejects_ambiguous_native_coupling(cfg, tmp_path, mutation):
     mutation(cfg)
     with pytest.raises(ValueError):
         prepare_campaign(cfg, ROOT, tmp_path / "invalid-coupling")
+
+
+@pytest.mark.parametrize("field", HOSE_PROPERTIES)
+@pytest.mark.parametrize("missing", [True, False])
+def test_rejects_unresolved_hose_property(cfg, tmp_path, field, missing):
+    if missing:
+        del cfg["coupling"]["hose_line_type"][field]
+    else:
+        cfg["coupling"]["hose_line_type"][field] = None
+    output = tmp_path / "unresolved"
+    with pytest.raises(ValueError, match=field):
+        prepare_campaign(cfg, ROOT, output)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("field", HOSE_PROPERTIES)
+@pytest.mark.parametrize("missing", [True, False])
+def test_requires_field_level_hose_sources(cfg, tmp_path, field, missing):
+    sources = cfg["coupling"]["hose_property_sources"]
+    if missing:
+        del sources[field]
+    else:
+        sources[field] = " "
+    output = tmp_path / "unsourced"
+    with pytest.raises(ValueError, match=field):
+        prepare_campaign(cfg, ROOT, output)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize(
+    "field, value",
+    [
+        ("EA", float("nan")),
+        ("MassPerUnitLength", True),
+        ("OD", 0),
+        ("ID", 0.3),
+        ("EI", [1]),
+        ("EI", [1, None]),
+        ("Cd", [1, 0]),
+        ("Ca", [1, 0, float("inf")]),
+        ("PoissonRatio", "unresolved"),
+    ],
+)
+def test_rejects_invalid_hose_properties(cfg, tmp_path, field, value):
+    cfg["coupling"]["hose_line_type"][field] = value
+    output = tmp_path / "invalid-hose"
+    with pytest.raises(ValueError, match=field):
+        prepare_campaign(cfg, ROOT, output)
+    assert not output.exists()
+
+
+def test_engineering_input_is_unresolved_and_separate(cfg, tmp_path):
+    engineering = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    for field in HOSE_PROPERTIES:
+        assert engineering["coupling"]["hose_line_type"][field] is None
+        assert engineering["coupling"]["hose_property_sources"][field] is None
+    # Only the hose data and its provenance differ in the arithmetic fixture.
+    fixture = copy.deepcopy(cfg)
+    for field in ("source", "hose_line_type", "hose_property_sources"):
+        fixture["coupling"][field] = engineering["coupling"][field]
+    assert fixture == engineering
+    output = tmp_path / "engineering"
+    with pytest.raises(ValueError, match="hose property"):
+        prepare_campaign(engineering, ROOT, output)
+    assert not output.exists()
+
+
+def test_cli_refuses_unresolved_engineering_input(tmp_path):
+    from digitalmodel.solvers.orcaflex.calm_workflow import main
+
+    output = tmp_path / "cli-unresolved"
+    with pytest.raises(ValueError, match="hose property"):
+        main([str(EXAMPLE), "--repo-root", str(ROOT), "--output", str(output)])
+    assert not output.exists()
+
+
+def test_hose_sources_are_recorded_without_native_metadata(cfg, prepared, tmp_path):
+    assert (
+        prepared["input"]["coupling"]["hose_property_sources"]
+        == (cfg["coupling"]["hose_property_sources"])
+    )
+    model = yaml.safe_load((tmp_path / "models/case-001.yml").read_text())
+    assert model["LineTypes"][-1] == cfg["coupling"]["hose_line_type"]
+
+
+@pytest.mark.parametrize("field", ["hose_line_type", "hose_property_sources"])
+@pytest.mark.parametrize("value", [None, []])
+def test_requires_hose_value_and_source_mappings(cfg, tmp_path, field, value):
+    cfg["coupling"][field] = value
+    output = tmp_path / "missing-hose-mapping"
+    with pytest.raises(ValueError, match="hose property"):
+        prepare_campaign(cfg, ROOT, output)
+    assert not output.exists()
