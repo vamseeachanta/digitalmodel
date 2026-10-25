@@ -70,6 +70,12 @@ class Generator:
 
 
 GENERATORS = (
+    Generator(
+        "scripts/build_fatigue_module_report.py",
+        ("docs/reports/modules/fatigue/report.html",
+         "docs/reports/modules/fatigue/changes.json"),
+        inputs=("docs/reports/modules/fatigue/public-example.json",),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(

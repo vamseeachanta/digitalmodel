@@ -39,7 +39,7 @@ def display(value: float) -> str:
 
 def calculate() -> dict:
     """Call the public assessment on the published signal and assumed basis."""
-    fixture = json.loads((DESTINATION / "public-example.json").read_text())
+    fixture = json.loads((DESTINATION / "public-example.json").read_text(encoding="utf-8"))
     w, a = fixture["waveform"], fixture["assumptions"]
     times = [w["span"] * i / w["intervals"] for i in range(w["intervals"] + 1)]
     signal = [w["offset"] + w["sine_amplitude"] * math.sin(t)
@@ -263,8 +263,8 @@ def render(data: dict) -> str:
     source = data["source"]
     result = data["result"]
     w = data["waveform"]
-    style = re.search(r"<style>(.*?)</style>", STYLE_SOURCE.read_text(), re.S)[1]
-    style = BRAND_SOURCE.read_text() + "\n" + style
+    style = re.search(r"<style>(.*?)</style>", STYLE_SOURCE.read_text(encoding="utf-8"), re.S)[1]
+    style = BRAND_SOURCE.read_text(encoding="utf-8") + "\n" + style
     # Retain the canonical rules; remove editorial comments from the public page.
     style = re.sub(r"/\*.*?\*/", "", style, flags=re.S)
     style = "\n".join(line.rstrip() for line in style.splitlines())
@@ -532,9 +532,9 @@ def build(output_dir: Path = DESTINATION) -> None:
     """Write the report and its engineering changes, without other artifacts."""
     data = calculate()
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "report.html").write_text(render(data), encoding="utf-8")
+    (output_dir / "report.html").write_text(render(data), encoding="utf-8", newline="\n")
     (output_dir / "changes.json").write_text(
-        json.dumps(changes(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        json.dumps(changes(), indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
 
 
 def main() -> None:

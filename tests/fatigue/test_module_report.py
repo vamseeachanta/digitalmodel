@@ -5,9 +5,11 @@
 import importlib.util
 import json
 import math
+import os
 import re
 import shutil
 import subprocess
+import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -15,6 +17,7 @@ import numpy as np
 import pytest
 
 from digitalmodel.fatigue.assessment import AssessmentInput, assess_fatigue
+from digitalmodel.fatigue.c203_sn_tables import BILINEAR, N_KNEE_AIR
 from digitalmodel.fatigue.rainflow import rainflow_count
 from digitalmodel.fatigue.sn_curves import get_sn_curve
 
@@ -80,7 +83,7 @@ class ReportParser(HTMLParser):
 @pytest.fixture(scope="module")
 def reference():
     """Evaluate the published signal without using the report generator."""
-    fixture = json.loads((REPORT / "public-example.json").read_text())
+    fixture = json.loads((REPORT / "public-example.json").read_text(encoding="utf-8"))
     w = fixture["waveform"]
     times = [w["span"] * i / w["intervals"] for i in range(w["intervals"] + 1)]
     signal = [w["offset"] + w["sine_amplitude"] * math.sin(t)
@@ -117,9 +120,9 @@ def test_every_worked_value_and_chart_point_comes_from_native_result(reference):
     assert data["time"] == times
     assert data["stress"] == stress.tolist()
     curve = get_sn_curve(inp.sn_curve_name, inp.environment)
-    independent_damage = sum(c.cycles / float(curve.cycles(c.stress_range_mpa))
-                             for c in result.cases[0].cycles)
-    assert result.block_damage == pytest.approx(independent_damage, rel=1e-12)
+    native_damage = sum(c.cycles / float(curve.cycles(c.stress_range_mpa))
+                        for c in result.cases[0].cycles)
+    assert result.block_damage == pytest.approx(native_damage, rel=1e-12)
     assert data["metrics"]["cycle_total"] == sum(c.cycles for c in result.cases[0].cycles)
     assert data["metrics"]["sample_count"] == len(times)
     assert data["metrics"]["maximum_range"] == max(c.stress_range_mpa for c in result.cases[0].cycles)
@@ -149,17 +152,81 @@ def test_every_worked_value_and_chart_point_comes_from_native_result(reference):
     assert fixture["source"]["section"].startswith("Usage")
 
 
+def test_published_rows_give_hand_calculated_damage_life_and_utilisation(reference):
+    """Evaluate both resistance segments without the native cycle evaluator."""
+    fixture, _, _, _, result = reference
+    assumptions = fixture["assumptions"]
+    assert (assumptions["sn_curve_name"], assumptions["environment"]) == ("D", "air")
+    parameters = BILINEAR["D"]
+    # DNV-RP-C203 (October 2011), section 2.4, S-N curves:
+    # S_D = (a_1/N_D)^(1/m_1); N(S) = N_D*(S_D/S)^m,
+    # with m_1 above the knee and m_2 below it. Existing parameter records
+    # are reused; neither get_sn_curve nor curve.cycles supplies expectations.
+    knee = (10 ** parameters.log_a1_air / N_KNEE_AIR) ** (1 / parameters.m1)
+    low, high = [], []
+    for public_range, count in fixture["published_range_counts"]:
+        stress = public_range * assumptions["stress_scale_mpa"]
+        above_knee = stress >= knee
+        slope = parameters.m1 if above_knee else parameters.m2
+        allowable = N_KNEE_AIR * (knee / stress) ** slope
+        (high if above_knee else low).append(count / allowable)
+    assert (len(low), len(high)) == (7, 3)
+    # DNV-RP-C203 (October 2011), section 2.2, Fatigue damage accumulation.
+    # Hand sum of the cited ten rows: seven low-range contributions plus
+    # three high-range contributions give D = sum(n_i/N_i), dimensionless.
+    assert math.fsum(low) == pytest.approx(7.49184385774e-8, rel=1e-10, abs=0)
+    assert math.fsum(high) == pytest.approx(1.22532222645e-6, rel=1e-10, abs=0)
+    damage = math.fsum(low + high)
+    assert damage == pytest.approx(1.30024066503e-6, rel=1e-10, abs=0)
+    # Repeating the assumed one-year block: L = 1/D years; exposure demand
+    # is U = D*(25/1)*1. These are duration bookkeeping, not a life forecast.
+    life = assumptions["block_years"] / damage
+    utilisation = (damage * assumptions["design_years"] / assumptions["block_years"]
+                   * assumptions["design_fatigue_factor"])
+    assert life == pytest.approx(769088.390246, rel=1e-10, abs=0)
+    assert utilisation == pytest.approx(3.25060166257e-5, rel=1e-10, abs=0)
+    metrics = builder.calculate()["metrics"]
+    for actual, expected in (
+        (result.block_damage, damage), (result.life_years, life),
+        (result.utilisation, utilisation), (metrics["block_damage"], damage),
+        (metrics["life_years"], life), (metrics["utilisation"], utilisation),
+    ):
+        assert actual == pytest.approx(expected, rel=1e-10, abs=0)
+
+
 def test_rebuild_is_deterministic_and_committed_outputs_are_current(tmp_path):
     builder.build(tmp_path)
     for name in ("report.html", "changes.json"):
-        assert (tmp_path / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (tmp_path / name).read_bytes() == (REPORT / name).read_bytes(), (
+            "Rebuild with PYTHONPATH=src python scripts/build_fatigue_module_report.py"
+        )
     builder.build(tmp_path)
-    assert (tmp_path / "report.html").read_bytes() == (REPORT / "report.html").read_bytes()
+    assert (tmp_path / "report.html").read_bytes() == (REPORT / "report.html").read_bytes(), (
+        "Rebuild with PYTHONPATH=src python scripts/build_fatigue_module_report.py"
+    )
+
+
+def test_rebuild_with_ascii_locale_writes_utf8_and_lf(tmp_path):
+    env = os.environ.copy()
+    env.update(PYTHONUTF8="0", PYTHONCOERCECLOCALE="0", LC_ALL="C")
+    rebuilt = subprocess.run(
+        [sys.executable, "-X", "utf8=0", str(ROOT / "scripts/build_fatigue_module_report.py"),
+         "--output-dir", str(tmp_path)],
+        env=env, capture_output=True, text=True, encoding="utf-8", timeout=30,
+    )
+    assert rebuilt.returncode == 0, rebuilt.stderr
+    for name in ("report.html", "changes.json"):
+        output = (tmp_path / name).read_bytes()
+        output.decode("utf-8")
+        assert b"\r" not in output
+        assert output == (REPORT / name).read_bytes(), (
+            "Rebuild with PYTHONPATH=src python scripts/build_fatigue_module_report.py"
+        )
 
 
 def test_visible_values_structure_and_self_containment():
     data = builder.calculate()
-    html = (REPORT / "report.html").read_text()
+    html = (REPORT / "report.html").read_text(encoding="utf-8")
     parser = ReportParser()
     parser.feed(html)
     assert parser.values == {key: builder.display(value) for key, value in data["metrics"].items()}
@@ -209,7 +276,7 @@ def test_comment_roundtrip_and_chart_handlers_without_a_browser(tmp_path):
     node = shutil.which("node")
     if node is None:
         pytest.skip("Node is unavailable for the offline interaction check")
-    html = (REPORT / "report.html").read_text()
+    html = (REPORT / "report.html").read_text(encoding="utf-8")
     script = re.findall(r'<script>(.*?)</script>', html, re.S)[0]
     harness = r'''
 const vm = require("node:vm");
@@ -278,9 +345,9 @@ vm.runInContext(fs.readFileSync(process.argv[2], "utf8"), context);
 })().catch(error => { console.error(error); process.exitCode = 1; });
 '''
     script_path = tmp_path / "interaction.js"
-    script_path.write_text(script)
+    script_path.write_text(script, encoding="utf-8", newline="\n")
     harness_path = tmp_path / "check.cjs"
-    harness_path.write_text(harness)
+    harness_path.write_text(harness, encoding="utf-8", newline="\n")
     checked = subprocess.run([node, str(harness_path), str(script_path)],
-                             capture_output=True, text=True, timeout=20)
+                             capture_output=True, text=True, encoding="utf-8", timeout=20)
     assert checked.returncode == 0, checked.stderr

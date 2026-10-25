@@ -13,6 +13,7 @@ committed page, and the regenerated page — not the committed one — is what m
 be free of hard-coded core brand tokens.
 """
 
+import re
 from pathlib import Path
 
 import pytest
@@ -39,13 +40,74 @@ def test_every_registered_page_is_byte_identical_to_its_generator(
 
 
 def test_regenerated_pages_inherit_core_brand_tokens(regenerated: Path) -> None:
-    offenders = sorted(
-        path.relative_to(regenerated).as_posix()
-        for path in checker.all_registered_outputs(regenerated)
-        if brand_guard.CORE_RE.search(path.read_text(encoding="utf-8", errors="ignore"))
-    )
+    css = (checker.REPO / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    canonical = "\n".join(line.rstrip() for line in
+                          re.sub(r"/\*.*?\*/", "", css, flags=re.S).splitlines()).strip()
+    offenders = []
+    for path in checker.all_registered_outputs(regenerated):
+        relative = path.relative_to(regenerated).as_posix()
+        text = path.read_text(encoding="utf-8")
+        if relative == "docs/reports/modules/fatigue/report.html":
+            # The standalone report carries the canonical stylesheet offline.
+            # Verify its exact normalized content, then check for overrides.
+            assert canonical and canonical in text, "Canonical inline brand stylesheet missing"
+            text = text.replace(canonical, "", 1)
+        if brand_guard.CORE_RE.search(text):
+            offenders.append(relative)
+    assert sorted(offenders) == []
 
-    assert offenders == []
+
+@pytest.mark.parametrize(
+    "case,accepted",
+    [("inline", True), ("linked", True), ("missing", False),
+     ("changed", False), ("override", False), ("online-inline", False)],
+)
+def test_core_brand_check_accepts_canonical_inline_styles_only(
+    tmp_path: Path, monkeypatch, case: str, accepted: bool,
+) -> None:
+    canonical = ":root { --brand: #123456; }"
+    source = tmp_path / "docs/api/_assets/brand.css"
+    source.parent.mkdir(parents=True)
+    source.write_text("/* Shared theme */\n" + canonical + "\n",
+                      encoding="utf-8", newline="\n")
+    relative = ("docs/api/example.html" if case in {"linked", "online-inline"}
+                else "docs/reports/modules/fatigue/report.html")
+    page = tmp_path / relative
+    page.parent.mkdir(parents=True, exist_ok=True)
+    text = "<style>\n" + canonical + "\n</style>"
+    if case in {"linked", "missing"}:
+        text = '<link rel="stylesheet" href="brand.css"><p style="color:var(--brand)">'
+    elif case == "changed":
+        text = text.replace("#123456", "#654321")
+    elif case == "override":
+        text += "<style>:root { --brand: #654321; }</style>"
+    page.write_text(text, encoding="utf-8", newline="\n")
+    monkeypatch.setattr(checker, "REPO", tmp_path)
+    monkeypatch.setattr(checker, "all_registered_outputs", lambda root: {root / relative})
+    if accepted:
+        test_regenerated_pages_inherit_core_brand_tokens(tmp_path)
+    else:
+        with pytest.raises(AssertionError):
+            test_regenerated_pages_inherit_core_brand_tokens(tmp_path)
+
+
+def test_fatigue_report_is_registered_with_its_public_input() -> None:
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script == "scripts/build_fatigue_module_report.py"]
+    assert len(entries) == 1
+    assert entries[0].outputs == (
+        "docs/reports/modules/fatigue/report.html",
+        "docs/reports/modules/fatigue/changes.json",
+    )
+    assert entries[0].inputs == ("docs/reports/modules/fatigue/public-example.json",)
+
+
+def test_fatigue_report_public_input_is_copied_to_shadow(regenerated: Path) -> None:
+    relative = "docs/reports/modules/fatigue/public-example.json"
+    copied = regenerated / relative
+    assert copied.is_file()
+    assert not copied.is_symlink()
+    assert copied.read_bytes() == (checker.REPO / relative).read_bytes()
 
 
 def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
@@ -55,9 +117,9 @@ def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
         'from pathlib import Path\n'
         'FORMAT = "HTML"\n'
         'output = Path("docs") / "api" / f"example.{FORMAT.lower()}"\n'
-        'with open(output, "w", encoding="utf-8") as stream:\n'
+        'with open(output, "w", encoding="utf-8", newline="\\n") as stream:\n'
         '    stream.write("<html></html>")\n',
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
 
     assert checker.discover_candidate_generators(tmp_path) == {
@@ -82,13 +144,13 @@ def test_shadow_copies_inputs_instead_of_linking_live_checkout(
     ):
         directory = repo / relative
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / "sentinel.txt").write_text("original", encoding="utf-8")
+        (directory / "sentinel.txt").write_text("original", encoding="utf-8", newline="\n")
 
     checker.prepare_shadow(repo, shadow)
 
     copied_inputs = ("assets", "atlases", "data", "src", "tests")
     assert all(not (shadow / name).is_symlink() for name in copied_inputs)
-    (shadow / "src" / "sentinel.txt").write_text("shadow", encoding="utf-8")
+    (shadow / "src" / "sentinel.txt").write_text("shadow", encoding="utf-8", newline="\n")
     assert (repo / "src" / "sentinel.txt").read_text(encoding="utf-8") == "original"
 
 
@@ -96,8 +158,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 27  # includes the published pipeline assessment and manifest
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 29  # includes the fatigue report and its changes record
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
@@ -141,7 +203,7 @@ def test_page_census_rejects_unclassified_html(tmp_path: Path, monkeypatch) -> N
     )
     for page in pages:
         page.parent.mkdir(parents=True, exist_ok=True)
-        page.write_text("<html></html>", encoding="utf-8")
+        page.write_text("<html></html>", encoding="utf-8", newline="\n")
 
     errors = checker.validate_page_census(tmp_path)
     message = "\n".join(errors)
@@ -277,7 +339,7 @@ def test_real_build_output_pages_match_specifications():
 
 def test_registry_reports_unsupported_specs(build_output_registry, monkeypatch):
     repo, script, _entries, ownership = build_output_registry
-    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8")
+    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     monkeypatch.setattr(
         checker, "discover_candidate_generators",
@@ -292,7 +354,7 @@ def test_check_reports_unsupported_specs_without_traceback(
     build_output_registry, monkeypatch, capsys,
 ):
     repo, script, _entries, ownership = build_output_registry
-    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8")
+    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     assert checker.check(repo) == 1
     assert capsys.readouterr().out == (
@@ -311,7 +373,7 @@ def test_build_output_enumeration_accepts_repository_root(tmp_path, monkeypatch)
     })
     script = tmp_path / "scripts/capabilities/build_onepagers.py"
     script.parent.mkdir(parents=True)
-    script.write_text('SPECS: list = [dict(id="temporary-root")]\n', encoding="utf-8")
+    script.write_text('SPECS: list = [dict(id="temporary-root")]\n', encoding="utf-8", newline="\n")
     assert ownership.build_output_pages(tmp_path) == {
         "docs/api/capabilities/pdf/temporary-root.html"
     }
@@ -325,7 +387,7 @@ def test_build_output_enumeration_accepts_repository_root(tmp_path, monkeypatch)
 def test_build_output_rejects_invalid_id_forms(build_output_registry, identifier):
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
-        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8",
+        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8", newline="\n",
     )
     with pytest.raises(ValueError) as error:
         ownership.build_output_pages(repo)
@@ -340,7 +402,7 @@ def test_build_output_rejects_duplicate_ids(build_output_registry):
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
         'SPECS: list = [dict(id="repeat"), dict(id="other"), dict(id="repeat")]\n',
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
     with pytest.raises(ValueError) as error:
         ownership.build_output_pages(repo)
@@ -359,7 +421,7 @@ def test_build_output_rejects_duplicate_ids(build_output_registry):
 def test_build_output_rejects_hyphen_edges(build_output_registry, identifier):
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
-        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8",
+        f"SPECS: list = [dict(id={identifier!r})]\n", encoding="utf-8", newline="\n",
     )
     with pytest.raises(ValueError) as error:
         ownership.build_output_pages(repo)
@@ -373,7 +435,7 @@ def test_build_output_accepts_single_internal_hyphens(build_output_registry):
     """Regression pin: single internal hyphens remain accepted."""
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
-        'SPECS: list = [dict(id="part-2-example")]\n', encoding="utf-8",
+        'SPECS: list = [dict(id="part-2-example")]\n', encoding="utf-8", newline="\n",
     )
     assert ownership.build_output_pages(repo) == {
         "docs/api/capabilities/pdf/part-2-example.html"
@@ -384,10 +446,10 @@ def test_failed_enumeration_withholds_unclassified_pages(
     build_output_registry, monkeypatch, capsys,
 ):
     repo, script, _entries, ownership = build_output_registry
-    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8")
+    (repo / script).write_text("SPECS: list = ()\n", encoding="utf-8", newline="\n")
     page = repo / "docs/api/capabilities/pdf/example.html"
     page.parent.mkdir(parents=True)
-    page.write_text("<title>Example</title>", encoding="utf-8")
+    page.write_text("<title>Example</title>", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     checker.MANUAL_PAGES["docs/api/missing.html"] = "synthetic manual page"
     assert checker.check(repo) == 1
@@ -406,7 +468,7 @@ def test_working_enumeration_reports_unclassified_page(
     repo, _script, _entries, ownership = build_output_registry
     page = repo / "docs/api/capabilities/pdf/unknown.html"
     page.parent.mkdir(parents=True)
-    page.write_text("<title>Unknown</title>", encoding="utf-8")
+    page.write_text("<title>Unknown</title>", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     assert checker.check(repo) == 1
     assert "unclassified docs/api HTML page(s): docs/api/capabilities/pdf/unknown.html" in capsys.readouterr().out
@@ -416,7 +478,7 @@ def test_registry_reports_registered_script_syntax_error(
     build_output_registry, monkeypatch, capsys,
 ):
     repo, script, _entries, ownership = build_output_registry
-    (repo / script).write_text("SPECS: list = [\n", encoding="utf-8")
+    (repo / script).write_text("SPECS: list = [\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(checker, "build_output_pages", ownership.build_output_pages)
     errors = checker.validate_registry(repo)
     assert len(errors) == 1
