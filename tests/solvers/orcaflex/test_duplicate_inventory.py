@@ -1,8 +1,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Independent hand-counted examples for the offline duplicate report."""
 
 import csv

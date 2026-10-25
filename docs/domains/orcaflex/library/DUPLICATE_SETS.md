@@ -11,12 +11,13 @@ permission to redistribute, or successful solver execution.
 |---|---|---|
 | 1 | 2026-10-12 | The initial survey recorded duplicate families and location preferences without removing models. |
 | 2 | 2026-10-20 | Proposal and reference outputs are separated to avoid repeated reference lists; a worked example and regression checks explain the join. |
+| 3 | 2026-10-24 | Candidate and reference-document counts use the same regenerated inventory; table numbering follows document order and duplicate test licence text is removed. |
 
-Table 2: document revisions; the original survey below remains a historical measurement.
+Table 1: document revisions; the original survey below remains a historical measurement.
 
-## Current inventory (2026-10-20)
+## Current inventory (2026-10-24)
 
-The tracked model tree at `6600d1de4` is read using the schema-version-2 script.
+The tracked model tree at `807dd9b9` is read using the schema-version-2 script.
 The scan selects 3,870 candidate YAML files. The family counts are reproduced
 without deleting or editing any model input.
 
@@ -28,7 +29,7 @@ without deleting or editing any model input.
 | Other | 146 | 591 | 445 |
 | Total | 408 | 1,834 | 1,426 |
 
-Table 3: current disjoint family counts; redundant copies equal files minus sets.
+Table 2: current disjoint family counts; redundant copies equal files minus sets.
 
 The current tree contains 151 more files in duplicate sets and 23 more sets than
 the historical inventory, giving 128 more redundant copies. This is a tree
@@ -53,7 +54,7 @@ The inventory is dated 2026-10-12.
 | Other, including sets crossing the above families | 122 | 423 | 301 | not stated |
 | Total | 385 | 1,683 | 1,298 | 996 |
 
-Table 1: disjoint family counts. Paths in the first column are relative to
+Table 3: disjoint family counts. Paths in the first column are relative to
 `docs/domains/orcaflex/`. Redundant copies equal files minus sets in every row.
 
 The issue's earlier survey at `a8084d1` reports 1,308 files in 312 sets and 996
@@ -74,9 +75,10 @@ The output directory must be outside the checkout. The script reads the tracked
 file list with `git ls-files` and reads current file bytes. It selects `.yml` and
 `.yaml` files under `docs/domains/orcaflex/` and `tests/solvers/orcaflex/`, plus
 other tracked YAML containing a column-zero `General`, `Environment`, `LineTypes`,
-`Vessels`, `BaseFile` or `IncludeFile` key. This selects 3,734 candidate files;
-it includes partial model and specification YAML and does not claim that each
-candidate is independently loadable. Symlink files are excluded.
+`Vessels`, `BaseFile` or `IncludeFile` key. The 2026-10-24 scan selects
+3,870 candidate files; it includes partial model and specification YAML and does
+not claim that each candidate is independently loadable. Symlink files are
+excluded.
 
 For each file, `bytes.splitlines()` separates line terminators. Lines whose first
 non-whitespace byte is `#` are removed. Remaining lines are joined with LF and
@@ -90,8 +92,9 @@ relative path, proposed-canonical flag, reference basename and reference count.
 The separate reference CSV contains each distinct basename/location pair once.
 A literal basename
 search covers tracked Markdown, reStructuredText, HTML, text and Python files
-under `docs/` and `tests/` (3,911 documents in this run). It reports file and line
-only, without copying source text. Basename matches are explicitly ambiguous:
+under `docs/` and `tests/` (4,295 documents in the 2026-10-24 scan).
+It reports file and line only, without copying source text. Basename matches are
+explicitly ambiguous:
 they are discovery candidates, not proof that a caller resolves to that copy.
 Dynamic paths and references outside those text formats are not established.
 
