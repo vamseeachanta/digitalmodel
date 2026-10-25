@@ -21,6 +21,7 @@ import pytest
 import yaml
 
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
     OrcaWaveRunner,
     RunConfig,
@@ -110,6 +111,9 @@ def _make_fake_diffraction(
 
     # No hydrostatics by default (optional sub-schema).
     obj.hydrostaticResults = []
+    obj.UnitsSystem = "SI"
+    obj.WaterDensity = 1.025
+    obj.g = 9.80665
     return obj
 
 
@@ -727,14 +731,137 @@ class TestOrcaWaveAdapterSuccess:
         assert result.validation_report_path is not None
         assert result.validation_report_path.exists()
 
-    def test_water_depth_retained_from_spec(self, ship_raos_spec_path, tmp_path):
+    @pytest.mark.parametrize("gravity", [8.0, 10.0, float("nan"), float("inf"), None])
+    @pytest.mark.parametrize("method", ["generate_single", "generate_modular"])
+    def test_backend_rejects_unsupported_gravity(
+        self, ship_raos_spec_path, tmp_path, gravity, method
+    ):
         spec = _load_spec(ship_raos_spec_path)
-        # Synthetic environment inputs matching the report hand-calculation case.
-        spec.environment.water_density = 1000.0
-        spec.environment.gravity = 8.0
+        spec.environment.gravity = gravity
+        with pytest.raises(ValueError, match="gravity.*user-defined units"):
+            getattr(OrcaWaveBackend(), method)(spec, tmp_path)
+        assert not list(tmp_path.glob("*.yml"))
+
+    @pytest.mark.parametrize("gravity", [8.0, 10.0])
+    def test_prepare_rejects_custom_gravity(
+        self, ship_raos_spec_path, tmp_path, gravity
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        spec.environment.gravity = gravity
+        runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, dry_run=True))
+        with pytest.raises(ValueError, match="gravity.*user-defined units"):
+            runner.prepare(spec)
+
+    def test_bundle_report_uses_solver_environment_readback(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        """Readback, serialization and reporting share the actual environment.
+
+        OrcaWave help, Data: Model / Units and Results: Hydrostatics /
+        Hydrostatic stiffness matrix (online edition accessed 2026-10-24).
+        Synthetic readback: rho=1 t/m^3, V=10 m^3, g=9.80665 m/s^2.
+        C44=98.0665 kN m/rad and C55=294.1995 kN m/rad give
+        denominator=98.0665 kN, hence GM_T=1 m and GM_L=3 m.
+        Mass=10 t becomes 10000 kg; C44 becomes 98066.5 N m/rad.
+        Readback density deliberately differs from the prepared density.
+        """
+        import json
+
+        from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+            DiffractionResults,
+        )
+        from digitalmodel.hydrodynamics.diffraction.solver.report_extractors import (
+            build_report_data_from_solver_results,
+        )
+
+        spec = _load_spec(ship_raos_spec_path)
+        spec.environment.water_density = 1250.0
+        runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
+        prepared = runner.prepare(spec)
+        generated = yaml.safe_load(prepared.input_file.read_text(encoding="utf-8"))
+        assert generated["UnitsSystem"] == "SI"
+        assert generated["WaterDensity"] == pytest.approx(1.25)
+        fake = _make_fake_diffraction()
+        fake.UnitsSystem = generated["UnitsSystem"]
+        fake.WaterDensity = 1.0
+        stiffness = np.zeros((6, 6))
+        stiffness[3, 3] = 98.0665
+        stiffness[4, 4] = 294.1995
+        fake.hydrostaticResults = [{
+            "volume": 10.0, "mass": 10.0,
+            "centreOfMass": np.zeros(3), "centreOfBuoyancy": np.zeros(3),
+            "Awp": 0.0, "restoringMatrix": stiffness,
+        }]
+        results = _run_api(runner, fake).diffraction_results
+        assert results is not None
+        loaded = DiffractionResults.from_dict(json.loads(json.dumps(results.to_dict())))
+        assert loaded.water_density == pytest.approx(1000.0)
+        assert loaded.gravity == pytest.approx(9.80665)
+        assert loaded.hydrostatics.mass == pytest.approx(10000.0)
+        assert loaded.hydrostatics.stiffness_matrix[3, 3] == pytest.approx(98066.5)
+        report = build_report_data_from_solver_results({"OrcaWave": loaded})
+        assert report.gm_transverse == pytest.approx(1.0)
+        assert report.gm_longitudinal == pytest.approx(3.0)
+
+    @pytest.mark.parametrize("field", ["WaterDensity", "g"])
+    @pytest.mark.parametrize(
+        "value", [None, "invalid", float("nan"), float("inf"), 0.0, -1.0, True]
+    )
+    def test_unknown_solver_environment_does_not_use_requested_values(
+        self, ship_raos_spec_path, tmp_path, field, value
+    ):
+        from digitalmodel.hydrodynamics.diffraction.solver.report_extractors import (
+            build_report_data_from_solver_results,
+        )
+
+        spec = _load_spec(ship_raos_spec_path)
         runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
         runner.prepare(spec)
-        result = _run_api(runner, _make_fake_diffraction())
+        fake = _make_fake_diffraction()
+        setattr(fake, field, value)
+        fake.hydrostaticResults = [{
+            "volume": 10.0, "mass": 10.0,
+            "centreOfMass": np.zeros(3), "centreOfBuoyancy": np.zeros(3),
+            "Awp": 0.0, "restoringMatrix": np.zeros((6, 6)),
+        }]
+        results = _run_api(runner, fake).diffraction_results
+        assert results is not None
+        actual = results.water_density if field == "WaterDensity" else results.gravity
+        assert actual is None
+        report = build_report_data_from_solver_results({"OrcaWave": results})
+        assert report.gm_transverse is None
+        assert report.gm_longitudinal is None
+        assert any("NOT_EVALUATED: GM requires" in item for item in report.executive_warnings)
+
+    def test_non_si_solver_environment_remains_unknown(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        spec = _load_spec(ship_raos_spec_path)
+        runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
+        runner.prepare(spec)
+        fake = _make_fake_diffraction()
+        fake.UnitsSystem = "US"
+        results = _run_api(runner, fake).diffraction_results
+        assert results is not None
+        assert results.water_density is None
+        assert results.gravity is None
+
+    def test_solver_density_conversion_remains_finite(self):
+        fake = _make_fake_diffraction()
+        fake.WaterDensity = 1e308
+        density, gravity = OrcaWaveRunner._read_solver_environment(fake)
+        assert density is None
+        assert gravity == pytest.approx(9.80665)
+
+    def test_water_depth_retained_from_spec(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        # Synthetic density; gravity remains at the supported default.
+        spec.environment.water_density = 1000.0
+        runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
+        runner.prepare(spec)
+        fake = _make_fake_diffraction()
+        fake.WaterDensity = 1.0
+        result = _run_api(runner, fake)
         expected = float(spec.environment.water_depth) \
             if isinstance(spec.environment.water_depth, (int, float)) else 0.0
         assert result.diffraction_results.water_depth == expected
@@ -743,16 +870,15 @@ class TestOrcaWaveAdapterSuccess:
 
 
     def test_hydrostatic_bundle_uses_si_stiffness(self, ship_raos_spec_path, tmp_path):
-        """Independent synthetic calculation: native GM=200/(1*10*10)=2 m.
+        """Independent synthetic mass and stiffness unit conversions.
 
         OrcaWave help, Data: Model / Units (accessed 2026-10-22) defines
         native SI as tonnes/kN; docs/UNITS.md requires N at internal seams.
         Thus C44=200 kN m/rad becomes 200000 N m/rad; mass=10 t becomes
-        10000 kg. SI GM=200000/(1000*10*10)=2 m, without a hidden scale.
+        10000 kg, without a hidden scale.
         """
         spec = _load_spec(ship_raos_spec_path)
         spec.environment.water_density = 1000.0
-        spec.environment.gravity = 10.0
         runner = OrcaWaveRunner(RunConfig(output_dir=tmp_path, use_api=True))
         runner.prepare(spec)
         fake = _make_fake_diffraction()

@@ -45,6 +45,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from numbers import Real
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -384,8 +385,6 @@ class OrcaWaveRunner:
 
         # Retain water depth from the spec for the post-Calculate() adapter.
         self._water_depth = self._spec_water_depth(spec)
-        self._water_density = spec.environment.water_density
-        self._gravity = spec.environment.gravity
 
         self._result = RunResult(
             status=RunStatus.PREPARING,
@@ -661,7 +660,8 @@ class OrcaWaveRunner:
             diffraction.LoadResults(str(Path(owr_path).resolve()))
 
         return self._build_results_from_object(
-            diffraction, source_files=[str(owr_path), str(data_file)]
+            diffraction,
+            source_files=[Path(owr_path).as_posix(), Path(data_file).as_posix()],
         )
 
     @staticmethod
@@ -805,6 +805,7 @@ class OrcaWaveRunner:
         )
 
         hydrostatics = self._extract_hydrostatics(diffraction, vessel_name)
+        water_density, gravity = self._read_solver_environment(diffraction)
 
         return DiffractionResults(
             vessel_name=vessel_name,
@@ -819,9 +820,33 @@ class OrcaWaveRunner:
             notes="Built from OrcFxAPI.Diffraction object (#625)",
             phase_convention="orcina_lag",
             unit_system="SI",
-            water_density=getattr(self, "_water_density", None),
-            gravity=getattr(self, "_gravity", None),
+            water_density=water_density,
+            gravity=gravity,
         )
+
+    @staticmethod
+    def _read_solver_environment(diffraction: Any) -> tuple[float | None, float | None]:
+        """Read the actual SI environment; unknown values leave GM unevaluated.
+
+        OrcaWave help, Data: Model / Units (online edition accessed
+        2026-10-24): SI density uses tonnes/m^3; bundle density uses kg/m^3.
+        The requested spec cannot substitute for missing solver readback.
+        """
+        if getattr(diffraction, "UnitsSystem", None) != "SI":
+            return None, None
+        values = []
+        for name in ("WaterDensity", "g"):
+            value = getattr(diffraction, name, None)
+            valid = (
+                isinstance(value, Real) and not isinstance(value, bool)
+                and np.isfinite(value) and value > 0
+            )
+            values.append(float(value) if valid else None)
+        density, gravity = values
+        density = float(tonnes_to_kg(density)) if density is not None else None
+        if density is not None and not np.isfinite(density):
+            density = None
+        return density, gravity
 
     @staticmethod
     def _extract_hydrostatics(
