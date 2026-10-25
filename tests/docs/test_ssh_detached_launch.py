@@ -34,6 +34,7 @@ def test_documented_launch_disconnects_standard_streams(recipe, tmp_path):
     # Exercise the exact remote shell command, excluding the SSH transport.
     args = shlex.split(command)
     assert args[:3] == ["ssh", "-nT", "$REMOTE_TARGET"]
+    assert "</dev/null" in args[3]
     worker = tmp_path / "worker"
     worker.write_text(
         f"#!{sys.executable}\n"
