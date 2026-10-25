@@ -17,6 +17,7 @@ This repairs the dependency mismatch reported in issue #1958.
 | A | 2026-10-19 | Document the corrected test installation and heartbeat so an old passing run is not treated as current evidence. |
 | B | 2026-10-19 | Select the coverage threshold explicitly, align shared coverage settings and explain test-extra side effects so a passing heartbeat has a defined meaning. |
 | C | 2026-10-21 | Separate test outcomes from coverage enforcement and retain both Python versions and diagnostic checks when an earlier step fails. |
+| D | 2026-10-25 | Record hosted outcomes and distinguish the upload step conclusion from acceptance by the coverage service. |
 
 ## Execution and coverage
 
@@ -104,6 +105,28 @@ The regression contracts in `test_ci_contract.py`
 also check the daily schedule, manual trigger, dependency paths, preservation
 of coverage upload, explicit coverage selection, independent matrix completion,
 diagnostic guards, final coverage enforcement and agreement of TOML-declared settings.
+
+## Observed hosted results
+
+The pull-request run 39551404933 at commit `1dd5fb1f` completed on 2026-10-21.
+Its job logs were inspected on 2026-10-25. Installation, focused tests, CLI
+commands and public imports succeeded on both Python versions.
+
+| Python | Focused tests passed | Coverage (%) | Required coverage (%) | Final coverage exit code |
+| --- | --- | --- | --- | --- |
+| 3.11 | 135 | 50.6 | 80.0 | 2 |
+| 3.12 | 135 | 50.4 | 80.0 | 2 |
+
+Table 1. Hosted focused-suite results; both coverage checks failed the configured criterion.
+
+The Python 3.11 **Upload coverage** step reported success, but its log records
+that Codecov rejected the tokenless upload. Acceptance and storage of that
+coverage report are therefore not established. The Python 3.12 upload step was
+skipped by its existing matrix condition. When assessing uploads, inspect the
+service response as well as the Actions step conclusion.
+
+These results apply to the named commit and run. They do not establish passing
+repository-wide checks or activation of the daily schedule.
 
 ## Limits
 
