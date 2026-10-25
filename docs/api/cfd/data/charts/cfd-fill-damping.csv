@@ -1,3 +1,3 @@
-fill_pct,cfd_damping_no_units,predicted_damping_no_units,evidence_pointer
+fill_pct,cfd_damping_no_units,inverse_area_damping_no_units,evidence_pointer
 25,0.513754283356724,0.5458859913267555,archived-cfd-campaign-2026-07/review_output/damping/prediction_checks.json#/groups/2/cases/1/zeta_measured | archived-cfd-campaign-2026-07/review_output/damping/prediction_checks.json#/groups/2/cases/1/zeta_predicted
 70,0.5363096043068284,0.4688247133327982,archived-cfd-campaign-2026-07/review_output/damping/prediction_checks.json#/groups/3/cases/1/zeta_measured | archived-cfd-campaign-2026-07/review_output/damping/prediction_checks.json#/groups/3/cases/1/zeta_predicted

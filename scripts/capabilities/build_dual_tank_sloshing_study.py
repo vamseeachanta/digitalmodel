@@ -345,7 +345,7 @@ def chart_specs(data=None, evidence=None, evidence_only=False):
                   (val(c['roll']), abs(val(c['period']) - val(r['predicted_period']))))) for r in fill]
     evidence_chart('cfd-fill-damping', 'Equivalent damping against fill (archived CFD geometry)', chosen,
                    ('fill', 'fill_pct'), [('measured', 'cfd_damping_no_units', 'CFD-derived'),
-                                        ('linear_prediction', 'predicted_damping_no_units', 'Predicted')],
+                                        ('linear_prediction', 'inverse_area_damping_no_units', 'Original inverse-area prediction')],
                    'Fill (%)', 'Damping ratio (no units)', '%', 'no units')
     loss = sorted(area_checks, key=lambda r: val(r['area']))
     near = [dict(area=r['area'], **min(r['damping'], key=lambda c:

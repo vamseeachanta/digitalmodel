@@ -2,6 +2,7 @@
 """Check the public study against its committed analytical sources."""
 
 import importlib.util
+import math
 import re
 from html.parser import HTMLParser
 from pathlib import Path
@@ -503,6 +504,143 @@ def test_a4_csv_values_equal_model_and_evidence_sources(builder):
             assert all(row[-1] for row in rows)
             rows = [row[:-1] for row in rows]
         assert rows == [['' if value is None else str(value) for value in row] for row in values]
+
+
+def hand_tank_properties(area):
+    """Integrate two 30 × 8 × 4 m legs and a 20 m conduit about the roll axis.
+
+    Inputs: the illustrative geometry table and the fluid properties in
+    src/digitalmodel/hydrodynamics/utube_tank.py. Each cuboid contributes
+    V * ((width² + height²) / 12 + y_centroid² + z_centroid²).
+    """
+    height = area / 30
+    first_z = 1920 * (height + 2) + 20 * area * height / 2
+    inertia = (1920 * ((8**2 + 4**2) / 12 + 10**2 + (height + 2)**2)
+               + 20 * area * ((20**2 + height**2) / 12 + (height / 2)**2))
+    return first_z, inertia, 2 * 30 * 8**3 / 12
+
+
+def hand_tank_moment(period, angle):
+    """Solve harmonic balance algebraically, without the model's iteration.
+
+    Equation basis: _forced_volume_response and tank_moment in
+    src/digitalmodel/hydrodynamics/utube_tank.py. With Q the volume amplitude,
+    D the detuning and B the loss factor, Q²(D² + B²Q²) = F². The positive
+    quadratic root below replaces the iterative amplitude calculation.
+    """
+    omega = 2 * math.pi / period
+    inertia_length = 5.2004 / 8 + 8 / 240
+    detuning = 19.62 / (240 * inertia_length) - omega**2
+    loss = 4 * 2.3894 * omega**2 / (3 * math.pi * 8**2.138 * inertia_length)
+    forcing = (196.2 * math.tan(angle)
+               + 20 * (4 + 5.2004 + 8 / 60) * omega**2 * angle) / inertia_length
+    q_squared = 2 * forcing**2 / (
+        detuning**2 + math.sqrt(detuning**4 + 4 * loss**2 * forcing**2))
+    damping = loss * math.sqrt(q_squared)
+    denominator = detuning**2 + damping**2
+    q_real = forcing * detuning / denominator
+    q_imag = -196.2 * math.sin(angle) / inertia_length * damping / denominator
+    first_z, inertia, surface = hand_tank_properties(8)
+    return 1025 * (9.81 * (first_z + surface) * math.sin(angle)
+                   - inertia * omega**2 * angle + 196.2 * complex(q_real, q_imag))
+
+
+def hand_roll_response(period):
+    """Bisect the scalar moment balance instead of iterating a complex response.
+
+    Basis: coupled_roll_response in src/digitalmodel/hydrodynamics/utube_tank.py;
+    hull period 20 s, damping 0.05, tank authority 0.12 and a 5 degree reference.
+    The amplitude satisfies |Z_hull * angle - scale * M_tank(angle)| = M_wave.
+    These checks assess the equations' evaluation, not their physical validity.
+    """
+    ratio = 20 / period
+    hull = complex(1 - ratio**2, 0.1 * ratio)
+    wave = 0.1 * math.radians(5)
+    first_z, _, surface = hand_tank_properties(8)
+    scale = 0.12 / (1025 * 9.81 * (first_z + surface + 48000))
+    low, high = 0.0, 0.5
+    assert abs(hull * high - scale * hand_tank_moment(period, high)) > wave
+    for _ in range(60):
+        angle = (low + high) / 2
+        if abs(hull * angle - scale * hand_tank_moment(period, angle)) < wave:
+            low = angle
+        else:
+            high = angle
+    return 1 / abs(hull), (low + high) / (2 * wave)
+
+
+def assert_computed_exports_against_independent_equations(builder, tmp_path):
+    import csv
+
+    builder.build(tmp_path / PAGE.name)
+
+    def rows(identifier):
+        with (tmp_path / 'data/charts' / (identifier + '.csv')).open() as stream:
+            return [[float(value) for value in row] for row in list(csv.reader(stream))[1:]]
+
+    # Rigid-column energy balance: T² = 4π²(L_eff*S/A + 2h)/(2g).
+    # Harmonic head loss: zeta = 2*K*omega*Q/(3π*A^p*L*omega_n).
+    for index in (0, 55, 110):
+        area, period = rows('natural')[index]
+        expected_period = 2 * math.pi * math.sqrt((5.2004 * 240 / area + 8) / 19.62)
+        assert period == pytest.approx(expected_period, rel=1e-10)
+        assert rows('inertia')[index][1] == pytest.approx(
+            1025 * hand_tank_properties(area)[1] / 1e6, rel=1e-10)
+        length = 5.2004 / area + 8 / 240
+        damping = [100 * 2 * 2.3894 * (2 * math.pi / 20) * (240 * level / 2)
+                   / (3 * math.pi * area**2.138 * length * (2 * math.pi / expected_period))
+                   for level in (0.1, 0.5)]
+        assert rows('damping')[index][1:] == pytest.approx(damping, rel=1e-10)
+        forcing_period, real, imag, magnitude = rows('moment')[index]
+        moment = hand_tank_moment(forcing_period, math.radians(5)) / 1e6
+        assert [real, imag, magnitude] == pytest.approx(
+            [moment.real, moment.imag, abs(moment)], rel=1e-8)
+        # Solve the two-degree-of-freedom dynamic stiffness matrix directly.
+        # Equation basis: scripts/cfd/reduce_tld_two_peak.py module docstring.
+        ratio, *responses = rows('split')[index]
+        expected = []
+        for damping_ratio in (0.03, 0.095, 0.1273, 0.18, 0.305):
+            coupling = complex(1, 2 * damping_ratio * ratio)
+            impedance = 1 - ratio**2 - 0.05 * ratio**2 * coupling / (coupling - ratio**2)
+            expected.append(1 / abs(impedance))
+        assert responses == pytest.approx(expected, rel=1e-10)
+
+    # All 111 grid points are checked, so both reported grid peaks and their
+    # locations are constrained independently of compute() and the exports.
+    response_rows = rows('coupled-response')
+    expected = [hand_roll_response(16 + 0.4 * index) for index in range(111)]
+    for index, (period, bare, coupled) in enumerate(response_rows):
+        assert period == pytest.approx(16 + 0.4 * index)
+        assert [bare, coupled] == pytest.approx(expected[index], rel=2e-6)
+    for column in (0, 1):
+        peak_index = max(range(111), key=lambda i: expected[i][column])
+        assert max(range(111), key=lambda i: response_rows[i][column + 1]) == peak_index
+        assert max(row[column + 1] for row in response_rows) == pytest.approx(
+            expected[peak_index][column], rel=2e-6)
+    peaks = [max(row[column] for row in expected) for column in (0, 1)]
+    visible = re.sub('<[^>]+>', '', builder.render())
+    assert f'falls from {peaks[0]:.1f} to {peaks[1]:.1f} per unit wave moment' in visible
+
+
+def test_computed_exports_against_independent_equations(builder, tmp_path):
+    assert_computed_exports_against_independent_equations(builder, tmp_path)
+
+
+@pytest.mark.parametrize('method', ['natural_period', 'coupled_roll_response'])
+def test_independent_checks_reject_regenerated_calculation_errors(builder, monkeypatch, tmp_path, method):
+    original = getattr(builder.MODEL, method)
+    monkeypatch.setattr(builder.MODEL, method, lambda **kwargs: 1.01 * original(**kwargs))
+    with pytest.raises(AssertionError):
+        assert_computed_exports_against_independent_equations(builder, tmp_path)
+
+
+def test_fill_damping_names_original_inverse_area_prediction(builder):
+    spec = next(s for s in builder.chart_specs() if s['id'] == 'cfd-fill-damping')
+    assert spec['series'][1]['name'] == 'Original inverse-area prediction'
+    assert spec['headers'][2] == 'inverse_area_damping_no_units'
+    svg = next(svg for svg in chart_roots(builder.render())
+               if svg.attrib['id'] == 'cfd-fill-damping')
+    assert 'Original inverse-area prediction' in ' '.join(''.join(svg.itertext()).split())
 
 
 def test_a6_exact_chart_set_and_independent_marker_counts(builder):

@@ -1,10 +1,18 @@
 # Connected-tank sloshing page, revision 2: layout, chart and prose specification
 
-Status: specification for maintainer review, 2026-10-25. It is written so that it can serve as the job spec for the builder change. It contains no code.
+Status: implemented scope and acceptance record for maintainer review, 2026-10-25. The specification, builder, generated page, chart CSVs and tests form one connected-tank page change.
 
 - Page: `docs/api/cfd/dual-tank-sloshing-cfd-study.html` at dd24f2094, live at https://vamseeachanta.github.io/digitalmodel/cfd/dual-tank-sloshing-cfd-study.html.
 - Builder: `scripts/capabilities/build_dual_tank_sloshing_study.py`, which writes the page.
 - Model page to follow: `docs/api/cfd/sloshing-cfd-study.html` (the single-tank study). It has a picture of the physical system at the top, results charts placed with the findings, and short numbered sections.
+
+## Plan-lite
+
+- Scope: one connected-tank page, its builder, 13 chart CSVs and the two study test files. The implementation adds the schematic, three summary charts, interactive points, numeric axes, discrete-case markers and CSV links. The evidence records and analytical model inputs retain their published values.
+- Sequence: retain the source and table preservation checks; add independent equation checks for computed exports and both reported peaks; identify the original inverse-area fill-damping prediction; regenerate with the builder; measure the page in exact-width iframes; record checks and limits.
+- Validation: the initial two-file study suite passed 82 tests; the final suite passed 86. Independent checks use explicit illustrative inputs, cuboid inertia integration, an algebraic harmonic-balance solution and scalar bisection, without obtaining expected values from `compute()` or model calls. Deliberate calculation perturbations confirm that these checks reject regenerated errors. Integration checks still cover byte-identical page and CSV regeneration, source digests, preserved table cells, chart metadata and public wording. File-level check results and unavailable checks are recorded with the implementation review.
+- A11 measurement, 2026-10-25: Chromium 151.0.7922.34 on Linux aarch64, outer viewport 1280 × 1000 px, separate iframes with zero border and exact widths of 390 px and 600 px. Both iframe bounding widths and `innerWidth` equal the requested widths. Vertical scrollbars leave document client widths of 375 px and 585 px respectively; document and body scroll widths equal those client widths, so neither iframe has sideways scroll. All 14 SVGs were measured: minimum rendered text sizes are 12.6 px and 20.2 px respectively, and no SVG text bounding box exceeds its SVG bounds. A11 is accepted for these measurements.
+- Known limits: these checks assess the implemented equations and presentation, not the physical validity of the analytical model. No new CFD assessment or archived-source digest revalidation is included. Width measurements cover the stated browser and widths; other browsers and physical touch interaction remain unmeasured. Newsletter prose is unchanged.
 
 ## 1. Review comments this revision answers
 
@@ -18,7 +26,7 @@ Status: specification for maintainer review, 2026-10-25. It is written so that i
 - A new number may appear only where the builder derives it from a committed series. It is printed with its source and checked by a test (section 7, check A3).
 - Status wording stays as it is: "Draft for maintainer review"; "screening"; "design qualification is not established".
 - Public repository rules: no client, vessel, project or private-case names; no internal role or tracker words in the page.
-- Style: the page keeps `../_assets/brand.css` and uses its tokens (`--ink`, `--navy`, `--teal`, `--accent`, `--warn`, `--red`, `--grid`, `--mut`, `--panel`). Charts use the brand series colours, in a colour-blind-safe order, with no new palette. Fonts and sizes come from the stylesheet.
+- Style: the page keeps `../_assets/brand.css` and uses its tokens (`--ink`, `--navy`, `--teal`, `--accent`, `--warn`, `--red`, `--grid`, `--mut`, `--panel`). Charts use the brand series colours, in an order distinguishable under colour-vision deficiency, with no new palette. Fonts and sizes come from the stylesheet.
 - No external scripts or stylesheets beyond `brand.css`. Interactivity uses inline SVG and, at most, one small inline script. Every chart and the schematic stays readable with scripts off.
 
 ## 3. Page order (new)
