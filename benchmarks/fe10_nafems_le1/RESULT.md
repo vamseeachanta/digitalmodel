@@ -10,6 +10,7 @@ its result remains recorded without modifying the deck or criterion.
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-10-20 | Measured four open-source solves and retained offline replay evidence. |
+| 2 | 2026-10-25 | Rejected duplicate result IDs, documented the supplied deck limits and replaced the copied implementation with a numerical citation record. |
 
 Table 1. Initial measured record.
 
@@ -76,7 +77,7 @@ is pinned independently in the review packet.
 Two source excerpts were omitted because reuse rights were not asserted:
 `sources/feenox-nafems-le1-excerpt.txt` and
 `sources/featool-ex_planestress5-excerpt.txt`. No file exceeded 1 MB. The
-retained MIT-licensed definition, generator, references and decks suffice for
+retained numerical definition, generator, references and decks suffice for
 replay. Historical preparation records are preserved with neutralized metadata.
 
 Offline regression: 22 benchmark tests pass, including native replay and two

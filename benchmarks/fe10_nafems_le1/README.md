@@ -9,7 +9,7 @@ LE1 mesh remains outside the 5.0% band. No licensed software was used.
 - `inputs/`: three LE1 meshes and the five-element distorted patch, unchanged
   from the received package.
 - `expected.json`, `expected.md`, `sources/`: reference basis, analytic patch
-  solution and retained MIT-licensed open-source definition excerpt.
+  solution and citation-only public definition record.
 - `compare.py`: supplied offline comparator, with unchanged numerical criteria.
 - `results-*.csv`: measured global centroid stresses at the mid-surface.
 - `native/`: compact native centroid fibre fields and sanitized ERR diagnostics.
@@ -22,8 +22,10 @@ LE1 mesh remains outside the 5.0% band. No licensed software was used.
 Two excerpts without asserted reuse rights were omitted:
 `sources/feenox-nafems-le1-excerpt.txt` and
 `sources/featool-ex_planestress5-excerpt.txt`. No file exceeded 1 MB. Public
-reference citations and the MIT-licensed definition remain available; omitted
+reference citations and the numerical definition remain available; omitted
 excerpts are not required for offline replay.
+The upstream implementation excerpt is also omitted; `sources/` retains its
+revision, blob and numerical citation without redistributing upstream code.
 
 ## Offline replay
 

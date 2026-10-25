@@ -6,7 +6,7 @@
 Usage: python -I build_expected.py <package dir>
 
 LE1: the reference value is retained from the received public-source record and
-the MIT-licensed excerpt, with source revisions and line locations listed below.
+the citation-only definition, with source revisions and line locations listed below.
 Patch test: plane-stress Hooke's law for the imposed linear field
 u = 1e-3 x + 0.5e-3 y, v = 0.5e-3 x + 1e-3 y (eps_xx = 1e-3, eps_yy = 1e-3, gamma_xy = 1e-3).
 """

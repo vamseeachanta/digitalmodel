@@ -3,7 +3,7 @@
 ## LE1 elliptic membrane
 | quantity | value | unit | source and location |
 |---|---|---|---|
-| sigma_yy at point D (2000, 0) mm | 92.7 | MPa | NAFEMS, *The Standard NAFEMS Benchmarks*, TNSB Rev. 3 (1990), test LE1 elliptic membrane (licensed; cited by number, title, edition and test name). The value is kept because the received public-source record cites the same value: axia-fem `solver/scripts/gen_nafems.py`, commit 884ec6fe7b74f0a1a9b9ae55e57ccfba625a93c1, line 8 (MIT licence); featool-multiphysics `examples/ex_planestress5.m`, commit 8207417131bc90534931a694a5d8d28ec17ca9fa, line 112; feenox `examples/nafems-le1.yaml`, commit 51bde067cc8f283f3797ee8eaba814cf42c66ce4, line 15 (only the MIT-licensed excerpt is retained in sources/). |
+| sigma_yy at point D (2000, 0) mm | 92.7 | MPa | NAFEMS, *The Standard NAFEMS Benchmarks*, TNSB Rev. 3 (1990), test LE1 elliptic membrane (licensed; cited by number, title, edition and test name). The value is kept because the received public-source record cites the same value: axia-fem `solver/scripts/gen_nafems.py`, commit 884ec6fe7b74f0a1a9b9ae55e57ccfba625a93c1, line 8 (MIT licence); featool-multiphysics `examples/ex_planestress5.m`, commit 8207417131bc90534931a694a5d8d28ec17ca9fa, line 112; feenox `examples/nafems-le1.yaml`, commit 51bde067cc8f283f3797ee8eaba814cf42c66ce4, line 15 (sources/ retains a citation-only numerical record; no upstream code is redistributed). |
 
 Table 1. Published LE1 value.
 
@@ -23,3 +23,19 @@ Imposed field u = 1e-3 x + 0.5e-3 y, v = 0.5e-3 x + 1e-3 y (mm) on the four corn
 Table 2. Exact uniform stress of the patch test; every element is graded.
 
 The fixed FE10 patch band is exact within 0.1 %.
+
+## Deck acceptance contract, revision 1
+
+These supplied deck-screening criteria are retained from the benchmark package
+at commit `016aa80fc2c6cd1684ebdc5483a7ad4f7c17a2d9`. This revision records
+their existing values; it does not establish that a publication prescribes them.
+The published LE1 geometry and reference stress cited above are a separate basis.
+Maintainer disposition of these screening limits remains pending.
+
+| Check | Supplied criterion | Application |
+|---|---|---|
+| FE2, aspect ratio | Longest edge / shortest edge <= 5 | Required for each LE1 element; information only for the deliberately distorted patch. |
+| FE2, interior angles | Every angle from 45 to 135 degrees, inclusive | Required for each LE1 element; information only for the deliberately distorted patch. |
+| AREA, quarter-annulus area | Absolute relative difference from the exact area <= 1.0% | Required for the total LE1 mesh area. |
+
+Table 3. Supplied screening limits used by `tools/check_bdf.py`, unchanged.

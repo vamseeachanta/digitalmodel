@@ -61,7 +61,7 @@ def read(text: str) -> tuple[dict[str, str], list[dict[str, str]]]:
 def centroids(deck: Path) -> dict[int, tuple[float, float]]:
     """Calculate the supplied deck's four-corner centroid positions."""
     grids, cen = {}, {}
-    for l in deck.read_text(encoding="ascii").splitlines():
+    for l in deck.read_text(encoding="utf-8").splitlines():
         fl = l.split(",")
         if fl[0] == "GRID":
             grids[int(fl[1])] = (float(fl[3]), float(fl[4]))
@@ -69,6 +69,17 @@ def centroids(deck: Path) -> dict[int, tuple[float, float]]:
             g = [grids[int(x)] for x in fl[3:7]]
             cen[int(fl[1])] = (sum(p[0] for p in g) / 4, sum(p[1] for p in g) / 4)
     return cen
+
+
+def unique_rows(rows: list[dict[str, str]]) -> dict[int, dict[str, str]]:
+    """Reject ambiguous element results before any row can be overwritten."""
+    indexed: dict[int, dict[str, str]] = {}
+    for row in rows:
+        eid = int(row["eid"])
+        if eid in indexed:
+            raise ValueError("duplicate element ID %d" % eid)
+        indexed[eid] = row
+    return indexed
 
 
 def le1(meta: dict[str, str], rows: list[dict[str, str]], out: TextIO = sys.stdout) -> str:
@@ -79,7 +90,7 @@ def le1(meta: dict[str, str], rows: list[dict[str, str]], out: TextIO = sys.stdo
         raise ValueError("'# mesh:' must name a deck in inputs/ (le1_8x24, le1_16x48 or le1_32x96)")
     nr, nt = (int(x) for x in mesh[4:].split("x"))
     cen = centroids(deck)
-    s = {int(r["eid"]): float(r["sigma_yy_MPa"]) for r in rows}
+    s = {eid: float(row["sigma_yy_MPa"]) for eid, row in unique_rows(rows).items()}
     e1, e2 = 1, nt + 1
     if e1 not in s or e2 not in s:
         raise ValueError("elements %d and %d are required" % (e1, e2))
@@ -102,7 +113,7 @@ def patch(meta: dict[str, str], rows: list[dict[str, str]], out: TextIO = sys.st
     """Grade each component of every patch element against its exact stress."""
     exp = EXP["patch"]["expected_MPa"]
     tol = EXP["patch"]["band_pct"]
-    got = {int(r["eid"]): r for r in rows}
+    got = unique_rows(rows)
     n_ok = n_bad = 0
     worst = 0.0
     print("program: %s; patch test, FE10 band %.1f %% (fixed benchmark criteria)" % (meta.get("program", "not stated"), tol), file=out)
@@ -158,9 +169,9 @@ def main() -> None:
         sys.exit(selftest())
     try:
         if a.le1:
-            v = le1(*read(Path(a.le1).read_text(encoding="utf-8-sig")))
+            v = le1(*read(Path(a.le1).read_text(encoding="utf-8").removeprefix("\ufeff")))
         elif a.patch:
-            v = patch(*read(Path(a.patch).read_text(encoding="utf-8-sig")))
+            v = patch(*read(Path(a.patch).read_text(encoding="utf-8").removeprefix("\ufeff")))
         else:
             ap.error("--le1, --patch or --selftest")
     except (OSError, ValueError, KeyError) as err:

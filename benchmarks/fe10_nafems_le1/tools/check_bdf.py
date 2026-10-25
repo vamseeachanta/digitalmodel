@@ -17,6 +17,7 @@ Usage: python -I check_bdf.py <deck.bdf> --kind le1|patch
 import argparse
 import math
 import sys
+from pathlib import Path
 
 E, NU, T, P = 210000.0, 0.3, 100.0, 10.0
 AI, BI, AO, BO = 2000.0, 1000.0, 3250.0, 2750.0
@@ -28,7 +29,7 @@ def main() -> None:
     ap.add_argument("deck")
     ap.add_argument("--kind", required=True, choices=["le1", "patch"])
     a = ap.parse_args()
-    raw = open(a.deck, "rb").read()
+    raw = Path(a.deck).read_bytes()
     res = []
 
     def chk(cid: str, ok: bool, detail: str) -> None:
@@ -100,6 +101,8 @@ def main() -> None:
             k = tuple(sorted((quad_nodes[i], quad_nodes[(i + 1) % 4])))
             edges[k] = edges.get(k, 0) + 1
     chk("element signed area > 0 (normal +z)", neg == 0, "%d elements with area <= 0; total area %.6g mm^2" % (neg, area))
+    # Supplied limits: ../expected.md, "Deck acceptance contract, revision 1", FE2.
+    # These are local screening criteria, not published NAFEMS acceptance limits.
     quality = ar_max <= 5 and 45 <= ang[0] and ang[1] <= 135
     if a.kind == "le1":
         chk("FE2 aspect <= 5, angles 45-135 deg", quality, "largest aspect %.2f; interior angles %.1f to %.1f deg" % (ar_max, ang[0], ang[1]))
@@ -111,6 +114,7 @@ def main() -> None:
     chk("3456 constrained at every grid", all(set("3456") <= spc1.get(g, set()) for g in allg), "")
     if a.kind == "le1":
         exact = math.pi / 4 * (AO * BO - AI * BI)
+        # Supplied tolerance: ../expected.md, "Deck acceptance contract, revision 1", AREA.
         chk("area against exact quarter annulus", abs(area - exact) / exact <= 0.01, "mesh %.1f, exact %.1f mm^2, difference %.2f %%" % (area, exact, (area - exact) / exact * 100))
         inner = [g for g, (x, y, z) in grids.items() if abs((x / AI) ** 2 + (y / BI) ** 2 - 1) < 1e-6]
         outer = [g for g, (x, y, z) in grids.items() if abs((x / AO) ** 2 + (y / BO) ** 2 - 1) < 1e-6]

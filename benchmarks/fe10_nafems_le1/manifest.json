@@ -25,13 +25,14 @@
     "The historical request filename is neutralized; unavailable execution paths are empty.",
     "Standard source licence headers are added to package Python tools.",
     "The native memory-matrix abbreviation is replaced by [matrix label removed] in console copies; no numerical field is changed.",
-    "Internal criterion attribution is neutralized; original numeric bands and comparator verdicts are verified against the received comparator."
+    "Internal criterion attribution is neutralized; original numeric bands and comparator verdicts are verified against the received comparator.",
+    "The upstream implementation excerpt is replaced by a citation-only numerical source record; source revision, blob and numerical definitions are retained."
   ],
   "files": [
     {
       "path": "compare.py",
-      "bytes": 7722,
-      "sha256": "f303e759dcab9bacdd106d1286b9a729dbe9da6e292def1d21b11c29ce2ab0f1"
+      "bytes": 8149,
+      "sha256": "0ec03b526a24d1e81c4ef7e3d7253f2592bfaf4869fb27250810691f7e43152e"
     },
     {
       "path": "console/commands.json",
@@ -330,8 +331,8 @@
     },
     {
       "path": "sources/axia-fem-gen_nafems-lines1-106.py.txt",
-      "bytes": 3856,
-      "sha256": "5562a79f0edb62cf42ef31d8d8c24f3414bf1c9754bd0728321d60800ef679ca"
+      "bytes": 763,
+      "sha256": "efaa9387c8593b286686e35e1eb88958cefba4e08d30a905e0ba2f2f0e225f68"
     },
     {
       "path": "tools/build_decks.py",
@@ -340,13 +341,13 @@
     },
     {
       "path": "tools/build_expected.py",
-      "bytes": 2642,
-      "sha256": "8b3393be6adc584b97597ce04079b27896e49c42c4e3d8146e340eaa5812face"
+      "bytes": 2646,
+      "sha256": "763393996c157fa16193f61b8deb0ed86162ccf18720952acce9286b57ec9e74"
     },
     {
       "path": "tools/check_bdf.py",
-      "bytes": 8688,
-      "sha256": "f0fa09d1266a857a25f25f3c0fe5e73fcd764c952108f62da5c6581b8161260f"
+      "bytes": 8971,
+      "sha256": "58e028237afca5f7a00ceb12bd18daebcc5516116ff0c268c7a4cce7e994908d"
     },
     {
       "path": "tools/extract_stresses.py",
