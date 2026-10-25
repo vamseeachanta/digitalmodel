@@ -618,3 +618,9 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+
+# Retain the normalized-section example source; generated output stays ignored.
+!/docs/reports/modules/passing_ship/
+/docs/reports/modules/passing_ship/*
+!/docs/reports/modules/passing_ship/build_worked_example.py
+!/docs/reports/modules/passing_ship/README.md
