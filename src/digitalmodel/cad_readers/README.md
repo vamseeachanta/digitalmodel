@@ -9,6 +9,7 @@ structural model merely because it can be read.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-22 | Add format adapters and a shared units contract for geometry ingestion. |
+| 2 | 2026-10-24 | Reject incomplete STEP unit coverage before transfer to prevent inconsistent root dimensions. |
 
 ## Formats and dependencies
 
@@ -49,6 +50,10 @@ the distinct original file units; it is empty when units came from the caller.
 `source` is `file` or `caller`. Mixed supported STEP representation units are
 translated by OpenCASCADE into the same output unit; a single caller declaration
 must agree with every declaration in that file.
+STEP files combining declared and unitless shape representations are refused,
+including when a caller supplies units. A wholly unitless file still requires
+the caller declaration. Parametric curve contexts do not define physical units
+and are excluded from this coverage check.
 
 For a length `L`, the conversion is `L_m = L * metres_per_unit`. For derived
 areas and volumes the factor is squared or cubed by dimensional multiplication.

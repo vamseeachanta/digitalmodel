@@ -67,6 +67,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/benchmarks/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#benchmarks
+  - module: cad_readers
+    entry_point: src/digitalmodel/cad_readers/
+    maturity: beta
+    owner_wiki: src/digitalmodel/cad_readers/README.md
+    key_tests: [tests/cad_readers/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#cad_readers
   - module: cathodic_protection
     entry_point: src/digitalmodel/cathodic_protection/
     submodules:

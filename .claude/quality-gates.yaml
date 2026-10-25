@@ -47,6 +47,16 @@ gates:
     failure_action: "block"
     warning_action: "report"
 
+  tests-cad-readers:
+    enabled: true
+    order: 1
+    description: "Typed CAD reader tests with optional geometry libraries"
+    domain: "cad-readers"
+    test_roots: ["tests/cad_readers/"]
+    command: "uv run --no-project --with 'pytest>=7.4.3,<9' --with 'pytest-asyncio==0.21.1' --with 'numpy>=1.24,<2' --with 'ezdxf>=1.3,<2' --with 'meshio>=5.3,<6' --with 'cadquery-ocp>=7.7,<8' --with 'pyyaml>=6,<7' python -m pytest tests/cad_readers/ -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    failure_action: "block"
+    warning_action: "report"
+
   tests-capabilities:
     enabled: true
     order: 1
@@ -480,6 +490,7 @@ gates:
     depends_on:
       [
         "tests-asset-integrity",
+        "tests-cad-readers",
         "tests-capabilities",
         "tests-cathodic-protection",
         "tests-citations",

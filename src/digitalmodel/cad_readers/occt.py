@@ -97,6 +97,12 @@ def read_brep(
 
 
 def _step_units(reader: STEPControl_Reader) -> tuple[LengthUnit, ...]:
+    from OCP.StepBasic import (
+        StepBasic_ConversionBasedUnitAndLengthUnit,
+        StepBasic_LengthUnit,
+        StepBasic_SiUnitAndLengthUnit,
+    )
+    from OCP.StepShape import StepShape_ShapeRepresentation
     from OCP.TColStd import TColStd_SequenceOfAsciiString
 
     lengths, angles, solids = (TColStd_SequenceOfAsciiString() for _ in range(3))
@@ -104,6 +110,29 @@ def _step_units(reader: STEPControl_Reader) -> tuple[LengthUnit, ...]:
     names = [
         lengths.Value(i).ToCString().lower() for i in range(1, lengths.Length() + 1)
     ]  # OCCT sequences are 1-based.
+    # OCCT 7.9 STEPControl_Reader::FileUnits aggregates declared units and
+    # omits missing contexts. Check each shape representation before transfer;
+    # parametric curve contexts legitimately have no physical length units.
+    model = reader.StepModel()
+    length_types = (
+        StepBasic_LengthUnit,
+        StepBasic_SiUnitAndLengthUnit,
+        StepBasic_ConversionBasedUnitAndLengthUnit,
+    )
+    for index in range(1, model.NbEntities() + 1):
+        entity = model.Value(index)
+        if isinstance(entity, StepShape_ShapeRepresentation):
+            context = entity.ContextOfItems()
+            has_length = (
+                context is not None
+                and hasattr(context, "NbUnits")
+                and any(
+                    isinstance(context.UnitsValue(i), length_types)
+                    for i in range(1, context.NbUnits() + 1)
+                )
+            )
+            if names and not has_length:
+                raise UnitsError("STEP length-unit coverage is incomplete")
     if any(name not in _STEP_NAMES for name in names):
         raise UnitsError("Unsupported STEP file units")
     return tuple(dict.fromkeys(_STEP_NAMES[name] for name in names))

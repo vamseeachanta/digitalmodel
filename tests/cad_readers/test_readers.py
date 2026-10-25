@@ -6,11 +6,14 @@ import subprocess
 import sys
 import re
 import json
+import runpy
+import shlex
 from pathlib import Path
 
 import ezdxf
 import meshio
 import pytest
+import yaml
 
 from digitalmodel.cad_readers import (
     CadReadError,
@@ -83,7 +86,7 @@ def test_mesh_units_and_triangle(tmp_path, suffix):
     assert result.units.metres_per_unit == 0.001
 
 
-def _write_brep(path, unit):
+def _write_brep(path, unit, roots=1):
     from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeFace
     from OCP.gp import gp_Pln, gp_Pnt, gp_Dir
     from OCP.IGESControl import IGESControl_Writer
@@ -100,7 +103,11 @@ def _write_brep(path, unit):
         previous = Interface_Static.CVal_s("write.step.unit")
         try:
             Interface_Static.SetCVal_s("write.step.unit", unit)
-            assert writer.Transfer(face, STEPControl_AsIs) == IFSelect_RetDone
+            for _ in range(roots):
+                face = BRepBuilderAPI_MakeFace(
+                    gp_Pln(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), 0, 30, 0, 40
+                ).Face()
+                assert writer.Transfer(face, STEPControl_AsIs) == IFSelect_RetDone
             assert writer.Write(str(path)) == IFSelect_RetDone
         finally:
             Interface_Static.SetCVal_s("write.step.unit", previous)
@@ -153,7 +160,9 @@ def test_converter_uses_argument_vector_and_retains_output(tmp_path):
     fake.write_text(
         "import pathlib, shutil, sys\n"
         "assert pathlib.Path(sys.argv[1]).suffix == '.dwg'\n"
-        "shutil.copyfile(sys.argv[3], sys.argv[2])\n"
+        "shutil.copyfile(sys.argv[3], sys.argv[2])\n",
+        encoding="utf-8",
+        newline="\n",
     )
     converter = Converter(
         (sys.executable, str(fake), "{input}", "{output}", str(template)),
@@ -191,7 +200,7 @@ def test_converter_failure(tmp_path, monkeypatch, behavior):
 def test_malformed_files_fail(tmp_path, suffix):
     """Malformed synthetic data must not return an empty successful result."""
     path = tmp_path / f"invalid.{suffix}"
-    path.write_text("not CAD data\n")
+    path.write_text("not CAD data\n", encoding="utf-8", newline="\n")
     with pytest.raises(CadReadError):
         read_cad(path, units="mm")
 
@@ -221,8 +230,12 @@ def test_step_without_unit_context(tmp_path):
 
     path = tmp_path / "unitless.step"
     _write_brep(path, "MM")
-    text = re.sub(r"GLOBAL_UNIT_ASSIGNED_CONTEXT\(\s*\([^)]*\)\)", "", path.read_text())
-    path.write_text(text)
+    text = re.sub(
+        r"GLOBAL_UNIT_ASSIGNED_CONTEXT\s*\(\s*\([^)]*\)\)",
+        "",
+        path.read_text(encoding="utf-8"),
+    )
+    path.write_text(text, encoding="utf-8", newline="\n")
     with pytest.raises(UnitsError, match="required"):
         read_cad(path)
     result = read_cad(path, units="cm")
@@ -232,6 +245,63 @@ def test_step_without_unit_context(tmp_path):
     x0, y0, _, x1, y1, _ = bounds.Get()
     assert x1 - x0 == pytest.approx(300, abs=Precision.Confusion_s(), rel=0)
     assert y1 - y0 == pytest.approx(400, abs=Precision.Confusion_s(), rel=0)
+
+
+def _write_step_contexts(path, unitless_root=None, mixed_units=False):
+    """Create two independent face roots with explicit or missing units."""
+    _write_brep(path, "MM", roots=2)
+    text = path.read_text(encoding="utf-8")
+    text = text.replace(
+        "SI_UNIT(.MILLI.,.METRE.)", "SI_UNIT($,.METRE.)", 1 if mixed_units else 2
+    )
+    contexts = list(
+        re.finditer(r"GLOBAL_UNIT_ASSIGNED_CONTEXT\s*\(\s*\([^)]*\)\)", text)
+    )
+    assert len(contexts) == 2
+    if unitless_root is not None:
+        context = contexts[unitless_root]
+        text = text[: context.start()] + text[context.end() :]
+    path.write_text(text, encoding="utf-8", newline="\n")
+
+
+@pytest.mark.parametrize("unitless_root", [0, 1])
+@pytest.mark.parametrize("caller", [None, "m"])
+def test_step_incomplete_unit_coverage_is_rejected(tmp_path, unitless_root, caller):
+    """A caller cannot repair one missing context by scaling both roots."""
+    path = tmp_path / "incomplete.step"
+    _write_step_contexts(path, unitless_root)
+    with pytest.raises(UnitsError, match="incomplete"):
+        read_cad(path, units=caller)
+
+
+@pytest.mark.parametrize("mixed_units", [False, True])
+def test_step_complete_unit_coverage_preserves_each_face(tmp_path, mixed_units):
+    """NIST SP 811 (2008), B.8: 30,40 m = 30000,40000 mm; mm unchanged."""
+    from OCP.Bnd import Bnd_Box
+    from OCP.BRepBndLib import BRepBndLib
+    from OCP.Precision import Precision
+    from OCP.TopAbs import TopAbs_FACE
+    from OCP.TopExp import TopExp_Explorer
+
+    path = tmp_path / "complete.step"
+    _write_step_contexts(path, mixed_units=mixed_units)
+    result = read_cad(path)
+    assert set(result.units.declared_units) == ({"m", "mm"} if mixed_units else {"m"})
+    faces = TopExp_Explorer(result.geometry.shape, TopAbs_FACE)
+    spans = []
+    while faces.More():
+        bounds = Bnd_Box()
+        BRepBndLib.AddOptimal_s(faces.Current(), bounds, False, False)
+        x0, y0, z0, x1, y1, z1 = bounds.Get()
+        spans.append((x1 - x0, y1 - y0, z1 - z0))
+        faces.Next()
+    # Two 30 by 40 coordinate faces: both m, or one m and one mm.
+    expected = (
+        [(30, 40, 0), (30000, 40000, 0)] if mixed_units else [(30000, 40000, 0)] * 2
+    )
+    assert len(spans) == 2
+    for actual, wanted in zip(sorted(spans), expected):
+        assert actual == pytest.approx(wanted, abs=Precision.Confusion_s(), rel=0)
 
 
 def test_kernel_settings_restored(tmp_path):
@@ -260,6 +330,7 @@ def test_worked_example(tmp_path):
         check=True,
         capture_output=True,
         text=True,
+        encoding="utf-8",
     )
     assert json.loads(result.stdout) == {
         "input_length": 2000.0,
@@ -292,7 +363,7 @@ def test_missing_dependency_is_actionable(tmp_path, monkeypatch):
         return real_import(name, *args, **kwargs)
 
     path = tmp_path / "mesh.stl"
-    path.write_text("synthetic")
+    path.write_text("synthetic", encoding="utf-8", newline="\n")
     monkeypatch.setattr(builtins, "__import__", without_meshio)
     with pytest.raises(CadReadError, match="dependency"):
         read_cad(path, units="mm")
@@ -359,7 +430,9 @@ def test_empty_dxf(tmp_path):
 def test_invalid_mesh_connectivity(tmp_path):
     """Three stored vertices cannot support OBJ's one-based vertex index 9."""
     path = tmp_path / "invalid.obj"
-    path.write_text("v 0 0 0\nv 3 0 0\nv 0 4 0\nf 1 2 9\n")
+    path.write_text(
+        "v 0 0 0\nv 3 0 0\nv 0 4 0\nf 1 2 9\n", encoding="utf-8", newline="\n"
+    )
     with pytest.raises(CadReadError):
         read_cad(path, units="m")
 
@@ -387,7 +460,9 @@ def test_original_iges_flag_handles_strings_and_delimiters(
             f"{data[i:i+72]:72}G{n:07d}"
             for n, i in enumerate(range(0, len(data), 72), start=1)
         )
-        + "\n"
+        + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     assert original_unit_flag(path) == (int(flag) if flag else 0)
 
@@ -406,3 +481,46 @@ from digitalmodel.cad_readers import read_cad
 assert callable(read_cad)
 """
     subprocess.run([sys.executable, "-c", code], check=True, capture_output=True)
+
+
+def test_cad_suite_is_owned_and_executed_with_geometry_dependencies():
+    """CAD regressions must reach an enabled shard and the required aggregate."""
+    root = Path(__file__).resolve().parents[2]
+    detector = runpy.run_path(str(root / "scripts/ci/detect_touched_domains.py"))
+    domains = detector["parse_domains"](root / "tests/DOMAINS.md")
+    test_root = "tests/cad_readers/"
+    owners = [domain for domain in domains if test_root in domain.roots]
+    assert len(owners) == 1
+    domain = owners[0]
+    for changed in (
+        "tests/cad_readers/test_readers.py",
+        "src/digitalmodel/cad_readers/occt.py",
+    ):
+        selected = detector["touched_domains"]([changed], domains)
+        assert domain.name in {item.name for item in selected}
+    gates = yaml.safe_load(
+        (root / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    name = f"tests-{domain.name}"
+    gate = gates[name]
+    assert gate["enabled"] is True
+    assert gate["failure_action"] == "block"
+    assert test_root in gate["test_roots"]
+    command = shlex.split(gate["command"])
+    assert test_root in command
+    assert command[command.index("-m") + 1] == "pytest"
+    dependencies = {
+        re.split(r"[<>=!]", command[index + 1])[0]
+        for index, token in enumerate(command)
+        if token == "--with"
+    }
+    assert {
+        "pytest",
+        "pytest-asyncio",
+        "numpy",
+        "ezdxf",
+        "meshio",
+        "cadquery-ocp",
+        "pyyaml",
+    } <= dependencies
+    assert name in gates["tests-all"]["depends_on"]
