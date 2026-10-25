@@ -6,10 +6,25 @@
 from collections.abc import Mapping
 from typing import Any
 
+from digitalmodel.cathodic_protection._edition import STANDARD_BY_EDITION
 from digitalmodel.reporting.spec import Section, TableBlock, TextBlock
 
 
-def _criterion(ver: Mapping[str, Any], flag: str, required: str) -> str:
+def _criterion_references(standard: str) -> tuple[str, str]:
+    edition = next((key for key, label in STANDARD_BY_EDITION.items()
+                    if label == standard), None)
+    if edition is None:
+        raise ValueError("sensitivity criterion edition is unsupported")
+    if edition == "2021":
+        mass, count = "[4.7.1]", "[4.8.4]"
+    elif edition == "2017":
+        mass, count = "[7.7.1]", "[7.8.4]"
+    else:
+        mass, count = "Sec. 7.7.1", "Sec. 7.8.4"
+    return f"{standard}, {mass}; {count}", f"{standard}, {count}"
+
+
+def _criterion(ver: Mapping[str, Any], flag: str, required: str, reference: str) -> str:
     provided, needed, passed = ver.get("anode_count"), ver.get(required), ver.get(flag)
     if (type(provided) is not int or type(needed) is not int
             or provided < 1 or needed < 0 or type(passed) is not bool):
@@ -19,7 +34,7 @@ def _criterion(ver: Mapping[str, Any], flag: str, required: str) -> str:
     status = "PASS" if passed else "FAIL"
     comparator = ">=" if passed else "<"
     return (f"{status}; N_verified {provided} {comparator} {needed} required; "
-            f"margin {provided - needed:+d} anodes; B401 Sec. 7.8")
+            f"margin {provided - needed:+d} anodes; {reference}")
 
 
 def sensitivity_section(rows: Any) -> Section:
@@ -30,6 +45,7 @@ def sensitivity_section(rows: Any) -> Section:
         raise ValueError("sensitivity rows must be a non-empty list")
     data = []
     sources = set()
+    criterion_sources = set()
     for row in rows:
         if not isinstance(row, Mapping) or row.get("mode") not in MODES:
             raise ValueError("sensitivity row mode is required")
@@ -48,13 +64,15 @@ def sensitivity_section(rows: Any) -> Section:
         basis = row.get("basis")
         if not isinstance(basis, Mapping) or not basis.get("base_input") or not basis.get("standard"):
             raise ValueError("sensitivity source basis is required")
+        mass_reference, count_reference = _criterion_references(basis["standard"])
         sources.add(f"{basis['base_input']}; {basis['standard']}")
+        criterion_sources.add(mass_reference)
         data.append([
             row["mode"], f"{parameter} = {value:g} {PARAMETER_UNITS[parameter]}",
             *(f"{number:.3f}" for number in numbers[:3]), f"{numbers[3]:.2f}", count,
-            _criterion(ver, "initial_meets_demand", "count_by_initial_current"),
-            _criterion(ver, "mass_meets_requirement", "count_by_mass"),
-            _criterion(ver, "final_meets_demand", "count_by_final_current"),
+            _criterion(ver, "initial_meets_demand", "count_by_initial_current", count_reference),
+            _criterion(ver, "mass_meets_requirement", "count_by_mass", mass_reference),
+            _criterion(ver, "final_meets_demand", "count_by_final_current", count_reference),
         ])
     return Section(key="sensitivity", title="Sensitivity analysis", blocks=[
         TextBlock(markdown=(
@@ -78,6 +96,7 @@ def sensitivity_section(rows: Any) -> Section:
             "Source: read-only run of run_cathodic_protection using the sweep config "
             f"and base input ({'; '.join(sorted(sources))}); not yet reviewed. "
             "Criteria: engine fresh/depleted "
-            "current-output and mass counts, B401 Sec. 7.8; edition follows the base input."
+            f"current-output and mass counts, {'; '.join(sorted(criterion_sources))}; "
+            "edition follows each row's base input."
         )),
     ])

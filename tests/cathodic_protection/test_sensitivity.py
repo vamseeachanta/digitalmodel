@@ -361,6 +361,57 @@ def test_report_criterion_uses_true_comparator(sweeps, provided, passed, compara
     assert cell.startswith("PASS" if passed else "FAIL")
 
 
+@pytest.mark.parametrize("standard,mass_ref,count_ref", [
+    ("DNV-RP-B401 (2005, with 2008 amendments)", "Sec. 7.7.1", "Sec. 7.8.4"),
+    ("DNV-RP-B401 (October 2010)", "Sec. 7.7.1", "Sec. 7.8.4"),
+    ("DNVGL-RP-B401 (June 2017)", "[7.7.1]", "[7.8.4]"),
+    ("DNV-RP-B401 (May 2021)", "[4.7.1]", "[4.8.4]"),
+])
+def test_report_criteria_follow_each_row_edition(sweeps, standard, mass_ref, count_ref):
+    from digitalmodel.cathodic_protection.report_sensitivity import sensitivity_section
+
+    row = deepcopy(sweeps["published"][0])
+    row["basis"]["standard"] = standard
+    before = deepcopy(row)
+    table = sensitivity_section([row]).blocks[1]
+    for column in (7, 8, 9):
+        assert standard in table.rows[0][column]
+        assert count_ref in table.rows[0][column]
+    assert mass_ref in table.rows[0][8]
+    assert mass_ref not in table.rows[0][7]
+    assert mass_ref not in table.rows[0][9]
+    assert standard in table.source
+    assert mass_ref in table.source and count_ref in table.source
+    if "2021" in standard:
+        assert "Sec. 7.8" not in table.source
+        assert all("Sec. 7.8" not in cell for cell in table.rows[0][7:])
+    assert row == before
+
+
+def test_report_mixed_editions_keep_their_own_criteria(sweeps):
+    from digitalmodel.cathodic_protection.report_sensitivity import sensitivity_section
+
+    rows = [deepcopy(sweeps["published"][0]) for _ in range(2)]
+    rows[0]["basis"]["standard"] = "DNV-RP-B401 (October 2010)"
+    table = sensitivity_section(rows).blocks[1]
+    assert "Sec. 7.8.4" in table.rows[0][7]
+    assert "[4.8.4]" not in table.rows[0][7]
+    assert "[4.8.4]" in table.rows[1][7]
+    assert "Sec. 7.8" not in table.rows[1][7]
+    for reference in ("Sec. 7.7.1", "Sec. 7.8.4", "[4.7.1]", "[4.8.4]"):
+        assert reference in table.source
+
+
+@pytest.mark.parametrize("standard", ["DNV-RP-B401 (2099)", "DNV-RP-F103 (2010)"])
+def test_report_rejects_unknown_criterion_edition(sweeps, standard):
+    from digitalmodel.cathodic_protection.report_sensitivity import sensitivity_section
+
+    row = deepcopy(sweeps["published"][0])
+    row["basis"]["standard"] = standard
+    with pytest.raises(ValueError, match="criterion.*edition"):
+        sensitivity_section([row])
+
+
 def test_report_explains_fixed_published_temperature_rows(sweeps):
     from digitalmodel.cathodic_protection.report_sensitivity import sensitivity_section
 
@@ -399,7 +450,8 @@ def test_report_and_cli_use_existing_output(tmp_path, capsys):
     page = render_html(spec)
     assert "3661.475" in page
     assert "standard_tables" in page and "modified input" in page
-    assert "B401 Sec. 7.8" in page and "N_verified" in page
+    assert "[4.7.1]" in page and "[4.8.4]" in page and "N_verified" in page
+    assert "B401 Sec. 7.8" not in section.blocks[1].source
     assert "FAIL" in page and "PASS" in page
     output = tmp_path / "folder with spaces" / "sweep.json"
     report = output.with_suffix(".html")
