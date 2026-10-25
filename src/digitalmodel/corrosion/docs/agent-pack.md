@@ -10,6 +10,7 @@ has not been established. NOT_EVALUATED means the required source was unreadable
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-22 | Initial pinned API inventory and hand anchors for repeatable review. |
+| 2 | 2026-10-25 | Correct the qualitative area-ratio locator to cite the note definition. |
 
 | Header | Value |
 | --- | --- |
@@ -49,7 +50,7 @@ runtime schemas. Output record fields have the same suffix convention.
 | ANODIC_INDEX_V metal values, ENVIRONMENTS limits, MARGINAL_BAND_V | NOT_EVALUATED: no edition/clause/table is supplied for either the metal indices, environmental thresholds or marginal band. No table rows or physical limits are reproduced here. | [src/digitalmodel/corrosion/galvanic_screening.py:L61-L86] [src/digitalmodel/corrosion/galvanic_screening.py:L88-L94] |
 | OK if delta<=allowable+tolerance; MARGINAL if delta<=allowable+band+tolerance; otherwise PROTECT | Software classification. Inclusive tolerance 1e-12 V is a numerical convention with no physical source claim. | [src/digitalmodel/corrosion/galvanic_screening.py:L134-L144] |
 | Round returned delta to six decimal places; matrix calls the same couple calculation; verdict_rank ordinal order | Software presentation, composition and ordering conventions, not independent evidence. | [src/digitalmodel/corrosion/galvanic_screening.py:L204-L247] |
-| Small-anode/large-cathode notes and recommendations | Qualitative guidance only: no area, electrolyte or polarization model is calculated; physical adequacy NOT_EVALUATED. | [src/digitalmodel/corrosion/galvanic_screening.py:L99-L100] [src/digitalmodel/corrosion/galvanic_screening.py:L192-L202] |
+| Small-anode/large-cathode notes and recommendations | Qualitative guidance only: no area, electrolyte or polarization model is calculated; physical adequacy NOT_EVALUATED. | [src/digitalmodel/corrosion/galvanic_screening.py:L93-L98] [src/digitalmodel/corrosion/galvanic_screening.py:L192-L202] |
 
 Source retrieval: the [institutional MIL-STD-889C PDF address](https://www.dau.edu/sites/default/files/Migrated/CopDocuments/MIL-STD-889C.pdf)
 returned HTTP 403 on 2026-10-22. The table could not be read. A public catalogue

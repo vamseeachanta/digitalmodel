@@ -77,6 +77,33 @@ def test_public_contract_and_locators(module):
     assert check_pack(package / "docs/agent-pack.md", package) == 0
 
 
+def test_area_ratio_guidance_cites_note_definition():
+    package = ROOT / "src/digitalmodel/corrosion"
+    source = package / "galvanic_screening.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    note = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.Assign)
+        and any(
+            isinstance(target, ast.Name) and target.id == "_AREA_RATIO_NOTE"
+            for target in node.targets
+        )
+    )
+    text = (package / "docs/agent-pack.md").read_text(encoding="utf-8")
+    row = next(
+        line
+        for line in text.splitlines()
+        if line.startswith("| Small-anode/large-cathode notes and recommendations |")
+    )
+    locators = re.findall(r"\[([^\[\]\s]+):L(\d+)-L(\d+)\]", row)
+    assert locators[0] == (
+        source.relative_to(ROOT).as_posix(),
+        str(note.lineno),
+        str(note.end_lineno),
+    )
+
+
 @pytest.mark.parametrize("module", MODULES)
 def test_missing_public_name_fails(module, tmp_path):
     package = ROOT / "src/digitalmodel" / module
