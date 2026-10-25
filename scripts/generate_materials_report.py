@@ -2,8 +2,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Build the standalone materials report from public materials interfaces.
 
 Use PYTHONPATH=src python scripts/generate_materials_report.py.
@@ -18,10 +16,11 @@ import html
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 from digitalmodel.materials import LinePipe, line_pipe, smts_mpa
 from digitalmodel.materials.database import load_database
+from digitalmodel.materials.line_pipe import _RHO_KG_M3
 
 ROOT = Path(__file__).resolve().parents[1]
 DESTINATION = ROOT / "docs/reports/modules/materials"
@@ -29,11 +28,20 @@ REPORT_NAME = "materials-module-report.html"
 DATE = "2026-10-21"
 REVISION = "00"
 
+
+class PipeExample(TypedDict):
+    """Catalogue selection for the public worked example."""
+
+    grade: str
+    nps: float
+    schedule: str
+
+
 # Public example: Continental Steel, WSP40-800-322, Specifications table,
 # undated web edition, accessed 2026-10-21. X52 is an independent grade
 # selection from UNIASEN, API 5L Pipe Specification, 46th ed. (2018),
 # Mechanical Requirement PSL1/PSL2, accessed 2026-10-21. No availability claim.
-EXAMPLE = {"grade": "X52", "nps": 8.0, "schedule": "SCH 40"}
+EXAMPLE: PipeExample = {"grade": "X52", "nps": 8.0, "schedule": "SCH 40"}
 PUBLIC_REFERENCE = {"od_in": 8.625, "wt_in": 0.322, "id_in": 7.981,
                     "weight_lb_ft": 28.55}
 # Existing test_plain_end_weight_matches_asme tolerance, not a design margin.
@@ -48,6 +56,8 @@ CHANGES: dict[str, Any] = {"document": "Materials module analysis", "revision": 
 def example_values() -> tuple[LinePipe, dict[str, float]]:
     """Read numerical example values through the public module interfaces."""
     pipe = line_pipe(**EXAMPLE)
+    if pipe.grade.rho_kg_m3 != _RHO_KG_M3:
+        raise ValueError("grade density differs from the fixed plain-end mass basis")
     values = {key: getattr(pipe, key) for key in (
         "nps", "od_in", "wt_in", "id_in", "od_mm", "wt_mm", "id_mm",
         "d_over_t", "metal_area_in2", "bore_area_in2", "weight_kg_m", "weight_lb_ft"

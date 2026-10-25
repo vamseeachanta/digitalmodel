@@ -1,13 +1,13 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
 """Rebuild the client report and compare its numerical surfaces to public calls."""
 
 import importlib.util
 import json
+import math
 import re
+from dataclasses import replace
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -19,6 +19,20 @@ ROOT = Path(__file__).resolve().parents[2]
 GENERATOR = ROOT / "scripts/generate_materials_report.py"
 REPORT = ROOT / "docs/reports/modules/materials/materials-module-report.html"
 CHANGES = REPORT.with_name("changes.json")
+
+
+@pytest.fixture(autouse=True)
+def legacy_text_locale(monkeypatch):
+    """Exercise report helpers with a Windows legacy text-file default."""
+    original_open = Path.open
+
+    def open_with_legacy_encoding(path, mode="r", buffering=-1, encoding=None,
+                                  errors=None, newline=None):
+        if "b" not in mode and encoding in (None, "locale"):
+            encoding = "cp1252"
+        return original_open(path, mode, buffering, encoding, errors, newline)
+
+    monkeypatch.setattr(Path, "open", open_with_legacy_encoding)
 
 
 class ReportParser(HTMLParser):
@@ -113,6 +127,56 @@ def test_all_worked_example_numbers_equal_fresh_module_calls():
     assert "computed" in section.lower()
 
 
+def test_rendered_example_matches_independent_cited_values():
+    """Pin the supplier strength transcription and an annular-area hand check.
+
+    Strength basis: UNIASEN, API 5L Pipe Specification, edition 46 (2018),
+    Mechanical Requirement PSL1/PSL2, L360/X52; report reference ref-public-grade.
+    Original-table qualification remains pending. Dimensions: Continental Steel,
+    WSP40-800-322, Specifications; report reference ref-public-dimensions.
+    Mass = pi * t * (D - t) * density, with inches converted to metres;
+    7850 kg/m3 is the assumed implementation basis, not a measured density.
+    """
+    expected = {
+        "smys_mpa": "360.0", "smts_psl1_mpa": "460.0",
+        "smts_psl2_mpa": "460.0", "weight_kg_m": "42.5",
+    }
+    hand_mass_kg_m = math.pi * 0.322 * (8.625 - 0.322) * 0.0254 ** 2 * 7850
+    assert format(hand_mass_kg_m, ".1f") == expected["weight_kg_m"]
+    parsed = parse(load_generator().render_report())
+    for key, value in expected.items():
+        displayed = [text for name, _, text in parsed.quantities if name == key]
+        assert displayed and all(text == value for text in displayed), key
+    assert {"ref-public-grade", "ref-public-dimensions", "ref-method"} <= parsed.ids
+
+
+def test_report_refuses_density_inconsistent_with_mass_basis(monkeypatch):
+    generator = load_generator()
+    pipe = line_pipe("X52", nps=8.0, schedule="SCH 40")
+    changed = replace(pipe, grade=replace(pipe.grade, rho_kg_m3=8000))
+    monkeypatch.setattr(generator, "line_pipe", lambda *args, **kwargs: changed)
+    with pytest.raises(ValueError, match="density"):
+        generator.render_report()
+
+
+@pytest.mark.parametrize("relative_difference", [-0.004, 0.004])
+def test_public_mass_guard_rejects_both_out_of_tolerance_directions(
+    monkeypatch, relative_difference,
+):
+    from digitalmodel.materials import LinePipe
+
+    generator = load_generator()
+    changed = generator.PUBLIC_REFERENCE["weight_lb_ft"] * (1 + relative_difference)
+    monkeypatch.setattr(LinePipe, "weight_lb_ft", property(lambda self: changed))
+    with pytest.raises(ValueError, match="public plain-end mass check"):
+        generator.render_report()
+
+
+def test_report_sources_have_one_license_header():
+    for path in (GENERATOR, Path(__file__)):
+        assert path.read_bytes().count(b"Copyright" + b" (c)") == 1, path.name
+
+
 def test_example_changes_when_module_output_changes(monkeypatch):
     generator = load_generator()
     from digitalmodel.materials import LinePipe
@@ -152,7 +216,7 @@ def test_style_sources_sections_links_and_offline_delivery():
     document = generator.render_report()
     parsed = parse(document)
     assert '<body class="hs-doc">' in document
-    assert (ROOT / "docs/api/_assets/brand.css").read_text() in document
+    assert (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8") in document
     assert len(parsed.levels) == 10
     assert all(link[1:] in parsed.ids for link in parsed.links if link.startswith("#"))
     assert not re.search(r'<(?:script|link)[^>]+(?:src|href)="https?://', document)
@@ -190,7 +254,7 @@ def test_embedded_interactions_save_roundtrip_and_handle_untrusted_comments():
     chart = json.loads(re.search(
         r'<script id="chart-data" type="application/json">(.*?)</script>', document, re.S
     )[1])
-    changes = json.loads(CHANGES.read_text())
+    changes = json.loads(CHANGES.read_text(encoding="utf-8"))
     program = r'''
 const assert = require("node:assert/strict");
 const vm = require("node:vm");
@@ -265,7 +329,7 @@ def test_missing_house_style_fails_explicitly(tmp_path, monkeypatch):
     generator = load_generator()
     exemplar = tmp_path / "docs/api/cfd/turbulent-flat-plate-verification.html"
     exemplar.parent.mkdir(parents=True)
-    exemplar.write_text("<html><body>Style missing</body></html>")
+    exemplar.write_text("<html><body>Style missing</body></html>", encoding="utf-8")
     brand = tmp_path / "docs/api/_assets/brand.css"
     brand.parent.mkdir(parents=True)
     brand.write_bytes((ROOT / "docs/api/_assets/brand.css").read_bytes())
