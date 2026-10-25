@@ -977,7 +977,7 @@ def evaluate_referent_free_run(
             "combination": "U_SN = sqrt(U_I^2 + U_G^2)",
             "excludes": [
                 "turbulence-model form error",
-                "wall-function error (the y+ regime is reported, not gated)",
+                "wall-function model error (measured y+ eligibility is gated)",
                 "free-surface / interface-compression modelling error",
                 "geometric idealisation of the supplied hull surface",
                 "attitude: the body is fixed, a real hull sinks and trims",
@@ -999,7 +999,7 @@ def evaluate_referent_free_run(
         },
         "reported_result": {
             "ct": ct,
-            "plus_minus": u_sn,
+            "plus_minus": u_sn if admissible else None,
             "statement": statement,
         },
         "cannot_establish": [

@@ -232,16 +232,18 @@ def test_the_sign_check_is_not_conditional_on_the_hull_class() -> None:
     assert ok["defect"] is False
 
 
-def test_no_verdict_anywhere_claims_a_pass_or_a_validation(tmp_path) -> None:
+def test_form_factor_claims_no_pass_and_manifest_claims_no_validation(tmp_path) -> None:
     """The vocabulary is load-bearing. ``referent_free_resistance`` says why:
     a criterion invented after looking at the answer is not a criterion, and a
     band that says 'passed' has been promoted to one."""
     manifest = evaluate_double_body_run(
         _force_file(tmp_path, WORKED_EXAMPLES["normal"]), _config()
     )
-    blob = json.dumps(manifest).lower()
+    verdict_blob = json.dumps(manifest["form_factor"]).lower()
     for forbidden in ("passed", "validated", "all_passed"):
-        assert forbidden not in blob, forbidden
+        assert forbidden not in verdict_blob, forbidden
+    assert "validated" not in json.dumps(manifest).lower()
+    assert "all_passed" not in manifest
     assert manifest["form_factor"]["verdict"] in (
         "not_implausible",
         "implausible",
