@@ -26,9 +26,12 @@
 
   <h2>Revision history</h2>
   <table>
-    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-    <tbody><tr><td>1</td><td>2026-10-21</td><td>Document unsupported-criterion rejection and the wave-only example to prevent incomplete assessments.</td></tr></tbody>
     <caption>Table 1. Revision history.</caption>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>2026-10-21</td><td>Document unsupported-criterion rejection and the wave-only example to prevent incomplete assessments.</td></tr>
+      <tr><td>2</td><td>2026-10-25</td><td>Place captions first in each table for valid HTML while retaining their display below the tables.</td></tr>
+    </tbody>
   </table>
 
   <h2>Inputs and method</h2>
@@ -36,12 +39,12 @@
     site operating limits or values from a standard. Both limits are explicitly
     supplied by the caller.</p>
   <table>
+    <caption>Table 2. Synthetic Hs/Tp joint probabilities, summing to unity.</caption>
     <thead><tr><th>Hs upper edge (m)</th><th>Occurrence at Tp upper edge 6.0 s</th><th>Occurrence at Tp upper edge 8.0 s</th></tr></thead>
     <tbody>
       <tr><td>1.0</td><td>0.1</td><td>0.2</td></tr>
       <tr><td>2.0</td><td>0.3</td><td>0.4</td></tr>
     </tbody>
-    <caption>Table 2. Synthetic Hs/Tp joint probabilities, summing to unity.</caption>
   </table>
   <p>The selected criteria are Hs &le; 2.0 m and Tp &le; 6.0 s. Accepted disjoint
     cells are summed: P = 0.1 + 0.3 = 0.4. Operability is 100P = 40.0%;
@@ -54,13 +57,13 @@
   <p>The example prints its inputs, the wave-only result and the rejected criteria.</p>
   <pre><code>PYTHONPATH=src python3 examples/solvers/orcaflex/wave_only_operability.py</code></pre>
   <table>
+    <caption>Table 3. Independent expected answers for the synthetic example.</caption>
     <thead><tr><th>Request</th><th>Result</th><th>Disposition</th></tr></thead>
     <tbody>
       <tr><td>Hs &le; 2.0 m, Tp &le; 6.0 s</td><td>40.0% operability; 60.0% non-operability</td><td>Wave-only assessment</td></tr>
       <tr><td>Same wave criteria plus wind &le; 1.0 m/s</td><td>NOT_EVALUATED</td><td>Input rejected; no wind occurrence data</td></tr>
       <tr><td>Same wave criteria plus current &le; 1.0 m/s</td><td>NOT_EVALUATED</td><td>Input rejected; no current occurrence data</td></tr>
     </tbody>
-    <caption>Table 3. Independent expected answers for the synthetic example.</caption>
   </table>
   <p>The example converts validation errors into <code>NOT_EVALUATED</code>
     entries for display. The API raises <code>pydantic.ValidationError</code>
