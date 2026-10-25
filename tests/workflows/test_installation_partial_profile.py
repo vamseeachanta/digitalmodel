@@ -3,12 +3,27 @@
 from copy import deepcopy
 from hashlib import sha256
 import json
+from shutil import copytree
 
 import numpy as np
 import pytest
 import yaml
 
 from digitalmodel.workflows import installation_partial_report as report
+from digitalmodel.workflows.installation_trace_extract import _read_profile
+
+
+INVALID_REQUESTS = [
+    ('extraction: [', 'Invalid request YAML'),
+    ('extraction: "\\q"', 'Invalid request YAML'),
+    ('', 'Request root must be a mapping'),
+    ('null', 'Request root must be a mapping'),
+    ('request', 'Request root must be a mapping'),
+    ('[]', 'Request root must be a mapping'),
+    ('extraction: null', 'Request extraction must be a mapping'),
+    ('extraction: 1', 'Request extraction must be a mapping'),
+    ('extraction: []', 'Request extraction must be a mapping'),
+]
 
 
 def _digest(path):
@@ -162,8 +177,79 @@ def test_report_retains_failure_and_reads_back_sidecar(evidence, tmp_path):
     assert result['envelopes'] == []
     assert 'channels' not in result['cases'][0]
     assert result['engineering_acceptance'] == 'NOT EVALUATED'
-    assert json.loads(output.with_suffix('.json').read_text()) == result
-    assert 'Evidence failures' in output.read_text()
+    assert json.loads(output.with_suffix('.json').read_text(encoding='utf-8')) == result
+    assert 'Evidence failures' in output.read_text(encoding='utf-8')
+
+
+@pytest.mark.parametrize('request_text,reason', INVALID_REQUESTS)
+def test_invalid_request_is_normalized_to_value_error(evidence, request_text, reason):
+    """A matching digest does not establish valid YAML or mapping shapes."""
+    run, _, _, _, _ = evidence
+    request = run / 'request.yml'
+    request.write_text(request_text, encoding='utf-8')
+    with pytest.raises(ValueError, match=reason):
+        _read_profile(run, {'request_sha256': _digest(request)}, None)
+
+
+@pytest.mark.parametrize('workers', [1, 3])
+@pytest.mark.parametrize('request_text,reason', INVALID_REQUESTS)
+def test_invalid_request_retains_report_and_other_cases(
+        evidence, tmp_path, request_text, reason, workers):
+    """One invalid request retains its failure and an independent verified case."""
+    _save(evidence)
+    run, snapshot, matrix, _, metadata = evidence
+    valid_run = copytree(run, tmp_path / 'valid-run')
+    generation = json.loads((tmp_path / 'generation.json').read_text(encoding='utf-8'))
+    generation['settings']['hs_m'] = 2
+    valid_generation = tmp_path / 'valid-generation.json'
+    _write_json(valid_generation, generation)
+    valid_case = dict(matrix['cases'][0], hs_m=2)
+    matrix['cases'].append(valid_case)
+    snapshot['cases'].append(dict(index=1, status='COMPLETED', run_dir=str(valid_run),
+                                  generation_file=str(valid_generation), **valid_case))
+    request = run / 'request.yml'
+    request.write_text(request_text, encoding='utf-8')
+    receipt = json.loads((run / 'run.json').read_text(encoding='utf-8'))
+    receipt['request_sha256'] = metadata['request_sha256'] = _digest(request)
+    _write_json(run / 'run.json', receipt)
+    _save(evidence)
+    matrix_path, campaign = tmp_path / 'matrix.json', tmp_path / 'campaign.json'
+    _write_json(matrix_path, matrix)
+    snapshot['matrix_sha256'] = _digest(matrix_path)
+    _write_json(campaign, snapshot)
+    captured = campaign.read_bytes()
+    output = tmp_path / 'report.html'
+    summary = report.generate_report(campaign, matrix_path, output, workers=workers)
+    assert summary['counts'] == {'FAILED': 1, 'VERIFIED': 1}
+    failed, verified = summary['cases']
+    assert reason in failed['reason'] and failed['status'] == 'FAILED'
+    assert 'channels' not in failed and 'peak_tension_kN' not in failed
+    assert verified['status'] == 'VERIFIED'
+    assert summary['envelopes'] == report.component_envelopes([verified])
+    assert campaign.read_bytes() == captured
+    assert json.loads(output.with_suffix('.json').read_text(encoding='utf-8')) == summary
+    assert 'title="FAILED"' in output.read_text(encoding='utf-8')
+
+
+@pytest.mark.parametrize('workers', [1, 3])
+@pytest.mark.parametrize('defect', ['metadata', 'arrays'])
+def test_failed_profile_preserves_provenance_without_responses(evidence, workers, defect):
+    """Verified run identity survives a later metadata or array coverage failure."""
+    run, snapshot, matrix, arrays, metadata = evidence
+    if defect == 'metadata':
+        del arrays['profile_001']
+        del metadata['channels']['profile_001']
+    else:
+        arrays['unexpected'] = [0., 0., 0.]
+    _save(evidence)
+    row, = report.collect_cases(snapshot, matrix, workers=workers)
+    generation = json.loads((run.parent / 'generation.json').read_text(encoding='utf-8'))
+    assert row == dict(index=0, hs_m=1, tp_s=8, seed=1, run_dir=str(run), status='FAILED',
+                       settings=generation['settings'],
+                       heading_degrees=generation['wave_reference']['WaveDirection'],
+                       simulation_sha256=metadata['simulation_sha256'],
+                       trace_sha256=metadata['trace_sha256'], reason=row['reason'])
+    assert report.component_envelopes([row]) == []
 
 
 @pytest.mark.parametrize('missing_geometry', [False, True])

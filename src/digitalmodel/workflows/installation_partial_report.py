@@ -64,9 +64,12 @@ def _collect_case(index, case, current, matrix):
                 if compute_hash(traces) != row['trace_sha256']:
                     raise ValueError('Traces changed during verification')
             except (OSError, ValueError, KeyError, TypeError) as error:
-                return dict(index=index, **{k: case[k] for k in ('hs_m', 'tp_s', 'seed')},
-                            run_dir=current['run_dir'], status='FAILED',
-                            reason=f'Profile evidence verification failed: {error}')
+                failed = {key: row[key] for key in (
+                    'index', 'hs_m', 'tp_s', 'seed', 'run_dir', 'settings',
+                    'heading_degrees', 'simulation_sha256', 'trace_sha256') if key in row}
+                failed.update(status='FAILED',
+                              reason=f'Profile evidence verification failed: {error}')
+                return failed
             row.update(status='VERIFIED', channels=_compact_channels(metadata['channels']),
                        metadata_sha256=sha256(raw).hexdigest(),
                        limitations=metadata.get('limitations', []))
