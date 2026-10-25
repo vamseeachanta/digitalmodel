@@ -618,3 +618,9 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+
+# Retain only the structural beam admission example and its local report.
+!/docs/reports/modules/structural_fe/
+/docs/reports/modules/structural_fe/*
+!/docs/reports/modules/structural_fe/build_worked_example.py
+!/docs/reports/modules/structural_fe/worked-example.html
