@@ -80,10 +80,20 @@ def format_value(value, scale=1.0, decimals=1, rounding="nearest"):
 
 def number(record, key, scale=1.0):
     """Bind visible numerical text to an exact module output or source input."""
+    value = lookup(record, key)
+    if key == "reel.result.residual_radius_m":
+        result = record["reel"]["result"]
+        status = result.get("residual_radius_status")
+        if value is None:
+            if status != "unbounded_zero_curvature" or result.get("residual_curvature_1_per_m") != 0:
+                raise ValueError("Inconsistent residual radius and zero-curvature status")
+            return (f'<span data-value="{key}" data-status="{status}">unbounded</span>')
+        if status != "finite" or value <= 0:
+            raise ValueError("Inconsistent residual radius and finite status")
     decimals = 3 if key.endswith(("wall_thickness", "coating_thickness")) else 1
     rounding = "up" if key.endswith("min_stinger_radius_m") else "nearest"
     return (f'<span data-value="{key}" data-scale="{scale}" data-decimals="{decimals}" data-rounding="{rounding}">'
-            f'{format_value(lookup(record, key), scale, decimals, rounding)}</span>')
+            f'{format_value(value, scale, decimals, rounding)}</span>')
 
 
 def screening_status(record, case):

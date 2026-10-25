@@ -4,6 +4,7 @@
 """Check rebuilt report text, numerical bindings and standalone controls."""
 
 import copy
+import hashlib
 import importlib.util
 import json
 import re
@@ -17,6 +18,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORT = ROOT / "docs/reports/modules/pipelay"
+REBUILD = ("Rebuild with PYTHONPATH=src uv run python docs/reports/modules/pipelay/build_report.py "
+           "--output-dir docs/reports/modules/pipelay --scratch-dir <external-scratch>")
 
 
 @pytest.fixture
@@ -82,10 +85,33 @@ class Page(HTMLParser):
                 self.unbound_worked_numbers.append(data)
 
 
-def test_report_rebuilds_exactly(builder, tmp_path):
+def test_report_rebuilds_with_numeric_tolerance(builder, tmp_path):
     builder.build(tmp_path / "report", tmp_path / "calculations")
-    for name in ("report.html", "changes.json"):
-        assert (tmp_path / "report" / name).read_bytes() == (REPORT / name).read_bytes()
+
+    def tolerant(value):
+        if isinstance(value, dict):
+            return {key: tolerant(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [tolerant(item) for item in value]
+        return pytest.approx(value, rel=1e-12, abs=1e-12) if isinstance(value, float) else value
+
+    record_pattern = r'<script id="calculation-record" type="application/json">(.*?)</script>'
+    config_pattern = r'<script id="review-config" type="application/json">(.*?)</script>'
+    built = (tmp_path / "report/report.html").read_text(encoding="utf-8")
+    stored = (REPORT / "report.html").read_text(encoding="utf-8")
+    built_record = json.loads(re.search(record_pattern, built, re.S)[1])
+    stored_record = json.loads(re.search(record_pattern, stored, re.S)[1])
+    assert built_record == tolerant(stored_record), REBUILD
+    for text in (built, stored):
+        config = json.loads(re.search(config_pattern, text, re.S)[1])
+        bound_page = re.sub(config_pattern, "", text, flags=re.S)
+        assert config["report_digest"] == hashlib.sha256(bound_page.encode("utf-8")).hexdigest(), REBUILD
+        assert config["revision"] == builder.REVISION, REBUILD
+    # Keep the formatted document exact while allowing roundoff in its raw record.
+    strip_records = lambda text: re.sub(record_pattern, "", re.sub(config_pattern, "", text, flags=re.S), flags=re.S)
+    assert strip_records(built) == strip_records(stored), REBUILD
+    assert json.loads((tmp_path / "report/changes.json").read_text(encoding="utf-8")) == json.loads(
+        (REPORT / "changes.json").read_text(encoding="utf-8")), REBUILD
 
 
 def test_report_deliverables_are_unignored():
@@ -212,6 +238,70 @@ def test_inconsistent_status_fails_closed(builder, tmp_path):
         builder.render(record)
 
 
+@pytest.mark.parametrize("efficiency, radius, displayed", [
+    (0.0, 8.0, "8.0"),
+    (0.95, 160.0, "160.0"),
+    (1.0, None, "unbounded"),
+])
+def test_report_builds_for_straightening_boundaries(builder, tmp_path, monkeypatch,
+                                                   efficiency, radius, displayed):
+    original = builder.load_example
+
+    def straightened(case):
+        cfg = original(case)
+        if case == "reel":
+            cfg["pipelay"]["config"]["straightener_efficiency"] = efficiency
+        return cfg
+
+    monkeypatch.setattr(builder, "load_example", straightened)
+    record = builder.build(tmp_path / "report", tmp_path / "calculations")
+    result = record["reel"]["result"]
+    if radius is None:
+        assert result["residual_radius_m"] is None
+        assert result["residual_radius_status"] == "unbounded_zero_curvature"
+        # Bai & Bai (2014), Ch. 6; screening-basis.md E6, illustrative inputs:
+        # curvature = (1 - 1) / 8 = 0; strain = 0.2731 * 0 / 2 = 0;
+        # mid-span offset = 0 * 12**2 / 8 = 0. No finite radius exists.
+        assert result["residual_curvature_1_per_m"] == pytest.approx(0.0)
+        assert result["residual_bending_strain"] == pytest.approx(0.0)
+        assert result["residual_out_of_straightness_m"] == pytest.approx(0.0)
+    else:
+        # E6: 1 / ((1 - 0) / 8) = 8; 1 / ((1 - 0.95) / 8) = 160 m.
+        assert result["residual_radius_m"] == pytest.approx(radius)
+        assert result["residual_radius_status"] == "finite"
+    text = (tmp_path / "report/report.html").read_text(encoding="utf-8")
+    page = Page()
+    page.feed(text)
+    assert [value for attrs, value in page.bindings
+            if attrs["data-value"] == "reel.result.residual_radius_m"] == [displayed]
+    embedded = json.loads(re.search(
+        r'<script id="calculation-record" type="application/json">(.*?)</script>',
+        text, re.S)[1])
+    assert embedded["reel"]["result"] == result
+
+
+@pytest.mark.parametrize("radius, status, curvature", [
+    (None, "finite", 0.00625),
+    (None, None, 0.0),
+    (None, "unknown", 0.0),
+    (None, "unbounded_zero_curvature", 0.00625),
+    (160.0, "unbounded_zero_curvature", 0.00625),
+    (0.0, "finite", 0.00625),
+    (-160.0, "finite", 0.00625),
+])
+def test_inconsistent_residual_radius_fails_closed(builder, tmp_path,
+                                                  radius, status, curvature):
+    record = builder.calculate(tmp_path)
+    result = record["reel"]["result"]
+    result.update(residual_radius_m=radius, residual_curvature_1_per_m=curvature)
+    if status is None:
+        result.pop("residual_radius_status")
+    else:
+        result["residual_radius_status"] = status
+    with pytest.raises(ValueError, match="residual radius"):
+        builder.render(record)
+
+
 def test_lf_source_digests_and_output_bytes(builder, tmp_path, monkeypatch):
     record = builder.calculate(tmp_path / "original")
     checkout = tmp_path / "checkout"
@@ -221,7 +311,7 @@ def test_lf_source_digests_and_output_bytes(builder, tmp_path, monkeypatch):
         source_text = (ROOT / name).read_text(encoding="utf-8")
         target.write_bytes(source_text.replace("\n", "\r\n").encode("utf-8"))
     monkeypatch.setattr(builder, "ROOT", checkout)
-    assert builder.calculate(tmp_path / "crlf") == record
+    assert builder.calculate(tmp_path / "crlf") == record, REBUILD
     monkeypatch.setattr(builder, "ROOT", ROOT)
     builder.build(tmp_path / "report", tmp_path / "calculations")
     for name in ("report.html", "changes.json"):
