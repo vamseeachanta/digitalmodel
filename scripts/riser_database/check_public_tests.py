@@ -79,6 +79,8 @@ class Evidence:
     def pytest_collectreport(self, report):
         if report.failed:
             self.collection_errors.add(report.nodeid)
+        elif report.skipped:
+            self.skipped[report.nodeid] = report.longrepr[2].removeprefix("Skipped: ")
 
     def pytest_runtest_logreport(self, report):
         if report.failed:
@@ -115,7 +117,9 @@ def main():
         "tests/riser_database", "-q", "-rA", "-p", "no:cacheprovider", *extra,
     ], plugins=[evidence])
     result = evidence.result()
-    args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+    args.output.write_text(
+        json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
     print(f"PUBLIC: {result['passed']} passed, {result['failed']} failed, "
           f"{result['skipped']} skipped; {result['collection_errors']} collection errors; "
           f"{len(result['unexpected_skips'])} undocumented skips")

@@ -137,9 +137,11 @@ reference-database inventory report.</p>
 </main></html>
 '''
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "fatigue-factor-analysis.html").write_text(report, encoding="utf-8")
+    (output_dir / "fatigue-factor-analysis.html").write_text(
+        report, encoding="utf-8", newline="\n"
+    )
     (output_dir / "changes.json").write_text(
-        json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8"
+        json.dumps(CHANGES, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
 
 
