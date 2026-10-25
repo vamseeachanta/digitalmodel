@@ -203,6 +203,8 @@ def test_failed_variants_have_distinct_case_identifiers(tmp_path, monkeypatch):
     settings = result["orcaflex_run_batch"]
     verdict = _assert_verdict(result, "FAIL", False, 1)
     assert len(verdict.issues) == len(settings["cases"]) == 3
+    assert [row["index"] for row in settings["cases"]] == [0, 1, 2]
+    assert len(set(verdict.issues)) == 3
     for row, issue in zip(settings["cases"], verdict.issues):
         assert issue == (
             f"{row['model']} (case {row['index']}): synthetic failure"
