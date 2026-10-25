@@ -44,7 +44,10 @@ def assert_same_calculation(actual, expected):
         assert actual.keys() == expected.keys()
         for key in expected:
             if key in {'inputs', 'source_digests'}:
-                assert actual[key] == expected[key]
+                assert actual[key] == expected[key], (
+                    'Rebuild with PYTHONPATH=src python '
+                    'scripts/reporting/build_rao_analysis_report.py'
+                )
             else:
                 assert_same_calculation(actual[key], expected[key])
     elif isinstance(expected, list):
@@ -61,8 +64,8 @@ def assert_same_calculation(actual, expected):
 
 def test_rebuild_is_reproducible(tmp_path):
     subprocess.run([sys.executable, str(BUILDER), '--output', str(tmp_path)], check=True)
-    actual = (tmp_path/'report.html').read_text()
-    expected = (REPORT/'report.html').read_text()
+    actual = (tmp_path/'report.html').read_text(encoding='utf-8')
+    expected = (REPORT/'report.html').read_text(encoding='utf-8')
     assert_same_calculation(calculation_from_html(actual), calculation_from_html(expected))
     # Numerical curve digests are checked against their own retained arrays;
     # source digests and all presentation content must still match exactly.
@@ -111,7 +114,7 @@ def test_worked_values_independent_quadrature(builder):
 
 def test_report_binds_all_displayed_values(builder):
     data = builder.calculate()
-    text = (REPORT / 'report.html').read_text()
+    text = (REPORT / 'report.html').read_text(encoding='utf-8')
     bindings = re.findall(r'<span data-value="([\w.]+)">([^<]+)</span>', text)
     assert len(bindings) >= 15
     for key, visible in bindings:
@@ -126,13 +129,16 @@ def test_report_binds_all_displayed_values(builder):
 
 def test_figures_are_bound_to_computed_arrays(builder):
     data = builder.calculate()
-    text = (REPORT / 'report.html').read_text()
+    text = (REPORT / 'report.html').read_text(encoding='utf-8')
     retained = calculation_from_html(text)
     assert_same_calculation(retained['curves'], data['curves'])
     for chart, names in [('regular', ['time', 'motion']), ('spectra', ['omega', 'wave', 'response']), ('rao', ['omega', 'rao'])]:
         assert f'id="figure-{chart}"' in text
         for name in names:
-            assert builder.curve_digest(retained['curves'][name]) in text
+            assert builder.curve_digest(retained['curves'][name]) in text, (
+                'Rebuild with PYTHONPATH=src python '
+                'scripts/reporting/build_rao_analysis_report.py'
+            )
     # Changing a synthetic peak input must alter the computed values and plot.
     modified = builder.calculate(peak_gain=1)
     assert modified['peak']['m0'] == pytest.approx(data['peak']['m0']/4)
@@ -140,7 +146,7 @@ def test_figures_are_bound_to_computed_arrays(builder):
 
 
 def test_report_structure_sources_and_limits():
-    text = (REPORT / 'report.html').read_text()
+    text = (REPORT / 'report.html').read_text(encoding='utf-8')
     assert text.index('id="revision-history"') > text.index('id="summary"')
     assert text.index('id="revision-history"') < text.index('id="scope"')
     assert len(re.findall(r'<section id=', text)) == 10
@@ -151,7 +157,7 @@ def test_report_structure_sources_and_limits():
         assert (REPORT / relative).resolve().is_file()
     ids = re.findall(r'\bid="([^"]+)"', text)
     assert len(ids) == len(set(ids))
-    json.loads((REPORT / 'changes.json').read_text())
+    json.loads((REPORT / 'changes.json').read_text(encoding='utf-8'))
 
 
 def test_figure_point_count_matches_data(builder):
@@ -163,9 +169,29 @@ def test_figure_point_count_matches_data(builder):
 
 def test_regular_figure_includes_negative_response():
     """Hand: 6*cos(t) ranges from -6 to +6; both extrema must fit the SVG."""
-    text = (REPORT/'report.html').read_text()
+    text = (REPORT/'report.html').read_text(encoding='utf-8')
     plot = re.search(r'<figure id="figure-regular">(.*?)</figure>', text, re.S).group(1)
     points = re.search(r'points="([^"]+)"', plot).group(1)
     y_values = [float(point.split(',')[1]) for point in points.split()]
     assert min(y_values) == 30
     assert max(y_values) == 270
+
+
+def test_report_generator_has_reasoned_ownership():
+    """Keep the report outside the API census with an explicit rationale."""
+    from scripts import check_generated_html as checker
+
+    relative = BUILDER.relative_to(ROOT).as_posix()
+    assert relative in checker.discover_candidate_generators(ROOT)
+    assert checker.DISCOVERY_FALSE_POSITIVES.get(relative, '').strip()
+
+
+@pytest.mark.parametrize('filename', ['report.html', 'changes.json'])
+def test_rebuilt_text_is_utf8_lf_without_trailing_whitespace(builder, tmp_path, filename):
+    """Both generated files retain portable text and clean line endings."""
+    builder.build(tmp_path)
+    content = (tmp_path / filename).read_bytes()
+
+    assert b'\r' not in content
+    assert content.endswith(b'\n')
+    assert all(line == line.rstrip() for line in content.decode('utf-8').splitlines())

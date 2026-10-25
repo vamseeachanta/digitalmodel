@@ -159,9 +159,9 @@ def render(data, changes):
     """Compose the report with the existing report style and computed figures."""
     def n(key):
         return number(data, key)
-    brand = re.sub(r'/\*.*?\*/', '', (ROOT/'docs/api/_assets/brand.css').read_text(), flags=re.S)
+    brand = re.sub(r'/\*.*?\*/', '', (ROOT/'docs/api/_assets/brand.css').read_text(encoding='utf-8'), flags=re.S)
     # Use the existing prose-report template's style, as in other module reports.
-    template = (ROOT/'src/digitalmodel/reporting/assets/calc_report_format.html').read_text()
+    template = (ROOT/'src/digitalmodel/reporting/assets/calc_report_format.html').read_text(encoding='utf-8')
     styles = '\n'.join(re.findall(r'<style[^>]*>(.*?)</style>', template, re.S))
     rows = ''.join(f'<tr><td>{escape(key)}</td><td>{n("inputs."+key)}</td></tr>' for key in data['inputs'])
     result_rows = ''.join(f'<tr><td>{case}</td><td>{n(case+".m0")}</td><td>{n(case+".rms")}</td><td>{n(case+".significant_amplitude")}</td></tr>'
@@ -174,7 +174,7 @@ def render(data, changes):
     regular = figure(data, 'regular', 'time', [('motion', 'Regular response')], 'Time (s)', 'Response (m)')
     spectra = figure(data, 'spectra', 'omega', [('wave', 'JONSWAP wave density'), ('response', 'Response density')], 'Angular frequency (rad/s)', 'Density (m² per rad/s)')
     rao = figure(data, 'rao', 'omega', [('rao', 'Synthetic heave-like RAO')], 'Angular frequency (rad/s)', 'RAO (m/m)')
-    return f'''<!doctype html>
+    html = f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RAO response module analysis</title><style>{brand}\n{styles}
 body{{max-width:1100px;margin:auto;padding:2rem}}table{{border-collapse:collapse;width:100%}}td,th{{padding:.5rem;border:1px solid #ccc;text-align:left}}svg{{width:100%;height:auto}}code{{overflow-wrap:anywhere}}section{{margin:2rem 0}}figure{{margin:1rem 0}}textarea{{width:100%}}
@@ -224,15 +224,16 @@ The synthetic peak example gives variance {n('peak.m0')} m², RMS {n('peak.rms')
 <script type="application/json" id="calculation">{json.dumps(data, sort_keys=True, separators=(',', ':'), allow_nan=False)}</script>
 </main></body></html>
 '''
+    return '\n'.join(line.rstrip() for line in html.splitlines()) + '\n'
 
 
 def build(output):
     """Write only the two reproducible report deliverables."""
-    changes_text = (OUTPUT/'changes.json').read_text()
+    changes_text = (OUTPUT/'changes.json').read_text(encoding='utf-8')
     changes = json.loads(changes_text)
     output.mkdir(parents=True, exist_ok=True)
-    (output/'report.html').write_text(render(calculate(), changes), encoding='utf-8')
-    (output/'changes.json').write_text(changes_text, encoding='utf-8')
+    (output/'report.html').write_text(render(calculate(), changes), encoding='utf-8', newline='\n')
+    (output/'changes.json').write_text(changes_text, encoding='utf-8', newline='\n')
 
 
 if __name__ == '__main__':

@@ -44,6 +44,11 @@ DISCOVERY_FALSE_POSITIVES = {
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
     ),
+    "scripts/reporting/build_rao_analysis_report.py": (
+        "renders docs/reports/modules/rao_analysis, outside docs/api; "
+        "tests/hydrodynamics/rao_analysis/test_module_report.py retains dedicated "
+        "reproduction and numerical value checks"
+    ),
     "scripts/benchmark/compare_hydro_properties.py": (
         "writes a user-selected benchmark report, not a committed docs/api page"
     ),
