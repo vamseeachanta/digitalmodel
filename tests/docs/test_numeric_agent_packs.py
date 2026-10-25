@@ -22,7 +22,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULES = ("seismic", "uncertainty", "residual")
-LOCATOR = re.compile(r"\[([^\]\n]+):L(\d+)-L(\d+)\]")
+LOCATOR = re.compile(r"\[([^\[\]\n]+):L(\d+)-L(\d+)\]")
 
 
 def public_definitions(package: Path, root: Path) -> dict[str, tuple[str, int]]:
@@ -77,7 +77,7 @@ def check_pack(text: str, package: Path, root: Path) -> list[str]:
         target = (root / path).resolve()
         if not target.is_relative_to(root.resolve()) or not target.is_file():
             problems.append(f"{path}: locator file missing or outside repository")
-        elif not 1 <= int(start) <= int(end) <= len(target.read_text().splitlines()):
+        elif not 1 <= int(start) <= int(end) <= len(target.read_text(encoding="utf-8").splitlines()):
             problems.append(f"{path}: locator out of bounds L{start}-L{end}")
     if not LOCATOR.search(text):
         problems.append("evidence locators missing")
@@ -87,20 +87,20 @@ def check_pack(text: str, package: Path, root: Path) -> list[str]:
 @pytest.mark.parametrize("module", MODULES)
 def test_new_pack_contracts(module):
     package = ROOT / "src/digitalmodel" / module
-    text = (package / "docs/agent-pack.md").read_text()
+    text = (package / "docs/agent-pack.md").read_text(encoding="utf-8")
     assert check_pack(text, package, ROOT) == []
 
 
 @pytest.mark.parametrize("module", MODULES)
 def test_missing_function_is_rejected(module, tmp_path):
     package = ROOT / "src/digitalmodel" / module
-    text = (package / "docs/agent-pack.md").read_text()
+    text = (package / "docs/agent-pack.md").read_text(encoding="utf-8")
     name = next(iter(public_definitions(package, ROOT)))
     # Remove only the section-2 name; prose or examples must not mask the drift.
     changed = text.replace(f"| `{name}` |", "| removed |", 1)
     copy = tmp_path / "agent-pack.md"
-    copy.write_text(changed)
-    assert f"{name}: code-only" in check_pack(copy.read_text(), package, ROOT)
+    copy.write_text(changed, encoding="utf-8", newline="\n")
+    assert f"{name}: code-only" in check_pack(copy.read_text(encoding="utf-8"), package, ROOT)
     result = subprocess.run(
         [sys.executable, __file__, "--pack", str(copy), "--package", str(package)],
         capture_output=True, text=True, check=False,
@@ -122,7 +122,9 @@ def test_checker_cli_accepts_new_pack(module):
 def test_checker_rejects_extra_name_and_invalid_locator(tmp_path):
     package = tmp_path / "pkg"
     package.mkdir()
-    (package / "example.py").write_text("def real():\n    return 1\n")
+    (package / "example.py").write_text(
+        "def real():\n    return 1\n", encoding="utf-8", newline="\n",
+    )
     text = ("## 2. Inputs\n| `example.real` | [pkg/example.py:L1-L2] |\n"
             "| `example.absent` | [pkg/example.py:L1-L2] |\n"
             "## 3. Method\n[pkg/example.py:L0-L9]\n")
@@ -131,10 +133,33 @@ def test_checker_rejects_extra_name_and_invalid_locator(tmp_path):
     assert "pkg/example.py: locator out of bounds L0-L9" in errors
 
 
+@pytest.mark.parametrize("separator", ["", " "])
+@pytest.mark.parametrize(("locator", "expected"), [
+    ("[pkg/example.py:L1-L2]", []),
+    ("[pkg/missing.py:L1-L2]", [
+        "pkg/missing.py: locator file missing or outside repository",
+    ]),
+    ("[pkg/example.py:L0-L9]", [
+        "pkg/example.py: locator out of bounds L0-L9",
+    ]),
+])
+def test_interval_adjacent_locator_is_validated(tmp_path, separator, locator, expected):
+    package = tmp_path / "pkg"
+    package.mkdir()
+    (package / "example.py").write_text(
+        "def real():\n    return 1\n", encoding="utf-8", newline="\n",
+    )
+    text = ("## 2. Inputs\n| `example.real` | [pkg/example.py:L1-L2] |\n"
+            f"## 3. Method\nRange [0, 1){separator}{locator}\n")
+    assert check_pack(text, package, tmp_path) == expected
+
+
 def test_checker_requires_the_declaration_locator(tmp_path):
     package = tmp_path / "pkg"
     package.mkdir()
-    (package / "example.py").write_text("# heading\ndef real():\n    return 1\n")
+    (package / "example.py").write_text(
+        "# heading\ndef real():\n    return 1\n", encoding="utf-8", newline="\n",
+    )
     text = "## 2. Inputs\n| `example.real` | [pkg/example.py:L1-L1] |\n## 3. Method\n"
     assert check_pack(text, package, tmp_path) == [
         "example.real: declaration locator missing",
@@ -145,7 +170,7 @@ def test_checker_requires_the_declaration_locator(tmp_path):
 def test_new_pack_node_ids(module, tmp_path):
     """Collect every cited node, including section-5 gates, without executing it."""
     pack = ROOT / "src/digitalmodel" / module / "docs/agent-pack.md"
-    section = re.search(r"(?ms)^## 4\..*?(?=^## 6\.|\Z)", pack.read_text())
+    section = re.search(r"(?ms)^## 4\..*?(?=^## 6\.|\Z)", pack.read_text(encoding="utf-8"))
     ids = sorted(set(re.findall(r"`(tests/[^`\n]+::[^`\n]+)`", section[0])))
     assert len(ids) >= 3
     env = {key: value for key, value in os.environ.items()
@@ -159,7 +184,7 @@ def test_new_pack_node_ids(module, tmp_path):
 
 
 def test_registered_pack_paths_exist_and_new_headings_are_ordered():
-    registry = yaml.safe_load((ROOT / "docs/registry/module-routing.yaml").read_text())
+    registry = yaml.safe_load((ROOT / "docs/registry/module-routing.yaml").read_text(encoding="utf-8"))
     registered = {}
     for entry in registry["modules"]:
         for submodule in entry.get("submodules", {}).values():
@@ -167,18 +192,18 @@ def test_registered_pack_paths_exist_and_new_headings_are_ordered():
                 path = submodule["agent_pack"]
                 assert (ROOT / path).is_file(), path
                 registered[path] = submodule["qa_family"]
-    mapping = yaml.safe_load((ROOT / "docs/registry/implementation-map.yaml").read_text())
+    mapping = yaml.safe_load((ROOT / "docs/registry/implementation-map.yaml").read_text(encoding="utf-8"))
     for module in MODULES:
         path = f"src/digitalmodel/{module}/docs/agent-pack.md"
         assert registered[path] == "EC"
         assert mapping["agent_packs"][module] == {"agent_pack": path, "qa_family": "EC"}
-        assert re.findall(r"(?m)^## (\d+)\.", (ROOT / path).read_text()) == [
+        assert re.findall(r"(?m)^## (\d+)\.", (ROOT / path).read_text(encoding="utf-8")) == [
             str(number) for number in range(1, 11)
         ]
 
 
 def test_existing_audit_identifies_every_pinned_pack():
-    audit = json.loads((ROOT / "docs/registry/numeric-pack-drift.json").read_text())
+    audit = json.loads((ROOT / "docs/registry/numeric-pack-drift.json").read_text(encoding="utf-8"))
     result = subprocess.run(
         ["git", "ls-tree", "-r", "--name-only", audit["code_pin"], "src/digitalmodel"],
         cwd=ROOT, capture_output=True, text=True, check=True,
@@ -209,7 +234,7 @@ def audit_existing(ref: str) -> list[dict]:
             continue
         pack = ROOT / name
         try:
-            errors = check_pack(pack.read_text(), pack.parent.parent, ROOT)
+            errors = check_pack(pack.read_text(encoding="utf-8"), pack.parent.parent, ROOT)
         except (SyntaxError, UnicodeError, OSError) as exc:
             errors = [f"AST audit unavailable: {type(exc).__name__}"]
         rows.append({"pack": name, "diagnostics": errors})
@@ -230,7 +255,7 @@ def main():
         return 0
     if args.package is None:
         parser.error("--package is required with --pack")
-    problems = check_pack(args.pack.read_text(), args.package, ROOT)
+    problems = check_pack(args.pack.read_text(encoding="utf-8"), args.package, ROOT)
     for problem in problems:
         print(problem)
     return int(bool(problems))

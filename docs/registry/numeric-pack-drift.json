@@ -46,9 +46,7 @@
         "workflow.router"
       ],
       "pack_only": [],
-      "evidence": [
-        "0, 1), default 0.08; L/D positive, default 5.0 | [src/digitalmodel/alt_fuel_ship_sizing/lh2_fuel_chain.py: locator file missing or outside repository"
-      ],
+      "evidence": [],
       "node_collection": {
         "status": "pass"
       }
@@ -2100,7 +2098,6 @@
         "results.status"
       ],
       "evidence": [
-        "0,1); count \u2265 0; axial length > 0 m | No joint data gives zero field-joint fraction | A 2019 coating identifier may require explicit infill; the edition is resolved first. [src/digitalmodel/cathodic_protection/dnv_rp_f103.py: locator file missing or outside repository",
         "examples/demos/gtm/report_template.py: locator out of bounds L551-L558"
       ],
       "node_collection": {
@@ -3354,9 +3351,7 @@
         "FloaterProperties",
         "LCOEResult"
       ],
-      "evidence": [
-        "0,1) | Calibrated OPEX/availability defaults in code | `ReliabilityScenario`; [src/digitalmodel/floating_wind/reliability.py: locator file missing or outside repository"
-      ],
+      "evidence": [],
       "node_collection": {
         "status": "fail",
         "missing_dependencies": [
@@ -17372,7 +17367,6 @@
       ],
       "pack_only": [],
       "evidence": [
-        "0, 360) degrees. `[src/digitalmodel/solvers/orcaflex/modular_generator/schema/environment.py: locator file missing or outside repository",
         "src/digitalmodel/marine_ops/marine_analysis/aqwa_enhanced_parser.py: locator out of bounds L757-L803",
         "src/digitalmodel/subsea/catenary_riser/simple_catenary.py: locator out of bounds L396-L428",
         "tests/hydrodynamics/aqwa/test_viscous_damping_determination.py: locator out of bounds L49-L63",
@@ -17938,9 +17932,7 @@
         "details",
         "fabrication_tolerance"
       ],
-      "evidence": [
-        "0, 1) | Code default; omitted here to avoid reproducing a standards-derived allowance | Caller; [src/digitalmodel/structural/analysis/wall_thickness.py: locator file missing or outside repository"
-      ],
+      "evidence": [],
       "node_collection": {
         "status": "pass"
       }
