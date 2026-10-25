@@ -50,8 +50,8 @@ def test_missing_terminator_refuses(tmp_path):
     text, deck = GENERATOR["listing"]()
     path = tmp_path / "synthetic.LIS"
     # Keep only the added-mass section, deliberately without its next header.
-    path.write_text(text.split(GENERATOR["DAMPING"])[0])
-    path.with_suffix(".dat").write_text(deck)
+    path.write_text(text.split(GENERATOR["DAMPING"])[0], encoding="utf-8", newline="\n")
+    path.with_suffix(".dat").write_text(deck, encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="missing_terminator"):
         AQWALISParser(path).parse_added_mass_table()
 
@@ -66,6 +66,46 @@ def test_last_rao_section_beyond_old_window(tmp_path):
     raos = AQWALISParser(path).parse_rao_table()
     assert len(raos) == 33 * 2
     assert (3.3, 90) in raos
+
+
+@pytest.mark.parametrize("repeated_titles", [False, True])
+@pytest.mark.parametrize("continued_heading", [False, True])
+def test_rao_rows_are_matched_once(tmp_path, monkeypatch, repeated_titles, continued_heading):
+    """Pagination must visit 33 frequencies times two headings exactly once."""
+    from digitalmodel.hydrodynamics.diffraction import aqwa_lis_parser
+
+    path = GENERATOR["write_pair"](tmp_path)
+    before, rao = path.read_text(encoding="utf-8").split(GENERATOR["RAO"], 1)
+    rows, after = rao.split(GENERATOR["END"], 1)
+    lines = []
+    for line in rows.splitlines():
+        tokens = line.split()
+        if len(tokens) == 15:
+            if repeated_titles:
+                lines.append(GENERATOR["RAO"])
+            if continued_heading and tokens[1] != "0.100":
+                del tokens[2]
+                line = " " + " ".join(tokens)
+        lines.append(line)
+    path.write_text(before + GENERATOR["RAO"] + "\n".join(lines)
+                    + GENERATOR["END"] + after, encoding="utf-8", newline="\n")
+
+    real_match = aqwa_lis_parser.re.match
+    numeric_row_visits = []
+
+    def record_match(pattern, line, *args, **kwargs):
+        match = real_match(pattern, line, *args, **kwargs)
+        if match is not None and len(match.groups()) in (14, 15):
+            numeric_row_visits.append(line)
+        return match
+
+    monkeypatch.setattr(aqwa_lis_parser.re, "match", record_match)
+    raos = AQWALISParser(path).parse_rao_table()
+    # Hand count: 33 rows per heading, with two headings, gives 66 visits.
+    assert len(numeric_row_visits) == 66
+    assert len(raos) == 66
+    assert raos[3.3, 0]["surge"] == (1.0, 0.0)
+    assert raos[3.3, 90]["surge"] == (1.0, 0.0)
 
 
 @pytest.mark.parametrize("table", ["added_mass", "damping"])
@@ -114,16 +154,17 @@ def test_declared_count_survives_result_serialization(mock_diffraction_results):
 ])
 def test_each_reader_requires_terminator(tmp_path, method, next_marker):
     path = GENERATOR["write_pair"](tmp_path)
-    path.write_text(path.read_text().split(GENERATOR[next_marker])[0])
+    path.write_text(path.read_text(encoding="utf-8").split(GENERATOR[next_marker])[0],
+                    encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="missing_terminator"):
         getattr(AQWALISParser(path), method)()
 
 
 def test_repeated_title_is_a_page_header(tmp_path):
     path = GENERATOR["write_pair"](tmp_path, gap=20)
-    text = path.read_text().replace(" PAGE HEADER\n" * 20,
-                                   GENERATOR["ADDED"] + "\n", 1)
-    path.write_text(text)
+    text = path.read_text(encoding="utf-8").replace(" PAGE HEADER\n" * 20,
+                                                   GENERATOR["ADDED"] + "\n", 1)
+    path.write_text(text, encoding="utf-8", newline="\n")
     assert len(AQWALISParser(path).parse_added_mass_table()) == 33
 
 
@@ -135,35 +176,79 @@ def test_different_title_ends_frequency_table(tmp_path):
 
 def test_duplicate_frequency_is_not_deduplicated(tmp_path):
     path = GENERATOR["write_pair"](tmp_path)
-    lines = path.read_text().splitlines()
+    lines = path.read_text(encoding="utf-8").splitlines()
     lines.insert(3, lines[2])
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="duplicate_frequency"):
         AQWALISParser(path).extract_frequencies_and_periods()
 
 
 def test_invalid_coefficient_row_refuses(tmp_path):
     path = GENERATOR["write_pair"](tmp_path)
-    lines = path.read_text().splitlines()
+    lines = path.read_text(encoding="utf-8").splitlines()
     row = lines[2].split()
     row[2] = "invalid"
     lines[2] = " " + " ".join(row)
-    path.write_text("\n".join(lines) + "\n")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="malformed_row"):
         AQWALISParser(path).parse_added_mass_table()
 
 
+@pytest.mark.parametrize("table,method", [
+    ("ADDED", "extract_frequencies_and_periods"),
+    ("ADDED", "parse_added_mass_table"),
+    ("ADDED", "parse_all"),
+    ("DAMPING", "parse_damping_table"),
+    ("DAMPING", "parse_all"),
+])
+@pytest.mark.parametrize("field", [0, 1])
+def test_extra_row_with_invalid_leading_field_refuses(tmp_path, table, method, field):
+    """A damaged 34th row must refuse even with 33 valid declared rows."""
+    path = GENERATOR["write_pair"](tmp_path)
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = lines.index(GENERATOR[table])
+    row = lines[start + 2].split()
+    row[field] = "invalid"
+    lines.insert(start + 2, " " + " ".join(row))
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="malformed_row") as caught:
+        getattr(AQWALISParser(path), method)()
+    assert caught.value.table == GENERATOR[table]
+
+
+@pytest.mark.parametrize("table,method", [
+    ("ADDED", "parse_added_mass_table"),
+    ("DAMPING", "parse_damping_table"),
+])
+def test_coefficient_column_and_unit_headers_are_skipped(tmp_path, table, method):
+    """Known 14-column headers remain valid at the start and on new pages."""
+    path = GENERATOR["write_pair"](tmp_path)
+    text = path.read_text(encoding="utf-8")
+    header = " PERIOD FREQ" + " M" * 12 + "\n"
+    units = " (SECS) (RAD/S) 11 22 33 44 55 66 13 15 24 26 35 46\n"
+    title = GENERATOR[table] + "\n"
+    text = text.replace(title, title + header + units, 1)
+    lines = text.splitlines()
+    start = lines.index(GENERATOR[table])
+    lines.insert(start + 14, title + header + units)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    matrices = getattr(AQWALISParser(path), method)()
+    assert len(matrices) == 33
+    assert 3.3 in matrices
+
+
 def test_equal_counts_with_different_keys_refuse(tmp_path):
     path = GENERATOR["write_pair"](tmp_path)
-    first, damping = path.read_text().split(GENERATOR["DAMPING"], 1)
-    path.write_text(first + GENERATOR["DAMPING"] + damping.replace("0.100", "9.900", 1))
+    first, damping = path.read_text(encoding="utf-8").split(GENERATOR["DAMPING"], 1)
+    path.write_text(first + GENERATOR["DAMPING"] + damping.replace("0.100", "9.900", 1),
+                    encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="frequency_keys_mismatch"):
         AQWALISParser(path).parse_all()
 
 
 def test_standalone_listing_has_no_independent_declaration(tmp_path):
     path = tmp_path / "standalone.LIS"
-    path.write_text(GENERATOR["listing"]()[0])
+    path.write_text(GENERATOR["listing"]()[0], encoding="utf-8", newline="\n")
     result = AQWALISParser(path).parse_all()
     assert result["declared_frequency_count"] is None
     assert result["declaration_status"] == "NOT_EVALUATED"
@@ -176,18 +261,18 @@ def test_standalone_listing_has_no_independent_declaration(tmp_path):
 def test_echoed_deck_counts_are_used(tmp_path):
     text, deck = GENERATOR["listing"]()
     path = tmp_path / "echo.LIS"
-    path.write_text(deck + text)
+    path.write_text(deck + text, encoding="utf-8", newline="\n")
     assert AQWALISParser(path).parse_all()["declared_frequency_count"] == 33
 
 
 def test_unsupported_deck_range_refuses(tmp_path):
     path = GENERATOR["write_pair"](tmp_path)
     deck = path.with_suffix(".dat")
-    lines = deck.read_text().splitlines()
+    lines = deck.read_text(encoding="utf-8").splitlines()
     # Change the last index field on the first card from 1 to 33. Range
     # interpolation is not implemented by this listing reader.
     lines[1] = lines[1][:15] + f'{33:5d}' + lines[1][20:]
-    deck.write_text("\n".join(lines) + "\n")
+    deck.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="unsupported_frequency_range"):
         AQWALISParser(path)
 

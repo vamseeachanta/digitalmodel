@@ -46,7 +46,7 @@ class AQWALISParser:
         """
         self.lis_file = Path(lis_file_path)
         if not self.lis_file.exists():
-            raise FileNotFoundError(f"LIS file not found: {lis_file_path}")
+            raise FileNotFoundError(f"LIS file not found: {self.lis_file.as_posix()}")
 
         # Read entire file content
         with open(self.lis_file, 'r', encoding='utf-8', errors='ignore') as f:
@@ -151,11 +151,17 @@ class AQWALISParser:
         seen = set()
         for line in self._table_span(marker).splitlines():
             tokens = line.split()
-            # A data row starts with two numbers. Headers and page numbers do
-            # not; malformed numeric rows must not silently disappear.
+            # Column and unit headers also have fourteen fields. Identify
+            # them explicitly before refusing damaged data-shaped rows.
+            if tuple(tokens[:2]) in {
+                    ("PERIOD", "FREQUENCY"), ("PERIOD", "FREQ"),
+                    ("(SECS)", "(RAD/S)")}:
+                continue
             try:
                 period, frequency = map(float, tokens[:2])
-            except ValueError:
+            except ValueError as exc:
+                if len(tokens) == 14:
+                    raise GridCompletenessError(marker, "malformed_row") from exc
                 continue
             # Established listing grammar: period + frequency + twelve
             # selected coefficients (the existing matrix mapping below).
@@ -299,12 +305,16 @@ class AQWALISParser:
 
         logger.info(f"Found {len(positions)} displacement RAO table sections in .LIS file")
 
-        # Collect all table text from all sections
-        # For each displacement RAO section, read until the next major section marker
-        # (which could be VEL, ACC, or another displacement section)
+        # Each span already includes repeated titles from the same table.
+        # Skip their positions so physical rows are collected only once.
         all_table_text = []
+        covered_until = 0
         for pos in positions:
-            all_table_text.append(self._table_span(section_marker, pos))
+            if pos < covered_until:
+                continue
+            span = self._table_span(section_marker, pos)
+            all_table_text.append(span)
+            covered_until = pos + len(span)
 
         # Combine all sections
         table_text = "\n".join(all_table_text)
