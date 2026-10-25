@@ -86,7 +86,12 @@ def main(output_dir: Path | None = None) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=(
+            "Illustrative WEC mooring sweep; writes wec_analysis.xlsx. "
+            "Not qualified against any standard."
+        )
+    )
     parser.add_argument(
         "--output-dir",
         type=Path,

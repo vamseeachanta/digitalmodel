@@ -92,6 +92,28 @@ def test_script_writes_workbook_from_another_working_directory(tmp_path):
     assert {path.name for path in tmp_path.iterdir()} == {"results"}
 
 
+def test_script_help_describes_unqualified_example_without_writing_output(tmp_path):
+    """Command-line help states the example's limits without running analysis."""
+    script = tmp_path / EXAMPLE.name
+    script.write_bytes(EXAMPLE.read_bytes())
+    result = subprocess.run(
+        [sys.executable, str(script), "--help"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,  # Software smoke-test time budget, not an engineering limit.
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    help_text = " ".join(result.stdout.split())
+    assert "Illustrative WEC mooring sweep; writes wec_analysis.xlsx." in help_text
+    assert "Not qualified against any standard." in help_text
+    assert "--output-dir" in help_text
+    for claim in ("Standards:", "DNV", "EMEC", "IEC", "design and fatigue analysis"):
+        assert claim not in help_text
+    assert list(tmp_path.iterdir()) == [script]
+
+
 def test_script_default_output_is_preserved(tmp_path):
     """A temporary script copy checks the original script-relative destination."""
     script = tmp_path / EXAMPLE.name
