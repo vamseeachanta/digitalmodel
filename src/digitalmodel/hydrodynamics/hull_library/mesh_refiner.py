@@ -239,13 +239,17 @@ def generate_mesh_family(
         source_mesh: The base mesh (factor=1.0).
         factors: Density multipliers. Default [0.25, 0.5, 1.0, 2.0, 4.0].
             factor < 1.0 -> coarsen, factor > 1.0 -> refine, factor == 1.0 -> original.
+            For classified sources, pass explicit identity/refinement factors
+            whenever the defaults would reduce panel count. Below-unity factors
+            remain valid if the four-panel target floor leaves the source unchanged.
 
     Returns:
         List of MeshFamilyMember sorted by ascending panel count.
 
     Raises:
-        ValueError: If coarsening is requested for a mesh with known panel
-            classifications. The coarsening backends do not map those fields.
+        ValueError: If the coarsening target is below the source panel count for
+            a mesh with known panel classifications. The coarsening backends do
+            not map those fields.
     """
     if factors is None:
         factors = [0.25, 0.5, 1.0, 2.0, 4.0]
@@ -279,13 +283,14 @@ def generate_mesh_family(
                 metadata={**source_mesh.metadata, "density_factor": 1.0},
             )
         elif factor < 1.0:
-            # Backend constructors omit metadata, so a later refinement cannot
-            # recover classifications. Keep the existing near-unity identity
-            # branch above: it does not change panel order or need a mapping.
-            if any(key in source_mesh.metadata for key in _PANEL_CLASSIFICATION_KEYS):
+            target_panels = max(4, int(base_panels * factor))
+            # Backends omit classifications only when the target reduces the
+            # mesh; targets at or above the source count return it unchanged.
+            if target_panels < base_panels and any(
+                key in source_mesh.metadata for key in _PANEL_CLASSIFICATION_KEYS
+            ):
                 raise ValueError("Cannot coarsen meshes with panel classifications")
             # Coarsen
-            target_panels = max(4, int(base_panels * factor))
             mesh = coarsen_mesh(
                 source_mesh, target_panels=target_panels, preserve_features=True
             )
@@ -317,6 +322,11 @@ def generate_mesh_family(
                 reference_point=list(mesh.reference_point),
                 metadata={**mesh.metadata, "density_factor": factor},
             )
+
+        # Each member owns its classification lists, including backend no-ops.
+        for key in _PANEL_CLASSIFICATION_KEYS:
+            if key in mesh.metadata:
+                mesh.metadata[key] = list(mesh.metadata[key])
 
         level_name = level_names.get(factor, f"x{factor:.1f}")
         metrics = compute_quality_metrics(mesh)

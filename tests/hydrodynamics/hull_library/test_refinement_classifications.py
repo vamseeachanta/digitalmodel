@@ -181,6 +181,74 @@ def test_classified_family_rejects_coarsening(key: str) -> None:
 
 
 @pytest.mark.parametrize("key", ["moonpool_wall", "moonpool_index"])
+@pytest.mark.parametrize("panel_count", [1, 4])
+@pytest.mark.parametrize("factor", [0.25, 0.5])
+def test_classified_family_allows_clamped_identity(
+    key: str, panel_count: int, factor: float
+) -> None:
+    """The four-panel target floor leaves one- and four-panel sources intact.
+
+    Source: coarsen_mesh returns its input when the target is no smaller than
+    the source. Panel order and every classification therefore stay unchanged.
+    """
+    box = box_mesh()
+    source = PanelMesh(
+        vertices=box.vertices,
+        panels=box.panels[:panel_count],
+        format_origin=box.format_origin,
+        symmetry_plane="y",
+        reference_point=[1.0, 2.0, 3.0],
+        metadata={
+            key: [True if key == "moonpool_wall" else 0] * panel_count,
+            "source": "synthetic",
+            "ordinary_list": ["unchanged"],
+        },
+    )
+    before = deepcopy(source.metadata)
+    (member,) = generate_mesh_family(source, factors=[factor])
+    for field in ("vertices", "panels", "normals", "panel_areas", "panel_centers"):
+        np.testing.assert_array_equal(getattr(member.mesh, field), getattr(source, field))
+    assert member.mesh.metadata == {**before, "density_factor": factor}
+    assert member.mesh.format_origin == source.format_origin
+    assert member.mesh.symmetry_plane == source.symmetry_plane
+    assert member.mesh.reference_point == source.reference_point
+    assert member.factor == factor
+    assert member.metrics.panel_count == panel_count
+    assert source.metadata == before
+
+
+@pytest.mark.parametrize("key", ["moonpool_wall", "moonpool_index"])
+@pytest.mark.parametrize(
+    "factor",
+    [0.25, 0.5, 1.0, float(np.nextafter(1.0, 0.0)), float(np.nextafter(1.0, 2.0))],
+)
+def test_classified_identity_members_isolate_mutations(key: str, factor: float) -> None:
+    """Classifications in repeated identities belong to each returned member.
+
+    Both the four-panel floor and the near-unity branch preserve panel order.
+    Mutating one member or its source must leave the other member unchanged.
+    """
+    box = box_mesh()
+    source = PanelMesh(
+        vertices=box.vertices,
+        panels=box.panels[:4],
+        metadata={
+            key: [True, False, True, False] if key == "moonpool_wall" else [0, -1, 1, -1]
+        },
+    )
+    before = deepcopy(source.metadata)
+    first, second = generate_mesh_family(source, factors=[factor, factor])
+    for member in (first, second):
+        assert member.mesh.metadata[key] == before[key]
+    first.mesh.metadata[key][0] = False if key == "moonpool_wall" else 2
+    assert source.metadata == before
+    assert second.mesh.metadata[key] == before[key]
+    source.metadata[key][1] = True if key == "moonpool_wall" else 3
+    assert first.mesh.metadata[key][1] == before[key][1]
+    assert second.mesh.metadata[key] == before[key]
+
+
+@pytest.mark.parametrize("key", ["moonpool_wall", "moonpool_index"])
 def test_classified_family_export_fails_before_writing(key: str, tmp_path: Path) -> None:
     """GDFHandler.write has geometry and symmetry fields, no classification field.
 
