@@ -39,9 +39,9 @@ def test_flaky_register_accepts_additional_entries(monkeypatch):
     test_flaky_register_schema()
 
 
-def test_repeated_failure_fix_is_recorded():
+def test_repeated_failure_stays_open_without_resolution_evidence():
     path = Path(__file__).resolve().parents[2] / ".github/ci/flaky-register.yml"
     row = yaml.safe_load(path.read_text())[0]
     assert row["kind"] == "repeated-failure"
-    assert row["status"] == "fixed"
+    assert row["status"] == "open"
     assert row["fix_issue"] == 2576

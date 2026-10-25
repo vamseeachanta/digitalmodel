@@ -11,7 +11,7 @@
     - https://api.github.com/repositories/590299785/actions/runs/38635174949
   cause: Last-bit floating-point differences; runner dependence is inferred, not measured.
   fix_issue: 2576
-  status: fixed
+  status: open
 - id: parametric.refresh
   kind: signal-exit
   first_seen: '2026-10-14'

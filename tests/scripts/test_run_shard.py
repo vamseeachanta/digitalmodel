@@ -121,6 +121,7 @@ def test_failure_then_pass_records_and_warns(tmp_path, monkeypatch):
     assert result.returncode == 0, result.stderr
     record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
     assert record["ids"] == ["tests/test_fake.py::test_case_0"]
+    assert record["kind"] == "retry-pass"
     message = record["first_attempt_failed"]["tests/test_fake.py::test_case_0"]
     assert len(message) <= 500
     assert message.startswith("assert mismatch")
@@ -143,6 +144,7 @@ def test_partial_recovery_is_recorded_while_shard_stays_red(tmp_path):
     assert result.returncode == 1
     record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
     assert record["ids"] == ["tests/test_fake.py::test_case_0"]
+    assert record["kind"] == "retry-pass"
 
 
 def test_skipped_retry_does_not_count_as_a_pass(tmp_path):
@@ -525,7 +527,54 @@ def test_timeout_failure_text_never_retries(tmp_path):
 
 def test_failure_twice_does_not_claim_recovery(tmp_path):
     assert invoke(tmp_path, fake_gate(tmp_path, second=1)).returncode == 1
-    assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["recovered"] == []
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    assert record["recovered"] == []
+    assert record["kind"] == "test-ids"
+
+
+@pytest.mark.parametrize("mode", ["report", "enforce"])
+@pytest.mark.parametrize("outcome", ["skipped", "missing", "stale", "malformed", "unidentified"])
+def test_retry_without_passing_evidence_does_not_claim_retry_pass(tmp_path, mode, outcome):
+    gate = fake_gate(tmp_path, mode="retry_skipped" if outcome == "skipped" else "failure")
+    # Change only retry evidence; the first attempt still supplies a concrete failure.
+    gate.write_text(gate.read_text().replace(
+        "sys.exit(code)",
+        "if len(history) == 2:\n"
+        f"    outcome = {outcome!r}\n"
+        "    report = pathlib.Path(target)\n"
+        "    if outcome == 'missing':\n"
+        "        report.rename(report.with_suffix('.unused'))\n"
+        "    elif outcome == 'stale':\n"
+        "        import os\n"
+        "        os.utime(report, ns=(1, 1))\n"
+        "    elif outcome == 'malformed':\n"
+        "        report.write_text('not XML')\n"
+        "    elif outcome == 'unidentified':\n"
+        "        report.write_text(report.read_text().replace('tests.test_fake', 'missing.module'))\n"
+        "sys.exit(code)",
+    ))
+    # Even an otherwise eligible register and a zero retry exit need passing XML.
+    options = register(tmp_path) if mode == "enforce" else ("--mode", mode)
+    result = invoke(tmp_path, gate, options=options)
+    assert result.returncode == 1
+    assert len(history(tmp_path)) == 2
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    assert record["retry_exit_code"] == 0
+    assert record["first_attempt_failed"] == {"tests/test_fake.py::test_case_0": "assert mismatch"}
+    assert record["ids"] == record["recovered"] == []
+    assert record["kind"] == "test-ids"
+
+
+def test_failure_message_bound_preserves_full_junit(tmp_path):
+    gate = fake_gate(tmp_path)
+    gate.write_text(gate.read_text().replace("else 'assert mismatch'", "else 'x' * 600"))
+    summary = tmp_path / "summary.md"
+    assert invoke(tmp_path, gate, summary=summary).returncode == 1
+    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
+    assert record["first_attempt_failed"] == {"tests/test_fake.py::test_case_0": "x" * 500}
+    assert "x" * 500 in summary.read_text()
+    assert "x" * 501 not in summary.read_text()
+    assert "x" * 600 in (tmp_path / "reports/junit-sample.xml").read_text()
 
 
 def test_signal_failure_twice_does_not_claim_recovery(tmp_path):

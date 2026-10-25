@@ -179,6 +179,7 @@ def first_failures(path: Path) -> tuple[dict[str, str], list[dict[str, str]]]:
                 unidentified.append({key: case.get(key, "") for key in ("classname", "name")})
                 continue
             message = (failure.get("message", "") + "\n" + (failure.text or "")).strip()
+            # Bound summary text, not the original JUnit evidence; see docs/ci/flaky-register.md.
             failures.setdefault(node, message[:500])
     return failures, unidentified
 
@@ -244,7 +245,8 @@ def retry_tests(args: argparse.Namespace, command: list[str], code: int, started
             except (OSError, ET.ParseError, ValueError):
                 pass
             recovered = sorted(set(result["ids"]) & passed)
-            payload.update(ids=recovered, recovered=recovered, kind="retry-pass")
+            payload.update(ids=recovered, recovered=recovered,
+                           kind="retry-pass" if recovered else "test-ids")
             if (retry_code == 0 and set(result["ids"]) == set(recovered)
                     and all(choices.get(node) == "registered with evidence" for node in result["ids"])):
                 enforce_code = 0
@@ -260,6 +262,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--shard", default="shard")
     parser.add_argument("--junit", type=Path)
+    # Operational retry budget, not a measured timing bound; see docs/ci/flaky-register.md.
     parser.add_argument("--max-retry-ids", type=int, default=20)
     parser.add_argument("--mode", choices=("report", "enforce"), default="report")
     parser.add_argument("--register", type=Path, default=Path(".github/ci/flaky-register.yml"))

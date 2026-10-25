@@ -2,11 +2,15 @@
 
 The planned daily main-health loop will propose entries from retry artifacts
 and evidenced same-tree mismatches through a pull request. That automation is
-not part of this change. Entries close with the merged fix recorded in `fix_issue`.
+not part of this change. Entries close only when recorded evidence establishes
+resolution and `fix_issue` identifies the merged fix.
 Repeated failures without a passing run on the same tree use
 `kind: repeated-failure`, rather than claiming a same-tree mismatch.
-The repeated numerical failure is fixed by pull request 2576; its recorded
-failures on different trees do not establish a same-tree mismatch.
+The repeated numerical failure remains open. Pull request 2576 made an existing
+absolute tolerance explicit without changing comparator acceptance; that merged
+change and a successful shard do not establish resolution. The reference in
+`fix_issue` records that related change, rather than evidence of closure. Its
+recorded failures on different trees do not establish a same-tree mismatch.
 
 The register never deselects or skips a test. In enforce mode, a retry-recovered
 test ID can clear only when its register entry has `status: open` and a nonempty
@@ -32,6 +36,12 @@ non-retried exits retain their original codes, including 2, 3, 4, 5 and signals.
 Enforce mode requires a zero retry exit, every requested ID passing (no skips),
 and register evidence for every recovered ID before returning zero.
 
+The 20-ID ceiling is an operational choice to bound the number of diagnostic
+test invocations after a failed shard; it is not derived from observed runtimes
+or a statistical criterion. A smaller `--max-retry-ids` can reduce that budget.
+One costly ID can still take longer than many inexpensive IDs, so the ceiling
+does not establish a duration bound or replace the workflow timeout.
+
 The retry record keeps each first-attempt failed ID and its first message (up
 to 500 characters per ID), recovered IDs, original exit, retry outcome, register
 decisions, commit, run ID and CPU model. Warnings and the job summary include
@@ -41,6 +51,15 @@ results. Comparison considers first failures from successful and failed shards,
 classifying each as pre-existing on fresh main evidence for the same shard and
 ID, registered with evidence after recovery, or NEW. The committed baseline mode
 remains `report`. Recovered IDs are excluded from open main-baseline failures.
+
+The 500-character message limit is an operational summary-size choice per ID,
+not an assertion that every diagnostic fits within it. IDs and failure counts
+are not truncated, and the first-attempt JUnit file retains the full messages.
+The record uses `kind: retry-pass` only when at least one requested ID has fresh,
+identified passing retry evidence. Failed, skipped, missing, stale, malformed or
+unidentified retry results with no recovered IDs retain `kind: test-ids`, even
+if the retry process exits zero. Partial recovery remains visible and cannot
+clear enforce mode unless every requested ID passes with register evidence.
 
 The Atlas drift gate runs its direct command. The diagnostic `--signal-retry`
 option retries the whole command once after a signal exit (128 or above),
