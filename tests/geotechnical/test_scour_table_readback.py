@@ -41,7 +41,8 @@ def check_tables(tables):
 
 def rights_document(root, digest):
     evidence = root / "invented-rights.txt"
-    evidence.write_text("Invented test evidence; no source permission is granted.\n")
+    evidence.write_text("Invented test evidence; no source permission is granted.\n",
+                        encoding="utf-8", newline="\n")
     return {
         "schema_version": "scour-rights-1", "source_sha256": digest,
         "licence": "CC BY-NC-ND 4.0", "destination": "scratch",
@@ -74,6 +75,7 @@ def test_group_collision_and_printed_values_survive():
     tables = small_tables()
     original = copy.deepcopy(tables)
     counts = check_tables(tables)
+    # 2 physical + 2 literature = 4 cases; 3 tables * 2 cases * 2 cells = 12 cells.
     assert counts == {"physical": 2, "literature": 2, "total": 4, "cells": 12}
     assert tables == original
     assert tables[0][1]["value_text"] == "0.03700"
@@ -173,7 +175,7 @@ def test_readback_rejects_unbound_evidence(change):
 def test_rights_checks_evidence_bytes_not_only_permitted(tmp_path):
     doc = rights_document(tmp_path, "a" * 64)
     readback.validate_rights(doc, "a" * 64, tmp_path)
-    (tmp_path / "invented-rights.txt").write_text("changed")
+    (tmp_path / "invented-rights.txt").write_text("changed", encoding="utf-8", newline="\n")
     with pytest.raises(readback.ValidationError):
         readback.validate_rights(doc, "a" * 64, tmp_path)
 
@@ -205,7 +207,7 @@ def test_rights_fail_closed(tmp_path, change):
         doc["evidence"][0]["locator"] = "../invented-rights.txt"
     else:
         outside = tmp_path.parent / "invented-outside.txt"
-        outside.write_text("Invented external evidence")
+        outside.write_text("Invented external evidence", encoding="utf-8", newline="\n")
         (tmp_path / "escape-link").symlink_to(outside)
         doc["evidence"][0].update(locator="escape-link", sha256=readback.sha256(outside))
     with pytest.raises(readback.ValidationError):
@@ -215,7 +217,7 @@ def test_rights_fail_closed(tmp_path, change):
 @pytest.mark.parametrize("text", ['{"key":1,"key":2}', '{"key":NaN}', '[]'])
 def test_json_rejects_duplicate_keys_nonfinite_and_wrong_root(tmp_path, text):
     path = tmp_path / "invalid.json"
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8", newline="\n")
     with pytest.raises(readback.ValidationError):
         readback.load_json(path)
 
@@ -229,16 +231,16 @@ def write_source_candidate(tmp_path, monkeypatch):
     paths = {}
     for name, rows in zip(("inputs", "results", "literature"), tables):
         paths[name] = tmp_path / f"{name}.csv"
-        with paths[name].open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(handle, fieldnames=readback.CSV_HEADER)
+        with paths[name].open("w", newline="\n", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=readback.CSV_HEADER, lineterminator="\n")
             writer.writeheader()
             writer.writerows(rows)
     rights = tmp_path / "rights.json"
-    rights.write_text(json.dumps(rights_document(tmp_path, digest)))
+    rights.write_text(json.dumps(rights_document(tmp_path, digest)), encoding="utf-8", newline="\n")
     record = tmp_path / "readback.json"
     record.write_text(json.dumps(readback_document(tables, digest, {
         key: readback.sha256(path) for key, path in paths.items()
-    })))
+    })), encoding="utf-8", newline="\n")
     return ["--source-pdf", str(source), "--source-sha256", digest,
             "--inputs-csv", str(paths["inputs"]), "--results-csv", str(paths["results"]),
             "--literature-csv", str(paths["literature"]), "--rights-json", str(rights),
@@ -246,7 +248,7 @@ def write_source_candidate(tmp_path, monkeypatch):
 
 
 def load_report(out):
-    return json.loads((out / "scour-table-readback.json").read_text())
+    return json.loads((out / "scour-table-readback.json").read_text(encoding="utf-8"))
 
 
 def test_complete_declarations_are_only_a_candidate(tmp_path, monkeypatch):
@@ -260,7 +262,7 @@ def test_complete_declarations_are_only_a_candidate(tmp_path, monkeypatch):
     assert report["engineering_qualified"] is False
     assert report["published_cases_admitted"] == 0
     assert report["source_cells_independently_read_back"] == 0
-    text = (out / "scour-table-readback.json").read_text()
+    text = (out / "scour-table-readback.json").read_text(encoding="utf-8")
     for secret in ("INVENTED-0", "1.230", "0.03700", "invented.pdf", "source cell reviewer"):
         assert secret not in text
     assert "density" not in report
@@ -288,7 +290,7 @@ def test_self_consistent_unpinned_source_is_rejected(tmp_path):
 def test_csv_header_and_extra_cells_are_rejected(tmp_path):
     path = tmp_path / "invented.csv"
     for text in ("wrong,header\na,b\n", ",".join(readback.CSV_HEADER) + "\n2,INVENTED,1,A,A,1,m,extra\n"):
-        path.write_text(text)
+        path.write_text(text, encoding="utf-8", newline="\n")
         with pytest.raises(readback.ValidationError):
             readback.read_csv(path)
 
@@ -302,6 +304,8 @@ def test_synthetic_output_is_deterministic_metadata_only(tmp_path):
     for name in names:
         assert (first / name).read_bytes() == (second / name).read_bytes()
     report = load_report(first)
+    # 2 physical + 1 literature = 3 cases; (2 + 2 + 1) table rows * 2 cells = 10 cells.
+    assert report["synthetic_counts"] == {"physical": 2, "literature": 1, "total": 3, "cells": 10}
     assert report["status"] == "SYNTHETIC_ONLY"
     assert report["source_status"] == "SOURCE_NOT_ADMITTED"
     assert report["published_cases_admitted"] == 0
@@ -313,7 +317,7 @@ def test_synthetic_output_is_deterministic_metadata_only(tmp_path):
     for gap in report["gaps"]:
         assert gap["status"] == "BLOCKED-IF-MISSING"
         assert all(gap[key] for key in ("evidence", "consequence", "owner_role", "missing_input"))
-    html = (first / "scour-table-readback.html").read_text()
+    html = (first / "scour-table-readback.html").read_text(encoding="utf-8")
     assert html.index("Summary") < html.index("Revision history") < html.index("Gap dispositions")
     assert "INVENTED-" not in html
 
@@ -342,7 +346,7 @@ def test_failed_rerun_replaces_previous_reports(tmp_path):
     assert readback.main(["--synthetic", "--out-dir", str(out)]) == 0
     assert readback.main(["--out-dir", str(out)]) == 2
     assert load_report(out)["status"] == "BLOCKED-IF-MISSING"
-    assert "BLOCKED-IF-MISSING; SOURCE_NOT_ADMITTED</p>" in (out / "scour-table-readback.html").read_text()
+    assert "BLOCKED-IF-MISSING; SOURCE_NOT_ADMITTED</p>" in (out / "scour-table-readback.html").read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize("input_kind", ["inputs-csv", "results-csv", "literature-csv", "source-pdf", "rights-json", "readback-json"])
@@ -350,7 +354,7 @@ def test_output_never_overwrites_supplied_input(tmp_path, input_kind):
     out = tmp_path / "out"
     out.mkdir()
     protected = out / "scour-table-readback.json"
-    protected.write_text("INVENTED protected input")
+    protected.write_text("INVENTED protected input", encoding="utf-8", newline="\n")
     before = protected.read_bytes()
     assert readback.main([f"--{input_kind}", str(protected), "--out-dir", str(out)]) == 2
     assert protected.read_bytes() == before
@@ -360,11 +364,11 @@ def test_output_never_overwrites_rights_evidence(tmp_path):
     out = tmp_path / "out"
     out.mkdir()
     protected = out / "scour-table-readback.html"
-    protected.write_text("INVENTED protected evidence")
+    protected.write_text("INVENTED protected evidence", encoding="utf-8", newline="\n")
     rights = tmp_path / "rights.json"
     doc = rights_document(tmp_path, "a" * 64)
     doc["evidence"][0].update(locator="out/scour-table-readback.html", sha256=readback.sha256(protected))
-    rights.write_text(json.dumps(doc))
+    rights.write_text(json.dumps(doc), encoding="utf-8", newline="\n")
     before = protected.read_bytes()
     assert readback.main(["--rights-json", str(rights), "--out-dir", str(out)]) == 2
     assert protected.read_bytes() == before
@@ -372,12 +376,12 @@ def test_output_never_overwrites_rights_evidence(tmp_path):
 
 def test_output_symlink_is_not_followed(tmp_path):
     protected = tmp_path / "protected.txt"
-    protected.write_text("INVENTED protected input")
+    protected.write_text("INVENTED protected input", encoding="utf-8", newline="\n")
     out = tmp_path / "out"
     out.mkdir()
     (out / "scour-table-readback.json").symlink_to(protected)
     assert readback.main(["--synthetic", "--out-dir", str(out)]) == 2
-    assert protected.read_text() == "INVENTED protected input"
+    assert protected.read_text(encoding="utf-8") == "INVENTED protected input"
 
 
 def test_hardlinked_output_reports_are_preserved(tmp_path):
@@ -385,7 +389,7 @@ def test_hardlinked_output_reports_are_preserved(tmp_path):
     out.mkdir()
     first = out / "scour-table-readback.json"
     second = out / "scour-table-readback.html"
-    first.write_text("INVENTED protected output")
+    first.write_text("INVENTED protected output", encoding="utf-8", newline="\n")
     second.hardlink_to(first)
     before = first.read_bytes()
     assert readback.main(["--synthetic", "--out-dir", str(out)]) == 2
@@ -396,10 +400,59 @@ def test_malformed_rights_cannot_hide_evidence_targets(tmp_path):
     out = tmp_path / "out"
     out.mkdir()
     protected = out / "scour-table-readback.html"
-    protected.write_text("INVENTED protected evidence")
+    protected.write_text("INVENTED protected evidence", encoding="utf-8", newline="\n")
     rights = tmp_path / "rights.json"
     rights.write_text('{"duplicate":1,"duplicate":2,"evidence":'
-                      '[{"locator":"out/scour-table-readback.html"}]}')
+                      '[{"locator":"out/scour-table-readback.html"}]}',
+                      encoding="utf-8", newline="\n")
     before = protected.read_bytes()
     assert readback.main(["--rights-json", str(rights), "--out-dir", str(out)]) == 2
     assert protected.read_bytes() == before
+
+
+@pytest.mark.parametrize("shape", [
+    "object", "string", "null", "number", "boolean", "empty", "missing",
+    "entry_string", "entry_null", "entry_list", "entry_missing_key",
+    "entry_extra_key", "locator_null", "locator_empty", "mixed_entries",
+])
+def test_malformed_rights_shapes_preserve_all_reports(tmp_path, capsys, shape):
+    out = tmp_path / "out"
+    out.mkdir()
+    reports = [out / name for name in readback.REPORT_NAMES]
+    for path in reports:
+        path.write_text("INVENTED retained evidence\n", encoding="utf-8", newline="\n")
+    doc = rights_document(tmp_path, "a" * 64)
+    item = {"locator": "out/scour-table-readback.html",
+            "sha256": readback.sha256(reports[1]), "scope": "extraction"}
+    shapes = {
+        "object": item, "string": item["locator"], "null": None,
+        "number": 1, "boolean": True, "empty": [],
+        "entry_string": [item["locator"]], "entry_null": [None], "entry_list": [[]],
+        "entry_missing_key": [{"locator": item["locator"]}],
+        "entry_extra_key": [{**item, "extra": True}],
+        "locator_null": [{**item, "locator": None}],
+        "locator_empty": [{**item, "locator": " "}],
+        "mixed_entries": [doc["evidence"][0], None],
+    }
+    if shape == "missing":
+        del doc["evidence"]
+    else:
+        doc["evidence"] = shapes[shape]
+    rights = tmp_path / "rights.json"
+    rights.write_text(json.dumps(doc), encoding="utf-8", newline="\n")
+    retained = {path: path.read_bytes() for path in [*reports, rights]}
+    assert readback.main(["--rights-json", str(rights), "--out-dir", str(out)]) == 2
+    assert {path: path.read_bytes() for path in retained} == retained
+    assert capsys.readouterr().err.strip() == "RIGHTS_OUTPUT_SAFETY_UNVERIFIED"
+
+
+def test_output_junction_is_not_followed(tmp_path, monkeypatch, capsys):
+    out = tmp_path / "out"
+    out.mkdir()
+    protected = out / "scour-table-readback.json"
+    protected.write_text("INVENTED retained evidence\n", encoding="utf-8", newline="\n")
+    monkeypatch.setattr(Path, "is_junction", lambda path: path == protected, raising=False)
+    before = protected.read_bytes()
+    assert readback.main(["--synthetic", "--out-dir", str(out)]) == 2
+    assert protected.read_bytes() == before
+    assert capsys.readouterr().err.strip() == "OUTPUT_SYMLINK_REFUSED"

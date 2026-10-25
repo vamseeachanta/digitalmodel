@@ -38,6 +38,11 @@
       "revision": "0",
       "date": "2026-10-25",
       "change": "Initial metadata-only audit; source admission and six missing-input dispositions are made explicit."
+    },
+    {
+      "revision": "1",
+      "date": "2026-10-25",
+      "change": "Malformed rights evidence is rejected before report writes; unsupported source claims are marked unverified and maintainer responsibilities are clarified."
     }
   ],
   "qualification_criteria": [
@@ -63,7 +68,7 @@
       "status": "BLOCKED-IF-MISSING",
       "evidence": [
         "S: cached table locations only; Tables 2 and 6 contain 58 paired physical cases; Table 7 contains 15 literature cases.",
-        "T: synthetic equation checks do not establish a published fixture."
+        "UNVERIFIED: no retrievable published-fixture citation accompanies the synthetic equation checks."
       ],
       "consequence": "Zero of the 73 published cases is admitted or independently read back in this audit.",
       "owner_role": "source readback reviewer",
@@ -84,7 +89,7 @@
       "id": "native_cyclic_runs",
       "status": "BLOCKED-IF-MISSING",
       "evidence": [
-        "Y: described normalized curves and loading combinations do not establish supplied native runs."
+        "UNVERIFIED: no retrievable source citation or native cyclic input/output runs are supplied."
       ],
       "consequence": "Native cyclic response qualification cannot be calculated from descriptions alone.",
       "owner_role": "cyclic analysis maintainer",
@@ -94,20 +99,19 @@
       "id": "clay_log_strain_convention",
       "status": "BLOCKED-IF-MISSING",
       "evidence": [
-        "Y: equation 8 logarithm base and strain convention remain UNVERIFIED in the cached packet."
+        "UNVERIFIED: no retrievable source citation establishes the logarithm base or strain convention."
       ],
       "consequence": "The cyclic degradation convention cannot be qualified; no additional clay helper is implemented.",
       "owner_role": "constitutive model reviewer",
-      "missing_input": "Source-confirmed logarithm base and strain definition for Y equation 8, with applicable units and independent review."
+      "missing_input": "Retrievable source citation and source-confirmed logarithm base and strain definition, with applicable units and independent review."
     },
     {
       "id": "native_cptu_matrix",
       "status": "BLOCKED-IF-MISSING",
       "evidence": [
-        "C: Table 4 has eight parameter rows, not native benchmark cases; underlying data were not supplied.",
-        "A and Z: archive script, native case count and supporting-source interpretation remain UNVERIFIED."
+        "UNVERIFIED: no retrievable source citations or native CPTU benchmark data are supplied."
       ],
-      "consequence": "CPTU benchmark qualification is not established by parameter rows or supporting-document listings.",
+      "consequence": "CPTU benchmark qualification cannot be established without source-bound native inputs and outputs.",
       "owner_role": "penetration analysis maintainer",
       "missing_input": "Native CPTU case matrix, source inputs and outputs, case counts, units, digests, source rights and acceptance criteria."
     },
@@ -115,12 +119,11 @@
       "id": "retained_scour_cptu_outputs",
       "status": "BLOCKED-IF-MISSING",
       "evidence": [
-        "N and D: bounded historical index observations found no matching names; current retained-output coverage was not inspected.",
-        "H: one pipeline example does not establish a riprap benchmark."
+        "UNVERIFIED: current retained scour and CPTU output coverage has not been inspected against retrievable manifests."
       ],
       "consequence": "No matching retained scour or CPTU result is admitted; absence across all retained data is not established.",
       "owner_role": "retained data custodian",
-      "missing_input": "Matching owner-held source/run manifests with stable case identifiers, versions, units, SHA-256 digests, access rights and qualified native outputs."
+      "missing_input": "Matching maintainer-held source/run manifests with stable case identifiers, versions, units, SHA-256 digests, access rights and qualified native outputs."
     }
   ]
 }

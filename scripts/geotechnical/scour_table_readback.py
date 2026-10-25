@@ -42,7 +42,7 @@ GAPS = (
     {
         "id": "checked_scour_transcription", "status": "BLOCKED-IF-MISSING",
         "evidence": ["S: cached table locations only; Tables 2 and 6 contain 58 paired physical cases; Table 7 contains 15 literature cases.",
-                     "T: synthetic equation checks do not establish a published fixture."],
+                     "UNVERIFIED: no retrievable published-fixture citation accompanies the synthetic equation checks."],
         "consequence": "Zero of the 73 published cases is admitted or independently read back in this audit.",
         "owner_role": "source readback reviewer",
         "missing_input": "Digest-verified S, complete scratch CSVs for Tables 2/6/7, actual headers and units, and independent original-cell readback.",
@@ -57,33 +57,31 @@ GAPS = (
     },
     {
         "id": "native_cyclic_runs", "status": "BLOCKED-IF-MISSING",
-        "evidence": ["Y: described normalized curves and loading combinations do not establish supplied native runs."],
+        "evidence": ["UNVERIFIED: no retrievable source citation or native cyclic input/output runs are supplied."],
         "consequence": "Native cyclic response qualification cannot be calculated from descriptions alone.",
         "owner_role": "cyclic analysis maintainer",
         "missing_input": "Native cyclic input/output runs with stable identifiers, units, digests and versioned acceptance criteria.",
     },
     {
         "id": "clay_log_strain_convention", "status": "BLOCKED-IF-MISSING",
-        "evidence": ["Y: equation 8 logarithm base and strain convention remain UNVERIFIED in the cached packet."],
+        "evidence": ["UNVERIFIED: no retrievable source citation establishes the logarithm base or strain convention."],
         "consequence": "The cyclic degradation convention cannot be qualified; no additional clay helper is implemented.",
         "owner_role": "constitutive model reviewer",
-        "missing_input": "Source-confirmed logarithm base and strain definition for Y equation 8, with applicable units and independent review.",
+        "missing_input": "Retrievable source citation and source-confirmed logarithm base and strain definition, with applicable units and independent review.",
     },
     {
         "id": "native_cptu_matrix", "status": "BLOCKED-IF-MISSING",
-        "evidence": ["C: Table 4 has eight parameter rows, not native benchmark cases; underlying data were not supplied.",
-                     "A and Z: archive script, native case count and supporting-source interpretation remain UNVERIFIED."],
-        "consequence": "CPTU benchmark qualification is not established by parameter rows or supporting-document listings.",
+        "evidence": ["UNVERIFIED: no retrievable source citations or native CPTU benchmark data are supplied."],
+        "consequence": "CPTU benchmark qualification cannot be established without source-bound native inputs and outputs.",
         "owner_role": "penetration analysis maintainer",
         "missing_input": "Native CPTU case matrix, source inputs and outputs, case counts, units, digests, source rights and acceptance criteria.",
     },
     {
         "id": "retained_scour_cptu_outputs", "status": "BLOCKED-IF-MISSING",
-        "evidence": ["N and D: bounded historical index observations found no matching names; current retained-output coverage was not inspected.",
-                     "H: one pipeline example does not establish a riprap benchmark."],
+        "evidence": ["UNVERIFIED: current retained scour and CPTU output coverage has not been inspected against retrievable manifests."],
         "consequence": "No matching retained scour or CPTU result is admitted; absence across all retained data is not established.",
         "owner_role": "retained data custodian",
-        "missing_input": "Matching owner-held source/run manifests with stable case identifiers, versions, units, SHA-256 digests, access rights and qualified native outputs.",
+        "missing_input": "Matching maintainer-held source/run manifests with stable case identifiers, versions, units, SHA-256 digests, access rights and qualified native outputs.",
     },
 )
 
@@ -345,7 +343,9 @@ def build_report(mode, counts=None, diagnostic=None):
                          "excluded": "Tables 3-5 describe 18 separate CFD cases; no CFD case enters the 73-case count."},
         "summary": "Offline software checks do not establish source admission or geotechnical validation.",
         "revision_history": [{"revision": "0", "date": "2026-10-25",
-                              "change": "Initial metadata-only audit; source admission and six missing-input dispositions are made explicit."}],
+                              "change": "Initial metadata-only audit; source admission and six missing-input dispositions are made explicit."},
+                             {"revision": "1", "date": "2026-10-25",
+                              "change": "Malformed rights evidence is rejected before report writes; unsupported source claims are marked unverified and maintainer responsibilities are clarified."}],
         "qualification_criteria": [
             "Exact pinned PDF digest before CSV validation.",
             "Human source-specific rights review for scratch extraction and literature contributions.",
@@ -389,7 +389,7 @@ def render_html(report):
 <p>Criterion disposition: {escape(report['diagnostic'])}.</p>
 <h2>Revision history</h2><div class="scroll"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>{revision}</tbody></table></div>
 <p>Table 1. Audit revisions.</p>
-<h2>Gap dispositions</h2><div class="scroll"><table><thead><tr><th>Gap</th><th>Status</th><th>Evidence</th><th>Consequence</th><th>Owner role</th><th>Exact missing input</th></tr></thead><tbody>{gaps}</tbody></table></div>
+<h2>Gap dispositions</h2><div class="scroll"><table><thead><tr><th>Gap</th><th>Status</th><th>Evidence</th><th>Consequence</th><th>Maintainer role</th><th>Exact missing input</th></tr></thead><tbody>{gaps}</tbody></table></div>
 <p>Table 2. Six independent missing-input dispositions; none is cleared by software exit status.</p>
 <h2>Source basis and criteria</h2><p>Source S: <a href="{escape(SOURCE_DOI)}">article DOI</a>; declared version 2026-10-15; CC BY-NC-ND 4.0 per cached packet.</p>
 <p>Expected SHA-256: <code>{SOURCE_SHA256}</code>. The packet metadata is historical evidence, not current source inspection.</p>
@@ -408,11 +408,13 @@ def protected_inputs(args):
     if args.rights_json:
         try:
             doc = load_json(args.rights_json)
-            evidence = doc.get("evidence", [])
-            if isinstance(evidence, list):
-                for item in evidence:
-                    if isinstance(item, dict) and isinstance(item.get("locator"), str):
-                        paths.append((Path(args.rights_json).parent / item["locator"]).resolve())
+            evidence = doc.get("evidence")
+            require(isinstance(evidence, list) and evidence, "RIGHTS_EVIDENCE_MISSING")
+            for item in evidence:
+                exact_keys(item, ("locator", "sha256", "scope"), "RIGHTS_EVIDENCE_SCHEMA_INVALID")
+                locator = item["locator"]
+                require(isinstance(locator, str) and locator.strip(), "RIGHTS_LOCATOR_INVALID")
+                paths.append((Path(args.rights_json).parent / locator).resolve())
         except ValidationError:
             # Existing malformed evidence may conceal protected target paths.
             # Missing evidence has no retained bytes to overwrite.
@@ -427,7 +429,8 @@ def output_targets(args):
     require(not (targets[0].exists() and targets[1].exists()
                  and targets[0].samefile(targets[1])), "OUTPUT_REPORT_ALIAS")
     for target in targets:
-        require(not target.is_symlink(), "OUTPUT_SYMLINK_REFUSED")
+        require(not (target.is_symlink() or getattr(target, "is_junction", lambda: False)()),
+                "OUTPUT_SYMLINK_REFUSED")
         require(not target.exists() or target.is_file(), "OUTPUT_TYPE_INVALID")
         for source in protected:
             require(target.resolve() != source, "OUTPUT_INPUT_COLLISION")
@@ -440,8 +443,8 @@ def emit_reports(targets, report):
     """Write only the two metadata reports into the explicitly requested directory."""
     targets[0].parent.mkdir(parents=True, exist_ok=True)
     targets[0].write_text(json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False)
-                          + "\n", encoding="utf-8")
-    targets[1].write_text(render_html(report), encoding="utf-8")
+                          + "\n", encoding="utf-8", newline="\n")
+    targets[1].write_text(render_html(report), encoding="utf-8", newline="\n")
 
 
 def argument_parser():
