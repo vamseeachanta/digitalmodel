@@ -1,5 +1,6 @@
 import os
 import math
+import logging
 from collections.abc import Mapping
 from numbers import Real
 import numpy as np
@@ -428,6 +429,12 @@ class DNVRPH103_hydrodynamics_rectangular:
         inputs = self.cfg["inputs"]
         if "moments_of_inertia_at_cog" in inputs:
             return self._get_supplied_mass_inertia(inputs["moments_of_inertia_at_cog"])
+        if any(inputs.get("cog", {}).get(axis, 0) != 0 for axis in ("x", "y", "z")):
+            logging.getLogger(__name__).warning(
+                "Using homogeneous-box estimate with displaced CoG; dimensions "
+                "and CoG do not define the mass distribution. Supply "
+                "moments_of_inertia_at_cog for known principal moments."
+            )
         m_air = inputs["m_air"]
         length = inputs["l"]
         width = inputs["w"]
@@ -463,11 +470,13 @@ class DNVRPH103_hydrodynamics_rectangular:
             inertia[axis] = value
         # OpenStax (2016), section 10.5, Eq. 10.19:
         # Iy + Iz - Ix = 2 * integral x^2 dm >= 0, with cyclic permutations.
-        # Compare the sum directly: subtraction can reject a valid boundary
-        # through cancellation. If the sum overflows, any finite largest value
-        # is necessarily less than that sum.
+        # Allow relative binary rounding at the planar boundary (e.g. 0.8
+        # versus 0.7 + 0.1), without an absolute tolerance that would admit
+        # impossible moments at small scales. If the sum overflows, any finite
+        # largest value is necessarily less than that sum.
         smallest, middle, largest = sorted(inertia.values())
-        if largest > middle + smallest:
+        total = middle + smallest
+        if largest > total and not math.isclose(largest, total, rel_tol=1e-15):
             raise ValueError(error)
         return inertia
 

@@ -15,6 +15,9 @@ The chosen offsets are synthetic coordinates, not measured engineering data.
 
 import pytest
 
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular import (
+    DNVRPH103_hydrodynamics_circular,
+)
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_rectangular import (
     DNVRPH103_hydrodynamics_rectangular,
 )
@@ -123,3 +126,73 @@ def test_supplied_planar_distribution_at_triangle_boundary():
     supplied = {"Ix": 0.4, "Iy": 0.3, "Iz": 0.1}
     solver.cfg["inputs"].update({"m_air": 0.4, "moments_of_inertia_at_cog": supplied})
     assert solver.get_mass_moment_of_inertia() == supplied
+
+
+@pytest.mark.parametrize("scale", [1e-200, 1, 1e200])
+@pytest.mark.parametrize("axes", [("Ix", "Iy", "Iz"), ("Iy", "Iz", "Ix"), ("Iz", "Ix", "Iy")])
+def test_supplied_planar_boundary_tolerates_binary_rounding(scale, axes):
+    """Two 0.05 kg masses at y=+/-1 and two 0.35 kg at z=+/-1 m.
+
+    Summing m*r^2 gives (0.8, 0.7, 0.1) kg.m^2, with Ix=Iy+Iz.
+    Scaling all masses and permuting axes preserves physical validity.
+    """
+    solver = make_solver((0, 0, 0))
+    supplied = dict(zip(axes, [value * scale for value in (0.8, 0.7, 0.1)]))
+    solver.cfg["inputs"]["moments_of_inertia_at_cog"] = supplied
+    assert solver.get_mass_moment_of_inertia() == supplied
+
+
+@pytest.mark.parametrize("scale", [1e-200, 1, 1e200])
+def test_supplied_inertia_rejects_triangle_excess_beyond_roundoff(scale):
+    """A relative excess of 1e-10 is larger than binary rounding error."""
+    solver = make_solver((0, 0, 0))
+    solver.cfg["inputs"]["moments_of_inertia_at_cog"] = {
+        "Ix": 0.8 * (1 + 1e-10) * scale, "Iy": 0.7 * scale, "Iz": 0.1 * scale,
+    }
+    with pytest.raises(ValueError, match="triangle inequalities"):
+        solver.get_mass_moment_of_inertia()
+
+
+def test_supplied_finite_moments_with_overflowing_sum():
+    solver = make_solver((0, 0, 0))
+    supplied = {"Ix": 1e308, "Iy": 1e308, "Iz": 1e308}
+    solver.cfg["inputs"]["moments_of_inertia_at_cog"] = supplied
+    assert solver.get_mass_moment_of_inertia() == supplied
+
+
+def test_displaced_box_estimate_warns_about_mass_distribution(caplog):
+    solver = make_solver((1, 2, 3))
+    solver.get_mass_moment_of_inertia()
+    assert "homogeneous-box estimate" in caplog.text
+    assert "moments_of_inertia_at_cog" in caplog.text
+
+
+@pytest.mark.parametrize("supplied", [False, True])
+def test_centred_box_or_supplied_inertia_does_not_warn(caplog, supplied):
+    solver = make_solver((1, 2, 3) if supplied else (0, 0, 0))
+    if supplied:
+        solver.cfg["inputs"]["moments_of_inertia_at_cog"] = {
+            "Ix": 10000, "Iy": 8000, "Iz": 5200,
+        }
+    solver.get_mass_moment_of_inertia()
+    assert not caplog.records
+
+
+@pytest.mark.parametrize("cog", [(0, 0, 0), (1, 2, 3), (-5, 7, -11)])
+def test_circular_inertia_and_export_are_about_centre_of_mass(cog):
+    """Uniform cylinder: mass 1200 kg, radius 2 m, height 6 m.
+
+    Integrating y^2+z^2 gives m*(R^2/4+h^2/12)=4800 kg.m^2;
+    integrating x^2+y^2 gives m*R^2/2=2400 kg.m^2. The existing
+    circular structural estimate uses r/2 for R, so its input r is 4 m.
+    """
+    solver = DNVRPH103_hydrodynamics_circular()
+    solver.cfg = {"inputs": {
+        "m_air": 1200, "r": 4, "h": 6,
+        "cog": dict(zip(("x", "y", "z"), cog)),
+    }}
+    inertia = solver.get_mass_moment_of_inertia()
+    assert inertia == {"Ix": 4800, "Iy": 4800, "Iz": 2400}
+    buoy = {}
+    solver.update_6d_buoy_inertia({"I": inertia}, buoy)
+    assert buoy["MomentsOfInertia"] == [4.8, 4.8, 2.4]

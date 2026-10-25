@@ -1026,7 +1026,11 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         translational = props["translational"]
         assert translational["ca"]["x"] == pytest.approx(0.703132)
         assert translational["area_drag"]["x"] == pytest.approx(0.427716)
-        assert props["I"]["Ix"] == pytest.approx(19.471869)
+        # Uniform centred box: integral (y^2+z^2) dm = m*(w^2+h^2)/12.
+        # The fixture gives 169*(0.654^2+0.654^2)/12 kg.m^2 through CoM.
+        inputs = cfg["inputs"]
+        expected_ix = inputs["m_air"] * (inputs["w"] ** 2 + inputs["h"] ** 2) / 12
+        assert props["I"]["Ix"] == pytest.approx(expected_ix)
 
         model_path = (
             REPO_ROOT / "examples/workflows/orcaflex-6dbuoy-dnvrph103/results/"
