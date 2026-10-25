@@ -160,10 +160,9 @@ class OrcaFlexCustomAnalysis:
                 if run_success_flag:
                     logging.info("Run statics  ....  SUCCESS")
                 else:
-                    logging.info("Run statics  ....  FAIL")
-                    simulation_flag = (
-                        save_sim_flag
-                    ) = save_dat_flag = iterate_to_target_value_flag = False
+                    # Stop the workflow so batch callers receive a failure and
+                    # no dynamics or final result files use invalid statics.
+                    raise RuntimeError(f"Static analysis failed for {filename_with_ext}")
 
             if simulation_flag:
                 model.RunSimulation()
@@ -215,30 +214,32 @@ class OrcaFlexCustomAnalysis:
         return clean_model
 
     def run_static_analysis(self, filename_with_ext, model):
+        """Return the model and success only when both statics solves complete.
+
+        Ordinary failures are recorded with their traceback and returned as
+        False for callers using this method directly. The sequential workflow
+        raises on that flag. Process-control exceptions propagate unchanged.
+        """
         print(f"Static analysis for {filename_with_ext} ... .... ")
         try:
             print("First analysis ......")
             model.CalculateStatics()
-            # #3838: a statics solve that did not reach a static state is a
-            # failed run; the bare except below turns this into the FAIL branch.
+            # A statics solve that did not reach a static state is a failed run.
             check_statics(model, context=filename_with_ext)
             print("First analysis ... PASS")
             self.save_model_with_calculated_positions(filename_with_ext, model)
             model = self.analysis_with_calculated_positions(model)
             run_success_flag = True
-        except:
+        except Exception:
             run_success_flag = False
-            print("First static analysis for ... FAIL")
+            logging.exception("Static analysis failed for %s", filename_with_ext)
 
         return model, run_success_flag
 
     def analysis_with_calculated_positions(self, model):
-        try:
-            model.CalculateStatics()
-            check_statics(model, context="analysis with calculated positions")
-        except:
-            print("Analysis with calculated positions ... FAIL")
-
+        """Solve using calculated positions, propagating solve or state errors."""
+        model.CalculateStatics()
+        check_statics(model, context="analysis with calculated positions")
         return model
 
     def save_model_with_calculated_positions(self, filename_with_ext, model):
