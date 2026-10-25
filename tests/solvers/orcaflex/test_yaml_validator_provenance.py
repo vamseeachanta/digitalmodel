@@ -96,6 +96,9 @@ def test_composition_failure_is_identified(tmp_path, text):
 @pytest.mark.parametrize("bad_value", [
     "!unsupported value",
     "{[unhashable]: value}",
+    "!!bool invalid",
+    "!!int ''",
+    "!!float ''",
 ])
 def test_construction_failure_retains_each_source_finding(tmp_path, bad_value):
     """Two written keys survive a later unavailable constructor or mapping key.
@@ -117,6 +120,7 @@ def test_construction_failure_retains_each_source_finding(tmp_path, bad_value):
 @pytest.mark.parametrize("bad_value", [
     "!!int invalid", "!!float invalid", "!!timestamp 2000-99-99",
     "!!timestamp invalid",
+    "!!bool invalid", "!!int ''", "!!float ''",
 ])
 def test_scalar_constructor_conversion_failure_becomes_diagnostic(tmp_path, bad_value):
     """Invalid tagged lexemes cannot erase a preceding inherited-context warning.
@@ -134,12 +138,30 @@ def test_scalar_constructor_conversion_failure_becomes_diagnostic(tmp_path, bad_
     assert "inherited context" in warnings[0].message
 
 
-def test_malformed_maximum_preserves_its_source_error(tmp_path):
+@pytest.mark.parametrize("bad_value", ["!!float invalid", "!!int ''", "!!float ''"])
+def test_malformed_maximum_preserves_its_source_error(tmp_path, bad_value):
     """A malformed tagged setter yields both a source and construction finding."""
-    result = validate(tmp_path, f"General:\n  {MAXIMUM}: !!float invalid\n")
+    result = validate(tmp_path, f"General:\n  {MAXIMUM}: {bad_value}\n")
+    assert not result.valid
     assert any("YAML construction error" in issue.message for issue in result.errors)
     issues = [issue for issue in result.errors if issue.property == MAXIMUM]
     assert [(issue.line, issue.column) for issue in issues] == [(2, 3)]
+    assert "finite positive number" in issues[0].message
+
+
+@pytest.mark.parametrize("exception", [KeyError, IndexError])
+def test_validation_errors_remain_outside_construction_boundary(
+    tmp_path, monkeypatch, exception,
+):
+    """Validator programming errors must still propagate after loading succeeds."""
+    from digitalmodel.solvers.orcaflex.yaml_validator import OrcaFlexYAMLValidator
+
+    def fail_validation(*args, **kwargs):
+        raise exception("synthetic validator failure")
+
+    monkeypatch.setattr(OrcaFlexYAMLValidator, "_validate_flat_format", fail_validation)
+    with pytest.raises(exception, match="synthetic validator failure"):
+        validate(tmp_path, "General: {}\n")
 
 
 def test_issue_positional_arguments_remain_compatible():

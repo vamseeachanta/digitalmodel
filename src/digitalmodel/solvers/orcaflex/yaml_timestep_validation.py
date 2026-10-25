@@ -76,7 +76,7 @@ def _positive_number(node):
         finally:
             loader.dispose()
         return isfinite(value) and value > 0
-    except (ValueError, TypeError, OverflowError):
+    except (ValueError, TypeError, OverflowError, IndexError):
         return False
 
 

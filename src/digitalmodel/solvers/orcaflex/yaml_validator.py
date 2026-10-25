@@ -213,9 +213,9 @@ class OrcaFlexYAMLValidator:
         try:
             data = yaml.safe_load(raw_text)
         except (yaml.YAMLError, RecursionError, ValueError, TypeError,
-                OverflowError, AttributeError) as exc:
+                OverflowError, AttributeError, KeyError, IndexError) as exc:
             # Standard scalar constructors can raise Python conversion errors
-            # (including AttributeError for an unmatched explicit timestamp).
+            # (including lookup errors for invalid bool or empty numeric tags).
             # Keep this boundary confined to construction, outside validation.
             result.add(Severity.ERROR, f"YAML construction error: {exc}", file=filename)
             _add_source_issues(result, source_issues, filename)
