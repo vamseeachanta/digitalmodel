@@ -26,8 +26,9 @@ adapter behaviour; they do not establish site-specific design qualification.</p>
 <h2>Revision history</h2>
 <table>
   <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-  <tbody><tr><td>1</td><td>2026-10-22</td><td>Independent examples and explicit limitations are added to expose calculation gaps.</td></tr></tbody>
-  <caption>Table 1. Initial issue of the test basis.</caption>
+  <tbody><tr><td>1</td><td>2026-10-22</td><td>Independent examples and explicit limitations are added to expose calculation gaps.</td></tr>
+    <tr><td>2</td><td>2026-10-25</td><td>The spectral exponent coefficient and omitted tails are derived explicitly to trace the integration error budget.</td></tr></tbody>
+  <caption>Table 1. Issue history of the test basis.</caption>
 </table>
 
 <h2>Sources and intended use</h2>
@@ -95,6 +96,26 @@ error. Current fit inputs are exact quantile pairs from fixed uniform variates,
 not a random sample; the fitted interface returns tail shapes, not a fitted scale.
 Scale is exercised through the independently known extrapolated speeds.
 Return periods cannot be inferred without an occurrence rate.</p>
+<h3 id="spectral-tail-budget">Independent spectral tail derivation</h3>
+<p>For gamma = 1, assume the dimensionless spectral shape family
+x<sup>−5</sup> exp(−b/x<sup>4</sup>), where x = ω/ω<sub>peak</sub> and b &gt; 0.
+The logarithmic derivative is −5/x + 4b/x<sup>5</sup>.
+Requiring the peak at x = 1 gives b = 5/4 = 1.25; the derivative is positive
+below the peak and negative above it. This derives the coefficient within the
+assumed shape family; it does not establish that family as a physical sea model.
+With u = b/x<sup>4</sup>, du = −4b x<sup>−5</sup> dx, so the shape integrates
+over (0, ∞) to 1/(4b). The unit-integral density is therefore
+q(x) = 4b x<sup>−5</sup> exp(−b/x<sup>4</sup>).</p>
+<p>An antiderivative of q is exp(−b/x<sup>4</sup>), giving the upper tail
+∫<sub>R</sub><sup>∞</sup> q(x) dx = 1 − exp(−b/R<sup>4</sup>)
+and the lower tail ∫<sub>0</sub><sup>L</sup> q(x) dx = exp(−b/L<sup>4</sup>).
+At R = 20 the upper fraction is below b/R<sup>4</sup> = 1/128000 &lt; 8 × 10<sup>−6</sup>;
+at L = 0.01 the lower fraction is exp(−125000000) &lt; 10<sup>−100</sup>.
+For the synthetic target variance of 1 m², these fractions give omitted variance
+below the absolute test tolerance of 10<sup>−4</sup> m², leaving room for quadrature.
+The derivation applies only to gamma = 1. The expected variance remains independently
+established by H<sub>m0</sub> = 4 sqrt(m<sub>0</sub>); the cited wave-height
+section is not used as a source for the exponent coefficient or tail integral.</p>
 <table>
   <thead><tr><th>Criterion</th><th>Observed limitation</th><th>Disposition</th></tr></thead>
   <tbody>

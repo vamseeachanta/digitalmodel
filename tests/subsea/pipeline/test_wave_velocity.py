@@ -131,8 +131,18 @@ def test_jonswap_integral_preserves_specified_wave_height(gamma):
     """Synthetic Hs=4,Tp=8: m0=Hs²/16=16/16=1 m², for any gamma.
 
     Source: Coastal Dynamics (2021), section 3.4.4, H_m0 definition.
-    Integrate [.01,20]*omega_peak with 50001 bins. For gamma=1 the omitted
-    upper tail fraction is 1-exp(-1.25/20⁴), below 8e-6. Absolute 1e-4
+    Independent tail derivation for gamma=1: set x=omega/omega_peak and
+    assume the shape family x^-5*exp(-b/x⁴), b>0. Its log derivative is
+    -5/x+4*b/x⁵; a peak at x=1 requires b=5/4=1.25. With u=b/x⁴,
+    du=-4*b*x^-5 dx, so the integral over (0,infinity) is 1/(4*b).
+    Thus the unit-integral density is q(x)=4*b*x^-5*exp(-b/x⁴), with
+    antiderivative exp(-b/x⁴). The upper tail above R is 1-exp(-b/R⁴);
+    the lower tail below L is exp(-b/L⁴). These expressions are derived
+    here, not attributed to the wave-height reference. They apply only
+    to gamma=1; the expected m0 remains the independent H_m0 relation.
+    Integrate [.01,20]*omega_peak with 50001 bins. At R=20 the omitted
+    upper fraction is below b/R⁴=1/128000<8e-6; at L=.01 the lower
+    fraction is exp(-125000000)<1e-100. Absolute 1e-4
     allows truncation and quadrature; gamma is an explicit synthetic input.
     No coefficient is inferred from an unopened standard.
     """
