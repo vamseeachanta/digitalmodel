@@ -17,7 +17,7 @@ name: Quality Gates by Domain
 "on":
   pull_request:
     # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches: [main, develop]
   workflow_dispatch:
@@ -33,7 +33,8 @@ permissions:
 jobs:
   detect-domains:
     name: Detect touched test domains
-    runs-on: ubuntu-latest
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
+    runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       has-domains: ${{ steps.detect.outputs.has_domains }}
@@ -189,8 +190,9 @@ jobs:
 
   ci-harness-tests:
     name: CI harness and compliance tests
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     needs: detect-domains
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -297,8 +299,10 @@ jobs:
   domain-tests:
     name: tests-${{ matrix.domain }}
     needs: detect-domains
-    if: needs.detect-domains.outputs.has-domains == 'true'
-    runs-on: ${{ matrix.runner }}
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
+      (needs.detect-domains.outputs.has-domains == 'true')
+    runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || matrix.runner }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect-domains.outputs.matrix) }}
@@ -392,7 +396,10 @@ jobs:
 
       - name: Install Gmsh runtime libraries
         if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+        # Self-hosted runners have no sudo; skip apt when the library is already present.
+        run: |
+          if dpkg -s libglu1-mesa >/dev/null 2>&1; then echo "libglu1-mesa present"; exit 0; fi
+          sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
 
       - name: Create reports directory
         run: mkdir -p reports
@@ -476,8 +483,10 @@ jobs:
   domain-tests-required:
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
-    if: always()
-    runs-on: ubuntu-latest
+    if: >-
+      (github.event_name != 'pull_request' || github.event.pull_request.draft == false) &&
+      (always())
+    runs-on: ${{ vars.PR_GATE_RUNNER && fromJSON(vars.PR_GATE_RUNNER) || 'ubuntu-latest' }}
     steps:
       - name: Report scope of this result
         # States what this check actually covered, so a green aggregate cannot be
