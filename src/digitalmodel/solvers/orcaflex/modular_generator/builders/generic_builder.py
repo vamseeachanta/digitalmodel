@@ -259,6 +259,13 @@ class GenericModelBuilder(BaseBuilder):
             # mode when these source properties are absent.
             method = properties.get("DynamicsSolutionMethod", "Implicit time domain")
             variable = properties.get("ImplicitUseVariableTimeStep")
+            if "ImplicitUseVariableTimeStep" in properties and not (
+                isinstance(variable, bool)
+                or isinstance(variable, str) and variable in ("Yes", "No")
+            ):
+                raise ValueError(
+                    "ImplicitUseVariableTimeStep must be True, False, 'Yes' or 'No'"
+                )
             if method in {"Explicit time domain", "Frequency domain"}:
                 skip_keys.update({
                     "ImplicitUseVariableTimeStep", "ImplicitConstantTimeStep",

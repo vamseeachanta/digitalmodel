@@ -23,37 +23,71 @@ from digitalmodel.solvers.orcaflex.modular_generator.schema import GenericModel
 from .test_generic_builder import _make_builder
 
 
-@pytest.mark.parametrize("mode", [True, "Yes", False, "No"])
+@pytest.mark.parametrize("mode", [
+    True, "Yes", False, "No", pytest.param(None, id="absent-mode"),
+])
 @pytest.mark.parametrize("method", [
     "Implicit time domain", "Explicit time domain", "Frequency domain",
+    pytest.param(None, id="absent-method"),
 ])
 def test_general_controls_follow_source_mode(method, mode):
     """Mode -> active control, with scrambled input order and no mutation."""
     properties = {
         "ImplicitVariableMaxTimeStep": 0.75,  # Probe: 3/4 s, see module basis.
         "ImplicitConstantTimeStep": 0.125,  # Probe: 1/8 s, see module basis.
-        "ImplicitUseVariableTimeStep": mode,
-        "DynamicsSolutionMethod": method,
         "StageDuration": [1],  # Arbitrary pass-through duration, 1 s.
     }
+    if mode is not None:
+        properties["ImplicitUseVariableTimeStep"] = mode
+    if method is not None:
+        properties["DynamicsSolutionMethod"] = method
     original = deepcopy(properties)
     model = GenericModel(general_properties=properties)
     builder, _ = _make_builder(model)
     general = builder.build()["General"]
-    expected = {"DynamicsSolutionMethod": method, "StageDuration": [1]}
-    if method == "Implicit time domain":
-        expected["ImplicitUseVariableTimeStep"] = mode
+    expected = {"StageDuration": [1]}
+    if method is not None:
+        expected["DynamicsSolutionMethod"] = method
+    if method in (None, "Implicit time domain"):
+        if mode is not None:
+            expected["ImplicitUseVariableTimeStep"] = mode
         active = (
             "ImplicitVariableMaxTimeStep" if mode in (True, "Yes")
             else "ImplicitConstantTimeStep"
         )
         expected[active] = original[active]
         keys = list(general)
-        assert keys.index("DynamicsSolutionMethod") < keys.index(
-            "ImplicitUseVariableTimeStep"
-        ) < keys.index(active)
+        controls = [key for key in (
+            "DynamicsSolutionMethod", "ImplicitUseVariableTimeStep", active,
+        ) if key in expected]
+        assert [key for key in keys if key in controls] == controls
     assert general == expected
     assert model.general_properties == original
+
+
+@pytest.mark.parametrize("mode", ["yes", "no", 1, 0, 1.0, 0.0, None, [], {}])
+@pytest.mark.parametrize("method", [
+    "Implicit time domain", "Explicit time domain", "Frequency domain",
+    pytest.param(None, id="absent-method"),
+])
+def test_unrecognised_variable_mode_fails_visibly(tmp_path, method, mode):
+    """Reject unsupported values rather than silently discarding a cap."""
+    properties = {
+        "ImplicitVariableMaxTimeStep": 0.75,  # Probe: 3/4 s.
+        "ImplicitConstantTimeStep": 0.125,  # Probe: 1/8 s.
+        "ImplicitUseVariableTimeStep": mode,
+    }
+    if method is not None:
+        properties["DynamicsSolutionMethod"] = method
+    original = deepcopy(properties)
+    model = GenericModel(general_properties=properties)
+    builder, _ = _make_builder(model)
+    with pytest.raises(ValueError, match="ImplicitUseVariableTimeStep"):
+        builder.build()
+    with pytest.raises(ValueError, match="ImplicitUseVariableTimeStep"):
+        ModularModelGenerator.from_spec(builder.spec).generate(tmp_path)
+    assert model.general_properties == original
+    assert list(tmp_path.iterdir()) == []
 
 
 @pytest.mark.parametrize("mode", [True, "Yes"])
