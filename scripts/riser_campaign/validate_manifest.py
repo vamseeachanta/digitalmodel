@@ -84,13 +84,20 @@ def validate_manifest(data: dict[str, Any], schema: dict[str, Any] | None = None
         if case["case_id"] in ids:
             raise ValueError("duplicate case id")
         ids.add(case["case_id"])
-        coverage.add((case["floater_type"], case["configuration"], case["water_depth_m"]))
+        combination = (case["floater_type"], case["size_class"], case["water_depth_m"], case["configuration"])
+        if combination in coverage:
+            raise ValueError("duplicate matrix combination")
+        coverage.add(combination)
         _validate_case(case, data, sources, raos)
-    for floater in ("FPSO", "semi-submersible", "spar", "TLP"):
-        for configuration in ("SCR", "lazy-wave"):
-            depths = {d for f, c, d in coverage if (f, c) == (floater, configuration)}
-            if len(depths) < 3:
-                raise ValueError("matrix requires three depths for every floater and configuration")
+    expected_coverage = {
+        (floater, size, depth, configuration)
+        for floater in ("FPSO", "semi-submersible", "spar", "TLP")
+        for size in ("small", "large")
+        for depth in (500, 1000, 1500)
+        for configuration in ("SCR", "lazy-wave")
+    }
+    if coverage != expected_coverage:
+        raise ValueError("matrix requires all 48 documented floater, size, depth and configuration combinations")
 
 
 def _validate_provenance(data: dict[str, Any], basis_payload: bytes) -> None:

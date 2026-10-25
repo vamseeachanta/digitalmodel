@@ -46,6 +46,43 @@ def test_matrix_has_full_factorial_coverage():
     assert len({r["rao_set_id"] for r in cases}) == 8
 
 
+@pytest.mark.parametrize("size_class", ["small", "large"])
+def test_matrix_rejects_missing_size_class(size_class):
+    data = manifest()
+    data["cases"] = [case for case in data["cases"] if case["size_class"] != size_class]
+    with pytest.raises(ValueError, match="matrix"):
+        api().validate_manifest(data)
+
+
+def test_matrix_rejects_missing_single_combination():
+    data = manifest()
+    data["cases"].pop()
+    with pytest.raises(ValueError, match="matrix"):
+        api().validate_manifest(data)
+
+
+@pytest.mark.parametrize("replace_existing", [False, True])
+def test_matrix_rejects_duplicate_combination_with_unique_id(replace_existing):
+    data = manifest()
+    duplicate = copy.deepcopy(data["cases"][0])
+    duplicate["case_id"] = "duplicate-combination"
+    if replace_existing:
+        data["cases"][-1] = duplicate
+    else:
+        data["cases"].append(duplicate)
+    with pytest.raises(ValueError, match="duplicate matrix combination"):
+        api().validate_manifest(data)
+
+
+def test_matrix_rejects_substituted_depth_grid():
+    data = manifest()
+    for case in data["cases"]:
+        if case["water_depth_m"] == 500:
+            case["water_depth_m"] = 750
+    with pytest.raises(ValueError, match="matrix"):
+        api().validate_manifest(data)
+
+
 @pytest.mark.parametrize("mutation", [
     lambda d: d["cases"][0].update(case_id="../escape"),
     lambda d: d["cases"][0].update(unknown=1),
@@ -67,7 +104,7 @@ def test_matrix_has_full_factorial_coverage():
     lambda d: d["cases"][0]["sea_states"][0].update(direction_deg=90),
 ])
 def test_invalid_manifests_fail_before_output(mutation):
-    data = json.loads((CAMPAIGN / "manifest.json").read_text())
+    data = json.loads((CAMPAIGN / "manifest.json").read_text(encoding="utf-8"))
     mutation(data)
     with pytest.raises(ValueError):
         api().validate_manifest(data)
@@ -75,7 +112,7 @@ def test_invalid_manifests_fail_before_output(mutation):
 
 def test_loader_rejects_duplicate_json_keys(tmp_path):
     path = tmp_path / "duplicate.json"
-    path.write_text('{"version": 1, "version": 2}')
+    path.write_text('{"version": 1, "version": 2}', encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="duplicate"):
         api().load_manifest(path)
 
@@ -169,10 +206,10 @@ def test_generation_is_deterministic_and_resumable(tmp_path):
     assert api().generate(CAMPAIGN / "manifest.json", first) == result
     assert {p: p.stat().st_mtime_ns for p in paths} == before
     damaged = first / result["cases"][0]["inputs"][0]["path"]
-    damaged.write_text("preserve unexpected existing data\n")
+    damaged.write_text("preserve unexpected existing data\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="digest|existing|differ"):
         api().generate(CAMPAIGN / "manifest.json", first)
-    assert damaged.read_text() == "preserve unexpected existing data\n"
+    assert damaged.read_text(encoding="utf-8") == "preserve unexpected existing data\n"
 
 
 def test_generation_rejects_symlink_output(tmp_path):
@@ -199,7 +236,7 @@ main()
     env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(ROOT / "src"), str(ROOT)])}
     run = subprocess.run([sys.executable, "-c", script, "--manifest", str(CAMPAIGN / "manifest.json"),
                           "--output-dir", str(tmp_path / "cli")],
-                         cwd=ROOT, env=env, capture_output=True, text=True, check=True)
+                         cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8", check=True)
     assert "48 cases; 288 solver inputs; 0 licensed runs" in run.stdout
     for case in manifest()["cases"]:
         assert case["case_id"] in run.stdout
@@ -207,7 +244,7 @@ main()
 
 def test_committed_worked_examples_match_generated_inputs(tmp_path):
     index = api().generate(CAMPAIGN / "manifest.json", tmp_path / "examples")
-    examples = json.loads((CAMPAIGN / "examples/index.json").read_text())
+    examples = json.loads((CAMPAIGN / "examples/index.json").read_text(encoding="utf-8"))
     assert {r["configuration"] for r in examples["files"]} == {"SCR", "lazy-wave"}
     for entry in examples["files"]:
         path = CAMPAIGN / "examples" / entry["path"]
@@ -239,7 +276,7 @@ def test_yaml_has_no_aliases_and_serialization_preserves_native_references(tmp_p
     for row in result["cases"]:
         for item in row["inputs"]:
             path = tmp_path / "roundtrip" / item["path"]
-            assert not any(isinstance(event, yaml.AliasEvent) for event in yaml.parse(path.read_text()))
+            assert not any(isinstance(event, yaml.AliasEvent) for event in yaml.parse(path.read_text(encoding="utf-8")))
             loaded, _ = orcaflex_load(path)
             assert loaded["Lines"][0]["EndAConnection"] == loaded["Vessels"][0]["Name"]
             assert loaded["Vessels"][0]["VesselType"] == loaded["VesselTypes"][0]["Name"]
