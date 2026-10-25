@@ -20,7 +20,9 @@ Explicit UTF-8 example reads and writers remain independent of a cp1252 default.
   <tr><td>2</td><td>2026-10-22</td><td>Bound post-exit settlement, expose cleanup
   retry handles, validate arguments and produce deterministic deck newlines.</td></tr>
   <tr><td>3</td><td>2026-10-24</td><td>Preserve cleanup recovery through capture
-  read failures, workflow errors and Windows startup cancellation.</td></tr></tbody>
+  read failures, workflow errors and Windows startup cancellation.</td></tr>
+  <tr><td>4</td><td>2026-10-25</td><td>Record the focused test count and scope
+  so verification figures reflect the cleanup recovery coverage.</td></tr></tbody>
 </table>
 <p>Table 1. Revision history.</p>
 <h2>Configuration and method</h2>
@@ -83,6 +85,11 @@ already select UTF-8. Regression tests invoke those existing guards while
 emulating a cp1252 default and Windows newline translation. The two deck writers
 explicitly use LF newlines; their bytes are compared to explicitly encoded UTF-8
 text. No deck or engineering result is regenerated.</p>
+<h2>Offline verification</h2>
+<p>The focused offline selection passes 214 tests, including cleanup recovery
+through capture, workflow and startup-cancellation failures. The change spans
+19 files, including 18 Python files. These counts were checked on 2026-10-25;
+the broader test selection was not rerun.</p>
 <h2>Known limits and next checkpoint</h2>
 <p>The offline tests do not qualify native Windows MPI behavior. A licensed
 environment must separately run a deliberately fatal deck, record timeout and
