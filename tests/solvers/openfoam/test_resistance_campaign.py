@@ -56,6 +56,67 @@ def test_sweep_rejects_both_sides(campaign, factor):
     assert analyze_campaign(campaign)["sweep"]["status"] == "FAIL"
 
 
+@pytest.mark.parametrize("sign", [-1, 1])
+@pytest.mark.parametrize("outside", [False, True])
+def test_ct_band_includes_endpoints_only_with_roundoff(campaign, sign, outside):
+    """Reference 1,2 scaled by 0.95 or 1.05 has exactly ±5% point error.
+
+    An additional signed 1e-13 fraction lies outside the roundoff allowance.
+    Increment errors are half the point errors, inside the supplied 5% band.
+    """
+    fraction = sign * (0.05 + (1e-13 if outside else 0))
+    for point, ref in zip(
+        campaign["computed"]["points"], campaign["reference"]["points"]
+    ):
+        point["ct"] = ref["ct"] * (1 + fraction)
+    campaign["limits"]["increment_fraction"] = 0.05
+    sweep = analyze_campaign(campaign)["sweep"]
+    assert sweep["ct_pass"] is (not outside)
+    assert sweep["increment_pass"] is True
+    assert sweep["status"] == ("FAIL" if outside else "PASS")
+
+
+@pytest.mark.parametrize("sign", [-1, 1])
+@pytest.mark.parametrize("outside", [False, True])
+def test_increment_band_includes_endpoints_only_with_roundoff(campaign, sign, outside):
+    """With reference 1,2 and computed 1,2±0.02, increment error is ±1%.
+
+    An additional signed 1e-13 fraction must fail; point errors remain below 5%.
+    """
+    fraction = sign * (0.01 + (1e-13 if outside else 0))
+    campaign["computed"]["points"][0]["ct"] = 1
+    campaign["computed"]["points"][1]["ct"] = 2 + 2 * fraction
+    sweep = analyze_campaign(campaign)["sweep"]
+    assert sweep["ct_pass"] is True
+    assert sweep["increment_pass"] is (not outside)
+    assert sweep["status"] == ("FAIL" if outside else "PASS")
+
+
+@pytest.mark.parametrize(
+    "limit,gate", [("ct_fraction", "ct_pass"), ("increment_fraction", "increment_pass")]
+)
+@pytest.mark.parametrize("offset", [0, 2e-13])
+def test_zero_limits_reject_errors_beyond_roundoff(campaign, limit, gate, offset):
+    campaign["computed"]["points"][0]["ct"] = 1
+    campaign["computed"]["points"][1]["ct"] = 2 + offset
+    campaign["limits"][limit] = 0
+    sweep = analyze_campaign(campaign)["sweep"]
+    assert sweep[gate] is (offset == 0)
+
+
+@pytest.mark.parametrize(
+    "section", ["reference", "computed", "prerequisite", "limits", "grids"]
+)
+def test_omitted_evidence_is_still_unevaluated(campaign, section):
+    campaign.pop(section)
+    assert analyze_campaign(campaign)["status"] == "NOT_EVALUATED"
+
+
+def test_malformed_shape_is_rejected_before_evidence_gates():
+    with pytest.raises(ValueError, match="object"):
+        analyze_campaign({"grids": [None]})
+
+
 @pytest.mark.parametrize("end_ct", [1.94, 2.06])
 def test_increment_is_two_sided_even_inside_ct_band(campaign, end_ct):
     """Endpoint errors ±3% pass Ct; increment errors ±0.03 fail ±0.01."""
@@ -227,6 +288,73 @@ def test_cli_matches_api_and_exposes_exit_status(campaign, tmp_path, monkeypatch
         )
         assert result.returncode == expected_exit, result.stderr
         assert json.loads(output.read_text()) == analyze_campaign(campaign)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        (),
+        ("reference",),
+        ("computed",),
+        ("prerequisite",),
+        ("limits",),
+        ("reference", "condition"),
+        ("computed", "condition"),
+        ("reference", "points", 0),
+        ("computed", "points", 0),
+        ("grids", 0),
+        ("grids", 0, "condition"),
+        ("grids", 0, "point"),
+    ],
+)
+@pytest.mark.parametrize("bad", [None, [], "invalid-record", 1, True])
+def test_cli_rejects_non_object_records(campaign, tmp_path, monkeypatch, path, bad):
+    if path:
+        parent = campaign
+        for key in path[:-1]:
+            parent = parent[key]
+        parent[path[-1]] = bad
+    else:
+        campaign = bad
+    _assert_invalid_cli(campaign, tmp_path, monkeypatch)
+
+
+@pytest.mark.parametrize(
+    "path", [("reference", "points"), ("computed", "points"), ("grids",)]
+)
+@pytest.mark.parametrize("bad", [None, {}, "invalid-list", 1, True])
+def test_cli_rejects_non_list_collections(campaign, tmp_path, monkeypatch, path, bad):
+    parent = campaign
+    for key in path[:-1]:
+        parent = parent[key]
+    parent[path[-1]] = bad
+    _assert_invalid_cli(campaign, tmp_path, monkeypatch)
+
+
+def _assert_invalid_cli(data, tmp_path, monkeypatch):
+    """Malformed JSON structures use the sanitized invalid-input protocol."""
+    source = tmp_path / "input.json"
+    output = tmp_path / "report.json"
+    root = Path(__file__).resolve().parents[3]
+    monkeypatch.setenv("PYTHONPATH", str(root / "src"))
+    source.write_text(json.dumps(data))
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "digitalmodel.solvers.openfoam.resistance_campaign",
+            str(source),
+            "--output",
+            str(output),
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert result.stderr == "invalid campaign input or output (ValueError)\n"
+    assert result.stdout == ""
+    assert not output.exists()
 
 
 def test_published_nasa_grid_example(campaign):

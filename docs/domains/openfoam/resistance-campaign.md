@@ -13,6 +13,7 @@ campaign must remain `NOT_EVALUATED` until that evidence is available.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Added offline sweep and grid analysis with a synthetic example to make the deferred evidence requirements executable. |
+| 2 | 2026-10-25 | Corrected inclusive sweep boundaries and rejected malformed JSON structures to preserve the documented comparison and exit-code contracts. |
 
 ## Scope and inputs
 
@@ -41,6 +42,10 @@ No interpolation, automatic renormalisation or rounding of condition fields is
 performed. Exact equality rejects rounding differences: convert units and reconcile source
 precision before supplying data. Duplicate speeds and invalid numerical fields
 are input errors; missing evidence and incomparable conditions are unevaluated.
+The JSON root, series, conditions, prerequisite, limits, grid entries and points
+must be objects; `points` and `grids` must be lists of objects. Explicit nulls or
+other container types are invalid input, checked before evidence evaluation.
+Omitted top-level evidence sections retain the unevaluated behavior.
 
 `prerequisite` contains `status: PASS` and a `source` pointing to the validated
 single-point result. A declaration alone does not authenticate that result.
@@ -65,6 +70,12 @@ The signed adjacent-increment error is
 / max(Ct_reference,i, Ct_reference,i+1)`.
 
 Both must satisfy `-limit <= error <= limit` at every point or interval.
+The inclusive comparison permits an absolute roundoff allowance of
+`8 * ulp(1.0)` in the dimensionless error (eight binary64 machine epsilons),
+with no relative allowance. This implementation definition (2026) accommodates
+the subtractions and division at decimal endpoints; it is not an engineering
+acceptance tolerance. Errors beyond `limit + 8 * ulp(1.0)` fail, including when
+the supplied limit is zero. Diagnostic errors remain unrounded.
 These are explicit campaign metric definitions developed here (2026), following
 the two-sided and condition-matching requirements of #2022. The increment scale
 remains defined when a reference increment vanishes or changes sign. It measures

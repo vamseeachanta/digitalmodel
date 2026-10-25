@@ -31,6 +31,43 @@ CONDITION_FIELDS = (
 MIN_REFINEMENT_RATIO = 1.1
 # Numerical equality only; not an engineering acceptance tolerance. See Method.
 RATIO_ROUNDOFF = 1e-12
+# Absolute error-space allowance for binary64 arithmetic; see Method.
+BAND_ROUNDOFF = 8 * math.ulp(1.0)
+
+
+def _object(value: Any, name: str) -> dict:
+    if not isinstance(value, dict):
+        raise ValueError(f"{name} must be an object")
+    return value
+
+
+def _records(value: Any, name: str) -> list[dict]:
+    if not isinstance(value, list):
+        raise ValueError(f"{name} must be a list")
+    for record in value:
+        _object(record, name)
+    return value
+
+
+def _validate_structure(data: dict) -> None:
+    """Reject malformed containers before evaluation; absent evidence is allowed."""
+    _object(data, "campaign")
+    for name in ("reference", "computed"):
+        series = _object(data.get(name, {}), name)
+        _object(series.get("condition", {}), "condition")
+        _records(series.get("points", []), "points")
+    for name in ("prerequisite", "limits"):
+        _object(data.get(name, {}), name)
+    for grid in _records(data.get("grids", []), "grids"):
+        _object(grid.get("condition", {}), "condition")
+        _object(grid.get("point", {}), "point")
+
+
+def _within_band(error: float, limit: float) -> bool:
+    """Inclusive symmetric band with absolute, roundoff-only endpoint equality."""
+    return abs(error) <= limit or math.isclose(
+        abs(error), limit, rel_tol=0, abs_tol=BAND_ROUNDOFF
+    )
 
 
 def _positive(value: Any, name: str, *, zero_allowed: bool = False) -> float:
@@ -120,10 +157,8 @@ def evaluate_sweep(
         increments.append(
             ((y["ct"] - x["ct"]) - (b["ct"] - a["ct"])) / max(a["ct"], b["ct"])
         )
-    ct_pass = all(-ct_limit <= error <= ct_limit for error in errors)
-    increment_pass = all(
-        -increment_limit <= error <= increment_limit for error in increments
-    )
+    ct_pass = all(_within_band(error, ct_limit) for error in errors)
+    increment_pass = all(_within_band(error, increment_limit) for error in increments)
     return {
         "status": "PASS" if ct_pass and increment_pass else "FAIL",
         "froude": [p["froude"] for p in refs],
@@ -228,6 +263,7 @@ def evaluate_grids(grids: list[dict], limits: dict) -> dict:
 
 def analyze_campaign(data: dict) -> dict:
     """Combine independent sweep and numerical gates; retain source declarations."""
+    _validate_structure(data)
     limits = data.get("limits", {})
     sweep = evaluate_sweep(
         data.get("reference", {}),
