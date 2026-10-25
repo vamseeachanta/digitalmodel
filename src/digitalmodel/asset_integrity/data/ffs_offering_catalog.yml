@@ -107,7 +107,7 @@ engines:
   riser-fatigue: {module: riser_fatigue, status: workflow, workflow: riser-fatigue, note: "no validation record under docs/domains"}
   hull-girder: {module: hull_girder_screening, status: engine}
   sn-fatigue: {module: structural.fatigue, status: engine, note: "221 S-N curves, 17 standards; library, not a verdict"}
-  scour: {module: geotechnical.scour, status: engine}
+  scour: {module: geotechnical.scour, status: engine, note: "screening only: sediment-motion threshold (FHWA-RD-03-052 eq. 3) and supplied-limit armour comparison; depth NOT_EVALUATED"}
   structural-health: {module: structural.offshore_resilience.structural_health, status: engine, note: "sensor templates and alert framework"}
   tank-settlement-screen: {status: planned, issue: 2172}
   tank-level3: {status: planned, issue: 2174}

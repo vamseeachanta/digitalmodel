@@ -421,3 +421,89 @@ def test_below_threshold_life_and_damage_match_hand_calculation():
     assert _fp().calculate_fatigue_damage(config).total_damage == pytest.approx(
         1000 / expected_cycles
     )
+
+
+def _synthetic_sn_curve(**metadata):
+    """Construct an analytical fixture; these are not design-code values.
+
+    Choose N1 = 10**6/S**2 and N2 = 10**7/S**3. They meet at
+    S = 10 MPa, N = 10**4 cycles. Set the unused threshold to that stress.
+    All coefficients and the threshold are synthetic inputs by construction.
+    """
+    return SNcurve(
+        name="synthetic",
+        log_a1=6,
+        m1=2,
+        log_a2=7,
+        m2=3,
+        N_transition=10_000,
+        threshold_mpa=10,
+        **metadata,
+    )
+
+
+@pytest.mark.parametrize("stress, expected", [(100, 100), (10, 10_000), (1, 10_000_000)])
+def test_synthetic_curve_segments_and_transition(stress, expected):
+    """Hand substitution into the fixture: N(100)=100, N(10)=10000,
+    N(1)=10000000. The last point is below the synthetic threshold.
+    The equal-transition case uses the first segment.
+    """
+    assert _fp().calculate_cycles_to_failure(stress, _synthetic_sn_curve()) == (
+        pytest.approx(expected)
+    )
+
+
+@pytest.mark.parametrize("environment", ["air", "seawater_cp", "custom"])
+def test_environment_metadata_does_not_select_another_curve(environment):
+    """At synthetic S=100, N=10**6/100**2=100 for every metadata label."""
+    sn = _synthetic_sn_curve(environment=environment)
+    assert _fp().calculate_cycles_to_failure(100, sn) == pytest.approx(100)
+
+
+def test_threshold_metadata_does_not_change_positive_range_life():
+    """Hand substitution: S=1 gives N2=10**7, even with threshold=100.
+
+    The changed threshold is a synthetic input, not an acceptance limit.
+    """
+    sn = _synthetic_sn_curve()
+    sn.threshold_mpa = 100
+    assert _fp().calculate_cycles_to_failure(1, sn) == pytest.approx(10_000_000)
+
+
+def test_worked_example_executes_and_matches_independent_hand_calculation(capsys):
+    """Execute the published example, keeping its answer independently pinned.
+
+    Analytical inputs: N1=10**6/S**2, N2=10**7/S**3, transition=10000.
+    Ranges 100, 10, 1 give N=100, 10000, 10000000 respectively.
+    Annual cycles 10, 2000, 3000000 give damage 1/10, 1/5, 3/10.
+    Thus total=3/5, life=5/3 years, allowable=1/2 (chosen DFF=2),
+    utilization=6/5, and the third case controls. No standard limit is used.
+    """
+    import re
+    from pathlib import Path
+
+    guide = Path(__file__).resolve().parents[2] / "docs/domains/ansys/fatigue-postprocessor.md"
+    blocks = re.findall(r"```python\n(.*?)```", guide.read_text(), re.DOTALL)
+    assert len(blocks) == 1
+    namespace = {"__name__": "__example__"}
+    exec(compile(blocks[0], guide.name, "exec"), namespace)
+    result = namespace["result"]
+    assert result.damage_per_case == pytest.approx(
+        {"high": 1 / 10, "knee": 1 / 5, "low": 3 / 10}
+    )
+    assert result.total_damage == pytest.approx(3 / 5)
+    assert result.fatigue_life_years == pytest.approx(5 / 3)
+    assert result.allowable_damage == pytest.approx(1 / 2)
+    assert result.utilization == pytest.approx(6 / 5)
+    assert result.critical_load_case == "low"
+    assert namespace["summary"].loc[0, "status"] == "FAIL"
+    assert capsys.readouterr().out.splitlines() == [
+        "damage=0.6; life=1.7 years; utilization=1.2; status=FAIL"
+    ]
+
+
+def test_module_documents_curve_selection_boundary_and_worked_example():
+    from digitalmodel.ansys import fatigue_postprocessor as module
+
+    assert "environment is metadata" in module.__doc__
+    assert "fatigue-postprocessor.md" in module.__doc__

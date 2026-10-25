@@ -174,7 +174,7 @@ class PileCapacityWorkflow:
 
 
 class ScourWorkflow:
-    """Run DNV-RP-F107 scour calculators from cfg."""
+    """Run guarded scour screens; preserve missing basis and criterion status."""
 
     def router(self, cfg: dict[str, Any]) -> dict[str, Any]:
         from digitalmodel.geotechnical.scour import (

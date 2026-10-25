@@ -11,6 +11,15 @@
 
 The code pin applies to repository citations; the map blob at the map pin is identical to the code-pin blob. [docs/registry/implementation-map.yaml:L1-L4]
 
+Post-pin corrections: [audit finding 1](https://github.com/vamseeachanta/digitalmodel/issues/2750)
+was addressed by [the F06 parser correction](https://github.com/vamseeachanta/digitalmodel/pull/2867).
+The rectangular CBAR helper now assigns I1 about local z and I2 about local y;
+the global z load uses I2 in both the deck and the analytical comparison.
+The [worked cantilever example](cantilever-bar-example.md) records the public
+sources, independent hand calculations and offline deck regressions. Native
+rectangular-section confirmation remains NOT_RUN and is required before release.
+The original code-pin citations below remain historical references.
+
 ## 1. Purpose and scope
 
 The package exports a BDF writer, F06 parser, optional OP2 reader, structured cantilever mesh/solve chain, convergence study and Richardson extrapolation. [src/digitalmodel/solvers/mystran/__init__.py:L3-L20] [src/digitalmodel/solvers/mystran/result_parser.py:L166-L180]
@@ -173,7 +182,7 @@ rg -n 'default=|else None|else 1\.0|zip\(|setdefault|write|cache|units|direction
 | S26 nearest tip-center selection casts argmin to int; odd divisions choose nearest available node, not exact centroid | no detection check exists for odd-count centroid approximation; issue pending (2) | [src/digitalmodel/solvers/mystran/fem_chain.py:L124-L131] |
 | S27 structured meshes seed zero coordinates and linspace from zero; dimension signs unchecked; counts int-converted in mesh_stats | no detection check exists for nonpositive dimensions; issue pending (2) | [src/digitalmodel/solvers/mystran/fem_chain.py:L92-L105] [src/digitalmodel/solvers/mystran/fem_chain.py:L134-L161] |
 | S28 benchmark helpers and sweep default geometry/material/load; default levels and tolerance 0.02 are assumptions, not measured accuracy | C2.4–C2.6 NOT_RUN; no detection check exists for applicability of defaults; issue pending (4) | [src/digitalmodel/solvers/mystran/fem_chain.py:L21-L22] [src/digitalmodel/solvers/mystran/fem_chain.py:L325-L339] [src/digitalmodel/solvers/mystran/fem_chain.py:L363-L374] [src/digitalmodel/solvers/mystran/fem_chain.py:L400-L417] |
-| S29 helper J multiplier has no cited basis; bar helper omits stress recovery points, and signed exact denominator presumes positive P/L/E/I | no detection check exists for coefficient provenance, stress completeness or negative-load error metric; issue pending (4) | [src/digitalmodel/solvers/mystran/fem_chain.py:L335-L360] [src/digitalmodel/solvers/mystran/fem_chain.py:L390-L397] |
+| S29 helper retains a square-only J estimate; bar helper omits stress recovery points, and signed exact denominator presumes positive P/L/E/I | The [worked example](cantilever-bar-example.md) cites the square coefficient and bounds its use to this unloaded torsional response. Rectangular torsion, stress completeness and negative-load error handling remain unqualified; issue pending (4). | [src/digitalmodel/solvers/mystran/fem_chain.py:L335-L360] [src/digitalmodel/solvers/mystran/fem_chain.py:L390-L397] |
 | S30 convergence value float-converted; counts int-converted and default zero (also dataclass counts); no finite/positive-count guard | no detection check exists; issue pending (3) | [src/digitalmodel/solvers/mystran/convergence.py:L13-L20] [src/digitalmodel/solvers/mystran/convergence.py:L47-L70] |
 | S31 zero current response denominator becomes 1.0, losing a strictly relative interpretation | zero-value test asserts this convention; no detection check exists for dimensional suitability; issue pending (3) | [src/digitalmodel/solvers/mystran/convergence.py:L51-L56] [tests/solvers/mystran/test_convergence.py:L85-L88] |
 | S32 reference None or zero suppresses reference error; convergence ignores reference accuracy | no detection check exists for inaccurate-but-stable result; issue pending (3) | [src/digitalmodel/solvers/mystran/convergence.py:L54-L56] [src/digitalmodel/solvers/mystran/convergence.py:L75-L80] |

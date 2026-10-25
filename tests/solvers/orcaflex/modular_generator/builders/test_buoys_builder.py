@@ -54,7 +54,7 @@ def _make_slay_spec(roller_arrangement=None):
             "segments": [{"type": "X65+CWC", "length": 1000, "segment_length": 5}],
         },
         "equipment": {
-            "vessel": {"name": "Eclipse", "properties": {"loa": 130, "beam": 28, "draft": 4, "gmt": 2.5, "cog": [0, 0, 3], "gyration_radii": [10, 30, 30]}},
+            "vessel": {"name": "VesselA", "properties": {"loa": 130, "beam": 28, "draft": 4, "gmt": 2.5, "cog": [0, 0, 3], "gyration_radii": [10, 30, 30]}},
             "stinger": {"radius": 150},
             "tensioner": {"capacity_kn": 500, "tension_value": 400},
         },

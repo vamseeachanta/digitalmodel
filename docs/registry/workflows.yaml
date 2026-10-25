@@ -911,7 +911,7 @@ workflows:
     runtime: offline
   - id: scour-assessment
     basename: scour
-    title: DNV-RP-F107 pipeline, monopile, and rock armour scour assessment
+    title: Scour screening with explicit sediment motion and armour criteria
     input: examples/workflows/scour-assessment/input.yml
     outputs:
       - examples/workflows/scour-assessment/results/input.yml

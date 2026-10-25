@@ -135,8 +135,23 @@ The RAO text parser reads numeric direction blocks and matching frequency grids;
 | `evaluate_gate`                                                  | deviation=(demand-reference)/abs(reference); PASS if abs(deviation)<=tolerance+1e-12 [src/digitalmodel/drilling_riser/global_model/qualification.py:L13-L27]                                                                                                                                                            | this helper's gate strings do not identify AQG gate clearance [src/digitalmodel/drilling_riser/global_model/qualification.py:L13-L27]                                                                                                                                                 |
 
 The matrices and mass regularisation are specified explicitly in the beam implementation, while independent uniform-string and pinned-beam limits are evaluated separately in the tests. [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L117-L146] [tests/drilling_riser/global_model/test_hand_checks.py:L66-L79]
-The docstring describes beam periods as ascending, but the eigenvalues are selected ascending and converted to periods without reversing; the test enumerates the resulting mode order against decreasing closed-form periods. [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L105-L106] [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L142-L146] [tests/drilling_riser/global_model/test_hand_checks.py:L66-L79]
-This ordering documentation discrepancy is tracked in #2529; no implementation change is made in this pack. [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L105-L106] [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L142-L146]
+Beam periods are returned in order of increasing natural frequency (decreasing periods, fundamental mode first). The selected positive eigenvalues are in ascending order; converting each eigenvalue by `T = 2*pi/sqrt(eigenvalue)` preserves mode identity and gives decreasing periods. The docstring and closed-form tests describe this same order. [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L105-L107] [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L142-L146] [tests/drilling_riser/global_model/test_hand_checks.py:test_tensioned_string_limit_matches_closed_form]
+
+**Worked example: uniform-string limit.** The synthetic inputs are length `L = 300 m`, tension `Te = 2,000,000 N` and mass per length `m = 800 kg/m`, matching `test_tensioned_string_limit_matches_closed_form`. The method is `v = sqrt(Te/m)` and `f_n = n*v/(2*L)`, from [OpenStax, University Physics Volume 1 (2016), section 16.6, equation 16.16](https://openstax.org/books/university-physics-volume-1/pages/16-6-standing-waves-and-resonance). Independent substitution gives `v = 50 m/s` and `T_n = 1/f_n = 12/n s`: modes one through five have periods `12.0, 6.0, 4.0, 3.0, 2.4 s`. The finite-element fixture uses the same small positive bending stiffness and mesh as the existing string-limit test; displayed answers are rounded to one decimal place, while that test retains its numerical error criterion.
+
+```python
+>>> from digitalmodel.drilling_riser.global_model.hand_checks import BeamSegment, tensioned_beam_periods
+>>> # Synthetic inputs and mesh: test_hand_checks.py::test_tensioned_string_limit_matches_closed_form.
+>>> length, tension, mass = 300.0, 2.0e6, 800.0
+>>> segments = [BeamSegment(length / 300, 1.0, tension, tension, mass) for _ in range(300)]
+>>> periods = tensioned_beam_periods(segments, n_modes=5)
+>>> # Expected values: independent T_n = 12/n s calculation above; rounding is for display only.
+>>> [round(period, 1) for period in periods]
+[12.0, 6.0, 4.0, 3.0, 2.4]
+
+```
+
+The example is executed by `test_natural_period_ordering_worked_example`; it illustrates return order for synthetic inputs and does not establish qualification of a riser design. [tests/drilling_riser/global_model/test_period_ordering_docs.py:test_natural_period_ordering_worked_example]
 
 The drilling stack hand-reference mismatch is conditional on positive bore area and contents density: ΔW = ρc Abore L g N per stack section; zero-bore fixtures do not expose it, while open-water generation and hand references both carry separate contents. [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L37-L42] [src/digitalmodel/drilling_riser/global_model/hand_checks.py:L64-L83] [src/digitalmodel/drilling_riser/global_model/build.py:L208-L212] [src/digitalmodel/drilling_riser/global_model/open_water.py:L156-L162] [src/digitalmodel/drilling_riser/global_model/open_water.py:L228-L239]
 

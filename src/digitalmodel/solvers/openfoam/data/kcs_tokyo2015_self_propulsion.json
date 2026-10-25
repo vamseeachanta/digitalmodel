@@ -1,0 +1,52 @@
+{
+  "case": "Tokyo 2015 KCS Case 2.5, ship self-propulsion point",
+  "citation": {
+    "title": "Tokyo 2015 CFD Workshop: KCS Case 2.5 instructions and V&V table",
+    "url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.5/Case_2-5.html",
+    "table_url": "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.5/%5BIdentifier%5D_V%26V_2-5.xls",
+    "table_sha256": "606b1b656206e2db9c47acda2497a785efcd1dd3ef192d7d2470c6ce8f34c7ca",
+    "retrieved_utc": "2026-10-23T14:31:15Z",
+    "http_status": 200,
+    "cells": {
+      "ct": "Sheet1!C4 (multiply by 0.001)",
+      "kt": "Sheet1!C10",
+      "kq": "Sheet1!C12",
+      "n_rps": "Sheet1!C14",
+      "resistance_minus_thrust_n": "Sheet1!C16"
+    }
+  },
+  "conditions": {
+    "lpp_m": 7.2786,
+    "speed_m_s": 2.196,
+    "density_kg_m3": 999.1,
+    "nu_m2_s": 0.000001139,
+    "froude": 0.260,
+    "wetted_area_m2": 9.4379,
+    "towing_n": 30.3,
+    "body": "free, arranged for even keel at the design speed",
+    "rudder": false
+  },
+  "efd": {
+    "n_rps": 9.5,
+    "kt": 0.17,
+    "kq": 0.0288,
+    "ct": 0.003966,
+    "resistance_minus_thrust_n": 30.25
+  },
+  "propeller": {
+    "diameter_m": 0.25,
+    "diameter_source": "Public geometry archive member KP505/KP505_modelScale_250mm.igs",
+    "url": "https://t2015.nmri.go.jp/file/Geometry_IGES_files/kcs/KP505.zip",
+    "archive_sha256": "cb3bc964bf8dd483f96d3268eb599d5f77525b2c03de83d9bffe03eec9fff152",
+    "x_from_fp_over_lpp": 0.9825,
+    "depth_over_lpp": 0.02913
+  },
+  "geometry_conditions_url": "https://t2015.nmri.go.jp/kcs_gc.html",
+  "normalization": {
+    "thrust": "T = rho * (rpm/60)^2 * D^4 * KT",
+    "resistance": "R = 0.5 * rho * U^2 * S * CT",
+    "note": "Dimensional thrust and resistance are derived from published coefficients, not separately measured values. Rounded table coefficients and the two towing-force entries need not close identically."
+  },
+  "scatter": null,
+  "scatter_note": "The opened V&V template leaves the experimental uncertainty column blank. No published scatter is inferred."
+}

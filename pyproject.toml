@@ -105,6 +105,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+slope = [
+    # Benchmarked API: xslope v1.0.3, README limit-equilibrium example.
+    "xslope==1.0.3",
+]
+slope-seepage = [
+    "xslope==1.0.3",
+    # xslope v1.0.3 declares Gmsh in its optional fem extra; seepage only.
+    # Minimum from the adoption requirements and the slope screening guide.
+    "gmsh>=4.15",
+]
 metocean = [
     # API tested against the published metocean-stats 1.2.0 distribution.
     "metocean-stats==1.2.0",

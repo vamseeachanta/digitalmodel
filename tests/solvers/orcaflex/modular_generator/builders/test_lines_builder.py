@@ -171,7 +171,7 @@ class TestSlayConnections:
     def _make_slay(self, seabed_slope=0):
         return _make_pipeline_spec(
             vessel={
-                "name": "Eclipse",
+                "name": "VesselA",
                 "properties": {
                     "loa": 130, "beam": 28, "draft": 4, "gmt": 2.5,
                     "cog": [0, 0, 3], "gyration_radii": [10, 30, 30],

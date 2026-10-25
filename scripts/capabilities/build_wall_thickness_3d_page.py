@@ -3,12 +3,13 @@
 
 Consumes the tidy study produced by ``build_wall_thickness_3d.py`` and writes
 ``docs/api/structural/wall-thickness-3d-explorer.html``.  The page embeds a
-regularly down-sampled grid, not the full study.
+regularly down-sampled grid in a fetched JSON sidecar, not the full study.
 """
 from __future__ import annotations
 
 import json
 import math
+import re
 from pathlib import Path
 
 
@@ -20,6 +21,9 @@ _WALL_STRIDE = 2
 _LOAD_STRIDE = 3
 _UTILISATION_SCALE = 10_000
 _MAX_PAYLOAD_BYTES = 400_000
+# Display budget: the existing 21 x 11 x 11 x 9 sampled grid. This is a
+# transport cap, not an engineering limit (snapshot scope: issue 1915).
+_MAX_DISPLAY_POINTS = 22_869
 
 
 def _sample(values: list[float], stride: int) -> list[float]:
@@ -119,8 +123,10 @@ def _payload(study: dict) -> dict:
     walls = _sample(all_walls, _WALL_STRIDE)
     tensions = _sample(all_tensions, _LOAD_STRIDE)
     moments = _sample(all_moments, _LOAD_STRIDE)
-    series, categories = _pack_rows(study, codes, walls, tensions, moments)
     point_count = len(codes) * len(walls) * len(tensions) * len(moments)
+    if point_count > _MAX_DISPLAY_POINTS:
+        raise ValueError("display exceeds the snapshot point cap")
+    series, categories = _pack_rows(study, codes, walls, tensions, moments)
     return {
         "m": {
             "c": codes,
@@ -134,6 +140,11 @@ def _payload(study: dict) -> dict:
             "r": study["meta"]["grid"].get("row_count", len(study.get("rows", []))),
             "z": 0,
             "s": _spec(study["meta"]),
+            "qualification": study["meta"].get(
+                "qualification", {"status": "NOT_EVALUATED"}
+            ),
+            "sources": study["meta"].get("sources", {}),
+            "load_range_basis": study["meta"].get("load_range_basis", {}),
         },
         "g": categories,
         "s": series,
@@ -161,10 +172,26 @@ def _encode_payload(payload: dict) -> tuple[str, int]:
     raise RuntimeError("embedded payload size did not converge")
 
 
-def build_page(study: dict) -> str:
-    """Return the complete explorer HTML for a tidy 3D study."""
+def build_page(study: dict, *, data_url: str | None = None) -> str:
+    """Render the explorer; omit data_url only for an inline standalone copy."""
     payload, _byte_count = _encode_payload(_payload(study))
-    return _HTML.replace("__PAYLOAD__", payload)
+    if data_url is None:
+        bootstrap = 'initialise(JSON.parse(document.getElementById("study-data").textContent));'
+        page = _HTML.replace("__PAYLOAD__", payload)
+    else:
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*\.json", data_url):
+            raise ValueError("sidecar must be a local JSON filename")
+        page = _HTML.replace(
+            '<script id="study-data" type="application/json">__PAYLOAD__</script>', ""
+        )
+        bootstrap = (
+            f"fetch({json.dumps(data_url)}, {{cache:'no-cache'}})"
+            ".then(response=>{if(!response.ok)throw new Error('HTTP '+response.status);"
+            "return response.json();}).then(initialise).catch(()=>{"
+            "document.getElementById('mode').textContent="
+            "'Data could not be loaded. Serve this page and its JSON sidecar over HTTP.';});"
+        )
+    return page.replace("__BOOTSTRAP__", bootstrap)
 
 
 _HTML = r"""<!DOCTYPE html>
@@ -223,7 +250,7 @@ shows the governing check. The double line marks utilisation&nbsp;=&nbsp;1.0.</p
  <input id="wall" type="range" min="0" max="0" step="1">
  <output class="wval" id="wall-value" for="wall"></output>
 </div>
-<p class="mode" id="mode" role="status" aria-live="polite">2D fallback ready.</p>
+<p class="mode" id="mode" role="status" aria-live="polite">Loading study data.</p>
 <div class="plot-shell">
  <canvas id="fallback" role="img" aria-label="Governing-check heatmap with utilisation acceptance boundary"></canvas>
  <div id="plot" role="img" aria-label="Interactive wall-thickness load interaction plot"></div>
@@ -231,16 +258,22 @@ shows the governing check. The double line marks utilisation&nbsp;=&nbsp;1.0.</p
 <p class="axis-note">Plane: effective tension (MN) &times; bending moment (kN&middot;m).
 Height in 3D: utilisation. Drag to orbit; scroll or pinch to zoom.</p>
 <div class="summary" id="summary"></div><div class="legend" id="legend"></div>
-<noscript><p class="mode">JavaScript is disabled. Use the linked full dataset below.</p></noscript>
+<noscript><p class="mode">JavaScript is disabled. Use the worked example below.</p></noscript>
 </section>
 <section class="panel info" aria-labelledby="provenance-heading">
 <h2 id="provenance-heading">Data, provenance &amp; limits</h2>
 <ul>
  <li id="sampling"></li>
- <li>The embedded view retains utilisation and governing check only. Per-check values remain
- in the <a href="wall-thickness-3d.json">full tidy dataset</a>.</li>
- <li>The coarser display grid is for interaction and screening; use the full 41 &times; 31
- &times; 31 grid and governing standard for engineering decisions.</li>
+ <li>The display snapshot is capped at 22,869 points and less than 400 kB of JSON.
+ Utilisation and governing check are retained; full per-check rows are generated separately.</li>
+ <li>Inputs are assumed, based on previous experience. Load axes end at a sampling choice
+ of 60% of the reference capacities at 18 mm; this is not an allowable-load envelope.</li>
+ <li>Design qualification: NOT_EVALUATED. The inherited thin-wall moment approximation
+ and code factors have not been independently checked against the standards here.
+ Fatigue, installation history, defects and compression are not evaluated.</li>
+ <li>Colours classify grid cells by the majority of their corner checks. Interpolated
+ boundaries and the coarser grid are for screening only.</li>
+ <li><a href="../../examples/wall-thickness-load-example.html">Worked example, equations, sources and regeneration</a>.</li>
 </ul>
 </section>
 <p class="foot">Built by <code>scripts/capabilities/build_wall_thickness_3d_page.py</code> from
@@ -249,7 +282,8 @@ Height in 3D: utilisation. Drag to orbit; scroll or pinch to zoom.</p>
 <script id="study-data" type="application/json">__PAYLOAD__</script>
 <script>
 "use strict";
-const DATA=JSON.parse(document.getElementById("study-data").textContent),M=DATA.m;
+function initialise(DATA){
+const M=DATA.m;
 const COLORS=["#0072b2","#d55e00","#009e73","#cc79a7","#e69f00","#56b4e9","#6f4e9c","#8c564b","#666666"];
 const STYLES=getComputedStyle(document.documentElement);
 const INK=STYLES.getPropertyValue("--ink").trim(),SOFT=STYLES.getPropertyValue("--soft").trim();
@@ -281,7 +315,7 @@ function updateText(um,gm){const flat=um.flat(),active=new Set(gm.flat());
  const safe=100*flat.filter(v=>v<1).length/flat.length;
  document.getElementById("wall-value").textContent=M.w[+wall.value].toFixed(1)+" mm";
  document.getElementById("summary").innerHTML=`<span><b>Range</b> ${Math.min(...flat).toFixed(3)}–${Math.max(...flat).toFixed(3)}</span>
- <span><b>Safe grid points</b> ${safe.toFixed(0)}%</span>`;
+ <span><b>Grid points below 1.0</b> ${safe.toFixed(0)}%</span>`;
  document.getElementById("legend").innerHTML=DATA.g.map((g,i)=>`<span class="legend-item" style="opacity:${active.has(i)?1:.38}">
  <i class="swatch" style="background:${COLORS[i%COLORS.length]}"></i>${esc(label(g))}</span>`).join("")+
  '<span class="legend-item"><i class="boundary"></i>Utilisation = 1.0</span>';
@@ -352,6 +386,7 @@ function queuePlot(mode,um,gm){pendingPlot={id:++renderToken,mode,um,gm};if(!plo
 async function drainPlots(){plotting=true;while(pendingPlot){const job=pendingPlot;pendingPlot=null;
  await plotlyPlot(job);}plotting=false;}
 function render(){const [um,gm]=matrices();nativePlot(um,gm);updateText(um,gm);
+ document.getElementById("mode").textContent="2D canvas fallback — interactive library unavailable.";
  plotMode="canvas";if(window.Plotly){plot.style.display="block";plot.style.visibility="hidden";canvas.style.display="block";
   queuePlot(allow3d?"3d":"2d",um,gm);}}
 M.c.forEach(c=>code.add(new Option(c,c)));code.value=M.c.includes("DNV-ST-F101")?"DNV-ST-F101":M.c[0];
@@ -360,37 +395,47 @@ wall.value=initial<0?Math.floor(M.w.length/2):initial;
 const S=M.s;document.getElementById("spec").innerHTML=[["OD",S.od+" mm"],["Grade",S.grade],
  ["SMYS",S.smys+" MPa"],["pᵢ / pₑ",S.pi+" / "+S.pe+" MPa"],["Safety class",S.sc]]
  .map(([k,v])=>`<span><b>${esc(k)}</b> ${esc(v)}</span>`).join("");
-document.getElementById("sampling").innerHTML=`Embedded display: every ${M.x[0]}nd wall value and every
+document.getElementById("sampling").innerHTML=`Display snapshot: every ${M.x[0]}nd wall value and every
  ${M.x[1]}rd load value (${M.w.length} × ${M.t.length} × ${M.b.length} × ${M.c.length} =
  ${M.p.toLocaleString()} points; ${(M.z/1000).toFixed(1)} kB JSON, ${(100*M.p/M.r).toFixed(1)}% of source rows).`;
 [code,wall].forEach(control=>control.addEventListener("input",render));
 window.addEventListener("resize",()=>{if(plotMode==="canvas")render();});
 window.addEventListener("plotly-ready",render);render();
+}
+__BOOTSTRAP__
 </script></body></html>
 """
 
 
-def main() -> None:
-    if not _SOURCE.exists():
+def main(argv: list[str] | None = None) -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source", type=Path, default=_SOURCE)
+    parser.add_argument("--output", type=Path, default=_OUTPUT)
+    args = parser.parse_args(argv or [])
+    source, output = args.source, args.output
+    if not source.exists():
         raise FileNotFoundError(
-            f"{_SOURCE.relative_to(_REPO)} is missing; run "
+            f"{source.name} is missing; run "
             "scripts/capabilities/build_wall_thickness_3d.py first"
         )
-    study = json.loads(_SOURCE.read_text(encoding="utf-8"))
-    html = build_page(study)
-    _OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    _OUTPUT.write_text(html, encoding="utf-8")
-    raw_payload = html.split(
-        '<script id="study-data" type="application/json">',
-        1,
-    )[1].split("</script>", 1)[0]
-    payload_meta = json.loads(raw_payload)["m"]
+    study = json.loads(source.read_text(encoding="utf-8"))
+    sidecar = output.with_suffix(".json")
+    payload, byte_count = _encode_payload(_payload(study))
+    html = build_page(study, data_url=sidecar.name)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    sidecar.write_text(payload, encoding="utf-8")
+    output.write_text(html, encoding="utf-8")
+    payload_meta = json.loads(payload)["m"]
     print(
-        f"wrote {_OUTPUT.relative_to(_REPO)} "
+        f"wrote {output.name} "
         f"({payload_meta['p']:,} points; "
-        f"{payload_meta['z']:,} embedded JSON bytes)"
+        f"{byte_count:,} sidecar JSON bytes)"
     )
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    main(sys.argv[1:])

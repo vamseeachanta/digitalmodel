@@ -75,6 +75,11 @@ GENERATORS = (
         ("docs/reports/modules/materials/materials-module-report.html",
          "docs/reports/modules/materials/changes.json"),
     ),
+    Generator(
+        "examples/demos/asset_integrity/ffs_showcase.py",
+        ("docs/api/ffs/ffs-showcase.html",),
+        inputs=("examples/demos/asset_integrity/ffs_showcase.py",),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
@@ -148,6 +153,12 @@ GENERATORS = (
         ("docs/api/cfd/sloshing-cfd-study.html",),
     ),
     Generator(
+        "scripts/capabilities/build_dual_tank_sloshing_study.py",
+        ("docs/api/cfd/dual-tank-sloshing-cfd-study.html",),
+        inputs=("tests/hydrodynamics/test_utube_tank.py",
+                "docs/api/cfd/data/dual_tank_cfd_evidence.json"),
+    ),
+    Generator(
         "scripts/capabilities/build_sloshing_explorer.py",
         ("docs/api/structural/sloshing-explorer.html",),
     ),
@@ -157,7 +168,8 @@ GENERATORS = (
     ),
     Generator(
         "scripts/capabilities/build_wall_thickness_3d_page.py",
-        ("docs/api/structural/wall-thickness-3d-explorer.html",),
+        ("docs/api/structural/wall-thickness-3d-explorer.html",
+         "docs/api/structural/wall-thickness-3d-explorer.json"),
         prerequisites=("scripts/capabilities/build_wall_thickness_3d.py",),
     ),
     Generator(
@@ -223,7 +235,10 @@ module.main()
 def discover_candidate_generators(repo: Path) -> set[str]:
     """Defense-in-depth scan for likely unregistered builders."""
     found = set()
-    for root in (repo / "scripts", repo / "docs" / "api"):
+    for root in (
+        repo / "scripts", repo / "docs" / "api",
+        repo / "examples" / "demos" / "asset_integrity",
+    ):
         for path in root.rglob("*.py"):
             text = path.read_text(encoding="utf-8", errors="ignore").casefold()
             # Avoid write API names: producers use helpers and exporters too.

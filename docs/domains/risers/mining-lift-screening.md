@@ -6,6 +6,10 @@ database includes the `riser_lift_screen` reference with `riser_type: lift`.
 Its dimensional fields remain empty: this class identifies an analysis method,
 not a measured or qualified configuration.
 
+The [lift-riser analysis guide](lift-riser-analysis.md) extends this method with
+an explicit dry/contents/buoyancy inventory, a sourced SI design-basis template,
+operating and survival snapshots, bounded flow screens and a worked example.
+
 The scope is deliberately narrow: fully immersed, straight vertical sections,
 fixed top displacement, circular nonoverlapping tubes, explicit lower effective
 force and optional lower inertial mass. Every dimensional input is supplied by
@@ -159,5 +163,6 @@ existing dimensional rows are not reinterpreted.
 The component-taxonomy and bundle-schema extension in the separate data
 repository remains tracked by [worldenergydata issue 1138](https://github.com/vamseeachanta/worldenergydata/issues/1138).
 The narrower reading here confines the change to digitalmodel's calculation
-interface and reference catalog. Flow assurance, generic campaigns, surface
-motion, VIV and metocean acquisition require separate work and evidence.
+interface and reference catalog. The companion lift-riser analysis guide adds
+bounded flow calculations; calibrated flow assurance, generic campaigns, surface
+motion, VIV and metocean acquisition require further work and evidence.

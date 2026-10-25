@@ -17,10 +17,10 @@ log_message "normal" "lets try something"
 
 # track and run registry management commands 
 registry_key_path=HKEY_LOCAL_MACHINE\\SOFTWARE\\Mozilla\\Firefox\\TaskBarIDs
-registry_key_name=siva-dummy
+registry_key_name=maintainer-dummy
 registry_key_data=nee-yenkamma
 
-reg add HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Firefox\TaskBarID /v siva-dummy /t REG_MULTI_SZ  /d "nee-yenkamma"
+reg add HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Firefox\TaskBarID /v maintainer-dummy /t REG_MULTI_SZ  /d client-a
 
 
 log_message "normal" "will execute \n\treg add \"$registry_key_path\" /v \"$registry_key_name\" /t REG_MULTI_SZ /d \"$registry_key_data\"\n"

@@ -9,16 +9,39 @@ generator silently reverted the brand on a public surface.
 
 These tests fix that class of defect in place: every registered generator is run
 into an isolated shadow tree and its output is byte-compared against the
-committed page, and the regenerated page — not the committed one — is what must
-be free of hard-coded core brand tokens.
+committed page. Regenerated pages must inherit core brand tokens or embed an
+exact copy of the canonical stylesheet without additional core-token overrides.
 """
 
+import stat
 from pathlib import Path
 
 import pytest
 
 from scripts import brand_guard
 from scripts import check_generated_html as checker
+
+
+def has_core_brand_override(document: str, canonical_css: str) -> bool:
+    """Detect core-token declarations outside the canonical stylesheet."""
+    canonical_inline = f"<style>{canonical_css}</style>"
+    return bool(brand_guard.CORE_RE.search(document.replace(canonical_inline, "")))
+
+
+@pytest.mark.parametrize(
+    "document,expected",
+    [
+        ("<style>:root { --accent:#123456 }</style>", False),
+        ("<style>:root { --accent:#654321 }</style>", True),
+        ("<style>:root { --accent:#123456 }</style>"
+         "<style>:root { --accent:#654321 }</style>", True),
+        ("<style>:root { --accent:#123456; color: red }</style>", True),
+        ("<style>body { color:var(--accent) }</style>", False),
+    ],
+    ids=["canonical-inline", "stale-inline", "extra-override", "modified-inline", "inherited"],
+)
+def test_core_brand_guard_checks_inline_styles(document: str, expected: bool) -> None:
+    assert has_core_brand_override(document, ":root { --accent:#123456 }") is expected
 
 
 @pytest.fixture(scope="module")
@@ -39,10 +62,13 @@ def test_every_registered_page_is_byte_identical_to_its_generator(
 
 
 def test_regenerated_pages_inherit_core_brand_tokens(regenerated: Path) -> None:
+    canonical_css = (regenerated / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     offenders = sorted(
         path.relative_to(regenerated).as_posix()
         for path in checker.all_registered_outputs(regenerated)
-        if brand_guard.CORE_RE.search(path.read_text(encoding="utf-8", errors="ignore"))
+        if has_core_brand_override(
+            path.read_text(encoding="utf-8", errors="ignore"), canonical_css,
+        )
     )
 
     assert offenders == []
@@ -57,13 +83,59 @@ def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
         'output = Path("docs") / "api" / f"example.{FORMAT.lower()}"\n'
         'with open(output, "w", encoding="utf-8", newline="\\n") as stream:\n'
         '    stream.write("<html></html>")\n',
-        encoding="utf-8",
-        newline="\n",
+        encoding="utf-8", newline="\n",
     )
 
     assert checker.discover_candidate_generators(tmp_path) == {
         "scripts/build_page.py"
     }
+
+
+def test_discovery_includes_asset_integrity_demo_generator(tmp_path: Path) -> None:
+    script = tmp_path / "examples/demos/asset_integrity/ffs_showcase.py"
+    script.parent.mkdir(parents=True)
+    script.write_text(
+        'from pathlib import Path\n'
+        'output = Path("docs/api/ffs/ffs-showcase.html")\n'
+        'output.write_text("<html></html>", encoding="utf-8", newline="\\n")\n',
+        encoding="utf-8", newline="\n",
+    )
+    assert checker.discover_candidate_generators(tmp_path) == {
+        "examples/demos/asset_integrity/ffs_showcase.py"
+    }
+
+
+def test_load_explorer_registers_its_fetched_sidecar() -> None:
+    entry = next(
+        entry for entry in checker.GENERATORS
+        if entry.script == "scripts/capabilities/build_wall_thickness_3d_page.py"
+    )
+
+    assert "docs/api/structural/wall-thickness-3d-explorer.json" in entry.outputs
+
+
+@pytest.mark.parametrize("fault", ["changed", "missing", "uncommitted"])
+def test_load_explorer_sidecar_drift_is_detected(tmp_path, monkeypatch, fault):
+    entry = next(
+        entry for entry in checker.GENERATORS
+        if entry.script == "scripts/capabilities/build_wall_thickness_3d_page.py"
+    )
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    relative = "docs/api/structural/wall-thickness-3d-explorer.json"
+    repo, shadow = tmp_path / "repo", tmp_path / "shadow"
+    for root in (repo, shadow):
+        for output in {*entry.outputs, relative}:
+            path = root / output
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("{}", encoding="utf-8", newline="\n")
+    assert checker.compare_outputs(repo, shadow) == []
+    if fault == "changed":
+        (shadow / relative).write_text('{"changed": true}', encoding="utf-8", newline="\n")
+    else:
+        root = shadow if fault == "missing" else repo
+        (root / relative).unlink()
+
+    assert [path for path, _ in checker.compare_outputs(repo, shadow)] == [relative]
 
 
 def test_shadow_copies_inputs_instead_of_linking_live_checkout(
@@ -88,7 +160,15 @@ def test_shadow_copies_inputs_instead_of_linking_live_checkout(
     checker.prepare_shadow(repo, shadow)
 
     copied_inputs = ("assets", "atlases", "data", "src", "tests")
-    assert all(not (shadow / name).is_symlink() for name in copied_inputs)
+    # Directory junctions also count as links on Windows.
+    assert all(
+        not path.is_symlink()
+        and not (
+            getattr(path.lstat(), "st_file_attributes", 0)
+            & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        )
+        for path in (shadow / name for name in copied_inputs)
+    )
     (shadow / "src" / "sentinel.txt").write_text("shadow", encoding="utf-8", newline="\n")
     assert (repo / "src" / "sentinel.txt").read_text(encoding="utf-8") == "original"
 
@@ -97,8 +177,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 25
-    assert len(outputs) == 29  # includes report sidecars and published copies
+    assert len(checker.GENERATORS) == 27
+    assert len(outputs) == 32  # includes report sidecars and published copies
     assert {
         "docs/reports/modules/materials/materials-module-report.html",
         "docs/reports/modules/materials/changes.json",
@@ -121,7 +201,7 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     }
     # The solved-case verification page is counted as manual because its
     # solver output is unavailable for repository-only regeneration.
-    assert len(checker.MANUAL_PAGES) == 12
+    assert len(checker.MANUAL_PAGES) == 11
     assert set(checker.MANUAL_PAGES) == {
         'docs/api/buckling/ship-panel-buckling.html',
         'docs/api/buckling/ship-plate-buckling.html',
@@ -131,7 +211,6 @@ def test_registry_has_reasoned_complete_ownership() -> None:
         'docs/api/cfd/tank-sloshing-verification.html',
         'docs/api/ffs/build-wave-2026-07.html',
         'docs/api/ffs/ffs-field-dashboard.html',
-        'docs/api/ffs/ffs-showcase.html',
         'docs/api/hydro/rudder-maneuvering-explorer.html',
         'docs/api/hydro/short-horizon-motion-forecast.html',
         'docs/api/subsea/offshore-cross-section-report.html',
@@ -345,8 +424,7 @@ def test_build_output_rejects_duplicate_ids(build_output_registry):
     repo, script, _entries, ownership = build_output_registry
     (repo / script).write_text(
         'SPECS: list = [dict(id="repeat"), dict(id="other"), dict(id="repeat")]\n',
-        encoding="utf-8",
-        newline="\n",
+        encoding="utf-8", newline="\n",
     )
     with pytest.raises(ValueError) as error:
         ownership.build_output_pages(repo)
@@ -435,3 +513,13 @@ def test_registry_reports_registered_script_syntax_error(
         f"  x {errors[0]}\n"
     )
     assert "Traceback" not in text
+
+
+def test_showcase_has_reproducible_generator_ownership():
+    entry, = (
+        entry for entry in checker.GENERATORS
+        if entry.script == "examples/demos/asset_integrity/ffs_showcase.py"
+    )
+    assert entry.outputs == ("docs/api/ffs/ffs-showcase.html",)
+    assert entry.script in entry.inputs
+    assert entry.outputs[0] not in checker.MANUAL_PAGES

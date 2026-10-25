@@ -5,7 +5,7 @@
 | Module | power/datacenter |
 | Repository | digitalmodel |
 | Path | src/digitalmodel/power/datacenter |
-| Pack revision | 1 |
+| Pack revision | 3 |
 | Code revision | 97dc074bad7e464d4b26ccd04bb83796ef4d0060 |
 | Analysis family | Engineering calculations (EC); AQG r0, section 10, Python calculations |
 | Quality role | Engineering calculations quality manager |
@@ -14,6 +14,11 @@
 Revision 0 code citations and offline results refer to the recorded code revision above.
 Revision 1 updates the finite-input contract using symbol references; it does not
 requalify the historical calculation examples.
+Revision 2 names the local classifier, validates STS efficiency and states the
+input-rating and equal-power-factor basis. The new hand calculations check the
+local arithmetic; equipment sizing and certification remain unverified.
+Revision 3 states the lower-bound conditions and downstream error comparator,
+rejects boolean and non-real STS efficiencies, and pins the upper boundary.
 
 ## Revision history
 
@@ -21,6 +26,8 @@ requalify the historical calculation examples.
 | --- | --- | --- |
 | 0 | 2026-10-17 | Initial source-pinned knowledge pack and regression inventory. |
 | 1 | 2026-10-19 | Reject nonfinite UPS/STS ratings and STS transfer times to prevent invalid capacities and timings; issue [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 2. |
+| 2 | 2026-10-22 | Name the tier heuristic explicitly, reject invalid STS efficiency and document capacity assumptions with hand-calculated examples; issue [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), items 1, 3 and 4. |
+| 3 | 2026-10-22 | State when the capacity approximation is a lower bound and quantify its downstream underestimate; reject boolean and non-real STS efficiencies and strengthen boundary coverage for #2749. |
 
 ## 1. Purpose and scope
 
@@ -35,20 +42,20 @@ UNVERIFIED: certification equivalence, design-load sufficiency and applicability
 | --- | --- | --- | --- | --- |
 | Generic rated_kva, efficiency | kVA, dimensionless | No runtime range check | 0.0, 1.0 | [src/digitalmodel/power/datacenter/models.py:L19-L41] |
 | component_type, name | text | No enumerated restriction; empty name generated | Empty strings | [src/digitalmodel/power/datacenter/models.py:L24-L41] |
-| UPS rated_kva, efficiency | kVA, dimensionless | Finite rated_kva > 0; 0 < efficiency <= 1 | Capacity inherited; efficiency 0.95 | `UPSModule.__post_init__` in `models.py` |
+| UPS rated_kva, efficiency | kVA, dimensionless | Finite rated_kva > 0; finite 0 < efficiency <= 1 | Capacity inherited; efficiency 0.95 | `UPSModule.__post_init__` in `models.py` |
 | battery_runtime_min, bypass_enabled | min, boolean | No runtime validation | 10.0, True | [src/digitalmodel/power/datacenter/models.py:L50-L75] |
-| STS rated_kva, transfer_time_ms | kVA, ms | Finite rated_kva > 0; finite transfer time >= 0 | Capacity inherited; transfer time 4.0 | `STSModule.__post_init__` in `models.py` |
+| STS rated_kva, transfer_time_ms, efficiency | kVA, ms, dimensionless | Finite rated_kva > 0; finite transfer time >= 0; finite 0 < efficiency <= 1; boolean and non-real efficiency raises ValueError | Capacity inherited; transfer time 4.0; efficiency 1.0 (lossless) | `STSModule.__post_init__` in `models.py`; local contract, #2749, items 2 and 3 |
 | preferred_source, alternate_source, retransfer_enabled | text, text, boolean | No runtime validation | A, B, True | [src/digitalmodel/power/datacenter/models.py:L94-L109] |
 | path name, components | text, ordered objects | No topology constraints enforced | Required name; empty component list | [src/digitalmodel/power/datacenter/topology.py:L30-L35] |
 | paths, redundancy_scheme | object list, enum | No minimum path count | Required paths; scheme None | [src/digitalmodel/power/datacenter/validator.py:L29-L35] |
 
 | Output | Unit | Definition and limits |
 | --- | --- | --- |
-| UPS output_kva | kVA | Rated capacity multiplied by efficiency. [src/digitalmodel/power/datacenter/models.py:L72-L75] |
+| UPS output_kva | kVA | Input-side rating multiplied by real-power efficiency, assuming equal, nonzero input/output power factors. `UPSModule.output_kva` in `models.py`. |
 | cascaded_efficiency | dimensionless | Product of efficiencies; empty path returns 1.0. [src/digitalmodel/power/datacenter/topology.py:L37-L45] |
-| bottleneck_kva, effective_capacity_kva | kVA | Minimum rating, then minimum rating times full-chain efficiency; empty path bottleneck is 0.0. [src/digitalmodel/power/datacenter/topology.py:L47-L57] |
+| bottleneck_kva, effective_capacity_kva | kVA | Minimum input-side rating, then minimum rating times full-chain efficiency; empty path bottleneck is 0.0. The approximation is a lower bound on propagated capacity only for finite nonnegative ratings and every efficiency in (0, 1]. `DataCenterPowerPath` properties in `topology.py`. |
 | has_ups, has_sts | boolean | Instance-type predicates. [src/digitalmodel/power/datacenter/topology.py:L59-L67] |
-| path_count, find_spofs, classify_tier | count, objects, integer | Path count; identity occurrence test; tier values 1 through 4. [src/digitalmodel/power/datacenter/validator.py:L32-L107] |
+| path_count, find_spofs, classify_local_tier, classify_tier | count, objects, integer | Path count; identity occurrence test; local levels 1 through 4. `classify_tier` remains a compatibility alias, with no certification equivalence. `TopologyValidator` in `validator.py`. |
 
 The component and path dataclasses contain no coordinates, origin, phase, file reader or file writer; units are the attribute conventions above, with no conversion layer. [src/digitalmodel/power/datacenter/models.py:L19-L109] [src/digitalmodel/power/datacenter/topology.py:L16-L67]
 
@@ -56,14 +63,54 @@ The component and path dataclasses contain no coordinates, origin, phase, file r
 
 | Method | Implementation | Basis and qualification |
 | --- | --- | --- |
-| UPS output | output_kva = rated_kva × efficiency | Local arithmetic convention. [src/digitalmodel/power/datacenter/models.py:L72-L75] |
-| Chain efficiency | Product of every component efficiency | Local arithmetic convention. [src/digitalmodel/power/datacenter/topology.py:L37-L45] |
-| Effective capacity | min(rated_kva) × product(efficiency) | Implemented approximation; component locations are not used to propagate loads. [src/digitalmodel/power/datacenter/topology.py:L47-L57] |
+| UPS output | output_kva = rated_kva × efficiency | Local input-rating convention with equal, nonzero input/output power factors; derived from the real-power efficiency definition below. `UPSModule.output_kva`. |
+| Chain efficiency | Product of every component efficiency | Cascading real-power output/input ratios under a common steady flow. `DataCenterPowerPath.cascaded_efficiency`. |
+| Effective capacity | min(rated_kva) × product(efficiency) | Retained local approximation using input-side ratings; all losses apply regardless of bottleneck position. `DataCenterPowerPath.effective_capacity_kva`. |
 | SPOF | Every component for one path; identity occurrences >= path count for multiple paths | Occurrences are counted, not distinct path membership. [src/digitalmodel/power/datacenter/validator.py:L49-L69] |
-| Tier | Ordered predicates: at least three paths, all STS, no SPOFs and 2n+1 gives 4; multiple paths with any STS and no SPOFs gives 3; any UPS gives 2; otherwise 1 | Local classification rules. [src/digitalmodel/power/datacenter/validator.py:L84-L107] |
+| Local tier heuristic | Ordered predicates: at least three paths, all STS, no detected SPOFs and 2n+1 gives 4; multiple paths with any STS and no detected SPOFs gives 3; any UPS gives 2; otherwise 1 | Historical local rules, not standards-derived thresholds; issue [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 1. `TopologyValidator.classify_local_tier`. |
 
-UNVERIFIED: the Uptime Institute attribution has no publication title, edition or clause in the implementation; standards conformity and a governing licensed clause are not established, clause text not checked against the licensed copy; issue pending (3). [src/digitalmodel/power/datacenter/models.py:L9-L15] [src/digitalmodel/power/datacenter/validator.py:L71-L82]
-The calculation bodies return scalars or lists, without a Citation sidecar; no standards-derived constant is introduced by this documentation change. [src/digitalmodel/power/datacenter/models.py:L72-L75] [src/digitalmodel/power/datacenter/topology.py:L37-L57] [src/digitalmodel/power/datacenter/validator.py:L49-L107]
+The Uptime Institute compliance claim is removed. Its public presentation
+*Mission Related - Critical Power Requirements* (2020), slide 11, distinguishes
+basic capacity, redundant components, concurrent maintainability and fault
+tolerance. The local model has no required-versus-installed component
+counts, active-path states, maintenance switching or fault-isolation evaluation;
+licensed Tier Standard clauses have not been checked. Certification is
+NOT_EVALUATED. Three explicit divergences are retained and tested:
+
+- A single nonredundant UPS returns local 2, without proving redundant capacity.
+- Two paths without UPS, with STS on one, return local 3, without proving concurrent maintainability.
+- Two independent STS paths declared 2N return local 3, since the local 4 predicate requires at least three paths and 2N+1; active-path status cannot be represented.
+
+### Rating and power-factor convention
+
+`rated_kva` denotes **input-side apparent power** for all component types in this
+local calculation. It is not an equipment output nameplate rating. The
+[ENERGY STAR UPS specification, version 2.0](https://www.energystar.gov/sites/default/files/ENERGY%20STAR%20Uninterruptible%20Power%20Supplies%20Final%20Version%202.0%20Specification_2.pdf),
+Eligibility Criteria section 1 K, defines power factor as active/apparent power;
+the included Test Method (December 2017), section 5 A, equation 2, defines
+efficiency as real output/input power. Therefore, by algebra,
+`S_out = efficiency × S_in × PF_in / PF_out`. Equal, nonzero power factors at
+each input and output are assumed here, giving `S_out = efficiency × S_in`.
+The module has no power-factor attribute and cannot check that assumption.
+
+The chain product follows by cascading those ratios. Applying that product to
+the minimum of all input ratings is a **local approximation**, not an ENERGY
+STAR sizing procedure. It includes losses upstream of a downstream bottleneck
+and is independent of component order. No propagation of nameplate limits,
+power-factor conversion, load adequacy or certification is established. Supplied
+output ratings require an independently established input-rating conversion;
+the module does not perform it. No standards-derived equipment limit or
+coefficient is introduced.
+
+With finite nonnegative input ratings and every efficiency finite and in `(0, 1]`,
+the approximation is a **lower bound** on the propagated deliverable capacity
+`min_i(rated_kva_i × product(efficiency_j for j >= i))`. Each propagated
+limit applies the component's own and downstream losses. The approximation
+also applies upstream efficiencies, which cannot increase a nonnegative
+limit within this domain. Generic `PowerComponent` inputs are unvalidated;
+for example, efficiency above unity invalidates this lower-bound guarantee.
+The underestimate depends on the ratings, efficiencies and component order;
+the downstream example in section 4 quantifies one case.
 
 ## 4. Validated worked examples
 
@@ -82,6 +129,37 @@ The input fixtures are inline Python constructions in these test nodes; no exter
 The recorded offline command is `PYTHONPATH=src uv run --no-sources python -m pytest tests/power/datacenter -q -rA -p no:cacheprovider --basetemp=<scratch>`; both runs use code revision 97dc074bad7e464d4b26ccd04bb83796ef4d0060, with documentation changes only in the second run.
 Run record: 34 run, 34 passed, 0 failed, 0 skipped, 0 NOT_RUN at BASE and after; no addopts override was used.
 
+### Revision 2 worked example: upstream bottleneck
+
+The following inputs are synthetic, selected for independent hand arithmetic;
+they are not measured or assumed equipment performance. All ratings follow the
+input-side convention, and every input/output power factor is assumed equal
+and nonzero. The method and source equations are stated in section 3.
+
+| Position | Component | Input rating (kVA) | Efficiency (dimensionless) |
+| --- | --- | --- | --- |
+| Upstream | Generic supply | 100.0 | 0.8 |
+| Intermediate | UPS | 200.0 | 0.75 |
+| Downstream | STS | 400.0 | 0.5 |
+
+Table 1. Synthetic inputs for the local capacity example.
+
+By hand, UPS output is `200 × 3/4 = 150.0 kVA`; chain efficiency is
+`(4/5) × (3/4) × (1/2) = 3/10`; the bottleneck is `100.0 kVA`; effective
+capacity is `100 × 3/10 = 30.0 kVA`. These are arithmetic expectations, not
+independent equipment validation. The executable example is
+`tests/power/datacenter/test_audit_regressions.py::test_upstream_bottleneck_uses_input_rating_and_full_chain_losses`.
+Run it with `PYTHONPATH=src uv run python -m pytest tests/power/datacenter/test_audit_regressions.py`.
+A second test places the minimum rating downstream and retains `30.0 kVA`,
+explicitly checking the approximation against a propagated-capacity comparator.
+Its ordered input ratings are `(400.0, 200.0, 100.0) kVA` and efficiencies
+are `(0.5, 0.75, 0.8)`. The propagated limit is
+`min(400 × 0.3, 200 × 0.6, 100 × 0.8) = 80.0 kVA`; the approximation is
+`30.0 kVA`, or `50.0 kVA` (`62.5%`) below that limit. The test asserts both
+the retained `30.0 kVA` result and `effective_capacity_kva <= 80.0`.
+The upstream example gives `30.0 kVA` under both calculations. Neither
+example establishes equipment adequacy or certification.
+
 ## 5. QA gates
 
 The following are pack-specific checks under AQG r0, section 10, Python calculations, and section 9, QA appendix; a passing regression does not establish independent engineering qualification.
@@ -97,6 +175,13 @@ The following are pack-specific checks under AQG r0, section 10, Python calculat
 | G5 | Applicable: evidence traceability | C5: all 6 section-4 nodes resolve and have results at the code pin, 0 missing results (unit: cases); all source citations resolve, 0 missing ranges (unit: citations). Independent signature remains required before clearance. | Section-4 node/result inventory and pinned citation readback; AQG r0, sections 9 and 11. |
 
 G1 uses the ordinary Python package imports; the module defines no program-input export or licensed program load route. [src/digitalmodel/power/datacenter/__init__.py:L15-L31] [src/digitalmodel/power/datacenter/topology.py:L16-L67]
+
+Revision 3 detection checks in `tests/power/datacenter/test_audit_regressions.py`:
+`test_sts_rejects_invalid_efficiency` includes `math.nextafter(1.0, 2.0)`;
+`test_sts_rejects_boolean_and_nonnumeric_efficiency` requires ValueError for
+boolean, text, None and complex inputs without coercion;
+`test_ups_rejects_nonfinite_efficiency` preserves rejection of NaN and both
+infinities. The downstream case in section 4 checks the lower-bound comparator.
 
 ## 6. Known failure modes and pitfalls
 
@@ -129,7 +214,9 @@ The sweep entries below distinguish normal defaults from missing rejection check
 | S19 | Ratings assume kVA; no external-text or unit conversion is performed. | C2 checks one kVA result; no conversion detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L24-L41] [src/digitalmodel/power/datacenter/models.py:L72-L75] |
 | S20 | Runtime and transfer time assume minutes and milliseconds. | C0b records defaults; no conversion detection check exists | issue pending (1); [src/digitalmodel/power/datacenter/models.py:L50-L58] [src/digitalmodel/power/datacenter/models.py:L84-L104] |
 | F01 | SPOF documentation says multiple paths; implementation requires occurrence count >= total paths, permitting duplicate occurrences to distort membership. | no detection check exists for partial sharing or duplicate placement | issue pending (2); [src/digitalmodel/power/datacenter/validator.py:L40-L42] [src/digitalmodel/power/datacenter/validator.py:L59-L69] |
-| F02 | Local tier rules are not an independent certification reference. | no detection check exists | issue pending (3); [src/digitalmodel/power/datacenter/validator.py:L71-L107] |
+| F02 | Local tier rules are not an independent certification reference. | Divergence regressions in `test_audit_regressions.py` check local outcomes; no certification check exists | [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 1; `TopologyValidator.classify_local_tier`. |
+| F03 | STS efficiency outside the finite interval (0, 1] previously allowed undefined, negative or inflated capacity. | Invalid values, smallest positive float and unity in `test_audit_regressions.py` | [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 3; `STSModule.__post_init__` now rejects invalid efficiency. |
+| F04 | An output nameplate rating or unequal power factors invalidates the local input-rated interpretation. | Hand-derived UPS output and upstream/downstream bottleneck cases in `test_audit_regressions.py`; actual power-factor conformity is NOT_EVALUATED | [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749), item 4; section 3 records the assumption and approximation. |
 
 The multiplication accumulator 1.0 and empty Counter/dict initializers are normal algorithm identities, not error-result caching; no swallowed exception, skipped record, external numeric conversion, return None error path, 1970 fallback or cache write is present in the complete package bodies. [src/digitalmodel/power/datacenter/models.py:L1-L109] [src/digitalmodel/power/datacenter/topology.py:L1-L67] [src/digitalmodel/power/datacenter/validator.py:L1-L107] [src/digitalmodel/power/datacenter/__init__.py:L1-L31]
 No incident issue is named in the scope; read-only issue searches for datacenter and SPOF returned no matching issue, so the confirmed limitations are tracked in the numbered drafts above.
@@ -142,10 +229,39 @@ and nonnegative transfer time remain local input-domain requirements from
 than standards-derived equipment limits. The boundary tests derive expected
 acceptance by hand in their docstrings. Generic component validation, mutable
 post-construction attributes, tier definitions, STS efficiency and rating/power-factor
-conventions remain outside this slice; no engineering qualification is established.
+conventions were outside revision 1; revision 2 addresses the last three as
+described below. No engineering qualification is established.
 
 Revision 1 checks: all 57 datacenter test nodes passed, including 23 finite-input
 cases. The historical 34-node results and inventory remain scoped to revision 0.
+
+Revision 2 addresses [2749](https://github.com/vamseeachanta/digitalmodel/issues/2749),
+items 1, 3 and 4: `classify_local_tier` names the local heuristic and
+`classify_tier` delegates for compatibility; the three divergences in section 3
+have regression cases. The declarations N/N+1 do not prove redundancy or change
+those outcomes. STS efficiency now requires a finite value in (0, 1], a local
+passive-component input domain rather than a certified equipment limit. The
+rating and power-factor assumptions and both bottleneck positions are explicit.
+Generic component validation, mutation after construction, partial sharing and
+repeated-instance SPOF semantics remain limitations outside these audit fixes.
+The F02 certification gap remains: the regression cases detect local behavior,
+not compliance with a Tier Standard.
+Revision 2 checks: all 73 datacenter nodes passed, including 16 new regression
+cases. Before implementation, seven invalid STS-efficiency cases and four
+local-classifier cases failed; the two hand-calculated capacity cases passed
+under the existing arithmetic. The three positive-efficiency boundary cases
+also preserve existing behavior.
+
+Revision 3 retains the capacity formula and limits its lower-bound interpretation
+to finite nonnegative ratings and passive efficiencies in `(0, 1]`. Boolean and
+non-real STS efficiency inputs raise ValueError; an internal TypeError from
+numeric validation is converted to that rejection rather than suppressed.
+The revision-3 detection checks in section 5 cover this error path. Generic
+components and post-construction mutation still do not enforce these bounds.
+Revision 3 checks: 73 baseline nodes passed; the expanded regression file first
+returned 4 failures and 21 passes for the intended constructor changes.
+After implementation, all 82 datacenter nodes passed in both normal and UTF-8
+modes, with 0 failures and 0 skips; package coverage is 95.6%.
 
 ## 7. Lessons log
 

@@ -178,3 +178,81 @@ def test_no_pandas_pure_numpy():
     # guard: projection returns a numpy array, not a pandas object
     d_eff = project_grid(GRID, T)
     assert isinstance(d_eff, np.ndarray)
+
+
+@pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])
+@pytest.mark.parametrize("weights", [None, [1.0, 3.0]])
+def test_raw_pit_qualification_survives_projection(projection, weights):
+    """Synthetic reproduction from issue #2335 (2026).
+
+    Hand calculation: raw d/t = .475/.5 = .95. Equal weights give
+    (.475+.025)/2 = .25 in, d/t = .50; weights [1,3] give
+    (.475+3*.025)/4 = .1375 in, d/t = .275. MAX gives .475 in.
+    All raw cases exceed the existing depth envelope documented in
+    docs/domains/rstreng-2d-validation-2026-06-29.md, Purpose/Result surface
+    (2026; ASME B31G-2012 basis). Projected weighted cases stay inside it.
+    """
+    r = rstreng_2d_river_bottom(
+        D, T, [0.0, 8.0], [[0.475, 0.025]] * 2, SMYS,
+        projection=projection, circ_weights=weights,
+    )
+    weighted = projection == PROJECTION_AREA_WEIGHTED
+    expected_depth = (0.25 if weights is None else 0.1375) if weighted else 0.475
+    assert r.d_eff_in == pytest.approx([expected_depth, expected_depth])
+    assert r.within_applicability is weighted  # legacy projected-profile flag
+    assert r.projected_profile_applicability is r.result.applicability
+    assert r.projected_profile_applicability.ok is weighted
+    assert r.raw_grid_applicability.ok is False
+    assert r.details["raw_max_d_over_t"] == pytest.approx(0.95)
+    assert r.details["max_d_over_t"] == pytest.approx(expected_depth / T)
+    assert r.screening_eligible is False
+    assert r.applicability.ok is False
+    assert "RSTRENG_2D_RAW_DEPTH_OUTSIDE_APPLICABILITY" in r.applicability.flags
+    assert r.sensitivity_only is weighted
+
+
+@pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])
+@pytest.mark.parametrize("raw_depth,raw_ok", [(0.399, True), (0.400, True), (0.401, False)])
+def test_raw_depth_boundary_and_serialized_qualification(projection, raw_depth, raw_ok):
+    """Hand calculation: .399/.5=.798, .400/.5=.8, .401/.5=.802.
+
+    Synthetic boundary cases bracket the inclusive depth envelope from
+    docs/domains/rstreng-2d-validation-2026-06-29.md, Purpose/Result surface
+    (2026; ASME B31G-2012 basis). Equal-weight means halve each raw ratio.
+    Sensitivity-only qualification follows the same record's Caveat.
+    """
+    from dataclasses import asdict
+    import json
+
+    r = rstreng_2d_river_bottom(
+        D, T, [0.0, 8.0], [[raw_depth, 0.0]] * 2, SMYS, projection=projection,
+    )
+    weighted = projection == PROJECTION_AREA_WEIGHTED
+    assert r.raw_grid_applicability.ok is raw_ok
+    assert r.sensitivity_only is weighted
+    assert r.screening_eligible is (raw_ok and not weighted)
+    assert r.applicability.ok is r.screening_eligible
+    assert ("RSTRENG_2D_SENSITIVITY_ONLY" in r.applicability.flags) is weighted
+    # A plain dataclass/JSON consumer must retain both qualification dimensions.
+    payload = json.loads(json.dumps(asdict(r)))
+    assert payload["raw_grid_applicability"]["ok"] is raw_ok
+    assert payload["details"]["sensitivity_only"] is weighted
+    assert payload["details"]["screening_eligible"] is r.screening_eligible
+    assert payload["details"]["applicability"] == r.applicability.to_dict()
+
+
+def test_legacy_construction_without_raw_qualification_is_not_evaluated():
+    """A legacy constructor supplies no raw measurements, so eligibility is unknown.
+
+    The existing synthetic golden grid supplies the unchanged pressure result.
+    No additional engineering limit is assumed for the missing source grid.
+    """
+    r = rstreng_2d_river_bottom(D, T, X, GRID, SMYS)
+    legacy = RiverBottom2DResult(
+        r.projection_rule, r.axial_positions_in, r.d_eff_in,
+        r.governing_segment, r.result, r.within_applicability,
+    )
+    assert legacy.within_applicability is True
+    assert legacy.raw_grid_applicability.ok is False
+    assert legacy.screening_eligible is False
+    assert "RSTRENG_2D_RAW_DEPTH_NOT_EVALUATED" in legacy.applicability.flags
