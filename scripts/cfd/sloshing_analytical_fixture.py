@@ -47,48 +47,32 @@ SOURCES = [
      "sha256": "a80411c1054c6f877c2974f195af1d125c24ce45164b9fbde50eaee1d474e4fc"},
 ]
 CITED_METADATA = {
-    "status": "UNVERIFIED", "numerical_reuse": "UNVERIFIED",
-    "used_in_calculation": False, "source_id": "cited-publication",
-    "basis": "Supplied historical descriptors; publication payload was not inspected.",
-    "citation": "Applied Ocean Research; publication date 2026-09-13; full title not supplied.",
-    "rights": "Citation only; CC BY-NC-ND 4.0 does not establish numerical reuse here.",
-    "sway": {
-        "length_m": 0.57, "height_m": 0.30, "depth_m": 0.15,
-        "displacement_mm": 0.4, "excitation_omega_rad_s": 5.028,
-        "reported_frequency_ratio": 0.83,
-        "acceleration_expression": "a*omega^2*sin(omega*t); a is displacement",
-        "wall_condition": "Flexible-wall figure; rigid-limit equivalence UNVERIFIED",
-    },
-    "historical_proposal": {"omega1_rad_s": 6.058, "status": "UNADOPTED",
-                            "use": "Historical metadata only; no numerical comparator."},
-    "pitch": {
-        "length_m": 0.25, "span_m": 0.16, "height_m": 0.15,
-        "fill_fractions": [0.3, 0.5], "period_s": 6.0,
-        "reported_excitation_hz": 0.167, "reported_first_frequency_hz": 1.47,
-        "probe_from_right_wall_mm": 25.0, "acquisition_frames_s": 50.0,
-        "numerical_samples": "ABSENT", "forcing": "BLOCKED: linkage dimensions absent",
-        "viscosity": "UNVERIFIED exponent; excluded from calculation",
-    },
-    "rotational_geometry": {
-        "breadth_m": 0.9, "length_m": 1.35, "height_m": 0.9, "depth_m": 0.45,
-        "use": "Descriptive only; roll/pitch summaries are not pure-sway references.",
-    },
-    "unadopted_proposals": {
-        "period_ratio_threshold": 8.0, "planar_spatial_difference_percent": 3.0,
-        "quasi_static_difference_percent": 5.0,
-        "use": "Not physical acceptance authority; no solver comparison is available.",
-    },
+    "status": "ABSENT", "numerical_reuse": "UNVERIFIED",
+    "used_in_calculation": False,
+    "basis": "Historical numerical descriptors omitted: identifiable publication "
+             "and numerical locators are unavailable.",
 }
 DERIVATION = [
+    "Eigenmode basis: NASA SP-106, The Dynamic Behavior of Liquids in Moving Containers, "
+    "with Applications to Space Vehicle Technology (1966 edition), section 2.2 "
+    "'Rectangular Tank', equation (2.13b); https://ntrs.nasa.gov/citations/19670006555.",
     "Incompressible irrotational flow gives Laplace(phi)=0 in a rigid rectangular tank.",
     "For x in [0,L], z in [-h,0], impermeable boundaries admit "
     "phi_n proportional to cos(k_n*x)*cosh(k_n*(z+h)), k_n=n*pi/L.",
     "Linear kinematic and dynamic free-surface conditions give "
     "omega_n^2=g*k_n*tanh(k_n*h), for positive integer n.",
     "Odd and even modes are eigenmodes; their forcing coupling is not calculated.",
+    "Harmonic kinematics basis: OpenStax, University Physics Volume 1 (2016 edition), "
+    "section 15.1 'Simple Harmonic Motion'; "
+    "https://openstax.org/books/university-physics-volume-1/pages/15-1-simple-harmonic-motion.",
     "T1=2*pi/omega1; T=period_ratio*T1; omega=omega1/period_ratio; "
     "acceleration amplitude=displacement*omega^2.",
-    "Hydrostatic slope d(eta)/dx=-acceleration/g gives the spatial end-to-end "
+    "Hydrostatic slope is derived from pressure-force balance: OpenStax, University "
+    "Physics Volume 1 (2016 edition), sections 5.3 'Newton's Second Law' and "
+    "14.1 'Fluids, Density, and Pressure'; "
+    "https://openstax.org/books/university-physics-volume-1/pages/5-3-newtons-second-law; "
+    "https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure.",
+    "Resolving pressure forces gives d(eta)/dx=-acceleration/g and the spatial end-to-end "
     "magnitude L*displacement*omega^2/g; this is not temporal peak-to-peak elevation.",
 ]
 
@@ -208,7 +192,7 @@ def build_fixture(inputs: dict) -> dict:
 def _records(values: dict, omega: float, points: list, modes: list) -> dict:
     return {
         "model_revision": REVISION, "criteria_revision": REVISION,
-        "dataset_id": "sloshing-analytical-fixture", "owner": "digitalmodel",
+        "dataset_id": "sloshing-analytical-fixture", "maintainer": "digitalmodel",
         "intended_use": "Synthetic analytical software regression only; no physical validation.",
         "inputs": {**values, "units": UNITS.copy()},
         "assumptions": {**dict.fromkeys(UNITS, "SYNTHETIC-ASSUMPTION"),
@@ -237,21 +221,26 @@ def _records(values: dict, omega: float, points: list, modes: list) -> dict:
         "next_evidence_step": "Obtain a rights-cleared rigid-tank sway reference package "
                               "with probe definitions, forcing, native histories and input digests.",
         "revision_history": [{"revision": "1", "date": "2026-10-25",
-                              "change": "Synthetic rigid-tank references added to expose physical-evidence gaps."}],
+                              "change": "Synthetic rigid-tank references added to expose physical-evidence gaps."},
+                             {"revision": "2", "date": "2026-10-25",
+                              "change": "Unsupported numerical metadata omitted and equation sources cited; "
+                                        "maintainer terminology and input precision corrected for traceable reporting."}],
     }
 
 
-def _view(value: object, field: str = "") -> str:
+def _view(value: object, field: str = "", preserve_precision: bool = False) -> str:
     if isinstance(value, dict):
         units = value.get("units", {})
         rows = "".join(f"<tr><th>{escape(str(key))}"
                        f'{" [" + escape(units[key]) + "]" if key in units else ""}'
-                       f"</th><td>{_view(item, key)}</td></tr>"
+                       f"</th><td>{_view(item, key, preserve_precision)}</td></tr>"
                        for key, item in value.items())
         return f"<table><tbody>{rows}</tbody></table>"
     if isinstance(value, list):
-        return "<ol>" + "".join(f"<li>{_view(item)}</li>" for item in value) + "</ol>"
+        return "<ol>" + "".join(f"<li>{_view(item, preserve_precision=preserve_precision)}</li>" for item in value) + "</ol>"
     if isinstance(value, float):
+        if preserve_precision:
+            return escape(str(value))
         text = (f"{value:.1f}" if {"ratio", "percent"} & set(field.split("_")) else
                 f"{value:.3e}" if 0 < abs(value) < 0.001 else f"{value:.3f}")
         return escape(text)
@@ -262,8 +251,11 @@ def _html(fixture: dict, serialized: str) -> str:
     safe_json = serialized.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
     counts = fixture["counts"]
     sections = "\n".join(
-        f'<section><h2>{escape(key.replace("_", " ").capitalize())}</h2>{_view(value)}'
-        f'<p class="caption">{escape(key)}: rounded display; exact records are in the companion JSON.</p></section>'
+        f'<section><h2>{escape(key.replace("_", " ").capitalize())}</h2>'
+        f'{_view(value, preserve_precision=key == "inputs")}'
+        f'<p class="caption">{escape(key)}: '
+        f'{"input precision retained" if key == "inputs" else "rounded display"}; '
+        'exact records are in the companion JSON.</p></section>'
         for key, value in fixture.items() if key != "revision_history"
     )
     return (
@@ -274,7 +266,8 @@ def _html(fixture: dict, serialized: str) -> str:
         'table{border-collapse:collapse;width:100%;margin:8px 0}th,td{border:1px solid #bcc8d2;'
         'padding:8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}'
         'th{width:30%}h1,h2{color:#123c59}.caption{font-size:0.9em}li{margin:8px 0}</style></head>\n<body>\n'
-        '<h1>Rigid-tank sloshing analytical analysis</h1>\n<section id="summary"><h2>Summary</h2>\n'
+        '<h1>Rigid-tank sloshing analytical analysis</h1>\n<p>Draft for maintainer review.</p>\n'
+        '<section id="summary"><h2>Summary</h2>\n'
         f'<p>{counts["synthetic_reference_points"]} synthetic frequency descriptors and '
         f'{counts["eigenmodes"]} eigenmodes are calculated under analytical-v1; '
         f'{counts["qualified_physical_results"]} qualified physical results are supplied; '

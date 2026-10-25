@@ -73,6 +73,45 @@ def test_modes_include_odd_and_even_without_forcing_coupling_claim(analytical):
         assert row["wave_number_rad_m"] == pytest.approx(n * math.pi, rel=1e-12, abs=0.0)
 
 
+@pytest.mark.parametrize("mode,expected_k,expected_omega", [
+    (1, 3.141592653589793, 5.316553374316751),
+    (2, 6.283185307179586, 7.836342636657429),
+    (3, 9.424777960769380, 9.614684109065045),
+    (4, 12.566370614359173, 11.102938165997398),
+])
+def test_finite_depth_modes_against_hand_calculation(analytical, mode, expected_k, expected_omega):
+    # NASA SP-106 (1966 edition), section 2.2, equation (2.13b).
+    # Synthetic L=1 m, h=0.5 m, g=9.81 m/s^2; pi=3.141592653589793...
+    # Hand calculation: k=n*pi; q=exp(-n*pi); tanh(k*h)=(1-q)/(1+q).
+    # q1=0.04321391826377225; tanh(pi/2)=0.9171523356672743.
+    # g*k*tanh(k*h) for n=1..4: 28.26573978195884, 61.40826591909510,
+    # 92.44215051710789, 123.27523591796166; square roots give the literals.
+    # Expectations use a separate 60-digit decimal calculation, no model calls.
+    row = analytical.build_fixture(inputs())["modes"][mode - 1]
+    assert row["wave_number_rad_m"] == pytest.approx(expected_k, rel=1e-12, abs=0.0)
+    assert row["omega_rad_s"] == pytest.approx(expected_omega, rel=1e-12, abs=0.0)
+
+
+def test_period_and_forcing_against_hand_calculation(analytical):
+    # OpenStax, University Physics Volume 1 (2016 edition), sections 5.3,
+    # 14.1 and 15.1: Newton's law, pressure forces and harmonic kinematics.
+    # Hand calculation: T1=2*pi/5.316553374316751=1.181815523104207 s;
+    # r=8 gives omega=5.316553374316751/8=0.6645691717895939 rad/s
+    # and T=8*T1=9.454524184833653 s. With synthetic A=0.001 m,
+    # a=A*omega^2=0.0004416521840931068 m/s^2. Balancing pressure forces
+    # gives d(eta)/dx=-a/g; L=1 m gives L*a/g=0.00004502060999929733 m.
+    expected = {
+        "t1_s": 1.181815523104207,
+        "excitation_omega_rad_s": 0.6645691717895939,
+        "excitation_period_s": 9.454524184833653,
+        "acceleration_amplitude_m_s2": 0.0004416521840931068,
+        "quasi_static_end_to_end_m": 0.00004502060999929733,
+    }
+    result = analytical.build_fixture(inputs())["results"]
+    for field, value in expected.items():
+        assert result[field] == pytest.approx(value, rel=1e-12, abs=0.0)
+
+
 def test_conversion_acceleration_and_excursion(analytical):
     displacement = analytical.length_to_m(1.0, "mm")
     assert displacement == 0.001
@@ -142,7 +181,8 @@ def test_evidence_gaps_do_not_become_qualified(analytical):
     metadata = fixture["cited_metadata"]
     assert metadata["numerical_reuse"] == "UNVERIFIED"
     assert metadata["used_in_calculation"] is False
-    assert metadata["historical_proposal"]["omega1_rad_s"] == 6.058
+    assert metadata["status"] == "ABSENT"
+    assert set(metadata) == {"status", "numerical_reuse", "used_in_calculation", "basis"}
     assert [row["period_ratio"] for row in fixture["reference_points"]] == [1.1, 8.0]
 
 
@@ -152,7 +192,7 @@ def cli(out_dir, *extra):
             "--period-ratio", "8", "--out-dir", str(out_dir), *extra]
     env = {k: v for k, v in os.environ.items()
            if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
-    return subprocess.run(args, env=env, capture_output=True, text=True, timeout=20)
+    return subprocess.run(args, env=env, capture_output=True, text=True, encoding="utf-8", timeout=20)
 
 
 def test_cli_deterministic_json_html_and_committed_readback(analytical, tmp_path):
@@ -162,9 +202,9 @@ def test_cli_deterministic_json_html_and_committed_readback(analytical, tmp_path
         run = cli(out_dir)
         assert run.returncode == 0, run.stderr
         outputs.append([p.read_bytes() for p in sorted(out_dir.iterdir())])
-        data = json.loads((out_dir / "sloshing-analytical-fixture.json").read_text())
+        data = json.loads((out_dir / "sloshing-analytical-fixture.json").read_text(encoding="utf-8"))
         assert data == analytical.build_fixture(inputs())
-        html = (out_dir / "sloshing-analytical-fixture.html").read_text()
+        html = (out_dir / "sloshing-analytical-fixture.html").read_text(encoding="utf-8")
         embedded = re.search(r'<script type="application/json" id="fixture-data">(.*?)</script>', html, re.S)
         assert embedded is not None
         assert json.loads(embedded.group(1)) == data
@@ -173,7 +213,11 @@ def test_cli_deterministic_json_html_and_committed_readback(analytical, tmp_path
             assert gap["id"] in html and gap["status"] in html
         for suffix in ("json", "html"):
             path = f"sloshing-analytical-fixture.{suffix}"
-            assert (ROOT / "docs/benchmarks" / path).read_bytes() == (out_dir / path).read_bytes()
+            assert (ROOT / "docs/benchmarks" / path).read_bytes() == (out_dir / path).read_bytes(), (
+                "Rebuild with: python scripts/cfd/sloshing_analytical_fixture.py "
+                "--length-m 1 --height-m 1 --depth-m 0.5 --displacement-m 0.001 "
+                "--gravity-m-s2 9.81 --period-ratio 8 --out-dir docs/benchmarks"
+            )
     assert outputs[0] == outputs[1]
 
 
@@ -202,7 +246,7 @@ def test_near_mode_proxy_and_report_units_are_explicit(analytical, tmp_path):
     assert off["classification"] == "QUASI_STATIC_ANCHOR"
     assert "NOT_ESTABLISHED" in off["excursion_interpretation"]
     analytical.write_fixture(fixture, tmp_path)
-    html = (tmp_path / "sloshing-analytical-fixture.html").read_text()
+    html = (tmp_path / "sloshing-analytical-fixture.html").read_text(encoding="utf-8")
     for header in ("omega1_rad_s [rad/s]", "t1_s [s]", "quasi_static_end_to_end_m [m]"):
         assert f"<th>{header}</th>" in html
 
@@ -221,7 +265,7 @@ def test_report_escapes_text_and_embedded_json(analytical, tmp_path):
     fixture = analytical.build_fixture(inputs())
     fixture["next_evidence_step"] = '</script><img src=x onerror="alert(1)">'
     analytical.write_fixture(fixture, tmp_path)
-    html = (tmp_path / "sloshing-analytical-fixture.html").read_text()
+    html = (tmp_path / "sloshing-analytical-fixture.html").read_text(encoding="utf-8")
     assert fixture["next_evidence_step"] not in html
     embedded = re.search(r'<script type="application/json" id="fixture-data">(.*?)</script>', html, re.S)
     assert json.loads(embedded.group(1)) == fixture
@@ -230,7 +274,7 @@ def test_report_escapes_text_and_embedded_json(analytical, tmp_path):
 def test_nonzero_acceleration_stays_visible_in_html(analytical, tmp_path):
     fixture = analytical.build_fixture(inputs())
     analytical.write_fixture(fixture, tmp_path)
-    html = (tmp_path / "sloshing-analytical-fixture.html").read_text()
+    html = (tmp_path / "sloshing-analytical-fixture.html").read_text(encoding="utf-8")
     cells = re.findall(r'<th>acceleration_amplitude_m_s2 \[m/s\^2\]</th><td>([^<]+)</td>', html)
     expected = [fixture["results"]["acceleration_amplitude_m_s2"]]
     expected += [row["acceleration_amplitude_m_s2"] for row in fixture["reference_points"]]
@@ -242,7 +286,26 @@ def test_nonzero_acceleration_stays_visible_in_html(analytical, tmp_path):
 def test_visible_period_ratios_identify_the_computed_cases(analytical, tmp_path):
     fixture = analytical.build_fixture(inputs())
     analytical.write_fixture(fixture, tmp_path)
-    html = (tmp_path / "sloshing-analytical-fixture.html").read_text()
+    html = (tmp_path / "sloshing-analytical-fixture.html").read_text(encoding="utf-8")
     cells = re.findall(r'<th>period_ratio \[1\]</th><td>([^<]+)</td>', html)
     records = [fixture["inputs"], fixture["results"], *fixture["reference_points"]]
     assert [float(cell) for cell in cells] == [row["period_ratio"] for row in records]
+
+
+def test_public_reports_identify_dataset_maintainer(analytical, tmp_path):
+    fixture = analytical.build_fixture(inputs())
+    assert fixture["maintainer"] == "digitalmodel"
+    assert "owner" not in fixture
+    analytical.write_fixture(fixture, tmp_path)
+    data = json.loads((tmp_path / "sloshing-analytical-fixture.json").read_text(encoding="utf-8"))
+    html = (tmp_path / "sloshing-analytical-fixture.html").read_text(encoding="utf-8")
+    assert data["maintainer"] == "digitalmodel"
+    assert "<h2>Maintainer</h2>" in html
+    assert "<h2>Owner</h2>" not in html
+
+
+def test_report_preserves_input_precision(analytical, tmp_path):
+    fixture = analytical.build_fixture(inputs(displacement_m=0.0254))
+    analytical.write_fixture(fixture, tmp_path)
+    html = (tmp_path / "sloshing-analytical-fixture.html").read_text(encoding="utf-8")
+    assert "<th>displacement_m [m]</th><td>0.0254</td>" in html
