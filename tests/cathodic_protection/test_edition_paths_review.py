@@ -25,7 +25,7 @@ def git_text(revision: str, path: str) -> str:
            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
     return subprocess.run(
         ["git", "-C", str(ROOT), "show", f"{revision}:{path}"],
-        check=True, capture_output=True, text=True, env=env,
+        check=True, capture_output=True, text=True, encoding="utf-8", env=env,
     ).stdout
 
 
@@ -50,8 +50,8 @@ def check_location(location, commit):
     assert path.parts[:3] == ("src", "digitalmodel", "cathodic_protection")
     line = location["line"]
     assert type(line) is int and line > 0
-    frozen = git_text(commit, str(path))
-    assert frozen == git_text("HEAD", str(path)), f"review needs refresh: {path}"
+    frozen = git_text(commit, path.as_posix())
+    assert frozen == git_text("HEAD", path.as_posix()), f"review needs refresh: {path}"
     assert frozen == (ROOT / path).read_text(encoding="utf-8")
     assert frozen.splitlines()[line - 1].strip() == location["anchor"]
     assert location["anchor"]
@@ -115,3 +115,50 @@ def test_duplicate_keys_are_rejected():
     with pytest.raises(AssertionError, match="duplicate JSON key"):
         json.loads('{"status": "PASS", "status": "FAIL"}',
                    object_pairs_hook=no_duplicate_keys)
+
+
+def review_section(topic):
+    text = REVIEW.with_suffix(".md").read_text(encoding="utf-8")
+    return text.split(f"### {topic}\n", 1)[1].split("\n### ", 1)[0]
+
+
+def test_f103_label_claim_names_field_joint_section_assertions(rows):
+    row = next(row for row in rows if row["id"] == "f103-labels")
+    for edition in ("2010", "2019"):
+        reference = (
+            "tests/cathodic_protection/test_f103_tables.py::"
+            f"test_field_joint_coating_constants_match_table_a2_{edition}"
+        )
+        assert reference in row["test"]
+        assert f"[`{reference}`]" in review_section(row["id"])
+
+
+def test_retrofit_clause_gap_is_explicit_in_both_records(rows):
+    row = next(row for row in rows if row["id"] == "b401-report-retrofit")
+    assert row["status"] == "FAIL"
+    assert any("retrofit clause" in item.lower() for item in row["missing"])
+    section = review_section(row["id"])
+    assert "**FAIL — B401;" in section
+    assert row["coverage"] in section
+    for item in row["missing"]:
+        assert item in section
+
+
+def test_markdown_dispositions_match_all_record_rows(rows):
+    text = REVIEW.with_suffix(".md").read_text(encoding="utf-8")
+    summary = re.search(
+        r"contains (\d+) entries: (\d+) PASS and\s+(\d+) FAIL", text
+    )
+    assert summary is not None
+    assert tuple(map(int, summary.groups())) == (
+        len(rows),
+        sum(row["status"] == "PASS" for row in rows),
+        sum(row["status"] == "FAIL" for row in rows),
+    )
+    for row in rows:
+        register = (
+            f"| [{row['id']}](#{row['id']}) | {row['code']} | "
+            f"{row['kind']} | {row['status']} |"
+        )
+        assert register in text
+        assert f"**{row['status']} — {row['code']};" in review_section(row["id"])

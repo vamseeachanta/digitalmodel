@@ -2,11 +2,11 @@
 
 ## Summary
 
-The source review records implemented edition selection at commit `d34bda5cf18d11be48b17c7ba94e5c8127af2bf2`,
-which equals the inspected `origin/main` ref and the starting HEAD. The record
-contains 28 entries: 17 PASS and
-11 FAIL under the criterion below. CP source
-and existing tests are unchanged. Numerical design results are not issued by
+The source review records implemented edition selection at commit
+`d34bda5cf18d11be48b17c7ba94e5c8127af2bf2`. The record
+contains 28 entries: 16 PASS and
+12 FAIL under the criterion below. CP source
+and calculator tests are unchanged. Numerical design results are not issued by
 this review.
 
 ## Revision history
@@ -14,6 +14,7 @@ this review.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-25 | Record implemented edition branches, shared behavior and evidence gaps so edition claims can be limited to reviewed code. |
+| 1 | 2026-10-26 | Add the existing F103 field-joint citation assertions and record the uncovered B401 retrofit clause; update dispositions to match the identified evidence. |
 
 Table 1. Review revision history.
 
@@ -84,7 +85,7 @@ inputs. No equivalence of standard editions is inferred.
 | [b401-driving-voltage](#b401-driving-voltage) | B401 | difference | PASS | [`src/digitalmodel/cathodic_protection/b401_tables.py:913`](../../../../src/digitalmodel/cathodic_protection/b401_tables.py#L913) |
 | [b401-retrofit](#b401-retrofit) | B401 | difference | FAIL | [`src/digitalmodel/cathodic_protection/b401_structures_phases_retrofit.py:127`](../../../../src/digitalmodel/cathodic_protection/b401_structures_phases_retrofit.py#L127) |
 | [b401-labels](#b401-labels) | B401 | difference | PASS | [`src/digitalmodel/cathodic_protection/b401_tables.py:76`](../../../../src/digitalmodel/cathodic_protection/b401_tables.py#L76) |
-| [b401-report-retrofit](#b401-report-retrofit) | B401 | difference | PASS | [`src/digitalmodel/cathodic_protection/report_recommendations.py:98`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L98) |
+| [b401-report-retrofit](#b401-report-retrofit) | B401 | difference | FAIL | [`src/digitalmodel/cathodic_protection/report_recommendations.py:98`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L98) |
 | [b401-edition-routing](#b401-edition-routing) | B401 | routing | FAIL | [`src/digitalmodel/cathodic_protection/_edition.py:27`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L27) |
 | [b401-f103-companion](#b401-f103-companion) | B401 | difference | FAIL | [`src/digitalmodel/cathodic_protection/dnv_rp_b401.py:93`](../../../../src/digitalmodel/cathodic_protection/dnv_rp_b401.py#L93) |
 | [f103-linepipe](#f103-linepipe) | F103 | difference | PASS | [`src/digitalmodel/cathodic_protection/f103_tables.py:786`](../../../../src/digitalmodel/cathodic_protection/f103_tables.py#L786) |
@@ -174,15 +175,17 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 ### b401-report-retrofit
 
-**PASS — B401; tokens: 2005, 2010, 2017, 2021.** The report selector uses retrofit evidence for 2021 and retrofit documentation for earlier tokens, then selects the matching rule label.
+**FAIL — B401; tokens: 2005, 2010, 2017, 2021.** The covered report behavior selects retrofit evidence for 2021 and retrofit documentation for earlier tokens; correctness of the emitted retrofit clause is not established.
 
 **Source:** [`src/digitalmodel/cathodic_protection/report_recommendations.py:98`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L98); [`src/digitalmodel/cathodic_protection/report_recommendations.py:132`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L132).
 
-**Existing tests:** [`tests/cathodic_protection/test_report_recommendations.py::test_verified_options_use_edition_specific_retrofit_subject`](../../../../tests/cathodic_protection/test_report_recommendations.py); [`tests/cathodic_protection/test_report_recommendations.py::test_recommendation_sources_are_selected_by_key`](../../../../tests/cathodic_protection/test_report_recommendations.py)
+**Existing tests:** [`tests/cathodic_protection/test_report_recommendations.py::test_verified_options_use_edition_specific_retrofit_subject`](../../../../tests/cathodic_protection/test_report_recommendations.py)
 
 **Code-carried label:** RULES: 2005/2010 Sec. 7.13.3; 2017 [7.13.3]; 2021 [7.4.1], [7.5.3]. The report appends these clause labels to its source text.
 
-**Coverage limit:** Existing assertions cover the stated behavior; exhaustive input coverage is not established.
+**Coverage limit:** The named test asserts the edition-dependent subject text only; the emitted retrofit clause is not asserted.
+
+**Missing item:** No identified assertion checks the emitted retrofit clause for every supported token.
 
 ### b401-edition-routing
 
@@ -304,7 +307,7 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 **Source:** [`src/digitalmodel/cathodic_protection/f103_tables.py:87`](../../../../src/digitalmodel/cathodic_protection/f103_tables.py#L87); [`src/digitalmodel/cathodic_protection/f103_tables.py:650`](../../../../src/digitalmodel/cathodic_protection/f103_tables.py#L650).
 
-**Existing tests:** [`tests/cathodic_protection/test_f103_tables.py::test_every_result_carries_the_edition_citation`](../../../../tests/cathodic_protection/test_f103_tables.py); [`tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019`](../../../../tests/cathodic_protection/test_edition_crosswalk.py)
+**Existing tests:** [`tests/cathodic_protection/test_f103_tables.py::test_every_result_carries_the_edition_citation`](../../../../tests/cathodic_protection/test_f103_tables.py); [`tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019`](../../../../tests/cathodic_protection/test_edition_crosswalk.py); [`tests/cathodic_protection/test_f103_tables.py::test_field_joint_coating_constants_match_table_a2_2010`](../../../../tests/cathodic_protection/test_f103_tables.py); [`tests/cathodic_protection/test_f103_tables.py::test_field_joint_coating_constants_match_table_a2_2019`](../../../../tests/cathodic_protection/test_f103_tables.py)
 
 **Code-carried label:** Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2.
 
@@ -477,18 +480,27 @@ incorrect line anchors and nonexistent test definitions. Both primary and
 supporting source references are checked at the recorded commit and HEAD; the
 working source bytes must also match. The test references are resolved by Python
 syntax inspection without importing calculators or opening citation resources.
-Every PASS has a nonempty test list, label and no missing item.
+Every PASS has a nonempty test list, label and no missing item. The added guards require
+field-joint citation assertions for both F103 tokens, preserve the B401 retrofit
+clause-coverage gap, and compare every Markdown disposition and the summary
+totals with the JSON record.
 
-The initial integrity run reports one pass and four missing-record errors before
+The original review reports one pass and four missing-record errors before
 the companion record is written. The initial focused regression run reports
-14 passing tests. The final focused run reports 131 passed tests, including
+14 passing tests. The original final focused run reports 131 passed tests, including
 the five record-integrity tests, selected edition crosswalks, edition API
 foundation, phased structures, a component-coating regression and shared kernels.
 The direct file checks, engineering register, local Markdown links and repository
 structure checks pass. Test counts measure verification activity, not qualified
 engineering results. Tests that would open standard resources or use
 excluded cases are outside this execution basis and are not run. Existing tests
-and their assertions are unchanged.
+of CP calculators and their assertions are unchanged.
+
+For this revision, the starting integrity run passes five tests. With the three
+new guards, the unchanged records produce two failures and six passes. After
+correction, all eight integrity tests pass with `PYTHONUTF8` unset. These tests
+inspect code and assertion definitions; the F103 calculator tests named in the
+record are not executed by this run.
 
 The source pins deliberately fail when a cited source file changes at HEAD or in
 the working tree. A source change requires a new review of the affected behavior,

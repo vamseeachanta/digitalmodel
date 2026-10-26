@@ -201,15 +201,16 @@
     "anchor": "retrofit_subject = \"retrofit evidence\" if edition == \"2021\" else \"retrofit documentation\"",
     "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
     "test": [
-      "tests/cathodic_protection/test_report_recommendations.py::test_verified_options_use_edition_specific_retrofit_subject",
-      "tests/cathodic_protection/test_report_recommendations.py::test_recommendation_sources_are_selected_by_key"
+      "tests/cathodic_protection/test_report_recommendations.py::test_verified_options_use_edition_specific_retrofit_subject"
     ],
     "label": "RULES: 2005/2010 Sec. 7.13.3; 2017 [7.13.3]; 2021 [7.4.1], [7.5.3]. The report appends these clause labels to its source text.",
-    "status": "PASS",
+    "status": "FAIL",
     "kind": "difference",
-    "difference": "The report selector uses retrofit evidence for 2021 and retrofit documentation for earlier tokens, then selects the matching rule label.",
-    "missing": [],
-    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "difference": "The covered report behavior selects retrofit evidence for 2021 and retrofit documentation for earlier tokens; correctness of the emitted retrofit clause is not established.",
+    "missing": [
+      "No identified assertion checks the emitted retrofit clause for every supported token."
+    ],
+    "coverage": "The named test asserts the edition-dependent subject text only; the emitted retrofit clause is not asserted.",
     "evidence": [
       {
         "file": "src/digitalmodel/cathodic_protection/report_recommendations.py",
@@ -523,7 +524,9 @@
     "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_every_result_carries_the_edition_citation",
-      "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019"
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019",
+      "tests/cathodic_protection/test_f103_tables.py::test_field_joint_coating_constants_match_table_a2_2010",
+      "tests/cathodic_protection/test_f103_tables.py::test_field_joint_coating_constants_match_table_a2_2019"
     ],
     "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2.",
     "status": "PASS",
