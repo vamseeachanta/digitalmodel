@@ -307,6 +307,7 @@ digitalmodel = [
     "foam_system/data/*.yml",
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
+    "subsea/riser_study/*.schema.json",
     "naval_architecture/data/*.yml",
     "field_development/data/*.yml",
     "solvers/openfoam/data/*.yml",
