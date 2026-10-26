@@ -32,6 +32,22 @@ import math
 from numbers import Real
 
 
+def _scaled_product_ratio(factors: tuple[float, ...], divisor: float = 1.0) -> float:
+    """Combine finite nonnegative ramp factors before rounding the exponent."""
+    mantissa, exponent = math.frexp(divisor)
+    mantissa = 1.0 / mantissa
+    exponent = -exponent
+    for factor in factors:
+        fraction, shift = math.frexp(factor)
+        mantissa *= fraction
+        exponent += shift
+    try:
+        return math.ldexp(mantissa, exponent)
+    except OverflowError:
+        # A cumulative volume may exceed the representable floating range.
+        return math.inf
+
+
 def rate_at_time(
     time_days: float,
     *,
@@ -81,12 +97,15 @@ def rate_at_time(
     if time_days < 0.0:
         return 0.0
     if time_days < ramp_duration_days:
-        return plateau_rate_bbl_per_day * (time_days / ramp_duration_days)
+        return _scaled_product_ratio(
+            (plateau_rate_bbl_per_day, time_days), ramp_duration_days
+        )
     after_ramp = time_days - ramp_duration_days
     if after_ramp <= plateau_duration_days:
         return plateau_rate_bbl_per_day
     decline_days = after_ramp - plateau_duration_days
-    return plateau_rate_bbl_per_day * math.exp(-decline_rate_per_day * decline_days)
+    exponent = float(decline_rate_per_day) * float(decline_days)
+    return plateau_rate_bbl_per_day * math.exp(-exponent)
 
 
 def cumulative_production(
@@ -139,18 +158,19 @@ def cumulative_production(
     if time_days <= 0.0:
         return 0.0
     if time_days < ramp_duration_days:
-        return (
-            plateau_rate_bbl_per_day
-            * (time_days / ramp_duration_days)
-            * (time_days / 2.0)
+        return _scaled_product_ratio(
+            (plateau_rate_bbl_per_day, time_days, time_days, 0.5),
+            ramp_duration_days,
         )
-    ramp_volume = plateau_rate_bbl_per_day * (ramp_duration_days / 2.0)
+    ramp_volume = _scaled_product_ratio(
+        (plateau_rate_bbl_per_day, ramp_duration_days, 0.5)
+    )
     after_ramp = time_days - ramp_duration_days
     plateau_volume = plateau_rate_bbl_per_day * min(
         after_ramp, plateau_duration_days
     )
     decline_days = max(after_ramp - plateau_duration_days, 0.0)
-    exponent = decline_rate_per_day * decline_days
+    exponent = float(decline_rate_per_day) * float(decline_days)
     if exponent == 0.0:
         # Also covers an underflowed D*s, whose relative loss is negligible.
         tail_volume = plateau_rate_bbl_per_day * decline_days

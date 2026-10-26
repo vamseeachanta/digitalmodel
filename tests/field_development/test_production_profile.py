@@ -14,6 +14,7 @@ sampling uses days too, so each rate-times-step term has units of barrels.
 """
 
 import math
+from decimal import Decimal, localcontext
 
 import pytest
 
@@ -231,3 +232,67 @@ def test_invalid_time(profile, function, time_days):
     """Only finite real times are accepted; negative finite times are valid."""
     with pytest.raises(ValueError, match="time_days"):
         function(time_days, **profile)
+
+
+@pytest.mark.parametrize("function", [rate_at_time, cumulative_production])
+@pytest.mark.parametrize(
+    "rate,ramp,time_days",
+    [
+        (1e300, 1e250, 1e-100),
+        (4.0, 2.0 * math.ulp(0.0), math.ulp(0.0)),
+        (4.0, math.ulp(0.0), math.ulp(0.0)),
+        (1e308, 2.0, 1.5),
+        (1e300, 1e-100, 1e-200),
+    ],
+)
+def test_ramp_preserves_representable_results(function, rate, ramp, time_days):
+    """Decimal integrals retain small ratios and half-times independently.
+
+    The first case has q=1e-50 and N=5e-151. With m the smallest positive
+    float, Q=4, R=2*m and t=m give q=2 and N=m; at R=t=m, N=2*m.
+    Decimal starts from the exact binary inputs and rounds only the result.
+    """
+    with localcontext() as context:
+        context.prec = 80
+        q, r, t = map(Decimal.from_float, (rate, ramp, time_days))
+        expected = q * t / r
+        if function is cumulative_production:
+            expected *= t / Decimal(2)
+    result = function(
+        time_days,
+        ramp_duration_days=ramp,
+        plateau_duration_days=0.0,
+        plateau_rate_bbl_per_day=rate,
+        decline_rate_per_day=0.0,
+    )
+    assert result > 0.0
+    assert result == pytest.approx(float(expected), rel=1e-14, abs=0.0)
+
+
+@pytest.mark.parametrize("function", [rate_at_time, cumulative_production])
+@pytest.mark.parametrize(
+    "decline,time_days,expected_rate,expected_volume",
+    [
+        (1, 1, math.exp(-1.0), -math.expm1(-1.0)),
+        (10**200, 10**200, 0.0, 1e-200),
+        (10**200, 1, 0.0, 1e-200),
+    ],
+)
+def test_decline_integer_float_parity(
+    function, decline, time_days, expected_rate, expected_volume
+):
+    """For Q=1 and immediate decline, saturated decay gives q=0 and N=1/D.
+
+    Integer and float inputs describe the same profile even when D*t exceeds
+    float range. At D=t=1, q=exp(-1) and N=1-exp(-1).
+    """
+    expected = expected_rate if function is rate_at_time else expected_volume
+    for convert in (int, float):
+        result = function(
+            convert(time_days),
+            ramp_duration_days=convert(0),
+            plateau_duration_days=convert(0),
+            plateau_rate_bbl_per_day=convert(1),
+            decline_rate_per_day=convert(decline),
+        )
+        assert result == pytest.approx(expected, rel=1e-14, abs=0.0)
