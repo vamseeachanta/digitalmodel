@@ -18,6 +18,14 @@
         "The unsupported noise acceptance band is removed; the estimated density and its observed difference from the input reference are reported without a noise verdict.",
         "Hand-calculated grid quantities and browser checks cover the revised comparison, and text access specifies UTF-8 with LF output."
       ]
+    },
+    {
+      "revision": "02",
+      "date": "2026-10-25",
+      "changes": [
+        "Numerical agreement within the stated tolerances is distinguished from platform-dependent retained bytes; matching library versions alone does not establish byte identity.",
+        "The configured Ubuntu Linux x86-64 and CPython 3.12 reference target is identified, together with the missing original platform provenance and the unfixed CI image and Python patch version; the strict retained-byte check is preserved."
+      ]
     }
   ]
 }

@@ -29,7 +29,7 @@
 <header>
 <h1>Signal processing module analysis</h1>
 <p>Frequency content of uniformly sampled signals</p>
-<p>Revision 01 | 2026-10-22</p>
+<p>Revision 02 | 2026-10-25</p>
 <p>Draft for maintainer review</p>
 </header>
 <div class="layout">
@@ -62,7 +62,8 @@
 <table><caption>Revision history. Each issue records its numerical basis or subsequent correction.</caption>
 <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
 <tbody><tr><td>00</td><td>2026-10-21</td><td>The spectral-density workflow is documented on a reproducible public example to distinguish numerical evidence from measured-signal qualification.</td></tr>
-<tr><td>01</td><td>2026-10-22</td><td>Numerical checks are separated from pinned byte checks so compatible library versions can run; the unsupported noise acceptance band is removed and the observed difference is retained.</td></tr></tbody></table></div>
+<tr><td>01</td><td>2026-10-22</td><td>Numerical checks are separated from pinned byte checks so compatible library versions can run; the unsupported noise acceptance band is removed and the observed difference is retained.</td></tr>
+<tr><td>02</td><td>2026-10-25</td><td>The configured reference platform and missing original platform provenance are stated to distinguish numerical agreement from exact retained bytes across environments.</td></tr></tbody></table></div>
 
 <section id="section-2"><h2>2. Introduction and scope</h2>
 <p>A signal is represented as ordered scalar values with a known sample interval. Frequency analysis is performed to identify repeating components and to distribute mean-square signal content across frequency.</p>
@@ -205,7 +206,9 @@ peak = analyzer.find_peaks(spectrum, n_peaks=1)
 statistics = TimeSeriesProcessor().calculate_statistics(x)</pre>
 <pre>PYTHONPATH=src uv run --no-project --with-requirements tests/signal_processing/signal_analysis/report-requirements.txt python docs/reports/modules/signalprocessing/build_report.py --check
 PYTHONPATH=src python -m pytest tests/signal_processing/signal_analysis/test_module_report.py</pre>
-<p>The input recipe, generated signal digest and full plotted arrays are retained. Exact retained-byte comparison is performed in the pinned environment by the separate continuous-integration job. Normal report tests compare every retained metric and spectral bin using numerical tolerances and record the installed versions; a temporary rebuild is checked for exact repeatability and tamper detection within that environment. Once dependencies are installed, calculation requires no network access. Changes to source files used by the selected evidence invalidate its digest checks and require a fresh execution record.</p>
+<p>The input recipe, generated signal digest and full plotted arrays are retained. Numerical reproducibility means agreement of every retained metric and spectral bin within the analysis-defined tolerances in Section 3; it does not imply identical floating-point serialization. Matching library versions alone does not guarantee identical retained bytes across operating systems, CPU architectures or numerical-library builds, even with Python 3.12.</p>
+<p>The strict reference check is configured in the separate continuous-integration job for Ubuntu Linux on x86-64 (<code>ubuntu-latest</code>), CPython 3.12 and the pinned report requirements. The original retained artifacts record NumPy 1.26.4, Pandas 2.2.3 and SciPy 1.14.1, but do not record the original operating system, architecture, Python patch version or numerical-library build. The CI image and Python patch version are not fixed. This configured reference target therefore does not establish a fully captured original environment; byte identity is established only by a successful <code>build_report.py --check</code> in the tested environment. That check remains strict and reports any retained-byte difference.</p>
+<p>Normal report tests compare every retained metric and spectral bin using numerical tolerances and record the installed versions. A temporary rebuild is checked for exact repeatability and tamper detection within its execution environment. Once dependencies are installed, calculation requires no network access. Changes to source files used by the selected evidence invalidate its digest checks and require a fresh execution record.</p>
 </section>
 
 <section id="section-10"><h2>10. Appendices</h2>
