@@ -10,6 +10,23 @@ the parent issue remains open.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-25 | Add a reproducible synthetic geometry example with independent result readback. |
+| 1 | 2026-10-25 | Record the example scope, output contract and acceptance checks before merge. |
+
+## Plan-lite
+
+- Scope: expose the synthetic case-A touchdown calculation through the public
+  solver, a standalone builder, this derivation and two subprocess tests.
+  Production solvers and shared indexes remain outside this slice.
+- Output contract: require `--output-dir` and write only `worked_example.html`
+  there, with visible inputs, units, equations, results, limits and revision
+  history. Imports create no output; repeated and relocated builds match bytes.
+- Independent numerical acceptance: compare the displayed suspended length,
+  horizontal reach and fairlead tension with 100√3 m, 100 ln(2 + √3) m and
+  H + wz = 1962 kN, respectively, allowing half the 0.1-unit display increment.
+- Before merge: run the two worked-example tests and five existing geometry
+  tests offline, plus a standalone build and file-level checks. These checks
+  establish this synthetic example only; design qualification remains
+  **NOT_EVALUATED** and full module qualification remains under #3319.
 
 ## Run
 
