@@ -18,7 +18,9 @@ import pytest
 import yaml
 
 from digitalmodel.field_development import api
-from digitalmodel.field_development.screening import size_cable
+from digitalmodel.field_development import screening
+from digitalmodel.field_development.layout_model import build_layout_model
+from digitalmodel.field_development.screening import size_cable, sweep_layout_flowlines
 
 DATA_DIR = (
     Path(__file__).resolve().parents[2]
@@ -197,6 +199,66 @@ class TestScreenHandAnchored:
 
 
 # --- screen: demo configs end-to-end ------------------------------------------
+class TestScreenDelegation:
+    @pytest.mark.parametrize("missing_rate", [False, True])
+    def test_generalized_direct_equivalence_and_delegation(
+        self, tmp_path, monkeypatch, missing_rate
+    ):
+        # Synthetic flat-anchor inputs above, with one straight 3D segment:
+        # plan=2000 m, rise=1500 m -> sqrt(2000**2+1500**2)=2500 m.
+        # Explicit 120 m3/day overrides the well's 300; both are test inputs.
+        config = api.deep_override(
+            FLAT_ANCHOR_CONFIG,
+            {
+                "assets": {"HOST-1": {"z_m": 1600.0}},
+                "connections": {"FL-1": {"rate_m3_per_day": 120.0}},
+                "routing": {"sample_spacing_m": 3000.0},
+            },
+        )
+        if missing_rate:
+            config["assets"][0].pop("rate_m3_per_day")
+            config["connections"][0].pop("rate_m3_per_day")
+        path = tmp_path / "generalized.yml"
+        path.write_text(yaml.safe_dump(config), encoding="utf-8")
+        model = build_layout_model(config)
+        skipped = []
+        defaults = screening.load_screening_defaults()
+        # Restrict to the existing NPS 3 anchor to check defaults forwarding.
+        defaults["flowline_sweep"]["candidate_nps"] = [3.0]
+        direct = sweep_layout_flowlines(
+            model, ANCHOR_FLUID, 2000.0, 1500.0,
+            defaults=defaults, skipped_connections=skipped,
+        )
+        if missing_rate:
+            assert direct == []
+            assert skipped == [{
+                "id": "FL-1", "kind": "flowline",
+                "reason": "no resolvable rate (no explicit, asset, co-located, or upstream rate)",
+            }]
+        else:
+            assert direct[0]["length_m"] == pytest.approx(2500.0)
+            assert direct[0]["elevation_change_m"] == 1500.0
+            assert direct[0]["rate_m3_per_day"] == 120.0
+            assert [c["nps"] for c in direct[0]["candidates"]] == [3.0]
+        calls = []
+        original = screening.sweep_layout_flowlines
+
+        def record_sweep(*args, **kwargs):
+            calls.append((args, kwargs))
+            return original(*args, **kwargs)
+
+        monkeypatch.setattr(screening, "sweep_layout_flowlines", record_sweep)
+        result = api.screen(
+            path, fluid=ANCHOR_FLUID,
+            inlet_pressure_kpa=2000.0, target_arrival_pressure_kpa=1500.0,
+            screening_defaults=defaults,
+        )
+        assert result["flowlines"] == direct
+        assert result["skipped_connections"] == skipped
+        assert len(calls) == 1
+        assert isinstance(calls[0][0][0], type(model))
+
+
 class TestScreenDemoConfigs:
     def test_onshore_demo_screens_all_flowlines(self, tmp_path):
         report = tmp_path / "onshore" / "screening.md"

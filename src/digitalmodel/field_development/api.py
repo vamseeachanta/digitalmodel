@@ -40,19 +40,13 @@ replace. Example — three rate variants of the demo field, no file edits:
 ...     )
 ...     print(rate, result["flowlines"][0]["selected"]["nps"])
 
-Adapter honesty
----------------
-:func:`screen` is where the generalized #1509 model meets the #1511
-screening layer. ``screening.sweep_layout_flowlines`` consumes the #1508
-tracer's ``FieldLayout`` objects, so THIS module adapts instead of editing
-``screening.py``: it feeds each hydraulic connection of the generalized
-model straight into
-:func:`~digitalmodel.field_development.screening.flowline_diameter_sweep`,
-resolving the line rate from (in order) an explicit ``rate_m3_per_day`` on
-the connection spec, the from-asset's rate, a co-located rated asset (a tree
-sits on its well), or the summed throughput of upstream hydraulic
-connections. Connections whose rate cannot be resolved are reported under
-``skipped_connections``, never silently dropped.
+Hydraulic adapter boundary
+--------------------------
+:func:`screen` builds the generalized layout and delegates hydraulic route
+selection, rate resolution and diameter sweeps to
+:func:`~digitalmodel.field_development.screening.sweep_layout_flowlines`.
+It collects unresolved connections under ``skipped_connections`` and keeps
+config overrides, input resolution, cable sizing and report assembly here.
 """
 
 from __future__ import annotations
@@ -63,24 +57,17 @@ from typing import Any, Optional
 
 import yaml
 
+from . import screening
 from .layout_model import (
     FieldLayoutModel,
     RoutedConnection,
     build_layout_model,
     layout_summary,
 )
-from .screening import flowline_diameter_sweep, screening_report, size_cable
-
-#: Connection kinds screened hydraulically by :func:`screen` (umbilicals
-#: carry controls/chemicals, not the production bore, so they are excluded).
-HYDRAULIC_CONNECTION_KINDS: tuple[str, ...] = ("jumper", "flowline", "pipeline")
+from .screening import HYDRAULIC_CONNECTION_KINDS, screening_report, size_cable
 
 #: Dotted path of the cross-repo analog finder (see :func:`analogs`).
 ANALOGS_MODULE = "worldenergydata.field_development.analogs"
-
-#: Plan-coordinate tolerance [m] for treating two assets as co-located
-#: (e.g. a tree stacked on its well) when resolving line rates.
-CO_LOCATION_TOLERANCE_M = 1.0e-6
 
 
 # ---------------------------------------------------------------------------
@@ -178,67 +165,6 @@ def layout(config_path: str | Path, **overrides: Any) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def _co_located_rate(model: FieldLayoutModel, asset_id: str) -> Optional[float]:
-    """Summed rate of OTHER rated assets at the same plan position, if any."""
-    asset = model.asset(asset_id)
-    total, found = 0.0, False
-    for other in model.assets:
-        if other.asset_id == asset.asset_id or other.rate_m3_per_day is None:
-            continue
-        if (
-            abs(other.x_m - asset.x_m) <= CO_LOCATION_TOLERANCE_M
-            and abs(other.y_m - asset.y_m) <= CO_LOCATION_TOLERANCE_M
-        ):
-            total += other.rate_m3_per_day
-            found = True
-    return total if found else None
-
-
-def _asset_throughput(
-    model: FieldLayoutModel,
-    asset_id: str,
-    kinds: tuple[str, ...],
-    visiting: frozenset[str],
-) -> Optional[float]:
-    """Screening-grade throughput of an asset [m3/day], or None if unresolvable.
-
-    own rate (or a co-located rated asset's — a tree sits on its well)
-    + the resolved rates of all hydraulic connections INTO the asset.
-    ``visiting`` guards against connection-graph cycles.
-    """
-    asset = model.asset(asset_id)
-    own = asset.rate_m3_per_day
-    if own is None:
-        own = _co_located_rate(model, asset_id)
-    total = own or 0.0
-    for conn in model.connections:
-        if conn.kind in kinds and conn.to_id == asset_id:
-            inflow = _connection_rate(model, conn, kinds, visiting)
-            if inflow is not None:
-                total += inflow
-    return total if total > 0.0 else None
-
-
-def _connection_rate(
-    model: FieldLayoutModel,
-    conn: RoutedConnection,
-    kinds: tuple[str, ...],
-    visiting: frozenset[str] = frozenset(),
-) -> Optional[float]:
-    """Rate carried by one connection [m3/day], or None if unresolvable.
-
-    Resolution order: explicit ``rate_m3_per_day`` on the connection spec
-    (cheapest per-iteration override), then the from-asset's throughput
-    (:func:`_asset_throughput`).
-    """
-    explicit = conn.properties.get("rate_m3_per_day")
-    if explicit is not None:
-        return float(explicit)
-    if conn.from_id in visiting:  # cycle in the connection graph
-        return None
-    return _asset_throughput(model, conn.from_id, kinds, visiting | {conn.from_id})
-
-
 def _screen_cables(
     config: dict[str, Any],
     connections: dict[str, RoutedConnection],
@@ -333,47 +259,16 @@ def screen(
             f"screen() inputs missing (pass as keywords or config sections): {missing}"
         )
 
-    flowlines: list[dict[str, Any]] = []
     skipped: list[dict[str, str]] = []
-    for conn in model.connections:
-        if conn.kind not in connection_kinds:
-            continue
-        rate = _connection_rate(model, conn, connection_kinds)
-        if rate is None:
-            skipped.append(
-                {
-                    "id": conn.connection_id,
-                    "kind": conn.kind,
-                    "reason": "no resolvable rate (no explicit, asset, "
-                    "co-located, or upstream rate)",
-                }
-            )
-            continue
-        if conn.roughness_m is None:
-            skipped.append(
-                {
-                    "id": conn.connection_id,
-                    "kind": conn.kind,
-                    "reason": "no roughness_m on the connection spec",
-                }
-            )
-            continue
-        sweep = flowline_diameter_sweep(
-            rate_m3_per_day=rate,
-            length_m=conn.route_length_m,
-            elevation_change_m=conn.elevation_change_m,
-            roughness_m=conn.roughness_m,
-            density_kg_per_m3=float(fluid["density_kg_per_m3"]),
-            viscosity_pa_s=float(fluid["viscosity_pa_s"]),
-            inlet_pressure_kpa=float(inlet_pressure_kpa),
-            target_arrival_pressure_kpa=float(target_arrival_pressure_kpa),
-            defaults=screening_defaults,
-        )
-        sweep["id"] = conn.connection_id
-        sweep["kind"] = conn.kind
-        sweep["from"] = conn.from_id
-        sweep["to"] = conn.to_id
-        flowlines.append(sweep)
+    flowlines = screening.sweep_layout_flowlines(
+        model,
+        fluid=fluid,
+        inlet_pressure_kpa=float(inlet_pressure_kpa),
+        target_arrival_pressure_kpa=float(target_arrival_pressure_kpa),
+        defaults=screening_defaults,
+        connection_kinds=connection_kinds,
+        skipped_connections=skipped,
+    )
 
     connection_map = {c.connection_id: c for c in model.connections}
     cables = _screen_cables(config, connection_map, screening_defaults)

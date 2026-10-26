@@ -5,7 +5,7 @@ digitalmodel.field_development.screening
 =========================================
 
 Workstream D of the field-development epic (#1507): screening-tier sizing
-correlations layered on top of the #1508 tracer, plus a one-page deterministic
+correlations over tracer and generalized layouts, plus a one-page deterministic
 markdown report per layout iteration.
 
 What this module does
@@ -38,9 +38,8 @@ one number; the hydraulic screen is single-phase incompressible. Rated cable
 and multiphase flow-assurance design are downstream workstreams of #1507, not
 this slice.
 
-This module CONSUMES the tracer's public layout objects (it reads
-``FlowlineRoute`` attributes) and deliberately does not modify or re-route
-them — layout-schema work is a parallel lane (#1509).
+This module consumes public ``FieldLayout`` and ``FieldLayoutModel``
+route attributes without modifying or re-routing either layout.
 
 Usage
 -----
@@ -57,13 +56,23 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 
 import yaml
 
 from digitalmodel.materials.line_pipe import line_pipe
 
+from .layout_model import FieldLayoutModel, RoutedConnection
 from .onshore_layout import SECONDS_PER_DAY, FieldLayout, darcy_weisbach_pressure_drop
+
+#: Hydraulic kinds for :func:`sweep_layout_flowlines`; umbilicals carry
+#: controls/chemicals rather than the production bore and are excluded.
+HYDRAULIC_CONNECTION_KINDS: tuple[str, ...] = ("jumper", "flowline", "pipeline")
+
+#: Plan-coordinate tolerance [m] for treating two assets as co-located
+#: (e.g. a tree stacked on its well) when resolving line rates.
+CO_LOCATION_TOLERANCE_M = 1.0e-6
+
 
 # --- unit conversions (exact definitions) ------------------------------------
 _M_PER_FT = 0.3048
@@ -363,37 +372,152 @@ def flowline_diameter_sweep(
     }
 
 
+def _co_located_rate(model: FieldLayoutModel, asset_id: str) -> Optional[float]:
+    """Summed rate of OTHER rated assets at the same plan position, if any."""
+    asset = model.asset(asset_id)
+    total, found = 0.0, False
+    for other in model.assets:
+        if other.asset_id == asset.asset_id or other.rate_m3_per_day is None:
+            continue
+        if (
+            abs(other.x_m - asset.x_m) <= CO_LOCATION_TOLERANCE_M
+            and abs(other.y_m - asset.y_m) <= CO_LOCATION_TOLERANCE_M
+        ):
+            total += other.rate_m3_per_day
+            found = True
+    return total if found else None
+
+
+def _asset_throughput(
+    model: FieldLayoutModel,
+    asset_id: str,
+    kinds: tuple[str, ...],
+    visiting: frozenset[str],
+) -> Optional[float]:
+    """Screening-grade throughput of an asset [m3/day], or None if unresolvable.
+
+    own rate (or a co-located rated asset's — a tree sits on its well)
+    + the resolved rates of all hydraulic connections INTO the asset.
+    ``visiting`` guards against connection-graph cycles.
+    """
+    asset = model.asset(asset_id)
+    own = asset.rate_m3_per_day
+    if own is None:
+        own = _co_located_rate(model, asset_id)
+    total = own or 0.0
+    for conn in model.connections:
+        if conn.kind in kinds and conn.to_id == asset_id:
+            inflow = _connection_rate(model, conn, kinds, visiting)
+            if inflow is not None:
+                total += inflow
+    return total if total > 0.0 else None
+
+
+def _connection_rate(
+    model: FieldLayoutModel,
+    conn: RoutedConnection,
+    kinds: tuple[str, ...],
+    visiting: frozenset[str] = frozenset(),
+) -> Optional[float]:
+    """Rate carried by one connection [m3/day], or None if unresolvable.
+
+    Resolution order: explicit ``rate_m3_per_day`` on the connection spec
+    (cheapest per-iteration override), then the from-asset's throughput
+    (:func:`_asset_throughput`).
+    """
+    explicit = conn.properties.get("rate_m3_per_day")
+    if explicit is not None:
+        return float(explicit)
+    if conn.from_id in visiting:  # cycle in the connection graph
+        return None
+    return _asset_throughput(model, conn.from_id, kinds, visiting | {conn.from_id})
+
+
+def _layout_hydraulic_inputs(
+    layout: FieldLayout | FieldLayoutModel,
+    connection_kinds: tuple[str, ...],
+    skipped_connections: Optional[list[dict[str, str]]],
+) -> Iterator[tuple[dict[str, str], dict[str, float]]]:
+    """Read route metadata and sweep inputs without changing either layout."""
+    if isinstance(layout, FieldLayoutModel):
+        for conn in layout.connections:
+            if conn.kind not in connection_kinds:
+                continue
+            rate = _connection_rate(layout, conn, connection_kinds)
+            if rate is None or conn.roughness_m is None:
+                reason = (
+                    "no resolvable rate (no explicit, asset, co-located, or upstream rate)"
+                    if rate is None else "no roughness_m on the connection spec"
+                )
+                diagnostic = {
+                    "id": conn.connection_id, "kind": conn.kind, "reason": reason
+                }
+                if skipped_connections is None:
+                    raise ValueError(f"connection {conn.connection_id!r}: {reason}")
+                skipped_connections.append(diagnostic)
+                continue
+            yield (
+                {
+                    "id": conn.connection_id, "kind": conn.kind,
+                    "from": conn.from_id, "to": conn.to_id,
+                },
+                {
+                    "rate_m3_per_day": rate, "length_m": conn.route_length_m,
+                    "elevation_change_m": conn.elevation_change_m,
+                    "roughness_m": conn.roughness_m,
+                },
+            )
+    else:
+        for fl in layout.flowlines:
+            yield (
+                {"id": fl.flowline_id, "from": fl.from_id, "to": fl.to_id},
+                {
+                    "rate_m3_per_day": fl.rate_m3_per_day,
+                    "length_m": fl.terrain_length_m,
+                    "elevation_change_m": fl.elevation_change_m,
+                    "roughness_m": fl.roughness_m,
+                },
+            )
+
+
 def sweep_layout_flowlines(
-    layout: FieldLayout,
+    layout: FieldLayout | FieldLayoutModel,
     fluid: dict[str, Any],
     inlet_pressure_kpa: float,
     target_arrival_pressure_kpa: float,
     defaults: Optional[dict[str, Any]] = None,
+    *,
+    connection_kinds: tuple[str, ...] = HYDRAULIC_CONNECTION_KINDS,
+    skipped_connections: Optional[list[dict[str, str]]] = None,
 ) -> list[dict[str, Any]]:
-    """Run the diameter sweep for every routed flowline of a tracer layout.
+    """Sweep hydraulic routes from a tracer or generalized layout, read-only.
 
-    Consumes the PUBLIC attributes of the #1508 tracer's
-    :class:`~digitalmodel.field_development.onshore_layout.FlowlineRoute`
-    objects (terrain length, endpoint elevation change, rate, roughness) —
-    read-only, so this stays decoupled from the parallel layout-schema lane
-    (#1509). Each returned sweep dict gains ``id``/``from``/``to`` keys.
+    Tracer flowlines retain their terrain lengths, rates and result keys.
+    Generalized connections use true ``route_length_m``, endpoint elevation
+    change and specified roughness; result metadata additionally has ``kind``.
+    Only generalized kinds in ``connection_kinds`` are considered, including
+    when accumulating upstream rates. Explicit connection rates take priority;
+    otherwise use the source's own rate (or summed co-located rates if absent)
+    plus resolvable upstream hydraulic rates. Cycles stop recursive resolution.
+
+    For generalized connections with missing rates or roughness, append an
+    ``id``/``kind``/``reason`` diagnostic to ``skipped_connections`` when a
+    collector is supplied; otherwise raise ValueError. No default rate or
+    roughness is inferred. The collector is appended to, never cleared.
     """
     results: list[dict[str, Any]] = []
-    for fl in layout.flowlines:
+    for metadata, inputs in _layout_hydraulic_inputs(
+        layout, connection_kinds, skipped_connections
+    ):
         sweep = flowline_diameter_sweep(
-            rate_m3_per_day=fl.rate_m3_per_day,
-            length_m=fl.terrain_length_m,
-            elevation_change_m=fl.elevation_change_m,
-            roughness_m=fl.roughness_m,
+            **inputs,
             density_kg_per_m3=float(fluid["density_kg_per_m3"]),
             viscosity_pa_s=float(fluid["viscosity_pa_s"]),
             inlet_pressure_kpa=inlet_pressure_kpa,
             target_arrival_pressure_kpa=target_arrival_pressure_kpa,
             defaults=defaults,
         )
-        sweep["id"] = fl.flowline_id
-        sweep["from"] = fl.from_id
-        sweep["to"] = fl.to_id
+        sweep.update(metadata)
         results.append(sweep)
     return results
 

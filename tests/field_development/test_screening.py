@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from digitalmodel.field_development.layout_model import build_layout_model, route_connection
 from digitalmodel.field_development.onshore_layout import (
     build_layout,
     load_field_config,
@@ -293,6 +294,152 @@ class TestSweepLayoutFlowlines:
             assert r["length_m"] == pytest.approx(fl.terrain_length_m)
             assert r["rate_m3_per_day"] == fl.rate_m3_per_day
             assert r["to"] == fl.to_id
+
+
+@pytest.fixture
+def hydraulic_model():
+    """Synthetic network; lengths use Euclidean segments, rates use addition.
+
+    Chosen geometry: each plan leg is a 300-400-500 triangle, with a
+    120 m endpoint rise/fall. One sample per leg makes its true length
+    sqrt(300**2 + 400**2 + 120**2). Fluid, roughness and pressure inputs
+    reuse SWEEP_KWARGS's hand-calculated example. All other numbers below
+    are synthetic geometry, grid resolution or explicit rate inputs.
+    """
+    return build_layout_model(
+        {
+            "field": {"name": "Synthetic network"},
+            "surface": {
+                "kind": "synthetic",
+                "x_min_m": 0.0, "x_max_m": 1000.0,
+                "y_min_m": 0.0, "y_max_m": 1000.0,
+                "nx": 2, "ny": 2,
+                "base_elevation_m": 0.0, "amplitude_m": 0.0,
+                "x_wavelength_m": 1000.0, "y_wavelength_m": 1000.0,
+            },
+            "routing": {"sample_spacing_m": 1000.0},
+            "assets": [
+                {"id": "W-A", "kind": "well", "x_m": 0.0, "y_m": 0.0,
+                 "rate_m3_per_day": 120.0},
+                {"id": "W-B", "kind": "well", "x_m": 0.0, "y_m": 0.0,
+                 "rate_m3_per_day": 180.0},
+                {"id": "T", "kind": "tree", "x_m": 0.0, "y_m": 0.0},
+                {"id": "W-C", "kind": "well", "x_m": 0.0, "y_m": 100.0,
+                 "rate_m3_per_day": 40.0},
+                {"id": "M", "kind": "manifold", "x_m": 300.0, "y_m": 400.0,
+                 "z_m": 120.0, "rate_m3_per_day": 20.0},
+                {"id": "W-D", "kind": "well", "x_m": 300.0, "y_m": 400.0,
+                 "rate_m3_per_day": 999.0},
+                {"id": "H", "kind": "host", "x_m": 600.0, "y_m": 800.0},
+            ],
+            "connections": [
+                {"id": "J-A", "kind": "jumper", "from": "T", "to": "M",
+                 "roughness_m": SWEEP_KWARGS["roughness_m"]},
+                {"id": "J-B", "kind": "flowline", "from": "W-C", "to": "M",
+                 "roughness_m": SWEEP_KWARGS["roughness_m"]},
+                {"id": "P", "kind": "pipeline", "from": "M", "to": "H",
+                 "roughness_m": SWEEP_KWARGS["roughness_m"]},
+                {"id": "U", "kind": "umbilical", "from": "H", "to": "T",
+                 "rate_m3_per_day": 999.0},
+            ],
+        }
+    )
+
+
+def _sweep_model(model, **kwargs):
+    return sweep_layout_flowlines(
+        model,
+        fluid={key: SWEEP_KWARGS[key]
+               for key in ("density_kg_per_m3", "viscosity_pa_s")},
+        inlet_pressure_kpa=SWEEP_KWARGS["inlet_pressure_kpa"],
+        target_arrival_pressure_kpa=SWEEP_KWARGS["target_arrival_pressure_kpa"],
+        **kwargs,
+    )
+
+
+class TestSweepGeneralizedLayout:
+    def test_true_segment_lengths_elevation_and_metadata(self, hydraulic_model):
+        results = _sweep_model(hydraulic_model)
+        assert [r["id"] for r in results] == ["J-A", "J-B", "P"]
+        first, _, last = results
+        length = math.sqrt(300.0**2 + 400.0**2 + 120.0**2)
+        assert first["length_m"] == pytest.approx(length)
+        assert last["length_m"] == pytest.approx(length)
+        assert first["elevation_change_m"] == 120.0
+        assert last["elevation_change_m"] == -120.0
+        assert (first["kind"], first["from"], first["to"]) == ("jumper", "T", "M")
+        assert first["roughness_m"] == SWEEP_KWARGS["roughness_m"]
+        # Hydrostatic hand calculation: rho*g*dz/1000 [kPa], with standard
+        # gravity 9.80665 m/s2 (SI conventional standard acceleration).
+        head = SWEEP_KWARGS["density_kg_per_m3"] * 9.80665 * 120.0 / 1000.0
+        for up, down in zip(first["candidates"], last["candidates"]):
+            assert up["dp_elevation_kpa"] == pytest.approx(head)
+            assert down["dp_elevation_kpa"] == pytest.approx(-head)
+
+    def test_waypoint_route_uses_polyline_length(self, hydraulic_model):
+        # Hand calculation: flat (0,0,0)->(300,0,0) is 300 m, followed
+        # by (300,0,0)->(300,400,120), length sqrt(400**2+120**2).
+        # This differs from both the 700 m plan route and endpoint chord.
+        hydraulic_model.connections[0] = route_connection(
+            {
+                "id": "J-A", "kind": "jumper", "from": "T", "to": "M",
+                "waypoints": [{"x_m": 300.0, "y_m": 0.0}],
+                "roughness_m": SWEEP_KWARGS["roughness_m"],
+            },
+            {a.asset_id: a for a in hydraulic_model.assets},
+            hydraulic_model.surface,
+            hydraulic_model.sample_spacing_m,
+        )
+        first = _sweep_model(hydraulic_model)[0]
+        assert first["length_m"] == pytest.approx(300.0 + math.hypot(400.0, 120.0))
+        assert first["elevation_change_m"] == 120.0
+
+    @pytest.mark.parametrize(
+        "jump_rate,export_rate,expected",
+        [
+            (None, None, [300.0, 40.0, 360.0]),
+            (75.0, None, [75.0, 40.0, 135.0]),
+            (None, 90.0, [300.0, 40.0, 90.0]),
+        ],
+    )
+    def test_rate_precedence(self, hydraulic_model, jump_rate, export_rate, expected):
+        # Co-located wells: 120+180=300. M's own 20 overrides co-located
+        # 999, then adds incoming 300+40=340, giving 360. Explicit J-A=75
+        # changes downstream to 20+75+40=135; explicit P=90 overrides it.
+        for conn, rate in zip(
+            (hydraulic_model.connections[0], hydraulic_model.connections[2]),
+            (jump_rate, export_rate),
+        ):
+            if rate is not None:
+                conn.properties["rate_m3_per_day"] = rate
+        results = _sweep_model(hydraulic_model)
+        assert [r["rate_m3_per_day"] for r in results] == expected
+
+    def test_selected_kinds_also_bound_upstream_rates(self, hydraulic_model):
+        # Excluding jumpers/flowlines leaves only M's own 20 m3/day.
+        (result,) = _sweep_model(hydraulic_model, connection_kinds=("pipeline",))
+        assert result["id"] == "P"
+        assert result["rate_m3_per_day"] == 20.0
+
+    @pytest.mark.parametrize("missing", ["rate", "roughness"])
+    def test_missing_inputs_have_connection_diagnostics(self, hydraulic_model, missing):
+        if missing == "rate":
+            hydraulic_model.asset("W-A").rate_m3_per_day = None
+            hydraulic_model.asset("W-B").rate_m3_per_day = None
+            reason = "no resolvable rate (no explicit, asset, co-located, or upstream rate)"
+        else:
+            hydraulic_model.connections[0].roughness_m = None
+            reason = "no roughness_m on the connection spec"
+        skipped = []
+        results = _sweep_model(hydraulic_model, skipped_connections=skipped)
+        assert [r["id"] for r in results] == ["J-B", "P"]
+        assert skipped == [{"id": "J-A", "kind": "jumper", "reason": reason}]
+
+    def test_missing_rate_without_collector_raises(self, hydraulic_model):
+        hydraulic_model.asset("W-A").rate_m3_per_day = None
+        hydraulic_model.asset("W-B").rate_m3_per_day = None
+        with pytest.raises(ValueError, match="J-A.*no resolvable rate"):
+            _sweep_model(hydraulic_model)
 
 
 # --- screening report -------------------------------------------------------------
