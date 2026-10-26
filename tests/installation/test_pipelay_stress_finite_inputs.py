@@ -1,5 +1,17 @@
 """Finite-input regressions with synthetic, independently calculated values.
 
+Plan-lite
+---------
+Validation scope: reject nonfinite supplied arguments and derived results in
+bending_stress_from_radius, axial_stress, smys_stress_check and
+allowable_bend_radius, including unused supplied area and allowable underflow.
+Regression checks: run this suite and test_pipelay_stress.py together; retain
+signed axial force, zero-force optional area, existing acceptance defaults and
+hand-calculated finite cases. Exercise overflow with runtime floating-point limits.
+Exclusions: no new engineering coefficients or acceptance criteria, no
+requalification of existing defaults, and no licensed solver execution or
+validation of other installation routes, integrity calculations or reports.
+
 The synthetic control uses E = 120000, OD = 0.8, SMYS = 320 and f = 0.75
 in consistent units. By hand: allowable = 0.75 * 320 = 240;
 R_min = 120000 * (0.8 / 2) / 240 = 200;
