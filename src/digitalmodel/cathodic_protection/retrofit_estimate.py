@@ -44,11 +44,90 @@ TABLE_3_ROWS = {
     "upper-bare-seawater": (170.0, 80.0, 110.0),
     "lower-bare-seawater": (140.0, 70.0, 90.0),
 }
+# Source p. 242, Tables 1–2: area (m2), base zone and initial/mean/final (A/m2).
+PUBLISHED_ZONE_BASIS = {
+    "coated-seawater": (652.9, "submerged", 0.01, 0.02, 0.04),
+    "upper-bare-seawater": (3726.8, "submerged", 0.15, 0.07, 0.10),
+    "lower-bare-seawater": (15737.0, "submerged", 0.12, 0.06, 0.08),
+    "buried-steel": (10814.8, "buried", 0.02, 0.02, 0.02),
+}
 # Xu (2023), p. 244 Section 5: both proposed levels lie in the lower zone.
 DEEP_ZONE = "lower-bare-seawater"
 DEEP_LEVELS_M = (70.5, 84.1)
 METRIC_PREFIX = 1000.0  # SI conversions: mA/A and mm/m; not an empirical input.
 PhaseOrder = Literal["initial_mean_final", "initial_final_mean"]
+
+
+def _require_fixed_fields(
+    values: Any, required: Mapping[str, Any], *,
+    optional: Mapping[str, Any] | None = None, metadata: tuple[str, ...] = (),
+) -> None:
+    """Reject missing, changed or unsupported calculation inputs before coercion."""
+    message = "The estimate inputs differ from the fixed published case or declared assumed basis"
+    optional = optional or {}
+    if not isinstance(values, Mapping):
+        raise ValueError(message)
+    if required.keys() - values.keys() or values.keys() - (required.keys() | optional.keys() | set(metadata)):
+        raise ValueError(message)
+    for key, expected in {**required, **optional}.items():
+        if key not in values:
+            continue  # Only optional fields can be absent after the required-key check.
+        actual = values[key]
+        if isinstance(expected, Mapping):
+            _require_fixed_fields(actual, expected)
+        elif isinstance(expected, (int, float)):
+            if isinstance(actual, bool) or not isinstance(actual, (int, float)):
+                raise ValueError(message)
+            if actual != expected or not math.isfinite(actual):
+                raise ValueError(message)
+        elif actual != expected:
+            raise ValueError(message)
+
+
+def _validate_fixed_case(inputs: Any) -> None:
+    """Bind source Tables 1–2 and Section 2 to the declared calculation assumptions."""
+    _require_fixed_fields(
+        inputs, {"calculation_type": "DNV_RP_B401_offshore"},
+        metadata=("design_data", "environment", "anode", "structure"),
+    )
+    _require_fixed_fields(inputs.get("design_data"), {
+        "edition": "2021", "design_life": 25.0, "structure_type": "jacket",
+    })
+    _require_fixed_fields(inputs.get("environment"), {
+        "seawater_temperature_C": 10.0, "seawater_resistivity_ohm_m": 0.22,
+    })
+    _require_fixed_fields(inputs.get("anode"), {
+        "material": "aluminium", "type": "stand_off", "length_m": 2.020,
+        "individual_anode_mass_kg": 323.4, "count": 569,
+    }, optional={"utilization_factor": 0.90, "density_kg_m3": 2750.0}, metadata=("radius_m",))
+    structure = inputs.get("structure")
+    _require_fixed_fields(structure, {}, metadata=(
+        "zones", "connected_current_allowances", "verification_evidence", "report_geometry",
+    ))
+    _validate_fixed_zones(structure.get("zones"))
+    allowances = structure.get("connected_current_allowances")
+    if not isinstance(allowances, list) or len(allowances) != 1:
+        raise ValueError("The estimate requires the fixed published case connected allowance")
+    _require_fixed_fields(
+        allowances[0], {"count": 9, "current_A_each": 2.0}, metadata=("source", "phase_basis"),
+    )
+
+
+def _validate_fixed_zones(zones: Any) -> None:
+    """Reject changed or duplicate published areas and effective phase densities."""
+    if not isinstance(zones, list) or len(zones) != len(PUBLISHED_ZONE_BASIS):
+        raise ValueError("The estimate requires exactly the four fixed published case zones")
+    seen: set[str] = set()
+    for zone in zones:
+        name = zone.get("zone") if isinstance(zone, Mapping) else None
+        if not isinstance(name, str) or name not in PUBLISHED_ZONE_BASIS or name in seen:
+            raise ValueError("The estimate requires unique fixed published case zones")
+        seen.add(name)
+        area, base, initial, mean, final = PUBLISHED_ZONE_BASIS[name]
+        _require_fixed_fields(zone, {
+            "zone": name, "base_zone": base, "area_m2": area, "coating_category": "bare",
+            "effective_current_density_A_m2": {"initial": initial, "mean": mean, "final": final},
+        }, optional={"depth_m": 0.0}, metadata=("area_source", "density_source"))
 
 
 def _anode_checks(
@@ -86,7 +165,13 @@ def _section_basis(cfg: Mapping[str, Any]) -> dict[str, Any]:
     """
     working = copy.deepcopy(dict(cfg))
     inputs = working["inputs"]
-    expression = inputs["structure"]["verification_evidence"]["published_anode_dimensions"]["expression"]
+    evidence = inputs["structure"].get("verification_evidence")
+    dimensions = evidence.get("published_anode_dimensions") if isinstance(evidence, Mapping) else None
+    if not isinstance(dimensions, Mapping):
+        raise ValueError("The estimate requires the published anode section dimensions")
+    expression = dimensions.get("expression")
+    if expression != "2020 mm × (240+270) mm × 270 mm":
+        raise ValueError("The estimate requires the fixed published case section dimensions")
     match = re.fullmatch(
         r"(\d+) mm × \((\d+)\+(\d+)\) mm × (\d+) mm", expression,
     )
@@ -110,7 +195,9 @@ def estimate_published_jacket_retrofit(
     """Return an estimate on stated assumptions, not an acceptance of an installed design.
 
     Supply the existing published-jacket B401 configuration, including its
-    sourced zone areas and design densities. The declared assumed basis is
+    sourced zone areas and design densities. Changed or missing calculation
+    inputs and unsupported overrides are rejected before the adapter runs.
+    The declared assumed basis is
     B401 edition 2021, life 25 years, capacity 2000 Ah/kg, utilisation 0.90,
     nominal 323.4 kg interpreted as net alloy, density 2750 kg/m3, and a
     depleted section retaining its length and similar shape. These are assumed,
@@ -153,9 +240,7 @@ def estimate_published_jacket_retrofit(
     """
     if phase_order not in ("initial_mean_final", "initial_final_mean"):
         raise ValueError("phase_order must explicitly identify the Table 3 mapping")
-    inputs = cfg["inputs"]
-    if inputs.get("calculation_type") != "DNV_RP_B401_offshore":
-        raise ValueError("The estimate requires the published-jacket B401 route")
+    _validate_fixed_case(cfg.get("inputs"))
     working = _section_basis(cfg)
     inputs = working["inputs"]
     result = run_cathodic_protection(working)["results"]
@@ -167,9 +252,9 @@ def estimate_published_jacket_retrofit(
         result["edition"], result["design_life_years"],
         requirements["electrochemical_capacity_Ah_kg"],
         requirements["utilization_factor"], requirements["individual_mass_kg"],
-        verification["anode_count"],
+        verification["anode_count"], verification["driving_voltage_V"],
     )
-    if basis != ("2021", 25.0, 2000.0, 0.90, 323.4, 569):
+    if basis != ("2021", 25.0, 2000.0, 0.90, 323.4, 569, 0.25):
         raise ValueError("The estimate inputs differ from the declared assumed basis")
     demand = result["current_demand_A"]
     zone_ids = tuple(item["zone"] for item in inputs["structure"]["zones"])

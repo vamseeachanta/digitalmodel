@@ -31,7 +31,7 @@ CHART = Path(__file__).parents[2] / "docs/domains/cathodic_protection/reports/pu
 @pytest.fixture
 def design():
     """Return the existing published areas, design densities and assumed basis."""
-    return yaml.safe_load(INPUT.read_text())
+    return yaml.safe_load(INPUT.read_text(encoding="utf-8"))
 
 
 def estimate(design, order="initial_final_mean"):
@@ -40,7 +40,7 @@ def estimate(design, order="initial_final_mean"):
 
 
 def hand_outputs():
-    """Existing section-periphery model: B401 code Sec. 7.8, Table 10-7.
+    """Existing section-periphery model: B401 (2021), Sec. 7.8, Table 10-7.
 
     Xu (2023), p. 242 Section 2: length 2.020 m, nominal mass 323.4 kg,
     resistivity 0.22 ohm.m and driving voltage 0.25 V. Assumed net mass,
@@ -188,11 +188,18 @@ def test_estimate_labels_and_unevaluated_items_are_explicit(design):
 
 
 def test_chart_csv_matches_every_output_value(design):
-    """The CSV uses exact reproducible output text; it is not a report page."""
+    """Rebuilding the chart preserves labels and numerical values within tolerance."""
     result = estimate(design)
     rendered = retrofit_estimate_csv(result)
-    assert CHART.read_text() == rendered
     rows = list(csv.DictReader(io.StringIO(rendered)))
+    stored = list(csv.DictReader(io.StringIO(CHART.read_text(encoding="utf-8"))))
+    assert len(stored) == len(rows)
+    for actual, expected in zip(rows, stored):
+        for key, value in actual.items():
+            if key.endswith(("_A", "_A_estimate", "_m2")):
+                assert float(value) == pytest.approx(float(expected[key]), rel=1e-12, abs=1e-12)
+            else:
+                assert value == expected[key]
     assert len(rows) == len(result["zones"])
     for row in rows:
         zone = result["zones"][row["zone"]]
@@ -231,3 +238,110 @@ def test_changed_assumptions_do_not_keep_the_declared_basis_label(design):
     design["inputs"]["design_data"]["design_life"] *= 2
     with pytest.raises(ValueError, match="declared assumed basis"):
         estimate(design)
+
+
+@pytest.mark.parametrize("zone_index", range(4))
+@pytest.mark.parametrize("field", ["area_m2", "initial", "mean", "final"])
+def test_changed_zone_inputs_cannot_retain_published_attribution(design, zone_index, field):
+    """All Table 1 areas and Table 2 phase densities belong to the fixed case."""
+    zone = design["inputs"]["structure"]["zones"][zone_index]
+    values = zone if field == "area_m2" else zone["effective_current_density_A_m2"]
+    values[field] *= 2
+    with pytest.raises(ValueError, match="published case"):
+        estimate(design)
+
+
+@pytest.mark.parametrize("section", [
+    "4040 mm × (240+270) mm × 270 mm",
+    "2020 mm × (480+270) mm × 270 mm",
+    "2020 mm × (240+540) mm × 270 mm",
+    "2020 mm × (240+270) mm × 540 mm",
+])
+def test_numeric_unpublished_sections_stop_before_calculation(design, section, monkeypatch):
+    """Matching caller length cannot qualify unpublished numeric geometry."""
+    design["inputs"]["structure"]["verification_evidence"]["published_anode_dimensions"]["expression"] = section
+    if section.startswith("4040"):
+        design["inputs"]["anode"]["length_m"] = 4.04
+
+    def unexpected_calculation(*args, **kwargs):
+        pytest.fail("Unpublished geometry reached the calculation adapter")
+
+    monkeypatch.setattr(
+        "digitalmodel.cathodic_protection.retrofit_estimate.run_cathodic_protection",
+        unexpected_calculation,
+    )
+    with pytest.raises(ValueError, match="published case|section"):
+        estimate(design)
+
+
+@pytest.mark.parametrize("section, field, value", [
+    ("design_data", "design_life", 26.0),
+    ("design_data", "edition", "2010"),
+    ("design_data", "structure_type", "monopile"),
+    ("environment", "seawater_temperature_C", 20.0),
+    ("environment", "seawater_resistivity_ohm_m", 0.44),
+    ("environment", "driving_voltage_V", 0.5),
+    ("anode", "material", "zinc"),
+    ("anode", "individual_anode_mass_kg", 323.4001),
+    ("anode", "count", 569.5),
+    ("anode", "utilization_factor", 0.8),
+    ("anode", "density_kg_m3", 2600.0),
+])
+def test_changed_scalar_basis_cannot_retain_published_attribution(design, section, field, value):
+    """Unrounded supplied values and unsupported overrides must be checked."""
+    design["inputs"][section][field] = value
+    with pytest.raises(ValueError, match="published case|declared assumed basis"):
+        estimate(design)
+
+
+@pytest.mark.parametrize("field, value", [("count", 18), ("current_A_each", 4.0)])
+def test_changed_connected_allowance_cannot_retain_published_attribution(design, field, value):
+    """Table 2 supplies nine connected items at 2 A each, not just a total."""
+    design["inputs"]["structure"]["connected_current_allowances"][0][field] = value
+    with pytest.raises(ValueError, match="published case"):
+        estimate(design)
+
+
+@pytest.mark.parametrize("field", ["zones", "connected_current_allowances"])
+def test_duplicate_case_rows_stop_the_estimate(design, field):
+    rows = design["inputs"]["structure"][field]
+    rows.append(copy.deepcopy(rows[0]))
+    with pytest.raises(ValueError, match="published case"):
+        estimate(design)
+
+
+@pytest.mark.parametrize("value", [None, True, "0.22", float("nan"), float("inf"), -float("inf")])
+def test_invalid_resistivity_stops_with_a_basis_error(design, value):
+    design["inputs"]["environment"]["seawater_resistivity_ohm_m"] = value
+    with pytest.raises(ValueError, match="published case"):
+        estimate(design)
+
+
+@pytest.mark.parametrize("section, field", [
+    ("design_data", "design_life"),
+    ("design_data", "edition"),
+    ("environment", "seawater_resistivity_ohm_m"),
+    ("anode", "individual_anode_mass_kg"),
+    ("anode", "count"),
+])
+def test_missing_basis_does_not_use_adapter_defaults(design, section, field):
+    del design["inputs"][section][field]
+    with pytest.raises(ValueError, match="published case"):
+        estimate(design)
+
+
+@pytest.mark.parametrize("field", ["components", "anode_families", "riser_base_assessment"])
+def test_other_routes_cannot_retain_fixed_case_attribution(design, field):
+    design["inputs"][field] = []
+    with pytest.raises(ValueError, match="published case"):
+        estimate(design)
+
+
+def test_explicit_declared_defaults_and_reordered_zones_remain_supported(design):
+    """Explicit defaults and input ordering do not change the physical basis."""
+    design["inputs"]["anode"].update(utilization_factor=0.90, density_kg_m3=2750.0)
+    design["inputs"]["structure"]["zones"].reverse()
+    original = copy.deepcopy(design)
+    result = estimate(design)
+    assert result["total_estimate"]["anodes_estimate"]["additional_anodes_estimate"] == 234
+    assert design == original
