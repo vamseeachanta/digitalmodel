@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "source_commit": "3a5ea5e79f1197335d032c6d6b17cb8751d9911f",
   "strategy_sources": {
     "src/digitalmodel/structural/analysis/wall_thickness.py": {
@@ -40,6 +40,9 @@
     },
     "scripts/reporting/build_riser_pipe_comparison.py": {
       "sha256": "be93e077171ad1ab6663e42da21993bf2da26b2d6b6351469783c3c9c58579d0"
+    },
+    "scripts/reporting/riser_pipe_comparison.criteria.json": {
+      "sha256": "644f15e3d4f459a52c01a4a528ed424a5683a4424de1d9069708771ec597f527"
     }
   },
   "inputs": {
@@ -79,9 +82,1299 @@
     ],
     "stock_basis": "illustrative stock wall list; availability not established"
   },
+  "criteria_source": "scripts/reporting/riser_pipe_comparison.criteria.json",
+  "criteria_revision": "2",
+  "check_provenance": {
+    "DNV-ST-F101": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+      "inherited_criteria": {},
+      "checks": {
+        "pressure_containment": {
+          "coefficient_symbols": [
+            "EDITION_FACTORS.f_y",
+            "EDITION_FACTORS.f_u",
+            "f_cb strength divisor",
+            "p_b coefficients",
+            "DesignFactors.gamma_sc",
+            "DesignFactors.gamma_m",
+            "DesignFactors.gamma_inc"
+          ],
+          "coefficient_sources": {
+            "EDITION_FACTORS.f_y": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+              "symbol": "EDITION_FACTORS.f_y",
+              "edition_key": 2021
+            },
+            "EDITION_FACTORS.f_u": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+              "symbol": "EDITION_FACTORS.f_u",
+              "edition_key": 2021
+            },
+            "f_cb strength divisor": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+              "symbol": "f_cb strength divisor"
+            },
+            "p_b coefficients": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+              "symbol": "p_b coefficients"
+            },
+            "DesignFactors.gamma_sc": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_sc"
+            },
+            "DesignFactors.gamma_m": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_m"
+            },
+            "DesignFactors.gamma_inc": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_inc"
+            }
+          },
+          "implementation_method": "_check_pressure_containment",
+          "source_reference": {
+            "standard": "DNV-ST-F101",
+            "title": "DNV-ST-F101",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [
+            "p_el coefficient and exponent",
+            "p_p coefficient",
+            "PipeMaterial.alpha_fab",
+            "EDITION_FACTORS.f_0",
+            "DesignFactors.gamma_sc",
+            "DesignFactors.gamma_m",
+            "DesignFactors.gamma_inc"
+          ],
+          "coefficient_sources": {
+            "p_el coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+              "symbol": "p_el coefficient and exponent"
+            },
+            "p_p coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+              "symbol": "p_p coefficient"
+            },
+            "PipeMaterial.alpha_fab": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "PipeMaterial.alpha_fab"
+            },
+            "EDITION_FACTORS.f_0": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+              "symbol": "EDITION_FACTORS.f_0",
+              "edition_key": 2021
+            },
+            "DesignFactors.gamma_sc": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_sc"
+            },
+            "DesignFactors.gamma_m": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_m"
+            },
+            "DesignFactors.gamma_inc": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_inc"
+            }
+          },
+          "implementation_method": "_check_collapse",
+          "source_reference": {
+            "standard": "DNV-ST-F101",
+            "title": "DNV-ST-F101",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [
+            "p_pr coefficient and exponent",
+            "PipeMaterial.alpha_fab",
+            "DesignFactors.gamma_sc",
+            "DesignFactors.gamma_m",
+            "DesignFactors.gamma_inc"
+          ],
+          "coefficient_sources": {
+            "p_pr coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+              "symbol": "p_pr coefficient and exponent"
+            },
+            "PipeMaterial.alpha_fab": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "PipeMaterial.alpha_fab"
+            },
+            "DesignFactors.gamma_sc": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_sc"
+            },
+            "DesignFactors.gamma_m": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_m"
+            },
+            "DesignFactors.gamma_inc": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "DesignFactors.gamma_inc"
+            }
+          },
+          "implementation_method": "_check_propagation_buckling",
+          "source_reference": {
+            "standard": "DNV-ST-F101",
+            "title": "DNV-ST-F101",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        }
+      }
+    },
+    "DNV-ST-F201": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f201.py",
+      "inherited_criteria": {},
+      "checks": {
+        "pressure_containment": {
+          "coefficient_symbols": [
+            "DEFAULT_FACTORS.alpha_U",
+            "f_cb strength divisor",
+            "p_b coefficients",
+            "DEFAULT_FACTORS.gamma_m",
+            "DEFAULT_FACTORS.gamma_SC",
+            "DEFAULT_FACTORS.gamma_dyn"
+          ],
+          "coefficient_sources": {
+            "DEFAULT_FACTORS.alpha_U": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f201.py",
+              "symbol": "DEFAULT_FACTORS.alpha_U"
+            },
+            "f_cb strength divisor": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f201.py",
+              "symbol": "f_cb strength divisor"
+            },
+            "p_b coefficients": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f201.py",
+              "symbol": "p_b coefficients"
+            },
+            "DEFAULT_FACTORS.gamma_m": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f201.py",
+              "symbol": "DEFAULT_FACTORS.gamma_m"
+            },
+            "DEFAULT_FACTORS.gamma_SC": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f201.py",
+              "symbol": "DEFAULT_FACTORS.gamma_SC"
+            },
+            "DEFAULT_FACTORS.gamma_dyn": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f201.py",
+              "symbol": "DEFAULT_FACTORS.gamma_dyn"
+            }
+          },
+          "implementation_method": "_check_pressure_containment",
+          "source_reference": {
+            "standard": "DNV-ST-F201",
+            "title": "DNV-ST-F201",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [],
+          "coefficient_sources": {},
+          "implementation_method": null,
+          "source_reference": {
+            "standard": "DNV-ST-F201",
+            "title": "DNV-ST-F201",
+            "edition": null,
+            "clause": null,
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": null,
+          "limit": null,
+          "criterion_applied": false,
+          "evaluation_status": "not implemented",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route",
+            "Check is not implemented"
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [],
+          "coefficient_sources": {},
+          "implementation_method": null,
+          "source_reference": {
+            "standard": "DNV-ST-F201",
+            "title": "DNV-ST-F201",
+            "edition": null,
+            "clause": null,
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": null,
+          "limit": null,
+          "criterion_applied": false,
+          "evaluation_status": "not implemented",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route",
+            "Check is not implemented"
+          ]
+        }
+      }
+    },
+    "API-RP-1111": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+      "inherited_criteria": {
+        "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)",
+        "revision": "strategy default metadata: 2015; publisher edition unqualified",
+        "constants": [
+          "_check_burst.p_b coefficients and branch threshold",
+          "EDITION_FACTORS.f_d",
+          "EDITION_FACTORS.f_c",
+          "EDITION_FACTORS.f_p",
+          "_check_collapse.p_el coefficient",
+          "_check_collapse.p_y coefficient",
+          "_check_propagation.p_pr coefficient and exponent"
+        ],
+        "checks": {
+          "burst": {
+            "section": "Clause number and title not established",
+            "criterion": "Returned utilisation <= unity"
+          },
+          "collapse": {
+            "section": "Clause number and title not established",
+            "criterion": "Returned utilisation <= unity"
+          },
+          "propagation": {
+            "section": "Clause number and title not established",
+            "criterion": "Returned utilisation <= unity"
+          }
+        },
+        "qualification": "Module metadata only; edition label conflicts with the standards inventory; standard conformity not established",
+        "module_sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+        "publisher": "API"
+      },
+      "checks": {
+        "burst": {
+          "coefficient_symbols": [
+            "_check_burst.p_b coefficients and branch threshold",
+            "EDITION_FACTORS.f_d"
+          ],
+          "coefficient_sources": {
+            "_check_burst.p_b coefficients and branch threshold": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+              "symbol": "_check_burst.p_b coefficients and branch threshold"
+            },
+            "EDITION_FACTORS.f_d": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+              "symbol": "EDITION_FACTORS.f_d",
+              "edition_key": 2015
+            }
+          },
+          "implementation_method": "_check_burst",
+          "source_reference": {
+            "standard": "API-RP-1111",
+            "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)",
+            "edition": "Unqualified repository metadata: strategy default metadata: 2015; publisher edition unqualified",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established.",
+            "Module metadata only; edition label conflicts with the standards inventory; standard conformity not established"
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [
+            "_check_collapse.p_el coefficient",
+            "_check_collapse.p_y coefficient",
+            "p_c transition exponents",
+            "EDITION_FACTORS.f_c"
+          ],
+          "coefficient_sources": {
+            "_check_collapse.p_el coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+              "symbol": "_check_collapse.p_el coefficient"
+            },
+            "_check_collapse.p_y coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+              "symbol": "_check_collapse.p_y coefficient"
+            },
+            "p_c transition exponents": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+              "symbol": "p_c transition exponents"
+            },
+            "EDITION_FACTORS.f_c": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+              "symbol": "EDITION_FACTORS.f_c",
+              "edition_key": 2015
+            }
+          },
+          "implementation_method": "_check_collapse",
+          "source_reference": {
+            "standard": "API-RP-1111",
+            "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)",
+            "edition": "Unqualified repository metadata: strategy default metadata: 2015; publisher edition unqualified",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established.",
+            "Module metadata only; edition label conflicts with the standards inventory; standard conformity not established"
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [
+            "_check_propagation.p_pr coefficient and exponent",
+            "EDITION_FACTORS.f_p"
+          ],
+          "coefficient_sources": {
+            "_check_propagation.p_pr coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+              "symbol": "_check_propagation.p_pr coefficient and exponent"
+            },
+            "EDITION_FACTORS.f_p": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+              "symbol": "EDITION_FACTORS.f_p",
+              "edition_key": 2015
+            }
+          },
+          "implementation_method": "_check_propagation",
+          "source_reference": {
+            "standard": "API-RP-1111",
+            "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)",
+            "edition": "Unqualified repository metadata: strategy default metadata: 2015; publisher edition unqualified",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established.",
+            "Module metadata only; edition label conflicts with the standards inventory; standard conformity not established"
+          ]
+        }
+      }
+    },
+    "API-RP-2RD": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+      "inherited_criteria": {
+        "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)",
+        "revision": "legacy; exact edition not established by the strategy",
+        "constants": [
+          "_check_burst.p_b coefficient",
+          "C_A (burst and collapse)",
+          "_check_hoop.sigma_allow coefficient",
+          "_check_collapse.p_el coefficient",
+          "_check_collapse.p_y coefficient"
+        ],
+        "checks": {
+          "burst": {
+            "section": "Clause number and title not established",
+            "criterion": "Returned pressure utilisation <= unity"
+          },
+          "collapse": {
+            "section": "Clause number and title not established",
+            "criterion": "Returned external-pressure utilisation <= unity"
+          },
+          "hoop": {
+            "section": "Clause number and title not established",
+            "criterion": "Returned hoop-stress utilisation <= unity"
+          }
+        },
+        "reference_edition": "1st edition, June 1998; implemented edition not established",
+        "metadata_source": "https://www.govinfo.gov/content/pkg/CFR-2011-title30-vol2/pdf/CFR-2011-title30-vol2-sec250-198.pdf",
+        "module_sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+        "publisher": "API"
+      },
+      "checks": {
+        "burst": {
+          "coefficient_symbols": [
+            "_check_burst.p_b coefficient",
+            "C_A (burst and collapse)"
+          ],
+          "coefficient_sources": {
+            "_check_burst.p_b coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "_check_burst.p_b coefficient"
+            },
+            "C_A (burst and collapse)": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "C_A (burst and collapse)"
+            }
+          },
+          "implementation_method": "_check_burst",
+          "source_reference": {
+            "standard": "API-RP-2RD",
+            "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)",
+            "edition": "Unqualified repository metadata: 1st edition, June 1998; implemented edition not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": "https://www.govinfo.gov/content/pkg/CFR-2011-title30-vol2/pdf/CFR-2011-title30-vol2-sec250-198.pdf",
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned pressure utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established."
+          ]
+        },
+        "hoop": {
+          "coefficient_symbols": [
+            "_check_hoop.sigma_allow coefficient",
+            "d_i coefficient",
+            "sigma_h divisor"
+          ],
+          "coefficient_sources": {
+            "_check_hoop.sigma_allow coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "_check_hoop.sigma_allow coefficient"
+            },
+            "d_i coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "d_i coefficient"
+            },
+            "sigma_h divisor": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "sigma_h divisor"
+            }
+          },
+          "implementation_method": "_check_hoop",
+          "source_reference": {
+            "standard": "API-RP-2RD",
+            "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)",
+            "edition": "Unqualified repository metadata: 1st edition, June 1998; implemented edition not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": "https://www.govinfo.gov/content/pkg/CFR-2011-title30-vol2/pdf/CFR-2011-title30-vol2-sec250-198.pdf",
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned hoop-stress utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established."
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [
+            "_check_collapse.p_el coefficient",
+            "_check_collapse.p_y coefficient",
+            "p_c transition exponents",
+            "C_A (burst and collapse)"
+          ],
+          "coefficient_sources": {
+            "_check_collapse.p_el coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "_check_collapse.p_el coefficient"
+            },
+            "_check_collapse.p_y coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "_check_collapse.p_y coefficient"
+            },
+            "p_c transition exponents": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "p_c transition exponents"
+            },
+            "C_A (burst and collapse)": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+              "symbol": "C_A (burst and collapse)"
+            }
+          },
+          "implementation_method": "_check_collapse",
+          "source_reference": {
+            "standard": "API-RP-2RD",
+            "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)",
+            "edition": "Unqualified repository metadata: 1st edition, June 1998; implemented edition not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": "https://www.govinfo.gov/content/pkg/CFR-2011-title30-vol2/pdf/CFR-2011-title30-vol2-sec250-198.pdf",
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned external-pressure utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established."
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [],
+          "coefficient_sources": {},
+          "implementation_method": null,
+          "source_reference": {
+            "standard": "API-RP-2RD",
+            "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)",
+            "edition": null,
+            "clause": null,
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": null,
+          "limit": null,
+          "criterion_applied": false,
+          "evaluation_status": "not implemented",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established.",
+            "Check is not implemented"
+          ]
+        }
+      }
+    },
+    "API-STD-2RD": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+      "inherited_criteria": {
+        "title": "Dynamic Risers for Floating Production Systems",
+        "revision": "2e-2013",
+        "constants": [
+          "_check_burst.p_b coefficient",
+          "_check_burst.f_d",
+          "_check_collapse.f_c",
+          "_check_combined.p_b coefficient",
+          "COMBINED_DESIGN_FACTOR",
+          "_check_collapse.p_el coefficient",
+          "_check_collapse.p_y coefficient"
+        ],
+        "checks": {
+          "burst": {
+            "section": "5.3.2 (burst)",
+            "criterion": "Returned pressure utilisation <= unity"
+          },
+          "collapse": {
+            "section": "5.3.3 (collapse)",
+            "criterion": "Returned external-pressure utilisation <= unity"
+          },
+          "combined": {
+            "section": "Section 5 (dynamic riser design criteria), Method 1",
+            "criterion": "Returned moment-tension-pressure utilisation <= unity"
+          }
+        },
+        "module_sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f",
+        "publisher": "API"
+      },
+      "checks": {
+        "burst": {
+          "coefficient_symbols": [
+            "_check_burst.p_b coefficient",
+            "_check_burst.f_d"
+          ],
+          "coefficient_sources": {
+            "_check_burst.p_b coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+              "symbol": "_check_burst.p_b coefficient"
+            },
+            "_check_burst.f_d": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+              "symbol": "_check_burst.f_d"
+            }
+          },
+          "implementation_method": "_check_burst",
+          "source_reference": {
+            "standard": "API-STD-2RD",
+            "title": "Dynamic Risers for Floating Production Systems",
+            "edition": "Unqualified repository metadata: 2e-2013",
+            "clause": "Unqualified repository metadata: 5.3.2 (burst)",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned pressure utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established."
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [
+            "_check_collapse.p_el coefficient",
+            "_check_collapse.p_y coefficient",
+            "p_c transition exponents",
+            "_check_collapse.f_c"
+          ],
+          "coefficient_sources": {
+            "_check_collapse.p_el coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+              "symbol": "_check_collapse.p_el coefficient"
+            },
+            "_check_collapse.p_y coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+              "symbol": "_check_collapse.p_y coefficient"
+            },
+            "p_c transition exponents": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+              "symbol": "p_c transition exponents"
+            },
+            "_check_collapse.f_c": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+              "symbol": "_check_collapse.f_c"
+            }
+          },
+          "implementation_method": "_check_collapse",
+          "source_reference": {
+            "standard": "API-STD-2RD",
+            "title": "Dynamic Risers for Floating Production Systems",
+            "edition": "Unqualified repository metadata: 2e-2013",
+            "clause": "Unqualified repository metadata: 5.3.3 (collapse)",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned external-pressure utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established."
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [],
+          "coefficient_sources": {},
+          "implementation_method": null,
+          "source_reference": {
+            "standard": "API-STD-2RD",
+            "title": "Dynamic Risers for Floating Production Systems",
+            "edition": null,
+            "clause": null,
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": null,
+          "limit": null,
+          "criterion_applied": false,
+          "evaluation_status": "not implemented",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established.",
+            "Check is not implemented"
+          ]
+        }
+      }
+    },
+    "PD-8010-2": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+      "inherited_criteria": {},
+      "checks": {
+        "hoop_stress": {
+          "coefficient_symbols": [
+            "sigma_h divisor",
+            "f_d"
+          ],
+          "coefficient_sources": {
+            "sigma_h divisor": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+              "symbol": "sigma_h divisor"
+            },
+            "f_d": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+              "symbol": "f_d"
+            }
+          },
+          "implementation_method": "_check_hoop_stress",
+          "source_reference": {
+            "standard": "PD-8010-2",
+            "title": "PD-8010-2",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [
+            "p_el coefficient and exponent",
+            "p_p coefficient",
+            "f_0",
+            "f_c"
+          ],
+          "coefficient_sources": {
+            "p_el coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+              "symbol": "p_el coefficient and exponent"
+            },
+            "p_p coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+              "symbol": "p_p coefficient"
+            },
+            "f_0": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+              "symbol": "f_0"
+            },
+            "f_c": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+              "symbol": "f_c"
+            }
+          },
+          "implementation_method": "_check_collapse",
+          "source_reference": {
+            "standard": "PD-8010-2",
+            "title": "PD-8010-2",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": false,
+          "evaluation_status": "suppressed (#1920)",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route",
+            "Known collapse solver fault (#1920); no collapse result is used"
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [
+            "p_pr coefficient and exponent",
+            "f_p"
+          ],
+          "coefficient_sources": {
+            "p_pr coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+              "symbol": "p_pr coefficient and exponent"
+            },
+            "f_p": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/pd_8010_2.py",
+              "symbol": "f_p"
+            }
+          },
+          "implementation_method": "_check_propagation",
+          "source_reference": {
+            "standard": "PD-8010-2",
+            "title": "PD-8010-2",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        }
+      }
+    },
+    "ASME-B31.8": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+      "inherited_criteria": {},
+      "checks": {
+        "burst": {
+          "coefficient_symbols": [
+            "p_d coefficient",
+            "F",
+            "E_j",
+            "T_factor"
+          ],
+          "coefficient_sources": {
+            "p_d coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "p_d coefficient"
+            },
+            "F": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "F"
+            },
+            "E_j": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "E_j"
+            },
+            "T_factor": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "T_factor"
+            }
+          },
+          "implementation_method": "_check_burst",
+          "source_reference": {
+            "standard": "ASME-B31.8",
+            "title": "ASME-B31.8",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [
+            "p_el coefficient and exponent",
+            "p_y coefficient",
+            "p_c transition exponents",
+            "f_c"
+          ],
+          "coefficient_sources": {
+            "p_el coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "p_el coefficient and exponent"
+            },
+            "p_y coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "p_y coefficient"
+            },
+            "p_c transition exponents": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "p_c transition exponents"
+            },
+            "f_c": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "f_c"
+            }
+          },
+          "implementation_method": "_check_collapse",
+          "source_reference": {
+            "standard": "ASME-B31.8",
+            "title": "ASME-B31.8",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [
+            "p_pr coefficient and exponent",
+            "f_p"
+          ],
+          "coefficient_sources": {
+            "p_pr coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "p_pr coefficient and exponent"
+            },
+            "f_p": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_8.py",
+              "symbol": "f_p"
+            }
+          },
+          "implementation_method": "_check_propagation",
+          "source_reference": {
+            "standard": "ASME-B31.8",
+            "title": "ASME-B31.8",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        }
+      }
+    },
+    "ISO-13623": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+      "inherited_criteria": {},
+      "checks": {
+        "pressure_containment": {
+          "coefficient_symbols": [
+            "p_d coefficient",
+            "e_j",
+            "gamma_s"
+          ],
+          "coefficient_sources": {
+            "p_d coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "p_d coefficient"
+            },
+            "e_j": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "e_j"
+            },
+            "gamma_s": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "gamma_s"
+            }
+          },
+          "implementation_method": "_check_pressure_containment",
+          "source_reference": {
+            "standard": "ISO-13623",
+            "title": "ISO-13623",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [
+            "p_el coefficient and exponent",
+            "p_p coefficient",
+            "PipeMaterial.alpha_fab",
+            "f_0",
+            "f_c"
+          ],
+          "coefficient_sources": {
+            "p_el coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "p_el coefficient and exponent"
+            },
+            "p_p coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "p_p coefficient"
+            },
+            "PipeMaterial.alpha_fab": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+              "symbol": "PipeMaterial.alpha_fab"
+            },
+            "f_0": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "f_0"
+            },
+            "f_c": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "f_c"
+            }
+          },
+          "implementation_method": "_check_collapse",
+          "source_reference": {
+            "standard": "ISO-13623",
+            "title": "ISO-13623",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": false,
+          "evaluation_status": "suppressed (#1920)",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route",
+            "Known collapse solver fault (#1920); no collapse result is used"
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [
+            "p_pr coefficient and exponent",
+            "f_p"
+          ],
+          "coefficient_sources": {
+            "p_pr coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "p_pr coefficient and exponent"
+            },
+            "f_p": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/iso_13623.py",
+              "symbol": "f_p"
+            }
+          },
+          "implementation_method": "_check_propagation",
+          "source_reference": {
+            "standard": "ISO-13623",
+            "title": "ISO-13623",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        }
+      }
+    },
+    "ASME-B31.4": {
+      "strategy_source": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+      "inherited_criteria": {},
+      "checks": {
+        "burst": {
+          "coefficient_symbols": [
+            "p_d coefficient",
+            "DESIGN_FACTOR_F",
+            "JOINT_FACTOR_E",
+            "TEMP_FACTOR_T"
+          ],
+          "coefficient_sources": {
+            "p_d coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "p_d coefficient"
+            },
+            "DESIGN_FACTOR_F": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "DESIGN_FACTOR_F"
+            },
+            "JOINT_FACTOR_E": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "JOINT_FACTOR_E"
+            },
+            "TEMP_FACTOR_T": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "TEMP_FACTOR_T"
+            }
+          },
+          "implementation_method": "_check_burst",
+          "source_reference": {
+            "standard": "ASME-B31.4",
+            "title": "ASME-B31.4",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "collapse": {
+          "coefficient_symbols": [
+            "p_el coefficient and exponent",
+            "p_y coefficient",
+            "p_c transition exponents",
+            "f_c"
+          ],
+          "coefficient_sources": {
+            "p_el coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "p_el coefficient and exponent"
+            },
+            "p_y coefficient": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "p_y coefficient"
+            },
+            "p_c transition exponents": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "p_c transition exponents"
+            },
+            "f_c": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "f_c"
+            }
+          },
+          "implementation_method": "_check_collapse",
+          "source_reference": {
+            "standard": "ASME-B31.4",
+            "title": "ASME-B31.4",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        },
+        "propagation": {
+          "coefficient_symbols": [
+            "p_pr coefficient and exponent",
+            "f_p"
+          ],
+          "coefficient_sources": {
+            "p_pr coefficient and exponent": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "p_pr coefficient and exponent"
+            },
+            "f_p": {
+              "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/asme_b31_4.py",
+              "symbol": "f_p"
+            }
+          },
+          "implementation_method": "_check_propagation",
+          "source_reference": {
+            "standard": "ASME-B31.4",
+            "title": "ASME-B31.4",
+            "edition": "Unqualified repository metadata: Not established",
+            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "metadata_source": null,
+            "basis": "Repository metadata only; publisher source not consulted"
+          },
+          "criterion": "Returned utilisation <= unity",
+          "limit": 1.0,
+          "criterion_applied": true,
+          "evaluation_status": "evaluated",
+          "qualification": "unqualified",
+          "qualification_gaps": [
+            "Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text",
+            "No comparison criterion record covers this route"
+          ]
+        }
+      }
+    }
+  },
+  "inherited_criteria_context": {
+    "criteria_revision": "2",
+    "comparison_kind": "repository-module outputs; standard conformity not established",
+    "limit": 1.0,
+    "locator_evidence": [
+      "src/digitalmodel/drilling_riser/postprocess/pressure.py",
+      "src/digitalmodel/riser_database/getters.py"
+    ],
+    "qualification": "Clause mapping is inherited from repository references, not checked against a licensed standard. Not Evaluated: legacy edition and clause locators are not established."
+  },
   "input_sha256": "8057be4b89744d93502528183e9c0b59fdcb85ce39f4427f7308215c335f57b4",
   "generator": "scripts/reporting/build_minimum_wall_table.py",
-  "generator_sha256": "f422e54d3d2722f54b45a4568352f599262a143ef685bf083a29a949cf6d7894",
+  "generator_sha256": "06180b1ae182238aa7b5199827563b26b7a3d9d8310df620274687526f9fdf22",
   "csv_sha256": "5f26b7fdcaa2f799eac9ea68cfb01884814ee080da3957eeadf49e618e1f7c2a",
   "rows": [
     {
@@ -4858,7 +6151,7 @@
   "wall_basis": "nominal or corroded wall, per code, as implemented; pressure-only corrosion wrapper for four nominal routes",
   "fabrication_basis": "F101 and F201 deduct a fraction multiplicatively; default 0.125; other routes do not apply this deduction",
   "limitations": [
-    "the result of our implementation",
+    "Implemented strategy results; standard conformity not established",
     "no edition claim",
     "pressure basis remains ASSUMED gauge pending confirmed pressure data",
     "collapse not shown (#1920) for ISO 13623 and PD 8010-2; no completed stock selection for these routes",
@@ -4876,6 +6169,11 @@
       "revision": 0,
       "date": "2026-10-26",
       "change": "Initial pressure grid and stock selection trace with explicit check gaps"
+    },
+    {
+      "revision": 1,
+      "date": "2026-10-26",
+      "change": "Preserve per-check coefficient references and unresolved qualification gaps for stock trials"
     }
   ]
 }

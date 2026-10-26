@@ -34,6 +34,7 @@ from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
 
 ROOT = Path(__file__).resolve().parents[2]
 INPUT = ROOT / "scripts/reporting/minimum_wall_table.json"
+CRITERIA = ROOT / "scripts/reporting/riser_pipe_comparison.criteria.json"
 OUTPUT = ROOT / "docs/reports/minimum-wall-table"
 NATIVE_CORROSION = {
     DesignCode.ASME_B31_4, DesignCode.PD_8010_2, DesignCode.ISO_13623,
@@ -52,6 +53,59 @@ PRESSURE_METHODS = {
     DesignCode.ISO_13623: ("pressure_containment",),
     DesignCode.PD_8010_2: ("hoop_stress",),
 }
+# Symbol inventory only: values and standard qualification are not supplied here.
+TRANSITION = ("p_el coefficient and exponent", "p_y coefficient", "p_c transition exponents", "f_c")
+PROPAGATION = ("p_pr coefficient and exponent", "f_p")
+COEFFICIENTS = {
+    DesignCode.API_RP_1111: {
+        "burst": ("_check_burst.p_b coefficients and branch threshold", "EDITION_FACTORS.f_d"),
+        "collapse": ("_check_collapse.p_el coefficient", "_check_collapse.p_y coefficient",
+                     "p_c transition exponents", "EDITION_FACTORS.f_c"),
+        "propagation": ("_check_propagation.p_pr coefficient and exponent", "EDITION_FACTORS.f_p"),
+    },
+    DesignCode.API_RP_2RD: {
+        "burst": ("_check_burst.p_b coefficient", "C_A (burst and collapse)"),
+        "hoop": ("_check_hoop.sigma_allow coefficient", "d_i coefficient", "sigma_h divisor"),
+        "collapse": ("_check_collapse.p_el coefficient", "_check_collapse.p_y coefficient",
+                     "p_c transition exponents", "C_A (burst and collapse)"),
+    },
+    DesignCode.API_STD_2RD: {
+        "burst": ("_check_burst.p_b coefficient", "_check_burst.f_d"),
+        "collapse": ("_check_collapse.p_el coefficient", "_check_collapse.p_y coefficient",
+                     "p_c transition exponents", "_check_collapse.f_c"),
+    },
+    DesignCode.ASME_B31_4: {
+        "burst": ("p_d coefficient", "DESIGN_FACTOR_F", "JOINT_FACTOR_E", "TEMP_FACTOR_T"),
+        "collapse": TRANSITION, "propagation": PROPAGATION,
+    },
+    DesignCode.ASME_B31_8: {
+        "burst": ("p_d coefficient", "F", "E_j", "T_factor"),
+        "collapse": TRANSITION, "propagation": PROPAGATION,
+    },
+    DesignCode.DNV_ST_F101: {
+        "pressure_containment": ("EDITION_FACTORS.f_y", "EDITION_FACTORS.f_u",
+                                 "f_cb strength divisor", "p_b coefficients",
+                                 "DesignFactors.gamma_sc", "DesignFactors.gamma_m", "DesignFactors.gamma_inc"),
+        "collapse": ("p_el coefficient and exponent", "p_p coefficient", "PipeMaterial.alpha_fab",
+                     "EDITION_FACTORS.f_0", "DesignFactors.gamma_sc", "DesignFactors.gamma_m", "DesignFactors.gamma_inc"),
+        "propagation": ("p_pr coefficient and exponent", "PipeMaterial.alpha_fab",
+                        "DesignFactors.gamma_sc", "DesignFactors.gamma_m", "DesignFactors.gamma_inc"),
+    },
+    DesignCode.DNV_ST_F201: {
+        "pressure_containment": ("DEFAULT_FACTORS.alpha_U", "f_cb strength divisor", "p_b coefficients",
+                                 "DEFAULT_FACTORS.gamma_m", "DEFAULT_FACTORS.gamma_SC", "DEFAULT_FACTORS.gamma_dyn"),
+    },
+    DesignCode.ISO_13623: {
+        "pressure_containment": ("p_d coefficient", "e_j", "gamma_s"),
+        "collapse": ("p_el coefficient and exponent", "p_p coefficient", "PipeMaterial.alpha_fab", "f_0", "f_c"),
+        "propagation": PROPAGATION,
+    },
+    DesignCode.PD_8010_2: {
+        "hoop_stress": ("sigma_h divisor", "f_d"),
+        "collapse": ("p_el coefficient and exponent", "p_p coefficient", "f_0", "f_c"),
+        "propagation": PROPAGATION,
+    },
+}
 FIELDS = (
     "code", "design_pressure_mpa", "external_pressure_mpa", "pressure_basis",
     "pressure_wall_basis", "external_wall_basis", "pressure_minimum_wall_mm",
@@ -60,6 +114,12 @@ FIELDS = (
     "collapse_status", "propagation_status", "failed_checks", "governing_check",
     "selection_status", "selection_set_by", "strategy_source",
 )
+REVISION_HISTORY = [
+    {"revision": 0, "date": "2026-10-26",
+     "change": "Initial pressure grid and stock selection trace with explicit check gaps"},
+    {"revision": 1, "date": "2026-10-26",
+     "change": "Preserve per-check coefficient references and unresolved qualification gaps for stock trials"},
+]
 
 
 def validate(cfg):
@@ -230,6 +290,7 @@ def source_digests(commit):
     analysis = ROOT / "src/digitalmodel/structural/analysis"
     sources = [analysis / "wall_thickness.py", *sorted((analysis / "wall_thickness_codes").glob("*.py"))]
     sources.append(ROOT / "scripts/reporting/build_riser_pipe_comparison.py")
+    sources.append(CRITERIA)
     digests = {}
     for source in sources:
         relative = source.relative_to(ROOT).as_posix()
@@ -240,12 +301,94 @@ def source_digests(commit):
     return digests
 
 
+def _coefficient_sources(symbols, strategy):
+    """Locate applied definitions; an executed table key is not an edition claim."""
+    sources = {}
+    for symbol in symbols:
+        definition = type(strategy)
+        if symbol.startswith("DesignFactors."):
+            definition = DesignFactors
+        elif symbol.startswith("PipeMaterial."):
+            definition = PipeMaterial
+        sources[symbol] = {
+            "path": Path(inspect.getfile(definition)).relative_to(ROOT).as_posix(),
+            "symbol": symbol,
+        }
+        if symbol.startswith("EDITION_FACTORS."):
+            sources[symbol]["edition_key"] = strategy.edition_year
+    return sources
+
+
+def _check_provenance(code, name, strategy, entry, criteria):
+    """Separate an unverified reference label from a check's evaluation status."""
+    native = "propagation_buckling" if code == DesignCode.DNV_ST_F101 and name == "propagation" else name
+    available = native in strategy.check_names
+    status = "evaluated" if available else "not implemented"
+    gaps = ["Publisher text was not consulted; coefficient values and applicability are unverified",
+            "Edition and clause qualification are not established against publisher text"]
+    if entry:
+        gaps.append(criteria["qualification"])
+        if "qualification" in entry:
+            gaps.append(entry["qualification"])
+    else:
+        gaps.append("No comparison criterion record covers this route")
+    if not available:
+        gaps.append("Check is not implemented")
+    if name == "collapse" and code in SUPPRESSED:
+        status = "suppressed (#1920)"
+        gaps.append("Known collapse solver fault (#1920); no collapse result is used")
+    reference = entry.get("checks", {}).get(native, {})
+    prefix = "Unqualified repository metadata: "
+    symbols = list(COEFFICIENTS[code][name]) if available else []
+    return {
+        "coefficient_symbols": symbols,
+        "coefficient_sources": _coefficient_sources(symbols, strategy),
+        "implementation_method": "_check_" + native if available else None,
+        "source_reference": {
+            "standard": code.value, "title": entry.get("title", code.value),
+            "edition": prefix + entry.get("reference_edition", entry.get("revision", "Not established")) if available else None,
+            "clause": prefix + reference.get("section", "Clause number and title not established") if available else None,
+            "metadata_source": entry.get("metadata_source") if available else None,
+            "basis": "Repository metadata only; publisher source not consulted",
+        },
+        "criterion": reference.get("criterion", "Returned utilisation <= unity") if available else None,
+        "limit": 1.0 if available else None,
+        "criterion_applied": status == "evaluated",
+        "evaluation_status": status, "qualification": "unqualified", "qualification_gaps": gaps,
+    }
+
+
+def check_provenance(digests):
+    """Bind inherited criteria to strategy bytes and retain unresolved gaps."""
+    criteria = json.loads(CRITERIA.read_text(encoding="utf-8"))
+    inherited = {entry["module"]: entry for entry in criteria["codes"].values()}
+    inventory = {}
+    fields = ("title", "revision", "constants", "checks", "qualification",
+              "reference_edition", "metadata_source", "module_sha256", "publisher")
+    for code in DesignCode:
+        strategy = CODE_REGISTRY[code]()
+        source = Path(inspect.getfile(type(strategy))).relative_to(ROOT).as_posix()
+        entry = inherited.get(source, {})
+        if entry and entry["module_sha256"] != digests[source]["sha256"]:
+            raise ValueError(f"Criterion module digest mismatch: {source}")
+        inventory[code.value] = {
+            "strategy_source": source,
+            "inherited_criteria": {key: entry[key] for key in fields if key in entry},
+            "checks": {name: _check_provenance(code, name, strategy, entry, criteria)
+                       for name in (*PRESSURE_METHODS[code], "collapse", "propagation")},
+        }
+    return {"source": CRITERIA.relative_to(ROOT).as_posix(),
+            "criteria_revision": criteria["criteria_revision"], "routes": inventory,
+            "context": {key: value for key, value in criteria.items() if key != "codes"}}
+
+
 def build(input_path=INPUT, output_dir=OUTPUT):
     """Write deterministic CSV and one manifest row per CSV row with provenance."""
     input_path, output_dir = Path(input_path), Path(output_dir)
     cfg = json.loads(input_path.read_text(encoding="utf-8"))
     validate(cfg)
     digests = source_digests(cfg["source_commit"])
+    provenance = check_provenance(digests)
     rows = [row for code in DesignCode for pressure in cfg["pressures_mpa"]
             for row in rows_for(cfg, code, pressure)]
     buffer = io.StringIO(newline="")
@@ -256,8 +399,11 @@ def build(input_path=INPUT, output_dir=OUTPUT):
                          for key, value in row.items()})
     payload = buffer.getvalue().encode()
     manifest = {
-        "schema_version": 1, "source_commit": cfg["source_commit"],
+        "schema_version": 2, "source_commit": cfg["source_commit"],
         "strategy_sources": digests, "inputs": cfg,
+        "criteria_source": provenance["source"], "criteria_revision": provenance["criteria_revision"],
+        "check_provenance": provenance["routes"],
+        "inherited_criteria_context": provenance["context"],
         "input_sha256": hashlib.sha256(input_path.read_bytes()).hexdigest(),
         "generator": Path(__file__).relative_to(ROOT).as_posix(),
         "generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
@@ -269,7 +415,7 @@ def build(input_path=INPUT, output_dir=OUTPUT):
         "wall_basis": "nominal or corroded wall, per code, as implemented; pressure-only corrosion wrapper for four nominal routes",
         "fabrication_basis": "F101 and F201 deduct a fraction multiplicatively; default 0.125; other routes do not apply this deduction",
         "limitations": [
-            "the result of our implementation", "no edition claim",
+            "Implemented strategy results; standard conformity not established", "no edition claim",
             "pressure basis remains ASSUMED gauge pending confirmed pressure data",
             "collapse not shown (#1920) for ISO 13623 and PD 8010-2; no completed stock selection for these routes",
             "propagation not implemented for API RP 2RD, API STD 2RD and DNV-ST-F201; collapse also not implemented for DNV-ST-F201",
@@ -281,13 +427,12 @@ def build(input_path=INPUT, output_dir=OUTPUT):
             "API-RP-1111": "Any oval remains SCREENING and unquoted until registration has a passed review record; wording, values and table switch together",
             "scope": "No combined-loading values or ovals are generated here",
         },
-        "revision_history": [{"revision": 0, "date": "2026-10-26",
-                              "change": "Initial pressure grid and stock selection trace with explicit check gaps"}],
+        "revision_history": REVISION_HISTORY,
     }
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "minimum-wall.csv").write_bytes(payload)
     (output_dir / "minimum-wall.manifest.json").write_text(
-        json.dumps(manifest, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+        json.dumps(manifest, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return manifest
 
 
