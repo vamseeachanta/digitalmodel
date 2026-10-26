@@ -991,8 +991,17 @@ class SensitivityAnalysisService:
     ) -> Optional[Tuple[float, float]]:
         """Calculate a Fisher interval, or None when it is unavailable.
 
-        Fisher's standard error is 1/sqrt(n-3); three or fewer pairs cannot
-        support this interval. At r=+/-1 the inverse transform tends to r.
+        For bivariate normal pairs, Fisher's transform has approximate standard
+        error 1/sqrt(n-3) [1]. Three or fewer pairs have no finite real standard
+        error. This service returns None in that case, consistent with R's
+        four-pair minimum for reporting a Fisher interval [2]; SciPy instead
+        returns the full [-1, 1] range. At r=+/-1 the inverse transform tends to r.
+
+        References:
+            [1] SciPy, PearsonRResult.confidence_interval, method description:
+            https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats._result_classes.PearsonRResult.confidence_interval.html
+            [2] R stats, cor.test, Details:
+            https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.test.html
         """
         if n <= 3 or not np.isfinite(correlation):
             return None

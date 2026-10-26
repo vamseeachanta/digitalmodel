@@ -1408,6 +1408,10 @@ def test_perfect_correlation_interval(service, correlation):
 
 def test_three_pairs_have_no_fisher_interval(service):
     # Fisher's standard error is 1/sqrt(n-3), undefined for three pairs.
+    # Formula: SciPy PearsonRResult.confidence_interval, method description:
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats._result_classes.PearsonRResult.confidence_interval.html
+    # Returning None follows R cor.test's four-pair minimum (Details):
+    # https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.test.html
     item, = service._correlation_sensitivity(
         pd.DataFrame({"parameter": [1.0, 2.0, 3.0], "response": [1.0, 3.0, 2.0]}),
         ["parameter"], "response",
