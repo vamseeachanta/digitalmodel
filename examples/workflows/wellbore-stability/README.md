@@ -20,6 +20,20 @@ no local environment paths. Pressures are psi, TVD is feet, EMW is ppg using
 `pressure / (0.052 * TVD)`. The pressure datum is surface gauge pressure for an
 onshore single fluid column; offshore datums need a separate qualified model.
 
+## Plan-lite
+
+Scope: disclose unknown selection-bias direction when collapse draws remain
+unresolved, while retaining the explicit fraction policy and the requirement
+that every collapse and ceiling draw resolve before a window can be feasible.
+
+Validation: run the stability regressions and drilling suite, including the
+independently derived narrow-interval case, then check Python lint and
+formatting, this document's engineering register and repository structure.
+
+Known limits: pressure sampling can miss narrow stable intervals. Conditional
+collapse quantiles do not qualify unresolved draws or establish a feasible
+operating window. Screening remains `NOT_VALIDATED`.
+
 ## Model and conventions
 
 Compression is positive. Sv is a vertical principal stress; SHmax and Shmin
