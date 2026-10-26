@@ -10,6 +10,8 @@ on:
       - "tests/solvers/openfoam/**"
       - "examples/hydrodynamics/oc4-semisub/**"
       - "tests/hydrodynamics/test_oc4_public_mesh.py"
+      - "tests/hydrodynamics/test_oc4_extended_band.py"
+      - "tests/hydrodynamics/test_oc4_complex_export.py"
       - "tests/solvers/smoke/test_ci_registration.py"
       - "tests/scripts/test_cfd_python_install.py"
       - "tests/scripts/test_dispatch_cfd_run.py"
@@ -32,6 +34,8 @@ on:
       - "tests/solvers/openfoam/**"
       - "examples/hydrodynamics/oc4-semisub/**"
       - "tests/hydrodynamics/test_oc4_public_mesh.py"
+      - "tests/hydrodynamics/test_oc4_extended_band.py"
+      - "tests/hydrodynamics/test_oc4_complex_export.py"
       - "tests/solvers/smoke/test_ci_registration.py"
       - "tests/scripts/test_cfd_python_install.py"
       - "tests/scripts/test_dispatch_cfd_run.py"
@@ -188,6 +192,8 @@ jobs:
         run: |
           uv run --frozen --extra cfd --extra test pytest -q \
             tests/hydrodynamics/test_oc4_public_mesh.py \
+            tests/hydrodynamics/test_oc4_extended_band.py \
+            tests/hydrodynamics/test_oc4_complex_export.py \
             tests/solvers/smoke/test_ci_registration.py \
             tests/solvers/gmsh_meshing/test_tank_fixture.py \
             tests/solvers/openfoam/test_poly_mesh_contract.py \

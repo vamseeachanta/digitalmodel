@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Keep this new test directory in the explicit solver-smoke CI invocation."""
 
 import importlib.util
@@ -69,3 +72,15 @@ def test_public_mesh_tests_execute_with_locked_gmsh_and_runtime():
         "--frozen" in args and "cfd" in args and "test" in args and mesh_test in args
         for args in test_commands
     )
+
+
+def test_extended_band_regressions_are_selected_and_executed():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/gmsh-meshing-tests.yml").read_text())
+    events = workflow.get("on", workflow.get(True))
+    paths = {"tests/hydrodynamics/test_oc4_extended_band.py",
+             "tests/hydrodynamics/test_oc4_complex_export.py"}
+    for event in ("push", "pull_request"):
+        assert paths <= set(events[event]["paths"])
+    commands = [shlex.split(step["run"].replace("\\\n", " "))
+                for step in workflow["jobs"]["focused-tests"]["steps"] if "run" in step]
+    assert any("pytest" in args and paths <= set(args) for args in commands)

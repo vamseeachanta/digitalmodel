@@ -13,6 +13,7 @@ published platform centre of mass is a distinct quantity.
 | A | 2026-10-20 | Public column and member geometry, independent mesh checks and dimension-based tests are added to provide a reproducible diffraction input. |
 | B | 2026-10-20 | Hosted test coverage is added, the dependency pin and reference platform are clarified, and every adjacent triangle repeat is supported. |
 | C | 2026-10-20 | Buoyancy depth is reported as information because no acceptance tolerance is specified, and a translated cube checks the integration origin. |
+| D | 2026-10-26 | Extended-band hull and lid generation, versioned inputs and complex exports are added for offline preparation; native acceptance remains open. |
 
 ## Public basis
 
@@ -98,7 +99,7 @@ uv run --no-project --with 'numpy<2' python \
   examples/hydrodynamics/oc4-semisub/check_mesh.py "$TMPDIR/oc4-public.gdf"
 ```
 
-The default target edge size is 1.25 m, with curvature refinement at 16 elements
+The historical target edge size was 1.25 m, with curvature refinement at 16 elements
 per full circle [G, `Mesh.MeshSizeFromCurvature`]. These are numerical choices,
 not publication dimensions. The reference output below was generated on Linux
 x86-64 with Python 3.11.14, NumPy 1.26.4 and Gmsh 4.15.1, matching the repository's
@@ -107,7 +108,7 @@ hydrostatics can vary across platforms and Gmsh releases; acceptance depends on
 the numerical criteria, rather than exact reproduction of these counts or values.
 The generator repeats the last vertex of each triangle, normals
 point into the fluid and symmetry flags are disabled for full-body export
-[F, section 6.1]. No lid or irregular-frequency treatment is included.
+[F, section 6.1]. That historical output contains no interior lid.
 
 The checker reads the exported coordinates, integrates signed tetrahedral
 volumes and first moments, and closes only the SWL boundary implicitly for
@@ -169,3 +170,68 @@ installs the Gmsh runtime library and the locked `cfd` and `test` extras. Its pu
 and pull-request filters include this example and its tests. Registration
 regressions check those filters and the executable pytest arguments, so metadata
 alone cannot substitute for running the tests.
+
+## Extended band, version 2
+
+The default target is now 0.55 m, followed by a maximum pairwise vertex-span
+check on the exported coordinates. `--pair` produces independently meshed coarse
+and fine hulls and separate SWL interior lids; all four meshes are checked at
+1500 m and 3.50 rad/s. The limit follows `omega² = g k tanh(k h)`,
+`lambda = 2 pi/k` and `span <= lambda/6`, with `g = 9.80665 m/s²` and six panels
+per wavelength **ASSUMED** from the supplied study criterion. The resulting
+unrounded limit is 0.8383265196279277 m. This is an input-resolution gate;
+response convergence remains unestablished.
+
+```bash
+uv run --no-project --with 'numpy<2' --with gmsh==4.15.1 python \
+  examples/hydrodynamics/oc4-semisub/generate_mesh.py \
+  "$TMPDIR/extended-packet" --gravity 9.80665 --pair
+uv run --no-project --with pyyaml python \
+  examples/hydrodynamics/oc4-semisub/build_datafile_v2.py \
+  "$TMPDIR/extended-packet/coarse-model-v2.yml" coarse-hull-v2.gdf
+uv run --no-project --with 'numpy<2' --with pyyaml python \
+  examples/hydrodynamics/oc4-semisub/input_checks_v2.py \
+  "$TMPDIR/extended-packet" coarse
+```
+
+The builder is also run for `fine-model-v2.yml` and `fine-hull-v2.gdf`. DF0
+checks the exact versioned datafile, platform mass and inertia, headings,
+350-frequency list, GDF gravity, generation sources and mesh digests. DF3
+checks the hull and reference lid against the upper frequency. Completed mesh
+cases are reused only after their recorded inputs and payload digests match.
+A partial case is retained and reported for inspection, rather than overwritten.
+The mesh payloads exceed the publication size limit and are retained outside
+Git; the checked SHA-256 manifests are included as generation receipts. Regeneration
+on a different Gmsh platform can change the bytes; both the receipt comparison
+and the physical checks are required before those bytes become solver inputs.
+
+The separate lid is a checked reference covering every column and brace
+waterline. The datafile requests automatic native interior panels with
+`BodyAddInteriorSurfacePanels: Yes`; the native panel footprint and span still
+require readback against that reference. `HasResonanceDampingLid: No` controls
+a different damping mechanism and remains unchanged. No assertion is made that
+the native automatic panels reproduce the reference triangulation.
+
+`input-specification-v2.json` and `expected-v2.json` preserve the supplied study
+basis, including the historical DF5.2 and DF5.3 FAILs. The old builder and
+expected record are not present in this checkout and are not replaced.
+The platform mass basis is unchanged; its suitability for a complete system
+is unverified. The additional 1.983 rad/s diagnostic is separate from the exact
+350-frequency production list.
+
+`complex_export_v2.py` requires a `ResultAdapter` for snapshot, native save
+and native reload. Every motion RAO and both excitation formulations retain
+real and imaginary parts; axes, coordinate and heading conventions, origins,
+SI units and the harmonic time sign are explicit. The adapter converts native
+units before export. Reload checks cover frequencies, headings, full added-mass
+and damping matrices, all three complex response arrays and metadata exactly.
+Only a fake adapter is tested here; native integration remains open.
+
+The [probe and acceptance plan](extended-band-plan.html) defines the smoke,
+lid, high-band, mesh and frequency-refinement checks. It also records the
+retention basis and the missing historical acceptance criteria. No licensed
+solver is imported or executed by this example's offline preparation.
+
+Generation receipts bind source bytes as well as mesh bytes. Applying the
+standard licence header changes source digests; a header-only equality proof
+and renewed DF0 checks are required before the normalised receipt is used.
