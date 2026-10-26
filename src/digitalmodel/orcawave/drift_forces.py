@@ -4,7 +4,7 @@ Implements Newman's approximation for QTF, full QTF double-sum integration,
 mean drift force coefficient handling, and wind/current drift estimation.
 """
 
-from typing import Dict, List, Literal, Optional, Tuple
+from typing import List, Literal, Tuple
 
 import numpy as np
 from pydantic import BaseModel, Field

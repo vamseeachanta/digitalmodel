@@ -3,10 +3,14 @@
 <h1>Low-frequency surge: artifact review and validation</h1>
 <p>2026-10-18. The experimental extreme does not meet the three-hour maximum
 criterion and is not qualified for design use.</p>
+<p>The rounded comparison figures, check counts and artifact hashes below record
+historical snapshot <code>146816a52ca07b45f8391d3cd9d9e477f013aa87</code>.
+Current validation results are reported separately.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>0</td><td>2026-10-18</td><td>Recorded synthetic checks and unresolved extreme accuracy.</td></tr>
-<tr><td>1</td><td>2026-10-18</td><td>Isolated the experimental API, tightened identity checks and clarified model compatibility.</td></tr></table>
+<tr><td>1</td><td>2026-10-18</td><td>Isolated the experimental API, tightened identity checks and clarified model compatibility.</td></tr>
+<tr><td>2</td><td>2026-10-26</td><td>Pinned the historical figures and artifact hashes to their source revision.</td></tr></table>
 <h2>Unresolved findings</h2>
 <p>MAJOR: the three-hour maximum criterion in test_slow_drift_monte_carlo.py
 is unmet. The estimate is 6.8 m versus 8.5 m from 256 synthetic
@@ -47,5 +51,5 @@ do not accept; their input is QTFMatrix.</p>
 <tr><td>src/digitalmodel/orcawave/slow_drift_response.py</td><td><code>5d748158140e1429146cd3f36b5ea94d357f62681f9e1d09f5cd543c1ca687e5</code></td></tr>
 <tr><td>tests/orcawave/test_slow_drift_monte_carlo.py</td><td><code>a63a3a357d8087995916dc1030ea0f4ffb9b9a9369ce997be78c336d701a064a</code></td></tr>
 <tr><td>tests/orcawave/test_slow_drift_response.py</td><td><code>dc3af58679317a3ba1338c0f3bbe0c84207d2910f30ac1f9cf0caaa3d3f80902</code></td></tr>
-</table><p>Table 1. Artifact snapshot, excluding this review record itself.</p>
+</table><p>Table 1. Historical artifact snapshot at 146816a5, excluding this review record itself.</p>
 </html>
