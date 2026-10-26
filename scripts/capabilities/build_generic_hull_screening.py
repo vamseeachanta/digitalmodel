@@ -291,8 +291,8 @@ def chart_svg(
                 f'<circle cx="{x(xv):.1f}" cy="{y(yv):.1f}" r="2.5" '
                 f'fill="{color}" tabindex="0" data-series="{index}" '
                 f'data-x="{xv}" data-y="{yv}" '
-                f'aria-label="{html.escape(name)}: {xv:.4g}, {yv:.4g}">'
-                f'<title>{html.escape(name)}: {xv:.4g}, {yv:.4g}</title></circle>')
+                f'aria-label="{html.escape(name)}: {xv}, {yv}">'
+                f'<title>{html.escape(name)}: {xv}, {yv}</title></circle>')
         parts.append('</g>')
     return "\n".join(parts) + "\n</svg>"
 
@@ -442,7 +442,8 @@ def render(record: dict[str, Any]) -> str:
               for row in record["damping_comparison"]]
     ratio_groups = '; '.join(
         f'{period:.0f} s: ' + ', '.join(
-            f'{row["higher_to_lower_damping_benefit_ratio"]:.3f}'
+            format(row["higher_to_lower_damping_benefit_ratio"],
+                   '.3f' if period == 18.0 and row["alpha"] == 0.05 else '.2f')
             for row in record["damping_comparison"] if row["roll_period_s"] == period)
         for period in (18.0, 21.0))
     natural_period = MODEL.natural_period(
@@ -667,7 +668,7 @@ Hand-check inputs and rational oracle values are defined in test_undamped_two_de
 <th>Peak reduction (%)</th><th>Coupled peak forcing period (s)</th></tr></thead><tbody>{chr(10).join(rows)}</tbody>
 <caption>Table A.1 – Peak reduction sensitivity matrix.</caption></table>
 <p id="damping-comparison">In this case (18 s, alpha 0.05), hull damping roughly halves the benefit (ratio {ratio:.3f}).
-The ratio of the 5 % benefit to the 2 % benefit ranges from {min(ratios):.3f} to {max(ratios):.3f} across the matrix.
+The ratio of the 5 % benefit to the 2 % benefit ranges from {min(ratios):.2f} to {max(ratios):.2f} across the matrix.
 For alpha 0.02, 0.05, 0.10, 0.15, 0.20 respectively, the ratios are {ratio_groups}.
 These comparisons rescale forcing between damping groups and therefore change the tank amplitude <a href="#ref-data">[I1]</a>.</p>
 <ol id="sensitivity-notes" class="notes">
@@ -1049,6 +1050,72 @@ def test_chart_points_and_csv_have_identical_values(builder, record, index):
         assert xs == list(builder.ALPHAS)
 
 
+@pytest.mark.parametrize("index,approved_digest", [
+    (0, "9d7328e01507f4bc90d66742e191c137322e4e9dad32b6ad792a8747c87592b1"),
+    (1, "16cdfb89566bafa1e483c12db134f419a363c93265c0f1f0a091070bf0797a8e"),
+    (2, "242d3beda99f74a7096adeb614f963214c2bb48b968b549f05492dec0bf16bca"),
+])
+def test_every_visible_chart_value_matches_csv_and_approved_page(
+    builder, record, index, approved_digest,
+):
+    """Pin all 254 point values and title/ARIA strings from a38468b2."""
+    import csv
+    import io
+    import re
+    from urllib.parse import unquote
+    from xml.etree import ElementTree
+
+    canonical = builder.canonical_numbers(record)
+    chart = builder.interactive_chart(*builder.chart_specs(canonical)[index])
+    committed = (ROOT / builder.PAGE).read_text(encoding="utf-8")
+    identifier = builder.chart_specs(canonical)[index][0]
+    for source in (chart, committed):
+        figure = re.search(r'<figure id="fig-' + identifier + r'">.*?</figure>',
+                           source, re.S).group()
+        svg = ElementTree.fromstring(re.search(r'<svg\b.*?</svg>', figure, re.S).group())
+        export = re.search(r'href="data:text/csv;charset=utf-8,([^"]+)"', figure).group(1)
+        rows = list(csv.reader(io.StringIO(unquote(export))))[1:]
+        points = svg.findall('.//circle')
+        assert len(points) == len(rows) == (2, 242, 10)[index]
+        ticks = [svg.findall(f'.//text[@data-axis="{axis}"]') for axis in ("x", "y")]
+
+        def coordinate(value, axis):
+            first, last = ticks[axis][0], ticks[axis][-1]
+            attribute = ("x", "y")[axis]
+            offset = (0, 4)[axis]
+            low, high = float(first.text), float(last.text)
+            start, stop = (float(tick.attrib[attribute]) - offset for tick in (first, last))
+            return f"{start + (float(value) - low) / (high - low) * (stop - start):.1f}"
+
+        approved = []
+        for point, (name, x, y) in zip(points, rows):
+            assert point.attrib["data-x"] == x
+            assert point.attrib["data-y"] == y
+            label = f"{name}: {x}, {y}"
+            assert point.attrib["aria-label"] == point.find("title").text == label
+            assert point.attrib["cx"] == coordinate(x, 0)
+            assert point.attrib["cy"] == coordinate(y, 1)
+            approved.append((x, y, label, point.find("title").text))
+        assert hashlib.sha256(json.dumps(approved).encode()).hexdigest() == approved_digest
+        for group in svg.findall('.//g[@data-series]'):
+            coordinates = " ".join(f'{p.attrib["cx"]},{p.attrib["cy"]}'
+                                   for p in group.findall('circle'))
+            assert group.find('polyline').attrib['points'] == coordinates
+
+
+def test_ratio_display_preserves_approved_precision(builder, record):
+    """Keep a38468b2 precision except for the repeated 18 s, alpha 0.05 ratio."""
+    import re
+
+    for page in (builder.render(record), (ROOT / builder.PAGE).read_text(encoding="utf-8")):
+        assert re.search(r'ranges from (.*?) across the matrix', page).group(1) == "0.43 to 0.72"
+        # Decimal points belong to the values; terminate at the paragraph's newline.
+        groups = re.search(r'the ratios are ([^\n]+)', page).group(1)
+        assert groups == ("18 s: 0.43, 0.505, 0.62, 0.69, 0.72; "
+                          "21 s: 0.43, 0.51, 0.59, 0.64, 0.66.")
+        assert "roughly halves the benefit (ratio 0.505)." in page
+
+
 def test_page_section_order_and_collapsed_revisions(builder, record):
     from html.parser import HTMLParser
 
@@ -1184,7 +1251,7 @@ def test_page_wording_links_and_preservation(builder, record):
     assert 'below about 16 s' in text
     assert '14.3 s' in text
     assert 'ratio 0.505' in text
-    assert '0.432 to 0.725' in text
+    assert '0.43 to 0.72' in text
     assert '6.0 % more roll' in text
     assert '29.5 %' in text
     assert '25.0 % slow-forcing limit' in text
