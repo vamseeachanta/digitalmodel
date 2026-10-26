@@ -13,6 +13,22 @@ only the analytic vertices below and writes a JSON record in a supplied director
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-25 | Added an executable Cartesian example to make panel scaling reproducible. |
+| 1 | 2026-10-25 | Added the Plan-lite section to state the scope, independent derivation, test plan and limits together. |
+
+## Plan-lite
+
+- Scope: demonstrate positive uniform and unequal-axis scaling of one synthetic
+  tilted rectangle about the Cartesian origin, including its reference point.
+- Independent Cartesian derivation: multiply each coordinate by its axis factor
+  and calculate area from perpendicular edge lengths. Expected values come from
+  these hand calculations, rather than the scaling functions.
+- Test plan: execute the Python block verbatim in a temporary directory; compare
+  vertices, reference points and areas against the hand calculations; check
+  connectivity and source snapshots exactly. Run the 34 existing scaler tests
+  and the 2 documented-example tests together.
+- Limits: this single analytic panel establishes neither hydrodynamic suitability
+  nor deep independence of nested output metadata after later edits. Inputs and
+  the floating-point comparison budget are assumptions.
 
 ## Inputs
 
