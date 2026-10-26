@@ -22,6 +22,13 @@
   "sea_source": "Supplied public Table 8; no occurrence renormalisation",
   "response_tail_threshold": 0.01,
   "response_tail_threshold_status": "ASSUMED for quantitative review",
+  "tail_fraction_denominator": "in_band_plus_tail_bound",
+  "fatigue_damage_tail_threshold": 0.01,
+  "fatigue_damage_tail_threshold_status": "ASSUMED for review; applies separately from variance",
+  "sn_slope": 3,
+  "sn_slope_status": "ASSUMED for review",
+  "damage_basis": "Narrow-band Rayleigh; no wide-band correction implemented",
+  "stress_transfer_status": "Caller-supplied linear transfer required; engineering stress acceptance OPEN",
   "tail_envelope_window_rad_s": 0.5,
   "spectrum_renormalisation": false,
   "native_acceptance": "OPEN"

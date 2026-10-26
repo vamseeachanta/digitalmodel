@@ -71,7 +71,8 @@ def test_decaying_rao_bound_exceeds_closed_form_tail_and_passes_threshold(tmp_pa
         surge = result["outputs"]["surge"]
         assert surge["in_band_variance"] == pytest.approx(exact_in_band, rel=5e-5)
         assert surge["omitted_variance_upper_bound"] >= exact_tail
-        assert surge["threshold_pass"] is True
+        assert surge["variance_status"] == "PASS"
+        assert surge["threshold_pass"] == (surge["fatigue_damage_tail_fraction"] <= report["threshold"])
     assert report["release_eligible"] is False
 
 

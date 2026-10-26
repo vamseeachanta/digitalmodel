@@ -89,7 +89,9 @@ def test_extended_band_regressions_are_selected_and_executed():
 def test_staged_band_and_tail_regressions_are_selected_and_executed():
     workflow = yaml.safe_load((ROOT / ".github/workflows/gmsh-meshing-tests.yml").read_text())
     paths = {"tests/hydrodynamics/test_oc4_staged_band.py",
-             "tests/hydrodynamics/test_oc4_tail_bound.py"}
+             "tests/hydrodynamics/test_oc4_tail_bound.py",
+             "tests/hydrodynamics/test_oc4_damage_tail.py",
+             "tests/hydrodynamics/test_oc4_retained_measurements.py"}
     events = workflow.get("on", workflow.get(True))
     for event in ("push", "pull_request"):
         assert paths <= set(events[event]["paths"])

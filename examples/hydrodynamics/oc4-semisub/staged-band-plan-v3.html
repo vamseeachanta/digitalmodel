@@ -5,13 +5,14 @@
 <body>
 <h1>Staged diffraction acceptance plan</h1>
 <p>Strength acceptance will be evaluated first on Stage S. Fatigue acceptance will
-then require Stage F, a quantitatively reviewed omitted-tail response bound and L2
-convergence probes. Offline tests will establish preparation behaviour only;
+then require Stage F, quantitatively reviewed response-variance and fatigue-damage
+tail bounds for every required sea and output, and L2 convergence probes. Offline tests will establish preparation behaviour only;
 native results and independent review will remain release prerequisites.</p>
 <h2>Revision history</h2>
 <table>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>A</td><td>2026-10-26</td><td>Separate strength and fatigue stages will replace the proposed high-band production schedule, whose estimated resources exceed the supplied benchmark basis.</td></tr>
+<tr><td>B</td><td>2026-10-26</td><td>Bind retained input digests and measured bands; require separate variance and fatigue-damage tails because spectral second moments can make damage fail when variance passes.</td></tr>
 </table>
 <p>Table 1. Proposed staged acceptance revision. The v2 inputs, high-band plan and historical failures will be retained.</p>
 
@@ -22,11 +23,22 @@ expected-v2.json. No Froude scaling, occurrence renormalisation, production-syst
 mass substitution or coupled mooring/riser feedback will be introduced. The
 original DF5.2 and DF5.3 criteria will have to be supplied before those failures
 can be cleared.</p>
-<p>The exact retained L1 and L2 GDF files and their benchmark linkage will have to
-be provided before production measurements or packets can be issued. The supplied
-L1 count of 14,064 and approximate maximum span of 1.72 m will not establish the
-identity or measured band of a mesh. A newly generated mesh will not inherit that
-benchmark identity. Synthetic cube packets will qualify software behaviour only.</p>
+<p>The retained L1 and L2 GDF files have been measured at 1500 m using the
+ASSUMED six-panel rule. L1 has 14,064 panels, maximum span 1.7 m and supported
+upper frequency 2.4 rad/s; L2 has 35,776 panels, maximum span 1.7 m and supported
+upper frequency 2.5 rad/s. Both declared-band DF3 checks pass with zero oversized
+panels. Unrounded spans, endpoints, all seven input digests and generated-deck
+digests are retained in <a href="retained-v3/retained-measurements-v3.json">the measurement receipt</a>;
+rounded display values will never be used to build a frequency grid. The supplied
+platform mass, centre of mass and inertia match expected-v2.json. Input bytes
+remain external. The L1 digest is bound to the supplied benchmark by the task's
+input linkage and matching panel count; an independent native run receipt remains OPEN.</p>
+<p>Stage S has 27 frequencies, Stage F has 244, and the L2 probe deck has four.
+Stage F crosses the supplied irregular-frequency estimate and requests native
+interior panels. The separate reference lid and complete packet DF0 remain OPEN:
+Gmsh has no matching Arm Linux wheel, so the existing lid generator cannot run.
+The generated decks have passed offline readback and declared-band checks but
+will not be treated as a complete native-ready packet.</p>
 <p>The supplied no-lid benchmark will provide the conditional estimate basis:
 3044.0 s over 32 frequencies, 35.6 GB peak working set and chunk averages of
 82.7 to 112.3 s per frequency. These supplied observations will not be treated as
@@ -70,8 +82,8 @@ axes. No licensed solver will be started, imported or queried.</li>
 <table>
 <tr><th>Stage</th><th>Required evidence</th><th>Release condition satisfied</th><th>Remaining condition</th></tr>
 <tr><td>S: strength first</td><td>DF0 and declared DF3 will pass on L1. The check 0.55 &lt; 1.983 rad/s will place this stage below the supplied irregular-frequency estimate, so no lid will be requested. Native warnings, hydrostatics, platform mass basis, complex reload, headings 0 and 180 degrees and applicable original gates will pass.</td><td>The exact 0.418879 rad/s response will become eligible for the strength prescribed-motion use after independent review and the strength convergence check.</td><td>Stage S alone will not release fatigue. System mass suitability and original missing acceptance criteria will remain explicit blockers.</td></tr>
-<tr><td>F: fatigue band</td><td>Both hull and reference lid will pass the declared-band check. Native lid geometry, irregular-frequency behaviour and complex phase will be read back. Local probes at 1.88, 1.983 and 2.08 rad/s will be run only when supported by the measured band. Half-step frequency refinement will resolve resonances.</td><td>The in-band complex response and response variance will become eligible for tail review.</td><td>A band retaining less than 99% of wave variance will require the reviewed response bound below. A wave-variance percentage alone will not establish response convergence.</td></tr>
-<tr><td>Tail review</td><td>Each selected sea, required heading and each of six motions plus three hang-off components will report in-band variance, omitted wave fraction, upper response bound and bound/in-band ratio. The ASSUMED default ratio limit will be 1.0% of in-band response variance, passed without rounding.</td><td>The truncated band will meet the alternative tail condition only if the envelope is quantitatively justified beyond the sampled band and every required output passes the confirmed threshold.</td><td>An assumed last-window maximum alone will not establish a high-frequency response envelope. Numerical passes will retain release_eligible=false; independent acceptance will be separate.</td></tr>
+<tr><td>F: fatigue band</td><td>Both hull and reference lid will pass the declared-band check. Native lid geometry, irregular-frequency behaviour and complex phase will be read back. Local probes at 1.88, 1.983 and 2.08 rad/s will be run only when supported by the measured band. Half-step frequency refinement will resolve resonances.</td><td>The in-band complex response and spectral moments m0 and m2 will become eligible for tail review.</td><td>A band retaining less than 99% of wave variance will require the reviewed response bound below. A wave-variance percentage alone will not establish response convergence.</td></tr>
+<tr><td>Tail review</td><td>F03, F04 and F05, every required heading, each of six motions, three hang-off components and a caller-supplied linear stress-range proxy will report in-band m0 and m2, tail-bound m0 and m2, response-variance tail fraction and fatigue-damage tail fraction. Each fraction will use the in-band-plus-bound denominator and pass the ASSUMED 1.0% default threshold independently, without rounding. The S-N slope will default to 3, ASSUMED for review.</td><td>The truncated band will meet the alternative tail condition only after the out-of-band envelope is quantitatively justified and both fractions pass for every required sea and output. Wave energy alone will never grant a pass.</td><td>Native RAOs, a qualified stress transfer and validated envelope are absent. Numerical passes will retain release_eligible=false. Motion damage proxies will not qualify riser stress fatigue.</td></tr>
 <tr><td>L2 convergence probes</td><td>Four no-lid frequencies will be checked: 0.418879 rad/s and the three unrounded spectral peaks, all below 1.983 rad/s. Complex L1/L2 motion and both excitation formulations will be compared at every required heading.</td><td>The strength-frequency probe will support the strength release decision before Stage F is required. The three peaks will provide the minimum fatigue mesh-convergence evidence.</td><td>Peak probes will not establish whole-band convergence. Suspect resonance or envelope-edge regions will require additional L2 points before fatigue release.</td></tr>
 </table>
 <p>Table 2. Proposed sequence and release boundaries. Strength will not wait for the full fatigue sweep once its own applicable gates pass.</p>
@@ -99,12 +111,71 @@ on translation and rotation bounds; in-band cancellation will not reduce an
 out-of-band envelope. The default lower limit of 0.05 rad/s will omit a
 negligible low tail for these seas, but its logarithmic fraction will be reported
 even if floating-point underflow produces a stored zero.</p>
+<p>The existing last-window maximum envelope, with multiplier at least one,
+will govern over the boundary-flat minimum because it includes the band-limit
+RAO magnitude. It will be a declared bound above the band, never extrapolated
+response. A real, frequency-independent caller transfer will map the six complex
+motions in metres and radians to stress in MPa. Twice the resulting stress
+amplitude will define a stress-range proxy. Its out-of-band envelope will use the
+triangle inequality on the component envelopes, so measured cancellation will
+not reduce the bound.</p>
+<p>For the ASSUMED narrow-band Rayleigh basis, damage will be proportional to
+m0^(m/2) times sqrt(m2/m0)/(2 pi). The damage tail fraction will be
+1 - D(in-band)/D(in-band plus tail bound); the variance tail fraction will be
+m0(tail bound)/m0(in-band plus tail bound). The implementation will evaluate
+m0 and m2 using the unmodified spectrum, integrate the infinite upper-tail second
+moment analytically using erf, and retain the lower-tail moment using erfc.
+No wide-band correction is implemented. Slopes below one will be rejected because
+monotonicity of the damage bound in m0 would no longer follow. The historical
+bound/in-band variance ratio will remain diagnostic and will not govern the new
+acceptance fractions.</p>
+<p>Constant-RAO closed forms will demonstrate that the variance fraction equals
+the wave fraction while damage is larger. A steeply decaying response will pass
+both; an F03 constant response will fail damage. A less steep decay can pass
+variance while failing damage, so the old variance-only assertion has been
+replaced with separate variance and combined acceptance assertions.</p>
 <p>These bounds will be conservative only conditional on the reviewed envelope
 holding outside the measured band. An unobserved resonance can violate that
 assumption. The last-window values will never be inserted as response ordinates;
-no zero/flat extrapolation or hidden spectral renormalisation will occur.
+no extrapolated response ordinates or hidden spectral renormalisation will occur.
 Annual fractions 0.015, 0.010 and 0.013 will be retained individually, without
 renormalising their 3.8% total. This subset will not establish a global fatigue maximum.</p>
+
+<h2>Per-sea response and damage tail review</h2>
+<p>Engineering response and damage fractions remain OPEN for all thirty sea/output pairs because no native complex RAO export or qualified stress transfer is supplied. The table below is synthetic constant-RAO software evidence only, at 2.44 rad/s, slope 3 and threshold 1.0%, all ASSUMED. Every output is a unit test function; the stress transfer is 1 MPa per metre surge. Hang-off envelopes include the triangle inequality. These values are not platform or riser response. The <a href="synthetic-tail-cases-v3.json">synthetic receipt</a> retains unrounded moments and the constant, steep-decay and variance-only-decay cases.</p>
+<table><tr><th>Sea</th><th>Output</th><th>Synthetic variance tail (%)</th><th>Synthetic damage tail (%)</th><th>Synthetic result</th><th>Engineering result</th></tr>
+<tr><td>F03</td><td>surge</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>sway</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>heave</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>roll</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>pitch</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>yaw</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>hangoff_x</td><td>4.2</td><td>17.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>hangoff_y</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>hangoff_z</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F03</td><td>stress_range_proxy</td><td>2.9</td><td>12.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>surge</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>sway</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>heave</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>roll</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>pitch</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>yaw</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>hangoff_x</td><td>2.6</td><td>13.4</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>hangoff_y</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>hangoff_z</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F04</td><td>stress_range_proxy</td><td>1.8</td><td>9.5</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>surge</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>sway</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>heave</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>roll</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>pitch</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>yaw</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>hangoff_x</td><td>1.8</td><td>10.8</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>hangoff_y</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>hangoff_z</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+<tr><td>F05</td><td>stress_range_proxy</td><td>1.2</td><td>7.6</td><td>FAIL</td><td>OPEN</td></tr>
+</table>
+<p>Table 3. Conditional synthetic fractions only. F03 surge with a less steep decay has a 0.2% variance tail (PASS) and a 1.6% damage tail (FAIL). Steep decay passes both for every output and sea; its F03 surge damage tail is 0.1%. Pass/fail uses unrounded values.</p>
 
 <h2>Conditional resource estimates</h2>
 <p>The estimate function will use the supplied unrounded observations, with
@@ -114,12 +185,12 @@ ESTIMATED and ASSUMED, based on previous experience. The native reference-lid
 count will remain unverified until readback.</p>
 <table>
 <tr><th>Scenario</th><th>Frequencies</th><th>Time (h)</th><th>Memory (GB)</th><th>Basis</th></tr>
-<tr><td>L1 S, no lid</td><td>27</td><td>0.7</td><td>35.6</td><td>Supplied 14,064-panel count; no new mesh qualification</td></tr>
-<tr><td>L1 F, no lid, illustrative</td><td>244</td><td>6.4</td><td>35.6</td><td>ASSUMED 1.72 m span would give about 2.44 rad/s; measured endpoint remains OPEN</td></tr>
-<tr><td>L1 S and F, with lid</td><td>27 and measured F count</td><td>OPEN</td><td>OPEN</td><td>Reference-lid count will be measured from the retained L1 hull; a no-lid F run crossing the irregular estimate will be diagnostic only</td></tr>
-<tr><td>L2 four-point probe, no lid</td><td>4</td><td>OPEN</td><td>OPEN</td><td>Exact retained L2 mesh count will be required</td></tr>
+<tr><td>L1 S, no lid</td><td>27</td><td>0.7</td><td>35.6</td><td>Measured retained hull; supplied benchmark linkage</td></tr>
+<tr><td>L1 F, no lid, diagnostic only</td><td>244</td><td>6.4</td><td>35.6</td><td>Measured band; crossing the irregular estimate will require a lid</td></tr>
+<tr><td>L1 S and F, with lid</td><td>27 and 244</td><td>OPEN</td><td>OPEN</td><td>Reference-lid count unavailable without Gmsh; native automatic count unverified</td></tr>
+<tr><td>L2 four-point probe, no lid</td><td>4</td><td>1.7</td><td>230.4</td><td>Measured retained L2 count; estimated memory exceeds the available host capacity</td></tr>
 </table>
-<p>Table 3. ESTIMATED scenarios only; missing counts will not be replaced with invented values.</p>
+<p>Table 4. ESTIMATED scenarios only, using the existing unrounded benchmark coefficients; no native computation was performed. The complete packet and lid scenarios remain OPEN.</p>
 
 <h2>Plan defect review and retention</h2>
 <p>The review will hunt for unsupported measured claims, endpoint rounding that
@@ -136,6 +207,6 @@ will remain outside Git with their manifests. A local save will not establish
 backup or publication. Public source identity and benchmark provenance will be
 verified before any engineering release.</p>
 <p>Lesson: an approximate mesh span will support an illustrative estimate only;
-production bands and decks will require the exact retained coordinates.</p>
+production bands and decks will require the exact retained coordinates. Fatigue tail acceptance will also require the spectral second moment; a variance pass alone will not establish a damage pass.</p>
 </body>
 </html>
