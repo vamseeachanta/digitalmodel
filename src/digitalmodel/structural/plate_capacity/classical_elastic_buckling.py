@@ -19,10 +19,10 @@ for noninteger r the minimum approaches 4 as r tends to infinity.
 Accessible corroboration: MIT OpenCourseWare, 2.080J Structural Mechanics,
 Fall 2013, Lecture 11, Section 11.2, pp. 11-3--11-4, Eqs. 11.11--11.17:
 https://ocw.mit.edu/courses/2-080j-structural-mechanics-fall-2013/resources/mit2_080jf13_lecture11/
-Historical references: Bryan, On the Stability of a Plane Plate under Thrusts
+Historical references: On the Stability of a Plane Plate under Thrusts
 in its own Plane, with Applications to the "Buckling" of the Sides of a Ship
 (1891 attribution; DOI metadata dates publication to 1890),
-https://doi.org/10.1112/plms/s1-22.1.54; Timoshenko and Gere,
+https://doi.org/10.1112/plms/s1-22.1.54;
 Theory of Elastic Stability, 2nd ed. (1961), plate chapter.
 Historical source pages: page to be confirmed by the maintainer. These
 references are not asserted to have been inspected; see the companion note.

@@ -11,6 +11,7 @@ retains the finite aspect-ratio dependence and minimizes over integer modes.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-26 | Added the modal relation, hand checks and coefficient CSV for comparisons. |
+| 2 | 2026-10-26 | Removed personal-name attribution from historical references for public-text compliance. |
 
 ## Formulation and sources
 
@@ -42,7 +43,7 @@ square-plate function; its source is MIT Lecture 4, equation 4.60.
 
 Historical references, with explicit access limits:
 
-- Bryan, G. H., *On the Stability of a Plane Plate under Thrusts in its own
+- *On the Stability of a Plane Plate under Thrusts in its own
   Plane, with Applications to the “Buckling” of the Sides of a Ship*,
   Proceedings of the London Mathematical Society, s1-22(1), pages 54–67,
   [DOI registration](https://doi.org/10.1112/plms/s1-22.1.54).
@@ -51,10 +52,10 @@ Historical references, with explicit access limits:
   the publisher returned HTTP 403 for the paper text. Formula page to be
   confirmed by the maintainer. No formula or worked value is taken from the
   inaccessible paper.
-- Timoshenko, S. P. and Gere, J. M., *Theory of Elastic Stability*, 2nd ed.,
+- *Theory of Elastic Stability*, 2nd ed.,
   McGraw-Hill, 1961, plate chapter; page to be confirmed by the maintainer.
   The [Open Library edition record](https://openlibrary.org/books/OL6271419M)
-  confirms the authors, second edition, publisher and year; it was read on
+  confirms the second edition, publisher and year; it was read on
   2026-10-26. MIT Lecture 11 also recommends this title. The formula page has
   not been inspected. The derivation and accessible lecture,
   rather than an unverified textbook page, establish the implemented relation.
