@@ -1,0 +1,2 @@
+# Keep the weather-window folder traversable after root sibling exclusions.
+!modules/weatherwindow/

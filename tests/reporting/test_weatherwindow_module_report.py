@@ -366,7 +366,8 @@ async function addComment(text) {get("comment-text").value=text;await get("add-c
 
 
 @pytest.mark.parametrize("sibling_first", [True, False])
-def test_only_report_deliverables_are_reincluded(tmp_path, sibling_first):
+@pytest.mark.parametrize("later_parent_rule", [False, True])
+def test_only_report_deliverables_are_reincluded(tmp_path, sibling_first, later_parent_rule):
     """Keep the requested report visible while local comments remain ignored."""
     for name in ("build_report.py", "changes.json", "report.html"):
         result = subprocess.run(
@@ -394,9 +395,19 @@ def test_only_report_deliverables_are_reincluded(tmp_path, sibling_first):
         rules = rules.replace(anchor, sibling + anchor)
     else:
         rules += "\n" + sibling
+    if later_parent_rule:
+        # Later sibling additions on the base branch can exclude module folders
+        # again. A deeper exception must keep the report visible in either order.
+        rules += "\n/docs/reports/modules/*\n" + sibling
     (tmp_path / ".gitignore").write_text(rules, encoding="utf-8", newline="\n")
+    scoped_ignore = ROOT / "docs/reports/.gitignore"
+    if scoped_ignore.exists():
+        target = tmp_path / "docs/reports/.gitignore"
+        target.parent.mkdir(parents=True)
+        target.write_text(scoped_ignore.read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
     for relative, expected in {
-        "docs/reports/modules/unlisted": 1,
+        "docs/reports/.gitignore": 1,
+        "docs/reports/modules/unlisted": 0 if later_parent_rule else 1,
         "docs/reports/modules/unlisted/report.html": 0,
         "docs/reports/modules/adjacent/report.html": 1,
         "docs/reports/modules/adjacent/report.comments.json": 0,
