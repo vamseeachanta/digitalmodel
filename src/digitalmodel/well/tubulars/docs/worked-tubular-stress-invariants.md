@@ -14,6 +14,18 @@ not qualify a casing or tubing design.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-25 | Added synthetic inputs, independent derivations and an executable example to make the helper conventions reproducible. |
+| 1 | 2026-10-26 | Added a Plan-lite section to state the worked-example scope, independent method, tests and limits together. |
+
+## Plan-lite
+
+- Scope: one synthetic thin-wall worked example covering combined loading,
+  reversed differential pressure and pure shear with the existing stress helpers.
+- Method: independent longitudinal half-cylinder equilibrium for hoop stress and
+  principal-stress differences for equivalent stress.
+- Tests: execution of the exact documented Python block, comparisons with the
+  independent calculations and confirmation that the block creates no files.
+- Limits: mean-surface geometry and plane stress; separate assessment of radial
+  stress, collapse, stability and material resistance remains necessary.
 
 ## Inputs and units
 
