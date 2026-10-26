@@ -42,12 +42,178 @@ def assert_references_resolve(text, page):
         if url.scheme or url.netloc:
             continue
         target = page.parent / unquote(url.path) if url.path else page
+        # This related page is supplied by the sibling change that merges first.
+        if target == PAGE.with_name('generic-hull-roll-screening.html') and not target.exists():
+            assert not url.fragment
+            continue
         assert target.is_file(), ref
         if url.fragment:
             other = References()
             other.feed(text if target == page else target.read_text(encoding="utf-8"))
             assert unquote(url.fragment) in other.ids, ref
     return parsed
+
+
+def test_published_links_stay_within_docs_api_or_use_repository_urls(builder):
+    parsed = References()
+    parsed.feed(builder.render())
+    publication_root = ROOT / 'docs/api'
+    repository = 'https://github.com/vamseeachanta/digitalmodel/blob/main/'
+    for ref in parsed.refs:
+        url = urlsplit(ref)
+        assert not unquote(url.path).startswith('../../../'), ref
+        if url.scheme or url.netloc:
+            continue
+        target = (PAGE.parent / unquote(url.path)).resolve()
+        assert target.is_relative_to(publication_root), ref
+    for path in (builder.MODEL_PATH, builder.TEST_PATH, builder.REDUCTION_PATH,
+                 BUILDER, ROOT / 'pyproject.toml'):
+        assert repository + path.relative_to(ROOT).as_posix() in parsed.refs
+    assert 'data/dual_tank_cfd_evidence.json' in parsed.refs
+    assert '../structural/sloshing-tld-twopeak.json' in parsed.refs
+    assert parsed.refs.count('generic-hull-roll-screening.html') == 1
+
+
+def test_appendix_c_has_revision_data_and_no_summary_history_link(builder):
+    text = builder.render()
+    summary = text.split('<h2 id="summary">', 1)[1].split('<h2 id="introduction">', 1)[0]
+    assert 'Revision history' not in summary
+    assert text.index('id="reproduce"') < text.index('id="revisions"')
+    history = text.split('<h2 id="revisions">Appendix C – Revision history</h2>', 1)[1]
+    table = ElementTree.fromstring(re.search(r'<table>.*?</table>', history, re.S)[0])
+    assert [node.text for node in table.findall('.//th')] == [
+        'Revision', 'Date', 'Description', 'Prepared / checked']
+    rows = table.findall('.//tr')[1:]
+    assert len(rows) == len(builder.REVISIONS) >= 10
+    assert all(row.findall('td')[3].text == 'AI-drafted; engineering check pending' for row in rows)
+
+
+def schematic_line_segments(svg):
+    """Read every stroked primitive, sampling circular arcs between endpoints."""
+    segments = []
+
+    def visit(node, inherited_stroke='none'):
+        if node.tag == 'defs':
+            return
+        stroke = node.get('stroke', inherited_stroke)
+        if stroke != 'none':
+            if node.tag == 'line':
+                segments.append(tuple(float(node.get(key)) for key in ('x1', 'y1', 'x2', 'y2')))
+            elif node.tag == 'rect':
+                x, y, w, h = (float(node.get(key)) for key in ('x', 'y', 'width', 'height'))
+                segments.extend([(x, y, x+w, y), (x+w, y, x+w, y+h),
+                                 (x+w, y+h, x, y+h), (x, y+h, x, y)])
+            elif node.tag == 'path':
+                tokens = iter(re.findall(r'[A-Za-z]|[-+]?(?:\d*\.)?\d+', node.get('d')))
+                x = y = 0
+                for command in tokens:
+                    if command == 'M':
+                        x, y = float(next(tokens)), float(next(tokens))
+                        continue
+                    if command == 'A':
+                        rx, ry, rotation, large, sweep, nx, ny = [float(next(tokens)) for _ in range(7)]
+                        assert rx == ry and rotation == 0, 'Extend arc sampling for elliptical arcs'
+                        chord = math.hypot(nx-x, ny-y)
+                        height = math.sqrt(max(0, rx*rx-chord*chord/4))
+                        sign = -1 if large == sweep else 1
+                        cx = (x+nx)/2 + sign * (y-ny) * height/chord
+                        cy = (y+ny)/2 + sign * (nx-x) * height/chord
+                        start = math.atan2(y-cy, x-cx)
+                        end = math.atan2(ny-cy, nx-cx)
+                        angle = (end-start) % (2*math.pi) if sweep else -((start-end) % (2*math.pi))
+                        for step in range(1, 33):
+                            px = cx + rx * math.cos(start + angle*step/32)
+                            py = cy + ry * math.sin(start + angle*step/32)
+                            segments.append((x, y, px, py))
+                            x, y = px, py
+                    else:
+                        assert command in ('L', 'H', 'V'), f'Unhandled schematic path: {command}'
+                        nx = float(next(tokens)) if command in ('L', 'H') else x
+                        ny = float(next(tokens)) if command in ('L', 'V') else y
+                        segments.append((x, y, nx, ny))
+                        x, y = nx, ny
+        for child in node:
+            visit(child, stroke)
+
+    visit(svg)
+    return segments
+
+
+def segment_intersects_box(segment, box):
+    """Clip a segment to an axis-aligned text box, including its boundary."""
+    x, y, nx, ny = segment
+    xmin, ymin, xmax, ymax = box
+    low, high = 0, 1
+    for p, q in ((x-nx, x-xmin), (nx-x, xmax-x),
+                 (y-ny, y-ymin), (ny-y, ymax-y)):
+        if p == 0:
+            if q < 0:
+                return False
+        elif p < 0:
+            low = max(low, q/p)
+        else:
+            high = min(high, q/p)
+    return low <= high
+
+
+def test_schematic_labels_do_not_intersect_drawn_lines(builder):
+    svg = ElementTree.fromstring(re.search(r'<svg.*?</svg>', builder.schematic(), re.S)[0])
+    segments = schematic_line_segments(svg)
+    font = float(re.search(r'\.schematic svg\{[^}]*font-size:(\d+)px', builder.LAYOUT_CSS)[1])
+    for node in svg.findall('.//text'):
+        label = ''.join(node.itertext())
+        if not label:
+            continue
+        assert 'transform' not in node.attrib, 'Transform text boxes before collision checking'
+        x, y = float(node.get('x')), float(node.get('y'))
+        size = float(node.get('font-size', font))
+        width = len(label) * .6 * size
+        anchor = {'start': 0, 'middle': .5, 'end': 1}[node.get('text-anchor', 'start')]
+        box = (x-anchor*width-1, y-size-1, x+(1-anchor)*width+1, y+.25*size+1)
+        assert not any(segment_intersects_box(segment, box) for segment in segments), label
+
+
+def test_schematic_motion_dimensions_are_anchored(builder):
+    svg = ElementTree.fromstring(re.search(r'<svg.*?</svg>', builder.schematic(), re.S)[0])
+    surfaces = svg.findall(".//line[@class='free-surface']")
+    levels = sorted(float(node.get('y1')) for node in surfaces)
+    dimension = svg.find(".//g[@id='level-difference']/line")
+    assert dimension is not None and len(levels) == 2 and levels[0] < levels[1]
+    assert sorted(float(dimension.get(key)) for key in ('y1', 'y2')) == levels
+    assert dimension.get('marker-start') and dimension.get('marker-end')
+    references = svg.findall(".//line[@class='level-extension']")
+    for surface in surfaces:
+        level = surface.get('y1')
+        assert any(line.get('y1') == line.get('y2') == level
+                   and {line.get('x1'), line.get('x2')} & {surface.get('x1'), surface.get('x2')}
+                   and dimension.get('x1') in {line.get('x1'), line.get('x2')}
+                   for line in references)
+    reference = svg.find(".//line[@id='roll-reference']")
+    ray = svg.find(".//line[@id='roll-ray']")
+    arc = svg.find(".//path[@id='roll-angle']")
+    assert reference is not None and ray is not None and arc is not None
+    assert reference.get('x2') == ray.get('x1') and reference.get('y2') == ray.get('y1')
+    assert reference.get('x1') == reference.get('x2') == '180'
+    values = [float(value) for value in re.findall(r'[-+]?(?:\d*\.)?\d+', arc.get('d'))]
+    ax, ay, rx, ry, _, _, _, bx, by = values
+    cx, cy = float(ray.get('x1')), float(ray.get('y1'))
+    assert rx == ry
+    assert math.hypot(ax-cx, ay-cy) == pytest.approx(rx)
+    assert math.hypot(bx-cx, by-cy) == pytest.approx(rx)
+    assert ax == float(reference.get('x1'))
+    assert (bx-cx) / (by-cy) == pytest.approx(
+        (float(ray.get('x2'))-cx) / (float(ray.get('y2'))-cy))
+
+
+def test_dimensionless_axes_use_one_convention(builder):
+    for chart in chart_roots(builder.render()):
+        labels = ' '.join(chart.itertext())
+        assert 'no units' not in labels and '(1)' not in labels
+    for spec in builder.chart_specs():
+        for label, units in ((spec['xlabel'], spec['xunit']), (spec['ylabel'], spec['yunit'])):
+            if units == 'dimensionless':
+                assert '(dimensionless)' in label
+    assert 'no units' not in builder.render()
 
 
 @pytest.fixture(scope="module")
@@ -207,7 +373,7 @@ def test_output_structure_links_and_privacy(builder):
     assert "<img" not in text
     assert "Conclusions and next steps" in text and "Not done" in text
     assert "Revision history" in text
-    assert text.index('id="summary"') < text.index('id="revisions"') < text.index('id="geometry"')
+    assert text.index('id="summary"') < text.index('id="geometry"') < text.index('id="revisions"')
     forbidden = ["/" + part + "/" for part in ("home", "mnt")]
     assert all(value not in text for value in forbidden)
     assert not re.search(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text)
@@ -326,7 +492,7 @@ def test_a2_preserved_inputs_and_table_cells(builder):
     assert len(bindings.values) == 211
     digest = hashlib.sha256(json.dumps(sorted(bindings.values), ensure_ascii=False).encode()).hexdigest()
     assert digest == '507bcb21019c7de157586b27789f7c607708049ea5dea5780441174aa305617c'
-    text = re.sub(r'<details id="revision-history">.*?</details>', '', builder.render(), flags=re.S)
+    text = re.sub(r'<div id="revision-history">.*?</div>', '', builder.render(), flags=re.S)
     text = re.sub(r'<div id="sensitivity-matrix">.*?</div>', '', text, flags=re.S)
     cells = [re.sub(r' \[I\d+\]', '', html.unescape(re.sub('<[^>]+>', '', c)))
              for c in re.findall('<td>(.*?)</td>', text, re.S)]
@@ -445,8 +611,8 @@ def test_a9_order_and_a10_exact_writer_copy(builder):
 
     text = builder.render()
     ids = re.findall(r'<h2 id="([^"]+)"', text)
-    assert ids == ['summary', 'revisions', 'introduction', 'geometry', 'method', 'curves',
-                   'validation', 'limits', 'forward', 'basis', 'sensitivity', 'reproduce']
+    assert ids == ['summary', 'introduction', 'geometry', 'method', 'curves',
+                   'validation', 'limits', 'forward', 'basis', 'sensitivity', 'reproduce', 'revisions']
     assert '<details><summary>' in text
     spec = (ROOT / 'docs/plans/2026-10-25-dual-tank-page-layout-spec.md').read_text()
     visible = html.unescape(re.sub('<[^>]+>', '', text))
@@ -734,10 +900,11 @@ def test_reporting_section_order_and_pinned_headlines(builder):
     text = builder.render()
     headings = re.findall(r'<h2 id="[^"]+">(.*?)</h2>', text)
     assert headings == [
-        '1 Executive summary', 'Revision history', '2 Introduction', '3 Design data',
+        '1 Executive summary', '2 Introduction', '3 Design data',
         '4 Analysis methodology', '5 Results', '6 Validation and benchmark',
         '7 Limitations', '8 Conclusions and next steps', '9 References',
         'Appendix A – Sensitivity matrix', 'Appendix B – Reproduce commands',
+        'Appendix C – Revision history',
     ]
     summary = text.split('<h2 id="summary">', 1)[1].split('<h2 id="introduction">', 1)[0]
     visible = html.unescape(re.sub('<[^>]+>', '', summary))
@@ -761,8 +928,8 @@ def test_design_basis_assumptions_and_standard_record(builder):
         '3.6 Load cases',
     ]
     assert design.count('ASSUMED') >= 7
-    revisions = text.split('<details id="revision-history">', 1)[1].split('</details>', 1)[0]
-    assert '<summary>' in revisions and ' open' not in revisions[:revisions.index('<summary>')]
+    revisions = text.split('<div id="revision-history">', 1)[1].split('</div>', 1)[0]
+    assert '<table>' in revisions and '<details' not in revisions
     assert 'numbered sections' in revisions
     assert not re.search(r'\b[A-Z]\d+\b|[0-9a-f]{9}', revisions)
     assert revisions.count('Not assigned') == 2  # Preserve undated historical entries.
@@ -803,9 +970,11 @@ def test_schematic_dimensions_are_proportional_and_explicit(builder):
     svg = ElementTree.fromstring(re.search(r'<svg id="schematic".*?</svg>', builder.schematic(), re.S).group())
     legs = svg.findall(".//rect[@class='tank-leg']")
     assert len(legs) == 2
-    water = svg.find(".//rect[@class='water-depth']")
+    water = svg.findall(".//rect[@class='water-depth']")
     scale = float(legs[0].attrib['width']) / builder.ILLUSTRATIVE_LEG_WIDTH
-    assert float(water.attrib['height']) == pytest.approx(scale * builder.ILLUSTRATIVE_FILL_DEPTH)
+    # Opposite motion-convention displacements conserve the mean fill depth.
+    assert sum(float(node.attrib['height']) for node in water) / 2 == pytest.approx(
+        scale * builder.ILLUSTRATIVE_FILL_DEPTH)
     assert float(legs[1].attrib['x']) - float(legs[0].attrib['x']) == pytest.approx(
         scale * 2 * builder.ILLUSTRATIVE_CENTROID_OFFSET)
     assert len(svg.findall(".//g[@class='dimension']")) >= 3
@@ -863,8 +1032,8 @@ def test_reader_definitions_and_precision_are_source_bound(builder):
         assert phrase in text
     assert 'Refitted inverse-area law RMS' in text
     assert 'Refitted linear-in-area law' not in text
-    assert 'Equivalent damping ratio (no units)' in text
-    assert 'CFD-derived damping (no units)' in text
+    assert 'Equivalent damping ratio (dimensionless)' in text
+    assert 'CFD-derived damping (dimensionless)' in text
     assert '0.30–0.33 %' in text
     assert 'Roll-moment amplitude (MN m)' in text
     assert '7.5' in text
@@ -895,8 +1064,10 @@ def test_qualification_has_two_locations_and_appendix_links_to_limits(builder):
 
 def test_revision_history_preserves_each_earlier_entry(builder):
     """Pin the earlier rows, with only the public-reference redaction."""
-    history = builder.render().split('<details id="revision-history">')[1].split('</details>')[0]
+    history = builder.render().split('<div id="revision-history">')[1].split('</div>')[0]
     expected = [
+        ('5', '2026-10-25', 'Earlier revision entries restored; qualification linked from Appendix A; reference paths wrap on narrow screens; rendered layout, print and interaction checks added; engineering results retained.'),
+        ('4', '2026-10-25', 'Illustrative and archived results separated; response terms defined; narrow-screen schematic and display precision clarified; calculation inputs and results retained.'),
         ('3', '2026-10-25', 'Engineering reporting conventions: numbered sections, source register, dimensioned schematic and consistent plots; calculation inputs and results retained.'),
         ('2', '2026-10-25', 'schematic added; three summary charts; every chart interactive with a CSV; the limits gathered in one place'),
         ('Display precision', '2026-10-23', 'Damping-axis labels distinguished and comparison percentages rounded to one decimal place; source precision retained in the evidence record.'),
@@ -905,11 +1076,10 @@ def test_revision_history_preserves_each_earlier_entry(builder):
         ('Editorial', 'Not assigned', 'Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.'),
         ('Initial', 'Not assigned', 'Public-source analysis added to document model scope and remaining work.'),
     ]
-    rows = re.findall(r'<tr[^>]*><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>', history)
-    assert rows[2:] == expected
-    assert rows[0][0] == '5' and rows[1] == (
-        '4', '2026-10-25',
-        'Illustrative and archived results separated; response terms defined; narrow-screen schematic and display precision clarified; calculation inputs and results retained.')
+    rows = [tuple(''.join(cell.itertext()) for cell in row.findall('td')[:3])
+            for row in ElementTree.fromstring('<div>' + history + '</div>').findall('.//tr')[1:]]
+    assert rows[1:] == expected
+    assert rows[0][:2] == ('6', '2026-10-26')
 
 
 @pytest.fixture(scope='module')
