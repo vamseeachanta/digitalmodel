@@ -3,13 +3,15 @@
 This example computes separate production and annulus velocity-screen capacities
 and a downstream pressure using declared synthetic inputs. It demonstrates
 `bore_capacity` and `flow_handoff`; it is a worked example for the remaining
-module-report work in #3342.
+module-report work in
+[the originating issue](https://github.com/vamseeachanta/digitalmodel/issues/3342).
 
 ## Revision history
 
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-25 | Added synthetic arithmetic and executable checks to make the handoff reproducible. |
+| 2 | 2026-10-26 | Linked the originating issue to keep the remaining scope traceable. |
 
 ## Synthetic inputs
 
@@ -108,4 +110,6 @@ NOT_EVALUATED:
 
 A design use requires qualified inputs and separate assessments for these omitted
 effects. No production formula changes are part of this example. The connector
-and complete module-report scope of #3342 remains open.
+and complete module-report scope of
+[the originating issue](https://github.com/vamseeachanta/digitalmodel/issues/3342)
+remains open.
