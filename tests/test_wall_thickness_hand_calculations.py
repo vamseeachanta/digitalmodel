@@ -42,11 +42,11 @@ First-principles derivation (SI units unless a stress is marked MPa):
 
 Independent teaching reference: "Yield and Plastic Flow", dated 2001-10-15,
 MIT OpenCourseWare, Mechanics of Materials, "Multiaxial stress states",
-equation (2) and the uniaxial-yield reduction immediately following it:
+page 5, equation (2) and the uniaxial-yield reduction on the same page:
 https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/resources/mit3_11f99_yield/
 This supports the deviatoric-energy criterion and its tensile-yield
 normalisation for ductile material. It supplies none of the four screening
-multipliers below. Page references await maintainer confirmation.
+multipliers below.
 
 Allowable-coefficient provenance remains OPEN for each report route:
 
@@ -69,12 +69,35 @@ derivation therefore do not close these coefficient-provenance gaps. An
 independent reference with the applicable loading criterion and condition
 is needed for each multiplier before claiming allowable validation.
 
+Public applicability cross-checks (inspected 2026-10-26):
+
+* RP 1111: the public code-check description's "API RP 1111 CLD" and
+  "API RP 1111 BEP" sections describe load interactions, rather than this
+  report's equivalent-stress allowable:
+  https://www.orcina.com/webhelp/OrcaFlex/Content/html/Codechecks,APIRP1111.htm
+* RP 2RD: the public description's "Results" section includes radial
+  stress and evaluates longitudinal stress at mid-wall. Its allowable
+  expression does not establish this report's rounded multiplier with
+  outer-fibre bending and omitted radial stress:
+  https://www.orcina.com/webhelp/OrcaFlex/Content/html/Codechecks,APIRP2RD.htm
+* STD 2RD: the public description's "API STD 2RD method 1" and "method 2"
+  sections define load interactions. Their design factors do not establish
+  an equivalent-stress multiplier for this screening calculation:
+  https://www.orcina.com/webhelp/OrcaFlex/Content/html/Codechecks,APISTD2RD.htm
+* F101: the public description's "Results" section distinguishes load-
+  and displacement-controlled combined-load criteria. Neither establishes
+  this report's single equivalent-stress multiplier:
+  https://www.orcina.com/webhelp/OrcaFlex/Content/html/Codechecks,DNVSTF101.htm
+
+These are public implementation descriptions, not inspected standards.
+The four coefficient-applicability gaps above therefore remain OPEN.
+
 The report's load fractions and factors identify the result of the
 implementation, not a requirement of a design code. The RP 1111 route is
 screening-only while its combined check is unregistered. These calculations
 do not reconcile the report with the strategy checks: in particular, the
 STD 2RD linear/cosine interactions and the F101 simplified combined form
-are different criteria and are not validated here. No edition is asserted.
+are different criteria and are not validated here. No report edition is asserted.
 """
 
 import math
