@@ -12,6 +12,26 @@ the omitted second moment; it does not establish compliance with a design standa
 | 1 | 2026-10-19 | Derive a peak-relative cutoff and independent regression moments to address the truncated tail. |
 | 2 | 2026-10-19 | Preserve the fatigue workflow grid, document reduced peak resolution and confirm source equation references to bound the effect of the automatic cutoff. |
 | 3 | 2026-10-20 | Add independent fatigue compatibility references and rebuild the computed atlas to match the changed spectrum source. |
+| 4 | 2026-10-26 | Record the cutoff implementation plan, acceptance checks and exclusions so the numerical scope can be assessed together. |
+
+## Plan-lite
+
+1. Derive the omitted-moment bound and use `10 wp` as the automatic upper
+   cutoff for direct two-parameter spectrum calls. Preserve explicit caller
+   bounds, the lower endpoint and the default point count.
+2. Keep the spectral fatigue workflow on its explicit `0.02-2.0 rad/s` grid
+   with 100 points. Compare its PSD, moments and damage with independent scalar
+   and frozen quadrature references for the four compatibility cases.
+3. Regenerate the computed spectral-fatigue atlas with the existing registry
+   builder because the spectrum source contributes to its fingerprint. Retain
+   the previous atlas and check the new grid, holdouts and provenance.
+4. Accept the change when the independent moment and period budgets below,
+   explicit-bound and invalid-input regressions, fatigue compatibility cases,
+   atlas freshness gate and related hydrodynamics and integration tests pass.
+   Keep the existing atlas interpolation threshold of `10.0 %`.
+5. Exclude physical fatigue-model qualification, general grid convergence,
+   changes to other spectrum defaults, the broader caller audit and licensed
+   solver execution. The limitations below remain applicable.
 
 ## Sources and independent calculation
 
