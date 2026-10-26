@@ -20,7 +20,9 @@ DESTINATION = ROOT / "docs/reports/modules/vesselseakeeping"
 CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
             "The spectral operability method, illustrative calculation and limits of use are presented for initial assessment."},
            {"revision": "B", "date": "2026-10-24", "change":
-            "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."}]
+            "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."},
+           {"revision": "C", "date": "2026-10-26", "change":
+            "The shared workflow test source digest is refreshed after mooring test changes to restore exact report rebuilds; calculation inputs and results are unchanged."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
@@ -221,7 +223,7 @@ function drawChart() {
 }
 select.addEventListener('change',drawChart); drawChart();
 document.getElementById('save-notes').addEventListener('click',async () => {
-  const text = JSON.stringify({document:'Vessel seakeeping module analysis', revision:'B',
+  const text = JSON.stringify({document:'Vessel seakeeping module analysis', revision:'C',
     comments:document.getElementById('notes').value},null,2);
   const status = document.getElementById('save-status');
   try {

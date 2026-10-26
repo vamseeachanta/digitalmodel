@@ -8,5 +8,10 @@
     "revision": "B",
     "date": "2026-10-24",
     "change": "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."
+  },
+  {
+    "revision": "C",
+    "date": "2026-10-26",
+    "change": "The shared workflow test source digest is refreshed after mooring test changes to restore exact report rebuilds; calculation inputs and results are unchanged."
   }
 ]
