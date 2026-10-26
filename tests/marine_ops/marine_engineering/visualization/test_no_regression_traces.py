@@ -23,9 +23,28 @@ TRACE_SIG_FIXTURE = FIXTURE_DIR / "ocimf_explorer_pre_refactor_trace_signature.j
 # ---------- TDD #13: refactored make_polar_overlay preserves trace signature ----------
 
 
+def _git_environment() -> dict[str, str]:
+    """Keep Git children independent of the caller's repository bindings."""
+    repository_variables = {
+        "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+        "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        "GIT_NAMESPACE", "GIT_PREFIX", "GIT_IMPLICIT_WORK_TREE",
+        "GIT_GRAFT_FILE", "GIT_SHALLOW_FILE", "GIT_REPLACE_REF_BASE",
+        "GIT_CONFIG", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT",
+        "GIT_NO_REPLACE_OBJECTS", "GIT_INTERNAL_SUPER_PREFIX",
+    }
+    return {
+        name: value for name, value in os.environ.items()
+        if name not in repository_variables
+        and not name.startswith(("GIT_CONFIG_KEY_", "GIT_CONFIG_VALUE_"))
+    }
+
+
 def _repo_root() -> pathlib.Path:
     return pathlib.Path(subprocess.check_output(
-        ["git", "rev-parse", "--show-toplevel"], text=True
+        ["git", "rev-parse", "--show-toplevel"],
+        cwd=pathlib.Path(__file__).resolve().parent, env=_git_environment(),
+        text=True, encoding="utf-8",
     ).strip())
 
 
@@ -41,7 +60,7 @@ def _assert_capture_source_identity(repo_root: pathlib.Path, fixture: dict) -> N
     )
     source = subprocess.run(
         ["git", "cat-file", "blob", source_spec],
-        cwd=repo_root, capture_output=True,
+        cwd=repo_root, env=_git_environment(), capture_output=True,
     )
     assert source.returncode == 0, (
         "historical generating source is unavailable; "
@@ -49,8 +68,8 @@ def _assert_capture_source_identity(repo_root: pathlib.Path, fixture: dict) -> N
     )
     actual_blob = subprocess.check_output(
         ["git", "hash-object", "--stdin"],
-        cwd=repo_root, input=source.stdout,
-    ).decode().strip()
+        cwd=repo_root, env=_git_environment(), input=source.stdout,
+    ).decode("utf-8").strip()
     assert actual_blob == fixture["build_script_blob_sha"], (
         f"generating source blob differs for {source_spec}: "
         f"expected {fixture['build_script_blob_sha']}, got {actual_blob}"
@@ -64,7 +83,7 @@ def _assert_capture_source_identity(repo_root: pathlib.Path, fixture: dict) -> N
 
 def test_capture_source_matches_recorded_blob():
     """The historical capture identifies the exact pre-refactor producer blob."""
-    fixture = json.loads(TRACE_SIG_FIXTURE.read_text())
+    fixture = json.loads(TRACE_SIG_FIXTURE.read_text(encoding="utf-8"))
     _assert_capture_source_identity(_repo_root(), fixture)
 
 
@@ -97,7 +116,7 @@ def test_refactored_polar_signatures_match_fixture():
     rows = bce.load_all(workbook)
     df = pd.DataFrame(rows)
 
-    fixture = json.loads(TRACE_SIG_FIXTURE.read_text())
+    fixture = json.loads(TRACE_SIG_FIXTURE.read_text(encoding="utf-8"))
 
     for call in fixture["polar_call_sites"]:
         fig = bce.make_polar_overlay(df, call["figure_key"], call["coef"], call["group_col"])
@@ -157,7 +176,7 @@ def test_no_client_identifiers_in_visualization_package_sources():
     if workspace_hub_scan is not None and workspace_hub_scan.is_file():
         probe = subprocess.run(
             ["bash", str(workspace_hub_scan), *targets],
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8", env=_git_environment(),
         )
         # If the script accepts the file-list interface, returncode is 0 (clean) or 1 (flagged).
         # If it rejects the args (e.g., "Unknown argument"), it returns 2 with stderr noise — fall back.
@@ -176,6 +195,7 @@ def test_no_client_identifiers_in_visualization_package_sources():
         out = subprocess.run(
             [sys.executable, str(gate), *targets],
             capture_output=True, text=True, encoding="utf-8", errors="replace",
+            env=_git_environment(),
         )
         assert out.returncode == 0, (
             f"identifier gate flagged production source:\n{out.stdout}\n{out.stderr}"
