@@ -2,14 +2,14 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Perry-Robertson first-yield strength of a bowed, uniform pinned strut.
 
-Textbook basis: E. R. Johnson, *Aerospace Structures* (2022), section 11.4,
+Textbook basis: *Aerospace Structures* (2022), section 11.4,
 "Geometrically imperfect column", equations 11.77 and 11.83-11.85:
 https://eng.libretexts.org/Under_Construction/Aerospace_Structures_(Johnson)/11%3A_Buckling_of_columns_and_plates
 Page to be confirmed by the maintainer. The textbook supplies the elastic
 initial-bow solution; the first-yield quadratic is derived below rather than
 attributed to an unseen textbook equation.
 
-Historical reference: A. Robertson, "The strength of struts" (1925),
+Historical reference: "The strength of struts" (1925),
 Selected Engineering Papers, 1(28), https://doi.org/10.1680/isenp.1925.15138.
 Bibliographic metadata confirmed; paper text not used. Page to be confirmed
 by the maintainer. No empirical imperfection coefficient is taken from it.

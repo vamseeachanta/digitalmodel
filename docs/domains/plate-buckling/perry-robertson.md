@@ -13,10 +13,11 @@ stiffeners; local plate and stiffener failure modes require separate analysis.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-26 | Add the derived column model, independent checks and reproducible CSV for subsequent stiffener studies. |
+| 1 | 2026-10-25 | Use title-based citations to meet the public-text requirement while retaining source traceability. |
 
 ## Basis and symbols
 
-E. R. Johnson, *Aerospace Structures* (2022), section 11.4,
+*Aerospace Structures* (2022), section 11.4,
 “Geometrically imperfect column”, equations 11.77 and 11.83–11.85,
 provides the sinusoidal initial-bow equilibrium solution. The
 [open textbook chapter](https://eng.libretexts.org/Under_Construction/Aerospace_Structures_(Johnson)/11%3A_Buckling_of_columns_and_plates)
@@ -26,7 +27,7 @@ Page to be confirmed by the maintainer: the inspected HTML has equation numbers
 but no printed page numbers. The direct textbook landing page returned HTTP 403;
 the open chapter and publisher announcement returned HTTP 200.
 
-The historical citation is A. Robertson, “The strength of struts” (1925),
+The historical citation is “The strength of struts” (1925),
 *Selected Engineering Papers*, volume 1, number 28,
 [DOI](https://doi.org/10.1680/isenp.1925.15138). Bibliographic metadata was
 confirmed in the publication registry. The paper text was not used;
