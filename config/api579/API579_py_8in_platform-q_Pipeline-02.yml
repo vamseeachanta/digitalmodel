@@ -179,18 +179,18 @@ LML:
 
 PlotSettings:
   Data:
-    PltSupTitle: Platform B, Pipeline-02
+    PltSupTitle: platform-q, Pipeline-02
     PltTitle: Measured WT
     PltXLabel: Circumference (inch)
     PltYLabel: Length (inch)
   LML:
-    PltSupTitle: Platform B, Pipeline-02
+    PltSupTitle: platform-q, Pipeline-02
     PltTitle: Local Metal Loss, Levels 1 & 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)
     ylim: [5000, 12000]
   GML:
-    PltSupTitle: Platform B, Pipeline-02
+    PltSupTitle: platform-q, Pipeline-02
     PltTitle: General Metal Loss, Level 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)
