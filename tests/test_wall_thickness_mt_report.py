@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for API RP 1111 pipeline wall thickness M-T interaction HTML report
 # ABOUTME: Covers report generation, sections, pressure checks, contour chart, key points,
 # ABOUTME: capacity limits, envelope tracing, and multi-condition interaction envelopes
@@ -317,12 +320,13 @@ def test_conditions_envelopes_nested(geometry, material):
 
 
 def test_report_contains_capacity_limits_section(report_html):
-    """Report HTML includes the capacity limits section with all four conditions."""
-    assert "Capacity Limits" in report_html
+    """Report exposes the implemented factor set and labels screening limits."""
+    assert "Screening Limits" in report_html
     assert "Normal Operating" in report_html
-    assert "Installation" in report_html
-    assert "Extreme" in report_html
-    assert "Survival" in report_html
+    assert "SCREENING" in report_html
+    assert "Installation" not in report_html
+    assert "Extreme" not in report_html
+    assert "Survival" not in report_html
 
 
 def test_report_contains_envelope_chart(report_html):
@@ -404,7 +408,7 @@ def test_report_api_std_2rd_generates(geometry, material):
 
 
 def test_report_api_std_2rd_contains_methods(geometry, material):
-    """API STD 2RD report contains Method 1 and Method 2 envelope labels."""
+    """API STD 2RD report plots only the registered Method 1 criterion."""
     html = generate_mt_report(
         geometry=geometry,
         material=material,
@@ -413,7 +417,7 @@ def test_report_api_std_2rd_contains_methods(geometry, material):
         code=DesignCode.API_STD_2RD,
     )
     assert "Method 1" in html
-    assert "Method 2" in html
+    assert "Method 2" not in html
 
 
 def test_cross_code_comparison(geometry, material):

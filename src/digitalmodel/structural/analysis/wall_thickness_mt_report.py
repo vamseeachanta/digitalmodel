@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Multi-code pipeline/riser wall thickness M-T interaction HTML report generator
 # ABOUTME: Supports API RP 1111, API RP 2RD, API STD 2RD with per-code conditions and envelopes
 
@@ -7,15 +10,14 @@ Wall Thickness — Moment-Tension Interaction Report
 Generates a professional HTML report presenting:
 0. Executive Summary (PASS/FAIL verdict, governing check, margin)
 1. Pressure-only checks (burst, collapse, propagation/hoop)
-2. Capacity limits by operating condition (per-code design factors)
-3. Combined loading Von Mises interaction contour (M vs T)
+2. Interaction limits using implemented strategy factors
+3. Strategy combined-loading contour, or labelled screening contour (M vs T)
 4. Allowable bending envelope by operating condition
 5. Key engineering points summary table (with margin %)
 6. Input data (geometry, material, design conditions, derived properties)
 
 Supports: API RP 1111, API RP 2RD, API STD 2RD, DNV-ST-F101.
-API STD 2RD additionally traces Method 1 (linear) and Method 2 (cosine)
-M-T interaction envelopes.
+API STD 2RD traces its registered Method 1 (linear) combined check.
 
 Uses existing WallThicknessAnalyzer infrastructure and Plotly for the
 interactive contour chart and envelope plot.
@@ -32,47 +34,27 @@ from digitalmodel.structural.analysis.wall_thickness import (
     DesignLoads,
     PipeGeometry,
     PipeMaterial,
-    WallThicknessAnalyzer,
 )
 from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
+from digitalmodel.structural.analysis.wall_thickness_codes.interaction import (
+    ReportInteraction,
+    report_conditions,
+    screening_utilisation,
+)
 
 logger = logging.getLogger(__name__)
 
-# API RP 1111 operating conditions with design factors.
-# Designed as a replaceable data structure so other codes (DNV, PD 8010)
-# can supply their own condition-factor mappings.
-API_RP_1111_CONDITIONS = [
-    {"name": "Normal Operating", "f_d": 0.72, "color": "#1f77b4", "dash": "solid"},
-    {"name": "Installation",     "f_d": 0.80, "color": "#2ca02c", "dash": "dash"},
-    {"name": "Extreme",          "f_d": 0.96, "color": "#ff7f0e", "dash": "dashdot"},
-    {"name": "Survival",         "f_d": 1.00, "color": "#d62728", "dash": "dot"},
-]
-
-API_RP_2RD_CONDITIONS = [
-    {"name": "Operating",    "f_d": 0.667, "color": "#1f77b4", "dash": "solid"},
-    {"name": "Installation", "f_d": 0.800, "color": "#2ca02c", "dash": "dash"},
-    {"name": "Extreme",      "f_d": 0.800, "color": "#ff7f0e", "dash": "dashdot"},
-    {"name": "Survival",     "f_d": 1.000, "color": "#d62728", "dash": "dot"},
-]
-
-API_STD_2RD_CONDITIONS = [
-    {"name": "SLS (Operating)",  "f_d": 0.80, "color": "#1f77b4", "dash": "solid"},
-    {"name": "ULS (Extreme)",    "f_d": 0.80, "color": "#ff7f0e", "dash": "dash"},
-    {"name": "ALS (Accidental)", "f_d": 1.00, "color": "#d62728", "dash": "dot"},
-]
-
-DNV_ST_F101_CONDITIONS = [
-    {"name": "Low Safety Class",    "f_d": 0.831, "color": "#2ca02c", "dash": "solid"},
-    {"name": "Medium Safety Class", "f_d": 0.764, "color": "#1f77b4", "dash": "dash"},
-    {"name": "High Safety Class",   "f_d": 0.665, "color": "#d62728", "dash": "dot"},
-]
-
+# Compatibility exports derive their factors from the registered strategies.
+# Report generation resolves them again for the selected strategy instance.
 CONDITIONS_BY_CODE = {
-    DesignCode.API_RP_1111: API_RP_1111_CONDITIONS,
-    DesignCode.API_RP_2RD:  API_RP_2RD_CONDITIONS,
-    DesignCode.API_STD_2RD: API_STD_2RD_CONDITIONS,
-    DesignCode.DNV_ST_F101: DNV_ST_F101_CONDITIONS,
+    code: report_conditions(CODE_REGISTRY[code]())
+    for code in (DesignCode.API_RP_1111, DesignCode.API_RP_2RD,
+                 DesignCode.API_STD_2RD, DesignCode.DNV_ST_F101)
 }
+API_RP_1111_CONDITIONS = CONDITIONS_BY_CODE[DesignCode.API_RP_1111]
+API_RP_2RD_CONDITIONS = CONDITIONS_BY_CODE[DesignCode.API_RP_2RD]
+API_STD_2RD_CONDITIONS = CONDITIONS_BY_CODE[DesignCode.API_STD_2RD]
+DNV_ST_F101_CONDITIONS = CONDITIONS_BY_CODE[DesignCode.DNV_ST_F101]
 
 
 def generate_mt_report(
@@ -87,8 +69,8 @@ def generate_mt_report(
     """Generate a wall thickness M-T interaction HTML report.
 
     Supports API RP 1111, API RP 2RD, and API STD 2RD design codes.
-    For API STD 2RD, Method 1 (linear) and Method 2 (cosine) envelopes
-    are overlaid on the envelope chart.
+    Registered combined checks supply the criteria. Other supported routes
+    produce explicitly labelled screening curves.
 
     Args:
         geometry: Pipe geometric properties.
@@ -115,10 +97,10 @@ def generate_mt_report(
 
     # Build edition label for report header
     edition_label = ""
-    if hasattr(strategy, "edition_info"):
+    if edition is not None and hasattr(strategy, "edition_info"):
         edition_label = f" — {strategy.edition_info.edition_label} ({strategy.edition_info.edition_year})"
 
-    conditions = CONDITIONS_BY_CODE.get(code, API_RP_1111_CONDITIONS)
+    conditions = report_conditions(strategy)
 
     loads = DesignLoads(
         internal_pressure=internal_pressure,
@@ -142,73 +124,31 @@ def generate_mt_report(
     M_p = strategy.compute_plastic_moment(geometry, material)
     T_y = strategy.compute_plastic_tension(geometry, material)
 
-    # Hoop stress and allowable (use most restrictive condition for key points)
-    p_net = internal_pressure - external_pressure
-    sigma_h = p_net * d_i / (2 * t) if t > 0 else 0.0
+    # All report views use the same condition-specific evaluator.
+    sigma_h = (internal_pressure - external_pressure) * d_i / (2 * t)
+    interactions = {
+        cond["name"]: ReportInteraction(strategy, geometry, material, loads, cond)
+        for cond in conditions
+    }
+    first = interactions[conditions[0]["name"]]
     f_d = conditions[0]["f_d"]
     sigma_allow = f_d * material.smys
-
-    # Build key engineering points
-    key_points = _compute_key_points(T_y, M_p, A, Z, sigma_h, sigma_allow)
-
-    # Build contour chart HTML
+    key_points = _compute_key_points(
+        T_y, M_p, A, Z, sigma_h, sigma_allow, interaction=first,
+    )
     contour_html = _build_contour_chart(
         D, t, d_i, material.smys, material.smts,
         internal_pressure, external_pressure,
         f_d, A, Z, sigma_h, sigma_allow, T_y, M_p,
-        code=code,
+        code=code, interaction=first,
     )
+    capacity_limits = [item.limits() for item in interactions.values()]
+    envelopes = {name: item.trace() for name, item in interactions.items()}
+    envelope_html = _build_envelope_chart(envelopes, T_y, M_p, conditions)
 
-    # Compute capacity limits and envelopes for all operating conditions
-    capacity_limits = _compute_capacity_limits(
-        A, Z, sigma_h, material.smys, T_y, M_p, conditions,
-    )
-
-    envelopes = {}
-    for cond in conditions:
-        lim = next(c for c in capacity_limits if c["name"] == cond["name"])
-        T_neg = lim["T_neg_kN"] * 1e3  # back to SI
-        T_pos = lim["T_pos_kN"] * 1e3
-        T_vals, M_vals = _trace_envelope(
-            A, Z, sigma_h, material.smys, cond["f_d"],
-            T_neg, T_pos, M_p, n_points=200,
-        )
-        envelopes[cond["name"]] = (T_vals, M_vals)
-
-    # For API STD 2RD, also trace Method 1 (linear) and Method 2 (cosine) envelopes
-    method_envelopes = {}
-    if code == DesignCode.API_STD_2RD:
-        smys = material.smys
-        smts = material.smts
-        for cond in conditions:
-            f_d_cond = cond["f_d"]
-            lim = next(c for c in capacity_limits if c["name"] == cond["name"])
-            T_neg_si = lim["T_neg_kN"] * 1e3
-            T_pos_si = lim["T_pos_kN"] * 1e3
-
-            m1_T, m1_M = _trace_envelope_method1(
-                D, t, A, smys, smts, f_d_cond, p_net,
-                T_neg_si, T_pos_si, M_p, T_y,
-            )
-            m2_T, m2_M = _trace_envelope_method2(
-                D, t, A, smys, smts, f_d_cond, p_net,
-                T_neg_si, T_pos_si, M_p, T_y,
-            )
-            method_envelopes[cond["name"]] = {
-                "method1": (m1_T, m1_M),
-                "method2": (m2_T, m2_M),
-            }
-
-    envelope_html = _build_envelope_chart(
-        envelopes, T_y, M_p, conditions, method_envelopes,
-    )
-
-    # Pressure sensitivity: baseline, +50%, +100%
-    pressure_factors = [1.0, 1.5, 2.0]
+    # Retain the existing relative pressure sweep; each case uses the strategy.
     pressure_sensitivity = _compute_pressure_sensitivity(
-        A, Z, d_i, t, internal_pressure, external_pressure,
-        material.smys, T_y, M_p, conditions,
-        pressure_factors,
+        strategy, geometry, material, loads, conditions, [1.0, 1.5, 2.0],
     )
     pressure_chart_html = _build_pressure_sensitivity_chart(
         pressure_sensitivity, T_y, M_p, internal_pressure, conditions,
@@ -244,8 +184,14 @@ def _compute_key_points(
     Z: float,
     sigma_h: float,
     sigma_allow: float,
+    interaction=None,
 ) -> List[Dict]:
     """Compute utilisation at key engineering points on the M-T plane."""
+    evaluate = interaction.utilisation if interaction is not None else (
+        lambda tension, moment: _von_mises_util_single(
+            tension, moment, A, Z, sigma_h, sigma_allow,
+        )
+    )
     fractions = [0.0, 0.5, 0.8, 1.0]
     points = []
 
@@ -253,7 +199,7 @@ def _compute_key_points(
     for frac in fractions:
         T = frac * T_y
         M = 0.0
-        util = _von_mises_util_single(T, M, A, Z, sigma_h, sigma_allow)
+        util = evaluate(T, M)
         label = "Pressure only (origin)" if frac == 0.0 else f"T = {frac:.1f} T_y"
         points.append(_point_row(label, T, M, T_y, M_p, util))
 
@@ -261,7 +207,7 @@ def _compute_key_points(
     for frac in fractions[1:]:
         T = 0.0
         M = frac * M_p
-        util = _von_mises_util_single(T, M, A, Z, sigma_h, sigma_allow)
+        util = evaluate(T, M)
         label = f"M = {frac:.1f} M_p"
         points.append(_point_row(label, T, M, T_y, M_p, util))
 
@@ -270,7 +216,7 @@ def _compute_key_points(
     for t_frac, m_frac in combos:
         T = t_frac * T_y
         M = m_frac * M_p
-        util = _von_mises_util_single(T, M, A, Z, sigma_h, sigma_allow)
+        util = evaluate(T, M)
         label = f"T = {t_frac:.1f} T_y + M = {m_frac:.1f} M_p"
         points.append(_point_row(label, T, M, T_y, M_p, util))
 
@@ -283,18 +229,7 @@ def _von_mises_util_single(
     sigma_h: float, sigma_allow: float,
 ) -> float:
     """Von Mises utilisation at a single (T, M) point, checking both fibres."""
-    sigma_a = T / A
-    sigma_b = M / Z
-
-    # Tension fibre
-    sl_t = sigma_a + sigma_b
-    vm_t = math.sqrt(max(sl_t**2 - sl_t * sigma_h + sigma_h**2, 0.0))
-
-    # Compression fibre
-    sl_c = sigma_a - sigma_b
-    vm_c = math.sqrt(max(sl_c**2 - sl_c * sigma_h + sigma_h**2, 0.0))
-
-    return max(vm_t, vm_c) / sigma_allow if sigma_allow > 0 else float("inf")
+    return screening_utilisation(T, M, A, Z, sigma_h, sigma_allow)
 
 
 def _point_row(
@@ -448,7 +383,7 @@ def _trace_envelope_method1(
     T_neg: float, T_pos: float, M_p: float, T_y: float,
     n_points: int = 200,
 ) -> Tuple[List[float], List[float]]:
-    """API STD 2RD Method 1: Linear M-T interaction envelope.
+    """Legacy Method 1 helper, retained for callers; reports use the strategy.
 
     M_limit = M_y * max(F_d_corr - |T| / T_y, 0)
     where F_d_corr = sqrt(max(f_d^2 - (p_net/p_b)^2, 0)).
@@ -479,7 +414,7 @@ def _trace_envelope_method2(
     T_neg: float, T_pos: float, M_p: float, T_y: float,
     n_points: int = 200,
 ) -> Tuple[List[float], List[float]]:
-    """API STD 2RD Method 2: Cosine M-T interaction envelope.
+    """Legacy Method 2 helper, retained for callers; not a report capacity.
 
     M_limit = M_p * F_d_corr * cos(pi/2 * (T/T_y) / F_d_corr)
     where F_d_corr = sqrt(max(f_d^2 - (p_net/p_b)^2, 0)).
@@ -510,49 +445,28 @@ def _trace_envelope_method2(
 
 
 def _compute_pressure_sensitivity(
-    A: float, Z: float, d_i: float, t: float,
-    pi_base: float, pe: float, smys: float,
-    T_y: float, M_p: float,
-    conditions: List[Dict],
-    pressure_factors: List[float],
+    strategy, geometry, material, loads, conditions, pressure_factors,
 ) -> List[Dict]:
-    """Compute capacity limits at multiple internal pressure levels.
+    """Re-evaluate the implemented criterion for every pressure and condition."""
+    from dataclasses import replace
 
-    Returns:
-        List of dicts with keys: pi_factor, pi_MPa, sigma_h_MPa,
-        limits (list of per-condition dicts), envelopes (dict of
-        condition_name -> (T_vals, M_vals)).
-    """
     results = []
-    for pf in pressure_factors:
-        pi = pi_base * pf
-        p_net = pi - pe
-        sigma_h = p_net * d_i / (2 * t) if t > 0 else 0.0
-
-        limits = _compute_capacity_limits(
-            A, Z, sigma_h, smys, T_y, M_p, conditions,
-        )
-
-        # Trace envelope for Normal Operating only (f_d=0.72) to keep chart readable
-        envelopes = {}
-        for cond in conditions:
-            lim = next(c for c in limits if c["name"] == cond["name"])
-            T_neg = lim["T_neg_kN"] * 1e3
-            T_pos = lim["T_pos_kN"] * 1e3
-            T_vals, M_vals = _trace_envelope(
-                A, Z, sigma_h, smys, cond["f_d"],
-                T_neg, T_pos, M_p, n_points=200,
-            )
-            envelopes[cond["name"]] = (T_vals, M_vals)
-
+    for factor in pressure_factors:
+        case_loads = replace(loads, internal_pressure=loads.internal_pressure * factor)
+        interactions = {
+            cond["name"]: ReportInteraction(strategy, geometry, material, case_loads, cond)
+            for cond in conditions
+        }
         results.append({
-            "pi_factor": pf,
-            "pi_MPa": pi / 1e6,
-            "sigma_h_MPa": sigma_h / 1e6,
-            "limits": limits,
-            "envelopes": envelopes,
+            "pi_factor": factor,
+            "pi_MPa": case_loads.internal_pressure / 1e6,
+            "sigma_h_MPa": (
+                (case_loads.internal_pressure - case_loads.external_pressure)
+                * geometry.inner_diameter / (2 * geometry.wall_thickness) / 1e6
+            ),
+            "limits": [item.limits() for item in interactions.values()],
+            "envelopes": {name: item.trace() for name, item in interactions.items()},
         })
-
     return results
 
 
@@ -587,12 +501,15 @@ def _build_pressure_sensitivity_chart(
         idx = len(sensitivity) - 1 - i  # original index for color/dash
         pf = case["pi_factor"]
         label_suffix = "" if pf == 1.0 else f" (+{(pf - 1) * 100:.0f}%)"
-        pi_label = f"P_i = {case['pi_MPa']:.0f} MPa{label_suffix}"
+        pi_label = (
+            f"P_i = {case['pi_MPa']:.1f} MPa{label_suffix} — "
+            f"{conditions[0].get('basis', '')}"
+        )
 
         # Show the first (most restrictive) condition's envelope
         first_cond_name = conditions[0]["name"]
         env = case["envelopes"].get(first_cond_name)
-        if env:
+        if env and env[0]:
             color = pressure_colors[idx % len(pressure_colors)]
             r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
 
@@ -661,6 +578,7 @@ def _build_contour_chart(
     T_y: float, M_p: float,
     n_points: int = 300,
     code: DesignCode = DesignCode.API_RP_1111,
+    interaction=None,
 ) -> str:
     """Build an embedded Plotly contour chart as HTML div."""
     try:
@@ -677,19 +595,17 @@ def _build_contour_chart(
 
     T_1d = np.linspace(-T_max, T_max, n_points)
     M_1d = np.linspace(-M_max, M_max, n_points)
-    T_grid, M_grid = np.meshgrid(T_1d, M_1d)
 
-    # Von Mises utilisation grid (both fibres)
-    sigma_a = T_grid / A
-    sigma_b = M_grid / Z
-
-    sl_t = sigma_a + sigma_b
-    vm_t = np.sqrt(np.maximum(sl_t**2 - sl_t * sigma_h + sigma_h**2, 0.0))
-
-    sl_c = sigma_a - sigma_b
-    vm_c = np.sqrt(np.maximum(sl_c**2 - sl_c * sigma_h + sigma_h**2, 0.0))
-
-    util_grid = np.maximum(vm_t, vm_c) / sigma_allow
+    evaluate = interaction.utilisation if interaction is not None else (
+        lambda tension, moment: _von_mises_util_single(
+            tension, moment, A, Z, sigma_h, sigma_allow,
+        )
+    )
+    util_grid = np.array([
+        [evaluate(float(tension), float(moment)) for tension in T_1d]
+        for moment in M_1d
+    ])
+    basis = interaction.condition["basis"] if interaction else "SCREENING (von Mises)"
 
     T_kN = T_1d / 1e3
     M_kNm = M_1d / 1e3
@@ -722,7 +638,7 @@ def _build_contour_chart(
             "T = %{x:.0f} kN<br>M = %{y:.0f} kN·m<br>"
             "Util = %{z:.2f}<extra></extra>"
         ),
-        name="Von Mises Utilisation",
+        name=basis,
     ))
 
     # Bold unity contour (util = 1.0)
@@ -793,7 +709,7 @@ def _build_contour_chart(
 
     fig.update_layout(
         title=(
-            f"{code.value} Von Mises Tension\u2013Moment Interaction<br>"
+            f"{code.value} {basis}<br>"
             f"<sub>OD={OD_mm:.1f} mm, WT={WT_mm:.1f} mm, "
             f"SMYS={smys / 1e6:.0f} MPa, f<sub>d</sub>={f_d}, "
             f"P<sub>i</sub>={pi / 1e6:.1f} MPa, "
@@ -886,7 +802,8 @@ def _build_envelope_chart(
         fig.add_trace(go.Scatter(
             x=poly_T, y=poly_M,
             mode="lines",
-            name=f"{name} (f_d={style.get('f_d', '?')})",
+            name=(f"{name} (f_d={style.get('f_d', '?')}) — "
+                  f"{style.get('basis', '')}"),
             line=dict(
                 color=color,
                 dash=style.get("dash", "solid"),
@@ -961,7 +878,7 @@ def _build_envelope_chart(
     ))
 
     fig.update_layout(
-        title="Allowable Bending Envelope by Operating Condition",
+        title=f"M-T Envelope — {conditions[0].get('basis', 'SCREENING')}",
         xaxis_title="Effective Tension (kN)",
         yaxis_title="Bending Moment (kN·m)",
         template="plotly_white",
@@ -1010,10 +927,16 @@ def _pressure_check_row(
     allowable_key: str,
     demand_key: str,
 ) -> str:
-    """Build a table row for a pressure check."""
+    """Build a table row from the returned pressure-check details.
+
+    Define allowable=factor*capacity. Dividing by capacity recovers the
+    displayed factor where the strategy returns resistances rather than f_d.
+    """
     capacity = details.get(capacity_key, 0.0)
-    factor = details.get(factor_key, 0.0)
     allowable = details.get(allowable_key, 0.0)
+    factor = details.get(factor_key)
+    if factor is None:
+        factor = allowable / capacity if capacity > 0 else 0.0
     demand = details.get(demand_key, 0.0)
     util = details.get("utilisation", 0.0)
     status = "PASS" if util <= 1.0 else "FAIL"
@@ -1028,6 +951,32 @@ def _pressure_check_row(
         f"<td>{util:.3f}</td>"
         f"<td>{_status_tag(status)}</td>"
         f"</tr>"
+    )
+
+
+def _build_envelope_table(envelopes, conditions):
+    """Tabulate each condition's own (tension, moment) pairs, including endpoints."""
+    rows = []
+    for condition in conditions:
+        name = condition["name"]
+        tensions, moments = envelopes.get(name, ([], []))
+        if len(tensions) != len(moments):
+            raise ValueError("Envelope tension and moment counts differ")
+        if not tensions:
+            rows.append(f'<tr><td>{name}</td><td colspan="2">No feasible curve</td></tr>')
+            continue
+        indices = list(range(0, len(tensions), max(1, len(tensions) // 20)))
+        if indices[-1] != len(tensions) - 1:
+            indices.append(len(tensions) - 1)
+        for index in indices:
+            rows.append(
+                f"<tr><td>{name}</td><td>{tensions[index] / 1e3:.1f}</td>"
+                f"<td>{moments[index] / 1e3:.1f}</td></tr>"
+            )
+    return (
+        '<table><thead><tr><th>Condition</th><th>Tension (kN)</th>'
+        '<th>Moment (kN&middot;m)</th></tr></thead><tbody>'
+        + "".join(rows) + "</tbody></table>"
     )
 
 
@@ -1066,9 +1015,13 @@ def _build_html(
         "burst": ("Burst", "p_b", "f_d", "p_b_design", "p_net"),
         "collapse": ("Collapse", "p_c", "f_c", "p_c_design", "p_e"),
         "propagation": ("Propagation", "p_pr", "f_p", "p_pr_design", "p_e"),
+        "pressure_containment": ("Pressure Containment", "p_b", "f_d", "p_b_design", "p_net"),
+        "propagation_buckling": ("Propagation", "p_pr", "f_p", "p_pr_design", "p_e"),
         "hoop": ("Hoop Stress", "sigma_allow", "utilisation", "sigma_allow", "sigma_h"),
     }
     for check_name, (util, details) in raw_results.items():
+        if check_name in ("combined", "combined_loading"):
+            continue
         cfg = check_configs.get(check_name)
         if cfg:
             label, cap_key, fac_key, allow_key, demand_key = cfg
@@ -1104,6 +1057,12 @@ def _build_html(
     cl_rows = ""
     if capacity_limits:
         for cl in capacity_limits:
+            if not cl.get("feasible", True):
+                cl_rows += (
+                    f"<tr><td>{cl['name']}</td>"
+                    '<td colspan="4">No feasible curve at this pressure</td></tr>'
+                )
+                continue
             cl_rows += (
                 f"<tr>"
                 f"<td>{cl['name']}</td>"
@@ -1114,36 +1073,7 @@ def _build_html(
                 f"</tr>"
             )
 
-    # Envelope data table (sample every N-th point for readability)
-    envelope_table_html = ""
-    if envelopes:
-        cond_names = [c["name"] for c in conditions]
-        # Use ~20 rows: sample every 10th point from the 201-point envelope
-        first_key = cond_names[0]
-        n_total = len(envelopes[first_key][0])
-        step = max(1, n_total // 20)
-        indices = list(range(0, n_total, step))
-        if indices[-1] != n_total - 1:
-            indices.append(n_total - 1)
-
-        # Header row
-        hdr_cells = "<th>Tension (kN)</th>"
-        for name in cond_names:
-            hdr_cells += f"<th>{name}<br>M<sub>allow</sub> (kN&middot;m)</th>"
-        envelope_table_html += (
-            f"<table><thead><tr>{hdr_cells}</tr></thead><tbody>"
-        )
-
-        # Use the first condition's T values as the common T axis
-        T_ref = envelopes[first_key][0]
-        for idx in indices:
-            T_kN = T_ref[idx] / 1e3
-            row = f"<td>{T_kN:.0f}</td>"
-            for name in cond_names:
-                M_kNm = envelopes[name][1][idx] / 1e3
-                row += f"<td>{M_kNm:.1f}</td>"
-            envelope_table_html += f"<tr>{row}</tr>"
-        envelope_table_html += "</tbody></table>"
+    envelope_table_html = _build_envelope_table(envelopes or {}, conditions)
 
     # Pressure sensitivity table
     ps_table_html = ""
@@ -1170,6 +1100,12 @@ def _build_html(
                     f"<td rowspan=\"{len(case['limits'])}\">{case['sigma_h_MPa']:.1f}</td>"
                     if j == 0 else ""
                 )
+                if not lim.get("feasible", True):
+                    ps_table_html += (
+                        f"<tr>{first_col}<td>{lim['name']}</td>"
+                        '<td colspan="4">No feasible curve at this pressure</td></tr>'
+                    )
+                    continue
                 ps_table_html += (
                     f"<tr>{first_col}"
                     f"<td>{lim['name']}</td>"
@@ -1181,10 +1117,14 @@ def _build_html(
                 )
         ps_table_html += "</tbody></table>"
 
-    # Governing check
+    # The summary verdict covers pressure checks, not the entire load plane.
+    pressure_results = {
+        name: value for name, value in raw_results.items()
+        if name not in ("combined", "combined_loading")
+    }
     max_util = 0.0
     governing = ""
-    for name, (util, _) in raw_results.items():
+    for name, (util, _) in pressure_results.items():
         if util > max_util:
             max_util = util
             governing = name
@@ -1194,9 +1134,19 @@ def _build_html(
     governing_label = governing.replace('_', ' ').title()
 
     # Executive summary: count pass/fail across pressure checks
-    n_checks = len(raw_results)
-    n_pass = sum(1 for _, (u, _) in raw_results.items() if u <= 1.0)
+    n_checks = len(pressure_results)
+    n_pass = sum(1 for _, (u, _) in pressure_results.items() if u <= 1.0)
     n_fail = n_checks - n_pass
+
+    basis = conditions[0].get("basis", "SCREENING")
+    screening = "SCREENING" in basis
+    limit_heading = "Screening Limits" if screening else "Capacity Limits"
+    basis_note = (
+        f"{basis}. Pressure basis: ASSUMED gauge. "
+        "Pressure checks use the route's fixed factor set; no operating-condition "
+        "uplifts are inferred. Curves are the result of our implementation. "
+        "A missing curve means no admissible origin was found at that pressure."
+    )
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1331,7 +1281,7 @@ def _build_html(
                 </div>
                 <div class="exec-details">
                     <table>
-                        <tr><td>Overall Verdict</td><td>{_status_tag(overall_status)} &mdash; {n_pass}/{n_checks} checks passed</td></tr>
+                        <tr><td>Pressure-check Verdict</td><td>{_status_tag(overall_status)} &mdash; {n_pass}/{n_checks} checks passed</td></tr>
                         <tr><td>Governing Check</td><td>{governing_label}</td></tr>
                         <tr><td>Governing Utilisation</td><td>{max_util:.3f}</td></tr>
                         <tr><td>Margin</td><td>{overall_margin:.1f}%</td></tr>
@@ -1342,6 +1292,14 @@ def _build_html(
                 </div>
             </div>
         </div>
+
+        <div class="card"><h2>Revision history</h2>
+            <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+            <tr><td>1</td><td>2026-10-26</td><td>Strategy criteria and individual
+            tension grids replace separate report criteria to reconcile results.</td></tr></table>
+        </div>
+
+        <div class="card"><h2>Interaction Basis</h2><p>{basis_note}</p></div>
 
         <!-- Section 1: Pressure-Only Checks -->
         <div class="card">
@@ -1365,15 +1323,12 @@ def _build_html(
             </table>
         </div>
 
-        <!-- Section 2: Capacity Limits by Operating Condition -->
+        <!-- Section 2: Interaction limits by implemented condition -->
         <div class="card">
-            <h2>2. Capacity Limits by Operating Condition</h2>
+            <h2>2. {limit_heading} by Implemented Condition</h2>
             <p>
-                Pure tension and pure bending limits at util&nbsp;=&nbsp;1.0 for each
-                {code_label} operating condition. Tension limits are
-                <strong>asymmetric</strong> due to hoop stress interaction: positive
-                tension (pipe stretching) is more favourable than compression when
-                net internal pressure is positive.
+                {basis}. Each row uses its own implemented condition and tension
+                range. Screening limits are not quoted as code capacities.
             </p>
             <table>
                 <thead>
@@ -1396,8 +1351,7 @@ def _build_html(
             <h2>2a. Pressure Sensitivity &mdash; Effect of Internal Pressure</h2>
             <p>
                 Capacity limits recomputed at baseline, +50%, and +100% internal pressure.
-                Higher hoop stress shrinks all envelopes and increases the asymmetry
-                between positive and negative tension limits.
+                Each case re-evaluates the same criterion with the changed pressure.
             </p>
             {ps_table_html}
             <div class="chart-container">
@@ -1407,19 +1361,10 @@ def _build_html(
 
         <!-- Section 3: Combined Loading -->
         <div class="card">
-            <h2>3. Combined Loading &mdash; Von Mises Interaction</h2>
-            <p>
-                The {code_label} combined check evaluates the Von Mises equivalent stress:
-                &sigma;<sub>vm</sub> = &radic;(&sigma;<sub>L</sub>&sup2;
-                &minus; &sigma;<sub>L</sub>&middot;&sigma;<sub>h</sub>
-                + &sigma;<sub>h</sub>&sup2;) &le; f<sub>d</sub>&middot;SMYS
-            </p>
-            <p>
-                The contour plot below maps utilisation across the bending moment vs. tension
-                envelope. The <strong>bold black contour</strong> at util&nbsp;=&nbsp;1.0 is
-                the acceptance boundary; the <strong>dashed contour</strong> at 0.8 marks a
-                typical design target.
-            </p>
+            <h2>3. Interaction Utilisation</h2>
+            <p>{basis}. The contour uses the same evaluator as the envelope and
+            key points. The unity contour is the implemented boundary for a
+            registered check and a screening boundary otherwise.</p>
             <div class="chart-container">
                 {contour_html}
             </div>
@@ -1427,12 +1372,12 @@ def _build_html(
 
         <!-- Section 4: Allowable Bending Envelope -->
         <div class="card">
-            <h2>4. Allowable Bending Envelope</h2>
+            <h2>4. M-T Envelope &mdash; {basis}</h2>
             <p>
-                Each curve traces the maximum allowable bending moment as a function of
-                applied tension, at util&nbsp;=&nbsp;1.0 for that operating condition.
-                The innermost envelope (most restrictive condition) is the most
-                conservative; the outermost envelope represents the full yield limit.
+                Each curve traces utilisation equal to one using its own condition.
+                Each tabulated tension is paired with the moment from that same curve.
+                Screening curves are not code capacities. All pressure, collapse and
+                propagation checks remain separate acceptance checks.
             </p>
             <div class="chart-container">
                 {envelope_html if envelope_html else ""}
@@ -1444,7 +1389,8 @@ def _build_html(
         <!-- Section 5: Key Points Summary -->
         <div class="card">
             <h2>5. Key Points Summary</h2>
-            <p>Utilisation at selected engineering reference points on the M&ndash;T plane.</p>
+            <p>{basis}. Utilisation at selected reference points on the M&ndash;T plane.
+            Screening point status refers only to the screening criterion.</p>
             <table>
                 <thead>
                     <tr>
