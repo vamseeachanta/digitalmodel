@@ -1,0 +1,912 @@
+[
+  {
+    "id": "b401-category-iv",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+    "line": 116,
+    "anchor": "_CATEGORY_IV_EDITIONS: Final[frozenset[str]] = frozenset({\"2021\"})",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_category_iv_only_in_2021"
+    ],
+    "label": "Code-carried B401 labels: 2005 and 2010 use revision 2011, Table 10-; 2017 uses revision 2017-06, Table A-; 2021 uses revision 2021-05, Table 8-. These are observed labels, without source-document validation. Coating constants carry the selected table ending in -4.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The implemented coating lookup accepts paint category IV only for the 2021 token; earlier tokens reject it.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 756,
+        "anchor": "if cat is PaintCategory.IV and ed not in _CATEGORY_IV_EDITIONS:"
+      }
+    ]
+  },
+  {
+    "id": "b401-anode-temperature",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+    "line": 119,
+    "anchor": "_ANODE_TEMPERATURE_EDITIONS: Final[frozenset[str]] = frozenset({\"2021\"})",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_2021_hot_anode_changes_driving_voltage_and_capacity",
+      "tests/cathodic_protection/test_b401_tables.py::test_ambient_editions_reject_anode_temperature_above_30",
+      "tests/cathodic_protection/test_b401_tables.py::test_table_8_6_rows_are_selected_stepwise"
+    ],
+    "label": "Code-carried B401 labels: 2005 and 2010 use revision 2011, Table 10-; 2017 uses revision 2017-06, Table A-; 2021 uses revision 2021-05, Table 8-. These are observed labels, without source-document validation. Anode values carry the selected table ending in -6.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The 2021 token selects stepwise anode-surface-temperature rows; earlier tokens reject temperatures above AMBIENT_ANODE_TEMPERATURE_C. This concerns anode properties, separately from fluid-temperature current-density bands.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 637,
+        "anchor": "if edition in _ANODE_TEMPERATURE_EDITIONS:"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 611,
+        "anchor": "if anode_surface_temperature_c > AMBIENT_ANODE_TEMPERATURE_C:"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 123,
+        "anchor": "AMBIENT_ANODE_TEMPERATURE_C: Final = 30.0"
+      }
+    ]
+  },
+  {
+    "id": "b401-driving-voltage",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+    "line": 913,
+    "anchor": "def design_driving_voltage(",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_zinc_seawater_potential_changes_in_2021",
+      "tests/cathodic_protection/test_b401_tables.py::test_design_driving_voltage_seawater"
+    ],
+    "label": "Code-carried B401 labels: 2005 and 2010 use revision 2011, Table 10-; 2017 uses revision 2017-06, Table A-; 2021 uses revision 2021-05, Table 8-. These are observed labels, without source-document validation. Anode table ending in -6 with Sec. 5 (2005/2010), [5.4] (2017), or [2.4.2] (2021).",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The same subtraction uses the selected anode row and shared protective-potential value; the zinc seawater result differs between the earlier tokens and 2021.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 946,
+        "anchor": "f\"{table_label(ed, 6)} with \""
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 423,
+        "anchor": "_PROTECTION_POTENTIAL_V: Final = -0.80"
+      }
+    ]
+  },
+  {
+    "id": "b401-retrofit",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/b401_structures_phases_retrofit.py",
+    "line": 127,
+    "anchor": "if edition == \"2021\":",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_b401_structures_phases.py::test_retrofit_project_practice_and_2021_condition_inputs_fail_closed"
+    ],
+    "label": "Code-carried retrofit rule labels: 2005/2010 Sec. 7.13.3 (retrofit documentation); 2017 [7.13.3] (retrofit documentation); 2021 [7.4.1], [7.5.3] (retrofit evidence). These are strings in RULES, rather than Citation objects.",
+    "status": "FAIL",
+    "kind": "difference",
+    "difference": "The 2021 branch requires all entries in _CONDITION_FIELDS. Earlier tokens require a condition mapping but do not execute that field loop. The method_basis label also branches by edition.",
+    "missing": [
+      "No identified regression checks omission of the condition fields under every earlier token or asserts both edition-dependent method_basis labels."
+    ],
+    "coverage": "The existing test removes potential_history under the default 2021 fixture and checks rejection. It does not establish the opposite branch or method_basis output.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_structures_phases_retrofit.py",
+        "line": 65,
+        "anchor": "\"method_basis\": \"B401 retrofit evidence\""
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_structures_phases_schema.py",
+        "line": 13,
+        "anchor": "RULES: dict[Edition, tuple[str, ...]] = {"
+      }
+    ]
+  },
+  {
+    "id": "b401-labels",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+    "line": 76,
+    "anchor": "_SOURCE_BY_EDITION: Final[dict[Edition, EditionSource]] = {",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_b401_tables.py::test_every_result_carries_the_edition_citation",
+      "tests/cathodic_protection/test_b401_tables.py::test_table_label_follows_edition_numbering",
+      "tests/cathodic_protection/test_b401_tables.py::test_protection_potential",
+      "tests/cathodic_protection/test_b401_tables.py::test_buried_current_density"
+    ],
+    "label": "Code-carried B401 labels: 2005 and 2010 use revision 2011, Table 10-; 2017 uses revision 2017-06, Table A-; 2021 uses revision 2021-05, Table 8-. These are observed labels, without source-document validation. Buried labels are Sec. 6.3 (2005/2010), [6.3.8] (2017), [3.3.8] (2021).",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "Source-map revision, table prefix, protective-potential clause and buried-density clause vary by token. The 2005 record carries revision 2011; token and citation revision are not interchangeable.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 482,
+        "anchor": "def _cite(section: str, note: str, edition: Edition) -> Citation:"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_structures_phases_schema.py",
+        "line": 13,
+        "anchor": "RULES: dict[Edition, tuple[str, ...]] = {"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_structures_phases_schema.py",
+        "line": 158,
+        "anchor": "return [f\"dnv-rp-b401 {edition} {rule}\" for rule in RULES[edition]]"
+      }
+    ]
+  },
+  {
+    "id": "b401-report-retrofit",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/report_recommendations.py",
+    "line": 98,
+    "anchor": "retrofit_subject = \"retrofit evidence\" if edition == \"2021\" else \"retrofit documentation\"",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_report_recommendations.py::test_verified_options_use_edition_specific_retrofit_subject",
+      "tests/cathodic_protection/test_report_recommendations.py::test_recommendation_sources_are_selected_by_key"
+    ],
+    "label": "RULES: 2005/2010 Sec. 7.13.3; 2017 [7.13.3]; 2021 [7.4.1], [7.5.3]. The report appends these clause labels to its source text.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The report selector uses retrofit evidence for 2021 and retrofit documentation for earlier tokens, then selects the matching rule label.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/report_recommendations.py",
+        "line": 132,
+        "anchor": "def _rule_source(edition: Any, key: str) -> str:"
+      }
+    ]
+  },
+  {
+    "id": "b401-edition-routing",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021",
+      "2008",
+      "2011"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/_edition.py",
+    "line": 27,
+    "anchor": "Edition = Literal[\"2005\", \"2010\", \"2017\", \"2021\"]",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_edition_api_foundation.py::test_normalize_edition_accepts_supported_aliases",
+      "tests/cathodic_protection/test_edition_api_foundation.py::test_normalize_edition_warns_and_defaults_when_missing",
+      "tests/cathodic_protection/test_edition_api_foundation.py::test_normalize_edition_rejects_unknown_values"
+    ],
+    "label": "Software routing labels in STANDARD_BY_EDITION; no normative clause is attached to alias/default policy.",
+    "status": "FAIL",
+    "kind": "routing",
+    "difference": "Canonical tokens are defined by Edition. The 2008 alias maps to 2005, the 2011 alias maps to 2010, missing input warns and defaults to 2021, and unsupported tokens including 1993 are rejected.",
+    "missing": [
+      "Alias/default policy has software labels but no attached clause citation; it is not a standards-difference claim."
+    ],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/_edition.py",
+        "line": 36,
+        "anchor": "_ALIASES: dict[str, Edition] = {"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/_edition.py",
+        "line": 127,
+        "anchor": "def normalize_edition(edition: str | None, *, stacklevel: int = 2) -> Edition:"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
+        "line": 562,
+        "anchor": "def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:"
+      }
+    ]
+  },
+  {
+    "id": "b401-f103-companion",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/dnv_rp_b401.py",
+    "line": 93,
+    "anchor": "_F103_EDITION_FOR_B401: Final[dict[Edition, F103Edition]] = {",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [],
+    "label": "The wrapper docstring labels F103 Sec. 5.6.7, Eq. 14 only; no edition-specific Citation is returned.",
+    "status": "FAIL",
+    "kind": "difference",
+    "difference": "The protected_length wrapper maps 2005/2010 to F103 2010 and 2017/2021 to F103 2019; the downstream formula has no edition-dependent arithmetic.",
+    "missing": [
+      "No eligible covering test is used for this wrapper; existing riser benchmark coverage is outside this review basis.",
+      "The numeric return has no attached edition-specific Citation."
+    ],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/dnv_rp_b401.py",
+        "line": 369,
+        "anchor": "delta_E_me, WT, D, rho_me, f_cf, i_cm, edition=_F103_EDITION_FOR_B401[ed]"
+      }
+    ]
+  },
+  {
+    "id": "f103-linepipe",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 786,
+    "anchor": "def linepipe_coating_row(",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019",
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_2019_concrete_weight_coating_selects_the_fbe_row",
+      "tests/cathodic_protection/test_f103_tables.py::test_coatings_absent_from_2019_table_raise",
+      "tests/cathodic_protection/test_f103_tables.py::test_2019_only_coatings_raise_under_2010"
+    ],
+    "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2. Coating constants carry Table A.1 or Table A-1.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "Edition selects different coating rows and constants. The 2019 route can split rows by concrete-weight-coating flag and rejects some earlier coating identifiers; some newer coating identifiers are rejected under 2010.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 829,
+        "anchor": "def linepipe_coating_constants("
+      }
+    ]
+  },
+  {
+    "id": "f103-field-joints",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 874,
+    "anchor": "def field_joint_coating_row(",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_f103_tables.py::test_2010_none_maps_to_2019_bare_steel_row",
+      "tests/cathodic_protection/test_f103_tables.py::test_other_2010_field_joint_ids_raise_under_2019",
+      "tests/cathodic_protection/test_f103_tables.py::test_2019_field_joint_ids_raise_under_2010",
+      "tests/cathodic_protection/test_f103_tables.py::test_resolve_2019_field_joint_3a_requires_infill",
+      "tests/cathodic_protection/test_f103_tables.py::test_resolve_2019_field_joint_amended_name"
+    ],
+    "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2. Field-joint constants carry Table A.2 or Table A-2.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "Edition selects different field-joint enums and rows. The older NONE maps to the newer bare-steel row; other older identifiers are rejected under 2019, and newer enum members are rejected under 2010. The 2019 resolver also distinguishes infill and amended identifier aliases.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 1034,
+        "anchor": "def resolve_field_joint_coating_2019("
+      }
+    ]
+  },
+  {
+    "id": "f103-temperature-bands",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 278,
+    "anchor": "_BANDS_BY_EDITION: Final[",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_f103_tables.py::test_temperature_bands_per_edition",
+      "tests/cathodic_protection/test_f103_tables.py::test_fluid_temperature_band_boundaries_2010",
+      "tests/cathodic_protection/test_f103_tables.py::test_fluid_temperature_band_boundaries_2019",
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019"
+    ],
+    "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2. Current density carries Table 5-1 or Table 6-2.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The 2019 fluid-temperature bands split the lowest 2010 band. The edition-specific mean-current-density maps also differ in overlapping bands; this is more than a band-label change.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 328,
+        "anchor": "_MEAN_CURRENT_DENSITY_BY_EDITION: Final["
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 714,
+        "anchor": "def mean_current_density("
+      }
+    ]
+  },
+  {
+    "id": "f103-ambient",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 1138,
+    "anchor": "def _check_ambient_for_2010(anode_surface_temperature_c: float) -> None:",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_f103_tables.py::test_anode_temperature_above_30_rejected_under_2010",
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_2019_buried_hot_anode_uses_table_6_3_row"
+    ],
+    "label": "F103 2010 defers to B401 2010, revision 2011, Table 10-6; F103 2019 uses revision 2019-09, Table 6-3.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The 2010 capacity lookup enforces the B401 ambient cap; the 2019 capacity lookup uses stepwise anode-surface-temperature rows. Potential and driving-voltage accessors share this guard, but coverage of each is assessed separately.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 1150,
+        "anchor": "def anode_capacity("
+      }
+    ]
+  },
+  {
+    "id": "f103-hot-potential-guard",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 1198,
+    "anchor": "def anode_closed_circuit_potential(",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_f103_tables.py::test_anode_values_2010_defer_to_b401_2010"
+    ],
+    "label": "B401 2010 revision 2011, Table 10-6 with Sec. 5; F103 2019 revision 2019-09, Table 6-3 with [6.7.11].",
+    "status": "FAIL",
+    "kind": "difference",
+    "difference": "The 2010 potential and driving-voltage lookups also reject anode temperatures above the ambient cap; the 2019 lookups use anode-temperature rows.",
+    "missing": [
+      "No identified test directly checks hot-anode rejection by both the 2010 potential and driving-voltage accessors."
+    ],
+    "coverage": "Ambient values and citations are tested; the separate capacity rejection test cannot establish every public accessor guard.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 1253,
+        "anchor": "def design_driving_voltage("
+      }
+    ]
+  },
+  {
+    "id": "f103-anode-sources",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 116,
+    "anchor": "_OWN_ANODE_TABLE_EDITIONS: Final[frozenset[str]] = frozenset({\"2019\"})",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_f103_tables.py::test_anode_values_2010_defer_to_b401_2010",
+      "tests/cathodic_protection/test_f103_tables.py::test_anode_values_2019_match_table_6_3"
+    ],
+    "label": "B401 revision 2011 Table 10-6 and Sec. 5 for F103 2010; F103 revision 2019-09 Table 6-3 and [6.7.11] for 2019.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The 2010 anode properties defer to the companion B401 2010 table; 2019 uses its own cited table. The zinc potential and derived driving voltage can differ even at ambient temperature.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 110,
+        "anchor": "_B401_EDITION_FOR_F103: Final[dict[F103Edition, Edition]] = {"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 1233,
+        "anchor": "def protection_potential(edition: F103Edition | None = None) -> CitedValue:"
+      }
+    ]
+  },
+  {
+    "id": "f103-utilisation-source",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 1088,
+    "anchor": "def bracelet_utilisation_factor(edition: F103Edition | None = None) -> CitedValue:",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_f103_tables.py::test_bracelet_utilisation_factor_2010_defers_to_b401_table_10_8",
+      "tests/cathodic_protection/test_f103_tables.py::test_bracelet_utilisation_factor_2019_cites_clause_6_4_2"
+    ],
+    "label": "B401 revision 2011 Table 10-8 for F103 2010; F103 revision 2019-09 [6.4.2] (anode utilisation factor) for 2019.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The value is shared, but 2010 defers to a B401 utilisation citation and 2019 attaches an F103 clause citation.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": []
+  },
+  {
+    "id": "f103-labels",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 87,
+    "anchor": "_SOURCE_BY_EDITION: Final[dict[F103Edition, F103EditionSource]] = {",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_f103_tables.py::test_every_result_carries_the_edition_citation",
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019"
+    ],
+    "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "Edition selects citation revision, current-density table label, linepipe table label and field-joint table label.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+        "line": 650,
+        "anchor": "def _cite(section: str, note: str, edition: F103Edition) -> Citation:"
+      }
+    ]
+  },
+  {
+    "id": "f103-bank-equations",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
+    "line": 666,
+    "anchor": "def anode_bank_formula_citations(",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_pipeline_anode_bank.py::test_formula_references_separate_standard_and_circuit_relation",
+      "tests/cathodic_protection/test_pipeline_anode_bank.py::test_2010_uses_renumbered_sections_and_companion_table"
+    ],
+    "label": "F103 2010 revision 2010 Sec. 5.6 Eq. (8)-(14), Eq. (16)-(17); 2019 revision 2019-09 Sec. 6.7 Eq. (9)-(16), Eq. (18)/(20), Appendix D.8.5-D.8.10. Companion B401 revision 2011 Table 10-7 or revision 2017-06 Table A-7. formula_references is a separate display list.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The anode-bank equation and arrangement labels are selected by edition; the circuit and metallic-drop kernels are shared. A separate companion B401 resistance citation changes with the F103 edition.",
+    "missing": [],
+    "coverage": "Existing tests assert selected section/equation/resistance strings. They do not assert every clause string or verify any underlying publication.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/pipeline_anode_bank.py",
+        "line": 282,
+        "anchor": "def _resistance_citation(edition: F103Edition) -> Citation:"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/pipeline_anode_bank.py",
+        "line": 327,
+        "anchor": "formula_references=["
+      }
+    ]
+  },
+  {
+    "id": "f103-engine-joints",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
+    "line": 844,
+    "anchor": "def _f103_field_joint_coating(",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_engine_adapter.py::test_f103_2019_fbe_field_joints_resolve_by_infill",
+      "tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_field_joint_ids_unchanged"
+    ],
+    "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2. Downstream field-joint constants carry Table A.2 or Table A-2.",
+    "status": "PASS",
+    "kind": "difference",
+    "difference": "The YAML adapter resolves newer field-joint identifiers and infill under 2019, and uses the older enum under 2010.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": []
+  },
+  {
+    "id": "f103-component-joints",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/b401_component_zones.py",
+    "line": 63,
+    "anchor": "if edition == \"2019\"",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_b401_riser_components.py::test_f103_field_joint_coating_is_edition_cited"
+    ],
+    "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2. Downstream coating constants supply the citation.",
+    "status": "FAIL",
+    "kind": "difference",
+    "difference": "The B401 component coating helper independently selects the F103 field-joint parser by the coating edition.",
+    "missing": [
+      "The identified component test covers 2019; no identified component-level regression covers the older field-joint branch."
+    ],
+    "coverage": "The existing component test exercises the newer parser; table-level enum tests do not establish both component branches.",
+    "evidence": []
+  },
+  {
+    "id": "f103-bank-joints",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/pipeline_anode_bank.py",
+    "line": 45,
+    "anchor": "enum = FieldJointCoating if edition == \"2010\" else FieldJointCoating2019",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_pipeline_anode_bank.py::test_fjc_extension_uses_area_weighted_side_current_per_length"
+    ],
+    "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2. Downstream field-joint constants supply the citation.",
+    "status": "FAIL",
+    "kind": "difference",
+    "difference": "The bank-side field-joint parser chooses the older or newer enum before the shared coating lookup.",
+    "missing": [
+      "No identified bank-side regression exercises field-joint parsing under both edition tokens."
+    ],
+    "coverage": "The existing field-joint extension test uses the default 2019 input.",
+    "evidence": []
+  },
+  {
+    "id": "f103-edition-routing",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019",
+      "2016",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/_edition.py",
+    "line": 157,
+    "anchor": "def normalize_f103_edition(edition: str | None, *, stacklevel: int = 2) -> F103Edition:",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_f103_tables.py::test_2016_aliases_to_2019_with_a_warning",
+      "tests/cathodic_protection/test_f103_tables.py::test_2021_alias_gives_the_2019_tables",
+      "tests/cathodic_protection/test_f103_tables.py::test_edition_none_warns_and_defaults_to_2019"
+    ],
+    "label": "Software routing labels in F103_STANDARD_BY_EDITION; no normative clause is attached to alias/default policy.",
+    "status": "FAIL",
+    "kind": "routing",
+    "difference": "Missing input warns and defaults to 2019; 2021 is an alias of 2019 and 2016 maps to 2019 with a warning. These are implemented token mappings, without a claim about publication equivalence.",
+    "missing": [
+      "Alias/default policy has no attached clause citation; it is not a standards-difference claim."
+    ],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/_edition.py",
+        "line": 85,
+        "anchor": "_F103_ALIASES: dict[str, F103Edition] = {"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/_edition.py",
+        "line": 113,
+        "anchor": "_F103_SUPERSEDED_2016: frozenset[str] = frozenset("
+      }
+    ]
+  },
+  {
+    "id": "f103-pinned-key",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
+    "line": 880,
+    "anchor": "if pinned_edition is None:",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_engine_adapter.py::test_neutral_f103_key_without_edition_runs_the_2019_default",
+      "tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_alias_pins_2010_with_deprecation",
+      "tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_alias_accepts_a_matching_edition",
+      "tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_alias_rejects_a_conflicting_edition"
+    ],
+    "label": "Code-carried F103 labels: 2010 revision 2010, Table 5-1 / Table A.1 / Table A.2; 2019 revision 2019-09, Table 6-2 / Table A-1 / Table A-2. Returned design quantities carry downstream table citations; compatibility-key policy itself has no normative clause.",
+    "status": "FAIL",
+    "kind": "routing",
+    "difference": "The neutral F103 key uses the selected or default 2019 token. The dated compatibility key pins 2010, warns and rejects a conflicting explicit edition.",
+    "missing": [
+      "The key-pinning policy has no attached clause citation; it is a software compatibility rule."
+    ],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": []
+  },
+  {
+    "id": "b401-current-densities",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+    "line": 675,
+    "anchor": "number, values = _CURRENT_DENSITY_BY_PHASE[DesignPhase(phase)]",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_current_demand_identical_across_editions",
+      "tests/cathodic_protection/test_b401_tables.py::test_design_current_density_matches_table_1",
+      "tests/cathodic_protection/test_b401_tables.py::test_design_current_density_mean_matches_table_2",
+      "tests/cathodic_protection/test_b401_tables.py::test_reinforcement_current_density_matches_table_3",
+      "tests/cathodic_protection/test_b401_tables.py::test_buried_current_density"
+    ],
+    "label": "Code-carried B401 labels: 2005 and 2010 use revision 2011, Table 10-; 2017 uses revision 2017-06, Table A-; 2021 uses revision 2021-05, Table 8-. These are observed labels, without source-document validation. Current density tables end in -1/-2/-3; buried density uses the source-map buried clause.",
+    "status": "PASS",
+    "kind": "shared",
+    "difference": "These implemented routes index the same current-density maps; the edition selects the citation label. Reinforcement and buried surfaces also use shared data. This does not establish equivalence of the publications.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 714,
+        "anchor": "value = _REINFORCEMENT_CURRENT_DENSITY[(Climate(climate), row)]"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 979,
+        "anchor": "value=_BURIED_CURRENT_DENSITY,"
+      }
+    ]
+  },
+  {
+    "id": "b401-utilisation",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+    "line": 414,
+    "anchor": "_UTILISATION_FACTOR: Final[dict[AnodeShape, float]] = {",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_b401_tables.py::test_utilisation_factor_matches_table_8"
+    ],
+    "label": "Code-carried B401 labels: 2005 and 2010 use revision 2011, Table 10-; 2017 uses revision 2017-06, Table A-; 2021 uses revision 2021-05, Table 8-. These are observed labels, without source-document validation. Utilisation tables end in -8.",
+    "status": "PASS",
+    "kind": "shared",
+    "difference": "These implemented routes return the same shape-keyed utilisation values; edition changes the attached table label. Explicit input overrides remain a separate design basis.",
+    "missing": [],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 878,
+        "anchor": "value=_UTILISATION_FACTOR[key], citation=citation, units=UNITS_DIMENSIONLESS"
+      }
+    ]
+  },
+  {
+    "id": "b401-resistance",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/anode_sizing.py",
+    "line": 313,
+    "anchor": "def calculate_anode_resistance(",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_kernels.py::TestTable107Resistance::test_long_slender_standoff_review_a2",
+      "tests/cathodic_protection/test_kernels.py::TestTable107Resistance::test_short_slender_standoff_formula",
+      "tests/cathodic_protection/test_kernels.py::TestTable107Resistance::test_long_flush",
+      "tests/cathodic_protection/test_kernels.py::TestTable107Resistance::test_short_flush_or_bracelet"
+    ],
+    "label": "The numeric function docstring carries B401 Table 10-7. The separate anode_resistance_citation helper selects Table 10-7, Table A-7 or Table 8-7 by edition; the function itself returns a float.",
+    "status": "FAIL",
+    "kind": "shared",
+    "difference": "The resistance function and shared kernels accept geometry and resistivity, with no edition argument; the same numerical resistance follows for identical inputs. Anode potential and resulting current output can still differ by edition.",
+    "missing": [
+      "The function returns no Citation sidecar; edition-specific labels are available only through a separate helper."
+    ],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
+        "line": 882,
+        "anchor": "def anode_resistance_citation(edition: Edition | None = None) -> Citation:"
+      }
+    ]
+  },
+  {
+    "id": "b401-design-life",
+    "code": "B401",
+    "editions": [
+      "2005",
+      "2010",
+      "2017",
+      "2021"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
+    "line": 610,
+    "anchor": "design_data.get(\"design_life\", 25.0), \"design_data.design_life\"",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_current_demand_identical_across_editions",
+      "tests/cathodic_protection/test_b401_structures_phases.py::test_temporary_phase_has_its_own_design_life"
+    ],
+    "label": "The mass kernel docstring labels B401 Eq. 2; RULES carries edition-specific active-time and mass labels. No source citation is attached to the flat adapter default design life.",
+    "status": "FAIL",
+    "kind": "shared",
+    "difference": "The flat B401 adapter reads and validates the same design-life input/default for all tokens, then passes that life to the same coating and mass kernels. Component-local and phase-local lives remain explicit; no claim is made about a standard-required life.",
+    "missing": [
+      "No identified regression varies design life across all supported tokens; the flat adapter default has no attached source citation."
+    ],
+    "coverage": "The crosswalk fixes life for a single jacket example; the phase test checks a separate temporary-life input.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
+        "line": 704,
+        "anchor": "total_mass = kernel.anode_mass(total_mean, design_life, capacity.value, u)"
+      },
+      {
+        "file": "src/digitalmodel/cathodic_protection/_kernels.py",
+        "line": 127,
+        "anchor": "def anode_mass("
+      }
+    ]
+  },
+  {
+    "id": "abs-single-edition",
+    "code": "ABS",
+    "editions": [
+      "2017-12"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/abs_ships_tables.py",
+    "line": 13,
+    "anchor": "_BASE: Final = {",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [
+      "tests/cathodic_protection/test_abs_ships_rebuild.py::test_abs_table_values_are_cited",
+      "tests/cathodic_protection/test_abs_tables.py::test_coating"
+    ],
+    "label": "ABS revision 2017-12; Section 2 Tables 1, 3, 4, 5 and Section 3 Tables 2, 4 are carried by the code. The record does not compare ABS editions.",
+    "status": "PASS",
+    "kind": "scope",
+    "difference": "The rebuilt ship table helper carries one fixed citation revision and has no edition selector. The public route key contains a historical date misnomer; it does not establish another edition.",
+    "missing": [],
+    "coverage": "Existing tests check selected attached labels and the fixed revision against test metadata; no multi-edition behavior is claimed.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
+        "line": 139,
+        "anchor": "KEY_ABS_SHIPS: Final = \"ABS_gn_ships_2018\""
+      }
+    ]
+  },
+  {
+    "id": "f103-result-metadata",
+    "code": "F103",
+    "editions": [
+      "2010",
+      "2019"
+    ],
+    "file": "src/digitalmodel/cathodic_protection/dnv_rp_f103.py",
+    "line": 78,
+    "anchor": "_LEGACY_RESULT_EDITION: Final[F103Edition] = \"2010\"",
+    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "test": [],
+    "label": "The result validator supplies f103_standard_for_edition and edition_provenance; no normative clause is attached to metadata fallback policy.",
+    "status": "FAIL",
+    "kind": "routing",
+    "difference": "Deserializing a result without edition metadata labels it 2010, while a new design without an edition selects 2019. These are different software fallback contracts.",
+    "missing": [
+      "No identified test removes edition metadata from an F103 result and checks the fallback independently of the design default.",
+      "Metadata fallback policy has no attached clause citation."
+    ],
+    "coverage": "Existing assertions cover the stated behavior; exhaustive input coverage is not established.",
+    "evidence": [
+      {
+        "file": "src/digitalmodel/cathodic_protection/dnv_rp_f103.py",
+        "line": 284,
+        "anchor": "edition = values.get(\"edition_used\") or _LEGACY_RESULT_EDITION"
+      }
+    ]
+  }
+]
