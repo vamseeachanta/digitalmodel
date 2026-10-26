@@ -58,7 +58,7 @@ def test_builder_uses_the_registered_index_output_name(builder, tmp_path):
 
 
 @pytest.mark.parametrize("family,correlation", [("calcite", "calcite_co2"), ("barite", "barite")])
-def test_printed_coefficients_reproduce_wellhead_indices(builder, family, correlation):
+def test_printed_coefficients_match_hand_calculation(builder, hand_calculation, family, correlation):
     data = builder.build_data()
     parser = ReportParser()
     parser.feed("".join(builder.render_body(data)))
@@ -66,13 +66,18 @@ def test_printed_coefficients_reproduce_wellhead_indices(builder, family, correl
         key.rsplit(".", 1)[1]: float(text.replace("−", "-"))
         for key, _, text in parser.numbers if key.startswith(f"coefficients.{correlation}.")
     }
-    temperature, pressure = data["profile"][-1]["t_f"], data["profile"][-1]["p_psia"]
-    strength = data["ionic_strength"]
-    terms = dict(a0=1, a_t=temperature, a_t2=temperature**2, a_t3=temperature**3,
-                 a_p=pressure, a_sqrt_i=math.sqrt(strength), a_i=strength)
-    constant = sum(coefficients[key] * factor for key, factor in terms.items())
-    result = data["states"][-1][family]
-    assert constant + result["log10_iap"] == pytest.approx(result["si"], abs=1e-6)
+    assert coefficients == hand_calculation["inputs"]["coefficients"][correlation]
+    for endpoint in hand_calculation["endpoints"].values():
+        temperature, pressure = endpoint["t_f"], endpoint["p_psia"]
+        terms = dict(a0=1, a_t=temperature, a_t2=temperature**2, a_t3=temperature**3,
+                     a_p=pressure, a_sqrt_i=hand_calculation["sqrt_ionic_strength"],
+                     a_i=hand_calculation["ionic_strength_mol_l"])
+        contributions = {key: coefficients[key] * factor for key, factor in terms.items()}
+        assert contributions == pytest.approx(endpoint["polynomial_terms"][correlation], abs=1e-11)
+        constant = sum(contributions.values())
+        result = endpoint["minerals"][family]
+        assert constant == pytest.approx(result["pk_cond"], abs=1e-11)
+        assert constant + result["log10_iap"] == pytest.approx(result["si"], abs=1e-11)
 
 
 def test_build_is_independent_of_windows_text_defaults(builder, monkeypatch, tmp_path):
@@ -214,6 +219,54 @@ def test_rebuild_matches_published_document_and_changes(rebuilt):
     assert (output / "index.html").read_bytes() == REPORT.read_text(encoding="utf-8").encode("utf-8")
     published_changes = REPORT.with_name("changes.json").read_text(encoding="utf-8")
     assert (output / "changes.json").read_bytes() == published_changes.encode("utf-8")
+
+
+@pytest.fixture(scope="module")
+def hand_calculation():
+    path = Path(__file__).parent / "fixtures/module_report_hand_calculation.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_hand_calculation_sources_match_report_basis(rebuilt, hand_calculation):
+    _, _, data = rebuilt
+    for source in hand_calculation["sources"]:
+        assert data["sources"][source["locator"]] == source["sha256_lf_utf8"]
+    for correlation, coefficients in hand_calculation["inputs"]["coefficients"].items():
+        assert data["coefficients"][correlation] == coefficients
+
+
+def test_method_reference_uses_title_identifier_and_framework_description(rebuilt):
+    output, parser, _ = rebuilt
+    html = (output / "index.html").read_text(encoding="utf-8")
+    reference = ReportParser()
+    reference.feed(html.split('<li id="ref-6">', 1)[1].split("</li>", 1)[0])
+    text = " ".join(" ".join(reference.visible).split())
+    assert text.startswith("[6] Why Scale Forms in the Oil Field and Methods To Predict It")
+    assert "SPE-21710-PA" in text
+    assert 'href="https://doi.org/10.2118/21710-PA"' in html
+    assert "The implementation uses the conditional-solubility framework [2, 6]." in " ".join(parser.visible)
+
+
+@pytest.mark.parametrize("endpoint", ["bottomhole", "wellhead"])
+def test_report_endpoints_match_independent_hand_calculation(rebuilt, hand_calculation, endpoint):
+    _, _, data = rebuilt
+    reference = hand_calculation
+    expected = reference["endpoints"][endpoint]
+    step = expected["step"]
+    assert data["inputs"]["brine"] == reference["inputs"]["brine"]
+    assert data["ions"] == reference["inputs"]["ions"]
+    assert data["ionic_strength"] == pytest.approx(reference["ionic_strength_mol_l"], rel=5e-12)
+    profile = data["profile"][step]
+    assert profile["t_f"] == expected["t_f"]
+    assert profile["p_psia"] == expected["p_psia"]
+    assert set(data["states"][step]) == set(expected["minerals"])
+    for family, result in expected["minerals"].items():
+        actual = data["states"][step][family]
+        for field in ("si", "pk_cond", "log10_iap"):
+            assert actual[field] == pytest.approx(result[field], rel=5e-12, abs=1e-11), (endpoint, family, field)
+        assert actual["details"] == pytest.approx(result["details"], rel=5e-12, abs=1e-11)
+        assert profile[f"si_{family}"] == pytest.approx(result["si"], abs=1e-11)
+        assert profile[f"dsi_{family}"] == pytest.approx(result["dsi"], abs=1e-11)
 
 
 def test_every_worked_result_equals_direct_module_calls(rebuilt):

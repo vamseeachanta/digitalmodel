@@ -35,8 +35,8 @@ TESTS = "tests/production_chemistry/test_scale_si.py"
 HOUSE = "src/digitalmodel/reporting/assets/calc_report_format.html"
 ENGINE_CSS = "src/digitalmodel/reporting/assets/standard_report.css"
 SCRIPT = "scripts/production_chemistry/module_report.js"
-REVISION = "01"
-DATE = "2026-10-22"
+REVISION = "02"
+DATE = "2026-10-25"
 CHANGES = {
     "report": "productionchemistry", "revision": REVISION,
     "revisions": [{"revision": "00", "date": "2026-10-21",
@@ -44,11 +44,15 @@ CHANGES = {
             "Initial analysis of mineral-scale screening along a production string.",
             "Synthetic public-example results are separated from field design acceptance.",
             "Coefficient calibration and independent physical comparison remain required.",
-        ]}, {"revision": REVISION, "date": DATE,
+        ]}, {"revision": "01", "date": "2026-10-22",
         "changes": [
             "Numeric serialization and text records are normalized for reproducible builds.",
             "Coefficient precision and unevaluated-result wording are corrected for independent readback.",
             "The method reference and shared report output name are added for consistent discovery.",
+        ]}, {"revision": REVISION, "date": DATE,
+        "changes": [
+            "Independent endpoint arithmetic is recorded in a literal hand-calculation worksheet.",
+            "The method is described as a conditional-solubility framework and cited by title and identifier.",
         ]}],
 }
 TITLES = (
@@ -212,7 +216,8 @@ are not calibrated against an independent physical dataset [2].</li></ul></li></
 <div class="revhist"><h3>Revision history</h3>
 {table(('Revision', 'Date', 'What changed and why'), [
 ('00', '2026-10-21', 'Initial mineral-scale screening analysis; coefficient and physical-comparison gaps are identified before design use.'),
-(REVISION, DATE, 'Portable rebuilds, coefficient readback and unevaluated-result reporting are corrected; the method reference and shared output name are added.')],
+('01', '2026-10-22', 'Portable rebuilds, coefficient readback and unevaluated-result reporting are corrected; the method reference and shared output name are added.'),
+(REVISION, DATE, 'Independent endpoint arithmetic is recorded; the method citation and framework description are corrected.')],
 'Revision record. Each issue retains its original entry and records the reason for the change.')}</div>'''
     introduction = '''<p>Mineral-scale tendency is assessed from water composition and local
 thermal and pressure conditions. The calculation is used to identify supersaturation
@@ -269,7 +274,7 @@ in psia. Each a denotes the coefficient of its associated term, with reciprocal
 units required to make F dimensionless. Distinct coefficient sets are used for each
 mineral and carbonate route. Their values are read from the implementation in
 Appendix 10.1; no coefficient is represented as a value transcribed from a publication.
-The implementation cites the Oddo–Tomson method as its framework [2, 6].</p>
+The implementation uses the conditional-solubility framework [2, 6].</p>
 <div class="eq"><div class="m">SI<sub>carbonate,gas</sub> =
 log<sub>10</sub>(c<sub>Ca</sub> c<sub>HCO₃</sub>² / f<sub>CO₂</sub>) + F<sub>gas</sub>;
 f<sub>CO₂</sub> = y<sub>CO₂</sub>P</div></div>
@@ -396,8 +401,7 @@ of Input and Examples for PHREEQC Version 3</a>, Techniques and Methods, book 6,
 chapter A43 (2013), “Introduction”, “Capabilities” and “Program Limitations”.
 Aqueous activities, speciation and database consistency are relevant to qualification.
 The referenced program has not been executed for this analysis.</li>
-<li id="ref-6">[6] Oddo, J. E., and Tomson, M. B.,
-<a href="https://doi.org/10.2118/21710-PA">Why Scale Forms in the Oil Field and Methods To Predict It</a>,
+<li id="ref-6">[6] <a href="https://doi.org/10.2118/21710-PA">Why Scale Forms in the Oil Field and Methods To Predict It</a>,
 SPE Production &amp; Facilities (1994), SPE-21710-PA.
 The method is cited by the implementation as its conditional-solubility framework.
 The supplied coefficient values are not transcribed from this paper [2].</li></ol>
@@ -457,7 +461,13 @@ The arithmetic and behavioural evidence is described in Section 6.
 The rebuild check compares the complete document with its generated form,
 compares all state and profile values with direct module calls, and reads back
 every annotated printed number against its computed origin.
-This establishes numerical reproduction; an independent physical validation is
+The literal worksheet at
+<code>tests/production_chemistry/fixtures/module_report_hand_calculation.json</code>
+records separate decimal arithmetic for all seven minerals at both endpoints,
+including ionic strength, conditional constants, logarithmic products and the
+gas carbon dioxide route. Endpoint and printed-coefficient tests use these fixed
+expectations without calculating expected values through the chemistry interface.
+This establishes numerical reproduction and independent arithmetic agreement; physical validation is
 NOT_EVALUATED.</p>
 <p>Quality pre-flight covers section and reference integrity, input units, the
 saturation boundary, source records, reproducibility and the distinction between

@@ -1,6 +1,6 @@
 {
   "report": "productionchemistry",
-  "revision": "01",
+  "revision": "02",
   "revisions": [
     {
       "revision": "00",
@@ -18,6 +18,14 @@
         "Numeric serialization and text records are normalized for reproducible builds.",
         "Coefficient precision and unevaluated-result wording are corrected for independent readback.",
         "The method reference and shared report output name are added for consistent discovery."
+      ]
+    },
+    {
+      "revision": "02",
+      "date": "2026-10-25",
+      "changes": [
+        "Independent endpoint arithmetic is recorded in a literal hand-calculation worksheet.",
+        "The method is described as a conditional-solubility framework and cited by title and identifier."
       ]
     }
   ]

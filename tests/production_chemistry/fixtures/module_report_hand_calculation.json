@@ -1,0 +1,531 @@
+{
+  "schema_version": 1,
+  "worksheet_id": "productionchemistry-synthetic-endpoints-v1",
+  "method": "Hand-calculation worksheet: inputs and coefficients are transcribed as decimal literals. The equations below are evaluated independently with 40-digit decimal arithmetic (base-10 logarithms and square roots), without importing or calling the chemistry API. Stored numerical results retain 15 significant figures. Tests read these committed expectations without recomputing them through the API.",
+  "qualification": "Independent arithmetic oracle for the repository's synthetic example, not an experimental benchmark. Defaults are uncalibrated; quantitative physical validity remains unestablished.",
+  "units": {
+    "concentration": "mg/L",
+    "molecular_mass": "g/mol",
+    "molarity": "mol/L",
+    "ionic_strength": "mol/L",
+    "temperature": "degF",
+    "pressure": "psia",
+    "si": "dimensionless",
+    "ph": "dimensionless",
+    "logarithmic_terms": "base-10 numerical values on the stated conditional-concentration and psia basis"
+  },
+  "equations": {
+    "molarity": "c_i = concentration_i / (1000 * molecular_mass_i)",
+    "ionic_strength": "I = sum(c_i * charge_i^2 / 2)",
+    "polynomial": "K = a0 + a_t*T + a_t2*T^2 + a_t3*T^3 + a_p*P + a_sqrt_i*sqrt(I) + a_i*I",
+    "co2_pressure": "f_CO2 = 0.02 * P (fugacity coefficient = 1)",
+    "calcite_product": "IAP_calcite = c_Ca * c_HCO3^2 / f_CO2",
+    "sulfate_product": "IAP_sulfate = c_cation * c_SO4",
+    "halite_product": "IAP_halite = c_Na * c_Cl",
+    "index": "SI = log10(IAP) + K",
+    "ph": "estimated_pH = log10(c_HCO3 / f_CO2) + K_ph_from_co2",
+    "delta": "dSI = SI_endpoint - SI_bottomhole"
+  },
+  "sources": [
+    {
+      "locator": "scripts/production_chemistry/build_scale_si_explorer.py",
+      "revision": "9a0ab3fadb54c25315f4efab487f5a3c63b0573b",
+      "symbols": [
+        "FORMATION_WATER",
+        "N_STEPS",
+        "T_BH",
+        "T_WH",
+        "P_BH",
+        "P_WH"
+      ],
+      "used_for": "Synthetic composition, gas fraction and endpoint conditions; not measured data.",
+      "sha256_lf_utf8": "c443f63fd61cd07e6a7730b25f1f6c0726cebd3130d2c201c6fd0e99500022ab"
+    },
+    {
+      "locator": "src/digitalmodel/production_chemistry/scale_si.py",
+      "revision": "9a0ab3fadb54c25315f4efab487f5a3c63b0573b",
+      "symbols": [
+        "ION_PROPERTIES",
+        "CorrelationCoefficients",
+        "DEFAULT_COEFFICIENTS",
+        "_calcite_result",
+        "_sulfate_type_result"
+      ],
+      "used_for": "Molecular masses, charges, equations and uncalibrated implementation defaults; no publication-value claim.",
+      "sha256_lf_utf8": "b659637bb5972c67c37b68930475e96b5bea05bf12889e71de6d099eb7b42521"
+    }
+  ],
+  "inputs": {
+    "brine": {
+      "na": 31000.0,
+      "k": 400.0,
+      "mg": 500.0,
+      "ca": 2000.0,
+      "sr": 400.0,
+      "ba": 250.0,
+      "fe": 5.0,
+      "cl": 53000.0,
+      "so4": 10.0,
+      "hco3": 1500.0,
+      "tds": 89000.0,
+      "ph": 6.6,
+      "co2_mole_fraction_gas": 0.02
+    },
+    "ions": {
+      "na": {
+        "molecular_mass": 22.99,
+        "charge": 1
+      },
+      "k": {
+        "molecular_mass": 39.098,
+        "charge": 1
+      },
+      "mg": {
+        "molecular_mass": 24.305,
+        "charge": 2
+      },
+      "ca": {
+        "molecular_mass": 40.078,
+        "charge": 2
+      },
+      "sr": {
+        "molecular_mass": 87.62,
+        "charge": 2
+      },
+      "ba": {
+        "molecular_mass": 137.327,
+        "charge": 2
+      },
+      "fe": {
+        "molecular_mass": 55.845,
+        "charge": 2
+      },
+      "cl": {
+        "molecular_mass": 35.453,
+        "charge": -1
+      },
+      "so4": {
+        "molecular_mass": 96.06,
+        "charge": -2
+      },
+      "hco3": {
+        "molecular_mass": 61.016,
+        "charge": -1
+      }
+    },
+    "coefficients": {
+      "calcite_co2": {
+        "a0": 6.538,
+        "a_t": 0.0077,
+        "a_t2": 0.0,
+        "a_t3": 0.0,
+        "a_p": -3.5e-05,
+        "a_sqrt_i": -3.05,
+        "a_i": 1.2
+      },
+      "ph_from_co2": {
+        "a0": 8.796,
+        "a_t": 0.0024,
+        "a_t2": 0.0,
+        "a_t3": 0.0,
+        "a_p": 0.0,
+        "a_sqrt_i": -0.51,
+        "a_i": 0.3
+      },
+      "gypsum": {
+        "a0": 4.701,
+        "a_t": -0.0025,
+        "a_t2": 1.2e-05,
+        "a_t3": 0.0,
+        "a_p": -4e-05,
+        "a_sqrt_i": -4.0,
+        "a_i": 1.7
+      },
+      "hemihydrate": {
+        "a0": 2.783,
+        "a_t": 0.011,
+        "a_t2": 0.0,
+        "a_t3": 0.0,
+        "a_p": -4e-05,
+        "a_sqrt_i": -4.0,
+        "a_i": 1.7
+      },
+      "anhydrite": {
+        "a0": 3.744,
+        "a_t": 0.008,
+        "a_t2": 0.0,
+        "a_t3": 0.0,
+        "a_p": -4e-05,
+        "a_sqrt_i": -4.0,
+        "a_i": 1.7
+      },
+      "barite": {
+        "a0": 10.785,
+        "a_t": -0.012,
+        "a_t2": 2e-05,
+        "a_t3": 0.0,
+        "a_p": -5e-05,
+        "a_sqrt_i": -4.0,
+        "a_i": 1.7
+      },
+      "celestite": {
+        "a0": 6.399,
+        "a_t": 0.003,
+        "a_t2": 0.0,
+        "a_t3": 0.0,
+        "a_p": -4e-05,
+        "a_sqrt_i": -4.0,
+        "a_i": 1.7
+      },
+      "halite": {
+        "a0": -1.561,
+        "a_t": -0.0002,
+        "a_t2": 0.0,
+        "a_t3": 0.0,
+        "a_p": 0.0,
+        "a_sqrt_i": 0.0,
+        "a_i": 0.0
+      }
+    }
+  },
+  "molarities_mol_l": {
+    "na": 1.34841235319704,
+    "k": 0.0102307023377155,
+    "mg": 0.020571898786258,
+    "ca": 0.0499026897549778,
+    "sr": 0.00456516776991554,
+    "ba": 0.00182047230333438,
+    "fe": 8.95335303071e-05,
+    "cl": 1.49493695879051,
+    "so4": 0.000104101603164689,
+    "hco3": 0.0245837157466894
+  },
+  "ionic_strength_contributions_mol_l": {
+    "na": 0.674206176598521,
+    "k": 0.00511535116885774,
+    "mg": 0.0411437975725159,
+    "ca": 0.0998053795099556,
+    "sr": 0.00913033553983109,
+    "ba": 0.00364094460666875,
+    "fe": 0.0001790670606142,
+    "cl": 0.747468479395256,
+    "so4": 0.000208203206329377,
+    "hco3": 0.0122918578733447
+  },
+  "ionic_strength_mol_l": 1.59318959253189,
+  "sqrt_ionic_strength": 1.26221614334942,
+  "endpoints": {
+    "bottomhole": {
+      "step": 0,
+      "t_f": 250,
+      "p_psia": 9000,
+      "polynomial_terms": {
+        "calcite_co2": {
+          "a0": 6.538,
+          "a_t": 1.925,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": -0.315,
+          "a_sqrt_i": -3.84975923721574,
+          "a_i": 1.91182751103827
+        },
+        "ph_from_co2": {
+          "a0": 8.796,
+          "a_t": 0.6,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": 0.0,
+          "a_sqrt_i": -0.643730233108206,
+          "a_i": 0.477956877759568
+        },
+        "gypsum": {
+          "a0": 4.701,
+          "a_t": -0.625,
+          "a_t2": 0.75,
+          "a_t3": 0.0,
+          "a_p": -0.36,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "hemihydrate": {
+          "a0": 2.783,
+          "a_t": 2.75,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": -0.36,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "anhydrite": {
+          "a0": 3.744,
+          "a_t": 2.0,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": -0.36,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "barite": {
+          "a0": 10.785,
+          "a_t": -3.0,
+          "a_t2": 1.25,
+          "a_t3": 0.0,
+          "a_p": -0.45,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "celestite": {
+          "a0": 6.399,
+          "a_t": 0.75,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": -0.36,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "halite": {
+          "a0": -1.561,
+          "a_t": -0.05,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": 0.0,
+          "a_sqrt_i": 0.0,
+          "a_i": 0.0
+        }
+      },
+      "ph_ratio": 0.000136576198592719,
+      "log10_ph_ratio": -3.86462497942828,
+      "ph_constant": 9.23022664465136,
+      "minerals": {
+        "calcite": {
+          "iap": 1.67550798141963e-07,
+          "log10_iap": -6.77585349902641,
+          "pk_cond": 6.21006827382253,
+          "si": -0.565785225203884,
+          "dsi": 0.0,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189,
+            "f_co2_psia": 180.0,
+            "estimated_ph": 5.36560166522308
+          }
+        },
+        "gypsum": {
+          "iap": 5.19495000572328e-06,
+          "log10_iap": -5.2844186275761,
+          "pk_cond": 2.12555773390652,
+          "si": -3.15886089366957,
+          "dsi": 0.0,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "hemihydrate": {
+          "iap": 5.19495000572328e-06,
+          "log10_iap": -5.2844186275761,
+          "pk_cond": 2.83255773390652,
+          "si": -2.45186089366957,
+          "dsi": 0.0,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "anhydrite": {
+          "iap": 5.19495000572328e-06,
+          "log10_iap": -5.2844186275761,
+          "pk_cond": 3.04355773390652,
+          "si": -2.24086089366957,
+          "dsi": 0.0,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "barite": {
+          "iap": 1.89514085294022e-07,
+          "log10_iap": -6.72235850633897,
+          "pk_cond": 6.24455773390652,
+          "si": -0.477800772432444,
+          "dsi": 0.0,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "celestite": {
+          "iap": 4.75241283563975e-07,
+          "log10_iap": -6.32308583981714,
+          "pk_cond": 4.44855773390652,
+          "si": -1.87452810591061,
+          "dsi": 0.0,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "halite": {
+          "iap": 2.01579146248394,
+          "log10_iap": 0.304445601495223,
+          "pk_cond": -1.611,
+          "si": -1.30655439850478,
+          "dsi": 0.0,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        }
+      }
+    },
+    "wellhead": {
+      "step": 12,
+      "t_f": 120,
+      "p_psia": 250,
+      "polynomial_terms": {
+        "calcite_co2": {
+          "a0": 6.538,
+          "a_t": 0.924,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": -0.00875,
+          "a_sqrt_i": -3.84975923721574,
+          "a_i": 1.91182751103827
+        },
+        "ph_from_co2": {
+          "a0": 8.796,
+          "a_t": 0.288,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": 0.0,
+          "a_sqrt_i": -0.643730233108206,
+          "a_i": 0.477956877759568
+        },
+        "gypsum": {
+          "a0": 4.701,
+          "a_t": -0.3,
+          "a_t2": 0.1728,
+          "a_t3": 0.0,
+          "a_p": -0.01,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "hemihydrate": {
+          "a0": 2.783,
+          "a_t": 1.32,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": -0.01,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "anhydrite": {
+          "a0": 3.744,
+          "a_t": 0.96,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": -0.01,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "barite": {
+          "a0": 10.785,
+          "a_t": -1.44,
+          "a_t2": 0.288,
+          "a_t3": 0.0,
+          "a_p": -0.0125,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "celestite": {
+          "a0": 6.399,
+          "a_t": 0.36,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": -0.01,
+          "a_sqrt_i": -5.0488645733977,
+          "a_i": 2.70842230730422
+        },
+        "halite": {
+          "a0": -1.561,
+          "a_t": -0.024,
+          "a_t2": 0.0,
+          "a_t3": 0.0,
+          "a_p": 0.0,
+          "a_sqrt_i": 0.0,
+          "a_i": 0.0
+        }
+      },
+      "ph_ratio": 0.00491674314933788,
+      "log10_ph_ratio": -2.308322478661,
+      "ph_constant": 8.91822664465136,
+      "minerals": {
+        "calcite": {
+          "iap": 6.03182873311067e-06,
+          "log10_iap": -5.21955099825913,
+          "pk_cond": 5.51531827382253,
+          "si": 0.295767275563403,
+          "dsi": 0.861552500767287,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189,
+            "f_co2_psia": 5.0,
+            "estimated_ph": 6.60990416599037
+          }
+        },
+        "gypsum": {
+          "iap": 5.19495000572328e-06,
+          "log10_iap": -5.2844186275761,
+          "pk_cond": 2.22335773390652,
+          "si": -3.06106089366957,
+          "dsi": 0.0978,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "hemihydrate": {
+          "iap": 5.19495000572328e-06,
+          "log10_iap": -5.2844186275761,
+          "pk_cond": 1.75255773390652,
+          "si": -3.53186089366957,
+          "dsi": -1.08,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "anhydrite": {
+          "iap": 5.19495000572328e-06,
+          "log10_iap": -5.2844186275761,
+          "pk_cond": 2.35355773390652,
+          "si": -2.93086089366957,
+          "dsi": -0.69,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "barite": {
+          "iap": 1.89514085294022e-07,
+          "log10_iap": -6.72235850633897,
+          "pk_cond": 7.28005773390652,
+          "si": 0.557699227567556,
+          "dsi": 1.0355,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "celestite": {
+          "iap": 4.75241283563975e-07,
+          "log10_iap": -6.32308583981714,
+          "pk_cond": 4.40855773390652,
+          "si": -1.91452810591061,
+          "dsi": -0.04,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        },
+        "halite": {
+          "iap": 2.01579146248394,
+          "log10_iap": 0.304445601495223,
+          "pk_cond": -1.585,
+          "si": -1.28055439850478,
+          "dsi": 0.026,
+          "details": {
+            "ionic_strength_mol_l": 1.59318959253189
+          }
+        }
+      }
+    }
+  }
+}
