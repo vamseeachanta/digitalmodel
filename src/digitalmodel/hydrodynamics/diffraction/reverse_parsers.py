@@ -268,7 +268,10 @@ class AQWAInputParser:
         freq_rad_s = [hz_to_rad_per_s(f) for f in freq_hz_list]
 
         if not freq_rad_s:
-            freq_rad_s = [0.1]  # fallback
+            raise ValueError(
+                "AQWA input requires at least one positive frequency "
+                "on an HRTZ card in deck 6."
+            )
 
         return FrequencySpec(
             input_type=FrequencyInputType.FREQUENCY,
