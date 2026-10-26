@@ -65,7 +65,7 @@ def calculate(cfg: dict[str, Any] | None = None, *,
     Public citation fixtures check locator metadata only. They do not establish
     source access, standards compliance or the applicability of assumed values.
     """
-    cfg = copy.deepcopy(cfg) if cfg is not None else json.loads(FIXTURE.read_text())
+    cfg = copy.deepcopy(cfg) if cfg is not None else json.loads(FIXTURE.read_text(encoding="utf-8"))
     inputs = cfg["inputs"]
     geometry = cfg["hull_geometry"]
     length, beam, draught = (geometry[key] for key in ("length_m", "beam_m", "draught_m"))
@@ -77,14 +77,16 @@ def calculate(cfg: dict[str, Any] | None = None, *,
     net_mass = (shape["width_m"] * physical["height"] - physical["core_cross_section_m2"]) * shape["length_m"] * anode["anode_density"]
     if not math.isclose(net_mass, physical["net_weight"]):
         raise ValueError("anode net mass differs from assumed rectangular geometry")
-    cfg["citation_repo_root"] = str(citation_repo_root)
+    cfg["citation_repo_root"] = citation_repo_root.as_posix()
     stated_result = run_cathodic_protection(copy.deepcopy(cfg))["results"]
     if stated_result["anode_current_capacity"] != cfg["route_lookup_basis"]["capacity_Ah_kg"]:
         raise ValueError("capacity lookup differs from declared assumed performance basis")
     required = stated_result["anode_requirements"]["recommended_anode_count"]
     candidate = copy.deepcopy(cfg)
     per_location = inputs["layout"]["anodes_per_location"]
-    candidate["inputs"]["layout"]["selected_locations"] = math.ceil(required / per_location)
+    candidate["inputs"]["layout"]["selected_locations"] = max(
+        inputs["layout"]["selected_locations"], math.ceil(required / per_location)
+    )
     rechecked_result = run_cathodic_protection(candidate)["results"]
     stated = _arrangement(stated_result, inputs)
     rechecked = _arrangement(rechecked_result, candidate["inputs"])
@@ -95,8 +97,8 @@ def calculate(cfg: dict[str, Any] | None = None, *,
         "input_sha256": hashlib.sha256(
             # The digest describes the actual calculation input, excluding only
             # the runtime citation-root path. File bytes are used for default runs.
-            FIXTURE.read_bytes() if cfg_without_root(cfg) == json.loads(FIXTURE.read_text())
-            else (json.dumps(cfg_without_root(cfg), sort_keys=True) + "\n").encode()
+            FIXTURE.read_bytes() if cfg_without_root(cfg) == json.loads(FIXTURE.read_text(encoding="utf-8"))
+            else (json.dumps(cfg_without_root(cfg), sort_keys=True) + "\n").encode("utf-8")
         ).hexdigest(),
         "arrangements": {"stated": stated, "rechecked": rechecked},
         "zone_demand_A": {"external_hull": {
@@ -117,14 +119,14 @@ def calculate(cfg: dict[str, Any] | None = None, *,
         "marketing_cleared": False,
         "recommendations": {"design_additional_anodes": added,
                             "design_additional_mass_kg": added * physical["net_weight"],
-                            "basis": "Retain the assumed paired layout; confirm placement before acceptance."},
+                            "basis": "Retain the declared anodes per location; resolve failed layout checks and confirm placement before acceptance."},
         "monitoring": {"status": "NOT_EVALUATED", "frequency": "NOT_EVALUATED",
                        "trigger_potential": "NOT_EVALUATED", "retrofit_quantity": "NOT_EVALUATED",
                        "intervention_date": "NOT_EVALUATED",
                        "positions": "deepest bottom, remote bow and stern, appendages and shielded positions",
                        "required_inputs": "qualified criterion and electrode, layout, baseline survey, operating exposure, depletion and access dates"},
     }
-    result["report_sha256"] = hashlib.sha256(render_note(result).encode()).hexdigest()
+    result["report_sha256"] = hashlib.sha256(render_note(result).encode("utf-8")).hexdigest()
     return result
 
 
@@ -133,18 +135,58 @@ def cfg_without_root(cfg: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in cfg.items() if key != "citation_repo_root"}
 
 
+def _layout_lines(result: dict[str, Any]) -> list[str]:
+    """Show the general-layout outcomes and the declarations behind them."""
+    lines = [
+        "General-layout criteria use ABS Guidance Notes on Cathodic Protection of Ships, "
+        "December 2017, Section 3/5.2. Inputs are ASSUMED declarations.", "",
+    ]
+    for name, arrangement in result["arrangements"].items():
+        layout = arrangement["layout"]
+        lines += [
+            f"The {name} general-layout status is {layout['status']}: "
+            f"maximum spacing {layout['actual_max_spacing_m']:.3f} m against a limit of "
+            f"{layout['spacing_limit_m']:.3f} m; {layout['selected_locations']} locations "
+            f"with {layout['anodes_per_location']} anodes per location against a minimum of "
+            f"{layout['minimum_anodes_per_location']}.", "",
+        ]
+    lines += ["| Arrangement | Layout check | Required | Evaluated | Result |",
+              "|---|---|---|---|---|"]
+    for name, arrangement in result["arrangements"].items():
+        for check, passes in arrangement["layout"]["checks"].items():
+            lines.append(f"| {name} | {check} | True | {passes} | {'PASS' if passes else 'FAIL'} |")
+    return lines
+
+
 def render_note(result: dict[str, Any]) -> str:
     """Render the short case note from unrounded results."""
     stated, sized = (result["arrangements"][key] for key in ("stated", "rechecked"))
     rec = result["recommendations"]
+    governing = {
+        "mass": "Mean-current lifetime mass", "initial_current_output": "Initial current output",
+        "mean_current_output": "Mean current output", "final_current_output": "Final current output",
+        "layout_distribution": "General layout distribution",
+    }[stated["governing_case"]]
+    action = (
+        f"At design, add {rec['design_additional_anodes']} anodes "
+        f"({rec['design_additional_mass_kg']:.1f} kg net alloy) for the rechecked candidate. "
+        if rec["design_additional_anodes"] > 0
+        else f"Retain the {stated['anode_count']}-anode trial arrangement without additional anodes. "
+    )
+    if sized["layout"]["status"] != "PASS":
+        action += "Resolve the failed general-layout checks before acceptance; count changes alone do not resolve them. "
     lines = [
         "# Synthetic hull cathodic protection analysis", "", "## Summary", "",
-        f"The {stated['anode_count']}-anode trial does not meet the final-current criterion. "
-        f"Final current governs the aggregate requirement of {stated['recommended_anode_count']} anodes. "
-        f"The {sized['anode_count']}-anode re-sized arrangement meets the calculated aggregate comparisons on the assumed basis.",
+        f"The {stated['anode_count']}-anode trial has aggregate status {stated['status']} "
+        f"against the calculated current-output, lifetime-mass and general-layout criteria "
+        f"({stated['anode_count']} selected; {stated['recommended_anode_count']} required). "
+        f"{governing} governs the aggregate requirement of {stated['recommended_anode_count']} anodes. "
+        f"The {sized['anode_count']}-anode rechecked arrangement has aggregate status {sized['status']} "
+        f"against the same criteria ({sized['anode_count']} selected; {sized['recommended_anode_count']} required) on the assumed basis.",
         "", "## Revision history", "",
         "| Revision | Date | What changed and why |", "|---|---|---|",
-        "| 0 | 2026-10-25 | Initial synthetic case for reproducible hull screening. |", "",
+        "| 0 | 2026-10-25 | Initial synthetic case for reproducible hull screening. |",
+        "| 1 | 2026-10-25 | Derive conclusions from calculated requirements and layout checks; retain sufficient trial counts. |", "",
         "## Inputs and basis", "",
         "All case inputs are ASSUMED, based on previous experience. No actual hull, site or supplier is represented. "
         "The [input file](../../../../../tests/fixtures/cathodic_protection/workflow_inputs/synthetic_hull.json) "
@@ -174,16 +216,16 @@ def render_note(result: dict[str, Any]) -> str:
     for name, arrangement in result["arrangements"].items():
         for row in arrangement["checks"]:
             lines.append(f"| {name} | {arrangement['anode_count']} | {row['quantity']} | "
-                         f"{row['required']:.1f} | {row['provided']:.1f} | {row['unit']} | "
+                         f"{row['required']:.3f} | {row['provided']:.3f} | {row['unit']} | "
                          f"{row['margin_percent']:+.1f} | {'PASS' if row['passes'] else 'FAIL'} |")
-    lines += ["", "## Distribution and limits", "",
-              "General spacing and layout flags pass on their ASSUMED declarations. Port and starboard pairing is retained during re-sizing. "
+    lines += ["", "## Distribution and limits", ""] + _layout_lines(result)
+    lines += ["",
+              "Re-sizing preserves the declared anodes per location. "
               "No coordinate schedule demonstrates those declarations. Deepest bottom and remote bow and stern positions require assessment. "
               "Special stern, propeller and opening geometry and local potentials are NOT_EVALUATED. "
               "Aggregate PASS does not establish protection at any position. Only external sacrificial-anode screening is covered.", "",
               "## Recommendations and monitoring plan", "",
-              f"At design, add {rec['design_additional_anodes']} anodes "
-              f"({rec['design_additional_mass_kg']:.1f} kg net alloy) for the re-sized aggregate arrangement. "
+              action +
               "Confirm coating, environment, qualified anode performance and placement before acceptance. "
               "If monitoring or later retrofit cannot be supported, resolve these uncertainties in the initial design.", "",
               "In service, measure the deepest bottom and remote bow and stern positions first, then appendages and shielded areas. "
@@ -196,7 +238,8 @@ def render_note(result: dict[str, Any]) -> str:
               "```", "",
               "The builder uses only the public input and citation-metadata fixtures. "
               "Tests independently calculate shell area, weighted demand, net anode mass, lifetime mass, "
-              "initial and depleted output and the governing count. Reproduction checks compare all evidence and report bytes. "
+              "initial and depleted output and the governing count. Reproduction checks compare numeric evidence within tolerance "
+              "and verify metadata, report bytes and digests. "
               "This synthetic example has no marketing clearance record; outward use remains subject to the maintainers' review.", ""]
     return "\n".join(lines)
 
@@ -205,9 +248,9 @@ def build(destination: Path, *, citation_repo_root: Path = CITATION_ROOT) -> Pat
     """Write deterministic evidence and its case note."""
     result = calculate(citation_repo_root=citation_repo_root)
     destination.mkdir(parents=True, exist_ok=True)
-    (destination / f"{NAME}.md").write_text(render_note(result), encoding="utf-8")
+    (destination / f"{NAME}.md").write_text(render_note(result), encoding="utf-8", newline="\n")
     output = destination / f"{NAME}.citations.json"
-    output.write_text(json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    output.write_text(json.dumps(result, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     return output
 
 

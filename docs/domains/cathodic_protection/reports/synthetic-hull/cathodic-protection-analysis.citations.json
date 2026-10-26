@@ -432,11 +432,11 @@
     "trigger_potential": "NOT_EVALUATED"
   },
   "recommendations": {
-    "basis": "Retain the assumed paired layout; confirm placement before acceptance.",
+    "basis": "Retain the declared anodes per location; resolve failed layout checks and confirm placement before acceptance.",
     "design_additional_anodes": 2,
     "design_additional_mass_kg": 97.2
   },
-  "report_sha256": "aaa84002f2535b6d564c94c9573ff3860927fc8f8f19cbb46a6e8c099c09faa1",
+  "report_sha256": "382f3bdab69dc8b2aa818d7f8a0c591f10778cf6cc54988ea4a90dbabd72b3a2",
   "reporting_standard_revision": null,
   "route_lookup_basis": {
     "basis": "Assumed, based on previous experience: electrochemical capacity and potential applicability are unqualified. Existing ABS lookup values are used without opening a standards document or private material.",

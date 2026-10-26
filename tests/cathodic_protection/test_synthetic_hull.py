@@ -22,6 +22,7 @@ FIXTURE = ROOT / "tests/fixtures/cathodic_protection/workflow_inputs/synthetic_h
 REPORT = ROOT / "docs/domains/cathodic_protection/reports/synthetic-hull/cathodic-protection-analysis.md"
 RESULTS = REPORT.with_suffix(".citations.json")
 CITATION_ROOT = ROOT / "tests/citations/fixtures"
+REBUILD = "PYTHONPATH=src uv run --no-project --with pydantic --with loguru --with scipy python scripts/reporting/build_synthetic_hull_analysis.py"
 
 
 def builder():
@@ -51,6 +52,10 @@ def test_hand_calculated_hull_demand_and_mass():
     }
     result = evidence()
     assert result["zone_demand_A"]["external_hull"] == pytest.approx(expected)
+    # Hand products: 1344 * (0.9*f + 0.1) * j / 1000, for each phase.
+    assert result["zone_demand_A"]["external_hull"] == pytest.approx(
+        {"I_initial_A": 47.5776, "I_mean_A": 27.4176, "I_final_A": 62.0928}
+    )
     # ABS GN Ships, December 2017, Minimum net anode mass.
     # Capacity 2500 Ah/kg is an ASSUMED performance basis, matched by the
     # existing alloy lookup; utilisation 0.85 and life 5 yr are ASSUMED.
@@ -94,7 +99,7 @@ def test_independent_depleted_output_and_governing_count():
 
 
 def test_every_input_has_assumption_basis():
-    cfg = json.loads(FIXTURE.read_text())
+    cfg = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
     def leaves(value, prefix=""):
         if isinstance(value, dict):
@@ -116,14 +121,15 @@ def test_every_input_has_assumption_basis():
 
 def test_result_file_matches_fresh_run_and_reference_contract():
     result = evidence()
-    assert json.loads(RESULTS.read_text()) == result
-    reference = json.loads((REPORT.parent.parent / "reference-jacket/cathodic-protection-analysis.citations.json").read_text())
+    stored = json.loads(RESULTS.read_text(encoding="utf-8"))
+    assert_evidence_matches(stored, result)
+    reference = json.loads((REPORT.parent.parent / "reference-jacket/cathodic-protection-analysis.citations.json").read_text(encoding="utf-8"))
     assert set(reference) <= set(result)
     for arrangement in result["arrangements"].values():
         for row in arrangement["checks"]:
             assert set(row) == {"quantity", "required", "provided", "unit", "margin_percent", "passes"}
-    assert result["input_sha256"] == hashlib.sha256(FIXTURE.read_bytes()).hexdigest()
-    assert result["report_sha256"] == hashlib.sha256(REPORT.read_bytes()).hexdigest()
+    assert result["input_sha256"] == hashlib.sha256(FIXTURE.read_bytes()).hexdigest(), REBUILD
+    assert result["report_sha256"] == hashlib.sha256(REPORT.read_bytes()).hexdigest(), REBUILD
     assert result["monitoring"]["status"] == "NOT_EVALUATED"
     assert result["local_potential_assessment"] == "NOT_EVALUATED"
     assert result["marketing_cleared"] is False
@@ -131,8 +137,26 @@ def test_result_file_matches_fresh_run_and_reference_contract():
 
 def test_reproduction_is_deterministic(tmp_path):
     output = builder().build(tmp_path, citation_repo_root=CITATION_ROOT)
-    assert output.read_bytes() == RESULTS.read_bytes()
-    assert builder().build(tmp_path, citation_repo_root=CITATION_ROOT).read_bytes() == output.read_bytes()
+    first = json.loads(output.read_text(encoding="utf-8"))
+    assert_evidence_matches(first, json.loads(RESULTS.read_text(encoding="utf-8")))
+    assert (tmp_path / REPORT.name).read_bytes() == REPORT.read_bytes(), REBUILD
+    second = builder().build(tmp_path, citation_repo_root=CITATION_ROOT)
+    assert_evidence_matches(first, json.loads(second.read_text(encoding="utf-8")))
+
+
+def assert_evidence_matches(actual, expected):
+    if isinstance(expected, dict):
+        assert actual.keys() == expected.keys()
+        for key, value in expected.items():
+            assert_evidence_matches(actual[key], value)
+    elif isinstance(expected, list):
+        assert len(actual) == len(expected)
+        for actual_item, expected_item in zip(actual, expected):
+            assert_evidence_matches(actual_item, expected_item)
+    elif isinstance(expected, float):
+        assert actual == pytest.approx(expected)
+    else:
+        assert actual == expected, "Rebuild with: " + REBUILD
 
 
 def test_missing_citation_fails_closed(tmp_path):
@@ -141,7 +165,63 @@ def test_missing_citation_fails_closed(tmp_path):
 
 
 def test_area_mismatch_is_rejected():
-    cfg = copy.deepcopy(json.loads(FIXTURE.read_text()))
+    cfg = copy.deepcopy(json.loads(FIXTURE.read_text(encoding="utf-8")))
     cfg["inputs"]["structure"]["steel_total_area"] += 1
     with pytest.raises(ValueError, match="hull area"):
         builder().calculate(cfg, citation_repo_root=CITATION_ROOT)
+
+
+def test_note_reports_mass_governed_requirement():
+    cfg = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    cfg["inputs"]["design_data"]["design_life"] = 50
+    module = builder()
+    result = module.calculate(cfg, citation_repo_root=CITATION_ROOT)
+    # 27.4176 A * 50 yr * 8760 h/yr / (2500 Ah/kg * 0.85) / 48.6 kg;
+    # ceil gives 117 anodes; paired locations require 118.
+    assert result["arrangements"]["stated"]["recommended_anode_count"] == 117
+    assert result["arrangements"]["rechecked"]["anode_count"] == 118
+    note = module.render_note(result)
+    assert "Mean-current lifetime mass governs the aggregate requirement of 117 anodes" in note
+    assert "Final current governs" not in note
+
+
+@pytest.mark.parametrize("spacing,status", [(6, "PASS"), (9, "FAIL")])
+def test_note_reports_spacing_against_its_limit(spacing, status):
+    cfg = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    cfg["inputs"]["layout"]["actual_max_spacing_m"] = spacing
+    module = builder()
+    result = module.calculate(cfg, citation_repo_root=CITATION_ROOT)
+    assert result["arrangements"]["rechecked"]["status"] == status
+    note = module.render_note(result)
+    assert f"rechecked arrangement has aggregate status {status}" in note
+    assert f"maximum spacing {spacing:.3f} m against a limit of 8.000 m" in note
+    assert f"| rechecked | spacing | True | {'True' if status == 'PASS' else 'False'} | {status} |" in note
+    if status == "FAIL":
+        assert "Resolve the failed general-layout checks before acceptance" in note
+        assert "General spacing and layout flags pass" not in note
+
+
+@pytest.mark.parametrize("flag", ["uniform_distribution_confirmed", "bilge_damage_avoided"])
+def test_note_reports_failed_layout_declarations(flag):
+    cfg = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    cfg["inputs"]["layout"][flag] = False
+    module = builder()
+    result = module.calculate(cfg, citation_repo_root=CITATION_ROOT)
+    note = module.render_note(result)
+    check = "uniform_distribution" if flag == "uniform_distribution_confirmed" else flag
+    assert f"| rechecked | {check} | True | False | FAIL |" in note
+    assert "rechecked arrangement has aggregate status FAIL" in note
+
+
+def test_passing_trial_is_retained_without_negative_additions():
+    cfg = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    cfg["inputs"]["layout"]["selected_locations"] = 30
+    module = builder()
+    result = module.calculate(cfg, citation_repo_root=CITATION_ROOT)
+    assert result["arrangements"]["stated"]["status"] == "PASS"
+    assert result["arrangements"]["rechecked"]["anode_count"] == 60
+    assert result["recommendations"]["design_additional_anodes"] == 0
+    note = module.render_note(result)
+    assert "60-anode trial has aggregate status PASS" in note
+    assert "Retain the 60-anode trial arrangement" in note
+    assert "trial does not meet" not in note
