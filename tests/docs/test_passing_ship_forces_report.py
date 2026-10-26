@@ -137,16 +137,19 @@ def test_plot_is_workflow_consistency_check(generated):
                 assert actual[field] == round(actual[field], 1)
 
 
-def test_rebuild_is_identical_and_uses_house_stylesheet(generated):
+def test_rebuild_preserves_narrative_and_chart_tolerance(generated):
+    """Require exact narrative, chart tolerance and the house stylesheet."""
     model, text, work = generated
     out = work / "rebuilt"
     report.build(out, work / "rebuild-calculation")
     assert (out / "report.html").read_text(encoding="utf-8") == text
     issued = (REPORT / "report.html").read_text(encoding="utf-8")
+    # Across platforms, narrative matches exactly after removing chart payloads.
     pattern = r'(<script id="chart-data" type="application/json">)(.*?)(</script>)'
     assert re.sub(pattern, r"\1\3", text, flags=re.S) == re.sub(
         pattern, r"\1\3", issued, flags=re.S
     )
+    # Compare parsed chart values within 0.1 in stated units, rather than bytes.
     rebuilt_data = json.loads(re.search(pattern, text, re.S)[2])
     issued_data = json.loads(re.search(pattern, issued, re.S)[2])
     for mode in ("finite", "deep"):
