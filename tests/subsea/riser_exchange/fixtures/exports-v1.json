@@ -1,0 +1,2646 @@
+{
+  "version": "ris-exchange/1",
+  "data_basis": "ASSUMED synthetic; not engineering results",
+  "exports": {
+    "results/R08-W1-SCR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W1-SCR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "0285ba5492578709c09762ffa9d2057526c8d2133b75908148ba0cc6dd5e645c",
+        "result_file": "synthetic/R08-W1-SCR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W1-SCR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W1-SCR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W1-SCR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "7fb5f5769fce6a34e859501c78a2fcd33b77306b9f7e53ca5b50461a61502b64",
+        "result_file": "synthetic/R08-W1-SCR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W1-SCR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W1-SCR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W1-SCR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "905cf3626e021eace984e8a2f08708dfa6cdbaaa972f4ac15a221818adfae8ef",
+        "result_file": "synthetic/R08-W1-SCR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W1-SCR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W1-SCR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W1-SCR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "3f65104315a4cbcc8eac4c65a4f97294d2b8da0d8745da30bf7c202aece529ff",
+        "result_file": "synthetic/R08-W1-SCR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W1-SCR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W1-SLWR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W1-SLWR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "1a604ba0cc602c1212f844f2b058ba1270a4ecc182437670545c74bf22e8bef8",
+        "result_file": "synthetic/R08-W1-SLWR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W1-SLWR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W1-SLWR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W1-SLWR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "dad966a0673e9ff5ab36d1a4054db6ed2af242f3d3c7f388b624015dae387f37",
+        "result_file": "synthetic/R08-W1-SLWR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W1-SLWR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W1-SLWR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W1-SLWR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "b4cda2e9a493e6aa5a79a91dafb383301f3dab02a420518269cd7f212c5e1cb9",
+        "result_file": "synthetic/R08-W1-SLWR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W1-SLWR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W1-SLWR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W1-SLWR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "6d400c3e3327f4670dc1388e546681d00024004dbdb1bd5f8871cd7fcef30158",
+        "result_file": "synthetic/R08-W1-SLWR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W1-SLWR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W2-SCR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W2-SCR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "cd06fa2de150ad070a3cb5d02edc91d15abb5fef32d4ce4c18dec85fc9ab06a2",
+        "result_file": "synthetic/R08-W2-SCR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W2-SCR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W2-SCR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W2-SCR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "ca5c093dd84c3ba28d140e744dc327bcebc24be7ca6ab275f993b4a35aebb80d",
+        "result_file": "synthetic/R08-W2-SCR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W2-SCR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W2-SCR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W2-SCR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "6c988dd3e6e10f620292f3569e4abe7e30a3b2cf650fef0f108d5d727cc4ca9b",
+        "result_file": "synthetic/R08-W2-SCR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W2-SCR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W2-SCR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W2-SCR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "68505668d0d2db6cdf276a06ace2778cd88f876c4e3d7f18d3c5c7d5257f45d2",
+        "result_file": "synthetic/R08-W2-SCR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W2-SCR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W2-SLWR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W2-SLWR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "75dc7e34db598a02517de70ee32904fd34d3fff6a8f9f34b9ec8e8e27dcd1ae5",
+        "result_file": "synthetic/R08-W2-SLWR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W2-SLWR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W2-SLWR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W2-SLWR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "4b868a60d13b24785c14086749e3632a2e5d1646f2063cae2816950170202c7a",
+        "result_file": "synthetic/R08-W2-SLWR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W2-SLWR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W2-SLWR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W2-SLWR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "00fc0b2f5011ea805161587acc09842972b93f1b9fa94d7c04072c81a10c0f6d",
+        "result_file": "synthetic/R08-W2-SLWR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W2-SLWR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R08-W2-SLWR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R08-W2-SLWR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "5df91372d4caa465d02146e8fe4f5d2242a89919add839c510103426a9a40408",
+        "result_file": "synthetic/R08-W2-SLWR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R08-W2-SLWR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W1-SCR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W1-SCR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "d4bd26b51074ef62f4286584b21d3f19254ae1a36ee958a92139490b3d4893a7",
+        "result_file": "synthetic/R10-W1-SCR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W1-SCR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W1-SCR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W1-SCR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "eedd2949a53f4899480af3adcd6d0db9e0c603e4c5a0bd139d5d535a0029aacd",
+        "result_file": "synthetic/R10-W1-SCR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W1-SCR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W1-SCR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W1-SCR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "289257b1712f24fcfae665d05dcb3417e6c6bc2b4268425c3265858ab99e9034",
+        "result_file": "synthetic/R10-W1-SCR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W1-SCR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W1-SCR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W1-SCR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "1fd124b468e07cc4a281a5699cc3237ab5b331195aa408266634a7c92b2b3a2f",
+        "result_file": "synthetic/R10-W1-SCR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W1-SCR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W1-SLWR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W1-SLWR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "4d8bc2e8c41279691292b0035e158d214e046aba454b17b34147bc040ce022c1",
+        "result_file": "synthetic/R10-W1-SLWR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W1-SLWR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W1-SLWR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W1-SLWR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "2b773ffbb7dda7294d04403ab281febd42ae2e9c75e21850fba1825892212f18",
+        "result_file": "synthetic/R10-W1-SLWR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W1-SLWR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W1-SLWR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W1-SLWR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "2c5be79cb77b640e671b0144a450764ab143a6ee7bd4803aabdf08d0c8b1c890",
+        "result_file": "synthetic/R10-W1-SLWR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W1-SLWR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W1-SLWR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W1-SLWR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "c2dc31dedf881b196246b704b37e1c744410f6ae31d609b0b7efd6acdbe20b7e",
+        "result_file": "synthetic/R10-W1-SLWR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W1-SLWR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W2-SCR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W2-SCR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "a1a36af6c182990522e8113c42d149790781c0430f796a546c8b869422a417cf",
+        "result_file": "synthetic/R10-W2-SCR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W2-SCR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W2-SCR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W2-SCR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "3c09575c7729cf74cc59cd33f4f51d298c6577edf66ee76e22ab2320428a954a",
+        "result_file": "synthetic/R10-W2-SCR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W2-SCR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W2-SCR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W2-SCR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "dbfd7ae5ab8abf1540b11f0fb3c65280841b5a7aca32f5b6357a8a9c87970038",
+        "result_file": "synthetic/R10-W2-SCR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W2-SCR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W2-SCR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W2-SCR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "4afd6ed1e06a8b9f386b8c7bafc61e1a146d981f8a75a64ece15e4f030074f49",
+        "result_file": "synthetic/R10-W2-SCR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W2-SCR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W2-SLWR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W2-SLWR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "eeb7018d9449fd1f17ff7fd8027ad11d33311238a92564933908a6993ade9c50",
+        "result_file": "synthetic/R10-W2-SLWR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W2-SLWR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W2-SLWR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W2-SLWR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "d1e113d6b9de24f6621a5a66813ba1acd508789a7704916caae5477d5c7fbf70",
+        "result_file": "synthetic/R10-W2-SLWR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W2-SLWR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W2-SLWR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W2-SLWR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "e28520d929a686ff9c1a8d3d4704b75dfb1d093b92fa5baf1bc9945de4c0a5d5",
+        "result_file": "synthetic/R10-W2-SLWR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W2-SLWR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R10-W2-SLWR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R10-W2-SLWR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "1c3e18a2c5a66e07a02c94cf15f698d78262a6140ae1221b5b2d31550c1d4a5a",
+        "result_file": "synthetic/R10-W2-SLWR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R10-W2-SLWR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W1-SCR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W1-SCR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "0c6fb039aa0427371032c7c3734ccc7a427cf67cdece0b27815c572310a11729",
+        "result_file": "synthetic/R12-W1-SCR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W1-SCR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W1-SCR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W1-SCR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "ded10059188f9fc4343f56ee0ad933b89b8441b3e48730d69b761948e5f832a4",
+        "result_file": "synthetic/R12-W1-SCR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W1-SCR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W1-SCR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W1-SCR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "38f3e668d6ea2fd6db7c0f2b4df10d2c21e193554e85dd5f9869891b42b34257",
+        "result_file": "synthetic/R12-W1-SCR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W1-SCR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W1-SCR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W1-SCR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "114a7c8622ac39c950593aba2fba21b38dfc80ca537ae561d229717b779fe00a",
+        "result_file": "synthetic/R12-W1-SCR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W1-SCR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W1-SLWR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W1-SLWR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "8ac256783df102d63d8c8a3ed7ebe250724acb2945229bbfd9c593c7214f09c3",
+        "result_file": "synthetic/R12-W1-SLWR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W1-SLWR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W1-SLWR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W1-SLWR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "9d8bd6e8148b82d5038c44c9f3d80b87bc96fcf5dcc8bc873535088f1a7bf9b4",
+        "result_file": "synthetic/R12-W1-SLWR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W1-SLWR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W1-SLWR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W1-SLWR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "7df2862c55fea9cc60980623a2941d1b561210462adf285801f78cb08fb9732d",
+        "result_file": "synthetic/R12-W1-SLWR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W1-SLWR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W1-SLWR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W1-SLWR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "d29ca52a8dd99846d07e515976a0aac0963e3c241b1ae355f8d50fc3905deb01",
+        "result_file": "synthetic/R12-W1-SLWR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W1-SLWR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W2-SCR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W2-SCR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "28e884c8e93ad19bb34c1636bd72e4fe3fdce68a246ffb382448dc4196e4ee84",
+        "result_file": "synthetic/R12-W2-SCR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W2-SCR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W2-SCR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W2-SCR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "3497f4d710c6f35767bd96904a1d992a1687261719c415ed9ae048f835c598c2",
+        "result_file": "synthetic/R12-W2-SCR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W2-SCR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W2-SCR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W2-SCR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "cce3ff272e841dd4e9fdf959c540b07bde2fc46aa7207bbe095bfd2048f511bb",
+        "result_file": "synthetic/R12-W2-SCR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W2-SCR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W2-SCR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W2-SCR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "ce41ebaf3b4fa03c966490658399adc7d0414b6dd0e8372b1e38714814fe5010",
+        "result_file": "synthetic/R12-W2-SCR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W2-SCR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W2-SLWR/strength.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W2-SLWR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture-v1"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic denominator"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "midspan"
+      },
+      "touchdown": {
+        "arc_length_m": 100,
+        "utilisation": 0.5,
+        "stress_range_MPa": 100
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 12
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 150
+      },
+      "run": {
+        "input_sha256": "c20f21b448572fdded777121cebb34c2c691949250f73ed212f0e7446517a782",
+        "result_file": "synthetic/R12-W2-SLWR/strength.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W2-SLWR-strength",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W2-SLWR/fatigue-F03.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W2-SLWR",
+      "sea_state": {
+        "id": "F03",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "fb2dc40e24f92b12889781bc2bbe458e904c6de7c964611991f9f5f30d9e8135",
+        "result_file": "synthetic/R12-W2-SLWR/F03.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W2-SLWR-F03",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W2-SLWR/fatigue-F04.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W2-SLWR",
+      "sea_state": {
+        "id": "F04",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 100,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.2
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 50,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0.025
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.2,
+      "life_years": 5,
+      "run": {
+        "input_sha256": "0c039dadda70bfd041dac2b22ad4b0cf907b4d87f08cf775efba82ad06220dcb",
+        "result_file": "synthetic/R12-W2-SLWR/F04.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W2-SLWR-F04",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    },
+    "results/R12-W2-SLWR/fatigue-F05.json": {
+      "exchange_version": "ris-exchange/1",
+      "case_id": "R12-W2-SLWR",
+      "sea_state": {
+        "id": "F05",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 180,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 100,
+          "stress_range_MPa": 0,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0,
+          "stress_range_MPa": 0,
+          "cycles_per_year": 1000000,
+          "scf": 1,
+          "damage_per_year": 0
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source": "ASSUMED synthetic arithmetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0,
+      "life_years": null,
+      "run": {
+        "input_sha256": "6348489fc9a49f4a384b9d2f62925845ff88aa87097464492d20cfdbcfb8bfc8",
+        "result_file": "synthetic/R12-W2-SLWR/F05.json",
+        "date": "2026-10-25",
+        "data_basis": "ASSUMED synthetic; not engineering results",
+        "id": "R12-W2-SLWR-F05",
+        "phase": "A",
+        "status": "completed",
+        "qualified": false
+      }
+    }
+  }
+}

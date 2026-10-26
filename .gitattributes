@@ -110,3 +110,8 @@ docs/benchmarks/catenary_closed_form/inputs/* text eol=lf
 
 # Preserve manifest-bound riser database fingerprints across checkout settings.
 data/riser_database/** text eol=lf
+
+# Preserve the raw bytes bound by exchange catalog and fixture digests.
+src/digitalmodel/riser_study/exchange/data/*.tsv text eol=lf
+src/digitalmodel/riser_study/exchange/data/*.json text eol=lf
+tests/subsea/riser_exchange/fixtures/*.json text eol=lf

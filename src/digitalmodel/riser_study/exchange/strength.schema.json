@@ -1,0 +1,698 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ris-exchange/1 strength",
+  "$ref": "#/$defs/strength",
+  "$defs": {
+    "campaign_run": {
+      "type": "object",
+      "required": [
+        "id",
+        "phase",
+        "status",
+        "qualified"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/text"
+        },
+        "phase": {
+          "enum": [
+            "A",
+            "B"
+          ]
+        },
+        "status": {
+          "enum": [
+            "attempted",
+            "completed",
+            "failed"
+          ]
+        },
+        "qualified": {
+          "type": "boolean"
+        }
+      },
+      "if": {
+        "properties": {
+          "qualified": {
+            "const": true
+          }
+        },
+        "required": [
+          "qualified"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "completed"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "run": {
+      "type": "object",
+      "properties": {
+        "input_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "result_file": {
+          "$ref": "#/$defs/text"
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "string",
+              "format": "date-time"
+            }
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/text"
+        },
+        "phase": {
+          "enum": [
+            "A",
+            "B"
+          ]
+        },
+        "status": {
+          "enum": [
+            "attempted",
+            "completed",
+            "failed"
+          ]
+        },
+        "qualified": {
+          "type": "boolean"
+        },
+        "data_basis": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "input_sha256",
+        "result_file",
+        "date"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "qualified": {
+                "const": true
+              }
+            },
+            "required": [
+              "qualified"
+            ]
+          },
+          "then": {
+            "required": [
+              "id",
+              "phase",
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "const": "completed"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "screening": {
+      "type": "object",
+      "properties": {
+        "condition": {
+          "enum": [
+            "functional",
+            "extreme"
+          ]
+        },
+        "dynamic": {
+          "type": "boolean"
+        },
+        "qualified": {
+          "type": "boolean"
+        },
+        "u1": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "const": "API RP 2RD"
+            },
+            "smys_MPa": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "stress_MPa": {
+              "type": "object",
+              "properties": {
+                "static": {
+                  "type": "object",
+                  "properties": {
+                    "inner": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "minItems": 2
+                    },
+                    "outer": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "minItems": 2
+                    }
+                  },
+                  "required": [
+                    "inner",
+                    "outer"
+                  ],
+                  "additionalProperties": false
+                },
+                "dynamic_max": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "inner": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "minItems": 2
+                        },
+                        "outer": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "minItems": 2
+                        }
+                      },
+                      "required": [
+                        "inner",
+                        "outer"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "static",
+                "dynamic_max"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "method",
+            "smys_MPa",
+            "stress_MPa"
+          ],
+          "additionalProperties": false
+        },
+        "tension_envelope_kN": {
+          "type": "object",
+          "properties": {
+            "dynamic_min": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "dynamic_max": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "dynamic_min",
+            "dynamic_max"
+          ],
+          "additionalProperties": false
+        },
+        "hang_off_dynamic_min_kN": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excursion_reference_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "excursion_limit_deg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "static_check": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "analytical": {
+                  "type": "object",
+                  "properties": {
+                    "top_tension_kN": {
+                      "type": "number"
+                    },
+                    "top_angle_deg": {
+                      "type": "number"
+                    },
+                    "touchdown_x_m": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "top_tension_kN",
+                    "top_angle_deg",
+                    "touchdown_x_m"
+                  ],
+                  "additionalProperties": false
+                },
+                "software_touchdown_x_m": {
+                  "type": "number"
+                },
+                "basis": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "analytical",
+                "software_touchdown_x_m",
+                "basis"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "api_rp_1111": {
+          "type": "object",
+          "properties": {
+            "in_scope": {
+              "type": "boolean"
+            },
+            "method": {
+              "type": "string",
+              "minLength": 1
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "checks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "arc_length_m": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "utilisation": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "check": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "arc_length_m",
+                  "utilisation",
+                  "check"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "in_scope",
+            "method",
+            "reason",
+            "checks"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "condition",
+        "dynamic",
+        "qualified",
+        "u1",
+        "tension_envelope_kN",
+        "hang_off_dynamic_min_kN",
+        "excursion_reference_deg",
+        "excursion_limit_deg",
+        "static_check",
+        "api_rp_1111"
+      ],
+      "additionalProperties": false
+    },
+    "strength": {
+      "type": "object",
+      "properties": {
+        "case_id": {
+          "enum": [
+            "R08-W1-SCR",
+            "R08-W1-SLWR",
+            "R08-W2-SCR",
+            "R08-W2-SLWR",
+            "R10-W1-SCR",
+            "R10-W1-SLWR",
+            "R10-W2-SCR",
+            "R10-W2-SLWR",
+            "R12-W1-SCR",
+            "R12-W1-SLWR",
+            "R12-W2-SCR",
+            "R12-W2-SLWR"
+          ]
+        },
+        "software": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "name",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "load_case": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "wave": {
+              "type": "object"
+            },
+            "current": {
+              "type": "object"
+            },
+            "offset": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "id",
+            "wave",
+            "current",
+            "offset"
+          ],
+          "additionalProperties": false
+        },
+        "arc_length_m": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 1
+        },
+        "effective_tension_kN": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1
+        },
+        "bending_moment_kNm": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1
+        },
+        "von_mises_utilisation": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 1
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowable": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "unit": {
+              "const": "MPa"
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "basis_label": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "value",
+            "unit",
+            "source"
+          ],
+          "additionalProperties": false
+        },
+        "max_utilisation": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "arc_length_m": {
+              "type": "number",
+              "minimum": 0
+            },
+            "location": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "value",
+            "arc_length_m",
+            "location"
+          ],
+          "additionalProperties": false
+        },
+        "touchdown": {
+          "type": "object",
+          "properties": {
+            "arc_length_m": {
+              "type": "number",
+              "minimum": 0
+            },
+            "utilisation": {
+              "type": "number",
+              "minimum": 0
+            },
+            "stress_range_MPa": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "arc_length_m",
+            "utilisation",
+            "stress_range_MPa"
+          ],
+          "additionalProperties": false
+        },
+        "top_angle_deg": {
+          "type": "object",
+          "properties": {
+            "static": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 90
+            },
+            "dynamic_min": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 90
+            },
+            "dynamic_max": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 90
+            }
+          },
+          "required": [
+            "static",
+            "dynamic_min",
+            "dynamic_max"
+          ],
+          "additionalProperties": false
+        },
+        "hang_off_tension_kN": {
+          "type": "object",
+          "properties": {
+            "static": {
+              "type": "number"
+            },
+            "dynamic_max": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "static",
+            "dynamic_max"
+          ],
+          "additionalProperties": false
+        },
+        "run": {
+          "$ref": "#/$defs/run"
+        },
+        "screening": {
+          "$ref": "#/$defs/screening"
+        },
+        "utilisation_basis": {
+          "const": "U1"
+        },
+        "utilisation_method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "utilisation_allowable": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "exchange_version": {
+          "const": "ris-exchange/1"
+        }
+      },
+      "required": [
+        "case_id",
+        "software",
+        "load_case",
+        "arc_length_m",
+        "effective_tension_kN",
+        "bending_moment_kNm",
+        "von_mises_utilisation",
+        "max_utilisation",
+        "touchdown",
+        "top_angle_deg",
+        "hang_off_tension_kN",
+        "run"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "method",
+            "allowable"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "utilisation_method"
+                ]
+              },
+              {
+                "required": [
+                  "utilisation_allowable"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "utilisation_method",
+            "utilisation_allowable"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "method"
+                ]
+              },
+              {
+                "required": [
+                  "allowable"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    }
+  }
+}

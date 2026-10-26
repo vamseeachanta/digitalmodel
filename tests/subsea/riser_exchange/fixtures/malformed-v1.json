@@ -1,0 +1,138 @@
+{
+  "version": "ris-exchange/1",
+  "data_basis": "ASSUMED synthetic malformed set",
+  "records": [
+    {
+      "kind": "strength",
+      "error": "touchdown utilisation exceeds maximum",
+      "data": {
+        "exchange_version": "ris-exchange/1",
+        "case_id": "R08-W1-SCR",
+        "software": {
+          "name": "synthetic",
+          "version": "fixture-v1"
+        },
+        "load_case": {
+          "id": "synthetic-extreme",
+          "wave": {
+            "Hs_m": 0
+          },
+          "current": {
+            "speed_m_s": 0
+          },
+          "offset": {
+            "x_m": 0,
+            "y_m": 0
+          }
+        },
+        "arc_length_m": [
+          0,
+          50,
+          100
+        ],
+        "effective_tension_kN": [
+          120,
+          90,
+          70
+        ],
+        "bending_moment_kNm": [
+          0,
+          2,
+          1
+        ],
+        "von_mises_utilisation": [
+          0.4,
+          0.6,
+          0.5
+        ],
+        "method": "ASSUMED synthetic stress / allowable",
+        "allowable": {
+          "value": 100,
+          "unit": "MPa",
+          "source": "ASSUMED synthetic denominator"
+        },
+        "max_utilisation": {
+          "value": 0.6,
+          "arc_length_m": 50,
+          "location": "midspan"
+        },
+        "touchdown": {
+          "arc_length_m": 75,
+          "utilisation": 1.2,
+          "stress_range_MPa": 100
+        },
+        "top_angle_deg": {
+          "static": 10,
+          "dynamic_min": 8,
+          "dynamic_max": 12
+        },
+        "hang_off_tension_kN": {
+          "static": 120,
+          "dynamic_max": 150
+        },
+        "run": {
+          "input_sha256": "0285ba5492578709c09762ffa9d2057526c8d2133b75908148ba0cc6dd5e645c",
+          "result_file": "synthetic/R08-W1-SCR/strength.json",
+          "date": "2026-10-25",
+          "data_basis": "ASSUMED synthetic; not engineering results",
+          "id": "R08-W1-SCR-strength",
+          "phase": "A",
+          "status": "completed",
+          "qualified": false
+        }
+      }
+    },
+    {
+      "kind": "fatigue",
+      "error": "reciprocal",
+      "data": {
+        "exchange_version": "ris-exchange/1",
+        "case_id": "R08-W1-SCR",
+        "sea_state": {
+          "id": "F03",
+          "Hs_m": 2,
+          "Tp_s": 8,
+          "direction_deg": 180,
+          "occurrence": 0.2
+        },
+        "hot_spots": [
+          {
+            "name": "touchdown",
+            "arc_length_m": 100,
+            "stress_range_MPa": 100,
+            "cycles_per_year": 1000000,
+            "scf": 1,
+            "damage_per_year": 0.2
+          },
+          {
+            "name": "hang_off",
+            "arc_length_m": 0,
+            "stress_range_MPa": 50,
+            "cycles_per_year": 1000000,
+            "scf": 1,
+            "damage_per_year": 0.025
+          }
+        ],
+        "sn_curve": {
+          "name": "ASSUMED synthetic power law",
+          "source": "ASSUMED synthetic arithmetic",
+          "m": 3,
+          "log_a": 12,
+          "thickness_correction": 1
+        },
+        "damage_per_year": 0.2,
+        "life_years": 2,
+        "run": {
+          "input_sha256": "7fb5f5769fce6a34e859501c78a2fcd33b77306b9f7e53ca5b50461a61502b64",
+          "result_file": "synthetic/R08-W1-SCR/F03.json",
+          "date": "2026-10-25",
+          "data_basis": "ASSUMED synthetic; not engineering results",
+          "id": "R08-W1-SCR-F03",
+          "phase": "A",
+          "status": "completed",
+          "qualified": false
+        }
+      }
+    }
+  ]
+}

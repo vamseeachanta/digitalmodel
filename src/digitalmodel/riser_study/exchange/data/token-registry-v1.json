@@ -1,0 +1,354 @@
+{
+  "version": "ris-exchange/1",
+  "source": "Maintainer-supplied analysis list; ids and captions retained verbatim; producer is the module name.",
+  "tokens": [
+    {
+      "id": "FIG-DEC-01",
+      "kind": "FIGURE",
+      "caption": "Figure 6.1 - Fatigue against strength: the annual benchmark damage of each case, summed over the three sea states at the same point, against its maximum utilisation, with the strength screening line; colour by size, shape by configuration, the two walls of each size linked",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "FIG-FAT-HEAT-01",
+      "kind": "FIGURE",
+      "caption": "Figure 5.8 - Annual benchmark damage for each case in each sea state, touchdown zone and hang-off panels; colour on a logarithmic scale, with true zero shown separately",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "FIG-FAT-RNG-08",
+      "kind": "FIGURE",
+      "caption": "Figure 5.7a - Fatigue stress ranges at the touchdown zone and the hang-off for the NPS 8 risers in each sea state, both walls, SCR and SLWR",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "FIG-FAT-RNG-10",
+      "kind": "FIGURE",
+      "caption": "Figure 5.7b - Fatigue stress ranges at the touchdown zone and the hang-off for the NPS 10 risers in each sea state, both walls, SCR and SLWR",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "FIG-FAT-RNG-12",
+      "kind": "FIGURE",
+      "caption": "Figure 5.7c - Fatigue stress ranges at the touchdown zone and the hang-off for the NPS 12 risers in each sea state, both walls, SCR and SLWR",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "FIG-STR-ANG-08",
+      "kind": "FIGURE",
+      "caption": "Figure 5.4a - Top angle from vertical and flex-joint excursion ratio for the NPS 8 risers against span offset, both walls, SCR and SLWR, with the assumed screen",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-ANG-10",
+      "kind": "FIGURE",
+      "caption": "Figure 5.4b - Top angle from vertical and flex-joint excursion ratio for the NPS 10 risers against span offset, both walls, SCR and SLWR, with the assumed screen",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-ANG-12",
+      "kind": "FIGURE",
+      "caption": "Figure 5.4c - Top angle from vertical and flex-joint excursion ratio for the NPS 12 risers against span offset, both walls, SCR and SLWR, with the assumed screen",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-HOT-08",
+      "kind": "FIGURE",
+      "caption": "Figure 5.5a - Maximum and minimum hang-off effective tension for the NPS 8 risers against span offset, both walls, SCR and SLWR, with the zero line",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-HOT-10",
+      "kind": "FIGURE",
+      "caption": "Figure 5.5b - Maximum and minimum hang-off effective tension for the NPS 10 risers against span offset, both walls, SCR and SLWR, with the zero line",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-HOT-12",
+      "kind": "FIGURE",
+      "caption": "Figure 5.5c - Maximum and minimum hang-off effective tension for the NPS 12 risers against span offset, both walls, SCR and SLWR, with the zero line",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-SUM-01",
+      "kind": "FIGURE",
+      "caption": "Figure 5.6 - The twelve cases side by side: maximum utilisation, minimum effective tension, maximum touchdown stress range, maximum excursion ratio and maximum hang-off tension, grouped by size and wall",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-TDR-08",
+      "kind": "FIGURE",
+      "caption": "Figure 5.3a - Touchdown stress range for the NPS 8 risers against span offset, one panel for each wave direction, both walls, SCR and SLWR, with the SLWR-to-SCR ratio",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-TDR-10",
+      "kind": "FIGURE",
+      "caption": "Figure 5.3b - Touchdown stress range for the NPS 10 risers against span offset, one panel for each wave direction, both walls, SCR and SLWR, with the SLWR-to-SCR ratio",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-TDR-12",
+      "kind": "FIGURE",
+      "caption": "Figure 5.3c - Touchdown stress range for the NPS 12 risers against span offset, one panel for each wave direction, both walls, SCR and SLWR, with the SLWR-to-SCR ratio",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-TEFF-08",
+      "kind": "FIGURE",
+      "caption": "Figure 5.1a - Effective tension along the NPS 8 risers: static, dynamic minimum and dynamic maximum, both walls, SCR and SLWR, with the zero line",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-TEFF-10",
+      "kind": "FIGURE",
+      "caption": "Figure 5.1b - Effective tension along the NPS 10 risers: static, dynamic minimum and dynamic maximum, both walls, SCR and SLWR, with the zero line",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-TEFF-12",
+      "kind": "FIGURE",
+      "caption": "Figure 5.1c - Effective tension along the NPS 12 risers: static, dynamic minimum and dynamic maximum, both walls, SCR and SLWR, with the zero line",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-U1-08",
+      "kind": "FIGURE",
+      "caption": "Figure 5.2a - Utilisation along the NPS 8 risers (API RP 2RD stress over allowable), both walls, SCR and SLWR, with the screening line at one",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-U1-10",
+      "kind": "FIGURE",
+      "caption": "Figure 5.2b - Utilisation along the NPS 10 risers (API RP 2RD stress over allowable), both walls, SCR and SLWR, with the screening line at one",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "FIG-STR-U1-12",
+      "kind": "FIGURE",
+      "caption": "Figure 5.2c - Utilisation along the NPS 12 risers (API RP 2RD stress over allowable), both walls, SCR and SLWR, with the screening line at one",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "SCH-01",
+      "kind": "SCHEMATIC",
+      "caption": "Figure 3.1 - The steel catenary and the steel lazy wave, from hang-off to seabed, to scale",
+      "producing_module": "riser_configuration_plot.py"
+    },
+    {
+      "id": "TAB-FAT-01",
+      "kind": "TABLE",
+      "caption": "Table A.2 - Fatigue stress ranges and annual benchmark damage for each case in each sea state",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "TAB-PHB-FAT-01",
+      "kind": "TABLE",
+      "caption": "Table D.1 - Fatigue duration check: annual benchmark damage from the three-hour response against the one-hour history, governing SCR and SLWR",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "TAB-RES-01",
+      "kind": "TABLE",
+      "caption": "Table A.1 - Strength and fatigue results for each case",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "TAB-STA-01",
+      "kind": "TABLE",
+      "caption": "Table 5.1 - Static check at nominal offset: top tension, top angle and touchdown position from the software against the analytical catenary, with the differences",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "TAB-STR-1111-01",
+      "kind": "TABLE",
+      "caption": "Table A.3 - API RP 1111 combined-loading checks on the strength histories, where in scope",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "TAB-WT-01",
+      "kind": "TABLE",
+      "caption": "Table 3.3 - Wall-thickness screens for each size and wall: utilisation by each strategy and the pressure guard",
+      "producing_module": "wall_basis_table.py"
+    },
+    {
+      "id": "V-ANS-OD1",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "V-ANS-OD2",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "V-ANS-OD3",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "V-DEC-COUNT-STR",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "V-FAT-DMAX",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "V-FAT-GOV-CASE",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "V-FAT-GOV-SS",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "V-FAT-RESOLVED",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "V-FAT-SCR-HOTSPOT",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "V-FAT-SLWR-HOTSPOT",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "V-FAT-WT-DELTA",
+      "kind": "VALUE",
+      "caption": "%",
+      "producing_module": "riser_fatigue_runs.py"
+    },
+    {
+      "id": "V-PHB-STATUS",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "V-RAO-BASIS",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "rao_disposition.md"
+    },
+    {
+      "id": "V-REVIEW-STATUS",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "review_record.md"
+    },
+    {
+      "id": "V-RUN-ATTEMPTED",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "V-RUN-COMPLETED",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "V-RUN-QUALIFIED",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "decision_chart.py"
+    },
+    {
+      "id": "V-SIZE-REF",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "case_matrix.yml"
+    },
+    {
+      "id": "V-STR-COMP-COUNT",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-DYN-BASIS",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-GOV-CASE",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-GOV-LOC",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-TDR-DELTA-REF",
+      "kind": "VALUE",
+      "caption": "%",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-TEFF-MIN",
+      "kind": "VALUE",
+      "caption": "kN",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-UANG-MAX",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-UMAX-GOV",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-UMAX-SCR",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-UMAX-SLWR",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-STR-WT-DELTA",
+      "kind": "VALUE",
+      "caption": "%",
+      "producing_module": "riser_strength_runs.py"
+    },
+    {
+      "id": "V-SW-VERSION",
+      "kind": "VALUE",
+      "caption": "-",
+      "producing_module": "riser_strength_runs.py"
+    }
+  ]
+}

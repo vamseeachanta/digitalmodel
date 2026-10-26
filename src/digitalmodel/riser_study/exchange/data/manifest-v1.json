@@ -1,0 +1,10 @@
+{
+  "version": "ris-exchange/1",
+  "matrix_sha256": "f95a98735eb3882a354857fc56975a82d1b67095d6a57cb8cf565229e9ddf2c1",
+  "matrix_source": {
+    "pull_request": 3463,
+    "revision": "e0d04824822c4a1f2aeb2f20841671b58d8fcd82",
+    "format": "TSV, original bytes"
+  },
+  "registry_sha256": "ba03ec892b938cfb55b65998510f1eaed12094a06840bd45f49675966c06714f"
+}
