@@ -23,7 +23,6 @@ ASSUMED = "ASSUMED for this illustrative calculation; not measured or material-q
 SOURCES = (
     WORKFLOW / "input.json",
     Path("src/digitalmodel/asset_integrity/pressure_vessel_metal_loss.py"),
-    Path("src/digitalmodel/ansys/pressure_vessel.py"),
     Path("scripts/reporting/build_pressure_vessel_metal_loss.py"),
 )
 CHARTS = {
@@ -32,7 +31,6 @@ CHARTS = {
     ),
     "remaining-thickness.csv": (
         "metal_loss_mm", "remaining_thickness_mm",
-        "implementation_required_thickness_mm", "thickness_difference_mm",
     ),
 }
 
@@ -40,9 +38,9 @@ CHARTS = {
 def build(root: Path, output: Path) -> tuple[Path, ...]:
     """Write chart data, rounding once to 0.1 of each column's stated unit.
 
-    Manifest rows store the exact chart strings, including signed differences
-    calculated before rounding. Hashes identify the input, calculation sources
-    and output bytes. Output contains no timestamps or local filesystem paths.
+    Manifest rows store the exact chart strings. Hashes identify the input,
+    calculation sources and output bytes. Output contains no timestamps or
+    local filesystem paths.
     """
     config = json.loads((root / WORKFLOW / "input.json").read_text(encoding="utf-8"))
     if config["basis"] != ASSUMED:
@@ -57,11 +55,10 @@ def build(root: Path, output: Path) -> tuple[Path, ...]:
     manifest: dict[str, Any] = {
         "basis": ASSUMED,
         "inputs": config,
-        "membrane_basis": "First-principles force equilibrium; calculation module docstring",
-        "thickness_basis": "the result of our implementation; zero corrosion allowance",
+        "membrane_basis": "MIT Pressure Vessels (2001), Stresses, equations (2) and (3), p. 3",
         "acceptance_criteria": "DATA GAP; no assessment level or service verdict",
         "geometry_basis": "Uniform external loss; fixed inner radius; closed ends; thin shell",
-        "chart_precision": "0.1 mm and 0.1 MPa; differences computed before rounding",
+        "chart_precision": "0.1 mm and 0.1 MPa; rounded after calculation",
         "source_sha256": {
             path.as_posix(): hashlib.sha256((root / path).read_bytes()).hexdigest()
             for path in SOURCES
@@ -73,7 +70,7 @@ def build(root: Path, output: Path) -> tuple[Path, ...]:
     for filename, fields in CHARTS.items():
         rows = [{field: f"{result[field]:.1f}" for field in fields} for result in results]
         path = output / filename
-        with path.open("w", encoding="utf-8", newline="") as stream:
+        with path.open("w", encoding="utf-8", newline="\n") as stream:
             writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
             writer.writeheader()
             writer.writerows(rows)
@@ -83,7 +80,10 @@ def build(root: Path, output: Path) -> tuple[Path, ...]:
         }
         paths.append(path)
     path = output / "manifest.json"
-    path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8", newline="\n",
+    )
     return (*paths, path)
 
 
