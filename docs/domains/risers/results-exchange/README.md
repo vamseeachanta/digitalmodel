@@ -10,6 +10,7 @@ licensed binding. Native engineering qualification remains outstanding.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-26 | Introduce extraction and validation for consistent downstream results. |
+| 2 | 2026-10-25 | Reconcile exported arithmetic and identify unsupported inputs in a versioned assumption record. |
 
 ## Run from the simulation loop
 
@@ -32,8 +33,11 @@ Use `--manifest extraction.json` to select metadata explicitly. Otherwise the
 command reads `completed.export.json` beside `completed.sim`. Relative input
 references resolve from the manifest directory. The sidecar contains the frozen
 matrix row, the actual simulation input file and the extraction settings. The
-following abbreviated row uses frozen matrix values; retain the complete frozen
-row in operational sidecars:
+following abbreviated row retains example matrix values. Their unsupported
+physical basis is **assumed, based on previous experience**, as recorded in
+[screening basis version 1](basis-v1.md). Frozen means retained input identity;
+it does not establish qualified data. Retain the complete frozen row in
+operational sidecars:
 
 ```json
 {
@@ -111,10 +115,15 @@ graph grids must agree exactly; missing curves are not interpolated.
 stress at each station. The allowable is `C_f * (2/3) * SMYS`, labelled
 **API RP 2RD legacy WSD**, as carried by
 `src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py`,
-`ApiRp2rdStrategy`. The supplied study basis sets SMYS to 450 MPa,
-functional `C_f=1` and extreme `C_f=1.2`; the resulting extreme allowable is
-360 MPa. This reuses the repository label and code basis without claiming a
-current standard edition or a complete code check. No licensed standard is used.
+`ApiRp2rdStrategy`. That strategy establishes the repository's basic factor,
+but does not establish extreme `C_f=1.2`. The enforced functional `C_f=1` and
+extreme `C_f=1.2` are **assumed, based on previous experience**, in
+[screening basis version 1, strength inputs](basis-v1.md#strength-screening-inputs).
+The output records that reference and assumption status in `utilisation_method`.
+Example SMYS 450 MPa and section dimensions have the same assumption status;
+the resulting extreme allowable of 360 MPa is a derived screening value.
+This reuses the repository label and code basis without claiming a current
+standard edition or a complete code check. No licensed standard is used.
 
 The adapter requires explicit native `StressOD` and `StressID` on every line
 type. Their checked wall must match `checked_wall_mm` from the frozen row; nominal
@@ -146,13 +155,18 @@ ASTM E1049-85; no standard document is opened or reproduced.
 Fatigue uses the supplied [public FAT80 comparison](https://strathprints.strath.ac.uk/52862/),
 section 3.2.1 and Figure 16: range 80 MPa at 2 million cycles, slope 3. The study
 extends `N = 2000000 * (80 / range_MPa)^3` with one slope and no endurance cutoff.
-Configured SCF multiplies ranges once. The supplied benchmark assumes SCF 1.2,
-no mean-stress benefit and unity thickness correction, with weld and environment
-treatment unqualified. Exact range/count histograms avoid damage error from
+Configured SCF multiplies ranges once; `thickness_correction` is a further
+multiplier on stress range before applying the recorded S-N curve.
+SCF 1.2, no mean-stress benefit and unity thickness correction are **assumed,
+based on previous experience**, with weld and environment treatment unqualified.
+The [fatigue screening inputs](basis-v1.md#fatigue-screening-inputs) also identify
+the annual hours, sea conditions, occurrences and durations as assumptions.
+Exact range/count histograms avoid damage error from
 bin-centre substitution. Annual damage is history damage times
 `8760 * 3600 / duration_s * occurrence`; occurrences are fractions without
 renormalisation. The recorded interval must cover the frozen stationary duration.
-The three selected seas cover 3.8% of a year in the supplied basis.
+The example does not provide a complete occurrence table for all three seas;
+their combined annual coverage is unverified.
 
 Every station/fibre retains its histogram and annual contribution. The document's
 `damage_per_year` is the maximum station/fibre contribution for **this sea**.
@@ -168,8 +182,14 @@ Downstream consumers import `read_document` and `validate_document` from
 `digitalmodel.riser_results`. Call `validate_document(document, "strength")` or
 `validate_document(document, "fatigue")` after reading. These checks enforce
 required schema fields, finite numbers, aligned increasing arcs, extrema,
-allowable/method labels, timestamps, digests, occurrence fractions, both hotspot
-regions, unique material points and reciprocal-life consistency. JSON with
+nonnegative equivalent stresses, utilisation as stress / allowable, consistency
+with the larger static/dynamic stress envelope, allowable/method labels,
+timestamps, digests, occurrence fractions, both hotspot regions and unique
+material points. Fatigue validation requires histograms, positive `duration_s`
+and `annual_hours_basis`, and station damage. It independently recomputes annual
+cycles and damage using occurrence, SCF and the recorded S-N curve and thickness
+multiplier, then checks governing damage and reciprocal life. Incomplete or
+arithmetically inconsistent existing exports are rejected on retry. JSON with
 nonfinite constants or duplicate keys is rejected. Additional evidence fields
 are permitted so consumers can retain provenance.
 

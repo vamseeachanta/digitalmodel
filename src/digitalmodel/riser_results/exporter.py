@@ -5,10 +5,11 @@
 Basis: structural/analysis/wall_thickness_codes/api_rp_2rd.py, ApiRp2rdStrategy
 labels legacy WSD allowable C_f*(2/3)*SMYS. Native equivalent stresses must include
 membrane, pressure and bending on the checked section, reconciled during readback.
-Extreme C_f=1.2 and functional C_f=1 follow the supplied frozen study basis.
-FAT80: supplied public comparison, section 3.2.1 / Figure 16, 80 MPa range at
+Extreme C_f=1.2 and functional C_f=1 are screening assumptions recorded in
+docs/domains/risers/results-exchange/basis-v1.md, not verified standard factors.
+FAT80: public comparison, section 3.2.1 / Figure 16, 80 MPa range at
 2 million cycles, m=3; one-slope extension and SCF are screening assumptions.
-Annualisation uses the supplied 8760-hour study year, without renormalisation.
+Annualisation assumes an 8760-hour year, without renormalisation; see basis-v1.
 SI prefix factors and radians-to-degrees below are unit definitions.
 """
 
@@ -27,7 +28,8 @@ from digitalmodel.structural.rainflow_cycles import count_cycles
 from .schema import Document, number, read_document, text, validate_document, vector
 
 METHOD_SOURCE = "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py:ApiRp2rdStrategy"
-SN_SOURCE = "https://strathprints.strath.ac.uk/52862/ section 3.2.1 / Figure 16; supplied study basis"
+SN_SOURCE = "https://strathprints.strath.ac.uk/52862/ section 3.2.1 / Figure 16"
+FACTOR_SOURCE = "docs/domains/risers/results-exchange/basis-v1.md#strength-screening-inputs"
 FACTORS = {
     "length": {"m": 1.0, "mm": 0.001},
     "force": {"N": 0.001, "kN": 1.0},
@@ -174,7 +176,7 @@ def _build(snapshot: Document, case: Document, options: Document,
     condition = options["load_condition"]
     factors = {"functional": 1.0, "extreme": 1.2}
     if condition not in factors or number(options["design_case_factor"], "design_case_factor") != factors[condition]:
-        raise ValueError("load condition or factor differs from supplied study basis")
+        raise ValueError("load condition or factor differs from versioned screening basis")
     allowable = _positive(options["smys_MPa"], "smys_MPa") * (2 / 3) * factors[condition]
     length, force, moment, stress, angle = (_scale(snapshot, name)
                                          for name in ("length", "force", "moment", "stress", "angle"))
@@ -233,6 +235,8 @@ def _build(snapshot: Document, case: Document, options: Document,
                                        "source": METHOD_SOURCE, "allowable_MPa": allowable,
                                        "smys_MPa": options["smys_MPa"], "basic_factor": 2 / 3,
                                        "design_case_factor": factors[condition],
+                                       "design_case_factor_source": FACTOR_SOURCE,
+                                       "design_case_factor_status": "assumed, based on previous experience",
                                        "load_condition": condition,
                                        "basis": "native pressure/membrane/bending equivalent stress on checked section; screening only"},
                 "max_utilisation": {"value": utilisation[peak_index], "arc_length_m": peak_arc, "location": location},

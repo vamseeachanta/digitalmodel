@@ -70,7 +70,8 @@ def _validate_run(run: Document) -> None:
 
 def _strength(doc: Document) -> None:
     _keys(doc, ("software", "load_case", "arc_length_m", "effective_tension_kN",
-                "bending_moment_kNm", "von_mises_utilisation", "utilisation_method",
+                "bending_moment_kNm", "von_mises_stress_MPa", "envelopes",
+                "von_mises_utilisation", "utilisation_method",
                 "max_utilisation", "touchdown", "top_angle_deg", "hang_off_tension_kN"), "strength")
     _keys(doc["software"], ("name", "version"), "software")
     for key in ("name", "version"):
@@ -90,8 +91,14 @@ def _strength(doc: Document) -> None:
     _keys(method, ("name", "source", "allowable_MPa"), "utilisation_method")
     text(method["name"], "method.name")
     text(method["source"], "method.source")
-    if number(method["allowable_MPa"], "allowable_MPa", 0) == 0:
+    allowable = number(method["allowable_MPa"], "allowable_MPa", 0)
+    if allowable == 0:
         raise ValueError("allowable_MPa: must be positive")
+    stresses = vector(doc["von_mises_stress_MPa"], "von_mises_stress_MPa", len(arcs))
+    for stress, utilisation in zip(stresses, util):
+        number(stress, "equivalent stress", 0)
+        if not math.isclose(utilisation, stress / allowable, rel_tol=1e-9, abs_tol=0):
+            raise ValueError("utilisation: inconsistent equivalent stress / allowable")
     peak = doc["max_utilisation"]
     _keys(peak, ("value", "arc_length_m", "location"), "max_utilisation")
     arc = number(peak["arc_length_m"], "peak arc")
@@ -107,19 +114,28 @@ def _strength(doc: Document) -> None:
             number(touchdown["utilisation"], "touchdown utilisation"), util[arcs.index(td_arc)]):
         raise ValueError("touchdown: inconsistent station or utilisation")
     static = doc.get("analysis_type") == "static"
-    if "envelopes" in doc:
-        for field in ("effective_tension_kN", "bending_moment_kNm", "von_mises_stress_MPa"):
-            envelope = doc["envelopes"][field]
-            _keys(envelope, ("static", "min", "max"), "envelope")
-            vector(envelope["static"], "static envelope", len(arcs))
-            if static:
-                if envelope["min"] is not None or envelope["max"] is not None:
-                    raise ValueError("static envelope: dynamic values must be null")
-            else:
-                low = vector(envelope["min"], "minimum envelope", len(arcs))
-                high = vector(envelope["max"], "maximum envelope", len(arcs))
-                if any(a > b for a, b in zip(low, high)):
-                    raise ValueError("envelope: inverted range")
+    for field in ("effective_tension_kN", "bending_moment_kNm", "von_mises_stress_MPa"):
+        envelope = doc["envelopes"][field]
+        _keys(envelope, ("static", "min", "max"), "envelope")
+        static_values = vector(envelope["static"], "static envelope", len(arcs))
+        if static:
+            if envelope["min"] is not None or envelope["max"] is not None:
+                raise ValueError("static envelope: dynamic values must be null")
+            governing = static_values
+        else:
+            low = vector(envelope["min"], "minimum envelope", len(arcs))
+            high = vector(envelope["max"], "maximum envelope", len(arcs))
+            if any(a > b for a, b in zip(low, high)):
+                raise ValueError("envelope: inverted range")
+            governing = [max(a, b) for a, b in zip(static_values, high)]
+        if field == "von_mises_stress_MPa":
+            for values in envelope.values():
+                if values is not None:
+                    for value in values:
+                        number(value, "equivalent stress envelope", 0)
+            if any(not math.isclose(a, b, rel_tol=1e-9, abs_tol=0)
+                   for a, b in zip(stresses, governing)):
+                raise ValueError("equivalent stress: inconsistent governing envelope")
     if touchdown["stress_range_MPa"] is None:
         if not static:
             raise ValueError("touchdown range: missing dynamic value")
@@ -143,7 +159,8 @@ def _strength(doc: Document) -> None:
 
 
 def _fatigue(doc: Document) -> None:
-    _keys(doc, ("sea_state", "hot_spots", "sn_curve", "damage_per_year", "life_years"), "fatigue")
+    _keys(doc, ("sea_state", "hot_spots", "sn_curve", "damage_per_year", "life_years",
+                "duration_s", "annual_hours_basis"), "fatigue")
     sea = doc["sea_state"]
     _keys(sea, ("id", "Hs_m", "Tp_s", "direction_deg", "occurrence"), "sea_state")
     if not re.fullmatch(r"[A-Za-z0-9_-]+", text(sea["id"], "sea_state.id")):
@@ -152,16 +169,26 @@ def _fatigue(doc: Document) -> None:
     if number(sea["Tp_s"], "Tp_s", 0) == 0:
         raise ValueError("Tp_s: must be positive")
     direction = number(sea["direction_deg"], "direction_deg", 0)
-    if direction >= 360 or number(sea["occurrence"], "occurrence", 0) > 1:
+    occurrence = number(sea["occurrence"], "occurrence", 0)
+    if direction >= 360 or occurrence > 1:
         raise ValueError("sea_state: direction or occurrence out of bounds")
+    duration = number(doc["duration_s"], "duration_s", 0)
+    annual_hours = number(doc["annual_hours_basis"], "annual_hours_basis", 0)
+    if duration == 0 or annual_hours == 0:
+        raise ValueError("duration_s and annual_hours_basis: must be positive")
+    year_multiplier = number(annual_hours * 3600 / duration * occurrence, "annual multiplier", 0)
     curve = doc["sn_curve"]
     _keys(curve, ("name", "source", "m", "log_a", "thickness_correction"), "sn_curve")
     text(curve["name"], "sn_curve.name")
     text(curve["source"], "sn_curve.source")
-    if number(curve["m"], "slope", 0) == 0:
+    slope = number(curve["m"], "slope", 0)
+    if slope == 0:
         raise ValueError("slope: must be positive")
-    number(curve["log_a"], "log_a")
-    if number(curve["thickness_correction"], "thickness correction", 0) == 0:
+    intercept = number(10 ** number(curve["log_a"], "log_a"), "S-N intercept", 0)
+    if intercept == 0:
+        raise ValueError("S-N intercept: must be positive")
+    thickness = number(curve["thickness_correction"], "thickness correction", 0)
+    if thickness == 0:
         raise ValueError("thickness correction: must be positive")
     hot_spots = doc["hot_spots"]
     if not isinstance(hot_spots, list) or not hot_spots:
@@ -170,7 +197,8 @@ def _fatigue(doc: Document) -> None:
     identities = set()
     damages = []
     for hot in hot_spots:
-        _keys(hot, ("name", "arc_length_m", "cycles_per_year", "scf"), "hot_spot")
+        _keys(hot, ("name", "arc_length_m", "cycles_per_year", "scf",
+                    "range_histogram", "damage_per_year"), "hot_spot")
         name = hot["name"]
         if name not in {"touchdown", "hang_off"}:
             raise ValueError("hot_spot: unexpected name")
@@ -180,26 +208,34 @@ def _fatigue(doc: Document) -> None:
         if identity in identities:
             raise ValueError("hot_spots: duplicate station/fibre")
         identities.add(identity)
-        number(hot["cycles_per_year"], "annual cycles", 0)
-        if number(hot["scf"], "scf", 0) == 0:
+        annual_cycles = number(hot["cycles_per_year"], "annual cycles", 0)
+        scf = number(hot["scf"], "scf", 0)
+        if scf == 0:
             raise ValueError("scf: must be positive")
-        if "range_histogram" in hot:
-            if not isinstance(hot["range_histogram"], list):
-                raise ValueError("histogram: expected array")
-            for row in hot["range_histogram"]:
-                _keys(row, ("stress_range_MPa", "cycles"), "histogram")
-                number(row["stress_range_MPa"], "stress range", 0)
-                number(row["cycles"], "cycle count", 0)
-        elif "stress_range_MPa" not in hot:
-            raise ValueError("hot_spot: missing range or histogram")
+        if not isinstance(hot["range_histogram"], list):
+            raise ValueError("histogram: expected array")
+        cycles = []
+        contributions = []
+        for row in hot["range_histogram"]:
+            _keys(row, ("stress_range_MPa", "cycles"), "histogram")
+            stress_range = number(row["stress_range_MPa"], "stress range", 0)
+            count = number(row["cycles"], "cycle count", 0)
+            cycles.append(count)
+            contributions.append(count * (stress_range * scf * thickness) ** slope / intercept)
+        expected_cycles = number(math.fsum(cycles) * year_multiplier, "derived annual cycles", 0)
+        expected_damage = number(math.fsum(contributions) * year_multiplier, "derived station damage", 0)
+        if not math.isclose(annual_cycles, expected_cycles, rel_tol=1e-9, abs_tol=0):
+            raise ValueError("annual cycles: inconsistent histogram or annualisation")
         if "stress_range_MPa" in hot:
             number(hot["stress_range_MPa"], "stress range", 0)
-        if "damage_per_year" in hot:
-            damages.append(number(hot["damage_per_year"], "station damage", 0))
+        station_damage = number(hot["damage_per_year"], "station damage", 0)
+        if not math.isclose(station_damage, expected_damage, rel_tol=1e-9, abs_tol=0):
+            raise ValueError("station damage: inconsistent histogram or S-N curve")
+        damages.append(expected_damage)
     if names != {"touchdown", "hang_off"}:
         raise ValueError("hot_spots: both regions are required")
     damage = number(doc["damage_per_year"], "damage_per_year", 0)
-    if damages and not math.isclose(damage, max(damages), rel_tol=1e-9, abs_tol=0):
+    if not math.isclose(damage, max(damages), rel_tol=1e-9, abs_tol=0):
         raise ValueError("damage_per_year: inconsistent governing station")
     life = doc["life_years"]
     if damage == 0:
@@ -222,7 +258,7 @@ def validate_document(doc: Document, kind: str) -> None:
             _fatigue(doc)
         else:
             raise ValueError("unknown document kind")
-    except (TypeError, KeyError, IndexError) as error:
+    except (TypeError, KeyError, IndexError, OverflowError) as error:
         raise ValueError(f"{kind}: invalid document structure") from error
 
 

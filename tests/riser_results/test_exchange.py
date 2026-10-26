@@ -395,3 +395,152 @@ def test_shared_validator_checks_envelopes(case, settings, snapshot, run, mutati
     mutation(strength)
     with pytest.raises(ValueError):
         validate_document(strength, "strength")
+
+
+@pytest.mark.parametrize("mutation", [
+    pytest.param(lambda d: d["von_mises_stress_MPa"].__setitem__(2, 720), id="stress-only"),
+    pytest.param(lambda d: (
+        d["von_mises_stress_MPa"].__setitem__(2, 720),
+        d["envelopes"]["von_mises_stress_MPa"]["max"].__setitem__(2, 720),
+    ), id="stress-and-envelope"),
+    pytest.param(lambda d: d["envelopes"]["von_mises_stress_MPa"]["max"].__setitem__(2, 720),
+                 id="envelope-only"),
+    pytest.param(lambda d: d["envelopes"]["von_mises_stress_MPa"]["static"].__setitem__(1, 720),
+                 id="static-governs"),
+    pytest.param(lambda d: d["von_mises_stress_MPa"].__setitem__(0, -120), id="negative-stress"),
+    pytest.param(lambda d: d["envelopes"]["von_mises_stress_MPa"]["min"].__setitem__(0, -1),
+                 id="negative-minimum"),
+    pytest.param(lambda d: d["envelopes"]["von_mises_stress_MPa"]["static"].__setitem__(0, -1),
+                 id="negative-static"),
+    pytest.param(lambda d: d["von_mises_stress_MPa"].pop(), id="unaligned-stress"),
+    pytest.param(lambda d: d.pop("von_mises_stress_MPa"), id="missing-stress"),
+    pytest.param(lambda d: d.pop("envelopes"), id="missing-envelopes"),
+    pytest.param(lambda d: d["utilisation_method"].__setitem__("allowable_MPa", 720),
+                 id="changed-allowable"),
+    pytest.param(lambda d: d["von_mises_utilisation"].__setitem__(0, 0.1),
+                 id="nongoverning-utilisation"),
+])
+def test_strength_validator_reconciles_stress(case, settings, snapshot, run, mutation):
+    strength, _ = build_documents(snapshot, case, settings, run)
+    mutation(strength)
+    with pytest.raises(ValueError):
+        validate_document(strength, "strength")
+
+
+def test_strength_validator_reconciles_static_stress(case, settings, snapshot, run):
+    settings.update(analysis_type="static", load_condition="functional", design_case_factor=1)
+    settings.pop("sea_state")
+    snapshot["touchdown_arc_length"] = [20]
+    strength, _ = build_documents(snapshot, case, settings, run)
+    strength["von_mises_stress_MPa"][2] = 720
+    strength["envelopes"]["von_mises_stress_MPa"]["static"][2] = 720
+    with pytest.raises(ValueError):
+        validate_document(strength, "strength")
+
+
+def test_static_stress_can_govern_dynamic_utilisation(case, settings, snapshot, run):
+    snapshot["profiles"]["von_mises_stress"]["static"][2] = 360e6
+    strength, _ = build_documents(snapshot, case, settings, run)
+    assert strength["von_mises_stress_MPa"][2] == 360
+    assert strength["von_mises_utilisation"][2] == 1
+    validate_document(strength, "strength")
+
+
+@pytest.mark.parametrize("mutation", [
+    pytest.param(lambda d: d["hot_spots"][0]["range_histogram"][0].__setitem__("stress_range_MPa", 400),
+                 id="histogram-range"),
+    pytest.param(lambda d: d["hot_spots"][0]["range_histogram"][0].__setitem__("cycles", 0.5),
+                 id="histogram-half-cycle"),
+    pytest.param(lambda d: d["hot_spots"][0].__setitem__("cycles_per_year", 100), id="annual-cycles"),
+    pytest.param(lambda d: d["hot_spots"][0].__setitem__("damage_per_year", 0), id="station-damage"),
+    pytest.param(lambda d: d["hot_spots"][0].__setitem__("scf", 2), id="scf"),
+    pytest.param(lambda d: d["sn_curve"].__setitem__("m", 2), id="slope"),
+    pytest.param(lambda d: d["sn_curve"].__setitem__("log_a", 12), id="intercept"),
+    pytest.param(lambda d: d["sn_curve"].__setitem__("thickness_correction", 2), id="thickness"),
+    pytest.param(lambda d: d.__setitem__("duration_s", 7200), id="duration"),
+    pytest.param(lambda d: d.__setitem__("annual_hours_basis", 1000), id="annual-hours"),
+    pytest.param(lambda d: d["sea_state"].__setitem__("occurrence", 0.03), id="occurrence"),
+    pytest.param(lambda d: d.pop("duration_s"), id="missing-duration"),
+    pytest.param(lambda d: d.pop("annual_hours_basis"), id="missing-annual-hours"),
+    pytest.param(lambda d: d.__setitem__("duration_s", 0), id="zero-duration"),
+    pytest.param(lambda d: d.__setitem__("annual_hours_basis", 0), id="zero-annual-hours"),
+    pytest.param(lambda d: d["hot_spots"][0].pop("range_histogram"), id="missing-histogram"),
+    pytest.param(lambda d: d["hot_spots"][0].pop("damage_per_year"), id="missing-station-damage"),
+])
+def test_fatigue_validator_recomputes_histogram(case, settings, snapshot, run, mutation):
+    _, fatigue = build_documents(snapshot, case, settings, run)
+    mutation(fatigue)
+    with pytest.raises(ValueError):
+        validate_document(fatigue, "fatigue")
+
+
+def test_fatigue_validator_independent_arithmetic(case, settings, snapshot, run):
+    _, fatigue = build_documents(snapshot, case, settings, run)
+    fatigue.update(duration_s=7200, annual_hours_basis=1000)
+    fatigue["sea_state"]["occurrence"] = 0.2
+    fatigue["sn_curve"].update(m=2, log_a=8, thickness_correction=2)
+    # 1000*3600/7200*0.2 = 100 repetitions/year; stress factor = 1.5*2.
+    # D = 100*(0.5*60^2 + 2*120^2)/1e8 = 0.0306, cycles = 250.
+    for hot in fatigue["hot_spots"]:
+        hot.update(scf=1.5, stress_range_MPa=40,
+                   range_histogram=[{"stress_range_MPa": 20, "cycles": 0.5},
+                                    {"stress_range_MPa": 40, "cycles": 2}],
+                   cycles_per_year=250, damage_per_year=0.0306)
+    # A lower-damage first station must not determine the aggregate.
+    fatigue["hot_spots"][0].update(
+        stress_range_MPa=10, range_histogram=[{"stress_range_MPa": 10, "cycles": 1}],
+        cycles_per_year=100, damage_per_year=0.0009)
+    fatigue.update(damage_per_year=0.0306, life_years=1 / 0.0306)
+    validate_document(fatigue, "fatigue")
+    fatigue["hot_spots"][0]["damage_per_year"] = 0.001
+    with pytest.raises(ValueError):
+        validate_document(fatigue, "fatigue")
+
+
+@pytest.mark.parametrize("kind", ["strength", "fatigue"])
+def test_retry_rejects_inconsistent_arithmetic_without_reading(
+        tmp_path, case, settings, snapshot, kind):
+    sim, inp, out = tmp_path / "synthetic.sim", tmp_path / "synthetic.dat", tmp_path / "results"
+    sim.write_bytes(b"synthetic simulation")
+    inp.write_bytes(b"synthetic input")
+    reads = []
+
+    class FakeAdapter:
+        def read(self, *args):
+            reads.append(True)
+            return snapshot
+
+    adapter = FakeAdapter()
+    paths = export_results(sim, inp, case, settings, out, adapter)
+    path = paths[0 if kind == "strength" else 1]
+    doc = read_document(path)
+    if kind == "strength":
+        doc["von_mises_stress_MPa"][2] = 720
+        doc["envelopes"]["von_mises_stress_MPa"]["max"][2] = 720
+    else:
+        doc["hot_spots"][0]["range_histogram"][0]["stress_range_MPa"] = 400
+    path.write_text(json.dumps(doc))
+    retained = {p: p.read_bytes() for p in paths}
+    with pytest.raises(ValueError):
+        export_results(sim, inp, case, settings, out, adapter)
+    assert len(reads) == 1
+    assert {p: p.read_bytes() for p in paths} == retained
+
+
+def test_enforced_factor_records_versioned_assumption(case, settings, snapshot, run):
+    strength, _ = build_documents(snapshot, case, settings, run)
+    method = strength["utilisation_method"]
+    assert method["design_case_factor"] == 1.2
+    assert method["design_case_factor_source"] == (
+        "docs/domains/risers/results-exchange/basis-v1.md#strength-screening-inputs")
+    assert method["design_case_factor_status"] == "assumed, based on previous experience"
+    basis = Path(method["design_case_factor_source"].split("#")[0])
+    assert basis.is_file()
+    assert "extreme `C_f=1.2`" in basis.read_text()
+
+
+@pytest.mark.parametrize("condition,factor", [("extreme", 1), ("functional", 1.2)])
+def test_enforced_factor_rejects_other_values(case, settings, snapshot, run, condition, factor):
+    settings.update(load_condition=condition, design_case_factor=factor)
+    with pytest.raises(ValueError, match="screening basis"):
+        build_documents(snapshot, case, settings, run)
