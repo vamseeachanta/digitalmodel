@@ -23,6 +23,7 @@ from matplotlib.figure import Figure
 from matplotlib.patches import ConnectionPatch
 
 from digitalmodel.riser_study.results_exchange import (
+    CASE_MATRIX_V1, CASE_MATRIX_VERSION, EXCHANGE_CONTRACT,
     load_json, validate_campaign_run, validate_result,
 )
 
@@ -77,6 +78,10 @@ def _expected(path: Path) -> tuple[list[str], list[str], dict[str, Any]]:
             or len(states) != 3 or any(not isinstance(state, str) for state in states)
             or set(states) != {"F03", "F04", "F05"}):
         raise ValueError("cases must be unique and fatigue states must be F03, F04 and F05")
+    if (type(manifest.get("matrix_version")) is not int
+            or manifest["matrix_version"] != CASE_MATRIX_VERSION
+            or set(cases) != CASE_MATRIX_V1):
+        raise ValueError("case matrix version 1 requires all twelve size/wall/configuration cases")
     basis = manifest.get("basis_label")
     if not isinstance(basis, str) or not basis.strip():
         raise ValueError("case manifest requires a basis_label")
@@ -205,6 +210,7 @@ def _collect(results: Path, manifest: Path, criteria_file: Path,
         })
     phase_a = [r for r in ledger.values() if r["phase"] == "A"]
     return {
+        "exchange_contract": EXCHANGE_CONTRACT, "matrix_version": CASE_MATRIX_VERSION,
         "basis_label": campaign["basis_label"], "criteria": criteria,
         "fatigue_sea_state_ids": states, "fatigue_resolved": resolved,
         "rows": rows, "count_strength": sum(row["meets_strength"] for row in rows),

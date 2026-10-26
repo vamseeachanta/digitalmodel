@@ -709,6 +709,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/riser_fatigue/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_fatigue
+  - module: riser_study
+    entry_point: src/digitalmodel/riser_study/
+    maturity: beta
+    owner_wiki: src/digitalmodel/riser_study/README.md
+    key_tests: [tests/riser_study/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_study
   - module: spectral_fatigue
     entry_point: src/digitalmodel/spectral_fatigue/
     maturity: development

@@ -1,0 +1,180 @@
+[
+  {
+    "kind": "strength",
+    "source_commit": "cd6e9edc3821b6332ae2aced0a887071addfc2f3",
+    "source_path": "tests/subsea/riser_study/test_riser_study.py",
+    "source_sha256": "1837a9eb4f030d9b48de4816b89a8f47aac01d0a5bab514f5d28a006c563eda5",
+    "fixture_function": "strength",
+    "record": {
+      "case_id": "R08-W1-SCR",
+      "software": {
+        "name": "synthetic",
+        "version": "fixture"
+      },
+      "load_case": {
+        "id": "synthetic-extreme",
+        "wave": {
+          "Hs_m": 0
+        },
+        "current": {
+          "speed_m_s": 0
+        },
+        "offset": {
+          "x_m": 0,
+          "y_m": 0
+        }
+      },
+      "arc_length_m": [
+        0,
+        50,
+        100
+      ],
+      "effective_tension_kN": [
+        120,
+        90,
+        70
+      ],
+      "bending_moment_kNm": [
+        0,
+        2,
+        1
+      ],
+      "von_mises_utilisation": [
+        0.4,
+        0.6,
+        0.5
+      ],
+      "method": "ASSUMED synthetic uniaxial von Mises stress / allowable",
+      "allowable": {
+        "value": 100,
+        "unit": "MPa",
+        "source": "ASSUMED synthetic"
+      },
+      "max_utilisation": {
+        "value": 0.6,
+        "arc_length_m": 50,
+        "location": "touchdown"
+      },
+      "touchdown": {
+        "arc_length_m": 50,
+        "utilisation": 0.6,
+        "stress_range_MPa": 12
+      },
+      "top_angle_deg": {
+        "static": 10,
+        "dynamic_min": 8,
+        "dynamic_max": 13
+      },
+      "hang_off_tension_kN": {
+        "static": 120,
+        "dynamic_max": 140
+      },
+      "run": {
+        "input_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "result_file": "exports/synthetic.json",
+        "date": "2026-10-26"
+      }
+    }
+  },
+  {
+    "kind": "fatigue",
+    "source_commit": "cd6e9edc3821b6332ae2aced0a887071addfc2f3",
+    "source_path": "tests/subsea/riser_study/test_riser_study.py",
+    "source_sha256": "1837a9eb4f030d9b48de4816b89a8f47aac01d0a5bab514f5d28a006c563eda5",
+    "fixture_function": "fatigue",
+    "record": {
+      "case_id": "R08-W1-SCR",
+      "sea_state": {
+        "id": "synthetic-1",
+        "Hs_m": 2,
+        "Tp_s": 8,
+        "direction_deg": 0,
+        "occurrence": 0.1
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 50,
+          "stress_range_MPa": 12,
+          "cycles_per_year": 1000,
+          "scf": 1
+        }
+      ],
+      "sn_curve": {
+        "name": "synthetic",
+        "source": "ASSUMED synthetic",
+        "m": 3,
+        "log_a": 12,
+        "thickness_correction": 1
+      },
+      "damage_per_year": 0.01,
+      "life_years": 100,
+      "run": {
+        "input_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "result_file": "exports/synthetic.json",
+        "date": "2026-10-26"
+      }
+    }
+  },
+  {
+    "kind": "fatigue",
+    "source_commit": "c399d80ea0ec2ab1e6f7fea359268da399145847",
+    "source_path": "tests/subsea/riser_study/test_riser_fatigue_runs.py",
+    "source_sha256": "e0fffb4f11fc12780b31878dfc4ba4b0891f73ebbbbaae43a4b6df55e381b9db",
+    "fixture_function": "record",
+    "record": {
+      "case_id": "R08-W1-SCR",
+      "sea_state": {
+        "id": "S1",
+        "Hs_m": 2.0,
+        "Tp_s": 8.0,
+        "direction_deg": 0.0,
+        "occurrence": 0.2
+      },
+      "hot_spots": [
+        {
+          "name": "touchdown",
+          "arc_length_m": 1000.0,
+          "stress_range_MPa": 100.0,
+          "cycles_per_year": 1000000.0,
+          "scf": 1.0
+        },
+        {
+          "name": "hang_off",
+          "arc_length_m": 0.0,
+          "stress_range_MPa": 50.0,
+          "cycles_per_year": 1000000.0,
+          "scf": 1.0
+        }
+      ],
+      "sn_curve": {
+        "name": "ASSUMED synthetic power law",
+        "source_label": "ASSUMED",
+        "m": 3.0,
+        "log_a": 12.0,
+        "thickness_correction": null
+      },
+      "damage_per_year": 0.2,
+      "run": {
+        "input_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "result_file": "synthetic-results.json",
+        "date": "2026-10-25",
+        "data_basis": "synthetic"
+      },
+      "arc_distribution": [
+        {
+          "arc_length_m": 0.0,
+          "stress_range_MPa": 50.0,
+          "cycles_per_year": 1000000.0,
+          "scf": 1.0
+        },
+        {
+          "arc_length_m": 1000.0,
+          "stress_range_MPa": 100.0,
+          "cycles_per_year": 1000000.0,
+          "scf": 1.0
+        }
+      ]
+    }
+  }
+]

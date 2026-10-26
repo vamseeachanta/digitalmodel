@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:digitalmodel:riser-results:v1",
   "title": "Exported riser strength or fatigue result",
   "oneOf": [{"$ref": "#/$defs/strength"}, {"$ref": "#/$defs/fatigue"}],
   "$defs": {
@@ -29,7 +30,7 @@
       }
     },
     "allowable": {
-      "type": "object", "required": ["value", "unit", "basis_label", "source"],
+      "type": "object", "required": ["value", "unit", "source"],
       "properties": {
         "value": {"$ref": "#/$defs/positive"}, "unit": {"$ref": "#/$defs/text"},
         "basis_label": {"$ref": "#/$defs/text"}, "source": {"$ref": "#/$defs/text"}
@@ -100,6 +101,23 @@
         "damage_per_year": {"$ref": "#/$defs/nonnegative"}
       }
     },
+    "thickness_correction": {
+      "description": "Null records no applied correction; a number is an exported stress-range multiplier; an object records thickness inputs. The reader performs no correction calculation.",
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/positive"},
+        {
+          "type": "object",
+          "required": ["thickness_mm", "reference_thickness_mm", "exponent", "source_label"],
+          "properties": {
+            "thickness_mm": {"$ref": "#/$defs/positive"},
+            "reference_thickness_mm": {"$ref": "#/$defs/positive"},
+            "exponent": {"$ref": "#/$defs/nonnegative"},
+            "source_label": {"$ref": "#/$defs/text"}
+          }
+        }
+      ]
+    },
     "fatigue": {
       "type": "object", "required": ["case_id", "sea_state", "hot_spots", "sn_curve", "damage_per_year", "run"],
       "properties": {
@@ -114,11 +132,13 @@
         },
         "hot_spots": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/hot_spot"}},
         "sn_curve": {
-          "type": "object", "required": ["name", "source", "m", "log_a", "thickness_correction"],
+          "type": "object", "required": ["name", "m", "log_a", "thickness_correction"],
+          "anyOf": [{"required": ["source"]}, {"required": ["source_label"]}],
           "properties": {
             "name": {"$ref": "#/$defs/text"}, "source": {"$ref": "#/$defs/text"},
+            "source_label": {"$ref": "#/$defs/text"},
             "m": {"$ref": "#/$defs/positive"}, "log_a": {"type": "number"},
-            "thickness_correction": {"$ref": "#/$defs/positive"}
+            "thickness_correction": {"$ref": "#/$defs/thickness_correction"}
           }
         },
         "damage_per_year": {"$ref": "#/$defs/nonnegative"}, "life_years": {"$ref": "#/$defs/positive"},

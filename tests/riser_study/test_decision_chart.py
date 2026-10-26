@@ -90,7 +90,7 @@ def exchange(tmp_path):
                 "damage_per_year": max(td, ho), "run": run(f"{case}-{state}"),
             }
             write_json(tmp_path / "results" / case / f"fatigue-{state}.json", fatigue)
-    manifest = {"basis_label": "synthetic", "fatigue_sea_state_ids": ["F03", "F04", "F05"],
+    manifest = {"matrix_version": 1, "basis_label": "synthetic", "fatigue_sea_state_ids": ["F03", "F04", "F05"],
                 "cases": [{"case_id": case} for case in HAND], "runs": runs}
     write_json(tmp_path / "cases.json", manifest)
     write_json(tmp_path / "fatigue-tokens.json",
@@ -507,3 +507,104 @@ def test_damage_ties_use_stable_station_order(exchange):
     data = run_generation(exchange)
     assert data["rows"][0]["damage_arc_length_m"] == 0
     assert data["rows"][0]["damage_location"] == "hang_off"
+
+
+@pytest.mark.parametrize("retained", [1, 11])
+def test_manifest_and_exports_cannot_omit_competitors(exchange, retained):
+    manifest = load_json(exchange / "cases.json")
+    manifest["cases"] = manifest["cases"][:retained]
+    keep = {row["case_id"] for row in manifest["cases"]}
+    for folder in (exchange / "results").iterdir():
+        if folder.name not in keep:
+            folder.rename(exchange / folder.name)
+    write_json(exchange / "cases.json", manifest)
+    with pytest.raises(ValueError, match="matrix"):
+        run_generation(exchange)
+    assert not (exchange / "out").exists()
+
+
+@pytest.mark.parametrize("offset", ["+00:60", "-00:60", "+01:99", "+24:00", "-24:00"])
+def test_rfc3339_rejects_out_of_range_offsets(exchange, offset):
+    data = load_json(exchange / "results/R08-W1-SCR/strength.json")
+    data["run"]["date"] = "2026-10-25T12:00:00" + offset
+    with pytest.raises(ValueError):
+        validate_result(data, "strength")
+
+
+@pytest.mark.parametrize("index", range(3))
+def test_peer_export_records_match_shared_contract(index):
+    fixture = load_json(FIXTURES / "peer-records.json")[index]
+    validate_result(fixture["record"], fixture["kind"])
+
+
+@pytest.mark.parametrize("correction", [None, {
+    "thickness_mm": 40, "reference_thickness_mm": 20,
+    "exponent": 1, "source_label": "ASSUMED synthetic correction",
+}])
+def test_peer_fatigue_thickness_metadata(exchange, correction):
+    data = load_json(exchange / "results/R08-W1-SCR/fatigue-F03.json")
+    data["sn_curve"]["source_label"] = data["sn_curve"].pop("source")
+    data["sn_curve"]["thickness_correction"] = correction
+    validate_result(data, "fatigue")
+
+
+@pytest.mark.parametrize("correction", [0, -1, True, {}, {
+    "thickness_mm": 0, "reference_thickness_mm": 20,
+    "exponent": 1, "source_label": "ASSUMED",
+}])
+def test_invalid_thickness_metadata_is_rejected(exchange, correction):
+    data = load_json(exchange / "results/R08-W1-SCR/fatigue-F03.json")
+    data["sn_curve"]["thickness_correction"] = correction
+    with pytest.raises(ValueError):
+        validate_result(data, "fatigue")
+
+
+@pytest.mark.parametrize("version", [None, True, 0, 2, "1"])
+def test_unknown_or_missing_matrix_version_is_rejected(exchange, version):
+    data = load_json(exchange / "cases.json")
+    if version is None:
+        del data["matrix_version"]
+    else:
+        data["matrix_version"] = version
+    write_json(exchange / "cases.json", data)
+    with pytest.raises(ValueError, match="matrix"):
+        run_generation(exchange)
+    assert not (exchange / "out").exists()
+
+
+def test_versioned_contract_is_recorded_in_output(exchange):
+    from digitalmodel.riser_study.results_exchange import EXCHANGE_CONTRACT, exchange_schema
+    from jsonschema import Draft202012Validator
+
+    schema = exchange_schema()
+    Draft202012Validator.check_schema(schema)
+    assert schema["$id"] == EXCHANGE_CONTRACT == "urn:digitalmodel:riser-results:v1"
+    data = run_generation(exchange)
+    assert data["exchange_contract"] == EXCHANGE_CONTRACT
+    assert data["matrix_version"] == 1
+    assert len(data["rows"]) == 12
+
+
+def test_peer_metadata_is_accepted_by_decision_reader(exchange):
+    for path in (exchange / "results").glob("*/strength.json"):
+        data = load_json(path)
+        del data["allowable"]["basis_label"]
+        write_json(path, data)
+    for path in (exchange / "results").glob("*/fatigue-*.json"):
+        data = load_json(path)
+        data["sn_curve"]["source_label"] = data["sn_curve"].pop("source")
+        data["sn_curve"]["thickness_correction"] = None
+        write_json(path, data)
+    data = run_generation(exchange)
+    assert data["rows"][0]["annual_benchmark_damage"] == pytest.approx(0.06)
+    tokens = load_json(exchange / "out/tokens.json")
+    assert tokens["V-ANS-OD1"]["value"] == "SLWR W2"
+
+
+@pytest.mark.parametrize("source", ["source", "source_label"])
+def test_fatigue_source_must_be_nonblank(exchange, source):
+    data = load_json(exchange / "results/R08-W1-SCR/fatigue-F03.json")
+    data["sn_curve"].pop("source")
+    data["sn_curve"][source] = " "
+    with pytest.raises(ValueError):
+        validate_result(data, "fatigue")

@@ -17,19 +17,36 @@ benchmark, not service life. It has no qualified service acceptance line.
 ## Inputs
 
 Provide a case manifest, a strength-screen criteria file, an upstream fatigue
-token file, and a results directory. The case manifest lists completed cases
-ready for the decision comparison and the complete Phase A run ledger. Every
-listed case requires at least one qualified Phase A strength export and all
+token file, and a results directory. The case manifest declares `matrix_version: 1` and contains exactly twelve
+cases: the Cartesian product of sizes 08/10/12, walls W1/W2 and SCR/SLWR.
+It also contains the complete Phase A run ledger. Subsets are rejected even
+when the manifest and exports omit the same competitor. No partial ranking
+mode is supported. Every case requires at least one qualified Phase A strength export and all
 three fatigue exports. Missing, duplicate, mismatched and unexpected exports
 are rejected before an output directory is created.
 
-Example manifest structure for synthetic inputs:
+Manifest structure for synthetic inputs (the run ledger shown is an excerpt;
+all twelve cases require their own strength and fatigue run entries):
 
 ```json
 {
+  "matrix_version": 1,
   "basis_label": "synthetic",
   "fatigue_sea_state_ids": ["F03", "F04", "F05"],
-  "cases": [{"case_id": "R08-W1-SCR"}],
+  "cases": [
+    {"case_id": "R08-W1-SCR"},
+    {"case_id": "R08-W1-SLWR"},
+    {"case_id": "R08-W2-SCR"},
+    {"case_id": "R08-W2-SLWR"},
+    {"case_id": "R10-W1-SCR"},
+    {"case_id": "R10-W1-SLWR"},
+    {"case_id": "R10-W2-SCR"},
+    {"case_id": "R10-W2-SLWR"},
+    {"case_id": "R12-W1-SCR"},
+    {"case_id": "R12-W1-SLWR"},
+    {"case_id": "R12-W2-SCR"},
+    {"case_id": "R12-W2-SLWR"}
+  ],
   "runs": [
     {"id": "strength-example", "phase": "A", "status": "completed", "qualified": true},
     {"id": "fatigue-f03", "phase": "A", "status": "completed", "qualified": true},
@@ -57,7 +74,10 @@ repeat the fatigue mesh, time-step or split-history checks.
 ## Shared exchange contract
 
 The reader imports validation from `results_exchange.py` and uses the single
-`results.schema.json` contract. No solver or standards document is loaded.
+`results.schema.json` contract, identified by `urn:digitalmodel:riser-results:v1`.
+`exchange_schema()` exposes this contract to consumers; the decision reader
+imports its validator and matrix constants rather than defining another schema.
+No solver or standards document is loaded.
 Existing strength arrays and provenance remain required. The following fields
 make the decision inputs explicit:
 
@@ -78,10 +98,31 @@ make the decision inputs explicit:
   fatigue export must be eligible. Excluded strength exports remain in input
   provenance. Duplicate run identifiers across exports are rejected.
 
-Missing metadata is rejected rather than inferred. The shared schema retains
-compatibility with older consumers, while this reader requires the explicit
-fields above. Dates accept calendar dates or timestamps with a timezone;
-leap-second timestamps are unsupported. Non-finite numbers, invalid dates,
+Version 1 preserves the following recorded metadata forms:
+
+- `allowable` requires positive `value`, `unit` and `source`; `basis_label` is
+  optional. No basis label is invented when it is absent.
+- `sn_curve` requires a source in `source` or `source_label`. Each supplied
+  source must be nonblank. `thickness_correction` is either a positive exported
+  stress-range multiplier, null (no correction applied), or an object with
+  positive `thickness_mm` and `reference_thickness_mm`, nonnegative `exponent`
+  and nonblank `source_label`. These forms are retained without conversion.
+  This reader sums recorded damage and applies no thickness correction.
+
+`tests/riser_study/fixtures/peer-records.json` contains strength and fatigue
+records extracted from peer test functions. Each entry pins the source commit,
+repository path, function name and source SHA-256. Tests validate those records
+unchanged, including a missing allowable basis and null correction, then check
+structured corrections separately. These establish structural compatibility
+with those fixtures only. The peer consumers are absent from this branch;
+import migration on their branches remains unverified. The separate exporter
+contract using `utilisation_method`, stress envelopes and multiple fibres also
+requires a versioned adapter before it can feed this reader; its compatibility
+is not claimed.
+
+Missing required metadata is rejected rather than inferred. This reader also
+requires the explicit qualification and station-damage fields above. Dates accept calendar dates or timestamps with a timezone;
+offset hours must be 00–23 and minutes 00–59. Leap-second timestamps are unsupported. Non-finite numbers, invalid dates,
 negative damage and inconsistent strength arrays are rejected. The validator
 checks structure and sampled consistency; it cannot establish that an exported
 U1 method, annualisation, allowable or qualification record is correct.
@@ -120,15 +161,15 @@ set supplies the configuration and wall. Ties, no strength-passing candidate,
 or unresolved fatigue produce `ranking unresolved`. Strength flags and counts
 remain available independently of the ranking.
 
-`tokens.json` contains exactly the ten registered decision IDs above. Every
+`tokens.json` contains exactly the ten decision IDs above. Every
 entry includes a `source_file`; figure and table entries link their artifacts
 and CSV data. No criteria table is emitted. `manifest.json` retains unrounded
 rows, the governing strength run and damage station, the resolution status,
-run ledger and counts, input SHA-256 digests, and output SHA-256 digests. It
+run ledger and counts, exchange-contract identity, matrix version, input SHA-256 digests, and output SHA-256 digests. It
 does not hash itself. Both CSV files contain the same unrounded rows. Display
 values use one decimal place, with scientific notation for damage.
 
-The token list follows the supplied draft-3 analysis map. The underlying ruling
+The token list follows the supplied analysis map. The underlying ruling
 is absent from this module's starting commit message and README. Engineering
 results and Phase B completion are not established by the synthetic tests.
 The tests use hand-enumerated strength counts and damage sums. Their static

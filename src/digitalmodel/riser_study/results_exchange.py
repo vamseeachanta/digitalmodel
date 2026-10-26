@@ -16,6 +16,14 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 
 FORMAT_CHECKER = FormatChecker()
+EXCHANGE_CONTRACT = "urn:digitalmodel:riser-results:v1"
+CASE_MATRIX_VERSION = 1
+CASE_MATRIX_V1 = frozenset(
+    f"R{size}-{wall}-{configuration}"
+    for size in ("08", "10", "12")
+    for wall in ("W1", "W2")
+    for configuration in ("SCR", "SLWR")
+)
 
 
 @FORMAT_CHECKER.checks("date-time", raises=ValueError)
@@ -25,7 +33,10 @@ def _date_time(value: Any) -> bool:
     # accepting any string when that optional checker is unavailable.
     if not isinstance(value, str):
         return True
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}[Tt]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[Zz]|[+-]\d{2}:\d{2})", value):
+    if not re.fullmatch(
+        r"[0-9]{4}-[0-9]{2}-[0-9]{2}[Tt][0-9]{2}:[0-9]{2}:[0-9]{2}"
+        r"(?:\.[0-9]+)?(?:[Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])", value
+    ):
         return False
     datetime.fromisoformat(value.upper().replace("Z", "+00:00"))
     return True
@@ -73,7 +84,7 @@ class Allowable(TypedDict):
 
     value: float
     unit: str
-    basis_label: str
+    basis_label: NotRequired[str]
     source: str
 
 
@@ -157,14 +168,24 @@ class HotSpot(TypedDict):
     damage_per_year: NotRequired[float]
 
 
+class ThicknessCorrection(TypedDict):
+    """Recorded thickness inputs, without calculating a correction here."""
+
+    thickness_mm: float
+    reference_thickness_mm: float
+    exponent: float
+    source_label: str
+
+
 class SNCurve(TypedDict):
     """Exporter-supplied curve parameters; this package computes no damage."""
 
     name: str
-    source: str
+    source: NotRequired[str]
+    source_label: NotRequired[str]
     m: float
     log_a: float
-    thickness_correction: float
+    thickness_correction: float | ThicknessCorrection | None
 
 
 class FatigueResult(TypedDict):
@@ -242,7 +263,7 @@ def validate_result(data: dict[str, Any], kind: str) -> None:
 def _validate_schema(data: dict[str, Any], kind: str) -> None:
     """Apply the single shared schema to one exchange record."""
     _finite_tree(data)
-    schema = json.loads(files(__package__).joinpath("results.schema.json").read_text())
+    schema = exchange_schema()
     validator = Draft202012Validator(
         {"$ref": f"#/$defs/{kind}", "$defs": schema["$defs"]},
         format_checker=FORMAT_CHECKER,
@@ -251,6 +272,11 @@ def _validate_schema(data: dict[str, Any], kind: str) -> None:
     if errors:
         # Do not echo raw exporter values, paths or arbitrary metadata.
         raise ValueError(f"{kind} record violates exchange schema")
+
+
+def exchange_schema() -> dict[str, Any]:
+    """Return the versioned structural contract used by exchange consumers."""
+    return json.loads(files(__package__).joinpath("results.schema.json").read_text())
 
 
 def validate_campaign_run(data: dict[str, Any]) -> None:
