@@ -35,6 +35,14 @@ def _reach(value: Any) -> float:
     return number
 
 
+def _basis(value: Any) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("reach_basis must be text describing the engineering criterion")
+    return value.strip() or None
+
+
 def _points(raw: Any) -> list[tuple[float, float, float]]:
     if not isinstance(raw, list):
         raise ValueError("coordinates must be a list of Cartesian triples in metres")
@@ -68,7 +76,7 @@ def _adjacent_spacing(anodes: list[tuple[float, float, float]]) -> float:
     return longest
 
 
-def _zone_screen(raw: Mapping[str, Any], reach: float) -> dict[str, Any]:
+def _zone_screen(raw: Mapping[str, Any], reach: float, basis: str | None) -> dict[str, Any]:
     anodes = _points(raw.get("anode_positions_m", []))
     points = _points(raw.get("governing_points_m", []))
     spacing = _adjacent_spacing(anodes) if anodes else None
@@ -82,6 +90,8 @@ def _zone_screen(raw: Mapping[str, Any], reach: float) -> dict[str, Any]:
             "margin_m": reach - distance if distance is not None else None,
         })
     reasons = []
+    if basis is None:
+        reasons.append("Reach is unqualified: supply an explicit reach and its engineering basis")
     if not anodes:
         reasons.append("No zone-local anode positions supplied")
     if not points:
@@ -97,7 +107,7 @@ def _zone_screen(raw: Mapping[str, Any], reach: float) -> dict[str, Any]:
         if reach_margin is not None and spacing_margin is not None else None
     )
     return {
-        "status": "FLAG" if reasons else "PASS", "reach_m": reach,
+        "status": "FLAG" if reasons else "PASS", "reach_m": reach, "reach_basis": basis,
         "max_spacing_m": spacing, "spacing_limit_m": 2 * reach,
         "spacing_margin_m": spacing_margin, "reach_margin_m": reach_margin,
         "margin_m": margin,
@@ -111,12 +121,16 @@ def screen_current_distribution(
     """Return PASS/FLAG and signed margins for every protected zone.
 
     Missing geometry yields FLAG and an unknown margin, never an inferred PASS.
-    A supplied reach overrides the illustrative default; zone reach overrides
-    the global reach. Positive margins indicate clearance to the chosen limit.
+    PASS requires an explicit reach and a nonblank engineering reach_basis.
+    A zone reach override requires its own basis; otherwise both are inherited.
+    Unqualified reaches retain illustrative margins but always produce FLAG.
     """
-    if set(config) - {"reach_m", "zones"}:
+    if set(config) - {"reach_m", "reach_basis", "zones"}:
         raise ValueError("current_distribution contains unknown input keys")
     reach = _reach(config.get("reach_m", DEFAULT_REACH_M))
+    basis = _basis(config.get("reach_basis"))
+    if "reach_m" not in config:
+        basis = None
     zones = config.get("zones", {})
     if not isinstance(zones, Mapping):
         raise ValueError("current_distribution.zones must be a mapping")
@@ -127,16 +141,21 @@ def screen_current_distribution(
         raw = zones.get(name, {})
         if not isinstance(raw, Mapping):
             raise ValueError("current_distribution zone must be a mapping")
-        if set(raw) - {"reach_m", "anode_positions_m", "governing_points_m"}:
+        if set(raw) - {"reach_m", "reach_basis", "anode_positions_m", "governing_points_m"}:
             raise ValueError("current_distribution zone contains unknown input keys")
-        results[name] = _zone_screen(raw, _reach(raw.get("reach_m", reach)))
-    basis = (
-        "User input; user to confirm against the governing code"
+        local_basis = _basis(raw.get("reach_basis"))
+        if "reach_m" not in raw and "reach_basis" not in raw:
+            local_basis = basis
+        if "reach_m" not in raw and "reach_m" not in config:
+            local_basis = None
+        results[name] = _zone_screen(raw, _reach(raw.get("reach_m", reach)), local_basis)
+    description = basis or (
+        "User-supplied reach without an engineering basis; confirmation required"
         if "reach_m" in config else DEFAULT_REACH_BASIS
     )
     return {
         "reach_m": reach,
-        "reach_basis": basis,
+        "reach_basis": description,
         "spacing_method": "Longest edge of zone-local Euclidean minimum spanning tree",
         "scope": "Governing points only; shielding, potential and continuity are not computed",
         "zones": results,

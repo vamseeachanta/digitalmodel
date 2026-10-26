@@ -16,7 +16,7 @@ from digitalmodel.cathodic_protection.design_screening import (
 def screen(anodes, points, reach=5):
     """Screen one active zone with coordinates expressed in metres."""
     return screen_current_distribution(
-        {"reach_m": reach, "zones": {"steel": {
+        {"reach_m": reach, "reach_basis": "Specified synthetic geometric criterion", "zones": {"steel": {
             "anode_positions_m": anodes, "governing_points_m": points,
         }}},
         ["steel"],
@@ -30,6 +30,7 @@ def test_boundary_reach_and_spacing_pass():
     assert result["reach_margin_m"] == 0
     assert result["margin_m"] == 0
     assert result["max_spacing_m"] == 10
+    assert result["reach_basis"] == "Specified synthetic geometric criterion"
 
 
 def test_every_point_uses_nearest_anode_in_three_dimensions():
@@ -82,10 +83,75 @@ def test_unspecified_protected_zone_is_flagged():
 
 def test_zone_reach_override():
     result = screen_current_distribution({"reach_m": 1, "zones": {"steel": {
-        "reach_m": 6, "anode_positions_m": [[0, 0, 0]],
+        "reach_m": 6, "reach_basis": "Specified local geometric criterion",
+        "anode_positions_m": [[0, 0, 0]],
         "governing_points_m": [[0, 0, 5]],
     }}}, ["steel"])
     assert result["zones"]["steel"]["margin_m"] == 1
+    assert result["zones"]["steel"]["status"] == "PASS"
+
+
+@pytest.mark.parametrize("criterion", [
+    {}, {"reach_basis": "A basis without an explicit reach"},
+    {"reach_m": 4}, {"reach_m": 4, "reach_basis": None},
+    {"reach_m": 4, "reach_basis": ""}, {"reach_m": 4, "reach_basis": " \t\n"},
+])
+def test_unqualified_reach_flags_even_when_geometric_limits_are_met(criterion):
+    result = screen_current_distribution({**criterion, "zones": {"steel": {
+        "anode_positions_m": [[0, 0, 0]], "governing_points_m": [[0, 0, 4]],
+    }}}, ["steel"])["zones"]["steel"]
+    assert result["status"] == "FLAG"
+    assert any("basis" in reason for reason in result["reasons"])
+    assert result["reach_basis"] is None
+    # One anode: spacing = 0; reach margin = 4 - 4 = 0; limit = 2 * 4 = 8 m.
+    assert result["max_spacing_m"] == pytest.approx(0)
+    assert result["reach_margin_m"] == pytest.approx(0)
+    assert result["spacing_limit_m"] == pytest.approx(8)
+    json.dumps(result, allow_nan=False)
+
+
+def test_zone_override_cannot_borrow_the_global_reach_basis():
+    result = screen_current_distribution({
+        "reach_m": 1, "reach_basis": "Basis for the global one-metre criterion",
+        "zones": {"steel": {"reach_m": 6, "anode_positions_m": [[0, 0, 0]],
+                            "governing_points_m": [[0, 0, 5]]}},
+    }, ["steel"])["zones"]["steel"]
+    assert result["status"] == "FLAG"
+    assert result["reach_margin_m"] == pytest.approx(1)
+    assert result["reach_basis"] is None
+    assert any("basis" in reason for reason in result["reasons"])
+
+
+def test_zone_basis_without_any_explicit_reach_cannot_qualify_the_default():
+    result = screen_current_distribution({"zones": {"steel": {
+        "reach_basis": "A basis without an explicit reach",
+        "anode_positions_m": [[0, 0, 0]], "governing_points_m": [[0, 0, 4]],
+    }}}, ["steel"])["zones"]["steel"]
+    assert result["status"] == "FLAG"
+    assert result["reach_basis"] is None
+
+
+def test_zone_inherits_a_global_reach_and_its_basis():
+    result = screen_current_distribution({
+        "reach_m": 5, "reach_basis": "  Specified global geometric criterion  ",
+        "zones": {"steel": {"anode_positions_m": [[0, 0, 0]],
+                            "governing_points_m": [[0, 0, 5]]}},
+    }, ["steel"])
+    zone = result["zones"]["steel"]
+    assert zone["status"] == "PASS"
+    assert zone["reach_basis"] == result["reach_basis"] == "Specified global geometric criterion"
+
+
+@pytest.mark.parametrize("local", [False, True])
+@pytest.mark.parametrize("basis", [True, 4, [], {}, float("nan")])
+def test_non_text_reach_basis_is_rejected(basis, local):
+    config = {"reach_m": 5, "zones": {"steel": {
+        "anode_positions_m": [[0, 0, 0]], "governing_points_m": [[0, 0, 4]],
+    }}}
+    target = config["zones"]["steel"] if local else config
+    target["reach_basis"] = basis
+    with pytest.raises(ValueError, match="reach_basis"):
+        screen_current_distribution(config, ["steel"])
 
 
 @pytest.mark.parametrize("reach", [0, -1, float("nan"), float("inf"), True, "bad"])

@@ -15,29 +15,39 @@ def _number(value: float | None) -> str:
     return "Unknown" if value is None else f"{value:.1f}"
 
 
+def _screen_number(value: float | None) -> str:
+    return "Unknown" if value is None else f"{value:.3g}"
+
+
 def _distribution_section(screen: Mapping[str, Any]) -> Section:
     rows = []
     point_rows = []
     for name, zone in screen["zones"].items():
         rows.append([
-            name, zone["status"], _number(zone["reach_m"]),
-            _number(zone["max_spacing_m"]), _number(zone["spacing_limit_m"]),
-            _number(zone["spacing_margin_m"]), _number(zone["reach_margin_m"]),
-            _number(zone["margin_m"]), "; ".join(zone["reasons"]) or "Limits met",
+            name, zone["status"], str(zone["reach_m"]),
+            _screen_number(zone["max_spacing_m"]), str(zone["spacing_limit_m"]),
+            _screen_number(zone["spacing_margin_m"]), _screen_number(zone["reach_margin_m"]),
+            _screen_number(zone["margin_m"]),
+            zone["reach_basis"] or "Unqualified: engineering basis required",
+            "; ".join(zone["reasons"]) or "Limits met",
         ])
         for index, point in enumerate(zone["points"]):
             point_rows.append([
-                name, index, ", ".join(_number(v) for v in point["coordinates_m"]),
-                point["nearest_anode_index"], _number(point["distance_m"]),
-                _number(point["margin_m"]),
+                name, index, ", ".join(str(v) for v in point["coordinates_m"]),
+                point["nearest_anode_index"], _screen_number(point["distance_m"]),
+                _screen_number(point["margin_m"]),
             ])
     return Section(key="current-distribution", title="Current-distribution screen", blocks=[
         TextBlock(markdown=(
-            f"{screen['reach_basis']} Zone reach inputs override the global reach. "
+            f"{screen['reach_basis']} Zone reach inputs override the global reach "
+            "and require their own engineering basis, shown beside each zone status. "
             f"Adjacent spacing: {screen['spacing_method']}; limit = twice the zone reach. "
             "Margins are limit minus measured distance; the zone margin is the smaller "
             "of spacing and reach margins. Verdicts use unrounded values. "
             "Missing positions or governing points produce FLAG and an unknown margin. "
+            "A missing explicit reach or engineering basis produces FLAG even when "
+            "the illustrative margins are positive. A supplied basis is recorded, "
+            "not independently validated by this screen. "
             "Only supplied governing points and zone-local anodes are screened. "
             "A PASS does not establish protection: shielding, obstructions, "
             "electrolyte paths, potential and electrical continuity require separate "
@@ -46,8 +56,8 @@ def _distribution_section(screen: Mapping[str, Any]) -> Section:
         )),
         TableBlock(title="Zone reach and spacing", columns=[
             "Zone", "Screen", "Reach", "Adjacent spacing", "Spacing limit",
-            "Spacing margin", "Reach margin", "Zone margin", "Reason",
-        ], units=["-", "-", "m", "m", "m", "m", "m", "m", "-"], rows=rows),
+            "Spacing margin", "Reach margin", "Zone margin", "Reach basis", "Reason",
+        ], units=["-", "-", "m", "m", "m", "m", "m", "m", "-", "-"], rows=rows),
         TableBlock(title="Governing points and nearest anodes", columns=[
             "Zone", "Point index", "Coordinates", "Nearest anode index", "Distance", "Reach margin",
         ], units=["-", "-", "m", "-", "m", "m"], rows=point_rows),

@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def base_cfg():
-    return yaml.safe_load((ROOT / "tests/fixtures/cathodic_protection/workflow_inputs/jacket.yml").read_text())
+    return yaml.safe_load((ROOT / "tests/fixtures/cathodic_protection/workflow_inputs/jacket.yml").read_text(encoding="utf-8"))
 
 
 def options(cfg):
@@ -71,6 +71,44 @@ def test_report_contains_screen_margins_comparison_and_manual_checklist():
         assert phrase in html
 
 
+@pytest.mark.parametrize("criterion", [{}, {"reach_m": 5}])
+def test_unqualified_reach_reason_is_reported_even_with_positive_margins(criterion):
+    cfg = base_cfg()
+    cfg["inputs"]["current_distribution"] = {**criterion, "zones": {"submerged": {
+        "anode_positions_m": [[0, 0, 0]], "governing_points_m": [[0, 0, 3]],
+    }}}
+    cfg = run_cathodic_protection(cfg)
+    zone = cfg["results"]["current_distribution"]["zones"]["submerged"]
+    assert zone["status"] == "FLAG"
+    assert zone["margin_m"] > 0
+    html = render_html(anode_design_report(cfg))
+    assert "FLAG" in html
+    assert "engineering basis" in html
+
+
+def test_report_binds_zone_status_to_its_own_criterion_and_preserves_input_precision():
+    cfg = base_cfg()
+    cfg["inputs"]["current_distribution"] = {
+        "reach_m": 1, "reach_basis": "Specified global geometric criterion",
+        "zones": {"submerged": {
+            "reach_m": 0.0254, "reach_basis": "Specified local geometric criterion",
+            "anode_positions_m": [[0, 0, 0]], "governing_points_m": [[0, 0, 0.0254]],
+        }},
+    }
+    cfg = run_cathodic_protection(cfg)
+    zone = cfg["results"]["current_distribution"]["zones"]["submerged"]
+    assert zone["status"] == "PASS"
+    section = next(s for s in anode_design_report(cfg).sections if s.key == "current-distribution")
+    table = next(b for b in section.blocks if isinstance(b, TableBlock))
+    row = dict(zip(table.columns, table.rows[0]))
+    assert row["Reach basis"] == "Specified local geometric criterion"
+    assert row["Reach"] == "0.0254"
+    assert row["Spacing limit"] == "0.0508"
+    html = render_html(anode_design_report(cfg))
+    assert "0.0254" in html
+    assert "Specified local geometric criterion" in html
+
+
 @pytest.mark.parametrize("key", ["calcareous", "current_distribution"])
 @pytest.mark.parametrize("value", [None, False, [], "bad"])
 def test_non_mapping_options_are_rejected(key, value):
@@ -96,9 +134,10 @@ def test_other_routes_reject_options():
 
 
 def test_worked_example_runs_to_html():
-    cfg = yaml.safe_load((ROOT / "examples/cathodic_protection/screening_and_calcareous.yml").read_text())
+    cfg = yaml.safe_load((ROOT / "examples/cathodic_protection/screening_and_calcareous.yml").read_text(encoding="utf-8"))
     result = run_cathodic_protection(cfg)["results"]
-    assert result["current_distribution"]["zones"]["submerged"]["status"] == "PASS"
+    assert result["current_distribution"]["zones"]["submerged"]["status"] == "FLAG"
+    assert any("basis" in reason for reason in result["current_distribution"]["zones"]["submerged"]["reasons"])
     assert result["calcareous"]["with_calcareous"]["total_mass_kg"] == pytest.approx(547.5)
     assert result["calcareous"]["without_calcareous"]["total_mass_kg"] == pytest.approx(1095)
     assert result["status"]["result"] == "FAIL"

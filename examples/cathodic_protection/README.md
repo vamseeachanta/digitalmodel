@@ -11,6 +11,7 @@ not adopt a reduction in the design.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-26 | Added synthetic geometry and demand sensitivity to demonstrate the optional calculations and their limits. |
+| 1 | 2026-10-26 | Required a supplied reach and engineering basis for a geometric PASS so illustrative limits remain flagged. |
 
 ## Current distribution
 
@@ -27,13 +28,22 @@ The screen does not generate a mesh or infer that a supplied point set covers
 the complete surface. Anodes are local to their assigned zone; a neighbouring
 zone's anode is not credited automatically.
 
-`reach_m` is a positive finite input, globally or per zone. A zone input overrides
-the global value. The documented default is **4.0 m**, half the **8.0 m** example
+`reach_m` is a positive finite input, globally or per zone. A geometric `PASS`
+requires an explicit reach and a nonblank text `reach_basis` describing its
+engineering criterion and source. The basis is recorded as supplied; the screen
+does not independently validate its engineering applicability. Zones inherit
+both global values unless overridden. A zone reach override requires its own
+`reach_basis`; a basis for a different global reach is not reused.
+
+The documented default is **4.0 m**, half the **8.0 m** example
 spacing in the repository's [ship workflow fixture](../../tests/fixtures/cathodic_protection/workflow_inputs/ships.yml).
 This is an illustrative geometric scale from existing repository data, with
 no validated offshore electrical reach implied. It is not a code-derived
 criterion: **user to confirm against the governing code**. The worked example
-explicitly supplies **5.0 m**, assumed, based on previous experience.
+explicitly supplies **5.0 m**, assumed, based on previous experience. Omitted
+reach or basis produces `FLAG` pending engineering confirmation, even where
+the illustrative margins meet the numeric limits. The worked example supplies
+no engineering basis and therefore remains flagged.
 
 For every supplied governing point, the screen records the nearest local anode,
 its straight-line distance and `reach − distance`. Adjacent anode spacing is
@@ -45,11 +55,13 @@ the geometric overlap convention already used by the pipeline route in
 reach is transferred to the offshore calculation. The spacing margin is
 `2 × reach − longest edge`. For a single anode, spacing is zero and reach
 still governs coverage. The zone margin is the smaller of the reach and
-spacing margins. A zero margin passes; any negative margin flags. Verdicts
-use unrounded values, while report numbers use one decimal place.
+spacing margins. A zero margin meets the geometric limit; any negative margin
+flags. A `PASS` also requires the explicit reach and basis described above.
+Verdicts use unrounded values. Report distances and margins use three significant
+figures; reach inputs and coordinates retain their supplied precision.
 
 `results.current_distribution` contains the per-zone `PASS` or `FLAG`, signed
-margins, reasons and individual point checks. A geometric PASS does not resolve
+margins, effective reach basis, reasons and individual point checks. A geometric PASS does not resolve
 shielding, obstructions, electrolyte paths, potential distribution or continuity.
 Review the governing points, reposition or add anodes where flagged, and confirm
 protection by engineering assessment and field measurements.
@@ -100,8 +112,9 @@ No external source or standard document was consulted for these supplements.
 | With illustrative factors | 2.0 | 4.2 | 16.6 | 547.5 | 3 |
 
 The three illustrative anode positions have adjacent spacing **10.0 m** and
-maximum governing-point distance **5.0 m**. Both margins are **0.0 m**, so the
-geometry screen passes. These positions describe the screen only; the reference
+maximum governing-point distance **5.0 m**. Both margins are **0.0 m**, meeting
+the illustrative geometric limits. The screen returns `FLAG` because an
+engineering reach basis is missing. These positions describe the screen only; the reference
 mass-only selection of **6** anodes fails the final current-output check; the
 reference route recommends **18** anodes. A reduction in mean demand does not
 establish that three installed anodes meet the final output demand. Develop and
@@ -125,7 +138,7 @@ from digitalmodel.cathodic_protection.report_adapters import anode_design_report
 from digitalmodel.reporting import render_html
 
 source = Path("examples/cathodic_protection/screening_and_calcareous.yml")
-cfg = run_cathodic_protection(yaml.safe_load(source.read_text()))
+cfg = run_cathodic_protection(yaml.safe_load(source.read_text(encoding="utf-8")))
 html = render_html(anode_design_report(cfg))
 ```
 
