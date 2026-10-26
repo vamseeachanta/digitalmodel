@@ -13,7 +13,10 @@ stiffeners; local plate and stiffener failure modes require separate analysis.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-26 | Add the derived column model, independent checks and reproducible CSV for subsequent stiffener studies. |
-| 1 | 2026-10-25 | Use title-based citations to meet the public-text requirement while retaining source traceability. |
+| 1 | 2026-10-26 | Use title-based citations to meet the public-text requirement while retaining source traceability. |
+| 2 | 2026-10-26 | Correct the citation revision date to match its UTC commit date and restore chronological order. |
+
+Revision dates use UTC.
 
 ## Basis and symbols
 
