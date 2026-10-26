@@ -407,6 +407,8 @@ Chart acceptance flags are computed from unrounded wave heights, durations and l
 Source-page retrieval records are separate from engineering acceptance evidence.</p>
 <p>Comment storage is provided below. In compatible browsers, selecting the report folder enables adjacent saving;
 otherwise the comment file is downloaded and placed beside this HTML. Comments are local review annotations and do not change calculation results.</p>
+<p>Only comment files labelled with the current report revision can be loaded.
+Keep older files with their corresponding report and review those notes separately before adding current comments.</p>
 </section>
 
 <aside class="review-controls" aria-label="Report review">
@@ -491,6 +493,7 @@ function windowChart() {
 }
 waveChart(); windowChart();
 const changes=JSON.parse(document.getElementById("engineering-changes").textContent);
+const currentRevision=changes.history[changes.history.length-1].revision;
 function showChanges() {
   const last=document.getElementById("last-revision").value;
   const selected=changes.history.findIndex(row=>row.revision===last);
@@ -508,7 +511,13 @@ for (const section of sections) {
 let comments=[], directory=null, savedText="[]";
 const status=document.getElementById("comment-status");
 function validComments(payload) {
-  if (payload.report!=="weather-window-module" || payload.revision!=="0" || !Array.isArray(payload.comments)) throw new Error("Comment file does not match this report revision.");
+  if (payload.report!=="weather-window-module" || !Array.isArray(payload.comments)) throw new Error("Comment file does not match this report revision.");
+  if (payload.revision!==currentRevision) {
+    const older=changes.history.slice(0,-1).some(row=>row.revision===payload.revision);
+    throw new Error(older
+      ? "Comments belong to an older report revision. Keep the original file and review those notes separately before adding current comments."
+      : "Comment file does not match this report revision.");
+  }
   if (!payload.comments.every(c=>typeof c.text==="string" && c.text.trim() && sections.some(s=>s.id===c.section))) throw new Error("Comment data is invalid.");
   return payload.comments.map(c=>({section:c.section,text:c.text}));
 }
@@ -548,7 +557,7 @@ document.getElementById("open-folder").addEventListener("click",async()=>{
 });
 document.getElementById("save-comments").addEventListener("click",async()=>{
   try {
-    const payload=JSON.stringify({report:"weather-window-module",revision:"0",comments},null,2)+"\n";
+    const payload=JSON.stringify({report:"weather-window-module",revision:currentRevision,comments},null,2)+"\n";
     if(directory) {
       const handle=await directory.getFileHandle("report.comments.json",{create:true});
       const writable=await handle.createWritable(); await writable.write(payload); await writable.close();

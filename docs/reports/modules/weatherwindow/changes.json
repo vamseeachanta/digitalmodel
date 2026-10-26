@@ -18,6 +18,14 @@
         "Chart colours and hover status preserve decisions from unrounded quantities; wave-height ticks match the drawn scale.",
         "The complete generated artifact, including audit metadata, is compared byte for byte to avoid overstating rebuild evidence."
       ]
+    },
+    {
+      "revision": "2",
+      "date": "2026-10-25",
+      "changes": [
+        "Saved comments and comment loading use the latest report-history revision so that new review evidence is attributed to the current report.",
+        "Older annotations are rejected with instructions to preserve and review the original file separately, preventing silent relabelling or replacement of current comments."
+      ]
     }
   ]
 }

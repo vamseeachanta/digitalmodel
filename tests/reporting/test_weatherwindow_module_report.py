@@ -167,7 +167,7 @@ def test_house_style_references_and_comment_controls():
     changes = json.loads(read_utf8(DIRECTORY / "changes.json"))
     assert changes["history"][0]["revision"] == "0"
     assert changes["history"][0]["changes"]
-    assert changes["history"][-1]["revision"] == "1"
+    assert changes["history"][-1]["revision"] == "2"
 
 
 def test_rounding_diagnostic_matches_documented_limitation():
@@ -220,7 +220,8 @@ def test_chart_decisions_use_unrounded_values():
     assert chart["windowAccepted"] == [False, True]
 
 
-def test_chart_and_comment_interaction_without_browser(tmp_path):
+@pytest.mark.parametrize("extra_revision", [None, "future"])
+def test_chart_and_comment_interaction_without_browser(tmp_path, extra_revision):
     """Exercise the delivered script using a minimal DOM and in-memory file handles."""
     node = shutil.which("node")
     assert node, "Node is required for the report interaction check"
@@ -230,6 +231,10 @@ def test_chart_and_comment_interaction_without_browser(tmp_path):
     metadata = dict(re.findall(
         r'<script id="([^"]+)" type="application/json">(.*?)</script>', text, re.S
     ))
+    if extra_revision:
+        revisions = json.loads(metadata["engineering-changes"])
+        revisions["history"].append({"revision": extra_revision, "changes": ["Test annotation revision."]})
+        metadata["engineering-changes"] = json.dumps(revisions)
     script = re.findall(r"<script>(.*?)</script>", text, re.S)[0]
     harness = r'''
 const assert = require("node:assert/strict");
@@ -279,7 +284,10 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
   assert.equal(get("comment-list").children[0].children.length,0);
   await get("save-comments").trigger("click");
   assert.deepEqual(downloads,["report.comments.json"]);
-  assert.equal(JSON.parse(await blobs[0].text()).comments.length,1);
+  const downloaded=JSON.parse(await blobs[0].text());
+  const history=JSON.parse(METADATA["engineering-changes"]).history;
+  assert.equal(downloaded.comments.length,1);
+  assert.equal(downloaded.revision,history.at(-1).revision);
   context.window.showDirectoryPicker=async()=>({getFileHandle:async(name,options)=>{
     if(name==="report.html") return {getFile:async()=>({text:async()=>REPORT_HTML})};
     if(!stored[name] && !options?.create) throw Object.assign(new Error(),{name:"NotFoundError"});
@@ -291,12 +299,44 @@ vm.createContext(context);vm.runInContext(SCRIPT,context);
   get("comment-text").value="Use unrounded quantities.";
   await get("add-comment").trigger("click");await get("save-comments").trigger("click");
   assert.equal(JSON.parse(stored["report.comments.json"]).comments[0].text,"Use unrounded quantities.");
+  assert.equal(JSON.parse(stored["report.comments.json"]).revision,history.at(-1).revision);
   await get("open-folder").trigger("click");
   assert.match(get("comment-list").children[0].textContent,/Use unrounded quantities/);
+  const loadFile=async payload=>get("load-comments").trigger("change",{
+    target:{files:[{text:async()=>JSON.stringify(payload)}]},
+  });
+  await loadFile(downloaded);
+  assert.equal(get("comment-status").textContent,"Comment file loaded.");
+  assert.match(get("comment-list").children[0].textContent,/<img>/);
+  const loadedText=()=>get("comment-list").children.map(e=>e.textContent);
+  const retained=loadedText(), savedFile=stored["report.comments.json"];
+  // Earlier evidence is neither silently relabelled nor substituted for current comments.
+  for(const revision of [...history.slice(0,-1).map(row=>row.revision),"unknown"]) {
+    const candidate={...downloaded,revision,comments:[{section:SECTION_IDS[0],text:"Other revision."}]};
+    await loadFile(candidate);
+    const message=revision==="unknown" ? /does not match this report revision/ : /older report revision/;
+    assert.match(get("comment-status").textContent,message);
+    assert.deepEqual(loadedText(),retained);
+    stored["report.comments.json"]=JSON.stringify(candidate);
+    await get("open-folder").trigger("click");
+    assert.match(get("comment-status").textContent,message);
+    assert.deepEqual(loadedText(),retained);
+    assert.equal(stored["report.comments.json"],JSON.stringify(candidate));
+  }
+  stored["report.comments.json"]=savedFile;
+  get("comment-text").value="Unsaved current comment.";
+  await get("add-comment").trigger("click");
+  const unsaved=loadedText();
+  await loadFile(downloaded);
+  assert.match(get("comment-status").textContent,/Save current comments/);
+  assert.deepEqual(loadedText(),unsaved);
+  await get("open-folder").trigger("click");
+  assert.match(get("comment-status").textContent,/Save current comments/);
+  assert.deepEqual(loadedText(),unsaved);
   get("last-revision").value="0";await get("last-revision").trigger("change");
   assert.match(get("change-list").textContent,/unrounded quantities/);
   assert.doesNotMatch(get("change-list").textContent,/documented using the existing/);
-  get("last-revision").value="1";await get("last-revision").trigger("change");
+  get("last-revision").value=history.at(-1).revision;await get("last-revision").trigger("change");
   assert.match(get("change-list").textContent,/No engineering changes/);
   // Re-render rounded-equal values using decisions generated from raw quantities.
   Object.assign(vm.runInContext("chart",context),BOUNDARY_CHART);
