@@ -147,16 +147,22 @@ class ReportInteraction:
         )
 
     def limit(self, vary, fixed=0.0, sign=1):
-        """Return a feasible limit; no curve is reported if the origin fails."""
+        """Return a feasible bound in the selected search direction.
+
+        Tension searches start at the screening stress minimum, or zero for
+        registered checks. Thus sign selects the upper/lower tension bound,
+        which need not have that sign. Moment searches start at zero moment.
+        """
+        origin = self.area * self.hoop / 2 if vary == "T" and not self.check_name else 0.0
         evaluate = (lambda x: self.utilisation(fixed, sign * x)) if vary == "M" else (
-            lambda x: self.utilisation(sign * x, fixed)
+            lambda x: self.utilisation(origin + sign * x, fixed)
         )
-        if evaluate(0) > 1:
-            return 0.0
+        if not evaluate(0) <= 1:
+            raise ValueError("No feasible starting point for the interaction boundary")
         lo = 0.0
         hi = self.moment_scale if vary == "M" else self.tension_scale
         for _ in range(20):
-            if evaluate(hi) > 1:
+            if not evaluate(hi) <= 1:
                 break
             hi *= 2
         else:
@@ -167,17 +173,29 @@ class ReportInteraction:
                 lo = mid
             else:
                 hi = mid
-        return sign * lo
+        return origin + sign * lo
 
     def limits(self):
-        """Condition limits; missing feasible curves have no quoted capacity."""
-        feasible = self.utilisation(0, 0) < 1
+        """Return tension bounds and the optional zero-tension moment intercept.
+
+        Legacy T_pos/T_neg keys denote upper/lower bounds, including domains
+        wholly in tension or compression. None denotes an unavailable pure
+        bending intercept; an empty domain has None for all three limits.
+        Completing the square in the screening invariant places its minimum
+        at axial stress = hoop/2. Registered checks keep their zero-load seed.
+        """
+        centre = self.area * self.hoop / 2 if not self.check_name else 0.0
+        minimum = self.utilisation(centre, 0)
+        feasible = math.isfinite(minimum) and (
+            minimum < 1 if self.check_name else minimum <= 1
+        )
+        bending_feasible = feasible and self.utilisation(0, 0) <= 1
         return dict(
             name=self.condition["name"], f_d=self.condition["f_d"],
             feasible=feasible,
-            T_pos_kN=self.limit("T") / 1e3 if feasible else 0.0,
-            T_neg_kN=self.limit("T", sign=-1) / 1e3 if feasible else 0.0,
-            M_allow_kNm=self.limit("M") / 1e3 if feasible else 0.0,
+            T_pos_kN=self.limit("T") / 1e3 if feasible else None,
+            T_neg_kN=self.limit("T", sign=-1) / 1e3 if feasible else None,
+            M_allow_kNm=self.limit("M") / 1e3 if bending_feasible else None,
         )
 
     def trace(self, n_points=200):

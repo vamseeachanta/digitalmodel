@@ -56,24 +56,25 @@ def test_every_envelope_point_satisfies_registered_check(code, pressures, pipe, 
         assert grids[0] != grids[-1]
 
 
-def test_method1_zero_pressure_intercepts_by_hand(pipe, steel):
-    """Independent section integrals, not a call to a strategy capacity helper.
+def test_method1_zero_pressure_intercepts_by_hand(pipe, steel, monkeypatch):
+    """Arithmetic-only fixture with an explicitly assumed factor of 0.6.
 
     For a thin ring of mean radius r, dA=r*t*dtheta. Integrating dA gives
     A=2*pi*r*t; integrating y^2*dA gives I=pi*r^3*t and Z=I/r.
     The existing linear interaction at zero pressure has intercepts
-    f*SMYS*A and f*SMYS*Z. Here f=0.8 from the implemented route.
+    f*SMYS*A and f*SMYS*Z. This does not validate a standard's design factor.
     """
     strategy = CODE_REGISTRY[DesignCode.API_STD_2RD]()
+    monkeypatch.setattr(strategy, "COMBINED_DESIGN_FACTOR", 0.6)
     condition = report_conditions(strategy)[0]
     interaction = ReportInteraction(strategy, pipe, steel, DesignLoads(), condition)
     limits = interaction.limits()
-    radius = (0.3 - 0.02) / 2
-    area = 2 * math.pi * radius * 0.02
-    modulus = math.pi * radius**2 * 0.02
-    assert limits["T_pos_kN"] == pytest.approx(0.8 * 400e6 * area / 1e3)
-    assert limits["T_neg_kN"] == pytest.approx(-0.8 * 400e6 * area / 1e3)
-    assert limits["M_allow_kNm"] == pytest.approx(0.8 * 400e6 * modulus / 1e3)
+    # Hand calculation: r=(0.3-0.02)/2=0.14 m;
+    # A=2*pi*0.14*0.02=0.01759291886 m^2, Z=pi*0.14^2*0.02;
+    # T=0.6*400e6*A=4222.300526 kN, M=0.6*400e6*Z=295.561037 kN.m.
+    assert limits["T_pos_kN"] == pytest.approx(4222.300526, abs=1e-6)
+    assert limits["T_neg_kN"] == pytest.approx(-4222.300526, abs=1e-6)
+    assert limits["M_allow_kNm"] == pytest.approx(295.561037, abs=1e-6)
 
 
 @pytest.mark.parametrize("code", [DesignCode.API_RP_1111, DesignCode.API_RP_2RD])
@@ -92,6 +93,132 @@ def test_unregistered_combined_routes_are_screening(code, pipe, steel):
     )
 
 
+@pytest.mark.parametrize("code", [DesignCode.API_RP_1111, DesignCode.API_RP_2RD])
+@pytest.mark.parametrize("pressure_sign", [-1, 1])
+@pytest.mark.parametrize("hoop_ratio", [0.9, 1.0, 1.1])
+def test_screening_bounds_surround_stress_minimum(
+    code, pressure_sign, hoop_ratio, pipe, steel,
+):
+    """Arithmetic-only screening fixture; 0.6 is assumed, not a code factor."""
+    strategy = CODE_REGISTRY[code]()
+    condition = dict(report_conditions(strategy)[0], f_d=0.6)
+    allowable = 0.6 * steel.smys
+    hoop = pressure_sign * hoop_ratio * allowable
+    pressure = hoop * 2 * pipe.wall_thickness / pipe.inner_diameter
+    loads = DesignLoads(max(pressure, 0), max(-pressure, 0))
+    interaction = ReportInteraction(strategy, pipe, steel, loads, condition)
+    if hoop_ratio == 1:
+        # Make the origin exactly unity, independent of pressure round-trip ulps.
+        interaction.hoop = hoop
+    area = math.pi * (0.3**2 - 0.26**2) / 4
+    # Complete the square: equivalent stress squared is
+    # (axial - hoop/2)**2 + 3*hoop**2/4, with minimum at axial=hoop/2.
+    centre = area * hoop / 2
+    half_width = area * math.sqrt(allowable**2 - 0.75 * hoop**2)
+    assert interaction.utilisation(centre, 0) == pytest.approx(
+        math.sqrt(3) * hoop_ratio / 2,
+    )
+    limits = interaction.limits()
+    assert limits["feasible"]
+    assert limits["T_neg_kN"] == pytest.approx((centre - half_width) / 1e3)
+    assert limits["T_pos_kN"] == pytest.approx((centre + half_width) / 1e3)
+    if hoop_ratio > 1:
+        assert limits["M_allow_kNm"] is None
+    elif hoop_ratio == 1:
+        assert limits["M_allow_kNm"] == pytest.approx(0, abs=1e-7)
+    else:
+        assert limits["M_allow_kNm"] > 0
+    tensions, moments = interaction.trace(n_points=24)
+    assert len(tensions) == len(moments) == 25
+    assert tensions[0] == pytest.approx(centre - half_width)
+    assert tensions[-1] == pytest.approx(centre + half_width)
+    assert moments[len(moments) // 2] > 0
+    for tension, moment in zip(tensions, moments):
+        for sign in (-1, 1):
+            assert interaction.utilisation(tension, sign * moment) <= 1 + 1e-9
+            assert interaction.utilisation(tension, sign * moment) == pytest.approx(
+                1, abs=1e-7,
+            )
+
+
+@pytest.mark.parametrize("code", [DesignCode.API_RP_1111, DesignCode.API_RP_2RD])
+@pytest.mark.parametrize("pressure_sign", [-1, 1])
+def test_screening_empty_domain_above_minimum(code, pressure_sign, pipe, steel):
+    strategy = CODE_REGISTRY[code]()
+    condition = dict(report_conditions(strategy)[0], f_d=0.6)
+    # Assumed screening stress: sqrt(3)/2 * 1.2 exceeds the unity limit.
+    hoop = pressure_sign * 1.2 * 0.6 * steel.smys
+    pressure = hoop * 2 * pipe.wall_thickness / pipe.inner_diameter
+    loads = DesignLoads(max(pressure, 0), max(-pressure, 0))
+    interaction = ReportInteraction(strategy, pipe, steel, loads, condition)
+    limits = interaction.limits()
+    assert not limits["feasible"]
+    assert limits["T_pos_kN"] is None
+    assert limits["T_neg_kN"] is None
+    assert limits["M_allow_kNm"] is None
+    assert interaction.trace() == ([], [])
+
+
+@pytest.mark.parametrize("code", [DesignCode.API_RP_1111, DesignCode.API_RP_2RD])
+@pytest.mark.parametrize("vary", ["T", "M"])
+def test_limit_rejects_an_infeasible_start(code, vary, pipe, steel):
+    strategy = CODE_REGISTRY[code]()
+    condition = report_conditions(strategy)[0]
+    interaction = ReportInteraction(strategy, pipe, steel, DesignLoads(), condition)
+    with pytest.raises(ValueError, match="No feasible starting point"):
+        interaction.limit(vary, fixed=1e12)
+
+
+@pytest.mark.parametrize("hoop", [float("nan"), float("inf"), -float("inf")])
+def test_screening_nonfinite_stress_never_emits_curve(hoop, pipe, steel):
+    strategy = CODE_REGISTRY[DesignCode.API_RP_1111]()
+    condition = report_conditions(strategy)[0]
+    interaction = ReportInteraction(strategy, pipe, steel, DesignLoads(), condition)
+    interaction.hoop = hoop
+    assert not interaction.limits()["feasible"]
+    assert interaction.trace() == ([], [])
+
+
+@pytest.mark.parametrize("code", [DesignCode.API_RP_1111, DesignCode.API_RP_2RD])
+@pytest.mark.parametrize("pressure_sign", [-1, 1])
+def test_report_retains_shifted_screening_domain(code, pressure_sign, pipe, steel, monkeypatch):
+    import inspect
+    import digitalmodel.structural.analysis.wall_thickness_mt_report as report
+    import plotly.graph_objects as go
+
+    monkeypatch.setattr(go.Figure, "to_html", lambda *args, **kwargs: "<div>plot</div>")
+    captured = {}
+    original = report._build_html
+    def capture_html(*args, **kwargs):
+        captured.update(inspect.signature(original).bind(*args, **kwargs).arguments)
+        return original(*args, **kwargs)
+    monkeypatch.setattr(report, "_build_html", capture_html)
+    condition = report_conditions(CODE_REGISTRY[code]())[0]
+    hoop = pressure_sign * 1.1 * condition["f_d"] * steel.smys
+    pressure = hoop * 2 * pipe.wall_thickness / pipe.inner_diameter
+    html = report.generate_mt_report(
+        pipe, steel, max(pressure, 0), max(-pressure, 0), code,
+    )
+    allowable = condition["f_d"] * steel.smys
+    area = math.pi * (0.3**2 - 0.26**2) / 4
+    centre = area * hoop / 2
+    half_width = area * math.sqrt(allowable**2 - 0.75 * hoop**2)
+    limits = captured["capacity_limits"][0]
+    assert limits["T_pos_kN"] == pytest.approx((centre + half_width) / 1e3)
+    assert limits["T_neg_kN"] == pytest.approx((centre - half_width) / 1e3)
+    assert pressure_sign * limits["T_pos_kN"] > 0
+    assert pressure_sign * limits["T_neg_kN"] > 0
+    assert limits["M_allow_kNm"] is None
+    assert captured["pressure_sensitivity"][0]["limits"][0]["M_allow_kNm"] is None
+    # Both the limits table and the baseline pressure-sensitivity row retain
+    # the interval, while distinguishing an absent zero-tension intercept.
+    assert html.count("Unavailable at zero tension") == (2 if pressure_sign > 0 else 4)
+    assert "No feasible curve</td>" not in html
+    assert "no admissible origin" not in html
+    assert html.count("T<sub>upper</sub> (kN)") == 2
+    assert html.count("T<sub>lower</sub> (kN)") == 2
+
+
 @pytest.mark.parametrize("code", [DesignCode.API_STD_2RD, DesignCode.DNV_ST_F101])
 def test_excess_pressure_has_no_feasible_curve(code, pipe, steel):
     strategy = CODE_REGISTRY[code]()
@@ -103,11 +230,14 @@ def test_excess_pressure_has_no_feasible_curve(code, pipe, steel):
 
 def test_conditions_follow_strategy_factors(pipe, steel):
     strategy = CODE_REGISTRY[DesignCode.API_STD_2RD]()
+    assert report_conditions(strategy)[0]["f_d"] == strategy.COMBINED_DESIGN_FACTOR
     strategy.COMBINED_DESIGN_FACTOR = 0.61
     condition = report_conditions(strategy)[0]
     assert condition["f_d"] == 0.61
     rp = CODE_REGISTRY[DesignCode.API_RP_2RD]()
-    assert report_conditions(rp)[0]["f_d"] == pytest.approx(2 / 3)
+    assert report_conditions(rp)[0]["f_d"] == rp.C_A
+    rp1111 = CODE_REGISTRY[DesignCode.API_RP_1111]()
+    assert report_conditions(rp1111)[0]["f_d"] == rp1111.get_edition_factors()["f_d"]
     for condition in report_conditions(CODE_REGISTRY[DesignCode.DNV_ST_F101]()):
         factors = condition["factors"]
         assert condition["f_d"] == 1 / (factors.gamma_sc * factors.gamma_m)
@@ -121,12 +251,14 @@ def test_conditions_follow_strategy_factors(pipe, steel):
     (DesignCode.DNV_ST_F201, "pressure_containment", "t1"),
 ])
 def test_pressure_wall_allowance_is_deducted_once(code, key, wall_key, pipe, steel):
-    """Independent subtraction: 20 mm less 2 mm; fractional tolerance on two routes."""
+    """Arithmetic-only fixture; 0.1 fabrication tolerance is explicitly assumed."""
     strategy = CODE_REGISTRY[code]()
+    pipe = replace(pipe, fabrication_tolerance=0.1)
     result = strategy.run_checks(pipe, steel, DesignLoads(5e6), DesignFactors())[key]
+    # Hand subtraction: 0.020-0.002=0.018 m; reduction: 0.018*(1-0.1)=0.0162 m.
     expected = 0.018
     if code in (DesignCode.DNV_ST_F101, DesignCode.DNV_ST_F201):
-        expected *= 0.875
+        expected = 0.0162
     assert result[1][wall_key] == pytest.approx(expected)
 
 

@@ -8,6 +8,8 @@
 import math
 import os
 import tempfile
+from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -65,8 +67,17 @@ def test_report_returns_html_string(report_html):
     assert "API-RP-1111" in report_html
 
 
-def test_report_writes_to_file(geometry, material):
+def test_report_writes_to_file(geometry, material, monkeypatch):
     """Report writes HTML to the specified output path."""
+    import builtins
+    import digitalmodel.structural.analysis.wall_thickness_mt_report as report
+
+    material = replace(material, grade="synthetic — steel")
+    output_options = {}
+    def capture_open(*args, **kwargs):
+        output_options.update(kwargs)
+        return builtins.open(*args, **kwargs)
+    monkeypatch.setattr(report, "open", capture_open, raising=False)
     with tempfile.TemporaryDirectory() as tmpdir:
         path = os.path.join(tmpdir, "report.html")
         html = generate_mt_report(
@@ -78,9 +89,14 @@ def test_report_writes_to_file(geometry, material):
             output_path=path,
         )
         assert os.path.exists(path)
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             content = f.read()
         assert content == html
+        assert output_options == {"encoding": "utf-8", "newline": "\n"}
+        raw = Path(path).read_bytes()
+        assert b"\r\n" not in raw
+        assert raw.decode("utf-8") == html
+        assert "synthetic — steel".encode("utf-8") in raw
 
 
 def test_report_contains_input_data_section(report_html):

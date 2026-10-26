@@ -166,9 +166,9 @@ def generate_mt_report(
     if output_path is not None:
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
             f.write(html)
-        logger.info("M-T report written to %s", output_path)
+        logger.info("M-T report written")
 
     return html
 
@@ -1063,13 +1063,17 @@ def _build_html(
                     '<td colspan="4">No feasible curve at this pressure</td></tr>'
                 )
                 continue
+            moment_text = (
+                "Unavailable at zero tension" if cl["M_allow_kNm"] is None
+                else f"{cl['M_allow_kNm']:.1f}"
+            )
             cl_rows += (
                 f"<tr>"
                 f"<td>{cl['name']}</td>"
                 f"<td>{cl['f_d']:.2f}</td>"
                 f"<td>{cl['T_pos_kN']:.1f}</td>"
                 f"<td>{cl['T_neg_kN']:.1f}</td>"
-                f"<td>{cl['M_allow_kNm']:.1f}</td>"
+                f"<td>{moment_text}</td>"
                 f"</tr>"
             )
 
@@ -1084,8 +1088,8 @@ def _build_html(
             "<th>&sigma;<sub>h</sub> (MPa)</th>"
             "<th>Condition</th>"
             "<th>f<sub>d</sub></th>"
-            "<th>T<sub>+</sub> (kN)</th>"
-            "<th>T<sub>&minus;</sub> (kN)</th>"
+            "<th>T<sub>upper</sub> (kN)</th>"
+            "<th>T<sub>lower</sub> (kN)</th>"
             "<th>M<sub>allow</sub> (kN&middot;m)</th>"
             "</tr></thead><tbody>"
         )
@@ -1106,13 +1110,17 @@ def _build_html(
                         '<td colspan="4">No feasible curve at this pressure</td></tr>'
                     )
                     continue
+                moment_text = (
+                    "Unavailable at zero tension" if lim["M_allow_kNm"] is None
+                    else f"{lim['M_allow_kNm']:.1f}"
+                )
                 ps_table_html += (
                     f"<tr>{first_col}"
                     f"<td>{lim['name']}</td>"
                     f"<td>{lim['f_d']:.2f}</td>"
                     f"<td>{lim['T_pos_kN']:.1f}</td>"
                     f"<td>{lim['T_neg_kN']:.1f}</td>"
-                    f"<td>{lim['M_allow_kNm']:.1f}</td>"
+                    f"<td>{moment_text}</td>"
                     f"</tr>"
                 )
         ps_table_html += "</tbody></table>"
@@ -1145,7 +1153,9 @@ def _build_html(
         f"{basis}. Pressure basis: ASSUMED gauge. "
         "Pressure checks use the route's fixed factor set; no operating-condition "
         "uplifts are inferred. Curves are the result of our implementation. "
-        "A missing curve means no admissible origin was found at that pressure."
+        "A missing curve means no admissible interaction domain was found at that pressure. "
+        "Tension bounds may both have the same sign. An unavailable pure-bending "
+        "intercept at zero tension does not imply an empty domain."
     )
 
     html = f"""<!DOCTYPE html>
@@ -1335,8 +1345,8 @@ def _build_html(
                     <tr>
                         <th>Condition</th>
                         <th>f<sub>d</sub></th>
-                        <th>T<sub>+</sub> (kN)</th>
-                        <th>T<sub>&minus;</sub> (kN)</th>
+                        <th>T<sub>upper</sub> (kN)</th>
+                        <th>T<sub>lower</sub> (kN)</th>
                         <th>M<sub>allow</sub> (kN&middot;m)</th>
                     </tr>
                 </thead>
