@@ -5,6 +5,7 @@ governing series are non-negative magnitudes (the sign guard).
 """
 
 import numpy as np
+import pytest
 
 from digitalmodel.motion_forecast.derived import (
     compute_governing,
@@ -53,11 +54,94 @@ def test_velocity_magnitude_is_positive_for_downward_motion():
     assert np.allclose(heave_velocity_magnitude(m), 0.5, atol=1e-9)
 
 
+@pytest.mark.parametrize(
+    "governing",
+    [
+        "crane_tip_vertical_velocity",
+        "gangway_tip_vertical_velocity",
+        "top_connection_vertical_velocity",
+    ],
+)
+@pytest.mark.parametrize("heave_rate", [0.05, 0.2], ids=["downward", "upward"])
+def test_combined_axis_point_velocity_hand_calculation(governing, heave_rate):
+    """Independent rigid-body hand calculation for synthetic linear traces.
+
+    Let tau = t - 20 s, h = 1.5 + heave_rate*tau m,
+    roll = -1 + 2*tau deg, pitch = 0.5 + 3*tau deg, rx = 4 m, ry = 3 m.
+    With k = pi/180 rad/deg, z = h + ry*roll_rad - rx*pitch_rad becomes
+    z = (1.5 - 5*k) + (heave_rate - 6*k)*tau m.
+    Thus dz/dt = heave_rate - pi/30 m/s: negative for 0.05 m/s heave,
+    positive for 0.2 m/s heave. Neither rotational sign can be reversed
+    without changing the expected magnitude because heave is nonzero.
+    """
+    # Synthetic shifted, nonuniform grid in seconds, including both endpoints.
+    t = np.array([20.0, 20.125, 20.5, 21.0, 22.0])
+    tau = t - t[0]
+    m = _motion(
+        t,
+        heave=1.5 + heave_rate * tau,
+        roll=-1.0 + 2.0 * tau,
+        pitch=0.5 + 3.0 * tau,
+    )
+    offset = (4.0, 3.0, 0.0)  # Hand-calculation lever arms; rz has no z term.
+    expected = abs(heave_rate - np.pi / 30.0)
+    # Linear derivatives are exact analytically; allow only floating roundoff.
+    np.testing.assert_allclose(
+        vertical_velocity_magnitude(m, offset), expected, rtol=0.0, atol=1e-12
+    )
+
+    series = compute_governing(m, governing, offset)
+    assert series.name == governing
+    assert series.unit == "m/s"
+    np.testing.assert_array_equal(series.t, t)
+    np.testing.assert_allclose(series.values, expected, rtol=0.0, atol=1e-12)
+    assert np.all(series.values >= 0.0)
+
+
+@pytest.mark.parametrize(
+    "governing",
+    [
+        "crane_tip_vertical_velocity",
+        "gangway_tip_vertical_velocity",
+        "top_connection_vertical_velocity",
+    ],
+)
+def test_rotations_cancel_heave_velocity(governing):
+    """Synthetic hand calculation: nonzero axis velocities sum to zero.
+
+    For tau = t - 20 s, choose h = 1/2 + (5/32)*tau m,
+    roll_rad = 1/64 + tau/32, pitch_rad = -1/128 + tau/16,
+    rx = 4 m and ry = 3 m. Then z = h + 3*roll_rad - 4*pitch_rad
+    = 37/64 + (5/32 + 3/32 - 4/16)*tau = 37/64 m,
+    so dz/dt = 0 m/s despite all three axes moving. Angles are stored
+    in degrees; binary fractions make the cancellation exact analytically.
+    """
+    t = np.array([20.0, 20.125, 20.5, 21.0, 22.0])
+    tau = t - t[0]
+    m = _motion(
+        t,
+        heave=0.5 + (5.0 / 32.0) * tau,
+        roll=np.rad2deg(1.0 / 64.0 + tau / 32.0),
+        pitch=np.rad2deg(-1.0 / 128.0 + tau / 16.0),
+    )
+    offset = (4.0, 3.0, 0.0)  # Lever arms from the hand calculation above.
+    # Zero analytic velocity; tolerate only degree-conversion roundoff.
+    np.testing.assert_allclose(
+        vertical_velocity_magnitude(m, offset), 0.0, rtol=0.0, atol=1e-12
+    )
+
+    series = compute_governing(m, governing, offset)
+    assert series.name == governing
+    assert series.unit == "m/s"
+    np.testing.assert_array_equal(series.t, t)
+    np.testing.assert_allclose(series.values, 0.0, rtol=0.0, atol=1e-12)
+    assert np.all(series.values >= 0.0)
+
+
 def test_compute_governing_dispatch_and_unknown():
     t = np.linspace(0, 10, 51)
     m = _motion(t, heave=0.5 * t)
     gs = compute_governing(m, "helideck_heave_velocity")
     assert gs.unit == "m/s" and np.allclose(gs.values, 0.5, atol=1e-9)
-    import pytest
     with pytest.raises(ValueError, match="unknown governing"):
         compute_governing(m, "nope")
