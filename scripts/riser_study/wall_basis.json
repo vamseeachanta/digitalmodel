@@ -1,0 +1,12 @@
+{
+  "basis": "Frozen twelve-case matrix sizing projection and supplied design assumptions",
+  "mill_minus_tolerance": {"value": 0.125, "source": "supplied sizing assumptions"},
+  "w2_checked_wall_multiplier": {"value": 1.25, "source": "supplied W2 selection rule"},
+  "grid_mm": {"value": 0.1, "source": "supplied grid rule; scripts/reporting/build_riser_pipe_comparison.py::_minimum_wall"},
+  "seawater_density_kg_m3": {"value": 1025.0, "source": "supplied sizing assumptions"},
+  "gravity_m_s2": {"value": 9.80665, "source": "supplied sizing assumptions"},
+  "youngs_modulus_pa": {"value": 207000000000.0, "source": "supplied sizing assumptions; wall_thickness.py::PipeMaterial"},
+  "poissons_ratio": {"value": 0.3, "source": "supplied sizing assumptions; wall_thickness.py::PipeMaterial"},
+  "temperature_c": {"value": 20.0, "source": "supplied ambient sizing assumption; no thermal derating"},
+  "riser_pressure_factor": {"value": 0.6, "source": "supplied additional pressure guard; applied to ApiRp2rdStrategy burst p_b"}
+}
