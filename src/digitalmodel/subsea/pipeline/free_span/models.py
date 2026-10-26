@@ -5,8 +5,10 @@ All physical quantities in SI units unless noted in field names.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
+from numbers import Real
 
 
 class BoundaryConditionF105(Enum):
@@ -57,6 +59,15 @@ class PipeSpanInput:
     -------------
     sn_curve_class   DNV-RP-C203 class, e.g. "F" for girth welds
     environment      in_air or seawater_cp
+    stress_concentration_factor   caller-selected local stress multiplier
+    gamma_s          caller-selected stress range safety multiplier
+
+    Both stress multipliers default to the multiplicative identity (1.0),
+    preserving the uncorrected stress range. Each is applied once to both
+    IL and CF ranges before fatigue evaluation. Values must be finite,
+    strictly positive real numbers; booleans are rejected. No design value
+    is prescribed: the caller supplies the applicable engineering basis.
+    Strake and thickness corrections are not supplied by these factors.
 
     Partial safety factors (F105 Sec 3.4)
     ----------------------------------------
@@ -104,6 +115,22 @@ class PipeSpanInput:
     gamma_on_IL: float = 1.1
     gamma_on_CF: float = 1.3
     gamma_k: float = 1.15
+
+    # Identity defaults preserve existing stress and fatigue calculations.
+    stress_concentration_factor: float = 1.0
+    gamma_s: float = 1.0
+
+    def __post_init__(self) -> None:
+        """Reject invalid caller-controlled stress range multipliers."""
+        for name in ("stress_concentration_factor", "gamma_s"):
+            value = getattr(self, name)
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, Real)
+                or not math.isfinite(value)
+                or value <= 0.0
+            ):
+                raise ValueError(f"{name} must be a finite positive real number")
 
 
 @dataclass

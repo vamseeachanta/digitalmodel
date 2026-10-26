@@ -138,7 +138,7 @@ class SpanVIVAmplitude:
     def stress_from_amplitude(
         self, A_over_D: float, fn: float, mode: str = "IL"
     ) -> float:
-        """Bending stress range Δσ from VIV amplitude [MPa] (screening level).
+        """Corrected bending stress range Δσ [MPa] (screening level).
 
         VIV motion is sinusoidal and zero-mean (fully reversed), so:
             Δσ = 2 × σ_peak_one_side
@@ -151,6 +151,11 @@ class SpanVIVAmplitude:
             pinned-pinned: 1.0  (max at midspan)
             fixed-pinned:  1.8  (max at fixed end)
             fixed-fixed:   2.3  (max at fixed ends)
+
+        The returned range includes stress_concentration_factor and gamma_s,
+        each exactly once, for either response direction. Both default to
+        the multiplicative identity, preserving the uncorrected range.
+        Fatigue evaluation consumes this range without reapplying factors.
         """
         if A_over_D <= 0.0:
             return 0.0
@@ -169,7 +174,8 @@ class SpanVIVAmplitude:
         I_sec = math.pi / 64.0 * (inp.od_m**4 - id_m**4)
         sigma_peak_pa = M_peak * (inp.od_m / 2.0) / I_sec
         # Stress range: fully-reversed VIV cycle → Δσ = 2 × σ_peak
-        return 2.0 * sigma_peak_pa / 1.0e6  # Pa → MPa
+        stress_range_mpa = 2.0 * sigma_peak_pa / 1.0e6  # Pa → MPa
+        return stress_range_mpa * inp.stress_concentration_factor * inp.gamma_s
 
 
 # ---------------------------------------------------------------------------
