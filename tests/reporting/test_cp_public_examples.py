@@ -5,6 +5,7 @@
 
 import importlib
 import json
+import math
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
@@ -18,6 +19,55 @@ sys.path.insert(0, str(ROOT / "scripts/reporting"))
 
 def builder():
     return importlib.import_module("build_cp_public_examples")
+
+
+def presentation_spec(project):
+    from digitalmodel.reporting.spec import DocumentMeta, ReportSpec, Section, TextBlock
+
+    spec = ReportSpec(
+        document=DocumentMeta(number="B0000-RPT-001-00", revision="00",
+                              title="Cathodic protection analysis", project=project,
+                              client="Not applicable"),
+        sections=[Section(key="summary", title="Summary", blocks=[TextBlock(markdown="Example")])],
+        verification_presentation=True,
+    )
+    spec.provenance.add("fixture", "synthetic presentation inputs")
+    return spec
+
+
+@pytest.mark.parametrize("project", ["Worked example on synthetic data", "Example basis"])
+def test_presentation_requires_explicit_flag_independent_of_project(project):
+    from digitalmodel.reporting.engine import render_html
+
+    spec = presentation_spec(project)
+    assert "Draft for review" in render_html(spec)
+    spec.worked_example_presentation = True
+    page = render_html(spec)
+    assert 'class="example-basis"' in page
+    assert "Revision 00 — Issued for information" in page
+    assert "Draft for review" not in page
+
+
+def test_child_template_preserves_status_and_body_end(monkeypatch):
+    from jinja2 import ChoiceLoader, DictLoader
+    from digitalmodel.reporting import engine
+
+    env = engine._environment()
+    parent = env.loader.get_source(env, "verification_report.html.j2")[0]
+    env.loader = ChoiceLoader([DictLoader({
+        "base_verification.html.j2": parent,
+        "verification_report.html.j2": (
+            "{% extends 'base_verification.html.j2' %}"
+            "{% set report_status = 'Issued child status' %}"
+            "{% block body_end %}<aside>Child controls</aside>{% endblock %}"
+        ),
+    }), env.loader])
+    monkeypatch.setattr(engine, "_environment", lambda: env)
+    page = engine.render_html(presentation_spec("Example basis"))
+    assert "Issued child status" in page
+    assert "Draft for review" not in page
+    assert "<aside>Child controls</aside>" in page
+    assert page.index("Child controls") < page.index("</body>")
 
 
 class VisibleText(HTMLParser):
@@ -120,7 +170,28 @@ def test_three_hand_calculation_anchors(case_id, expected, added):
     checks = module.b401_checks(results)
     # Hand calculation: 25 * 150 = 3750 kg; 28 * 80 = 2240 kg.
     assert checks[0]["provided"] == (3750.0 if case_id == "S02" else 2240.0)
-    # Hand calculation: ceil(59.28 / 1.2489) = 48; ceil(46.24 / 0.7276) = 64.
+    # Derive demand from fixture area and life, using the cited density and
+    # coating coefficients recorded with the case, rather than saved demand.
+    inputs = module.load_fixture(module.CASES[case_id][1])["inputs"]
+    submerged = next(z for z in inputs["structure"]["zones"] if z["zone"] == "submerged")
+    coating = results["coating_breakdown"]["submerged"]
+    breakdown = min(1.0, coating["a"] + coating["b_per_yr"] * inputs["design_data"]["design_life"])
+    density = results["current_densities_A_m2"]["submerged"]["i_final_A_m2"]
+    demand = submerged["area_m2"] * density * breakdown
+    verification = results["current_output_verification"]
+    assert verification["final_current_demand_A"] == pytest.approx(demand)
+    # Independently evaluate depleted radius, long stand-off resistance and
+    # output from the fixture geometry and the case's cited driving voltage.
+    anode = inputs["anode"]
+    radius = anode["radius_m"] * math.sqrt(1.0 - anode["utilization_factor"])
+    length = anode["length_m"]
+    assert length >= 4.0 * radius
+    resistance = (inputs["environment"]["seawater_resistivity_ohm_m"] / (2.0 * math.pi * length)
+                  * (math.log(4.0 * length / radius) - 1.0))
+    output = verification["driving_voltage_V"] / resistance
+    assert verification["anode_resistance_final_ohm"] == pytest.approx(resistance, abs=0.0000005)
+    assert verification["anode_current_output_final_A"] == pytest.approx(output, abs=0.00005)
+    assert math.ceil(demand / output) == expected
     assert module.design_count(results) == expected
     # Hand calculation: 48 - 25 = 23; 64 - 28 = 36 additional anodes.
     assert module.design_count(results) - results["current_output_verification"]["anode_count"] == added

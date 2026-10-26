@@ -244,6 +244,7 @@ def build_document() -> tuple[ReportSpec, dict[str, Any]]:
     }
     spec = anode_design_report(cfg)
     spec.document.project = "Worked example on published geometry"
+    spec.worked_example_presentation = True
     spec.document.revision = "01"
     spec.document.number = spec.document.number[:-2] + "01"
     blocks = section_blocks(cfg, evidence, spec)

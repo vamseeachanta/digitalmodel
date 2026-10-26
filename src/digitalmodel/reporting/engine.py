@@ -222,6 +222,7 @@ def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER,
     return template.render(
         brand=BRAND,
         doc=spec.document,
+        worked_example=spec.worked_example_presentation,
         standards=spec.standards,
         citations=spec.citations,
         sections=spec.sections,

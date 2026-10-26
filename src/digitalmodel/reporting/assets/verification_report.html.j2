@@ -1,5 +1,6 @@
-{%- set worked_example = doc.project in ['Worked example on published geometry', 'Worked example on synthetic data'] -%}
+{%- if report_status is not defined -%}
 {%- set report_status = ('Revision ' ~ doc.revision ~ ' — Issued for information') if worked_example else 'Draft for review' -%}
+{%- endif -%}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,5 +132,6 @@ body.doc{min-width:0;width:100%}
 {%- endfor %}
 </main></div>
 <footer><div class="wrap">{{ report_status }}</div></footer>
+{% block body_end %}{% endblock -%}
 </body>
 </html>

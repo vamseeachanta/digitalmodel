@@ -227,6 +227,7 @@ def public_spec(cfg: dict[str, Any], title: str):
     spec.document.project = "Worked example on synthetic data"
     spec.document.client = "Not applicable"
     spec.verification_presentation = True
+    spec.worked_example_presentation = True
     spec.document.title = f"Cathodic protection analysis: {title.lower()} worked example"
     old_history = spec.document.revision_history
     spec.document.revision = "01"

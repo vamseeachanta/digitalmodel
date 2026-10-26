@@ -302,6 +302,7 @@ class ReportSpec(BaseModel):
     appendices: list[Section] = Field(default_factory=list)
     tool_version: str = Field(default_factory=_tool_version)
     verification_presentation: bool = Field(default=False, exclude=True)
+    worked_example_presentation: bool = Field(default=False, exclude=True)
 
     @field_validator("citations", mode="before")
     @classmethod
