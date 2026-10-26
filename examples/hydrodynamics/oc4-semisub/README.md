@@ -14,6 +14,7 @@ published platform centre of mass is a distinct quantity.
 | B | 2026-10-20 | Hosted test coverage is added, the dependency pin and reference platform are clarified, and every adjacent triangle repeat is supported. |
 | C | 2026-10-20 | Buoyancy depth is reported as information because no acceptance tolerance is specified, and a translated cube checks the integration origin. |
 | D | 2026-10-26 | Extended-band hull and lid generation, versioned inputs and complex exports are added for offline preparation; native acceptance remains open. |
+| E | 2026-10-26 | Linux test evidence is recorded with per-file counts and unavailable dependencies so partial execution does not imply a generator pass. |
 
 ## Public basis
 
@@ -340,10 +341,14 @@ only with `interpolate_spikes=True`; a substantive `verified_lid_statement` may
 instead record the caller's native-lid evidence. Neither disposition grants
 release. Endpoints and broad resonances are outside this isolated-spike rule.
 
-The focused baseline passed 126 tests. The final focused suite passed 146 tests,
-with seven additional CI-registration tests passing, for 153 total. All checks
-were run against the uncommitted tree. Synthetic tests establish software
-behaviour only; native response and engineering release remain OPEN.
+The earlier focused suite recorded 146 passing tests plus seven CI-registration
+tests. The current [Linux test evidence](linux-test-evidence.md) exercises every
+touched test file, the workflow selection and the broader gmsh meshing suite:
+436 passed, 19 failed, 29 skipped and 6 setup errors. All remaining failures and
+errors require Gmsh 4.15.1, whose published wheels do not support Linux aarch64;
+complete pinned execution remains unverified. Both named public-mesh tests error
+before their assertions because Gmsh is missing. No tolerance, threshold or test
+was changed. Native response and engineering release remain OPEN.
 
 Lesson: an approximate span supports an illustrative estimate; exact retained
 coordinates are required for production bands and source-bound decks. Hull
