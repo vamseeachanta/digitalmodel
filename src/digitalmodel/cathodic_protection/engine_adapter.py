@@ -797,6 +797,32 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
     if input_sources:
         results["input_sources"] = input_sources
         results["connected_current_allowance_A"] = connected_current
+    if "current_distribution" in inputs:
+        from digitalmodel.cathodic_protection.design_screening import (
+            screen_current_distribution,
+        )
+
+        protected = [name for name, _, _, _ in zones
+                     if demand[name]["area_m2"] > 0 and any(
+                         demand[name][f"i_{phase}_A_m2"] * demand[name][fc] > 0
+                         for phase, fc in zip(("initial", "mean", "final"),
+                                              ("f_ci", "f_cm", "f_cf")))]
+        results["current_distribution"] = screen_current_distribution(
+            inputs["current_distribution"], protected,
+        )
+    if "calcareous" in inputs:
+        from digitalmodel.cathodic_protection.calcareous_demand import calcareous_demand
+
+        results["calcareous"] = calcareous_demand(
+            inputs["calcareous"], {
+                name: {**demand[name], "calcareous_applicable": zone.exposure_zone in (
+                    ExposureZone.SUBMERGED, ExposureZone.TIDAL,
+                )} for name, _, _, zone in zones
+            },
+            design_life_years=design_life, capacity_Ah_kg=capacity.value,
+            utilization_factor=u, individual_mass_kg=m_a,
+            connected_current_A=connected_current,
+        )
     cfg["results"] = results
 
     if adequate:
@@ -1271,6 +1297,17 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
     """
     inputs = _section(cfg, "inputs")
     key = inputs.get("calculation_type")
+    supplements = [name for name in ("current_distribution", "calcareous") if name in inputs]
+    if supplements:
+        if key != KEY_B401:
+            raise ValueError("current_distribution and calcareous require the offshore route")
+        if any(inputs.get(mode) is not None for mode in (
+            "components", "anode_families", "riser_base_assessment",
+        )):
+            raise ValueError("design supplements require single-family anode offshore inputs")
+        for name in supplements:
+            if not isinstance(inputs[name], Mapping):
+                raise ValueError(f"inputs.{name} must be a mapping")
     if key == KEY_B401:
         return _run_b401(cfg)
     if key == KEY_F103:

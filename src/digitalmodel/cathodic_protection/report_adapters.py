@@ -1873,7 +1873,9 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
 
         depth = float(cfg["structural_model"]["water_depth_m"])
         document, _ = _document(cfg, f"Cathodic protection analysis: jacket at {depth:g} m water depth")
-        return ReportSpec(document=document, sections=reference_sections(cfg),
+        from digitalmodel.cathodic_protection.design_supplement_report import design_supplement_sections
+
+        return ReportSpec(document=document, sections=reference_sections(cfg) + design_supplement_sections(results),
                           standards=_standards(results, calc_type),
                           provenance=_provenance(cfg, results, "results"),
                           verification_presentation=True)
@@ -1900,6 +1902,10 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
         _b401_report_additions(inputs, results, sections)
         if calc_type == KEY_B401 else []
     )
+    if calc_type == KEY_B401:
+        from digitalmodel.cathodic_protection.design_supplement_report import design_supplement_sections
+
+        sections.extend(design_supplement_sections(results))
     return ReportSpec(
         verification_presentation=calc_type == KEY_B401 and any(section.key == "summary" for section in sections),
         document=document,

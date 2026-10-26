@@ -1,0 +1,35 @@
+# Synthetic worked example: optional geometric screen and deposition sensitivity.
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+  design_data:
+    edition: "2021"
+    design_life: 25
+  structure:
+    zones:
+      - zone: submerged
+        area_m2: 500
+        coating_category: III
+  environment:
+    seawater_temperature_C: 10
+    seawater_resistivity_ohm_m: 0.3
+  anode:
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 200
+    utilization_factor: 0.85
+    length_m: 1
+    radius_m: 0.05
+  current_distribution:
+    reach_m: 5 # Illustrative input; user to confirm against the governing code.
+    zones:
+      submerged:
+        # Three local anodes at a spacing of 10 m; points govern this example only.
+        anode_positions_m: [[0, 0, -10], [10, 0, -10], [20, 0, -10]]
+        governing_points_m: [[0, 3, -6], [5, 0, -10], [15, 0, -10], [20, 0, -10]]
+  calcareous:
+    # Assumed, based on previous experience; sensitivity only, no adopted credit.
+    phase_factors:
+      initial: 1
+      mean: 0.5
+      final: 0.8
