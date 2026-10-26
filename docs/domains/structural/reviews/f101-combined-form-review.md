@@ -18,6 +18,7 @@ with the code strategy. No strategy calculation changes accompany this record.
 | --- | --- | --- |
 | 1 | 2026-10-26 | Record the secondary-source comparison and independent ring calculation; retain the limitation because equivalence is not established. |
 | 2 | 2026-10-26 | Require complete, consistent evidence and the current implementation digest before releasing the label; retain institutional citation details without personal attribution. |
+| 3 | 2026-10-26 | Distinguish the original and revised software test counts and record a repeated focused run; engineering equivalence remains unestablished. |
 
 Table 1. Review issues.
 
@@ -128,6 +129,22 @@ This counterexample disproves exact ideal plastic ring equivalence; it does not
 quantify a design margin for a real pipeline. A yield model alone cannot validate
 imperfections, local buckling, pressure sign limits or the factors in a pipeline
 resistance model. No general bound on the simplified form is claimed.
+
+## Software verification
+
+The execution records on pull request #3528 distinguish the original baseline
+of **41 tests**, the original result of **65 passed** including **24 added tests**,
+and the revised result of **129 passed** after **64 additional regressions**.
+The revised result comprises **21 report tests**, **20 strategy tests** and
+**88 review tests**. The revised figures are attributed to that execution record;
+the original result is retained as historical evidence.
+
+A repeated focused run on 2026-10-26 passed the same **129 tests**, with **zero
+skips**, using `tests/test_wall_thickness_mt_report.py`,
+`tests/structural/analysis/wall_thickness_codes/test_dnv_st_f101.py` and
+`tests/structural/analysis/test_f101_combined_form_review.py`.
+These software results cover evidence handling and report labels. They do not
+establish engineering equivalence or report-to-strategy reconciliation.
 
 ## Label control and way forward
 
