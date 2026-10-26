@@ -18,7 +18,9 @@ read back below. Buckling, stress and displacement are NOT_EVALUATED.</p>
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
 <tbody><tr><td>A</td><td>2026-10-25</td><td>The synthetic admission example is introduced
-to document inputs and independent geometry without a response calculation.</td></tr></tbody></table>
+to document inputs and independent geometry without a response calculation.</td></tr>
+<tr><td>B</td><td>2026-10-26</td><td>The isolated rebuild command declares NumPy
+so the required dependency is available in a clean environment.</td></tr></tbody></table>
 <h2>Inputs</h2>
 <p>[S1] All physical values and identifiers are synthetic assumptions for this
 example, assumed, based on previous experience. They are not measured data,
@@ -91,7 +93,7 @@ data only; no physical response is inferred from them.</p>
 before engineering use. Full module reporting and qualification remain
 follow-up work; this example does not complete the parent reporting issue.</p>
 <h2>Rebuild</h2>
-<pre><code>PYTHONPATH=src uv run --no-project --with pytest python docs/reports/modules/structural_fe/build_worked_example.py --output-dir selected-output</code></pre>
+<pre><code>PYTHONPATH=src uv run --no-project --with pytest --with 'numpy&gt;=1.24,&lt;2' python docs/reports/modules/structural_fe/build_worked_example.py --output-dir selected-output</code></pre>
 <p>Run from a source checkout with NumPy available. The only generated file is
 <code>worked-example.html</code> inside the selected output directory.
 No external input data, network access, licensed software or large computation
