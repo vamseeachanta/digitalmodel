@@ -62,6 +62,9 @@ class SNCurve(TypedDict):
     m: float
     log_a: float
     thickness_correction: NotRequired[ThicknessCorrection | None]
+    reference_cycles: NotRequired[float]
+    reference_range_MPa: NotRequired[float]
+    endurance_limit_MPa: NotRequired[float | None]
 
 
 class RangeBin(TypedDict):
@@ -88,14 +91,14 @@ class HotSpot(ArcPoint):
 
 
 class FatigueResult(TypedDict):
-    """Recorded governing damage and life, plus their calculation inputs."""
+    """Recorded benchmark damage and calculation inputs; legacy reciprocal optional."""
 
     case_id: str
     sea_state: SeaState
     hot_spots: list[HotSpot]
     sn_curve: SNCurve
     damage_per_year: float
-    life_years: float | None
+    life_years: NotRequired[float | None]
     run: RunRecord
     arc_distribution: NotRequired[list[ArcPoint]]
 
@@ -188,13 +191,13 @@ def _increasing(values: list[float]) -> None:
         raise ValueError("arc length must be strictly increasing")
 
 
-def validate_result(data: dict, kind: Literal["fatigue", "strength"]) -> None:
+def validate_result(data: dict, kind: Literal["fatigue", "strength", "g4_checks"]) -> None:
     """Validate field types, finiteness and cross-field export invariants.
 
     Raises:
         ValueError: If schema, arc alignment, names or cycle totals are invalid.
     """
-    if kind not in ("fatigue", "strength"):
+    if kind not in ("fatigue", "strength", "g4_checks"):
         raise ValueError("unknown result kind")
     _finite(data)
     document = exchange_schema()
@@ -204,6 +207,8 @@ def validate_result(data: dict, kind: Literal["fatigue", "strength"]) -> None:
         # Report only field location and rule; never echo untrusted export values.
         location = ".".join(str(part) for part in error.absolute_path) or "result"
         raise ValueError(f"{kind}: {location}: {error.validator}")
+    if kind == "g4_checks":
+        return
     if kind == "strength":
         arc = data["arc_length_m"]
         _increasing(arc)
@@ -225,5 +230,5 @@ def validate_result(data: dict, kind: Literal["fatigue", "strength"]) -> None:
                 raise ValueError("histogram cycles differ from cycles_per_year")
     if "arc_distribution" in data:
         _increasing([point["arc_length_m"] for point in data["arc_distribution"]])
-    if (data["damage_per_year"] == 0) != (data["life_years"] is None):
+    if "life_years" in data and (data["damage_per_year"] == 0) != (data["life_years"] is None):
         raise ValueError("life_years must be null exactly when damage is zero")

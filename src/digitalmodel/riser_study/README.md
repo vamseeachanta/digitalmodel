@@ -1,15 +1,17 @@
 # Riser fatigue export post-processing
 
-This package reads exported results and produces a screening sensitivity over
-3 sea states. It supplies figures, tables and value tokens for later analysis.
-It starts no solver. Synthetic examples establish arithmetic and artifact
-consistency; they do not establish design fatigue lives.
+This package reads exported stress ranges and annual cycle counts and produces
+**air-equivalent benchmark damage, not service life**. The outputs provide a
+screening sensitivity over three sea states, not a full fatigue analysis.
+Synthetic fixtures establish arithmetic and artifact consistency. No solver is
+started or queried.
 
 ## Revision history
 
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | A | 2026-10-25 | Add shared export validation and fatigue artifacts so recorded inputs can be traced to screening results. |
+| B | 2026-10-26 | Replace reciprocal results with benchmark damage, per-size range panels and damage heatmaps to align the analysis tokens with the specified outputs. |
 
 ## Run
 
@@ -19,144 +21,150 @@ From the repository root, with the declared `jsonschema` dependency available:
 PYTHONPATH=src python -m digitalmodel.riser_study.riser_fatigue_runs results output
 ```
 
-The output directory must be outside the results directory. Input files follow
-`results/<case_id>/fatigue-<sea_state_id>.json`. Every discovered file is read;
-invalid JSON, inconsistent names, missing states and invalid values fail before
-artifacts are written. An empty input directory fails. Output files with the
-same token names are replaced when the command is rerun.
+Input files follow `results/<case_id>/fatigue-<sea_state_id>.json`. Output must be
+an empty directory outside the results tree. Earlier outputs are retained
+separately; a nonempty directory is rejected so obsolete figures cannot remain
+beside the new tokens. No existing output data is deleted.
 
-All cases must carry the same three sea-state definitions, including occurrence,
-and the same hot-spot names across states. The sum of occurrence fractions must
-not exceed one. Fractions are retained without normalization. Subsets of the
-size matrix are supported, but both configurations and both walls of the
-governing size and configuration are required for the value tokens. The full
-study requires twelve cases; this package does not invent missing cases.
+All twelve combinations of nominal size 08/10/12, wall W1/W2 and configuration
+SCR/SLWR are required. Every case must carry the same three sea-state definitions,
+including occurrence, and both named stations (`touchdown`, `hang_off`) at
+unchanged arc coordinates across states. Occurrence fractions are retained
+without normalization and their sum must not exceed one. Missing cases, stations,
+recorded curve parameters or inconsistent exports fail before outputs are written.
 
 ## Shared results exchange
 
-`results_exchange.py` provides `FatigueResult`, `StrengthResult`, supporting
-TypedDicts and `validate_result(data, kind)`. The adjacent
-`results_exchange.schema.json` is a Draft 2020-12 JSON Schema with `fatigue` and
-`strength` definitions. Runtime validation adds finite-number checks, increasing
-arc coordinates, aligned strength arrays, unique hot-spot names and histogram
-cycle-total checks. Unknown fields fail validation. JSON booleans are not numbers.
+`results_exchange.py` imports the single adjacent
+`results_exchange.schema.json` contract for fatigue and strength exports and G4
+comparison evidence. Runtime validation also checks finite numbers, increasing
+arc coordinates, aligned strength arrays, unique station names and histogram
+cycle totals. Unknown fields fail validation; booleans are not numeric inputs.
 
-Case identifiers are `R08-W1-SCR`, `R10-W2-SLWR` and the other combinations of
-nominal size, wall label and configuration in the requested matrix. These labels
-do not supply an outside diameter or a physical wall thickness.
+Fatigue exports record:
 
-Fatigue exports contain the fields below. Units are part of the field names.
-
-| Field | Required meaning |
+| Field | Meaning |
 | --- | --- |
-| `case_id` | Matches the containing directory. |
-| `sea_state` | `id`, `Hs_m`, `Tp_s`, `direction_deg`, `occurrence`; occurrence is the annual exposure fraction from zero to one. |
-| `hot_spots` | Nonempty array of `name` (`touchdown` or `hang_off`), `arc_length_m`, `cycles_per_year`, `scf`, and one range representation. |
-| `stress_range_MPa` | Scalar nominal stress range before SCF, assigned to all recorded cycles. |
-| `range_histogram` | Alternative to the scalar: nonempty array of `{stress_range_MPa, cycles_per_year}` bins. Bin cycles must sum to the hot spot's annual cycle count. |
-| `sn_curve` | `name`, `source_label`, `m`, `log_a`; optional `thickness_correction`, also permitted to be null. The source label is recorded, not inferred. |
-| `thickness_correction` | If present: `thickness_mm`, `reference_thickness_mm`, `exponent`, `source_label`. |
-| `damage_per_year`, `life_years` | Recorded maximum damage over hot spots for this case/state and its reciprocal life. Zero damage requires null life. These are checked against the independent recalculation. |
-| `run` | `input_sha256` (SHA-256 hex), `result_file`, `date` (calendar date); optional `data_basis`, such as `synthetic`. |
-| `arc_distribution` | Optional ordered array of arc points with the same range, cycle and SCF fields as hot spots, without a name. These are recalculated, not interpolated from hot spots. |
+| `case_id` | Matches the containing directory, for example `R08-W1-SCR`. |
+| `sea_state` | `id`, `Hs_m`, `Tp_s`, `direction_deg`, `occurrence`; occurrence is an annual fraction between zero and one. |
+| `hot_spots` | Both station names, `arc_length_m`, `cycles_per_year`, `scf`, and one range representation. |
+| `stress_range_MPa` | Nominal range before SCF, assigned to all recorded cycles. |
+| `range_histogram` | Alternative array of nominal ranges and annual bin counts; counts sum to the station's annual count. |
+| `sn_curve` | `name`, `source_label`, `m`, `log_a`, `reference_cycles`, `reference_range_MPa`, `endurance_limit_MPa`; optional `thickness_correction`. |
+| `damage_per_year` | Recorded maximum over the named stations for this case/state, checked against independent recalculation. |
+| `run` | `input_sha256`, `result_file`, calendar `date`; optional `data_basis`. |
+| `arc_distribution` | Optional ordered arc points with the same range, cycle and SCF representation. |
 
-For strength exports, the shared schema retains `software`, `load_case`, the arc,
-effective tension, bending moment and utilisation arrays, `max_utilisation`,
-`touchdown`, `top_angle_deg`, `hang_off_tension_kN` and `run`. The utilisation
-array has separate required `utilisation_method` and `utilisation_allowable`
-fields so its basis is stated. The `wave`, `current` and `offset` objects retain
-exporter-defined load fields. No strength computation is performed here.
+The shared schema accepts an optional legacy reciprocal input for compatibility;
+it is never copied into tokens, plots, tables or the run record. Strength exports
+retain their shared array and utilisation-basis contract. No strength calculation
+or alternative exchange schema is introduced.
 
 ## Calculation basis
 
-The method follows the specified Miner-sum contract and the single-slope S-N
-parameters in each export:
+The study inputs must explicitly record FAT 80, slope 3, 2,000,000 cycles at
+80 MPa, no endurance limit, SCF 1.2 and no thickness correction. These values are
+checked, not supplied as defaults. Each run record retains the complete recorded
+curve, exposure, cycle counts and SCFs. No licensed publication was opened.
 
 ```text
-thickness_factor = 1, when no correction is recorded
-thickness_factor = (thickness_mm / reference_thickness_mm)**exponent, otherwise
-corrected_range = nominal_range_MPa * scf * thickness_factor
-N = 10**log_a / corrected_range**m
-damage_per_year = occurrence * sum(cycles_per_year / N)
-life_years = 1 / damage_per_year
+N = 2,000,000 * (80 / (nominal_range_MPa * 1.2))**3
+annual_benchmark_damage = occurrence * sum(cycles_per_year / N)
+same_station_damage = sum(annual_benchmark_damage over the three sea states)
 ```
 
-Annual cycles describe continuous exposure to the sea state, before occurrence
-weighting. An exporter whose counts already include occurrence must convert them
-to that basis first. Stress must likewise be nominal before the recorded SCF.
-There is no implicit thickness clipping, reference thickness, safety factor,
-mean stress adjustment or curve selection. A zero range contributes no damage.
-Null life means unbounded life from the supplied inputs; it is labelled
-`unbounded` and omitted from logarithmic coordinates.
+Annual cycle counts describe continuous exposure before occurrence weighting;
+occurrence is applied exactly once. For a one-hour damage contribution `d`, this
+is `D = d * 8760 * occurrence`. Zero range, zero cycles or zero occurrence gives
+true zero damage. Reciprocal life at zero damage is **not established**.
+No finite substitute is reported. Damage has no qualified service acceptance line.
 
-The hand example in the module and test docstrings uses explicitly ASSUMED
-synthetic parameters: slope 3, intercept 12, range 100 MPa, SCF 1, annual cycles
-1,000,000 and occurrence 0.2. Failure cycles are 1,000,000, annual damage is 0.2
-and life is 5.0 years. The histogram example calculates each bin separately.
-No parameter is taken from a licensed publication. All other test values are
-labelled synthetic assumptions. One geometry test uses the retained closed-form
-SCR benchmark in
-`docs/domains/orcaflex/library/campaigns/generic-scr-slwr/static-reference.json`;
-its fatigue inputs remain synthetic. Static geometry is not a dynamic fatigue
-qualification. The adjacent `riser_configuration_screen` package supplies a
-static curvature proxy and is deliberately not used as fatigue stress data.
+The lower-level `calculate()` function still supports explicitly recorded generic
+power-law curves and thickness corrections for arithmetic checks. The artifact
+producer enforces the study benchmark. The synthetic hand example uses slope 3,
+intercept 12, range 100 MPa, SCF 1, annual cycles 1,000,000 and occurrence 0.2,
+giving annual damage 0.2. Histogram bins are evaluated separately.
 
-Recorded damage/life comparisons allow relative numerical tolerance `1e-8`;
-histogram count totals allow `1e-9`. These are serialization tolerances, not
-engineering acceptance criteria. Overflow, underflow and nonfinite calculations
-fail rather than producing a finite substitute life.
+Recorded damage permits relative serialization tolerance `1e-8`; histogram cycle
+totals permit `1e-9`. These are numerical comparison tolerances. Overflow,
+underflow and nonfinite calculations fail explicitly.
 
 ## Artifacts and tokens
 
-Each of the following tokens has its own SVG and CSV. `manifest.json` contains
-the actual CSV rows, source export and input digests, artifact digests, all
-calculated hot spots, governing records and plotting transforms. SVG metadata
-and marks carry those same rows; plotted coordinates use unrounded values.
-Every artifact and CSV row carries the screening scope. Table SVGs contain
-wrapped record blocks so every recorded field is visible. Calculated table
-comparisons display one decimal, using scientific notation for small or large
-values; machine-readable rows retain full precision.
-
 | Token | Content |
 | --- | --- |
-| `FIG-FAT-01` | Maximum nominal histogram/scalar range at the governing damage hot spot of each case/state, in MPa. Corrected range, SCF and thickness factor are retained alongside it. |
-| `FIG-FAT-02` | Life at that hot spot in years, with a logarithmic vertical axis. |
-| `FIG-FAT-03` | Recalculated damage along each exported riser in the globally governing sea state, with identified case traces. |
-| `TAB-FAT-01` | Stress range, damage, life and hot-spot location for each case/state. |
-| `TAB-FAT-IN-01` | Recorded sea states, S-N curve and source, correction, SCF, cycles and histograms, arc inputs and run provenance. |
+| `FIG-FAT-RNG-08` | Nominal ranges for size 08, sea state on the horizontal axis, touchdown and hang-off panels, both walls and configurations. |
+| `FIG-FAT-RNG-10` | Corresponding size 10 ranges on the same vertical scale. |
+| `FIG-FAT-RNG-12` | Corresponding size 12 ranges on the same vertical scale. |
+| `FIG-FAT-HEAT-01` | Two 12 by 3 annual benchmark damage panels, one per named station, with a shared logarithmic colour scale and white for true zero. |
+| `TAB-FAT-01` | Nominal and corrected ranges, counts, SCFs and annual benchmark damage at both stations for every case/state. |
 
-Missing arc exports produce an unavailable `FIG-FAT-03` with a header-only CSV
-and an explanatory SVG. Partial coverage is labelled in the SVG and manifest,
-with the missing cases listed. No arc curve is fabricated.
+Each artifact has an SVG and CSV. Its manifest rows and SVG metadata contain
+exactly the serialized CSV rows. Each plotted mark carries its row and uses its
+unrounded value. CSV and SVG digests, source digests and the run-record digest
+are retained in `manifest.json`. Human-visible calculated labels use one decimal;
+machine-readable values retain full precision. `run_record.json` retains inputs
+without adding an analysis token for known design data.
 
-`tokens.json` provides `V-FAT-GOV-CASE`, `V-FAT-GOV-SS`, `V-FAT-LMIN`,
-`V-FAT-SCR-HOTSPOT`, `V-FAT-SLWR-HOTSPOT` and `V-FAT-WT-FACTOR`. The governing
-case/state and configuration-specific hot spots are those with greatest annual
-damage. Exact ties use case, state and hot-spot name in lexical order.
+`tokens.json` provides these values:
 
-The wall factor is **W2 minimum life / W1 minimum life**, for the size and
-configuration of the global governing case. Each wall uses its own minimum
-over all states and hot spots. Both case ids and states are recorded in
-`wall_comparison`. The factor is null if either wall has unbounded life. Wall
-labels do not imply which physical thickness is greater. These definitions are
-also in the calculation module docstring.
+| Token | Definition |
+| --- | --- |
+| `V-FAT-DMAX` | Maximum of the three-state damage sums formed at each named station first. |
+| `V-FAT-GOV-CASE` | Case of that maximum. |
+| `V-FAT-GOV-SS` | Largest contributing sea state at that governing station. |
+| `V-FAT-SCR-HOTSPOT`, `V-FAT-SLWR-HOTSPOT` | Named station governing each configuration's three-state sum. |
+| `V-FAT-WT-DELTA` | `100 * (W2 damage - W1 damage) / W1 damage`, in %, at the governing size/configuration; each wall uses its own maximum same-station sum. Null when W1 damage is zero. |
+| `V-FAT-RESOLVED` | `resolved` only with passing G4 comparison evidence and a wall change exceeding measured uncertainty; otherwise `not resolved`. |
+
+Wall labels refer to the supplied matrix; no physical wall thickness is inferred.
+Exact damage ties use case id, contributing state id and station name in lexical
+order. The manifest records governing stations and their individual contributions.
+No removed analysis token is emitted. The Phase B duration table remains deferred
+until duration-check results are available.
+
+## G4 evidence
+
+Supply an optional JSON record with `--g4-checks checks.json`. The same shared
+schema validates its fields:
+
+```json
+{
+  "comparison_cases": ["R08-W1-SCR", "R08-W2-SCR"],
+  "mesh_step": {
+    "wall_delta_pct": -87.4,
+    "tolerance_pct": 1.0,
+    "source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "half_hour": {
+    "wall_delta_pct": -87.3,
+    "tolerance_pct": 1.0,
+    "source_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  }
+}
+```
+
+These are assumed synthetic examples, not acceptance tolerances for actual runs.
+Each check records the wall percentage from its checked responses, the permitted
+absolute deviation in percentage points and its evidence digest. The cases must
+match the comparison in the tokens. Both deviations from the full-history wall
+percentage must meet the supplied tolerances, and the absolute wall change must
+strictly exceed the larger measured deviation. The run record and manifest retain
+the supplied evidence and calculated deviations. The post-processor does not
+retrieve or independently qualify the referenced evidence. Missing checks or
+zero reference damage cannot establish resolution; no default tolerance is used.
 
 ## Verification and limits
 
-The fixture tests check schema acceptance and rejection, a hand-worked Miner
-sum, SCF and explicit thickness correction, reciprocal life, governing selection,
-missing data, CLI execution, input/artifact digests and every plotted value's
-CSV and manifest row. A synthetic twelve-case set covers three common states.
-No test imports or starts a licensed solver.
+Fixture tests cover hand-worked Miner sums, recorded FAT 80 inputs, same-station
+aggregation, output identifiers, matrix coverage, true zero, plot coordinates
+and colours against CSV and manifest rows, G4 comparison resolution, CLI use and
+digests. Input validation and generic SCF/thickness arithmetic remain covered.
+Tests of removed reciprocal, arc-plot and input-table outputs are replaced by
+checks of the revised outputs. No test imports or starts a licensed solver.
 
-Actual runs must export the named hot spots, nominal ranges or histograms,
-unweighted annual counts, SCFs, single-slope curve parameters and source,
-occurrence fractions, recorded governing damage and reciprocal life, and run
-provenance. Arc distributions are required for a complete `FIG-FAT-03`.
-
-These outputs rank the supplied three-state sensitivity. Full fatigue assessment
-requires the qualified full scatter diagram, stress response and cycle counting,
-applicable fatigue mechanisms and engineering review. Neither curve provenance
-nor the selection of the three fatigue-governing states is established by this
-post-processor. The package does not aggregate the three states into a design
-life or supply results for absent exports.
+Actual stress-response exports, source qualification, cycle counting, full
+scatter coverage, other fatigue mechanisms and engineering review remain required.
+Only the named stations define the reported maximum; optional arc inputs remain
+in the run record and do not establish complete spatial coverage. No Phase B
+result, qualified service acceptance or complete fatigue assessment is claimed.

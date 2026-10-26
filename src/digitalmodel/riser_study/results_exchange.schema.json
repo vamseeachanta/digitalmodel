@@ -92,6 +92,21 @@
               "$ref": "#/$defs/thickness_correction"
             }
           ]
+        },
+        "reference_cycles": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "reference_range_MPa": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "endurance_limit_MPa": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
         }
       },
       "required": [
@@ -301,7 +316,6 @@
         "hot_spots",
         "sn_curve",
         "damage_per_year",
-        "life_years",
         "run"
       ],
       "additionalProperties": false
@@ -495,6 +509,55 @@
         "top_angle_deg",
         "hang_off_tension_kN",
         "run"
+      ],
+      "additionalProperties": false
+    },
+    "g4_check": {
+      "type": "object",
+      "properties": {
+        "wall_delta_pct": {
+          "type": "number"
+        },
+        "tolerance_pct": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        }
+      },
+      "required": [
+        "wall_delta_pct",
+        "tolerance_pct",
+        "source_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "g4_checks": {
+      "type": "object",
+      "properties": {
+        "comparison_cases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R(08|10|12)-W[12]-(SCR|SLWR)$"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "mesh_step": {
+          "$ref": "#/$defs/g4_check"
+        },
+        "half_hour": {
+          "$ref": "#/$defs/g4_check"
+        }
+      },
+      "required": [
+        "comparison_cases",
+        "mesh_step",
+        "half_hour"
       ],
       "additionalProperties": false
     }
