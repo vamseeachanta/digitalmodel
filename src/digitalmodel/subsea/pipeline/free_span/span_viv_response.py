@@ -14,6 +14,7 @@ Cross-flow amplitude (F105 Sec 4.4.4, Fig 4-5):
     Piecewise from Vr_onset → Vr_peak → Vr_end=16
 
 Turbulence reductions (implementation basis: digitalmodel issue #1730):
+    Recorded source: DNV-RP-F105, 2006, Section 4.3.6; superseded edition.
     R1 = clamp(1 - π² (Ic - 0.03) (π/2 - √2 θ_rel), 0, 1)   IL only
     R2 = clamp(1 - (Ic - 0.03) / 0.17, 0, 1)                 CF only
     Ic is a fractional intensity; θ_rel is converted from input degrees to
@@ -30,7 +31,7 @@ from __future__ import annotations
 
 import math
 
-from .models import PipeSpanInput
+from .models import PipeSpanInput, turbulence_citations
 
 
 class SpanVIVAmplitude:
@@ -61,6 +62,9 @@ class SpanVIVAmplitude:
         self._fn_CF = fn_CF
         self._EI = EI
         self._m_e = m_e
+        # Validate the recorded source before any reduction is calculated.
+        # Keep provenance separate from the existing scalar amplitude outputs.
+        self.citations = turbulence_citations()
         self._r1, self._r2 = self._turbulence_reduction_factors()
 
     def _turbulence_reduction_factors(self) -> tuple[float, float]:

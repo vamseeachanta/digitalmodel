@@ -9,12 +9,27 @@ Synthetic geometry and response inputs isolate reductions from calibration.
 """
 
 import math
-from dataclasses import replace
+from dataclasses import asdict, replace
 
 import pytest
 
+from digitalmodel.citations import Citation, CitationResolutionError, validate_citation
 from digitalmodel.subsea.pipeline.free_span import FreespanVIVFatigue, PipeSpanInput
 from digitalmodel.subsea.pipeline.free_span.span_viv_response import SpanVIVAmplitude
+
+
+_WIKI_PAGE = "wikis/engineering-standards/wiki/standards/dnv-rp-f105.md"
+_METADATA = "---\ncode_id: dnv-rp-f105\npublisher: DNV\nrevision: 2006\n---\n"
+
+
+@pytest.fixture(autouse=True)
+def citation_page(tmp_path, monkeypatch):
+    """Supply synthetic metadata, never licensed standard content."""
+    page = tmp_path / _WIKI_PAGE
+    page.parent.mkdir(parents=True)
+    page.write_text(_METADATA, encoding="utf-8", newline="\n")
+    monkeypatch.setenv("LLM_WIKI_PATH", tmp_path.as_posix())
+    return page
 
 
 @pytest.fixture
@@ -32,6 +47,81 @@ def span_input():
 
 def _assess(inp):
     return FreespanVIVFatigue(inp).assess()
+
+
+def _cited_output(inp, consumer):
+    if consumer == "facade":
+        return _assess(inp)
+    return SpanVIVAmplitude(inp, Ks=0.0, fn_IL=1.0, fn_CF=0.5, EI=1.0, m_e=1.0)
+
+
+@pytest.mark.parametrize("consumer", ["amplitude", "facade"])
+@pytest.mark.parametrize("layout", ["", "knowledge"])
+def test_turbulence_citation_sidecar(span_input, tmp_path, citation_page, consumer, layout):
+    """Catch absent sidecars without changing the numeric result payload."""
+    if layout:
+        overlay = tmp_path / layout / _WIKI_PAGE
+        overlay.parent.mkdir(parents=True)
+        citation_page.rename(overlay)
+    output = _cited_output(span_input, consumer)
+    assert len(output.citations) == 1
+    citation = output.citations[0]
+    assert isinstance(citation, Citation)
+    assert citation.code_id == "dnv-rp-f105"
+    assert citation.publisher == "DNV"
+    assert citation.revision == "2006"
+    assert citation.section == "Section 4.3.6 (turbulence reduction factors)"
+    assert citation.wiki_path == _WIKI_PAGE
+    assert citation.source_sibling == "generic"
+    assert citation.source_project is None
+    validate_citation(citation)
+    if consumer == "facade":
+        assert "citations" not in asdict(output)
+        assert output.il_A_over_D > 0.0
+        assert output.cf_A_over_D > 0.0
+    else:
+        assert isinstance(output.il_amplitude_over_D(), float)
+        assert isinstance(output.cf_amplitude_over_D(), float)
+
+
+@pytest.mark.parametrize("consumer", ["amplitude", "facade"])
+def test_missing_turbulence_citation_rejected(span_input, citation_page, consumer):
+    """A previous success must not authorize a later calculation without its source."""
+    _cited_output(span_input, consumer)
+    citation_page.rename(citation_page.with_suffix(".absent"))
+    for _ in range(2):
+        with pytest.raises(CitationResolutionError) as caught:
+            _cited_output(span_input, consumer)
+        assert caught.value.code_id == "dnv-rp-f105"
+        assert caught.value.reason == "page_missing"
+
+
+@pytest.mark.parametrize("consumer", ["amplitude", "facade"])
+@pytest.mark.parametrize("field", ["code_id", "publisher", "revision"])
+@pytest.mark.parametrize("invalid", [None, "mismatched"])
+def test_invalid_turbulence_citation_rejected(
+    span_input, citation_page, consumer, field, invalid
+):
+    """Catch skipped source-identity checks, including after a successful calculation."""
+    _cited_output(span_input, consumer)
+    lines = [line for line in _METADATA.splitlines() if not line.startswith(field + ":")]
+    if invalid is not None:
+        lines.insert(-1, f"{field}: {invalid}")
+    citation_page.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    with pytest.raises(CitationResolutionError) as caught:
+        _cited_output(span_input, consumer)
+    assert caught.value.code_id == "dnv-rp-f105"
+    reason = "frontmatter_missing" if invalid is None else "frontmatter_mismatch"
+    assert caught.value.reason.startswith(f"{reason}:{field}")
+
+
+@pytest.mark.parametrize("consumer", ["amplitude", "facade"])
+def test_invalid_turbulence_resolver_rejected(span_input, tmp_path, monkeypatch, consumer):
+    """An invalid configured source root must never return a numeric assessment."""
+    monkeypatch.setenv("LLM_WIKI_PATH", (tmp_path / "unavailable").as_posix())
+    with pytest.raises(CitationResolutionError) as caught:
+        _cited_output(span_input, consumer)
+    assert caught.value.reason.startswith("llm_wiki_path_invalid:")
 
 
 @pytest.mark.parametrize("angle", [0.0, 30.0, 90.0])

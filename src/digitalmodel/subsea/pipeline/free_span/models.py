@@ -9,6 +9,27 @@ import math
 from dataclasses import dataclass, field
 from enum import Enum
 
+from digitalmodel.citations import Citation, validate_citation
+
+
+_TURBULENCE_CITATION = Citation(
+    code_id="dnv-rp-f105",
+    publisher="DNV",
+    revision="2006",
+    section="Section 4.3.6 (turbulence reduction factors)",
+    wiki_path="wikis/engineering-standards/wiki/standards/dnv-rp-f105.md",
+    source_sibling="generic",
+    note="Issue #1730 supplies the implemented equations. The recorded edition "
+         "is superseded; metadata resolution does not establish independent "
+         "standards validation or current-edition compliance.",
+)
+
+
+def turbulence_citations() -> tuple[Citation, ...]:
+    """Resolve the recorded basis before calculating turbulence reductions."""
+    validate_citation(_TURBULENCE_CITATION)
+    return (_TURBULENCE_CITATION,)
+
 
 class BoundaryConditionF105(Enum):
     """Span end conditions (F105 Table 6-1)."""
@@ -184,3 +205,12 @@ class SpanVIVResult:
     allowable_span_m: float
     span_length_m: float
     span_utilization: float   # span_length_m / allowable_span_m
+
+    @property
+    def citations(self) -> tuple[Citation, ...]:
+        """Return validated provenance outside the numeric dataclass payload.
+
+        Only the new turbulence reductions are covered by this sidecar.
+        Existing response, stress and fatigue approximations are not certified.
+        """
+        return turbulence_citations()
