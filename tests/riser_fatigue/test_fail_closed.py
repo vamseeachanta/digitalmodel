@@ -79,9 +79,14 @@ def test_RF02_missing_viv_rejected(segment, value):
 def test_RF03_invalid_histogram_rejected(touch, segment, stress, cycles):
     with pytest.raises(ValueError):
         assess_touchdown_fatigue(replace(touch, stress_ranges_mpa=stress, cycles=cycles))
-    with pytest.raises(ValueError):
-        miner_damage(pd.DataFrame({"stress_range": stress, "cycles": cycles}),
-                     get_sn_curve("F1", "seawater_cp"))
+    if any(value is None or not math.isfinite(value) or value < 0
+           for value in stress + cycles):
+        with pytest.raises(ValueError):
+            miner_damage(pd.DataFrame({"stress_range": stress, "cycles": cycles}),
+                         get_sn_curve("F1", "seawater_cp"))
+    else:
+        assert miner_damage(pd.DataFrame({"stress_range": stress, "cycles": cycles}),
+                            get_sn_curve("F1", "seawater_cp")).attrs["total_damage"] == 0
     segment["wave"].update(stress_ranges_MPa=stress, cycles=cycles)
     with pytest.raises(ValueError):
         evaluate(segment)
@@ -335,6 +340,14 @@ def test_RF14_diameter_is_informational_for_supplied_stress(touch):
     assert "Outer diameter is informational" in report
     assert "PASS requires design-life damage × DFF ≤ 1" in report
     assert report.index("## Summary") < report.index("## Revision history") < report.index("## Inputs")
+
+
+def test_report_revision_is_explicit_and_independent_of_calendar(touch):
+    dated = replace(touch, report_revision="2", report_date="2026-10-20")
+    result = assess_touchdown_fatigue(dated)
+    report = report_markdown(dated, result)
+    assert "| 2 | 2026-10-20 |" in report
+    assert "| 1 | Not supplied |" in report_markdown(touch, result)
 
 
 @pytest.mark.parametrize("allowable", [math.nan, -1, 0, math.inf])

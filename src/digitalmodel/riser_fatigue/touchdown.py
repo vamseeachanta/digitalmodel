@@ -26,7 +26,6 @@ thickness_correction) — no S-N math is reimplemented here.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
 from typing import Optional, Sequence
 
 import numpy as np
@@ -108,6 +107,11 @@ class TouchdownFatigueInput:
         overrides it only with ``thickness_exponent_basis`` and without
         reducing the selected class penalty. ``sn_basis`` records detail and
         environment evidence; ``histogram_basis`` records the duration basis.
+    report_revision : str
+        Supplied report revision identifier (default "1").
+    report_date : str, optional
+        Supplied issue date. Omitted dates are reported as "Not supplied";
+        rendering never reads the current calendar date.
     """
 
     section: RiserSection
@@ -119,12 +123,14 @@ class TouchdownFatigueInput:
     design_life_years: Optional[float] = None
     dff: Optional[float] = None
     histogram_period_years: Optional[float] = None
-    thickness_ref_mm: float = 25.0
+    thickness_ref_mm: float = _c203.T_REF_WELDED_MM
     thickness_exponent: Optional[float] = None
     scf_basis: Optional[str] = None
     sn_basis: Optional[str] = None
     histogram_basis: Optional[dict] = None
     thickness_exponent_basis: Optional[str] = None
+    report_revision: str = "1"
+    report_date: Optional[str] = None
 
 
 def _class_thickness_exponent(sn_class: str, environment: str) -> float:
@@ -203,7 +209,7 @@ def assess_touchdown_fatigue(
             raise ValueError("thickness_exponent must not reduce the selected class penalty")
         evidence_text(inp.thickness_exponent_basis, "thickness_exponent_basis")
     # A larger reference thickness could suppress the selected method's penalty.
-    if reference > 25:
+    if reference > _c203.T_REF_WELDED_MM:
         raise ValueError("thickness_ref_mm must not exceed the selected method reference")
 
     # 1) SCF on nominal stress ranges, then 2) DNV thickness correction.
@@ -285,7 +291,10 @@ def report_markdown(
     lines.append("")
     lines.append("| Revision | Date | What changed and why |")
     lines.append("|---|---|---|")
-    lines.append(f"| 1 | {date.today().isoformat()} | Initial stress-based assessment with validated input evidence |")
+    lines.append(
+        f"| {inp.report_revision} | {inp.report_date or 'Not supplied'} | "
+        "Stress-based assessment with validated input evidence |"
+    )
     lines.append("")
     lines.append("## Inputs")
     lines.append("")

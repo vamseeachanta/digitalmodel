@@ -26,6 +26,12 @@ def simple_histogram():
 
 
 class TestMinerDamage:
+    @pytest.mark.parametrize("stress, cycles", [([0.0], [10.0]), ([100.0], [0.0])])
+    def test_unloaded_histogram_has_zero_damage(self, f_curve, stress, cycles):
+        result = miner_damage(pd.DataFrame({"stress_range": stress, "cycles": cycles}), f_curve)
+        assert result.attrs["total_damage"] == 0.0
+        assert result["damage"].tolist() == [0.0]
+
     def test_returns_dataframe_with_damage_columns(self, simple_histogram, f_curve):
         result = miner_damage(simple_histogram, f_curve)
         assert "allowable_cycles" in result.columns

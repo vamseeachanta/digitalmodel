@@ -33,6 +33,7 @@ from typing import Any, Optional
 import pandas as pd
 
 from digitalmodel.fatigue.damage import miner_damage
+from digitalmodel.fatigue.c203_sn_tables import T_REF_WELDED_MM
 from digitalmodel.fatigue.sn_curves import get_sn_curve
 from digitalmodel.riser_database.getters import get_riser_dff
 from digitalmodel.riser_fatigue.validation import (
@@ -212,7 +213,7 @@ def _wave_damage(
         scf_basis=wave.get("scf_basis"),
         sn_basis=sn_basis,
         histogram_basis=wave.get("histogram_basis"),
-        thickness_ref_mm=wave.get("thickness_ref_mm", 25.0),
+        thickness_ref_mm=wave.get("thickness_ref_mm", T_REF_WELDED_MM),
         thickness_exponent=wave.get("thickness_exponent"),
         thickness_exponent_basis=wave.get("thickness_exponent_basis"),
         design_life_years=design_life_years,

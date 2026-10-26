@@ -8,8 +8,13 @@ at query time. See docs/plans/parametric-refresh/adding-an-atlas.md.
 
 from __future__ import annotations
 
+import math
+
+import pytest
+
 from digitalmodel.parametric import refresh
 from digitalmodel.parametric.atlas import Atlas
+from digitalmodel.parametric.generate import RESPONSE_FUNCS
 from digitalmodel.parametric.query import _HANDLERS
 
 
@@ -19,6 +24,29 @@ def _rows_by_id() -> dict[str, dict]:
 
 def _basename(wid: str) -> str:
     return _rows_by_id()[wid]["basename"]
+
+
+@pytest.mark.parametrize("basename", sorted(RESPONSE_FUNCS))
+def test_every_response_evaluates_a_registered_point(basename, tmp_path, monkeypatch):
+    # Supply citation metadata as in the watch-circle workflow tests; no
+    # standard values or numerical responses are replaced by this fixture.
+    page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+    page.parent.mkdir(parents=True)
+    page.write_text("---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n")
+    monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
+    row = next(row for row in refresh._registry_rows() if row["basename"] == basename)
+    block = row["parametric"]
+    point = {axis["name"]: axis.get("values", axis.get("grid"))[0]
+             for axis in block["axes"]}
+    value = RESPONSE_FUNCS[basename](point, **block.get("response_kwargs", {}))
+    assert math.isfinite(value)
+    assert value >= 0
+
+
+@pytest.mark.parametrize("scf", [1.0, 1.15])
+def test_riser_response_preserves_reference_damage(scf):
+    value = RESPONSE_FUNCS["riser_fatigue"]({"scf": scf, "viv_stress_scale": 1.0})
+    assert value == pytest.approx({1.0: 2.93e-4, 1.15: 5.37e-4}[scf], rel=0.005)
 
 
 def test_some_atlases_are_registered():

@@ -47,14 +47,14 @@ def miner_damage(
     if not np.all(np.isfinite(damages)) or np.any(damages < 0):
         raise ValueError("Miner bin damage must be finite and non-negative")
     total = float(damages.sum())
-    if not np.isfinite(total) or total <= 0:
-        raise ValueError("Miner total damage must be finite and positive; zero loading is unqualified")
+    if not np.isfinite(total) or total < 0:
+        raise ValueError("Miner total damage must be finite and non-negative")
     result.attrs["total_damage"] = total
     return result
 
 
 def validate_histogram(stress_ranges, cycles):
-    """Require known non-negative bins and at least one loaded cycle bin."""
+    """Require known non-negative bins; unloaded bins have valid zero damage."""
     try:
         for values in (stress_ranges, cycles):
             raw = np.asarray(values, dtype=object)
@@ -72,8 +72,6 @@ def validate_histogram(stress_ranges, cycles):
         raise ValueError("histogram stress and cycles must be finite")
     if np.any(stress < 0) or np.any(counts < 0):
         raise ValueError("histogram stress and cycles must be non-negative")
-    if not np.any((stress > 0) & (counts > 0)):
-        raise ValueError("histogram contains no loaded cycles; zero loading is unqualified")
     return stress, counts
 
 
