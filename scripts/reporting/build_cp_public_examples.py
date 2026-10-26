@@ -16,6 +16,7 @@ import hashlib
 import json
 import math
 import re
+import stat
 from pathlib import Path
 from typing import Any
 
@@ -404,28 +405,45 @@ def build_reference(destination: Path) -> Path:
     return folder
 
 
+def validate_install_path(path: Path, root: Path) -> None:
+    """Reject links and Windows reparse points in every installation segment."""
+    current = root
+    for part in ("", *path.relative_to(root).parts):
+        current = current / part
+        try:
+            details = current.lstat()
+        except FileNotFoundError:
+            # New pack files are permitted; their existing parents are checked.
+            continue
+        if stat.S_ISLNK(details.st_mode) or getattr(details, "st_reparse_tag", 0):
+            raise ValueError("unsafe installation path")
+    if not path.resolve().is_relative_to(root.resolve()):
+        raise ValueError("unsafe installation destination")
+
+
 def install(candidate: Path) -> None:
     """Copy verified selected packs only; retain unrelated release receipt entries."""
     folders = [candidate / "cases" / key for key in CASES] + [candidate / "reference-jacket"]
     receipt_path = REPORTS / "portfolio-receipt.json"
+    validate_install_path(receipt_path, REPORTS)
     receipt = read_json(receipt_path)
     for folder in folders:
-        if folder.is_symlink() or not folder.resolve().is_relative_to(candidate.resolve()):
-            raise ValueError("unsafe candidate directory")
-        verify_pack(folder)
+        validate_install_path(folder, candidate)
         relative = folder.relative_to(candidate)
         target = REPORTS / relative
-        if target.is_symlink() or not target.resolve().is_relative_to(REPORTS.resolve()):
-            raise ValueError("unsafe report destination")
+        validate_install_path(target, REPORTS)
+        for path in sorted(folder.iterdir()):
+            validate_install_path(path, candidate)
+            validate_install_path(target / path.name, REPORTS)
+            if not path.is_file():
+                raise ValueError("unsafe report file")
+        verify_pack(folder)
         check_existing_pack(target)
         if (target / "results.json").is_file():
             compare_results(read_json(target / "results.json"), read_json(folder / "results.json"))
         for path in sorted(folder.iterdir()):
             name = (relative / path.name).as_posix()
             old = target / path.name
-            if (path.is_symlink() or not path.is_file() or old.is_symlink()
-                    or not old.resolve().is_relative_to(target.resolve())):
-                raise ValueError("unsafe report file")
             if name in receipt and digest(old) != receipt[name]:
                 raise ValueError("existing selected release receipt differs")
     for folder in folders:
