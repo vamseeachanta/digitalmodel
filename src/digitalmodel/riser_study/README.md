@@ -1,130 +1,137 @@
 # Riser strength and fatigue decision outputs
 
-`decision_chart.py` reads exported results and produces a fatigue against
-strength chart. It uses the maximum exported utilisation and the shortest
-exported sea-state life for each case. Strength passes when utilisation is
-less than or equal to its criterion; fatigue passes when life is greater than
-or equal to its target. Comparisons use unrounded values.
+`decision_chart.py` joins qualified strength exports to annual benchmark damage
+at matching stations. The chart uses the maximum qualified Phase A U1 on x and
+the maximum of the station sums over F03, F04 and F05 on y. A station sum is
+formed before selecting the maximum; summing the separate sea-state maxima
+would combine different physical locations. Annual damages are already
+weighted by the exporter and are added without further occurrence weighting.
 
-This is a screening sensitivity, not a full fatigue analysis. Occurrences are
-retained in the exchange records; this package neither reweights lives nor
-sums damage. Exporters must document their annualisation and fatigue factors.
-The minimum life is a sensitivity envelope, not a combined scatter-diagram
-life. No solver or standards document is loaded.
+U1 at or below one meets the strength screen. The chart has one screening line
+at U1 = 1, colours for nominal sizes, markers for configurations, and links
+between W1 and W2 within each size and configuration. Positive damage uses a
+logarithmic axis. True zero is labelled in a separate strip at the axis edge;
+it is never replaced with a positive damage floor. Damage is an air-equivalent
+benchmark, not service life. It has no qualified service acceptance line.
 
 ## Inputs
 
-Provide an explicit case manifest, a criteria file, and a results directory.
-The manifest defines completeness; every listed case requires strength and
-every listed fatigue sea state. Missing, duplicate, mismatched and unexpected
-exports are rejected. Case identifiers carry the configuration suffix.
+Provide a case manifest, a strength-screen criteria file, an upstream fatigue
+token file, and a results directory. The case manifest lists completed cases
+ready for the decision comparison and the complete Phase A run ledger. Every
+listed case requires at least one qualified Phase A strength export and all
+three fatigue exports. Missing, duplicate, mismatched and unexpected exports
+are rejected before an output directory is created.
 
-Example manifest for synthetic inputs:
+Example manifest structure for synthetic inputs:
 
 ```json
 {
   "basis_label": "synthetic",
-  "fatigue_sea_state_ids": ["S1", "S2", "S3"],
-  "cases": [
-    {"case_id": "R08-W1-SCR"},
-    {"case_id": "R08-W1-SLWR"}
+  "fatigue_sea_state_ids": ["F03", "F04", "F05"],
+  "cases": [{"case_id": "R08-W1-SCR"}],
+  "runs": [
+    {"id": "strength-example", "phase": "A", "status": "completed", "qualified": true},
+    {"id": "fatigue-f03", "phase": "A", "status": "completed", "qualified": true},
+    {"id": "fatigue-f04", "phase": "A", "status": "completed", "qualified": true},
+    {"id": "fatigue-f05", "phase": "A", "status": "completed", "qualified": true}
   ]
 }
 ```
 
-The example uses a subset only to show the shape. List every study case in
-the actual manifest; no case count or sea-state count is embedded in the code.
+Each ledger entry records a unique `id`, `phase` (`A` or `B`), `status`
+(`attempted`, `completed` or `failed`) and boolean `qualified`. Qualification
+requires completion. The attempted count includes all Phase A ledger entries;
+completed and qualified counts use their explicit status. Counts describe
+runs, including attempts without exports, rather than the number of cases.
+Phase B entries are retained as evidence and excluded from Phase A counts.
+Ledger completeness and qualification require upstream review; they cannot be
+established by the presence of a result file.
 
-Criteria have `strength` and `fatigue` objects, each containing `criterion`,
-`value`, `unit`, `basis_label` and `source`. Units are `-` and `years`,
-respectively. Use the reviewed matrix criteria record as the source, including
-its revision. There are no default numeric criteria. Until the reviewed record
-is available, the fixture criteria are **ASSUMED**, as their basis labels state.
-Those synthetic numbers are arithmetic examples, not design acceptance limits.
+The criteria file contains only `strength`, with `criterion`, `value` (one),
+`unit` (`-`), `basis_label` and `source`. The upstream token file must contain
+`V-FAT-RESOLVED.value` equal to `resolved` or `not resolved`. Its bytes are
+included in input provenance. The decision reader does not independently
+repeat the fatigue mesh, time-step or split-history checks.
 
-The supplied fixture is
-`tests/riser_study/fixtures/criteria.json` from the repository root. Tests define
-their synthetic result values and hand-counted expectations in
-`tests/riser_study/test_decision_chart.py`. Its static top tension is copied
-from case C1 in `docs/benchmarks/catenary_closed_form/benchmark.json`, whose
-independent calculation is `catenary_hand_values.py` in the same directory.
-Every other fixture number is an ASSUMED synthetic schema or arithmetic example.
-Presentation settings in the chart are not engineering parameters.
+## Shared exchange contract
 
-## Exchange contract
+The reader imports validation from `results_exchange.py` and uses the single
+`results.schema.json` contract. No solver or standards document is loaded.
+Existing strength arrays and provenance remain required. The following fields
+make the decision inputs explicit:
 
-`results_exchange.py` defines `StrengthResult` and `FatigueResult` TypedDicts.
-`results.schema.json` is the structural contract, with JSON Schema draft
-2020-12 definitions for both records. `validate_result(data, kind)` checks
-the schema, real dates, finite numbers and strength-array consistency.
-Duplicate JSON keys, non-finite numbers and nonpositive fatigue lives are
-rejected. Positive finite life is required for the logarithmic plot; exporters
-must resolve zero-damage or undefined-life cases before chart generation.
-Dates may be calendar dates or timestamps with seconds and a timezone;
-leap-second timestamps are unsupported.
+- Strength files are `results/<case_id>/strength.json` or
+  `results/<case_id>/strength-<export_id>.json`. Eligible exports must declare
+  `utilisation_basis: "U1"`. The existing `von_mises_utilisation` array and
+  `max_utilisation` carry that declared U1 basis. The maximum must identify an
+  actual sample. The largest qualified Phase A export supplies the chart x.
+- Fatigue files are `results/<case_id>/fatigue-F03.json`, `fatigue-F04.json`
+  and `fatigue-F05.json`. Each `hot_spots` entry must include an annual
+  `damage_per_year`. The three exports must share the same station grid and
+  location names; duplicate stations are rejected. A case-level scalar damage
+  cannot substitute for station evidence. Legacy `life_years` is optional in
+  the shared schema and is never read by the decision calculation.
+- Each result's `run` retains `input_sha256`, `result_file` and `date`, and
+  adds `id`, `phase`, `status` and `qualified`, matching a unique ledger entry.
+  Only completed, qualified Phase A exports enter the comparison. Every
+  fatigue export must be eligible. Excluded strength exports remain in input
+  provenance. Duplicate run identifiers across exports are rejected.
 
-Licensed runs must export:
-
-- `results/<case_id>/strength.json`: `case_id`; `software` with `name` and
-  `version`; `load_case` with `id`, `wave`, `current`, `offset`; aligned arrays
-  `arc_length_m`, `effective_tension_kN`, `bending_moment_kNm`,
-  `von_mises_utilisation`; top-level `method` and `allowable`; `max_utilisation`
-  with `value`, `arc_length_m`, `location`; `touchdown` with `arc_length_m`,
-  `utilisation`, `stress_range_MPa`; `top_angle_deg` with `static`, `dynamic_min`,
-  `dynamic_max`; `hang_off_tension_kN` with `static`, `dynamic_max`; and `run`.
-- `results/<case_id>/fatigue-<sea_state_id>.json`: `case_id`; `sea_state` with
-  `id`, `Hs_m`, `Tp_s`, `direction_deg`, fractional `occurrence`; `hot_spots`
-  with `name` (`touchdown` or `hang_off`), `arc_length_m`, `cycles_per_year`,
-  `scf`, and either `stress_range_MPa` or `range_histogram` bins containing
-  `stress_range_MPa` and `cycles_per_year`; `sn_curve` with `name`, `source`,
-  `m`, `log_a`, `thickness_correction`; `damage_per_year`; `life_years`; and `run`.
-
-`run` contains `input_sha256`, `result_file`, and `date`. `allowable` contains
-`value`, `unit`, `basis_label`, and `source`. Exporter metadata objects
-`wave`, `current`, and `offset` preserve their own units and loading basis.
-Additional metadata fields are allowed. The exported maximum must identify an
-actual sample of the utilisation array, using the same precision. All tied
-maximum locations are valid. Tied shortest lives select the first sea-state
-identifier in lexical order for reproducibility.
-
-The validator checks structure and sample consistency; it cannot establish
-whether a stress method, allowable, S-N curve or source is qualified. The
-input digest is recorded as supplied, not verified against an unavailable
-solver input. No engineering criterion or S-N constant is inferred.
+Missing metadata is rejected rather than inferred. The shared schema retains
+compatibility with older consumers, while this reader requires the explicit
+fields above. Dates accept calendar dates or timestamps with a timezone;
+leap-second timestamps are unsupported. Non-finite numbers, invalid dates,
+negative damage and inconsistent strength arrays are rejected. The validator
+checks structure and sampled consistency; it cannot establish that an exported
+U1 method, annualisation, allowable or qualification record is correct.
 
 ## Run
 
-With `src` on the Python import path and the repository's `matplotlib` and
-`jsonschema` dependencies available:
+With `src` on the Python import path and `matplotlib` and `jsonschema` available:
 
 ```sh
 python -m digitalmodel.riser_study.decision_chart \
-  --results results --manifest cases.json --criteria criteria.json --output decision
+  --results results --manifest cases.json --criteria criteria.json \
+  --fatigue-tokens fatigue-tokens.json --output decision
 ```
 
-Use a new output directory for each run. Existing decision artifacts are never
-overwritten. The chart uses circles for SCR and triangles for SLWR, labels every
-case, and shades utilisation at or below the strength criterion and life at or
-above the fatigue target. The legend includes the criteria basis labels.
+The output directory must be empty or absent. A directory containing older
+artifacts is rejected so that removed outputs cannot survive a regeneration.
 
 ## Outputs
 
-| Token | Artifact | Data |
+| Token | Artifact or value | Data source |
 |---|---|---|
-| FIG-DEC-01 | `decision.svg` | `results.csv` |
-| TAB-RES-01 | `results.md` | `results.csv` |
-| V-DEC-COUNT-BOTH | `tokens.json` value | `manifest.json` rows |
-| TAB-DEC-CRITERIA-01 | `criteria.md` | `criteria.csv` |
+| FIG-DEC-01 | `FIG-DEC-01.svg` | `FIG-DEC-01.csv` |
+| TAB-RES-01 | `TAB-RES-01.md` | `TAB-RES-01.csv` |
+| V-DEC-COUNT-STR | Cases with U1 at or below one | `manifest.json` rows |
+| V-ANS-OD1 | NPS 8 configuration and wall, or unresolved | `manifest.json` rows and resolution |
+| V-ANS-OD2 | NPS 10 configuration and wall, or unresolved | `manifest.json` rows and resolution |
+| V-ANS-OD3 | NPS 12 configuration and wall, or unresolved | `manifest.json` rows and resolution |
+| V-RUN-ATTEMPTED | Phase A attempted runs | `manifest.json` ledger |
+| V-RUN-COMPLETED | Phase A completed runs | `manifest.json` ledger |
+| V-RUN-QUALIFIED | Phase A qualified runs | `manifest.json` ledger |
+| V-PHB-STATUS | `not yet done` | Phase B is outside this reader's assessment |
 
-The criteria-table identifier is supplied for the additional criteria token;
-the consuming document can map it to its registered identifier.
-`tokens.json` links each artifact. `manifest.json` stores criteria, rows,
-completeness identifiers, the count, limitations, input file SHA-256 digests
-and output artifact SHA-256 digests. Input locators are relative to the case
-manifest when possible, otherwise basenames; roles distinguish input kinds.
-The manifest does not hash itself.
+For each size, selection is restricted to strength-passing cases and requires
+upstream resolved fatigue. The unique minimum annual benchmark damage in that
+set supplies the configuration and wall. Ties, no strength-passing candidate,
+or unresolved fatigue produce `ranking unresolved`. Strength flags and counts
+remain available independently of the ranking.
 
-CSV and JSON retain input numeric precision to permit point-to-row checks.
-Display tables and criterion legends use one decimal place; rounding never
-changes pass flags. Generated tables are data artifacts for document assembly,
-not a study report. No study conclusions are supplied by synthetic fixtures.
+`tokens.json` contains exactly the ten registered decision IDs above. Every
+entry includes a `source_file`; figure and table entries link their artifacts
+and CSV data. No criteria table is emitted. `manifest.json` retains unrounded
+rows, the governing strength run and damage station, the resolution status,
+run ledger and counts, input SHA-256 digests, and output SHA-256 digests. It
+does not hash itself. Both CSV files contain the same unrounded rows. Display
+values use one decimal place, with scientific notation for damage.
+
+The token list follows the supplied draft-3 analysis map. The underlying ruling
+is absent from this module's starting commit message and README. Engineering
+results and Phase B completion are not established by the synthetic tests.
+The tests use hand-enumerated strength counts and damage sums. Their static
+reference tension is copied from case C1 in
+`docs/benchmarks/catenary_closed_form/benchmark.json`; all other result numbers
+are assumed synthetic arithmetic examples.

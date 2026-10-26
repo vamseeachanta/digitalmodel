@@ -1,16 +1,9 @@
 {
   "strength": {
-    "criterion": "Maximum utilisation",
+    "criterion": "Maximum qualified Phase A U1",
     "value": 1.0,
     "unit": "-",
     "basis_label": "ASSUMED",
-    "source": "Synthetic fixture only; replace with the reviewed matrix criteria record"
-  },
-  "fatigue": {
-    "criterion": "Shortest fatigue life",
-    "value": 20.0,
-    "unit": "years",
-    "basis_label": "ASSUMED",
-    "source": "Synthetic fixture only; replace with the reviewed matrix criteria record"
+    "source": "Synthetic fixture for the supplied strength screening line"
   }
 }

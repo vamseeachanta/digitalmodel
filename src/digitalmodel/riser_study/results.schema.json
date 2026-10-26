@@ -9,11 +9,22 @@
     "positive": {"type": "number", "exclusiveMinimum": 0},
     "numbers": {"type": "array", "minItems": 1, "items": {"type": "number"}},
     "nonnegative_array": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/nonnegative"}},
+    "campaign_run": {
+      "type": "object", "required": ["id", "phase", "status", "qualified"],
+      "properties": {
+        "id": {"$ref": "#/$defs/text"}, "phase": {"enum": ["A", "B"]},
+        "status": {"enum": ["attempted", "completed", "failed"]}, "qualified": {"type": "boolean"}
+      },
+      "if": {"properties": {"qualified": {"const": true}}, "required": ["qualified"]},
+      "then": {"properties": {"status": {"const": "completed"}}}
+    },
     "run": {
       "type": "object", "required": ["input_sha256", "result_file", "date"],
       "properties": {
         "input_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "result_file": {"$ref": "#/$defs/text"},
+        "id": {"$ref": "#/$defs/text"}, "phase": {"enum": ["A", "B"]},
+        "status": {"enum": ["attempted", "completed", "failed"]}, "qualified": {"type": "boolean"},
         "date": {"oneOf": [{"type": "string", "format": "date"}, {"type": "string", "format": "date-time"}]}
       }
     },
@@ -44,6 +55,7 @@
         "effective_tension_kN": {"$ref": "#/$defs/numbers"},
         "bending_moment_kNm": {"$ref": "#/$defs/numbers"},
         "von_mises_utilisation": {"$ref": "#/$defs/nonnegative_array"},
+        "utilisation_basis": {"enum": ["U1"]},
         "method": {"$ref": "#/$defs/text"}, "allowable": {"$ref": "#/$defs/allowable"},
         "max_utilisation": {
           "type": "object", "required": ["value", "arc_length_m", "location"],
@@ -84,11 +96,12 @@
         "name": {"enum": ["touchdown", "hang_off"]}, "arc_length_m": {"$ref": "#/$defs/nonnegative"},
         "cycles_per_year": {"$ref": "#/$defs/nonnegative"}, "scf": {"$ref": "#/$defs/positive"},
         "stress_range_MPa": {"$ref": "#/$defs/nonnegative"},
-        "range_histogram": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/range_bin"}}
+        "range_histogram": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/range_bin"}},
+        "damage_per_year": {"$ref": "#/$defs/nonnegative"}
       }
     },
     "fatigue": {
-      "type": "object", "required": ["case_id", "sea_state", "hot_spots", "sn_curve", "damage_per_year", "life_years", "run"],
+      "type": "object", "required": ["case_id", "sea_state", "hot_spots", "sn_curve", "damage_per_year", "run"],
       "properties": {
         "case_id": {"$ref": "#/$defs/case_id"},
         "sea_state": {

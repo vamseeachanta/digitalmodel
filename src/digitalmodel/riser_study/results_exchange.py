@@ -31,12 +31,25 @@ def _date_time(value: Any) -> bool:
     return True
 
 
+class CampaignRun(TypedDict):
+    """Explicit attempt, completion and qualification status in the run ledger."""
+
+    id: str
+    phase: str
+    status: str
+    qualified: bool
+
+
 class RunRecord(TypedDict):
     """Exporter provenance; the digest identifies the input bytes."""
 
     input_sha256: str
     result_file: str
     date: str
+    id: NotRequired[str]
+    phase: NotRequired[str]
+    status: NotRequired[str]
+    qualified: NotRequired[bool]
 
 
 class Software(TypedDict):
@@ -105,6 +118,7 @@ class StrengthResult(TypedDict):
     effective_tension_kN: list[float]
     bending_moment_kNm: list[float]
     von_mises_utilisation: list[float]
+    utilisation_basis: NotRequired[str]
     method: str
     allowable: Allowable
     max_utilisation: MaximumUtilisation
@@ -140,6 +154,7 @@ class HotSpot(TypedDict):
     scf: float
     stress_range_MPa: NotRequired[float]
     range_histogram: NotRequired[list[RangeBin]]
+    damage_per_year: NotRequired[float]
 
 
 class SNCurve(TypedDict):
@@ -153,14 +168,14 @@ class SNCurve(TypedDict):
 
 
 class FatigueResult(TypedDict):
-    """One life and damage result per case and fatigue sea state."""
+    """Annual damage per case and sea state; legacy life is optional."""
 
     case_id: str
     sea_state: SeaState
     hot_spots: list[HotSpot]
     sn_curve: SNCurve
     damage_per_year: float
-    life_years: float
+    life_years: NotRequired[float]
     run: RunRecord
 
 
@@ -203,16 +218,7 @@ def validate_result(data: dict[str, Any], kind: str) -> None:
     """
     if kind not in ("strength", "fatigue"):
         raise ValueError("result kind must be strength or fatigue")
-    _finite_tree(data)
-    schema = json.loads(files(__package__).joinpath("results.schema.json").read_text())
-    validator = Draft202012Validator(
-        {"$ref": f"#/$defs/{kind}", "$defs": schema["$defs"]},
-        format_checker=FORMAT_CHECKER,
-    )
-    errors = list(validator.iter_errors(data))
-    if errors:
-        # Do not echo raw exporter values, paths or arbitrary metadata.
-        raise ValueError(f"{kind} result violates exchange schema")
+    _validate_schema(data, kind)
     if kind == "strength":
         arc = data["arc_length_m"]
         if any(b <= a for a, b in zip(arc, arc[1:])):
@@ -231,3 +237,22 @@ def validate_result(data: dict[str, Any], kind: str) -> None:
         angle = data["top_angle_deg"]
         if angle["dynamic_min"] > angle["dynamic_max"]:
             raise ValueError("dynamic angle extrema are reversed")
+
+
+def _validate_schema(data: dict[str, Any], kind: str) -> None:
+    """Apply the single shared schema to one exchange record."""
+    _finite_tree(data)
+    schema = json.loads(files(__package__).joinpath("results.schema.json").read_text())
+    validator = Draft202012Validator(
+        {"$ref": f"#/$defs/{kind}", "$defs": schema["$defs"]},
+        format_checker=FORMAT_CHECKER,
+    )
+    errors = list(validator.iter_errors(data))
+    if errors:
+        # Do not echo raw exporter values, paths or arbitrary metadata.
+        raise ValueError(f"{kind} record violates exchange schema")
+
+
+def validate_campaign_run(data: dict[str, Any]) -> None:
+    """Validate an explicit run status without inferring qualification."""
+    _validate_schema(data, "campaign_run")
