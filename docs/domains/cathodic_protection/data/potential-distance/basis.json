@@ -1,0 +1,30 @@
+{
+  "basis": {
+    "current_a": 4.677342400923924,
+    "base_resistivity_ohm_m": 0.22,
+    "anode_length_m": 2.02,
+    "anode_radius_m": 0.13612974776055878,
+    "net_alloy_mass_kg": 323.4,
+    "alloy_density_kg_m3": 2750.0,
+    "driving_voltage_v": 0.25,
+    "edition": "2021"
+  },
+  "input_fixture": "tests/fixtures/cathodic_protection/workflow_inputs/published_jacket_84m.yml",
+  "input_revision": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+  "published_source": {
+    "citation": "Xu (2023), Engineering Advances 3(3), 241-245",
+    "doi": "10.26855/ea.2023.06.017",
+    "locator": "p. 242, section 2",
+    "url": "https://www.hillpublisher.com/UpFile/202308/20230803150221.pdf"
+  },
+  "current_basis": "initial output at base resistivity, reused B401 mass-equivalent cylinder route; fixed across curves",
+  "resistance_source": "existing _kernels.long_slender_standoff; DNV-RP-B401 (2021), Anode resistance",
+  "driving_voltage_source": "existing b401_tables.design_driving_voltage; DNV-RP-B401 (2021), Design driving voltage; also Xu (2023), p. 242 section 2",
+  "assumptions": "net alloy mass interpretation, alloy density and edition assumed, based on previous experience; fixture verification_evidence.assumptions",
+  "distance_basis": "surface gap 0 to 30 m at 1 m intervals; illustrative sampling assumed, based on previous experience; member spacing not published",
+  "resistivity_basis": "0.22 ohm.m = 22 ohm.cm from Xu (2023), p. 242 section 2; 0.20, 0.25, 0.30 illustrative until replaced by a cited range",
+  "model_label": "screening model, not a structure potential prediction",
+  "primary_plot": "finite-line-source.csv; point-source.csv is the comparison",
+  "review_status": "pending",
+  "derivation": "docs/domains/cathodic_protection/potential-distance-derivation.md"
+}
