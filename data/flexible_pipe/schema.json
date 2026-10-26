@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Flexible pipe catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "database",
+    "units",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "database": {
+      "const": "flexible_pipe"
+    },
+    "units": {
+      "const": {
+        "id_m": "m",
+        "od_m": "m",
+        "axial_stiffness_n": "N",
+        "bending_stiffness_n_m2": "N*m^2",
+        "torsional_stiffness_n_m2": "N*m^2",
+        "dry_mass_kg_per_m": "kg/m",
+        "minimum_bend_radius_m": "m",
+        "design_pressure_pa": "Pa",
+        "temperature_deg_c": "degC"
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "citation_id",
+          "id_m",
+          "od_m",
+          "axial_stiffness_n",
+          "bending_stiffness_n_m2",
+          "torsional_stiffness_n_m2",
+          "dry_mass_kg_per_m",
+          "minimum_bend_radius_m",
+          "design_pressure_pa",
+          "temperature_deg_c",
+          "stiffness_basis",
+          "test_conditions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "status": {
+            "enum": [
+              "cited",
+              "synthetic"
+            ]
+          },
+          "citation_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "id_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "od_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "axial_stiffness_n": {
+            "$ref": "#/$defs/positive"
+          },
+          "bending_stiffness_n_m2": {
+            "$ref": "#/$defs/positive"
+          },
+          "torsional_stiffness_n_m2": {
+            "$ref": "#/$defs/positive"
+          },
+          "dry_mass_kg_per_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "minimum_bend_radius_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "design_pressure_pa": {
+            "type": "number",
+            "minimum": 0
+          },
+          "temperature_deg_c": {
+            "type": "number",
+            "exclusiveMinimum": -273.15
+          },
+          "stiffness_basis": {
+            "enum": [
+              "initial_tangent",
+              "secant_tension",
+              "linearised"
+            ]
+          },
+          "test_conditions": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positive": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "publisher",
+        "url",
+        "catalogue_number",
+        "revision",
+        "date",
+        "page",
+        "table",
+        "source_class",
+        "reuse_terms"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://[^/\\s?#]+(?:[/?#]|$)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_number": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_class": {
+          "enum": [
+            "mill_catalogue",
+            "manufacturer_catalogue",
+            "public_paper",
+            "public_thesis",
+            "public_agency_report",
+            "own_design_basis",
+            "synthetic_fixture"
+          ]
+        },
+        "reuse_terms": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "catalogue_number": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "page": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "table": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "description": "A locator for the values in each referencing row; class declarations require independent source review."
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "citation_schema",
+        "citations"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "citation_schema": {
+          "const": "schema.json#/$defs/citation"
+        },
+        "citations": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/citation"
+          }
+        }
+      }
+    }
+  }
+}
