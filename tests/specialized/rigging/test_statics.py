@@ -110,7 +110,37 @@ def test_underflowed_positive_leg_force_is_rejected():
         calculate(math.nextafter(0.0, math.inf), 0.0)
 
 
-def test_import_and_calculation_need_only_standard_library_and_no_outputs(tmp_path):
+@pytest.mark.parametrize(
+    ("probe", "expected_error"),
+    [
+        ("", None),
+        (
+            "import unavailable_dependency",
+            "ModuleNotFoundError: Non-standard dependency requested",
+        ),
+        (
+            "import digitalmodel.specialized.rigging.rigging",
+            "AssertionError: Workbook module requested",
+        ),
+        (
+            "import digitalmodel.specialized.rigging.rigging_components",
+            "AssertionError: Workbook module requested",
+        ),
+        ("import digitalmodel.solvers", "AssertionError: Solver import requested"),
+        (
+            "open('catalogue.xlsx', encoding='utf-8')",
+            "AssertionError: Workbook access requested",
+        ),
+        (
+            "open('output.txt', 'w', encoding='utf-8', newline='\\n')",
+            "AssertionError: Output file requested",
+        ),
+    ],
+    ids=["pure", "dependency", "catalogue", "components", "solver", "workbook", "write"],
+)
+def test_import_and_calculation_need_only_standard_library_and_no_outputs(
+    tmp_path, probe, expected_error
+):
     # A fresh interpreter avoids pytest's mocks and imported optional packages.
     script = textwrap.dedent(
         """
@@ -122,7 +152,9 @@ def test_import_and_calculation_need_only_standard_library_and_no_outputs(tmp_pa
             def find_spec(self, fullname, path=None, target=None):
                 root = fullname.split('.')[0]
                 if root not in sys.stdlib_module_names and root != 'digitalmodel':
-                    raise AssertionError('Non-standard dependency requested')
+                    raise ModuleNotFoundError(
+                        'Non-standard dependency requested', name=fullname
+                    )
                 if fullname.rsplit('.', 1)[-1] in ('rigging_components', 'rigging'):
                     if fullname not in (
                         'digitalmodel.specialized.rigging', 'digitalmodel.rigging'
@@ -141,6 +173,15 @@ def test_import_and_calculation_need_only_standard_library_and_no_outputs(tmp_pa
 
         sys.meta_path.insert(0, PureImportsOnly())
         sys.addaudithook(no_workbooks_or_writes)
+
+        # Standard-library optional probes must retain missing-module semantics.
+        try:
+            import unavailable_optional_dependency
+        except ModuleNotFoundError as error:
+            assert error.name == 'unavailable_optional_dependency'
+        else:
+            raise AssertionError('Optional dependency probe was not blocked')
+
         from digitalmodel.specialized.rigging.statics import (
             calculate_two_leg_sling_forces,
         )
@@ -153,6 +194,7 @@ def test_import_and_calculation_need_only_standard_library_and_no_outputs(tmp_pa
         )
         """
     )
+    script += probe
     env = dict(os.environ)
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[3] / "src")
     result = subprocess.run(
@@ -161,10 +203,15 @@ def test_import_and_calculation_need_only_standard_library_and_no_outputs(tmp_pa
         env=env,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=False,
     )
 
-    assert result.returncode == 0, result.stderr
+    if expected_error is None:
+        assert result.returncode == 0, result.stderr
+    else:
+        assert result.returncode != 0
+        assert expected_error in result.stderr
     assert result.stdout == ""
     assert list(tmp_path.iterdir()) == []
 
