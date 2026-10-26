@@ -9,11 +9,15 @@ These are free functions taking the model rather than methods on it, so the
 model module carries the interpolation contract and this module carries what is
 computed from it. Each is re-exported as a thin method on the model, which
 remains the supported entry point.
+
+The standalone ``coupled_roll_response`` instead requires explicit normalized
+coefficients and solves the linear forced roll equation without a sweep model.
 """
 
 from __future__ import annotations
 
 import math
+from numbers import Complex, Real
 from typing import TYPE_CHECKING, List, Optional
 
 import numpy as np
@@ -21,8 +25,10 @@ from numpy.typing import NDArray
 
 
 from .sloshing_coupling_models import (
+    CoupledRollResponse,
     CouplingStrengthReport,
     FillDampingResult,
+    NormalizedRollCoefficients,
     TuningReport,
 )
 
@@ -34,7 +40,151 @@ __all__ = [
     "moment_from_harmonic",
     "best_antiroll_fill",
     "coupling_strength",
+    "coupled_roll_response",
 ]
+
+
+def _finite_real(value: float, name: str) -> float:
+    """Require a finite real scalar, excluding boolean flags."""
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise ValueError(f"{name} must be a finite real scalar")
+    value = float(value)
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be finite")
+    return value
+
+
+def _support_interval(bounds: tuple[float, float], name: str) -> tuple[float, float]:
+    """Validate an immutable inclusive support interval."""
+    if not isinstance(bounds, tuple) or len(bounds) != 2:
+        raise ValueError(f"{name} must be a pair of finite bounds")
+    low, high = (_finite_real(value, name) for value in bounds)
+    if low < 0.0 or low > high:
+        raise ValueError(f"{name} must have ordered nonnegative bounds")
+    return low, high
+
+
+def _roll_impedance(inertia: float, restoring: float, damping: float,
+                    omega: float, name: str) -> complex:
+    """Form the harmonic impedance and reject an undefined steady solution."""
+    real = _finite_real(restoring - inertia * omega * omega, f"{name} impedance")
+    imag = _finite_real(omega * damping, f"{name} impedance")
+    impedance = complex(real, imag)
+    if impedance == 0.0:
+        raise ValueError(f"{name}: singular undamped resonance")
+    return impedance
+
+
+def coupled_roll_response(
+    *,
+    inertia_kg_m2: float,
+    restoring_nm_per_rad: float,
+    damping_nm_s_per_rad: float,
+    omega_rad_s: float,
+    excitation_moment_nm: complex,
+    coefficients: NormalizedRollCoefficients,
+) -> CoupledRollResponse:
+    """Solve a linear single-degree-of-freedom forced roll equation.
+
+    The sign and phase convention is ``theta(t) = Re(Theta*exp(i*omega*t))``
+    and ``M_tank = -K*theta - B_tank*theta_dot``. Substitution into
+    ``I*theta_ddot + B*theta_dot + C*theta = M_excitation + M_tank`` gives
+    ``Z0 = C - I*omega**2 + i*omega*B`` and
+    ``Zc = C + K - I*omega**2 + i*omega*(B + B_tank)``. Each complex response
+    is ``F/Z`` in radians for the same complex excitation ``F`` in N.m.
+    Inertia is in kg.m^2, restoring in N.m/rad, damping in N.m.s/rad and
+    frequency in rad/s. These equations derive all numeric factors here.
+
+    Reduction is ``100*(1 - abs(Theta_c)/abs(Theta_0))`` percent. Negative
+    reduction is retained: reactive stiffness can move the oscillator closer
+    to resonance even with nonnegative tank damping. No damping benefit is
+    inferred from a damping coefficient alone.
+
+    Only explicitly normalized coefficients with declared units are accepted.
+    The evaluated frequency must match the requested frequency exactly and
+    lie inside declared support. The reference amplitude and computed coupled
+    amplitude must lie inside declared amplitude support. There is no clamping,
+    extrapolation, amplitude iteration or physical calibration. The caller must
+    justify applicability across the declared support and encode the tank
+    configuration, fill and coefficient source in ``condition``.
+
+    All inputs and computed results must be finite. Inertia, baseline and total
+    restoring, frequency and reference amplitude must be positive; both damping
+    contributions must be nonnegative. Nonzero excitation is required to define
+    a reduction percentage. Exact undamped resonance in either solution is
+    rejected; damped resonance is supported. Unrepresentable responses are
+    rejected rather than returned as zero or infinity.
+    """
+    if not isinstance(coefficients, NormalizedRollCoefficients):
+        raise TypeError("coefficients must be NormalizedRollCoefficients")
+    tank = coefficients
+    if tank.normalization != "per_roll_angle_and_rate":
+        raise ValueError("explicit per_roll_angle_and_rate normalization required")
+    if tank.stiffness_unit != "N.m/rad" or tank.damping_unit != "N.m/(rad/s)":
+        raise ValueError("declared units must be N.m/rad and N.m/(rad/s)")
+    if not isinstance(tank.condition, str) or not tank.condition.strip():
+        raise ValueError("coefficient condition provenance must be declared")
+
+    inertia = _finite_real(inertia_kg_m2, "inertia")
+    restoring = _finite_real(restoring_nm_per_rad, "restoring")
+    damping = _finite_real(damping_nm_s_per_rad, "baseline damping")
+    omega = _finite_real(omega_rad_s, "frequency")
+    stiffness = _finite_real(tank.stiffness, "tank stiffness")
+    tank_damping = _finite_real(tank.damping, "tank damping")
+    evaluated_omega = _finite_real(tank.omega_rad_s, "evaluated frequency")
+    reference_amplitude = _finite_real(tank.reference_amplitude_rad, "reference amplitude")
+    if min(inertia, restoring, omega, evaluated_omega, reference_amplitude) <= 0.0:
+        raise ValueError("inertia, restoring, frequencies and reference amplitude must be positive")
+    if damping < 0.0 or tank_damping < 0.0:
+        raise ValueError("baseline and tank damping must be nonnegative")
+    total_restoring = _finite_real(restoring + stiffness, "total restoring")
+    total_damping = _finite_real(damping + tank_damping, "total damping")
+    if total_restoring <= 0.0:
+        raise ValueError("total restoring must be positive")
+
+    freq_low, freq_high = _support_interval(tank.frequency_support_rad_s, "frequency support")
+    amp_low, amp_high = _support_interval(tank.amplitude_support_rad, "amplitude support")
+    if freq_low <= 0.0:
+        raise ValueError("frequency support bounds must be positive")
+    if not freq_low <= omega <= freq_high:
+        raise ValueError("frequency outside declared coefficient support")
+    if evaluated_omega != omega:
+        raise ValueError("coefficient evaluated frequency must match requested frequency")
+    if not amp_low <= reference_amplitude <= amp_high:
+        raise ValueError("reference amplitude outside declared coefficient support")
+
+    if isinstance(excitation_moment_nm, bool) or not isinstance(excitation_moment_nm, Complex):
+        raise ValueError("excitation moment must be a finite complex scalar")
+    excitation = complex(excitation_moment_nm)
+    _finite_real(excitation.real, "excitation moment real part")
+    _finite_real(excitation.imag, "excitation moment imaginary part")
+    if excitation == 0.0:
+        raise ValueError("excitation moment must be nonzero")
+
+    baseline = excitation / _roll_impedance(inertia, restoring, damping, omega, "baseline")
+    coupled = excitation / _roll_impedance(inertia, total_restoring, total_damping, omega, "coupled")
+    # hypot avoids overflow from squaring the real and imaginary components.
+    baseline_amplitude = _finite_real(math.hypot(baseline.real, baseline.imag), "baseline amplitude")
+    coupled_amplitude = _finite_real(math.hypot(coupled.real, coupled.imag), "coupled amplitude")
+    if baseline_amplitude == 0.0 or coupled_amplitude == 0.0:
+        raise ValueError("response amplitudes must be representable and nonzero")
+    if not amp_low <= coupled_amplitude <= amp_high:
+        raise ValueError("computed coupled amplitude outside declared coefficient support")
+    reduction = _finite_real(100.0 * (1.0 - coupled_amplitude / baseline_amplitude), "reduction")
+
+    return CoupledRollResponse(
+        baseline_response_rad=baseline,
+        coupled_response_rad=coupled,
+        baseline_amplitude_rad=baseline_amplitude,
+        coupled_amplitude_rad=coupled_amplitude,
+        reduction_percent=reduction,
+        inertia_kg_m2=inertia,
+        restoring_nm_per_rad=restoring,
+        damping_nm_s_per_rad=damping,
+        omega_rad_s=omega,
+        excitation_moment_nm=excitation,
+        coefficients=tank,
+    )
 
 
 def moment_time_series(
