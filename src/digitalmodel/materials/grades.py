@@ -41,6 +41,7 @@ class MaterialGrade:
     material_class: str = "ferritic"
     aliases: tuple[str, ...] = ()
     charpy_test_temperature_degc: Optional[float] = None
+    specification_edition: Optional[str] = None
 
     def __post_init__(self) -> None:
         import math
@@ -48,6 +49,10 @@ class MaterialGrade:
 
         for field in ("name", "standard", "row_id"):
             text(getattr(self, field), field)
+        if self.specification_edition is not None:
+            text(self.specification_edition, "specification_edition")
+            if "|" in self.specification_edition or self.specification_edition == "edition-unspecified":
+                raise ValueError("specification_edition must not contain a key separator or null token")
         for field in ("smys_mpa", "E_mpa", "rho_kg_m3"):
             positive(getattr(self, field), field)
         for field in ("smts_mpa", "smts_psl1_mpa"):

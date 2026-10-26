@@ -2,6 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Offline database contracts; strength fixtures remain in test_grade_matrix.py."""
 from dataclasses import FrozenInstanceError, replace
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -11,6 +12,7 @@ import pytest
 
 from digitalmodel.materials import grades
 from digitalmodel.materials import database as database_module
+from digitalmodel.materials.catalog import load_catalog, use_catalog
 from digitalmodel.materials.database import MaterialDatabase, load_database
 from digitalmodel.materials.database_schema import Strengths
 
@@ -130,13 +132,11 @@ def test_software_line_endings_do_not_change_data_provenance(
 
 
 def test_altered_input_changes_data_provenance(tmp_path):
-    import json
-    from digitalmodel.materials.catalog import load_catalog
     fixture = Path(__file__).parent / "fixtures"
     original = load_catalog(fixture / "catalog.json")
-    data = json.loads((fixture / "catalog.json").read_text())
+    data = json.loads((fixture / "catalog.json").read_text(encoding="utf-8"))
     data["grades"][0]["smys_mpa"] += 1
-    (tmp_path / "catalog.json").write_text(json.dumps(data))
+    (tmp_path / "catalog.json").write_text(json.dumps(data), encoding="utf-8", newline="\n")
     (tmp_path / "sources.yml").write_bytes((fixture / "sources.yml").read_bytes())
     assert load_catalog(tmp_path / "catalog.json").digest != original.digest
 
@@ -160,10 +160,50 @@ def test_shipped_docs_expose_superseded_provenance(database, path):
     assert database.lookup("X52").provenance.repository_revision is None
 
 
-def test_edition_metadata_comes_from_row_sources(database):
+def test_unknown_specification_editions_remain_null(database):
     for record in database.values():
-        assert record.edition == grades.get(record.designation).source.revision
-        assert record.edition == "1"
+        assert record.edition is None
+        assert "|edition-unspecified|" in record.key
+        assert grades.get(record.designation).source.revision == "1"
+
+
+@pytest.mark.parametrize("kind", ["manufacturer", "public_paper", "design_basis", "synthetic"])
+def test_publication_revision_is_provenance_only(synthetic_catalog, kind):
+    rows = tuple(replace(g, source=replace(g.source, revision="catalogue-r7", kind=kind))
+                 for g in synthetic_catalog.grades)
+    with use_catalog(replace(synthetic_catalog, grades=rows), allow_synthetic=True):
+        database = load_database()
+    for record in database.values():
+        assert record.edition is None
+        assert "catalogue-r7" in record.provenance.citation
+        assert "catalogue-r7" not in record.key
+
+
+def test_explicit_specification_edition_loads_independently(tmp_path):
+    fixture = Path(__file__).parent / "fixtures"
+    data = json.loads((fixture / "catalog.json").read_text(encoding="utf-8"))
+    sources = json.loads((fixture / "sources.yml").read_text(encoding="utf-8"))
+    next(g for g in data["grades"] if g["name"] == "X52")["specification_edition"] = "test-edition"
+    sources["grade:X52"]["revision"] = "catalogue-r7"
+    path = tmp_path / "catalog.json"
+    path.write_text(json.dumps(data), encoding="utf-8", newline="\n")
+    path.with_name("sources.yml").write_text(json.dumps(sources), encoding="utf-8", newline="\n")
+    with use_catalog(load_catalog(path), allow_synthetic=True):
+        database = load_database()
+    for level in ("PSL1", "PSL2"):
+        record = database.lookup("X52", psl=level)
+        assert record.edition == "test-edition"
+        assert "|test-edition|" in record.key
+        assert "catalogue-r7" in record.provenance.citation
+    assert database.lookup("X65").edition is None
+
+
+@pytest.mark.parametrize("edition", [
+    "", " ", " untrimmed", "bad|edition", "edition-unspecified", 1, True, float("nan"),
+])
+def test_invalid_specification_edition_is_rejected(edition):
+    with pytest.raises(ValueError, match="specification_edition"):
+        replace(grades.get("X52"), specification_edition=edition)
 
 
 def test_missing_associations_are_explicitly_null(database):
@@ -184,6 +224,11 @@ def test_duplicate_keys_are_rejected(database):
 def test_blank_identity_metadata_is_rejected(database, field):
     with pytest.raises(ValueError, match=field):
         replace(database.lookup("X52"), **{field: " "})
+
+
+def test_explicit_null_edition_token_is_rejected(database):
+    with pytest.raises(ValueError, match="edition"):
+        replace(database.lookup("X52"), edition="edition-unspecified")
 
 
 @pytest.mark.parametrize("value", [True, "MPa", float("nan"), float("inf")])
@@ -251,14 +296,12 @@ def test_source_digest_detects_changed_text():
 
 
 def test_source_sidecar_drift_changes_provenance(tmp_path):
-    import json
-    from digitalmodel.materials.catalog import load_catalog
     fixture = Path(__file__).parent / "fixtures"
     original = load_catalog(fixture / "catalog.json")
-    sources = json.loads((fixture / "sources.yml").read_text())
+    sources = json.loads((fixture / "sources.yml").read_text(encoding="utf-8"))
     sources["grade:X52"]["revision"] = "2"
     (tmp_path / "catalog.json").write_bytes((fixture / "catalog.json").read_bytes())
-    (tmp_path / "sources.yml").write_text(json.dumps(sources))
+    (tmp_path / "sources.yml").write_text(json.dumps(sources), encoding="utf-8", newline="\n")
     changed = load_catalog(tmp_path / "catalog.json")
     assert changed.digest != original.digest
     assert next(g for g in changed.grades if g.name == "X52").source.revision == "2"
@@ -274,7 +317,7 @@ def test_source_drift_requires_refreshed_provenance():
 
 def test_distinct_editions_cannot_silently_overwrite_grade_lookup(database):
     record = database.lookup("X52")
-    other = replace(record, edition=None)
+    other = replace(record, edition="test-edition")
     assert record.key != other.key
     with pytest.raises(ValueError, match="ambiguous grade lookup"):
         MaterialDatabase([record, other])

@@ -20,7 +20,7 @@ def test_psl1_synthetic_values_and_row_provenance(index, name):
     record = load_database().lookup(name, psl="PSL1")
     assert grades.smts_mpa(name, psl="PSL1") == 581 + index * 2
     assert record.strengths.smts_mpa == 581 + index * 2
-    assert record.edition == "1"
+    assert record.edition is None
     assert record.provenance.citation == grades.get(name).source.citation
     assert "Synthetic" in record.provenance.citation
 

@@ -10,7 +10,6 @@ from digitalmodel.solvers.orcaflex.modular_generator.builders.context import (
 )
 from digitalmodel.solvers.orcaflex.modular_generator.builders.linetype_builder import (
     DEFAULT_HYDRO_COEFFS,
-    MATERIAL_PROPERTIES,
     LineTypeBuilder,
 )
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
@@ -112,14 +111,17 @@ class TestMaterialProperties:
     def test_x65_defaults(self):
         lt_list = _build(_make_pipeline_spec(material="X65"))
         lt = lt_list[0]
-        assert lt["MaterialDensity"] == MATERIAL_PROPERTIES["X65"]["MaterialDensity"]
-        assert lt["E"] == MATERIAL_PROPERTIES["X65"]["E"]
-        assert lt["PoissonRatio"] == MATERIAL_PROPERTIES["X65"]["PoissonRatio"]
+        # Synthetic row: 7709 kg/m3 / 1000 = 7.709 t/m3;
+        # 198009 MPa * 1000 = 198009000 kPa; Poisson ratio is dimensionless.
+        assert lt["MaterialDensity"] == pytest.approx(7.709)
+        assert lt["E"] == pytest.approx(198009000.0)
+        assert lt["PoissonRatio"] == pytest.approx(0.281)
 
     def test_x70_grade(self):
         lt_list = _build(_make_pipeline_spec(material="X70"))
         lt = lt_list[0]
-        assert lt["DNVSTF101Fy"] == MATERIAL_PROPERTIES["X70"]["DNVSTF101Fy"]
+        # Synthetic row: 319 MPa * 1000 = 319000 kPa.
+        assert lt["DNVSTF101Fy"] == pytest.approx(319000.0)
 
     def test_unknown_grade_requires_supplied_material(self):
         with pytest.raises(KeyError, match="X999"):

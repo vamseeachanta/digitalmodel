@@ -60,6 +60,7 @@ _STANDARD_PUBLISHERS = re.compile(
     r"American Society of Mechanical Engineers|International Organization for "
     r"Standardization)\b", re.IGNORECASE
 )
+SOURCE_KINDS = frozenset({"manufacturer", "public_paper", "design_basis", "synthetic"})
 
 
 @dataclass(frozen=True)
@@ -77,7 +78,7 @@ class Source:
     def __post_init__(self) -> None:
         for field in ("title", "publisher", "revision", "date", "kind"):
             text(getattr(self, field), field)
-        if self.kind not in {"manufacturer", "public_paper", "design_basis", "synthetic"}:
+        if self.kind not in SOURCE_KINDS:
             raise ValueError("source kind must identify a nonstandard source")
         # A manufacturer's catalogue or paper can name a product specification
         # in its exact title. The publisher and kind identify the actual source.

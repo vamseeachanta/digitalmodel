@@ -89,7 +89,7 @@ def _record(grade: grades.MaterialGrade, level: str | None, catalog: Catalog) ->
     return MaterialRecord(
         designation=grade.name,
         specification=grade.standard,
-        edition=grade.source.revision,
+        edition=grade.specification_edition,
         product_level=level,
         strengths=Strengths(
             smys_mpa=grade.smys_mpa,

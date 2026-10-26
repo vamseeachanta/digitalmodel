@@ -187,20 +187,29 @@ def _register():
     return pd.read_csv(DATA / "gml_results_register.csv")
 
 
-def _synthetic_campaign_depth():
-    severe = acceptable_water_depth_ft(OD, 15.02 / 25.4, GRADE)
-    mild = acceptable_water_depth_ft(OD, 21.0 / 25.4, GRADE)
-    # Demand lies above twice the severe capacity and below the mild capacity.
-    return (2 * severe + mild) / 2
+# Fixed synthetic demand, independent of the capacity implementation.
+# Collapse interaction: API RP 1111, Design, Construction, Operation, and
+# Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design),
+# 4th ed. (2009), section 4.3.2.1, Collapse Due to External Pressure.
+# Test-model inputs: E = 30e6 psi, nu = 0.3, design factor = 0.7,
+# and hydrostatic pressure gradient = 0.4444 psi/ft.
+# Hand calculation: t/D = (wall_mm/25.4)/21.25; synthetic yield =
+# 321 MPa * 145.0377 psi/MPa. The existing elastic/yield interaction gives
+# (p_el, p_y) = (1420.8, 2591.2) psi at 15.02 mm and
+# (3883.2, 3622.8) psi at 21.0 mm. Thus p_c = 1245.8 and 2649.0 psi;
+# factored depths = 1962.4 and 4172.6 ft. Choose 4050 > 2*1962.4 and < 4172.6.
+SYNTHETIC_CAMPAIGN_DEPTH_FT = 4050.0
 
 
 def test_place_severe_vs_mild_joint():
     reg = _register()
     main = reg[reg["component"] == "Main"].groupby("joint_id")["min_life_years"].min()
-    kw = dict(od_in=OD, grade=GRADE, campaign_water_depth_ft=_synthetic_campaign_depth(),
+    kw = dict(od_in=OD, grade=GRADE, campaign_water_depth_ft=SYNTHETIC_CAMPAIGN_DEPTH_FT,
               campaign_years=3.0)
     severe = place_joint("RJ-101", main["RJ-101"], 15.02 / 25.4, **kw)
     mild = place_joint("RJ-103", main["RJ-103"], 21.0 / 25.4, **kw)
+    assert severe.acceptable_depth_ft == pytest.approx(1962.4, abs=0.1)
+    assert mild.acceptable_depth_ft == pytest.approx(4172.6, abs=0.1)
     # severe joint: life fits only mid, but its thinnest wall is not
     # collapse-qualified even at 50% campaign depth -> repair
     assert severe.eligible_zones == []
@@ -214,7 +223,7 @@ def test_place_severe_vs_mild_joint():
 def test_degraded_joint_restricted_to_mid_string():
     p = place_joint("RJ-x", min_life_years=4.0, wt_min_in=WT,
                     od_in=OD, grade=GRADE,
-                    campaign_water_depth_ft=_synthetic_campaign_depth(), campaign_years=3.0)
+                    campaign_water_depth_ft=SYNTHETIC_CAMPAIGN_DEPTH_FT, campaign_years=3.0)
     assert p.verdict == "ACCEPT"
     assert p.eligible_zones == ["mid"]  # low-fatigue band only
 

@@ -17,8 +17,8 @@ What this module does
 2. **Flowline diameter sweep** — REUSES the tracer's Darcy-Weisbach +
    Swamee-Jain pressure-drop screen
    (:func:`digitalmodel.field_development.onshore_layout.darcy_weisbach_pressure_drop`)
-   and the ASME B36.10M pipe catalog
-   (:mod:`digitalmodel.materials.line_pipe`) to find the smallest standard
+   and caller-supplied pipe dimensions
+   (:mod:`digitalmodel.materials.line_pipe`) to find the smallest supplied
    nominal size that meets a target arrival pressure AND the API RP 14E
    erosional-velocity limit.
 3. **Screening report** — :func:`screening_report` writes a deterministic
@@ -61,6 +61,7 @@ from typing import Any, Optional
 
 import yaml
 
+from digitalmodel.materials.catalog import SOURCE_KINDS, text
 from digitalmodel.materials.line_pipe import line_pipe
 
 from .onshore_layout import SECONDS_PER_DAY, FieldLayout, darcy_weisbach_pressure_drop
@@ -285,11 +286,11 @@ def flowline_diameter_sweep(
     target_arrival_pressure_kpa: float,
     defaults: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
-    """Smallest standard pipe size meeting arrival pressure + erosional limit.
+    """Smallest supplied pipe size meeting arrival pressure + erosional limit.
 
     Sweeps the configured candidate NPS list (ascending) with inner diameters
-    from the ASME B36.10M catalog (:mod:`digitalmodel.materials.line_pipe`,
-    REUSED). Per candidate:
+    from caller-supplied dimensions (:mod:`digitalmodel.materials.line_pipe`).
+    Each candidate retains its geometry source citation and kind. Per candidate:
 
     - pressure drop via the tracer's Darcy-Weisbach + Swamee-Jain screen
       (:func:`~digitalmodel.field_development.onshore_layout.darcy_weisbach_pressure_drop`,
@@ -332,6 +333,8 @@ def flowline_diameter_sweep(
             "schedule": schedule,
             "inner_diameter_m": inner_diameter_m,
             "product": pipe.api_5l_reference,
+            "geometry_source": pipe.geometry_source.citation,
+            "geometry_source_kind": pipe.geometry_source.kind,
             "velocity_m_per_s": drop["velocity_m_per_s"],
             "erosional_velocity_m_per_s": v_erosional,
             "velocity_ok": drop["velocity_m_per_s"] <= v_erosional,
@@ -408,7 +411,8 @@ _CORRELATION_NOTES = (
     "Single-phase incompressible, screening grade.",
     "Erosional velocity: API RP 14E section 2.5a, Ve = C/sqrt(rho_m) "
     "(field units), C-factor from config.",
-    "Pipe inner diameters: ASME B36.10M catalog " "(digitalmodel.materials.line_pipe).",
+    "Pipe inner diameters: caller-supplied geometry; each evaluated "
+    "candidate's source is listed below. Source metadata requires qualification.",
     "Cable ampacity: IEC 60287-1-1 permissible-current equation reduced to "
     "its conductor-loss-only form with a lumped total thermal resistance. "
     "Screening grade — not a rated design.",
@@ -419,6 +423,25 @@ _CORRELATION_NOTES = (
 
 def _flag(ok: bool) -> str:
     return "PASS" if ok else "FAIL"
+
+
+def _geometry_source_lines(flowlines: list[dict[str, Any]]) -> list[str]:
+    lines = ["### Geometry sources", ""]
+    for fl in flowlines:
+        for row in fl["candidates"]:
+            citation = row.get("geometry_source")
+            text(citation, "geometry_source")
+            if "\n" in citation or "\r" in citation:
+                raise ValueError("geometry_source must be a single-line citation")
+            kind = row.get("geometry_source_kind")
+            if kind not in SOURCE_KINDS:
+                raise ValueError("geometry_source_kind must identify a nonstandard source")
+            lines.append(
+                f"- {fl.get('id', '-')}, NPS {row['nps']:g} {row['schedule']} "
+                f"({kind}): {citation}"
+            )
+    lines.append("")
+    return lines
 
 
 def _flowline_section(flowlines: list[dict[str, Any]]) -> list[str]:
@@ -449,6 +472,7 @@ def _flowline_section(flowlines: list[dict[str, Any]]) -> list[str]:
             f"{_flag(fl['passes'])} |"
         )
     lines.append("")
+    lines.extend(_geometry_source_lines(flowlines))
     return lines
 
 
@@ -526,5 +550,5 @@ def screening_report(results: dict[str, Any], path: str | Path) -> str:
 
     dest = Path(path)
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text("\n".join(lines), encoding="utf-8")
-    return str(dest)
+    dest.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+    return dest.as_posix()

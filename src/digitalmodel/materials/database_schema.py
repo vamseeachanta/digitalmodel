@@ -105,6 +105,8 @@ class MaterialRecord:
             if field == "edition" and value is None:
                 continue
             _text(value, field)
+            if field == "edition" and value == "edition-unspecified":
+                raise ValueError("edition must not be the reserved null token")
             if "|" in value or value != value.strip():
                 raise ValueError(f"{field} must be trimmed and contain no key separator")
         levels = ("PSL1", "PSL2") if self.specification == "API 5L" else (None,)

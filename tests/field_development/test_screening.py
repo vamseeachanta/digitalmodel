@@ -12,10 +12,12 @@ snapshot of the code's own output.
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
+from digitalmodel.materials.catalog import current_catalog, use_catalog
 from digitalmodel.field_development.onshore_layout import (
     build_layout,
     load_field_config,
@@ -52,7 +54,7 @@ class TestLoadScreeningDefaults:
 
     def test_non_mapping_defaults_rejected(self, tmp_path):
         bad = tmp_path / "bad.yml"
-        bad.write_text("- just\n- a\n- list\n", encoding="utf-8")
+        bad.write_text("- just\n- a\n- list\n", encoding="utf-8", newline="\n")
         with pytest.raises(ValueError, match="mapping"):
             load_screening_defaults(bad)
 
@@ -303,6 +305,48 @@ def _report_inputs():
 
 
 class TestScreeningReport:
+    @pytest.mark.parametrize("kind", ["manufacturer", "public_paper", "design_basis", "synthetic"])
+    @pytest.mark.parametrize("target", [1500.0, 1999.0])
+    def test_geometry_sources_survive_sweep_and_report(self, tmp_path, kind, target):
+        catalog = current_catalog()
+        dimensions = tuple(
+            replace(d, source=replace(d.source, kind=kind, title=f"Dimension test row {i} — geometry"))
+            for i, d in enumerate(catalog.dimensions)
+        )
+        with use_catalog(replace(catalog, dimensions=dimensions), allow_synthetic=True):
+            result = flowline_diameter_sweep(
+                **{**SWEEP_KWARGS, "target_arrival_pressure_kpa": target}
+            )
+        for row in result["candidates"]:
+            source = next(d.source for d in dimensions
+                          if d.nps == row["nps"] and d.schedule == row["schedule"])
+            assert row["geometry_source"] == source.citation
+            assert row["geometry_source_kind"] == kind
+        assert result["passes"] is (target == 1500.0)
+        dest = tmp_path / "sources.md"
+        # Rendering will retain provenance even after the input context closes.
+        with use_catalog(None):
+            written = screening_report({"field": "Synthetic inputs", "flowlines": [result]}, dest)
+        assert written == dest.as_posix()
+        text = dest.read_text(encoding="utf-8")
+        assert "ASME B36.10M" not in text
+        for row in result["candidates"]:
+            expected = (f"NPS {row['nps']:g} {row['schedule']} "
+                        f"({kind}): {row['geometry_source']}")
+            assert expected in text
+        assert b"\r" not in dest.read_bytes()
+
+    @pytest.mark.parametrize("field,value", [
+        ("geometry_source", None), ("geometry_source", ""),
+        ("geometry_source", "multiple\nlines"),
+        ("geometry_source_kind", None), ("geometry_source_kind", "unknown"),
+    ])
+    def test_report_rejects_missing_or_invalid_geometry_provenance(self, tmp_path, field, value):
+        inputs = _report_inputs()
+        inputs["flowlines"][0]["candidates"][0][field] = value
+        with pytest.raises(ValueError, match="geometry_source"):
+            screening_report(inputs, tmp_path / "invalid.md")
+
     def test_report_written_with_expected_content(self, tmp_path):
         dest = tmp_path / "report" / "screening.md"
         written = screening_report(_report_inputs(), dest)
