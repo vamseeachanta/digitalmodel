@@ -160,6 +160,12 @@ class FrequencyFilter:
         The DFT basis exp(-2*pi*i*k*n/N) gives bin frequencies k*fs/N;
         real samples have unique frequencies from zero through fs/2. No
         endpoint amplitude scaling is needed for a real FFT/inverse pair.
+        Bounds allow relative rounding slack of twice machine epsilon, with
+        zero absolute slack. For normal values, the two grid operations and
+        a rounded cutoff each contribute at most one unit roundoff; this
+        slack allows their accumulated error. The rounding model is given in
+        Accuracy and Stability of Numerical Algorithms, 2nd ed. (2002),
+        chapter 2, Floating Point Arithmetic.
         This operation treats the record as periodic. Nonperiodic endpoints
         can cause spectral leakage, and the sharp mask can cause ringing and
         circular edge effects. No padding, windowing or detrending is applied.
@@ -199,8 +205,15 @@ class FrequencyFilter:
         if signal.size % 2 == 0:
             # Anchor the even-record endpoint at the same fs/2 as validation.
             frequencies[-1] = nyquist
+        roundoff_rtol = 2 * np.finfo(float).eps
+        below_band = (frequencies < low) & ~np.isclose(
+            frequencies, low, rtol=roundoff_rtol, atol=0
+        )
+        above_band = (frequencies > high) & ~np.isclose(
+            frequencies, high, rtol=roundoff_rtol, atol=0
+        )
         spectrum = np.fft.rfft(signal)
-        spectrum[(frequencies < low) | (frequencies > high)] = 0
+        spectrum[below_band | above_band] = 0
         return np.fft.irfft(spectrum, n=signal.size)
     
     def bandpass_filter(self, signal: Union[list, np.ndarray],

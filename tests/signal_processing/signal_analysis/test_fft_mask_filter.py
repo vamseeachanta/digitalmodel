@@ -126,12 +126,13 @@ def test_fft_mask_accepts_extreme_finite_sampling_rates(sampling_rate):
 
 
 @pytest.mark.parametrize(
-    "length, sampling_rate, cutoff", [(49, 49, 1), (14, 0.6, 0.3)]
+    "length, sampling_rate, cutoff",
+    [(49, 49, 1), (14, 0.6, 0.3), (100, 10, 0.7), (10, 3, 0.9)],
 )
 def test_fft_mask_includes_boundary_bins_at_other_record_sizes(
     length, sampling_rate, cutoff
 ):
-    """Hand bins: fs=N=49 gives 1 Hz; fs=0.6, N=14 gives Nyquist 0.3.
+    """Hand bins: 49/49=1; 7*0.6/14=0.3; 7*10/100=0.7; 3*3/10=0.9 Hz.
 
     These controls exercise rounding in the frequency grid. A single-bin
     mask at the cosine's frequency must retain the entire cosine.
@@ -141,6 +142,63 @@ def test_fft_mask_includes_boundary_bins_at_other_record_sizes(
     filtered = FrequencyFilter().fft_filter(signal, sampling_rate, cutoff, cutoff)
     np.testing.assert_allclose(filtered, original, rtol=0, atol=1e-12)
     np.testing.assert_array_equal(signal, original)
+
+
+@pytest.mark.parametrize(
+    "length, sampling_rate, bin_index, cutoff",
+    [(100, 10, 7, 0.7), (10, 3, 3, 0.9), (100, 1e-12, 7, 7e-14)],
+)
+@pytest.mark.parametrize(
+    "band, retained",
+    [("lowpass", (0, 1)), ("highpass", (1, 2)), ("single-bin", (1,))],
+)
+def test_fft_mask_roundoff_keeps_boundary_and_excludes_adjacent_bins(
+    length, sampling_rate, bin_index, cutoff, band, retained
+):
+    """Hand bins k*fs/N give 0.6/0.7/0.8 and 0.6/0.9/1.2 Hz.
+
+    The small-rate control gives 6e-14/7e-14/8e-14 Hz and guards against
+    a fixed absolute tolerance. Orthogonality retains only the listed
+    components, with amplitudes 2, 3 and 5, including the boundary tone.
+    """
+    phase = 2 * np.pi * np.arange(length) / length
+    components = [
+        2 * np.cos((bin_index - 1) * phase),
+        3 * np.cos(bin_index * phase),
+        5 * np.cos((bin_index + 1) * phase),
+    ]
+    signal = sum(components)
+    original = signal.copy()
+    expected = sum((components[k] for k in retained), np.zeros(length))
+    low = None if band == "lowpass" else cutoff
+    high = None if band == "highpass" else cutoff
+
+    filtered = FrequencyFilter().fft_filter(signal, sampling_rate, low, high)
+
+    np.testing.assert_allclose(filtered, expected, rtol=0, atol=1e-12)
+    np.testing.assert_array_equal(signal, original)
+
+
+@pytest.mark.parametrize(
+    "length, sampling_rate, bin_index, cutoff",
+    [(100, 10, 7, 0.7), (10, 3, 3, 0.9), (100, 1e-12, 7, 7e-14)],
+)
+@pytest.mark.parametrize("side", ["below", "above"])
+def test_fft_mask_excludes_tone_beyond_boundary_roundoff(
+    length, sampling_rate, bin_index, cutoff, side
+):
+    """A relative gap of 1e-10 exceeds arithmetic rounding at either bound.
+
+    This synthetic gap is much smaller than one bin, so an excessively
+    broad comparison tolerance would wrongly retain the unit cosine.
+    """
+    signal = np.cos(2 * np.pi * bin_index * np.arange(length) / length)
+    low = cutoff * (1 + 1e-10) if side == "below" else None
+    high = cutoff * (1 - 1e-10) if side == "above" else None
+
+    filtered = FrequencyFilter().fft_filter(signal, sampling_rate, low, high)
+
+    np.testing.assert_allclose(filtered, np.zeros(length), rtol=0, atol=1e-12)
 
 
 @pytest.mark.parametrize(
