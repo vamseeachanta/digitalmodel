@@ -1,6 +1,6 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Compute the synthetic two-layer annulus case defined in README.md."""
+"""Compute the two public-case sheath annuli cited in README.md."""
 
 from __future__ import annotations
 
@@ -10,34 +10,36 @@ from pathlib import Path
 
 
 def build_example() -> dict:
-    """Return full-wall areas and dry masses using the cross-section API."""
+    """Return sheath areas and a dry-mass subtotal using the layer API."""
     from digitalmodel.subsea.flexible_pipes.cross_section import (
-        FlexiblePipeSection,
         Layer,
         LayerType,
     )
 
-    # Source: README.md, Synthetic section; dimensions in m, densities in kg/m^3.
-    section = FlexiblePipeSection(
-        [
-            Layer(LayerType.PRESSURE_SHEATH, 0.200, 0.005, 950.0),
-            Layer(LayerType.OUTER_SHEATH, 0.210, 0.010, 1200.0),
-        ]
-    )
+    # DOI 10.1007/s12204-019-2064-8 (2019), section 1, Table 1, p. 358:
+    # Fluid barrier (ID=70.2 mm, OD=80.0 mm, rho=1080 kg/m^3);
+    # Outer sheath (ID=110.5 mm, OD=111.5 mm, rho=800 kg/m^3).
+    # Convert mm to m; t=(OD-ID)/2. The selected layers are not contiguous.
+    layers = [
+        Layer(LayerType.PRESSURE_SHEATH, 0.0702, (0.0800 - 0.0702) / 2, 1080.0),
+        Layer(LayerType.OUTER_SHEATH, 0.1105, (0.1115 - 0.1105) / 2, 800.0),
+    ]
     return {
+        "scope": "fluid barrier and outer sheath only",
         "layers": [
             {
                 "layer_type": layer.layer_type.value,
                 "annular_area_m2": layer.annular_area,
                 "dry_mass_per_length_kg_per_m": layer.mass_per_length(),
             }
-            for layer in section.layers
+            for layer in layers
         ],
-        "dry_mass_per_length_kg_per_m": section.dry_mass_per_length(),
+        "dry_mass_per_length_kg_per_m": sum(layer.mass_per_length() for layer in layers),
         "NOT_EVALUATED": [
             "stiffness interaction",
             "API compliance",
             "design qualification",
+            "complete-pipe dry mass",
         ],
     }
 
@@ -51,7 +53,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.output is None:
         print(payload, end="")
     else:
-        args.output.write_text(payload, encoding="utf-8")
+        args.output.write_text(payload, encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":
