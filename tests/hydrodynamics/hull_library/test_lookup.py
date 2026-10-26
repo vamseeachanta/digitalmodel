@@ -291,3 +291,84 @@ class TestHullLookupFallback:
         empty = PanelCatalog(entries=[])
         lookup = HullLookup(catalog=empty)
         assert len(lookup._candidates) == len(_BUILTIN_HULLS)
+
+
+@pytest.fixture
+def synthetic_lookup():
+    """Use assumed dimensions chosen for independent division by hand.
+
+    The target is (120, 24, 6) metres. The smaller candidate (60, 8, 3)
+    needs scales (120/60, 24/8, 6/3) = (2, 3, 2). The exact candidate
+    needs (1, 1, 1). No panel file is read or written.
+    """
+    entries = [
+        PanelCatalogEntry(
+            hull_id=hull_id,
+            hull_type=HullType.BARGE,
+            name=hull_id,
+            source="synthetic",
+            panel_format=PanelFormat.GDF,
+            file_path=f"synthetic/{hull_id}.gdf",
+            length_m=length,
+            beam_m=beam,
+            draft_m=draft,
+        )
+        for hull_id, length, beam, draft in (
+            ("synthetic-small", 60.0, 8.0, 3.0),
+            ("synthetic-exact", 120.0, 24.0, 6.0),
+        )
+    ]
+    return HullLookup(PanelCatalog(entries=entries))
+
+
+@pytest.fixture
+def synthetic_target():
+    """Return the assumed target defined in synthetic_lookup's hand example."""
+    return HullLookupTarget(loa_m=120.0, beam_m=24.0, draft_m=6.0)
+
+
+@pytest.mark.parametrize("n", [0, -1, 1.5, True, False, 1.0, None, "2"])
+def test_lookup_rejects_invalid_result_count(synthetic_lookup, synthetic_target, n):
+    """A positive integer count excludes zero, negatives and non-integer types."""
+    with pytest.raises(ValueError, match="n must be a positive integer"):
+        synthetic_lookup.find_closest(synthetic_target, n=n)
+
+
+@pytest.mark.parametrize(
+    "displacement",
+    [0.0, -1.0, float("nan"), float("inf"), -float("inf"), True, False, "bad"],
+)
+@pytest.mark.parametrize("api", ["find_closest", "get_hull_form", "convenience"])
+def test_lookup_rejects_invalid_optional_displacement(
+    synthetic_lookup, synthetic_target, displacement, api
+):
+    """Supplied displacement must be a finite positive number, per query contract."""
+    synthetic_target.displacement_t = displacement
+    with pytest.raises(ValueError, match="displacement_t must be a finite positive number"):
+        if api == "convenience":
+            get_hull_form(vars(synthetic_target))
+        else:
+            getattr(synthetic_lookup, api)(synthetic_target)
+
+
+@pytest.mark.parametrize("displacement", [None, 1.0])
+def test_synthetic_lookup_exact_match(synthetic_lookup, synthetic_target, displacement):
+    """Equal dimensions give distance zero, exp(0) = 1 and axis ratios of one.
+
+    None omits displacement; an assumed unit displacement remains valid and
+    does not change the dimension-only score. Expected scales are the hand
+    divisions in synthetic_lookup, independent of the lookup implementation.
+    """
+    synthetic_target.displacement_t = displacement
+    best = synthetic_lookup.get_hull_form(synthetic_target)
+    assert best.hull_id == "synthetic-exact"
+    assert best.source == "panel_catalog"
+    assert best.similarity_score == 1.0
+    assert best.scaling_factors == {"loa": 1.0, "beam": 1.0, "draft": 1.0}
+
+    # Three requested results exceed the two synthetic candidates by one.
+    matches = synthetic_lookup.find_closest(synthetic_target, n=3)
+    assert [match.hull_id for match in matches] == ["synthetic-exact", "synthetic-small"]
+    assert matches[0] == best
+    assert matches[1].similarity_score < best.similarity_score
+    assert matches[1].scaling_factors == {"loa": 2.0, "beam": 3.0, "draft": 2.0}
