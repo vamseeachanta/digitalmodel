@@ -1,7 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Configurable four-survey correlation using synthetic demonstration criteria.
+"""Four-survey correlation requiring explicit criteria and basis references.
 
 No standard compliance is asserted. Every threshold is an input: user to confirm
 against the governing code. Correlation prioritizes assessment, not excavation
@@ -24,6 +24,7 @@ from digitalmodel.cathodic_protection.cp_survey import (
     ACVGBands,
     ACVGIndication,
     CISSurveyPoint,
+    CriteriaProvenance,
     DCVGIndication,
     PCMConfig,
     PCMSurveyPoint,
@@ -38,24 +39,29 @@ ECDAClass = Literal["high priority", "further assessment", "conflicting signals"
 
 
 class ECDAConfig(SurveyInput):
-    """Demonstration criteria; user to confirm against the governing code."""
+    """Required assessment criteria with no implicit engineering or example values."""
 
-    alignment_tolerance_m: float = Field(default=5, ge=0, description=CRITERIA_NOTE)
-    cis_potential: Literal["off", "on"] = "off"
-    cis_protection_criterion_V: float = Field(default=-0.85, description=CRITERIA_NOTE)
-    cis_overprotection_limit_V: float = Field(default=-1.2, description=CRITERIA_NOTE)
-    dcvg_min_ir_percentage: float = Field(default=35, ge=0, le=100, description=CRITERIA_NOTE)
-    pcm: PCMConfig = Field(default_factory=PCMConfig)
-    acvg: ACVGBands = Field(default_factory=ACVGBands)
-    acvg_min_severity: Literal["minor", "moderate", "severe", "very_severe"] = "severe"
-    high_priority_min_surveys: int = Field(default=2, ge=2, le=4, description=CRITERIA_NOTE)
-    require_cis_for_high: bool = True
+    alignment_tolerance_m: float = Field(ge=0, description=CRITERIA_NOTE)
+    cis_potential: Literal["off", "on"]
+    cis_protection_criterion_V: float = Field(description=CRITERIA_NOTE)
+    cis_overprotection_limit_V: float = Field(description=CRITERIA_NOTE)
+    dcvg_min_ir_percentage: float = Field(ge=0, le=100, description=CRITERIA_NOTE)
+    pcm: PCMConfig
+    acvg: ACVGBands
+    acvg_min_severity: Literal["minor", "moderate", "severe", "very_severe"]
+    high_priority_min_surveys: int = Field(ge=2, le=4, description=CRITERIA_NOTE)
+    require_cis_for_high: bool = Field(strict=True)
+    provenance: CriteriaProvenance
 
     @model_validator(mode="after")
     def ordered_potentials(self) -> ECDAConfig:
         """Require overprotection limit below protection criterion."""
         if self.cis_overprotection_limit_V >= self.cis_protection_criterion_V:
             raise ValueError("CIS overprotection limit must be below protection criterion")
+        if self.provenance.kind == "engineering" and any(
+            criteria.provenance.kind != "engineering" for criteria in (self.pcm, self.acvg)
+        ):
+            raise ValueError("engineering correlation requires engineering PCM and ACVG criteria")
         return self
 
 
@@ -94,7 +100,7 @@ class ECDAResult(BaseModel):
 
     def to_csv(self, path: str | Path) -> None:
         """Write the ranked DataFrame with stable headers, including when empty."""
-        self.to_dataframe().to_csv(path, index=False)
+        self.to_dataframe().to_csv(path, index=False, encoding="utf-8", lineterminator="\n")
 
 
 def _finite(value: float, name: str, non_negative: bool = False) -> None:
@@ -167,7 +173,9 @@ def correlate_surveys(
     evidence stays unknown. Groups without positive evidence are omitted.
     Priority is class order, decreasing positive survey count, then chainage.
     """
-    config = ECDAConfig.model_validate((config or ECDAConfig()).model_dump())
+    if config is None:
+        raise ValueError("correlation requires explicit criteria and provenance")
+    config = ECDAConfig.model_validate(config.model_dump())
     surveys = _survey_evidence(cis or [], dcvg or [], pcm or [], acvg or [], config)
     events = sorted(
         [(point["distance_m"], name, point) for name, points in surveys.items() for point in points],
@@ -194,4 +202,6 @@ def correlate_surveys(
         anomaly.rank = rank
     # Include original PCM amplitudes as well as the segment evidence for plotting.
     surveys["pcm_current"] = [p.model_dump() for p in sorted(pcm or [], key=lambda p: p.distance_m)]
-    return ECDAResult(criteria=config.model_dump(), anomalies=anomalies, surveys=surveys)
+    kinds = sorted({config.provenance.kind, config.pcm.provenance.kind, config.acvg.provenance.kind})
+    note = f"{'/'.join(kinds)} criteria selected explicitly; {CRITERIA_NOTE}"
+    return ECDAResult(criteria=config.model_dump(), criteria_note=note, anomalies=anomalies, surveys=surveys)

@@ -110,8 +110,13 @@ def chainage_html(result: ECDAResult) -> str:
         'survey coverage before preparing an excavation plan. Missing evidence is unknown. '
         f'Criteria: {escape(result.criteria_note)}. No compliance verdict is implied.</p>'
         '<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>'
-        '<tr><td>0</td><td>2026-10-26</td><td>Initial configurable survey analysis for assessment planning.</td></tr></table>'
-        '<h2>Criteria</h2><p>All values are user inputs with demonstration defaults. '
+        '<tr><td>0</td><td>2026-10-26</td><td>Initial configurable survey analysis for assessment planning.</td></tr>'
+        '<tr><td>1</td><td>2026-10-26</td><td>Require explicit criteria and retain their basis '
+        'to prevent implicit demonstration priorities.</td></tr></table>'
+        '<h2>Criteria</h2><p>All criteria and their provenance are supplied explicitly. '
+        'Engineering criteria require recorded confirmation; demonstration criteria '
+        'have no established field basis. Source references are retained as supplied '
+        'and their applicability is not independently established by this analysis. '
         'Chainage groups span no more than the alignment tolerance from their earliest '
         'observation. PCM uses segment midpoints; endpoints remain in the evidence. '
         'An observation is used once; each survey contributes at most one positive vote. '
@@ -136,4 +141,4 @@ def chainage_html(result: ECDAResult) -> str:
 
 def write_chainage_html(result: ECDAResult, path: str | Path) -> None:
     """Write a self-contained interactive HTML analysis."""
-    Path(path).write_text(chainage_html(result), encoding="utf-8")
+    Path(path).write_text(chainage_html(result), encoding="utf-8", newline="\n")

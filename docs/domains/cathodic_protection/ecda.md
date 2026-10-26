@@ -11,15 +11,19 @@ nor remaining strength and does not authorize excavation.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 0 | 2026-10-26 | Initial configurable survey correlation and example for assessment planning. |
+| 1 | 2026-10-26 | Require explicit criteria and retain their provenance to prevent implicit demonstration priorities. |
 
-## Inputs and demonstration defaults
+## Required criteria and explicit demonstration inputs
 
 Every threshold below is an input: **user to confirm against the governing code**.
-The defaults demonstrate the software and carry no claim of code compliance.
+No PCM, ACVG or correlation criterion has a default. Missing criteria are rejected
+before classification or artifact creation, including through the YAML adapter.
+The values below occur only in the explicitly selected synthetic example and
+carry no claim of code compliance or established engineering threshold basis.
 Use metres for chainage and a common registered chainage datum across surveys.
 Non-finite values and negative chainages are rejected.
 
-| Input under `inputs.ecda.criteria` | Default | Meaning |
+| Input under `inputs.ecda.criteria` | Synthetic example value | Meaning |
 | --- | --- | --- |
 | `alignment_tolerance_m` | 5 m | Maximum inclusive span of one aligned group. |
 | `cis_potential` | `off` | Use OFF potential; missing OFF stays unknown. Select `on` explicitly to use ON. |
@@ -36,12 +40,31 @@ Non-finite values and negative chainages are rejected.
 | `high_priority_min_surveys` | 2 | Required number of distinct positive survey types, from 2 through 4. |
 | `require_cis_for_high` | `true` | Require positive CIS evidence for high priority. |
 
+The correlation criteria and each of `pcm` and `acvg` require a `provenance`
+mapping containing `kind`, `reference` and `confirmed`. `kind` is `engineering`
+or `demonstration`; `reference` identifies the supplied basis, including its
+title, edition or revision, and applicable clause or section. Blank references
+are rejected. Engineering criteria require the boolean `confirmed: true` in
+all three mappings; an engineering correlation cannot contain demonstration
+PCM or ACVG thresholds. Confirmation records the caller's attestation, not an
+independent assessment of the cited basis or its applicability. No engineering
+thresholds are provided by this module. The example explicitly selects
+`demonstration` with `confirmed: false` and labels its source as synthetic.
+
+The full criteria and all three provenance mappings are retained in the
+serialized result, CSV criteria cells and HTML criteria table. Standalone PCM
+segments and classified ACVG indications also retain their criterion provenance.
+The result note identifies demonstration criteria whenever any selected group
+has that kind. Before field use, replace every demonstration criterion with
+an applicable, confirmed engineering basis and retain its source reference.
+
 CIS and DCVG use the existing `CISSurveyPoint` and `DCVGIndication` fields.
 DCVG correlation uses the supplied IR percentage and the configured threshold;
 it does not inherit a prefilled severity label. PCM readings have `distance_m`
-and `signal_current_mA`. ACVG has `distance_m`, `reading`, `unit`, and optional
+and `signal_current_mA`. ACVG requires `distance_m`, `reading`, `unit`, and has optional
 `direction` (`upstream` or `downstream`). ACVG direction is evidence only;
-it does not change the severity. Values below `moderate_min` are `minor`;
+it does not change the severity. A missing ACVG unit is rejected rather than
+assumed to be instrument-relative. Values below `moderate_min` are `minor`;
 the other classes are `moderate`, `severe` and `very_severe`. Bands must
 strictly increase, and each ACVG reading must match the configured unit.
 
@@ -53,6 +76,12 @@ length `L` has signed amplitude loss:
 
 - `dB/m`: `20 * (log10(I_start) - log10(I_end)) / L`.
 - `mA/m`: `(I_start - I_end) / L`.
+
+The amplitude-to-decibel definition follows NIST SP 811, *Guide for the Use of
+the International System of Units (SI)*, 2008 edition, section 8.7,
+[Logarithmic quantities and units: level, neper, bel](https://www.nist.gov/pml/special-publication-811/nist-guide-si-chapter-8).
+Division by segment length expresses the measured change per metre; neither
+formula establishes an anomaly threshold or severity band.
 
 A current gain stays negative and does not flag a non-negative loss threshold.
 The interpretation assumes a transmitter arrangement where current decays along
@@ -104,7 +133,9 @@ from pathlib import Path
 import yaml
 from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
 
-cfg = yaml.safe_load(Path("examples/cathodic_protection/ecda_synthetic.yml").read_text())
+cfg = yaml.safe_load(
+    Path("examples/cathodic_protection/ecda_synthetic.yml").read_text(encoding="utf-8")
+)
 cfg["Analysis"] = {"result_folder": "results/ecda"}
 result = run_cathodic_protection(cfg)["results"]
 ```
@@ -131,10 +162,13 @@ the shared chainage axis. The HTML includes a summary, revision history,
 criteria table, ranked dig evidence and way forward.
 
 For Python use, `correlate_surveys(...)` accepts the four model lists and an
-`ECDAConfig`. `ECDAResult.to_dataframe()` and `.to_csv(path)` produce the same
+explicit `ECDAConfig` with all criteria and provenance supplied.
+`analyze_pcm_survey` and `classify_acvg_indication` likewise require explicit
+`PCMConfig` and `ACVGBands`. `ECDAResult.to_dataframe()` and `.to_csv(path)` produce the same
 ranked columns. Survey evidence and criteria use JSON cells so repeated
 observations and missing values survive CSV export. Empty inputs return an empty
-DataFrame with stable columns and an empty four-panel chart. Raw CSV evidence
+DataFrame with stable columns and an empty four-panel chart when explicit
+criteria are supplied. Raw CSV evidence
 retains numerical precision for auditing.
 
 ## Checks and way forward
@@ -142,6 +176,9 @@ retains numerical precision for auditing.
 Synthetic tests cover PCM formulas, threshold equality, ACVG units and severity
 boundaries, configurable rules, unknown readings, non-transitive grouping,
 duplicate survey votes, deterministic ranking, CSV evidence and YAML dispatch.
+Regression tests reject implicit thresholds, omitted provenance, blank sources,
+unconfirmed engineering criteria and mixed engineering/demonstration criteria.
+Provenance is checked in serialized results, CSV exports and HTML output.
 The optional phrase check reads `ECDA_POST_DENYLIST`; when unset it skips.
 It reports only a text index on a match and never copies phrases into output.
 

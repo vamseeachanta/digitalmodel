@@ -22,7 +22,7 @@ from digitalmodel.cathodic_protection.ecda_reporting import write_chainage_html
 class ECDAInput(SurveyInput):
     """Four survey lists and explicitly configurable assessment criteria."""
 
-    criteria: ECDAConfig = Field(default_factory=ECDAConfig)
+    criteria: ECDAConfig
     cis: list[CISSurveyPoint] = Field(default_factory=list)
     dcvg: list[DCVGIndication] = Field(default_factory=list)
     pcm: list[PCMSurveyPoint] = Field(default_factory=list)
