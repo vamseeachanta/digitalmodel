@@ -410,6 +410,7 @@ vm.runInNewContext(payload.script, context);
   assert.match(get('comment-list').children[1].textContent, /<img/);
   await get('comment-save').emit('click');
   assert.equal(JSON.parse(saved).comments.length, 2);
+  assert.equal(JSON.parse(saved).revision, JSON.parse(payload.changes).revisions.at(-1).revision);
   existing = saved;
   get('comment-import').files = [{async text() { return existing; }}];
   await get('comment-import').emit('change');

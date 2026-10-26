@@ -317,7 +317,7 @@ INTERACTION = r"""
     } catch (error) { status.textContent = `The folder was not selected: ${error.message}`; }
   });
   document.getElementById('comment-save').addEventListener('click', async () => {
-    const text = JSON.stringify({document: 'synthetic-rope-mooring-fatigue', revision: 'Initial', comments: state.comments}, null, 2) + '\n';
+    const text = JSON.stringify({document: 'synthetic-rope-mooring-fatigue', revision: changes.revisions[changes.revisions.length - 1].revision, comments: state.comments}, null, 2) + '\n';
     try {
       let handle;
       if (directory) handle = await directory.getFileHandle(sidecar, {create: true});
