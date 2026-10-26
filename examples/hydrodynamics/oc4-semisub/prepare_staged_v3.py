@@ -87,6 +87,7 @@ def generate_lid(hull_path, output, *, max_span):
     loops = _waterline_loops(hull)
     import gmsh
 
+    version = module("generate_mesh").gmsh_version()
     gmsh.initialize()
     try:
         gmsh.option.setNumber("General.Terminal", 0)
@@ -115,6 +116,7 @@ def generate_lid(hull_path, output, *, max_span):
         gmsh.finalize()
     lid = check.read_gdf(output)
     result = check.validate_lid(hull, lid)
+    result["gmsh_version"] = version
     if max(module("mesh_band_v3").maximum_span(lid)) > max_span:
         raise ValueError("Reference lid exceeds the hull panel scale")
     return result
@@ -137,6 +139,10 @@ def prepare_packet(directory, l1_source, *, l2_source=None):
         return manifest
     if directory.exists() and any(directory.iterdir()):
         raise ValueError("Partial output retained; use a new empty directory")
+    check = module("check_mesh")
+    for source in (l1_source, l2_source):
+        if source is not None:
+            check.validate_hull(check.read_gdf(source))
     directory.mkdir(parents=True, exist_ok=True)
     meshes = {}
     for level, source in (("L1", l1_source), ("L2", l2_source)):

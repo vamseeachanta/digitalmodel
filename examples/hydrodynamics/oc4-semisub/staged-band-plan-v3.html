@@ -13,6 +13,7 @@ native results and independent review will remain release prerequisites.</p>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>A</td><td>2026-10-26</td><td>Separate strength and fatigue stages will replace the proposed high-band production schedule, whose estimated resources exceed the supplied benchmark basis.</td></tr>
 <tr><td>B</td><td>2026-10-26</td><td>Bind retained input digests and measured bands; require separate variance and fatigue-damage tails because spectral second moments can make damage fail when variance passes.</td></tr>
+<tr><td>C</td><td>2026-10-26</td><td>The reference-lid receipt, independent hull checks, probe envelopes and explicit spike-window effects will address the unresolved preparation and tail conditions.</td></tr>
 </table>
 <p>Table 1. Proposed staged acceptance revision. The v2 inputs, high-band plan and historical failures will be retained.</p>
 
@@ -34,11 +35,11 @@ platform mass, centre of mass and inertia match expected-v2.json. Input bytes
 remain external. The L1 digest is bound to the supplied benchmark by the task's
 input linkage and matching panel count; an independent native run receipt remains OPEN.</p>
 <p>Stage S has 27 frequencies, Stage F has 244, and the L2 probe deck has four.
-Stage F crosses the supplied irregular-frequency estimate and requests native
-interior panels. The separate reference lid and complete packet DF0 remain OPEN:
-Gmsh has no matching Arm Linux wheel, so the existing lid generator cannot run.
-The generated decks have passed offline readback and declared-band checks but
-will not be treated as a complete native-ready packet.</p>
+Stage F crosses the supplied irregular-frequency estimate and will request native
+interior panels. The reference-lid receipt will bind 2,446 panels generated with
+Gmsh 4.15.1, maximum span 1.2 m, and passing waterline coverage, separation and
+Stage F declared-band DF3. Native automatic-panel readback and complete packet
+acceptance will remain separate prerequisites.</p>
 <p>The supplied no-lid benchmark will provide the conditional estimate basis:
 3044.0 s over 32 frequencies, 35.6 GB peak working set and chunk averages of
 82.7 to 112.3 s per frequency. These supplied observations will not be treated as
@@ -69,7 +70,11 @@ maximum span. Native automatic interior panels will still require readback
 against this reference; enabling automatic panels will not establish equivalence.</li>
 <li>Packet tests will require DF0 to check both decks, source and file digests,
 mesh measurements, counts, mass, headings, depth, frequencies, lid state and the
-L2 probe deck. A completed packet will be reused only after the retained source
+L2 probe deck. Both versions will independently check hull closure with an implicit
+SWL cap, aspect and hydrostatics against the existing platform criteria on actual
+serialized bytes; consistently rehashed damaged geometry will fail. Lid acceptance
+will remain separate. The executing Gmsh version will be recorded and unsupported
+versions will be rejected before generation. A completed packet will be reused only after the retained source
 and every bound byte match; a partial packet will be retained and rejected.</li>
 <li>Closed-form constant and decaying RAOs and an intentionally failing constant
 case will test response integrals and tail bounds through the reload-verified
@@ -87,6 +92,25 @@ axes. No licensed solver will be started, imported or queried.</li>
 <tr><td>L2 convergence probes</td><td>Four no-lid frequencies will be checked: 0.418879 rad/s and the three unrounded spectral peaks, all below 1.983 rad/s. Complex L1/L2 motion and both excitation formulations will be compared at every required heading.</td><td>The strength-frequency probe will support the strength release decision before Stage F is required. The three peaks will provide the minimum fatigue mesh-convergence evidence.</td><td>Peak probes will not establish whole-band convergence. Suspect resonance or envelope-edge regions will require additional L2 points before fatigue release.</td></tr>
 </table>
 <p>Table 2. Proposed sequence and release boundaries. Strength will not wait for the full fatigue sweep once its own applicable gates pass.</p>
+<p>The Stage F first batch will include supported samples at 1.88, 1.983 and
+2.08 rad/s and the unrounded band endpoint, followed by separate indicative
+probes at 2.6, 3.0 and 3.5 rad/s. Those probes will not extend the declared band
+or become response ordinates. Each probe receipt will identify the export digest,
+mesh span and depth, supported upper frequency, actual panels per wavelength and
+shortfall against the ASSUMED six-panel rule. L1 will provide approximately 5.3,
+4.0 and 2.9 panels per wavelength at those three probes. Those shortfalls will
+retain INDICATIVE status and require independent review before envelope use.</p>
+<p>Every response result will record the irregular-frequency window, default
+1.9 to 2.45 rad/s. An isolated point will be flagged per motion when its magnitude
+exceeds three times both immediate neighbours; the multiplier will be configurable
+and greater than one. Interpolation will use real and imaginary components between
+unflagged neighbours. Raw response will remain the default. The result will report
+flagged frequencies, component and frequency counts, evaluated window coverage,
+and corrected-minus-raw changes in variance and both tail fractions for every sea
+and output using identical envelopes. The default window exceeds L1 support, so
+coverage will be PARTIAL unless the caller supplies a verified native-lid statement.
+That statement will be retained verbatim and will not itself grant release. Endpoints,
+broad peaks and unresolved resonances will require separate native review.</p>
 <p>Numerical comparison criteria will be ASSUMED pending confirmation: complex
 L1/L2 differences will be at most 5.0% of each L2 component's maximum magnitude
 over the compared frequencies, with that scale also used for near-zero components;
@@ -119,6 +143,18 @@ motions in metres and radians to stress in MPa. Twice the resulting stress
 amplitude will define a stress-range proxy. Its out-of-band envelope will use the
 triangle inequality on the component envelopes, so measured cancellation will
 not reduce the bound.</p>
+<p>The optional probe-anchored envelope will take magnitudes of six complex
+motion RAOs at the band limit and above-band probes with matching headings,
+units, origin and phase convention. Each interval will use the suffix maximum
+of its remaining anchors, times a multiplier of at least one, as a nonincreasing
+staircase. A rising probe will raise all preceding affected steps, including the
+band-limit step; decay will never be forced across a measured rise. The triangle
+inequality will bound every complex linear chord by these steps. The final probe
+magnitude will be held to infinity and analytic wave-tail moment differences will
+integrate each step without truncation. This will bound the assumed chord model,
+not establish the absence of an unobserved resonance. Motion bounds will precede
+the hang-off and stress triangle-inequality transfers. These ordinates will remain
+conditional bounds and will never be used as physical response.</p>
 <p>For the ASSUMED narrow-band Rayleigh basis, damage will be proportional to
 m0^(m/2) times sqrt(m2/m0)/(2 pi). The damage tail fraction will be
 1 - D(in-band)/D(in-band plus tail bound); the variance tail fraction will be
@@ -187,10 +223,11 @@ count will remain unverified until readback.</p>
 <tr><th>Scenario</th><th>Frequencies</th><th>Time (h)</th><th>Memory (GB)</th><th>Basis</th></tr>
 <tr><td>L1 S, no lid</td><td>27</td><td>0.7</td><td>35.6</td><td>Measured retained hull; supplied benchmark linkage</td></tr>
 <tr><td>L1 F, no lid, diagnostic only</td><td>244</td><td>6.4</td><td>35.6</td><td>Measured band; crossing the irregular estimate will require a lid</td></tr>
-<tr><td>L1 S and F, with lid</td><td>27 and 244</td><td>OPEN</td><td>OPEN</td><td>Reference-lid count unavailable without Gmsh; native automatic count unverified</td></tr>
+<tr><td>L1 S, with reference lid, diagnostic only</td><td>27</td><td>1.2</td><td>49.1</td><td>2,446 reference panels; native automatic count unverified</td></tr>
+<tr><td>L1 F, with reference lid</td><td>244</td><td>10.4</td><td>49.1</td><td>2,446 reference panels; native automatic count unverified</td></tr>
 <tr><td>L2 four-point probe, no lid</td><td>4</td><td>1.7</td><td>230.4</td><td>Measured retained L2 count; estimated memory exceeds the available host capacity</td></tr>
 </table>
-<p>Table 4. ESTIMATED scenarios only, using the existing unrounded benchmark coefficients; no native computation was performed. The complete packet and lid scenarios remain OPEN.</p>
+<p>Table 4. ESTIMATED scenarios only, using the existing unrounded benchmark coefficients; native capacity and automatic-lid equivalence will remain OPEN.</p>
 
 <h2>Plan defect review and retention</h2>
 <p>The review will hunt for unsupported measured claims, endpoint rounding that
@@ -207,6 +244,6 @@ will remain outside Git with their manifests. A local save will not establish
 backup or publication. Public source identity and benchmark provenance will be
 verified before any engineering release.</p>
 <p>Lesson: an approximate mesh span will support an illustrative estimate only;
-production bands and decks will require the exact retained coordinates. Fatigue tail acceptance will also require the spectral second moment; a variance pass alone will not establish a damage pass.</p>
+production bands and decks will require the exact retained coordinates. Fatigue tail acceptance will also require the spectral second moment; a variance pass alone will not establish a damage pass. Integrity hashes will not substitute for independent topology and hydrostatic checks.</p>
 </body>
 </html>

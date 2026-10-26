@@ -30,8 +30,10 @@ def df0(directory):
         meshes = manifest["meshes"]
         if set(meshes) not in ({"L1"}, {"L1", "L2"}):
             raise ValueError("Unexpected mesh set")
+        hull_acceptance = {}
         for level, record in meshes.items():
             filename = f"{level.lower()}-hull-v3.gdf"
+            hull_acceptance[level] = check.validate_hull(check.read_gdf(directory / filename))
             if record != prepare.mesh_record(directory / filename):
                 raise ValueError("Mesh measurements or digest differ")
         specification = builder.resolved_specification(meshes["L1"]["valid_band_rad_s"])
@@ -83,6 +85,7 @@ def df0(directory):
     except (OSError, KeyError, TypeError, IndexError, json.JSONDecodeError, yaml.YAMLError) as error:
         raise ValueError("Incomplete or malformed staged packet") from error
     return {"pass": True, "schema_version": 3, "stages": stages, "lid": lid_check,
+            "hull_acceptance": hull_acceptance,
             "l2_probe_df3": probe_df3,
             "historical_failures": {"DF5.2": "FAIL", "DF5.3": "FAIL"}, "native_acceptance": "OPEN"}
 

@@ -26,8 +26,8 @@ def inputs(tmp_path, scale=2):
     source = tmp_path / "inputs"
     source.mkdir()
     fixture = load("test_oc4_staged_band", Path(__file__).parent)
-    cube = fixture.cube_packet_source(tmp_path)
-    panels = load("check_mesh").read_gdf(cube) * scale
+    synthetic = fixture.platform_packet_source(tmp_path, edge=scale)
+    panels = load("check_mesh").read_gdf(synthetic)
     for level in ("L1", "L2"):
         load("generate_mesh").write_gdf(source / f"oc4_{level}.gdf", panels, 9.80665)
         (source / f"oc4_{level}.yml").write_text("UnitsSystem: SI\n")
@@ -105,6 +105,14 @@ def test_committed_measurements_and_decks_match_bound_generator_sources():
     assert report["stages"]["F"]["interior_lid"]
     assert report["benchmark"]["panel_count_matches_L1"]
     assert report["mass_basis_matches"]
+    assert all(report["hull_acceptance"][level]["pass"] for level in ("L1", "L2"))
+    assert report["lid"]["status"] == "REFERENCE_GENERATED_NATIVE_READBACK_OPEN"
+    assert report["lid"]["check"]["gmsh_version"] == "4.15.1"
+    assert report["lid"]["check"]["pass"]
+    assert report["lid"]["mesh"]["declared_df3"]["pass"]
+    assert report["lid"]["mesh"]["max_span_m"] <= report["meshes"]["L1"]["max_span_m"]
+    for stage in ("S", "F"):
+        assert report["estimates"][f"{stage}_with_lid"]["reference_lid_panels"] == report["lid"]["mesh"]["panels"]
     for stage in ("S", "F"):
         deck = yaml.safe_load((directory / f"stage-{stage.lower()}-model-v3.yml").read_text())
         specification = json.loads((directory / "resolved-specification-v3.json").read_text())

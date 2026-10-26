@@ -11,17 +11,17 @@
     "SHA256SUMS.txt": "596f65d5470e3124eb2771cad289d41b0ecb9de3c1e0c4326e491c4549a721a7"
   },
   "source_sha256": {
-    "prepare_staged_v3.py": "223275cefc59e1a8b84658472e1cc649609f4d6bd7e1d427d9530dffb11a5ead",
+    "prepare_staged_v3.py": "2aef8addc7d970605b17ee838f3c971f7d4c0ddd460078c147a57318dd4c8936",
     "mesh_band_v3.py": "529cd2eb53455f3ff568dcb82deca6f4846366a3614571087890c36cab06f21a",
     "build_datafile_v3.py": "18913dc349ec36b8f3cf9b0f69306af05fc60ca7948d9358c5bb51a2756d4713",
-    "input_checks_v3.py": "2c63d287721b9a106329dc81fea5ec0bcccbe586f6092ae2a262c891ae59f647",
+    "input_checks_v3.py": "2ce52f6aa17ad1e30b544ed9d90c570c5efbd5f012499f0d4f4bd9a68089c46e",
     "input-specification-v3.json": "4c9f87fc280bf2ec5cffe540776adcb6ac30c15645a2fb3e0755b12ceff3571d",
     "expected-v2.json": "756bb6db5d3dc6f3ebb9f91c7fd0080dbd22e3f61c853346fdaceebad2be1c31",
     "build_datafile_v2.py": "f40e96b8682d90a17276c334b96a30a8dea8304c811c6dcf62001e9558b4c946",
-    "check_mesh.py": "0bc9c5e23cf7c119001701dd042ae5001b6e382cc0a4863fd722fe715da2ec1d",
-    "generate_mesh.py": "c03fa5f83f0c77a0bd03f2514bf1dbe7cbd1ad4c7ac04a967675211cf588c23a",
+    "check_mesh.py": "9d0bea54a315baa75f032b2d3a9f4fb09763e275149ac38ca56c5125065b1ec0",
+    "generate_mesh.py": "2e96ac50e7f83847afd703fcd8a6de5154b014018ad79381d6b7c689fbc0c519",
     "native_estimate_v3.py": "6cbb5d35a590cc3c9ff91e05f196a6fbd2e3603225a3f25c544175ff5d3b55e0",
-    "measure_retained_v3.py": "e8a4b818baaf0789072a01afe97c39227c5d500804e9e58b582155f0d51f4ab0"
+    "measure_retained_v3.py": "f05b9ac464ab9b06af10dc7543adf2a7cde9cbbdd19981183df41421c1923d4b"
   },
   "meshes": {
     "L1": {
@@ -77,6 +77,154 @@
         "limit_m": 0.8383265196279277,
         "oversized_panels": 9273
       }
+    }
+  },
+  "hull_acceptance": {
+    "L1": {
+      "pass": true,
+      "criteria": "Historical platform hull criteria; SWL closure permitted",
+      "measurements": {
+        "volume": 13833.48909557576,
+        "waterplane": 376.27415729420017,
+        "cob_x": -0.0034442226118874893,
+        "cob_y": -0.0002403418617995313,
+        "cob_z": -13.182196801338335,
+        "max_span": 1.7164461578797052,
+        "max_aspect": 2.5946250552926053,
+        "crossings": 0.0,
+        "bad_edges": 0.0,
+        "degenerate": 0.0,
+        "above_water": 0.0
+      },
+      "checks": [
+        {
+          "check": "Waterline crossings",
+          "criterion": "= 0",
+          "value": 0.0,
+          "status": "PASS"
+        },
+        {
+          "check": "Above-water vertices",
+          "criterion": "= 0",
+          "value": 0.0,
+          "status": "PASS"
+        },
+        {
+          "check": "Degenerate panels",
+          "criterion": "= 0",
+          "value": 0.0,
+          "status": "PASS"
+        },
+        {
+          "check": "Bad non-SWL edges",
+          "criterion": "= 0",
+          "value": 0.0,
+          "status": "PASS"
+        },
+        {
+          "check": "Maximum aspect",
+          "criterion": "<= 3.0",
+          "value": 2.5946250552926053,
+          "status": "PASS"
+        },
+        {
+          "check": "Maximum span (m)",
+          "criterion": "<= 3.66",
+          "value": 1.7164461578797052,
+          "status": "PASS"
+        },
+        {
+          "check": "Displacement (m3) [T4-6]",
+          "criterion": "13917 +/- 1%",
+          "value": 13833.48909557576,
+          "status": "PASS"
+        },
+        {
+          "check": "Waterplane (m2) [criteria]",
+          "criterion": "380 +/- 1%",
+          "value": 376.27415729420017,
+          "status": "PASS"
+        },
+        {
+          "check": "COB z (m) [T4-6]",
+          "criterion": "reference -13.15",
+          "value": -13.182196801338335,
+          "status": "INFO"
+        }
+      ]
+    },
+    "L2": {
+      "pass": true,
+      "criteria": "Historical platform hull criteria; SWL closure permitted",
+      "measurements": {
+        "volume": 13872.555238266046,
+        "waterplane": 376.9106333738002,
+        "cob_x": -0.003068626353185021,
+        "cob_y": 1.6708268238041967e-05,
+        "cob_z": -13.184439386680554,
+        "max_span": 1.7023995386806245,
+        "max_aspect": 2.0766102674405924,
+        "crossings": 0.0,
+        "bad_edges": 0.0,
+        "degenerate": 0.0,
+        "above_water": 0.0
+      },
+      "checks": [
+        {
+          "check": "Waterline crossings",
+          "criterion": "= 0",
+          "value": 0.0,
+          "status": "PASS"
+        },
+        {
+          "check": "Above-water vertices",
+          "criterion": "= 0",
+          "value": 0.0,
+          "status": "PASS"
+        },
+        {
+          "check": "Degenerate panels",
+          "criterion": "= 0",
+          "value": 0.0,
+          "status": "PASS"
+        },
+        {
+          "check": "Bad non-SWL edges",
+          "criterion": "= 0",
+          "value": 0.0,
+          "status": "PASS"
+        },
+        {
+          "check": "Maximum aspect",
+          "criterion": "<= 3.0",
+          "value": 2.0766102674405924,
+          "status": "PASS"
+        },
+        {
+          "check": "Maximum span (m)",
+          "criterion": "<= 3.66",
+          "value": 1.7023995386806245,
+          "status": "PASS"
+        },
+        {
+          "check": "Displacement (m3) [T4-6]",
+          "criterion": "13917 +/- 1%",
+          "value": 13872.555238266046,
+          "status": "PASS"
+        },
+        {
+          "check": "Waterplane (m2) [criteria]",
+          "criterion": "380 +/- 1%",
+          "value": 376.9106333738002,
+          "status": "PASS"
+        },
+        {
+          "check": "COB z (m) [T4-6]",
+          "criterion": "reference -13.15",
+          "value": -13.184439386680554,
+          "status": "INFO"
+        }
+      ]
     }
   },
   "mass_basis_matches": true,
@@ -444,11 +592,42 @@
     "oversized_panels": 0
   },
   "lid": {
-    "status": "OPEN_TOOL_UNAVAILABLE",
-    "tool": "gmsh",
-    "reason": "No matching Arm Linux wheel; no source build attempted"
+    "status": "REFERENCE_GENERATED_NATIVE_READBACK_OPEN",
+    "mesh": {
+      "file": "l1-lid-v3.gdf",
+      "sha256": "5c2dc8313de480d32a989af2ffc301c279e327045e10413685fcf88229e41626",
+      "panels": 2446,
+      "bytes": 404385,
+      "max_span_m": 1.2140313137641874,
+      "valid_band_rad_s": 2.908437277774313,
+      "declared_df3": {
+        "pass": true,
+        "mode": "declared_band",
+        "panels": 2446,
+        "upper_rad_s": 2.4460174688985594,
+        "depth_m": 1500,
+        "panels_per_wavelength": 6,
+        "rule_status": "ASSUMED study criterion",
+        "max_span_m": 1.2140313137641874,
+        "limit_m": 1.716446157879706,
+        "oversized_panels": 0
+      },
+      "historical_3_50_df3": {
+        "pass": false,
+        "panels": 2446,
+        "max_span_m": 1.2140313137641874,
+        "limit_m": 0.8383265196279277,
+        "oversized_panels": 267
+      }
+    },
+    "check": {
+      "pass": true,
+      "panels": 2446,
+      "area_m2": 376.2741572942002,
+      "gmsh_version": "4.15.1"
+    }
   },
-  "packet_df0": "OPEN_REFERENCE_LID_UNAVAILABLE",
+  "packet_df0": "OPEN_ASSEMBLE_EXTERNAL_INPUTS_FOR_FULL_PACKET_CHECK",
   "benchmark": {
     "panels": 14064,
     "time_s": 3044.0,
@@ -477,7 +656,23 @@
       "capacity_established": false,
       "native_lid_count_verified": false
     },
-    "S_with_lid": null,
+    "S_with_lid": {
+      "status": "ESTIMATED_NOT_MEASURED",
+      "hull_panels": 14064,
+      "reference_lid_panels": 2446,
+      "effective_panels": 16510,
+      "frequencies": 27,
+      "panel_ratio": 1.1739192263936291,
+      "memory_gb": 49.070898754240325,
+      "time_h": 1.154156954595243,
+      "chunk_time_range_h": [
+        1.003416918961107,
+        1.3625600967271139
+      ],
+      "scaling_status": "ASSUMED, based on previous experience",
+      "capacity_established": false,
+      "native_lid_count_verified": false
+    },
     "F_without_lid": {
       "status": "ESTIMATED_NOT_MEASURED",
       "hull_panels": 14064,
@@ -495,7 +690,23 @@
       "capacity_established": false,
       "native_lid_count_verified": false
     },
-    "F_with_lid": null,
+    "F_with_lid": {
+      "status": "ESTIMATED_NOT_MEASURED",
+      "hull_panels": 14064,
+      "reference_lid_panels": 2446,
+      "effective_panels": 16510,
+      "frequencies": 244,
+      "panel_ratio": 1.1739192263936291,
+      "memory_gb": 49.070898754240325,
+      "time_h": 10.430159145231086,
+      "chunk_time_range_h": [
+        9.067915860241117,
+        12.313506059311695
+      ],
+      "scaling_status": "ASSUMED, based on previous experience",
+      "capacity_established": false,
+      "native_lid_count_verified": false
+    },
     "L2_probes": {
       "status": "ESTIMATED_NOT_MEASURED",
       "hull_panels": 35776,
@@ -516,9 +727,10 @@
   },
   "generator_command": "python examples/hydrodynamics/oc4-semisub/measure_retained_v3.py INPUTS OUTPUT",
   "generated_sha256": {
+    "l1-lid-v3.gdf": "5c2dc8313de480d32a989af2ffc301c279e327045e10413685fcf88229e41626",
     "stage-s-model-v3.yml": "c9149160cda3dfd2ab2585f3edad4361a06fa9244ef594c4b950888469a69cc7",
-    "resolved-specification-v3.json": "f01f3509688dc4f88119ba0365ecc43221c32621928b3eab91bd39f246348c23",
+    "stage-f-model-v3.yml": "9b986ccf1e0b82e1e4e75b9b139f98aff6e9750f07ea5e226bb4c9e4c3fa86d6",
     "l2-probes-model-v3.yml": "2e072b49055d7388dd5c396914229efdf5d1c2f08c6e1a269129f914be763e0a",
-    "stage-f-model-v3.yml": "9b986ccf1e0b82e1e4e75b9b139f98aff6e9750f07ea5e226bb4c9e4c3fa86d6"
+    "resolved-specification-v3.json": "f01f3509688dc4f88119ba0365ecc43221c32621928b3eab91bd39f246348c23"
   }
 }

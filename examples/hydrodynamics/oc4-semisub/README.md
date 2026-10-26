@@ -267,18 +267,43 @@ uv run --no-project --with 'numpy<2' --with pyyaml python \
 ```
 
 DF0 checks both stages, the optional L2 probe and the retained-byte/source
-digests. Completed packets are reused only after all checks pass. Partial
-packets are retained and rejected. The exact benchmark L1/L2 GDF bytes have
-not been located; no production packet, measured valid band, lid count or
-native allocation is established by the synthetic packet tests.
+digests. Both v2 and v3 independently check serialized hull topology, panel
+aspect, displacement and waterplane against the existing platform criteria.
+Closure permits only the implicit SWL cap. A consistent hash does not excuse
+damaged geometry. Lid acceptance remains separate. Completed packets are reused
+only after all checks pass; partial packets are retained and rejected.
+
+The retained L1 and L2 inputs have been located and their six supplied digests
+verified. The [measurement receipt](retained-v3/retained-measurements-v3.json)
+binds the exact spans, supported endpoints and generated decks. L1 has 14,064
+panels and L2 has 35,776; both independent hull checks pass. Stage S has 27
+frequencies and Stage F has 244. The four L2 convergence probes remain separate
+from the indicative above-band envelope probes. Displayed spans and frequencies
+are rounded; generation uses the unrounded receipt values.
+
+The [reference lid](retained-v3/l1-lid-v3.gdf) has 2,446 panels, maximum span
+1.2 m and SHA-256
+`5c2dc8313de480d32a989af2ffc301c279e327045e10413685fcf88229e41626`.
+Waterline coverage, separation and Stage F declared-band DF3 pass with zero
+oversized panels. The executing Gmsh package is recorded as 4.15.1; unsupported
+versions are rejected before generation. The receipt includes the generator
+command. Conditional estimates with this lid are 1.2 h for Stage S and 10.4 h
+for Stage F, both at 49.1 GB, using `native_estimate_v3.py`. Native automatic-lid
+equivalence, native capacity and engineering acceptance remain OPEN.
 
 `tail_response_v3.response_bound` accepts the reload-verified JSON export from
 `complex_export_v2.py`, the selected fatigue seas and the exact declared band
 endpoint. Each required heading is evaluated separately; absent headings fail
 closed. The return value includes all six motions and three hang-off motion
-components at (0,0,-10) m, the in-band variances, omitted wave fractions,
-conditional upper variance bounds and bound/in-band ratios. The ASSUMED default
-threshold is 1.0% of in-band response variance. Gamma values other than the
+components at (0,0,-10) m, in-band spectral moments m0 and m2, omitted wave
+fractions, conditional upper moment bounds and bound/in-band diagnostic ratios.
+Optional real stress-transfer coefficients produce a stress-range proxy. The
+ASSUMED default threshold is 1.0%, applied independently to the variance tail
+fraction and the narrow-band fatigue-damage tail fraction. Their denominators
+are the in-band-plus-bound variance and damage respectively. Damage is
+`1 - D(in-band)/D(in-band plus tail bound)`, with
+`D proportional to m0^((m-1)/2) * sqrt(m2)` and default S-N slope 3, ASSUMED for
+review. No wide-band correction is implemented. Gamma values other than the
 supplied 1.0 are rejected. Occurrences and spectra are never renormalised.
 
 The last 0.5 rad/s envelope is applied only as a bound. Its validity beyond the
@@ -290,5 +315,37 @@ No physical response is extrapolated. Strength release requires its applicable
 native and convergence gates; fatigue additionally requires the reviewed tail
 condition, irregular-frequency checks and whole-band convergence evidence.
 
+The optional `probe_envelope` argument supplies a reload-verified complex export
+under `record`, plus `mesh_max_span_m` and `mesh_depth_m`. Above-band probes
+must share the in-band units, origin, coordinate frame, phase convention and
+selected heading. The receipt records INDICATIVE status, a computed supported
+upper frequency and each probe's panels-per-wavelength shortfall. A suffix-maximum
+staircase bounds the complex linear chords between the band limit and probes;
+a rising probe raises preceding steps. The final probe magnitude is held to
+infinity. Exact wave-tail moment differences integrate the steps. Component
+motion envelopes precede the hang-off and stress triangle-inequality transfers.
+This remains a conditional bound: unresolved resonances and insufficient probe
+resolution require independent review. Existing flat last-window envelopes remain
+available. The [acceptance plan](staged-band-plan-v3.html) specifies the first
+batch at 2.6, 3.0 and 3.5 rad/s without extending the production response band.
+
+`scan_irregular_spikes` flags each motion magnitude exceeding three times both
+immediate neighbours inside the default 1.9 to 2.45 rad/s window. The factor is
+configurable and greater than one. Interpolation uses real and imaginary parts
+between unflagged neighbours; raw arrays remain unchanged. Every `response_bound`
+result records window coverage, flagged counts and points, and the changes in
+variance and both tail fractions using identical envelopes. The full default
+window exceeds L1 support and is recorded as PARTIAL. Interpolation is applied
+only with `interpolate_spikes=True`; a substantive `verified_lid_statement` may
+instead record the caller's native-lid evidence. Neither disposition grants
+release. Endpoints and broad resonances are outside this isolated-spike rule.
+
+The focused baseline passed 126 tests. The final focused suite passed 146 tests,
+with seven additional CI-registration tests passing, for 153 total. All checks
+were run against the uncommitted tree. Synthetic tests establish software
+behaviour only; native response and engineering release remain OPEN.
+
 Lesson: an approximate span supports an illustrative estimate; exact retained
-coordinates are required for production bands and source-bound decks.
+coordinates are required for production bands and source-bound decks. Hull
+acceptance also requires independent geometry checks, and fatigue tail acceptance
+requires both spectral moments rather than variance alone.

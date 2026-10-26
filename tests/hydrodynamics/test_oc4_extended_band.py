@@ -38,6 +38,28 @@ def cube_and_lid():
                [2, 3, 7, 6], [3, 0, 4, 7]]], v[[[4, 5, 6, 7]]])
 
 
+def platform_hull_and_lid(edge=1):
+    """Synthetic box matches the governing volume and waterplane criteria.
+
+    This fixture exercises input checks without claiming platform shape or COB
+    equivalence. Unit cubes remain available for the independent flux tests.
+    """
+    hull, lid = cube_and_lid()
+    scale = np.array([np.sqrt(380), np.sqrt(380), 13917 / 380])
+    outputs = []
+    for faces in (hull * scale, lid * scale):
+        panels = []
+        for face in faces:
+            u, v = face[1] - face[0], face[3] - face[0]
+            nx, ny = (int(np.ceil(np.linalg.norm(axis) / edge)) for axis in (u, v))
+            for i in range(nx):
+                for j in range(ny):
+                    panels.append([face[0] + x * u / nx + y * v / ny
+                                   for x, y in ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))])
+        outputs.append(np.asarray(panels))
+    return outputs
+
+
 @pytest.mark.parametrize("damage", ["none", "outside", "reverse", "duplicate", "hole", "above", "hull_cap"])
 def test_lid_requires_interior_coverage_and_no_overlap(damage):
     hull, lid = cube_and_lid()
@@ -106,8 +128,7 @@ def small_packet(tmp_path):
     import hashlib
     import json
     builder, generator = load("build_datafile_v2"), load("generate_mesh")
-    hull, lid = cube_and_lid()
-    hull, lid = hull * 0.25, lid * 0.25
+    hull, lid = platform_hull_and_lid(edge=0.55)
     artifacts = []
     for kind, panels in (("hull", hull), ("lid", lid)):
         path = tmp_path / f"coarse-{kind}-v2.gdf"
@@ -191,6 +212,8 @@ def test_generated_pair_has_checked_hulls_lids_and_resumable_manifests(generated
     before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in generated_packet.glob("*.gdf")}
     for level in ("coarse", "fine"):
         manifest = json.loads((generated_packet/f"{level}-manifest-v2.json").read_text())
+        import gmsh
+        assert manifest["inputs"]["gmsh_version"] == gmsh.__version__ == "4.15.1"
         result = load("input_checks_v2").df0(generated_packet, level)
         assert result["pass"] and result["lid"]["pass"]
         assert result["frequency_count"] == 350
@@ -207,3 +230,44 @@ def test_pair_rejects_tampered_retained_case(tmp_path):
     (tmp_path/"coarse-manifest-v2.json").write_text(json.dumps({"inputs": {}}))
     with pytest.raises(ValueError, match="inputs differ"):
         load("generate_mesh").generate_pair(tmp_path)
+
+
+@pytest.mark.parametrize("entry", ["mesh", "pair", "lid"])
+def test_generators_reject_unsupported_executing_gmsh(tmp_path, monkeypatch, entry):
+    import sys
+    from types import SimpleNamespace
+    monkeypatch.setitem(sys.modules, "gmsh", SimpleNamespace(__version__="4.14.0"))
+    generator = load("generate_mesh")
+    with pytest.raises(ValueError, match="Unsupported Gmsh version"):
+        if entry == "mesh":
+            generator.generate_mesh(tmp_path / "mesh.gdf", gravity=9.80665)
+        elif entry == "pair":
+            generator.generate_pair(tmp_path / "pair")
+        else:
+            hull, _ = cube_and_lid()
+            path = tmp_path / "hull.gdf"
+            generator.write_gdf(path, hull, 9.80665)
+            load("prepare_staged_v3").generate_lid(path, tmp_path / "lid.gdf", max_span=2)
+
+
+@pytest.mark.parametrize("damage", ["bottom", "aspect", "hydrostatics"])
+def test_v2_rejects_geometry_with_consistent_artifact_hash(tmp_path, damage):
+    import hashlib
+    import json
+    packet = small_packet(tmp_path)
+    hull = packet / "coarse-hull-v2.gdf"
+    panels = load("check_mesh").read_gdf(hull)
+    if damage == "bottom":
+        panels = panels[1:]
+    elif damage == "aspect":
+        panels[:, :, 0] *= 10
+        panels[:, :, 1] /= 10
+    else:
+        panels[:, :, 2] *= 0.5
+    load("generate_mesh").write_gdf(hull, panels, 9.80665)
+    path = packet / "coarse-manifest-v2.json"
+    manifest = json.loads(path.read_text())
+    manifest["artifacts"][0].update(sha256=hashlib.sha256(hull.read_bytes()).hexdigest(), panels=len(panels))
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="Hull acceptance"):
+        load("input_checks_v2").df0(packet, "coarse")

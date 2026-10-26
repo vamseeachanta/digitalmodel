@@ -67,6 +67,8 @@ def df0(directory, level, *, expected=None):
             if float(header[1]) != specification["gravity_m_s2"]:
                 raise ValueError("Mesh gravity differs from the input basis")
             meshes[kind] = check.read_gdf(path)
+            if kind == "hull":
+                hull_acceptance = check.validate_hull(meshes[kind])
             if len(meshes[kind]) != artifact["panels"]:
                 raise ValueError("Mesh panel count mismatch")
             span_checks[kind] = check.df3(meshes[kind], specification["frequencies_rad_s"],
@@ -86,6 +88,7 @@ def df0(directory, level, *, expected=None):
             "specification_sha256": sha256(HERE / "input-specification-v2.json"),
             "expected_sha256": sha256(HERE / "expected-v2.json"),
             "df3": span_checks, "lid": lid_check,
+            "hull_acceptance": hull_acceptance,
             "historical_failures": expected["historical_failures"], "native_acceptance": "OPEN"}
 
 

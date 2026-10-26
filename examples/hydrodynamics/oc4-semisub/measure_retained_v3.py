@@ -56,6 +56,9 @@ def measure_inputs(inputs, destination):
     if any(supplied_mass[key] != expected_mass[key] for key in keys):
         raise ValueError("Supplied platform basis differs from the committed basis")
     meshes = {level: prepare.mesh_record(inputs / f"oc4_{level}.gdf") for level in ("L1", "L2")}
+    check = module("check_mesh")
+    hull_acceptance = {level: check.validate_hull(check.read_gdf(inputs / f"oc4_{level}.gdf"))
+                       for level in ("L1", "L2")}
     specification = builder.resolved_specification(meshes["L1"]["valid_band_rad_s"])
     destination.mkdir(parents=True, exist_ok=True)
     builder.build_datafiles(destination, specification)
@@ -82,7 +85,7 @@ def measure_inputs(inputs, destination):
             if error.name != "gmsh":
                 raise
             lid = {"status": "OPEN_TOOL_UNAVAILABLE", "tool": "gmsh",
-                   "reason": "No matching Arm Linux wheel; no source build attempted"}
+                   "reason": "Gmsh package unavailable; no source build attempted"}
         else:
             lid_record = prepare.mesh_record(lid_path, declared_upper=stages["F"]["upper_rad_s"])
             lid = {"status": "REFERENCE_GENERATED_NATIVE_READBACK_OPEN", "mesh": lid_record, "check": checked}
@@ -92,7 +95,7 @@ def measure_inputs(inputs, destination):
         raise ValueError("L2 probe DF3 failed")
     result = {"schema_version": 3, "status": "OFFLINE_MEASUREMENTS_NATIVE_ACCEPTANCE_OPEN",
               "input_sha256": hashes, "source_sha256": source_hashes,
-              "meshes": meshes, "mass_basis_matches": True,
+              "meshes": meshes, "hull_acceptance": hull_acceptance, "mass_basis_matches": True,
               "measured_mass_basis": {key: supplied_mass[key] for key in keys},
               "stages": stages, "l2_probe_count": len(probe["PeriodOrFrequency"]),
               "l2_probe_df3": l2_df3, "lid": lid,

@@ -234,6 +234,27 @@ def checks(values):
     ] + [("COB z (m) [T4-6]", "reference -13.15", values["cob_z"], "INFO")]
 
 
+def validate_hull(panels):
+    """Apply independent topology, aspect and platform hydrostatic criteria.
+
+    Closure permits only the implicit SWL cap. Lid acceptance remains separate;
+    digests and a dispersion pass cannot substitute for these geometry checks.
+    """
+    panels = np.asarray(panels, float)
+    if (panels.ndim != 3 or panels.shape[1:] != (4, 3) or not len(panels)
+            or not np.isfinite(panels).all()):
+        raise ValueError("Hull acceptance requires finite nonempty panels")
+    values = measure(panels)
+    rows = checks(values)
+    failed = [label for label, _, _, verdict in rows if verdict == "FAIL"]
+    if failed:
+        raise ValueError("Hull acceptance failed: " + ", ".join(failed))
+    return {"pass": True, "criteria": "Historical platform hull criteria; SWL closure permitted",
+            "measurements": {key: float(value) for key, value in values.items()},
+            "checks": [{"check": label, "criterion": criterion, "value": float(value), "status": verdict}
+                       for label, criterion, value, verdict in rows]}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mesh", type=Path)

@@ -35,6 +35,16 @@ MEMBERS = (
 )
 
 
+def gmsh_version():
+    """Validate the executing package before geometry or output is created."""
+    import gmsh
+
+    version = getattr(gmsh, "__version__", None)
+    if version != "4.15.1":
+        raise ValueError(f"Unsupported Gmsh version: {version}; requires 4.15.1")
+    return version
+
+
 def build_geometry(gmsh):
     """Fuse exterior solids and clip at SWL; extensions are buried in columns."""
     occ = gmsh.model.occ
@@ -98,6 +108,7 @@ def generate_mesh(output, *, gravity, mesh_size=0.55,
         raise ValueError("mesh_size must be finite and positive")
     import gmsh
 
+    gmsh_version()
     gmsh.initialize()
     try:
         gmsh.option.setNumber("General.Terminal", 0)
@@ -149,6 +160,7 @@ def generate_mesh(output, *, gravity, mesh_size=0.55,
 
 def generate_pair(directory, *, gravity=9.80665, depth=1500, omega=3.5):
     """Generate resumable coarse/fine hulls and matching reference lids."""
+    version = gmsh_version()
     directory = Path(directory)
     directory.mkdir(parents=True, exist_ok=True)
     check = _checker()
@@ -161,7 +173,7 @@ def generate_pair(directory, *, gravity=9.80665, depth=1500, omega=3.5):
                   "omega_max_rad_s": omega, "panels_per_wavelength": 6,
                   "rule_status": "ASSUMED study criterion", "max_span_m": limit,
                   "mesh_size_m": size, "source_sha256": sources,
-                  "gmsh_version": "4.15.1"}
+                  "gmsh_version": version}
         if manifest_file.exists():
             old = json.loads(manifest_file.read_text())
             if old["inputs"] != inputs:

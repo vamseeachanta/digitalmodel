@@ -80,9 +80,21 @@ def cube_packet_source(tmp_path):
     return source
 
 
+def platform_packet_source(tmp_path, edge=1):
+    import importlib.util
+    path = Path(__file__).with_name("test_oc4_extended_band.py")
+    spec = importlib.util.spec_from_file_location("mesh_fixtures", path)
+    fixture = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fixture)
+    hull, _ = fixture.platform_hull_and_lid(edge)
+    source = tmp_path / "source.gdf"
+    load("generate_mesh").write_gdf(source, hull, 9.80665)
+    return source
+
+
 def test_staged_packet_binds_mesh_lid_both_decks_and_resumes(tmp_path):
     import hashlib
-    source = cube_packet_source(tmp_path)
+    source = platform_packet_source(tmp_path)
     directory = tmp_path / "packet"
     prepare = load("prepare_staged_v3")
     manifest = prepare.prepare_packet(directory, source, l2_source=source)
@@ -104,7 +116,7 @@ def test_staged_packet_binds_mesh_lid_both_decks_and_resumes(tmp_path):
 def test_staged_df0_rejects_changed_inputs(tmp_path, damage):
     import json
     import yaml
-    source = cube_packet_source(tmp_path)
+    source = platform_packet_source(tmp_path)
     directory = tmp_path / "packet"
     load("prepare_staged_v3").prepare_packet(directory, source)
     model = directory / "stage-f-model-v3.yml"
@@ -161,7 +173,7 @@ def test_native_estimates_scale_supplied_benchmark_without_claiming_capacity():
 def test_packet_estimates_include_both_lid_scenarios_and_four_l2_probes(tmp_path):
     import math
     import yaml
-    source = cube_packet_source(tmp_path)
+    source = platform_packet_source(tmp_path)
     directory = tmp_path / "packet"
     manifest = load("prepare_staged_v3").prepare_packet(directory, source, l2_source=source)
     assert set(manifest["estimates"]) == {"S_without_lid", "S_with_lid", "F_without_lid", "F_with_lid", "L2_probes"}
@@ -178,9 +190,7 @@ def test_packet_estimates_include_both_lid_scenarios_and_four_l2_probes(tmp_path
 
 def test_lower_band_packet_has_no_lid_and_refuses_source_change_on_resume(tmp_path):
     import json
-    source = cube_packet_source(tmp_path)
-    panels = load("check_mesh").read_gdf(source) * 2
-    load("generate_mesh").write_gdf(source, panels, 9.80665)
+    source = platform_packet_source(tmp_path, edge=2)
     directory = tmp_path / "packet"
     prepare = load("prepare_staged_v3")
     prepare.prepare_packet(directory, source)
@@ -197,7 +207,7 @@ def test_lower_band_packet_has_no_lid_and_refuses_source_change_on_resume(tmp_pa
 def test_l2_probe_and_estimate_tampering_fail_df0_even_with_updated_file_hash(tmp_path):
     import json
     import yaml
-    source = cube_packet_source(tmp_path)
+    source = platform_packet_source(tmp_path)
     directory = tmp_path / "packet"
     prepare = load("prepare_staged_v3")
     prepare.prepare_packet(directory, source, l2_source=source)
@@ -218,3 +228,40 @@ def test_l2_probe_and_estimate_tampering_fail_df0_even_with_updated_file_hash(tm
     manifest_path.write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="Native estimate"):
         load("input_checks_v3").df0(directory)
+
+
+def test_missing_bottom_scaled_cube_is_rejected_before_packet_generation(tmp_path):
+    source = cube_packet_source(tmp_path)
+    check = load("check_mesh")
+    damaged = check.read_gdf(source)[1:] * 2
+    assert check.measure(damaged)["bad_edges"] == 4
+    load("generate_mesh").write_gdf(source, damaged, 9.80665)
+    with pytest.raises(ValueError, match="Hull acceptance"):
+        load("prepare_staged_v3").prepare_packet(tmp_path / "packet", source)
+    assert not (tmp_path / "packet").exists()
+
+
+@pytest.mark.parametrize("damage", ["bottom", "aspect", "hydrostatics"])
+def test_consistently_rehashed_geometry_cannot_pass_staged_df0(tmp_path, damage):
+    import json
+    source = platform_packet_source(tmp_path)
+    packet = tmp_path / "packet"
+    prepare = load("prepare_staged_v3")
+    prepare.prepare_packet(packet, source)
+    hull = packet / "l1-hull-v3.gdf"
+    panels = load("check_mesh").read_gdf(hull)
+    if damage == "bottom":
+        panels = panels[1:]
+    elif damage == "aspect":
+        panels[:, :, 0] *= 10
+        panels[:, :, 1] /= 10
+    else:
+        panels[:, :, 2] *= 0.5
+    load("generate_mesh").write_gdf(hull, panels, 9.80665)
+    manifest_path = packet / "manifest-v3.json"
+    manifest = json.loads(manifest_path.read_text())
+    manifest["meshes"]["L1"] = prepare.mesh_record(hull)
+    manifest["files"][hull.name] = prepare.digest(hull)
+    manifest_path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="Hull acceptance"):
+        load("input_checks_v3").df0(packet)
