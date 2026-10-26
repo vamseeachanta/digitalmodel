@@ -74,7 +74,9 @@ GENERATORS = (
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(
         "scripts/reporting/build_pipeline_ffs_report.py",
-        ("docs/reports/pipeline-ffs-assessment.html",
+        ("docs/api/ffs/pipeline-ffs-assessment.html",
+         "docs/api/ffs/pipeline-ffs-assessment.manifest.json",
+         "docs/reports/pipeline-ffs-assessment.html",
          "docs/reports/pipeline-ffs-assessment.manifest.json"),
         inputs=(
             "pyproject.toml",

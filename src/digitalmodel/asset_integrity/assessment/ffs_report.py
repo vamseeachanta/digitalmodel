@@ -357,7 +357,7 @@ class FFSReport:
         label = verdict_label or verdict
         rl_str = FFSReport._life_text(remaining_life, "yr")
         rsf_str = f"{rsf:.4f}" if rsf is not None and math.isfinite(rsf) else "N/A"
-        rsf_a_str = f"{rsf_a:.2f}" if rsf_a is not None and math.isfinite(rsf_a) else "Not evaluated"
+        rsf_a_str = f"{rsf_a:.2f}" if rsf_a is not None and math.isfinite(rsf_a) and rsf_a > 0 else "Not evaluated"
         return (
             "<div class='section'>\n"
             "<h2>1. Executive Summary</h2>\n"
@@ -448,12 +448,14 @@ class FFSReport:
         decision: dict,
     ) -> str:
         rsf_str = f"{rsf:.4f}" if rsf is not None and math.isfinite(rsf) else "N/A"
-        rsf_a_str = f"{rsf_a:.2f}" if rsf_a is not None and math.isfinite(rsf_a) else "Not evaluated"
-        comparable = (rsf is not None and math.isfinite(rsf)
-                      and rsf_a is not None and math.isfinite(rsf_a))
-        verdict = ("ACCEPT" if rsf >= rsf_a else "FAIL") if comparable else "NOT_EVALUATED"
+        rsf_a_str = f"{rsf_a:.2f}" if rsf_a is not None and math.isfinite(rsf_a) and rsf_a > 0 else "Not evaluated"
+        if (rsf is not None and math.isfinite(rsf)
+                and rsf_a is not None and math.isfinite(rsf_a) and rsf_a > 0):
+            verdict = "ACCEPT" if rsf >= rsf_a else "FAIL"
+        else:
+            verdict = "NOT_EVALUATED"
         color = _VERDICT_COLORS.get(
-            "ACCEPT" if comparable and rsf >= rsf_a else "REPAIR", _DEFAULT_COLOR
+            "ACCEPT" if verdict == "ACCEPT" else "REPAIR", _DEFAULT_COLOR
         )
         folias = decision.get("folias_factor", 1.0)
         l2_verdict = decision.get("verdict", "")

@@ -213,6 +213,15 @@ def test_legacy_nonfinite_allowable_renders_as_not_evaluated(rsf_a):
     _assert_report_allowable_and_comparison(decision, "Not evaluated", "NOT_EVALUATED")
 
 
+@pytest.mark.parametrize("rsf_a", [0.0, -0.9])
+def test_legacy_nonpositive_allowable_renders_as_not_evaluated(rsf_a):
+    """A nonpositive comparator cannot establish acceptance or a pressure rating."""
+    decision = FFSDecision.decide("ACCEPT", "ACCEPT", 1.0, rsf_a, 0.5, 0.3, None)
+    assert decision["verdict"] == "ESCALATE"
+    assert decision["rerated_mawp_psi"] is None
+    _assert_report_allowable_and_comparison(decision, "Not evaluated", "NOT_EVALUATED")
+
+
 @pytest.mark.parametrize("rsf_a", [None, float("nan"), float("inf"), float("-inf")])
 def test_report_handles_absent_and_raw_nonfinite_allowable(rsf_a):
     """Both report sections also handle payloads before finite normalization."""

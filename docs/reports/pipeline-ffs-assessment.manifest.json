@@ -744,7 +744,7 @@
     ]
   },
   "assumptions_sha256_lf": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
-  "builder_sha256_lf": "ad81a13a40e4aebe4547c2ca5482d4294a2add2d0d72b011cd9ee11fc7638b4a",
+  "builder_sha256_lf": "031c79ab02b7e8b087e6020983e0641c1466cf8d1636be2914c8157c41a08728",
   "calculation_sources_sha256_lf": {
     "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "d68f74e5f7a573159ecb7f13c573de1fafe77a38ec21e376154a46452e2cceca",

@@ -635,13 +635,13 @@ def report_spec(root, result):
 
 
 def build(root, output=None):
+    """Publish the site pair and legacy copies, or only an explicit output folder."""
     root = Path(root).resolve()
-    output = Path(output) if output is not None else root / "docs/reports"
+    directories = ((Path(output),) if output is not None else
+                   (root / "docs/api/ffs", root / "docs/reports"))
     source_digests = {name: digest(root / name) for name in CALCULATION_SOURCES}
     result = evaluate(root)
     page = render_html(report_spec(root, result), assessment_presentation=True)
-    html_path = output / "pipeline-ffs-assessment.html"
-    manifest_path = output / "pipeline-ffs-assessment.manifest.json"
     manifest = {
         "schema_version": 1, "data_status": "synthetic, for demonstration",
         "intended_use": "worked example; no actual operating asset qualification",
@@ -657,15 +657,20 @@ def build(root, output=None):
     }
     if source_digests != {name: digest(root / name) for name in CALCULATION_SOURCES}:
         raise ValueError("Calculation source changed during build")
-    output.mkdir(parents=True, exist_ok=True)
-    html_path.write_text(page, encoding="utf-8", newline="\n")
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True,
-                                        allow_nan=False) + "\n", encoding="utf-8", newline="\n")
-    if hashlib.sha256(html_path.read_bytes()).hexdigest() != manifest["report_sha256"]:
-        raise ValueError("Report readback mismatch")
-    if json.loads(manifest_path.read_text(encoding="utf-8")) != manifest:
-        raise ValueError("Manifest readback mismatch")
-    return html_path, manifest_path
+    manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True,
+                               allow_nan=False) + "\n"
+    for directory in directories:
+        directory.mkdir(parents=True, exist_ok=True)
+        html_path = directory / "pipeline-ffs-assessment.html"
+        manifest_path = directory / "pipeline-ffs-assessment.manifest.json"
+        html_path.write_text(page, encoding="utf-8", newline="\n")
+        manifest_path.write_text(manifest_text, encoding="utf-8", newline="\n")
+        if hashlib.sha256(html_path.read_bytes()).hexdigest() != manifest["report_sha256"]:
+            raise ValueError("Report readback mismatch")
+        if json.loads(manifest_path.read_text(encoding="utf-8")) != manifest:
+            raise ValueError("Manifest readback mismatch")
+    return (directories[0] / "pipeline-ffs-assessment.html",
+            directories[0] / "pipeline-ffs-assessment.manifest.json")
 
 
 if __name__ == "__main__":

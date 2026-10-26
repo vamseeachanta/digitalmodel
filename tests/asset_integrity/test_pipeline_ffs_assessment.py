@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 import re
+import shutil
 from functools import lru_cache
 from html.parser import HTMLParser
 from pathlib import Path
@@ -24,6 +25,45 @@ SPEC = importlib.util.spec_from_file_location(
 )
 builder = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(builder)
+
+
+@pytest.fixture
+def isolated_build_root(tmp_path):
+    from scripts import check_generated_html as checker
+
+    entry = next(entry for entry in checker.GENERATORS
+                 if entry.script == "scripts/reporting/build_pipeline_ffs_report.py")
+    for relative in {entry.script, *entry.inputs, *builder.CALCULATION_SOURCES}:
+        destination = tmp_path / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / relative, destination)
+    return tmp_path
+
+
+def test_default_build_refreshes_both_maintained_copies(isolated_build_root):
+    """Default regeneration must refresh both owned copies from the same sources."""
+    from scripts import check_generated_html as checker
+
+    fresh = builder.build(isolated_build_root)
+    owned = checker.all_registered_outputs(isolated_build_root)
+    for directory in ("docs/api/ffs", "docs/reports"):
+        for path in fresh:
+            target = isolated_build_root / directory / path.name
+            assert target in owned
+            assert target.read_bytes() == path.read_bytes()
+    manifest = json.loads(fresh[1].read_text(encoding="utf-8"))
+    assert manifest["calculation_sources_sha256_lf"] == {
+        name: builder.digest(isolated_build_root / name)
+        for name in builder.CALCULATION_SOURCES
+    }
+
+
+def test_explicit_build_output_stays_in_selected_folder(isolated_build_root):
+    output = isolated_build_root / "selected"
+    fresh = builder.build(isolated_build_root, output)
+    assert all(path.is_file() and path.parent == output for path in fresh)
+    assert not (isolated_build_root / "docs/api/ffs").exists()
+    assert not (isolated_build_root / "docs/reports").exists()
 
 
 class VisibleText(HTMLParser):

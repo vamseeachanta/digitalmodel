@@ -1,0 +1,781 @@
+{
+  "assessment": {
+    "sections": [
+      {
+        "applicability": {
+          "flags": [],
+          "notes": [],
+          "ok": true
+        },
+        "axial_limit_psi": 36222.891356045504,
+        "component": {
+          "component_id": "Section A, 24 in line",
+          "component_type": "pipe",
+          "corrosion_rate_in_per_yr": 0.005,
+          "design_code": "B31.8",
+          "design_pressure_psi": 800.0,
+          "fca_in": 0.0,
+          "nominal_od_in": 24.0,
+          "nominal_wt_in": 0.5,
+          "smys_psi": 52000.0
+        },
+        "coordinator": {
+          "assessment_type": "LML",
+          "component_id": "Section A, 24 in line",
+          "fca_in": 0.0,
+          "level_reached": 2,
+          "remaining_life_yr": 0.0,
+          "t_measured_avg_in": 0.42,
+          "t_measured_min_in": 0.2,
+          "t_min_in": 0.2564102564102564,
+          "t_nominal_in": 0.5
+        },
+        "decision": "escalate",
+        "inputs": {
+          "axial_positions_in": [
+            0,
+            2,
+            4,
+            6,
+            8
+          ],
+          "axial_stress_psi": 10000.0,
+          "circumferential_width_in": 4.0,
+          "component_id": "Section A, 24 in line",
+          "data_origin": "synthetic, for demonstration",
+          "design_pressure_psi": 800.0,
+          "grid": [
+            [
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0.4,
+              0.3,
+              0.45
+            ],
+            [
+              0.35,
+              0.2,
+              0.4
+            ],
+            [
+              0.45,
+              0.25,
+              0.5
+            ],
+            [
+              0.5,
+              0.5,
+              0.5
+            ]
+          ],
+          "nominal_od_in": 24.0,
+          "nominal_wt_in": 0.5,
+          "smts_psi": 66700.0,
+          "smys_psi": 52000.0
+        },
+        "interval_yr": 5.77199028003072,
+        "level1": {
+          "design_code": "B31.8",
+          "margin_in": -0.056410256410256376,
+          "pressure_wall_comparison": "MINIMUM_BELOW_PRESSURE_WALL",
+          "t_min_in": 0.2564102564102564,
+          "t_mm_in": 0.2
+        },
+        "level2": {
+          "applicability": {
+            "flags": [],
+            "notes": [],
+            "ok": true
+          },
+          "assessment_type": "LML",
+          "flaw_length_in": 6.0,
+          "folias_factor": 1.8657826892428444,
+          "lambda": 2.2735549639085137,
+          "pressure_criterion": "RATING_ABOVE_DEMAND",
+          "rsf": 0.5896060058646886,
+          "rt": 0.4,
+          "strength_factor_comparison": "BELOW_ALLOWABLE_REDUCED_RATING_EVALUATED",
+          "t_am_in": 0.42000000000000004,
+          "t_mm_in": 0.2
+        },
+        "life_basis": "fixed-geometry reduced local-loss rating",
+        "life_limit_wall_in": 0.1422800971996928,
+        "life_sensitivity": [
+          [
+            0.0025,
+            23.08796112012288
+          ],
+          [
+            0.005,
+            11.54398056006144
+          ],
+          [
+            0.01,
+            5.77199028003072
+          ]
+        ],
+        "local_loss_rating_psi": 1021.9837434987936,
+        "name": "Section A, 24 in line",
+        "pressure_rating_psi": 800.0,
+        "reference_wall_in": 0.5,
+        "remaining_life_yr": 11.54398056006144,
+        "strength": {
+          "applicability": {
+            "flags": [],
+            "notes": [],
+            "ok": true
+          },
+          "decision": {
+            "action": "ACCEPT",
+            "applicability": {
+              "flags": [],
+              "notes": [],
+              "ok": true
+            },
+            "asset_class": "pipeline",
+            "demand_limits_psi": {
+              "axial_membrane_stress": 36222.891356045504,
+              "pressure": 1164.6980812246757
+            },
+            "derated": null,
+            "derated_units": null,
+            "governing_criterion": "DNV-RP-F101: allowable/demand=1.456; Current demand passes: minimum allowable/demand >= 1.000.",
+            "margin": 1.4558726015308445,
+            "margin_allowable": 1.0,
+            "remaining_life_yr": null,
+            "rerated_mawp_psi": null,
+            "verdict": "ACCEPT"
+          },
+          "governing_method": "DNV-RP-F101",
+          "inputs": {
+            "axial_positions_in": [
+              0.0,
+              2.0,
+              4.0,
+              6.0,
+              8.0
+            ],
+            "axial_stress_psi": 10000.0,
+            "circumferential_width_in": 4.0,
+            "component_id": "Section A, 24 in line",
+            "data_origin": "synthetic, for demonstration",
+            "design_pressure_psi": 800.0,
+            "grid": [
+              [
+                0.5,
+                0.5,
+                0.5
+              ],
+              [
+                0.4,
+                0.3,
+                0.45
+              ],
+              [
+                0.35,
+                0.2,
+                0.4
+              ],
+              [
+                0.45,
+                0.25,
+                0.5
+              ],
+              [
+                0.5,
+                0.5,
+                0.5
+              ]
+            ],
+            "nominal_od_in": 24.0,
+            "nominal_wt_in": 0.5,
+            "smts_psi": 66700.0,
+            "smys_psi": 52000.0
+          },
+          "limitations": [
+            "The caller-defined grid window is assumed to bound one defect, including intact gaps.",
+            "Above-nominal readings are rejected; mill-tolerance correction is not established in this screen."
+          ],
+          "methods": [
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 1245.9420155427517,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 1731.8594016044249,
+              "demand_psi": 800.0,
+              "margin": 1.5574275194284397,
+              "method": "B31G"
+            },
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 1209.9806765900312,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 1681.873140460143,
+              "demand_psi": 800.0,
+              "margin": 1.512475845737539,
+              "method": "Modified_B31G"
+            },
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 1416.6555171423024,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 1969.1511688278003,
+              "demand_psi": 800.0,
+              "margin": 1.770819396427878,
+              "method": "RSTRENG"
+            },
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 1416.6555171423024,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 1969.1511688278003,
+              "demand_psi": 800.0,
+              "margin": 1.770819396427878,
+              "method": "RSTRENG-2D"
+            },
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 1164.6980812246757,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 1797.3735821368452,
+              "demand_psi": 800.0,
+              "margin": 1.4558726015308445,
+              "method": "DNV-RP-F101",
+              "pressure_basis": {
+                "result_label": "Part B safe working pressure"
+              }
+            },
+            {
+              "allowable_axial_stress_psi": 36222.891356045504,
+              "allowable_pressure_psi": null,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": null,
+              "demand_psi": 10000.0,
+              "level1_extent_screen_ok": true,
+              "margin": 3.6222891356045506,
+              "method": "Circumferential net-section"
+            }
+          ],
+          "validation_records": [
+            "docs/domains/asset-integrity/b31g-validation-2026-06-27.md",
+            "docs/domains/rstreng-2d-validation-2026-06-29.md",
+            "docs/domains/circumferential-defect-validation-2026-06-29.md",
+            "docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md"
+          ]
+        },
+        "strength_decision": {
+          "action": "ACCEPT",
+          "applicability": {
+            "flags": [],
+            "notes": [],
+            "ok": true
+          },
+          "asset_class": "pipeline",
+          "derated": null,
+          "derated_units": null,
+          "governing_criterion": "Minimum capacity/demand=1.277; required ratio=1. Includes the reduced local-loss pressure rating and separate axial restriction.",
+          "margin": 1.277479679373492,
+          "margin_allowable": 1.0,
+          "minimum_capacity_to_demand": 1.277479679373492,
+          "remaining_life_yr": 11.54398056006144,
+          "rerated_mawp_psi": null,
+          "verdict": "ACCEPT"
+        },
+        "sufficiency": {
+          "actions": [
+            {
+              "action": "escalate_level_2",
+              "count": null,
+              "location": "office Level 2 re-rating",
+              "rationale": "RSF below RSFa but above the replace floor"
+            }
+          ],
+          "confidence": "high",
+          "metrics": {
+            "cov": 0.23328473740792172,
+            "min_degraded": true,
+            "min_location": [
+              2,
+              1
+            ],
+            "min_on_edge": false,
+            "min_thickness_in": 0.2,
+            "n_readings": 15,
+            "profile_cells": 6,
+            "rsf": 0.5896060058646886,
+            "t_margin_in": -0.056410256410256376
+          },
+          "reasons": [
+            "Remaining strength factor below the allowable factor and above the replacement floor; formal local-loss evaluation is required. Field data is adequate. Method basis: Reference 3."
+          ],
+          "status": "ESCALATE"
+        },
+        "uncorroded_rating_psi": 1560.0000000000002
+      },
+      {
+        "applicability": {
+          "flags": [],
+          "notes": [],
+          "ok": true
+        },
+        "axial_limit_psi": 35883.425679840504,
+        "component": {
+          "component_id": "Section B, 12.75 in line",
+          "component_type": "pipe",
+          "corrosion_rate_in_per_yr": 0.005,
+          "design_code": "B31.8",
+          "design_pressure_psi": 1000.0,
+          "fca_in": 0.0,
+          "nominal_od_in": 12.75,
+          "nominal_wt_in": 0.5,
+          "smys_psi": 52000.0
+        },
+        "coordinator": {
+          "assessment_type": "LML",
+          "component_id": "Section B, 12.75 in line",
+          "fca_in": 0.0,
+          "level_reached": 1,
+          "remaining_life_yr": 25.945512820512818,
+          "t_measured_avg_in": 0.4894444444444444,
+          "t_measured_min_in": 0.3,
+          "t_min_in": 0.1702724358974359,
+          "t_nominal_in": 0.5
+        },
+        "decision": "take more measurements",
+        "inputs": {
+          "axial_positions_in": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "axial_stress_psi": 10000.0,
+          "circumferential_width_in": 4.0,
+          "component_id": "Section B, 12.75 in line",
+          "corrosion_rate_in_per_yr": 0.005,
+          "data_origin": "synthetic, for demonstration",
+          "design_code": "B31.8",
+          "design_pressure_psi": 1000.0,
+          "grid": [
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.3,
+              0.5,
+              0.5
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.32,
+              0.5,
+              0.5
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ],
+            [
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5,
+              0.5
+            ]
+          ],
+          "nominal_od_in": 12.75,
+          "nominal_wt_in": 0.5,
+          "smts_psi": 66700.0,
+          "smys_psi": 52000.0
+        },
+        "interval_yr": 12.972756410256409,
+        "level1": {
+          "design_code": "B31.8",
+          "margin_in": 0.12972756410256409,
+          "pressure_wall_comparison": "MINIMUM_MEETS_PRESSURE_WALL",
+          "t_min_in": 0.1702724358974359,
+          "t_mm_in": 0.3
+        },
+        "level2": {
+          "applicability": {
+            "flags": [],
+            "notes": [],
+            "ok": true
+          },
+          "assessment_type": "LML",
+          "flaw_length_in": 2.0,
+          "folias_factor": 1.2408200445587279,
+          "lambda": 1.0603010411540394,
+          "pressure_criterion": "RATING_ABOVE_DEMAND",
+          "rsf": 0.8854356310284619,
+          "rt": 0.6,
+          "strength_factor_comparison": "BELOW_ALLOWABLE_REDUCED_RATING_EVALUATED",
+          "t_am_in": 0.48944444444444446,
+          "t_mm_in": 0.3
+        },
+        "life_basis": "point-minimum pressure wall",
+        "life_limit_wall_in": 0.1702724358974359,
+        "life_sensitivity": [
+          [
+            0.0025,
+            51.891025641025635
+          ],
+          [
+            0.005,
+            25.945512820512818
+          ],
+          [
+            0.01,
+            12.972756410256409
+          ]
+        ],
+        "local_loss_rating_psi": 2888.9507647673736,
+        "name": "Section B, 12.75 in line",
+        "pressure_rating_psi": 1000.0,
+        "reference_wall_in": 0.5,
+        "remaining_life_yr": 25.945512820512818,
+        "strength": {
+          "applicability": {
+            "flags": [],
+            "notes": [],
+            "ok": true
+          },
+          "decision": {
+            "action": "ACCEPT",
+            "applicability": {
+              "flags": [],
+              "notes": [],
+              "ok": true
+            },
+            "asset_class": "pipeline",
+            "demand_limits_psi": {
+              "axial_membrane_stress": 35883.425679840504,
+              "pressure": 2723.981580318776
+            },
+            "derated": null,
+            "derated_units": null,
+            "governing_criterion": "B31G: allowable/demand=2.724; Current demand passes: minimum allowable/demand >= 1.000.",
+            "margin": 2.7239815803187764,
+            "margin_allowable": 1.0,
+            "remaining_life_yr": null,
+            "rerated_mawp_psi": null,
+            "verdict": "ACCEPT"
+          },
+          "governing_method": "B31G",
+          "inputs": {
+            "axial_positions_in": [
+              0.0,
+              1.0,
+              2.0,
+              3.0,
+              4.0,
+              5.0
+            ],
+            "axial_stress_psi": 10000.0,
+            "circumferential_width_in": 4.0,
+            "component_id": "Section B, 12.75 in line",
+            "corrosion_rate_in_per_yr": 0.005,
+            "data_origin": "synthetic, for demonstration",
+            "design_code": "B31.8",
+            "design_pressure_psi": 1000.0,
+            "grid": [
+              [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+              ],
+              [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+              ],
+              [
+                0.5,
+                0.5,
+                0.5,
+                0.3,
+                0.5,
+                0.5
+              ],
+              [
+                0.5,
+                0.5,
+                0.5,
+                0.32,
+                0.5,
+                0.5
+              ],
+              [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+              ],
+              [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+              ]
+            ],
+            "nominal_od_in": 12.75,
+            "nominal_wt_in": 0.5,
+            "smts_psi": 66700.0,
+            "smys_psi": 52000.0
+          },
+          "limitations": [
+            "The caller-defined grid window is assumed to bound one defect, including intact gaps.",
+            "Above-nominal readings are rejected; mill-tolerance correction is not established in this screen."
+          ],
+          "methods": [
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 2723.981580318776,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 3786.334396643099,
+              "demand_psi": 1000.0,
+              "margin": 2.7239815803187764,
+              "method": "B31G"
+            },
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 2830.0923454663152,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 3933.828360198178,
+              "demand_psi": 1000.0,
+              "margin": 2.830092345466315,
+              "method": "Modified_B31G"
+            },
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 3204.286457886377,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 4453.958176462063,
+              "demand_psi": 1000.0,
+              "margin": 3.204286457886377,
+              "method": "RSTRENG"
+            },
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 3204.286457886377,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 4453.958176462063,
+              "demand_psi": 1000.0,
+              "margin": 3.204286457886377,
+              "method": "RSTRENG-2D"
+            },
+            {
+              "allowable_axial_stress_psi": null,
+              "allowable_pressure_psi": 2894.9059667477377,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": 4467.447479548978,
+              "demand_psi": 1000.0,
+              "margin": 2.8949059667477375,
+              "method": "DNV-RP-F101",
+              "pressure_basis": {
+                "result_label": "Part B safe working pressure"
+              }
+            },
+            {
+              "allowable_axial_stress_psi": 35883.425679840504,
+              "allowable_pressure_psi": null,
+              "applicability": {
+                "flags": [],
+                "notes": [],
+                "ok": true
+              },
+              "capacity_pressure_psi": null,
+              "demand_psi": 10000.0,
+              "level1_extent_screen_ok": true,
+              "margin": 3.5883425679840504,
+              "method": "Circumferential net-section"
+            }
+          ],
+          "validation_records": [
+            "docs/domains/asset-integrity/b31g-validation-2026-06-27.md",
+            "docs/domains/rstreng-2d-validation-2026-06-29.md",
+            "docs/domains/circumferential-defect-validation-2026-06-29.md",
+            "docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md"
+          ]
+        },
+        "strength_decision": {
+          "action": "ACCEPT",
+          "applicability": {
+            "flags": [],
+            "notes": [],
+            "ok": true
+          },
+          "asset_class": "pipeline",
+          "derated": null,
+          "derated_units": null,
+          "governing_criterion": "Minimum capacity/demand=2.724; required ratio=1. Includes the reduced local-loss pressure rating and separate axial restriction.",
+          "margin": 2.7239815803187764,
+          "margin_allowable": 1.0,
+          "minimum_capacity_to_demand": 2.7239815803187764,
+          "remaining_life_yr": 25.945512820512818,
+          "rerated_mawp_psi": null,
+          "verdict": "ACCEPT"
+        },
+        "sufficiency": {
+          "actions": [
+            {
+              "action": "densify_readings",
+              "count": 3,
+              "location": "across and immediately around the flaw",
+              "rationale": "under-resolved local thickness profile"
+            }
+          ],
+          "confidence": "medium",
+          "metrics": {
+            "cov": 0.08905086046042929,
+            "min_degraded": true,
+            "min_location": [
+              2,
+              3
+            ],
+            "min_on_edge": false,
+            "min_thickness_in": 0.3,
+            "n_readings": 36,
+            "profile_cells": 2,
+            "rsf": 0.8854356310284619,
+            "t_margin_in": 0.12972756410256409
+          },
+          "reasons": [
+            "Local flaw is resolved by only 2 grid cells; the critical (river-bottom) thickness profile is under-sampled."
+          ],
+          "status": "TAKE_MORE"
+        },
+        "uncorroded_rating_psi": 2936.470588235294
+      }
+    ],
+    "sources": [
+      {
+        "name": "Section A, 24 in line",
+        "path": "examples/workflows/pipeline-corroded-defect-screen/synthetic.yml",
+        "sha256_lf": "757e5f95cde8bc80e82b657542e1571c84d7bd0ac065344912498a861b1de1b8"
+      },
+      {
+        "name": "Section B, 12.75 in line",
+        "path": "examples/workflows/ffs-metal-loss/input.yml",
+        "sha256_lf": "f138227cfaacd65046f41f98806f49f347d1ae494782dd37930b5222104cf41f"
+      }
+    ]
+  },
+  "assumptions_sha256_lf": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
+  "builder_sha256_lf": "031c79ab02b7e8b087e6020983e0641c1466cf8d1636be2914c8157c41a08728",
+  "calculation_sources_sha256_lf": {
+    "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
+    "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "d68f74e5f7a573159ecb7f13c573de1fafe77a38ec21e376154a46452e2cceca",
+    "src/digitalmodel/asset_integrity/assessment/ffs_decision.py": "225a7e67f3b9682a677073221d423a99d200765123fbe03629a42a204357931c",
+    "src/digitalmodel/asset_integrity/assessment/ffs_router.py": "2921f94c36a3c47af6790b9cf9a6020b40b595cf36502f03245a7635854a3dc1",
+    "src/digitalmodel/asset_integrity/assessment/grid_parser.py": "ef3c73a838a00e08980f67ca34d94791347efd9abf7ddb32f9481751bfc9f969",
+    "src/digitalmodel/asset_integrity/assessment/level1_screener.py": "84fb0b073f02ee9a0f1be532f977c4054dfb8ab44e6a699b3addd0de774d1d62",
+    "src/digitalmodel/asset_integrity/assessment/level2_engine.py": "b4f89518bc99c54d16fde53346a086cddd5651b5c64e034ee4fa840de5babf78",
+    "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py": "751138e77faf469a0024ea71d0e72689e7ed57dd262eb796de5de3806919f22e",
+    "src/digitalmodel/asset_integrity/assessment/pitting.py": "cc43d5d5450f3613d385e48e47e79916c9692d9196a0fe962247632da489e479",
+    "src/digitalmodel/asset_integrity/circumferential_defect.py": "d1ae4a23f5e6d8605a40292a976ef1523391ed98ef8c103e0febfb7227c7c952",
+    "src/digitalmodel/asset_integrity/composite_repair.py": "5bd8d8621c87e072fc6559d730f138d705a34c02a81e9920454bdd5fcf026b34",
+    "src/digitalmodel/asset_integrity/corroded_pipe.py": "4c8a45a6a0f05e4a777e705e95ae71e98d2ecb044fce866409b13c700bf371bd",
+    "src/digitalmodel/asset_integrity/dnv_rp_f101.py": "fdb7e0e3d928ba5f9462ae6a6dc40b033dedcfe3c7fb2106e7db65025dcc78bf",
+    "src/digitalmodel/asset_integrity/pipeline_defect_screen.py": "76c1be2114f80054fa5a9ee3ffd6330772685717bdfd5fa10a856dcc99e39468",
+    "src/digitalmodel/asset_integrity/pipeline_defect_screen_inputs.py": "875626eb053a5333f082ee5c83486a048dee77dcc102e6bdbeed4e5e86aa7f1c",
+    "src/digitalmodel/asset_integrity/rstreng_2d.py": "79ada328af4155a77f812134c21fd5f524dfbbdcc4eaf3d0b3d0ffd63e2aa1b9",
+    "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
+    "src/digitalmodel/materials/grades.py": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90",
+    "src/digitalmodel/reporting/assets/assessment_report.html.j2": "6ca3b435cf7104e4a8500fa97c514ceff8723f4a0e255adef08b484ea5740fb0",
+    "src/digitalmodel/reporting/engine.py": "c2166904cb93dedf00e8f80955eabc23c187fa8b778f70176db93cb1409531de",
+    "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
+  },
+  "configuration_sha256_lf": "1920f2066019de88764275b269c47eb37d37c4e7da8b87256a74f7bb197ca3c9",
+  "data_status": "synthetic, for demonstration",
+  "digest_convention": "Input SHA-256 after CRLF to LF normalisation; output SHA-256 over exact UTF-8 bytes",
+  "excluded_outputs": [
+    "Automatic composite-repair candidate advice; no repair-specific design basis is supplied"
+  ],
+  "figures": "inline vector figures; 680-unit width; no raster or external dependencies",
+  "intended_use": "worked example; no actual operating asset qualification",
+  "report_sha256": "479cd00c7a447ad5c56d4a6d214b4adb7da46d294cf970e8ac8b3f728355cb3c",
+  "schema_version": 1
+}
