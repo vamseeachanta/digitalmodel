@@ -106,6 +106,9 @@ def test_surface_at_reference_is_sum_of_component_cosines():
 
 @pytest.mark.parametrize("vector_times", [False, True], ids=["scalar", "vector"])
 def test_finite_depth_surface_phase_reference(vector_times):
+    # Basis for both finite-depth cases: USACE Coastal Engineering Manual,
+    # EM 1110-2-1100 (2002), Part II, sections II-1-2.c(2) and c(3),
+    # wave celerity, length and period; the sinusoidal wave profile.
     # Independent hand calculation, with chosen synthetic inputs (SI units):
     # k=0.2, h=3 give kh=0.6, so omega=sqrt(g*k*tanh(k*h)), not sqrt(g*k).
     # At heading 90 degrees, d_hat=(0, 1). From reference (3, -4), choose
@@ -163,9 +166,20 @@ def test_surface_translation_preserves_phase():
     sx, sy = shift
     # Quarter-period samples span a full cycle; use the plan's 1e-9 m tolerance.
     times = period * np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+    # Hand calculation: delta=(8,11), projected onto (sqrt(3)/2,1/2), gives
+    # alpha=pi/3-(4*sqrt(3)+11/2)/5. At quarter-period samples the elevations
+    # are 1.3*(cos(alpha),-sin(alpha),-cos(alpha),sin(alpha),cos(alpha)).
+    # These literals are independent of the evaluator and its wavenumber helper.
+    expected = [
+        0.171557303637, 1.288630316099, -0.171557303637,
+        -1.288630316099, 0.171557303637,
+    ]
+    original = surface_elevation(fc, x, y, times)
+    translated = surface_elevation(shifted, x + sx, y + sy, times)
+    np.testing.assert_allclose(original, expected, rtol=0.0, atol=1e-9)
+    np.testing.assert_allclose(translated, expected, rtol=0.0, atol=1e-9)
     np.testing.assert_allclose(
-        surface_elevation(shifted, x + sx, y + sy, times),
-        surface_elevation(fc, x, y, times),
+        translated, original,
         rtol=0.0, atol=1e-9,
     )
 
