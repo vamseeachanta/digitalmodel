@@ -271,6 +271,10 @@ docs/reports/*
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
+# Retain selected module reports through directory-local exceptions.
+!docs/reports/modules/
+docs/reports/modules/*/
+
 # ==========================================
 # Project-Specific: Agent/AI Runtime
 # ==========================================
@@ -581,11 +585,3 @@ docs/reports/abstracted-hulls/*
 # Retain the small native force evidence used by the indicative study.
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
-
-# Retain selected module reports and their change panels.
-!docs/reports/modules/
-docs/reports/modules/*/
-!docs/reports/modules/mooringfatigue/
-docs/reports/modules/mooringfatigue/*
-!docs/reports/modules/mooringfatigue/report.html
-!docs/reports/modules/mooringfatigue/changes.json

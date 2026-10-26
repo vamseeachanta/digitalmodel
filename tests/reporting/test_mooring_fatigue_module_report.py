@@ -9,6 +9,7 @@ import copy
 import csv
 import importlib.util
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -27,6 +28,37 @@ SPEC = importlib.util.spec_from_file_location(
 )
 BUILDER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BUILDER)
+
+
+def test_report_ignore_exceptions_survive_shared_module_rules(tmp_path):
+    """Keep report sources visible when another module adds a parent rule."""
+    rules = Path("docs/reports/modules/.gitignore")
+    target = tmp_path / rules
+    target.parent.mkdir(parents=True)
+    target.write_bytes((ROOT / rules).read_bytes())
+    shared_rules = (
+        "\n/docs/reports/modules/*\n"
+        "!/docs/reports/modules/reference/\n"
+        "!/docs/reports/modules/reference/report.html\n"
+    )
+    (tmp_path / ".gitignore").write_text(
+        (ROOT / ".gitignore").read_text() + shared_rules, encoding="utf-8"
+    )
+    prefix = "docs/reports/modules/"
+    retained = [".gitignore", "mooringfatigue/report.html",
+                "mooringfatigue/changes.json", "reference/report.html"]
+    ignored = ["mooringfatigue/calculation.csv", "mooringfatigue/extra.html",
+               "unrelated/report.html"]
+    paths = [prefix + name for name in retained + ignored]
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    completed = subprocess.run(
+        ["git", "-C", str(ROOT), "--work-tree", str(tmp_path),
+         "check-ignore", "--no-index", "--stdin"],
+        input="\n".join(paths) + "\n", text=True, capture_output=True,
+        check=False, env=env, timeout=10,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert set(completed.stdout.splitlines()) == {prefix + name for name in ignored}
 
 
 class Document(HTMLParser):

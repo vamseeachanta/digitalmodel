@@ -31,6 +31,10 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/reporting/build_mooring_fatigue_module_report.py": (
+        "renders the mooring fatigue report under docs/reports/modules, not docs/api; "
+        "dedicated reporting tests verify byte reproduction"
+    ),
     "scripts/attestation_manifest.py": (
         "writes a caller-selected attestation summary, not committed docs/api pages"
     ),
@@ -42,10 +46,6 @@ DISCOVERY_FALSE_POSITIVES = {
     ),
     "scripts/reporting/build_reference_jacket_analysis.py": (
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
-        "dedicated reporting tests verify byte reproduction"
-    ),
-    "scripts/reporting/build_mooring_fatigue_module_report.py": (
-        "renders the mooring fatigue report under docs/reports/modules, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
     ),
     "scripts/benchmark/compare_hydro_properties.py": (

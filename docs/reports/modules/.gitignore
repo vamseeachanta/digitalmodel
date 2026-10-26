@@ -1,0 +1,6 @@
+# Keep the mooring report exceptions after repository-level module rules.
+!.gitignore
+!mooringfatigue/
+mooringfatigue/*
+!mooringfatigue/report.html
+!mooringfatigue/changes.json
