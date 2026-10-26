@@ -15,6 +15,7 @@ from urllib.parse import urljoin, urlsplit
 import pytest
 
 from scripts.capabilities import build_pore_pressure_explorer as explorer
+from scripts.capabilities import build_wellbore_workflow_page as workflow_page
 
 
 class PageText(HTMLParser):
@@ -111,7 +112,33 @@ def test_stability_link_resolves_to_published_workflow(generated):
     repo = Path(__file__).resolve().parents[2]
     published_source = repo / "docs/api/structural/wellbore-stability.md"
     workflow_source = repo / "examples/workflows/wellbore-stability/README.md"
+    assert not published_source.is_symlink()
     assert published_source.read_bytes() == workflow_source.read_bytes()
+
+
+@pytest.mark.parametrize("initial_content", [
+    None,
+    "../../../examples/workflows/wellbore-stability/README.md",
+])
+def test_generator_refreshes_portable_workflow_copy(
+    tmp_path, monkeypatch, initial_content,
+):
+    source = tmp_path / "canonical.md"
+    source.write_text("# Wellbore stability screening\n", encoding="utf-8")
+    output = tmp_path / "wellbore-stability.md"
+    if initial_content is not None:
+        # A symlink-disabled checkout materializes the link target as plain text.
+        output.write_text(initial_content, encoding="utf-8")
+    monkeypatch.setattr(workflow_page, "_SOURCE", source)
+    monkeypatch.setattr(workflow_page, "_OUTPUT", output)
+
+    workflow_page.main()
+    assert not output.is_symlink()
+    assert output.read_bytes() == source.read_bytes()
+
+    source.write_text("# Updated screening limitations\n", encoding="utf-8")
+    workflow_page.main()
+    assert output.read_bytes() == source.read_bytes()
 
 
 def test_margin_basis_is_machine_readable(generated):
