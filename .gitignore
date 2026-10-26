@@ -618,3 +618,7 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+!/docs/reports/modules/pipe_capacity/
+/docs/reports/modules/pipe_capacity/*
+!/docs/reports/modules/pipe_capacity/build_worked_example.py
+!/docs/reports/modules/pipe_capacity/README.md
