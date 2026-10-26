@@ -40,6 +40,35 @@ First-principles derivation (SI units unless a stress is marked MPa):
   gives b_limit = sqrt(S**2 - 6912) - 102 MPa and
   M_limit = Z*b_limit*1e6 N.m. The other fibre is also checked below.
 
+Independent teaching reference: "Yield and Plastic Flow", dated 2001-10-15,
+MIT OpenCourseWare, Mechanics of Materials, "Multiaxial stress states",
+equation (2) and the uniaxial-yield reduction immediately following it:
+https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/resources/mit3_11f99_yield/
+This supports the deviatoric-energy criterion and its tensile-yield
+normalisation for ductile material. It supplies none of the four screening
+multipliers below. Page references await maintainer confirmation.
+
+Allowable-coefficient provenance remains OPEN for each report route:
+
+* RP 1111: 0.72, hence S = 216.0 MPa, is a regression input from the
+  report's Normal Operating setting. Independent applicability to this
+  equivalent-stress screening criterion has not been established.
+* RP 2RD: 0.667, hence S = 200.1 MPa, is a regression input from the
+  report's Operating setting. Neither its rounding from 2/3 nor its use
+  for equivalent stress has an independently confirmed basis here.
+* STD 2RD: 0.8, hence S = 240.0 MPa, is a regression input from the
+  report's SLS setting. A pressure or linear/cosine interaction factor
+  does not by itself establish applicability to a von Mises allowable.
+* F101: 0.831, hence S = 249.3 MPa, is a regression input from the
+  report's Low Safety Class setting. The label alone does not establish
+  an independent basis for its use as an equivalent-stress multiplier.
+
+Writing S = yield/n gives n = 1/f for a multiplier f; that identity cannot
+select or justify f. The teaching reference and the first-principles stress
+derivation therefore do not close these coefficient-provenance gaps. An
+independent reference with the applicable loading criterion and condition
+is needed for each multiplier before claiming allowable validation.
+
 The report's load fractions and factors identify the result of the
 implementation, not a requirement of a design code. The RP 1111 route is
 screening-only while its combined check is unregistered. These calculations
