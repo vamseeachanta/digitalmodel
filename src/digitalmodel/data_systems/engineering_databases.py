@@ -1,5 +1,6 @@
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Load explicit-unit engineering catalogues with mandatory row citations.
 
 Catalogue directories are supplied by the caller; data is not bundled in the
@@ -11,8 +12,11 @@ from __future__ import annotations
 
 import json
 import math
+import re
+from ipaddress import IPv6Address
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
@@ -21,6 +25,12 @@ from jsonschema.exceptions import SchemaError, ValidationError
 DATABASES = frozenset(
     {"line_pipe", "flexible_pipe", "structure_properties", "soil_stiffness"}
 )
+# Catalogue precision policy: seven significant digits in a derived value allow
+# at most 5e-7 relative decimal rounding; 1e-6 leaves the same margin again.
+# Derived values use stored operands; this is not a design tolerance.
+# Basis: docs/plans/engineering-databases-plan-lite.md, Numerical validation basis;
+# PEP 485 (2015), "Proposed Implementation", https://peps.python.org/pep-0485/.
+CONSISTENCY_REL_TOL = 1e-6
 
 
 class CatalogueValidationError(ValueError):
@@ -77,7 +87,7 @@ def _engineering(database: str, row: dict[str, Any]) -> None:
         if not math.isclose(
             row["dry_mass_kg_per_m"],
             row["area_m2"] * row["density_kg_per_m3"],
-            rel_tol=1e-6,
+            rel_tol=CONSISTENCY_REL_TOL,
             abs_tol=0.0,
         ):
             raise CatalogueValidationError("dry mass must equal area times density")
@@ -99,7 +109,7 @@ def _soil_relationships(row: dict[str, Any]) -> None:
     if not math.isclose(
         row["initial_secant_stiffness_n_per_m2"],
         resistance[1] / displacement[1],
-        rel_tol=1e-6,
+        rel_tol=CONSISTENCY_REL_TOL,
         abs_tol=0.0,
     ):
         raise CatalogueValidationError("soil stiffness must match the first segment")
@@ -107,6 +117,33 @@ def _soil_relationships(row: dict[str, Any]) -> None:
 
 def _validate(schema: dict[str, Any], document: Any) -> None:
     Draft202012Validator(schema, format_checker=FormatChecker()).validate(document)
+
+
+def _citation_address(url: str | None) -> None:
+    """Check citation URI syntax without optional jsonschema format packages."""
+    if url is None:
+        return
+    # RFC 3986 (2005), sections 2 and 3: escaped characters and URI components.
+    # Citation policy excludes user information and scoped/future IP literals.
+    reg_name = r"(?:[A-Za-z0-9._~!$&'()*+,;=-]|%[0-9A-Fa-f]{2})"
+    authority = rf"(?:\[[0-9A-Fa-f:.]+\]|{reg_name}+)(?::[0-9]+)?"
+    pchar = rf"(?:{reg_name}|[:@])"
+    suffix = rf"(?:/{pchar}*)*(?:\?(?:{pchar}|[/?])*)?(?:#(?:{pchar}|[/?])*)?"
+    try:
+        parsed = urlsplit(url)
+        valid = (
+            bool(parsed.hostname)
+            and re.fullmatch(rf"https?://{authority}{suffix}", url) is not None
+        )
+        # Explicit IP validation also covers older supported parser versions.
+        if valid and parsed.netloc.startswith("["):
+            IPv6Address(parsed.hostname or "")
+        # Access validates numeric range.
+        _ = parsed.port
+    except ValueError:
+        valid = False
+    if not valid:
+        raise CatalogueValidationError("citation URL must have valid HTTP(S) syntax and authority")
 
 
 def load_database(
@@ -155,7 +192,10 @@ def load_database(
         location = ".".join(str(part) for part in exc.absolute_path) or "document"
         # Values and file-system locations are deliberately omitted from errors.
         raise CatalogueValidationError(f"{location}: {exc.validator} validation failed") from None
-    except (OSError, ValueError, TypeError, KeyError, yaml.YAMLError, SchemaError):
+    except (
+        OSError, ValueError, TypeError, KeyError, OverflowError, RecursionError,
+        yaml.YAMLError, SchemaError,
+    ):
         raise CatalogueValidationError("cannot read catalogue files or schema") from None
 
 
@@ -177,12 +217,18 @@ def _join_rows(
             raise CatalogueValidationError("unresolved row citation")
         used.add(citation_id)
         citation = citations[citation_id]
+        _citation_address(citation["url"])
         synthetic = citation["source_class"] == "synthetic_fixture"
         if synthetic != (row["status"] == "synthetic"):
             raise CatalogueValidationError("synthetic row and citation status disagree")
         if synthetic and not allow_synthetic:
             raise CatalogueValidationError("synthetic rows require explicit opt-in")
-        _engineering(database, row)
+        try:
+            _engineering(database, row)
+        except OverflowError:
+            raise CatalogueValidationError(
+                "engineering numeric values exceed supported arithmetic"
+            ) from None
         result.append({**row, "citation": citation})
     if used != set(citations):
         raise CatalogueValidationError("unreferenced citation")

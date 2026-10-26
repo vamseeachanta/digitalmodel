@@ -13,6 +13,7 @@ contracts; engineering values will require a later source and suitability review
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-26 | Define catalogue boundaries, units and citation checks before population. |
+| 2 | 2026-10-26 | Specify citation URI validation, the numerical precision basis, soil interpretation limits and validation-error handling. |
 
 Table 1. Plan issue history.
 
@@ -58,7 +59,7 @@ The citation schema will require all of these keys:
 | Field | Meaning and validation |
 | --- | --- |
 | `title`, `publisher` | Nonblank public bibliographic text. |
-| `url`, `catalogue_number` | At least one nonblank locator; a URL will use HTTP or HTTPS and include an authority. The unused field may be null. |
+| `url`, `catalogue_number` | At least one nonblank locator; a URL will use HTTP or HTTPS and include a valid host and optional numeric port. URI syntax checks will run without optional format packages. User information, scoped IP addresses and future IP-literal syntax will be excluded; ordinary IPv6 literals will be validated explicitly. The unused field may be null. |
 | `revision` | Nonblank edition or revision; `not stated` will be explicit when absent in the source. |
 | `date` | Valid ISO calendar date of the source, quoted in YAML. An unavailable source date will defer admission. |
 | `page`, `table` | At least one nonblank exact value locator; the unused field may be null. |
@@ -217,10 +218,10 @@ Directory: `data/soil_stiffness`; API: `load_soil_stiffness(directory)`.
 | `loading` | text | `monotonic` or `cyclic_envelope`. |
 | `direction` | text | `axial`, `lateral` or `vertical`. |
 | `pipe_od_m`, `embedment_m` | m | OD positive; embedment nonnegative, measured below the original seabed to the pipe invert. |
-| `depth_top_m`, `depth_bottom_m` | m | Nonnegative and ordered, relative to the original seabed. |
+| `depth_top_m`, `depth_bottom_m` | m | Nonnegative and ordered, relative to the original seabed; equal bounds will represent a single sampling depth. |
 | `displacement_m` | m | At least two nonnegative, strictly increasing displacement magnitudes, starting at zero. |
 | `resistance_n_per_m` | N/m | Same length as displacement; nonnegative magnitudes starting at zero. Post-peak softening will be permitted. |
-| `initial_secant_stiffness_n_per_m2` | N/m^2 | Positive; first nonzero resistance divided by displacement, within relative tolerance `1e-6`. |
+| `initial_secant_stiffness_n_per_m2` | N/m^2 | Positive; resistance at the first nonzero displacement divided by that displacement, within relative tolerance `1e-6`. A zero-resistance first segment will be rejected. |
 | `test_conditions` | text | Nonblank test method, stress and strength state, drainage, rate or cycle history, and applicability limits from the source. |
 
 Table 6. Pipe-soil row fields in addition to shared metadata.
@@ -236,6 +237,48 @@ comparison. Nodal spring stiffness will require multiplication by a documented
 tributary length in a future adapter. N/m and N/m^2 will not be interchanged.
 Site-specific application, signed unloading, suction and hysteresis will need
 additional qualification and potentially a schema revision.
+
+## Numerical validation basis
+
+The two consistency checks will apply one shared catalogue precision policy,
+rather than a material, manufacturing or design tolerance. The relative limit
+will be one part per million, with no absolute allowance. The comparison will
+follow [PEP 485 (2015), Proposed Implementation](https://peps.python.org/pep-0485/#proposed-implementation):
+the absolute difference will not exceed `1e-6` times the larger magnitude.
+Strictly positive schema fields will make an absolute allowance unnecessary;
+small values will retain the same relative check.
+
+Derived values will be computed from the operands as stored in the row, including
+analytically generated section areas; only the derived result will then be rounded
+to at least seven significant decimal digits. Operand source precision will be
+retained, but operand rounding before storage will not be charged to this internal
+consistency budget. For `x = c * 10^e`, with `1 <= c < 10`, the last retained place
+will be `10^(e-6)` and half a place will be `0.5 * 10^(e-6)`. Dividing by
+`x >= 10^e` will bound that rounding contribution by `5e-7`. The `1e-6` policy
+will provide an equal remaining margin. This will be a declared catalogue
+precision budget, not a value prescribed by PEP 485 or a claim about source
+accuracy. Independently rounded operands, measured uncertainty or coarser tables
+will require a separately reviewed precision basis before population; passing
+this numerical check alone will not establish engineering suitability.
+
+For the synthetic section, `0.01 m^2 * 1000 kg/m^3` will give `10 kg/m`.
+The acceptance tests will bracket the limit using deviations of `0.000009`
+and `0.000011 kg/m`, on both sides, and will repeat the scale check near
+`1e-11 kg/m`. For the synthetic soil segment, `10 N/m / 0.01 m` will give
+`1000 N/m^2`; deviations of `0.0009` and `0.0011 N/m^2` will bracket the limit.
+These will be invented numerical controls, not qualified engineering data.
+The regression brackets will detect a tolerance drift beyond 0.9 to 1.1 times
+the declared limit; they will not resolve changes inside that interval.
+
+The temperature bound will follow the freely available BIPM
+[The International System of Units (SI), 9th edition, v4.01 (2026)](https://doi.org/10.59161/AUEZ1291),
+section 2.3.1, "The kelvin", page 129. The Celsius relation will give
+`t/degC = T/K - 273.15`. This catalogue will require strictly positive
+thermodynamic temperature; therefore `temperature_deg_c > -273.15` will apply.
+Tests will cover below, at and above this bound. This unit definition will
+support a validation limit only; standards-derived product values will remain
+excluded from the catalogue, and service-temperature qualification will remain
+outside this check.
 
 ## Verification and acceptance
 

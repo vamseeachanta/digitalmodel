@@ -92,6 +92,7 @@
           },
           "temperature_deg_c": {
             "type": "number",
+            "$comment": "BIPM, The International System of Units (SI), 9th edition, v4.01 (2026), section 2.3.1, The kelvin, p. 129: t/degC = T/K - 273.15. Catalogue policy requires T > 0 K; this does not establish a service envelope. https://doi.org/10.59161/AUEZ1291",
             "exclusiveMinimum": -273.15
           },
           "stiffness_basis": {
