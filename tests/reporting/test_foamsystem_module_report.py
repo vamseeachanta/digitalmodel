@@ -126,6 +126,36 @@ def test_ci_gate_runs_report_tests():
     assert "tests/report_pack/" in shlex.split(gate["command"])
 
 
+def test_module_report_ignore_rules_preserve_other_modules(tmp_path):
+    import os
+    import subprocess
+
+    rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    # An earlier module allowlist must survive the later foam-specific block.
+    allowance = ("!docs/reports/modules/example_module/\n"
+                 "docs/reports/modules/example_module/*\n"
+                 "!docs/reports/modules/example_module/report.html\n")
+    rules = rules.replace("# Publish the foam system module analysis", allowance +
+                          "# Publish the foam system module analysis")
+    (tmp_path / ".gitignore").write_text(rules, encoding="utf-8", newline="\n")
+    paths = ["docs/reports/modules/example_module/report.html",
+             "docs/reports/modules/foamsystem/report.html",
+             "docs/reports/modules/foamsystem/build_report.py",
+             "docs/reports/modules/foamsystem/scratch.txt",
+             "docs/reports/modules/unlisted/report.html"]
+    for name in paths:
+        (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
+    git_dir = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"],
+                             env=env, check=True, capture_output=True, text=True).stdout.strip()
+    result = subprocess.run(["git", "--git-dir", git_dir, "--work-tree", str(tmp_path),
+                             "check-ignore", "--no-index", "--stdin"], cwd=tmp_path, env=env,
+                            input="\n".join(paths) + "\n", capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == paths[-2:]
+
+
 def test_public_example_consistency(data, tmp_path):
     cfg = yaml.safe_load((ROOT / builder().EXAMPLE).read_text(encoding="utf-8"))
     original = cfg["foam_system_sizing"]
@@ -209,7 +239,7 @@ def test_rebuild_displayed_digits_and_changes(tmp_path):
     committed = (REPORT / "report.html").read_text(encoding="utf-8")
     assert html == committed, f"Report differs at displayed precision; rebuild: {COMMAND}"
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
-    assert changes["revision"] == "1"
+    assert changes["revision"] == "2"
     assert changes["changes"]
     assert "\r" not in html
     assert '<body class="hs-doc">' in html
@@ -255,6 +285,10 @@ def test_source_access_records(data):
         assert re.fullmatch(r"[a-f0-9]{64}", record["content_sha256"])
         assert record["locators"]
         assert record["accessed_utc"].endswith("Z")
+    assert "Section 5.2, Table 9" in html
+    assert "Section 5.2, Table 8" not in html
+    nist = next(record for record in source["sources"] if record["title"].startswith("NIST"))
+    assert "5.2 (Table 9)" in nist["locators"]
     import ast
 
     checks = json.loads((REPORT / "checks.json").read_text(encoding="utf-8"))

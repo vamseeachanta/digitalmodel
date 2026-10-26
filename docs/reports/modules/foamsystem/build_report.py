@@ -209,7 +209,8 @@ Pressure losses through the proportioner and discharge-device performance are ab
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and cause</th></tr></thead>
 <tbody><tr><td>0</td><td>2026-10-22</td><td>The public synthetic sizing example and evidence limits are documented to support input review.</td></tr>
-<tr><td>1</td><td>2026-10-22</td><td>Independent hydraulic anchors, rounded calculation records, returned screening outcomes and both monitor capacity criteria are documented to address review findings.</td></tr></tbody></table>
+<tr><td>1</td><td>2026-10-22</td><td>Independent hydraulic anchors, rounded calculation records, returned screening outcomes and both monitor capacity criteria are documented to address review findings.</td></tr>
+<tr><td>2</td><td>2026-10-25</td><td>The pressure-unit citation is corrected to Table 9 of NIST SP 811; the conversion value and calculation results are unchanged.</td></tr></tbody></table>
 </section>
 <nav aria-label="Contents"><p><a href="#introduction">Introduction</a> · <a href="#basis">Design data</a> ·
 <a href="#method">Methodology</a> · <a href="#results">Results</a> · <a href="#validation">Validation</a> ·
@@ -294,7 +295,7 @@ form is not asserted. Unit conversion is based on NIST Special Publication 811, 
 Hazen–Williams is empirical for water in turbulent flow; its use for foam solution is an assumption requiring fluid data {ref(2)}.</p>
 <p>Pressure head and static lift follow the energy balance in University Physics, Volume 1, 2016 edition, Section 14.6 {ref(4)}.
 The implementation uses standard gravity 9.80665 m/s² and 100000 Pa per bar; the unit bases are NIST Special Publication 811,
-2008 edition, Appendix B.8 and Section 5.2, Table 8 {ref(3)}. Mixing-device loss, velocity-head changes and nozzle curves are omitted.</p>
+2008 edition, Appendix B.8 and Section 5.2, Table 9 {ref(3)}. Mixing-device loss, velocity-head changes and nozzle curves are omitted.</p>
 </section>
 <section id="results"><h2>5 Detailed Results</h2>
 <p>The public workflow is called on the documented example to obtain the values below. The returned governing area is

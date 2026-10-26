@@ -1,12 +1,12 @@
 {
-  "date": "2026-10-22",
+  "date": "2026-10-25",
   "command_convention": "Commands are shown in portable form; temporary directories are supplied outside the repository.",
   "test_results": [
     {
       "scope": "Module report",
-      "passed": 23,
+      "passed": 24,
       "unavailable": 0,
-      "note": "Independent flow, concentrate, head, margin and utilization anchors; four-decimal payload precision; monitor capacity criteria; both screening-flag outcomes; governing labels; CI test-directory coverage; rebuild and simulated document interactions pass.",
+      "note": "Independent flow, concentrate, head, margin and utilization anchors; four-decimal payload precision; monitor capacity criteria; both screening-flag outcomes; governing labels; CI test-directory coverage; rebuild and simulated document interactions pass. Shared ignore-rule ordering and the pressure-unit source locator are checked.",
       "command": "PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pytest-asyncio python -m pytest tests/reporting/test_foamsystem_module_report.py -q -rA -p no:cacheprovider --basetemp=<temporary-directory>",
       "environment": "PYTHONUTF8 unset; bytecode disabled; caches outside the repository"
     },
@@ -14,9 +14,14 @@
       "scope": "Existing sizing, library and report-pack example",
       "passed": 36,
       "unavailable": 1,
-      "note": "The engine-routing test fails during dependency import with ModuleNotFoundError: No module named 'assetutilities'. The unchanged base and main import the same application dependency.",
+      "note": "The engine-routing test fails during the unchanged application dependency import with ModuleNotFoundError: No module named 'pandas'. The same engine import and routing test are present on main.",
       "command": "PYTHONPATH=src uv run --no-project --with pytest --with pyyaml --with pytest-asyncio --with pydantic --with jinja2 --with plotly python -m pytest tests/fire_safety/test_foam_system_sizing.py tests/fire_safety/test_foam_criteria_library.py tests/report_pack/test_foam_report_pack.py -q -rA -p no:cacheprovider --basetemp=<temporary-directory>",
-      "base_evidence": ["src/digitalmodel/engine.py:10", "tests/fire_safety/test_foam_system_sizing.py:371", "pyproject.toml:54"]
+      "base_evidence": [
+        "src/digitalmodel/engine.py:10",
+        "tests/fire_safety/test_foam_system_sizing.py:371",
+        "pyproject.toml:32",
+        "pyproject.toml:54"
+      ]
     }
   ],
   "not_exercised": [

@@ -267,6 +267,11 @@ node_modules/
 reports/
 !docs/reports/
 docs/reports/*
+
+# Shared parent rules precede all module-specific report allowlists.
+!docs/reports/modules/
+docs/reports/modules/*
+
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
@@ -583,8 +588,6 @@ docs/reports/abstracted-hulls/*
 !data/cfd/calm_water_study/raw/*
 
 # Publish the foam system module analysis and its rebuild sources only.
-!docs/reports/modules/
-docs/reports/modules/*
 !docs/reports/modules/foamsystem/
 docs/reports/modules/foamsystem/*
 !docs/reports/modules/foamsystem/build_report.py

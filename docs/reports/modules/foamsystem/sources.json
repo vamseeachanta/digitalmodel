@@ -19,10 +19,10 @@
     {
       "title": "NIST Special Publication 811, 2008 edition",
       "url": "https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication811e2008.pdf",
-      "accessed_utc": "2026-10-22T04:55:04Z",
+      "accessed_utc": "2026-10-26T03:56:56Z",
       "http_status": 200,
       "content_sha256": "788dd8f0bcb0ec06e40c300690266742532a7e760a93be57764b77ed0ef3482f",
-      "locators": "Sections 5.1–5.2, 7.10.2 and 8.6.6; Appendix B.8"
+      "locators": "Sections 5.1–5.2 (Table 9), 7.10.2 and 8.6.6; Appendix B.8"
     },
     {
       "title": "University Physics, Volume 1, 2016 edition",

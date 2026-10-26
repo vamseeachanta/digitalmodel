@@ -1,9 +1,10 @@
 {
-  "revision": "1",
-  "date": "2026-10-22",
+  "revision": "2",
+  "date": "2026-10-25",
   "changes": [
     "The public synthetic foam sizing example is evaluated to identify supply, concentrate and equipment screening demand.",
     "The monitor minimum, governing-edition gap and omitted equipment losses are stated as limits on design acceptance.",
-    "Revision 1 adds independent hydraulic and equipment anchors, removes unused unrounded CSV records, binds dispositions and governing labels to returned fields, and states both monitor capacity criteria."
+    "Revision 1 adds independent hydraulic and equipment anchors, removes unused unrounded CSV records, binds dispositions and governing labels to returned fields, and states both monitor capacity criteria.",
+    "Revision 2 corrects the NIST SP 811 pressure-unit locator to Section 5.2, Table 9 without changing the conversion or calculation results."
   ]
 }
