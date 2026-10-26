@@ -5,6 +5,7 @@
 import os
 import shutil
 import subprocess
+import sys
 import sysconfig
 import tomllib
 from importlib import metadata
@@ -27,7 +28,15 @@ def project(pytestconfig):
 
 def _installed_entry_points(project):
     # conftest adds src/ to sys.path; do not mistake source egg-info for an install.
-    site_paths = {sysconfig.get_path("purelib"), sysconfig.get_path("platlib")}
+    # uv overlays add installation directories without changing the base scheme.
+    site_paths = {
+        Path(sysconfig.get_path(name)).resolve() for name in ("purelib", "platlib")
+    }
+    site_paths.update(
+        Path(path).resolve()
+        for path in sys.path
+        if Path(path).name in {"site-packages", "dist-packages"}
+    )
     matches = [
         dist
         for dist in metadata.distributions(path=site_paths)
@@ -126,3 +135,61 @@ def test_harness_rejects_mismatched_entry_point(project):
         _assert_entry_point_target(
             _installed_entry_points(project), project["scripts"][COMMAND] + "_stale"
         )
+
+
+@pytest.fixture
+def metadata_layout(tmp_path, monkeypatch, project):
+    """Build real metadata with separate source, base and overlay directories."""
+    source = tmp_path / "src"
+    base = tmp_path / "base" / "site-packages"
+    overlay = tmp_path / "overlay" / "site-packages"
+    for directory in (source, base, overlay):
+        directory.mkdir(parents=True)
+    get_path = sysconfig.get_path
+    monkeypatch.setattr(
+        sysconfig, "get_path",
+        lambda name: str(base) if name in ("purelib", "platlib") else get_path(name),
+    )
+    monkeypatch.setattr(sys, "path", [str(source), str(overlay), str(base)])
+
+    def write_metadata(directory, *, source_only=False):
+        suffix = "egg-info" if source_only else "dist-info"
+        info = directory / f"{project['name']}-1.0.{suffix}"
+        info.mkdir()
+        metadata_name = "PKG-INFO" if source_only else "METADATA"
+        (info / metadata_name).write_text(
+            f"Name: {project['name']}\nVersion: 1.0\n", encoding="utf-8"
+        )
+        (info / "entry_points.txt").write_text(
+            f"[console_scripts]\n{COMMAND} = {project['scripts'][COMMAND]}\n",
+            encoding="utf-8",
+        )
+
+    return source, base, overlay, write_metadata
+
+
+def test_entry_point_discovery_in_overlay(metadata_layout, project):
+    """An overlay installation is visible even outside the base scheme paths."""
+    source, _, overlay, write_metadata = metadata_layout
+    write_metadata(source, source_only=True)
+    write_metadata(overlay)
+    _assert_entry_point_target(
+        _installed_entry_points(project), project["scripts"][COMMAND]
+    )
+
+
+def test_entry_point_discovery_rejects_source_only(metadata_layout, project):
+    """Source egg-info alone cannot satisfy the installed metadata contract."""
+    source, _, _, write_metadata = metadata_layout
+    write_metadata(source, source_only=True)
+    with pytest.raises(AssertionError, match="Install digitalmodel"):
+        _installed_entry_points(project)
+
+
+def test_entry_point_discovery_rejects_duplicate_installs(metadata_layout, project):
+    """Different installation directories must still have unique metadata."""
+    _, base, overlay, write_metadata = metadata_layout
+    write_metadata(base)
+    write_metadata(overlay)
+    with pytest.raises(AssertionError, match="Install digitalmodel"):
+        _installed_entry_points(project)
