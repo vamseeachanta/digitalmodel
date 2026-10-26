@@ -9,9 +9,11 @@ error and reference magnitude. Invalid-value cases exercise domain boundaries.
 """
 
 from dataclasses import replace
+from fractions import Fraction
 import runpy
 from pathlib import Path
 
+from numpy import int64, uint64
 import pytest
 
 from digitalmodel.structural.result_comparison import (
@@ -201,6 +203,84 @@ def test_nonfinite_or_nonnumeric_value_refused(bad):
         ResultComparison().add_result(
             "reference", metadata=META, reactions={REACTION: ResultValue(bad, "N", "global")}
         )
+
+
+@pytest.mark.parametrize("family,key,unit", [
+    ("reactions", REACTION, "N"),
+    ("displacements", DISPLACEMENT, "m"),
+    ("member_forces", MEMBER, "N"),
+])
+@pytest.mark.parametrize("bad", [
+    2**53 + 1, -(2**53 + 1), Fraction(1, 10),
+    int64(2**53 + 1), int64(2**63 - 1), uint64(2**64 - 1),
+])
+def test_lossy_result_conversion_refused(family, key, unit, bad):
+    # (2**53 + 1) - 2**53 = 1; binary floats would erase this difference.
+    # 1/10 also has no exact finite binary representation.
+    comparison = ResultComparison()
+    with pytest.raises(ValueError, match="precision"):
+        comparison.add_result(
+            "candidate", metadata=META,
+            **{family: {key: ResultValue(bad, unit, "global")}},
+        )
+    # A refused dataset must not reserve its name or retain any result table.
+    comparison.add_result(
+        "candidate", metadata=META,
+        **{family: {key: ResultValue(0, unit, "global")}},
+    )
+
+
+def test_adjacent_large_integers_cannot_false_pass():
+    # The exact candidate-reference difference is 1 N, above the 0 N limit.
+    with pytest.raises(ValueError, match="precision"):
+        comparison = pair(
+            {REACTION: ResultValue(2**53, "N", "global")},
+            {REACTION: ResultValue(2**53 + 1, "N", "global")},
+        )
+        comparison.compare_reactions(
+            "reference", "candidate", tolerances={REACTION: Tolerance(0, 0, "N")}
+        )
+
+
+@pytest.mark.parametrize("field", ["absolute", "relative"])
+@pytest.mark.parametrize("bad", [
+    2**53 + 1, Fraction(1, 10),
+    int64(2**53 + 1), int64(2**63 - 1), uint64(2**64 - 1),
+])
+def test_lossy_tolerance_conversion_refused(field, bad):
+    comparison = pair(
+        {REACTION: ResultValue(1, "N", "global")},
+        {REACTION: ResultValue(2, "N", "global")},
+    )
+    tolerance = replace(Tolerance(0, 0, "N"), **{field: bad})
+    with pytest.raises(ValueError, match="precision"):
+        comparison.compare_reactions(
+            "reference", "candidate", tolerances={REACTION: tolerance}
+        )
+
+
+@pytest.mark.parametrize("reference,candidate,difference", [
+    (2**53 - 1, 2**53, 1),
+    (2**53, 2**53 + 2, 2),
+    (Fraction(1, 2), Fraction(3, 4), 0.25),
+    (int64(2**53), int64(2**53 + 2), 2),
+    (uint64(2**63), uint64(2**63 + 2048), 2048),
+])
+def test_exact_numeric_conversion_retains_difference(reference, candidate, difference):
+    # Boundary integers differ by 1, 2 and 2048 N; 3/4 - 1/2 = 1/4 N.
+    comparison = pair(
+        {REACTION: ResultValue(reference, "N", "global")},
+        {REACTION: ResultValue(candidate, "N", "global")},
+    )
+    report = comparison.compare_reactions(
+        "reference", "candidate", tolerances={REACTION: Tolerance(0, 0, "N")}
+    )
+    (row,) = report.differences
+    assert row.reference == reference
+    assert row.candidate == candidate
+    assert row.signed_difference == pytest.approx(difference)
+    assert row.allowed_difference == 0
+    assert row.status == report.status == "FAIL"
 
 
 @pytest.mark.parametrize("field", list(ReferenceMetadata.__dataclass_fields__))

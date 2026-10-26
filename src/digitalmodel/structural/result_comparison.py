@@ -11,6 +11,8 @@ No unit conversion, coordinate transformation, interpolation or missing-value
 substitution is performed. The explicit unit vocabulary below is dimensional
 validation only: no conversion factors or engineering tolerances are embedded.
 Additional units require an explicit extension rather than guessed dimensions.
+Result values and tolerances must convert to finite binary floats without losing
+precision; inputs that would be rounded during conversion are refused.
 
 For each identity, signed error = candidate - reference; absolute error = its
 magnitude. Relative error = absolute error / abs(reference), or None at a zero
@@ -28,7 +30,7 @@ with different components or member locations are distinct result identities.
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, fields
 from math import isfinite
-from numbers import Real
+from numbers import Integral, Real
 
 
 @dataclass(frozen=True)
@@ -144,12 +146,16 @@ def _text(value: object, label: str) -> None:
 def _finite(value: object, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, Real):
         raise ValueError(f"{label} must be a finite real number")
+    if isinstance(value, Integral):
+        value = int(value)
     try:
         number = float(value)
     except (OverflowError, ValueError) as error:
         raise ValueError(f"{label} must be a finite real number") from error
     if not isfinite(number):
         raise ValueError(f"{label} must be a finite real number")
+    if number != value:
+        raise ValueError(f"{label} cannot convert to float without losing precision")
     return number
 
 
