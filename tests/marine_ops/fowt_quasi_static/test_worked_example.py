@@ -70,7 +70,8 @@ def test_inertia_example_matches_independent_tensor(tmp_path):
     values = Values()
     values.feed(html)
 
-    # Source: synthetic example specified in issue #3318, SI units.
+    # Input specification: README.md, Inputs, method and answer section,
+    # in docs/reports/modules/fowt_quasi_static; SI units.
     mass = 2
     x, y, z = 1, 2, 0
     # Independent hand calculation: squared distances to each axis, then
@@ -94,6 +95,10 @@ def test_inertia_example_matches_independent_tensor(tmp_path):
     assert values.visible.count("kg") == 1
     assert values.visible.count("m") == 6  # Cartesian coordinates for both offsets.
     assert sum("[kg m^2]" in caption for caption in values.captions) == 2
+    visible_text = " ".join(" ".join(values.visible).split())
+    assert "Input basis: README.md, Inputs, method and answer section." in visible_text
+    assert "#3318 requests a worked example but does not prescribe these values." in visible_text
+    assert "Source: issue #3318" not in html
     assert "synthetic" in html.lower()
     assert "NOT_EVALUATED" in html
     assert "mooring qualification" in html

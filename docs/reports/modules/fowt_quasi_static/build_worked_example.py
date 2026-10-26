@@ -12,10 +12,11 @@ from pathlib import Path
 from digitalmodel.marine_ops.fowt_quasi_static.basis import parallel_axis
 
 
-# Source: issue #3318, synthetic worked-example specification, SI units.
+# Input specification: README.md, Inputs, method and answer section,
+# beside this builder; constructed demonstration inputs in SI units.
 MASS_KG = 2.0
 OFFSET_M = (1.0, 2.0, 0.0)
-# Source: the same specification's zero-offset control, at the reference origin.
+# Control defined in the same README section, at the reference origin.
 CONTROL_OFFSET_M = (0.0, 0.0, 0.0)
 AXES = "xyz"
 
@@ -86,13 +87,15 @@ entries are zero. The zero-offset control gives a zero tensor.</p>
 <h2>Revision history</h2>
 <table><caption>Report revisions</caption>
 <thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
-<tbody><tr><td>Initial</td><td>2026-10-25</td><td>Add the synthetic point-mass example to expose inputs, axis-distance arithmetic and the resulting shift.</td></tr></tbody>
+<tbody><tr><td>Initial</td><td>2026-10-25</td><td>Add the synthetic point-mass example to expose inputs, axis-distance arithmetic and the resulting shift.</td></tr>
+<tr><td>1</td><td>2026-10-25</td><td>Identify the repository input specification to remove an unsupported external source claim.</td></tr></tbody>
 </table>
 </section>
 <section id="inputs">
 <h2>Inputs</h2>
-<p>Source: issue #3318, synthetic worked-example specification. These are
-constructed demonstration inputs, rather than measured or turbine data.
+<p>Input basis: README.md, Inputs, method and answer section.
+#3318 requests a worked example but does not prescribe these values.
+These are constructed demonstration inputs, rather than measured or turbine data.
 Coordinates are Cartesian, measured from the reference origin to the point mass.
 The control uses the same mass at the origin. Intrinsic point-mass inertia
 about its own location is zero by definition.</p>
