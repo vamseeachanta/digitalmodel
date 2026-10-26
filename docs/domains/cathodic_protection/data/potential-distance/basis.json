@@ -7,10 +7,12 @@
     "net_alloy_mass_kg": 323.4,
     "alloy_density_kg_m3": 2750.0,
     "driving_voltage_v": 0.25,
-    "edition": "2021"
+    "edition": "2021",
+    "input_sha256": "38823145d7dc9dedd7ef13a1b4c4ebe73ef99ffafd1c6a6baf3ff1bd7a61eeed"
   },
   "input_fixture": "tests/fixtures/cathodic_protection/workflow_inputs/published_jacket_84m.yml",
   "input_revision": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+  "input_sha256": "38823145d7dc9dedd7ef13a1b4c4ebe73ef99ffafd1c6a6baf3ff1bd7a61eeed",
   "published_source": {
     "citation": "Xu (2023), Engineering Advances 3(3), 241-245",
     "doi": "10.26855/ea.2023.06.017",

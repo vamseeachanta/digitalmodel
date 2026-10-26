@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -33,6 +34,9 @@ from digitalmodel.cathodic_protection.potential_distance import (
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = "tests/fixtures/cathodic_protection/workflow_inputs/published_jacket_84m.yml"
+INPUT_REVISION = "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2"
+# SHA-256 of the exact fixture bytes at INPUT_REVISION; verify before parsing.
+INPUT_SHA256 = "38823145d7dc9dedd7ef13a1b4c4ebe73ef99ffafd1c6a6baf3ff1bd7a61eeed"
 DERIVATION = "docs/domains/cathodic_protection/potential-distance-derivation.md"
 MODEL_LABEL = "screening model, not a structure potential prediction"
 # Requested illustrative samples, not a cited seawater range. See derivation.
@@ -53,6 +57,7 @@ class ChartBasis:
     alloy_density_kg_m3: float
     driving_voltage_v: float
     edition: str
+    input_sha256: str
 
 
 def load_basis() -> ChartBasis:
@@ -64,7 +69,11 @@ def load_basis() -> ChartBasis:
     driving voltage; no standard document is opened. No section-based builder
     is present in the assessed base; this is the mass-equivalent cylinder.
     """
-    inputs = yaml.safe_load((ROOT / FIXTURE).read_text(encoding="utf-8"))["inputs"]
+    source = (ROOT / FIXTURE).read_bytes()
+    digest = hashlib.sha256(source).hexdigest()
+    if digest != INPUT_SHA256:
+        raise ValueError("Input fixture SHA-256 does not match the declared revision")
+    inputs = yaml.safe_load(source.decode("utf-8"))["inputs"]
     anode = inputs["anode"]
     length = anode["length_m"]
     mass = anode["individual_anode_mass_kg"]
@@ -75,7 +84,7 @@ def load_basis() -> ChartBasis:
     voltage = design_driving_voltage(AnodeMaterial.ALUMINIUM, edition).value
     resistance = calculate_anode_resistance(AnodeType.STAND_OFF, length, radius, rho)
     current = _kernels.anode_current_output(voltage, resistance)
-    return ChartBasis(current, rho, length, radius, mass, density, voltage, edition)
+    return ChartBasis(current, rho, length, radius, mass, density, voltage, edition, digest)
 
 
 def write_charts(output_dir: Path, basis: ChartBasis) -> list[Path]:
@@ -84,7 +93,11 @@ def write_charts(output_dir: Path, basis: ChartBasis) -> list[Path]:
     Each chart has one curve per requested resistivity. Current is held at
     its base-resistivity B401 output to isolate the field's rho dependence;
     it is not a coupled sacrificial-anode current/resistivity sensitivity.
+    Source bytes and every supplied basis field must match the verified
+    fixture calculation before any output directory or file is written.
     """
+    if basis != load_basis():
+        raise ValueError("Supplied basis does not match the verified fixture calculation")
     output_dir.mkdir(parents=True, exist_ok=True)
     paths = []
     manifest = []
@@ -128,7 +141,8 @@ def write_charts(output_dir: Path, basis: ChartBasis) -> list[Path]:
     metadata = {
         "basis": asdict(basis),
         "input_fixture": FIXTURE,
-        "input_revision": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+        "input_revision": INPUT_REVISION,
+        "input_sha256": basis.input_sha256,
         "published_source": {
             "citation": "Xu (2023), Engineering Advances 3(3), 241-245",
             "doi": "10.26855/ea.2023.06.017",

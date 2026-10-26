@@ -8,12 +8,15 @@ The derivation is in potential-distance-derivation.md, equations P and L.
 """
 
 import csv
+import hashlib
 import json
 import math
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
+from scripts.cathodic_protection import generate_potential_distance as generator
 from digitalmodel.cathodic_protection.potential_distance import (
     finite_line_source_potential_shift_mv,
     point_source_potential_shift_mv,
@@ -130,7 +133,56 @@ def test_published_basis_reproduces_existing_b401_route():
     assert basis.base_resistivity_ohm_m == 0.22
 
 
-def test_every_csv_and_manifest_row_matches_function_and_committed_data(tmp_path):
+@pytest.mark.parametrize("operation", ["load", "write"])
+@pytest.mark.parametrize("change", ["input", "whitespace"])
+def test_changed_fixture_is_rejected_before_calculation(tmp_path, monkeypatch, operation, change):
+    """Reject changed source bytes before calculation or output creation."""
+    basis = load_basis()
+    source = (generator.ROOT / generator.FIXTURE).read_bytes()
+    if change == "input":
+        changed = source.replace(b"323.4", b"324.4")
+        assert changed != source
+    else:
+        changed = source + b"\n"
+    fixture = tmp_path / generator.FIXTURE
+    fixture.parent.mkdir(parents=True)
+    fixture.write_bytes(changed)
+    monkeypatch.setattr(generator, "ROOT", tmp_path)
+
+    def unexpected_calculation(*args, **kwargs):
+        pytest.fail("Unverified fixture reached calculation")
+
+    monkeypatch.setattr(generator._kernels, "equivalent_radius_from_mass", unexpected_calculation)
+    output = tmp_path / "charts"
+    with pytest.raises(ValueError, match="fixture SHA-256"):
+        if operation == "load":
+            load_basis()
+        else:
+            write_charts(output, basis)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("field,value", [
+    ("current_a", 1.0),
+    ("base_resistivity_ohm_m", 0.23),
+    ("anode_length_m", 3.0),
+    ("anode_radius_m", 0.5),
+    ("net_alloy_mass_kg", 1.0),
+    ("alloy_density_kg_m3", 1.0),
+    ("driving_voltage_v", 1.0),
+    ("edition", "2005"),
+    ("input_sha256", "0" * 64),
+])
+def test_supplied_basis_must_match_verified_fixture(tmp_path, field, value):
+    """A supplied calculation cannot retain provenance from a different basis."""
+    basis = replace(load_basis(), **{field: value})
+    output = tmp_path / "charts"
+    with pytest.raises(ValueError, match="basis does not match"):
+        write_charts(output, basis)
+    assert not output.exists()
+
+
+def test_regeneration_matches_committed_data(tmp_path):
     basis = load_basis()
     paths = write_charts(tmp_path, basis)
     committed = Path(__file__).resolve().parents[2] / "docs/domains/cathodic_protection/data/potential-distance"
@@ -139,6 +191,12 @@ def test_every_csv_and_manifest_row_matches_function_and_committed_data(tmp_path
     }
     for path in paths:
         assert path.read_bytes() == (committed / path.name).read_bytes()
+
+
+def test_every_csv_and_manifest_row_matches_independent_equations(tmp_path):
+    """Check equations P/L directly, with the logarithmic line integral."""
+    basis = load_basis()
+    write_charts(tmp_path, basis)
     manifest = {r["quantity"]: r for r in csv.DictReader((tmp_path / "values.csv").open())}
     assert len(manifest) == 248  # two forms * four illustrative resistivities * 31 samples
     for form in ("point-source", "finite-line-source"):
@@ -154,16 +212,23 @@ def test_every_csv_and_manifest_row_matches_function_and_committed_data(tmp_path
             assert axis_distance == basis.anode_radius_m + gap
             assert float(row["current_a"]) == basis.current_a  # fixed current across all curves
             if form == "point-source":
-                expected = point_source_potential_shift_mv(basis.current_a, rho, axis_distance)
+                expected = 1000 * rho * basis.current_a / (4 * math.pi * axis_distance)
             else:
-                expected = finite_line_source_potential_shift_mv(basis.current_a, rho, basis.anode_length_m, axis_distance)
-            assert float(row["potential_shift_mv"]) == expected
+                half_length = basis.anode_length_m / 2
+                integral = 2 * math.log(
+                    (half_length + math.sqrt(half_length**2 + axis_distance**2)) / axis_distance
+                )
+                expected = 1000 * rho * (basis.current_a / basis.anode_length_m) / (4 * math.pi) * integral
+            assert float(row["potential_shift_mv"]) == pytest.approx(expected, rel=1e-12)
             assert "screening" in row["model_label"]
             assert "not a structure potential prediction" in row["model_label"]
             quantity = f"{form}:rho={rho}:gap={gap}"
-            assert float(manifest[quantity]["value"]) == expected
+            assert float(manifest[quantity]["value"]) == pytest.approx(expected, rel=1e-12)
             assert manifest[quantity]["unit"] == "mV"
             assert manifest[quantity]["source"]
     metadata = json.loads((tmp_path / "basis.json").read_text())
     assert metadata["basis"]["current_a"] == basis.current_a
+    digest = hashlib.sha256((generator.ROOT / generator.FIXTURE).read_bytes()).hexdigest()
+    assert metadata["input_sha256"] == digest
+    assert metadata["basis"]["input_sha256"] == digest
     assert metadata["review_status"] == "pending"
