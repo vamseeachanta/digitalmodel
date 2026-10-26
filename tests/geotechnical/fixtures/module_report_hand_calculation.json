@@ -1,0 +1,211 @@
+{
+  "basis": {
+    "input_source": "examples/workflows/pile-axial-capacity/input.yml",
+    "equation_source": "docs/reports/modules/geotechnical/index.html, Theory and methodology",
+    "purpose": "Independent arithmetic oracle for the illustrative uniform clay example; no physical design acceptance or independently published engineering benchmark is established.",
+    "procedure": "Hand substitutions evaluated with 50-digit Decimal arithmetic and a 50-digit circle constant; no production modules, builder, workflow or generated payload were used to obtain answers.",
+    "storage": "Answers rounded once to 12 decimal places. Tests use zero relative tolerance and absolute tolerance 1e-9 in the stated units to allow binary floating-point roundoff.",
+    "units": "Lengths in m; strengths in kPa; capacities and demand in kN; alpha, design divisor and utilization dimensionless.",
+    "steps": [
+      "psi = 80 / 200 = 0.4, selecting the lower branch; alpha = min(1, 0.5 / sqrt(0.4)).",
+      "f = 80 * alpha; shaft resistance per metre = pi * 1.8 * f.",
+      "Full circular tip area = pi * 1.8^2 / 4; tip pressure = 9 * 80; Qb = 9 * 80 * pi * 1.8^2 / 4.",
+      "At 40.0 m: Qs = pi * 1.8 * 40 * (80 * 0.5 / sqrt(0.4)) = 14,305.8 kN; Qb = 1,832.2 kN; Qu = Qs + Qb = 16,138.0 kN.",
+      "Qallow = Qu / 2 = 8,069.0 kN against 5,000.0 kN demand; U = 5000 / Qallow; PASS when 5000 <= Qallow, otherwise FAIL.",
+      "Chart lengths are 20, 22, ..., 60 m. At each length L: Qallow(L) = ((pi * 1.8 * 80 * 0.5 / sqrt(0.4)) * L + (9 * 80 * pi * 1.8^2 / 4)) / 2; U(L) = 5000 / Qallow(L).",
+      "Use unrounded intermediate values for all results, utilization and verdicts. Lengths 20 and 22 m fail; lengths 24 through 60 m pass."
+    ]
+  },
+  "inputs": {
+    "D": 1.8,
+    "L": 40.0,
+    "Su": 80.0,
+    "sigma_v": 200.0,
+    "Nc": 9.0
+  },
+  "result": {
+    "alpha": 0.790569415042,
+    "unit_skin_friction_kpa": 63.245553203368,
+    "skin_friction_kn": 14305.807102746387,
+    "end_bearing_kn": 1832.176835573567,
+    "total_capacity_kn": 16137.983938319952
+  },
+  "design": {
+    "length_m": 40.0,
+    "allowable_capacity_kn": 8068.991969159977,
+    "demand_kn": 5000.0,
+    "utilization": 0.619656088283,
+    "factor_of_safety": 2.0,
+    "status": "PASS"
+  },
+  "sweep": [
+    {
+      "length_m": 20.0,
+      "allowable_capacity_kn": 4492.54019347338,
+      "demand_kn": 5000.0,
+      "utilization": 1.112956097146,
+      "factor_of_safety": 2.0,
+      "status": "FAIL"
+    },
+    {
+      "length_m": 22.0,
+      "allowable_capacity_kn": 4850.18537104204,
+      "demand_kn": 5000.0,
+      "utilization": 1.030888433636,
+      "factor_of_safety": 2.0,
+      "status": "FAIL"
+    },
+    {
+      "length_m": 24.0,
+      "allowable_capacity_kn": 5207.830548610699,
+      "demand_kn": 5000.0,
+      "utilization": 0.960092682227,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 26.0,
+      "allowable_capacity_kn": 5565.475726179359,
+      "demand_kn": 5000.0,
+      "utilization": 0.898395796873,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 28.0,
+      "allowable_capacity_kn": 5923.120903748019,
+      "demand_kn": 5000.0,
+      "utilization": 0.844149576085,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 30.0,
+      "allowable_capacity_kn": 6280.766081316678,
+      "demand_kn": 5000.0,
+      "utilization": 0.796081232013,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 32.0,
+      "allowable_capacity_kn": 6638.411258885338,
+      "demand_kn": 5000.0,
+      "utilization": 0.75319226318,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 34.0,
+      "allowable_capacity_kn": 6996.056436453998,
+      "demand_kn": 5000.0,
+      "utilization": 0.714688345558,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 36.0,
+      "allowable_capacity_kn": 7353.701614022657,
+      "demand_kn": 5000.0,
+      "utilization": 0.679929682007,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 38.0,
+      "allowable_capacity_kn": 7711.346791591317,
+      "demand_kn": 5000.0,
+      "utilization": 0.648395168202,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 40.0,
+      "allowable_capacity_kn": 8068.991969159977,
+      "demand_kn": 5000.0,
+      "utilization": 0.619656088283,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 42.0,
+      "allowable_capacity_kn": 8426.637146728635,
+      "demand_kn": 5000.0,
+      "utilization": 0.593356509001,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 44.0,
+      "allowable_capacity_kn": 8784.282324297295,
+      "demand_kn": 5000.0,
+      "utilization": 0.569198463279,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 46.0,
+      "allowable_capacity_kn": 9141.927501865955,
+      "demand_kn": 5000.0,
+      "utilization": 0.546930611622,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 48.0,
+      "allowable_capacity_kn": 9499.572679434616,
+      "demand_kn": 5000.0,
+      "utilization": 0.526339464808,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 50.0,
+      "allowable_capacity_kn": 9857.217857003276,
+      "demand_kn": 5000.0,
+      "utilization": 0.507242517365,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 52.0,
+      "allowable_capacity_kn": 10214.863034571934,
+      "demand_kn": 5000.0,
+      "utilization": 0.489482823517,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 54.0,
+      "allowable_capacity_kn": 10572.508212140594,
+      "demand_kn": 5000.0,
+      "utilization": 0.472924674039,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 56.0,
+      "allowable_capacity_kn": 10930.153389709254,
+      "demand_kn": 5000.0,
+      "utilization": 0.457450121854,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 58.0,
+      "allowable_capacity_kn": 11287.798567277912,
+      "demand_kn": 5000.0,
+      "utilization": 0.442956168131,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    },
+    {
+      "length_m": 60.0,
+      "allowable_capacity_kn": 11645.443744846572,
+      "demand_kn": 5000.0,
+      "utilization": 0.4293524669,
+      "factor_of_safety": 2.0,
+      "status": "PASS"
+    }
+  ]
+}

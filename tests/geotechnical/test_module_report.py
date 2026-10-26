@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Rebuild the module report and compare all example quantities with the API."""
+"""Check the module report against hand arithmetic and API integration calls."""
 
 from copy import deepcopy
 from dataclasses import asdict
@@ -122,6 +122,41 @@ def test_design_and_every_chart_point_match_workflow(rebuilt, tmp_path):
         assert point["demand_kn"] == expected["design"]["applied_load_kn"]
         assert point["factor_of_safety"] == expected["design"]["factor_of_safety"]
     assert {point["status"] for point in data["sweep"]} == {"PASS", "FAIL"}
+
+
+@pytest.fixture(scope="module")
+def hand_calculation():
+    """Load fixed arithmetic answers; never regenerate them from the module."""
+    path = Path(__file__).with_name("fixtures") / "module_report_hand_calculation.json"
+    return json.loads(path.read_text())
+
+
+@pytest.mark.parametrize("quantity", [
+    "alpha", "unit_skin_friction_kpa", "skin_friction_kn",
+    "end_bearing_kn", "total_capacity_kn",
+])
+def test_worked_results_match_hand_calculation(rebuilt, hand_calculation, quantity):
+    """Pin the worked inputs and five answers independently of production code."""
+    data = payload(rebuilt[0])
+    assert data["inputs"] == hand_calculation["inputs"]
+    assert data["result"][quantity] == pytest.approx(
+        hand_calculation["result"][quantity], rel=0, abs=1e-9,
+    )
+
+
+@pytest.mark.parametrize("case", ["design", *range(21)])
+def test_design_and_chart_match_hand_calculation(rebuilt, hand_calculation, case):
+    """Check every capacity, utilization and verdict against fixed answers."""
+    data = payload(rebuilt[0])
+    assert len(data["sweep"]) == len(hand_calculation["sweep"]) == 21
+    actual = data["design"] if case == "design" else data["sweep"][case]
+    expected = (hand_calculation["design"] if case == "design"
+                else hand_calculation["sweep"][case])
+    assert actual.keys() == expected.keys()
+    for key in ("length_m", "demand_kn", "factor_of_safety", "status"):
+        assert actual[key] == expected[key], key
+    for key in ("allowable_capacity_kn", "utilization"):
+        assert actual[key] == pytest.approx(expected[key], rel=0, abs=1e-9), key
 
 
 def test_all_visible_example_numbers_are_bound_to_calculation(rebuilt):
