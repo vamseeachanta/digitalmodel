@@ -12,7 +12,8 @@ References:
 
     TEOS-10 (2011), *Notes on the GSW function gsw_SP_from_C*, p. 1,
     gives C(35, 15, 0) = 42.914 mS/cm = 4.2914 S/m, citing the standard
-    conductivity measurement of Culkin and Smith (1980).
+    conductivity measurement in IEEE Journal of Oceanic Engineering 5
+    (1980), pp. 22-23.
     https://www.teos-10.org/pubs/gsw/pdf/SP_from_C.pdf
 
 Temperatures are degrees Celsius on IPTS-68, the scale of the published

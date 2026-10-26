@@ -10,6 +10,7 @@ page or site-specific seawater range is established here.
 | Revision | Date | Change and reason |
 |---|---|---|
 | A | 2026-10-26 | Add the cited relation, chart CSV and numerical checks so resistivity can be evaluated from salinity and temperature. |
+| B | 2026-10-26 | Remove personal names from citations while retaining organizations and publication details. |
 
 ## Sources and method
 
@@ -18,7 +19,7 @@ page or site-specific seawater range is established here.
   reference is identified in the TEOS-10 notes, p. 2; its original PDF was not
   accessible. The implementation uses the same PSS-78 relation as reproduced in
   the accessible computational reference below, rather than a different relation.
-- Fofonoff and Millard / UNESCO (1983), *Algorithms for computation of fundamental
+- UNESCO (1983), *Algorithms for computation of fundamental
   properties of seawater*, Technical Papers in Marine Science 44,
   [open institutional copy](https://repository.oceanbestpractices.org/handle/11329/109).
   Printed pp. 6-8, equations (1)-(4), define the conductivity ratios, coefficients,
@@ -29,7 +30,7 @@ page or site-specific seawater range is established here.
 - TEOS-10 (2011), [*Notes on the GSW function gsw_SP_from_C*](https://www.teos-10.org/pubs/gsw/pdf/SP_from_C.pdf),
   p. 1: standard conductivity at practical salinity 35, IPTS-68 temperature
   15 degrees C and zero sea pressure is 42.914 mS/cm, or 4.2914 S/m. The notes cite
-  Culkin and Smith (1980), *Determination of the Concentration of Potassium
+  IEEE (1980), *Determination of the Concentration of Potassium
   Chloride Solution Having the Same Electrical Conductivity, at 15 C and Infinite
   Frequency, as Standard Seawater of Salinity 35.0000 (Chlorinity 19.37394)*,
   IEEE Journal of Oceanic Engineering 5, pp. 22-23. The absolute conductivity
