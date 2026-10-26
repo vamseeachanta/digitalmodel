@@ -36,6 +36,10 @@ __all__ = ["FatigueReliability"]
 
 def _log_std(cov: float) -> float:
     """Invert the handbook lognormal CoV formula without large-CoV overflow."""
+    # sqrt(ln(1+c^2)) rounds to c below sqrt(machine epsilon).
+    # Keep c before its square can underflow to a deterministic variance.
+    if cov < math.sqrt(math.ulp(1.0)):
+        return cov
     # NIST section 1.3.6.6.9: ln(1+c^2) = 2*ln(hypot(1,c)).
     # The equivalent log1p form preserves precision for small c.
     variance = 2 * math.log(math.hypot(1, cov)) if cov > 1 else math.log1p(cov * cov)
@@ -76,24 +80,35 @@ class FatigueReliability:
             if not math.isfinite(value) or value < 0:
                 raise ValueError(f"{name} must be nonnegative and finite")
 
-    def _margin(self, life: float) -> tuple[float, float]:
+    def _normal_margin(self, life: float) -> tuple[float, float]:
+        """Return a standardized random margin, or an unscaled point mass."""
         if not math.isfinite(life) or life <= 0:
             raise ValueError("life in cycles must be positive and finite")
         sigma_a = _log_std(self.cov_sn)
         sigma_s = _log_std(self.cov_stress)
         # NIST 1.3.6.6.9 moments, substituted into the S-N log margin above.
-        # Sum the mean corrections separately to retain small uncertainty.
+        # Form the deterministic log margin before standardizing corrections.
         terms = (
             math.log(self.A),
             -self.m * math.log(self.stress_range),
-            -(sigma_a**2) / 2,
-            self.m * sigma_s**2 / 2,
             -math.log(life),
         )
         sigma = math.hypot(sigma_a, self.m * sigma_s)
         if not all(math.isfinite(term) for term in terms) or not math.isfinite(sigma):
             raise ValueError("log margin exceeds floating-point range")
-        return math.fsum(terms), sigma
+        mean = math.fsum(terms)
+        if sigma == 0:
+            return mean, sigma
+        # Divide each moment correction by sigma before multiplying again.
+        # The unscaled squares can underflow even when beta is representable.
+        beta = math.fsum(
+            (
+                mean / sigma,
+                -(sigma_a / sigma) * (sigma_a / 2),
+                (self.m * sigma_s / sigma) * (sigma_s / 2),
+            )
+        )
+        return beta, 1.0
 
     def _deterministic_failure(self, life: float, log_margin: float) -> bool:
         # Use the original N=A/S**m equation when representable so that an
@@ -112,7 +127,7 @@ class FatigueReliability:
         Install ``digitalmodel[reliability]`` to evaluate a random margin.
         A deterministic margin is evaluated directly, including equality.
         """
-        mean, sigma = self._margin(design_life)
+        mean, sigma = self._normal_margin(design_life)
         if sigma == 0:
             # Point-mass probability of the documented event g <= 0.
             return float(self._deterministic_failure(design_life, mean))
@@ -124,7 +139,7 @@ class FatigueReliability:
             raise ImportError(
                 "Install digitalmodel[reliability] for OpenTURNS probabilities"
             ) from exc
-        # OpenTURNS 1.26 Normal.computeCDF evaluates P(g <= threshold).
+        # OpenTURNS evaluates P(g/sigma_g <= 0) for the standardized margin.
         return float(ot.Normal(mean, sigma).computeCDF(0))
 
     def reliability_index(self, target_life: float) -> float:
@@ -134,7 +149,7 @@ class FatigueReliability:
         ratio retains finite indices when the reported probability underflows.
         At zero variance the normal quantile limits are signed infinities.
         """
-        mean, sigma = self._margin(target_life)
+        mean, sigma = self._normal_margin(target_life)
         if sigma == 0:
             return (
                 -math.inf

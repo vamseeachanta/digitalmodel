@@ -170,6 +170,8 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    # Exercise optional reliability probabilities in structural domain tests.
+    "openturns>=1.26,<2",
     "ezdxf>=1.3,<2",
     # Run curvature screening regressions in CI (Python 3.10-3.12).
     "hullprod>=1.0.1,<2",

@@ -15,6 +15,7 @@ exercise the mathematical domains in those same handbook sections.
 """
 
 import builtins
+from decimal import Decimal, localcontext
 import math
 import subprocess
 import sys
@@ -137,6 +138,38 @@ def test_small_uncertainty_is_not_discarded():
     assert result.reliability_index(1) == pytest.approx(
         -math.sqrt(math.log1p(cov * cov)) / 2, rel=1e-12, abs=0
     )
+
+
+@pytest.mark.parametrize(
+    "cov_sn,cov_stress", [(1e-200, 0), (0, 1e-200), (1e-200, 1e-200)]
+)
+def test_tiny_positive_uncertainty_retains_finite_index(cov_sn, cov_stress):
+    """Synthetic A=S=Nd=1, m=2; derive beta from 500-digit moments.
+
+    v_X=ln(1+c_X^2), mu_g=-v_A/2+v_S, sigma_g=sqrt(v_A+4*v_S).
+    In the intercept-only case beta rounds to -5e-201, rather than -infinity.
+    """
+    with localcontext() as context:
+        context.prec = 500
+        one = Decimal(1)
+        variance_a = (one + Decimal.from_float(cov_sn) ** 2).ln()
+        variance_s = (one + Decimal.from_float(cov_stress) ** 2).ln()
+        expected = float(
+            (-variance_a / 2 + variance_s) / (variance_a + 4 * variance_s).sqrt()
+        )
+    result = model(A=1, cov_sn=cov_sn, cov_stress=cov_stress)
+    actual = result.reliability_index(1)
+    assert math.isfinite(actual)
+    assert actual == pytest.approx(expected, rel=1e-12, abs=0)
+
+
+@pytest.mark.parametrize(
+    "cov_sn,cov_stress", [(1e-200, 0), (0, 1e-200), (1e-200, 1e-200)]
+)
+def test_tiny_positive_uncertainty_has_continuous_probability(cov_sn, cov_stress):
+    """Synthetic moments above imply a normal CDF rounding to one half."""
+    result = model(A=1, cov_sn=cov_sn, cov_stress=cov_stress)
+    assert result.failure_probability(1) == 0.5
 
 
 def test_large_finite_uncertainty_does_not_overflow():
