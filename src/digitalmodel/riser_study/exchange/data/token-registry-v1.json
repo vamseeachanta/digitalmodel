@@ -5,7 +5,7 @@
     "source": "maintainer-supplied analysis list, draft 3",
     "revision": "d3",
     "sha256": "f84d243ba2561496815ef5d537d19c00f147713f4cbe469f2b087df183996f66",
-    "public": false
+    "public": true
   },
   "tokens": [
     {

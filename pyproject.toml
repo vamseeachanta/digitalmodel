@@ -301,6 +301,7 @@ digitalmodel = [
     "riser_study/exchange/*.schema.json",
     "riser_study/exchange/data/*.json",
     "riser_study/exchange/data/*.tsv",
+    "riser_study/exchange/data/*.txt",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
     "hydrodynamics/aqwa/docs/damping-basis.md",

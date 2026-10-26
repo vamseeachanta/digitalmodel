@@ -12,6 +12,7 @@ another basis.
 | --- | --- | --- |
 | 1 | 2026-10-26 | Reconcile three export readers and publish shared matrix, registry and fixtures to prevent incompatible post-processing inputs. |
 | 2 | 2026-10-26 | Check supplied station summaries, retain run provenance, constrain comparison cases and document source limits and complete import migration. |
+| 3 | 2026-10-26 | Preserve the supplied analysis list and compare every registry record with its source to make inventory fidelity reproducible. |
 
 ## API and layout
 
@@ -65,10 +66,15 @@ order. A supplied alternative file must have the same bytes and digest.
 kinds and captions. The source is `maintainer-supplied analysis list, draft 3`,
 revision `d3`, with source-file SHA-256
 `f84d243ba2561496815ef5d537d19c00f147713f4cbe469f2b087df183996f66`.
-The source is not public; no public URL is available. These supplied provenance
-fields identify the private source bytes, which are unavailable for an independent
-id/kind/caption/producer comparison here. Internal digest and inventory tests
-establish registry stability, not independent source fidelity.
+The supplied source is preserved verbatim in `data/token-registry-source-d3.txt`,
+including its terminal LF; its raw-byte digest equals the supplied digest above.
+Both provenance records mark these committed bytes as public. The regression
+test reads the source in binary mode, checks its digest against the registry and
+manifest, and parses all 58 rows to compare every id, kind, caption and producing
+module with the registry. Producer normalization removes the `RIS-*` group prefix
+and any parenthesized context, preserving the module basename; captions and units
+remain exact cell text. No record mismatches remain. This establishes fidelity to
+the supplied list, not completeness of drafts or execution of the named producers.
 `producing_module` contains only the named module, including
 non-Python producers. Both the code and manifest pin its raw-byte digest.
 `assert_token_ids(module, ids)` rejects missing, unexpected and duplicate ids.
@@ -203,6 +209,8 @@ The consumer branches are unchanged. Delete each redundant module and schema
 only after switching every reference listed below. Keep the shared package-data
 entries `riser_study/exchange/*.schema.json`, `riser_study/exchange/data/*.json`
 and `riser_study/exchange/data/*.tsv` in `pyproject.toml`.
+Retain `riser_study/exchange/data/*.txt` as well so the digest-bound source list
+ships beside the registry.
 
 ### #3517: strength
 

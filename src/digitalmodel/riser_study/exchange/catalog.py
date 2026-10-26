@@ -18,7 +18,7 @@ SEA_STATE_IDS = ("F03", "F04", "F05")
 _DATA = Path(__file__).with_name("data")
 _MATRIX_SHA256 = "f95a98735eb3882a354857fc56975a82d1b67095d6a57cb8cf565229e9ddf2c1"
 # The registry digest is pinned separately from its adjacent manifest.
-_REGISTRY_SHA256 = "a436c478038138d6898eecd1bf6553e9bc1a38ea3b46071519d72b21acdc9310"
+_REGISTRY_SHA256 = "c7ae78a6c4d215c33f3eac26333071f2e25617901fcf17e6fb0391bd6d2662a6"
 
 
 class TokenRecord(TypedDict):

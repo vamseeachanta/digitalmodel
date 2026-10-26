@@ -3,14 +3,16 @@
 """Regressions for consumer provenance and supplied summary consistency."""
 
 from copy import deepcopy
+import hashlib
 import json
 from pathlib import Path
+import re
 
 import pytest
 from jsonschema import Draft202012Validator, ValidationError
 
 from digitalmodel.riser_study.exchange import (
-    CASE_IDS, exchange_schema, load_json, load_result,
+    CASE_IDS, exchange_schema, load_json, load_result, load_token_registry,
     validate_campaign_run, validate_result,
 )
 
@@ -127,19 +129,32 @@ def test_large_integer_file_reader(tmp_path):
 
 
 def test_registry_source_provenance():
+    source_bytes = (DATA / "token-registry-source-d3.txt").read_bytes()
+    assert b"\r" not in source_bytes
+    rows = [line for line in source_bytes.decode("utf-8").splitlines()
+            if line.startswith("| ")][1:]
+    tokens = []
+    for row in rows:
+        token_id, kind, caption, producer = [cell.strip() for cell in row.strip("|").split("|")]
+        # The registry drops the analysis group and parenthesized production context.
+        module = re.fullmatch(r"RIS-[A-Z]+/([\w-]+\.(?:py|md|yml))(?: \([^)]+\))?", producer)
+        assert module is not None, producer
+        tokens.append({"id": token_id, "kind": kind, "caption": caption,
+                       "producing_module": module.group(1)})
+    assert len(tokens) == len({token["id"] for token in tokens}) == 58
     registry = load_json(DATA / "token-registry-v1.json")
     manifest = load_json(DATA / "manifest-v1.json")
     expected = {
         "source": "maintainer-supplied analysis list, draft 3",
         "revision": "d3",
-        "sha256": "f84d243ba2561496815ef5d537d19c00f147713f4cbe469f2b087df183996f66",
-        "public": False,
+        "sha256": hashlib.sha256(source_bytes).hexdigest(),
+        "public": True,
     }
     assert registry["source"] == expected["source"]
     assert registry["source_provenance"] == expected
     assert manifest["registry_source"] == expected
-    assert all(set(token) == {"id", "kind", "caption", "producing_module"}
-               for token in registry["tokens"])
+    assert registry["tokens"] == tokens
+    assert load_token_registry() == tokens
 
 
 @pytest.mark.parametrize("scale", [1, 10])

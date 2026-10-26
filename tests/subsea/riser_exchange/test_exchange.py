@@ -413,6 +413,7 @@ def test_format_checker_is_present(exports):
 
 def test_pinned_checkout_attributes():
     names = ["src/digitalmodel/riser_study/exchange/data/case-matrix-v1.tsv",
+             "src/digitalmodel/riser_study/exchange/data/token-registry-source-d3.txt",
              "src/digitalmodel/riser_study/exchange/data/token-registry-v1.json",
              "tests/subsea/riser_exchange/fixtures/exports-v1.json",
              "tests/subsea/riser_exchange/fixtures/malformed-v1.json"]
@@ -445,7 +446,7 @@ def test_package_data_included():
     config = tomllib.loads((root / "pyproject.toml").read_text())
     patterns = config["tool"]["setuptools"]["package-data"]["digitalmodel"]
     for pattern in ("riser_study/exchange/*.schema.json", "riser_study/exchange/data/*.json",
-                    "riser_study/exchange/data/*.tsv"):
+                    "riser_study/exchange/data/*.tsv", "riser_study/exchange/data/*.txt"):
         assert pattern in patterns
 
 
