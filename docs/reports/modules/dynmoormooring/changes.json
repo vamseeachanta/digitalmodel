@@ -1,8 +1,9 @@
 {
-  "revision": "1",
+  "revision": "3",
   "changes": [
     "Static spread-mooring calculations and legacy comparison evidence are documented.",
     "Operating limits and dynamic response remain not evaluated.",
-    "Equation sources, independent static checks and portable report output are documented."
+    "Equation sources, independent static checks and portable report output are documented.",
+    "Report and comment revisions are synchronized, and mismatched comment revisions are flagged."
   ]
 }

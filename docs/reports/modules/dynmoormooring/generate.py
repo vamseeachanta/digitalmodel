@@ -19,6 +19,7 @@ from digitalmodel.subsea.mooring_analysis import dynmoor
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+REPORT_REVISION = "3"
 STYLE = "docs/api/cfd/turbulent-flat-plate-verification.html"
 SOURCES = [
     "src/digitalmodel/dynmoor_mooring/workflow.py",
@@ -156,15 +157,17 @@ def build(work_dir):
     exemplar = (ROOT / STYLE).read_text(encoding="utf-8")
     style = re.search(r"<style>.*?</style>", exemplar, re.S).group()
     brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
-    changes = {"revision": "1", "changes": [
+    changes = {"revision": REPORT_REVISION, "changes": [
         "Static spread-mooring calculations and legacy comparison evidence are documented.",
         "Operating limits and dynamic response remain not evaluated.",
-        "Equation sources, independent static checks and portable report output are documented."
+        "Equation sources, independent static checks and portable report output are documented.",
+        "Report and comment revisions are synchronized, and mismatched comment revisions are flagged."
     ]}
     replacements = {
         "STYLE": f"<style>{brand}</style>{style}",
         "RESULTS": json.dumps(data, allow_nan=False),
         "CHANGES": json.dumps(changes),
+        "REVISION": REPORT_REVISION,
         "CHART": chart(data), "SCHEMATIC": schematic(data),
         "APPENDIX": appendix(data),
         "PRETENSION": number(data["lines"][0]["pretension_kips"]),

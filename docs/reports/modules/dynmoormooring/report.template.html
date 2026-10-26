@@ -21,7 +21,8 @@
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
 <tr><td>Initial</td><td>2026-10-21</td><td>Initial issue — the static calculation basis, reproducible example and missing acceptance evidence are presented together.</td></tr>
 <tr><td>1</td><td>2026-10-22</td><td>Published equation sources, an independent catenary check and portable text output are added to qualify the numerical evidence and reproduction method.</td></tr>
-<tr><td>2</td><td>2026-10-24</td><td>Comment initialization includes the revision-history heading so engineering changes and add, save and load controls remain available.</td></tr></table>
+<tr><td>2</td><td>2026-10-24</td><td>Comment initialization includes the revision-history heading so engineering changes and add, save and load controls remain available.</td></tr>
+<tr><td>{{REVISION}}</td><td>2026-10-25</td><td>Report and comment revisions share the current revision so comments from another issue are identified when loaded.</td></tr></table>
 <p>Revision history table. Issued changes and their purpose.</p></section>
 <section id="introduction"><h2>2. Introduction</h2>
 <p>A spread of chain lines connects fixed seabed anchors to moving hull fairleads. Static analysis is performed at prescribed surge, sway and yaw positions using load–distance tables and interpolated line forces.</p>
@@ -143,13 +144,15 @@ M = Σ(r<sub>x,i</sub>F<sub>y,i</sub> − r<sub>y,i</sub>F<sub>x,i</sub>)</div>
 <script id="change-data" type="application/json">{{CHANGES}}</script>
 <script>
 const byId = id => document.getElementById(id);
+const changeData = JSON.parse(byId('change-data').textContent);
+const reportRevision = changeData.revision;
 let comments = [];
 document.querySelectorAll('main > section').forEach(section => {
   const option = document.createElement('option'); option.value = section.id;
   option.textContent = section.querySelector('h2, h3').textContent;
   byId('comment-section').append(option);
 });
-JSON.parse(byId('change-data').textContent).changes.forEach(change => {
+changeData.changes.forEach(change => {
   const item = document.createElement('li'); item.textContent = change; byId('changes').append(item);
 });
 function renderComments() {
@@ -166,7 +169,7 @@ byId('add-comment').onclick = () => {
   byId('comment-status').textContent = 'Unsaved comments.';
 };
 byId('save-comments').onclick = async () => {
-  const text = JSON.stringify({revision: 'Initial', comments}, null, 2);
+  const text = JSON.stringify({revision: reportRevision, comments}, null, 2);
   try {
     if (window.showSaveFilePicker) {
       const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json',
@@ -185,9 +188,12 @@ byId('load-comments').onchange = async event => {
   try {
     const file = event.target.files[0]; if (!file) return;
     const data = JSON.parse(await file.text());
-    if (data.revision !== 'Initial' || !Array.isArray(data.comments) || !data.comments.every(
+    if (typeof data.revision !== 'string' || !data.revision.trim() ||
+      !Array.isArray(data.comments) || !data.comments.every(
       item => typeof item.section === 'string' && typeof item.text === 'string')) throw Error('Invalid comments file');
-    comments = data.comments; renderComments(); byId('comment-status').textContent = 'Comments loaded.';
+    comments = data.comments; renderComments();
+    byId('comment-status').textContent = data.revision === reportRevision ? 'Comments loaded.' :
+      `Warning: comments revision ${data.revision} differs from report revision ${reportRevision}. Comments loaded.`;
   } catch (error) { byId('comment-status').textContent = 'Comments were not loaded: ' + error.message; }
 };
 </script></body></html>

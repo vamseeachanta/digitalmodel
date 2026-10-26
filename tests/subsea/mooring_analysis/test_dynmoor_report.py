@@ -265,6 +265,21 @@ def test_source_locators_do_not_embed_unrelated_content_digests():
     assert not re.search(r"\b[0-9a-f]{64}\b", sources)
 
 
+@pytest.mark.parametrize("rebuild", [False, True], ids=["saved", "rebuilt"])
+def test_report_revision_matches_current_history(tmp_path, rebuild):
+    document = (load_builder().build(tmp_path)[0] if rebuild else
+                (REPORT / "report.html").read_text(encoding="utf-8"))
+    history = re.search(r'<section id="revision-history">(.*?)</section>',
+                        document, re.S).group(1)
+    revisions = re.findall(r"<tr><td>(.*?)</td>", history)
+    changes = json.loads(re.search(
+        r'<script id="change-data" type="application/json">(.*?)</script>',
+        document, re.S).group(1))
+    assert revisions == ["Initial", "1", "2", "3"]
+    assert changes["revision"] == revisions[-1]
+    assert json.loads((REPORT / "changes.json").read_text(encoding="utf-8")) == changes
+
+
 COMMENT_CONTROLS_SCRIPT = r"""
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
@@ -322,7 +337,7 @@ async function checkControls() {
     })};
   };
   await byId('save-comments').onclick();
-  const expected = {revision: 'Initial', comments: [
+  const expected = {revision: input.revision, comments: [
     {section: 'revision-history', text: 'Check revision entry.'}]};
   assert.deepEqual(JSON.parse(saved), expected);
   assert.equal(closed, true);
@@ -334,14 +349,34 @@ async function checkControls() {
   assert.equal(revoked, true);
   const load = text => byId('load-comments').onchange({target: {files: [
     {text: async () => text}]}});
-  await load(JSON.stringify({revision: 'Initial', comments: [
+  await load(JSON.stringify({revision: input.revision, comments: [
     {section: 'summary', text: 'Loaded review note.'}]}));
   assert.equal(byId('comment-list').children.length, 1);
   assert.equal(byId('comment-list').children[0].textContent, 'summary: Loaded review note.');
   assert.equal(byId('comment-status').textContent, 'Comments loaded.');
-  await load('{"revision":"Initial","comments":[{}]}');
-  assert.match(byId('comment-status').textContent, /^Comments were not loaded:/);
-  assert.equal(byId('comment-list').children[0].textContent, 'summary: Loaded review note.');
+  for (const revision of ['Initial', '1', '2', '99']) {
+    await load(JSON.stringify({revision, comments: [
+      {section: 'summary', text: 'Earlier review note.'}]}));
+    assert.equal(byId('comment-list').children[0].textContent, 'summary: Earlier review note.');
+    const status = byId('comment-status').textContent;
+    assert.match(status, /warning/i);
+    assert.ok(status.includes(`comments revision ${revision}`));
+    assert.ok(status.includes(`report revision ${input.revision}`));
+    assert.notEqual(status, 'Comments loaded.');
+  }
+  for (const invalid of [
+    {revision: input.revision, comments: [{}]},
+    {revision: input.revision, comments: [null]},
+    {revision: input.revision, comments: 'invalid'},
+    {comments: []}, {revision: 3, comments: []}, {revision: '', comments: []}
+  ]) {
+    await load(JSON.stringify(invalid));
+    assert.match(byId('comment-status').textContent, /^Comments were not loaded:/);
+    assert.equal(byId('comment-list').children[0].textContent, 'summary: Earlier review note.');
+  }
+  await load(JSON.stringify({revision: input.revision, comments: []}));
+  assert.equal(byId('comment-list').children.length, 0);
+  assert.equal(byId('comment-status').textContent, 'Comments loaded.');
 }
 checkControls().catch(error => { console.error(error); process.exitCode = 1; });
 """
@@ -367,6 +402,7 @@ def test_comment_controls_initialize_with_revision_history(tmp_path, rebuild):
     result = subprocess.run(
         ["node", "-e", COMMENT_CONTROLS_SCRIPT], input=json.dumps({
             "sections": sections, "changes": changes, "script": script,
+            "revision": "3",
             "ids": re.findall(r'\bid="([^"]+)"', document)}),
         capture_output=True, text=True, encoding="utf-8", check=False, timeout=10,
     )
