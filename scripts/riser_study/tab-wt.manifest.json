@@ -3336,7 +3336,7 @@
     },
     {
       "path": "scripts/riser_study/wall_basis_derivation.md",
-      "sha256": "90fbcad19938db5ff2a4cfe56af7db87d09f3679c27a524ee86f16c502189ff3"
+      "sha256": "de4033f6af91d3b92c3da6a13b6cab92fdbc23b1504823d22457e1ebe1693db2"
     },
     {
       "path": "scripts/riser_study/wall_basis_matrix.csv",

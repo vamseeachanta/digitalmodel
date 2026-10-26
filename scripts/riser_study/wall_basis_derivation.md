@@ -12,6 +12,7 @@ they do not qualify those equations against licensed standards.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-25 | Record input provenance, study conventions and independent equations for all code and section maxima; define comparison columns. |
+| 2 | 2026-10-26 | Distinguish W1 hoop from W2 burst in the RP 2RD readback to match the detailed checks. |
 
 ## Versioned repository references
 
@@ -118,9 +119,10 @@ the defaults above. The separate study guard is p/(0.60*Pb).
 ## Section readback
 
 Maxima below are percentages rounded to 0.1 %. The CSV retains unrounded ratios.
-RP 1111 empty propagation governs all sections. RP 2RD maxima are hoop under
-internal pressure; STD 2RD maxima are empty collapse; F101 maxima are empty
-propagation. All other candidates are independently checked in the tests.
+RP 1111 empty propagation governs all sections. RP 2RD maxima are hoop for W1
+and burst for W2, both under internal pressure. STD 2RD maxima are empty collapse;
+F101 maxima are empty propagation. All other candidates are independently checked
+in the tests.
 
 | Nominal size (in) | Wall | Nominal wall (mm) | RP 1111 (%) | RP 2RD (%) | STD 2RD (%) | F101 (%) | 0.60 Pb (%) |
 | --- | --- | --- | --- | --- | --- | --- | --- |
