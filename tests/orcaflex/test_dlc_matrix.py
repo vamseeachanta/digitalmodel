@@ -59,6 +59,30 @@ def test_cartesian_cases_match_expected(axes):
         assert isinstance(case.case_id, str) and case.case_id
 
 
+@pytest.mark.parametrize("heading", [0, 0.0, -0.0])
+@pytest.mark.parametrize("reverse_keys", [False, True])
+def test_identifier_matches_literal_canonical_payload(heading, reverse_keys):
+    """Pin the public digest format independently of the implementation."""
+    # Canonical UTF-8 payload (join the following lines without whitespace):
+    # ["synthetic-example",0.0,"annual","calm",{"profile":[[0,0.5]],
+    # "wave":{"height":1.0,"period":5.0}}]
+    # SHA-256 was calculated from those literal bytes, without the enumerator.
+    environment = {"wave": {"period": 5.0, "height": 1.0}, "profile": [[0, 0.5]]}
+    if reverse_keys:
+        environment = {
+            "profile": [[0, 0.5]], "wave": {"height": 1.0, "period": 5.0}
+        }
+    (case,) = enumerate_load_cases(
+        headings=[heading],
+        return_periods=["annual"],
+        environmental_cases={"calm": environment},
+        basis_id="synthetic-example",
+    )
+    assert case.case_id == (
+        "dlc-31818b95826fd498a7277885f35caa277ddc993295a831618a93055e15afee9e"
+    )
+
+
 def test_order_and_ids_are_stable(axes):
     """Identity follows case content, independently of position or map order."""
     original = enumerate_load_cases(**axes)
