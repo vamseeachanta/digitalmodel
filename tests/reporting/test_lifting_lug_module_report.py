@@ -106,6 +106,20 @@ def test_rebuild_matches_committed_report_and_changes(rebuilt):
         assert (output / name).read_bytes() == (REPORT / name).read_bytes()
 
 
+@pytest.mark.parametrize("name", ["lifting-lug-analysis.html", "changes.json"])
+def test_git_checkout_filters_preserve_report_lf_bytes(rebuilt, name):
+    """Exercise Git's real checkout conversion independently of Python writes."""
+    _, output, _ = rebuilt
+    path = (REPORT / name).relative_to(ROOT).as_posix()
+    filtered = subprocess.run(
+        ["git", "-c", "core.autocrlf=true", "cat-file", "--filters", f"HEAD:{path}"],
+        cwd=ROOT, capture_output=True, check=True,
+    ).stdout
+    assert b"\r" not in filtered
+    assert filtered == (REPORT / name).read_bytes()
+    assert filtered == (output / name).read_bytes()
+
+
 def test_every_displayed_example_number_matches_hand_literals(rebuilt):
     _, _, text = rebuilt
     page = Page(text)

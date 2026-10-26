@@ -110,3 +110,7 @@ docs/benchmarks/catenary_closed_form/inputs/* text eol=lf
 
 # Preserve manifest-bound riser database fingerprints across checkout settings.
 data/riser_database/** text eol=lf
+
+# Keep byte-compared lifting lug report artifacts reproducible on checkout.
+docs/reports/modules/liftinglug/lifting-lug-analysis.html text eol=lf
+docs/reports/modules/liftinglug/changes.json text eol=lf
