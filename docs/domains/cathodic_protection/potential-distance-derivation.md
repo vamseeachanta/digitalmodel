@@ -14,6 +14,26 @@ establishes cathodic protection, anode spacing or throwing power for a jacket.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | A | 2026-10-26 | Derive both fields and provide reproducible screening data; structure current distribution is outside this calculation. |
+| B | 2026-10-26 | State the implementation plan and source-byte checks so the screening scope and reproduction safeguards are explicit. |
+
+## Plan-lite
+
+Scope: calculate potential against distance for one prescribed current source
+using point-source and uniform finite-line-source fields in an infinite
+electrolyte. The finite-line form supplies the primary screening curve.
+
+1. Derive both fields from current conservation and Ohm's law, declaring the
+   sign, units, coordinate convention and assumptions.
+2. Verify the existing input fixture and reuse the B401 fresh-anode calculation
+   to establish the fixed current and mass-equivalent radius.
+3. Generate both chart CSVs, the value manifest and basis metadata.
+4. Validate with hand calculations, limiting cases, independent equations for
+   every chart value, rejected input mutations and byte-for-byte regeneration.
+
+Exclusions: structure potential, polarisation, installed anode spacing,
+boundary effects, coupled current/resistivity sensitivity and report generation.
+Technical review and the source confirmations below remain prerequisites for
+use beyond this screening calculation.
 
 ## First-principles basis
 
@@ -135,6 +155,15 @@ not sourced environmental values. Tests check units, linear scaling, far-field
 and short-line limits, invalid domains, the existing B401 current basis, and
 every chart and manifest row. The generated bundle is compared byte for byte
 with the committed bundle.
+
+Before parsing or calculating, the generator hashes the exact fixture bytes
+and compares them with the pinned SHA-256 digest for the declared input revision.
+Both numerical changes and whitespace changes are rejected. Before creating an
+output directory, every supplied basis field must match a fresh calculation
+from the verified bytes. The digest is also recorded in `basis.json`.
+The per-row expectations evaluate equations P and L independently of the field
+functions, using the logarithmic line integral for L; regeneration is a separate
+reproducibility check.
 
 From the repository root, use an environment with the package's import
 dependencies, including pydantic, numpy, scipy, PyYAML and loguru:
