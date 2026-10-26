@@ -16,7 +16,9 @@ from jsonschema import Draft202012Validator, FormatChecker
 from .records import FatigueResult, StrengthResult
 
 VERSION = "ris-exchange/1"
-ROUND_OFF = 1e-9  # Serialization tolerance, not an engineering acceptance band.
+# Contract consistency policy: 1e-9 in recorded units or relative to magnitude.
+# This permits nine-decimal rounding near unity; see README for its limits.
+ROUND_OFF = 1e-9
 _FORMATS = FormatChecker()
 
 
@@ -48,8 +50,13 @@ def _reject_constant(_value: str) -> None:
 
 
 def _finite_tree(value: Any) -> None:
-    if isinstance(value, float) and not math.isfinite(value):
-        raise ValueError("non-finite numeric value")
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        try:
+            finite = math.isfinite(value)
+        except OverflowError:
+            raise ValueError("numeric range exceeds finite binary64") from None
+        if not finite:
+            raise ValueError("non-finite numeric value")
     if isinstance(value, dict):
         for child in value.values():
             _finite_tree(child)
@@ -105,8 +112,10 @@ def _validate_schema(data: Any, kind: str) -> None:
 
 
 def validate_campaign_run(data: Any) -> None:
-    """Validate explicit ledger status, including completion before qualification."""
+    """Validate ledger status and optional full export provenance."""
     _validate_schema(data, "campaign_run")
+    if "result_file" in data:
+        portable_path(data["result_file"])
 
 
 @overload
@@ -231,6 +240,15 @@ def _fatigue_semantics(data: dict[str, Any]) -> None:
     names = [spot["name"] for spot in data["hot_spots"]]
     if len(names) != len(set(names)):
         raise ValueError("duplicate hot-spot name")
+    station_damage = [spot["damage_per_year"] for spot in data["hot_spots"]
+                      if "damage_per_year" in spot]
+    if any(value > damage and not math.isclose(value, damage, rel_tol=ROUND_OFF,
+                                               abs_tol=ROUND_OFF)
+           for value in station_damage):
+        raise ValueError("station damage exceeds root damage")
+    if len(station_damage) == len(names) and not math.isclose(
+            max(station_damage), damage, rel_tol=ROUND_OFF, abs_tol=ROUND_OFF):
+        raise ValueError("root damage differs from maximum station damage")
     points = [*data["hot_spots"], *data.get("arc_distribution", [])]
     for point in points:
         if "range_histogram" in point:

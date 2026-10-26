@@ -11,6 +11,7 @@ another basis.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-26 | Reconcile three export readers and publish shared matrix, registry and fixtures to prevent incompatible post-processing inputs. |
+| 2 | 2026-10-26 | Check supplied station summaries, retain run provenance, constrain comparison cases and document source limits and complete import migration. |
 
 ## API and layout
 
@@ -60,8 +61,15 @@ strings, requires the exact twelve ids and F03/F04/F05, and checks raw bytes.
 `validate_matrix(rows)` compares all cells to that frozen matrix, ignoring row
 order. A supplied alternative file must have the same bytes and digest.
 
-`data/token-registry-v1.json` transcribes all 58 supplied analysis-list ids,
-kinds and captions. `producing_module` contains only the named module, including
+`data/token-registry-v1.json` retains all 58 supplied analysis-list ids,
+kinds and captions. The source is `maintainer-supplied analysis list, draft 3`,
+revision `d3`, with source-file SHA-256
+`f84d243ba2561496815ef5d537d19c00f147713f4cbe469f2b087df183996f66`.
+The source is not public; no public URL is available. These supplied provenance
+fields identify the private source bytes, which are unavailable for an independent
+id/kind/caption/producer comparison here. Internal digest and inventory tests
+establish registry stability, not independent source fidelity.
+`producing_module` contains only the named module, including
 non-Python producers. Both the code and manifest pin its raw-byte digest.
 `assert_token_ids(module, ids)` rejects missing, unexpected and duplicate ids.
 The complete inventories are 30 for `riser_strength_runs.py`, one for
@@ -76,7 +84,7 @@ LF attributes preserve all digest-bound catalog and fixture files.
 
 Arc length is measured in metres from hang-off zero and increases strictly.
 Strength arrays share the arc grid. The maximum identifies a sampled maximum
-within a serialization tolerance of `1e-9`; touchdown lies within the grid,
+within the consistency tolerance below; touchdown lies within the grid,
 agrees with a coincident sample and cannot exceed that maximum. Intermediate
 touchdown values are not interpolated. Dynamic angle and tension extrema cannot
 be reversed. Optional screening records retain their fibre, envelope, independent
@@ -89,7 +97,11 @@ histogram bin counts sum to the station total. `occurrence` is the exposure
 fraction, applied exactly once by a calculating consumer. Root and station
 `damage_per_year` values already include that exposure fraction. Root damage is
 the maximum named-station annual damage for that state, rather than a sum over
-sea states. The contract does not recalculate or enforce agreement between the
+sea states. No supplied named-station damage may exceed root damage outside the
+consistency tolerance. When every named station supplies damage, root damage must
+equal their maximum within that tolerance; partial coverage imposes only the
+lower bound. Unnamed `arc_distribution` points do not define this named-station
+summary. The contract does not recalculate or enforce agreement between the
 recorded damage and the curve. Summing states at the same physical station and
 then finding the maximum remains consumer work; summing state maxima is invalid.
 
@@ -106,9 +118,28 @@ The input digest has exactly 64 hexadecimal characters. `result_file` is a
 relative POSIX locator with no traversal or control characters; it is never
 opened by this package. Explicit qualification requires completed status and a
 run id and phase. Generic records without status do not acquire qualification.
-`validate_campaign_run` validates a ledger entry;
+`validate_campaign_run` requires id, phase, status and qualified and accepts the
+same optional `input_sha256`, `result_file`, `date` and `data_basis` fields as an
+export run, with the same validation. Unknown fields remain rejected. It accepts
+both minimal ledger entries and full run mappings passed by decision selection;
 `validate_result(record, "g4_checks")` validates the fatigue comparison-evidence
 shape only. Passing either structural check is not engineering acceptance.
+
+### Consistency tolerance basis
+
+`ROUND_OFF = 1e-9` is an explicit contract policy for comparisons of supplied
+values. It is not derived from a solver precision requirement or a measured
+error bound. With `math.isclose`, comparisons use
+`abs(a-b) <= max(1e-9 * max(abs(a), abs(b)), 1e-9)` in the recorded units.
+Independently rounding two values to nine decimal places can differ by at most
+`1e-9`, motivating the absolute allowance near unity; larger magnitudes use the
+relative allowance. This policy does not establish that any producer actually
+uses that precision. Arc identity uses only the absolute allowance; reciprocal
+life and histogram cycle totals use only the relative allowance. Tests place
+values at 0.99 and 1.01 times the relevant boundary near unity, at larger
+magnitudes and on both sides of the station summary. Numeric inputs must be representable as finite binary64
+values before arithmetic checks, including JSON integers. No engineering
+acceptance criterion follows from these consistency checks.
 
 ## Field provenance
 
@@ -163,6 +194,112 @@ Run the focused suite with an external temporary directory:
 ```bash
 PYTHONPATH=src uv run --no-project --with pytest --with pytest-asyncio --with jsonschema python -m pytest tests/subsea/riser_exchange -q -rA -p no:cacheprovider --basetemp="$CHECK_TMP"
 ```
+
+## Consumer migration
+
+These instructions were checked against the diffs for #3517 at `cd6e9edc`,
+#3518 at `c399d80e` and #3519 at `87d262da`. Paths are repository-relative.
+The consumer branches are unchanged. Delete each redundant module and schema
+only after switching every reference listed below. Keep the shared package-data
+entries `riser_study/exchange/*.schema.json`, `riser_study/exchange/data/*.json`
+and `riser_study/exchange/data/*.tsv` in `pyproject.toml`.
+
+### #3517: strength
+
+- In `src/digitalmodel/subsea/riser_study/riser_strength_runs.py`, replace
+  `from .results_exchange import load_result` with imports of `load_result`,
+  `CASE_IDS`, `load_case_matrix` and `assert_token_ids` from
+  `digitalmodel.riser_study.exchange`. Replace the local `CASES` construction
+  with `set(CASE_IDS)` and compare governing rows with the loaded frozen matrix.
+  Retain load-history coverage checks; `load_campaign` represents a single
+  strength summary per case and does not replace them. Assert all 30 registered
+  strength ids after production.
+- In `src/digitalmodel/subsea/riser_study/riser_configuration_plot.py`, replace
+  `from .results_exchange import portable_path` with
+  `from digitalmodel.riser_study.exchange import portable_path, assert_token_ids`.
+  Assert its separate `SCH-01` inventory. The `portable_path` switch is required
+  before deleting the local module.
+- In `tests/subsea/riser_study/test_riser_study.py`, switch the `exchange()`
+  helper from `digitalmodel.subsea.riser_study.results_exchange` to
+  `digitalmodel.riser_study.exchange`. Replace the adjacent schema-file read in
+  `test_schema_accepts_both_contracts` with `exchange_schema(kind)` for each
+  record kind, imported from the shared package. Keep validation, geometry,
+  plotting, CLI and calculation assertions. Shared fixture bundles may replace
+  local interchange builders without removing consumer-specific assertions.
+- Delete `src/digitalmodel/subsea/riser_study/results_exchange.py` in full,
+  including its local record classes, reader, schema selection and validation;
+  delete `src/digitalmodel/subsea/riser_study/results_exchange.schema.json`.
+  Remove the obsolete `subsea/riser_study/*.schema.json` package-data entry.
+  In `src/digitalmodel/subsea/riser_study/README.md`, replace both local contract
+  references with the common package and this contract's field-form guidance.
+- After removal, import `riser_strength_runs` and `riser_configuration_plot`
+  and run `tests/subsea/riser_study/test_riser_study.py`. Preserve screening
+  extensions; adapt calculation readers to the alternate strength basis pair
+  when accepting generic records.
+
+### #3518: fatigue
+
+- In `src/digitalmodel/riser_study/riser_fatigue_runs.py`, replace
+  `from .results_exchange import validate_result` with imports of
+  `validate_result`, `load_json`, `CASE_IDS`, `SEA_STATE_IDS`, `load_case_matrix`
+  and `assert_token_ids` from `digitalmodel.riser_study.exchange`. Use strict
+  `load_json` for export reads; use the shared case and sea-state sets and frozen
+  matrix for production coverage. Retain local fatigue calculation.
+- In `tests/subsea/riser_study/test_riser_fatigue_runs.py`, change `schema()`
+  to import `digitalmodel.riser_study.exchange`. Change the no-argument
+  `schema().exchange_schema()` in
+  `test_shared_schema_is_valid_and_rejects_wrong_kind` to
+  `schema().exchange_schema("fatigue")`. Other schema selections must explicitly
+  pass `strength` or `g4_checks` as appropriate; existing `validate_result`
+  calls keep their explicit kinds.
+- Delete `src/digitalmodel/riser_study/results_exchange.py` in full, including
+  its local record classes, cached schema loader and validation; delete
+  `src/digitalmodel/riser_study/results_exchange.schema.json`. Remove the
+  obsolete `riser_study/*.schema.json` package-data entry. In
+  `src/digitalmodel/riser_study/README.md`, replace the two local contract
+  references with the common package and these explicit schema-kind calls.
+- Adapt curve reading to the sole supplied `source` or `source_label`.
+  A numeric thickness correction is a stress multiplier; an object uses its
+  recorded power law; absent/null means no correction. Apply occurrence exactly
+  once to continuous-exposure cycles; supplied damage already includes it.
+  Preserve histogram, arc-distribution, G4 and zero-damage assertions.
+- Assert the complete 13-id inventory, including `TAB-PHB-FAT-01`; the current
+  twelve Phase A ids alone are incomplete. After removal, import
+  `riser_fatigue_runs` and run
+  `tests/subsea/riser_study/test_riser_fatigue_runs.py`. Calculation underflow
+  and saved-byte artifact hashing remain separate consumer concerns.
+
+### #3519: decision
+
+- In `src/digitalmodel/riser_study/decision_chart.py`, switch the absolute
+  `digitalmodel.riser_study.results_exchange` import to
+  `digitalmodel.riser_study.exchange`, retaining `load_json`,
+  `validate_campaign_run` and `validate_result`. Also import `CASE_IDS`,
+  `SEA_STATE_IDS`, `load_case_matrix`, `validate_matrix` and `assert_token_ids`.
+  `_eligible` may continue passing the entire export run, including provenance;
+  no four-field projection is required. Retain ledger linkage and qualification.
+- In `tests/riser_study/test_decision_chart.py`, switch the `load_json` and
+  `validate_result` import to the common package. Keep all selection,
+  qualification, station aggregation and unresolved-output assertions.
+- Delete `src/digitalmodel/riser_study/results_exchange.py` in full, including
+  its local record classes, JSON reader and schema validation; delete
+  `src/digitalmodel/riser_study/results.schema.json`. Remove the obsolete
+  `riser_study/*.json` package-data entry if no other retained data requires it.
+  In `src/digitalmodel/riser_study/README.md`, replace both local contract
+  references with the common package and shared provenance rules.
+- Require exact shared case and sea-state sets before selection. Use
+  `validate_matrix` for full matrix rows; an id-only manifest must agree with
+  `load_case_matrix`. Retain same-station aggregation and upstream resolution
+  checks. Assert the ten decision ids. After removal, import `decision_chart`
+  and run `tests/riser_study/test_decision_chart.py`. Legacy life may be null
+  only at zero damage and otherwise must be reciprocal.
+
+For all three integrations, materialize shared exports using the `campaign`
+fixture pattern in `tests/subsea/riser_exchange/test_exchange.py`. Resolve the
+shared parent-package metadata together. No forwarding modules or schema copies
+are required. Search source, tests, documentation and package metadata for each
+deleted module/schema name before completing integration. Import smoke checks
+cover import compatibility only; consumer calculations require their own suites.
 
 ## CHANGELOG
 

@@ -4,7 +4,7 @@
 
 The normalised strength limit is unity by the definition stress / allowable;
 no standard acceptance value is inferred. Method and allowable are export
-inputs. Relative consistency tolerance only absorbs JSON round-off.
+inputs. Consistency tolerances are contract policy, not engineering allowances.
 """
 
 from __future__ import annotations
@@ -267,9 +267,13 @@ class FatigueResult(TypedDict):
 
 
 class CampaignRun(TypedDict):
-    """Explicit status without inferred qualification."""
+    """Explicit status with optional full export provenance."""
 
     id: str
     phase: Literal["A", "B"]
     status: Literal["attempted", "completed", "failed"]
     qualified: bool
+    input_sha256: NotRequired[str]
+    result_file: NotRequired[str]
+    date: NotRequired[str]
+    data_basis: NotRequired[str]

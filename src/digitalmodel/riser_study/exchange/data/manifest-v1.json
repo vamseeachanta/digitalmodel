@@ -6,5 +6,11 @@
     "revision": "e0d04824822c4a1f2aeb2f20841671b58d8fcd82",
     "format": "TSV, original bytes"
   },
-  "registry_sha256": "ba03ec892b938cfb55b65998510f1eaed12094a06840bd45f49675966c06714f"
+  "registry_sha256": "a436c478038138d6898eecd1bf6553e9bc1a38ea3b46071519d72b21acdc9310",
+  "registry_source": {
+    "source": "maintainer-supplied analysis list, draft 3",
+    "revision": "d3",
+    "sha256": "f84d243ba2561496815ef5d537d19c00f147713f4cbe469f2b087df183996f66",
+    "public": false
+  }
 }

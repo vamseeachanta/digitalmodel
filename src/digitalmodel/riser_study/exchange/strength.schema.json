@@ -30,6 +30,31 @@
         },
         "qualified": {
           "type": "boolean"
+        },
+        "input_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "result_file": {
+          "$ref": "#/$defs/text"
+        },
+        "date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "string",
+              "format": "date-time"
+            }
+          ]
+        },
+        "data_basis": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "if": {

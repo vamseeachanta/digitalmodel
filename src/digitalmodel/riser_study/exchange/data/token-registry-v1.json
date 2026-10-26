@@ -1,6 +1,12 @@
 {
   "version": "ris-exchange/1",
-  "source": "Maintainer-supplied analysis list; ids and captions retained verbatim; producer is the module name.",
+  "source": "maintainer-supplied analysis list, draft 3",
+  "source_provenance": {
+    "source": "maintainer-supplied analysis list, draft 3",
+    "revision": "d3",
+    "sha256": "f84d243ba2561496815ef5d537d19c00f147713f4cbe469f2b087df183996f66",
+    "public": false
+  },
   "tokens": [
     {
       "id": "FIG-DEC-01",

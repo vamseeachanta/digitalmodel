@@ -184,8 +184,20 @@
         "comparison_cases": {
           "type": "array",
           "items": {
-            "type": "string",
-            "pattern": "^R(08|10|12)-W[12]-(SCR|SLWR)$"
+            "enum": [
+              "R08-W1-SCR",
+              "R08-W1-SLWR",
+              "R08-W2-SCR",
+              "R08-W2-SLWR",
+              "R10-W1-SCR",
+              "R10-W1-SLWR",
+              "R10-W2-SCR",
+              "R10-W2-SLWR",
+              "R12-W1-SCR",
+              "R12-W1-SLWR",
+              "R12-W2-SCR",
+              "R12-W2-SLWR"
+            ]
           },
           "minItems": 2,
           "maxItems": 2,
