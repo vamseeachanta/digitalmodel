@@ -164,6 +164,17 @@ def classify_diff(
     return rule.category
 
 
+def _validate_mapping_keys(document: dict[str, Any]) -> None:
+    """Reject unsupported keys before Python equality can conflate their types."""
+    for section, properties in document.items():
+        if not isinstance(section, str):
+            raise TypeError("Section keys must be strings")
+        if isinstance(properties, dict) and any(
+            not isinstance(key, str) for key in properties
+        ):
+            raise TypeError("Property keys must be strings")
+
+
 def is_semantically_equivalent(
     strict_yaml: dict[str, Any], generated_yaml: dict[str, Any]
 ) -> tuple[bool, list[Diff]]:
@@ -173,7 +184,13 @@ def is_semantically_equivalent(
     loadability, or reference validity. No schema or reference graph is checked.
     Inputs are parsed section mappings; nested properties and lists stay atomic.
     Whole-section loss/addition/shape changes are always significant.
+
+    Raises:
+        TypeError: Either input has a non-string section or property key.
+            Nested mapping keys remain part of atomic, type-sensitive values.
     """
+    _validate_mapping_keys(strict_yaml)
+    _validate_mapping_keys(generated_yaml)
     diffs: list[Diff] = []
     for section in sorted(strict_yaml.keys() | generated_yaml.keys()):
         before = strict_yaml.get(section, MISSING)

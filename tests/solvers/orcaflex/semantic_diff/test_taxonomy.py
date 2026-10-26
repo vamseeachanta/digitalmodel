@@ -188,6 +188,50 @@ def test_nested_key_type_changes_are_unknown_and_significant():
     assert [diff.category for diff in diffs] == [DiffCategory.PHYSICS_SIGNIFICANT]
 
 
+@pytest.mark.parametrize("level", ["section", "property"])
+@pytest.mark.parametrize("before,after", [(True, 1), (1, 1.0), (False, 0.0)])
+@pytest.mark.parametrize("reverse", [False, True])
+def test_equal_looking_nonstring_keys_are_rejected(level, before, after, reverse):
+    strict = {before: "value"}
+    generated = {after: "value"}
+    if level == "property":
+        strict, generated = {"Unknown": strict}, {"Unknown": generated}
+    if reverse:
+        strict, generated = generated, strict
+    with pytest.raises(TypeError, match=f"{level.capitalize()} keys must be strings"):
+        is_semantically_equivalent(strict, generated)
+
+
+@pytest.mark.parametrize("level", ["section", "property"])
+@pytest.mark.parametrize("key", [True, 1, 1.0, None])
+def test_identical_nonstring_keys_are_rejected_before_equality(level, key):
+    document = {key: "value"}
+    if level == "property":
+        document = {"Unknown": document}
+    with pytest.raises(TypeError, match=f"{level.capitalize()} keys must be strings"):
+        is_semantically_equivalent(document, document)
+
+
+@pytest.mark.parametrize("level", ["section", "property"])
+@pytest.mark.parametrize("reverse", [False, True])
+def test_mixed_key_types_are_rejected_before_sorting(level, reverse):
+    invalid = {"Valid": "value", 1: "value"}
+    valid = {"Valid": "value"}
+    if level == "property":
+        invalid, valid = {"Unknown": invalid}, {"Unknown": valid}
+    strict, generated = (valid, invalid) if reverse else (invalid, valid)
+    with pytest.raises(TypeError, match=f"{level.capitalize()} keys must be strings"):
+        is_semantically_equivalent(strict, generated)
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_nonstring_property_keys_are_rejected_in_unmatched_sections(reverse):
+    invalid = {"Unknown": {True: "value"}}
+    strict, generated = ({}, invalid) if reverse else (invalid, {})
+    with pytest.raises(TypeError, match="Property keys must be strings"):
+        is_semantically_equivalent(strict, generated)
+
+
 @pytest.mark.parametrize("key", ["WaterDepth", "SeabedOriginDepth", "Density"])
 def test_changed_physical_scalar_is_never_cosmetic(key):
     assert classify_diff("Environment", key, 100, 101) == (
