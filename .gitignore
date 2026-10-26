@@ -618,3 +618,11 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+
+# Track only the authored flexible pipe annulus example and its documentation.
+!/docs/reports/modules/flexible_pipes/
+/docs/reports/modules/flexible_pipes/*
+!/docs/reports/modules/flexible_pipes/examples/
+/docs/reports/modules/flexible_pipes/examples/*
+!/docs/reports/modules/flexible_pipes/examples/annulus.py
+!/docs/reports/modules/flexible_pipes/examples/README.md
