@@ -66,6 +66,71 @@ def test_free_vibration_matches_closed_form(damping_ratio):
     )
 
 
+def test_critical_free_vibration_matches_repeated_root_solution():
+    # The repeated characteristic root is -w, so u=(C+D*tau)*exp(-w*tau).
+    # u(0)=u0 and v(0)=v0 give C=u0, D=v0+w*u0. Differentiate for v and a.
+    w, u0, v0 = 2.0, 0.3, -0.2
+    tau = np.linspace(0.0, 2.0 * np.pi, 4001)
+    time = tau + 7.0
+    d = v0 + w * u0
+    wave = u0 + d * tau
+    decay = np.exp(-w * tau)
+    exact_u = decay * wave
+    exact_v = decay * (d - w * wave)
+    exact_a = decay * (w**2 * wave - 2.0 * w * d)
+
+    result = integrate_sdof(
+        time, np.zeros_like(time), natural_period_s=2.0 * np.pi / w,
+        damping_ratio=1.0,
+        initial_displacement_m=u0, initial_velocity_m_s=v0,
+    )
+
+    # Absolute error targets: 5 micrometres, 10 micrometres/s, 20 micrometres/s².
+    np.testing.assert_allclose(result.relative_displacement_m, exact_u, rtol=0, atol=5e-6)
+    np.testing.assert_allclose(result.relative_velocity_m_s, exact_v, rtol=0, atol=1e-5)
+    np.testing.assert_allclose(
+        result.relative_acceleration_m_s2, exact_a, rtol=0, atol=2e-5,
+    )
+    np.testing.assert_allclose(
+        result.absolute_acceleration_m_s2, exact_a, rtol=0, atol=2e-5,
+    )
+
+
+def test_overdamped_free_vibration_matches_real_root_solution():
+    # Real roots r1,r2=-w*(zeta +/- sqrt(zeta²-1)) give
+    # u=c1*exp(r1*tau)+c2*exp(r2*tau). Initial conditions imply
+    # c1=(v0-r2*u0)/(r1-r2), c2=u0-c1. Each derivative multiplies by its root.
+    w, damping_ratio, u0, v0 = 2.0, 2.0, 0.3, -0.2
+    tau = np.linspace(0.0, 2.0 * np.pi, 4001)
+    time = tau + 7.0
+    root_gap = np.sqrt(damping_ratio**2 - 1.0)
+    r1 = -w * (damping_ratio - root_gap)
+    r2 = -w * (damping_ratio + root_gap)
+    c1 = (v0 - r2 * u0) / (r1 - r2)
+    c2 = u0 - c1
+    first_mode = c1 * np.exp(r1 * tau)
+    second_mode = c2 * np.exp(r2 * tau)
+    exact_u = first_mode + second_mode
+    exact_v = r1 * first_mode + r2 * second_mode
+    exact_a = r1**2 * first_mode + r2**2 * second_mode
+
+    result = integrate_sdof(
+        time, np.zeros_like(time), natural_period_s=2.0 * np.pi / w,
+        damping_ratio=damping_ratio,
+        initial_displacement_m=u0, initial_velocity_m_s=v0,
+    )
+
+    # Absolute error targets: 5 micrometres, 10 micrometres/s, 20 micrometres/s².
+    np.testing.assert_allclose(result.relative_displacement_m, exact_u, rtol=0, atol=5e-6)
+    np.testing.assert_allclose(result.relative_velocity_m_s, exact_v, rtol=0, atol=1e-5)
+    np.testing.assert_allclose(
+        result.relative_acceleration_m_s2, exact_a, rtol=0, atol=2e-5,
+    )
+    np.testing.assert_allclose(
+        result.absolute_acceleration_m_s2, exact_a, rtol=0, atol=2e-5,
+    )
+
+
 def test_sine_base_acceleration_converges():
     # For zeta=0, ag=A*sin(O*tau), w != O: a particular solution is
     # -A*sin(O*tau)/(w²-O²). Adding A*O*sin(w*tau)/(w*(w²-O²))
