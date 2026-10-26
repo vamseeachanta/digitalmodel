@@ -181,7 +181,7 @@ def test_report_review_wording(tmp_path):
     assert "voltage magnitude" in html and "voltage demand" not in html
     assert "(4.5.8)–(4.5.10)" in html and "(4.5.11)" not in html
     assert "Section 3.6, Network Equations" in html
-    assert "Grainger" in html and "Stevenson" in html and "McGraw-Hill" in html
+    assert "Power System Analysis, McGraw-Hill, 1994, pages 337–338" in html
     assert "conditional on the supplied case limits" in html
     assert "textbook basis for these limits is not established" in html
     assert "Newton updates" in html and "mismatch evaluations" in html
