@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Staged diffraction acceptance plan</title>
+<body>
+<h1>Staged diffraction acceptance plan</h1>
+<p>Strength acceptance will be evaluated first on Stage S. Fatigue acceptance will
+then require Stage F, a quantitatively reviewed omitted-tail response bound and L2
+convergence probes. Offline tests will establish preparation behaviour only;
+native results and independent review will remain release prerequisites.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>A</td><td>2026-10-26</td><td>Separate strength and fatigue stages will replace the proposed high-band production schedule, whose estimated resources exceed the supplied benchmark basis.</td></tr>
+</table>
+<p>Table 1. Proposed staged acceptance revision. The v2 inputs, high-band plan and historical failures will be retained.</p>
+
+<h2>Resource intelligence and missing inputs</h2>
+<p>The preparation will use the existing public solid definition, the supplied
+public fatigue table and the unchanged platform-only mass and inertia in
+expected-v2.json. No Froude scaling, occurrence renormalisation, production-system
+mass substitution or coupled mooring/riser feedback will be introduced. The
+original DF5.2 and DF5.3 criteria will have to be supplied before those failures
+can be cleared.</p>
+<p>The exact retained L1 and L2 GDF files and their benchmark linkage will have to
+be provided before production measurements or packets can be issued. The supplied
+L1 count of 14,064 and approximate maximum span of 1.72 m will not establish the
+identity or measured band of a mesh. A newly generated mesh will not inherit that
+benchmark identity. Synthetic cube packets will qualify software behaviour only.</p>
+<p>The supplied no-lid benchmark will provide the conditional estimate basis:
+3044.0 s over 32 frequencies, 35.6 GB peak working set and chunk averages of
+82.7 to 112.3 s per frequency. These supplied observations will not be treated as
+new measurements. Native panel limits, memory sharing, frequency dependence,
+heading comparability and automatic-lid panel count will require readback.</p>
+
+<h2>Implementation and test sequence</h2>
+<ol>
+<li>Finite-depth inversion tests will precede band calculation. Serialized mesh
+coordinates will provide the greatest pairwise vertex span s. The supported upper
+frequency will follow k = 2 pi/(6 s), omega = sqrt(g k tanh(k h)), with h = 1500 m
+and g = 9.80665 m/s². Six panels per wavelength will remain ASSUMED from the study
+criterion. The declared-band DF3 check will compare every panel against the
+unrounded wavelength limit; the separate 3.50 rad/s FAIL will remain unchanged.</li>
+<li>The v3 recipe will retain nine headings (-180 to 180 degrees at 45-degree
+increments), depth, density, mass, inertia, origin and axis conventions. Stage S
+will contain 0.30 to 0.55 rad/s at 0.01 rad/s, plus the specified 0.418879 rad/s,
+for 27 frequencies. The specified decimal will be retained as the strength
+interpolation frequency; the fatigue peaks will use the unrounded 2 pi/Tp values.</li>
+<li>Stage F will contain every 0.01 rad/s grid point from 0.05 rad/s up to the
+measured L1 band, plus its unrounded endpoint and 2 pi/6.59, 2 pi/7.43 and
+2 pi/8.19 rad/s. No frequency will exceed that band. The supplied 1.983 rad/s
+irregular-frequency estimate will trigger a separate conforming reference lid
+when the band reaches or crosses it. The lid generator will retain each hull
+waterline segment; check_mesh.py will validate orientation, SWL elevation,
+coverage, separation and boundary equality. Lid spans will not exceed the L1
+maximum span. Native automatic interior panels will still require readback
+against this reference; enabling automatic panels will not establish equivalence.</li>
+<li>Packet tests will require DF0 to check both decks, source and file digests,
+mesh measurements, counts, mass, headings, depth, frequencies, lid state and the
+L2 probe deck. A completed packet will be reused only after the retained source
+and every bound byte match; a partial packet will be retained and rejected.</li>
+<li>Closed-form constant and decaying RAOs and an intentionally failing constant
+case will test response integrals and tail bounds through the reload-verified
+v2 complex export adapter. Tests will cover phase, rotational units, origins,
+point transformation, cancelled point motion, unsupported headings and malformed
+axes. No licensed solver will be started, imported or queried.</li>
+</ol>
+
+<h2>Release conditions by stage</h2>
+<table>
+<tr><th>Stage</th><th>Required evidence</th><th>Release condition satisfied</th><th>Remaining condition</th></tr>
+<tr><td>S: strength first</td><td>DF0 and declared DF3 will pass on L1. The check 0.55 &lt; 1.983 rad/s will place this stage below the supplied irregular-frequency estimate, so no lid will be requested. Native warnings, hydrostatics, platform mass basis, complex reload, headings 0 and 180 degrees and applicable original gates will pass.</td><td>The exact 0.418879 rad/s response will become eligible for the strength prescribed-motion use after independent review and the strength convergence check.</td><td>Stage S alone will not release fatigue. System mass suitability and original missing acceptance criteria will remain explicit blockers.</td></tr>
+<tr><td>F: fatigue band</td><td>Both hull and reference lid will pass the declared-band check. Native lid geometry, irregular-frequency behaviour and complex phase will be read back. Local probes at 1.88, 1.983 and 2.08 rad/s will be run only when supported by the measured band. Half-step frequency refinement will resolve resonances.</td><td>The in-band complex response and response variance will become eligible for tail review.</td><td>A band retaining less than 99% of wave variance will require the reviewed response bound below. A wave-variance percentage alone will not establish response convergence.</td></tr>
+<tr><td>Tail review</td><td>Each selected sea, required heading and each of six motions plus three hang-off components will report in-band variance, omitted wave fraction, upper response bound and bound/in-band ratio. The ASSUMED default ratio limit will be 1.0% of in-band response variance, passed without rounding.</td><td>The truncated band will meet the alternative tail condition only if the envelope is quantitatively justified beyond the sampled band and every required output passes the confirmed threshold.</td><td>An assumed last-window maximum alone will not establish a high-frequency response envelope. Numerical passes will retain release_eligible=false; independent acceptance will be separate.</td></tr>
+<tr><td>L2 convergence probes</td><td>Four no-lid frequencies will be checked: 0.418879 rad/s and the three unrounded spectral peaks, all below 1.983 rad/s. Complex L1/L2 motion and both excitation formulations will be compared at every required heading.</td><td>The strength-frequency probe will support the strength release decision before Stage F is required. The three peaks will provide the minimum fatigue mesh-convergence evidence.</td><td>Peak probes will not establish whole-band convergence. Suspect resonance or envelope-edge regions will require additional L2 points before fatigue release.</td></tr>
+</table>
+<p>Table 2. Proposed sequence and release boundaries. Strength will not wait for the full fatigue sweep once its own applicable gates pass.</p>
+<p>Numerical comparison criteria will be ASSUMED pending confirmation: complex
+L1/L2 differences will be at most 5.0% of each L2 component's maximum magnitude
+over the compared frequencies, with that scale also used for near-zero components;
+phase differences will be at most 5 degrees above 1.0% of that maximum. Frequency
+refinement will use 0.005 rad/s in resonance and energy-bearing intervals, and
+integrated response variance and peak changes will be at most 2.0%. Each criterion
+will be applied to motions and both load formulations; original hydrostatic
+criteria in the retained high-band plan will continue to apply.</p>
+
+<h2>Conditional omitted-tail bound</h2>
+<p>For each supplied gamma=1 sea, the integration will use m0 = Hs²/16 and the
+unmodified variance CDF F(w) = exp[-(5/4)(wp/w)^4]. The complex RAO will be
+interpolated only inside its exported band. Hang-off translation at (0,0,-10) m
+will use translation plus rotation cross the offset from the declared origin,
+with rotations in rad/m and no loss of complex phase.</p>
+<p>The high-tail bound will multiply the omitted upper wave variance by the
+squared declared envelope: the maximum magnitude in the last 0.5 rad/s,
+including the interpolated window boundary, times a configurable multiplier
+of at least one. The low-tail bound will use the full-band maximum and the
+omitted lower wave variance. Point envelopes will use the triangle inequality
+on translation and rotation bounds; in-band cancellation will not reduce an
+out-of-band envelope. The default lower limit of 0.05 rad/s will omit a
+negligible low tail for these seas, but its logarithmic fraction will be reported
+even if floating-point underflow produces a stored zero.</p>
+<p>These bounds will be conservative only conditional on the reviewed envelope
+holding outside the measured band. An unobserved resonance can violate that
+assumption. The last-window values will never be inserted as response ordinates;
+no zero/flat extrapolation or hidden spectral renormalisation will occur.
+Annual fractions 0.015, 0.010 and 0.013 will be retained individually, without
+renormalising their 3.8% total. This subset will not establish a global fatigue maximum.</p>
+
+<h2>Conditional resource estimates</h2>
+<p>The estimate function will use the supplied unrounded observations, with
+r = (hull panels + reference-lid panels)/14064, M = 35.608 r² GB and
+T = (3043.96/32) n r³ seconds. N² memory and N³ time scaling will be labelled
+ESTIMATED and ASSUMED, based on previous experience. The native reference-lid
+count will remain unverified until readback.</p>
+<table>
+<tr><th>Scenario</th><th>Frequencies</th><th>Time (h)</th><th>Memory (GB)</th><th>Basis</th></tr>
+<tr><td>L1 S, no lid</td><td>27</td><td>0.7</td><td>35.6</td><td>Supplied 14,064-panel count; no new mesh qualification</td></tr>
+<tr><td>L1 F, no lid, illustrative</td><td>244</td><td>6.4</td><td>35.6</td><td>ASSUMED 1.72 m span would give about 2.44 rad/s; measured endpoint remains OPEN</td></tr>
+<tr><td>L1 S and F, with lid</td><td>27 and measured F count</td><td>OPEN</td><td>OPEN</td><td>Reference-lid count will be measured from the retained L1 hull; a no-lid F run crossing the irregular estimate will be diagnostic only</td></tr>
+<tr><td>L2 four-point probe, no lid</td><td>4</td><td>OPEN</td><td>OPEN</td><td>Exact retained L2 mesh count will be required</td></tr>
+</table>
+<p>Table 3. ESTIMATED scenarios only; missing counts will not be replaced with invented values.</p>
+
+<h2>Plan defect review and retention</h2>
+<p>The review will hunt for unsupported measured claims, endpoint rounding that
+admits oversized panels, missing stage frequencies, reference/native lid confusion,
+high-tail resonances, coordinate or phase loss, cancellation credited outside the
+band and strength release incorrectly waiting for fatigue. Current-artifact
+independent provider review will remain OPEN; no second assistant will be called
+by this preparation.</p>
+<p>The retained packet will contain exact GDF bytes, source and output SHA-256
+receipts, both stage decks, the L2 probe deck, resolved recipe, estimates and DF0
+readback. Native results will retain complex arrays, coefficients, metadata and
+save/reload evidence through the existing adapter. Large regenerable payloads
+will remain outside Git with their manifests. A local save will not establish
+backup or publication. Public source identity and benchmark provenance will be
+verified before any engineering release.</p>
+<p>Lesson: an approximate mesh span will support an illustrative estimate only;
+production bands and decks will require the exact retained coordinates.</p>
+</body>
+</html>

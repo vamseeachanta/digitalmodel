@@ -12,6 +12,8 @@ on:
       - "tests/hydrodynamics/test_oc4_public_mesh.py"
       - "tests/hydrodynamics/test_oc4_extended_band.py"
       - "tests/hydrodynamics/test_oc4_complex_export.py"
+      - "tests/hydrodynamics/test_oc4_staged_band.py"
+      - "tests/hydrodynamics/test_oc4_tail_bound.py"
       - "tests/solvers/smoke/test_ci_registration.py"
       - "tests/scripts/test_cfd_python_install.py"
       - "tests/scripts/test_dispatch_cfd_run.py"
@@ -36,6 +38,8 @@ on:
       - "tests/hydrodynamics/test_oc4_public_mesh.py"
       - "tests/hydrodynamics/test_oc4_extended_band.py"
       - "tests/hydrodynamics/test_oc4_complex_export.py"
+      - "tests/hydrodynamics/test_oc4_staged_band.py"
+      - "tests/hydrodynamics/test_oc4_tail_bound.py"
       - "tests/solvers/smoke/test_ci_registration.py"
       - "tests/scripts/test_cfd_python_install.py"
       - "tests/scripts/test_dispatch_cfd_run.py"
@@ -194,6 +198,8 @@ jobs:
             tests/hydrodynamics/test_oc4_public_mesh.py \
             tests/hydrodynamics/test_oc4_extended_band.py \
             tests/hydrodynamics/test_oc4_complex_export.py \
+            tests/hydrodynamics/test_oc4_staged_band.py \
+            tests/hydrodynamics/test_oc4_tail_bound.py \
             tests/solvers/smoke/test_ci_registration.py \
             tests/solvers/gmsh_meshing/test_tank_fixture.py \
             tests/solvers/openfoam/test_poly_mesh_contract.py \

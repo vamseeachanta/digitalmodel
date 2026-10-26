@@ -1,0 +1,28 @@
+{
+  "schema_version": 3,
+  "status": "RECIPE_REQUIRES_MEASURED_L1_MESH",
+  "depth_m": 1500,
+  "density_kg_m3": 1025,
+  "gravity_m_s2": 9.80665,
+  "headings_deg": [-180, -135, -90, -45, 0, 45, 90, 135, 180],
+  "panels_per_wavelength": 6,
+  "panel_rule_status": "ASSUMED study criterion",
+  "mass_properties_reference": "expected-v2.json",
+  "irregular_frequency_estimate_rad_s": 1.983,
+  "irregular_frequency_status": "Supplied estimate; native lid effectiveness remains unverified",
+  "stages": {
+    "S": {"lower_rad_s": 0.30, "upper_rad_s": 0.55, "step_rad_s": 0.01, "exact_periods_s": [], "exact_frequencies_rad_s": [0.418879]},
+    "F": {"lower_rad_s": 0.05, "upper_rule": "measured L1 valid band", "step_rad_s": 0.01, "exact_periods_s": [6.59, 7.43, 8.19]}
+  },
+  "fatigue_seas": [
+    {"id": "F03", "hs_m": 2.112264, "tp_s": 6.59, "gamma": 1.0, "annual_fraction": 0.015},
+    {"id": "F04", "hs_m": 2.712720, "tp_s": 7.43, "gamma": 1.0, "annual_fraction": 0.010},
+    {"id": "F05", "hs_m": 3.535680, "tp_s": 8.19, "gamma": 1.0, "annual_fraction": 0.013}
+  ],
+  "sea_source": "Supplied public Table 8; no occurrence renormalisation",
+  "response_tail_threshold": 0.01,
+  "response_tail_threshold_status": "ASSUMED for quantitative review",
+  "tail_envelope_window_rad_s": 0.5,
+  "spectrum_renormalisation": false,
+  "native_acceptance": "OPEN"
+}

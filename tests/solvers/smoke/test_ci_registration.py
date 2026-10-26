@@ -84,3 +84,15 @@ def test_extended_band_regressions_are_selected_and_executed():
     commands = [shlex.split(step["run"].replace("\\\n", " "))
                 for step in workflow["jobs"]["focused-tests"]["steps"] if "run" in step]
     assert any("pytest" in args and paths <= set(args) for args in commands)
+
+
+def test_staged_band_and_tail_regressions_are_selected_and_executed():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/gmsh-meshing-tests.yml").read_text())
+    paths = {"tests/hydrodynamics/test_oc4_staged_band.py",
+             "tests/hydrodynamics/test_oc4_tail_bound.py"}
+    events = workflow.get("on", workflow.get(True))
+    for event in ("push", "pull_request"):
+        assert paths <= set(events[event]["paths"])
+    commands = [shlex.split(step["run"].replace("\\\n", " "))
+                for step in workflow["jobs"]["focused-tests"]["steps"] if "run" in step]
+    assert any("pytest" in args and paths <= set(args) for args in commands)

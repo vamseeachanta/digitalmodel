@@ -235,3 +235,60 @@ solver is imported or executed by this example's offline preparation.
 Generation receipts bind source bytes as well as mesh bytes. Applying the
 standard licence header changes source digests; a header-only equality proof
 and renewed DF0 checks are required before the normalised receipt is used.
+
+## Staged preparation v3
+
+The [staged acceptance plan](staged-band-plan-v3.html) separates strength from
+fatigue acceptance. Version 2 and its historical high-band failures are retained.
+`mesh_band_v3.py` measures serialized panel spans and inverts finite-depth
+dispersion at 1500 m. The six-panel wavelength rule is ASSUMED from the study
+criterion. A declared-band DF3 pass does not clear the 3.50 rad/s failure.
+
+`input-specification-v3.json` is a recipe requiring the exact retained L1 mesh.
+Stage S has 27 frequencies: 0.30 to 0.55 rad/s at 0.01 rad/s, plus the specified
+0.418879 rad/s. Its upper frequency is below the supplied 1.983 rad/s
+irregular-frequency estimate, so no interior lid is requested. Stage F reaches
+the measured L1 band, includes the three unrounded spectral peaks and requests
+automatic native interior panels when the band reaches that estimate. The
+separate reference lid matches the retained hull waterline and panel scale.
+Native lid geometry still requires readback; reference panels are not imported
+as a separate physical body.
+
+Both decks, a four-frequency L2 probe deck and conditional resource estimates
+are written by the offline packet builder. Inputs are local GDF paths supplied
+by the caller; output shall be an empty directory outside the checkout.
+
+```bash
+uv run --no-project --with 'numpy<2' --with gmsh==4.15.1 --with pyyaml python \
+  examples/hydrodynamics/oc4-semisub/prepare_staged_v3.py \
+  "$OUTPUT_DIRECTORY" "$L1_MESH" --l2-mesh "$L2_MESH"
+uv run --no-project --with 'numpy<2' --with pyyaml python \
+  examples/hydrodynamics/oc4-semisub/input_checks_v3.py "$OUTPUT_DIRECTORY"
+```
+
+DF0 checks both stages, the optional L2 probe and the retained-byte/source
+digests. Completed packets are reused only after all checks pass. Partial
+packets are retained and rejected. The exact benchmark L1/L2 GDF bytes have
+not been located; no production packet, measured valid band, lid count or
+native allocation is established by the synthetic packet tests.
+
+`tail_response_v3.response_bound` accepts the reload-verified JSON export from
+`complex_export_v2.py`, the selected fatigue seas and the exact declared band
+endpoint. Each required heading is evaluated separately; absent headings fail
+closed. The return value includes all six motions and three hang-off motion
+components at (0,0,-10) m, the in-band variances, omitted wave fractions,
+conditional upper variance bounds and bound/in-band ratios. The ASSUMED default
+threshold is 1.0% of in-band response variance. Gamma values other than the
+supplied 1.0 are rejected. Occurrences and spectra are never renormalised.
+
+The last 0.5 rad/s envelope is applied only as a bound. Its validity beyond the
+band requires quantitative review for unresolved resonances; numerical passes
+retain `release_eligible=false`. The lower omitted tail uses the full-band
+maximum. Point envelopes use component bounds and the triangle inequality,
+without credit for translation/rotation cancellation outside the measured band.
+No physical response is extrapolated. Strength release requires its applicable
+native and convergence gates; fatigue additionally requires the reviewed tail
+condition, irregular-frequency checks and whole-band convergence evidence.
+
+Lesson: an approximate span supports an illustrative estimate; exact retained
+coordinates are required for production bands and source-bound decks.
