@@ -118,6 +118,8 @@ def _samples(history: StressHistory, basis: CurveBasis) -> np.ndarray:
         raise ValueError(
             "history stress_unit must equal curve stress_unit; convert explicitly"
         )
+    if np.ma.is_masked(history.samples):
+        raise ValueError("history must not contain masked stress samples")
     try:
         if np.iscomplexobj(history.samples):
             raise ValueError("history must contain real stress samples")
@@ -140,7 +142,10 @@ class _CheckedCurve:
 
     def cycles(self, ranges: np.ndarray) -> np.ndarray:
         """Return validated counts for the primitive's exact range vector."""
-        allowable = np.asarray(self.curve.cycles(ranges), dtype=float)
+        allowable = self.curve.cycles(ranges)
+        if np.iscomplexobj(allowable) or np.ma.is_masked(allowable):
+            raise ValueError("allowable_cycles must contain real, unmasked counts")
+        allowable = np.asarray(allowable, dtype=float)
         if (
             allowable.shape != ranges.shape
             or np.isnan(allowable).any()

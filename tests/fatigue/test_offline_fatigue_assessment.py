@@ -129,6 +129,25 @@ def test_invalid_history(samples, basis):
         assess({"detail": StressHistory(samples, "MPa")}, basis)
 
 
+@pytest.mark.parametrize("samples, mask", [
+    ([0, 2], [False, True]),
+    ([0, 2, 0], [False, True, False]),
+    ([0, 2], [True, True]),
+    ([5, 5, 5], [False, True, False]),
+])
+def test_masked_history_samples_are_rejected(samples, mask, basis):
+    history = StressHistory(np.ma.array(samples, mask=mask), "MPa")
+    with pytest.raises(ValueError, match="history"):
+        assess({"detail": history}, basis)
+
+
+def test_history_without_masked_samples_is_accepted(basis):
+    history = StressHistory(np.ma.array([0, 2], mask=False), "MPa")
+    report = assess({"detail": history}, basis)
+    # One range-2 half-cycle: 0.5 * 2**2 / 1000 = 0.002.
+    assert report.locations["detail"].exposure_damage == pytest.approx(0.002)
+
+
 @pytest.mark.parametrize("field", ["exposure_duration", "design_life"])
 @pytest.mark.parametrize("value", [0, -1, np.nan, np.inf, -np.inf, True, "bad"])
 def test_invalid_exposure_or_life(field, value, history, basis):
@@ -194,6 +213,47 @@ def test_invalid_curve_endurance_is_rejected(history, basis, allowable):
     with pytest.raises(ValueError, match="allowable_cycles"):
         fatigue_assessment({"detail": history}, InvalidCurve(), 10,
                            exposure_duration=2, time_unit="year", curve_basis=basis)
+
+
+@pytest.mark.parametrize("allowable", [1000 + 1000j, 1000 + 0j, complex(np.inf, 1)])
+def test_complex_curve_endurance_is_rejected(history, basis, allowable):
+    class ComplexCurve:
+        def cycles(self, ranges):
+            return np.full(ranges.shape, allowable)
+
+    with pytest.raises(ValueError, match="allowable_cycles"):
+        fatigue_assessment(
+            {"detail": history}, ComplexCurve(), 10,
+            exposure_duration=2, time_unit="year", curve_basis=basis,
+        )
+
+
+@pytest.mark.parametrize("allowable", [1000.0, np.inf])
+def test_masked_curve_endurance_is_rejected(history, basis, allowable):
+    class MaskedCurve:
+        def cycles(self, ranges):
+            return np.ma.array(
+                np.full(ranges.shape, allowable), mask=np.arange(ranges.size) == 0,
+            )
+
+    with pytest.raises(ValueError, match="allowable_cycles"):
+        fatigue_assessment(
+            {"detail": history}, MaskedCurve(), 10,
+            exposure_duration=2, time_unit="year", curve_basis=basis,
+        )
+
+
+def test_curve_without_masked_counts_is_accepted(history, basis):
+    class UnmaskedCurve:
+        def cycles(self, ranges):
+            return np.ma.array(np.full(ranges.shape, 1000.0), mask=False)
+
+    report = fatigue_assessment(
+        {"detail": history}, UnmaskedCurve(), 10,
+        exposure_duration=2, time_unit="year", curve_basis=basis,
+    )
+    # One full cycle and four half-cycles: (1 + 4 * 0.5) / 1000 = 0.003.
+    assert report.locations["detail"].exposure_damage == pytest.approx(0.003)
 
 
 def test_infinite_endurance_means_zero_damage(history, basis):
