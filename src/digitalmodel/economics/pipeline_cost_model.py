@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Calculate a caller-priced subset of pipeline capital cost for issue #1740.
@@ -13,6 +16,7 @@ The circular annulus area is pi/4 * (OD^2 - ID^2), where ID = OD - 2*wall.
 The equivalent pi*wall*(OD-wall) avoids subtracting nearly equal squares.
 Coating covers pi*OD*length, excluding ends, field-joint coating and allowances.
 Section count is ceil(length/joint_length); the final section may be cut short.
+Boundaries use the exact ratios of the supplied floating-point lengths.
 Connecting weld count is section count minus one; end connections are excluded.
 Consequently weld costs change in steps, while steel and coating scale with length.
 Positive geometry and density, a positive bore, and nonnegative rates are required.
@@ -62,7 +66,7 @@ True
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import ceil, isfinite, pi
+from math import isfinite, pi
 from numbers import Real
 
 
@@ -200,7 +204,10 @@ def estimate_pipeline_cost(
         )
         mass = area * inputs.length_m * inputs.steel_density_kg_m3
         coating_area = pi * inputs.outer_diameter_m * inputs.length_m
-        welds = max(0, ceil(inputs.length_m / inputs.joint_length_m) - 1)
+        length_num, length_den = inputs.length_m.as_integer_ratio()
+        joint_num, joint_den = inputs.joint_length_m.as_integer_ratio()
+        # For positive integer ratios, ceil(n/d) - 1 equals (n - 1) // d.
+        welds = (length_num * joint_den - 1) // (length_den * joint_num)
         steel = mass * inputs.steel_rate_per_kg
         coating = coating_area * inputs.coating_rate_per_m2
         weld_ndt = welds * inputs.weld_ndt_rate_per_weld

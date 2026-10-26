@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Independent synthetic arithmetic for issue #1740; no market price basis.
@@ -14,7 +17,8 @@ Other numeric cases below are synthetic boundary, scaling or rejection probes.
 """
 
 from dataclasses import FrozenInstanceError, asdict
-from math import nextafter, pi
+from fractions import Fraction
+from math import ceil, nextafter, pi
 
 import pytest
 
@@ -79,6 +83,42 @@ def test_weld_count_excludes_end_connections(inputs, length, welds):
     result = estimate_pipeline_cost(**{**inputs, "length_m": length})
     assert result.weld_count == welds
     assert result.weld_ndt_cost == pytest.approx(welds * 100)
+
+
+@pytest.mark.parametrize(
+    ("joint_length", "direction", "welds"),
+    [
+        (12.2, 0.0, 16),
+        (12.2, None, 16),
+        (12.2, float("inf"), 17),
+        (0.1, 0.0, 16),
+        (0.1, None, 17),
+        (0.1, float("inf"), 17),
+    ],
+)
+def test_weld_count_at_noninteger_joint_boundaries(
+    inputs, joint_length, direction, welds
+):
+    """Count sections from exact supplied lengths, before quotient rounding."""
+    length = 17 * joint_length
+    if direction is not None:
+        length = nextafter(length, direction)
+    exact_ratio = Fraction(length) / Fraction(joint_length)
+    # At most 17 exact joint lengths need 16 welds (1600 at 100 per weld);
+    # above that boundary, 18 sections need 17 welds (1700).
+    assert ceil(exact_ratio) - 1 == welds
+    result = estimate_pipeline_cost(
+        **{
+            **inputs,
+            "length_m": length,
+            "joint_length_m": joint_length,
+            "steel_rate_per_kg": 0,
+            "coating_rate_per_m2": 0,
+        }
+    )
+    assert result.weld_count == welds
+    assert result.weld_ndt_cost == pytest.approx(welds * 100)
+    assert result.total_cost == pytest.approx(welds * 100)
 
 
 def test_units_provenance_and_unevaluated_categories(inputs):
