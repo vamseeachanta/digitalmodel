@@ -276,6 +276,7 @@ docs/reports/modules/diff/*
 !docs/reports/modules/diff/report.html
 !docs/reports/modules/diff/changes.json
 !docs/reports/modules/diff/execution.json
+!docs/reports/modules/diff/README.md
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
