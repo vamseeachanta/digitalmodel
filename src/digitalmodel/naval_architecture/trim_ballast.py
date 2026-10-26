@@ -20,23 +20,46 @@ actual rotation is about the centre of flotation, which may be off midship.
 No hull integration, tank capacity, free-surface correction, stability or fuel
 optimization, or ballast compliance assessment is performed. Large changes
 require updated hydrostatics and a loading analysis.
+
+The ``*_cited`` entry points return numeric values, units and resolved EN400
+and NIST SP 811 citation sidecars. Both wiki records are required; missing or
+mismatched references raise ``CitationResolutionError`` without an uncited
+fallback. The numeric helpers remain available independently of wiki access.
 """
 
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
+from digitalmodel.citations import Citation, validate_citation
+from digitalmodel.citations.registry import get_en400_reference
 from digitalmodel.naval_architecture.trim_hydrostatics import end_drafts
 
 __all__ = [
     "drafts_after_weight_shift",
+    "drafts_after_weight_shift_cited",
     "even_keel_transfer_mass",
+    "even_keel_transfer_mass_cited",
     "trim_change_from_weight_shift",
+    "trim_change_from_weight_shift_cited",
 ]
 
-# Exact conversion: NIST, "Metric (SI) Prefixes", centi = one hundredth.
-# https://www.nist.gov/pml/owm/metric-si-prefixes
+# Exact conversion: NIST SP 811 (2008), Section 4.3, Table 5 (SI prefixes).
 _CENTIMETRES_PER_METRE = 100.0
+_SI_PREFIX_CITATION = Citation(
+    code_id="NIST-SP-811",
+    publisher="NIST",
+    revision="2008",
+    section="Section 4.3, Table 5 (decimal multiples and submultiples: centi)",
+    wiki_path="wikis/engineering-standards/wiki/standards/nist-sp-811.md",
+    source_sibling="generic",
+    note=(
+        "Guide for the Use of the International System of Units (SI); "
+        "https://www.nist.gov/pml/special-publication-811/"
+        "nist-guide-si-chapter-4-two-classes-si-units-and-si-prefixes"
+    ),
+)
 
 
 def _require_finite(**values: float) -> None:
@@ -130,3 +153,71 @@ def drafts_after_weight_shift(
     forward_m, aft_m = end_drafts(mean_draft_m, final_trim_m)
     _require_finite(draft_fwd_m=forward_m, draft_aft_m=aft_m)
     return forward_m, aft_m
+
+
+def _cited_result(
+    value: float | tuple[float, float], units: str, repo_root: Path | None
+) -> dict:
+    """Resolve both references before returning any cited numeric payload."""
+    reference = get_en400_reference(
+        "Section 3.6, pp. 3-28 and 3-32 (longitudinal weight shift and trim)",
+        note=(
+            "Forward-minus-aft trim; metric units; constant MCT; "
+            "fixed mean draft uses the midship-flotation approximation"
+        ),
+        repo_root=repo_root,
+    )
+    validate_citation(_SI_PREFIX_CITATION, repo_root=repo_root)
+    return {
+        "value": value,
+        "units": units,
+        "citations": [reference.citation, _SI_PREFIX_CITATION],
+    }
+
+
+def trim_change_from_weight_shift_cited(
+    *, mass_t: float, lever_arm_m: float, mct_t_m_per_cm: float,
+    repo_root: Path | None = None,
+) -> dict:
+    """Return trim change in metres with two required, validated citations.
+
+    The moment balance and SI conversion follow the editions and sections
+    identified in the sidecars. Numeric validation matches the plain helper;
+    citation resolution errors propagate even when no wiki is configured.
+    """
+    value = trim_change_from_weight_shift(
+        mass_t=mass_t, lever_arm_m=lever_arm_m, mct_t_m_per_cm=mct_t_m_per_cm
+    )
+    return _cited_result(value, "m", repo_root)
+
+
+def even_keel_transfer_mass_cited(
+    *, initial_trim_m: float, lever_arm_m: float, mct_t_m_per_cm: float,
+    repo_root: Path | None = None,
+) -> dict:
+    """Return signed transfer tonnes with the moment-balance and SI citations.
+
+    Both references are required, including for a zero correction. Capacity,
+    transfer availability and stability remain outside this screen.
+    """
+    value = even_keel_transfer_mass(
+        initial_trim_m=initial_trim_m, lever_arm_m=lever_arm_m,
+        mct_t_m_per_cm=mct_t_m_per_cm,
+    )
+    return _cited_result(value, "t", repo_root)
+
+
+def drafts_after_weight_shift_cited(
+    *, mean_draft_m: float, initial_trim_m: float, mass_t: float,
+    lever_arm_m: float, mct_t_m_per_cm: float, repo_root: Path | None = None,
+) -> dict:
+    """Return ``(forward, aft)`` metres with required, validated citations.
+
+    Fixed arithmetic mean draft retains the midship-flotation approximation
+    of the plain helper. The EN400 sidecar records that scope explicitly.
+    """
+    value = drafts_after_weight_shift(
+        mean_draft_m=mean_draft_m, initial_trim_m=initial_trim_m, mass_t=mass_t,
+        lever_arm_m=lever_arm_m, mct_t_m_per_cm=mct_t_m_per_cm,
+    )
+    return _cited_result(value, "m", repo_root)

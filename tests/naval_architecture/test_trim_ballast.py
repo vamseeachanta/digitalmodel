@@ -12,6 +12,8 @@ import math
 
 import pytest
 
+from digitalmodel.citations import Citation, CitationResolutionError
+from digitalmodel.naval_architecture import trim_ballast
 from digitalmodel.naval_architecture.trim_ballast import (
     drafts_after_weight_shift,
     even_keel_transfer_mass,
@@ -220,3 +222,132 @@ def test_unrepresentable_results_are_rejected(helper, options, field):
     """
     with pytest.raises(ValueError, match=field):
         helper(**options)
+
+
+_CITED_CASES = [
+    (
+        "trim_change_from_weight_shift_cited",
+        dict(mass_t=50.0, lever_arm_m=20.0, mct_t_m_per_cm=100.0),
+        0.1,  # 50 * 20 / 100 = 10 cm = 0.1 m.
+        "m",
+    ),
+    (
+        "even_keel_transfer_mass_cited",
+        dict(initial_trim_m=-0.4, lever_arm_m=20.0, mct_t_m_per_cm=100.0),
+        200.0,  # 40 cm * 100 / 20 = 200 t.
+        "t",
+    ),
+    (
+        "drafts_after_weight_shift_cited",
+        dict(mean_draft_m=5.0, initial_trim_m=-0.4, mass_t=50.0,
+             lever_arm_m=20.0, mct_t_m_per_cm=100.0),
+        (4.85, 5.15),  # -0.4 + 0.1 = -0.3 m; 5 +/- (-0.3 / 2).
+        "m",
+    ),
+]
+_REFERENCE_RECORDS = [
+    ("marine-engineering", "en400.md", "EN400", "USNA", "Summer 2020"),
+    ("engineering-standards", "nist-sp-811.md", "NIST-SP-811", "NIST", "2008"),
+]
+
+
+def _write_reference_records(root):
+    """Write synthetic metadata only; no source document or loading data."""
+    for domain, filename, code_id, publisher, revision in _REFERENCE_RECORDS:
+        target = root / "wikis" / domain / "wiki" / "standards" / filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            f"---\ncode_id: {code_id}\npublisher: {publisher}\n"
+            f"revision: {revision}\n---\n",
+            encoding="utf-8", newline="\n",
+        )
+
+
+def _cited_helper(name):
+    helper = getattr(trim_ballast, name, None)
+    assert callable(helper), f"Missing cited entry point: {name}"
+    return helper
+
+
+@pytest.mark.parametrize("name, options, expected, units", _CITED_CASES)
+@pytest.mark.parametrize("layout", ["standalone", "overlay"])
+def test_cited_results_resolve_both_sources(tmp_path, name, options,
+                                          expected, units, layout):
+    root = tmp_path if layout == "standalone" else tmp_path / "knowledge"
+    _write_reference_records(root)
+    result = _cited_helper(name)(**options, repo_root=tmp_path)
+    assert result["value"] == pytest.approx(expected)
+    assert result["units"] == units
+    citations = result["citations"]
+    assert len(citations) == 2
+    assert all(isinstance(citation, Citation) for citation in citations)
+    assert [(c.code_id, c.publisher, c.revision) for c in citations] == [
+        ("EN400", "USNA", "Summer 2020"),
+        ("NIST-SP-811", "NIST", "2008"),
+    ]
+    assert "3.6" in citations[0].section
+    assert "4.3" in citations[1].section and "Table 5" in citations[1].section
+    assert all(c.source_sibling == "generic" for c in citations)
+    assert all(c.source_project is None for c in citations)
+
+
+@pytest.mark.parametrize("name, options, expected, units", _CITED_CASES)
+def test_cited_results_use_configured_resolver(tmp_path, monkeypatch, name,
+                                             options, expected, units):
+    _write_reference_records(tmp_path)
+    monkeypatch.setenv("LLM_WIKI_PATH", tmp_path.as_posix())
+    result = _cited_helper(name)(**options)
+    assert result["value"] == pytest.approx(expected)
+    assert len(result["citations"]) == 2
+
+
+@pytest.mark.parametrize("name, options, expected, units", _CITED_CASES)
+@pytest.mark.parametrize("record", _REFERENCE_RECORDS)
+@pytest.mark.parametrize("defect", ["page", "code_id", "publisher", "revision",
+                                  "missing_revision"])
+def test_cited_results_fail_closed(tmp_path, name, options, expected, units,
+                                   record, defect):
+    _write_reference_records(tmp_path)
+    domain, filename, code_id, _, _ = record
+    target = tmp_path / "wikis" / domain / "wiki" / "standards" / filename
+    if defect == "page":
+        # Leave the reference absent without deleting any supplied data.
+        target.rename(target.with_suffix(".unavailable"))
+        reason = "page_missing"
+    else:
+        lines = target.read_text(encoding="utf-8").splitlines()
+        field = "revision" if defect == "missing_revision" else defect
+        lines = [line for line in lines if not line.startswith(f"{field}:")]
+        if defect != "missing_revision":
+            lines.insert(1, f"{field}: invalid")
+        target.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+        prefix = "frontmatter_missing" if defect == "missing_revision" else "frontmatter_mismatch"
+        reason = f"{prefix}:{field}"
+    with pytest.raises(CitationResolutionError) as error:
+        _cited_helper(name)(**options, repo_root=tmp_path)
+    assert error.value.code_id == code_id
+    assert error.value.reason.startswith(reason)
+
+
+@pytest.mark.parametrize("name, options, expected, units", _CITED_CASES)
+def test_cited_results_propagate_unconfigured_resolver(monkeypatch, name,
+                                                     options, expected, units):
+    from digitalmodel.citations import resolver
+
+    def unavailable(*args, **kwargs):
+        raise CitationResolutionError(code_id="EN400", wiki_path="wikis/missing.md",
+                                      reason="resolver_unconfigured:test")
+
+    monkeypatch.setattr(resolver, "resolve_wiki_path", unavailable)
+    with pytest.raises(CitationResolutionError, match="resolver_unconfigured"):
+        _cited_helper(name)(**options)
+
+
+@pytest.mark.parametrize("name, options, expected, units", _CITED_CASES)
+@pytest.mark.parametrize("bad_mct", [0.0, -1.0, math.nan, math.inf])
+def test_cited_results_reject_invalid_mct(tmp_path, name, options,
+                                        expected, units, bad_mct):
+    _write_reference_records(tmp_path)
+    with pytest.raises(ValueError, match="mct_t_m_per_cm"):
+        _cited_helper(name)(**{**options, "mct_t_m_per_cm": bad_mct},
+                            repo_root=tmp_path)
