@@ -245,6 +245,31 @@ def test_saved_artifacts_match_current_builder(tmp_path, data):
             assert path.read_bytes() == (ROOT / "docs/api/cathodic-protection" / path.relative_to(tmp_path)).read_bytes()
 
 
+def test_freshness_registry_rebuilds_front_page(tmp_path, monkeypatch, data):
+    """The docs check rebuilds every artifact using only shadow-tree inputs."""
+    from scripts import check_generated_html as checker
+
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script == "scripts/cathodic_protection/build_front_page_data.py"]
+    assert len(entries) == 1, "front-page builder must have a freshness registration"
+    entry = entries[0]
+    assert {source["path"] for source in data["references"]} <= set(entry.inputs)
+    assert builder.BASIS_FILE in entry.inputs
+    expected = {path.relative_to(ROOT).as_posix()
+                for path in (ROOT / "docs/api/cathodic-protection").rglob("*")
+                if path.is_file()}
+    assert set(entry.outputs) == expected
+
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    checker.prepare_shadow(ROOT, tmp_path)
+    checker.clear_generated_html(tmp_path, entry)
+    assert checker.run_generator(tmp_path, entry) is None
+    assert checker.compare_outputs(ROOT, tmp_path) == []
+    assert checker.output_paths(tmp_path, entry) == {
+        tmp_path / path for path in expected
+    }
+
+
 def test_source_digests_match_bytes(data):
     import hashlib
     for source in data["references"]:
