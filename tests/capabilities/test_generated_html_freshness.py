@@ -136,7 +136,7 @@ def test_generic_screening_page_has_matched_interactive_exports():
                'id="hull-section"', 'id="method"', 'id="comparison"', 'id="damping"',
                'id="response"', 'id="alpha"', 'id="validation"', 'id="limits"',
                'id="conclusions"', 'id="references"', 'id="sensitivity"',
-               'id="reproduce"', '<details id="revisions">']
+               'id="reproduce"', '<section id="revisions">']
     assert [text.index(marker) for marker in markers] == sorted(text.index(marker) for marker in markers)
     assert '<details id="revisions" open' not in text
     assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in text

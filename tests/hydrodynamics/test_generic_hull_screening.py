@@ -227,7 +227,7 @@ def test_schematic_and_response_explain_motion_and_scale(builder, record):
     svg = builder.schematic(record)
     assert "φ" in svg and 'id="roll-motion"' in svg
     assert 'id="water-flow"' in svg and "Oscillatory flow" in svg
-    assert "Roll amplification factor (1)" in page
+    assert "Roll amplification factor (dimensionless)" in page
     assert "5° bare roll" in page and "2ζ" in page
     assert "retained rather than tuned to the 18 s hull" in page
     assert page.index("Kₛ is") < page.index("Kₛ also includes")
@@ -376,7 +376,7 @@ def test_ratio_display_preserves_approved_precision(builder, record):
         assert "roughly halves the benefit (ratio 0.505)." in page
 
 
-def test_page_section_order_and_collapsed_revisions(builder, record):
+def test_page_section_order_and_visible_revisions(builder, record):
     from html.parser import HTMLParser
 
     class Headings(HTMLParser):
@@ -405,16 +405,17 @@ def test_page_section_order_and_collapsed_revisions(builder, record):
         "4 Analysis methodology", "5 Results", "6 Validation and benchmark",
         "7 Limitations", "8 Conclusions and next steps", "9 References",
         "Appendix A Sensitivity matrix", "Appendix B Review status",
+        "Appendix C Revision history",
     ]
     markers = ['id="summary"', 'id="introduction"', 'id="design-data"',
                'id="hull-section"', 'id="method"', 'id="comparison"',
                'id="damping"', 'id="response"', 'id="alpha"', 'id="validation"',
                'id="limits"', 'id="conclusions"', 'id="references"',
-               'id="sensitivity"', 'id="reproduce"', '<details id="revisions">']
+               'id="sensitivity"', 'id="reproduce"', '<section id="revisions">']
     positions = [page.index(marker) for marker in markers]
     assert positions == sorted(positions)
     assert '<details id="revisions" open' not in page
-    assert '<summary>Appendix C Revision history</summary>' in page
+    assert '<h2>Appendix C Revision history</h2>' in page
     assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in page
     assert ': screening estimate</h' not in page
     assert '<h2>Left</h2>' not in page
@@ -442,7 +443,7 @@ def test_report_traceability_and_print_contract(builder, record):
             href = attrs.get("href", "")
             if href.startswith("#"):
                 self.targets.append(href[1:])
-            if href.startswith(("../../../", "data/", "dual-tank")):
+            if href.startswith((builder.REPOSITORY_FILES, "data/", "dual-tank")):
                 self.locators.append(self.in_references)
             if tag in ("caption", "figcaption"):
                 self.caption = ""
@@ -530,5 +531,164 @@ def test_page_wording_links_and_preservation(builder, record):
         url = urlsplit(href)
         if not url.scheme:
             assert (page.parent / url.path if url.path else page).is_file(), href
-    parent = (ROOT / builder.PARENT_PAGE).read_text()
-    assert f'href="{Path(builder.PAGE).name}"' in parent
+
+
+def test_page_links_stay_within_published_root(builder, record):
+    from html.parser import HTMLParser
+    from urllib.parse import unquote, urljoin, urlsplit
+    import posixpath
+
+    class Links(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            for key, value in attrs:
+                if key not in ("href", "src"):
+                    continue
+                assert not value.startswith("../../../"), value
+                url = urlsplit(value)
+                if not url.scheme and not url.netloc and not url.path.startswith("/"):
+                    resolved = posixpath.normpath(posixpath.join("cfd", unquote(url.path)))
+                    assert resolved != ".." and not resolved.startswith("../"), value
+                target = urlsplit(urljoin("https://published.invalid/cfd/generic-hull-roll-screening.html", value))
+                if target.netloc == "published.invalid":
+                    relative = unquote(target.path).lstrip("/")
+                    assert (ROOT / "docs/api" / relative).is_file(), value
+                elif target.netloc == "github.com":
+                    prefix = builder.REPOSITORY_FILES
+                    assert value.startswith(prefix), value
+                    relative = unquote(target.path.split("/blob/main/", 1)[1])
+                    assert (ROOT / relative).is_file(), value
+
+    Links().feed(builder.render(record))
+
+
+def test_revision_table_is_visible_complete_and_checked(builder, record):
+    from xml.etree import ElementTree
+    import re
+
+    page = builder.render(record)
+    appendix = page.split('<section id="revisions">', 1)[1].split('</section>', 1)[0]
+    table = ElementTree.fromstring(re.search(r'<table.*?</table>', appendix, re.S).group())
+    assert [cell.text for cell in table.findall('thead/tr/th')] == [
+        "Revision", "Date", "Description", "Prepared / checked",
+    ]
+    rows = table.findall('tbody/tr')
+    assert len(rows) == len(builder.REVISIONS) >= 6
+    assert [tuple(cell.text for cell in row) for row in rows] == [
+        (revision, date, description, "AI-drafted; engineering check pending")
+        for revision, date, description in builder.REVISIONS
+    ]
+    summary = page.split('<section id="summary">')[1].split('</section>')[0]
+    assert 'href="#revisions"' not in summary
+
+
+def test_schematic_labels_clear_drawn_segments(builder, record):
+    """Conservative character boxes include a margin for glyph descenders."""
+    from xml.etree import ElementTree
+    import re
+
+    svg = ElementTree.fromstring(builder.schematic(record))
+    segments, labels = [], []
+
+    def collect(node, font_size=14):
+        if node.tag == "defs":
+            return
+        font_size = float(node.get("font-size", font_size))
+        if node.tag == "polyline":
+            coords = [float(v) for v in re.findall(r'-?\d+(?:\.\d+)?', node.get("points"))]
+            points = list(zip(coords[::2], coords[1::2]))
+            segments.extend(zip(points, points[1:]))
+        if node.tag == "path":
+            # Keep diagram geometry explicit and testable, including outlines.
+            tokens = re.findall(r'[A-Za-z]|-?\d+(?:\.\d+)?', node.get("d"))
+            point, start, command, index = (0, 0), (0, 0), None, 0
+            while index < len(tokens):
+                if tokens[index].isalpha():
+                    command = tokens[index]
+                    index += 1
+                assert command in "MmLlHhVvZzQq", command
+                if command in "Zz":
+                    segments.append((point, start))
+                    point = start
+                    continue
+                if command in "Qq":
+                    values = list(map(float, tokens[index:index + 4]))
+                    index += 4
+                    control, target = (values[0], values[1]), (values[2], values[3])
+                    if command.islower():
+                        control = tuple(a + b for a, b in zip(point, control))
+                        target = tuple(a + b for a, b in zip(point, target))
+                    # Subdivide the drawn curve; the label margin exceeds the
+                    # subdivision error for these schematic control points.
+                    start_curve, previous = point, point
+                    for step in range(1, 101):
+                        t = step / 100
+                        current = tuple((1-t)**2 * a + 2*(1-t)*t*b + t*t*c
+                                        for a, b, c in zip(start_curve, control, target))
+                        segments.append((previous, current))
+                        previous = current
+                    point = target
+                    continue
+                count = 1 if command in "HhVv" else 2
+                values = list(map(float, tokens[index:index + count]))
+                index += count
+                if command in "Hh":
+                    target = (values[0] + (point[0] if command.islower() else 0), point[1])
+                elif command in "Vv":
+                    target = (point[0], values[0] + (point[1] if command.islower() else 0))
+                else:
+                    target = tuple(value + (point[axis] if command.islower() else 0)
+                                   for axis, value in enumerate(values))
+                if command in "Mm":
+                    start = target
+                    command = "l" if command == "m" else "L"
+                else:
+                    segments.append((point, target))
+                point = target
+        if node.tag == "text":
+            text = ''.join(node.itertext())
+            x, y = float(node.get("x", 0)), float(node.get("y", 0))
+            width = len(text) * 0.6 * font_size
+            anchor = node.get("text-anchor", "start")
+            x -= width * {"start": 0, "middle": 0.5, "end": 1}[anchor]
+            box = (x - 1, y - font_size - 1, x + width + 1, y + 4)
+            transform = node.get("transform")
+            if transform:
+                match = re.fullmatch(r'translate\((-?[\d.]+) (-?[\d.]+)\) rotate\(-90\)', transform)
+                assert match, transform
+                dx, dy = map(float, match.groups())
+                left, top, right, bottom = box
+                box = (dx + top, dy - right, dx + bottom, dy - left)
+            labels.append((text, box))
+        for child in node:
+            collect(child, font_size)
+
+    collect(svg)
+    assert segments and labels
+    for text, (left, top, right, bottom) in labels:
+        for (x1, y1), (x2, y2) in segments:
+            low, high = 0.0, 1.0
+            for origin, delta, minimum, maximum in (
+                (x1, x2 - x1, left, right), (y1, y2 - y1, top, bottom),
+            ):
+                if delta == 0:
+                    if not minimum <= origin <= maximum:
+                        high = -1
+                        break
+                else:
+                    enter, leave = sorted(((minimum - origin) / delta,
+                                           (maximum - origin) / delta))
+                    low, high = max(low, enter), min(high, leave)
+            assert low > high, (text, (x1, y1), (x2, y2))
+
+
+def test_chart_shading_units_and_shortened_cross_references(builder, record):
+    page = builder.render(record)
+    assert 'class="validity-key"' in page
+    assert 'Outside moment-fit band' in page
+    assert 'Roll amplification factor (dimensionless)' in page
+    assert 'Alpha: normalized stiffness (dimensionless)' in page
+    assert '3.6 Coupled roll model' not in page
+    assert '<h3>3.6 Load cases</h3>' in page
+    sentence = "The model's stated moment fit does not validate coupled hull reduction."
+    assert page.count(sentence) == 1
+    assert sentence in page.split('<section id="limits">')[1].split('</section>')[0]

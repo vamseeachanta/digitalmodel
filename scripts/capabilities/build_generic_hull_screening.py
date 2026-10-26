@@ -49,6 +49,40 @@ CONDUIT_AREA = 6.8
 ALPHAS = (0.02, 0.05, 0.10, 0.15, 0.20)
 CRITERIA = "generic-coupled-screening-v1"
 GENERATION_DATE = "2026-10-25"
+REPOSITORY_FILES = "https://github.com/vamseeachanta/digitalmodel/blob/main/"
+
+REVISIONS = (
+    (
+        'Initial',
+        '2026-10-24',
+        'Generic hull screening estimate added to distinguish model predictions from real-hull evidence.',
+    ),
+    (
+        'Clarification',
+        '2026-10-25',
+        'Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.',
+    ),
+    (
+        'Interactive summary',
+        '2026-10-25',
+        'Input-driven tank section, interactive charts and matching CSV exports added; calculated values retained and limits placed before method.',
+    ),
+    (
+        'Report layout',
+        '2026-10-25',
+        'Engineering reporting layout applied to presentation: numbered sections, input table, dimensioned section, figure captions and appendices. Calculated values, claims and conclusions retained.',
+    ),
+    (
+        'Summary and chart clarification',
+        '2026-10-25',
+        'Earlier headline clarification recorded: peak roll reduction estimates refer to an 18 s hull roll period, with separate 2 % and 5 % damping cases. Moment-fit provenance and extrapolation, slow-forcing limit, tuning basis, symbols and chart scales clarified; calculation data retained.',
+    ),
+    (
+        'Publication layout',
+        '2026-10-26',
+        'Source links, visible revision history, schematic labels and chart legend corrected; repeated cross-references consolidated. Calculated values retained.',
+    ),
+)
 
 
 def canonical_numbers(value: Any, *, field: str = "") -> Any:
@@ -294,6 +328,11 @@ def chart_svg(
                 f'aria-label="{html.escape(name)}: {xv}, {yv}">'
                 f'<title>{html.escape(name)}: {xv}, {yv}</title></circle>')
         parts.append('</g>')
+    if supported_from is not None:
+        parts.extend([
+            '<g class="validity-key"><rect x="430" y="385" width="18" height="12" fill="#fff0d0"/>',
+            '<text x="456" y="396" font-size="12">Outside moment-fit band</text></g>',
+        ])
     return "\n".join(parts) + "\n</svg>"
 
 
@@ -337,31 +376,39 @@ fill="#f2f6fa" stroke="#526579" stroke-width="2"/>
 <path d="M {left:.1f} {waterline:.1f} h {width:.1f} M {right:.1f} {waterline:.1f} h {width:.1f}"
  stroke="#0f8a7e" stroke-width="2"/>
 <g id="roll-motion" fill="none" stroke="#0f8a7e" stroke-width="2">
-<path d="M 665 90 A 48 48 0 0 1 710 125" marker-end="url(#motion-arrow)"/>
-</g><text x="721" y="120" fill="#16324f" font-size="14">φ (roll)</text>
-<g id="water-flow" fill="none" stroke="#0f8a7e" stroke-width="2">
-<path d="M {centre-42} {base-duct/2-3:.1f} h 84" marker-end="url(#motion-arrow)"/>
-<path d="M {centre+42} {base-duct/2+3:.1f} h -84" marker-end="url(#motion-arrow)"/>
-</g><text x="{centre}" y="{base-27:.1f}" text-anchor="middle" fill="#16324f" font-size="14">Oscillatory flow</text>
-<path d="M {centre} 105 V 367 M {centre-offset:.1f} 122 V {base+10:.1f}
+<path d="M {centre} 145 Q {centre+35} 145 {centre+35} 180" marker-end="url(#motion-arrow)"/>
+<path d="M {centre} 145 V 180 M {centre-5} 180 H {centre+5}"/>
+</g><text x="{centre}" y="202" text-anchor="middle" fill="#16324f" font-size="14">φ (roll)</text>
+<g id="water-flow" aria-label="Oscillatory flow" fill="none" stroke="#0f8a7e" stroke-width="2">
+<path d="M {centre-10} {base-duct/2-3:.1f} h 42" marker-end="url(#motion-arrow)"/>
+<path d="M {centre+32} {base-duct/2+3:.1f} h -42" marker-end="url(#motion-arrow)"/>
+<path d="M {centre} 248 V {base-duct/2-3:.1f}"/>
+</g><g fill="#16324f" font-size="14" text-anchor="middle">
+<text x="{centre}" y="222" text-anchor="middle">Oscillatory</text>
+<text x="{centre}" y="242" text-anchor="middle">flow</text></g>
+<path d="M {centre} 140 V 180 M {centre} {base+5} V 300 M {centre} 360 V 367
+ M {centre-offset:.1f} 122 V {base+10:.1f}
  M {centre+offset:.1f} 122 V {base+10:.1f}" stroke="#8293a4" stroke-dasharray="6 4" fill="none"/>
 <g stroke="#526579" stroke-width="1" fill="none">
 <path d="M {left:.1f} 140 V 73 M {left+width:.1f} 140 V 73
- M {centre} 100 V 108 M {centre+offset:.1f} 100 V 122
+ M {centre} 100 V 108 M {centre+offset:.1f} 106 V 122
  M {left-40:.1f} {waterline:.1f} H {left-8:.1f}
  M {left-40:.1f} {base:.1f} H {left-8:.1f}"/>
 <path d="M {left:.1f} 82 H {left+width:.1f}" marker-start="url(#dimension-arrow)" marker-end="url(#dimension-arrow)"/>
 <path d="M {centre} 113 H {centre+offset:.1f}" marker-start="url(#dimension-arrow)" marker-end="url(#dimension-arrow)"/>
 <path d="M {left-30:.1f} {waterline:.1f} V {base:.1f}" marker-start="url(#dimension-arrow)" marker-end="url(#dimension-arrow)"/>
-<path d="M {centre+25:.1f} {base-duct/2:.1f} L 603 310 H 715 M 410 360 V 380 H 600"/>
+<path d="M {centre+30} {base-duct/2:.1f} V {base+10} H 530"/>
+<path d="M {centre-30} {base-duct} V {base}" marker-start="url(#dimension-arrow)" marker-end="url(#dimension-arrow)"/>
+<path d="M {centre-38} {base-duct} H {centre-22} M {centre-38} {base} H {centre-22}
+ M {centre-30} {base} V 285 H 350 V 318"/>
 </g>
 <g fill="#16324f" font-size="14">
 <text x="{left+width/2:.1f}" y="67" text-anchor="middle">Leg width {a['leg_width_m']:.1f} m</text>
 <text x="{centre+offset/2:.1f}" y="98" text-anchor="middle">Offset {a['centroid_offset_m']:.1f} m</text>
 <text transform="translate({left-46:.1f} {waterline+depth/2:.1f}) rotate(-90)" text-anchor="middle">Fill {a['fill_depth_m']:.1f} m</text>
-<text x="{centre}" y="390" text-anchor="end">Centreline</text>
-<text x="605" y="300">A_c {a['conduit_area_m2']:.1f} m²</text>
-<text x="605" y="330">Symbolic duct height</text>
+<text x="{centre}" y="390" text-anchor="middle">Centreline</text>
+<text x="530" y="300">A_c {a['conduit_area_m2']:.1f} m²</text>
+<text x="530" y="325" text-anchor="end">Symbolic duct height</text>
 <text x="410" y="418" text-anchor="middle">Leg length {a['leg_length_m']:.1f} m (out of section) · dimensions ASSUMED</text>
 <text x="410" y="442" text-anchor="middle">Hull section: outline and duct height not to scale</text>
 </g></svg>'''
@@ -380,12 +427,12 @@ def chart_specs(record: dict[str, Any]) -> list[tuple]:
         ("response", "Roll response with and without the tank",
          response["forcing_periods_s"],
          [("Without tank", response["bare_rao"]), ("With tank", response["tank_rao"])],
-         "Wave forcing period (s)", "Roll amplification factor (1)"),
+         "Wave forcing period (s)", "Roll amplification factor (dimensionless)"),
         ("alpha", "Peak roll reduction against alpha", sorted({row["alpha"] for row in cases}),
          [(f"Hull damping {100 * damping:.0f} %",
            [row["reduction_percent"] for row in cases if row["hull_damping_ratio"] == damping])
           for damping in sorted({row["hull_damping_ratio"] for row in cases})],
-         "Alpha: normalized stiffness (1)", "Peak roll reduction (%)"),
+         "Alpha: normalized stiffness (dimensionless)", "Peak roll reduction (%)"),
     ]
 
 
@@ -424,6 +471,10 @@ def interactive_chart(
 def render(record: dict[str, Any]) -> str:
     """Present the recorded calculation in the selected engineering structure."""
     a = record["assumptions"]
+    revision_rows = ''.join(
+        '<tr>' + ''.join(f'<td>{html.escape(value)}</td>' for value in
+                        (*revision, "AI-drafted; engineering check pending")) + '</tr>'
+        for revision in REVISIONS)
     rows = []
     for row in record["cases"]:
         rows.append('<tr>' + ''.join(f'<td>{value}</td>' for value in (
@@ -526,9 +577,7 @@ nav{{display:none}}a{{color:inherit;text-decoration:none}}details>table{{display
 <section id="summary"><h2>1 Executive summary</h2>
 <p>The coupled model can be used to compare generic hull roll with and without the connected tank.
 The results are screening estimates; no result represents a real hull.</p>
-<p class="notice">The model's stated moment fit does not validate coupled hull reduction.
-No tank-on and tank-off real-vessel comparison establishes these reductions.
-The implications are listed in <a href="#limits">Section 7</a>.</p>
+<p class="notice">The implications of the model's stated moment fit are listed in <a href="#limits">Section 7</a>.</p>
 <ul>
 <li>At an 18 s hull roll period, alpha 0.05, and conduit area A_c = 6.8 m²,
 the peak roll reduction screening estimates are {lower_damping_benefit:.1f} % at 2 % hull damping and {higher_damping_benefit:.1f} % at 5 %.
@@ -571,8 +620,7 @@ All hull values are ASSUMED; no real hull data is used. The full load-case matri
 <h3>3.5 Criteria and sources</h3>
 <p>No design acceptance criterion is specified. The arithmetic checks and the model's stated moment-fit band are distinguished in <a href="#validation">Section 6</a>.
 Their sources are <a href="#ref-builder">[I4]</a> and <a href="#ref-public">[R1]</a>.</p>
-<h3>3.6 Coupled roll model</h3><p>The coupled roll method is described in <a href="#method">Section 4</a>.</p>
-<h3>3.7 Load cases</h3>
+<h3>3.6 Load cases</h3>
 <p>Every combination of the assumed hull periods, damping and alpha values is retained in <a href="#sensitivity-table">Table A.1</a>.
 The response sweep covers 0.7 to 1.3 times each hull period; the additional long-period comparison uses 60 s forcing <a href="#ref-data">[I1]</a>.</p>
 </section>
@@ -616,8 +664,7 @@ The comparison is recorded in <a href="#ref-data">[I1]</a>.</p></section>
 <section id="validation"><h2>6 Validation and benchmark</h2>
 <p>The model's stated moment fit and the mathematical hand checks address different quantities.
 The moment fit has 4.3 % RMS error for forcing periods of 20 s and longer; it degrades below about 16 s for a reason not established <a href="#ref-public">[R1]</a>.</p>
-<p>The model's stated moment fit does not validate coupled hull reduction.
-No tank-on and tank-off real-vessel comparison establishes these reductions. No full-scale roll reduction has been calculated here.</p>
+<p>No tank-on and tank-off real-vessel comparison establishes these reductions. No full-scale roll reduction has been calculated here.</p>
 <p>Alpha = 0 gives zero reduction, or 0 %.
 An undamped box hand check copies the model's own moment formula, so it checks arithmetic and the coupling denominator,
 not the physics of the moment model. It also checks both natural frequencies <a href="#ref-tests">[I5]</a>.</p>
@@ -627,6 +674,7 @@ The conduit has 1 m² area and 1 m effective length. Fluid density is 1 kg/m³; 
 At alpha 0.1, the response is 2120/1231 times normalized forcing, with no units <a href="#ref-tests">[I5]</a>.</p>
 </section>
 <section id="limits"><h2>7 Limitations</h2>
+<p>The model's stated moment fit does not validate coupled hull reduction.</p>
 <p>The reductions are screening estimates for generic hulls, with no real-hull evidence; the missing comparison is described in <a href="#validation">Section 6</a>.</p>
 <ul>
 <li>The reference tank's natural period is {natural_period:.1f} s <a href="#ref-builder">[I4]</a>; the 18 s sweep starts at {record["cases"][0]["forcing_periods_s"][0]:.1f} s.
@@ -653,12 +701,12 @@ The statement is retained in the <a href="#ref-model">model reference [I2]</a>; 
 <li id="ref-data">[I1] Model/data: <a href="data/generic_hull_roll_screening.json">{DATA}</a>.
 Assumptions, units, cases, damping comparisons, numeric arrays and source digests.</li>
 <li id="ref-model">[I2] Solver/program: public U-tube model; version not declared.
-<a href="../../../{MODEL_PATH}">{MODEL_PATH}</a>. Source digest is recorded in [I1].</li>
+<a href="{REPOSITORY_FILES}{MODEL_PATH}">{MODEL_PATH}</a>. Source digest is recorded in [I1].</li>
 <li id="ref-study">[I3] Model context: <a href="dual-tank-sloshing-cfd-study.html">{PARENT_PAGE}</a>.
 The illustrative tank differs from the reference tank used here.</li>
-<li id="ref-builder">[I4] Calculation and figure builder: <a href="../../../{SCRIPT}">{SCRIPT}</a>.
+<li id="ref-builder">[I4] Calculation and figure builder: <a href="{REPOSITORY_FILES}{SCRIPT}">{SCRIPT}</a>.
 {source_note()}</li>
-<li id="ref-tests">[I5] Mathematical benchmark: <a href="../../../{TEST}">{TEST}</a>.
+<li id="ref-tests">[I5] Mathematical benchmark: <a href="{REPOSITORY_FILES}{TEST}">{TEST}</a>.
 Hand-check inputs and rational oracle values are defined in test_undamped_two_degree_hand_check.</li>
 </ul></section>
 <section id="sensitivity"><h2>Appendix A Sensitivity matrix</h2>
@@ -684,14 +732,9 @@ Hull outline and conduit height are symbolic; widths, depths and centroid offset
 <p>Calculation records, source links and reproduction instructions are identified in <a href="#ref-builder">[I4]</a>.</p>
 <p>AI generated the script, calculations, tests and draft text. Engineering checks and acceptance remain pending.
 P.E. sign-off remains pending; no engineer signature is asserted.</p></section>
-<details id="revisions"><summary>Appendix C Revision history</summary>
-<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody>
-<tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td></tr>
-<tr><td>Clarification</td><td>{GENERATION_DATE}</td><td>Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.</td></tr>
-<tr><td>Interactive summary</td><td>{GENERATION_DATE}</td><td>Input-driven tank section, interactive charts and matching CSV exports added; calculated values retained and limits placed before method.</td></tr>
-<tr><td>Report layout</td><td>{GENERATION_DATE}</td><td>Engineering reporting layout applied to presentation: numbered sections, input table, dimensioned section, figure captions and appendices. Calculated values, claims and conclusions retained.</td></tr>
-<tr><td>Summary and chart clarification</td><td>{GENERATION_DATE}</td><td>Earlier headline clarification recorded: peak roll reduction estimates refer to an 18 s hull roll period, with separate 2 % and 5 % damping cases. Moment-fit provenance and extrapolation, slow-forcing limit, tuning basis, symbols and chart scales clarified; calculation data retained.</td></tr>
-</tbody><caption>Table C.1 – Revision history.</caption></table></details>
+<section id="revisions"><h2>Appendix C Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Description</th><th>Prepared / checked</th></tr></thead>
+<tbody>{revision_rows}</tbody><caption>Table C.1 – Revision history.</caption></table></section>
 <script>
 function toggleSeries(chart, series, visible) {{
   document.querySelectorAll('#' + chart + ' g[data-series="' + series + '"]')
@@ -967,7 +1010,7 @@ def test_schematic_and_response_explain_motion_and_scale(builder, record):
     svg = builder.schematic(record)
     assert "φ" in svg and 'id="roll-motion"' in svg
     assert 'id="water-flow"' in svg and "Oscillatory flow" in svg
-    assert "Roll amplification factor (1)" in page
+    assert "Roll amplification factor (dimensionless)" in page
     assert "5° bare roll" in page and "2ζ" in page
     assert "retained rather than tuned to the 18 s hull" in page
     assert page.index("Kₛ is") < page.index("Kₛ also includes")
@@ -1116,7 +1159,7 @@ def test_ratio_display_preserves_approved_precision(builder, record):
         assert "roughly halves the benefit (ratio 0.505)." in page
 
 
-def test_page_section_order_and_collapsed_revisions(builder, record):
+def test_page_section_order_and_visible_revisions(builder, record):
     from html.parser import HTMLParser
 
     class Headings(HTMLParser):
@@ -1145,16 +1188,17 @@ def test_page_section_order_and_collapsed_revisions(builder, record):
         "4 Analysis methodology", "5 Results", "6 Validation and benchmark",
         "7 Limitations", "8 Conclusions and next steps", "9 References",
         "Appendix A Sensitivity matrix", "Appendix B Review status",
+        "Appendix C Revision history",
     ]
     markers = ['id="summary"', 'id="introduction"', 'id="design-data"',
                'id="hull-section"', 'id="method"', 'id="comparison"',
                'id="damping"', 'id="response"', 'id="alpha"', 'id="validation"',
                'id="limits"', 'id="conclusions"', 'id="references"',
-               'id="sensitivity"', 'id="reproduce"', '<details id="revisions">']
+               'id="sensitivity"', 'id="reproduce"', '<section id="revisions">']
     positions = [page.index(marker) for marker in markers]
     assert positions == sorted(positions)
     assert '<details id="revisions" open' not in page
-    assert '<summary>Appendix C Revision history</summary>' in page
+    assert '<h2>Appendix C Revision history</h2>' in page
     assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in page
     assert ': screening estimate</h' not in page
     assert '<h2>Left</h2>' not in page
@@ -1182,7 +1226,7 @@ def test_report_traceability_and_print_contract(builder, record):
             href = attrs.get("href", "")
             if href.startswith("#"):
                 self.targets.append(href[1:])
-            if href.startswith(("../../../", "data/", "dual-tank")):
+            if href.startswith((builder.REPOSITORY_FILES, "data/", "dual-tank")):
                 self.locators.append(self.in_references)
             if tag in ("caption", "figcaption"):
                 self.caption = ""
@@ -1270,8 +1314,167 @@ def test_page_wording_links_and_preservation(builder, record):
         url = urlsplit(href)
         if not url.scheme:
             assert (page.parent / url.path if url.path else page).is_file(), href
-    parent = (ROOT / builder.PARENT_PAGE).read_text()
-    assert f'href="{Path(builder.PAGE).name}"' in parent
+
+
+def test_page_links_stay_within_published_root(builder, record):
+    from html.parser import HTMLParser
+    from urllib.parse import unquote, urljoin, urlsplit
+    import posixpath
+
+    class Links(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            for key, value in attrs:
+                if key not in ("href", "src"):
+                    continue
+                assert not value.startswith("../../../"), value
+                url = urlsplit(value)
+                if not url.scheme and not url.netloc and not url.path.startswith("/"):
+                    resolved = posixpath.normpath(posixpath.join("cfd", unquote(url.path)))
+                    assert resolved != ".." and not resolved.startswith("../"), value
+                target = urlsplit(urljoin("https://published.invalid/cfd/generic-hull-roll-screening.html", value))
+                if target.netloc == "published.invalid":
+                    relative = unquote(target.path).lstrip("/")
+                    assert (ROOT / "docs/api" / relative).is_file(), value
+                elif target.netloc == "github.com":
+                    prefix = builder.REPOSITORY_FILES
+                    assert value.startswith(prefix), value
+                    relative = unquote(target.path.split("/blob/main/", 1)[1])
+                    assert (ROOT / relative).is_file(), value
+
+    Links().feed(builder.render(record))
+
+
+def test_revision_table_is_visible_complete_and_checked(builder, record):
+    from xml.etree import ElementTree
+    import re
+
+    page = builder.render(record)
+    appendix = page.split('<section id="revisions">', 1)[1].split('</section>', 1)[0]
+    table = ElementTree.fromstring(re.search(r'<table.*?</table>', appendix, re.S).group())
+    assert [cell.text for cell in table.findall('thead/tr/th')] == [
+        "Revision", "Date", "Description", "Prepared / checked",
+    ]
+    rows = table.findall('tbody/tr')
+    assert len(rows) == len(builder.REVISIONS) >= 6
+    assert [tuple(cell.text for cell in row) for row in rows] == [
+        (revision, date, description, "AI-drafted; engineering check pending")
+        for revision, date, description in builder.REVISIONS
+    ]
+    summary = page.split('<section id="summary">')[1].split('</section>')[0]
+    assert 'href="#revisions"' not in summary
+
+
+def test_schematic_labels_clear_drawn_segments(builder, record):
+    """Conservative character boxes include a margin for glyph descenders."""
+    from xml.etree import ElementTree
+    import re
+
+    svg = ElementTree.fromstring(builder.schematic(record))
+    segments, labels = [], []
+
+    def collect(node, font_size=14):
+        if node.tag == "defs":
+            return
+        font_size = float(node.get("font-size", font_size))
+        if node.tag == "polyline":
+            coords = [float(v) for v in re.findall(r'-?\d+(?:\.\d+)?', node.get("points"))]
+            points = list(zip(coords[::2], coords[1::2]))
+            segments.extend(zip(points, points[1:]))
+        if node.tag == "path":
+            # Keep diagram geometry explicit and testable, including outlines.
+            tokens = re.findall(r'[A-Za-z]|-?\d+(?:\.\d+)?', node.get("d"))
+            point, start, command, index = (0, 0), (0, 0), None, 0
+            while index < len(tokens):
+                if tokens[index].isalpha():
+                    command = tokens[index]
+                    index += 1
+                assert command in "MmLlHhVvZzQq", command
+                if command in "Zz":
+                    segments.append((point, start))
+                    point = start
+                    continue
+                if command in "Qq":
+                    values = list(map(float, tokens[index:index + 4]))
+                    index += 4
+                    control, target = (values[0], values[1]), (values[2], values[3])
+                    if command.islower():
+                        control = tuple(a + b for a, b in zip(point, control))
+                        target = tuple(a + b for a, b in zip(point, target))
+                    # Subdivide the drawn curve; the label margin exceeds the
+                    # subdivision error for these schematic control points.
+                    start_curve, previous = point, point
+                    for step in range(1, 101):
+                        t = step / 100
+                        current = tuple((1-t)**2 * a + 2*(1-t)*t*b + t*t*c
+                                        for a, b, c in zip(start_curve, control, target))
+                        segments.append((previous, current))
+                        previous = current
+                    point = target
+                    continue
+                count = 1 if command in "HhVv" else 2
+                values = list(map(float, tokens[index:index + count]))
+                index += count
+                if command in "Hh":
+                    target = (values[0] + (point[0] if command.islower() else 0), point[1])
+                elif command in "Vv":
+                    target = (point[0], values[0] + (point[1] if command.islower() else 0))
+                else:
+                    target = tuple(value + (point[axis] if command.islower() else 0)
+                                   for axis, value in enumerate(values))
+                if command in "Mm":
+                    start = target
+                    command = "l" if command == "m" else "L"
+                else:
+                    segments.append((point, target))
+                point = target
+        if node.tag == "text":
+            text = ''.join(node.itertext())
+            x, y = float(node.get("x", 0)), float(node.get("y", 0))
+            width = len(text) * 0.6 * font_size
+            anchor = node.get("text-anchor", "start")
+            x -= width * {"start": 0, "middle": 0.5, "end": 1}[anchor]
+            box = (x - 1, y - font_size - 1, x + width + 1, y + 4)
+            transform = node.get("transform")
+            if transform:
+                match = re.fullmatch(r'translate\((-?[\d.]+) (-?[\d.]+)\) rotate\(-90\)', transform)
+                assert match, transform
+                dx, dy = map(float, match.groups())
+                left, top, right, bottom = box
+                box = (dx + top, dy - right, dx + bottom, dy - left)
+            labels.append((text, box))
+        for child in node:
+            collect(child, font_size)
+
+    collect(svg)
+    assert segments and labels
+    for text, (left, top, right, bottom) in labels:
+        for (x1, y1), (x2, y2) in segments:
+            low, high = 0.0, 1.0
+            for origin, delta, minimum, maximum in (
+                (x1, x2 - x1, left, right), (y1, y2 - y1, top, bottom),
+            ):
+                if delta == 0:
+                    if not minimum <= origin <= maximum:
+                        high = -1
+                        break
+                else:
+                    enter, leave = sorted(((minimum - origin) / delta,
+                                           (maximum - origin) / delta))
+                    low, high = max(low, enter), min(high, leave)
+            assert low > high, (text, (x1, y1), (x2, y2))
+
+
+def test_chart_shading_units_and_shortened_cross_references(builder, record):
+    page = builder.render(record)
+    assert 'class="validity-key"' in page
+    assert 'Outside moment-fit band' in page
+    assert 'Roll amplification factor (dimensionless)' in page
+    assert 'Alpha: normalized stiffness (dimensionless)' in page
+    assert '3.6 Coupled roll model' not in page
+    assert '<h3>3.6 Load cases</h3>' in page
+    sentence = "The model's stated moment fit does not validate coupled hull reduction."
+    assert page.count(sentence) == 1
+    assert sentence in page.split('<section id="limits">')[1].split('</section>')[0]
 '''
 
 
