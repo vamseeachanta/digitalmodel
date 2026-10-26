@@ -11,6 +11,22 @@ units, derivation, input basis, limits and revision history after its summary.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-25 | Add a reproducible arithmetic example with an independent hand calculation. |
+| 2 | 2026-10-26 | State the bounded calculation and validation plan explicitly. |
+
+## Plan-lite
+
+- Objective: demonstrate the existing deep-water `wave_number` helper with
+  reproducible synthetic arithmetic probes and explicit units.
+- Bounded scope: use `g=4 m/s^2`, `omega=(1, 2) rad/s` and infinite depth;
+  leave helper behavior unchanged and exclude the calculations listed below.
+- Independent hand calculation: derive `k=omega^2/g` from the linear
+  free-surface conditions in [H], giving exact answers `(1/4, 1) 1/m`
+  without using helper output as the reference.
+- Validation: run the worked-example tests to compare visible HTML values
+  and units with those exact fractions, confirm import has no output, and
+  compare rebuild bytes across output directories. Run the existing module
+  tests and direct repository checks; report their counts and limitations
+  separately from the two arithmetic probes.
 
 ## Build and check
 
