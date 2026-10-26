@@ -161,6 +161,64 @@ class TestApiRp1111PlasticCapacity:
 class TestApiRp1111CombinedLoading:
     @pytest.mark.parametrize("edition", [1999, 2015])
     @pytest.mark.parametrize(
+        "scale, expected_utilisation, expected_pass",
+        [(0.5, 0.5, True), (0.999, 0.999, True),
+         (1.0, 1.0, True), (1.001, 1.001, False)],
+    )
+    def test_independent_legacy_interaction(
+        self, edition, scale, expected_utilisation, expected_pass
+    ):
+        """Catch shared capacity, factor and interaction errors missed by parity.
+
+        Capacity basis: ANSI/AISC 360-22 (2022), D2, Tensile Strength,
+        and F8.1, Yielding, for gross-section yield force and plastic moment.
+        These references support the reference capacities, not the interaction.
+        API RP 1111, 3rd ed. (1999), 4.3.1, Internal Pressure Design,
+        and 5th ed. (2015), 4.3.1.3, Combined Load Design, are the comparison
+        basis: the legacy three-term interaction and its moment/tension factor
+        are not established as prescribed by those clauses. Both configured
+        years retain that software contract; this is arithmetic validation.
+        """
+        # Synthetic inputs: D=0.5 m, t=0.015625 m, di=0.46875 m;
+        # SMYS=384 MPa=384e6 Pa, SMTS=512 MPa. No production helper is
+        # used to calculate an expected value or to choose a boundary load.
+        # Integrating the annulus gives A=pi*(0.5**2-0.46875**2)/4
+        # =0.007568359375*pi m2 and Z=(0.5**3-0.46875**3)/6 m3.
+        # Thus M_p=384e6*Z=1408203.125 N m;
+        # S_p=384e6*A=2906250*pi=9130253.649495335 N.
+        # The retained software factor gives reference moment=1013906.25 N m
+        # and reference force=2092500*pi N. This factor is an implementation
+        # assumption, not a newly sourced engineering design coefficient.
+        # The legacy thin-wall burst arithmetic gives p_b=806.4/31 MPa.
+        # At scale=1, choose M=486675 N m, S=1339200*pi N and
+        # p_net=483.84/31 MPa: the three normalised terms are 0.48, 0.64,
+        # 0.6, so U=sqrt(0.2304+0.4096+0.36)=1. Scaling every load gives
+        # the literal utilisations above, including either side of U<=1.
+        geometry = PipeGeometry(outer_diameter=0.5, wall_thickness=0.015625)
+        material = PipeMaterial(grade="synthetic", smys=384e6, smts=512e6)
+        loads = DesignLoads(
+            bending_moment=486675.0 * scale,
+            effective_tension=1339200.0 * math.pi * scale,
+            internal_pressure=(1.0 + 483.84 / 31.0) * scale * 1e6,
+            external_pressure=1e6 * scale,
+        )
+        result = WallThicknessAnalyzer(
+            geometry, material, loads, DesignFactors(),
+            code=DesignCode.API_RP_1111, edition=edition,
+        ).perform_analysis()
+
+        utilisation = result.checks["combined_loading"]
+        details = result.details["combined_loading"]
+        assert details["M_p"] == pytest.approx(1408203.125, rel=1e-12)
+        assert details["S_p"] == pytest.approx(9130253.649495335, rel=1e-12)
+        assert utilisation == pytest.approx(expected_utilisation, rel=1e-12)
+        assert details["utilisation"] == utilisation
+        assert result.governing_check == "combined_loading"
+        assert (utilisation <= 1.0) is expected_pass
+        assert result.is_safe is expected_pass
+
+    @pytest.mark.parametrize("edition", [1999, 2015])
+    @pytest.mark.parametrize(
         "thickness, moment, tension, internal_mpa, external_mpa",
         [
             pytest.param(0.01905, 0.0, 0.0, 5.0, 0.5, id="current-pressure-only"),
