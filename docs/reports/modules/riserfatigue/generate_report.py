@@ -30,16 +30,27 @@ from digitalmodel.riser_fatigue.workflow import SECONDS_PER_YEAR, router
 
 ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = ROOT / "examples/workflows/riser-fatigue/input.yml"
+REPORT_CHECK_COMMAND = (
+    "PYTHONPATH=src uv run --no-project "
+    "--with 'pytest>=7.4.3,<9.0.0' "
+    "--with 'numpy>=1.24.0,<2.0.0' --with 'pandas>=2.0.0,<3.0.0' "
+    "--with 'pylife>=2.2,<3.0' --with 'pydantic>=2.7.0,<3.0.0' "
+    "--with 'rainflow>=3.2.0,<4.0.0' --with 'pyyaml>=6.0.0,<7.0.0' "
+    "python -m pytest tests/riser_fatigue/test_module_report.py "
+    "tests/riser_fatigue/test_touchdown.py tests/riser_fatigue/test_resolve_dff.py "
+    "-q -rA -p no:cacheprovider"
+)
 CHANGES = {
     "report": "Riser fatigue module analysis",
-    "revision": "1",
-    "date": "2026-10-22",
+    "revision": "2",
+    "date": "2026-10-25",
     "changes": [
         {
-            "section": "Report reproducibility and interpretation",
-            "change": "Portable UTF-8/LF output, normalized source digests, stable location labels, "
-                      "explicit criteria and exact input precision are presented.",
-            "reason": "Rebuilds and screening conclusions require consistent numeric and input evidence.",
+            "section": "Supported verification environment",
+            "change": "The appendix provides a runnable report-test command with the declared "
+                      "numerical and test dependency bounds.",
+            "reason": "Isolated verification requires explicit dependencies because project "
+                      "constraints are not loaded by the isolated command.",
         }
     ],
 }
@@ -403,8 +414,10 @@ neither is established by the synthetic example or the existing regression check
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
 <tbody><tr><td>Initial</td><td>2026-10-21</td><td>Supplied-response fatigue screening is documented
 to distinguish damage arithmetic from riser response and design qualification.</td></tr>
-<tr><td>1</td><td>{CHANGES["date"]}</td><td>Report rebuilding, location identities and display precision
-are corrected so the supplied-response screening evidence remains reproducible.</td></tr></tbody></table>
+<tr><td>1</td><td>2026-10-22</td><td>Report rebuilding, location identities and display precision
+are corrected so the supplied-response screening evidence remains reproducible.</td></tr>
+<tr><td>2</td><td>{CHANGES["date"]}</td><td>Supported verification instructions are added so isolated
+report checks retain the declared dependency bounds.</td></tr></tbody></table>
 </section>
 
 <section id="s2"><h2>2. Introduction</h2>
@@ -710,6 +723,16 @@ output destination redirected. The touchdown interface is called separately on t
 to obtain the allowable damage and period basis. The rebuild test compares all numeric output rows
 and per-location results against direct module calls, checks every displayed numeric field against the
 embedded record, and checks deterministic reproduction of this HTML and its change record. {cite(6)}</p>
+<p>From the repository root, the following POSIX-shell command runs the report and supporting fatigue
+checks with the declared numerical and test dependency bounds. Other shells require
+<code>PYTHONPATH</code> to be set to <code>src</code> before running <code>uv</code>.
+The <code>--no-project</code> option does not load project constraints, so those bounds are supplied
+explicitly, including NumPy below version 2. An unconstrained cached environment does not establish
+supported-dependency verification. {cite(6)}</p>
+<pre id="report-check-command" style="white-space:pre-wrap;overflow-wrap:anywhere"><code>{html.escape(REPORT_CHECK_COMMAND)}</code></pre>
+<p>The command checks arithmetic, report reproduction and interaction logic. Its result does not
+establish physical qualification or native browser and platform behavior. Test scratch can be directed
+outside the checkout by appending <code>--basetemp</code> with a new disposable directory.</p>
 <p>The chart plots total design-life damage by location with the allowable damage returned by the
 touchdown interface. Its ordinate starts at zero and its upper extent includes both demands and the limit.
 No operating boundary, stress limit or service-life probability is inferred from the chart. {cite(2)}{cite(6)}</p>

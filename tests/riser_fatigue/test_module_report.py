@@ -9,8 +9,11 @@ import importlib.util
 import json
 import math
 import re
+import shlex
 import subprocess
 import sys
+import tomllib
+from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -196,6 +199,29 @@ def test_report_has_house_style_sources_and_ten_sections(built):
     ids = set(re.findall(r'\bid="([^"]+)"', html))
     for target in re.findall(r'href="#([^"]+)"', html):
         assert target in ids
+
+
+def test_documented_verification_preserves_supported_dependency_bounds(built):
+    _, _, page = built
+    command = re.search(r'<pre id="report-check-command"[^>]*><code>(.*?)</code></pre>',
+                        page, re.S)
+    assert command is not None, "The report must provide a runnable verification command"
+    tokens = shlex.split(unescape(command.group(1)))
+    assert tokens[:4] == ["PYTHONPATH=src", "uv", "run", "--no-project"]
+    requirements = {tokens[index + 1] for index, token in enumerate(tokens)
+                    if token == "--with"}
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    dependencies = project["dependencies"] + project["optional-dependencies"]["test"]
+    names = {"numpy", "pandas", "pylife", "pydantic", "pyyaml", "rainflow", "pytest"}
+    assert requirements == {dep for dep in dependencies if dep.split(">=")[0] in names}
+    execution = tokens[tokens.index("python"):]
+    assert execution[:3] == ["python", "-m", "pytest"]
+    assert {path for path in execution if path.endswith(".py")} == {
+        "tests/riser_fatigue/test_module_report.py",
+        "tests/riser_fatigue/test_touchdown.py",
+        "tests/riser_fatigue/test_resolve_dff.py",
+    }
+    assert "no:cacheprovider" in execution
 
 
 def test_cli_writes_only_requested_deliverables(tmp_path):
