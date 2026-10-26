@@ -6,11 +6,52 @@ All numbers below are chosen arithmetic inputs, not measured response data or
 acceptance limits. Each expected response is derived in the test's comments.
 """
 
+import importlib.util
+import shlex
+import sys
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
+import yaml
 
 from digitalmodel.marine_ops.w2w_gangway import ResponseBasis, compute_relative_rao
+
+
+def test_relative_motion_test_changes_select_the_collecting_domain(monkeypatch):
+    """A test-only edit must select the shard that runs the relative responses."""
+    root = Path(__file__).resolve().parents[3]
+    spec = importlib.util.spec_from_file_location(
+        "relative_motion_ci_detector", root / "scripts/ci/detect_touched_domains.py"
+    )
+    detector = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, spec.name, detector)
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    selected = detector.touched_domains(
+        ["tests/marine_ops/w2w_gangway/test_relative_motion.py"], domains
+    )
+    assert [domain.name for domain in selected] == ["marine-engineering"]
+    owners = [
+        domain.name for domain in domains
+        if "tests/marine_ops/w2w_gangway/" in domain.roots
+    ]
+    assert owners == ["marine-engineering"]
+
+
+def test_relative_motion_ci_gate_includes_the_suite():
+    """The selected blocking gate must actually pass the suite to pytest."""
+    root = Path(__file__).resolve().parents[3]
+    gates = yaml.safe_load(
+        (root / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    gate = gates["tests-marine-engineering"]
+    assert gate["enabled"] is True
+    assert gate["domain"] == "marine-engineering"
+    assert "tests/marine_ops/w2w_gangway/" in gate["test_roots"]
+    command = shlex.split(gate["command"])
+    assert "tests/marine_ops/w2w_gangway/" in command[command.index("pytest") + 1:]
+    assert gate["failure_action"] == "block"
 
 
 @pytest.fixture
