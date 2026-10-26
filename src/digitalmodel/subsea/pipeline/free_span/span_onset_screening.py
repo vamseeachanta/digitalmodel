@@ -15,6 +15,9 @@ CF onset reduced velocity (F105 Sec 4.4.6):
            = 1.0                 (e/D ≥ 0.8)
     Vr_onset_CF = 3.0 × ψ_prox / γ_on_CF
 
+The CF onset also includes the bounded trench factor from issue #1731;
+cf_onset_velocity documents its equation and input mapping.
+
 Total reduced velocity:
     Ur = (Uc + Uw) / (fn × D)
 """
@@ -99,9 +102,26 @@ class SpanOnsetScreening:
         return 0.2 * (4.0 + 1.25 * e_over_D)
 
     def cf_onset_velocity(self) -> float:
-        """CF onset reduced velocity with γ_on_CF safety factor applied."""
+        """CF onset reduced velocity with safety and trench factors applied.
+
+        Trench implementation basis: issue #1731, not independent standards
+        qualification. Its seabed_proximity maps to seabed_gap_m and its
+        drag_diameter maps to od_m, the diameter used by this onset model.
+        All three lengths are in metres; delta_D and the factor are dimensionless:
+            delta_D = clamp((1.25 * trench_depth_m - seabed_gap_m) / od_m, 0, 1)
+            factor = 1 + 0.5 * delta_D
+        The issue supplies the coefficients and bounds. Zero trench depth
+        preserves legacy behavior, including the existing negative-gap handling.
+        """
         psi = self._seabed_proximity_factor()
-        return 3.0 * psi / self._inp.gamma_on_CF
+        trench_factor = 1.0
+        if self._inp.trench_depth_m > 0.0:
+            delta_D = (
+                1.25 * self._inp.trench_depth_m - self._inp.seabed_gap_m
+            ) / self._inp.od_m
+            delta_D = max(0.0, min(1.0, delta_D))
+            trench_factor += 0.5 * delta_D
+        return 3.0 * psi / self._inp.gamma_on_CF * trench_factor
 
     # ------------------------------------------------------------------
     # Reduced velocity

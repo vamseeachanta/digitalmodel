@@ -5,6 +5,7 @@ All physical quantities in SI units unless noted in field names.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -47,6 +48,8 @@ class PipeSpanInput:
     current_velocity_ms  current speed Uc [m/s]
     wave_velocity_ms     wave-induced velocity Uw [m/s]
     seabed_gap_m         gap e between pipe bottom and seabed [m]
+    trench_depth_m       finite nonnegative trench depth [m]; default zero
+                         preserves untrenched onset (issue #1731)
 
     Damping
     -------
@@ -104,6 +107,14 @@ class PipeSpanInput:
     gamma_on_IL: float = 1.1
     gamma_on_CF: float = 1.3
     gamma_k: float = 1.15
+
+    # Appended to preserve existing positional input arguments (issue #1731).
+    trench_depth_m: float = 0.0
+
+    def __post_init__(self) -> None:
+        """Validate the trench-depth domain required by issue #1731."""
+        if not math.isfinite(self.trench_depth_m) or self.trench_depth_m < 0.0:
+            raise ValueError("trench_depth_m must be finite and nonnegative")
 
 
 @dataclass
