@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Validated concept-screening facade for ITC 1969 gross and net tonnage.
@@ -17,6 +20,7 @@ Passenger counts must be nonnegative integers; booleans are rejected for
 every input. Zero cargo volume is unsupported by the logarithmic equation.
 Numeric extremes that cannot produce finite positive coefficients and
 tonnages are rejected rather than returned as screening results.
+Overflowing draught/depth intermediates are rejected before delegation.
 
 The caller supplies estimated volumes, the applicable Regulation 4(2)
 draught and permitted passenger counts. No enclosed-space geometry,
@@ -93,6 +97,14 @@ def tonnage(
         if isinstance(count, bool) or not isinstance(count, Integral) or count < 0:
             raise ValueError(f"{name} must be a nonnegative integer")
     try:
+        # Reg 4: both products in 4d/(3D) must remain representable.
+        if not (
+            math.isfinite(4.0 * moulded_draught_m)
+            and math.isfinite(3.0 * moulded_depth_m)
+        ):
+            raise ValueError(
+                "draught/depth intermediates exceed the supported numeric range"
+            )
         result: TonnageResult = _equations.tonnage(
             total_enclosed_volume_m3,
             cargo_volume_m3,

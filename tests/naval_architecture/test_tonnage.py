@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Synthetic ITC 1969 Annex I Regulations 3 and 4 hand calculations.
@@ -123,6 +126,31 @@ def test_unrepresentable_gross_tonnage(volume):
 def test_unrepresentable_net_tonnage(inputs):
     with pytest.raises(ValueError):
         facade.tonnage(*inputs)
+
+
+@pytest.mark.parametrize(
+    "draught, depth",
+    [(4e307, 6e307), (1e307, 1e308), (5e307, 5.5e307)],
+)
+def test_rejects_overflowing_draught_ratio_intermediates(draught, depth):
+    """Reg 4 products can overflow even when output floors or caps hide it."""
+    with pytest.raises(ValueError, match="supported numeric range"):
+        facade.tonnage(10000.0, 10000.0, draught, depth)
+
+
+@pytest.mark.parametrize("draught, depth", [(4.0, 6.0), (4e306, 6e306)])
+def test_representable_draught_ratio_hand_calculation(draught, depth):
+    """ITC 1969 Annex I Regs 3 and 4, printed page 15: finite control."""
+    # V=Vc=10000: log10(V)=4, K1=K2=0.28 and GT=2800.
+    # d/D=2/3: (4d/3D)^2=64/81; cargo=NT=179200/81.
+    # Cargo and NT exceed their respective floors of 700 and 840.
+    result = facade.tonnage(10000.0, 10000.0, draught, depth)
+    assert result.gross_tonnage == pytest.approx(2800.0)
+    assert result.draught_depth_factor == pytest.approx(64 / 81)
+    assert result.cargo_term == pytest.approx(179200 / 81)
+    assert result.net_tonnage == pytest.approx(179200 / 81)
+    assert result.cargo_term_floor_applied is False
+    assert result.nt_floor_applied is False
 
 
 @pytest.mark.parametrize(
