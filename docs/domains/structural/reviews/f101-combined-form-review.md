@@ -17,6 +17,7 @@ with the code strategy. No strategy calculation changes accompany this record.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-26 | Record the secondary-source comparison and independent ring calculation; retain the limitation because equivalence is not established. |
+| 2 | 2026-10-26 | Require complete, consistent evidence and the current implementation digest before releasing the label; retain institutional citation details without personal attribution. |
 
 Table 1. Review issues.
 
@@ -29,7 +30,7 @@ implementation is `DnvStF101Strategy._check_combined_loading` in
 revision `3a5ea5e79f1197335d032c6d6b17cb8751d9911f`. Its content digest is recorded
 in JSON so that a changed strategy needs a new review.
 
-The secondary source is David Roylance, *Yield and Plastic Flow*, **2001**,
+The secondary source is *Yield and Plastic Flow*, **2001**,
 *Modules in Mechanics of Materials*, Massachusetts Institute of Technology,
 printed pages **5–6**: the principal-stress expression preceding equation (2)
 and the yield locus in Figure 7. The [open module](https://web.mit.edu/course/3/3.11/www/modules/yield.pdf)
@@ -132,7 +133,13 @@ resistance model. No general bound on the simplified form is claimed.
 
 `wall_thickness_mt_report.py` reads the companion JSON record. A missing,
 unreadable, malformed, incomplete or unrecognised record retains the simplified
-form label. Only an explicit `passed` status for this form can release that label.
+form label. Releasing the label requires an explicit `passed` status, overall
+agreement and agreement at every required comparison point, with nonblank reasons.
+The record must identify the reviewed implementation and symbol, contain its
+current SHA-256 digest, and retain dated source evidence with institutional
+attribution, page locators and retrieval metadata. Missing evidence, contradictory
+agreement or a stale implementation digest retains the label. These checks establish
+record consistency; they do not establish engineering equivalence.
 The independent screening/reconciliation warning remains on the contour,
 bending-envelope and pressure-sensitivity chart fragments even if this particular
 review later passes. Installed packages without the review file retain the label.
