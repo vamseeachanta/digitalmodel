@@ -3,6 +3,25 @@
 
 """Coating-to-charge integration with independent synthetic oracles.
 
+Plan-lite
+---------
+Scope: this test module alone connects coating breakdown, current demand,
+installed anode mass and consumed mass. Production code and inputs are unchanged.
+Oracles: hand dimensional identities [D] and the independent antiderivative [C]
+check synthetic charge budgets without production functions or constants.
+Offline validation, from the repository root with the declared dependencies::
+
+    PYTHONPATH=src uv run --no-project --with 'pytest>=7.4.3,<9' \
+        --with 'hypothesis>=6.100,<7' --with pytest-asyncio==0.21.1 \
+        --with 'pydantic>=2.7,<3' --with pyyaml --with scipy python -m pytest \
+        tests/cathodic_protection/test_cp_charge_integration.py \
+        tests/cathodic_protection/test_cp_cross_module_consistency.py \
+        tests/cathodic_protection/test_properties.py -q -rA -p no:cacheprovider \
+        --basetemp="$TMPDIR/../bt-final"
+
+Deferred integration paths: inspection recommendations and retrofit assessment.
+Synthetic charge identities do not qualify physical design inputs.
+
 Basis and citations for the constants and expected values in this module:
 
 [D] Dimensional identities, by hand: I [A] = area [m2] * density [A/m2] * f;
