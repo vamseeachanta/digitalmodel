@@ -618,3 +618,11 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+
+# Retain only the synthetic tree-flow example and its documentation.
+!/docs/reports/modules/trees/
+/docs/reports/modules/trees/*
+!/docs/reports/modules/trees/examples/
+/docs/reports/modules/trees/examples/*
+!/docs/reports/modules/trees/examples/flow_handoff.py
+!/docs/reports/modules/trees/examples/README.md
