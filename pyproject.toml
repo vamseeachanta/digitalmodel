@@ -312,6 +312,7 @@ digitalmodel = [
     "solvers/openfoam/data/*.yml",
     "motion_forecast/*.yml",
     "usecase_registry/*.yaml",
+    "riser_study/*.json",
     "marine_ops/artificial_lift/reference_data/**/*.csv",
     "marine_ops/artificial_lift/reference_data/**/*.yml",
     "reporting/assets/*.html",

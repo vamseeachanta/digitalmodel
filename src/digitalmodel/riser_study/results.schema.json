@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Exported riser strength or fatigue result",
+  "oneOf": [{"$ref": "#/$defs/strength"}, {"$ref": "#/$defs/fatigue"}],
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "pattern": "\\S"},
+    "case_id": {"type": "string", "pattern": "^R(08|10|12)-W[12]-(SCR|SLWR)$"},
+    "nonnegative": {"type": "number", "minimum": 0},
+    "positive": {"type": "number", "exclusiveMinimum": 0},
+    "numbers": {"type": "array", "minItems": 1, "items": {"type": "number"}},
+    "nonnegative_array": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/nonnegative"}},
+    "run": {
+      "type": "object", "required": ["input_sha256", "result_file", "date"],
+      "properties": {
+        "input_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "result_file": {"$ref": "#/$defs/text"},
+        "date": {"oneOf": [{"type": "string", "format": "date"}, {"type": "string", "format": "date-time"}]}
+      }
+    },
+    "allowable": {
+      "type": "object", "required": ["value", "unit", "basis_label", "source"],
+      "properties": {
+        "value": {"$ref": "#/$defs/positive"}, "unit": {"$ref": "#/$defs/text"},
+        "basis_label": {"$ref": "#/$defs/text"}, "source": {"$ref": "#/$defs/text"}
+      }
+    },
+    "strength": {
+      "type": "object",
+      "required": ["case_id", "software", "load_case", "arc_length_m", "effective_tension_kN", "bending_moment_kNm", "von_mises_utilisation", "method", "allowable", "max_utilisation", "touchdown", "top_angle_deg", "hang_off_tension_kN", "run"],
+      "properties": {
+        "case_id": {"$ref": "#/$defs/case_id"},
+        "software": {
+          "type": "object", "required": ["name", "version"],
+          "properties": {"name": {"$ref": "#/$defs/text"}, "version": {"$ref": "#/$defs/text"}}
+        },
+        "load_case": {
+          "type": "object", "required": ["id", "wave", "current", "offset"],
+          "properties": {
+            "id": {"$ref": "#/$defs/text"}, "wave": {"type": "object"},
+            "current": {"type": "object"}, "offset": {"type": "object"}
+          }
+        },
+        "arc_length_m": {"$ref": "#/$defs/nonnegative_array"},
+        "effective_tension_kN": {"$ref": "#/$defs/numbers"},
+        "bending_moment_kNm": {"$ref": "#/$defs/numbers"},
+        "von_mises_utilisation": {"$ref": "#/$defs/nonnegative_array"},
+        "method": {"$ref": "#/$defs/text"}, "allowable": {"$ref": "#/$defs/allowable"},
+        "max_utilisation": {
+          "type": "object", "required": ["value", "arc_length_m", "location"],
+          "properties": {
+            "value": {"$ref": "#/$defs/nonnegative"}, "arc_length_m": {"$ref": "#/$defs/nonnegative"},
+            "location": {"$ref": "#/$defs/text"}
+          }
+        },
+        "touchdown": {
+          "type": "object", "required": ["arc_length_m", "utilisation", "stress_range_MPa"],
+          "properties": {
+            "arc_length_m": {"$ref": "#/$defs/nonnegative"}, "utilisation": {"$ref": "#/$defs/nonnegative"},
+            "stress_range_MPa": {"$ref": "#/$defs/nonnegative"}
+          }
+        },
+        "top_angle_deg": {
+          "type": "object", "required": ["static", "dynamic_min", "dynamic_max"],
+          "properties": {"static": {"type": "number"}, "dynamic_min": {"type": "number"}, "dynamic_max": {"type": "number"}}
+        },
+        "hang_off_tension_kN": {
+          "type": "object", "required": ["static", "dynamic_max"],
+          "properties": {"static": {"type": "number"}, "dynamic_max": {"type": "number"}}
+        },
+        "run": {"$ref": "#/$defs/run"}
+      }
+    },
+    "range_bin": {
+      "type": "object", "required": ["stress_range_MPa", "cycles_per_year"],
+      "properties": {"stress_range_MPa": {"$ref": "#/$defs/nonnegative"}, "cycles_per_year": {"$ref": "#/$defs/nonnegative"}}
+    },
+    "hot_spot": {
+      "type": "object", "required": ["name", "arc_length_m", "cycles_per_year", "scf"],
+      "oneOf": [
+        {"required": ["stress_range_MPa"], "not": {"required": ["range_histogram"]}},
+        {"required": ["range_histogram"], "not": {"required": ["stress_range_MPa"]}}
+      ],
+      "properties": {
+        "name": {"enum": ["touchdown", "hang_off"]}, "arc_length_m": {"$ref": "#/$defs/nonnegative"},
+        "cycles_per_year": {"$ref": "#/$defs/nonnegative"}, "scf": {"$ref": "#/$defs/positive"},
+        "stress_range_MPa": {"$ref": "#/$defs/nonnegative"},
+        "range_histogram": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/range_bin"}}
+      }
+    },
+    "fatigue": {
+      "type": "object", "required": ["case_id", "sea_state", "hot_spots", "sn_curve", "damage_per_year", "life_years", "run"],
+      "properties": {
+        "case_id": {"$ref": "#/$defs/case_id"},
+        "sea_state": {
+          "type": "object", "required": ["id", "Hs_m", "Tp_s", "direction_deg", "occurrence"],
+          "properties": {
+            "id": {"$ref": "#/$defs/text"}, "Hs_m": {"$ref": "#/$defs/nonnegative"},
+            "Tp_s": {"$ref": "#/$defs/positive"}, "direction_deg": {"type": "number"},
+            "occurrence": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        },
+        "hot_spots": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/hot_spot"}},
+        "sn_curve": {
+          "type": "object", "required": ["name", "source", "m", "log_a", "thickness_correction"],
+          "properties": {
+            "name": {"$ref": "#/$defs/text"}, "source": {"$ref": "#/$defs/text"},
+            "m": {"$ref": "#/$defs/positive"}, "log_a": {"type": "number"},
+            "thickness_correction": {"$ref": "#/$defs/positive"}
+          }
+        },
+        "damage_per_year": {"$ref": "#/$defs/nonnegative"}, "life_years": {"$ref": "#/$defs/positive"},
+        "run": {"$ref": "#/$defs/run"}
+      }
+    }
+  }
+}
