@@ -10,6 +10,21 @@ example; none represents a qualified material or a reference pipe design.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-26 | Added synthetic inputs and independent hand calculations for a runnable geometry example. |
+| 2 | 2026-10-26 | Added Plan-lite to state the geometry scope, calculation basis, regression checks and deferred qualification explicitly. |
+
+## Plan-lite
+
+- Scope will remain geometry and mass per unit length for contiguous full-wall
+  layers using the existing `Layer` and `FlexiblePipeSection` classes.
+- Inputs will use the synthetic dimensions and densities listed below; they
+  will not be treated as qualified material or manufactured-pipe data.
+- Expected outputs will use an independent hand-calculation oracle based on
+  circle radii, annular areas and density times volume per unit length.
+- Regression checks will compare literal subprocess output with that oracle,
+  reject a deliberate layer gap and retain the existing flexible-pipe tests.
+- Engineering qualification, including fatigue, structural capacity, layer
+  interaction, bend-stiffener sizing and catenary integration, will remain
+  deferred to separate qualified inputs and analysis.
 
 ## Run offline
 
