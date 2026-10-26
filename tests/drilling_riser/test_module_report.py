@@ -86,7 +86,14 @@ def direct_results(tmp_path):
     return inputs, summary, profile
 
 
-def test_report_values_equal_public_module_and_independent_equilibrium(builder, tmp_path):
+@pytest.fixture()
+def slip_ring_reference():
+    """Load the cited arithmetic reference without reading production factors."""
+    path = ROOT / "tests/drilling_riser/fixtures/slip_ring_reference.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_report_values_equal_public_module_and_independent_equilibrium(builder, tmp_path, slip_ring_reference):
     data = builder.compute(tmp_path / "report")
     inputs, summary, profile = direct_results(tmp_path / "direct")
     assert data["inputs"] == inputs
@@ -100,11 +107,18 @@ def test_report_values_equal_public_module_and_independent_equilibrium(builder, 
     d = {k: Decimal(str(v)) for k, v in inputs.items() if isinstance(v, (float, int))}
     top = d["submerged_weight_kn"] * d["dynamic_factor"]
     wall = d["design_pressure_mpa"] * d["od_mm"] * d["barlow_safety_factor"] / (2 * d["smys_mpa"])
-    slip = d["submerged_weight_kn"] * Decimal(str(stackup.F_WT_DEFAULT)) - d["buoyancy_uplift_kn"] * Decimal(str(stackup.F_BT_DEFAULT))
-    slip += d["internal_area_m2"] * (d["mud_density_kn_m3"] * d["mud_column_m"] - d["seawater_density_kn_m3"] * d["seawater_column_m"])
     assert summary["top_tension_required_kn"] == pytest.approx(float(top))
     assert summary["wall_thickness_required_mm"] == pytest.approx(float(wall))
-    assert summary["min_slip_ring_tension_kn"] == pytest.approx(float(slip))
+    # Report-to-module reconciliation above is separate from this hand check.
+    # Neither the reference factors nor the expected result come from stackup.
+    reference = slip_ring_reference
+    assert {key: inputs[key] for key in reference["inputs"]} == reference["inputs"]
+    r = {key: Decimal(str(value)) for key, value in reference["inputs"].items()}
+    factors = {key: Decimal(value) for key, value in reference["factors"].items()}
+    slip = r["submerged_weight_kn"] * factors["f_wt"] - r["buoyancy_uplift_kn"] * factors["f_bt"]
+    slip += r["internal_area_m2"] * (r["mud_density_kn_m3"] * r["mud_column_m"] - r["seawater_density_kn_m3"] * r["seawater_column_m"])
+    assert slip == Decimal(reference["expected_min_slip_ring_tension_kn"])
+    assert summary["min_slip_ring_tension_kn"] == pytest.approx(float(slip), rel=1e-12, abs=1e-9)
     for row in profile:
         expected = top - d["submerged_weight_kn"] * Decimal(str(row["depth_factor"]))
         assert row["effective_tension_kn"] == pytest.approx(float(expected))

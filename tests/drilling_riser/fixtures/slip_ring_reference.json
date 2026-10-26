@@ -1,0 +1,40 @@
+{
+  "description": "Independent arithmetic reference for the public stack-up example.",
+  "qualification": "Arithmetic regression only. The factors are pinned from a separately documented test hand calculation, not imported from production code. Publication clauses, physical applicability and operating acceptance have not been independently established.",
+  "sources": [
+    {
+      "path": "examples/workflows/riser-stackup/input.yml",
+      "revision": "50b3e9ce3dcdac764a586695bec0d8154119c2d8",
+      "sha256": "965f24fbcb6271e6f578cd3d3ebab67c80cf387bf2f358d2099d90fe4b8451f7",
+      "use": "Illustrative case inputs; assumed values, not measured design data."
+    },
+    {
+      "path": "tests/drilling_riser/test_stackup_doc_verified.py",
+      "revision": "50b3e9ce3dcdac764a586695bec0d8154119c2d8",
+      "sha256": "16661806e4ef276338ea8e0b019106aae45040a8b1a4a29fbcc246a77b9e2920",
+      "symbol": "TestMinimumSlipRingTension.test_typical_deepwater_slip_ring_tension",
+      "use": "Literal factor pair in the separate hand calculation; no publication text is used as independent evidence."
+    }
+  ],
+  "inputs": {
+    "submerged_weight_kn": 8200.0,
+    "buoyancy_uplift_kn": 2500.0,
+    "internal_area_m2": 0.18,
+    "mud_density_kn_m3": 13.0,
+    "mud_column_m": 1800.0,
+    "seawater_density_kn_m3": 10.05,
+    "seawater_column_m": 1800.0
+  },
+  "factors": {
+    "f_wt": "1.05",
+    "f_bt": "0.96"
+  },
+  "factor_units": "dimensionless",
+  "hand_calculation": [
+    "Weight term: 8200.0 kN x 1.05 = 8610.0 kN.",
+    "Buoyancy term: 2500.0 kN x 0.96 = 2400.0 kN.",
+    "Fluid-head term: 0.18 m^2 x (13.0 kN/m^3 x 1800.0 m - 10.05 kN/m^3 x 1800.0 m) = 955.8 kN.",
+    "Minimum slip-ring tension: 8610.0 - 2400.0 + 955.8 = 7165.8 kN."
+  ],
+  "expected_min_slip_ring_tension_kn": "7165.8"
+}
