@@ -9,6 +9,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Optional, Union
 
+import numpy as np
+
 from .catalog import HullCatalog, HullCatalogEntry
 from .panel_catalog import PanelCatalog, PanelCatalogEntry
 
@@ -165,7 +167,7 @@ def _validate_target(target: HullLookupTarget) -> None:
     if displacement is not None:
         try:
             valid = (
-                not isinstance(displacement, bool)
+                not isinstance(displacement, (bool, np.bool_))
                 and math.isfinite(displacement)
                 and displacement > 0
             )

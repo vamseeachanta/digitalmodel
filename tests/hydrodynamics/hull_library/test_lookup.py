@@ -4,6 +4,7 @@ ABOUTME: Unit tests for HullLookupTarget, HullMatch, HullLookup, and the
 get_hull_form convenience function in the hull_library lookup module.
 """
 
+import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics.hull_library.lookup import (
@@ -336,7 +337,18 @@ def test_lookup_rejects_invalid_result_count(synthetic_lookup, synthetic_target,
 
 @pytest.mark.parametrize(
     "displacement",
-    [0.0, -1.0, float("nan"), float("inf"), -float("inf"), True, False, "bad"],
+    [
+        0.0,
+        -1.0,
+        float("nan"),
+        float("inf"),
+        -float("inf"),
+        True,
+        False,
+        pytest.param(np.bool_(True), id="numpy-true"),
+        pytest.param(np.bool_(False), id="numpy-false"),
+        "bad",
+    ],
 )
 @pytest.mark.parametrize("api", ["find_closest", "get_hull_form", "convenience"])
 def test_lookup_rejects_invalid_optional_displacement(
@@ -351,7 +363,9 @@ def test_lookup_rejects_invalid_optional_displacement(
             getattr(synthetic_lookup, api)(synthetic_target)
 
 
-@pytest.mark.parametrize("displacement", [None, 1.0])
+@pytest.mark.parametrize(
+    "displacement", [None, 1.0, pytest.param(np.float64(1.0), id="numpy-float")]
+)
 def test_synthetic_lookup_exact_match(synthetic_lookup, synthetic_target, displacement):
     """Equal dimensions give distance zero, exp(0) = 1 and axis ratios of one.
 
