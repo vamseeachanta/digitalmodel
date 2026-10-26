@@ -554,8 +554,11 @@ class CampaignGenerator:
                 combo parameters.
 
         Returns:
-            CampaignResult with aggregated statistics. manifest_path is set
-            only in spec_only mode.
+            CampaignResult with aggregated statistics. manifest_path identifies
+            a manifest written by this call, only in spec_only mode when at least
+            one run is generated. It is None when every run is skipped (for
+            example, when resume finds every spec.yml sentinel); any existing
+            manifest is left unchanged.
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
