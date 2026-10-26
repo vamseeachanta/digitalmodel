@@ -4,7 +4,8 @@
 """Reproduce the frozen wall selections as pressure-only module screens.
 
 Run with PYTHONPATH=src:. python -m scripts.riser_study.wall_basis_table
---output-dir <output-directory>. Outputs are tab-wt.csv and its JSON manifest.
+--output-dir <output-directory>. Outputs are the TAB-WT-01 summary tab-wt.csv,
+the detailed tab-wt-checks.csv and their shared JSON manifest.
 Only the four explicitly listed strategies are executed. The M-T report's
 strategy routing is retained without generating an envelope or a native result.
 """
@@ -35,7 +36,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = Path(__file__).resolve().parent
 MATRIX = DATA / "wall_basis_matrix.csv"
 BASIS = DATA / "wall_basis.json"
-# Explicit editions from the supplied sizing basis, not a latest-edition claim.
+# Explicit editions adopted by the versioned study basis.
 STRATEGIES = (
     ("API RP 2RD", codes.API_RP_2RD.label, ApiRp2rdStrategy()),
     ("API RP 1111", ApiRp1111Strategy(2015).edition_info.display_label, ApiRp1111Strategy(2015)),
@@ -49,7 +50,7 @@ CODE_IDS = {"API RP 1111": "API_RP1111", "API RP 2RD": "API_RP2RD",
 
 
 def load_basis():
-    """Read values with their supplied assumption or repository provenance."""
+    """Read study assumptions and pinned repository provenance."""
     return json.loads(BASIS.read_text(encoding="utf-8"))
 
 
@@ -187,7 +188,7 @@ def _sha(path):
 
 
 def build(output_dir):
-    """Write the full check table and a deterministic provenance manifest.
+    """Write the comparison, full check table and provenance manifest.
 
     Args:
         output_dir: Destination for the CSV and JSON manifest.
@@ -206,12 +207,22 @@ def build(output_dir):
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     table = output / "tab-wt.csv"
+    checks_table = output / "tab-wt-checks.csv"
+    summary_fields = ("case_id", "size_nps_in", "wall_option", "wall_mm", "checked_wall_mm",
+                      "rp1111_utilisation", "rp2rd_utilisation", "std2rd_utilisation",
+                      "f101_utilisation", "pressure_guard_utilisation", "governing_check")
+    summary_codes = {"rp1111_utilisation": "API RP 1111", "rp2rd_utilisation": "API RP 2RD",
+                     "std2rd_utilisation": "API STD 2RD", "f101_utilisation": "DNV-ST-F101",
+                     "pressure_guard_utilisation": "pressure guard"}
     fields = ("case_id", "size_nps_in", "outside_diameter_mm", "wall_option", "wall_mm",
               "checked_wall_mm", "check", "check_id", "condition", "utilisation", "governing",
               "code_label", "internal_pressure_pa", "external_pressure_pa", "commit")
-    with table.open("w", encoding="utf-8", newline="") as stream:
+    with checks_table.open("w", encoding="utf-8", newline="") as stream, table.open(
+            "w", encoding="utf-8", newline="") as summary_stream:
         writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
+        summary_writer = csv.DictWriter(summary_stream, fieldnames=summary_fields, lineterminator="\n")
         writer.writeheader()
+        summary_writer.writeheader()
         for case in matrix:
             result = selected[case["nps_in"]][int(case["case_id"].split("-")[1][1:]) - 1]
             if abs(result["wall_mm"] - case["wall_thickness_mm"]) >= 0.1:
@@ -219,6 +230,13 @@ def build(output_dir):
             governing = max(result["checks"], key=lambda row: row["utilisation"])
             if governing["check_id"] != case["governing_check"]:
                 raise ValueError("Governing check does not match the matrix")
+            summary_writer.writerow({"case_id": case["case_id"], "size_nps_in": case["nps_in"],
+                                     "wall_option": result["wall_option"], "wall_mm": result["wall_mm"],
+                                     "checked_wall_mm": result["checked_wall_mm"],
+                                     "governing_check": governing["check_id"],
+                                     **{field: max(row["utilisation"] for row in result["checks"]
+                                                    if row["code"] == code)
+                                        for field, code in summary_codes.items()}})
             for check in result["checks"]:
                 writer.writerow({"case_id": case["case_id"], "size_nps_in": case["nps_in"],
                                  "outside_diameter_mm": case["outside_diameter_mm"],
@@ -227,20 +245,25 @@ def build(output_dir):
                                  "governing": str(check is governing).lower(),
                                  **{key: check[key] for key in ("check", "check_id", "condition",
                                     "code_label", "utilisation", "internal_pressure_pa", "external_pressure_pa")}})
-    paths = {Path(__file__), MATRIX, BASIS, Path(inspect.getfile(get_grade)),
+    paths = {Path(__file__), MATRIX, BASIS, DATA / "wall_basis_derivation.md",
+             ROOT / "tests/riser_study/test_wall_basis_table.py", Path(inspect.getfile(get_grade)),
              ROOT / "src/digitalmodel/codes.py", ROOT / "src/digitalmodel/structural/analysis/wall_thickness.py",
              ROOT / "src/digitalmodel/structural/analysis/wall_thickness_mt_report.py",
              ROOT / "scripts/reporting/build_riser_pipe_comparison.py"}
     paths.update(Path(inspect.getfile(type(strategy))) for _, _, strategy in STRATEGIES)
-    manifest = {"artifact": "TAB-WT", "commit": commit, "source_tree_dirty": dirty,
+    manifest = {"artifact": "TAB-WT-01", "commit": commit, "source_tree_dirty": dirty,
                 "commit_scope": "HEAD source revision; sources digests bind the actual calculation bytes",
                 "matrix_scope": "Sizing columns only; all twelve case IDs retained",
                 "basis": basis, "matrix": matrix,
                 "selections": {str(nps): results for nps, results in selected.items()},
                 "sources": [{"path": path.relative_to(ROOT).as_posix(), "sha256": _sha(path)}
                             for path in sorted(paths)],
-                "table": {"file": table.name, "rows": sum(len(result["checks"]) * 2 for results in selected.values() for result in results),
-                          "sha256": _sha(table)},
+                "table": {"file": table.name, "rows": len(matrix), "sha256": _sha(table),
+                          "utilisation_basis": "Maximum returned check per strategy over both load conditions; dimensionless ratios",
+                          "columns": list(summary_fields)},
+                "checks_table": {"file": checks_table.name,
+                                 "rows": sum(len(result["checks"]) * 2 for results in selected.values() for result in results),
+                                 "sha256": _sha(checks_table)},
                 "limits": [
                     "Pressure-only module screens; not standard certification, procurement or dynamic resistance.",
                     "Zero moment and effective tension; ambient temperature with no derating; seamless material.",
@@ -265,7 +288,8 @@ def main():
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     manifest = build(args.output_dir)
-    print(f'TAB-WT: {manifest["table"]["rows"]} check rows; six selected sections; twelve cases')
+    print(f'TAB-WT-01: {manifest["table"]["rows"]} comparison rows; '
+          f'{manifest["checks_table"]["rows"]} detailed checks; six selected sections')
 
 
 if __name__ == "__main__":

@@ -1,12 +1,137 @@
 {
-  "basis": "Frozen twelve-case matrix sizing projection and supplied design assumptions",
-  "mill_minus_tolerance": {"value": 0.125, "source": "supplied sizing assumptions"},
-  "w2_checked_wall_multiplier": {"value": 1.25, "source": "supplied W2 selection rule"},
-  "grid_mm": {"value": 0.1, "source": "supplied grid rule; scripts/reporting/build_riser_pipe_comparison.py::_minimum_wall"},
-  "seawater_density_kg_m3": {"value": 1025.0, "source": "supplied sizing assumptions"},
-  "gravity_m_s2": {"value": 9.80665, "source": "supplied sizing assumptions"},
-  "youngs_modulus_pa": {"value": 207000000000.0, "source": "supplied sizing assumptions; wall_thickness.py::PipeMaterial"},
-  "poissons_ratio": {"value": 0.3, "source": "supplied sizing assumptions; wall_thickness.py::PipeMaterial"},
-  "temperature_c": {"value": 20.0, "source": "supplied ambient sizing assumption; no thermal derating"},
-  "riser_pressure_factor": {"value": 0.6, "source": "supplied additional pressure guard; applied to ApiRp2rdStrategy burst p_b"}
+  "basis": "Repository sizing projection; study conventions and engineering inputs are assumed, based on previous experience; no independent external input source is available",
+  "mill_minus_tolerance": {
+    "value": 0.125,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "study convention",
+    "reference": "previous_basis"
+  },
+  "w2_checked_wall_multiplier": {
+    "value": 1.25,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "study convention",
+    "reference": "previous_basis"
+  },
+  "grid_mm": {
+    "value": 0.1,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "study convention",
+    "reference": "grid"
+  },
+  "seawater_density_kg_m3": {
+    "value": 1025.0,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "engineering input",
+    "reference": "previous_basis"
+  },
+  "gravity_m_s2": {
+    "value": 9.80665,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "engineering input",
+    "reference": "previous_basis"
+  },
+  "youngs_modulus_pa": {
+    "value": 207000000000.0,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "engineering input",
+    "reference": "defaults"
+  },
+  "poissons_ratio": {
+    "value": 0.3,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "engineering input",
+    "reference": "defaults"
+  },
+  "temperature_c": {
+    "value": 20.0,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "engineering input",
+    "reference": "previous_basis"
+  },
+  "riser_pressure_factor": {
+    "value": 0.6,
+    "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+    "classification": "study convention",
+    "reference": "previous_basis"
+  },
+  "schema_version": 2,
+  "references": {
+    "matrix": {
+      "path": "scripts/riser_study/wall_basis_matrix.csv",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "919c1e2e83f2c28f5cee2465a9e18f322831723eb78ea7f332be5f8a6c3ced44"
+    },
+    "selection": {
+      "path": "scripts/riser_study/wall_basis_table.py",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "82d804cda78049b6be97797639db9f5fb9ef299437c9a47c7cd9ccc1972894a7"
+    },
+    "previous_basis": {
+      "path": "scripts/riser_study/wall_basis.json",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "721de82503263d161eb2c8ecb93f8227bdd11b85ed8a6b1ee13214838ccb8667"
+    },
+    "grid": {
+      "path": "scripts/reporting/build_riser_pipe_comparison.py",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "be93e077171ad1ab6663e42da21993bf2da26b2d6b6351469783c3c9c58579d0"
+    },
+    "material": {
+      "path": "src/digitalmodel/materials/grades.py",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90"
+    },
+    "defaults": {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "2b2684136b209dcb63888f6924282991e281b89143f1d90e03ae676d5d2ae053"
+    },
+    "api_rp_1111": {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544"
+    },
+    "api_rp_2rd": {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef"
+    },
+    "api_std_2rd": {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f"
+    },
+    "dnv_st_f101": {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+      "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+      "sha256": "1ecb39c1bf52a2b64bc3a71933324cdaf48c63c13b142d5e155f702cc1eb506e"
+    }
+  },
+  "matrix_provenance": {
+    "reference": "matrix",
+    "engineering_inputs": "assumed, based on previous experience; no independently sourced matrix or measured fabrication inputs are available",
+    "columns": {
+      "case_id": "study convention: twelve-case identifiers; SCR and SLWR share pressure screening inputs",
+      "nps_in": "engineering input: assumed, based on previous experience; nominal size label",
+      "outside_diameter_mm": "engineering input: assumed, based on previous experience; no dimensional standard qualification",
+      "wall_thickness_mm": "derived regression evidence: first passing W1 grid wall or W2 checked-wall uplift; selection reference",
+      "checked_wall_mm": "derived regression evidence: nominal wall times (1 - mill minus tolerance), then corrosion deduction",
+      "design_pressure_MPa_g": "engineering input: assumed, based on previous experience; internal gauge pressure without external support",
+      "material_grade": "engineering input: assumed, based on previous experience; X65 from material reference, SMYS 450 MPa and SMTS 535 MPa",
+      "corrosion_allowance_mm": "engineering input: assumed, based on previous experience; common deduction for all strategies",
+      "governing_check": "derived regression evidence: maximum returned utilisation under study conventions; not a prescribed standard rule",
+      "water_depth_m": "engineering input: assumed, based on previous experience; full-depth empty-pipe hydrostatic screen"
+    }
+  },
+  "load_conventions": {
+    "source": "assumed, based on previous experience",
+    "reference": "selection",
+    "conditions": [
+      "20 MPa internal gauge pressure with zero external pressure",
+      "zero internal gauge pressure with full-depth seawater external pressure"
+    ],
+    "mechanical": "Zero bending moment and effective tension; ambient temperature; seamless fabrication with alpha_fab = 1",
+    "selection": "All returned checks must pass; no buckle arrestors are credited; propagation as a wall selection constraint is a study convention",
+    "factors": "Use repository implementation defaults and explicit RP 1111 (2015) and F101 (2021) editions; not independently qualified against licensed standards"
+  }
 }
