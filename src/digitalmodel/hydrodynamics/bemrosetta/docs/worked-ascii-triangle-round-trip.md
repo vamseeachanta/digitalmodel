@@ -13,6 +13,20 @@ independently. This is a mesh conversion example, not solver qualification.
 | Revision | Date       | What changed and why                                       |
 | -------- | ---------- | ---------------------------------------------------------- |
 | A        | 2026-10-25 | Added a synthetic triangle example with executable checks. |
+| B        | 2026-10-25 | Stated the example scope, acceptance checks and deferred report work. |
+
+## Plan-lite
+
+The scope is one synthetic triangle written and restored through the offline
+ASCII STL handler, with one translated case. Acceptance checks compare both
+original and restored area, bounds and signed unit normal against the
+independent hand calculations below. Translation must shift the bounds while
+preserving area and normal direction. Comparisons use the stated absolute
+tolerance with zero relative tolerance; vertex ordering is not an acceptance
+criterion. The tests execute the document's sole Python block verbatim.
+
+The full module report, report builder and index are deferred. General mesh
+equivalence, other STL cases and solver qualification require separate work.
 
 ## Inputs and basis
 
