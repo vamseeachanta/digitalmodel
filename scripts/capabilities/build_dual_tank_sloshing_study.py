@@ -573,6 +573,7 @@ table{table-layout:fixed}td,th{overflow-wrap:anywhere}#chart-tooltip{position:fi
 .schematic svg{max-width:440px;font-size:16px;margin:0 auto}.figure-note,.chart-data{font-size:.82rem}
 caption{caption-side:bottom;text-align:left;font-size:.82rem;color:var(--mut);padding:6px 0}
 pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}
+code{overflow-wrap:anywhere}
 @media print{
   @page{margin:16mm}
   body,.wrap{background:#fff;box-shadow:none}.wrap{max-width:none;padding:0}
@@ -582,7 +583,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}
   .schematic svg{max-width:340px;font-size:16px}
   figcaption,caption,.figure-note{font-size:9pt;font-weight:400}
   td,th{font-size:9pt}thead{display:table-header-group}
-  #basis code{overflow-wrap:anywhere}a{color:inherit;text-decoration:none}
+  a{color:inherit;text-decoration:none}
 }
 
 """
@@ -593,7 +594,7 @@ TOOLTIP_SCRIPT = """<script>
   box.id = 'chart-tooltip'; box.setAttribute('role', 'status'); box.hidden = true;
   document.body.append(box);
   const show = event => {
-    const point = event.target.closest('[data-tooltip]');
+    const point = event.target.closest('[data-tooltip]') || document.activeElement.closest('[data-tooltip]');
     box.hidden = !point;
     if (point) box.textContent = point.dataset.tooltip;
   };
@@ -601,7 +602,11 @@ TOOLTIP_SCRIPT = """<script>
   document.addEventListener('keydown', event => { if (event.key === 'Escape') box.hidden = true; });
   document.addEventListener('focusout', () => { box.hidden = true; });
   document.addEventListener('pointerout', event => {
-    if (event.pointerType !== 'touch') box.hidden = true;
+    if (event.pointerType !== 'touch') {
+      const focused = document.activeElement.closest('[data-tooltip]');
+      if (focused) show({target: focused});
+      else box.hidden = true;
+    }
   });
 })();
 </script>"""
@@ -987,10 +992,15 @@ def render():
 <details id="revision-history"><summary>Revision history</summary>
 <h2 id="revisions">Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr class="revision-5"><td>5</td><td>2026-10-25</td><td>Earlier revision entries restored; qualification linked from Appendix A; reference paths wrap on narrow screens; rendered layout, print and interaction checks added; engineering results retained.</td></tr>
 <tr class="revision-4"><td>4</td><td>2026-10-25</td><td>Illustrative and archived results separated; response terms defined; narrow-screen schematic and display precision clarified; calculation inputs and results retained.</td></tr>
-<tr class="revision-3"><td>3</td><td>2026-10-25</td><td>Numbered engineering sections, source register, dimensioned schematic and consistent plots; calculation inputs and results retained.</td></tr>
-<tr class="revision-2"><td>2</td><td>2026-10-25</td><td>schematic added; three summary charts; every chart interactive with a CSV; the limits gathered in one place</td></tr></table>
-<p>Earlier changes dated 2026-10-23 clarified display precision, archived evidence and independent illustrative geometry. Initial publication and editorial clarification dates are unrecorded.</p>
+<tr class="revision-3"><td>3</td><td>2026-10-25</td><td>Engineering reporting conventions: numbered sections, source register, dimensioned schematic and consistent plots; calculation inputs and results retained.</td></tr>
+<tr class="revision-2"><td>2</td><td>2026-10-25</td><td>schematic added; three summary charts; every chart interactive with a CSV; the limits gathered in one place</td></tr>
+<tr><td>Display precision</td><td>2026-10-23</td><td>Damping-axis labels distinguished and comparison percentages rounded to one decimal place; source precision retained in the evidence record.</td></tr>
+<tr><td>Evidence</td><td>2026-10-23</td><td>Archived CFD reductions added with provenance and evidence-class limits to distinguish measurements from illustrative predictions.</td></tr>
+<tr><td>Geometry</td><td>2026-10-23</td><td>Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.</td></tr>
+<tr><td>Editorial</td><td>Not assigned</td><td>Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.</td></tr>
+<tr><td>Initial</td><td>Not assigned</td><td>Public-source analysis added to document model scope and remaining work.</td></tr></table>
 </details>
 <h2 id="introduction">2 Introduction</h2>
 
@@ -1109,10 +1119,7 @@ the forced-sweep peak is loss-controlled and varies with roll amplitude. The rep
 <p>Wrapper cases are cases attempted through automated case-launch scripts. An End marker is the normal solver-completion message. Open transfer denotes the open-boundary transfer check, rejected because of boundary-flux growth. A screening manifest is a list of analytical screening cases; it does not establish completed CFD solutions <a href="#ref-evidence">[I3]</a>.</p>
 {evidence_classes()}
 
-<p>These results support screening only; design qualification is not established. The moment fit holds for forcing periods of 20 s and longer (4.3 % RMS) and degrades below about 16 s; the cause is not established. Transfer of the calibration to the invented geometry is an assumption, also inside that band; the new geometry's natural period must be measured before the effective conduit length is recalibrated. The single-tank comparison illustrates peak splitting and merging only: single and connected tanks are not compared at matched mass, tuning, hull damping and forcing. Continuous fill coverage, anti-roll phase and anti-roll benefit remain unestablished.</p>
-
-<p>The archived period checks do not establish a direct frozen-fluid roll-inertia error bound.
-Raw CFD fields, meshes, unstaged case quantities and the archived geometry are omitted. The earlier campaign does not qualify the invented illustrative geometry.</p>
+<p>Screening evidence only; the qualification limits are stated in <a href="#limits">Section 7</a>. Raw CFD fields, meshes, unstaged case quantities and the archived geometry are omitted.</p>
 </details>
 <h2 id="reproduce">Appendix B – Reproduce commands</h2>
 <p>Execute the linked calculation command from the repository root with Python; it evaluates the analytical models without a CFD solver. Output locations and source files are listed in <a href="#ref-build">[I7]</a>.</p>

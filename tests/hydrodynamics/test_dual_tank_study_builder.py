@@ -450,7 +450,7 @@ def test_a9_order_and_a10_exact_writer_copy(builder):
     assert '<details><summary>' in text
     spec = (ROOT / 'docs/plans/2026-10-25-dual-tank-page-layout-spec.md').read_text()
     visible = html.unescape(re.sub('<[^>]+>', '', text))
-    for section in ('6.1 Summary', '6.2 Limits', '6.3 Method'):
+    for section in ('6.1 Summary', '6.3 Method'):
         passage = spec.split('### ' + section, 1)[1].split('\n\n"', 1)[1].split('"', 1)[0]
         passage = passage.replace('illustrative inputs below', 'illustrative inputs in Section 3')
         passage = passage.replace('key results are summarized below', 'key results are summarized in Section 1')
@@ -763,9 +763,9 @@ def test_design_basis_assumptions_and_standard_record(builder):
     assert design.count('ASSUMED') >= 7
     revisions = text.split('<details id="revision-history">', 1)[1].split('</details>', 1)[0]
     assert '<summary>' in revisions and ' open' not in revisions[:revisions.index('<summary>')]
-    assert 'Numbered engineering sections' in revisions
+    assert 'numbered sections' in revisions
     assert not re.search(r'\b[A-Z]\d+\b|[0-9a-f]{9}', revisions)
-    assert 'Not assigned' not in revisions
+    assert revisions.count('Not assigned') == 2  # Preserve undated historical entries.
 
 
 def test_body_has_citations_instead_of_raw_source_lists(builder):
@@ -869,7 +869,7 @@ def test_reader_definitions_and_precision_are_source_bound(builder):
     assert 'Roll-moment amplitude (MN m)' in text
     assert '7.5' in text
     for phrase in ('version confirmation is pending', 'an earlier explanation was withdrawn',
-                   'source-neutral review', 'Not assigned'):
+                   'source-neutral review'):
         assert phrase not in text
 
 
@@ -879,3 +879,183 @@ def test_reference_locators_stay_in_reference_register(builder):
     # Body tooltips and metadata keep resolvable markers, not visible locator lists.
     assert '<summary>Chart sources and archive locators</summary>' not in body
     assert '<summary>Chart sources and archive locators</summary>' in text.split('9.2 Data record and builder links')[1]
+
+
+def test_qualification_has_two_locations_and_appendix_links_to_limits(builder):
+    text = builder.render()
+    qualification = 'These results support screening only; design qualification is not established.'
+    assert text.count(qualification) == 2
+    for start, end in [('summary', 'introduction'), ('limits', 'forward')]:
+        assert qualification in text.split(f'<h2 id="{start}">')[1].split(f'<h2 id="{end}">')[0]
+    appendix = text.split('<h2 id="sensitivity">')[1].split('<h2 id="reproduce">')[0]
+    assert '<a href="#limits">Section 7</a>' in appendix
+    assert qualification not in appendix
+    assert 'The moment fit holds for forcing periods' not in appendix
+
+
+def test_revision_history_preserves_each_earlier_entry(builder):
+    """Pin the earlier rows, with only the public-reference redaction."""
+    history = builder.render().split('<details id="revision-history">')[1].split('</details>')[0]
+    expected = [
+        ('3', '2026-10-25', 'Engineering reporting conventions: numbered sections, source register, dimensioned schematic and consistent plots; calculation inputs and results retained.'),
+        ('2', '2026-10-25', 'schematic added; three summary charts; every chart interactive with a CSV; the limits gathered in one place'),
+        ('Display precision', '2026-10-23', 'Damping-axis labels distinguished and comparison percentages rounded to one decimal place; source precision retained in the evidence record.'),
+        ('Evidence', '2026-10-23', 'Archived CFD reductions added with provenance and evidence-class limits to distinguish measurements from illustrative predictions.'),
+        ('Geometry', '2026-10-23', 'Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.'),
+        ('Editorial', 'Not assigned', 'Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.'),
+        ('Initial', 'Not assigned', 'Public-source analysis added to document model scope and remaining work.'),
+    ]
+    rows = re.findall(r'<tr[^>]*><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>', history)
+    assert rows[2:] == expected
+    assert rows[0][0] == '5' and rows[1] == (
+        '4', '2026-10-25',
+        'Illustrative and archived results separated; response terms defined; narrow-screen schematic and display precision clarified; calculation inputs and results retained.')
+
+
+@pytest.fixture(scope='module')
+def rendered_study():
+    """Serve committed assets locally; use an installed browser without downloads."""
+    import os
+    from functools import partial
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+    from threading import Thread
+
+    from playwright.sync_api import sync_playwright
+
+    class QuietHandler(SimpleHTTPRequestHandler):
+        def log_message(self, *_args):
+            pass
+
+    server = ThreadingHTTPServer(('127.0.0.1', 0), partial(QuietHandler, directory=ROOT))
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        with sync_playwright() as playwright:
+            executable = os.environ.get('PLAYWRIGHT_CHROMIUM_EXECUTABLE')
+            browser = playwright.chromium.launch(executable_path=executable)
+            try:
+                yield browser, f'http://127.0.0.1:{server.server_port}/{PAGE.relative_to(ROOT).as_posix()}'
+            finally:
+                browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()
+
+
+def rendered_svg_metrics(frame):
+    return frame.locator('svg[role="img"]').evaluate_all('''svgs => svgs.map(svg => {
+      const rect = svg.getBoundingClientRect();
+      const texts = [...svg.querySelectorAll('text')].filter(t => t.textContent.trim());
+      return {id: svg.id, width: rect.width, height: rect.height,
+        minimumFont: Math.min(...texts.map(t => parseFloat(getComputedStyle(t).fontSize)
+          * Math.hypot(t.getScreenCTM().a, t.getScreenCTM().b))),
+        overflow: texts.filter(t => {
+          const r = t.getBoundingClientRect();
+          return r.left < rect.left - 1 || r.right > rect.right + 1
+            || r.top < rect.top - 1 || r.bottom > rect.bottom + 1;
+        }).map(t => t.textContent)};
+    })''')
+
+
+@pytest.mark.parametrize('width,theme,scripts', [
+    (390, 'light', True), (390, 'dark', True), (600, 'light', True),
+    (1280, 'light', True), (390, 'light', False),
+])
+def test_rendered_exact_width_frames_have_readable_text_and_no_scroll(
+        rendered_study, width, theme, scripts, record_property):
+    browser, url = rendered_study
+    with browser.new_context(viewport={'width': 1440, 'height': 1000}, java_script_enabled=scripts) as context:
+        page = context.new_page()
+        page.set_content(f'<iframe title="Study" src="{url}" style="width:{width}px;height:900px;border:0"></iframe>')
+        frame = page.frames[1]
+        frame.wait_for_selector('#schematic')
+        frame.evaluate('theme => document.documentElement.dataset.theme = theme', theme)
+        frame.locator('details').evaluate_all('nodes => nodes.forEach(n => n.open = true)')
+        frame.evaluate('document.fonts.ready')
+        assert page.locator('iframe').bounding_box()['width'] == width
+        layout = frame.evaluate('''() => ({width: innerWidth,
+          client: document.documentElement.clientWidth,
+          scroll: document.documentElement.scrollWidth, body: document.body.scrollWidth})''')
+        assert layout['width'] == width
+        assert layout['scroll'] == layout['client'] == layout['body']
+        metrics = rendered_svg_metrics(frame)
+        assert len(metrics) == 14
+        assert all(item['minimumFont'] >= 12 for item in metrics), metrics
+        assert all(not item['overflow'] for item in metrics), metrics
+        record_property('rendered_layout', {'browser': browser.version, 'layout': layout, 'svg': metrics})
+        assert_references_resolve(frame.content(), PAGE)
+
+
+def test_rendered_print_bounds_and_pdf(rendered_study, tmp_path, record_property):
+    from pypdf import PdfReader
+
+    browser, url = rendered_study
+    # A4 content width and height after the report's 16 mm print margins.
+    printable_width = (210 - 32) * 96 / 25.4
+    printable_height = (297 - 32) * 96 / 25.4
+    with browser.new_context(viewport={'width': round(printable_width), 'height': 1000}) as context:
+        page = context.new_page()
+        page.goto(url)
+        page.emulate_media(media='print')
+        metrics = rendered_svg_metrics(page)
+        assert len(metrics) == 14
+        assert all(not item['overflow'] for item in metrics), metrics
+        assert all(item['minimumFont'] >= 12 for item in metrics), metrics
+        for selector in ('figure', 'table'):
+            sizes = page.locator(selector).evaluate_all('nodes => nodes.map(n => ({width:n.getBoundingClientRect().width, height:n.getBoundingClientRect().height, split:getComputedStyle(n).breakInside}))')
+            assert all(s['width'] <= printable_width + 1 and s['height'] < printable_height
+                       and s['split'] == 'avoid' for s in sizes), sizes
+        assert not page.locator('nav').is_visible()
+        assert not page.locator('.chart-data').first.is_visible()
+        pdf = tmp_path / 'study.pdf'
+        page.pdf(path=str(pdf), format='A4', prefer_css_page_size=True)
+        document = PdfReader(pdf)
+        printed = '\n'.join(p.extract_text() for p in document.pages)
+        assert len(document.pages) > 1
+        for heading in ('1 Executive summary', '7 Limitations', '9 References', 'Appendix A', 'Appendix B'):
+            assert heading in printed
+        assert 'roll angle' in printed
+        assert len(re.findall(r'Figure \d+\.\d+\s*–', printed)) == 14
+        record_property('print_layout', {'browser': browser.version, 'pages': len(document.pages), 'svg': metrics})
+
+
+def test_rendered_chart_hover_keyboard_touch_escape_and_csv(rendered_study, tmp_path):
+    browser, url = rendered_study
+    with browser.new_context(viewport={'width': 390, 'height': 900}, has_touch=True) as context:
+        page = context.new_page()
+        page.goto(url)
+        tooltip = page.locator('#chart-tooltip')
+        charts = page.locator('.study-chart')
+        assert charts.count() == 13
+        for chart in charts.all():
+            points = chart.locator('[data-tooltip]')
+            # The last series is painted on top of coincident observations.
+            point = points.last
+            expected = point.get_attribute('data-tooltip')
+            point.hover(force=True)
+            assert tooltip.is_visible() and tooltip.inner_text() == expected
+            page.keyboard.press('Escape')
+            assert tooltip.is_hidden()
+            points.first.focus()
+            assert tooltip.is_visible() and tooltip.inner_text() == points.first.get_attribute('data-tooltip'), (
+                chart.get_attribute('id'), page.evaluate('''() => ({active:document.activeElement.outerHTML.slice(0,200), focused:document.hasFocus()})'''))
+            page.keyboard.press('Tab')
+            assert tooltip.is_visible() and tooltip.inner_text() == points.nth(1).get_attribute('data-tooltip')
+            # Scrolling a focused point can move the pointer onto its chart.
+            chart.dispatch_event('pointerover', {'pointerType': 'mouse'})
+            assert tooltip.is_visible() and tooltip.inner_text() == points.nth(1).get_attribute('data-tooltip')
+            chart.dispatch_event('pointerout', {'pointerType': 'mouse'})
+            assert tooltip.is_visible() and tooltip.inner_text() == points.nth(1).get_attribute('data-tooltip')
+            page.keyboard.press('Escape')
+            assert tooltip.is_hidden()
+            point.tap(force=True)
+            assert tooltip.is_visible() and tooltip.inner_text() == expected
+            page.keyboard.press('Escape')
+            link = chart.locator('xpath=..').get_by_role('link', name='Data (CSV)')
+            with page.expect_download() as pending:
+                link.click()
+            download = pending.value
+            target = tmp_path / download.suggested_filename
+            download.save_as(target)
+            assert target.read_bytes() == (PAGE.parent / 'data/charts' / target.name).read_bytes()
