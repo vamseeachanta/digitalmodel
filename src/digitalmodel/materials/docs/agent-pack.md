@@ -1,3 +1,5 @@
+Historical provenance is superseded. Current numerical inputs are caller-supplied with per-row sources.yml; see docs/domains/materials/caller-supplied-data.md.
+
 # Materials knowledge pack
 
 | Header | Value |

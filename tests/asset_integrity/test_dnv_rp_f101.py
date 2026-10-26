@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Tests for DNV-RP-F101 corroded-pipe remaining-strength module —
 # ABOUTME: hand-calc golden, monotonicity, intact limit, B31G sanity, interaction, validation.
 import math
@@ -43,8 +45,8 @@ def test_hand_calc_golden():
 
 
 def test_smts_table_x52():
-    assert SMTS_PSI["X52"] == 66_700.0
-    assert SMTS_PSI["X70"] == 82_700.0
+    assert SMTS_PSI["X52"] == 611.0 * 145.0377
+    assert SMTS_PSI["X70"] == 619.0 * 145.0377
 
 
 def test_deeper_defect_lowers_capacity():
@@ -468,3 +470,7 @@ def test_omitted_legacy_alias_does_not_warn():
         warnings.simplefilter("error", DeprecationWarning)
         result = dnv_f101_single_defect(D, T, DEPTH, LEN, SMTS)
     assert result.allowable_pressure_psi == pytest.approx(960.6196866417781, rel=1e-12)
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

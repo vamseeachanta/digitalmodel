@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Tests for the FFS material library (#2171) — lower-bound toughness
 # ABOUTME: estimates, true stress-strain curve for FEA, and grade lookup.
 """Tests for :mod:`digitalmodel.materials.ffs_material_library`.
@@ -343,14 +345,14 @@ def test_lookup_carbon_steel_grade():
     m = lookup_grade("X65")
     assert isinstance(m, FFSMaterialInputs)
     g = get_grade("X65")
-    assert m.sigma_y_mpa == g.smys_mpa == 450.0
-    assert m.sigma_u_mpa == g.smts_mpa == 535.0
+    assert m.sigma_y_mpa == g.smys_mpa == 317.0
+    assert m.sigma_u_mpa == g.smts_mpa == 617.0
     assert m.E_mpa == g.E_mpa
     assert m.material_class == "ferritic"
     assert m.temperature_degc == 20.0
     assert m.hardening_exponent is None  # user input, no public grade-wise default
     curve = m.true_stress_strain_curve(n=0.12, ultimate_true_strain=0.12)
-    assert math.isclose(curve.stress(curve.yield_strain), 450.0, rel_tol=1e-9)
+    assert math.isclose(curve.stress(curve.yield_strain), 317.0, rel_tol=1e-9)
     est = m.lower_bound_toughness(cvn_j=40.0, thickness_mm=20.0)
     assert est.method == "charpy"
 
@@ -358,23 +360,23 @@ def test_lookup_carbon_steel_grade():
 def test_lookup_stainless_grade():
     m = lookup_grade("TP316L")
     assert m.material_class == "austenitic"
-    assert m.sigma_y_mpa == 170.0     # ASTM A312/A312M, TP316L min yield (25 ksi)
-    assert m.sigma_u_mpa == 485.0     # ASTM A312/A312M, TP316L min tensile (70 ksi)
-    assert m.E_mpa == 193_000.0
+    assert m.sigma_y_mpa == 373.0     # Synthetic test basis.
+    assert m.sigma_u_mpa == 673.0     # Synthetic test basis.
+    assert m.E_mpa == 198037.0
     # The ferritic toughness correlations refuse austenitic material.
     with pytest.raises(ValueError, match="ferritic"):
         m.lower_bound_toughness(cvn_j=100.0)
     # The stress-strain curve does not care about the class.
     curve = m.true_stress_strain_curve(n=0.3, ultimate_true_strain=0.3)
-    assert math.isclose(curve.stress(curve.yield_strain), 170.0, rel_tol=1e-9)
+    assert math.isclose(curve.stress(curve.yield_strain), 373.0, rel_tol=1e-9)
     # Alias forms.
-    assert lookup_grade("316L").sigma_y_mpa == 170.0
-    assert lookup_grade("tp316l").sigma_y_mpa == 170.0
+    assert lookup_grade("316L").sigma_y_mpa == 373.0
+    assert lookup_grade("tp316l").sigma_y_mpa == 373.0
 
 
 def test_lookup_hull_steel_carries_charpy_test_temperature():
     m = lookup_grade("DH36")
-    assert m.charpy_test_temperature_degc == -20.0
+    assert m.charpy_test_temperature_degc == -13.0
     assert lookup_grade("X65").charpy_test_temperature_degc is None
 
 

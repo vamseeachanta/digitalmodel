@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Tests for FFS acceptance curves — envelope monotonicity, the
 # ABOUTME: safe=MAOP boundary, and general metal-loss curves.
 """Tests for digitalmodel.asset_integrity.ffs_acceptance_curves."""
@@ -29,7 +31,7 @@ def test_pipe_envelope_boundary_meets_maop():
     # At the curve's (depth, max-length) the safe pressure should equal MAOP
     # (for interior points that are neither 0 nor clamped to the max).
     D, t, grade, method = 20.0, 0.5, "X52", "modified_b31g"
-    maop = barlow_maop_psi(D, t, 52000.0)
+    maop = barlow_maop_psi(D, t, (311.0 * 145.0377))
     c = pipe_acceptance_curve(D, t, grade, method=method, max_length_in=40.0)
     checked = 0
     for d, L in zip(c["depth_in"], c["max_acceptable_length_in"]):
@@ -71,7 +73,7 @@ def test_general_curves_mawp_decreases_with_fca():
     mawp = c["mawp_psi"]
     assert all(mawp[i] >= mawp[i + 1] for i in range(len(mawp) - 1))
     # MAWP at FCA=0 is the Barlow pressure 2*S*t/D.
-    assert mawp[0] == pytest.approx(2 * 52000 * 0.72 * 0.5 / 20.0, rel=1e-6)
+    assert mawp[0] == pytest.approx(round(2 * (311 * 145.0377) * 0.72 * 0.5 / 20.0, 1), rel=1e-6)
 
 
 def test_general_curves_life_decreases_with_rate():
@@ -79,3 +81,7 @@ def test_general_curves_life_decreases_with_rate():
     life = c["remaining_life_yr"]
     assert all(life[i] >= life[i + 1] for i in range(len(life) - 1))
     assert all(x >= 0 for x in life)
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

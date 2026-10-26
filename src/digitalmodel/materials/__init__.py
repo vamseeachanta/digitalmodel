@@ -1,17 +1,9 @@
-# ABOUTME: Canonical material-grade matrix — single source of truth for steel
-# ABOUTME: grade strengths (API 5L / ISO 3183, IACS UR W11, EN 10025-2).
-"""Canonical material-grade matrix for digitalmodel.
-
-One reconciled record per grade (see :class:`MaterialGrade`) replaces the eight-
-plus scattered strength dicts that previously disagreed on X52 SMYS (358 / 359 /
-360 MPa) and mixed psi / MPa / Pa units.  Strengths are stored in **MPa**; psi
-helpers and back-compat adapters are provided for existing consumers.
-
-Standards covered:
-  * API 5L / ISO 3183 line pipe — A25..X120 (PSL1 and PSL2).
-  * IACS UR W11 hull structural steel — A/B/D/E, AH/DH/EH/FH 32/36/40.
-  * EN 10025-2 structural steel — S275/S355/S420.
-"""
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+# ABOUTME: Caller-supplied material catalogues and derived geometry.
+# ABOUTME: Engineering properties require a validated source for every row.
+"""Material data loading, scoped queries, geometry and unit adapters."""
+from .catalog import Catalog, Dimension, Source, load_catalog, use_catalog
 from .grades import (
     MaterialGrade,
     GRADES,
@@ -48,6 +40,7 @@ from .line_pipe import (
 )
 
 __all__ = [
+    "Catalog", "Dimension", "Source", "load_catalog", "use_catalog",
     "MaterialGrade",
     "GRADES",
     "get",

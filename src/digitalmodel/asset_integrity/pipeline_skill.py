@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Agent-callable pipeline integrity skill for digitalmodel.
 
 Provides a zero-config, chained assessment:
@@ -10,6 +12,8 @@ boundary use Pint (see digitalmodel.units) instead of hardcoded factors.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from dataclasses import dataclass, field
 
 from digitalmodel.materials import legacy_smys_table_mpa
@@ -19,13 +23,8 @@ from .rsf_calculations import check_ffs_level1
 SKILL_NAME = "pipeline_integrity"
 
 # ---------------------------------------------------------------------------
-# Material grade table — SMYS in MPa (US-customary ksi values).
-# Sourced from the canonical grade matrix (issue #1089). These US-customary
-# values sit 1-3 MPa below the canonical ISO SMYS (e.g. X52 359 vs ISO 360);
-# the legacy values are preserved verbatim pending the convergence sign-off in
-# docs/domains/grade-table-migration-2026-06-28.md.
-# ---------------------------------------------------------------------------
-SMYS_TABLE: dict[str, float] = legacy_smys_table_mpa()
+# Caller-supplied strength view; no default numerical table.
+SMYS_TABLE: Mapping[str, float] = legacy_smys_table_mpa()
 
 # Hoop stress design factor (ASME B31.4 / B31.8 onshore buried pipelines)
 HOOP_DESIGN_FACTOR = 0.72

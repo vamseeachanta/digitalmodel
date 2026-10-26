@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Tests for parametric wall thickness sweep and Plotly visualisation
 # ABOUTME: Validates DataFrame shape, no NaN values, chart generation, HTML report
 
@@ -289,3 +291,7 @@ class TestExcelExport:
 
         df_read = pd.read_excel(path, sheet_name="Multi-OD Sweep")
         assert len(df_read) == 12
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

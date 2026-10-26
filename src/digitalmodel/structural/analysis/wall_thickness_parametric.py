@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Parametric sweep across wall thickness parameters with Plotly visualisation
 # ABOUTME: Sweeps WT, OD, grade, load combos and produces utilisation DataFrames + charts
 
@@ -19,6 +21,8 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from collections.abc import Mapping
+
 from digitalmodel.materials import legacy_pipe_db_grades_pa
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
@@ -37,7 +41,7 @@ logger = logging.getLogger(__name__)
 # matrix (issue #1089). Same legacy snapshot as pipe_db_client (US-customary
 # SMYS + PSL1-ish SMTS), scaled to Pa; preserved verbatim pending the
 # convergence sign-off in docs/domains/grade-table-migration-2026-06-28.md.
-API_5L_GRADES: Dict[str, Dict[str, float]] = legacy_pipe_db_grades_pa()
+API_5L_GRADES: Mapping[str, Mapping[str, float]] = legacy_pipe_db_grades_pa()
 
 
 @dataclass

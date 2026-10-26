@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Tests for LineTypeBuilder property mapping."""
 from __future__ import annotations
 
@@ -119,10 +121,9 @@ class TestMaterialProperties:
         lt = lt_list[0]
         assert lt["DNVSTF101Fy"] == MATERIAL_PROPERTIES["X70"]["DNVSTF101Fy"]
 
-    def test_unknown_grade_falls_back_to_x65(self):
-        lt_list = _build(_make_pipeline_spec(material="X999"))
-        lt = lt_list[0]
-        assert lt["MaterialDensity"] == MATERIAL_PROPERTIES["X65"]["MaterialDensity"]
+    def test_unknown_grade_requires_supplied_material(self):
+        with pytest.raises(KeyError, match="X999"):
+            _build(_make_pipeline_spec(material="X999"))
 
     def test_custom_youngs_modulus(self):
         """Spec-level youngs_modulus overrides grade default."""
@@ -270,3 +271,7 @@ class TestShouldGenerate:
         })
         builder = LineTypeBuilder(spec, BuilderContext())
         assert builder.should_generate() is False
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

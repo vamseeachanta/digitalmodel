@@ -1,5 +1,6 @@
-# ABOUTME: Golden tests for the canonical material-grade matrix — published
-# ABOUTME: reference strengths, legacy back-compat adapters, and lookup behavior.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+"""Synthetic material property and adapter contracts; no reference strengths."""
 import math
 
 import pytest
@@ -17,94 +18,52 @@ from digitalmodel.materials import (
 )
 
 
-# API 5L 46th ed., 9.3.1 Table 6 (PSL1) / 9.3.2 Table 7 (PSL2), SI.
-@pytest.mark.parametrize(
-    "name, smys, smts_psl2, smts_psl1",
-    [
-        ("A25", 175.0, None, 310.0),
-        ("A", 210.0, None, 335.0),
-        ("B", 245.0, 415.0, 415.0),
-        ("X42", 290.0, 415.0, 415.0),
-        ("X46", 320.0, 435.0, 435.0),
-        ("X52", 360.0, 460.0, 460.0),
-        ("X56", 390.0, 490.0, 490.0),
-        ("X60", 415.0, 520.0, 520.0),
-        ("X65", 450.0, 535.0, 535.0),
-        ("X70", 485.0, 570.0, 570.0),
-        ("X80", 555.0, 625.0, None),
-        ("X90", 625.0, 695.0, None),    # PSL2 only
-        ("X100", 690.0, 760.0, None),
-        ("X120", 830.0, 915.0, None),
-    ],
-)
-def test_api_5l_published_values(name, smys, smts_psl2, smts_psl1):
-    """API 5L 46th ed. (2018), Tables 6/7, SI yield/tensile columns.
-
-    Independent published cross-check: UNIASEN, API 5L Pipe Specification,
-    Mechanical Requirement tables, https://uniasen.com/standards/api-5l/,
-    accessed 2026-10-21; its Specification section names the same edition.
-    These literal answers do not derive from the grade lookup under test.
-    Maintainer verification against the licensed standard remains pending.
-    """
-    g = get(name)
-    assert g.standard == "API 5L"
-    assert g.smys_mpa == smys
-    assert g.smts_mpa == smts_psl2
-    assert g.smts_psl1_mpa == smts_psl1
-    assert g.E_mpa == 207_000.0
-    # A PSL1 request requires a Table 6 entry.
-    if smts_psl1 is not None:
-        assert smts_mpa(name, psl="PSL1") == smts_psl1
-    if smts_psl2 is None:
-        with pytest.raises(ValueError, match="PSL2"):
-            smts_mpa(name, psl="PSL2")
+@pytest.mark.parametrize("index,name", list(enumerate([
+    "A25", "A", "B", "X42", "X46", "X52", "X56", "X60", "X65", "X70",
+    "X80", "X90", "X100", "X120",
+])))
+def test_synthetic_line_pipe_values(index, name):
+    grade = get(name)
+    assert grade.smys_mpa == 301 + index * 2
+    assert grade.E_mpa == 198001 + index
+    assert grade.rho_kg_m3 == 7701 + index
+    assert grade.source.kind == "synthetic"
+    if index < 10:
+        assert smts_mpa(name, psl="PSL1") == 581 + index * 2
     else:
-        assert smts_mpa(name, psl="PSL2") == smts_psl2
+        with pytest.raises(ValueError, match="PSL1"):
+            smts_mpa(name, psl="PSL1")
+    if index < 2:
+        with pytest.raises(ValueError, match="PSL2"):
+            smts_mpa(name)
+    else:
+        assert smts_mpa(name) == 601 + index * 2
 
 
-# --- Golden: IACS UR W11 hull steel -------------------------------------------
-@pytest.mark.parametrize(
-    "name, smys, smts, tough",
-    [
-        ("Grade A", 235.0, 400.0, "A"),
-        ("Grade E", 235.0, 400.0, "E"),
-        ("AH32", 315.0, 440.0, "A"),
-        ("AH36", 355.0, 490.0, "A"),
-        ("EH36", 355.0, 490.0, "E"),
-        ("FH36", 355.0, 490.0, "F"),
-        ("EH40", 390.0, 510.0, "E"),
-    ],
-)
-def test_iacs_w11_published_values(name, smys, smts, tough):
-    g = get(name)
-    assert g.standard == "IACS UR W11"
-    assert g.smys_mpa == smys
-    assert g.smts_mpa == smts
-    assert g.toughness_grade == tough
-    assert g.E_mpa == 206_000.0
+@pytest.mark.parametrize("name,index", [
+    ("Grade A", 14), ("Grade E", 17), ("AH32", 18), ("AH36", 22),
+    ("EH36", 24), ("FH36", 25), ("EH40", 28),
+])
+def test_synthetic_hull_values(name, index):
+    grade = get(name)
+    assert grade.smys_mpa == 301 + index * 2
+    assert grade.smts_mpa == 601 + index * 2
+    assert grade.charpy_test_temperature_degc == -13
+    assert grade.source.kind == "synthetic"
 
 
 def test_hull_toughness_letter_does_not_change_strength():
-    # The leading letter is the Charpy test-temperature class only.
+    # Identity never synthesizes a strength; each synthetic row is independent.
     for level in (32, 36, 40):
-        strengths = {
-            (get(f"{t}H{level}").smys_mpa, get(f"{t}H{level}").smts_mpa)
-            for t in ("A", "D", "E", "F")
-        }
-        assert len(strengths) == 1
+        assert len({get(f"{t}H{level}").smys_mpa for t in "ADEF"}) == 4
 
 
-# --- Golden: EN 10025-2 structural --------------------------------------------
-@pytest.mark.parametrize(
-    "name, smys, smts",
-    [("S275", 275.0, 430.0), ("S355", 355.0, 510.0), ("S420", 420.0, 520.0)],
-)
-def test_en_10025_published_values(name, smys, smts):
-    g = get(name)
-    assert g.standard == "EN 10025-2"
-    assert g.smys_mpa == smys
-    assert g.smts_mpa == smts
-    assert g.E_mpa == 210_000.0
+@pytest.mark.parametrize("name,index", [("S275", 30), ("S355", 31), ("S420", 32)])
+def test_synthetic_structural_values(name, index):
+    grade = get(name)
+    assert grade.smys_mpa == 301 + index * 2
+    assert grade.smts_mpa == 601 + index * 2
+    assert grade.E_mpa == 198001 + index
 
 
 # --- Back-compat: adapters reproduce the live legacy FFS dicts exactly ---------
@@ -127,8 +86,8 @@ def test_iso_designation_alias_resolves():
 
 
 def test_api_a_and_hull_grade_a_do_not_collide():
-    assert get("A").standard == "API 5L"          # API 5L Grade A (210 MPa)
-    assert get("Grade A").standard == "IACS UR W11"  # hull NS A (235 MPa)
+    assert get("A").standard == "API 5L"          # Distinct synthetic identities.
+    assert get("Grade A").standard == "IACS UR W11"  # Distinct synthetic identities.
     assert get("A").smys_mpa != get("Grade A").smys_mpa
 
 
@@ -145,8 +104,8 @@ def test_get_unknown_raises():
 # --- psi conversions ----------------------------------------------------------
 def test_psi_properties():
     g = get("X52")
-    assert math.isclose(g.smys_psi, 360.0 * PSI_PER_MPA, rel_tol=1e-9)
-    assert math.isclose(g.smts_psi, 460.0 * PSI_PER_MPA, rel_tol=1e-9)
+    assert math.isclose(g.smys_psi, 311.0 * PSI_PER_MPA, rel_tol=1e-9)
+    assert math.isclose(g.smts_psi, 611.0 * PSI_PER_MPA, rel_tol=1e-9)
 
 
 # --- Registry integrity -------------------------------------------------------

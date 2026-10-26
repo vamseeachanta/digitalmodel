@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Tests for the agent-callable pipeline integrity skill.
 
 Coverage:
@@ -38,12 +40,8 @@ from digitalmodel.asset_integrity.pipeline_skill import (
 # Fixtures
 # ---------------------------------------------------------------------------
 
-X65_NOMINAL = PipelineInput(
-    outer_diameter_mm=323.9,
-    wall_thickness_mm=14.3,
-    design_pressure_mpa=10.0,
-    material_grade="X65",
-)
+def _nominal():
+    return _make()
 
 
 def _make(
@@ -69,17 +67,17 @@ def _make(
 # ---------------------------------------------------------------------------
 
 def test_x65_passes_wall_thickness_check():
-    result = pipeline_integrity(X65_NOMINAL)
+    result = pipeline_integrity(_nominal())
     assert result.wall_thickness_ok is True
 
 
 def test_x65_utilisation_below_1():
-    result = pipeline_integrity(X65_NOMINAL)
+    result = pipeline_integrity(_nominal())
     assert result.utilisation_ratio < 1.0
 
 
 def test_x65_utilisation_positive():
-    result = pipeline_integrity(X65_NOMINAL)
+    result = pipeline_integrity(_nominal())
     assert result.utilisation_ratio > 0.0
 
 
@@ -104,12 +102,12 @@ def test_thin_wall_utilisation_above_1():
 # ---------------------------------------------------------------------------
 
 def test_zero_corrosion_ffs_not_applicable():
-    result = pipeline_integrity(X65_NOMINAL)
+    result = pipeline_integrity(_nominal())
     assert result.ffs_verdict == "not_applicable"
 
 
 def test_zero_corrosion_safe_pressure_equals_design():
-    result = pipeline_integrity(X65_NOMINAL)
+    result = pipeline_integrity(_nominal())
     assert math.isclose(result.ffs_safe_pressure_mpa, 10.0, rel_tol=1e-9)
 
 
@@ -214,7 +212,7 @@ def test_negative_corrosion_depth_raises():
 # ---------------------------------------------------------------------------
 
 def test_utilisation_ratio_in_0_1_for_safe_input():
-    result = pipeline_integrity(X65_NOMINAL)
+    result = pipeline_integrity(_nominal())
     assert 0.0 <= result.utilisation_ratio <= 1.0
 
 
@@ -232,8 +230,8 @@ def test_all_material_grades_produce_valid_result(grade):
 
 
 @pytest.mark.parametrize("grade,smys", [
-    ("X52", 359.0), ("X60", 414.0), ("X65", 448.0),
-    ("X70", 483.0), ("X80", 552.0), ("X100", 690.0),
+    ("X52", 311.0), ("X60", 315.0), ("X65", 317.0),
+    ("X70", 319.0), ("X80", 321.0), ("X100", 325.0),
 ])
 def test_smys_table_values_correct(grade, smys):
     assert SMYS_TABLE[grade] == smys
@@ -244,7 +242,7 @@ def test_smys_table_values_correct(grade, smys):
 # ---------------------------------------------------------------------------
 
 def test_summary_contains_expected_keys():
-    result = pipeline_integrity(X65_NOMINAL)
+    result = pipeline_integrity(_nominal())
     expected_keys = {
         "material_grade", "smys_mpa", "hoop_stress_mpa",
         "allowable_stress_mpa", "utilisation_ratio", "wall_thickness_ok",
@@ -258,7 +256,7 @@ def test_summary_contains_expected_keys():
 # ---------------------------------------------------------------------------
 
 def test_source_field_matches_skill_name():
-    result = pipeline_integrity(X65_NOMINAL)
+    result = pipeline_integrity(_nominal())
     assert result.source == f"skill:{SKILL_NAME}"
 
 
@@ -316,3 +314,7 @@ def test_utilisation_increases_with_pressure():
     r_low = pipeline_integrity(_make(pressure=5.0))
     r_high = pipeline_integrity(_make(pressure=15.0))
     assert r_high.utilisation_ratio > r_low.utilisation_ratio
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

@@ -1,0 +1,962 @@
+{
+  "grade:A25": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:A": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:B": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X42": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X46": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X52": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X56": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X60": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X65": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X70": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X90": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X100": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X120": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:Grade A": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:Grade B": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:Grade D": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:Grade E": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:AH32": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:DH32": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:EH32": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:FH32": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:AH36": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:DH36": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:EH36": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:FH36": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:AH40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:DH40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:EH40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:FH40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:S275": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:S355": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:S420": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:TP304": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:TP304L": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:TP316": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:TP316L": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:TP321": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:S31803": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:S32205": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:1:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:1:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:1:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:1:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:2:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:2:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:2:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:2:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:3:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:3:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:3:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:3:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:4:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:4:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:4:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:4:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:5:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:5:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:5:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:5:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:6:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:6:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:6:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:6:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:7:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:7:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:7:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:7:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:8:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:8:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:8:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:8:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:9:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:9:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:9:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:9:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:10:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:10:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:10:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:10:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:11:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:11:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:11:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:11:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:12:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:12:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:12:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:12:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:13:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:13:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:13:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:13:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:14:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:14:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:14:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:14:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:15:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:15:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:15:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:15:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:16:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:16:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:16:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:16:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:17:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:17:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:17:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:17:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:18:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:18:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:18:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:18:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:19:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:19:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:19:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:19:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:20:STD": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:20:SCH 40": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:20:XS": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "dimension:20:SCH 80": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "catalogue_number": "synthetic-inputs-v1"
+  }
+}

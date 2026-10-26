@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: FFS material library (API 579-1 Annex F / Annex 3D): lower-bound
 # ABOUTME: toughness estimates, true stress-strain curve for FEA, grade lookup.
 """Material inputs for fitness-for-service assessment (#2171).
@@ -559,12 +561,6 @@ class TrueStressStrainCurve:
 # ---------------------------------------------------------------------------
 # Grade lookup
 # ---------------------------------------------------------------------------
-# IACS UR W11 Charpy test temperature by toughness class (degC): normal-strength
-# grades A/B/D/E and higher-strength AH/DH/EH/FH (the "A" class differs).
-_HULL_NS_CHARPY_DEGC = {"A": 20.0, "B": 0.0, "D": -20.0, "E": -40.0}
-_HULL_HS_CHARPY_DEGC = {"A": 0.0, "D": -20.0, "E": -40.0, "F": -60.0}
-
-
 @dataclass(frozen=True)
 class FFSMaterialInputs:
     """Material inputs for an FFS assessment, as returned by :func:`lookup_grade`.
@@ -620,10 +616,7 @@ class FFSMaterialInputs:
 
 
 def _charpy_test_temperature(grade: MaterialGrade) -> Optional[float]:
-    if grade.standard != "IACS UR W11" or not grade.toughness_grade:
-        return None
-    table = _HULL_NS_CHARPY_DEGC if grade.name.startswith("Grade ") else _HULL_HS_CHARPY_DEGC
-    return table.get(grade.toughness_grade.upper())
+    return grade.charpy_test_temperature_degc
 
 
 def lookup_grade(
@@ -656,5 +649,5 @@ def lookup_grade(
         charpy_test_temperature_degc=_charpy_test_temperature(g),
         hardening_exponent=_optional(hardening_exponent, "dimensionless",
                                      "hardening_exponent"),
-        source=g.source,
+        source=g.source.citation,
     )

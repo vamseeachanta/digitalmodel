@@ -13,6 +13,7 @@ from digitalmodel.solvers.orcaflex.modular_generator.builders.environment_builde
     EnvironmentBuilder,
 )
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+from pathlib import Path
 
 
 # ---------------------------------------------------------------------------
@@ -698,14 +699,18 @@ def test_wave_selectors_precede_raw_parameters_in_fresh_process(tmp_path, wave_t
 import sys
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+from digitalmodel.materials import load_catalog, use_catalog
 spec = ProjectInputSpec.model_validate_json(sys.stdin.buffer.read())
-ModularModelGenerator.from_spec(spec).generate(sys.argv[1])
+with use_catalog(load_catalog(sys.argv[2]), allow_synthetic=True):
+    ModularModelGenerator.from_spec(spec).generate(sys.argv[1])
 """
     environment = os.environ.copy()
     for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
         environment.pop(key, None)
     subprocess.run(
-        [sys.executable, "-c", child, str(tmp_path)], env=environment,
+        [sys.executable, "-c", child, str(tmp_path), str(
+            Path(__file__).resolve().parents[4] / "materials/fixtures/catalog.json"
+        )], env=environment,
         input=spec.model_dump_json().encode(), capture_output=True, check=True,
     )
     data = yaml.safe_load((tmp_path / "includes/03_environment.yml").read_text())

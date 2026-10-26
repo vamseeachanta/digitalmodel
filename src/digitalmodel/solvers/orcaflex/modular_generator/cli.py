@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """
 Command-line interface for the OrcaFlex Modular Model Generator.
 
@@ -20,12 +22,14 @@ import logging
 import sys
 from pathlib import Path
 from typing import NoReturn
+from contextlib import nullcontext
 
 import yaml
 from pydantic import ValidationError
 
 from .schema import ProjectInputSpec
 from . import ModularModelGenerator
+from digitalmodel.materials import load_catalog, use_catalog
 
 
 def print_error(message: str) -> None:
@@ -338,6 +342,13 @@ For more information, see the documentation at:
 """
     )
 
+    parser.add_argument(
+        '--material-catalog', help='Caller material JSON beside sources.yml'
+    )
+    parser.add_argument(
+        '--allow-synthetic-materials', action='store_true',
+        help='Allow labelled synthetic inputs for software tests'
+    )
     subparsers = parser.add_subparsers(
         dest='command',
         title='commands',
@@ -428,6 +439,17 @@ For more information, see the documentation at:
     return parser
 
 
+def run_with_material_catalog(args: argparse.Namespace) -> int:
+    """Apply sourced material inputs to the complete command execution."""
+    context = (
+        use_catalog(load_catalog(args.material_catalog),
+                    allow_synthetic=args.allow_synthetic_materials)
+        if args.material_catalog else nullcontext()
+    )
+    with context:
+        return args.func(args)
+
+
 def main() -> NoReturn:
     """
     Main entry point for the CLI.
@@ -441,7 +463,11 @@ def main() -> NoReturn:
         parser.print_help()
         sys.exit(0)
 
-    exit_code = args.func(args)
+    try:
+        exit_code = run_with_material_catalog(args)
+    except (ValueError, OSError) as error:
+        print_error(str(error))
+        exit_code = 1
     sys.exit(exit_code)
 
 

@@ -1,474 +1,193 @@
-# ABOUTME: MaterialGrade record + reconciled registry of steel grade strengths
-# ABOUTME: with sourced values and derivable back-compat adapters for legacy dicts.
-"""Canonical material-grade matrix.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+# ABOUTME: Validated caller-supplied material properties and unit adapters.
+# ABOUTME: No bundled strength, elastic, density or toughness tables.
+"""Material queries over the catalogue selected with use_catalog.
 
-Strengths are stored in **MPa** (SI).  For API 5L the stored ``smts_mpa`` is the
-canonical minimum tensile strength; ``smts_psl1_mpa`` carries the 46th-edition
-Table 6 SI minimum where listed (through X70). These SI minima equal the
-corresponding PSL2 minima; legacy converted ksi snapshots are separate.
-
-Sources:
-  * API 5L (46th ed.), 9.3.1 Table 6 (PSL1), 9.3.2 Table 7 (PSL2), SI.
-  * IACS UR W11 (Rev.) — Normal & Higher-Strength Hull Structural Steels.
-  * EN 10025-2 — hot-rolled structural steel (t <= 16 mm class).
-  * ASTM A312/A312M — austenitic stainless steel pipe (TP304/304L/316/316L/321).
-  * ASTM A790/A790M — ferritic/austenitic (duplex) stainless steel pipe
-    (UNS S31803, S32205).
+Specification names identify products; they never establish a numerical basis.
+All engineering properties and aliases come from caller-owned sourced rows.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
+from collections.abc import Mapping
+from types import MappingProxyType
 
-# Unit conversion (exact-enough engineering constant).
+from .catalog import Catalog, CatalogView, Source, current_catalog, positive, text
+
 PSI_PER_MPA = 145.0377
 MPA_PER_PSI = 1.0 / PSI_PER_MPA
-
-# Per-standard elastic defaults (MPa), Poisson ratio, density (kg/m^3).
-_E_LINE_PIPE = 207_000.0   # API 5L line pipe (207 GPa)
-_E_MARINE = 206_000.0      # IACS hull steel (206 GPa)
-_E_STRUCTURAL = 210_000.0  # EN 10025 structural (210 GPa)
-_E_AUSTENITIC = 193_000.0  # austenitic stainless (193 GPa)
-_E_DUPLEX = 200_000.0      # duplex stainless (200 GPa)
-_NU = 0.30
-_RHO = 7850.0
-_RHO_AUSTENITIC = 8000.0
-_RHO_DUPLEX = 7800.0
 
 
 @dataclass(frozen=True)
 class MaterialGrade:
-    """One reconciled material grade.
-
-    Attributes:
-        name: Canonical registry key (e.g. ``"X52"``, ``"AH36"``, ``"S355"``).
-        standard: Governing standard (``"API 5L"`` / ``"IACS UR W11"`` /
-            ``"EN 10025-2"``).
-        smys_mpa: Specified minimum yield strength (MPa).
-        smts_mpa: Specified minimum tensile strength (MPa); PSL2 for API 5L,
-            or ``None`` when that product level is absent.
-        E_mpa: Young's modulus (MPa).
-        nu: Poisson's ratio.
-        rho_kg_m3: Density (kg/m^3).
-        designation: Equivalent designation (ISO 3183 L-grade or alias).
-        grade_ksi: SMYS in ksi for API 5L (the X-number); ``None`` otherwise.
-        toughness_grade: Charpy test-temperature class for hull steel
-            (``A`` 20C / ``B`` 0C / ``D`` -20C / ``E`` -40C / ``F`` -60C).
-        smts_psl1_mpa: API 5L Table 6 SI minimum tensile strength (MPa);
-            ``None`` for non-API or PSL2-only grades.
-        source: Citation for the canonical strength (PSL1 for PSL1-only grades).
-        source_psl1: Citation for API 5L PSL1 strengths, empty if absent.
-        notes: Free-form reconciliation notes.
-        material_class: Metallurgical class used by the FFS material library
-            to gate toughness correlations: ``"ferritic"`` (carbon, C-Mn and
-            low-alloy steels), ``"austenitic"`` or ``"duplex"``.
-    """
+    """Immutable sourced material inputs, with strengths and modulus in MPa."""
 
     name: str
     standard: str
     smys_mpa: float
     smts_mpa: Optional[float]
-    E_mpa: float = _E_LINE_PIPE
-    nu: float = _NU
-    rho_kg_m3: float = _RHO
+    E_mpa: float
+    nu: float
+    rho_kg_m3: float
+    source: Source
+    row_id: str
     designation: Optional[str] = None
     grade_ksi: Optional[float] = None
     toughness_grade: Optional[str] = None
     smts_psl1_mpa: Optional[float] = None
-    source: str = ""
     notes: str = ""
     material_class: str = "ferritic"
-    source_psl1: str = ""
+    aliases: tuple[str, ...] = ()
+    charpy_test_temperature_degc: Optional[float] = None
+
+    def __post_init__(self) -> None:
+        import math
+        from numbers import Real
+
+        for field in ("name", "standard", "row_id"):
+            text(getattr(self, field), field)
+        for field in ("smys_mpa", "E_mpa", "rho_kg_m3"):
+            positive(getattr(self, field), field)
+        for field in ("smts_mpa", "smts_psl1_mpa"):
+            value = getattr(self, field)
+            if value is not None:
+                positive(value, field)
+                if value < self.smys_mpa:
+                    raise ValueError(f"{field} must be at least smys_mpa")
+        if self.smts_mpa is None and self.smts_psl1_mpa is None:
+            raise ValueError("at least one tensile strength must be supplied")
+        if (isinstance(self.nu, bool) or not isinstance(self.nu, Real)
+                or not math.isfinite(self.nu) or not -1 < self.nu < 0.5):
+            raise ValueError("nu must be finite and between -1 and 0.5")
+        if not isinstance(self.source, Source):
+            raise ValueError("source must be a validated Source")
+        if self.material_class not in {"ferritic", "austenitic", "duplex"}:
+            raise ValueError("unknown material_class")
+        if self.grade_ksi is not None:
+            positive(self.grade_ksi, "grade_ksi")
+        if not isinstance(self.aliases, tuple):
+            raise ValueError("aliases must be an immutable tuple")
+        for alias in self.aliases:
+            text(alias, "alias")
+        value = self.charpy_test_temperature_degc
+        if value is not None and (isinstance(value, bool) or not isinstance(value, Real)
+                                  or not math.isfinite(value)):
+            raise ValueError("charpy_test_temperature_degc must be finite")
+
+    @property
+    def source_psl1(self) -> str:
+        return self.source.citation if self.smts_psl1_mpa is not None else ""
 
     @property
     def smys_psi(self) -> float:
-        """Convert the canonical SI yield minimum to psi.
-
-        For API grades, legacy_smys_psi_dict instead uses the ksi designation;
-        the two views deliberately differ (see the API registry basis note).
-        """
         return self.smys_mpa * PSI_PER_MPA
 
     @property
     def smts_psi(self) -> float:
-        """Tensile strength in psi (MPa -> psi)."""
         if self.smts_mpa is None:
-            raise ValueError(f"{self.name}: PSL2 is not listed in API 5L 46th ed. Table 7")
+            raise ValueError(f"{self.name}: PSL2 strength was not supplied")
         return self.smts_mpa * PSI_PER_MPA
 
 
-# ---------------------------------------------------------------------------
-# Registry construction
-# ---------------------------------------------------------------------------
-_API_5L_PSL1_SRC = "API 5L (46th ed.), 9.3.1 Table 6 (PSL1), SI"
-_API_5L_PSL2_SRC = "API 5L (46th ed.), 9.3.2 Table 7 (PSL2), SI"
-_IACS_SRC = "IACS UR W11, Normal & Higher-Strength Hull Structural Steels"
-_EN_SRC = "EN 10025-2, structural steel (t <= 16 mm)"
+GRADES = CatalogView(lambda catalog: {g.name: g for g in catalog.grades})
 
 
-def _api5l(name, ksi, smys, smts2, smts1, iso, *, note=""):
-    return MaterialGrade(
-        name=name, standard="API 5L", smys_mpa=smys, smts_mpa=smts2,
-        E_mpa=_E_LINE_PIPE, designation=iso, grade_ksi=ksi,
-        smts_psl1_mpa=smts1,
-        source=_API_5L_PSL2_SRC if smts2 is not None else _API_5L_PSL1_SRC,
-        source_psl1=_API_5L_PSL1_SRC if smts1 is not None else "", notes=note)
-
-
-def _hull(name, smys, smts, tough, *, note=""):
-    return MaterialGrade(
-        name=name, standard="IACS UR W11", smys_mpa=smys, smts_mpa=smts,
-        E_mpa=_E_MARINE, toughness_grade=tough, source=_IACS_SRC, notes=note)
-
-
-def _en(name, smys, smts):
-    return MaterialGrade(
-        name=name, standard="EN 10025-2", smys_mpa=smys, smts_mpa=smts,
-        E_mpa=_E_STRUCTURAL, source=_EN_SRC)
-
-
-_A312_SRC = "ASTM A312/A312M, austenitic stainless steel pipe, tensile requirements"
-_A790_SRC = "ASTM A790/A790M, duplex stainless steel pipe, tensile requirements"
-
-
-def _austenitic(name, ksi_y, smys, smts, uns, *, note=""):
-    return MaterialGrade(
-        name=name, standard="ASTM A312", smys_mpa=smys, smts_mpa=smts,
-        E_mpa=_E_AUSTENITIC, rho_kg_m3=_RHO_AUSTENITIC, designation=uns,
-        grade_ksi=ksi_y, source=_A312_SRC, notes=note,
-        material_class="austenitic")
-
-
-def _duplex(name, ksi_y, smys, smts, uns, *, note=""):
-    return MaterialGrade(
-        name=name, standard="ASTM A790", smys_mpa=smys, smts_mpa=smts,
-        E_mpa=_E_DUPLEX, rho_kg_m3=_RHO_DUPLEX, designation=uns,
-        grade_ksi=ksi_y, source=_A790_SRC, notes=note, material_class="duplex")
-
-
-# API 5L / ISO 3183 — SMYS = ISO L-grade (MPa); SMTS = PSL2 min, PSL1 in 5th col.
-# US-customary (ksi) SMYS values differ by ~1-2% on the low grades; the grade
-# number (grade_ksi) preserves that designation for psi back-compat.
-_API_5L = [
-    _api5l("A25", 25, 175.0, None, 310.0, "L175",
-           note="PSL1 only; D <= 141.3 mm. US 25 ksi = 172 MPa."),
-    _api5l("A", 30, 210.0, None, 335.0, "L210",
-           note="PSL1 only. US 30 ksi = 207 MPa."),
-    _api5l("B", 35, 245.0, 415.0, 415.0, "L245", note="US 35 ksi = 241 MPa."),
-    _api5l("X42", 42, 290.0, 415.0, 415.0, "L290"),
-    _api5l("X46", 46, 320.0, 435.0, 435.0, "L320"),
-    _api5l("X52", 52, 360.0, 460.0, 460.0, "L360",
-           note="Legacy converted ksi values are not the 46th-edition SI minima."),
-    _api5l("X56", 56, 390.0, 490.0, 490.0, "L390"),
-    _api5l("X60", 60, 415.0, 520.0, 520.0, "L415"),
-    _api5l("X65", 65, 450.0, 535.0, 535.0, "L450"),
-    _api5l("X70", 70, 485.0, 570.0, 570.0, "L485"),
-    _api5l("X80", 80, 555.0, 625.0, None, "L555", note="PSL2 only."),
-    _api5l("X90", 90, 625.0, 695.0, None, "L625", note="PSL2 only."),
-    _api5l("X100", 100, 690.0, 760.0, None, "L690", note="PSL2 only."),
-    _api5l("X120", 120, 830.0, 915.0, None, "L830", note="PSL2 only."),
-]
-
-# IACS UR W11 — normal strength (235 MPa yield, Rm 400-520, min 400).
-_HULL_NS = [
-    _hull("Grade A", 235.0, 400.0, "A", note="Charpy at +20 C."),
-    _hull("Grade B", 235.0, 400.0, "B", note="Charpy at 0 C."),
-    _hull("Grade D", 235.0, 400.0, "D", note="Charpy at -20 C."),
-    _hull("Grade E", 235.0, 400.0, "E", note="Charpy at -40 C."),
-]
-
-# IACS UR W11 — higher strength: 32 -> 315, 36 -> 355, 40 -> 390 MPa yield.
-# Tensile minima: 32 -> 440, 36 -> 490, 40 -> 510 MPa.  The leading letter is
-# the toughness (test-temperature) class and does not change the strength.
-_HULL_HS_LEVELS = [(32, 315.0, 440.0), (36, 355.0, 490.0), (40, 390.0, 510.0)]
-_HULL_TOUGHNESS = [("A", "A", "+0 C"), ("D", "D", "-20 C"),
-                   ("E", "E", "-40 C"), ("F", "F", "-60 C")]
-_HULL_HS = [
-    _hull(f"{tletter}H{lvl}", smys, smts, tclass,
-          note=f"Higher-strength {lvl}; Charpy at {ttemp}.")
-    for (lvl, smys, smts) in _HULL_HS_LEVELS
-    for (tletter, tclass, ttemp) in _HULL_TOUGHNESS
-]
-
-# EN 10025-2 structural steel (t <= 16 mm class).
-_EN_GRADES = [
-    _en("S275", 275.0, 430.0),
-    _en("S355", 355.0, 510.0),
-    _en("S420", 420.0, 520.0),
-]
-
-# ASTM A312/A312M austenitic stainless pipe — minimum yield (0.2 % offset) and
-# tensile; the "L" (low-carbon) grades sit at 170 / 485 MPa, the straight
-# grades at 205 / 515 MPa.  ``grade_ksi`` carries the US-customary yield.
-_AUSTENITIC = [
-    _austenitic("TP304", 30, 205.0, 515.0, "S30400"),
-    _austenitic("TP304L", 25, 170.0, 485.0, "S30403", note="Low-carbon grade."),
-    _austenitic("TP316", 30, 205.0, 515.0, "S31600"),
-    _austenitic("TP316L", 25, 170.0, 485.0, "S31603", note="Low-carbon grade."),
-    _austenitic("TP321", 30, 205.0, 515.0, "S32100", note="Ti-stabilised."),
-]
-
-# ASTM A790/A790M duplex stainless pipe — 22Cr duplex, S32205 has the higher
-# tensile minimum.
-_DUPLEX = [
-    _duplex("S31803", 65, 450.0, 620.0, "2205", note="22Cr duplex (UNS S31803)."),
-    _duplex("S32205", 65, 450.0, 655.0, None,
-            note="22Cr duplex (UNS S32205), tighter N; higher tensile minimum."),
-]
-
-#: The canonical registry, keyed by :attr:`MaterialGrade.name`.
-GRADES: dict[str, MaterialGrade] = {
-    g.name: g
-    for g in (_API_5L + _HULL_NS + _HULL_HS + _EN_GRADES + _AUSTENITIC + _DUPLEX)
-}
-
-# Alias map (ISO L-grade / UNS number -> canonical name) for forgiving lookup.
-_ALIASES: dict[str, str] = {
-    g.designation.upper(): g.name
-    for g in GRADES.values() if g.designation
-}
-# Stainless short forms ("316L" -> "TP316L").
-_ALIASES.update({g.name[2:].upper(): g.name for g in _AUSTENITIC})
-
-
-# ---------------------------------------------------------------------------
-# Query API
-# ---------------------------------------------------------------------------
 def get(name: str) -> MaterialGrade:
-    """Look up a grade by canonical name, ISO designation, or alias.
-
-    Case-insensitive; exact ``"Grade A/B/D/E"`` names identify hull steel.
-    Bare A/B retain their canonical API identities; D/E are hull aliases.
-    Qualified strings outside this grammar are rejected (issue 2727).
-
-    Raises:
-        KeyError: if the grade is unknown.
-    """
-    if name in GRADES:
-        return GRADES[name]
-    key = name.strip()
-    # Never infer a grade from the last character of unrelated input.
-    for candidate in (key, key.upper()):
-        if candidate in GRADES:
-            return GRADES[candidate]
-    upper = key.upper()
-    if upper in ("D", "E"):
-        return GRADES[f"Grade {upper}"]
-    if upper in _ALIASES:
-        return GRADES[_ALIASES[upper]]
-    # Case-insensitive name match.
-    for canonical, grade in GRADES.items():
-        if canonical.upper() == upper:
+    """Resolve only the caller's exact names and aliases, ignoring case."""
+    key = name.strip().casefold()
+    for grade in current_catalog().grades:
+        if key in (grade.name.casefold(), *(a.casefold() for a in grade.aliases)):
             return grade
     raise KeyError(f"Unknown material grade: {name!r}")
 
 
 def all_grades() -> list[MaterialGrade]:
-    """All registered grades, in registry (standard) order."""
-    return list(GRADES.values())
+    return list(current_catalog().grades)
 
 
 def by_standard(standard: str) -> list[MaterialGrade]:
-    """All grades belonging to a standard (case-insensitive substring match)."""
-    s = standard.strip().lower()
-    return [g for g in GRADES.values() if s in g.standard.lower()]
+    return [g for g in all_grades() if standard.strip().casefold() in g.standard.casefold()]
 
 
 def smys_mpa(name: str) -> float:
-    """Specified minimum yield strength (MPa)."""
     return get(name).smys_mpa
 
 
 def smts_mpa(name: str, *, psl: str = "PSL2") -> float:
-    """Specified minimum tensile strength (MPa).
-
-    API 5L 46th ed., 9.3.1/Table 6 supplies PSL1; 9.3.2/Table 7 supplies
-    PSL2. Reject unknown levels and absent entries rather than substituting
-    another product level. Non-API grades retain their canonical strength.
-    """
-    g = get(name)
-    if g.standard == "API 5L":
-        if psl.upper() not in ("PSL1", "PSL2"):
-            raise ValueError(f"Unknown API 5L product level: {psl!r}; use PSL1 or PSL2")
-        if psl.upper() == "PSL1":
-            if g.smts_psl1_mpa is None:
-                raise ValueError(f"{g.name}: PSL1 is not listed in API 5L 46th ed. Table 6")
-            return g.smts_psl1_mpa
-    if g.smts_mpa is None:
-        raise ValueError(f"{g.name}: PSL2 is not listed in API 5L 46th ed. Table 7")
-    return g.smts_mpa
+    grade = get(name)
+    if psl.upper() not in ("PSL1", "PSL2"):
+        raise ValueError("PSL must be PSL1 or PSL2")
+    value = grade.smts_psl1_mpa if psl.upper() == "PSL1" else grade.smts_mpa
+    if value is None:
+        raise ValueError(f"{grade.name}: {psl.upper()} strength was not supplied")
+    return value
 
 
 def smys_psi(name: str) -> float:
-    """Specified minimum yield strength (psi)."""
-    return get(name).smys_psi
+    return smys_mpa(name) * PSI_PER_MPA
 
 
 def smts_psi(name: str, *, psl: str = "PSL2") -> float:
-    """Specified minimum tensile strength (psi)."""
     return smts_mpa(name, psl=psl) * PSI_PER_MPA
 
 
-# ---------------------------------------------------------------------------
-# Back-compat adapters — regenerate the legacy FFS dicts from the matrix.
-# These are checked against the live legacy dicts by the test-suite, both to
-# document the convention and to guard against future drift.  Migration of the
-# scattered consumers onto these is tracked separately (issue #1089).
-# ---------------------------------------------------------------------------
-#: API 5L grades that the legacy asset_integrity dicts covered.
-_LEGACY_API_5L = ["X42", "X46", "X52", "X56", "X60", "X65", "X70", "X80"]
-
-
-def legacy_smys_psi_dict() -> dict[str, float]:
-    """Reproduce ``asset_integrity.corroded_pipe.SMYS_PSI``.
-
-    Convention: SMYS in psi = grade number (ksi) x 1000 (X52 -> 52,000 psi).
-    """
-    return {name: get(name).grade_ksi * 1000.0 for name in _LEGACY_API_5L}
-
-
-def legacy_smts_psi_dict() -> dict[str, float]:
-    """Reproduce ``asset_integrity.dnv_rp_f101.SMTS_PSI``.
-
-    Convention: PSL2 SMTS (MPa) -> psi, rounded to the nearest 100 psi.
-    """
-    return {
-        name: float(round(get(name).smts_mpa * PSI_PER_MPA, -2))
-        for name in _LEGACY_API_5L
-    }
-
-
-# ---------------------------------------------------------------------------
-# Generic unit-view helpers (canonical-derived).
-# Exact for consumers that already used the canonical ISO numbers (e.g. the
-# OrcaFlex linetype DNV-ST-F101 yield in kN/m^2).
-# ---------------------------------------------------------------------------
 def smys_kn_m2(name: str) -> float:
-    """Specified minimum yield strength in kN/m^2 (1 MPa = 1000 kN/m^2)."""
     return smys_mpa(name) * 1000.0
 
 
 def smts_kn_m2(name: str, *, psl: str = "PSL2") -> float:
-    """Specified minimum tensile strength in kN/m^2."""
     return smts_mpa(name, psl=psl) * 1000.0
 
 
 def smys_pa(name: str) -> float:
-    """Specified minimum yield strength in Pa (1 MPa = 1e6 Pa)."""
     return smys_mpa(name) * 1.0e6
 
 
 def smts_pa(name: str, *, psl: str = "PSL2") -> float:
-    """Specified minimum tensile strength in Pa."""
     return smts_mpa(name, psl=psl) * 1.0e6
 
 
-# ---------------------------------------------------------------------------
-# Legacy-preserved grade snapshots (issue #1089).
-#
-# These reproduce, VERBATIM, the API 5L strength dicts that were previously
-# hardcoded across the scattered consumers, so that routing those consumers
-# through this module is a *zero value change* consolidation.  Where a snapshot
-# diverges from the canonical ``smys_mpa`` / ``smts_mpa`` above (US-customary
-# ksi rounding, PSL1-vs-PSL2 tensile, and small per-module drift) the LEGACY
-# value is kept as-is.  Every delta is catalogued in
-# ``docs/domains/grade-table-migration-2026-06-28.md`` as a future-convergence
-# candidate; DO NOT "fix" these toward canonical without that sign-off.
-#
-# Per-module SMYS drift on the low grades (a reconciliation target):
-#   X52  -> 358 (riser_config, pipeline_pressure) | 359 (pipeline_skill,
-#           pipe_db, wall_thickness) | 360 canonical ISO
-#   X60  -> 413 (pipeline_pressure) | 414 (others) | 415 canonical ISO
-#   X70  -> 482 (pipeline_pressure) | 483 (others) | 485 canonical ISO
-# ---------------------------------------------------------------------------
-
-# asset_integrity.pipeline_skill.SMYS_TABLE — US-customary SMYS in MPa.
-_LEGACY_SMYS_TABLE_MPA: dict[str, float] = {
-    "X52": 359.0, "X60": 414.0, "X65": 448.0,
-    "X70": 483.0, "X80": 552.0, "X100": 690.0,
-}
-
-# pipe_db_client.API_5L_GRADES / wall_thickness_parametric.API_5L_GRADES — the
-# same US-customary SMYS + PSL1-ish SMTS (X65 531, X80 621 sit +1 MPa above the
-# canonical PSL1 values 530 / 620), in MPa.
-_LEGACY_PIPE_DB_MPA: dict[str, dict[str, float]] = {
-    "X42": {"yield_strength": 289.0, "tensile_strength": 414.0},
-    "X52": {"yield_strength": 359.0, "tensile_strength": 455.0},
-    "X60": {"yield_strength": 414.0, "tensile_strength": 517.0},
-    "X65": {"yield_strength": 448.0, "tensile_strength": 531.0},
-    "X70": {"yield_strength": 483.0, "tensile_strength": 565.0},
-    "X80": {"yield_strength": 552.0, "tensile_strength": 621.0},
-}
-
-# orcaflex.riser_config.PIPE_GRADES strengths — note X52 SMYS 358 (not 359), MPa.
-_LEGACY_RISER_MPA: dict[str, dict[str, float]] = {
-    "X52": {"smys_mpa": 358, "smts_mpa": 455},
-    "X60": {"smys_mpa": 414, "smts_mpa": 517},
-    "X65": {"smys_mpa": 448, "smts_mpa": 531},
-    "X70": {"smys_mpa": 483, "smts_mpa": 565},
-    "X80": {"smys_mpa": 552, "smts_mpa": 621},
-}
-
-# subsea.pipeline.pipeline_pressure.MATERIAL_LIBRARY strengths — a third drift
-# variant (X52 358, X60 413, X70 482), MPa.
-_LEGACY_PIPELINE_PRESSURE_MPA: dict[str, dict[str, float]] = {
-    "X52": {"smys": 358.0, "smts": 455.0},
-    "X60": {"smys": 413.0, "smts": 517.0},
-    "X65": {"smys": 448.0, "smts": 531.0},
-    "X70": {"smys": 482.0, "smts": 565.0},
-}
+# Legacy names retain their units and key shapes, but no copied snapshots.
+# Yield always comes from the supplied strength, never a grade designation.
+def _pipe_grades(catalog: Catalog) -> list[MaterialGrade]:
+    return [g for g in catalog.grades if g.standard == "API 5L"]
 
 
-def legacy_smys_table_mpa() -> dict[str, float]:
-    """Reproduce ``asset_integrity.pipeline_skill.SMYS_TABLE`` (SMYS, MPa).
-
-    US-customary SMYS (grade ksi -> MPa); diverges 1-3 MPa below canonical ISO.
-    """
-    return dict(_LEGACY_SMYS_TABLE_MPA)
+def legacy_smys_psi_dict() -> Mapping[str, float]:
+    return CatalogView(lambda c: {g.name: g.smys_psi for g in _pipe_grades(c)})
 
 
-def legacy_pipe_db_grades_mpa() -> dict[str, dict[str, float]]:
-    """Reproduce ``pipe_db_client.PipeSpecificationClient.API_5L_GRADES`` (MPa).
-
-    Keys ``yield_strength`` / ``tensile_strength`` per grade.
-    """
-    return {g: dict(v) for g, v in _LEGACY_PIPE_DB_MPA.items()}
+def legacy_smts_psi_dict() -> Mapping[str, float]:
+    return CatalogView(lambda c: {g.name: g.smts_psi for g in _pipe_grades(c)
+                                  if g.smts_mpa is not None})
 
 
-def legacy_pipe_db_grades_pa() -> dict[str, dict[str, float]]:
-    """Reproduce ``wall_thickness_parametric.API_5L_GRADES`` (SMYS/SMTS, Pa).
-
-    Same numeric table as :func:`legacy_pipe_db_grades_mpa`, scaled MPa -> Pa,
-    with keys ``smys`` / ``smts``.
-    """
-    return {
-        g: {"smys": v["yield_strength"] * 1.0e6,
-            "smts": v["tensile_strength"] * 1.0e6}
-        for g, v in _LEGACY_PIPE_DB_MPA.items()
-    }
+def legacy_smys_table_mpa() -> Mapping[str, float]:
+    return CatalogView(lambda c: {g.name: g.smys_mpa for g in _pipe_grades(c)})
 
 
-def legacy_riser_pipe_grades_mpa() -> dict[str, dict[str, float]]:
-    """Reproduce ``orcaflex.riser_config.PIPE_GRADES``.
-
-    Strengths (``smys_mpa`` / ``smts_mpa``) are the legacy snapshot; ``E_gpa``
-    and ``density_kg_m3`` are sourced from the canonical :class:`MaterialGrade`.
-    """
-    out: dict[str, dict[str, float]] = {}
-    for g, v in _LEGACY_RISER_MPA.items():
-        grade = get(g)
-        out[g] = {
-            "smys_mpa": v["smys_mpa"],
-            "smts_mpa": v["smts_mpa"],
-            "E_gpa": grade.E_mpa / 1000.0,
-            "density_kg_m3": grade.rho_kg_m3,
-        }
-    return out
+def legacy_pipe_db_grades_mpa() -> Mapping[str, Mapping[str, float]]:
+    return CatalogView(lambda c: {g.name: MappingProxyType({
+        "yield_strength": g.smys_mpa, "tensile_strength": g.smts_mpa,
+    }) for g in _pipe_grades(c) if g.smts_mpa is not None})
 
 
-def legacy_pipeline_material_library_mpa() -> dict[str, dict[str, float]]:
-    """Reproduce ``subsea.pipeline.pipeline_pressure.MATERIAL_LIBRARY`` strengths.
+def legacy_pipe_db_grades_pa() -> Mapping[str, Mapping[str, float]]:
+    return CatalogView(lambda c: {g.name: MappingProxyType({
+        "smys": g.smys_mpa * 1e6, "smts": g.smts_mpa * 1e6,
+    }) for g in _pipe_grades(c) if g.smts_mpa is not None})
 
-    Keys ``smys`` / ``smts`` (MPa) per grade.
-    """
-    return {g: dict(v) for g, v in _LEGACY_PIPELINE_PRESSURE_MPA.items()}
+
+def legacy_riser_pipe_grades_mpa() -> Mapping[str, Mapping[str, float]]:
+    return CatalogView(lambda c: {g.name: MappingProxyType({
+        "smys_mpa": g.smys_mpa, "smts_mpa": g.smts_mpa,
+        "E_gpa": g.E_mpa / 1000, "density_kg_m3": g.rho_kg_m3,
+    }) for g in _pipe_grades(c) if g.smts_mpa is not None})
+
+
+def legacy_pipeline_material_library_mpa() -> Mapping[str, Mapping[str, float]]:
+    return CatalogView(lambda c: {g.name: MappingProxyType({
+        "smys": g.smys_mpa, "smts": g.smts_mpa,
+    }) for g in _pipe_grades(c) if g.smts_mpa is not None})

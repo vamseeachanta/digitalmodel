@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Drilling-riser joint FFS — envelopes, collapse depth, placement, rollup (#1292).
 
 Physics legs are compositions of golden-tested engines; these tests pin the
@@ -158,7 +160,7 @@ def test_collapse_pressure_interaction_hand_value():
     r = collapse_pressure_psi(OD, WT, SMYS_PSI["X80"])
     t_over_d = WT / OD
     p_el = 2 * 30e6 * t_over_d**3 / (1 - 0.3**2)
-    p_y = 2 * 80_000 * t_over_d
+    p_y = 2 * (321 * 145.0377) * t_over_d
     assert r["p_el_psi"] == pytest.approx(p_el)
     assert r["p_y_psi"] == pytest.approx(p_y)
     assert r["p_c_psi"] == pytest.approx(p_el * p_y / math.hypot(p_el, p_y))
@@ -169,9 +171,8 @@ def test_acceptable_depth_monotone_in_wall():
     d_nominal = acceptable_water_depth_ft(OD, WT, GRADE)
     d_corroded = acceptable_water_depth_ft(OD, 15.02 / 25.4, GRADE)
     assert d_corroded < d_nominal
-    # fully-evacuated criterion qualifies the nominal wall to ~5,900 ft; a
-    # mud-filled basis (lower differential head) reaches farther
-    assert 5_500 < d_nominal < 6_500
+    # Independently computed from the synthetic yield and explicit geometry.
+    assert d_nominal == pytest.approx(4640.5, abs=0.1)
     assert acceptable_water_depth_ft(
         OD, WT, GRADE, differential_head_fraction=0.5) == pytest.approx(2 * d_nominal)
     p_c = collapse_pressure_psi(OD, WT, SMYS_PSI["X80"])["p_c_psi"]
@@ -186,10 +187,17 @@ def _register():
     return pd.read_csv(DATA / "gml_results_register.csv")
 
 
+def _synthetic_campaign_depth():
+    severe = acceptable_water_depth_ft(OD, 15.02 / 25.4, GRADE)
+    mild = acceptable_water_depth_ft(OD, 21.0 / 25.4, GRADE)
+    # Demand lies above twice the severe capacity and below the mild capacity.
+    return (2 * severe + mild) / 2
+
+
 def test_place_severe_vs_mild_joint():
     reg = _register()
     main = reg[reg["component"] == "Main"].groupby("joint_id")["min_life_years"].min()
-    kw = dict(od_in=OD, grade=GRADE, campaign_water_depth_ft=5_000.0,
+    kw = dict(od_in=OD, grade=GRADE, campaign_water_depth_ft=_synthetic_campaign_depth(),
               campaign_years=3.0)
     severe = place_joint("RJ-101", main["RJ-101"], 15.02 / 25.4, **kw)
     mild = place_joint("RJ-103", main["RJ-103"], 21.0 / 25.4, **kw)
@@ -206,7 +214,7 @@ def test_place_severe_vs_mild_joint():
 def test_degraded_joint_restricted_to_mid_string():
     p = place_joint("RJ-x", min_life_years=4.0, wt_min_in=WT,
                     od_in=OD, grade=GRADE,
-                    campaign_water_depth_ft=5_000.0, campaign_years=3.0)
+                    campaign_water_depth_ft=_synthetic_campaign_depth(), campaign_years=3.0)
     assert p.verdict == "ACCEPT"
     assert p.eligible_zones == ["mid"]  # low-fatigue band only
 
@@ -224,3 +232,7 @@ def test_fleet_rollup_on_real_register():
     assert all(x["high_fatigue_qualified"] <= x["fit_joints"] for x in c)
     # the real fleet has repairs by campaign 1 (worst joint: 3.46 yr < 3x margin)
     assert c[0]["high_fatigue_qualified"] < 26
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

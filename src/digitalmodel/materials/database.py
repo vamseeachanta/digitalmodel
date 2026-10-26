@@ -1,29 +1,20 @@
-"""Indexed projection of the existing reconciled grades, with pinned provenance.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+"""Indexed snapshot of caller-supplied grades and their source metadata.
 
-No dimensional values, independent grade matrix or external source fetch is
-introduced. Compatibility lookup delegates name handling to grades.get.
-The provenance digest hashes the grade module bytes decoded as UTF-8, with
-every CRLF and lone CR replaced by LF, then encoded as UTF-8.
+The digest covers the input data and its adjacent sources.yml, not software
+text. No historical software revision is presented as a material data source.
 """
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable, Iterator, Mapping
 from hashlib import sha256
-from pathlib import Path
 from types import MappingProxyType
 
 from . import grades
+from .catalog import Catalog
 from .database_schema import MaterialRecord, RepositoryProvenance, Strengths
 
-# PR #2741 merge, reachable from main; normalized grades.py digest checked.
-# Repository traceability does not establish original-standard qualification.
-_SOURCE_REVISION = "b4c10284fa7d28398e6fa02c262c219c0fec8fef"
-# SHA-256 of UTF-8-decoded grade text, CRLF and lone CR replaced by LF,
-# then encoded as UTF-8.
-_SOURCE_SHA256 = "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90"
-_RETRIEVED_ON_UTC = "2026-10-18"
-_SOURCE_PATH = "src/digitalmodel/materials/grades.py"
 _LINK_FIELDS = ("sn_curve_ids", "standards_registry_id", "structural_shape_id")
 
 
@@ -36,7 +27,8 @@ class MaterialDatabase(Mapping[str, MaterialRecord]):
     """
 
     def __init__(
-        self, records: Iterable[MaterialRecord], *, source_digest_matches: bool = False
+        self, records: Iterable[MaterialRecord], *, source_digest_matches: bool = False,
+        grade_rows: tuple[grades.MaterialGrade, ...] = ()
     ) -> None:
         indexed: dict[str, MaterialRecord] = {}
         by_grade: dict[tuple[str, str | None], MaterialRecord] = {}
@@ -53,18 +45,14 @@ class MaterialDatabase(Mapping[str, MaterialRecord]):
                 raise ValueError(f"ambiguous grade lookup: {identity}")
             indexed[record.key] = record
             by_grade[identity] = record
+        self._grade_rows = grade_rows
         self._source_digest_matches = source_digest_matches
         self._records = MappingProxyType(indexed)
         self._by_grade = MappingProxyType(by_grade)
 
     @property
     def source_digest_matches(self) -> bool:
-        """Whether the loaded source matched the inspected normalised digest.
-
-        False on a loader result means the grade source changed since inspection
-        and the records carry stale pinned provenance. Directly constructed
-        indexes default to False because no source comparison is established.
-        """
+        """Whether records were projected from the validated input snapshot."""
         return self._source_digest_matches
 
     def __getitem__(self, key: str) -> MaterialRecord:
@@ -78,37 +66,42 @@ class MaterialDatabase(Mapping[str, MaterialRecord]):
 
     def lookup(self, name: str, *, psl: str = "PSL2") -> MaterialRecord:
         """Match grades.smts_mpa, rejecting unsupported API product levels."""
-        grade = grades.get(name)
+        key = name.strip().casefold()
+        grade = next((g for g in self._grade_rows
+                      if key in (g.name.casefold(), *(a.casefold() for a in g.aliases))), None)
+        if grade is None:
+            raise KeyError(f"Unknown material grade: {name!r}")
         level = None
         if grade.standard == "API 5L":
-            grades.smts_mpa(grade.name, psl=psl)  # Validate against the cited table.
             level = psl.upper()
+            if level not in ("PSL1", "PSL2"):
+                raise ValueError("PSL must be PSL1 or PSL2")
+            strength = grade.smts_psl1_mpa if level == "PSL1" else grade.smts_mpa
+            if strength is None:
+                raise ValueError(f"{grade.name}: {level} strength was not supplied")
         return self._by_grade[(grade.name, level)]
 
 
-def _edition(citation: str) -> str | None:
-    """Retain only the edition already present in the grade citation."""
-    match = re.search(r"\(([^()]*\bed\.)\)", citation)
-    return match.group(1) if match else None
-
-
-def _record(grade: grades.MaterialGrade, level: str | None) -> MaterialRecord:
-    citation = grade.source_psl1 if level == "PSL1" else grade.source
+def _record(grade: grades.MaterialGrade, level: str | None, catalog: Catalog) -> MaterialRecord:
+    tensile = grade.smts_psl1_mpa if level == "PSL1" else grade.smts_mpa
+    if tensile is None:
+        raise ValueError("the requested tensile strength was not supplied")
     return MaterialRecord(
         designation=grade.name,
         specification=grade.standard,
-        edition=_edition(citation),
+        edition=grade.source.revision,
         product_level=level,
         strengths=Strengths(
-            smys_mpa=grades.smys_mpa(grade.name),
-            smts_mpa=grades.smts_mpa(grade.name, psl=level or "PSL2"),
+            smys_mpa=grade.smys_mpa,
+            smts_mpa=tensile,
         ),
         provenance=RepositoryProvenance(
-            citation=citation,
-            repository_path=_SOURCE_PATH,
-            repository_revision=_SOURCE_REVISION,
-            sha256=_SOURCE_SHA256,
-            retrieved_on_utc=_RETRIEVED_ON_UTC,
+            citation=grade.source.citation,
+            repository_path=catalog.locator,
+            repository_revision=None,
+            sha256=catalog.digest,
+            retrieved_on_utc=grade.source.date,
+            original_source_terms="caller-supplied; qualification remains required",
         ),
         notes=grade.notes,
     )
@@ -121,23 +114,17 @@ def normalised_source_digest(source: bytes) -> str:
 
 
 def load_database() -> MaterialDatabase:
-    """Build from grades.py reconciliation, including when its digest drifts.
+    """Snapshot the active caller catalogue, retaining source identities."""
+    from .catalog import current_catalog
 
-    A False source_digest_matches flag means the grade source changed since
-    inspection and the records carry stale pinned provenance. Drift is reported
-    by the flag and a test, without a loader error. Original standards and reuse
-    terms are not re-verified by this loader.
-    """
-    digest = normalised_source_digest(Path(grades.__file__).read_bytes())
+    catalog = current_catalog()
     records = []
-    for grade in grades.all_grades():
+    for grade in catalog.grades:
         if grade.standard == "API 5L":
-            levels = tuple(
-                level for level, strength in (
-                    ("PSL1", grade.smts_psl1_mpa), ("PSL2", grade.smts_mpa)
-                ) if strength is not None
-            )
+            levels = tuple(level for level, strength in (
+                ("PSL1", grade.smts_psl1_mpa), ("PSL2", grade.smts_mpa)
+            ) if strength is not None)
         else:
             levels = (None,)
-        records.extend(_record(grade, level) for level in levels)
-    return MaterialDatabase(records, source_digest_matches=digest == _SOURCE_SHA256)
+        records.extend(_record(grade, level, catalog) for level in levels)
+    return MaterialDatabase(records, source_digest_matches=True, grade_rows=catalog.grades)

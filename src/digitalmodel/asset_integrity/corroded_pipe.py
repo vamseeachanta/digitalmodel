@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Corroded-pipe remaining-strength — ASME B31G, Modified B31G (0.85dL)
 # ABOUTME: and RSTRENG effective-area failure-pressure methods (FFS Level 1/2).
 """Corroded-pipeline remaining-strength assessment.
@@ -72,9 +74,7 @@ _DEFAULT_SAFETY_FACTOR = ASME_B318_CLASS1_SAFETY_FACTOR
 # qualified range and should be assessed by repair/replace criteria.
 _B31G_MAX_DT = 0.80
 
-# API 5L specified minimum yield strength (psi) — grade number is SMYS in ksi.
-# Sourced from the canonical grade matrix (issue #1089); the matrix reproduces
-# these values exactly via the grade-ksi convention (X52 -> 52,000 psi).
+# Caller-supplied strength view; no default numerical table.
 SMYS_PSI = legacy_smys_psi_dict()
 
 

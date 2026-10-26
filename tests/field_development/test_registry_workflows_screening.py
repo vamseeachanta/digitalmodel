@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
@@ -99,3 +101,7 @@ def test_all_gated_status_fails(cfg):
     summary = run(cfg)
     assert all(row["gated"] for row in summary["ranked"])
     assert summary["screening_status"] == "fail"
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

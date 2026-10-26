@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Builds a self-contained interactive HTML showcase of the digitalmodel
 # ABOUTME: Fitness-For-Service (FFS) decision layer (corroded pipe + plate + sufficiency).
 """Fitness-For-Service (FFS) decision-layer showcase.
@@ -19,7 +21,7 @@ Every number comes from the library modules; nothing is re-implemented here.
 This is a *field-screening* aid, not a replacement for detailed analysis.
 
 Run:
-    .venv/bin/python examples/demos/asset_integrity/ffs_showcase.py
+    python examples/demos/asset_integrity/ffs_showcase.py --catalog inputs/catalog.json
 """
 
 from __future__ import annotations
@@ -51,7 +53,10 @@ from digitalmodel.asset_integrity.assessment import (
     Level2Engine,
     MeasurementSufficiency,
 )
-from digitalmodel.structural.structural_analysis.models import STEEL_AH36, PlateGeometry
+from digitalmodel.structural.structural_analysis.models import MaterialProperties, PlateGeometry
+from digitalmodel.materials import get as get_grade
+from digitalmodel.materials.catalog import current_catalog, load_catalog, use_catalog
+from dataclasses import asdict
 from digitalmodel.structural.structural_analysis.plate_metal_loss_ffs import (
     assess_plate_uniform_loss,
     max_acceptable_loss,
@@ -210,14 +215,20 @@ def _build_sufficiency() -> dict:
 def _build_plate() -> dict:
     """Buckling utilisation vs metal loss for an AH36 ship plate at sigma_x=150 MPa."""
     geom = PlateGeometry(2400.0, 800.0, 16.0)
+    grade = get_grade("AH36")
+    material = MaterialProperties(
+        yield_strength=grade.smys_mpa, ultimate_strength=grade.smts_mpa,
+        youngs_modulus=grade.E_mpa, poissons_ratio=grade.nu,
+        density=grade.rho_kg_m3, name=grade.name,
+    )
     sigma_x = 150.0
-    max_loss = max_acceptable_loss(geom, STEEL_AH36, sigma_x)
+    max_loss = max_acceptable_loss(geom, material, sigma_x)
 
     hi = min(15.5, max(max_loss["metal_loss_mm"] * 1.5, max_loss["metal_loss_mm"] + 4.0))
     losses = [round(float(x), 3) for x in np.linspace(0.0, hi, 28)]
     util, retained = [], []
     for loss in losses:
-        r = assess_plate_uniform_loss(geom, STEEL_AH36, loss, sigma_x=sigma_x)
+        r = assess_plate_uniform_loss(geom, material, loss, sigma_x=sigma_x)
         util.append(round(float(r.utilization), 4))
         retained.append(round(float(r.capacity_retained_frac), 4))
 
@@ -235,7 +246,11 @@ def _build_plate() -> dict:
 
 def build_showcase_data() -> dict:
     """Precompute all showcase data from the FFS implementations."""
+    catalog = current_catalog()
     return {
+        "synthetic": catalog.synthetic,
+        "sources": {g.row_id: asdict(g.source) for g in catalog.grades
+                    if g.name in {"X52", "X65", "AH36"}},
         "corroded": _build_corroded_grids(),
         "sufficiency": _build_sufficiency(),
         "plate": _build_plate(),
@@ -243,10 +258,20 @@ def build_showcase_data() -> dict:
 
 
 def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Render FFS examples from sourced inputs")
+    parser.add_argument("--catalog", required=True, help="Input JSON beside sources.yml")
+    parser.add_argument("--allow-synthetic", action="store_true", help="Explicit software-test mode")
+    args = parser.parse_args()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    data = build_showcase_data()
+    with use_catalog(load_catalog(args.catalog), allow_synthetic=args.allow_synthetic):
+        data = build_showcase_data()
     html = _render_html(data)
     HTML_PATH.write_text(html, encoding="utf-8")
+    HTML_PATH.with_name("sources.yml").write_text(
+        json.dumps(data["sources"], indent=2) + "\n", encoding="utf-8"
+    )
 
     c = data["corroded"]
     suf = data["sufficiency"]
@@ -305,10 +330,12 @@ def _sufficiency_html(suf: dict, c: dict) -> str:
 
 def _render_html(data: dict) -> str:
     c = COLORS
+    basis = ("Synthetic software-test data; do not use for engineering decisions."
+             if data["synthetic"] else "Caller-supplied data; engineering qualification remains required.")
     plotly_js = get_plotlyjs()
     corroded_json = json.dumps(data["corroded"])
     plate_json = json.dumps(data["plate"])
-    suf_section = _sufficiency_html(data["sufficiency"], c)
+    suf_section = _sufficiency_html(data["sufficiency"], c).lstrip("\n")
     return f"""<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -374,6 +401,7 @@ def _render_html(data: dict) -> str:
 </style>
 </head>
 <body>
+<p role="alert">Data basis: {basis}</p>
 <div class="wrap">
   <div class="panel callout" role="alert">
     <b>DNV-RP-F101 safe pressures were corrected on 2026-10-20 to apply the Part B modelling factor (F = F1·F2); independent verification is pending; do not use them for decisions.</b>
@@ -615,7 +643,8 @@ bindClickOnce();
 renderPlate();
 </script>
 </body>
-</html>"""
+</html>
+"""
 
 
 if __name__ == "__main__":

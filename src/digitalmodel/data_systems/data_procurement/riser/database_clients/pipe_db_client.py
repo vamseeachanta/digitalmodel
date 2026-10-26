@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Pipe specification database for API 5L and API 5CT pipes
 # ABOUTME: Embedded database with property calculations and OrcaFlex export
 
@@ -37,7 +39,9 @@ import logging
 from typing import Dict, Any, List, Optional
 import numpy as np
 
-from digitalmodel.materials import legacy_pipe_db_grades_mpa
+from digitalmodel.materials import legacy_pipe_db_grades_mpa, get
+from digitalmodel.materials.catalog import current_catalog
+from digitalmodel.materials.line_pipe import NPS_OD_IN
 
 logger = logging.getLogger(__name__)
 
@@ -49,39 +53,9 @@ class PipeSpecificationClient:
     Embedded database of pipe specifications with complete properties.
     """
 
-    # Schedule to wall thickness mapping (inches)
-    SCHEDULE_WALL_THICKNESS = {
-        # Common schedules
-        'SCH 20': {},  # Populated below
-        'SCH 40': {},
-        'SCH 60': {},
-        'SCH 80': {},
-        'SCH 100': {},
-        'SCH 120': {},
-        'SCH 140': {},
-        'SCH 160': {},
-        'STD': {},  # Standard (same as SCH 40 for most sizes)
-        'XS': {},   # Extra strong (same as SCH 80 for most sizes)
-        'XXS': {},  # Double extra strong
-    }
-
-    # Standard pipe diameters (inches)
-    STANDARD_DIAMETERS = [2, 3, 4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 30, 36]
-
-    # API 5L grades (MPa) — sourced from the canonical grade matrix (issue
-    # #1089). Yields are US-customary (X42 289, X52 359 vs canonical ISO 290 /
-    # 360) and the SMTS is PSL1-ish (X65 531, X80 621); preserved verbatim
-    # pending the convergence sign-off in
-    # docs/domains/grade-table-migration-2026-06-28.md.
+    # Read-only views of the active caller catalogue.
+    STANDARD_DIAMETERS = NPS_OD_IN
     API_5L_GRADES = legacy_pipe_db_grades_mpa()
-
-    # Material properties (steel)
-    STEEL_PROPERTIES = {
-        'youngs_modulus': 207,  # GPa
-        'poissons_ratio': 0.30,
-        'density': 7850,  # kg/m³
-        'shear_modulus': 80,  # GPa
-    }
 
     def __init__(self):
         """Initialize Pipe Specification Client."""
@@ -98,38 +72,9 @@ class PipeSpecificationClient:
 
     def _initialize_schedule_mapping(self):
         """Initialize schedule to wall thickness mapping."""
-        # Wall thickness data from API 5L standard (inches)
-        # Format: diameter: {schedule: wall_thickness}
-
-        wall_data = {
-            2: {'SCH 40': 0.154, 'SCH 80': 0.218, 'STD': 0.154, 'XS': 0.218, 'XXS': 0.436},
-            3: {'SCH 40': 0.216, 'SCH 80': 0.300, 'STD': 0.216, 'XS': 0.300, 'XXS': 0.600},
-            4: {'SCH 40': 0.237, 'SCH 80': 0.337, 'STD': 0.237, 'XS': 0.337, 'XXS': 0.674},
-            6: {'SCH 40': 0.280, 'SCH 80': 0.432, 'STD': 0.280, 'XS': 0.432, 'XXS': 0.864},
-            8: {'SCH 20': 0.250, 'SCH 40': 0.322, 'SCH 60': 0.406, 'SCH 80': 0.500, 'SCH 100': 0.594,
-                'SCH 120': 0.719, 'SCH 140': 0.812, 'SCH 160': 0.906, 'STD': 0.322, 'XS': 0.500, 'XXS': 0.875},
-            10: {'SCH 20': 0.250, 'SCH 40': 0.365, 'SCH 60': 0.500, 'SCH 80': 0.594, 'SCH 100': 0.719,
-                 'SCH 120': 0.844, 'SCH 140': 1.000, 'SCH 160': 1.125, 'STD': 0.365, 'XS': 0.500, 'XXS': 1.000},
-            12: {'SCH 20': 0.250, 'SCH 40': 0.375, 'SCH 60': 0.562, 'SCH 80': 0.688, 'SCH 100': 0.844,
-                 'SCH 120': 1.000, 'SCH 140': 1.125, 'SCH 160': 1.312, 'STD': 0.375, 'XS': 0.500, 'XXS': 1.000},
-            14: {'SCH 20': 0.250, 'SCH 40': 0.375, 'SCH 60': 0.594, 'SCH 80': 0.750, 'SCH 100': 0.938,
-                 'SCH 120': 1.094, 'SCH 140': 1.250, 'SCH 160': 1.406, 'STD': 0.375, 'XS': 0.500},
-            16: {'SCH 20': 0.250, 'SCH 40': 0.375, 'SCH 60': 0.656, 'SCH 80': 0.844, 'SCH 100': 1.031,
-                 'SCH 120': 1.219, 'SCH 140': 1.438, 'SCH 160': 1.594, 'STD': 0.375, 'XS': 0.500},
-            18: {'SCH 20': 0.250, 'SCH 40': 0.375, 'SCH 60': 0.750, 'SCH 80': 0.938, 'SCH 100': 1.156,
-                 'SCH 120': 1.375, 'SCH 140': 1.562, 'SCH 160': 1.781, 'STD': 0.375, 'XS': 0.500},
-            20: {'SCH 20': 0.250, 'SCH 40': 0.375, 'SCH 60': 0.812, 'SCH 80': 1.031, 'SCH 100': 1.281,
-                 'SCH 120': 1.500, 'SCH 140': 1.750, 'SCH 160': 1.969, 'STD': 0.375, 'XS': 0.500},
-            24: {'SCH 20': 0.250, 'SCH 40': 0.375, 'SCH 60': 0.969, 'SCH 80': 1.219, 'SCH 100': 1.531,
-                 'SCH 120': 1.812, 'SCH 140': 2.062, 'SCH 160': 2.344, 'STD': 0.375, 'XS': 0.500},
-            30: {'SCH 20': 0.312, 'SCH 40': 0.375, 'SCH 60': 1.000, 'SCH 80': 1.250, 'STD': 0.375, 'XS': 0.500},
-            36: {'SCH 20': 0.312, 'SCH 40': 0.375, 'SCH 60': 1.000, 'SCH 80': 1.250, 'STD': 0.375, 'XS': 0.500},
-        }
-
-        # Populate schedule mapping
-        for diameter, schedules in wall_data.items():
-            for schedule, wall_thickness in schedules.items():
-                self.SCHEDULE_WALL_THICKNESS[schedule][diameter] = wall_thickness
+        self.SCHEDULE_WALL_THICKNESS = {}
+        for row in current_catalog().dimensions:
+            self.SCHEDULE_WALL_THICKNESS.setdefault(row.schedule.upper(), {})[row.nps] = row.wt_in
 
     def _initialize_pipe_database(self) -> List[Dict[str, Any]]:
         """
@@ -171,7 +116,8 @@ class PipeSpecificationClient:
             Complete pipe specification dict
         """
         # Convert to metric
-        od_mm = diameter * 25.4
+        od_in = NPS_OD_IN[diameter]
+        od_mm = od_in * 25.4
         wall_mm = wall_thickness * 25.4
         id_mm = od_mm - 2 * wall_mm
 
@@ -180,7 +126,13 @@ class PipeSpecificationClient:
         id_m = id_mm / 1000
 
         # Material properties
-        steel = self.STEEL_PROPERTIES
+        material = get(grade)
+        steel = {
+            "youngs_modulus": material.E_mpa / 1000,
+            "poissons_ratio": material.nu,
+            "density": material.rho_kg_m3,
+            "shear_modulus": material.E_mpa / (2 * (1 + material.nu)) / 1000,
+        }
         grade_props = self.API_5L_GRADES[grade]
 
         # Cross-sectional area (steel only)
@@ -229,8 +181,8 @@ class PipeSpecificationClient:
             'wall_thickness_mm': round(wall_mm, 2),
 
             # Dimensions (imperial)
-            'outer_diameter_in': diameter,
-            'inner_diameter_in': round(diameter - 2 * wall_thickness, 3),
+            'outer_diameter_in': od_in,
+            'inner_diameter_in': round(od_in - 2 * wall_thickness, 3),
             'wall_thickness_in': wall_thickness,
 
             # Mechanical properties

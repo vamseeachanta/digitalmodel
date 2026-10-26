@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Pipeline pressure containment checks — DNV-ST-F101 and API RP 1111 (WRK-355).
 
 Implements core functions:
@@ -18,7 +20,6 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from digitalmodel.materials import legacy_pipeline_material_library_mpa
 
 
 # ---------------------------------------------------------------------------
@@ -129,16 +130,13 @@ class PipeMaterial:
 # Material library
 # ---------------------------------------------------------------------------
 
-#: Standard pipeline material grades: name -> PipeMaterial.
-#: Sourced from the canonical grade matrix (issue #1089). Strengths are the
-#: legacy snapshot (X52 358, X60 413, X70 482 vs canonical ISO 360/415/485);
-#: preserved verbatim pending the convergence sign-off in
-#: docs/domains/grade-table-migration-2026-06-28.md.
-MATERIAL_LIBRARY: dict[str, PipeMaterial] = {
-    name: PipeMaterial(name=name, SMYS=v["smys"], SMTS=v["smts"])
-    for name, v in legacy_pipeline_material_library_mpa().items()
-}
+# Caller-supplied material view; no values are captured at import time.
+from digitalmodel.materials.catalog import CatalogView
 
+MATERIAL_LIBRARY = CatalogView(lambda c: {
+    g.name: PipeMaterial(name=g.name, SMYS=g.smys_mpa, SMTS=g.smts_mpa)
+    for g in c.grades if g.standard == "API 5L" and g.smts_mpa is not None
+})
 
 # ---------------------------------------------------------------------------
 # Internal helpers

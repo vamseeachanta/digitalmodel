@@ -22,6 +22,8 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from pydantic import BaseModel, Field
 
+from collections.abc import Mapping
+
 from digitalmodel.materials import legacy_riser_pipe_grades_mpa
 
 
@@ -56,7 +58,7 @@ class PipeGrade(str, Enum):
 # legacy snapshot (X52 SMYS 358 vs canonical ISO 360); E and density come from
 # the canonical record. Preserved verbatim pending the convergence sign-off in
 # docs/domains/grade-table-migration-2026-06-28.md.
-PIPE_GRADES: Dict[str, Dict[str, float]] = legacy_riser_pipe_grades_mpa()
+PIPE_GRADES: Mapping[str, Mapping[str, float]] = legacy_riser_pipe_grades_mpa()
 
 
 # ---------------------------------------------------------------------------

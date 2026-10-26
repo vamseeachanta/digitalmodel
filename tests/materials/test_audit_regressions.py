@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Contracts for the materials post-merge audit (issues 2726-2731)."""
 import math
 
@@ -11,31 +13,21 @@ from digitalmodel.materials.ffs_material_library import (
 from digitalmodel.materials.line_pipe import line_pipe
 
 
-@pytest.mark.parametrize(
-    "name,minimum", [("A25", 310), ("A", 335), ("B", 415),
-                     ("X42", 415), ("X46", 435), ("X52", 460),
-                     ("X56", 490), ("X60", 520), ("X65", 535), ("X70", 570)],
-)
-def test_psl1_si_minima_and_table_provenance(name, minimum):
-    """API 5L 46th ed. (2018), 9.3.1 / Table 6 SI tensile entries.
-
-    Published cross-check: UNIASEN, API 5L Pipe Specification, Mechanical
-    Requirement PSL1 table, https://uniasen.com/standards/api-5l/, accessed
-    2026-10-21. Its Specification section names API Spec 5L 46th 2018.
-    The supplier's publication is independent of the code under test;
-    qualification against the licensed standard remains pending.
-    """
+@pytest.mark.parametrize("index,name", list(enumerate([
+    "A25", "A", "B", "X42", "X46", "X52", "X56", "X60", "X65", "X70",
+])))
+def test_psl1_synthetic_values_and_row_provenance(index, name):
     record = load_database().lookup(name, psl="PSL1")
-    assert grades.smts_mpa(name, psl="PSL1") == minimum
-    assert record.strengths.smts_mpa == minimum
-    assert record.edition == "46th ed."
-    assert "Table 6" in record.provenance.citation
-    assert "9.3.1" in record.provenance.citation
+    assert grades.smts_mpa(name, psl="PSL1") == 581 + index * 2
+    assert record.strengths.smts_mpa == 581 + index * 2
+    assert record.edition == "1"
+    assert record.provenance.citation == grades.get(name).source.citation
+    assert "Synthetic" in record.provenance.citation
 
 
 @pytest.mark.parametrize("name", ["X80", "X90", "X100", "X120"])
 def test_psl1_unlisted_grades_raise(name):
-    """API 5L 46th ed., Table 6 ends at L485/X70."""
+    """Synthetic fixture deliberately omits selected product levels."""
     database = load_database()
     assert not any(r.designation == name and r.product_level == "PSL1"
                    for r in database.values())
@@ -47,11 +39,11 @@ def test_psl1_unlisted_grades_raise(name):
 
 @pytest.mark.parametrize("name", ["A25", "A", "L175", "l210"])
 def test_psl1_only_grades_reject_psl2(name):
-    """A25/L175 and A/L210 have no Table 7 product level."""
+    """Synthetic fixture deliberately omits the second product level."""
     grade = grades.get(name)
     database = load_database()
     assert grade.smts_mpa is None
-    assert "Table 7" not in grade.source
+    assert grade.source.kind == "synthetic"
     assert database.lookup(name, psl="PSL1").strengths.smts_mpa == grade.smts_psl1_mpa
     assert {r.product_level for r in database.values()
             if r.designation == grade.name} == {"PSL1"}
@@ -73,10 +65,8 @@ def test_psl1_only_grades_reject_psl2(name):
 ])
 def test_psl2_provenance_excludes_psl1_table(name):
     record = load_database().lookup(name, psl="PSL2")
-    assert "9.3.2" in record.provenance.citation
-    assert "Table 7" in record.provenance.citation
-    assert "9.3.1" not in record.provenance.citation
-    assert "Table 6" not in record.provenance.citation
+    assert record.provenance.citation == grades.get(name).source.citation
+    assert "Synthetic" in record.provenance.citation
 
 
 @pytest.mark.parametrize("psl", ["unknown", "PSL3", ""])

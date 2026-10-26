@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Builder for the LineTypes section of OrcaFlex models.
 
 This builder generates LineType definitions for homogeneous pipe segments,
@@ -6,43 +8,21 @@ referencing coating names from the VarDataBuilder via context.
 
 from typing import Any
 
-from digitalmodel.materials import smys_kn_m2
+from digitalmodel.materials.catalog import CatalogView
 
 from .base import BaseBuilder
 from .registry import BuilderRegistry
 
 
-# Default material properties by grade. The DNV-ST-F101 yield (kN/m2) is sourced
-# from the canonical grade matrix (issue #1089) — these grades already used the
-# canonical ISO SMYS (X52 360, X60 415, X65 450, X70 485 MPa), so smys_kn_m2()
-# reproduces the legacy literals exactly. E / density / Poisson are OrcaFlex
-# modelling defaults (PoissonRatio 0.293 is intentionally not the canonical nu).
-MATERIAL_PROPERTIES = {
-    "X65": {
-        "MaterialDensity": 7.85,  # te/m3
-        "E": 207e6,  # kN/m2
-        "PoissonRatio": 0.293,
-        "DNVSTF101Fy": smys_kn_m2("X65"),  # kN/m2
-    },
-    "X70": {
-        "MaterialDensity": 7.85,
-        "E": 207e6,
-        "PoissonRatio": 0.293,
-        "DNVSTF101Fy": smys_kn_m2("X70"),
-    },
-    "X52": {
-        "MaterialDensity": 7.85,
-        "E": 207e6,
-        "PoissonRatio": 0.293,
-        "DNVSTF101Fy": smys_kn_m2("X52"),
-    },
-    "X60": {
-        "MaterialDensity": 7.85,
-        "E": 207e6,
-        "PoissonRatio": 0.293,
-        "DNVSTF101Fy": smys_kn_m2("X60"),
-    },
-}
+# Material properties resolve the caller's catalogue when building a model.
+MATERIAL_PROPERTIES = CatalogView(lambda c: {
+    alias.upper(): {
+        "MaterialDensity": g.rho_kg_m3 / 1000,
+        "E": g.E_mpa * 1000,
+        "PoissonRatio": g.nu,
+        "DNVSTF101Fy": g.smys_mpa * 1000,
+    } for g in c.grades for alias in (g.name, *g.aliases)
+})
 
 # Default hydrodynamic coefficients for pipes
 DEFAULT_HYDRO_COEFFS = {
@@ -98,9 +78,7 @@ class LineTypeBuilder(BaseBuilder):
 
         # Get material properties
         material_grade = pipeline.material.upper()
-        material_props = MATERIAL_PROPERTIES.get(
-            material_grade, MATERIAL_PROPERTIES["X65"]
-        )
+        material_props = MATERIAL_PROPERTIES[material_grade]
 
         # Override with spec values if provided
         youngs_modulus = (
@@ -141,7 +119,7 @@ class LineTypeBuilder(BaseBuilder):
                 youngs_modulus=youngs_modulus,
                 poissons_ratio=poissons_ratio,
                 coating_name=coating_name,
-                dnv_fy=material_props.get("DNVSTF101Fy", 450e3),
+                dnv_fy=material_props["DNVSTF101Fy"],
             )
             line_types_list.append(line_type)
             line_type_names.append(segment_type)

@@ -1,0 +1,29 @@
+{
+  "grade:X52": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "url": "",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:X65": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "url": "",
+    "catalogue_number": "synthetic-inputs-v1"
+  },
+  "grade:AH36": {
+    "title": "Synthetic material and geometry test basis",
+    "publisher": "Repository test fixtures",
+    "revision": "1",
+    "date": "2026-10-26",
+    "kind": "synthetic",
+    "url": "",
+    "catalogue_number": "synthetic-inputs-v1"
+  }
+}

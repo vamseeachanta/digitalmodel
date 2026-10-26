@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Drilling-riser joint FFS — Level-1 flaw-acceptance envelopes, collapse-
 # ABOUTME: limited water depth, string fatigue-zone placement and fleet rollup.
 """Drilling-riser joint fitness-for-service (#1292).
@@ -213,8 +215,8 @@ def level1_flaw_envelope(
             length = _max_acceptable_length(
                 method, od_in, wt_in, d_end, grade, design_pressure_psi, max_length_in
             )
-        depth_in.append(round(d, 4))
-        max_len.append(round(length, 3))
+        depth_in.append(d)
+        max_len.append(length)
     return {
         "domain": "riser_joint_flaw_envelope",
         "od_in": od_in, "wt_in": wt_in, "grade": grade,

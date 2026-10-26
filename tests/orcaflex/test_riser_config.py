@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Tests for digitalmodel.orcaflex.riser_config module."""
 
 import math
@@ -161,3 +163,7 @@ class TestUtilityFunctions:
         angle = estimate_scr_hang_off_angle(water_depth=1000.0, horizontal_offset=500.0)
         assert angle > 0
         assert angle < 90
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

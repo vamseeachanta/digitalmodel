@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Shared fixtures for modular generator tests."""
 
 from __future__ import annotations
@@ -76,3 +78,9 @@ def builder_context():
     )
 
     return BuilderContext()
+
+
+@pytest.fixture(autouse=True)
+def generator_material_inputs(synthetic_material_catalog):
+    """Use the labelled synthetic material basis for generator tests."""
+    return synthetic_material_catalog

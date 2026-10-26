@@ -137,3 +137,13 @@ except ImportError:
 # Only register the mock for the specific problematic module
 if 'digitalmodel.subsea.catenary_riser.legacy.catenary_riser_summary' not in sys.modules:
     sys.modules['digitalmodel.subsea.catenary_riser.legacy.catenary_riser_summary'] = _mock_catenary_riser_summary
+
+
+@pytest.fixture
+def synthetic_material_catalog():
+    """Supply labelled synthetic inputs only to tests explicitly requesting them."""
+    from digitalmodel.materials.catalog import load_catalog, use_catalog
+
+    catalog = load_catalog(Path(__file__).parent / "materials" / "fixtures" / "catalog.json")
+    with use_catalog(catalog, allow_synthetic=True):
+        yield catalog

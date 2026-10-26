@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
@@ -257,3 +259,7 @@ class TestCapexProvenance:
         norms = {row.host_type: row.axes.norm["capex"] for row in overridden.ranked}
         assert norms[cheap.host_type] == 0
         assert norms[expensive.host_type] == 100
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

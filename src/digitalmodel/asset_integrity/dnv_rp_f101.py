@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: DNV-RP-F101 corroded-pipeline remaining-strength for a single
 # ABOUTME: longitudinal metal-loss defect (allowable-stress + PSF) and interacting defects.
 """DNV-RP-F101 corroded-pipeline burst-capacity assessment.
@@ -82,13 +84,7 @@ from digitalmodel.codes import DNV_RP_F101
 from digitalmodel.materials import legacy_smts_psi_dict
 
 # ---------------------------------------------------------------------------
-# Material — API 5L specified minimum TENSILE strength (SMTS), psi.
-# DNV-RP-F101 capacity uses f_u = SMTS (not SMYS).  Values are the API 5L /
-# ISO 3183 PSL2 minimum UTS for each grade (rounded from MPa): X52 = 460 MPa,
-# X60 = 520 MPa, X65 = 535 MPa, X70 = 570 MPa, X80 = 625 MPa.
-# Sourced from the canonical grade matrix (issue #1089), which reproduces these
-# psi values exactly (PSL2 SMTS MPa -> psi, rounded to the nearest 100 psi).
-# ---------------------------------------------------------------------------
+# Caller-supplied tensile strength view in psi, without table defaults.
 SMTS_PSI = legacy_smts_psi_dict()
 
 # Legacy total-F default retained for existing callers and validation records.

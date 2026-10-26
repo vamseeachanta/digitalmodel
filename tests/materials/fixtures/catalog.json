@@ -1,0 +1,1181 @@
+{
+  "grades": [
+    {
+      "row_id": "grade:A25",
+      "name": "A25",
+      "standard": "API 5L",
+      "smys_mpa": 301,
+      "smts_mpa": null,
+      "E_mpa": 198001,
+      "nu": 0.281,
+      "rho_kg_m3": 7701,
+      "aliases": [
+        "L175"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 581
+    },
+    {
+      "row_id": "grade:A",
+      "name": "A",
+      "standard": "API 5L",
+      "smys_mpa": 303,
+      "smts_mpa": null,
+      "E_mpa": 198002,
+      "nu": 0.281,
+      "rho_kg_m3": 7702,
+      "aliases": [
+        "L210"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 583
+    },
+    {
+      "row_id": "grade:B",
+      "name": "B",
+      "standard": "API 5L",
+      "smys_mpa": 305,
+      "smts_mpa": 605,
+      "E_mpa": 198003,
+      "nu": 0.281,
+      "rho_kg_m3": 7703,
+      "aliases": [
+        "L245"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 585
+    },
+    {
+      "row_id": "grade:X42",
+      "name": "X42",
+      "standard": "API 5L",
+      "smys_mpa": 307,
+      "smts_mpa": 607,
+      "E_mpa": 198004,
+      "nu": 0.281,
+      "rho_kg_m3": 7704,
+      "aliases": [
+        "L290"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 587
+    },
+    {
+      "row_id": "grade:X46",
+      "name": "X46",
+      "standard": "API 5L",
+      "smys_mpa": 309,
+      "smts_mpa": 609,
+      "E_mpa": 198005,
+      "nu": 0.281,
+      "rho_kg_m3": 7705,
+      "aliases": [
+        "L320"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 589
+    },
+    {
+      "row_id": "grade:X52",
+      "name": "X52",
+      "standard": "API 5L",
+      "smys_mpa": 311,
+      "smts_mpa": 611,
+      "E_mpa": 198006,
+      "nu": 0.281,
+      "rho_kg_m3": 7706,
+      "aliases": [
+        "L360"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 591
+    },
+    {
+      "row_id": "grade:X56",
+      "name": "X56",
+      "standard": "API 5L",
+      "smys_mpa": 313,
+      "smts_mpa": 613,
+      "E_mpa": 198007,
+      "nu": 0.281,
+      "rho_kg_m3": 7707,
+      "aliases": [
+        "L390"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 593
+    },
+    {
+      "row_id": "grade:X60",
+      "name": "X60",
+      "standard": "API 5L",
+      "smys_mpa": 315,
+      "smts_mpa": 615,
+      "E_mpa": 198008,
+      "nu": 0.281,
+      "rho_kg_m3": 7708,
+      "aliases": [
+        "L415"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 595
+    },
+    {
+      "row_id": "grade:X65",
+      "name": "X65",
+      "standard": "API 5L",
+      "smys_mpa": 317,
+      "smts_mpa": 617,
+      "E_mpa": 198009,
+      "nu": 0.281,
+      "rho_kg_m3": 7709,
+      "aliases": [
+        "L450"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 597
+    },
+    {
+      "row_id": "grade:X70",
+      "name": "X70",
+      "standard": "API 5L",
+      "smys_mpa": 319,
+      "smts_mpa": 619,
+      "E_mpa": 198010,
+      "nu": 0.281,
+      "rho_kg_m3": 7710,
+      "aliases": [
+        "L485"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": 599
+    },
+    {
+      "row_id": "grade:X80",
+      "name": "X80",
+      "standard": "API 5L",
+      "smys_mpa": 321,
+      "smts_mpa": 621,
+      "E_mpa": 198011,
+      "nu": 0.281,
+      "rho_kg_m3": 7711,
+      "aliases": [
+        "L555"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": null
+    },
+    {
+      "row_id": "grade:X90",
+      "name": "X90",
+      "standard": "API 5L",
+      "smys_mpa": 323,
+      "smts_mpa": 623,
+      "E_mpa": 198012,
+      "nu": 0.281,
+      "rho_kg_m3": 7712,
+      "aliases": [
+        "L625"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": null
+    },
+    {
+      "row_id": "grade:X100",
+      "name": "X100",
+      "standard": "API 5L",
+      "smys_mpa": 325,
+      "smts_mpa": 625,
+      "E_mpa": 198013,
+      "nu": 0.281,
+      "rho_kg_m3": 7713,
+      "aliases": [
+        "L690"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": null
+    },
+    {
+      "row_id": "grade:X120",
+      "name": "X120",
+      "standard": "API 5L",
+      "smys_mpa": 327,
+      "smts_mpa": 627,
+      "E_mpa": 198014,
+      "nu": 0.281,
+      "rho_kg_m3": 7714,
+      "aliases": [
+        "L830"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "smts_psl1_mpa": null
+    },
+    {
+      "row_id": "grade:Grade A",
+      "name": "Grade A",
+      "standard": "IACS UR W11",
+      "smys_mpa": 329,
+      "smts_mpa": 629,
+      "E_mpa": 198015,
+      "nu": 0.281,
+      "rho_kg_m3": 7715,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "A"
+    },
+    {
+      "row_id": "grade:Grade B",
+      "name": "Grade B",
+      "standard": "IACS UR W11",
+      "smys_mpa": 331,
+      "smts_mpa": 631,
+      "E_mpa": 198016,
+      "nu": 0.281,
+      "rho_kg_m3": 7716,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "B"
+    },
+    {
+      "row_id": "grade:Grade D",
+      "name": "Grade D",
+      "standard": "IACS UR W11",
+      "smys_mpa": 333,
+      "smts_mpa": 633,
+      "E_mpa": 198017,
+      "nu": 0.281,
+      "rho_kg_m3": 7717,
+      "aliases": [
+        "D"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "D"
+    },
+    {
+      "row_id": "grade:Grade E",
+      "name": "Grade E",
+      "standard": "IACS UR W11",
+      "smys_mpa": 335,
+      "smts_mpa": 635,
+      "E_mpa": 198018,
+      "nu": 0.281,
+      "rho_kg_m3": 7718,
+      "aliases": [
+        "E"
+      ],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "E"
+    },
+    {
+      "row_id": "grade:AH32",
+      "name": "AH32",
+      "standard": "IACS UR W11",
+      "smys_mpa": 337,
+      "smts_mpa": 637,
+      "E_mpa": 198019,
+      "nu": 0.281,
+      "rho_kg_m3": 7719,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "A"
+    },
+    {
+      "row_id": "grade:DH32",
+      "name": "DH32",
+      "standard": "IACS UR W11",
+      "smys_mpa": 339,
+      "smts_mpa": 639,
+      "E_mpa": 198020,
+      "nu": 0.281,
+      "rho_kg_m3": 7720,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "D"
+    },
+    {
+      "row_id": "grade:EH32",
+      "name": "EH32",
+      "standard": "IACS UR W11",
+      "smys_mpa": 341,
+      "smts_mpa": 641,
+      "E_mpa": 198021,
+      "nu": 0.281,
+      "rho_kg_m3": 7721,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "E"
+    },
+    {
+      "row_id": "grade:FH32",
+      "name": "FH32",
+      "standard": "IACS UR W11",
+      "smys_mpa": 343,
+      "smts_mpa": 643,
+      "E_mpa": 198022,
+      "nu": 0.281,
+      "rho_kg_m3": 7722,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "F"
+    },
+    {
+      "row_id": "grade:AH36",
+      "name": "AH36",
+      "standard": "IACS UR W11",
+      "smys_mpa": 345,
+      "smts_mpa": 645,
+      "E_mpa": 198023,
+      "nu": 0.281,
+      "rho_kg_m3": 7723,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "A"
+    },
+    {
+      "row_id": "grade:DH36",
+      "name": "DH36",
+      "standard": "IACS UR W11",
+      "smys_mpa": 347,
+      "smts_mpa": 647,
+      "E_mpa": 198024,
+      "nu": 0.281,
+      "rho_kg_m3": 7724,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "D"
+    },
+    {
+      "row_id": "grade:EH36",
+      "name": "EH36",
+      "standard": "IACS UR W11",
+      "smys_mpa": 349,
+      "smts_mpa": 649,
+      "E_mpa": 198025,
+      "nu": 0.281,
+      "rho_kg_m3": 7725,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "E"
+    },
+    {
+      "row_id": "grade:FH36",
+      "name": "FH36",
+      "standard": "IACS UR W11",
+      "smys_mpa": 351,
+      "smts_mpa": 651,
+      "E_mpa": 198026,
+      "nu": 0.281,
+      "rho_kg_m3": 7726,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "F"
+    },
+    {
+      "row_id": "grade:AH40",
+      "name": "AH40",
+      "standard": "IACS UR W11",
+      "smys_mpa": 353,
+      "smts_mpa": 653,
+      "E_mpa": 198027,
+      "nu": 0.281,
+      "rho_kg_m3": 7727,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "A"
+    },
+    {
+      "row_id": "grade:DH40",
+      "name": "DH40",
+      "standard": "IACS UR W11",
+      "smys_mpa": 355,
+      "smts_mpa": 655,
+      "E_mpa": 198028,
+      "nu": 0.281,
+      "rho_kg_m3": 7728,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "D"
+    },
+    {
+      "row_id": "grade:EH40",
+      "name": "EH40",
+      "standard": "IACS UR W11",
+      "smys_mpa": 357,
+      "smts_mpa": 657,
+      "E_mpa": 198029,
+      "nu": 0.281,
+      "rho_kg_m3": 7729,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "E"
+    },
+    {
+      "row_id": "grade:FH40",
+      "name": "FH40",
+      "standard": "IACS UR W11",
+      "smys_mpa": 359,
+      "smts_mpa": 659,
+      "E_mpa": 198030,
+      "nu": 0.281,
+      "rho_kg_m3": 7730,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data.",
+      "charpy_test_temperature_degc": -13.0,
+      "toughness_grade": "F"
+    },
+    {
+      "row_id": "grade:S275",
+      "name": "S275",
+      "standard": "EN 10025-2",
+      "smys_mpa": 361,
+      "smts_mpa": 661,
+      "E_mpa": 198031,
+      "nu": 0.281,
+      "rho_kg_m3": 7731,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:S355",
+      "name": "S355",
+      "standard": "EN 10025-2",
+      "smys_mpa": 363,
+      "smts_mpa": 663,
+      "E_mpa": 198032,
+      "nu": 0.281,
+      "rho_kg_m3": 7732,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:S420",
+      "name": "S420",
+      "standard": "EN 10025-2",
+      "smys_mpa": 365,
+      "smts_mpa": 665,
+      "E_mpa": 198033,
+      "nu": 0.281,
+      "rho_kg_m3": 7733,
+      "aliases": [],
+      "material_class": "ferritic",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:TP304",
+      "name": "TP304",
+      "standard": "ASTM A312",
+      "smys_mpa": 367,
+      "smts_mpa": 667,
+      "E_mpa": 198034,
+      "nu": 0.281,
+      "rho_kg_m3": 7734,
+      "aliases": [
+        "304",
+        "S30400"
+      ],
+      "material_class": "austenitic",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:TP304L",
+      "name": "TP304L",
+      "standard": "ASTM A312",
+      "smys_mpa": 369,
+      "smts_mpa": 669,
+      "E_mpa": 198035,
+      "nu": 0.281,
+      "rho_kg_m3": 7735,
+      "aliases": [
+        "304L",
+        "S30403"
+      ],
+      "material_class": "austenitic",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:TP316",
+      "name": "TP316",
+      "standard": "ASTM A312",
+      "smys_mpa": 371,
+      "smts_mpa": 671,
+      "E_mpa": 198036,
+      "nu": 0.281,
+      "rho_kg_m3": 7736,
+      "aliases": [
+        "316",
+        "S31600"
+      ],
+      "material_class": "austenitic",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:TP316L",
+      "name": "TP316L",
+      "standard": "ASTM A312",
+      "smys_mpa": 373,
+      "smts_mpa": 673,
+      "E_mpa": 198037,
+      "nu": 0.281,
+      "rho_kg_m3": 7737,
+      "aliases": [
+        "316L",
+        "S31603"
+      ],
+      "material_class": "austenitic",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:TP321",
+      "name": "TP321",
+      "standard": "ASTM A312",
+      "smys_mpa": 375,
+      "smts_mpa": 675,
+      "E_mpa": 198038,
+      "nu": 0.281,
+      "rho_kg_m3": 7738,
+      "aliases": [
+        "321",
+        "S32100"
+      ],
+      "material_class": "austenitic",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:S31803",
+      "name": "S31803",
+      "standard": "ASTM A790",
+      "smys_mpa": 377,
+      "smts_mpa": 677,
+      "E_mpa": 198039,
+      "nu": 0.281,
+      "rho_kg_m3": 7739,
+      "aliases": [
+        "2205"
+      ],
+      "material_class": "duplex",
+      "notes": "Synthetic software-test input; not engineering data."
+    },
+    {
+      "row_id": "grade:S32205",
+      "name": "S32205",
+      "standard": "ASTM A790",
+      "smys_mpa": 379,
+      "smts_mpa": 679,
+      "E_mpa": 198040,
+      "nu": 0.281,
+      "rho_kg_m3": 7740,
+      "aliases": [],
+      "material_class": "duplex",
+      "notes": "Synthetic software-test input; not engineering data."
+    }
+  ],
+  "dimensions": [
+    {
+      "row_id": "dimension:1:STD",
+      "nps": 1,
+      "od_in": 1.71,
+      "wt_in": 0.08000900900900901,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:1:SCH 40",
+      "nps": 1,
+      "od_in": 1.71,
+      "wt_in": 0.08000900900900901,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:1:XS",
+      "nps": 1,
+      "od_in": 1.71,
+      "wt_in": 0.11100900900900901,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:1:SCH 80",
+      "nps": 1,
+      "od_in": 1.71,
+      "wt_in": 0.11100900900900901,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:2:STD",
+      "nps": 2,
+      "od_in": 2.71,
+      "wt_in": 0.08901801801801801,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:2:SCH 40",
+      "nps": 2,
+      "od_in": 2.71,
+      "wt_in": 0.08901801801801801,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:2:XS",
+      "nps": 2,
+      "od_in": 2.71,
+      "wt_in": 0.12001801801801801,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:2:SCH 80",
+      "nps": 2,
+      "od_in": 2.71,
+      "wt_in": 0.12001801801801801,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:3:STD",
+      "nps": 3,
+      "od_in": 3.71,
+      "wt_in": 0.09802702702702702,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:3:SCH 40",
+      "nps": 3,
+      "od_in": 3.71,
+      "wt_in": 0.09802702702702702,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:3:XS",
+      "nps": 3,
+      "od_in": 3.71,
+      "wt_in": 0.129027027027027,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:3:SCH 80",
+      "nps": 3,
+      "od_in": 3.71,
+      "wt_in": 0.129027027027027,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:4:STD",
+      "nps": 4,
+      "od_in": 4.71,
+      "wt_in": 0.10703603603603604,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:4:SCH 40",
+      "nps": 4,
+      "od_in": 4.71,
+      "wt_in": 0.10703603603603604,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:4:XS",
+      "nps": 4,
+      "od_in": 4.71,
+      "wt_in": 0.13803603603603604,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:4:SCH 80",
+      "nps": 4,
+      "od_in": 4.71,
+      "wt_in": 0.13803603603603604,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:5:STD",
+      "nps": 5,
+      "od_in": 5.71,
+      "wt_in": 0.11604504504504504,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:5:SCH 40",
+      "nps": 5,
+      "od_in": 5.71,
+      "wt_in": 0.11604504504504504,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:5:XS",
+      "nps": 5,
+      "od_in": 5.71,
+      "wt_in": 0.14704504504504504,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:5:SCH 80",
+      "nps": 5,
+      "od_in": 5.71,
+      "wt_in": 0.14704504504504504,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:6:STD",
+      "nps": 6,
+      "od_in": 6.71,
+      "wt_in": 0.12505405405405406,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:6:SCH 40",
+      "nps": 6,
+      "od_in": 6.71,
+      "wt_in": 0.12505405405405406,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:6:XS",
+      "nps": 6,
+      "od_in": 6.71,
+      "wt_in": 0.15605405405405406,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:6:SCH 80",
+      "nps": 6,
+      "od_in": 6.71,
+      "wt_in": 0.15605405405405406,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:7:STD",
+      "nps": 7,
+      "od_in": 7.71,
+      "wt_in": 0.13406306306306304,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:7:SCH 40",
+      "nps": 7,
+      "od_in": 7.71,
+      "wt_in": 0.13406306306306304,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:7:XS",
+      "nps": 7,
+      "od_in": 7.71,
+      "wt_in": 0.16506306306306304,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:7:SCH 80",
+      "nps": 7,
+      "od_in": 7.71,
+      "wt_in": 0.16506306306306304,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:8:STD",
+      "nps": 8,
+      "od_in": 8.71,
+      "wt_in": 0.14307207207207207,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:8:SCH 40",
+      "nps": 8,
+      "od_in": 8.71,
+      "wt_in": 0.14307207207207207,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:8:XS",
+      "nps": 8,
+      "od_in": 8.71,
+      "wt_in": 0.17407207207207206,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:8:SCH 80",
+      "nps": 8,
+      "od_in": 8.71,
+      "wt_in": 0.17407207207207206,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:9:STD",
+      "nps": 9,
+      "od_in": 9.71,
+      "wt_in": 0.1520810810810811,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:9:SCH 40",
+      "nps": 9,
+      "od_in": 9.71,
+      "wt_in": 0.1520810810810811,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:9:XS",
+      "nps": 9,
+      "od_in": 9.71,
+      "wt_in": 0.1830810810810811,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:9:SCH 80",
+      "nps": 9,
+      "od_in": 9.71,
+      "wt_in": 0.1830810810810811,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:10:STD",
+      "nps": 10,
+      "od_in": 10.71,
+      "wt_in": 0.16109009009009007,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:10:SCH 40",
+      "nps": 10,
+      "od_in": 10.71,
+      "wt_in": 0.16109009009009007,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:10:XS",
+      "nps": 10,
+      "od_in": 10.71,
+      "wt_in": 0.19209009009009007,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:10:SCH 80",
+      "nps": 10,
+      "od_in": 10.71,
+      "wt_in": 0.19209009009009007,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:11:STD",
+      "nps": 11,
+      "od_in": 11.71,
+      "wt_in": 0.1700990990990991,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:11:SCH 40",
+      "nps": 11,
+      "od_in": 11.71,
+      "wt_in": 0.1700990990990991,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:11:XS",
+      "nps": 11,
+      "od_in": 11.71,
+      "wt_in": 0.2010990990990991,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:11:SCH 80",
+      "nps": 11,
+      "od_in": 11.71,
+      "wt_in": 0.2010990990990991,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:12:STD",
+      "nps": 12,
+      "od_in": 12.71,
+      "wt_in": 0.17910810810810812,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:12:SCH 40",
+      "nps": 12,
+      "od_in": 12.71,
+      "wt_in": 0.17910810810810812,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:12:XS",
+      "nps": 12,
+      "od_in": 12.71,
+      "wt_in": 0.21010810810810812,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:12:SCH 80",
+      "nps": 12,
+      "od_in": 12.71,
+      "wt_in": 0.21010810810810812,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:13:STD",
+      "nps": 13,
+      "od_in": 13.71,
+      "wt_in": 0.1881171171171171,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:13:SCH 40",
+      "nps": 13,
+      "od_in": 13.71,
+      "wt_in": 0.1881171171171171,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:13:XS",
+      "nps": 13,
+      "od_in": 13.71,
+      "wt_in": 0.2191171171171171,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:13:SCH 80",
+      "nps": 13,
+      "od_in": 13.71,
+      "wt_in": 0.2191171171171171,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:14:STD",
+      "nps": 14,
+      "od_in": 14.71,
+      "wt_in": 0.19712612612612612,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:14:SCH 40",
+      "nps": 14,
+      "od_in": 14.71,
+      "wt_in": 0.19712612612612612,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:14:XS",
+      "nps": 14,
+      "od_in": 14.71,
+      "wt_in": 0.22812612612612612,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:14:SCH 80",
+      "nps": 14,
+      "od_in": 14.71,
+      "wt_in": 0.22812612612612612,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:15:STD",
+      "nps": 15,
+      "od_in": 15.71,
+      "wt_in": 0.20613513513513515,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:15:SCH 40",
+      "nps": 15,
+      "od_in": 15.71,
+      "wt_in": 0.20613513513513515,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:15:XS",
+      "nps": 15,
+      "od_in": 15.71,
+      "wt_in": 0.23713513513513515,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:15:SCH 80",
+      "nps": 15,
+      "od_in": 15.71,
+      "wt_in": 0.23713513513513515,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:16:STD",
+      "nps": 16,
+      "od_in": 16.71,
+      "wt_in": 0.21514414414414412,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:16:SCH 40",
+      "nps": 16,
+      "od_in": 16.71,
+      "wt_in": 0.21514414414414412,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:16:XS",
+      "nps": 16,
+      "od_in": 16.71,
+      "wt_in": 0.24614414414414412,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:16:SCH 80",
+      "nps": 16,
+      "od_in": 16.71,
+      "wt_in": 0.24614414414414412,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:17:STD",
+      "nps": 17,
+      "od_in": 17.71,
+      "wt_in": 0.22415315315315315,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:17:SCH 40",
+      "nps": 17,
+      "od_in": 17.71,
+      "wt_in": 0.22415315315315315,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:17:XS",
+      "nps": 17,
+      "od_in": 17.71,
+      "wt_in": 0.2551531531531531,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:17:SCH 80",
+      "nps": 17,
+      "od_in": 17.71,
+      "wt_in": 0.2551531531531531,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:18:STD",
+      "nps": 18,
+      "od_in": 18.71,
+      "wt_in": 0.23316216216216218,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:18:SCH 40",
+      "nps": 18,
+      "od_in": 18.71,
+      "wt_in": 0.23316216216216218,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:18:XS",
+      "nps": 18,
+      "od_in": 18.71,
+      "wt_in": 0.26416216216216215,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:18:SCH 80",
+      "nps": 18,
+      "od_in": 18.71,
+      "wt_in": 0.26416216216216215,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:19:STD",
+      "nps": 19,
+      "od_in": 19.71,
+      "wt_in": 0.24217117117117115,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:19:SCH 40",
+      "nps": 19,
+      "od_in": 19.71,
+      "wt_in": 0.24217117117117115,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:19:XS",
+      "nps": 19,
+      "od_in": 19.71,
+      "wt_in": 0.2731711711711712,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:19:SCH 80",
+      "nps": 19,
+      "od_in": 19.71,
+      "wt_in": 0.2731711711711712,
+      "schedule": "SCH 80"
+    },
+    {
+      "row_id": "dimension:20:STD",
+      "nps": 20,
+      "od_in": 20.71,
+      "wt_in": 0.2511801801801802,
+      "schedule": "STD"
+    },
+    {
+      "row_id": "dimension:20:SCH 40",
+      "nps": 20,
+      "od_in": 20.71,
+      "wt_in": 0.2511801801801802,
+      "schedule": "SCH 40"
+    },
+    {
+      "row_id": "dimension:20:XS",
+      "nps": 20,
+      "od_in": 20.71,
+      "wt_in": 0.2821801801801802,
+      "schedule": "XS"
+    },
+    {
+      "row_id": "dimension:20:SCH 80",
+      "nps": 20,
+      "od_in": 20.71,
+      "wt_in": 0.2821801801801802,
+      "schedule": "SCH 80"
+    }
+  ]
+}

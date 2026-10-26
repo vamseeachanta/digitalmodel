@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Tests for field_development.screening (#1511, epic #1507): cable sizing,
 # ABOUTME: flowline diameter sweep, report. Every correlation vs a HAND-COMPUTED anchor.
 """Tests for digitalmodel.field_development.screening.
@@ -219,30 +221,21 @@ SWEEP_KWARGS = dict(
 
 class TestFlowlineDiameterSweep:
     def test_hand_computed_selection_nps3(self):
-        # HAND CALC (defaults: NPS candidates 2..12 STD, ASME B36.10M IDs;
-        # Darcy-Weisbach + Swamee-Jain; API RP 14E Ve = 4.18422 m/s for
-        # rho = 850 from the erosional hand calc):
-        #   NPS 2 STD: ID = 2.067 in = 0.0525018 m, v = Q/A = 1.6039 m/s,
-        #     Re = 35789, eps/D = 8.5711e-4, f = 0.02501,
-        #     dp_f = f*(L/D)*rho*v^2/2 = 0.02501*38094.9*1093.3 = 1041.6 kPa
-        #     -> arrival = 2000 - (1041.6+125.0) = 833 kPa < 1500  FAIL
-        #   NPS 3 STD: ID = 3.068 in = 0.0779272 m,
-        #     A = pi/4*0.0779272^2 = 4.76944e-3 m2,
-        #     v = (300/86400)/4.76944e-3 = 0.72801 m/s  (< 4.184, ok)
-        #     Re = 850*0.72801*0.0779272/2e-3 = 24111, eps/D = 5.7746e-4,
-        #     f = 0.25/log10(5.7746e-4/3.7 + 5.74/24111^0.9)^2 = 0.026149
-        #     dp_f = 0.026149*(2000/0.0779272)*850*0.72801^2/2 = 151.2 kPa
-        #     dp_el = 850*9.80665*15 = 125.03 kPa; total = 276.2 kPa
-        #     arrival = 2000 - 276.2 = 1723.8 kPa >= 1500  PASS
-        #   -> smallest passing size = NPS 3.
+        # Independent hand calculation from the synthetic dimension formula.
+        diameter = (3.71 - 2 * (0.071 + 3 / 111)) * 0.0254
+        velocity = (300 / 86400) / (math.pi * diameter**2 / 4)
+        reynolds = 850 * velocity * diameter / 0.002
+        friction = 0.25 / math.log10(4.5e-5 / diameter / 3.7 + 5.74 / reynolds**0.9)**2
+        drop = friction * 2000 / diameter * 850 * velocity**2 / 2 / 1000
+        drop += 850 * 9.80665 * 15 / 1000
         result = flowline_diameter_sweep(**SWEEP_KWARGS)
         assert result["passes"] is True
         sel = result["selected"]
         assert sel["nps"] == 3.0
-        assert sel["inner_diameter_m"] == pytest.approx(0.0779272, rel=1e-6)
-        assert sel["velocity_m_per_s"] == pytest.approx(0.72801, rel=1e-4)
-        assert sel["dp_total_kpa"] == pytest.approx(276.2, rel=5e-3)
-        assert sel["arrival_pressure_kpa"] == pytest.approx(1723.8, rel=1e-3)
+        assert sel["inner_diameter_m"] == pytest.approx(diameter, rel=1e-6)
+        assert sel["velocity_m_per_s"] == pytest.approx(velocity, rel=1e-4)
+        assert sel["dp_total_kpa"] == pytest.approx(drop, rel=5e-3)
+        assert sel["arrival_pressure_kpa"] == pytest.approx(2000 - drop, rel=1e-3)
         assert result["erosional_velocity_m_per_s"] == pytest.approx(4.18422, rel=1e-5)
         by_nps = {c["nps"]: c for c in result["candidates"]}
         assert by_nps[2.0]["arrival_ok"] is False
@@ -368,3 +361,7 @@ class TestPhysicsSanity:
             area = math.pi * c["inner_diameter_m"] ** 2 / 4.0
             rate = c["velocity_m_per_s"] * area * 86_400.0
             assert rate == pytest.approx(SWEEP_KWARGS["rate_m3_per_day"], rel=1e-9)
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

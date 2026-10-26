@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: FFS showcase regression checks for Part B pressures and publication limits.
 # ABOUTME: Exercises the negative control, generated grids and published HTML.
 """Test the FFS showcase driver's data and publication contract.
@@ -10,6 +12,7 @@ qualification claims are checked in both generated data and published HTML.
 
 import importlib.util
 import json
+import math
 import math
 import re
 from pathlib import Path
@@ -56,8 +59,8 @@ def test_build_showcase_data_returns_finite_grids():
     assert finite_grid_found, "no grid had positive finite safe pressures"
 
 
-@pytest.fixture(scope="module")
-def showcase_data():
+@pytest.fixture
+def showcase_data(synthetic_material_catalog):
     return _load_driver().build_showcase_data()
 
 
@@ -91,24 +94,20 @@ def test_showcase_dnv_uses_corrected_part_b_factor(preset_index):
 def test_showcase_part_b_matches_hand_calculation(showcase_data):
     driver = _load_driver()
     preset = driver.PRESETS[1]
-    # For D=30, t=0.375, d=0.150, L=8 in and SMTS=66,700 psi:
-    # Q=sqrt(1+0.31*8**2/(30*0.375))=1.6624;
-    # capacity=(2*0.375*66700/29.625)*0.6/(1-0.4/Q)=1334.19 psi.
-    # F = F1·F2 = 0.9 × 0.72 = 0.648 is the Part B total usage factor;
-    # F1 is the modelling factor; F2 is the ASME B31.8 class-1 design factor.
-    # Part B safe pressure=F*capacity=864.56 psi.
-    assert _part_b_reference(preset).capacity_pressure_psi == pytest.approx(
-        1334.19, abs=0.05
-    )
+    # Closed-form check with synthetic strengths and explicit geometry.
+    q = math.sqrt(1 + 0.31 * 8**2 / (30 * 0.375))
+    capacity = (2 * 0.375 * (611 * 145.0377) / 29.625) * 0.6 / (1 - 0.4 / q)
+    expected = capacity * 0.9 * ASME_B318_CLASS1_DESIGN_FACTOR
+    assert _part_b_reference(preset).capacity_pressure_psi == pytest.approx(capacity, abs=0.05)
     safe = driver._safe_pressure(
-        "DNV-RP-F101", 30.0, 0.375, 0.150, 8.0, 52_000.0, 66_700.0,
+        "DNV-RP-F101", 30.0, 0.375, 0.150, 8.0, 311 * 145.0377, 611 * 145.0377,
     )
-    assert safe == pytest.approx(864.56, abs=0.05)
+    assert safe == pytest.approx(expected, abs=0.05)
     corroded = showcase_data["corroded"]
     row = corroded["depths_pct"].index(40.0)
     column = corroded["lengths"].index(8.0)
     grid = corroded["grids"][preset[0] + "|DNV-RP-F101"]
-    assert grid["safe"][row][column] == pytest.approx(864.6, abs=0.05)
+    assert grid["safe"][row][column] == pytest.approx(round(expected, 1), abs=0.05)
 
 
 def test_part_b_regression_rejects_deprecated_total_factor(monkeypatch):
@@ -136,7 +135,7 @@ def test_embedded_dnv_grid_uses_corrected_part_b_factor(showcase_data, preset_in
     column = corroded["lengths"].index(8.0)
     expected = _part_b_reference(preset).allowable_pressure_psi
     assert grid["safe"][row][column] == round(expected, 1)
-    assert grid["ratio"][row][column] == round(expected / grid["maop"], 4)
+    assert grid["ratio"][row][column] == round(expected / driver._maop_psi(preset[1], preset[2], SMYS_PSI[preset[3]]), 4)
 
 
 @pytest.mark.parametrize("source", ["generator", "published"])
@@ -156,6 +155,7 @@ def test_showcase_notice_and_qualification_limits(showcase_data, monkeypatch, so
     )
     assert html.index("<body>") < html.index(notice) < html.index("<header>")
     assert 'role="alert"' in html
+    assert "Synthetic software-test data; do not use for engineering decisions." in html
     assert "Representative pipe preset" in html
     assert "Representative AH36 plate" in html
     assert "not edition-matched to API 579 Part 5" in html
@@ -170,3 +170,7 @@ def test_published_showcase_contains_current_pressure_grid(showcase_data):
     )
     embedded = json.loads(re.search(r"const COR = (.+);", html).group(1))
     assert embedded == showcase_data["corroded"]
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

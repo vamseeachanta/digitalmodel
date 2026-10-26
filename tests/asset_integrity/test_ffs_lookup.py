@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Tests for the uniform FFS query router + indexed lookup
 # ABOUTME: (ffs_lookup.py): routing, index round-trip, monotonicity, IO.
 """Tests for digitalmodel.asset_integrity.ffs_lookup."""
@@ -130,3 +132,7 @@ def test_record_from_assessment():
     assert rec["key"] == "component|L-9"
     assert rec["metric_name"] == "rsf"
     assert isinstance(rec["acceptable"], bool)
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

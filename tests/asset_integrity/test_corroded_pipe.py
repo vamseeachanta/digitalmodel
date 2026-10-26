@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: Tests for corroded-pipe remaining strength (B31G / Modified B31G /
 # ABOUTME: RSTRENG) — golden hand-calcs, regimes, monotonicity, validation.
 """Tests for digitalmodel.asset_integrity.corroded_pipe."""
@@ -143,8 +145,8 @@ def test_allowable_length_meets_design_pressure():
 
 # --- material table & validation ------------------------------------------
 def test_smys_table_grades():
-    assert SMYS_PSI["X52"] == 52_000.0
-    assert SMYS_PSI["X65"] == 65_000.0
+    assert SMYS_PSI["X52"] == 311.0 * 145.0377
+    assert SMYS_PSI["X65"] == 317.0 * 145.0377
 
 
 def test_geometry_validation():
@@ -183,3 +185,7 @@ def test_b31g_allowable_length_decreases_with_depth():
     shallow = b31g_original_allowable_length(ASME_OD, 0.5, 0.10)
     deep = b31g_original_allowable_length(ASME_OD, 0.5, 0.30)
     assert deep < shallow
+
+
+# Numerical catalogue inputs are synthetic software-test fixtures.
+pytestmark = pytest.mark.usefixtures("synthetic_material_catalog")

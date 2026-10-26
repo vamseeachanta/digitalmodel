@@ -282,7 +282,7 @@ class LinesBuilder(BaseBuilder):
         stinger = self.spec.equipment.stinger
         od = pipe.dimensions.outer_diameter
         wall = pipe.dimensions.wall_thickness
-        density = MATERIAL_PROPERTIES.get(pipe.material, MATERIAL_PROPERTIES["X65"])["MaterialDensity"]
+        density = MATERIAL_PROPERTIES[pipe.material.upper()]["MaterialDensity"]
         mass = density * math.pi / 4 * (od**2 - (od - 2 * wall)**2)
         for coating in [pipe.coatings.corrosion, *pipe.coatings.weight]:
             outer = od + 2 * coating.thickness
