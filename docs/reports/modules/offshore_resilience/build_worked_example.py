@@ -1,6 +1,6 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Render the synthetic cost arithmetic specified in issue #3308."""
+"""Render synthetic cost arithmetic from an existing regression case."""
 
 from __future__ import annotations
 
@@ -14,13 +14,14 @@ from digitalmodel.structural.offshore_resilience.minimum_facility import (
 
 def render_worked_example() -> str:
     """Return deterministic HTML computed with the existing cost model."""
-    # Source: issue #3308 synthetic scenario, in abstract currency units.
+    # Source: test_minimum_facility.py, TestModularCostComparison.test_savings_fraction.
+    # Divide its 40_000_000, 28_000_000 and 4_000_000 inputs by 1_000_000.
     # The required weather-window argument is an unused zero-day placeholder;
     # neither cost property uses it, and no installation duration is evaluated.
     comparison = ModularCostComparison(
-        conventional_capex_usd=100.0,
-        minimum_facility_capex_usd=70.0,
-        heavy_lift_vessel_savings_usd=10.0,
+        conventional_capex_usd=40.0,
+        minimum_facility_capex_usd=28.0,
+        heavy_lift_vessel_savings_usd=4.0,
         installation_weather_window_days=0,
     )
     conventional = comparison.conventional_capex_usd
@@ -44,10 +45,19 @@ savings fraction. These inputs are not market estimates.</p>
 <table>
 <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>Initial</td><td>2026-10-25</td>
-<td>Add the synthetic arithmetic example requested in issue #3308.</td></tr></tbody>
+<td>Add the synthetic arithmetic example requested in issue #3308.</td></tr>
+<tr><td>1</td><td>2026-10-25</td>
+<td>Use an existing regression case to replace unsupported input attribution.</td></tr>
+</tbody>
 </table>
 <h2>Inputs</h2>
-<p>Basis: issue #3308, synthetic worked-example specification. All cost inputs
+<p>Numerical basis:
+<code>tests/structural/offshore_resilience/test_minimum_facility.py</code>,
+<code>TestModularCostComparison.test_savings_fraction</code>.
+The existing regression inputs are 40,000,000, 28,000,000 and 4,000,000;
+each is divided by 1,000,000 to define this abstract arithmetic example.
+This is a regression fixture, not an engineering cost basis. Issue #3308
+requests a worked example but supplies no numerical inputs. All cost inputs
 share the same abstract currency unit. The avoided installation cost is an
 additional saving, excluded from the minimum-facility input, so it is added
 once. The model's field names end in _usd; this example assigns abstract
@@ -70,7 +80,12 @@ assessed.</p>
 <h2>Equations and results</h2>
 <p>Source: ModularCostComparison.net_savings_usd and savings_fraction in
 src/digitalmodel/structural/offshore_resilience/minimum_facility.py.
-The arithmetic follows the independent hand calculation in issue #3308.</p>
+These cost expressions are the regression case's definitions, not design rules.
+Arithmetic reference: <a
+href="https://openstax.org/books/prealgebra-2e/pages/2-1-use-the-language-of-algebra">OpenStax,
+Prealgebra 2e, section 2.1, Use the Language of Algebra</a> (addition,
+subtraction, division and order of operations). This reference supplies
+arithmetic conventions, not cost inputs or engineering validation.</p>
 <p>Net savings = (conventional cost - minimum-facility cost) + avoided
 installation cost.</p>
 <p>({conventional:.1f} - {minimum:.1f}) + {avoided:.1f} =
@@ -106,7 +121,9 @@ def main() -> None:
     args = parser.parse_args()
     html = render_worked_example()
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "worked_example.html").write_text(html, encoding="utf-8")
+    (args.output_dir / "worked_example.html").write_text(
+        html, encoding="utf-8", newline="\n"
+    )
 
 
 if __name__ == "__main__":

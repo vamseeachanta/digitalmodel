@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[3]
 REPORT_DIR = Path("docs/reports/modules/offshore_resilience")
@@ -46,30 +48,33 @@ def run_builder(cwd, output_dir):
         check=True,
         capture_output=True,
         text=True,
+        encoding="utf-8",
     )
     return (output_dir / "worked_example.html").read_text(encoding="utf-8")
 
 
 def test_cost_example_matches_hand_sum(tmp_path):
-    """Issue #3308 hand sum: (100 - 70) + 10 = 40; 40 / 100 = 0.4."""
+    """Scaled regression case: (40 - 28) + 4 = 16; 16 / 40 = 0.4."""
     html = run_builder(tmp_path, tmp_path / "selected-output")
     rendered = RenderedValues()
     rendered.feed(html)
-    # Independent expectations from the synthetic scenario in issue #3308.
+    # test_minimum_facility.py::TestModularCostComparison::test_savings_fraction
+    # specifies 40_000_000, 28_000_000 and 4_000_000; divide each by 1_000_000.
+    # Hand calculation: (40 - 28) + 4 = 16; 16 / 40 = 0.4.
     expected = {
-        "conventional-cost": (100, "currency units"),
-        "minimum-facility-cost": (70, "currency units"),
-        "avoided-installation-cost": (10, "currency units"),
-        "net-savings": ((100 - 70) + 10, "currency units"),
-        "savings-fraction": (((100 - 70) + 10) / 100, "dimensionless"),
+        "conventional-cost": (40, "currency units"),
+        "minimum-facility-cost": (28, "currency units"),
+        "avoided-installation-cost": (4, "currency units"),
+        "net-savings": (16, "currency units"),
+        "savings-fraction": (0.4, "dimensionless"),
     }
     for identifier, (expected_value, expected_unit) in expected.items():
         value, unit = rendered.values[identifier].split(maxsplit=1)
-        assert float(value) == expected_value
+        assert float(value) == pytest.approx(expected_value)
         assert unit == expected_unit
     normalized_html = " ".join(html.split())
-    assert "(100.0 - 70.0) + 10.0 = 40.0 currency units" in normalized_html
-    assert "40.0 / 100.0 = 0.4 dimensionless" in normalized_html
+    assert "(40.0 - 28.0) + 4.0 = 16.0 currency units" in normalized_html
+    assert "16.0 / 40.0 = 0.4 dimensionless" in normalized_html
     assert "synthetic" in html.lower()
     assert "not market estimates" in html
     assert "NOT_EVALUATED" in html
@@ -78,11 +83,21 @@ def test_cost_example_matches_hand_sum(tmp_path):
     assert html.index("Revision history</h2>") < html.index("Inputs</h2>")
 
 
+def test_cost_example_reports_regression_basis(tmp_path):
+    """The displayed input basis identifies an existing numerical fixture."""
+    html = run_builder(tmp_path, tmp_path / "selected-output")
+    assert "tests/structural/offshore_resilience/test_minimum_facility.py" in html
+    assert "TestModularCostComparison.test_savings_fraction" in html
+    assert "1,000,000" in html
+    assert "not an engineering cost basis" in html
+
+
 def test_cost_example_rebuild_is_deterministic(tmp_path):
     """Repeated builds and a different output location yield identical bytes."""
     output_dir = tmp_path / "selected-output"
     run_builder(tmp_path, output_dir)
     first = (output_dir / "worked_example.html").read_bytes()
+    assert b"\r\n" not in first
     run_builder(tmp_path, output_dir)
     assert (output_dir / "worked_example.html").read_bytes() == first
     other_dir = tmp_path / "other-output"
@@ -103,6 +118,7 @@ def test_import_has_no_output(tmp_path):
         check=True,
         capture_output=True,
         text=True,
+        encoding="utf-8",
     )
     assert list(tmp_path.iterdir()) == []
 
@@ -116,9 +132,10 @@ def test_delivered_files_are_not_ignored():
         Path(__file__).relative_to(ROOT),
     ):
         result = subprocess.run(
-            ["git", "check-ignore", "--no-index", "--", str(path)],
+            ["git", "check-ignore", "--no-index", "--", path.as_posix()],
             cwd=ROOT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
         )
-        assert result.returncode == 1, f"{path}: {result.stdout}{result.stderr}"
+        assert result.returncode == 1, path.as_posix()

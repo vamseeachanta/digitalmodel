@@ -12,18 +12,29 @@ installation feasibility and structural adequacy.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-25 | Add a reproducible synthetic cost example for issue #3308. |
+| 1 | 2026-10-25 | Replace unsupported input attribution with an existing regression case and document its scaling. |
 
 ## Basis and independent hand calculation
 
-Source: issue #3308, synthetic worked-example specification. The conventional
-cost is 100 currency units, minimum-facility cost is 70 currency units, and
-avoided installation cost is 10 currency units. The avoided cost is excluded
+Numerical source: `TestModularCostComparison.test_savings_fraction` in
+[test_minimum_facility.py](../../../../tests/structural/offshore_resilience/test_minimum_facility.py).
+This existing executable regression specification defines conventional cost
+40,000,000, minimum-facility cost 28,000,000 and avoided installation cost
+4,000,000. Each is divided by 1,000,000 to define abstract inputs of 40, 28
+and 4 currency units. This is a regression fixture, not an engineering cost
+basis. Issue #3308 requests a worked example but supplies no numerical inputs.
+The avoided cost is excluded
 from the minimum-facility input and added once as an additional saving.
 
-- Net savings = (100 - 70) + 10 = 40 currency units.
-- Savings fraction = 40 / 100 = 0.4 dimensionless.
+- Net savings = (40 - 28) + 4 = 16 currency units.
+- Savings fraction = 16 / 40 = 0.4 dimensionless.
 
 These are independent hand calculations, used as the test expectations.
+The cost expressions are the regression case's definitions, not design rules.
+Arithmetic reference: OpenStax, *Prealgebra 2e*, section 2.1,
+[Use the Language of Algebra](https://openstax.org/books/prealgebra-2e/pages/2-1-use-the-language-of-algebra),
+for addition, subtraction, division and order of operations. This reference
+supplies arithmetic conventions, not cost inputs or engineering validation.
 The builder obtains its results from `net_savings_usd` and `savings_fraction`
 in [minimum_facility.py](../../../../src/digitalmodel/structural/offshore_resilience/minimum_facility.py).
 Despite the API's `_usd` field names, the example uses abstract currency units;
