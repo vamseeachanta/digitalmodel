@@ -12,6 +12,18 @@ modulus and radius of gyration. This example covers geometry only.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-25 | Added an independently derived, executable geometry example and uniform scaling check. |
+| 2 | 2026-10-25 | Added a scope and validation plan to make the geometry boundary and offline checks explicit. |
+
+## Plan-lite
+
+- Bound the example to the five geometric properties of a synthetic concentric
+  annulus; member capacity, joint capacity and standards compliance are excluded.
+- Execute the single documented Python block to report values and inch-based
+  units, with output confined to the supplied directory.
+- Derive expectations independently from annulus integrals and property
+  definitions, rather than from the package calls being checked.
+- Run the example tests offline alongside the existing tubular-section tests;
+  check the independent values, units and uniform scaling.
 
 ## Inputs and constants
 
