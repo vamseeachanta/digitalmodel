@@ -142,19 +142,67 @@ def test_fatigue_histogram_and_invalid_records(fatigue):
         exchange().validate_result(bad, "fatigue")
 
 
-def write_cases(tmp_path, strength):
-    """Create paired ASSUMED fixtures; the SLWR maximum is hand-set to 0.8."""
+def screening_record(strength, size="08", wall="1", kind="SCR", *,
+                     condition="extreme", dynamic=True, offset=0, direction=0):
+    """ASSUMED exports with independent fibre stresses and load histories."""
+    data = deepcopy(strength)
+    data["case_id"] = f"R{size}-W{wall}-{kind}"
+    data["load_case"]["id"] = f"{condition}-{dynamic}-{offset}-{direction}"
+    data["load_case"]["wave"]["direction_deg"] = direction
+    data["load_case"]["offset"]["x_m"] = offset
+    scale = (0.75 if wall == "2" else 1) * (1.1 if kind == "SLWR" else 1)
+    fibres = {"inner": [120*scale, 180*scale, 150*scale],
+              "outer": [110*scale, 210*scale, 130*scale]}
+    extreme = {"inner": [144*scale, 216*scale, 180*scale],
+               "outer": [180*scale, 288*scale, 200*scale]}
+    minimum = [110, 80, -2] if kind == "SCR" else [100, 70, 60]
+    data["top_angle_deg"]["static"] = 10 + offset/90
+    data["touchdown"]["stress_range_MPa"] = (
+        (12 if kind == "SCR" else 9) * (0.8 if wall == "2" else 1) if dynamic else 0)
+    data["screening"] = {
+        "condition": condition, "dynamic": dynamic, "qualified": True,
+        "u1": {"method": "API RP 2RD", "smys_MPa": 450,
+               "stress_MPa": {"static": fibres, "dynamic_max": extreme if dynamic else None}},
+        "tension_envelope_kN": {"dynamic_min": minimum if dynamic else None,
+                                "dynamic_max": [140, 110, 90] if dynamic else None},
+        "hang_off_dynamic_min_kN": minimum[0] if dynamic else None,
+        "excursion_reference_deg": 10, "excursion_limit_deg": 10,
+        "static_check": ({"analytical": {"top_tension_kN": 100, "top_angle_deg": 9,
+                                         "touchdown_x_m": 99},
+                          "software_touchdown_x_m": 100, "basis": "ASSUMED synthetic catenary"}
+                         if condition == "functional" else None),
+        "api_rp_1111": {"in_scope": True, "method": "ASSUMED exported combined-loading check",
+                        "reason": "ASSUMED synthetic history", "checks": [
+                            {"arc_length_m": 50, "utilisation": 0.4*scale,
+                             "check": "combined loading"}]},
+    }
+    return data
+
+
+def write_cases(tmp_path, strength, *, dynamic_directions=(0, 180), dynamic_offsets=(0,)):
+    """Write twelve cases with reference, mean-offset and nominal dynamic exports."""
     results = tmp_path / "results"
-    for kind, values in [("SCR", [0.4, 0.6, 0.5]), ("SLWR", [0.3, 0.8, 0.4])]:
-        record = deepcopy(strength)
-        record["case_id"] = f"R08-W1-{kind}"
-        record["von_mises_utilisation"] = values
-        record["max_utilisation"]["value"] = values[1]
-        record["touchdown"]["utilisation"] = values[1]
-        folder = results / record["case_id"]
-        folder.mkdir(parents=True)
-        (folder / "strength.json").write_text(json.dumps(record))
+    for size in ("08", "10", "12"):
+        for wall in ("1", "2"):
+            for kind in ("SCR", "SLWR"):
+                conditions = [("functional", False, 0, 0)]
+                conditions += [("extreme", False, x, d) for x in (-90, 0, 90) for d in (0, 180)]
+                conditions += [("extreme", True, x, d) for x in dynamic_offsets for d in dynamic_directions]
+                for condition, dynamic, offset, direction in conditions:
+                    data = screening_record(strength, size, wall, kind, condition=condition,
+                                            dynamic=dynamic, offset=offset, direction=direction)
+                    folder = results / data["case_id"] / data["load_case"]["id"]
+                    folder.mkdir(parents=True)
+                    (folder / "strength.json").write_text(json.dumps(data))
     return results
+
+
+FIGURES = {f"FIG-STR-{measure}-{size}" for measure in ("TEFF", "U1", "HOT", "ANG", "TDR")
+           for size in ("08", "10", "12")} | {"FIG-STR-SUM-01"}
+TABLES = {"TAB-STA-01", "TAB-STR-1111-01"}
+VALUES = {"V-STR-" + name for name in ("GOV-CASE", "UMAX-GOV", "GOV-LOC", "UMAX-SCR",
+          "UMAX-SLWR", "WT-DELTA", "TEFF-MIN", "COMP-COUNT", "UANG-MAX", "TDR-DELTA-REF",
+          "DYN-BASIS")} | {"V-SW-VERSION"}
 
 
 def test_every_svg_value_matches_csv_manifest_and_sources(tmp_path, strength):
@@ -162,7 +210,7 @@ def test_every_svg_value_matches_csv_manifest_and_sources(tmp_path, strength):
     results = write_cases(tmp_path, strength)
     out = tmp_path / "figures"
     manifest = build_strength(results, out, reference_pair="R08-W1", touchdown_window_m=50)
-    expected = {f"FIG-STR-0{i}" for i in range(1, 7)}
+    expected = FIGURES | TABLES
     assert {a["id"] for a in manifest["artifacts"]} == expected
     assert json.loads((out / "manifest.json").read_text()) == manifest
     for artifact in manifest["artifacts"]:
@@ -170,15 +218,20 @@ def test_every_svg_value_matches_csv_manifest_and_sources(tmp_path, strength):
         with (out / artifact["csv_file"]).open(newline="") as stream:
             csv_rows = list(csv.DictReader(stream))
         assert csv_rows == [{k: str(v) for k, v in r.items()} for r in rows]
+        if artifact["id"] in TABLES:
+            continue
         svg = ET.parse(out / artifact["file"]).getroot()
         assert json.loads(svg.find("s:metadata", NS).text) == rows
-        marks = svg.findall('.//s:circle[@data-row]', NS)
+        marks = sorted(svg.findall('.//s:circle[@data-row]', NS), key=lambda m: int(m.attrib["data-row"]))
         assert len(marks) == len(rows)
         for mark, row in zip(marks, rows):
             assert float(mark.attrib["data-x"]) == row["x"]
             assert float(mark.attrib["data-y"]) == row["y"]
             # Check actual geometry, not only embedded metadata.
-            axes = svg.find('.//s:g[@id="axes"]', NS).attrib
+            panel = next(p for p in svg.findall('.//s:g[@data-panel]', NS)
+                         if mark in p.findall('.//s:circle[@data-row]', NS))
+            axes = next(a for a in panel.findall('.//s:g[@data-axis]', NS)
+                        if a.attrib["data-axis"] == row.get("axis", "left")).attrib
             assert float(mark.attrib["cx"]) == pytest.approx(
                 float(axes["data-x-origin"]) + row["x"] * float(axes["data-x-scale"]), abs=1e-6)
             assert float(mark.attrib["cy"]) == pytest.approx(
@@ -186,32 +239,57 @@ def test_every_svg_value_matches_csv_manifest_and_sources(tmp_path, strength):
         assert "stroke-dasharray" in (out / artifact["file"]).read_text()
     tokens = {r["id"]: r for r in json.loads((out / "tokens.json").read_text())}
     assert tokens["V-STR-GOV-CASE"]["value"] == "R08-W1-SLWR"
-    assert tokens["V-STR-UMAX-GOV"]["value"] == 0.8
-    assert tokens["V-STR-UMAX-SCR"]["value"] == 0.6
-    assert tokens["V-STR-UMAX-SLWR"]["value"] == 0.8
-    assert tokens["V-STR-TDP-SCR-REF"]["value"] == 0.6
-    assert tokens["V-STR-TDP-SLWR-REF"]["value"] == 0.8
+    assert tokens["V-STR-UMAX-GOV"]["value"] == pytest.approx(288*1.1/360)
+    assert tokens["V-STR-UMAX-SCR"]["value"] == pytest.approx(288/360)
+    assert tokens["V-STR-UMAX-SLWR"]["value"] == pytest.approx(288*1.1/360)
+    assert set(tokens) == FIGURES | TABLES | VALUES
+    assert {p.name for p in out.iterdir()} == {"tokens.json", "manifest.json"} | {
+        t + ext for t in FIGURES for ext in (".svg", ".csv")} | {
+        t + ext for t in TABLES for ext in (".md", ".csv")}
+    assert tokens["V-STR-WT-DELTA"]["value"] == pytest.approx(-25)
+    assert tokens["V-STR-WT-DELTA"]["unit"] == "%"
+    assert tokens["V-STR-TDR-DELTA-REF"]["value"] == -25
+    assert tokens["V-STR-TDR-DELTA-REF"]["unit"] == "%"
+    assert tokens["V-STR-TEFF-MIN"]["value"] == -2
+    assert tokens["V-STR-TEFF-MIN"]["unit"] == "kN"
+    assert tokens["V-STR-COMP-COUNT"]["value"] == 6
+    assert tokens["V-STR-UANG-MAX"]["value"] == pytest.approx(0.3)
+    assert tokens["V-STR-DYN-BASIS"]["value"] == "nominal offset, two screened directions"
+    assert "outer" in tokens["V-STR-GOV-LOC"]["value"]
     assert tokens["V-SW-VERSION"]["value"] == "synthetic fixture"
     for source in manifest["sources"]:
-        path = tmp_path / source["file"]
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == source["sha256"]
-    curve = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-01")
-    assert [r["y"] for r in curve["rows"] if r["case_id"].endswith("SCR")] == [120, 90, 70]
-    maximum = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-03")
-    assert {r["y"] for r in maximum["rows"] if r["series"] == "limit"} == {1}
-    top = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-05")
-    assert {r["series"] for r in top["rows"]} == {"static", "dynamic_min", "dynamic_max"}
-    tension = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-06")
-    assert {r["series"] for r in tension["rows"]} == {"static", "dynamic_max"}
+        actual = results / source["file"].removeprefix("results/")
+        assert source["sha256"] == hashlib.sha256(actual.read_bytes()).hexdigest()
+    for artifact in manifest["artifacts"]:
+        if artifact["id"] in TABLES:
+            continue
+        assert artifact["rows"]
+        for datum in artifact["rows"]:
+            if datum["case_id"]:
+                assert datum["input_sha256"]
+                assert datum["result_sha256"]
+    summary = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-SUM-01")
+    assert len({r["panel"] for r in summary["rows"]}) == 5
+    assert manifest["run_counts"] == {"records": 108, "qualified": 108, "dynamic": 24,
+                                       "static": 84, "cases": 12}
+    curve = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-TEFF-08")
+    assert [r["y"] for r in curve["rows"] if r["case_id"] == "R08-W1-SCR"
+            and r["series"] == "functional:static:equilibrium"] == [120, 90, 70]
+    utilisation = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-U1-08")
+    assert {r["y"] for r in utilisation["rows"] if r["series"] == "screen"} == {1}
+    for measure in ("ANG", "HOT"):
+        artifact = next(a for a in manifest["artifacts"] if a["id"] == f"FIG-STR-{measure}-08")
+        assert {r["series"].split(":")[1] for r in artifact["rows"]
+                if r["case_id"] and r["axis"] == "left"} == {"static", "dynamic_min", "dynamic_max"}
 
 
 def test_bad_batch_writes_nothing_and_requires_explicit_reference(tmp_path, strength):
     from digitalmodel.subsea.riser_study.riser_strength_runs import build_strength
     results = write_cases(tmp_path, strength)
-    for reference, window in [("R10-W1", 50), ("R08-W1", -1)]:
+    for reference, window in [("R14-W1", 50), ("R08-W1", -1)]:
         with pytest.raises(ValueError):
             build_strength(results, tmp_path / "out", reference_pair=reference, touchdown_window_m=window)
-    wrong = results / "R08-W1-SLWR/strength.json"
+    wrong = next((results / "R08-W1-SLWR").rglob("strength.json"))
     record = json.loads(wrong.read_text())
     record["case_id"] = "R08-W1-SCR"
     wrong.write_text(json.dumps(record))
@@ -299,40 +377,40 @@ runpy.run_module('digitalmodel.subsea.riser_study.riser_strength_runs', run_name
 
 
 def test_twelve_cases_and_multiple_software_versions(tmp_path, strength):
-    """Cover the complete diameter/wall/configuration matrix with synthetic data."""
+    """Per-size figures retain both walls and configurations with all offsets."""
     from digitalmodel.subsea.riser_study.riser_strength_runs import build_strength
-    results = tmp_path / "results"
-    for size in ("08", "10", "12"):
-        for wall in ("1", "2"):
-            for kind in ("SCR", "SLWR"):
-                data = deepcopy(strength)
-                data["case_id"] = f"R{size}-W{wall}-{kind}"
-                if wall == "2":
-                    data["software"]["version"] = "fixture-alternate"
-                folder = results / data["case_id"]
-                folder.mkdir(parents=True)
-                (folder / "strength.json").write_text(json.dumps(data))
+    results = write_cases(tmp_path, strength)
+    for path in results.rglob("strength.json"):
+        data = json.loads(path.read_text())
+        if "-W2-" in data["case_id"]:
+            data["software"]["version"] = "fixture-alternate"
+            path.write_text(json.dumps(data))
     output = tmp_path / "output"
     manifest = build_strength(results, output, reference_pair="R12-W2", touchdown_window_m=1)
-    assert len(manifest["sources"]) == 12
     for artifact in manifest["artifacts"]:
-        assert len({r["case_id"] for r in artifact["rows"] if r["case_id"]}) == 12
+        cases = {r["case_id"] for r in artifact["rows"] if r["case_id"]}
+        assert len(cases) == (4 if artifact["id"][-2:] in {"08", "10", "12"} else 12)
+        if artifact["id"] in TABLES:
+            continue
         svg = ET.parse(output / artifact["file"]).getroot()
         assert "SYNTHETIC" in " ".join(svg.itertext())
-        # Verify every drawn response polyline against the tabulated marks.
-        axes = svg.find('.//s:g[@id="axes"]', NS).attrib
-        for line in svg.findall('.//s:polyline[@data-case]', NS):
-            rows = [r for r in artifact["rows"] if r["case_id"] == line.attrib["data-case"]
-                    and r["series"] == line.attrib["data-series"]]
-            assert len(line.attrib["points"].split()) == len(rows)
-            for point, datum in zip(line.attrib["points"].split(), rows):
-                x, y = map(float, point.split(","))
-                assert x == pytest.approx(float(axes["data-x-origin"]) + datum["x"]*float(axes["data-x-scale"]), abs=1e-6)
-                assert y == pytest.approx(float(axes["data-y-origin"]) + datum["y"]*float(axes["data-y-scale"]), abs=1e-6)
+        for panel in svg.findall('.//s:g[@data-panel]', NS):
+            for line in panel.findall('.//s:polyline[@data-case]', NS):
+                rows = [r for r in artifact["rows"] if r["case_id"] == line.attrib["data-case"]
+                        and r["series"] == line.attrib["data-series"]
+                        and r["panel"] == panel.attrib["data-panel"]
+                        and r["axis"] == line.attrib["data-axis"]]
+                axes = next(a for a in panel.findall('.//s:g[@data-axis]', NS)
+                            if a.attrib["data-axis"] == line.attrib["data-axis"]).attrib
+                assert len(line.attrib["points"].split()) == len(rows)
+                for point, datum in zip(line.attrib["points"].split(), rows):
+                    x, y = map(float, point.split(","))
+                    assert x == pytest.approx(float(axes["data-x-origin"]) + datum["x"]*float(axes["data-x-scale"]), abs=1e-6)
+                    assert y == pytest.approx(float(axes["data-y-origin"]) + datum["y"]*float(axes["data-y-scale"]), abs=1e-6)
     tokens = {t["id"]: t for t in json.loads((output / "tokens.json").read_text())}
-    assert tokens["V-STR-GOV-CASE"]["value"] == "R08-W1-SCR"
+    assert tokens["V-STR-GOV-CASE"]["value"] == "R08-W1-SLWR"
     assert tokens["V-SW-VERSION"]["value"] == "synthetic fixture; synthetic fixture-alternate"
-    assert len(tokens["V-SW-VERSION"]["source_file"]) == 12
+    assert len(tokens["V-SW-VERSION"]["source_file"]) == 108
 
 
 @pytest.mark.parametrize("field", ["case_id", "sea_state", "hot_spots", "sn_curve",
@@ -353,18 +431,13 @@ def test_zero_damage_and_histogram_total(fatigue):
         exchange().validate_result(fatigue, "fatigue")
 
 
-def test_intermediate_touchdown_is_recorded_without_interpolation(tmp_path, strength):
+def test_intermediate_touchdown_is_retained_in_source_provenance(tmp_path, strength):
     from digitalmodel.subsea.riser_study.riser_strength_runs import build_strength
     strength["touchdown"] = {"arc_length_m": 75, "utilisation": 0.55, "stress_range_MPa": 12}
-    # ASSUMED intermediate response, deliberately independent of nearest samples.
     results = write_cases(tmp_path, strength)
-    for file in results.glob("*/strength.json"):
-        data = json.loads(file.read_text())
-        data["touchdown"]["utilisation"] = 0.55
-        file.write_text(json.dumps(data))
     manifest = build_strength(results, tmp_path / "out", reference_pair="R08-W1", touchdown_window_m=1)
-    artifact = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-04")
-    assert [(r["x"], r["y"]) for r in artifact["rows"]] == [(75, 0.55), (75, 0.55)]
+    assert all(s["record"]["touchdown"]["arc_length_m"] == 75 for s in manifest["sources"])
+    assert not any(a["id"] == "FIG-STR-04" for a in manifest["artifacts"])
 
 
 def test_schema_diagnostics_do_not_echo_values(strength):
@@ -401,3 +474,142 @@ runpy.run_module('digitalmodel.subsea.riser_study.riser_configuration_plot', run
     assert json.loads(svg.find("s:metadata", NS).text) == artifact["rows"]
     assert len(svg.findall('.//s:circle[@data-row]', NS)) == len(artifact["rows"])
     assert svg.find('.//s:polyline[@data-series="buoyancy"]', NS) is not None
+
+
+@pytest.mark.parametrize("defect", ["missing_screening", "missing_fibre", "stress_length",
+    "negative_stress", "sigma_over_smys", "reversed_envelope", "hangoff_envelope",
+    "missing_static_check", "missing_case", "duplicate", "cross_offset", "wrong_method",
+    "unqualified_reference", "different_wave", "mixed_dynamic_coverage"])
+def test_d3_invalid_batch_is_rejected_before_output(tmp_path, strength, defect):
+    from digitalmodel.subsea.riser_study.riser_strength_runs import build_strength
+    results = write_cases(tmp_path, strength)
+    path = results / "R08-W1-SCR" / "functional-False-0-0" / "strength.json"
+    data = json.loads(path.read_text())
+    screen = data["screening"]
+    if defect == "missing_screening":
+        del data["screening"]
+    elif defect == "missing_fibre":
+        del screen["u1"]["stress_MPa"]["static"]["outer"]
+    elif defect == "stress_length":
+        screen["u1"]["stress_MPa"]["static"]["inner"].pop()
+    elif defect == "negative_stress":
+        screen["u1"]["stress_MPa"]["static"]["inner"][0] = -1
+    elif defect == "sigma_over_smys":
+        screen["u1"]["method"] = "sigma/SMYS"
+    elif defect == "reversed_envelope":
+        path = results / "R08-W1-SCR/extreme-True-0-0/strength.json"
+        data = json.loads(path.read_text())
+        data["screening"]["tension_envelope_kN"]["dynamic_min"][1] = 200
+    elif defect == "hangoff_envelope":
+        path = results / "R08-W1-SCR/extreme-True-0-0/strength.json"
+        data = json.loads(path.read_text())
+        data["screening"]["hang_off_dynamic_min_kN"] = 5
+    elif defect == "missing_static_check":
+        screen["static_check"] = None
+    elif defect == "missing_case":
+        data["case_id"] = "R08-W2-SCR"
+    elif defect == "duplicate":
+        extra = path.parent.parent / "duplicate"
+        extra.mkdir()
+        (extra / "strength.json").write_text(json.dumps(data))
+    elif defect == "cross_offset":
+        data["load_case"]["offset"]["y_m"] = 90
+    elif defect == "wrong_method":
+        screen["api_rp_1111"]["method"] = ""
+    elif defect == "unqualified_reference":
+        screen["qualified"] = False
+    elif defect == "different_wave":
+        data["load_case"]["wave"]["Hs_m"] = 1
+    elif defect == "mixed_dynamic_coverage":
+        path = results / "R08-W1-SCR/extreme-True-0-180/strength.json"
+        data = json.loads(path.read_text())
+        data["screening"]["qualified"] = False
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError):
+        build_strength(results, tmp_path / "out", reference_pair="R08-W1", touchdown_window_m=50)
+    assert not (tmp_path / "out").exists()
+
+
+def test_d3_profile_values_ratios_and_static_table_are_hand_checked(tmp_path, strength):
+    from digitalmodel.subsea.riser_study.riser_strength_runs import build_strength
+    results = write_cases(tmp_path, strength)
+    manifest = build_strength(results, tmp_path / "out", reference_pair="R08-W1", touchdown_window_m=50)
+    artifacts = {a["id"]: a for a in manifest["artifacts"]}
+    u1 = [r for r in artifacts["FIG-STR-U1-08"]["rows"] if r["case_id"] == "R08-W1-SCR"]
+    assert any(r["y"] == 210/300 and "functional:static:outer" in r["series"] for r in u1)
+    assert any(r["y"] == 288/360 and "extreme:dynamic_max:outer" in r["series"] for r in u1)
+    teff = artifacts["FIG-STR-TEFF-08"]["rows"]
+    assert {r["y"] for r in teff if "dynamic_min" in r["series"]} == {-2, 60, 70, 80, 100, 110}
+    for measure in ("HOT", "ANG", "TDR"):
+        rows = artifacts[f"FIG-STR-{measure}-08"]["rows"]
+        assert {r["x"] for r in rows if r["case_id"]} == {-90, 0, 90}
+    tdr = artifacts["FIG-STR-TDR-08"]["rows"]
+    assert all(r["y"] == pytest.approx(0.75) for r in tdr if r["axis"] == "right" and r["case_id"])
+    assert {r["direction_deg"] for r in tdr if r["axis"] == "right" and r["case_id"]} == {0, 180}
+    hot = artifacts["FIG-STR-HOT-08"]["rows"]
+    assert {r["y"] for r in hot if "dynamic_min" in r["series"]} == {100, 110}
+    sta = artifacts["TAB-STA-01"]["rows"]
+    first = next(r for r in sta if r["case_id"] == "R08-W1-SCR" and r["measure"] == "top_tension")
+    assert first["software"] == 120 and first["analytical"] == 100
+    assert first["difference"] == 20 and first["difference_pct"] == 20
+    assert all(r["utilisation"] >= 0 for r in artifacts["TAB-STR-1111-01"]["rows"])
+
+
+def test_d3_static_only_zero_range_and_out_of_scope_are_explicit(tmp_path, strength):
+    from digitalmodel.subsea.riser_study.riser_strength_runs import build_strength
+    results = tmp_path / "results"
+    for size in ("08", "10", "12"):
+        for wall in ("1", "2"):
+            for kind in ("SCR", "SLWR"):
+                data = screening_record(strength, size, wall, kind, condition="functional", dynamic=False)
+                data["screening"]["api_rp_1111"] = {"in_scope": False, "method": "not applicable",
+                    "reason": "ASSUMED out-of-scope fixture", "checks": []}
+                folder = results / data["case_id"]
+                folder.mkdir(parents=True)
+                (folder / "strength.json").write_text(json.dumps(data))
+    out = tmp_path / "out"
+    manifest = build_strength(results, out, reference_pair="R08-W1", touchdown_window_m=50)
+    tokens = {t["id"]: t for t in json.loads((out / "tokens.json").read_text())}
+    assert tokens["V-STR-DYN-BASIS"]["value"] == "not established"
+    assert tokens["V-STR-TDR-DELTA-REF"]["value"] == "not established"
+    assert manifest["unresolved_ratios"]
+    table = next(a for a in manifest["artifacts"] if a["id"] == "TAB-STR-1111-01")
+    assert all(r["utilisation"] == "not in scope" for r in table["rows"])
+
+
+@pytest.mark.parametrize("directions,offsets,expected", [
+    ((0,), (0,), "nominal offset, one screened direction"),
+    ((0, 180), (0,), "nominal offset, two screened directions"),
+    ((0, 180), (-90, 0, 90), "near, nominal and far offsets"),
+])
+def test_dynamic_basis_tracks_actual_offsets_and_directions(tmp_path, strength, directions, offsets, expected):
+    from digitalmodel.subsea.riser_study.riser_strength_runs import build_strength
+    results = write_cases(tmp_path, strength, dynamic_directions=directions, dynamic_offsets=offsets)
+    out = tmp_path / "out"
+    manifest = build_strength(results, out, reference_pair="R10-W1", touchdown_window_m=50)
+    tokens = {t["id"]: t for t in json.loads((out / "tokens.json").read_text())}
+    assert tokens["V-STR-DYN-BASIS"]["value"] == expected
+    for measure in ("TEFF", "HOT", "ANG", "TDR"):
+        artifact = next(a for a in manifest["artifacts"] if a["id"] == f"FIG-STR-{measure}-10")
+        dynamic = [r for r in artifact["rows"] if r["case_id"] and "dynamic" in r["series"]]
+        assert {r["span_offset_m"] for r in dynamic} == set(offsets)
+        assert {r["direction_deg"] for r in dynamic} == set(directions)
+    # Every span series progresses in offset; mean and history-reference statics
+    # must not create a line that doubles back to nominal from the far offset.
+    hot = next(a for a in manifest["artifacts"] if a["id"] == "FIG-STR-HOT-10")
+    svg = ET.parse(out / hot["file"]).getroot()
+    for line in svg.findall('.//s:polyline[@data-case]', NS):
+        xs = [float(p.split(",")[0]) for p in line.attrib["points"].split()]
+        assert xs == sorted(xs)
+
+
+def test_legacy_output_destination_is_preserved_and_rejected(tmp_path, strength):
+    from digitalmodel.subsea.riser_study.riser_strength_runs import build_strength
+    out = tmp_path / "out"
+    out.mkdir()
+    legacy = out / "FIG-STR-02.svg"
+    legacy.write_text("existing artifact")
+    with pytest.raises(ValueError, match="deprecated"):
+        build_strength(tmp_path / "results", out, reference_pair="R08-W1", touchdown_window_m=50)
+    assert legacy.read_text() == "existing artifact"
+    assert not (out / "tokens.json").exists()

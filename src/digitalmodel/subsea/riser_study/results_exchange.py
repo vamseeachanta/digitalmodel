@@ -87,6 +87,83 @@ class HangOffTension(TypedDict):
     dynamic_max: float
 
 
+class FibreStress(TypedDict):
+    """Exported nonnegative equivalent stress on both pipe fibres, in MPa."""
+
+    inner: list[float]
+    outer: list[float]
+
+
+class StressStates(TypedDict):
+    """Static stresses and the maximum over each dynamic fibre history."""
+
+    static: FibreStress
+    dynamic_max: FibreStress | None
+
+
+class U1Inputs(TypedDict):
+    """Explicit stress combination and material basis for U1."""
+
+    method: Literal["API RP 2RD"]
+    smys_MPa: float
+    stress_MPa: StressStates
+
+
+class TensionEnvelope(TypedDict):
+    """Dynamic extrema at the same arc stations as the static export."""
+
+    dynamic_min: list[float] | None
+    dynamic_max: list[float] | None
+
+
+class AnalyticalStatic(TypedDict):
+    """Independent analytical catenary outputs with explicit units."""
+
+    top_tension_kN: float
+    top_angle_deg: float
+    touchdown_x_m: float
+
+
+class StaticCheck(TypedDict):
+    """Analytical comparison inputs; touchdown position is horizontal."""
+
+    analytical: AnalyticalStatic
+    software_touchdown_x_m: float
+    basis: str
+
+
+class CombinedCheck(TypedDict):
+    """An exported combined-loading check over the recorded history."""
+
+    arc_length_m: float
+    utilisation: float
+    check: str
+
+
+class CombinedLoading(TypedDict):
+    """Explicit applicability and exported API RP 1111 check values."""
+
+    in_scope: bool
+    method: str
+    reason: str
+    checks: list[CombinedCheck]
+
+
+class Screening(TypedDict):
+    """Additional inputs required by the per-size strength output contract."""
+
+    condition: Literal["functional", "extreme"]
+    dynamic: bool
+    qualified: bool
+    u1: U1Inputs
+    tension_envelope_kN: TensionEnvelope
+    hang_off_dynamic_min_kN: float | None
+    excursion_reference_deg: float
+    excursion_limit_deg: float
+    static_check: StaticCheck | None
+    api_rp_1111: CombinedLoading
+
+
 class StrengthResult(TypedDict):
     """One case's strength export; arc is measured from hang-off."""
 
@@ -104,6 +181,7 @@ class StrengthResult(TypedDict):
     top_angle_deg: TopAngle
     hang_off_tension_kN: HangOffTension
     run: Run
+    screening: NotRequired[Screening]
 
 
 class RangeBin(TypedDict):
@@ -206,6 +284,47 @@ def _strength_semantics(data: dict[str, Any]) -> None:
     angle = data["top_angle_deg"]
     if angle["dynamic_min"] > angle["dynamic_max"]:
         raise ValueError("top-angle dynamic range is reversed")
+    if "screening" in data:
+        _screening_semantics(data)
+
+
+def _screening_semantics(data: dict[str, Any]) -> None:
+    screen = data["screening"]
+    count = len(data["arc_length_m"])
+    dynamic = screen["dynamic"]
+    if dynamic and screen["condition"] != "extreme":
+        raise ValueError("dynamic screening requires the extreme condition")
+    for state, fibres in screen["u1"]["stress_MPa"].items():
+        if fibres is None:
+            if state == "static" or dynamic:
+                raise ValueError("missing U1 stress state")
+        elif state == "dynamic_max" and not dynamic:
+            raise ValueError("static record contains dynamic U1 stresses")
+        elif any(len(values) != count for values in fibres.values()):
+            raise ValueError("U1 fibre length differs from arc_length_m")
+    envelope = screen["tension_envelope_kN"]
+    for values in envelope.values():
+        if dynamic and (values is None or len(values) != count):
+            raise ValueError("missing or misaligned dynamic tension envelope")
+        if not dynamic and values is not None:
+            raise ValueError("static record contains a dynamic tension envelope")
+    if dynamic:
+        if any(a > b for a, b in zip(envelope["dynamic_min"], envelope["dynamic_max"])):
+            raise ValueError("dynamic tension envelope is reversed")
+        for actual, expected in [(screen["hang_off_dynamic_min_kN"], envelope["dynamic_min"][0]),
+                                 (data["hang_off_tension_kN"]["dynamic_max"], envelope["dynamic_max"][0])]:
+            if actual is None or not math.isclose(actual, expected, rel_tol=ROUND_OFF, abs_tol=ROUND_OFF):
+                raise ValueError("hang-off tension differs from envelope at arc zero")
+    elif screen["hang_off_dynamic_min_kN"] is not None:
+        raise ValueError("static record contains a dynamic hang-off minimum")
+    if not math.isclose(data["hang_off_tension_kN"]["static"], data["effective_tension_kN"][0],
+                        rel_tol=ROUND_OFF, abs_tol=ROUND_OFF):
+        raise ValueError("static hang-off tension differs from profile at arc zero")
+    checks = screen["api_rp_1111"]
+    if bool(checks["checks"]) != checks["in_scope"]:
+        raise ValueError("combined-loading applicability differs from check rows")
+    if any(not 0 <= check["arc_length_m"] <= data["arc_length_m"][-1] for check in checks["checks"]):
+        raise ValueError("combined-loading check outside exported arc")
 
 
 def _fatigue_semantics(data: dict[str, Any]) -> None:

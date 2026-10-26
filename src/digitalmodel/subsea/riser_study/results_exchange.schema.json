@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Riser exported strength and fatigue results",
-  "description": "Numeric quantities use the units in field names. Zero fatigue damage has null life. Method and allowable describe the normalised strength samples.",
+  "description": "Numeric quantities use the units in field names. Zero fatigue damage has null life. Method and allowable describe the normalised strength samples. Optional screening inputs carry both-fibre U1 stresses, dynamic envelopes and independent check records in this same contract.",
   "oneOf": [
     {
       "$ref": "#/$defs/strength"
@@ -245,6 +245,9 @@
         },
         "run": {
           "$ref": "#/$defs/run"
+        },
+        "screening": {
+          "$ref": "#/$defs/screening"
         }
       },
       "required": [
@@ -451,6 +454,274 @@
           }
         }
       ]
+    },
+    "screening": {
+      "type": "object",
+      "properties": {
+        "condition": {
+          "enum": [
+            "functional",
+            "extreme"
+          ]
+        },
+        "dynamic": {
+          "type": "boolean"
+        },
+        "qualified": {
+          "type": "boolean"
+        },
+        "u1": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "const": "API RP 2RD"
+            },
+            "smys_MPa": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "stress_MPa": {
+              "type": "object",
+              "properties": {
+                "static": {
+                  "type": "object",
+                  "properties": {
+                    "inner": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "minItems": 2
+                    },
+                    "outer": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "minItems": 2
+                    }
+                  },
+                  "required": [
+                    "inner",
+                    "outer"
+                  ],
+                  "additionalProperties": false
+                },
+                "dynamic_max": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "inner": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "minItems": 2
+                        },
+                        "outer": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "minItems": 2
+                        }
+                      },
+                      "required": [
+                        "inner",
+                        "outer"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "static",
+                "dynamic_max"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "method",
+            "smys_MPa",
+            "stress_MPa"
+          ],
+          "additionalProperties": false
+        },
+        "tension_envelope_kN": {
+          "type": "object",
+          "properties": {
+            "dynamic_min": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "dynamic_max": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "dynamic_min",
+            "dynamic_max"
+          ],
+          "additionalProperties": false
+        },
+        "hang_off_dynamic_min_kN": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excursion_reference_deg": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 90
+        },
+        "excursion_limit_deg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "static_check": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "analytical": {
+                  "type": "object",
+                  "properties": {
+                    "top_tension_kN": {
+                      "type": "number"
+                    },
+                    "top_angle_deg": {
+                      "type": "number"
+                    },
+                    "touchdown_x_m": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "top_tension_kN",
+                    "top_angle_deg",
+                    "touchdown_x_m"
+                  ],
+                  "additionalProperties": false
+                },
+                "software_touchdown_x_m": {
+                  "type": "number"
+                },
+                "basis": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "analytical",
+                "software_touchdown_x_m",
+                "basis"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "api_rp_1111": {
+          "type": "object",
+          "properties": {
+            "in_scope": {
+              "type": "boolean"
+            },
+            "method": {
+              "type": "string",
+              "minLength": 1
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "checks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "arc_length_m": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "utilisation": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "check": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "arc_length_m",
+                  "utilisation",
+                  "check"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "in_scope",
+            "method",
+            "reason",
+            "checks"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "condition",
+        "dynamic",
+        "qualified",
+        "u1",
+        "tension_envelope_kN",
+        "hang_off_dynamic_min_kN",
+        "excursion_reference_deg",
+        "excursion_limit_deg",
+        "static_check",
+        "api_rp_1111"
+      ],
+      "additionalProperties": false
     }
   }
 }

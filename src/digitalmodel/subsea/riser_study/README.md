@@ -1,142 +1,153 @@
 # Riser export post-processing
 
-This package reads exported results. It produces SVG figures, exact numeric
-CSV tables, manifests and value tokens without a native solver interface.
-It does not compute a strength acceptance criterion or fatigue response.
+This package reads exported results and produces SVG figures, numeric CSV
+files, manifests and tokens. It imports no native solver interface. Synthetic
+test exports demonstrate the output contract; qualified engineering results
+remain an external input.
 
-Run from the repository root, with the repository dependencies available:
+Run the strength and geometry commands from the repository root with their
+Python dependencies available:
 
 ```bash
-PYTHONPATH=src uv run python -m digitalmodel.subsea.riser_study.riser_strength_runs results figures --reference-pair R08-W1 --touchdown-window-m 50
-PYTHONPATH=src uv run python -m digitalmodel.subsea.riser_study.riser_configuration_plot geometry.json figures --reference-pair R08-W1
+PYTHONPATH=src uv run python -m digitalmodel.subsea.riser_study.riser_strength_runs results figures --reference-pair R10-W1 --touchdown-window-m 50
+PYTHONPATH=src uv run python -m digitalmodel.subsea.riser_study.riser_configuration_plot geometry.json figures --reference-pair R10-W1
 ```
 
-The example touchdown window is **ASSUMED**, in metres on either side of each
-exported touchdown. Select a window appropriate to the exported sampling.
-The reference pair is explicit: both configurations must be present. No case is
-silently selected as the reference. Every recursively discovered `strength.json`
-is validated before any output is written. Duplicate cases and directory/case
-mismatches fail validation. Each invocation represents one strength load case
-per case; different load-case parameters remain in source provenance and are
-not combined into an unrecorded envelope. An invalid batch leaves no new output.
-Use a separate destination for each batch; existing artifacts are overwritten
-when their token identifiers match.
+The reference size controls the wall comparison; its wall controls the paired
+touchdown comparison. The touchdown window argument is retained as provenance
+for command-line compatibility. U3 is the exported touchdown-zone stress range;
+no utilisation window or new stress history is inferred from this argument.
+Select a fresh destination when replacing older output identifiers. The builder
+rejects a destination containing deprecated figure files without removing data.
 
 ## Output contract
 
-| Token | Figure and CSV content |
+The identifiers below follow the supplied analysis list. Each size suffix is
+one of `08`, `10`, `12`. Figure tokens identify SVG files, table tokens identify
+Markdown files, and every artifact has a matching CSV and manifest rows.
+
+| Identifier | Contents |
 | --- | --- |
-| FIG-STR-01 | Effective tension against arc length from hang-off, m and kN |
-| FIG-STR-02 | Bending moment against arc length from hang-off, m and kN.m |
-| FIG-STR-03 | Maximum normalised strength utilisation per case, dimensionless |
-| FIG-STR-04 | Samples in the touchdown window and the exported touchdown marker |
-| FIG-STR-05 | Static top angle and dynamic minimum/maximum, degrees from vertical |
-| FIG-STR-06 | Static and dynamic maximum hang-off effective tension, kN |
-| SCH-01 | Nominal SCR/SLWR profiles, horizontal distance and depth in metres |
+| FIG-STR-TEFF-08/10/12 | Static and dynamic minimum/maximum effective tension along arc, zero line |
+| FIG-STR-U1-08/10/12 | Both-fibre U1 along arc, screening line at unity |
+| FIG-STR-TDR-08/10/12 | Touchdown stress range U3 against span offset, direction panels, SLWR/SCR ratio on the right axis |
+| FIG-STR-ANG-08/10/12 | Angle from vertical against span offset, direction panels, excursion ratio on the right axis with its unity screen |
+| FIG-STR-HOT-08/10/12 | Static and dynamic minimum/maximum hang-off effective tension against span offset, direction panels, zero line |
+| FIG-STR-SUM-01 | Five panels: maximum U1, minimum effective tension, maximum touchdown stress range, maximum excursion ratio, maximum hang-off tension; run counts |
+| TAB-STA-01 | Nominal functional static software and analytical tension, angle and horizontal touchdown position, absolute and percentage differences |
+| TAB-STR-1111-01 | Exported API RP 1111 combined-loading checks, applicability, method, reason and load conditions |
+| SCH-01 | Existing proportional SCR/SLWR configuration schematic |
 
-FIG-STR-05 and FIG-STR-06 are provisional identifiers for the additional figures.
-Their CSV files serve as the corresponding tables. Every figure has matching
-`<token>.svg` and `<token>.csv` files. `manifest.json` contains each strength
-artifact's identifier, files and all plotted rows, including the normalised
-limit line. The limit is unity by the definition stress divided by the supplied
-allowable; it is not a numerical requirement taken from a standard. The
-export's `method` explains its stress combination and allowable basis.
+Each profile panel compares both walls and configurations on shared axes.
+Static results at the three offsets and dynamic results at their actual offsets
+retain distinct conditions and source records. The summary includes all qualified
+records supplied, so adding near/far dynamics updates the same identifiers.
+No near/far dynamic response is inferred from a nominal response.
 
-The renderer consumes the same rows that it writes to CSV and JSON. SVG
-metadata embeds those rows, and each numeric mark records its row index and
-unrounded coordinates. Presentation labels use one decimal place; numeric
-artifacts retain the input precision. SCR uses solid lines and SLWR dashed
-lines, with a common colour for each diameter/wall pair. Categorical results
-use unconnected marks, with a vertical segment between dynamic angle extremes.
+`tokens.json` contains `{id, value, unit, source_file}` entries for all strength
+figures and tables and these values:
 
-`tokens.json` is a list of `{id, value, unit, source_file}` records for
-V-STR-GOV-CASE, V-STR-UMAX-GOV, V-STR-UMAX-SCR, V-STR-UMAX-SLWR,
-V-STR-TDP-SCR-REF, V-STR-TDP-SLWR-REF and V-SW-VERSION. The touchdown
-reference tokens contain utilisation, not touchdown position. Numeric tokens
-are dimensionless. A software token lists every distinct recorded name/version
-and all source files. Ties for governing strength resolve by sorted case id.
-Source paths are relative labels rooted at `results/`; the manifest binds each
-source's bytes with SHA-256 and preserves software, load case, method,
-allowable and run record. Files are not modified during reading.
+- `V-STR-GOV-CASE`, `V-STR-UMAX-GOV`, `V-STR-GOV-LOC`: governing U1, case,
+  arc station, fibre and stress state; ties resolve by sorted case identifier.
+- `V-STR-UMAX-SCR`, `V-STR-UMAX-SLWR`: configuration maxima over U1.
+- `V-STR-WT-DELTA`: `100 * (W2 - W1) / W1`, where each wall value is maximum
+  U1 across both configurations at the explicit reference size. Unit `%`.
+- `V-STR-TEFF-MIN`: lowest static/dynamic effective tension, unit `kN`.
+- `V-STR-COMP-COUNT`: cases with any strictly negative effective tension.
+- `V-STR-UANG-MAX`: maximum excursion ratio. Excursion is the largest absolute
+  angle departure from that case's nominal functional angle, divided by the
+  supplied assumed 10-degree screen; dynamic extrema are checked separately.
+- `V-STR-TDR-DELTA-REF`: `100 * (SLWR - SCR) / SCR`, using each configuration's
+  maximum dynamic touchdown stress range for the explicit reference pair. Unit `%`.
+  The figure retains the paired SLWR/SCR ratio at each matching load condition.
+- `V-STR-DYN-BASIS`: actual qualified coverage: nominal with one/two screened
+  directions, all three offsets, or `not established` when no supported dynamic
+  basis is available. Missing dynamics are never treated as zero response.
+- `V-SW-VERSION`: every distinct recorded software name/version.
 
-## Shared result exchange
+A zero comparison denominator yields `not established`; undefined figure ratios
+are recorded in `unresolved_ratios` rather than plotted as a numeric zero.
+The six provisional figure identifiers and the two touchdown-utilisation value
+identifiers are no longer produced. Bending moment remains an exchange input
+for compatibility but has no figure in this output contract.
 
-`results_exchange.py` defines TypedDict contracts and `validate_result` /
-`load_result`. `results_exchange.schema.json` is the shared JSON Schema
-(Draft 2020-12), with strength and fatigue definitions. The schema ships as
-package data. Both other post-processors can import this module without
-importing geometry or solver packages.
+## Shared input exchange
 
-The strength record is `results/<case_id>/strength.json`:
+`results_exchange.py` and `results_exchange.schema.json` remain the single
+strength/fatigue exchange. Generic legacy records still validate. Per-size
+strength output additionally requires the optional `screening` object; legacy
+`von_mises_utilisation`, `max_utilisation`, `method` and `allowable` are preserved
+as provenance and never substituted for U1.
 
-- `case_id`: diameter/wall/configuration, such as `R08-W1-SCR`.
-- `software`: nonempty `name` and `version`, exactly as exported.
-- `load_case`: `id`, named wave/current parameter objects and horizontal
-  `offset` containing `x_m` and `y_m`. Parameter names retain their units.
-- `arc_length_m`, `effective_tension_kN`, `bending_moment_kNm` and
-  `von_mises_utilisation`: aligned arrays, arc increasing from hang-off zero.
-- `method`: named exported utilisation method. `allowable`: positive `value`,
-  `unit` of MPa and `source`. An assumed method or value is labelled ASSUMED.
-- `max_utilisation`: `value`, `arc_length_m`, `location`; it must identify a
-  maximum of the supplied utilisation samples.
-- `touchdown`: `arc_length_m`, `utilisation`, `stress_range_MPa`. Its arc must
-  lie in the exported range; a coincident utilisation sample must agree.
-  An intermediate touchdown is retained as an independent exported marker;
-  no interpolation of response is invented.
-- `top_angle_deg`: acute inclination from vertical, `static`, `dynamic_min`,
-  `dynamic_max`. Convert a solver's tangent convention before exporting.
-- `hang_off_tension_kN`: `static` and `dynamic_max`, as effective tension.
-- `run`: hexadecimal `input_sha256`, portable relative `result_file` and ISO
-  calendar `date`. Absolute or parent-traversing paths are rejected.
+A strength record is stored as either `results/<case_id>/strength.json` or
+`results/<case_id>/<load_id>/strength.json`. Case identifiers span all twelve
+size/wall/configuration combinations. Multiple static and dynamic exports per
+case are supported. Every recursively discovered record is validated before
+any output is written, including unqualified records. Duplicate conditions,
+directory mismatches and unmatched load coverage are rejected. Span offset is
+explicitly `load_case.offset.x_m`, with zero transverse offset; supported span
+positions are near, nominal and far. `load_case.wave.direction_deg` is required.
+Paired conditions must have identical wave/current inputs.
 
-The fatigue record is `results/<case_id>/fatigue-<sea_state_id>.json`:
+The original aligned arrays, touchdown summary, software, load case and run
+provenance retain their shared contract. Additional `screening` fields are:
 
-- `case_id`, `sea_state` with `id`, `Hs_m`, `Tp_s`, `direction_deg`, `occurrence`
-  as a fraction; `hot_spots` with unique `touchdown` or `hang_off` names.
-- Each hot spot has `arc_length_m`, `cycles_per_year`, `scf` and exactly one
-  of `stress_range_MPa` or `range_histogram`. Each histogram bin contains
-  `stress_range_MPa` and `cycles_per_year`; annual cycles sum to the hot-spot
-  total. These are annualised inputs, with occurrence weighting already
-  reflected in the exported annual damage.
-- `sn_curve`: `name`, `source` label, `m`, `log_a`, `thickness_correction`.
-  These are supplied parameters, with no publication values supplied here.
-- `damage_per_year`, `life_years` and the same `run` fields. Life is reciprocal
-  annual damage; zero damage has null life rather than non-JSON infinity.
+- `condition`: `functional` or `extreme`; `dynamic`: whether a history exists;
+  `qualified`: whether the supplied record may enter reported envelopes.
+- `u1`: `method` must be `API RP 2RD`; `smys_MPa` records the study's material
+  basis. `stress_MPa.static` and, for dynamics, `stress_MPa.dynamic_max` each
+  contain aligned nonnegative `inner` and `outer` equivalent-stress arrays.
+  These stresses must already use the exported method. The denominator is
+  `(2/3) SMYS` for functional records and the supplied study screen of 360 MPa
+  for extreme records. Both fibres and all supplied states enter maxima.
+  The generic screen's stress/SMYS values cannot serve as U1 inputs.
+- `tension_envelope_kN`: aligned `dynamic_min` and `dynamic_max` arrays;
+  both are null on static-only records. Reversed envelopes are rejected.
+- `hang_off_dynamic_min_kN`: the dynamic minimum at arc zero, null on static
+  records. Dynamic minimum/maximum and static hang-off values must agree with
+  their corresponding profile samples at arc zero.
+- `excursion_reference_deg`, `excursion_limit_deg`: explicit reference and
+  assumed screen. Every reference must agree with that case's nominal
+  functional angle.
+- `static_check`: required for each case's nominal functional reference;
+  `analytical` contains `top_tension_kN`, `top_angle_deg`, `touchdown_x_m`,
+  with `software_touchdown_x_m` and a nonempty `basis`. These are independent
+  analytical/export inputs. The processor reports differences, not a gate pass.
+- `api_rp_1111`: `in_scope`, `method`, `reason`, and `checks` containing
+  `arc_length_m`, `utilisation`, `check`. In-scope records require check rows;
+  out-of-scope records require an empty list and are shown as `not in scope`.
+  The processor reports exported checks without reimplementing the criterion.
 
-The validator rejects unknown keys, missing fields, non-finite numbers,
-booleans in numeric fields, misaligned samples and inconsistent summaries.
-The relative numerical consistency tolerance absorbs JSON round-off only;
-it is not an engineering acceptance band. Diagnostics identify fields and
-schema rules without reproducing rejected values.
+All twelve cases need a qualified nominal functional reference and matching
+qualified load coverage. Unqualified records remain in source provenance and
+are excluded from plotted response and values. Qualification is an explicit
+export input, not a status assigned by this package. Run counts distinguish
+all discovered records, qualified static/dynamic records and represented cases.
 
-## Geometry and verification basis
+The shared fatigue contract is unchanged. It retains its existing sea-state,
+hot-spot, curve, damage, reciprocal-life and run fields for other consumers.
+This strength change neither produces fatigue outputs nor changes their basis.
 
-`geometry.json` contains numeric inputs accepted by
-`digitalmodel.riser_configuration_screen.static`: `water_depth_m`,
-`submerged_weight_n_m`, `grounded_length_m`, `hangoff_angle_deg`,
-`sag_fraction`, `hog_fraction`, `buoyancy_factor`. The supplied reference
-identifies the pair; geometry is not inferred from a nominal pipe size.
+## Traceability and checks
 
-SCH-01 uses `scr_offsets` and `lazy_wave_offsets` at nominal zero offset,
-converts elevation above seabed to depth below the water line, and uses the
-same pixel scale in both directions. It labels hang-off, sag, hog, buoyancy,
-touchdown, water line and seabed, with labels outside the profile panel and
-leader lines. The buoyed material interval is highlighted. Its separate
-`SCH-01.manifest.json` avoids replacing the strength manifest. Its rows also
-record material arc length and the buoyed interval. The command-line input
-record includes a digest of the geometry file.
+CSV and manifest rows retain full precision. Each SVG numeric mark records its
+row index and unrounded coordinates; metadata embeds the same rows. Hover text
+shows case, measure, value and units. Direction panels use separate ratio axes.
+Labels and Markdown table values use one decimal place. Source labels are
+portable paths rooted at `results/`; every response row carries the input and
+result digests. Paired ratios carry both sources and both digests. The manifest
+preserves every source record and its byte digest. Hashes remain in provenance,
+not visible figure labels. No source file is modified.
 
-Tests use ASSUMED synthetic exports, not design results. The uniaxial hand
-check is stress divided by allowable. The plain-catenary fixture uses case C1
-and the acceptance bands in
-`docs/benchmarks/catenary_closed_form/benchmark.json`; its expected tension
-and angle are read from that independent benchmark. The compliant elastic
-case C2 is outside the inextensible screen's scope. No licensed document is
-opened and no native solver is imported or queried.
+Tests check the complete identifier set, both-fibre functional/extreme U1,
+compression count, percentage denominators, paired ratios, analytical table
+arithmetic, source digests, CSV/manifest equality and actual SVG mark/polyline
+coordinates on both axes. The complete matrix uses assumed synthetic exports.
+The independent catenary benchmark and equal-scale schematic checks remain.
+No standard document is opened and no native solver is started or queried.
 
-The geometry screen's existing package imports need its plotting and tabular
-dependencies even though this package renders SVG with the standard library.
-The strength post-processor requires only the shared JSON validation dependency.
-The fixture suite exercises the command line with native-interface imports
-rejected. Native results, qualified methods, environmental inputs and
-engineering review remain required before using the artifacts for a design.
+Geometry inputs and `SCH-01.manifest.json` remain unchanged: nominal profiles
+use the same pixel scale horizontally and vertically, and identify hang-off,
+sag, hog, buoyancy, touchdown, water line and seabed. Geometry imports require
+its plotting/tabular dependencies; strength processing needs only the shared
+JSON validation dependency in addition to the standard library.
