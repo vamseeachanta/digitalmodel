@@ -189,6 +189,62 @@ def test_motion_choices_are_explicit(domain, tmp_path, field):
         convert(domain, tmp_path)
 
 
+@pytest.mark.parametrize("orientation", [
+    None, [], [0.0, 0.0], [0.0, 0.0, 0.0, 0.0],
+    [0.0, 0.0, float("nan")], [0.0, float("inf"), 0.0],
+    [float("-inf"), 0.0, 0.0], [None, 0.0, 0.0],
+    ["invalid", 0.0, 0.0], ["0", 0.0, 0.0], [True, 0.0, 0.0], "0, 0, 0",
+])
+def test_invalid_orientation_rejected_by_schema_and_converter(
+    domain, tmp_path, orientation,
+):
+    domain["installation"]["vessels"][0]["properties"]["Orientation"] = orientation
+    with pytest.raises(ValidationError, match="Orientation"):
+        JumperInstallationSpec.from_dict(domain)
+    with pytest.raises(ValidationError, match="Orientation"):
+        convert(domain, tmp_path)
+
+
+@pytest.mark.parametrize("field,value", [
+    (field, value)
+    for field in ("PrimaryMotion", "SuperimposedMotion")
+    for value in (None, "", "unknown", 1, False, [], {})
+] + [
+    ("PrimaryMotion", "RAOs + harmonics"),
+    ("SuperimposedMotion", "Calculated (6 DOF)"),
+])
+def test_invalid_motion_rejected_by_schema_and_converter(domain, tmp_path, field, value):
+    domain["installation"]["vessels"][0]["properties"][field] = value
+    with pytest.raises(ValidationError, match=field):
+        JumperInstallationSpec.from_dict(domain)
+    with pytest.raises(ValidationError, match=field):
+        convert(domain, tmp_path)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("PrimaryMotion", value) for value in (
+        "None", "Prescribed", "Calculated (3 DOF)", "Calculated (6 DOF)",
+        "Time history", "Externally calculated",
+    )
+] + [
+    ("SuperimposedMotion", value)
+    for value in ("None", "RAOs + harmonics", "Time history")
+])
+def test_supported_motion_and_orientation_survive_generation(domain, tmp_path, field, value):
+    properties = domain["installation"]["vessels"][0]["properties"]
+    properties[field] = value
+    properties["Orientation"] = [15.0, -2.0, 1.0]  # Declared angles (degrees).
+    parsed = JumperInstallationSpec.from_dict(domain)
+    assert parsed.installation.vessels[0].properties == properties
+    data = convert(domain, tmp_path)
+    out = tmp_path / "motion_choices"
+    ModularModelGenerator.from_spec(ProjectInputSpec(**data)).generate(out)
+    objects = yaml.safe_load((out / "includes/20_generic_objects.yml").read_text())
+    vessel = objects["Vessels"][0]
+    for key, expected in properties.items():
+        assert vessel[key] == expected
+
+
 def test_nested_rao_data_survive_generation(domain, tmp_path):
     """Serialization oracle: existing repository template, not a motion solution."""
     template = yaml.safe_load(

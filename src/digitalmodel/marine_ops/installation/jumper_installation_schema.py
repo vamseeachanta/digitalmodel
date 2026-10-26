@@ -227,6 +227,23 @@ class JumperVesselTypeSpec(BaseModel):
     properties: Dict[str, Any] = Field(default_factory=dict)
 
 
+class _JumperVesselMotionSpec(BaseModel):
+    """Validate required native properties without changing the property bag.
+
+    Source: Orcina online help, Vessel data: Initial position and orientation;
+    Vessel data: Calculation data, Primary motion and Superimposed motion.
+    """
+
+    model_config = ConfigDict(strict=True)
+
+    Orientation: List[FiniteFloat] = Field(min_length=3, max_length=3)
+    PrimaryMotion: Literal[
+        "None", "Prescribed", "Calculated (3 DOF)", "Calculated (6 DOF)",
+        "Time history", "Externally calculated",
+    ]
+    SuperimposedMotion: Literal["None", "RAOs + harmonics", "Time history"]
+
+
 class JumperVesselSpec(BaseModel):
     """Explicit generic vessel definition; no vessel data are inferred."""
 
@@ -242,11 +259,7 @@ class JumperVesselSpec(BaseModel):
     @model_validator(mode="after")
     def validate_explicit_motion(self) -> JumperVesselSpec:
         """Require explicit vessel orientation and motion selections."""
-        # Orcina online help (2026), Vessel data: Initial position and
-        # orientation; calculation settings must be supplied, not inferred.
-        for key in ("Orientation", "PrimaryMotion", "SuperimposedMotion"):
-            if key not in self.properties:
-                raise ValueError(f"vessel properties require {key}")
+        _JumperVesselMotionSpec.model_validate(self.properties)
         return self
 
 
