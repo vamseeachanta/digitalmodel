@@ -82,6 +82,7 @@ REVISIONS = (
         '2026-10-26',
         'Source links, visible revision history, schematic labels and chart legend corrected; repeated cross-references consolidated. Calculated values retained.',
     ),
+    ('R4', '2026-10-26', 'summary chart and 3D schematic, appendix plots'),
 )
 
 
@@ -264,9 +265,11 @@ def axis_ticks(low: float, high: float) -> tuple[list[float], int]:
 def chart_svg(
     identifier: str, title: str, xs: list[float],
     series: list[tuple[str, list[float]]], xlabel: str, ylabel: str,
+    options: dict[str, Any] | None = None,
     supported_from: float | None = None,
 ) -> str:
     """Inline accessible SVG with independent axes, legend and validity shading."""
+    options = options or {}
     colors = ("#0B3D91", "#0f8a7e", "#b8860b", "#943a78", "#555555")
     left, right, top, bottom = 84, 770, 46, 300
     xmin, xmax = min(xs), max(xs)
@@ -320,14 +323,36 @@ def chart_svg(
             f'<text x="84" y="{365+index*16}" fill="{color}" '
             f'font-size="12">{html.escape(name)}</text>',
         ])
-        for xv, yv in zip(xs, ys):
+        for point_index, (xv, yv) in enumerate(zip(xs, ys)):
+            outside = options.get("outside_band")
+            marker = (f' data-outside-band="{str(outside[index][point_index]).lower()}" '
+                      f'stroke="{color}" stroke-width="1.8"' if outside else '')
+            marker_fill = "white" if outside and outside[index][point_index] else color
             parts.append(
-                f'<circle cx="{x(xv):.1f}" cy="{y(yv):.1f}" r="2.5" '
-                f'fill="{color}" tabindex="0" data-series="{index}" '
+                f'<circle cx="{x(xv):.1f}" cy="{y(yv):.1f}" '
+                f'r="{4.5 if xv == options.get("highlight_x") else 2.5}" '
+                f'fill="{marker_fill}"{marker} tabindex="0" data-series="{index}" '
                 f'data-x="{xv}" data-y="{yv}" '
                 f'aria-label="{html.escape(name)}: {xv}, {yv}">'
                 f'<title>{html.escape(name)}: {xv}, {yv}</title></circle>')
+            if xv == options.get("highlight_x"):
+                parts.append(f'<text data-highlight-x="{xv}" x="{x(xv)+9:.1f}" '
+                             f'y="{y(yv)-10:.1f}" font-size="12" fill="{color}">{yv:.1f} %</text>')
         parts.append('</g>')
+    if options.get("outside_band"):
+        parts.extend([
+            '<ellipse cx="90" cy="423" rx="5" ry="5" fill="white" stroke="#526579"/>',
+            "<text x=\"104\" y=\"427\" font-size=\"12\">outside the model's moment-fit band "
+            '(forcing period below 20 s)</text>',
+        ])
+    if "reference_y" in options:
+        reference = options["reference_y"]
+        parts.extend([
+            f'<path data-reference-y="{reference}" d="M {left} {y(reference):.1f} H {right}" '
+            'stroke="#b8860b" stroke-width="1.5" stroke-dasharray="5 4"/>',
+            f'<text x="{right}" y="{y(reference)-8:.1f}" text-anchor="end" '
+            'font-size="12">20 s lower edge of moment-fit band</text>',
+        ])
     if supported_from is not None:
         parts.extend([
             '<g class="validity-key"><rect x="430" y="385" width="18" height="12" fill="#fff0d0"/>',
@@ -414,12 +439,157 @@ fill="#f2f6fa" stroke="#526579" stroke-width="2"/>
 </g></svg>'''
 
 
+def schematic_3d(record: dict[str, Any], *, compact: bool = False) -> str:
+    """Project recorded leg dimensions; unknown outlines remain symbolic.
+
+    Transverse x, longitudinal y and vertical z use one drawing scale.
+    Headroom, hull form and conduit section use symbolic drawing offsets;
+    neither a tank height nor a conduit shape is inferred from its area.
+    Labels occupy a separate rail clear of all geometry and leader segments.
+    """
+    a = record["assumptions"]
+    length, width, fill, offset = (a[key] for key in (
+        "leg_length_m", "leg_width_m", "fill_depth_m", "centroid_offset_m"))
+    scale = 17.0
+    identifier = "es-tank-3d" if compact else "tank-3d"
+
+    def project(x: float, y: float, z: float) -> tuple[float, float]:
+        return 330 + scale * (x + .4 * y), 410 - scale * (.42 * y + z)
+
+    def coordinates(points: list[tuple[float, float, float]]) -> str:
+        return " ".join(f"{x:.1f},{y:.1f}" for x, y in (project(*p) for p in points))
+
+    parts = [
+        f'<svg id="{identifier}" class="schematic" viewBox="0 0 1100 {560 if compact else 620}" role="img" '
+        f'aria-labelledby="{identifier}-title {identifier}-desc" '
+        f'style="width:100%;height:auto;max-width:{680 if compact else 1100}px">',
+        f'<title id="{identifier}-title">Connected anti-roll tank, three-dimensional view</title>',
+        f'<desc id="{identifier}-desc">Axonometric view with proportional recorded leg '
+        'length, width, fill depth and centroid offset. Hull form, tank height above '
+        'fill and conduit section are symbolic; conduit area is a recorded label.</desc>',
+        f'<rect width="1100" height="{560 if compact else 620}" fill="white"/>',
+        f'<defs><marker id="{identifier}-arrow" viewBox="0 0 10 10" refX="5" refY="5" '
+        'markerWidth="6" markerHeight="6" orient="auto-start-reverse">'
+        '<path d="M 9 1 L 1 5 L 9 9" fill="none" stroke="#526579"/></marker></defs>',
+    ]
+
+    def outline(name: str, points: list[tuple[float, float, float]],
+                *, color: str = "#526579", water: bool = False,
+                symbolic: bool = False) -> None:
+        parts.append(f'<polyline data-part="{name}" points="{coordinates(points)}" '
+                     f'fill="{"#b6e4ef" if water else "none"}" stroke="{color}" '
+                     'stroke-width="1.8" '
+                     + ('stroke-dasharray="6 4" ' if symbolic else '') + '/>')
+
+    # Symbolic hull sections are extruded through the recorded tank length.
+    hull_half = offset + width / 2 + 2.5
+    hull_top, hull_bottom = fill + 45 / scale, -60 / scale
+    for y, name in ((length, "hull-back"), (0, "hull-front")):
+        outline(name, [(-hull_half, y, hull_top), (-hull_half + 1.5, y, hull_bottom),
+                       (hull_half - 1.5, y, hull_bottom), (hull_half, y, hull_top)],
+                symbolic=True)
+    for x, z in ((-hull_half, hull_top), (hull_half, hull_top),
+                 (-hull_half + 1.5, hull_bottom), (hull_half - 1.5, hull_bottom)):
+        outline("hull-extrusion", [(x, 0, z), (x, length, z)], symbolic=True)
+
+    # The cross-connecting duct is deliberately drawn with a symbolic section.
+    duct_depth, duct_height = 22 / scale, 14 / scale
+    inner = offset - width / 2
+    outline("conduit-front", [(-inner, 0, 0), (-inner, 0, -duct_height),
+                              (inner, 0, -duct_height), (inner, 0, 0)], color="#0f8a7e")
+    outline("conduit-top", [(-inner, 0, 0), (-inner, duct_depth, 0),
+                            (inner, duct_depth, 0), (inner, 0, 0)], color="#0f8a7e")
+    outline("conduit-side", [(inner, 0, -duct_height),
+                             (inner, duct_depth, -duct_height), (inner, duct_depth, 0)],
+            color="#0f8a7e", symbolic=True)
+    for index, centre in enumerate((-offset, offset), 1):
+        left, right = centre - width / 2, centre + width / 2
+        top = fill + 24 / scale  # Symbolic headroom in drawing units only.
+        outline(f"leg-{index}-front", [(left, 0, fill), (left, 0, 0),
+                                       (right, 0, 0), (right, 0, fill)],
+                color="#0f8a7e", water=True)
+        outline(f"leg-{index}-side", [(right, 0, 0), (right, length, 0),
+                                      (right, length, fill), (right, 0, fill)],
+                color="#0f8a7e", water=True)
+        outline(f"free-surface-{index}", [(left, 0, fill), (right, 0, fill),
+                                          (right, length, fill), (left, length, fill),
+                                          (left, 0, fill)], color="#0f8a7e", water=True)
+        outline(f"leg-{index}-rim", [(left, 0, top), (right, 0, top),
+                                     (right, length, top), (left, length, top),
+                                     (left, 0, top)], symbolic=True)
+        for x, y in ((left, 0), (right, 0), (left, length), (right, length)):
+            outline(f"leg-{index}-headroom", [(x, y, fill), (x, y, top)], symbolic=True)
+
+    def label(text: str, y: int, *, field: str | None = None,
+              color: str = "#16324f") -> None:
+        attribute = f' data-dimension="{field}"' if field else ''
+        parts.append(f'<text x="700" y="{y+4}" font-size="14" fill="{color}"{attribute}>'
+                     f'{html.escape(text)}</text>')
+
+    for index, (centre, x) in enumerate(((-offset, 260), (offset, 480)), 1):
+        target_x, target_y = project(centre, length, fill)
+        parts.append(f'<polyline points="{x+42},118 {target_x:.1f},{target_y:.1f}" '
+                     'fill="none" stroke="#8795a3"/>')
+        parts.append(f'<text x="{x}" y="108" font-size="14">Tank leg {index}</text>')
+    outline("roll-axis", [(0, -2, fill+24/scale), (0, length+2, fill+24/scale)],
+            symbolic=True)
+    hull_x, hull_y = project(hull_half, 0, hull_top)
+    hull_label_y = 220 if compact else 440
+    parts.append(f'<polyline points="{hull_x:.1f},{hull_y:.1f} 670,{hull_label_y} 690,{hull_label_y}" '
+                 'fill="none" stroke="#8795a3"/>')
+    if compact:
+        label("symbolic hull, no hull dimensions", hull_label_y)
+    else:
+        dimensions = (
+            ("leg_length_m", "Each leg length", 160, "#0B3D91",
+             [(-offset-width/2, 0, 0), (-offset-width/2, length, 0)]),
+            ("leg_width_m", "Each leg width", 190, "#0f8a7e",
+             [(-offset-width/2, 0, fill), (-offset+width/2, 0, fill)]),
+            ("fill_depth_m", "Fill depth", 220, "#996b00",
+             [(offset+width/2, 0, 0), (offset+width/2, 0, fill)]),
+            ("centroid_offset_m", "Centroid offset", 250, "#943a78",
+             [(0, 0, fill+24/scale), (offset, 0, fill+24/scale)]),
+        )
+        for field, name, y, color, ends in dimensions:
+            parts.append(f'<polyline data-measure="{field}" points="{coordinates(ends)}" '
+                         f'marker-start="url(#{identifier}-arrow)" '
+                         f'marker-end="url(#{identifier}-arrow)" '
+                         f'fill="none" stroke="{color}" stroke-width="2.5"/>')
+            parts.append(f'<path d="M 650 {y} H 680" stroke="{color}" stroke-width="2.5"/>')
+            label(f"{name} {a[field]:.1f} m", y, field=field, color=color)
+        label(f"Conduit area {a['conduit_area_m2']:.1f} m²", 280, field="conduit_area_m2")
+        label("Free surface in each leg", 310, color="#0f8a7e")
+        parts.append('<path d="M 650 310 H 680" stroke="#0f8a7e" stroke-width="2"/>')
+        parts.append('<text x="430" y="70" font-size="14">Roll axis</text>')
+        axis_x, axis_y = project(0, length+2, fill+24/scale)
+        parts.append(f'<polyline points="460,80 {axis_x:.1f},{axis_y:.1f}" '
+                     'fill="none" stroke="#8795a3"/>')
+        # Direction triad uses the same projection and symbolic arrow lengths.
+        origin = (140, 575)
+        for name, end, text_position in (
+            ("Transverse", (208, 575), (220, 579)),
+            ("Longitudinal", (167.2, 546.4), (180, 545)),
+            ("Vertical", (140, 507), (110, 492)),
+        ):
+            parts.append(f'<polyline points="{origin[0]},{origin[1]} {end[0]},{end[1]}" '
+                         f'marker-end="url(#{identifier}-arrow)" '
+                         'fill="none" stroke="#526579"/>')
+            parts.append(f'<text x="{text_position[0]}" y="{text_position[1]}" '
+                         f'font-size="14">{name}</text>')
+        label("Tank height above fill: symbolic", 350)
+        label("Conduit height: symbolic", 380)
+        label("Conduit section shape: symbolic", 410)
+        label("symbolic hull, no hull dimensions", hull_label_y)
+    return '\n'.join(parts) + '\n</svg>'
+
+
 def chart_specs(record: dict[str, Any]) -> list[tuple]:
     """Select existing calculated samples without interpolation or new cases."""
+    a_min = record["assumptions"]["moment_validated_min_forcing_period_s"]
     cases = [row for row in record["cases"] if row["roll_period_s"] == 18.0]
     reference = [row for row in cases if row["alpha"] == .05]
     response = next(row for row in reference if row["hull_damping_ratio"] == .02)
-    return [
+    specs = [
         ("damping", "Peak roll reduction against hull damping",
          [100 * row["hull_damping_ratio"] for row in reference],
          [("Alpha 0.05", [row["reduction_percent"] for row in reference])],
@@ -434,6 +604,26 @@ def chart_specs(record: dict[str, Any]) -> list[tuple]:
           for damping in sorted({row["hull_damping_ratio"] for row in cases})],
          "Alpha: normalized stiffness (dimensionless)", "Peak roll reduction (%)"),
     ]
+    specs.append(("es-alpha", "Peak roll reduction against alpha", *specs[2][2:], {
+        "outside_band": [[row["tank_peak_period_s"] < a_min
+                          for row in cases if row["hull_damping_ratio"] == damping]
+                         for damping in sorted({row["hull_damping_ratio"] for row in cases})],
+        "highlight_x": .05,
+    }))
+    for identifier, field, title, ylabel in (
+        ("sens-reduction", "reduction_percent", "Peak roll reduction against alpha, all twenty cases of Table A.1",
+         "Peak roll reduction (%)"),
+        ("sens-period", "tank_peak_period_s", "Coupled peak forcing period against alpha, all twenty cases of Table A.1",
+         "Coupled peak forcing period (s)"),
+    ):
+        series = [(f"{period:.0f} s hull, {100*damping:.0f} % damping",
+                   [row[field] for row in record["cases"] if row["roll_period_s"] == period
+                    and row["hull_damping_ratio"] == damping])
+                  for period in (18.0, 21.0) for damping in (0.02, 0.05)]
+        specs.append((identifier, title, list(ALPHAS), series,
+                      "Alpha: normalized stiffness (dimensionless)", ylabel,
+                      {"reference_y": a_min} if identifier == "sens-period" else {}))
+    return specs
 
 
 def source_note() -> str:
@@ -445,6 +635,7 @@ def source_note() -> str:
 def interactive_chart(
     identifier: str, title: str, xs: list[float],
     series: list[tuple[str, list[float]]], xlabel: str, ylabel: str,
+    options: dict[str, Any] | None = None,
 ) -> str:
     """Use identical values for SVG hover targets and downloadable CSV rows."""
     stream = io.StringIO(newline="")
@@ -456,15 +647,24 @@ def interactive_chart(
         f'<label><input type="checkbox" checked aria-controls="{identifier}" '
         f'onchange="toggleSeries(\'{identifier}\', {i}, this.checked)">'
         f'{html.escape(name)}</label> ' for i, (name, _) in enumerate(series))
-    svg = chart_svg(identifier, title, xs, series, xlabel, ylabel,
+    svg = chart_svg(identifier, title, xs, series, xlabel, ylabel, options,
                     supported_from=20 if identifier == "response" else None)
-    number = {"damping": "5.1", "response": "5.2", "alpha": "5.3"}[identifier]
+    number = {"damping": "5.1", "response": "5.2", "alpha": "5.3", "es-alpha": "1.1",
+              "sens-reduction": "A.1", "sens-period": "A.2"}[identifier]
+    caption = title
+    note = ""
+    if identifier == "es-alpha":
+        caption = ("Peak roll reduction against alpha at an 18 s hull roll period, 2 % and 5 % "
+                   "hull damping, with the alpha 0.05 results marked")
+        note = 'Figure 5.3 data: <a href="#fig-alpha">Figure 5.3</a>. '
+    elif identifier == "sens-period":
+        caption += ", with the 20 s lower edge of the moment-fit band drawn"
     return (f'<figure id="fig-{identifier}">{svg}'
-            f'<figcaption>Figure {number} – {html.escape(title)}.</figcaption>'
+            f'<figcaption>Figure {number} – {html.escape(caption)}.</figcaption>'
             f'<div class="series-controls">{controls}</div>'
             f'<a class="chart-export" download="{identifier}.csv" href="data:text/csv;charset=utf-8,'
             f'{quote(stream.getvalue(), safe="")}">Export CSV</a>'
-            '<p class="notes">Source: <a href="#ref-data">[I1]</a>. '
+            f'<p class="notes">{note}Source: <a href="#ref-data">[I1]</a>. '
             '<a href="#sensitivity-notes">Chart notes in Appendix A</a>.</p></figure>')
 
 
@@ -500,7 +700,7 @@ def render(record: dict[str, Any]) -> str:
     natural_period = MODEL.natural_period(
         leg_area=GEOMETRY.leg_area, conduit_area=CONDUIT_AREA,
         fill_depth=GEOMETRY.fill_depth, effective_conduit_length=GEOMETRY.effective_conduit_length)
-    charts = ''.join(interactive_chart(*spec) for spec in chart_specs(record))
+    charts = {spec[0]: interactive_chart(*spec) for spec in chart_specs(record)}
 
     # Input values/units are record.assumptions; table citations identify their
     # existing basis. Values are not selected or recalibrated for presentation.
@@ -573,6 +773,12 @@ nav{{display:none}}a{{color:inherit;text-decoration:none}}details>table{{display
 <li><a href="#limits">7 Limitations</a></li><li><a href="#conclusions">8 Conclusions and next steps</a></li>
 <li><a href="#references">9 References</a></li><li><a href="#sensitivity">Appendix A Sensitivity matrix</a></li>
 <li><a href="#reproduce">Appendix B Review status</a></li><li><a href="#revisions">Appendix C Revision history</a></li>
+</ul><ul aria-label="Figures">
+<li><a href="#fig-es-alpha">Figure 1.1</a></li><li><a href="#fig-es-3d">Figure 1.2</a></li>
+<li><a href="#fig-section">Figure 3.1</a></li><li><a href="#fig-3d">Figure 3.2</a></li>
+<li><a href="#fig-damping">Figure 5.1</a></li><li><a href="#fig-response">Figure 5.2</a></li>
+<li><a href="#fig-alpha">Figure 5.3</a></li><li><a href="#fig-sens-reduction">Figure A.1</a></li>
+<li><a href="#fig-sens-period">Figure A.2</a></li>
 </ul></nav>
 <section id="summary"><h2>1 Executive summary</h2>
 <p>The coupled model can be used to compare generic hull roll with and without the connected tank.
@@ -591,7 +797,10 @@ See <a href="#validation">Section 6</a>.</li>
 Every sampled forcing period below 20 s lies outside the model's stated moment-fit band (≥20 s), including parts of the 21 s sweep.
 The {lower_damping_benefit:.1f} % peak at {case(0.02)['tank_peak_period_s']:.1f} s lies outside it.
 See <a href="#sensitivity">Appendix A</a>.</li>
-</ul></section>
+</ul>
+{charts['es-alpha']}
+<figure id="fig-es-3d">{schematic_3d(record, compact=True)}<figcaption>Figure 1.2 – The connected anti-roll tank in a generic hull, three-dimensional view (detail in <a href="#fig-3d">Figure 3.2</a>).</figcaption></figure>
+</section>
 <section id="introduction"><h2>2 Introduction</h2>
 <p>The generic hull roll comparison describes the effect of a connected anti-roll tank for engineers considering the simplified coupled model.
 The scope is a normalized hull and the public reference tank, with no actual hull mass, inertia or restoring.</p>
@@ -606,12 +815,15 @@ The input values and their units are listed in <a href="#inputs">Table 3.1</a>.<
 Conduit area A_c is 6.8 m². The model supplies effective length, fluid properties and calibrated loss parameters.</p>
 <table id="inputs"><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis</th></tr></thead>
 <tbody>{inputs}</tbody><caption>Table 3.1 – Recorded tank and normalized-hull inputs.</caption></table>
+<p>The recorded inputs are illustrated by <a href="#fig-section">Figure 3.1</a> and <a href="#fig-3d">Figure 3.2</a>.</p>
 <p class="notes">In the loss-coefficient unit, n is the loss area exponent in Table 3.1.</p>
 <p>Calibration transfer means using the model's calibrated loss parameters in this reference-tank and generic-hull calculation: ASSUMED - to be confirmed.
 These screening estimates use the public reference tank, which differs from the illustrative tank on the linked study page <a href="#ref-study">[I3]</a>.</p>
 <p>The transverse leg widths, fill depths and centroid offsets in <a href="#fig-section">Figure 3.1</a> use the dimensions in <a href="#inputs">Table 3.1</a>.
 Tank dimensions are recorded assumptions; the hull outline supplies no hull dimensions.</p>
 <figure id="fig-section">{schematic(record)}<figcaption>Figure 3.1 – Connected-tank transverse section.</figcaption></figure>
+<p><a href="#fig-3d">Figure 3.2</a> shows the same recorded tank dimensions in three dimensions.</p>
+<figure id="fig-3d">{schematic_3d(record)}<figcaption>Figure 3.2 – Connected anti-roll tank, three-dimensional view: the two legs, the fill, the cross-connecting conduit and the generic hull section around them.</figcaption></figure>
 <h3>3.3 Environmental data</h3>
 <p>No sea state is specified. Forcing stays fixed within each tank-on and tank-off comparison and is rescaled between damping groups.</p>
 <h3>3.4 Vessel data</h3>
@@ -653,7 +865,7 @@ The reference geometry is retained rather than tuned to the 18 s hull; the tank 
 The full sensitivity matrix and damping comparison are in <a href="#sensitivity">Appendix A</a>.</p>
 <p>The amplification factor multiplies the normalized wave moment to give roll in radians.
 The bare factor is 1/(2ζ) at the nominal hull resonance; a normalized moment of 2ζ times 5° in radians gives the 5° bare roll used here.</p>
-{charts}
+{charts['damping']}{charts['response']}{charts['alpha']}
 <h3 id="penalty">5.2 Long-period penalty</h3>
 <p>Slow water transfer reduces the effective hull restoring. In the slow-forcing limit, the roll ratio approaches 1/(1−α).
 At alpha 0.05, that limit gives {100 * (1 / (1 - 0.05) - 1):.1f} % more roll.</p>
@@ -715,6 +927,7 @@ Hand-check inputs and rational oracle values are defined in test_undamped_two_de
 <table id="sensitivity-table"><thead><tr><th>Hull roll period (s)</th><th>Hull damping (% of critical)</th><th>Alpha (1)</th>
 <th>Peak reduction (%)</th><th>Coupled peak forcing period (s)</th></tr></thead><tbody>{chr(10).join(rows)}</tbody>
 <caption>Table A.1 – Peak reduction sensitivity matrix.</caption></table>
+{charts['sens-reduction']}{charts['sens-period']}
 <p id="damping-comparison">In this case (18 s, alpha 0.05), hull damping roughly halves the benefit (ratio {ratio:.3f}).
 The ratio of the 5 % benefit to the 2 % benefit ranges from {min(ratios):.2f} to {max(ratios):.2f} across the matrix.
 For alpha 0.02, 0.05, 0.10, 0.15, 0.20 respectively, the ratios are {ratio_groups}.
@@ -987,7 +1200,7 @@ def test_summary_qualifies_fit_and_names_slow_forcing_limit(builder, record):
     assert "published moment" not in page
 
 
-@pytest.mark.parametrize("index", [0, 1, 2])
+@pytest.mark.parametrize("index", range(6))
 def test_chart_ticks_are_round_and_distinct(builder, record, index):
     from xml.etree import ElementTree
 
@@ -999,9 +1212,9 @@ def test_chart_ticks_are_round_and_distinct(builder, record, index):
         assert len(labels) == len(set(labels))
         values = [float(label) for label in labels]
         assert values == sorted(values)
-        if axis == "y":
+        if axis == "y" and index != 5:
             assert all(value % 5 == 0 for value in values)
-        if axis == "x" and index == 2:
+        if axis == "x" and index >= 2:
             assert labels == ["0.00", "0.05", "0.10", "0.15", "0.20"]
 
 
@@ -1043,7 +1256,7 @@ def test_schematic_uses_record_dimensions(builder, record):
     assert 'Hull section' in svg
 
 
-@pytest.mark.parametrize("index", [0, 1, 2])
+@pytest.mark.parametrize("index", range(6))
 def test_chart_points_and_csv_have_identical_values(builder, record, index):
     import csv
     import io
@@ -1069,7 +1282,7 @@ def test_chart_points_and_csv_have_identical_values(builder, record, index):
     parsed = Chart()
     rendered = builder.interactive_chart(*chart)
     parsed.feed(rendered)
-    identifier, title, xs, series, xlabel, ylabel = chart
+    identifier, title, xs, series, xlabel, ylabel, *_ = chart
     expected = [(i, x, y) for i, (_, ys) in enumerate(series) for x, y in zip(xs, ys)]
     assert parsed.points == expected
     assert len(parsed.exports) == 1
@@ -1097,11 +1310,14 @@ def test_chart_points_and_csv_have_identical_values(builder, record, index):
     (0, "9d7328e01507f4bc90d66742e191c137322e4e9dad32b6ad792a8747c87592b1"),
     (1, "16cdfb89566bafa1e483c12db134f419a363c93265c0f1f0a091070bf0797a8e"),
     (2, "242d3beda99f74a7096adeb614f963214c2bb48b968b549f05492dec0bf16bca"),
+    (3, "242d3beda99f74a7096adeb614f963214c2bb48b968b549f05492dec0bf16bca"),
+    (4, "5b33752a322e0e72a35713adc49273fac7be8636ec733fcfa27ad3d8e8171730"),
+    (5, "87287dc72f3273cd608a1902db184cc04616ba6324b93cd032f3aa1666d2a304"),
 ])
 def test_every_visible_chart_value_matches_csv_and_approved_page(
     builder, record, index, approved_digest,
 ):
-    """Pin all 254 point values and title/ARIA strings from a38468b2."""
+    """Retain the original 254 values and pin the additional record selections."""
     import csv
     import io
     import re
@@ -1119,7 +1335,7 @@ def test_every_visible_chart_value_matches_csv_and_approved_page(
         export = re.search(r'href="data:text/csv;charset=utf-8,([^"]+)"', figure).group(1)
         rows = list(csv.reader(io.StringIO(unquote(export))))[1:]
         points = svg.findall('.//circle')
-        assert len(points) == len(rows) == (2, 242, 10)[index]
+        assert len(points) == len(rows) == (2, 242, 10, 10, 20, 20)[index]
         ticks = [svg.findall(f'.//text[@data-axis="{axis}"]') for axis in ("x", "y")]
 
         def coordinate(value, axis):
@@ -1364,12 +1580,15 @@ def test_revision_table_is_visible_complete_and_checked(builder, record):
     assert 'href="#revisions"' not in summary
 
 
-def test_schematic_labels_clear_drawn_segments(builder, record):
+@pytest.mark.parametrize("view", ["section", "3d", "compact"])
+def test_schematic_labels_clear_drawn_segments(builder, record, view):
     """Conservative character boxes include a margin for glyph descenders."""
     from xml.etree import ElementTree
     import re
 
-    svg = ElementTree.fromstring(builder.schematic(record))
+    drawing = (builder.schematic(record) if view == "section" else
+               builder.schematic_3d(record, compact=view == "compact"))
+    svg = ElementTree.fromstring(drawing)
     segments, labels = [], []
 
     def collect(node, font_size=14):
@@ -1475,6 +1694,187 @@ def test_chart_shading_units_and_shortened_cross_references(builder, record):
     sentence = "The model's stated moment fit does not validate coupled hull reduction."
     assert page.count(sentence) == 1
     assert sentence in page.split('<section id="limits">')[1].split('</section>')[0]
+
+
+def test_summary_figures_precede_introduction_and_share_alpha_data(builder, record):
+    import re
+    from xml.etree import ElementTree
+
+    page = builder.render(record)
+    summary = page.split('<section id="summary">')[1].split('</section>')[0]
+    assert summary.index('</ul>') < summary.index('id="fig-es-alpha"')
+    assert summary.index('Figure 1.1') < summary.index('Figure 1.2')
+    assert 'id="fig-es-3d"' in summary
+    assert 'href="#fig-alpha">Figure 5.3</a>' in summary
+    assert 'href="#fig-3d">Figure 3.2</a>' in summary
+    assert '[[FIGURE:' not in page and '[[SCHEMATIC:' not in page
+    figures = {identifier: re.search(
+        r'<figure id="fig-' + identifier + r'">.*?</figure>', page, re.S).group()
+        for identifier in ('es-alpha', 'alpha')}
+    svgs = {key: ElementTree.fromstring(re.search(r'<svg\b.*?</svg>', value, re.S).group())
+            for key, value in figures.items()}
+    points = {key: svg.findall('.//circle') for key, svg in svgs.items()}
+    assert [(p.get('data-x'), p.get('data-y')) for p in points['es-alpha']] == [
+        (p.get('data-x'), p.get('data-y')) for p in points['alpha']]
+    expected = [row for row in record['cases'] if row['roll_period_s'] == 18.0]
+    assert len(points['es-alpha']) == len(expected)
+    for point, row in zip(points['es-alpha'], expected):
+        outside = row['tank_peak_period_s'] < 20
+        assert (point.get('fill') == 'white') == outside
+        assert point.get('data-outside-band') == str(outside).lower()
+        assert point.get('stroke')
+        assert point.get('tabindex') == '0'
+    labels = svgs['es-alpha'].findall('.//text[@data-highlight-x="0.05"]')
+    assert [label.text for label in labels] == ['46.1 %', '23.3 %']
+    assert "outside the model's moment-fit band (forcing period below 20 s)" in figures['es-alpha']
+
+
+def test_3d_schematic_dimensions_and_compact_labels(builder, record):
+    import copy
+    from xml.etree import ElementTree
+
+    expected = {
+        'leg_length_m': 'Each leg length', 'leg_width_m': 'Each leg width',
+        'fill_depth_m': 'Fill depth', 'centroid_offset_m': 'Centroid offset',
+        'conduit_area_m2': 'Conduit area',
+    }
+    svg = ElementTree.fromstring(builder.schematic_3d(record))
+    for field, name in expected.items():
+        labels = svg.findall(f'.//text[@data-dimension="{field}"]')
+        unit = 'm²' if field == 'conduit_area_m2' else 'm'
+        assert [node.text for node in labels] == [f'{name} {record["assumptions"][field]:.1f} {unit}']
+        altered = copy.deepcopy(record)
+        altered['assumptions'][field] += 1
+        changed = ElementTree.fromstring(builder.schematic_3d(altered))
+        assert changed.find(f'.//text[@data-dimension="{field}"]').text == (
+            f'{name} {altered["assumptions"][field]:.1f} {unit}')
+        if field != 'conduit_area_m2':
+            assert [p.get('points') for p in changed.findall('.//polyline')] != [
+                p.get('points') for p in svg.findall('.//polyline')]
+    for label in svg.findall('.//text'):
+        x, y = float(label.get('x')), float(label.get('y'))
+        assert 0 <= x and x + len(label.text) * 14 * .6 <= 1100
+        assert 14 <= y <= 620
+    text = ' '.join(svg.itertext())
+    for phrase in ('symbolic hull, no hull dimensions', 'Tank height above fill: symbolic',
+                   'Conduit height: symbolic', 'Free surface', 'Roll axis',
+                   'Transverse', 'Longitudinal', 'Vertical'):
+        assert phrase in text
+    compact = ElementTree.fromstring(builder.schematic_3d(record, compact=True))
+    assert [node.text for node in compact.findall('.//text')] == [
+        'Tank leg 1', 'Tank leg 2', 'symbolic hull, no hull dimensions']
+    assert [node.get('points') for node in compact.findall('.//polyline[@data-part]')] == [
+        node.get('points') for node in svg.findall('.//polyline[@data-part]')]
+
+
+@pytest.mark.parametrize('identifier,column,field', [
+    ('sens-reduction', 3, 'reduction_percent'),
+    ('sens-period', 4, 'tank_peak_period_s'),
+])
+def test_appendix_charts_equal_table_csv_and_record(builder, record, identifier, column, field):
+    import csv
+    import io
+    import re
+    from urllib.parse import unquote
+    from xml.etree import ElementTree
+
+    saved = json.loads((ROOT / builder.DATA).read_text(encoding='utf-8'))
+    page = builder.render(saved)
+    appendix = page.split('<section id="sensitivity">')[1].split('</section>')[0]
+    table = ElementTree.fromstring(re.search(r'<table.*?</table>', appendix, re.S).group())
+    figure = re.search(r'<figure id="fig-' + identifier + r'">.*?</figure>', appendix, re.S).group()
+    assert appendix.index('</table>') < appendix.index(f'id="fig-{identifier}"')
+    svg = ElementTree.fromstring(re.search(r'<svg\b.*?</svg>', figure, re.S).group())
+    points = svg.findall('.//circle')
+    export = re.search(r'href="data:text/csv;charset=utf-8,([^"]+)"', figure).group(1)
+    rows = list(csv.reader(io.StringIO(unquote(export))))[1:]
+    assert len(points) == len(rows) == len(saved['cases']) == len(table.findall('tbody/tr')) == 20
+    assert len(svg.findall('.//g[@data-series]')) == 4
+    for point, csv_row, case, computed, cells in zip(
+        points, rows, saved['cases'], record['cases'], table.findall('tbody/tr'),
+    ):
+        assert float(point.get('data-x')) == float(csv_row[1]) == case['alpha']
+        assert float(point.get('data-y')) == float(csv_row[2]) == case[field]
+        assert case[field] == builder.canonical_numbers(computed)[field]
+        assert f'{float(point.get("data-y")):.1f}' == cells[column].text
+        assert cells[0].text == f'{case["roll_period_s"]:.0f}'
+        assert cells[1].text == f'{100 * case["hull_damping_ratio"]:.0f}'
+        assert cells[2].text == f'{case["alpha"]:.2f}'
+    if identifier == 'sens-period':
+        line = svg.find('.//path[@data-reference-y="20.0"]')
+        assert line is not None
+        assert '20 s lower edge of moment-fit band' in ''.join(svg.itertext())
+
+
+def test_long_tables_have_figures_in_their_section(builder, record):
+    from html.parser import HTMLParser
+
+    # Unlike inputs share dimensioned views rather than a meaningless common axis.
+    allow_list = {'inputs': ({'fig-section', 'fig-3d'},
+                            'Recorded unlike inputs are illustrated by Figures 3.1 and 3.2.')}
+
+    class Sections(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.sections, self.section, self.table, self.in_body = {}, None, None, False
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == 'section':
+                self.section = attrs['id']
+                self.sections[self.section] = {'figures': set(), 'tables': []}
+            if tag == 'figure' and self.section:
+                self.sections[self.section]['figures'].add(attrs['id'])
+            if tag == 'table':
+                self.table = [attrs.get('id'), 0]
+            if tag == 'tbody':
+                self.in_body = True
+            if tag == 'tr' and self.in_body:
+                self.table[1] += 1
+
+        def handle_endtag(self, tag):
+            if tag == 'tbody':
+                self.in_body = False
+            if tag == 'table':
+                self.sections[self.section]['tables'].append(self.table)
+                self.table = None
+            if tag == 'section':
+                self.section = None
+
+    page = builder.render(record)
+    parsed = Sections()
+    parsed.feed(page)
+    large = []
+    for section in parsed.sections.values():
+        for identifier, count in section['tables']:
+            if count <= 8:
+                continue
+            large.append(identifier)
+            if identifier in allow_list:
+                figures, reason = allow_list[identifier]
+                assert reason and figures <= section['figures']
+                after_table = page.split('<table id="inputs">')[1].split('</table>')[1].split('</p>')[0]
+                assert 'href="#fig-section">Figure 3.1</a>' in after_table
+                assert 'href="#fig-3d">Figure 3.2</a>' in after_table
+            else:
+                assert section['figures'], (identifier, count)
+    assert large == ['inputs', 'sensitivity-table']
+
+
+def test_new_figure_numbering_contents_and_revision(builder, record):
+    page = builder.render(record)
+    captions = {'es-alpha': '1.1', 'es-3d': '1.2', 'section': '3.1', '3d': '3.2',
+                'damping': '5.1', 'response': '5.2', 'alpha': '5.3',
+                'sens-reduction': 'A.1', 'sens-period': 'A.2'}
+    import re
+    nav = page.split('<nav')[1].split('</nav>')[0]
+    for identifier, number in captions.items():
+        figure = re.search(r'<figure id="fig-' + identifier + r'">.*?</figure>', page, re.S).group()
+        assert f'<figcaption>Figure {number} ' in figure
+        assert f'href="#fig-{identifier}">Figure {number}</a>' in nav
+    assert builder.REVISIONS[-1] == (
+        'R4', '2026-10-26', 'summary chart and 3D schematic, appendix plots',
+    )
 '''
 
 

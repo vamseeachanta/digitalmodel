@@ -204,7 +204,7 @@ def test_summary_qualifies_fit_and_names_slow_forcing_limit(builder, record):
     assert "published moment" not in page
 
 
-@pytest.mark.parametrize("index", [0, 1, 2])
+@pytest.mark.parametrize("index", range(6))
 def test_chart_ticks_are_round_and_distinct(builder, record, index):
     from xml.etree import ElementTree
 
@@ -216,9 +216,9 @@ def test_chart_ticks_are_round_and_distinct(builder, record, index):
         assert len(labels) == len(set(labels))
         values = [float(label) for label in labels]
         assert values == sorted(values)
-        if axis == "y":
+        if axis == "y" and index != 5:
             assert all(value % 5 == 0 for value in values)
-        if axis == "x" and index == 2:
+        if axis == "x" and index >= 2:
             assert labels == ["0.00", "0.05", "0.10", "0.15", "0.20"]
 
 
@@ -260,7 +260,7 @@ def test_schematic_uses_record_dimensions(builder, record):
     assert 'Hull section' in svg
 
 
-@pytest.mark.parametrize("index", [0, 1, 2])
+@pytest.mark.parametrize("index", range(6))
 def test_chart_points_and_csv_have_identical_values(builder, record, index):
     import csv
     import io
@@ -286,7 +286,7 @@ def test_chart_points_and_csv_have_identical_values(builder, record, index):
     parsed = Chart()
     rendered = builder.interactive_chart(*chart)
     parsed.feed(rendered)
-    identifier, title, xs, series, xlabel, ylabel = chart
+    identifier, title, xs, series, xlabel, ylabel, *_ = chart
     expected = [(i, x, y) for i, (_, ys) in enumerate(series) for x, y in zip(xs, ys)]
     assert parsed.points == expected
     assert len(parsed.exports) == 1
@@ -314,11 +314,14 @@ def test_chart_points_and_csv_have_identical_values(builder, record, index):
     (0, "9d7328e01507f4bc90d66742e191c137322e4e9dad32b6ad792a8747c87592b1"),
     (1, "16cdfb89566bafa1e483c12db134f419a363c93265c0f1f0a091070bf0797a8e"),
     (2, "242d3beda99f74a7096adeb614f963214c2bb48b968b549f05492dec0bf16bca"),
+    (3, "242d3beda99f74a7096adeb614f963214c2bb48b968b549f05492dec0bf16bca"),
+    (4, "5b33752a322e0e72a35713adc49273fac7be8636ec733fcfa27ad3d8e8171730"),
+    (5, "87287dc72f3273cd608a1902db184cc04616ba6324b93cd032f3aa1666d2a304"),
 ])
 def test_every_visible_chart_value_matches_csv_and_approved_page(
     builder, record, index, approved_digest,
 ):
-    """Pin all 254 point values and title/ARIA strings from a38468b2."""
+    """Retain the original 254 values and pin the additional record selections."""
     import csv
     import io
     import re
@@ -336,7 +339,7 @@ def test_every_visible_chart_value_matches_csv_and_approved_page(
         export = re.search(r'href="data:text/csv;charset=utf-8,([^"]+)"', figure).group(1)
         rows = list(csv.reader(io.StringIO(unquote(export))))[1:]
         points = svg.findall('.//circle')
-        assert len(points) == len(rows) == (2, 242, 10)[index]
+        assert len(points) == len(rows) == (2, 242, 10, 10, 20, 20)[index]
         ticks = [svg.findall(f'.//text[@data-axis="{axis}"]') for axis in ("x", "y")]
 
         def coordinate(value, axis):
@@ -581,12 +584,15 @@ def test_revision_table_is_visible_complete_and_checked(builder, record):
     assert 'href="#revisions"' not in summary
 
 
-def test_schematic_labels_clear_drawn_segments(builder, record):
+@pytest.mark.parametrize("view", ["section", "3d", "compact"])
+def test_schematic_labels_clear_drawn_segments(builder, record, view):
     """Conservative character boxes include a margin for glyph descenders."""
     from xml.etree import ElementTree
     import re
 
-    svg = ElementTree.fromstring(builder.schematic(record))
+    drawing = (builder.schematic(record) if view == "section" else
+               builder.schematic_3d(record, compact=view == "compact"))
+    svg = ElementTree.fromstring(drawing)
     segments, labels = [], []
 
     def collect(node, font_size=14):
@@ -692,3 +698,184 @@ def test_chart_shading_units_and_shortened_cross_references(builder, record):
     sentence = "The model's stated moment fit does not validate coupled hull reduction."
     assert page.count(sentence) == 1
     assert sentence in page.split('<section id="limits">')[1].split('</section>')[0]
+
+
+def test_summary_figures_precede_introduction_and_share_alpha_data(builder, record):
+    import re
+    from xml.etree import ElementTree
+
+    page = builder.render(record)
+    summary = page.split('<section id="summary">')[1].split('</section>')[0]
+    assert summary.index('</ul>') < summary.index('id="fig-es-alpha"')
+    assert summary.index('Figure 1.1') < summary.index('Figure 1.2')
+    assert 'id="fig-es-3d"' in summary
+    assert 'href="#fig-alpha">Figure 5.3</a>' in summary
+    assert 'href="#fig-3d">Figure 3.2</a>' in summary
+    assert '[[FIGURE:' not in page and '[[SCHEMATIC:' not in page
+    figures = {identifier: re.search(
+        r'<figure id="fig-' + identifier + r'">.*?</figure>', page, re.S).group()
+        for identifier in ('es-alpha', 'alpha')}
+    svgs = {key: ElementTree.fromstring(re.search(r'<svg\b.*?</svg>', value, re.S).group())
+            for key, value in figures.items()}
+    points = {key: svg.findall('.//circle') for key, svg in svgs.items()}
+    assert [(p.get('data-x'), p.get('data-y')) for p in points['es-alpha']] == [
+        (p.get('data-x'), p.get('data-y')) for p in points['alpha']]
+    expected = [row for row in record['cases'] if row['roll_period_s'] == 18.0]
+    assert len(points['es-alpha']) == len(expected)
+    for point, row in zip(points['es-alpha'], expected):
+        outside = row['tank_peak_period_s'] < 20
+        assert (point.get('fill') == 'white') == outside
+        assert point.get('data-outside-band') == str(outside).lower()
+        assert point.get('stroke')
+        assert point.get('tabindex') == '0'
+    labels = svgs['es-alpha'].findall('.//text[@data-highlight-x="0.05"]')
+    assert [label.text for label in labels] == ['46.1 %', '23.3 %']
+    assert "outside the model's moment-fit band (forcing period below 20 s)" in figures['es-alpha']
+
+
+def test_3d_schematic_dimensions_and_compact_labels(builder, record):
+    import copy
+    from xml.etree import ElementTree
+
+    expected = {
+        'leg_length_m': 'Each leg length', 'leg_width_m': 'Each leg width',
+        'fill_depth_m': 'Fill depth', 'centroid_offset_m': 'Centroid offset',
+        'conduit_area_m2': 'Conduit area',
+    }
+    svg = ElementTree.fromstring(builder.schematic_3d(record))
+    for field, name in expected.items():
+        labels = svg.findall(f'.//text[@data-dimension="{field}"]')
+        unit = 'm²' if field == 'conduit_area_m2' else 'm'
+        assert [node.text for node in labels] == [f'{name} {record["assumptions"][field]:.1f} {unit}']
+        altered = copy.deepcopy(record)
+        altered['assumptions'][field] += 1
+        changed = ElementTree.fromstring(builder.schematic_3d(altered))
+        assert changed.find(f'.//text[@data-dimension="{field}"]').text == (
+            f'{name} {altered["assumptions"][field]:.1f} {unit}')
+        if field != 'conduit_area_m2':
+            assert [p.get('points') for p in changed.findall('.//polyline')] != [
+                p.get('points') for p in svg.findall('.//polyline')]
+    for label in svg.findall('.//text'):
+        x, y = float(label.get('x')), float(label.get('y'))
+        assert 0 <= x and x + len(label.text) * 14 * .6 <= 1100
+        assert 14 <= y <= 620
+    text = ' '.join(svg.itertext())
+    for phrase in ('symbolic hull, no hull dimensions', 'Tank height above fill: symbolic',
+                   'Conduit height: symbolic', 'Free surface', 'Roll axis',
+                   'Transverse', 'Longitudinal', 'Vertical'):
+        assert phrase in text
+    compact = ElementTree.fromstring(builder.schematic_3d(record, compact=True))
+    assert [node.text for node in compact.findall('.//text')] == [
+        'Tank leg 1', 'Tank leg 2', 'symbolic hull, no hull dimensions']
+    assert [node.get('points') for node in compact.findall('.//polyline[@data-part]')] == [
+        node.get('points') for node in svg.findall('.//polyline[@data-part]')]
+
+
+@pytest.mark.parametrize('identifier,column,field', [
+    ('sens-reduction', 3, 'reduction_percent'),
+    ('sens-period', 4, 'tank_peak_period_s'),
+])
+def test_appendix_charts_equal_table_csv_and_record(builder, record, identifier, column, field):
+    import csv
+    import io
+    import re
+    from urllib.parse import unquote
+    from xml.etree import ElementTree
+
+    saved = json.loads((ROOT / builder.DATA).read_text(encoding='utf-8'))
+    page = builder.render(saved)
+    appendix = page.split('<section id="sensitivity">')[1].split('</section>')[0]
+    table = ElementTree.fromstring(re.search(r'<table.*?</table>', appendix, re.S).group())
+    figure = re.search(r'<figure id="fig-' + identifier + r'">.*?</figure>', appendix, re.S).group()
+    assert appendix.index('</table>') < appendix.index(f'id="fig-{identifier}"')
+    svg = ElementTree.fromstring(re.search(r'<svg\b.*?</svg>', figure, re.S).group())
+    points = svg.findall('.//circle')
+    export = re.search(r'href="data:text/csv;charset=utf-8,([^"]+)"', figure).group(1)
+    rows = list(csv.reader(io.StringIO(unquote(export))))[1:]
+    assert len(points) == len(rows) == len(saved['cases']) == len(table.findall('tbody/tr')) == 20
+    assert len(svg.findall('.//g[@data-series]')) == 4
+    for point, csv_row, case, computed, cells in zip(
+        points, rows, saved['cases'], record['cases'], table.findall('tbody/tr'),
+    ):
+        assert float(point.get('data-x')) == float(csv_row[1]) == case['alpha']
+        assert float(point.get('data-y')) == float(csv_row[2]) == case[field]
+        assert case[field] == builder.canonical_numbers(computed)[field]
+        assert f'{float(point.get("data-y")):.1f}' == cells[column].text
+        assert cells[0].text == f'{case["roll_period_s"]:.0f}'
+        assert cells[1].text == f'{100 * case["hull_damping_ratio"]:.0f}'
+        assert cells[2].text == f'{case["alpha"]:.2f}'
+    if identifier == 'sens-period':
+        line = svg.find('.//path[@data-reference-y="20.0"]')
+        assert line is not None
+        assert '20 s lower edge of moment-fit band' in ''.join(svg.itertext())
+
+
+def test_long_tables_have_figures_in_their_section(builder, record):
+    from html.parser import HTMLParser
+
+    # Unlike inputs share dimensioned views rather than a meaningless common axis.
+    allow_list = {'inputs': ({'fig-section', 'fig-3d'},
+                            'Recorded unlike inputs are illustrated by Figures 3.1 and 3.2.')}
+
+    class Sections(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.sections, self.section, self.table, self.in_body = {}, None, None, False
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == 'section':
+                self.section = attrs['id']
+                self.sections[self.section] = {'figures': set(), 'tables': []}
+            if tag == 'figure' and self.section:
+                self.sections[self.section]['figures'].add(attrs['id'])
+            if tag == 'table':
+                self.table = [attrs.get('id'), 0]
+            if tag == 'tbody':
+                self.in_body = True
+            if tag == 'tr' and self.in_body:
+                self.table[1] += 1
+
+        def handle_endtag(self, tag):
+            if tag == 'tbody':
+                self.in_body = False
+            if tag == 'table':
+                self.sections[self.section]['tables'].append(self.table)
+                self.table = None
+            if tag == 'section':
+                self.section = None
+
+    page = builder.render(record)
+    parsed = Sections()
+    parsed.feed(page)
+    large = []
+    for section in parsed.sections.values():
+        for identifier, count in section['tables']:
+            if count <= 8:
+                continue
+            large.append(identifier)
+            if identifier in allow_list:
+                figures, reason = allow_list[identifier]
+                assert reason and figures <= section['figures']
+                after_table = page.split('<table id="inputs">')[1].split('</table>')[1].split('</p>')[0]
+                assert 'href="#fig-section">Figure 3.1</a>' in after_table
+                assert 'href="#fig-3d">Figure 3.2</a>' in after_table
+            else:
+                assert section['figures'], (identifier, count)
+    assert large == ['inputs', 'sensitivity-table']
+
+
+def test_new_figure_numbering_contents_and_revision(builder, record):
+    page = builder.render(record)
+    captions = {'es-alpha': '1.1', 'es-3d': '1.2', 'section': '3.1', '3d': '3.2',
+                'damping': '5.1', 'response': '5.2', 'alpha': '5.3',
+                'sens-reduction': 'A.1', 'sens-period': 'A.2'}
+    import re
+    nav = page.split('<nav')[1].split('</nav>')[0]
+    for identifier, number in captions.items():
+        figure = re.search(r'<figure id="fig-' + identifier + r'">.*?</figure>', page, re.S).group()
+        assert f'<figcaption>Figure {number} ' in figure
+        assert f'href="#fig-{identifier}">Figure {number}</a>' in nav
+    assert builder.REVISIONS[-1] == (
+        'R4', '2026-10-26', 'summary chart and 3D schematic, appendix plots',
+    )

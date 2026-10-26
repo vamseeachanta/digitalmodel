@@ -44,6 +44,12 @@ nav{display:none}a{color:inherit;text-decoration:none}details>table{display:tabl
 <li><a href="#limits">7 Limitations</a></li><li><a href="#conclusions">8 Conclusions and next steps</a></li>
 <li><a href="#references">9 References</a></li><li><a href="#sensitivity">Appendix A Sensitivity matrix</a></li>
 <li><a href="#reproduce">Appendix B Review status</a></li><li><a href="#revisions">Appendix C Revision history</a></li>
+</ul><ul aria-label="Figures">
+<li><a href="#fig-es-alpha">Figure 1.1</a></li><li><a href="#fig-es-3d">Figure 1.2</a></li>
+<li><a href="#fig-section">Figure 3.1</a></li><li><a href="#fig-3d">Figure 3.2</a></li>
+<li><a href="#fig-damping">Figure 5.1</a></li><li><a href="#fig-response">Figure 5.2</a></li>
+<li><a href="#fig-alpha">Figure 5.3</a></li><li><a href="#fig-sens-reduction">Figure A.1</a></li>
+<li><a href="#fig-sens-period">Figure A.2</a></li>
 </ul></nav>
 <section id="summary"><h2>1 Executive summary</h2>
 <p>The coupled model can be used to compare generic hull roll with and without the connected tank.
@@ -62,7 +68,89 @@ See <a href="#validation">Section 6</a>.</li>
 Every sampled forcing period below 20 s lies outside the model's stated moment-fit band (≥20 s), including parts of the 21 s sweep.
 The 46.1 % peak at 18.5 s lies outside it.
 See <a href="#sensitivity">Appendix A</a>.</li>
-</ul></section>
+</ul>
+<figure id="fig-es-alpha"><svg id="es-alpha" class="chart" viewBox="0 0 820 440" role="img" aria-labelledby="es-alpha-title es-alpha-desc" style="width:100%;height:auto">
+<title id="es-alpha-title">Peak roll reduction against alpha</title>
+<desc id="es-alpha-desc">Peak roll reduction (%) against Alpha: normalized stiffness (dimensionless). Hull damping 2 %; Hull damping 5 %.</desc>
+<rect width="820" height="440" fill="white"/>
+<text class="chart-title" x="84" y="22" fill="#16324f">Peak roll reduction against alpha</text>
+<path d="M 84 300.0 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="304.0" text-anchor="end" font-size="12">0</text>
+<path d="M 84 236.5 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="240.5" text-anchor="end" font-size="12">20</text>
+<path d="M 84 173.0 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="177.0" text-anchor="end" font-size="12">40</text>
+<path d="M 84 109.5 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="113.5" text-anchor="end" font-size="12">60</text>
+<path d="M 84 46.0 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="50.0" text-anchor="end" font-size="12">80</text>
+<text data-axis="x" x="84.0" y="322" text-anchor="middle" font-size="12">0.00</text>
+<text data-axis="x" x="255.5" y="322" text-anchor="middle" font-size="12">0.05</text>
+<text data-axis="x" x="427.0" y="322" text-anchor="middle" font-size="12">0.10</text>
+<text data-axis="x" x="598.5" y="322" text-anchor="middle" font-size="12">0.15</text>
+<text data-axis="x" x="770.0" y="322" text-anchor="middle" font-size="12">0.20</text>
+<text class="axis-title" x="427" y="345" text-anchor="middle">Alpha: normalized stiffness (dimensionless)</text>
+<text class="axis-title" transform="translate(18 175) rotate(-90)" text-anchor="middle">Peak roll reduction (%)</text>
+<g data-series="0"><polyline points="152.6,223.0 255.5,153.6 427.0,105.1 598.5,90.5 770.0,86.6" fill="none" stroke="#0B3D91" stroke-width="2"/>
+<text x="84" y="365" fill="#0B3D91" font-size="12">Hull damping 2 %</text>
+<circle cx="152.6" cy="223.0" r="2.5" fill="white" data-outside-band="true" stroke="#0B3D91" stroke-width="1.8" tabindex="0" data-series="0" data-x="0.02" data-y="24.2533874028" aria-label="Hull damping 2 %: 0.02, 24.2533874028"><title>Hull damping 2 %: 0.02, 24.2533874028</title></circle>
+<circle cx="255.5" cy="153.6" r="4.5" fill="white" data-outside-band="true" stroke="#0B3D91" stroke-width="1.8" tabindex="0" data-series="0" data-x="0.05" data-y="46.1131587008" aria-label="Hull damping 2 %: 0.05, 46.1131587008"><title>Hull damping 2 %: 0.05, 46.1131587008</title></circle>
+<text data-highlight-x="0.05" x="264.5" y="143.6" font-size="12" fill="#0B3D91">46.1 %</text>
+<circle cx="427.0" cy="105.1" r="2.5" fill="white" data-outside-band="true" stroke="#0B3D91" stroke-width="1.8" tabindex="0" data-series="0" data-x="0.1" data-y="61.3708265831" aria-label="Hull damping 2 %: 0.1, 61.3708265831"><title>Hull damping 2 %: 0.1, 61.3708265831</title></circle>
+<circle cx="598.5" cy="90.5" r="2.5" fill="#0B3D91" data-outside-band="false" stroke="#0B3D91" stroke-width="1.8" tabindex="0" data-series="0" data-x="0.15" data-y="65.9955703766" aria-label="Hull damping 2 %: 0.15, 65.9955703766"><title>Hull damping 2 %: 0.15, 65.9955703766</title></circle>
+<circle cx="770.0" cy="86.6" r="2.5" fill="#0B3D91" data-outside-band="false" stroke="#0B3D91" stroke-width="1.8" tabindex="0" data-series="0" data-x="0.2" data-y="67.1972659743" aria-label="Hull damping 2 %: 0.2, 67.1972659743"><title>Hull damping 2 %: 0.2, 67.1972659743</title></circle>
+</g>
+<g data-series="1"><polyline points="152.6,266.7 255.5,226.1 427.0,179.8 598.5,155.3 770.0,145.4" fill="none" stroke="#0f8a7e" stroke-width="2"/>
+<text x="84" y="381" fill="#0f8a7e" font-size="12">Hull damping 5 %</text>
+<circle cx="152.6" cy="266.7" r="2.5" fill="white" data-outside-band="true" stroke="#0f8a7e" stroke-width="1.8" tabindex="0" data-series="1" data-x="0.02" data-y="10.4739692338" aria-label="Hull damping 5 %: 0.02, 10.4739692338"><title>Hull damping 5 %: 0.02, 10.4739692338</title></circle>
+<circle cx="255.5" cy="226.1" r="4.5" fill="white" data-outside-band="true" stroke="#0f8a7e" stroke-width="1.8" tabindex="0" data-series="1" data-x="0.05" data-y="23.2862649764" aria-label="Hull damping 5 %: 0.05, 23.2862649764"><title>Hull damping 5 %: 0.05, 23.2862649764</title></circle>
+<text data-highlight-x="0.05" x="264.5" y="216.1" font-size="12" fill="#0f8a7e">23.3 %</text>
+<circle cx="427.0" cy="179.8" r="2.5" fill="white" data-outside-band="true" stroke="#0f8a7e" stroke-width="1.8" tabindex="0" data-series="1" data-x="0.1" data-y="37.8622654351" aria-label="Hull damping 5 %: 0.1, 37.8622654351"><title>Hull damping 5 %: 0.1, 37.8622654351</title></circle>
+<circle cx="598.5" cy="155.3" r="2.5" fill="#0f8a7e" data-outside-band="false" stroke="#0f8a7e" stroke-width="1.8" tabindex="0" data-series="1" data-x="0.15" data-y="45.5813812497" aria-label="Hull damping 5 %: 0.15, 45.5813812497"><title>Hull damping 5 %: 0.15, 45.5813812497</title></circle>
+<circle cx="770.0" cy="145.4" r="2.5" fill="#0f8a7e" data-outside-band="false" stroke="#0f8a7e" stroke-width="1.8" tabindex="0" data-series="1" data-x="0.2" data-y="48.6884412365" aria-label="Hull damping 5 %: 0.2, 48.6884412365"><title>Hull damping 5 %: 0.2, 48.6884412365</title></circle>
+</g>
+<ellipse cx="90" cy="423" rx="5" ry="5" fill="white" stroke="#526579"/>
+<text x="104" y="427" font-size="12">outside the model's moment-fit band (forcing period below 20 s)</text>
+</svg><figcaption>Figure 1.1 – Peak roll reduction against alpha at an 18 s hull roll period, 2 % and 5 % hull damping, with the alpha 0.05 results marked.</figcaption><div class="series-controls"><label><input type="checkbox" checked aria-controls="es-alpha" onchange="toggleSeries('es-alpha', 0, this.checked)">Hull damping 2 %</label> <label><input type="checkbox" checked aria-controls="es-alpha" onchange="toggleSeries('es-alpha', 1, this.checked)">Hull damping 5 %</label> </div><a class="chart-export" download="es-alpha.csv" href="data:text/csv;charset=utf-8,series%2CAlpha%3A%20normalized%20stiffness%20%28dimensionless%29%2CPeak%20roll%20reduction%20%28%25%29%0AHull%20damping%202%20%25%2C0.02%2C24.2533874028%0AHull%20damping%202%20%25%2C0.05%2C46.1131587008%0AHull%20damping%202%20%25%2C0.1%2C61.3708265831%0AHull%20damping%202%20%25%2C0.15%2C65.9955703766%0AHull%20damping%202%20%25%2C0.2%2C67.1972659743%0AHull%20damping%205%20%25%2C0.02%2C10.4739692338%0AHull%20damping%205%20%25%2C0.05%2C23.2862649764%0AHull%20damping%205%20%25%2C0.1%2C37.8622654351%0AHull%20damping%205%20%25%2C0.15%2C45.5813812497%0AHull%20damping%205%20%25%2C0.2%2C48.6884412365%0A">Export CSV</a><p class="notes">Figure 5.3 data: <a href="#fig-alpha">Figure 5.3</a>. Source: <a href="#ref-data">[I1]</a>. <a href="#sensitivity-notes">Chart notes in Appendix A</a>.</p></figure>
+<figure id="fig-es-3d"><svg id="es-tank-3d" class="schematic" viewBox="0 0 1100 560" role="img" aria-labelledby="es-tank-3d-title es-tank-3d-desc" style="width:100%;height:auto;max-width:680px">
+<title id="es-tank-3d-title">Connected anti-roll tank, three-dimensional view</title>
+<desc id="es-tank-3d-desc">Axonometric view with proportional recorded leg length, width, fill depth and centroid offset. Hull form, tank height above fill and conduit section are symbolic; conduit area is a recorded label.</desc>
+<rect width="1100" height="560" fill="white"/>
+<defs><marker id="es-tank-3d-arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 9 1 L 1 5 L 9 9" fill="none" stroke="#526579"/></marker></defs>
+<polyline data-part="hull-back" points="287.5,137.2 313.0,327.2 619.0,327.2 644.5,137.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-front" points="151.5,280.0 177.0,470.0 483.0,470.0 508.5,280.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-extrusion" points="151.5,280.0 287.5,137.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-extrusion" points="508.5,280.0 644.5,137.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-extrusion" points="177.0,470.0 313.0,327.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-extrusion" points="483.0,470.0 619.0,327.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="conduit-front" points="296.0,410.0 296.0,424.0 364.0,424.0 364.0,410.0" fill="none" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="conduit-top" points="296.0,410.0 304.8,400.8 372.8,400.8 364.0,410.0" fill="none" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="conduit-side" points="364.0,424.0 372.8,414.8 372.8,400.8" fill="none" stroke="#0f8a7e" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-front" points="194.0,325.0 194.0,410.0 296.0,410.0 296.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="leg-1-side" points="296.0,410.0 432.0,267.2 432.0,182.2 296.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="free-surface-1" points="194.0,325.0 296.0,325.0 432.0,182.2 330.0,182.2 194.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="leg-1-rim" points="194.0,301.0 296.0,301.0 432.0,158.2 330.0,158.2 194.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-headroom" points="194.0,325.0 194.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-headroom" points="296.0,325.0 296.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-headroom" points="330.0,182.2 330.0,158.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-headroom" points="432.0,182.2 432.0,158.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-front" points="364.0,325.0 364.0,410.0 466.0,410.0 466.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="leg-2-side" points="466.0,410.0 602.0,267.2 602.0,182.2 466.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="free-surface-2" points="364.0,325.0 466.0,325.0 602.0,182.2 500.0,182.2 364.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="leg-2-rim" points="364.0,301.0 466.0,301.0 602.0,158.2 500.0,158.2 364.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-headroom" points="364.0,325.0 364.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-headroom" points="466.0,325.0 466.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-headroom" points="500.0,182.2 500.0,158.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-headroom" points="602.0,182.2 602.0,158.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline points="302,118 381.0,182.2" fill="none" stroke="#8795a3"/>
+<text x="260" y="108" font-size="14">Tank leg 1</text>
+<polyline points="522,118 551.0,182.2" fill="none" stroke="#8795a3"/>
+<text x="480" y="108" font-size="14">Tank leg 2</text>
+<polyline data-part="roll-axis" points="316.4,315.3 479.6,143.9" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline points="508.5,280.0 670,220 690,220" fill="none" stroke="#8795a3"/>
+<text x="700" y="224" font-size="14" fill="#16324f">symbolic hull, no hull dimensions</text>
+</svg><figcaption>Figure 1.2 – The connected anti-roll tank in a generic hull, three-dimensional view (detail in <a href="#fig-3d">Figure 3.2</a>).</figcaption></figure>
+</section>
 <section id="introduction"><h2>2 Introduction</h2>
 <p>The generic hull roll comparison describes the effect of a connected anti-roll tank for engineers considering the simplified coupled model.
 The scope is a normalized hull and the public reference tank, with no actual hull mass, inertia or restoring.</p>
@@ -77,6 +165,7 @@ The input values and their units are listed in <a href="#inputs">Table 3.1</a>.<
 Conduit area A_c is 6.8 m². The model supplies effective length, fluid properties and calibrated loss parameters.</p>
 <table id="inputs"><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis</th></tr></thead>
 <tbody><tr><td>Each leg length</td><td>20</td><td>m</td><td>ASSUMED; <a href="#ref-data">[I1]</a></td></tr><tr><td>Each leg width</td><td>6</td><td>m</td><td>ASSUMED; <a href="#ref-data">[I1]</a></td></tr><tr><td>Fill depth</td><td>5</td><td>m</td><td>ASSUMED; <a href="#ref-data">[I1]</a></td></tr><tr><td>Centroid offset</td><td>5</td><td>m</td><td>ASSUMED; <a href="#ref-data">[I1]</a></td></tr><tr><td>Conduit area</td><td>6.8</td><td>m²</td><td>ASSUMED; <a href="#ref-data">[I1]</a></td></tr><tr><td>Effective conduit length</td><td>5.2</td><td>m</td><td>ASSUMED; <a href="#ref-data">[I1]</a>; <a href="#ref-model">[I2]</a></td></tr><tr><td>Fluid density</td><td>1025</td><td>kg/m³</td><td>ASSUMED; <a href="#ref-data">[I1]</a>; <a href="#ref-model">[I2]</a></td></tr><tr><td>Gravity</td><td>9.81</td><td>m/s²</td><td>ASSUMED; <a href="#ref-data">[I1]</a>; <a href="#ref-model">[I2]</a></td></tr><tr><td>Loss coefficient</td><td>2.389</td><td>m^(2n−4)</td><td>ASSUMED; <a href="#ref-data">[I1]</a>; <a href="#ref-model">[I2]</a></td></tr><tr><td>Loss area exponent n</td><td>2.138</td><td>1</td><td>ASSUMED; <a href="#ref-data">[I1]</a>; <a href="#ref-model">[I2]</a></td></tr><tr><td>Bare-roll reference</td><td>5</td><td>°</td><td>ASSUMED; <a href="#ref-data">[I1]</a></td></tr><tr><td>Normalized hull restoring</td><td>1</td><td>1</td><td>ASSUMED; <a href="#ref-data">[I1]</a></td></tr></tbody><caption>Table 3.1 – Recorded tank and normalized-hull inputs.</caption></table>
+<p>The recorded inputs are illustrated by <a href="#fig-section">Figure 3.1</a> and <a href="#fig-3d">Figure 3.2</a>.</p>
 <p class="notes">In the loss-coefficient unit, n is the loss area exponent in Table 3.1.</p>
 <p>Calibration transfer means using the model's calibrated loss parameters in this reference-tank and generic-hull calculation: ASSUMED - to be confirmed.
 These screening estimates use the public reference tank, which differs from the illustrative tank on the linked study page <a href="#ref-study">[I3]</a>.</p>
@@ -141,6 +230,71 @@ fill="#f2f6fa" stroke="#526579" stroke-width="2"/>
 <text x="410" y="418" text-anchor="middle">Leg length 20.0 m (out of section) · dimensions ASSUMED</text>
 <text x="410" y="442" text-anchor="middle">Hull section: outline and duct height not to scale</text>
 </g></svg><figcaption>Figure 3.1 – Connected-tank transverse section.</figcaption></figure>
+<p><a href="#fig-3d">Figure 3.2</a> shows the same recorded tank dimensions in three dimensions.</p>
+<figure id="fig-3d"><svg id="tank-3d" class="schematic" viewBox="0 0 1100 620" role="img" aria-labelledby="tank-3d-title tank-3d-desc" style="width:100%;height:auto;max-width:1100px">
+<title id="tank-3d-title">Connected anti-roll tank, three-dimensional view</title>
+<desc id="tank-3d-desc">Axonometric view with proportional recorded leg length, width, fill depth and centroid offset. Hull form, tank height above fill and conduit section are symbolic; conduit area is a recorded label.</desc>
+<rect width="1100" height="620" fill="white"/>
+<defs><marker id="tank-3d-arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 9 1 L 1 5 L 9 9" fill="none" stroke="#526579"/></marker></defs>
+<polyline data-part="hull-back" points="287.5,137.2 313.0,327.2 619.0,327.2 644.5,137.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-front" points="151.5,280.0 177.0,470.0 483.0,470.0 508.5,280.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-extrusion" points="151.5,280.0 287.5,137.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-extrusion" points="508.5,280.0 644.5,137.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-extrusion" points="177.0,470.0 313.0,327.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="hull-extrusion" points="483.0,470.0 619.0,327.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="conduit-front" points="296.0,410.0 296.0,424.0 364.0,424.0 364.0,410.0" fill="none" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="conduit-top" points="296.0,410.0 304.8,400.8 372.8,400.8 364.0,410.0" fill="none" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="conduit-side" points="364.0,424.0 372.8,414.8 372.8,400.8" fill="none" stroke="#0f8a7e" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-front" points="194.0,325.0 194.0,410.0 296.0,410.0 296.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="leg-1-side" points="296.0,410.0 432.0,267.2 432.0,182.2 296.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="free-surface-1" points="194.0,325.0 296.0,325.0 432.0,182.2 330.0,182.2 194.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="leg-1-rim" points="194.0,301.0 296.0,301.0 432.0,158.2 330.0,158.2 194.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-headroom" points="194.0,325.0 194.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-headroom" points="296.0,325.0 296.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-headroom" points="330.0,182.2 330.0,158.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-1-headroom" points="432.0,182.2 432.0,158.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-front" points="364.0,325.0 364.0,410.0 466.0,410.0 466.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="leg-2-side" points="466.0,410.0 602.0,267.2 602.0,182.2 466.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="free-surface-2" points="364.0,325.0 466.0,325.0 602.0,182.2 500.0,182.2 364.0,325.0" fill="#b6e4ef" stroke="#0f8a7e" stroke-width="1.8" />
+<polyline data-part="leg-2-rim" points="364.0,301.0 466.0,301.0 602.0,158.2 500.0,158.2 364.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-headroom" points="364.0,325.0 364.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-headroom" points="466.0,325.0 466.0,301.0" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-headroom" points="500.0,182.2 500.0,158.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline data-part="leg-2-headroom" points="602.0,182.2 602.0,158.2" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline points="302,118 381.0,182.2" fill="none" stroke="#8795a3"/>
+<text x="260" y="108" font-size="14">Tank leg 1</text>
+<polyline points="522,118 551.0,182.2" fill="none" stroke="#8795a3"/>
+<text x="480" y="108" font-size="14">Tank leg 2</text>
+<polyline data-part="roll-axis" points="316.4,315.3 479.6,143.9" fill="none" stroke="#526579" stroke-width="1.8" stroke-dasharray="6 4" />
+<polyline points="508.5,280.0 670,440 690,440" fill="none" stroke="#8795a3"/>
+<polyline data-measure="leg_length_m" points="194.0,410.0 330.0,267.2" marker-start="url(#tank-3d-arrow)" marker-end="url(#tank-3d-arrow)" fill="none" stroke="#0B3D91" stroke-width="2.5"/>
+<path d="M 650 160 H 680" stroke="#0B3D91" stroke-width="2.5"/>
+<text x="700" y="164" font-size="14" fill="#0B3D91" data-dimension="leg_length_m">Each leg length 20.0 m</text>
+<polyline data-measure="leg_width_m" points="194.0,325.0 296.0,325.0" marker-start="url(#tank-3d-arrow)" marker-end="url(#tank-3d-arrow)" fill="none" stroke="#0f8a7e" stroke-width="2.5"/>
+<path d="M 650 190 H 680" stroke="#0f8a7e" stroke-width="2.5"/>
+<text x="700" y="194" font-size="14" fill="#0f8a7e" data-dimension="leg_width_m">Each leg width 6.0 m</text>
+<polyline data-measure="fill_depth_m" points="466.0,410.0 466.0,325.0" marker-start="url(#tank-3d-arrow)" marker-end="url(#tank-3d-arrow)" fill="none" stroke="#996b00" stroke-width="2.5"/>
+<path d="M 650 220 H 680" stroke="#996b00" stroke-width="2.5"/>
+<text x="700" y="224" font-size="14" fill="#996b00" data-dimension="fill_depth_m">Fill depth 5.0 m</text>
+<polyline data-measure="centroid_offset_m" points="330.0,301.0 415.0,301.0" marker-start="url(#tank-3d-arrow)" marker-end="url(#tank-3d-arrow)" fill="none" stroke="#943a78" stroke-width="2.5"/>
+<path d="M 650 250 H 680" stroke="#943a78" stroke-width="2.5"/>
+<text x="700" y="254" font-size="14" fill="#943a78" data-dimension="centroid_offset_m">Centroid offset 5.0 m</text>
+<text x="700" y="284" font-size="14" fill="#16324f" data-dimension="conduit_area_m2">Conduit area 6.8 m²</text>
+<text x="700" y="314" font-size="14" fill="#0f8a7e">Free surface in each leg</text>
+<path d="M 650 310 H 680" stroke="#0f8a7e" stroke-width="2"/>
+<text x="430" y="70" font-size="14">Roll axis</text>
+<polyline points="460,80 479.6,143.9" fill="none" stroke="#8795a3"/>
+<polyline points="140,575 208,575" marker-end="url(#tank-3d-arrow)" fill="none" stroke="#526579"/>
+<text x="220" y="579" font-size="14">Transverse</text>
+<polyline points="140,575 167.2,546.4" marker-end="url(#tank-3d-arrow)" fill="none" stroke="#526579"/>
+<text x="180" y="545" font-size="14">Longitudinal</text>
+<polyline points="140,575 140,507" marker-end="url(#tank-3d-arrow)" fill="none" stroke="#526579"/>
+<text x="110" y="492" font-size="14">Vertical</text>
+<text x="700" y="354" font-size="14" fill="#16324f">Tank height above fill: symbolic</text>
+<text x="700" y="384" font-size="14" fill="#16324f">Conduit height: symbolic</text>
+<text x="700" y="414" font-size="14" fill="#16324f">Conduit section shape: symbolic</text>
+<text x="700" y="444" font-size="14" fill="#16324f">symbolic hull, no hull dimensions</text>
+</svg><figcaption>Figure 3.2 – Connected anti-roll tank, three-dimensional view: the two legs, the fill, the cross-connecting conduit and the generic hull section around them.</figcaption></figure>
 <h3>3.3 Environmental data</h3>
 <p>No sea state is specified. Forcing stays fixed within each tank-on and tank-off comparison and is rescaled between damping groups.</p>
 <h3>3.4 Vessel data</h3>
@@ -603,6 +757,119 @@ Hand-check inputs and rational oracle values are defined in test_undamped_two_de
 <tr><td>21</td><td>5</td><td>0.15</td><td>35.2</td><td>23.4</td></tr>
 <tr><td>21</td><td>5</td><td>0.20</td><td>37.7</td><td>24.5</td></tr></tbody>
 <caption>Table A.1 – Peak reduction sensitivity matrix.</caption></table>
+<figure id="fig-sens-reduction"><svg id="sens-reduction" class="chart" viewBox="0 0 820 440" role="img" aria-labelledby="sens-reduction-title sens-reduction-desc" style="width:100%;height:auto">
+<title id="sens-reduction-title">Peak roll reduction against alpha, all twenty cases of Table A.1</title>
+<desc id="sens-reduction-desc">Peak roll reduction (%) against Alpha: normalized stiffness (dimensionless). 18 s hull, 2 % damping; 18 s hull, 5 % damping; 21 s hull, 2 % damping; 21 s hull, 5 % damping.</desc>
+<rect width="820" height="440" fill="white"/>
+<text class="chart-title" x="84" y="22" fill="#16324f">Peak roll reduction against alpha, all twenty cases of Table A.1</text>
+<path d="M 84 300.0 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="304.0" text-anchor="end" font-size="12">0</text>
+<path d="M 84 236.5 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="240.5" text-anchor="end" font-size="12">20</text>
+<path d="M 84 173.0 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="177.0" text-anchor="end" font-size="12">40</text>
+<path d="M 84 109.5 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="113.5" text-anchor="end" font-size="12">60</text>
+<path d="M 84 46.0 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="50.0" text-anchor="end" font-size="12">80</text>
+<text data-axis="x" x="84.0" y="322" text-anchor="middle" font-size="12">0.00</text>
+<text data-axis="x" x="255.5" y="322" text-anchor="middle" font-size="12">0.05</text>
+<text data-axis="x" x="427.0" y="322" text-anchor="middle" font-size="12">0.10</text>
+<text data-axis="x" x="598.5" y="322" text-anchor="middle" font-size="12">0.15</text>
+<text data-axis="x" x="770.0" y="322" text-anchor="middle" font-size="12">0.20</text>
+<text class="axis-title" x="427" y="345" text-anchor="middle">Alpha: normalized stiffness (dimensionless)</text>
+<text class="axis-title" transform="translate(18 175) rotate(-90)" text-anchor="middle">Peak roll reduction (%)</text>
+<g data-series="0"><polyline points="152.6,223.0 255.5,153.6 427.0,105.1 598.5,90.5 770.0,86.6" fill="none" stroke="#0B3D91" stroke-width="2"/>
+<text x="84" y="365" fill="#0B3D91" font-size="12">18 s hull, 2 % damping</text>
+<circle cx="152.6" cy="223.0" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.02" data-y="24.2533874028" aria-label="18 s hull, 2 % damping: 0.02, 24.2533874028"><title>18 s hull, 2 % damping: 0.02, 24.2533874028</title></circle>
+<circle cx="255.5" cy="153.6" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.05" data-y="46.1131587008" aria-label="18 s hull, 2 % damping: 0.05, 46.1131587008"><title>18 s hull, 2 % damping: 0.05, 46.1131587008</title></circle>
+<circle cx="427.0" cy="105.1" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.1" data-y="61.3708265831" aria-label="18 s hull, 2 % damping: 0.1, 61.3708265831"><title>18 s hull, 2 % damping: 0.1, 61.3708265831</title></circle>
+<circle cx="598.5" cy="90.5" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.15" data-y="65.9955703766" aria-label="18 s hull, 2 % damping: 0.15, 65.9955703766"><title>18 s hull, 2 % damping: 0.15, 65.9955703766</title></circle>
+<circle cx="770.0" cy="86.6" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.2" data-y="67.1972659743" aria-label="18 s hull, 2 % damping: 0.2, 67.1972659743"><title>18 s hull, 2 % damping: 0.2, 67.1972659743</title></circle>
+</g>
+<g data-series="1"><polyline points="152.6,266.7 255.5,226.1 427.0,179.8 598.5,155.3 770.0,145.4" fill="none" stroke="#0f8a7e" stroke-width="2"/>
+<text x="84" y="381" fill="#0f8a7e" font-size="12">18 s hull, 5 % damping</text>
+<circle cx="152.6" cy="266.7" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.02" data-y="10.4739692338" aria-label="18 s hull, 5 % damping: 0.02, 10.4739692338"><title>18 s hull, 5 % damping: 0.02, 10.4739692338</title></circle>
+<circle cx="255.5" cy="226.1" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.05" data-y="23.2862649764" aria-label="18 s hull, 5 % damping: 0.05, 23.2862649764"><title>18 s hull, 5 % damping: 0.05, 23.2862649764</title></circle>
+<circle cx="427.0" cy="179.8" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.1" data-y="37.8622654351" aria-label="18 s hull, 5 % damping: 0.1, 37.8622654351"><title>18 s hull, 5 % damping: 0.1, 37.8622654351</title></circle>
+<circle cx="598.5" cy="155.3" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.15" data-y="45.5813812497" aria-label="18 s hull, 5 % damping: 0.15, 45.5813812497"><title>18 s hull, 5 % damping: 0.15, 45.5813812497</title></circle>
+<circle cx="770.0" cy="145.4" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.2" data-y="48.6884412365" aria-label="18 s hull, 5 % damping: 0.2, 48.6884412365"><title>18 s hull, 5 % damping: 0.2, 48.6884412365</title></circle>
+</g>
+<g data-series="2"><polyline points="152.6,234.2 255.5,179.8 427.0,140.8 598.5,125.5 770.0,119.3" fill="none" stroke="#b8860b" stroke-width="2"/>
+<text x="84" y="397" fill="#b8860b" font-size="12">21 s hull, 2 % damping</text>
+<circle cx="152.6" cy="234.2" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.02" data-y="20.7168498465" aria-label="21 s hull, 2 % damping: 0.02, 20.7168498465"><title>21 s hull, 2 % damping: 0.02, 20.7168498465</title></circle>
+<circle cx="255.5" cy="179.8" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.05" data-y="37.8442868735" aria-label="21 s hull, 2 % damping: 0.05, 37.8442868735"><title>21 s hull, 2 % damping: 0.05, 37.8442868735</title></circle>
+<circle cx="427.0" cy="140.8" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.1" data-y="50.1454675827" aria-label="21 s hull, 2 % damping: 0.1, 50.1454675827"><title>21 s hull, 2 % damping: 0.1, 50.1454675827</title></circle>
+<circle cx="598.5" cy="125.5" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.15" data-y="54.9527318156" aria-label="21 s hull, 2 % damping: 0.15, 54.9527318156"><title>21 s hull, 2 % damping: 0.15, 54.9527318156</title></circle>
+<circle cx="770.0" cy="119.3" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.2" data-y="56.9140276292" aria-label="21 s hull, 2 % damping: 0.2, 56.9140276292"><title>21 s hull, 2 % damping: 0.2, 56.9140276292</title></circle>
+</g>
+<g data-series="3"><polyline points="152.6,271.5 255.5,239.1 427.0,205.5 598.5,188.2 770.0,180.2" fill="none" stroke="#943a78" stroke-width="2"/>
+<text x="84" y="413" fill="#943a78" font-size="12">21 s hull, 5 % damping</text>
+<circle cx="152.6" cy="271.5" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.02" data-y="8.97199678145" aria-label="21 s hull, 5 % damping: 0.02, 8.97199678145"><title>21 s hull, 5 % damping: 0.02, 8.97199678145</title></circle>
+<circle cx="255.5" cy="239.1" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.05" data-y="19.1739619659" aria-label="21 s hull, 5 % damping: 0.05, 19.1739619659"><title>21 s hull, 5 % damping: 0.05, 19.1739619659</title></circle>
+<circle cx="427.0" cy="205.5" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.1" data-y="29.7642601488" aria-label="21 s hull, 5 % damping: 0.1, 29.7642601488"><title>21 s hull, 5 % damping: 0.1, 29.7642601488</title></circle>
+<circle cx="598.5" cy="188.2" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.15" data-y="35.2241116568" aria-label="21 s hull, 5 % damping: 0.15, 35.2241116568"><title>21 s hull, 5 % damping: 0.15, 35.2241116568</title></circle>
+<circle cx="770.0" cy="180.2" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.2" data-y="37.7402287754" aria-label="21 s hull, 5 % damping: 0.2, 37.7402287754"><title>21 s hull, 5 % damping: 0.2, 37.7402287754</title></circle>
+</g>
+</svg><figcaption>Figure A.1 – Peak roll reduction against alpha, all twenty cases of Table A.1.</figcaption><div class="series-controls"><label><input type="checkbox" checked aria-controls="sens-reduction" onchange="toggleSeries('sens-reduction', 0, this.checked)">18 s hull, 2 % damping</label> <label><input type="checkbox" checked aria-controls="sens-reduction" onchange="toggleSeries('sens-reduction', 1, this.checked)">18 s hull, 5 % damping</label> <label><input type="checkbox" checked aria-controls="sens-reduction" onchange="toggleSeries('sens-reduction', 2, this.checked)">21 s hull, 2 % damping</label> <label><input type="checkbox" checked aria-controls="sens-reduction" onchange="toggleSeries('sens-reduction', 3, this.checked)">21 s hull, 5 % damping</label> </div><a class="chart-export" download="sens-reduction.csv" href="data:text/csv;charset=utf-8,series%2CAlpha%3A%20normalized%20stiffness%20%28dimensionless%29%2CPeak%20roll%20reduction%20%28%25%29%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.02%2C24.2533874028%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.05%2C46.1131587008%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.1%2C61.3708265831%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.15%2C65.9955703766%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.2%2C67.1972659743%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.02%2C10.4739692338%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.05%2C23.2862649764%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.1%2C37.8622654351%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.15%2C45.5813812497%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.2%2C48.6884412365%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.02%2C20.7168498465%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.05%2C37.8442868735%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.1%2C50.1454675827%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.15%2C54.9527318156%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.2%2C56.9140276292%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.02%2C8.97199678145%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.05%2C19.1739619659%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.1%2C29.7642601488%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.15%2C35.2241116568%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.2%2C37.7402287754%0A">Export CSV</a><p class="notes">Source: <a href="#ref-data">[I1]</a>. <a href="#sensitivity-notes">Chart notes in Appendix A</a>.</p></figure><figure id="fig-sens-period"><svg id="sens-period" class="chart" viewBox="0 0 820 440" role="img" aria-labelledby="sens-period-title sens-period-desc" style="width:100%;height:auto">
+<title id="sens-period-title">Coupled peak forcing period against alpha, all twenty cases of Table A.1</title>
+<desc id="sens-period-desc">Coupled peak forcing period (s) against Alpha: normalized stiffness (dimensionless). 18 s hull, 2 % damping; 18 s hull, 5 % damping; 21 s hull, 2 % damping; 21 s hull, 5 % damping.</desc>
+<rect width="820" height="440" fill="white"/>
+<text class="chart-title" x="84" y="22" fill="#16324f">Coupled peak forcing period against alpha, all twenty cases of Table A.1</text>
+<path d="M 84 300.0 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="304.0" text-anchor="end" font-size="12">0</text>
+<path d="M 84 249.2 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="253.2" text-anchor="end" font-size="12">5</text>
+<path d="M 84 198.4 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="202.4" text-anchor="end" font-size="12">10</text>
+<path d="M 84 147.6 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="151.6" text-anchor="end" font-size="12">15</text>
+<path d="M 84 96.8 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="100.8" text-anchor="end" font-size="12">20</text>
+<path d="M 84 46.0 H 770" stroke="#e2e7eb"/>
+<text data-axis="y" x="76" y="50.0" text-anchor="end" font-size="12">25</text>
+<text data-axis="x" x="84.0" y="322" text-anchor="middle" font-size="12">0.00</text>
+<text data-axis="x" x="255.5" y="322" text-anchor="middle" font-size="12">0.05</text>
+<text data-axis="x" x="427.0" y="322" text-anchor="middle" font-size="12">0.10</text>
+<text data-axis="x" x="598.5" y="322" text-anchor="middle" font-size="12">0.15</text>
+<text data-axis="x" x="770.0" y="322" text-anchor="middle" font-size="12">0.20</text>
+<text class="axis-title" x="427" y="345" text-anchor="middle">Alpha: normalized stiffness (dimensionless)</text>
+<text class="axis-title" transform="translate(18 175) rotate(-90)" text-anchor="middle">Coupled peak forcing period (s)</text>
+<g data-series="0"><polyline points="152.6,115.6 255.5,112.4 427.0,103.7 598.5,93.0 770.0,82.1" fill="none" stroke="#0B3D91" stroke-width="2"/>
+<text x="84" y="365" fill="#0B3D91" font-size="12">18 s hull, 2 % damping</text>
+<circle cx="152.6" cy="115.6" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.02" data-y="18.1492" aria-label="18 s hull, 2 % damping: 0.02, 18.1492"><title>18 s hull, 2 % damping: 0.02, 18.1492</title></circle>
+<circle cx="255.5" cy="112.4" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.05" data-y="18.4666" aria-label="18 s hull, 2 % damping: 0.05, 18.4666"><title>18 s hull, 2 % damping: 0.05, 18.4666</title></circle>
+<circle cx="427.0" cy="103.7" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.1" data-y="19.3162" aria-label="18 s hull, 2 % damping: 0.1, 19.3162"><title>18 s hull, 2 % damping: 0.1, 19.3162</title></circle>
+<circle cx="598.5" cy="93.0" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.15" data-y="20.3761" aria-label="18 s hull, 2 % damping: 0.15, 20.3761"><title>18 s hull, 2 % damping: 0.15, 20.3761</title></circle>
+<circle cx="770.0" cy="82.1" r="2.5" fill="#0B3D91" tabindex="0" data-series="0" data-x="0.2" data-y="21.4491" aria-label="18 s hull, 2 % damping: 0.2, 21.4491"><title>18 s hull, 2 % damping: 0.2, 21.4491</title></circle>
+</g>
+<g data-series="1"><polyline points="152.6,115.3 255.5,112.6 427.0,106.1 598.5,95.9 770.0,83.4" fill="none" stroke="#0f8a7e" stroke-width="2"/>
+<text x="84" y="381" fill="#0f8a7e" font-size="12">18 s hull, 5 % damping</text>
+<circle cx="152.6" cy="115.3" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.02" data-y="18.1827" aria-label="18 s hull, 5 % damping: 0.02, 18.1827"><title>18 s hull, 5 % damping: 0.02, 18.1827</title></circle>
+<circle cx="255.5" cy="112.6" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.05" data-y="18.4426" aria-label="18 s hull, 5 % damping: 0.05, 18.4426"><title>18 s hull, 5 % damping: 0.05, 18.4426</title></circle>
+<circle cx="427.0" cy="106.1" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.1" data-y="19.0891" aria-label="18 s hull, 5 % damping: 0.1, 19.0891"><title>18 s hull, 5 % damping: 0.1, 19.0891</title></circle>
+<circle cx="598.5" cy="95.9" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.15" data-y="20.0849" aria-label="18 s hull, 5 % damping: 0.15, 20.0849"><title>18 s hull, 5 % damping: 0.15, 20.0849</title></circle>
+<circle cx="770.0" cy="83.4" r="2.5" fill="#0f8a7e" tabindex="0" data-series="1" data-x="0.2" data-y="21.3182" aria-label="18 s hull, 5 % damping: 0.2, 21.3182"><title>18 s hull, 5 % damping: 0.2, 21.3182</title></circle>
+</g>
+<g data-series="2"><polyline points="152.6,84.4 255.5,80.2 427.0,71.6 598.5,61.9 770.0,51.6" fill="none" stroke="#b8860b" stroke-width="2"/>
+<text x="84" y="397" fill="#b8860b" font-size="12">21 s hull, 2 % damping</text>
+<circle cx="152.6" cy="84.4" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.02" data-y="21.2234" aria-label="21 s hull, 2 % damping: 0.02, 21.2234"><title>21 s hull, 2 % damping: 0.02, 21.2234</title></circle>
+<circle cx="255.5" cy="80.2" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.05" data-y="21.6369" aria-label="21 s hull, 2 % damping: 0.05, 21.6369"><title>21 s hull, 2 % damping: 0.05, 21.6369</title></circle>
+<circle cx="427.0" cy="71.6" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.1" data-y="22.4843" aria-label="21 s hull, 2 % damping: 0.1, 22.4843"><title>21 s hull, 2 % damping: 0.1, 22.4843</title></circle>
+<circle cx="598.5" cy="61.9" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.15" data-y="23.4335" aria-label="21 s hull, 2 % damping: 0.15, 23.4335"><title>21 s hull, 2 % damping: 0.15, 23.4335</title></circle>
+<circle cx="770.0" cy="51.6" r="2.5" fill="#b8860b" tabindex="0" data-series="2" data-x="0.2" data-y="24.4456" aria-label="21 s hull, 2 % damping: 0.2, 24.4456"><title>21 s hull, 2 % damping: 0.2, 24.4456</title></circle>
+</g>
+<g data-series="3"><polyline points="152.6,83.9 255.5,80.1 427.0,71.9 598.5,62.1 770.0,51.2" fill="none" stroke="#943a78" stroke-width="2"/>
+<text x="84" y="413" fill="#943a78" font-size="12">21 s hull, 5 % damping</text>
+<circle cx="152.6" cy="83.9" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.02" data-y="21.2659" aria-label="21 s hull, 5 % damping: 0.02, 21.2659"><title>21 s hull, 5 % damping: 0.02, 21.2659</title></circle>
+<circle cx="255.5" cy="80.1" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.05" data-y="21.6484" aria-label="21 s hull, 5 % damping: 0.05, 21.6484"><title>21 s hull, 5 % damping: 0.05, 21.6484</title></circle>
+<circle cx="427.0" cy="71.9" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.1" data-y="22.4496" aria-label="21 s hull, 5 % damping: 0.1, 22.4496"><title>21 s hull, 5 % damping: 0.1, 22.4496</title></circle>
+<circle cx="598.5" cy="62.1" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.15" data-y="23.4159" aria-label="21 s hull, 5 % damping: 0.15, 23.4159"><title>21 s hull, 5 % damping: 0.15, 23.4159</title></circle>
+<circle cx="770.0" cy="51.2" r="2.5" fill="#943a78" tabindex="0" data-series="3" data-x="0.2" data-y="24.493" aria-label="21 s hull, 5 % damping: 0.2, 24.493"><title>21 s hull, 5 % damping: 0.2, 24.493</title></circle>
+</g>
+<path data-reference-y="20.0" d="M 84 96.8 H 770" stroke="#b8860b" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="770" y="88.8" text-anchor="end" font-size="12">20 s lower edge of moment-fit band</text>
+</svg><figcaption>Figure A.2 – Coupled peak forcing period against alpha, all twenty cases of Table A.1, with the 20 s lower edge of the moment-fit band drawn.</figcaption><div class="series-controls"><label><input type="checkbox" checked aria-controls="sens-period" onchange="toggleSeries('sens-period', 0, this.checked)">18 s hull, 2 % damping</label> <label><input type="checkbox" checked aria-controls="sens-period" onchange="toggleSeries('sens-period', 1, this.checked)">18 s hull, 5 % damping</label> <label><input type="checkbox" checked aria-controls="sens-period" onchange="toggleSeries('sens-period', 2, this.checked)">21 s hull, 2 % damping</label> <label><input type="checkbox" checked aria-controls="sens-period" onchange="toggleSeries('sens-period', 3, this.checked)">21 s hull, 5 % damping</label> </div><a class="chart-export" download="sens-period.csv" href="data:text/csv;charset=utf-8,series%2CAlpha%3A%20normalized%20stiffness%20%28dimensionless%29%2CCoupled%20peak%20forcing%20period%20%28s%29%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.02%2C18.1492%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.05%2C18.4666%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.1%2C19.3162%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.15%2C20.3761%0A%2218%20s%20hull%2C%202%20%25%20damping%22%2C0.2%2C21.4491%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.02%2C18.1827%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.05%2C18.4426%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.1%2C19.0891%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.15%2C20.0849%0A%2218%20s%20hull%2C%205%20%25%20damping%22%2C0.2%2C21.3182%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.02%2C21.2234%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.05%2C21.6369%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.1%2C22.4843%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.15%2C23.4335%0A%2221%20s%20hull%2C%202%20%25%20damping%22%2C0.2%2C24.4456%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.02%2C21.2659%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.05%2C21.6484%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.1%2C22.4496%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.15%2C23.4159%0A%2221%20s%20hull%2C%205%20%25%20damping%22%2C0.2%2C24.493%0A">Export CSV</a><p class="notes">Source: <a href="#ref-data">[I1]</a>. <a href="#sensitivity-notes">Chart notes in Appendix A</a>.</p></figure>
 <p id="damping-comparison">In this case (18 s, alpha 0.05), hull damping roughly halves the benefit (ratio 0.505).
 The ratio of the 5 % benefit to the 2 % benefit ranges from 0.43 to 0.72 across the matrix.
 For alpha 0.02, 0.05, 0.10, 0.15, 0.20 respectively, the ratios are 18 s: 0.43, 0.505, 0.62, 0.69, 0.72; 21 s: 0.43, 0.51, 0.59, 0.64, 0.66.
@@ -622,7 +889,7 @@ Hull outline and conduit height are symbolic; widths, depths and centroid offset
 P.E. sign-off remains pending; no engineer signature is asserted.</p></section>
 <section id="revisions"><h2>Appendix C Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Description</th><th>Prepared / checked</th></tr></thead>
-<tbody><tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Clarification</td><td>2026-10-25</td><td>Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Interactive summary</td><td>2026-10-25</td><td>Input-driven tank section, interactive charts and matching CSV exports added; calculated values retained and limits placed before method.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Report layout</td><td>2026-10-25</td><td>Engineering reporting layout applied to presentation: numbered sections, input table, dimensioned section, figure captions and appendices. Calculated values, claims and conclusions retained.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Summary and chart clarification</td><td>2026-10-25</td><td>Earlier headline clarification recorded: peak roll reduction estimates refer to an 18 s hull roll period, with separate 2 % and 5 % damping cases. Moment-fit provenance and extrapolation, slow-forcing limit, tuning basis, symbols and chart scales clarified; calculation data retained.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Publication layout</td><td>2026-10-26</td><td>Source links, visible revision history, schematic labels and chart legend corrected; repeated cross-references consolidated. Calculated values retained.</td><td>AI-drafted; engineering check pending</td></tr></tbody><caption>Table C.1 – Revision history.</caption></table></section>
+<tbody><tr><td>Initial</td><td>2026-10-24</td><td>Generic hull screening estimate added to distinguish model predictions from real-hull evidence.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Clarification</td><td>2026-10-25</td><td>Damping basis, assumptions and validity limits clarified; numeric output stabilized and unpublished comparison removed.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Interactive summary</td><td>2026-10-25</td><td>Input-driven tank section, interactive charts and matching CSV exports added; calculated values retained and limits placed before method.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Report layout</td><td>2026-10-25</td><td>Engineering reporting layout applied to presentation: numbered sections, input table, dimensioned section, figure captions and appendices. Calculated values, claims and conclusions retained.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Summary and chart clarification</td><td>2026-10-25</td><td>Earlier headline clarification recorded: peak roll reduction estimates refer to an 18 s hull roll period, with separate 2 % and 5 % damping cases. Moment-fit provenance and extrapolation, slow-forcing limit, tuning basis, symbols and chart scales clarified; calculation data retained.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>Publication layout</td><td>2026-10-26</td><td>Source links, visible revision history, schematic labels and chart legend corrected; repeated cross-references consolidated. Calculated values retained.</td><td>AI-drafted; engineering check pending</td></tr><tr><td>R4</td><td>2026-10-26</td><td>summary chart and 3D schematic, appendix plots</td><td>AI-drafted; engineering check pending</td></tr></tbody><caption>Table C.1 – Revision history.</caption></table></section>
 <script>
 function toggleSeries(chart, series, visible) {
   document.querySelectorAll('#' + chart + ' g[data-series="' + series + '"]')

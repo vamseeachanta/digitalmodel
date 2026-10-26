@@ -121,11 +121,13 @@ def test_generic_screening_page_has_matched_interactive_exports():
     text = (root / builder.PAGE).read_text(encoding="utf-8")
     page = Page()
     page.feed(text)
-    assert page.charts == ["hull-section", "damping", "response", "alpha"]
+    assert page.charts == ["es-alpha", "es-tank-3d", "hull-section", "tank-3d",
+                           "damping", "response", "alpha", "sens-reduction", "sens-period"]
     expected = []
-    assert len(page.exports) == 3
-    for chart, export in zip(builder.chart_specs(record), page.exports):
-        _, _, xs, series, xlabel, ylabel = chart
+    assert len(page.exports) == 6
+    specs = builder.chart_specs(record)
+    for chart, export in zip([specs[i] for i in (3, 0, 1, 2, 4, 5)], page.exports):
+        _, _, xs, series, xlabel, ylabel, *_ = chart
         rows = list(csv.reader(io.StringIO(unquote(export.split(",", 1)[1]))))
         assert rows[0] == ["series", xlabel, ylabel]
         points = [(name, x, y) for name, ys in series for x, y in zip(xs, ys)]
