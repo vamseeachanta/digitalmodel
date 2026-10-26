@@ -219,7 +219,11 @@ def generate(manifest_path: Path | str, output_dir: Path | str) -> dict[str, Any
     schema_payload = (CAMPAIGN / "manifest.schema.json").read_bytes()
     basis_payload = BASIS.read_bytes()
     data = json.loads(manifest_payload, object_pairs_hook=unique_object)
-    validate_manifest(data, json.loads(schema_payload, object_pairs_hook=unique_object), basis_payload)
+    frozen_payloads = None
+    if "frozen_tranche" in data:
+        from .frozen_scope import source_payloads
+        frozen_payloads = source_payloads()
+    validate_manifest(data, json.loads(schema_payload, object_pairs_hook=unique_object), basis_payload, frozen_payloads)
     output = Path(output_dir).absolute()
     if any(parent.is_symlink() for parent in [output, *output.parents]):
         raise ValueError("output symlink is not permitted")
@@ -230,6 +234,12 @@ def generate(manifest_path: Path | str, output_dir: Path | str) -> dict[str, Any
     index["basis_sha256"] = hashlib.sha256(basis_payload).hexdigest()
     # Geometry is checked for the complete campaign before any output is written.
     geometries = [geometry(case, data) for case in data["cases"]]
+    frozen_geometries = []
+    if "frozen_tranche" in data:
+        from .frozen_scope import prepare_geometry
+        from .frozen_scope import CRITERIA
+        frozen_criteria = json.loads(frozen_payloads[CRITERIA])
+        frozen_geometries = [prepare_geometry(row, frozen_criteria) for row in data["frozen_tranche"]["rows"]]
     index["manifest"] = _write(output, "manifest.json", manifest_payload)
     index["schema"] = _write(output, "manifest.schema.json", schema_payload)
     index["basis"] = _write(output, "basis.md", basis_payload)
@@ -251,7 +261,66 @@ def generate(manifest_path: Path | str, output_dir: Path | str) -> dict[str, Any
                 file = _write(output, relative, stream.getvalue().encode("utf-8"))
                 record["inputs"].append({**file, "offset_id": offset["id"], "sea_state_id": state["id"]})
         index["cases"].append(record)
+    if frozen_payloads is not None:
+        index["frozen_tranche"] = _frozen_inputs(output, data["frozen_tranche"], frozen_payloads, frozen_geometries)
     _write(output, "index.json", _json_bytes(index))
+    return index
+
+
+def _frozen_inputs(output: Path, tranche: dict[str, Any], payloads: dict[str, bytes],
+                   geometries: list[dict[str, Any]]) -> dict[str, Any]:
+    """Write the frozen tranche with the same serializer and digest guard.
+
+    Governing QA cannot be selected before completed native responses. Those
+    calculations are recorded as pending, never counted as written inputs.
+    """
+    from .frozen_scope import CRITERIA, VERSION, expand_loads, native_model, section_properties, validate_loads
+    criteria = json.loads(payloads[CRITERIA])
+    loads = expand_loads(tranche, criteria)
+    validate_loads(tranche, loads, criteria)
+    index = {"criteria_version": VERSION, "scope_sha256": tranche["scope_sha256"],
+             "criteria_sha256": tranche["criteria_sha256"], "cases": [],
+             "written_counts": {"statics": 0, "dynamics": 0, "fatigue": 0},
+             "phase_a_required": criteria["counts"]["phase_a"],
+             "pending_governing_qa": criteria["counts"]["pending_governing_qa"],
+             "qa_status": criteria["qa"]["status"],
+             "snapshots": [_write(output, name, payload) for name, payload in payloads.items()],
+             "code_sources": []}
+    source_paths = ["scripts/riser_campaign/generate_inputs.py", "scripts/riser_campaign/validate_manifest.py",
+                    "scripts/riser_campaign/frozen_scope.py", "src/digitalmodel/riser_configuration_screen/static.py",
+                    "src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py",
+                    "src/digitalmodel/marine_ops/marine_analysis/catenary/solver.py",
+                    "src/digitalmodel/solvers/orcaflex/modular_generator/builders/generic_builder.py",
+                    "src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py",
+                    "src/digitalmodel/solvers/orcaflex/modular_generator/schema/__init__.py",
+                    "src/digitalmodel/solvers/orcaflex/modular_generator/schema/environment.py",
+                    "src/digitalmodel/solvers/orcaflex/yaml_utils.py",
+                    "docs/domains/orcaflex/library/campaigns/generic-scr-slwr/basis.yml",
+                    "src/digitalmodel/materials/grades.py"]
+    for relative in source_paths:
+        entry = _write(output, "source/" + relative, (CAMPAIGN.parents[1] / relative).read_bytes())
+        index["code_sources"].append(entry)
+    for scope, geometry in zip(tranche["rows"], geometries):
+        case_id = scope["case_id"]
+        record = {"case_id": case_id, "inputs": []}
+        record["geometry"] = _write(output, f"{case_id}/geometry.json", _json_bytes(geometry))
+        record["section"] = _write(output, f"{case_id}/section.json", _json_bytes(section_properties(scope, criteria)))
+        for load in (r for r in loads if r["case_id"] == case_id):
+            model = native_model(scope, load, geometry, criteria)
+            stream = io.StringIO()
+            stream.write("# UNRELEASED SCREENING INPUT: native QA and readback required.\n")
+            if load["kind"] != "statics":
+                stream.write("# BLOCKED: qualified heading/band motions and matching equilibrium required; motions absent.\n")
+            tree = json.loads(json.dumps(model, allow_nan=False))
+            yaml.dump(tree, stream, Dumper=OrcaFlexDumper, sort_keys=False, width=1000, allow_unicode=True)
+            file = _write(output, f"{case_id}/{load['id']}.yml", stream.getvalue().encode("utf-8"))
+            blockers = ["NATIVE_INPUT_READBACK_REQUIRED", "CONTACT_CENTRELINE_READBACK_REQUIRED"]
+            if load["kind"] != "statics":
+                blockers += ["RAO_CLEARANCE_REQUIRED", "MATCHING_CONVERGED_EQUILIBRIUM_REQUIRED"]
+            record["inputs"].append({**load, **file, "qualification": "NOT_RUN", "release_blockers": blockers})
+            index["written_counts"][load["kind"]] += 1
+        index["cases"].append(record)
+    index["load_ledger"] = _write(output, "frozen-loads.json", _json_bytes({"criteria_version": VERSION, "loads": loads}))
     return index
 
 
@@ -270,6 +339,10 @@ def main() -> None:
               f"{case['configuration']} | {len(record['inputs'])} | ASSUMED")
     count = sum(len(r["inputs"]) for r in index["cases"])
     print(f"End: {len(index['cases'])} cases; {count} solver inputs; 0 licensed runs")
+    if "frozen_tranche" in index:
+        frozen = index["frozen_tranche"]
+        print(f"Frozen tranche: {len(frozen['cases'])} cases; written {frozen['written_counts']}; "
+              f"Phase A required {frozen['phase_a_required']}; pending governing QA {frozen['pending_governing_qa']}")
 
 
 if __name__ == "__main__":

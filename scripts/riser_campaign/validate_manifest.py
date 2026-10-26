@@ -40,7 +40,8 @@ def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 
 def validate_manifest(data: dict[str, Any], schema: dict[str, Any] | None = None,
-                      basis_payload: bytes | None = None) -> None:
+                      basis_payload: bytes | None = None,
+                      frozen_payloads: dict[str, bytes] | None = None) -> None:
     """Reject schema, provenance, coverage and geometry inconsistencies.
 
     Args:
@@ -91,13 +92,16 @@ def validate_manifest(data: dict[str, Any], schema: dict[str, Any] | None = None
         _validate_case(case, data, sources, raos)
     expected_coverage = {
         (floater, size, depth, configuration)
-        for floater in ("FPSO", "semi-submersible", "spar", "TLP")
-        for size in ("small", "large")
-        for depth in (500, 1000, 1500)
-        for configuration in ("SCR", "lazy-wave")
+        for floater in data["matrix_axes"]["floater_type"]
+        for size in data["matrix_axes"]["size_class"]
+        for depth in data["matrix_axes"]["water_depth_m"]
+        for configuration in data["matrix_axes"]["configuration"]
     }
     if coverage != expected_coverage:
-        raise ValueError("matrix requires all 48 documented floater, size, depth and configuration combinations")
+        raise ValueError("matrix requires all declared floater, size, depth and configuration combinations")
+    if "frozen_tranche" in data:
+        from .frozen_scope import validate_tranche
+        validate_tranche(data["frozen_tranche"], frozen_payloads)
 
 
 def _validate_provenance(data: dict[str, Any], basis_payload: bytes) -> None:

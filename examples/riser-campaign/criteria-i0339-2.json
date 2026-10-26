@@ -1,0 +1,189 @@
+{
+  "version": "I0339-2-v1",
+  "basis": "Supplied frozen matrix and study assumptions; module screens only; native response not established.",
+  "provenance": {
+    "matrix": "matrix-i0339-2.tsv; all fields retained verbatim in manifest frozen_tranche.rows",
+    "properties": "docs/domains/orcaflex/library/campaigns/generic-scr-slwr/basis.yml, parameters; assumed, based on previous experience",
+    "pressure_and_wall": "Frozen criteria: 20 MPa gauge at MSL; 12.5 percent mill tolerance then 3 mm corrosion; no further deductions",
+    "geometry": "Frozen criteria: 1490 m separation; 50 m sag and 700 m hog above seabed; 12/8 degree top angles; fixed material arcs",
+    "reserve": "Existing generic basis: maximum suspended-length increase over full offset envelope plus 20 m, rounded up to 0.1 m; full adverse friction, minimum 1 kN",
+    "module": "Frozen BW2: added net uplift = twice coated oil-filled submerged weight; equivalent annular modules",
+    "strength_environment": {
+      "url": "https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/622aa.pdf",
+      "version": "Rev. 2, May 2009",
+      "section": "Printed page 13, Table 4-5",
+      "status": "Numeric inputs supplied with frozen criteria; public bytes not independently retrieved in this change"
+    },
+    "fatigue_environment": {
+      "url": "https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/622aa.pdf",
+      "version": "Rev. 2, May 2009",
+      "section": "Printed page 15, Table 4-7",
+      "status": "Numeric inputs supplied with frozen criteria; selected annual occurrences are not renormalised"
+    },
+    "regular_proxy": "1.86 times Hs at Tp is a study assumption; regular-wave screening proxy based on a public 100-year hurricane sea",
+    "sn_benchmark": "Supplied public FAT 80 benchmark: 80 MPa range at two million cycles, slope 3; single-slope extension and SCF 1.2 are study assumptions; no qualified service life",
+    "catalogue_status": "Public report catalogue identity not established; no new authoritative data catalogue",
+    "rao_status": "No qualified motions supplied; no synthetic fallback, Froude scaling or extrapolation; headings 0 and 180 and full energy-bearing band require clearance",
+    "defaults": "Existing typed native builders; unlisted defaults remain assumed and require native readback",
+    "mesh": "Supplied 3 m coarse / 0.5 m fine targets; 20 m fine window from the existing riser_catenary template touchdown zone, also applied around hang-off, buoyancy transitions and bends as an assumed seed"
+  },
+  "properties": {
+    "steel_density_kg_m3": 7850,
+    "contents_density_kg_m3": 800,
+    "seawater_density_kg_m3": 1025,
+    "coating_thickness_m": 0.04,
+    "coating_density_kg_m3": 900,
+    "gravity_m_s2": 9.80665,
+    "youngs_modulus_Pa": 207000000000.0,
+    "poisson_ratio": 0.3,
+    "mill_minus_tolerance_fraction": 0.125,
+    "pressure_at_msl_MPa_g": 20,
+    "SMYS_MPa": 450,
+    "SMTS_MPa": 535,
+    "temperature_C": 20,
+    "marine_growth_m": 0
+  },
+  "geometry": {
+    "hangoff_depth_m": 10,
+    "angles_deg": {
+      "SCR": 12,
+      "SLWR": 8
+    },
+    "grounded_reserve_m": 20,
+    "reserve_grid_m": 0.1,
+    "minimum_tension_N": 1000,
+    "floater_length_m": 103
+  },
+  "buoyancy": {
+    "factor": 2,
+    "density_kg_m3": 450,
+    "length_m": 1,
+    "pitch_m": 2.5
+  },
+  "seabed": {
+    "normal_stiffness_kN_m3": 100,
+    "shear_stiffness_kN_m3": 100,
+    "friction": 0.5
+  },
+  "numerics": {
+    "coarse_segment_m": 3,
+    "fine_segment_m": 0.5,
+    "time_step_s": 0.05,
+    "build_up_seconds": 150,
+    "drag_coefficient": 1.2,
+    "axial_drag_coefficient": 0.008,
+    "added_mass_coefficient": 1,
+    "fine_window_m": 20
+  },
+  "strength": {
+    "Hs_m": 14.301216,
+    "Tp_s": 15,
+    "gamma": 2.6,
+    "regular_height_factor": 1.86,
+    "stationary_seconds": 600,
+    "heading_pairs_deg": [
+      [
+        0,
+        15
+      ],
+      [
+        180,
+        195
+      ]
+    ],
+    "current_knots": [
+      [
+        0,
+        1.898904
+      ],
+      [
+        3.9624,
+        1.700784
+      ],
+      [
+        17.0688,
+        1.399032
+      ],
+      [
+        36.8808,
+        0.999744
+      ],
+      [
+        43.8912,
+        0.70104
+      ],
+      [
+        52.1208,
+        0.100584
+      ],
+      [
+        1500,
+        0.100584
+      ]
+    ],
+    "deep_tail_status": "Assumed constant tail below final published knot"
+  },
+  "fatigue": {
+    "seas": {
+      "F03": {
+        "Hs_m": 2.112264,
+        "Tp_s": 6.59,
+        "gamma": 1,
+        "annual_occurrence": 0.015
+      },
+      "F04": {
+        "Hs_m": 2.71272,
+        "Tp_s": 7.43,
+        "gamma": 1,
+        "annual_occurrence": 0.01
+      },
+      "F05": {
+        "Hs_m": 3.53568,
+        "Tp_s": 8.19,
+        "gamma": 1,
+        "annual_occurrence": 0.013
+      }
+    },
+    "sn_curve": {
+      "name": "SN80",
+      "source_label": "Supplied public air-equivalent FAT 80 benchmark",
+      "m": 3,
+      "log_a": 12.010299956639813,
+      "reference_cycles": 2000000,
+      "reference_range_MPa": 80,
+      "scf": 1.2,
+      "thickness_correction": "not qualified"
+    },
+    "status": "screening sensitivity: three sea states, not a full fatigue analysis"
+  },
+  "counts": {
+    "phase_a": {
+      "statics": 88,
+      "dynamics_including_fatigue": 70
+    },
+    "full_envelope": {
+      "statics": 88,
+      "dynamics_including_fatigue": 120
+    },
+    "pending_governing_qa": {
+      "statics": 4,
+      "dynamics_including_fatigue": 10
+    }
+  },
+  "qa": {
+    "regular_spatial_pair": 2,
+    "regular_step_pair": 2,
+    "regular_duration_pair": 2,
+    "fatigue_spatial_pair": 2,
+    "fatigue_step_pair": 2,
+    "half_step_s": 0.025,
+    "double_regular_seconds": 1200,
+    "phase_b_fatigue_duration_seconds": 10800,
+    "regular_response_relative_limit": 0.05,
+    "angle_absolute_limit_deg": 0.5,
+    "fatigue_damage_relative_limit": 0.1,
+    "fatigue_stress_relative_limit": 0.05,
+    "fatigue_half_history_damage_relative_limit": 0.2,
+    "status": "Governing SCR and SLWR selections require completed responses; no arbitrary case substituted"
+  }
+}

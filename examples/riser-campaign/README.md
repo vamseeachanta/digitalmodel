@@ -22,6 +22,8 @@ This campaign prepares **48 ASSUMED screening cases** and **288 solver input
 files**, without a licensed solver. It crosses four floater types, two size
 classes, three water depths and two riser configurations. No stress utilization
 curve, native equilibrium or operating limit is established by these inputs.
+A distinct frozen tranche adds twelve pipe variants and 36 fatigue histories;
+its native input templates remain unreleased pending readback and motion clearance.
 
 ## Revision history
 
@@ -29,6 +31,7 @@ curve, native equilibrium or operating limit is established by these inputs.
 | --- | --- | --- |
 | 1 | 2026-10-25 | Define an assumed comparison matrix and reproducible inputs for later licensed analysis. |
 | 2 | 2026-10-25 | Place inputs under examples and bind each input group to explicit source terms, versions and digests. |
+| 3 | 2026-10-26 | Add the frozen twelve-section tranche, depth-dependent pressure and three-sea expansion with explicit release gates. |
 
 ## Matrix and existing code
 
@@ -90,6 +93,96 @@ position from hang-off, and elevation above the touchdown centreline, in metres;
 forces are newtons and angles are degrees. Geometry is an analytical seed, not
 native solver output. Only one worked YAML input per configuration and their
 hash index are retained here; bulk outputs belong outside the checkout.
+
+## Frozen twelve-section tranche
+
+The manifest declares the original comparison axes in `matrix_axes` and the
+additional pipe variants in `frozen_tranche`. Coverage is checked separately:
+the original tuples retain their existing meaning; the frozen rows require the
+exact NPS 8/10/12 × wall W1/W2 × SCR/SLWR Cartesian set. A standalone original
+matrix may declare a smaller subset of the supported axes. Its schema minimum
+is one case; coverage still requires every declared combination. Frozen variants
+are distinguished by validated case IDs and every supplied dimensional field.
+
+`matrix-i0339-2.tsv` retains the supplied UTF-8/LF bytes. Its SHA-256 is
+`f95a98735eb3882a354857fc56975a82d1b67095d6a57cb8cf565229e9ddf2c1`.
+`criteria-i0339-2.json` records version `I0339-2-v1`, assumptions, units and
+public-source lineage. Every TSV field is retained as text in the manifest and
+compared against the frozen bytes, including the explicit `not_applicable`
+values. The criteria digest is also pinned by the manifest. Public report bytes
+were not independently acquired for this extension; environmental numbers are
+the supplied frozen criteria. The public report catalogue identity remains a gap.
+
+The same command writes the original inputs and this separate tranche. Outputs
+include the scope/criteria snapshots, numerical section properties, fixed
+geometry, load ledger and source-code snapshots with SHA-256 digests. The
+tranche is indexed under `index.json:frozen_tranche`; it is not an extension of
+the original synthetic-RAO example's qualification.
+
+| Calculation | Written inputs | Phase A requirement | Pending governing selection |
+| --- | ---: | ---: | ---: |
+| Statics: 12 functional references and 72 offset/current equilibria | 84 | 88 | 4 |
+| Regular dynamics, nominal offset, both headings | 24 | 30 | 6 |
+| Fatigue: twelve sections and three seas | 36 | 40 | 4 |
+| Total | 144 | 158 | 14 |
+
+Table 4. Written inputs are not completed calculations. Four spatial QA statics
+and ten QA dynamics depend on governing completed SCR/SLWR responses. They are
+recorded as pending; no arbitrary section is substituted to reach the planned
+88 statics and 70 dynamics. The full envelope additionally includes 48 offset
+regular dynamics and two longer fatigue checks. No QA or Phase B input is counted
+as written by this extension.
+
+Nominal wall sets steel mass, EA and EI. The checked wall is nominal wall times
+0.875 minus 3 mm, once only, and sets stress diameters. The coating contributes
+mass and displacement once. Equivalent distributed modules conserve net uplift,
+with pitch-weighted projected diameter for drag and volume-equivalent diameter
+for inertia/displacement. These idealised modules are not depth-rated hardware.
+The original module code-check screens are not rerun or represented as native
+resistance qualification. Mesh targets are 3 m coarse and 0.5 m fine, with
+20 m fine windows around hang-off, the analytical touchdown envelope, buoyancy
+transitions and sag/hog material stations. The fine-window width is inherited
+from the existing catenary template and remains an assumed starting mesh.
+
+The analytical reference uses the 1490 m hang-off separation and transforms
+ASB elevation to global z by subtracting the physical 1500 m water depth. The
+nominal sag/hog targets are 50/700 m ASB. Grounded length is derived from the
+largest suspended-length increase across -90/0/+90 m plus 20 m, rounded upward
+on the inherited 0.1 m grid. The anchor, line length and buoyancy material arcs
+are then fixed. The full adverse axial-friction bound must retain at least 1 kN;
+a failed bound raises an error rather than tuning geometry. The analytical
+reference remains frictionless, separately from the production soil input of
+100 kN/m³ normal/shear stiffness and 0.5 axial/lateral friction.
+
+The reference centreline ends at the seabed elevation with an explicit zero
+contact-radius correction. Native centreline/contact interpretation requires
+readback before static release; this seed is not a contact-qualified equilibrium.
+Any required radius correction must preserve the stated physical water depth
+and be closure-tested in a subsequent reviewed change.
+
+Positive span offset moves the floater in negative x while the anchor stays
+fixed. Contents pressure is 20 MPa gauge at MSL with density 800 kg/m³; native
+pressure is entered as 20000 kPa at reference z=0 and varies hydrostatically.
+The external column uses 1025 kg/m³ water. All seven public current knots are
+retained, including the explicitly assumed deep constant tail. Regular-wave
+headings 0/180 degrees are paired with currents toward 15/195 degrees. The
+full wave height is 1.86 Hs and the period is Tp, an assumed regular-wave proxy.
+Nonlinear wave validity and native coefficient mappings require later QA.
+
+Every frozen dynamic input is marked blocked in its header and index. Floater
+motions are absent: no synthetic RAO, extrapolation or Froude scaling fills the
+missing qualified motion packet. Exact-source hashes, complex phases, axes,
+origin, heading and energy-bearing spectral-band clearance remain prerequisites.
+Each dynamic row identifies its matching equilibrium dependency. The files are
+native-format load templates for readback, not released dynamic models.
+
+Fatigue inputs retain F03/F04/F05, their common paired seeds, nominal offset,
+zero current, wave toward 180 degrees, gamma 1, 150 s build-up and 3600 s
+stationary response at 0.05 s. The native wave period is explicitly Tp, not Tz.
+Annual occurrences are 0.015, 0.010 and 0.013, without renormalisation. The
+supplied SN80/SCF assumptions remain an air-equivalent benchmark. No rainflow,
+damage, service life, native stress extraction or solver result is delivered:
+**screening sensitivity: three sea states, not a full fatigue analysis.**
 
 ## Later licensed analysis and post-processing
 
