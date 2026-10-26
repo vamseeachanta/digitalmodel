@@ -2,6 +2,16 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Finite geometry checks and independent annulus hand calculations.
 
+Plan-lite
+---------
+Scope: reject NaN and both infinities in every supplied geometry dimension,
+including the third wrapper input; retain Boolean rejection in the validator.
+Compatibility: preserve finite dimension-pair calculations, positive-bore rules,
+three-input diameter precedence and the existing consistency tolerance.
+Acceptance: exercise each argument and route, compare finite results with the
+independent annulus integrals below, and pass all regressions in this file.
+Package integration and finite-arithmetic overflow handling remain separate.
+
 Synthetic dimensions are declared below in metres, with no design-code limits.
 Hand calculation basis: in polar coordinates dA = r dr dtheta, so
 A = integral(0..2*pi) integral(ri..ro) r dr dtheta = pi*(ro**2-ri**2).
