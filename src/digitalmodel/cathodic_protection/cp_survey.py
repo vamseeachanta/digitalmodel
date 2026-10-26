@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """CP survey data analysis and interpretation.
 
 Provides tools for processing and interpreting cathodic protection survey
@@ -16,9 +19,9 @@ References
 from __future__ import annotations
 
 import math
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 # Protection criteria
@@ -101,6 +104,123 @@ class AttenuationResult(BaseModel):
     leakage_conductance_S_per_km: float = Field(
         ..., description="Leakage conductance [S/km]"
     )
+
+
+CRITERIA_NOTE = "user to confirm against the governing code"
+SEVERITIES = ("minor", "moderate", "severe", "very_severe")
+
+
+class SurveyInput(BaseModel):
+    """Finite, validated inputs for synthetic and user-supplied survey criteria."""
+
+    model_config = ConfigDict(allow_inf_nan=False, extra="forbid", frozen=True)
+
+
+class PCMSurveyPoint(SurveyInput):
+    """PCM signal amplitude in mA at a non-negative pipeline chainage."""
+
+    distance_m: float = Field(ge=0)
+    signal_current_mA: float = Field(gt=0)
+
+
+class PCMConfig(SurveyInput):
+    """Segment loss threshold, inclusive; user to confirm against the governing code."""
+
+    loss_unit: Literal["dB/m", "mA/m"] = "dB/m"
+    loss_threshold: float = Field(default=0.1, ge=0, description=CRITERIA_NOTE)
+
+
+class PCMSegment(SurveyInput):
+    """Signed current loss over a segment; a gain remains negative."""
+
+    start_m: float
+    end_m: float
+    distance_m: float
+    start_current_mA: float
+    end_current_mA: float
+    loss_per_m: float
+    loss_unit: Literal["dB/m", "mA/m"]
+    loss_threshold: float
+    flagged: bool
+
+
+def analyze_pcm_survey(
+    survey_points: list[PCMSurveyPoint], config: PCMConfig | None = None,
+) -> list[PCMSegment]:
+    """Sort by chainage and flag signed loss >= threshold at segment midpoints.
+
+    Decibel loss uses current amplitude: 20 log10(I_start / I_end) / length.
+    Duplicate chainages and non-positive currents are rejected. Zero or one
+    reading yields no segment. Every threshold is a user input; user to confirm
+    against the governing code.
+    """
+    config = PCMConfig.model_validate(config or PCMConfig())
+    points = sorted(
+        (PCMSurveyPoint.model_validate(p.model_dump()) for p in survey_points),
+        key=lambda p: p.distance_m,
+    )
+    segments = []
+    for start, end in zip(points, points[1:]):
+        length = end.distance_m - start.distance_m
+        if length == 0:
+            raise ValueError("duplicate PCM chainage")
+        if config.loss_unit == "dB/m":
+            loss = 20 * (math.log10(start.signal_current_mA)
+                         - math.log10(end.signal_current_mA)) / length
+        else:
+            loss = (start.signal_current_mA - end.signal_current_mA) / length
+        segments.append(PCMSegment(
+            start_m=start.distance_m, end_m=end.distance_m,
+            distance_m=start.distance_m + length / 2,
+            start_current_mA=start.signal_current_mA,
+            end_current_mA=end.signal_current_mA,
+            loss_per_m=loss, loss_unit=config.loss_unit,
+            loss_threshold=config.loss_threshold, flagged=loss >= config.loss_threshold,
+        ))
+    return segments
+
+
+class ACVGIndication(SurveyInput):
+    """ACVG reading; direction describes an optional along-pipeline indication."""
+
+    distance_m: float = Field(ge=0)
+    reading: float
+    unit: Literal["dB_uV", "relative"] = "relative"
+    direction: Literal["upstream", "downstream"] | None = None
+    severity: str = ""
+
+
+class ACVGBands(SurveyInput):
+    """Inclusive lower bands; user to confirm against the governing code.
+
+    Synthetic defaults are 20, 40 and 60 in the declared unit. No conversion
+    between dB microvolts and instrument-relative readings is inferred.
+    """
+
+    unit: Literal["dB_uV", "relative"] = "relative"
+    moderate_min: float = Field(default=20, description=CRITERIA_NOTE)
+    severe_min: float = Field(default=40, description=CRITERIA_NOTE)
+    very_severe_min: float = Field(default=60, description=CRITERIA_NOTE)
+
+    @model_validator(mode="after")
+    def ordered_bands(self) -> ACVGBands:
+        """Require strictly increasing severity boundaries."""
+        if not self.moderate_min < self.severe_min < self.very_severe_min:
+            raise ValueError("ACVG bands must be strictly increasing")
+        return self
+
+
+def classify_acvg_indication(
+    indication: ACVGIndication, bands: ACVGBands | None = None,
+) -> ACVGIndication:
+    """Return a classified copy using unit-matched, user-set severity bands."""
+    bands = ACVGBands.model_validate(bands or ACVGBands())
+    indication = ACVGIndication.model_validate(indication.model_dump())
+    if indication.unit != bands.unit:
+        raise ValueError("ACVG reading unit must match the severity bands unit")
+    thresholds = (bands.moderate_min, bands.severe_min, bands.very_severe_min)
+    severity = SEVERITIES[sum(indication.reading >= edge for edge in thresholds)]
+    return indication.model_copy(update={"severity": severity})
 
 
 def analyze_cis_survey(
