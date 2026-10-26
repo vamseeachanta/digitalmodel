@@ -20,6 +20,9 @@ an omitted output or unsupported timing limit cannot pass preparation.</td></tr>
 <tr><td>3</td><td>2026-10-24</td><td>Native issuance refuses source-tree and
 Git-worktree destinations, requires document references and restart after the
 options list closes, and withholds uncited allocation values.</td></tr>
+<tr><td>4</td><td>2026-10-26</td><td>Source identities, physical reconciliation
+and sampling details are withheld from the public request pending source
+provenance and publication rights. A separate private evidence record is required.</td></tr>
 </table>
 <p>Table: Revision history.</p>
 
@@ -30,12 +33,10 @@ intersected sparse frequency grids, and placeholder matrices. A corrected
 comparison cannot qualify those historical outputs. Source: repository issue
 <a href="https://github.com/vamseeachanta/digitalmodel/issues/714">#714</a>,
 maintainer comments on input mismatch, sampling and native-output conventions.</p>
-<p>The existing <code>orcawave_001_ship_raos_rev2_matched.yml</code> is an
-investigation candidate, not proof of matching. Its centre of gravity still
-requires reconciliation with AQWA. It also requests a full QTF calculation;
-frequency times heading count does not describe the entire workload.
-Native mapping and readback remain separate checks. No native input is issued
-with this page; the conditional offline command below refuses the current basis.</p>
+<p>Physical equivalence and the requested native workload require separate
+review against authorized private evidence. Native mapping and readback remain
+separate checks. No native input is issued with this page; the conditional
+offline command below refuses the public placeholder.</p>
 <p>The matched API runner now refuses calculation failure before saving.
 Successful calculation and saving still require separate native completion,
 completeness, model-equivalence and engineering checks. The fallback that
@@ -105,51 +106,26 @@ The complete supplied grid is separately retained for both solvers.</p>
 
 <h2>Source rights</h2>
 <p>Source rights: internal use only. The L01 source model files are held in the project repositories; runs use the project licences; results are kept in the private data store; nothing derived from the source model is published in a public repository or page until its provenance is recorded.</p>
-<p>The same record is retained in <a href="native_request.json">native_request.json</a>.
-That file pins both source decks by SHA-256. Issued decks and solver outputs
-belong in the private data store; they are not public deliverables.</p>
+<p>The same rights restriction is retained in
+<a href="native_request.json">native_request.json</a>. That file is a public
+placeholder: source identities, digests, physical values, reconciliation findings
+and sampling details are WITHHELD pending source provenance and publication
+rights. Neither public availability of a source file nor a private output path
+establishes publication authority. This revision makes no rights clearance claim.</p>
+<p>The complete source and derived evidence must be retained and reviewed in an
+authorized private store. Local preservation does not establish private archival.
+A separate private request must pin both source decks by SHA-256 and carry the
+reviewed evidence before issuance; source decks and historical records are not
+changed by this request. Issued decks and solver outputs belong in the private
+data store.</p>
 
 <h2>Physical basis reconciliation</h2>
-<p>Only the checked-in matched YAML and AQWA deck are used below. The AQWA
-deck is also the mesh selected by the matched YAML. Values are retained as read;
-no unrecorded coordinate transform, tolerance or restraint default is applied.</p>
-<table border="1">
-<tr><th>Quantity</th><th>Value with unit</th><th>File and line</th><th>Agrees across the OrcaWave and AQWA inputs (yes/no)</th><th>Note</th></tr>
-<tr><td>Geometry</td><td>OrcaWave mesh translation [0, 0, 0.5] m;
-AQWA node 10 z = 0 m and waterline z = 0 m</td>
-<td>orcawave_001_ship_raos_rev2_matched.yml:82,85-90;
-aqwa_001_ship_raos_rev2.dat:30,6143</td><td>no — NOT_EVALUATED</td>
-<td>The mesh file is shared, but a common geometry/frame transform is not established.
-The translation and native mesh coordinates are not interchangeable.</td></tr>
-<tr><td>Mass</td><td>OrcaWave 44082.20 t; AQWA 45184268 kg</td>
-<td>orcawave_001_ship_raos_rev2_matched.yml:11,108;
-aqwa_001_ship_raos_rev2.dat:13,12138</td><td>no — DISAGREES</td>
-<td>The AQWA mass card governs this record, rather than the displacement quoted
-in a YAML comment. Unit conversion does not reconcile the values.</td></tr>
-<tr><td>Centre of gravity</td><td>OrcaWave [108.88, 0.002, 8.0] m;
-AQWA [108.882, 0.0016289, 8.5] m</td>
-<td>orcawave_001_ship_raos_rev2_matched.yml:106;
-aqwa_001_ship_raos_rev2.dat:6134</td><td>no — DISAGREES</td>
-<td>These are the input coordinates. A common-frame transformation is not evidenced.</td></tr>
-<tr><td>Reference point</td><td>NOT_EVALUATED (m): OrcaWave free-surface/body-origin declarations;
-AQWA response/coefficient reference point not specified</td>
-<td>orcawave_001_ship_raos_rev2_matched.yml:92,124,132;
-aqwa_001_ship_raos_rev2.dat:12191-12193</td><td>no — NOT_EVALUATED</td>
-<td>The empty AQWA DRC1 block does not establish a common response/coefficient origin.</td></tr>
-<tr><td>Water depth</td><td>OrcaWave 500 m; AQWA 500 m</td>
-<td>orcawave_001_ship_raos_rev2_matched.yml:36;
-aqwa_001_ship_raos_rev2.dat:12150</td><td>yes — AGREES</td>
-<td>Both explicit depth fields agree.</td></tr>
-<tr><td>Restraints</td><td>NOT_EVALUATED (dimensionless): OrcaWave free connection,
-multibody constraints disabled and all fixed DOFs disabled; AQWA not established</td>
-<td>orcawave_001_ship_raos_rev2_matched.yml:78,133,135-140;
-aqwa_001_ship_raos_rev2.dat:12191-12193</td><td>no — NOT_EVALUATED</td>
-<td>Absence of an AQWA restraint card is not evidence of equivalent restraints.
-External damping and inertia also require reconciliation for a scientific comparison.</td></tr>
-</table>
-<p>Table: Reconciliation against the explicit source inputs. DISAGREES and
-NOT_EVALUATED both prevent native issuance. Corrected, cited inputs are required;
-the source decks are not changed by this request.</p>
+<p>WITHHELD pending source provenance and publication rights. No source values,
+file locators or per-source findings are published here. Geometry, mass, centre
+of gravity, reference point, water depth and restraints remain NOT_EVALUATED in
+the public placeholder. The solver manager must review all cited physical
+reconciliations in the authorized private evidence record. Both DISAGREES and
+NOT_EVALUATED prevent native issuance.</p>
 
 <h2>Conditional offline native preparation</h2>
 <pre>python scripts/benchmark/l01_investigation.py issue docs/domains/orcawave/L01_aqwa_benchmark/native_request.json "$PRIVATE_RUN_DIR/stage1" --source-root .</pre>
@@ -211,43 +187,24 @@ and fixed configuration; later allocations are summed across requested solvers
 and variants. An incomplete or capped stage does not establish a full-stage
 duration. The offline command records the stop rule; execution supervision shall
 enforce it. There is no running solver or automatic termination claim here.</p>
-<p>Stage-1 identifiers below describe the same sampling points in each solver.
-The period and heading values come from
-<code>orcawave_001_ship_raos_rev2_matched.yml</code>, at the cited lines. Each
-AQWA case expects <code>stage1.LIS</code> and <code>stage1.AH1</code>; each OrcaWave
-case expects <code>stage1.owr</code>. These are shared native files containing all
-stage-1 samples, not separate fabricated files per sample. Both solvers also
-retain execution logs, input digests and native readback in the private data store.</p>
-<table border="1">
-<tr><th>Case ID</th><th>Solver</th><th>Period (s), file:line</th><th>Heading (deg), file:line</th><th>Expected outputs</th></tr>
-<tr><td>L01-S1-F01-H01</td><td>AQWA; OrcaWave</td><td>2, orcawave_001_ship_raos_rev2_matched.yml:41</td><td>0, orcawave_001_ship_raos_rev2_matched.yml:62</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F01-H02</td><td>AQWA; OrcaWave</td><td>2, orcawave_001_ship_raos_rev2_matched.yml:41</td><td>45, orcawave_001_ship_raos_rev2_matched.yml:64</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F01-H03</td><td>AQWA; OrcaWave</td><td>2, orcawave_001_ship_raos_rev2_matched.yml:41</td><td>112.5, orcawave_001_ship_raos_rev2_matched.yml:67</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F01-H04</td><td>AQWA; OrcaWave</td><td>2, orcawave_001_ship_raos_rev2_matched.yml:41</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F02-H01</td><td>AQWA; OrcaWave</td><td>7.5, orcawave_001_ship_raos_rev2_matched.yml:47</td><td>0, orcawave_001_ship_raos_rev2_matched.yml:62</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F02-H02</td><td>AQWA; OrcaWave</td><td>7.5, orcawave_001_ship_raos_rev2_matched.yml:47</td><td>45, orcawave_001_ship_raos_rev2_matched.yml:64</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F02-H03</td><td>AQWA; OrcaWave</td><td>7.5, orcawave_001_ship_raos_rev2_matched.yml:47</td><td>112.5, orcawave_001_ship_raos_rev2_matched.yml:67</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F02-H04</td><td>AQWA; OrcaWave</td><td>7.5, orcawave_001_ship_raos_rev2_matched.yml:47</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F03-H01</td><td>AQWA; OrcaWave</td><td>11, orcawave_001_ship_raos_rev2_matched.yml:53</td><td>0, orcawave_001_ship_raos_rev2_matched.yml:62</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F03-H02</td><td>AQWA; OrcaWave</td><td>11, orcawave_001_ship_raos_rev2_matched.yml:53</td><td>45, orcawave_001_ship_raos_rev2_matched.yml:64</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F03-H03</td><td>AQWA; OrcaWave</td><td>11, orcawave_001_ship_raos_rev2_matched.yml:53</td><td>112.5, orcawave_001_ship_raos_rev2_matched.yml:67</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F03-H04</td><td>AQWA; OrcaWave</td><td>11, orcawave_001_ship_raos_rev2_matched.yml:53</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F04-H01</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>0, orcawave_001_ship_raos_rev2_matched.yml:62</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F04-H02</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>45, orcawave_001_ship_raos_rev2_matched.yml:64</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F04-H03</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>112.5, orcawave_001_ship_raos_rev2_matched.yml:67</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-<tr><td>L01-S1-F04-H04</td><td>AQWA; OrcaWave</td><td>22, orcawave_001_ship_raos_rev2_matched.yml:60</td><td>180, orcawave_001_ship_raos_rev2_matched.yml:70</td><td>stage1.LIS, stage1.AH1; stage1.owr</td></tr>
-</table>
-<p>Table: Stage-1 case IDs, solvers and expected native outputs. The shared
-stop rule remains NOT_EVALUATED until the solver manager supplies the cited cap.</p>
+<h2>Stage-1 sampling</h2>
+<p>WITHHELD pending source provenance and publication rights. The public
+placeholder contains no periods, headings, source line citations or case list.
+The solver manager must supply those details in a separate authorized private
+request, with a shared cited cap before native preparation. Each AQWA case
+expects <code>stage1.LIS</code> and <code>stage1.AH1</code>; each OrcaWave case
+expects <code>stage1.owr</code>. These are shared native files containing all
+stage-1 samples. Retain execution logs, input digests and native readback in
+the private data store.</p>
 
 <h2>Solver run request</h2>
 <ol>
-<li>Review the physical basis and source rights. Use the existing matched YAML
-and AQWA source model only after reconciliation. Prepare native inputs for the
+<li>Review the physical basis and source rights. Use authorized private source
+models only after reconciliation. Prepare native inputs for the
 request's exact grids and panel-division variants. Convert angular frequencies
-to the native frequency/period convention explicitly; the historical YAML uses
-periods. Verify generated values by native readback. Do not directly apply
-request JSON fields as native API options.</li>
+to the native frequency/period convention explicitly; record the
+source convention privately. Verify generated values by native readback. Do not
+directly apply request JSON fields as native API options.</li>
 <li>Run the repository GeometryQualityChecker with retained mesh reports.
 Inspect non-planar panels, winding, mesh dimensions, panel aspect ratios,
 waterline/interior surfaces and the shortest-wave criterion in both solvers.
@@ -330,8 +287,8 @@ limitation, phase/reference-point concerns and native-log failure handling.</li>
 <li>API_EXECUTION_SUMMARY.md: observed resource/time history and warnings.
 Its statement that low memory rules out resource problems is not adopted as
 a new conclusion.</li>
-<li>orcawave_001_ship_raos_rev2_matched.yml: existing calculation options and
-candidate physical basis; no claim of verified equivalence.</li>
+<li>Authorized private evidence record: source provenance, publication rights,
+pinned native inputs and physical reconciliation remain required.</li>
 <li>src/digitalmodel/hydrodynamics/diffraction/benchmark_abscissa.py:
 relative-gap sampling contract; a new roll-specific bound requires evidence.</li>
 <li>docs/plans/issue-714-aqwa-offline-scope-addendum.html: source-rights,

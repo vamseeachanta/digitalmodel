@@ -408,3 +408,39 @@ def test_document_reference_forms_are_retained(mod, candidate, citation):
     output = root.parent / (root.name + "-issued")
     manifest = mod.issue_native_inputs(request, root, output)
     assert manifest["allocation_policy"]["citation"] == citation
+
+
+def test_public_request_withholds_source_details():
+    request = json.loads(REQUEST.read_text(encoding="utf-8"))
+    assert request["native_inputs"] == "WITHHELD"
+    assert request["sources"] == {}
+    for row in request["reconciliation"]:
+        assert row["status"] == "NOT_EVALUATED"
+        assert row["unit"] == "NOT_EVALUATED"
+        for solver in ("AQWA", "OrcaWave"):
+            assert row[solver] == {"value": None, "file_line": "NOT_EVALUATED"}
+        assert row["note"] == "WITHHELD pending source provenance and publication rights."
+    for key in ("periods_s", "headings_deg", "grid_evidence", "cases"):
+        assert request["stage1"][key] == []
+
+
+def test_public_page_withholds_reconciliation_and_case_details():
+    page = REQUEST.with_name("solver_request.html").read_text(encoding="utf-8")
+    for heading in ("Physical basis reconciliation", "Stage-1 sampling"):
+        section = page.split(f"<h2>{heading}</h2>", 1)[1].split("<h2>", 1)[0]
+        assert "WITHHELD" in section
+        assert "<table" not in section
+        assert "<tr>" not in section
+    assert "That file pins both source decks" not in page
+
+
+def test_public_placeholder_cannot_issue_after_only_allocation_is_supplied(
+        mod, candidate, tmp_path):
+    synthetic, _ = candidate
+    request = json.loads(REQUEST.read_text(encoding="utf-8"))
+    request["allocation_policy"] = synthetic["allocation_policy"]
+    request["stage1"]["cap_licensed_minutes"] = 60
+    output = tmp_path / "issued"
+    with pytest.raises(ValueError, match="reconciliation"):
+        mod.issue_native_inputs(request, ROOT, output)
+    assert not output.exists()
