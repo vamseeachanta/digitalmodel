@@ -146,28 +146,30 @@ def test_evidence_contains_digest_and_symbol_extent(repository, audit_module):
 
 
 @pytest.mark.parametrize(
-    "mutation",
+    "mutation, diagnostic",
     [
-        {"status": "PASS"},
-        {"status": "GAP"},  # A gap requires a test reproducer, not just a source claim.
-        {"control": "invented"},
-        {"follow_up": ""},
-        {"evidence": []},
-        {"evidence": [{"path": "../outside.py", "symbol": "launch"}]},
-        {
-            "evidence": [
-                {
-                    "path": "src/digitalmodel/solvers/neutral/runner.py",
-                    "symbol": "missing",
-                }
-            ]
-        },
+        ({"status": "PASS"}, "invalid observation claim"),
+        # A gap requires a test reproducer, not just a source claim.
+        ({"status": "GAP"}, "gap requires a test reproducer"),
+        ({"control": "invented"}, "invalid observation claim"),
+        ({"follow_up": ""}, "invalid observation claim"),
+        ({"evidence": []}, "invalid observation claim"),
+        (
+            {"evidence": [dict(observation()["evidence"][0], path="../outside.py")]},
+            "invalid relative evidence path",
+        ),
+        (
+            {"evidence": [dict(observation()["evidence"][0], symbol="missing")]},
+            "missing or ambiguous evidence symbol",
+        ),
     ],
 )
-def test_invalid_or_unsubstantiated_claims_refuse(repository, audit_module, mutation):
+def test_invalid_or_unsubstantiated_claims_refuse(
+    repository, audit_module, mutation, diagnostic
+):
     record = observation()
     record.update(mutation)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=diagnostic):
         audit_module.audit(repository, [record])
 
 

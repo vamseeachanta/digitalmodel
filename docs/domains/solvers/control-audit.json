@@ -169,7 +169,7 @@
       {
         "path": "tests/scripts/test_audit_solver_controls.py",
         "symbol": "test_real_batch_invocation_has_no_explicit_timeout",
-        "sha256": "b5980f76b4c16b361be00d25d1dbd230699e9fff55b1b2ceb3b85aeaf50fee73"
+        "sha256": "382f9075fd64a0cc15e10f868e97cc307a0cb9184bf10c3c13ac9118bb54c00a"
       }
     ],
     "follow_up": "#2096"
