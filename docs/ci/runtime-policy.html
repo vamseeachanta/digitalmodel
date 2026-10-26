@@ -27,9 +27,25 @@
   <h2>Revision history</h2>
   <table>
     <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-    <tbody><tr><td>1</td><td>2026-10-24</td><td>Record the allocation basis for existing timeout and freshness limits so that regression expectations have a documented rationale.</td></tr></tbody>
+    <tbody>
+      <tr><td>1</td><td>2026-10-24</td><td>Record the allocation basis for existing timeout and freshness limits so that regression expectations have a documented rationale.</td></tr>
+      <tr><td>2</td><td>2026-10-26</td><td>Clarify concurrency and full-sweep coverage so that incremental results and resource limits are interpreted within their scope.</td></tr>
+    </tbody>
     <caption>Table 1. Policy revision history.</caption>
   </table>
+
+  <h2>Concurrency and coverage</h2>
+  <p>Incremental push runs in <code>quality-gates.yml</code> and
+    <code>quality-gates-by-domain.yml</code> use distinct groups for each run;
+    superseded pull-request runs for the same workflow and ref cancel.
+    The <code>pages</code> and <code>publish</code> deployment groups serialize
+    without cancelling an active execution. These settings do not establish
+    deployment completion or a bound on queue time.</p>
+  <p>The <code>Full Matrix Sweep</code> workflow runs nightly or manually;
+    a newer sweep cancels an older sweep for the same ref. It has no push
+    trigger. Incremental domain checks select the touched shards, with a full
+    matrix fallback when the push base is unavailable. A pass for the selected
+    shards supplies no execution evidence for omitted shards.</p>
 
   <h2>Timeout allocations</h2>
   <p>Each timeout is the sum of its work allocations and margin. The allocations
