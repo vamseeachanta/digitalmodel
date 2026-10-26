@@ -39,8 +39,18 @@ def miner_damage(
     allowable = sn_curve.cycles(stress_ranges)
     result["allowable_cycles"] = allowable
     allowable = np.asarray(allowable, dtype=float)
+    endurance = np.zeros_like(stress_ranges, dtype=bool)
+    if isinstance(sn_curve, WoehlerCurve):
+        # pyLife defines k_2=+inf as perfect endurance below SD; an
+        # infinite result at or above SD remains unqualified.
+        limit = np.asarray(sn_curve.SD, dtype=float)
+        endurance = np.isposinf(sn_curve.k_2) & (stress_ranges < limit)
+        for parameter in (limit, sn_curve.ND, sn_curve.k_1):
+            value = np.asarray(parameter, dtype=float)
+            endurance &= np.isfinite(value) & (value > 0)
     if (np.any(np.isnan(allowable)) or np.any(allowable <= 0)
-            or np.any(~np.isfinite(allowable) & (stress_ranges > 0) & (applied_cycles > 0))):
+            or np.any(~np.isfinite(allowable) & ~endurance
+                      & (stress_ranges > 0) & (applied_cycles > 0))):
         raise ValueError("allowable cycles must be positive and known")
     result["damage"] = applied_cycles / allowable
     damages = result["damage"].to_numpy()

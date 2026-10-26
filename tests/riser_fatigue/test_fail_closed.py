@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 import yaml
+from pylife.materiallaws.woehlercurve import WoehlerCurve
 
 from digitalmodel.fatigue.damage import miner_damage, thickness_correction
 from digitalmodel.fatigue.sn_curves import get_sn_curve
@@ -358,6 +359,23 @@ def test_RF03_invalid_allowable_cannot_hide_a_bin(allowable):
 
     with pytest.raises(ValueError, match="allowable"):
         miner_damage(pd.DataFrame({"stress_range": [100, 100], "cycles": [1, 1]}), InvalidCurve())
+
+
+@pytest.mark.parametrize("contribution", ["wave", "viv"])
+def test_RF03_riser_rejects_perfect_endurance_bins(touch, segment, monkeypatch, contribution):
+    curve = WoehlerCurve(pd.Series({"SD": 100.0, "ND": 1e6, "k_1": 3.0, "k_2": math.inf}))
+    if contribution == "wave":
+        monkeypatch.setattr("digitalmodel.riser_fatigue.touchdown.get_sn_curve", lambda *args: curve)
+        with pytest.raises(ValueError, match="allowable"):
+            assess_touchdown_fatigue(replace(touch, stress_ranges_mpa=[200, 50], cycles=[1, 10000]))
+    else:
+        monkeypatch.setattr("digitalmodel.riser_fatigue.workflow.get_sn_curve", lambda *args: curve)
+        segment["viv_cases"] = [
+            {"stress_range_MPa": 200, "frequency_hz": 1, "exposure_fraction": .1},
+            {"stress_range_MPa": 50, "frequency_hz": 1, "exposure_fraction": .1},
+        ]
+        with pytest.raises(ValueError, match="allowable"):
+            evaluate(segment)
 
 
 @pytest.mark.parametrize("stress", [True, 1j])

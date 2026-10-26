@@ -226,6 +226,10 @@ def assess_touchdown_fatigue(
         {"stress_range": stress_corr, "cycles": cycles}
     )
     damaged = miner_damage(histogram, sn_curve)
+    # Riser screening has no qualified endurance-limit mode for loaded bins.
+    loaded = (stress_corr > 0) & (cycles > 0)
+    if not np.all(np.isfinite(damaged.loc[loaded, "allowable_cycles"])):
+        raise ValueError("riser allowable cycles must be finite for loaded bins")
     period_damage = positive_damage(damaged.attrs["total_damage"], "period_damage")
 
     bins: list[BinResult] = []

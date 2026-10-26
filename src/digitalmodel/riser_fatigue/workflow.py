@@ -271,6 +271,9 @@ def _viv_damage(
 
     sn_curve = get_sn_curve(curve, environment)
     damage_df = miner_damage(pd.DataFrame(bins), sn_curve)
+    # Every supplied VIV bin is loaded; no endurance-limit mode is qualified.
+    if not all(math.isfinite(value) for value in damage_df["allowable_cycles"]):
+        raise ValueError("VIV allowable cycles must be finite for loaded bins")
     total = positive_damage(damage_df.attrs["total_damage"], "VIV total_damage")
 
     rows: list[dict[str, Any]] = []
