@@ -38,6 +38,21 @@ Frequency = Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)]
 Heading = Annotated[float, Field(strict=True, ge=0, lt=360, allow_inf_nan=False)]
 
 
+class _UniqueKeySafeLoader(yaml.SafeLoader):
+    """Reject repeated mapping keys, including collisions after YAML merges."""
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
+        """Keep safe construction while rejecting silently overwritten entries."""
+        self.flatten_mapping(node)
+        mapping = super().construct_mapping(node, deep=deep)
+        if len(mapping) != len(node.value):
+            raise yaml.constructor.ConstructorError(
+                "while constructing a mapping", node.start_mark,
+                "duplicate mapping key", node.start_mark,
+            )
+        return mapping
+
+
 class _StudyInput(BaseModel):
     """Reject unknown keys and retain immutable validated inputs."""
 
@@ -105,7 +120,7 @@ class ConvergenceStudy(_StudyInput):
             ValueError: If YAML syntax or any study input is invalid.
         """
         try:
-            raw = yaml.safe_load(text)
+            raw = yaml.load(text, Loader=_UniqueKeySafeLoader)
         except yaml.YAMLError as error:
             raise ValueError("invalid study YAML") from error
         return cls.model_validate(raw)

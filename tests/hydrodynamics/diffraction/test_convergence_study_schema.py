@@ -140,6 +140,61 @@ def test_study_schema_bad_yaml(text) -> None:
         schema.ConvergenceStudy.from_yaml(text)
 
 
+@pytest.mark.parametrize("axis", ["mesh_variants", "frequency_grids", "heading_grids"])
+def test_study_schema_rejects_repeated_yaml_axes(axis) -> None:
+    text = STUDY_YAML + yaml.safe_dump({axis: raw_study()[axis]})
+    with pytest.raises(ValueError, match="invalid study YAML") as error:
+        schema.ConvergenceStudy.from_yaml(text)
+    assert "duplicate mapping key" in str(error.value.__cause__)
+
+
+@pytest.mark.parametrize(
+    "original, replacement",
+    [
+        ("label: coarse", "label: coarse, label: alternate"),
+        ("mesh_file: synthetic/coarse.gdf",
+         "mesh_file: synthetic/coarse.gdf, mesh_file: synthetic/alternate.gdf"),
+        ("label: sparse", "label: sparse, label: alternate"),
+        ("frequencies: [0.5, 1.0]",
+         "frequencies: [0.5, 1.0], frequencies: [2.0]"),
+        ("label: axial", "label: axial, label: alternate"),
+        ("headings: [0.0, 180.0]", "headings: [0.0, 180.0], headings: [90.0]"),
+    ],
+)
+def test_study_schema_rejects_repeated_nested_yaml_keys(original, replacement) -> None:
+    text = STUDY_YAML.replace(original, replacement)
+    with pytest.raises(ValueError, match="invalid study YAML") as error:
+        schema.ConvergenceStudy.from_yaml(text)
+    assert "duplicate mapping key" in str(error.value.__cause__)
+
+
+def test_study_schema_accepts_noncolliding_yaml_merges() -> None:
+    text = STUDY_YAML.replace(
+        "- {label: coarse, mesh_file: synthetic/coarse.gdf}",
+        "- {<<: &mesh {mesh_file: synthetic/coarse.gdf}, label: coarse}",
+    ).replace("mesh_file: synthetic/fine.gdf", "<<: *mesh")
+    study = schema.ConvergenceStudy.from_yaml(text)
+    assert [mesh.label for mesh in study.mesh_variants] == ["coarse", "fine"]
+    assert [mesh.mesh_file for mesh in study.mesh_variants] == [
+        "synthetic/coarse.gdf", "synthetic/coarse.gdf",
+    ]
+
+
+def test_study_schema_rejects_colliding_yaml_merges() -> None:
+    text = STUDY_YAML.replace(
+        "{label: coarse, mesh_file: synthetic/coarse.gdf}",
+        "{<<: {label: alternate}, label: coarse, mesh_file: synthetic/coarse.gdf}",
+    )
+    with pytest.raises(ValueError, match="invalid study YAML") as error:
+        schema.ConvergenceStudy.from_yaml(text)
+    assert "duplicate mapping key" in str(error.value.__cause__)
+
+
+def test_study_schema_rejects_unsafe_yaml_tags() -> None:
+    with pytest.raises(ValueError, match="invalid study YAML"):
+        schema.ConvergenceStudy.from_yaml("!!python/tuple [1, 2]")
+
+
 @pytest.mark.parametrize("mesh_file", ["", "   ", None])
 def test_study_schema_requires_mesh_reference(mesh_file) -> None:
     raw = raw_study()
@@ -205,38 +260,81 @@ def test_study_schema_labels_are_scoped_to_each_axis() -> None:
     assert len(schema.expand_study(study, max_cases=8)) == 8
 
 
-def test_study_schema_import_and_expansion_are_solver_free(tmp_path) -> None:
-    """A fresh process must not import runners or perform filesystem operations."""
+def _run_isolated_study(source: Path, directory: Path) -> subprocess.CompletedProcess:
+    """Import and expand the study in a fresh isolated process."""
     script = """
 import builtins
 import importlib.util
 import sys
+from dataclasses import dataclass
+from itertools import product
 from pathlib import Path
+from typing import Annotated, Self
+import yaml
+from pydantic import (
+    BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator,
+)
+# Preload dependency plugin discovery before target-module filesystem guards.
+class DependencyWarmup(BaseModel):
+    value: int
+
 source, text = sys.argv[1:]
 spec = importlib.util.spec_from_file_location('pure_study', source)
 module = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = module
-spec.loader.exec_module(module)
 def forbidden(*args, **kwargs):
     raise AssertionError('filesystem operation during planning')
 builtins.open = forbidden
 Path.open = forbidden
 Path.exists = forbidden
 Path.mkdir = forbidden
+spec.loader.exec_module(module)
 study = module.ConvergenceStudy.from_yaml(text)
 assert len(module.expand_study(study, max_cases=8)) == 8
 assert not any(name.startswith('digitalmodel.') for name in sys.modules)
 assert not any(name.startswith('OrcFxAPI') for name in sys.modules)
 """
     result = subprocess.run(
-        [sys.executable, "-I", "-B", "-c", script, str(SOURCE), STUDY_YAML],
-        cwd=tmp_path,
+        [sys.executable, "-I", "-B", "-c", script, source.as_posix(), STUDY_YAML],
+        cwd=directory,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=False,
     )
+    return result
+
+
+def test_study_schema_import_and_expansion_are_solver_free(tmp_path) -> None:
+    """A fresh process must not import runners or perform filesystem operations."""
+    result = _run_isolated_study(SOURCE, tmp_path)
     assert result.returncode == 0, result.stderr
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize(
+    "operation",
+    [
+        "open(__file__, encoding='utf-8')",
+        "Path(__file__).open(encoding='utf-8')",
+        "Path(__file__).exists()",
+        "Path('unexpected').mkdir()",
+    ],
+)
+def test_study_schema_guard_detects_import_time_filesystem_access(
+    tmp_path, operation,
+) -> None:
+    probe = tmp_path / "probe_schema.py"
+    probe.write_text(
+        SOURCE.read_text(encoding="utf-8")
+        + "\nfrom pathlib import Path\n" + operation + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    result = _run_isolated_study(probe, tmp_path)
+    assert result.returncode != 0
+    assert "filesystem operation during planning" in result.stderr
+    assert operation in result.stderr
 
 
 def test_study_schema_preserves_unsorted_coordinates() -> None:
