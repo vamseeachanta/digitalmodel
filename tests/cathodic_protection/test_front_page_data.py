@@ -79,6 +79,12 @@ def test_every_numeric_row_has_resolvable_evidence(data):
                     expected = operands[0]
                 elif operation == "product":
                     expected = math.prod(operands)
+                elif operation == "maximum":
+                    expected = max(operands)
+                elif operation == "maximum_difference":
+                    expected = max(operands[:-1]) - operands[-1]
+                elif operation == "maximum_difference_product":
+                    expected = (max(operands[:-2]) - operands[-2]) * operands[-1]
                 elif operation == "difference":
                     expected = operands[0] - operands[1]
                 elif operation == "quotient":
@@ -326,3 +332,88 @@ def test_schematic_length_ratio_is_physical():
     svg = ET.fromstring(drawings.render_monopile({"diameter_m": 6, "height_m": 30}))
     rectangle = svg.find("{http://www.w3.org/2000/svg}rect")
     assert float(rectangle.attrib["height"]) / float(rectangle.attrib["width"]) == pytest.approx(5)
+
+
+@pytest.fixture
+def pipeline_probe(monkeypatch):
+    """Override saved pipeline operands without changing source files."""
+    import copy
+
+    original = builder.Sources.read
+    changes = {}
+
+    def read(sources, path):
+        result = original(sources, path)
+        if path.endswith("S06/results.json"):
+            result = copy.deepcopy(result)
+            for section, fields in changes.items():
+                result[section].update(fields)
+        return result
+
+    monkeypatch.setattr(builder.Sources, "read", read)
+    return changes
+
+
+@pytest.mark.parametrize("provided,verdict", [
+    (5, "does not meet the criterion"),
+    (6, "does not meet the criterion"),
+    (34, "meets the criterion"),
+])
+def test_pipeline_verdict_reaches_every_summary(pipeline_probe, provided, verdict):
+    from html import escape
+
+    pipeline_probe["anode_requirements"] = {"anode_count": provided}
+    data = builder.build_data(ROOT)
+    item = card(data, "pipeline")
+    assert item["verdict"] == verdict
+    summaries = [item["result_line"]] + [
+        step["result_line"] for step in item["steps"]
+        if step["id"] in {"anode-sizing", "check"}
+    ]
+    for summary in summaries:
+        assert f"the arrangement {verdict}" in summary
+    html = builder._report(data, item)
+    assert html.count(f"<p>{escape(item['result_line'])}</p>") == 3
+    if verdict == "does not meet the criterion":
+        assert "the checks meet the criterion" not in html
+
+
+@pytest.mark.parametrize("mass_count,final_count,mass_need,final_demand,needed,added,added_mass", [
+    (34, 6, 846.119, 6.8685, 34, 29, 725),
+    (4, 8, 100.0, 9.5, 8, 3, 75),
+])
+def test_pipeline_additions_use_governing_saved_requirement(
+    pipeline_probe, mass_count, final_count, mass_need, final_demand, needed, added, added_mass
+):
+    pipeline_probe["anode_requirements"] = {
+        "anode_count": 5,
+        "anode_count_by_mass": mass_count,
+        "anode_count_by_final_current": final_count,
+        "total_anode_mass_kg": mass_need,
+    }
+    pipeline_probe["current_demand_A"] = {"final_current_demand_A": final_demand}
+    item = card(builder.build_data(ROOT), "pipeline")
+    assert item["verdict"] == "does not meet the criterion"
+    rows = {row["key"]: row for step in item["steps"] for row in step["rows"]}
+    assert rows["needed-count"]["raw_value"] == needed
+    assert rows["added-count"]["raw_value"] == added > 0
+    assert rows["added-mass"]["raw_value"] == added_mass > 0
+    for key in ("needed-count", "added-count", "added-mass"):
+        evidence = rows[key]["evidence"]
+        assert [operand["keys"] for operand in evidence["operands"][:2]] == [
+            ["anode_requirements", "anode_count_by_mass"],
+            ["anode_requirements", "anode_count_by_final_current"],
+        ]
+        assert all(operand["path"].endswith("S06/results.json")
+                   for operand in evidence["operands"][:2])
+
+
+@pytest.mark.parametrize("key", ["monopile", "subsea-structure"])
+@pytest.mark.parametrize("phase,table", [("initial", "8-1"), ("mean", "8-2"), ("final", "8-1")])
+def test_density_locator_matches_phase(data, key, phase, table):
+    rows = [row for step in card(data, key)["steps"] for row in step["rows"]
+            if row["key"].startswith("density-") and row["key"].endswith("-" + phase)]
+    assert rows
+    for row in rows:
+        assert row["locator"] == f"dnv-rp-b401 2021-05 Table {table}"
+        assert f"Table {table}" in row["basis"]

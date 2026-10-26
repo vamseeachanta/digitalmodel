@@ -8,6 +8,11 @@
       "revision": "0",
       "date": "2026-10-25",
       "change": "Initial step data and public report copies from saved case evidence."
+    },
+    {
+      "revision": "1",
+      "date": "2026-10-26",
+      "change": "Correct pipeline verdict summaries, governing required counts and phase-specific density locators."
     }
   ],
   "release_status": "clearance required before outward release",
@@ -1934,8 +1939,8 @@
               "precision": 3,
               "unit": "A/m²",
               "input_class": "synthetic",
-              "basis": "DNV-RP-B401 (May 2021); Design current densities; dnv-rp-b401 2021-05 Table 8-1 (as cited by the case pack)",
-              "locator": "dnv-rp-b401 2021-05 Table 8-1",
+              "basis": "DNV-RP-B401 (May 2021); Design current densities; dnv-rp-b401 2021-05 Table 8-2 (as cited by the case pack)",
+              "locator": "dnv-rp-b401 2021-05 Table 8-2",
               "source": [
                 4
               ],
@@ -3486,8 +3491,8 @@
               "precision": 3,
               "unit": "A/m²",
               "input_class": "synthetic",
-              "basis": "DNV-RP-B401 (May 2021); Design current densities; dnv-rp-b401 2021-05 Table 8-1 (as cited by the case pack)",
-              "locator": "dnv-rp-b401 2021-05 Table 8-1",
+              "basis": "DNV-RP-B401 (May 2021); Design current densities; dnv-rp-b401 2021-05 Table 8-2 (as cited by the case pack)",
+              "locator": "dnv-rp-b401 2021-05 Table 8-2",
               "source": [
                 6
               ],
@@ -5339,7 +5344,7 @@
             "count-mass": "34",
             "count-final": "6"
           },
-          "result_line": "The 34 bracelets at 44.1 m provide 850.0 kg against 846.1 kg and 45.3 A against 6.9 A; the checks meet the criterion within the recorded 1587.4 m protected length per side."
+          "result_line": "The 34 bracelets at 44.1 m provide 850.0 kg against 846.1 kg and 45.3 A against 6.9 A; the arrangement meets the criterion within the recorded 1587.4 m protected length per side."
         },
         {
           "id": "distribution",
@@ -5515,13 +5520,20 @@
                 8
               ],
               "evidence": {
-                "operation": "identity",
+                "operation": "maximum",
                 "operands": [
                   {
                     "path": "docs/domains/cathodic_protection/reports/cases/S06/results.json",
                     "keys": [
                       "anode_requirements",
-                      "anode_count"
+                      "anode_count_by_mass"
+                    ]
+                  },
+                  {
+                    "path": "docs/domains/cathodic_protection/reports/cases/S06/results.json",
+                    "keys": [
+                      "anode_requirements",
+                      "anode_count_by_final_current"
                     ]
                   }
                 ]
@@ -5733,7 +5745,7 @@
             "margin-mass": "0.5",
             "margin-final": "559.7"
           },
-          "result_line": "The 34 bracelets at 44.1 m provide 850.0 kg against 846.1 kg and 45.3 A against 6.9 A; the checks meet the criterion within the recorded 1587.4 m protected length per side."
+          "result_line": "The 34 bracelets at 44.1 m provide 850.0 kg against 846.1 kg and 45.3 A against 6.9 A; the arrangement meets the criterion within the recorded 1587.4 m protected length per side."
         },
         {
           "id": "monitoring-plan",
@@ -5918,7 +5930,7 @@
         "demand-final": "6.9",
         "protected-length": "1587.4"
       },
-      "result_line": "The 34 bracelets at 44.1 m provide 850.0 kg against 846.1 kg and 45.3 A against 6.9 A; the checks meet the criterion within the recorded 1587.4 m protected length per side.",
+      "result_line": "The 34 bracelets at 44.1 m provide 850.0 kg against 846.1 kg and 45.3 A against 6.9 A; the arrangement meets the criterion within the recorded 1587.4 m protected length per side.",
       "schematic": {
         "status": "proportional",
         "path": "schematics/S06.svg",

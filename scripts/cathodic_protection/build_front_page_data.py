@@ -90,6 +90,12 @@ def _calculate(values: list[float], operation: str) -> float:
         return values[0]
     if operation == "product":
         return math.prod(values)
+    if operation == "maximum":
+        return max(values)
+    if operation == "maximum_difference":
+        return max(values[:-1]) - values[-1]
+    if operation == "maximum_difference_product":
+        return (max(values[:-2]) - values[-2]) * values[-1]
     if operation == "difference":
         return values[0] - values[1]
     if operation == "quotient":
@@ -237,8 +243,10 @@ def _card(sources: Sources, case: str, identifier: str, title: str) -> dict[str,
             add_text("inputs", "coating-" + name, name + " coating category", zone["coating_category"])
             if not reference:
                 for phase in ("initial", "mean", "final"):
+                    table = "8-2" if phase == "mean" else "8-1"
                     add("criteria", f"density-{name}-{phase}", f"{name} {phase} current density", f"i_{phase}", "A/m²",
-                        op("current_densities_A_m2", name, f"i_{phase}_A_m2"), precision=3, locator=locators[0])
+                        op("current_densities_A_m2", name, f"i_{phase}_A_m2"), precision=3,
+                        locator=next(label for label in locators if label.endswith(f"Table {table}")))
                 for phase, field in [("initial", "f_ci"), ("mean", "f_cm"), ("final", "f_cf")]:
                     add("inputs", f"coating-{name}-{phase}", f"{name} {phase} coating breakdown", field, "dimensionless",
                         op("coating_breakdown", name, field), precision=3,
@@ -275,7 +283,7 @@ def _card(sources: Sources, case: str, identifier: str, title: str) -> dict[str,
 
     if reference:
         count = op("arrangements", "stated", "anode_count")
-        required_count = op("arrangements", "rechecked", "anode_count")
+        required_counts = [op("arrangements", "rechecked", "anode_count")]
         demands = {phase: op("arrangements", "stated", "checks", index, "required")
                    for phase, index in [("initial", 1), ("final", 2)]}
         mass_need = op("arrangements", "stated", "checks", 0, "required")
@@ -289,18 +297,18 @@ def _card(sources: Sources, case: str, identifier: str, title: str) -> dict[str,
         demand_phases = ("initial", "final")
     elif pipeline:
         count = op("anode_requirements", "anode_count")
-        required_count = count
         mass_need = op("anode_requirements", "total_anode_mass_kg")
         mass_operands, mass_operation = [count, inp("anode", "individual_anode_mass_kg")], "product"
         demands = {phase: op("current_demand_A", f"{phase}_current_demand_A") for phase in ("mean", "final")}
         count_ops = {phase: op("anode_requirements", f"anode_count_by_{phase}") for phase in ("mass", "final_current")}
         count_ops["final"] = count_ops.pop("final_current")
+        required_counts = list(count_ops.values())
         outputs = {}
         governing = result["status"]["governing_case"]
         demand_phases = ("mean", "final")
     else:
         count = op("current_output_verification", "anode_count")
-        required_count = op("current_output_verification", "recommended_anode_count")
+        required_counts = [op("current_output_verification", "recommended_anode_count")]
         demands = {phase: op("current_demand_A", f"total_{phase}_A") for phase in ("initial", "mean", "final")}
         outputs = {phase: op("current_output_verification", f"total_anode_current_output_{phase}_A") for phase in ("initial", "final")}
         mass_need = op("anode_requirements", "total_mass_kg")
@@ -338,7 +346,8 @@ def _card(sources: Sources, case: str, identifier: str, title: str) -> dict[str,
         add("anode-sizing", "count-" + phase, "Anodes needed for " + phase, "N_" + phase, "anodes", operand, precision=0)
     add_text("anode-sizing", "governing", "Governing check", governing)
     add("check", "provided-count", "Anodes provided", "N_p", "anodes", count, precision=0)
-    add("check", "needed-count", "Anodes needed", "N_r", "anodes", required_count, precision=0)
+    add("check", "needed-count", "Anodes needed", "N_r", "anodes", *required_counts,
+        operation="maximum" if pipeline else "identity", precision=0)
     add("check", "mass-provided", "Mass provided", "M_p", "kg", *mass_operands, operation=mass_operation)
     add("check", "mass-needed", "Mass needed", "M_r", "kg", mass_need)
     # Every comparison is formed from unrounded saved values. Display margins
@@ -389,9 +398,10 @@ def _card(sources: Sources, case: str, identifier: str, title: str) -> dict[str,
     _monitoring(card, add_text)
     if not all(verdicts):
         add("check", "added-count", "Additional initial-design anodes", "delta_N", "anodes",
-            required_count, count, operation="difference", precision=0)
+            *required_counts, count, operation="maximum_difference" if pipeline else "difference", precision=0)
         add("check", "added-mass", "Additional initial-design net mass", "delta_M", "kg",
-            required_count, count, inp("anode", "individual_anode_mass_kg"), operation="difference_product")
+            *required_counts, count, inp("anode", "individual_anode_mass_kg"),
+            operation="maximum_difference_product" if pipeline else "difference_product")
         card["recommendation"] = {
             "design": "Use the additional initial-design anodes and net mass stated in the check table; recheck the final arrangement.",
             "monitoring": MONITORING_RULE,
@@ -412,8 +422,8 @@ def _card(sources: Sources, case: str, identifier: str, title: str) -> dict[str,
                                f"{v['needed-count']} anodes are needed and {governing} governs on the saved aggregate basis.")
     elif pipeline:
         card["result_line"] = (f"The {v['provided-count']} bracelets at {v['spacing']} m provide {v['mass-provided']} kg against "
-                               f"{v['mass-needed']} kg and {v['provided-final']} A against {v['demand-final']} A; the checks meet "
-                               f"the criterion within the recorded {v['protected-length']} m protected length per side.")
+                               f"{v['mass-needed']} kg and {v['provided-final']} A against {v['demand-final']} A; "
+                               f"the arrangement {card['verdict']} within the recorded {v['protected-length']} m protected length per side.")
     else:
         card["result_line"] = (f"The mass-sized arrangement of {v['provided-count']} anodes {card['verdict']}; "
                                f"{v['needed-count']} anodes are needed and {governing} current governs.")
@@ -464,7 +474,10 @@ def build_data(root: Path = ROOT, *, include_riser: bool = False) -> dict[str, A
     published = json.loads((root / BASIS_FILE).read_text(encoding="utf-8"))
     data = {"schema_version": 1, "source_commit": BASE, "title": "Cathodic protection analysis data",
             "summary": "Published geometry and synthetic or assumed CP inputs; screening examples requiring engineering review.",
-            "revision_history": [{"revision": "0", "date": "2026-10-25", "change": "Initial step data and public report copies from saved case evidence."}],
+            "revision_history": [
+                {"revision": "0", "date": "2026-10-25", "change": "Initial step data and public report copies from saved case evidence."},
+                {"revision": "1", "date": "2026-10-26", "change": "Correct pipeline verdict summaries, governing required counts and phase-specific density locators."},
+            ],
             "release_status": "clearance required before outward release", "structures": structures,
             "references": sources.records, "published_jacket_basis": published,
             "published_jacket_basis_note": "Separate published-jacket reproduction; it does not replace the reference-jacket card.",
