@@ -1,10 +1,11 @@
 """
 Data models for DNV RP F105 free-spanning pipeline VIV assessment.
 
-All physical quantities in SI units unless noted in field names.
+All physical quantities in SI units unless documented otherwise.
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -63,6 +64,19 @@ class PipeSpanInput:
     gamma_on_IL   IL onset safety factor (default 1.1)
     gamma_on_CF   CF onset safety factor (default 1.3)
     gamma_k       stability parameter safety factor (default 1.15)
+
+    Turbulence reductions (digitalmodel issue #1730 equations)
+    --------------------------------------------------------
+    turbulence_intensity  Ic as a dimensionless fraction, finite in [0, 1]
+    relative_flow_angle   acute flow-to-pipe angle in degrees, finite in [0, 90]
+
+    The angle domain is the API's acute-angle convention. Convert a directed
+    flow angle to that convention before constructing this input.
+    Ic=0.03 is an explicit neutral compatibility default: both issue factors
+    equal one, preserving previous amplitudes. It is not a site estimate.
+    The issue's Ic=0.05, angle=90 degrees example must be supplied explicitly.
+    The equations have not been independently validated against the standard.
+    Optional RD wave spreading is not implemented.
     """
     # --- geometry ---
     od_m: float
@@ -104,6 +118,23 @@ class PipeSpanInput:
     gamma_on_IL: float = 1.1
     gamma_on_CF: float = 1.3
     gamma_k: float = 1.15
+
+    # Appended to preserve existing positional arguments. The neutral intensity
+    # and normal-flow angle come from the equations/example in issue #1730.
+    turbulence_intensity: float = 0.03
+    relative_flow_angle: float = 90.0
+
+    def __post_init__(self) -> None:
+        """Validate the fractional intensity and acute angle API domains."""
+        # Fraction bounds and degree bounds implement the documented contract.
+        if not math.isfinite(self.turbulence_intensity) or not (
+            0.0 <= self.turbulence_intensity <= 1.0
+        ):
+            raise ValueError("turbulence_intensity must be finite in [0, 1] (fraction)")
+        if not math.isfinite(self.relative_flow_angle) or not (
+            0.0 <= self.relative_flow_angle <= 90.0
+        ):
+            raise ValueError("relative_flow_angle must be finite in [0, 90] (degrees)")
 
 
 @dataclass

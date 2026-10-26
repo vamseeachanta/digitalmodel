@@ -13,6 +13,15 @@ Cross-flow amplitude (F105 Sec 4.4.4, Fig 4-5):
            wave-dominated: 0.7 (KC<10) / 0.9 (KC>30) / interpolated
     Piecewise from Vr_onset → Vr_peak → Vr_end=16
 
+Turbulence reductions (implementation basis: digitalmodel issue #1730):
+    R1 = clamp(1 - π² (Ic - 0.03) (π/2 - √2 θ_rel), 0, 1)   IL only
+    R2 = clamp(1 - (Ic - 0.03) / 0.17, 0, 1)                 CF only
+    Ic is a fractional intensity; θ_rel is converted from input degrees to
+    radians. Each factor multiplies its completed piecewise amplitude once.
+    Ic=0.03 preserves the previous response (neutral compatibility default).
+    These issue equations are not an independent standards validation.
+    Optional RD wave spreading remains unimplemented.
+
 Stress (simplified beam approximation):
     σ_peak = A/D × (π/L)² × EI × (D/2) / I_section   [MPa]
     Valid for screening; FEA mode shapes give accurate values.
@@ -52,6 +61,21 @@ class SpanVIVAmplitude:
         self._fn_CF = fn_CF
         self._EI = EI
         self._m_e = m_e
+        self._r1, self._r2 = self._turbulence_reduction_factors()
+
+    def _turbulence_reduction_factors(self) -> tuple[float, float]:
+        """Return clamped R1/R2 using the equations in issue #1730.
+
+        The issue supplies 0.03, 0.17, pi/2 and sqrt(2); clamp bounds are
+        dimensionless zero and unity. PipeSpanInput validates the input domains.
+        """
+        intensity_excess = self._inp.turbulence_intensity - 0.03
+        theta_rad = math.radians(self._inp.relative_flow_angle)
+        r1 = 1.0 - math.pi**2 * intensity_excess * (
+            math.pi / 2.0 - math.sqrt(2.0) * theta_rad
+        )
+        r2 = 1.0 - intensity_excess / 0.17
+        return max(0.0, min(1.0, r1)), max(0.0, min(1.0, r2))
 
     # ------------------------------------------------------------------
     # Reduced velocity helpers
@@ -81,7 +105,7 @@ class SpanVIVAmplitude:
         Vr_end = 3.7 if Ks >= 1.0 else 4.5 - 0.8 * Ks
         Vr1 = Vr_onset + 10.0 * A1
         Vr2 = Vr_end - 2.0 * A2
-        return _piecewise_il(Ur, Vr_onset, Vr1, Vr2, Vr_end, A1, A2)
+        return self._r1 * _piecewise_il(Ur, Vr_onset, Vr1, Vr2, Vr_end, A1, A2)
 
     def _il_onset_Vr(self, Ks: float) -> float:
         """IL onset Vr with γ_on_IL safety factor (same logic as screening)."""
@@ -117,7 +141,7 @@ class SpanVIVAmplitude:
         A2 = 0.3 * Rk
         Vr_peak = Vr_onset + 2.5
         Vr_end = 16.0
-        return _piecewise_cf(Ur, Vr_onset, Vr_peak, Vr_end, A1, A2)
+        return self._r2 * _piecewise_cf(Ur, Vr_onset, Vr_peak, Vr_end, A1, A2)
 
     @staticmethod
     def _cf_peak_amplitude(alpha: float, KC: float) -> float:
