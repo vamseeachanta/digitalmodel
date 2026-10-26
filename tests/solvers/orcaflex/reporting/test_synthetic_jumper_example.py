@@ -10,6 +10,8 @@ import re
 import subprocess
 import sys
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = REPO_ROOT / "examples/solvers/orcaflex/reporting/synthetic_jumper.py"
@@ -132,6 +134,7 @@ def test_synthetic_jumper_html_example(tmp_path):
         env=env,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=False,
     )
     assert result.returncode == 0, result.stderr
@@ -144,36 +147,46 @@ def test_synthetic_jumper_html_example(tmp_path):
     assert any("plotly.js" in script for script in parsed.scripts)
     assert "Error rendering section" not in html
 
-    # Source: README-synthetic-jumper.md, Data basis, a 3-4-3 m dogleg.
+    # MoorDyn-C 2.3.1, tests/Mooring/lifting.txt, POINT PROPERTIES:
+    # the input chord is abs(-100 - 0) = 100 m, not the 100.5 m
+    # unstretched length in LINES. No equilibrium shape is calculated here.
     traces, layout = parsed.chart("geometry-3d")
-    assert traces[0]["x"] == [0.0, 3.0, 3.0, 6.0]
-    assert traces[0]["y"] == [0.0, 0.0, 4.0, 4.0]
-    assert traces[0]["z"] == [-8.0, -8.0, -8.0, -8.0]
+    assert traces[0]["x"] == pytest.approx([0.0, 0.0])
+    assert traces[0]["y"] == pytest.approx([0.0, 0.0])
+    assert traces[0]["z"] == pytest.approx([0.0, -100.0])
     for axis, label in (("xaxis", "X [m]"), ("yaxis", "Y [m]"), ("zaxis", "Z [m]")):
         assert layout["scene"][axis]["title"]["text"] == label
     geometry = " ".join(parsed.sections["geometry"])
-    for value in ("End A", "Corner A", "Corner B", "End B", "10.0 m", "Arc Length [m]"):
+    for value in ("Fixed end", "Free end", "500.0 m", "Arc Length [m]"):
         assert value in geometry
-    assert parsed.rows["geometry"] == [
-        ["Label", "Arc Length [m]", "X [m]", "Y [m]", "Z [m]"],
-        ["End A", "0.0", "0.0", "0.0", "-8.0"],
-        ["Corner A", "3.0", "3.0", "0.0", "-8.0"],
-        ["Corner B", "7.0", "3.0", "4.0", "-8.0"],
-        ["End B", "10.0", "6.0", "4.0", "-8.0"],
-    ]
+    rows = parsed.rows["geometry"]
+    assert rows[0] == ["Label", "Arc Length [m]", "X [m]", "Y [m]", "Z [m]"]
+    assert [row[0] for row in rows[1:]] == ["Fixed end", "Free end"]
+    for row, values in zip(rows[1:], ([0, 0, 0, 0], [100, 0, 0, -100])):
+        assert [float(value) for value in row[1:]] == pytest.approx(values)
 
-    # Independent extrema: 10 +/- 4 = 6, 14 kN; -2, 0, 2, 0, -2 gives
-    # -2, 2 kN·m. See the note's Hand calculation; no renderer helper is used.
+    # MoorDyn-C 2.3.1, tests/lifting.cpp: length starts at 100.5 m and
+    # shortens by 1 m each second. OpenStax University Physics Volume 1,
+    # first edition (2016), section 3.4, equation 3.10: L = L0 + rate*t.
+    # Hand extrema over 0..4 s: 100.5 - 1*0 = 100.5 m (maximum),
+    # 100.5 - 1*4 = 96.5 m (minimum); rate = (96.5 - 100.5)/4 = -1 m/s.
     histories = (
-        ("tension", "Synthetic tension at End A", "kN", [10, 14, 10, 6, 10], 6, 14),
-        ("bending", "Synthetic bending at Corner A", "kN·m", [-2, 0, 2, 0, -2], -2, 2),
+        (
+            "length",
+            "Prescribed unstretched length",
+            "m",
+            [100.5, 99.5, 98.5, 97.5, 96.5],
+            96.5,
+            100.5,
+        ),
+        ("length-rate", "Prescribed length rate", "m/s", [-1] * 5, -1, -1),
     )
     for chart_id, label, units, values, low, high in histories:
         traces, layout = parsed.chart(f"dynamic-{chart_id}")
-        assert traces[0]["x"] == [0, 1, 2, 3, 4]
-        assert traces[0]["y"] == values
-        assert min(traces[0]["y"]) == low
-        assert max(traces[0]["y"]) == high
+        assert traces[0]["x"] == pytest.approx([0, 1, 2, 3, 4])
+        assert traces[0]["y"] == pytest.approx(values)
+        assert min(traces[0]["y"]) == pytest.approx(low)
+        assert max(traces[0]["y"]) == pytest.approx(high)
         assert layout["xaxis"]["title"]["text"] == "Time [s]"
         assert layout["yaxis"]["title"]["text"] == f"{label} [{units}]"
 
@@ -196,6 +209,9 @@ def test_synthetic_jumper_html_example(tmp_path):
     visible = " ".join(parsed.text)
     assert "NO CHECKS" in visible
     assert "No fitness verdict is made" in visible
+    assert "MoorDyn-C 2.3.1" in visible
+    assert "Initial input chord" in geometry
+    assert "not solver results" in visible
     assert "ALL PASS" not in visible
     assert "COMPLIANT" not in visible
     assert "completed successfully" not in visible
@@ -208,6 +224,7 @@ def test_synthetic_jumper_requires_output_directory(tmp_path):
         cwd=tmp_path,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         env={
             **os.environ,
             "PYTHONDONTWRITEBYTECODE": "1",

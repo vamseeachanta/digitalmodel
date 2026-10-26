@@ -1,6 +1,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
-"""Render an offline jumper HTML example from explicitly synthetic data.
+"""Render an offline jumper HTML example from cited open lifting inputs.
 
 All numeric inputs are defined in README-synthetic-jumper.md, Data basis.
 They illustrate the reporting interface and are not solver results.
@@ -23,64 +23,75 @@ from digitalmodel.solvers.orcaflex.reporting.models import (
 
 
 def build_report() -> OrcaFlexAnalysisReport:
-    """Construct the illustrative geometry and histories without a solver."""
-    # Source: companion note, Data basis, geometry and cumulative lengths.
+    """Construct the published input chord and length schedule without a solver."""
+    # MoorDyn-C 2.3.1, tests/Mooring/lifting.txt, POINT PROPERTIES.
+    # The input chord is 100 m; the unstretched line length is 100.5 m.
     profile = LineProfileData(
-        arc_length=[0.0, 3.0, 7.0, 10.0],
-        x=[0.0, 3.0, 3.0, 6.0],
-        y=[0.0, 0.0, 4.0, 4.0],
-        z=[-8.0, -8.0, -8.0, -8.0],
+        arc_length=[0.0, 100.0],
+        x=[0.0, 0.0],
+        y=[0.0, 0.0],
+        z=[0.0, -100.0],
     )
     key_points = [
         KeyPointData(label=label, arc_length_m=s, x=x, y=y, z=z)
         for label, s, x, y, z in zip(
-            ("End A", "Corner A", "Corner B", "End B"),
+            ("Fixed end", "Free end"),
             profile.arc_length,
             profile.x,
             profile.y,
             profile.z,
         )
     ]
-    # Source: companion note, Data basis, piecewise-linear sample histories.
+    # MoorDyn-C 2.3.1, tests/lifting.cpp, lifting(): dt=1 s, lift_vel=1 m/s.
+    # Initial length: tests/Mooring/lifting.txt, LINES, UnstrLen.
+    # Constant-rate kinematics: OpenStax University Physics Volume 1,
+    # first edition (2016), section 3.4, equation 3.10, L = L0 + rate*t.
     times = [0.0, 1.0, 2.0, 3.0, 4.0]
+    initial_length = 100.5
+    length_rate = -1.0
     dynamic = DynamicResultsData(
         ramp_end_time_s=0.0,
         time_series=[
             TimeSeriesData(
-                id="tension",
-                label="Synthetic tension at End A",
+                id="length",
+                label="Prescribed unstretched length",
                 t=times,
-                values=[10.0, 14.0, 10.0, 6.0, 10.0],
-                units="kN",
-                arc_length_m=profile.arc_length[0],
+                values=[initial_length + length_rate * t for t in times],
+                units="m",
             ),
             TimeSeriesData(
-                id="bending",
-                label="Synthetic bending at Corner A",
+                id="length-rate",
+                label="Prescribed length rate",
                 t=times,
-                values=[-2.0, 0.0, 2.0, 0.0, -2.0],
-                units="kN·m",
-                arc_length_m=profile.arc_length[1],
+                values=[length_rate] * len(times),
+                units="m/s",
             ),
         ],
     )
     return OrcaFlexAnalysisReport(
-        project_name="Synthetic reporting example",
-        structure_id="Illustrative jumper",
+        project_name="Open lifting input example",
+        structure_id="Prescribed lifting line",
         structure_type="jumper",
         geometry=GeometryData(
-            coordinate_system="Synthetic local Cartesian, z-positive-up [m]",
-            water_depth_m=10.0,  # Source: companion note, Data basis.
+            coordinate_system="Initial input chord, z-positive-up [m]",
+            # MoorDyn-C 2.3.1, tests/Mooring/lifting.txt, OPTIONS, WtrDpth.
+            water_depth_m=500.0,
             line_profile=profile,
             key_points=key_points,
         ),
         dynamic_results=dynamic,
         summary_notes=(
-            "Synthetic geometry and prescribed time histories only; no solver "
-            "analysis was performed. No fitness verdict is made. Pipe properties, "
+            "Source: MoorDyn-C 2.3.1, tests/Mooring/lifting.txt "
+            "(POINT PROPERTIES, LINES, OPTIONS) and tests/lifting.cpp (lifting()). "
+            "Initial input chord and prescribed length histories only; "
+            "not solver results. No equilibrium geometry, tension, bending or "
+            "endpoint motion is calculated. This open lifting input case "
+            "illustrates the jumper renderer, not a qualified jumper design. "
+            "No fitness verdict is made. Pipe properties, "
             "weight tally, rigging, crane configuration, solver section definitions, "
             "centre of gravity per kit, end rotations, go/no-go criteria and "
-            "calculation references are unavailable. PDF export and solver "
+            "installation calculation references are unavailable. "
+            "PDF export and solver "
             "extraction remain follow-up work."
         ),
         recommendations=[
