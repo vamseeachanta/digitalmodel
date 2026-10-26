@@ -2,15 +2,20 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Reject client-derived names in tracked paths and small tracked text files.
 
-Files over 1 MB, binary files and symlink targets are not read. Paths are always
-checked. Adjacent words are also joined to cover separator variants.
+Files over 1 MB, binary files and symlink or junction targets are not read.
+Paths are always checked. Adjacent words are also joined for separator variants.
 """
 
 from functools import cache
 from hashlib import sha256
+import os
 from pathlib import Path
 import re
+import stat
 import subprocess
+from types import SimpleNamespace
+
+import pytest
 
 
 RESTRICTED_HASHES = frozenset({
@@ -47,12 +52,23 @@ def _matches(data, restricted=RESTRICTED_HASHES, joined=JOINED_HASHES):
     return matches
 
 
+def _is_link(path):
+    return (
+        path.is_symlink()
+        or (hasattr(path, "is_junction") and path.is_junction())
+        or (path.exists() and bool(
+            getattr(path.lstat(), "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        ))
+    )
+
+
 def _scan(root, paths, restricted=RESTRICTED_HASHES, joined=JOINED_HASHES):
     findings = []
     for name in paths:
         matches = _matches(name.encode("utf-8"), restricted, joined)
         path = root / name
-        if path.is_file() and not path.is_symlink():
+        parts = (path, *(root / parent for parent in Path(name).parents))
+        if not any(_is_link(part) for part in parts) and path.is_file():
             if path.stat().st_size <= MAX_TEXT_BYTES:
                 data = path.read_bytes()
                 if b"\0" not in data:
@@ -64,8 +80,12 @@ def _scan(root, paths, restricted=RESTRICTED_HASHES, joined=JOINED_HASHES):
 
 def test_tracked_public_names():
     root = Path(__file__).resolve().parents[1]
+    env = os.environ.copy()
+    for binding in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
+        env.pop(binding, None)
     names = subprocess.check_output(
-        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=root
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+        cwd=root, env=env,
     ).decode("utf-8").split("\0")
     # Include pending additions and omit pending deletions before staging as well.
     paths = sorted({name for name in names if name and (
@@ -75,12 +95,61 @@ def test_tracked_public_names():
     assert not findings, "\n".join(f"{name}: {digest}" for name, digest in findings)
 
 
+@pytest.mark.parametrize("binding", [
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE", "all", "none",
+])
+def test_guard_ignores_foreign_git_bindings(tmp_path, monkeypatch, binding):
+    bindings = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")
+    clean_env = {key: value for key, value in os.environ.items() if key not in bindings}
+    local, foreign = tmp_path / "local", tmp_path / "foreign"
+    for root in (local, foreign):
+        root.mkdir()
+        subprocess.run(["git", "init", "--quiet"], cwd=root, env=clean_env, check=True)
+        (root / "shared.txt").write_text("neutral", encoding="utf-8", newline="\n")
+        subprocess.run(["git", "add", "shared.txt"], cwd=root, env=clean_env, check=True)
+    (local / "local.txt").write_text("samplelabel", encoding="utf-8", newline="\n")
+    (local / ".gitignore").write_text("local.txt\n", encoding="utf-8", newline="\n")
+    subprocess.run(["git", "add", "--force", "local.txt", ".gitignore"],
+                   cwd=local, env=clean_env, check=True)
+    (local / "pending.txt").write_text("neutral", encoding="utf-8", newline="\n")
+    (foreign / ".git" / "info" / "exclude").write_text(
+        "pending.txt\n", encoding="utf-8", newline="\n",
+    )
+    foreign_values = dict(zip(bindings, (
+        foreign / ".git", foreign, foreign / ".git", foreign / ".git" / "index",
+    )))
+    for key, value in foreign_values.items():
+        if binding in (key, "all"):
+            monkeypatch.setenv(key, value.as_posix())
+        else:
+            monkeypatch.delenv(key, raising=False)
+    caller_env = os.environ.copy()
+    preserved = [local / "local.txt", local / "pending.txt"] + [
+        root / ".git" / name for root in (local, foreign) for name in ("index", "config")
+    ]
+    before = {path: path.read_bytes() for path in preserved}
+    inventories = []
+    scan = _scan
+
+    def scan_synthetic_names(root, paths):
+        inventories.append(paths)
+        return scan(root, paths, {_digest(b"samplelabel")}, {})
+
+    monkeypatch.setitem(globals(), "__file__", str(local / "tests" / "guard.py"))
+    monkeypatch.setitem(globals(), "_scan", scan_synthetic_names)
+    with pytest.raises(AssertionError, match=r"local\.txt:"):
+        test_tracked_public_names()
+    assert inventories == [[".gitignore", "local.txt", "pending.txt", "shared.txt"]]
+    assert os.environ == caller_env
+    assert {path: path.read_bytes() for path in preserved} == before
+
+
 def test_scanner_checks_paths_and_separator_variants(tmp_path):
     restricted = {_digest(b"samplelabel")}
     names = ["sample-label.txt", "words.txt", "substring.txt"]
-    (tmp_path / names[0]).write_text("neutral")
+    (tmp_path / names[0]).write_text("neutral", encoding="utf-8", newline="\n")
     (tmp_path / names[1]).write_bytes(b"\xff SAMPLE_label sample.label sample label")
-    (tmp_path / names[2]).write_text("sampleslabel samplelabels")
+    (tmp_path / names[2]).write_text("sampleslabel samplelabels", encoding="utf-8", newline="\n")
     assert _scan(tmp_path, names, restricted, {_digest(b"samplelabel"): 11}) == [
         (names[0], _digest(b"samplelabel")),
         (names[1], _digest(b"samplelabel")),
@@ -96,6 +165,39 @@ def test_scanner_omits_large_binary_and_symlink_contents(tmp_path):
     (tmp_path / names[0]).write_bytes(b"samplelabel" + b" " * MAX_TEXT_BYTES)
     (tmp_path / names[1]).write_bytes(b"samplelabel\0")
     target = tmp_path / "target.txt"
-    target.write_text("samplelabel")
+    target.write_text("samplelabel", encoding="utf-8", newline="\n")
     (tmp_path / names[2]).symlink_to(target)
     assert _scan(tmp_path, names, {_digest(b"samplelabel")}) == []
+
+
+@pytest.mark.parametrize("link_kind", ["symlink", "junction", "reparse"])
+def test_scanner_omits_directory_link_contents(tmp_path, monkeypatch, link_kind):
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / "content.txt").write_text("samplelabel", encoding="utf-8", newline="\n")
+    links = [tmp_path / "linked", tmp_path / "sample-label"]
+    for link in links:
+        if link_kind == "symlink":
+            link.symlink_to(target, target_is_directory=True)
+        else:
+            link.mkdir()
+            (link / "content.txt").write_text("samplelabel", encoding="utf-8", newline="\n")
+    if link_kind == "junction":
+        monkeypatch.setattr(Path, "is_junction", lambda path: path in links, raising=False)
+    elif link_kind == "reparse":
+        monkeypatch.delattr(Path, "is_junction", raising=False)
+        lstat = Path.lstat
+
+        def reparse_lstat(path, *args, **kwargs):
+            result = lstat(path, *args, **kwargs)
+            if path in links:
+                return SimpleNamespace(st_mode=result.st_mode,
+                                       st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT)
+            return result
+
+        monkeypatch.setattr(Path, "lstat", reparse_lstat)
+    paths = [(link / "content.txt").relative_to(tmp_path).as_posix() for link in links]
+    digest = _digest(b"samplelabel")
+    assert _scan(tmp_path, paths, {digest}, {digest: 11}) == [
+        ("sample-label/content.txt", digest),
+    ]
