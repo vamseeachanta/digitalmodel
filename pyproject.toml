@@ -298,6 +298,7 @@ exclude = ["tests*", "docs*"]
 [tool.setuptools.package-data]
 digitalmodel = [
     "py.typed",
+    "riser_study/*.schema.json",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
     "hydrodynamics/aqwa/docs/damping-basis.md",
