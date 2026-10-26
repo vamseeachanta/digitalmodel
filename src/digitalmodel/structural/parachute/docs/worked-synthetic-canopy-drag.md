@@ -13,6 +13,19 @@ a measured or qualified canopy coefficient. The example runs offline.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | A | 2026-10-25 | Added a synthetic drag example and executable SI checks to document the calculation and its unit basis. |
+| B | 2026-10-25 | Added an explicit plan to make the example boundaries and executable checks visible together. |
+
+## Plan-lite
+
+1. Bound the example to a synthetic circular projected canopy at two speeds,
+   with diameter, density, drag coefficient and opening multiplier held fixed.
+2. Derive the projected area and SI forces independently of production helpers,
+   using the cited drag law and unit definitions.
+3. Execute the documented Python block and check both returned force units and
+   quadratic speed scaling against unrounded independent arithmetic.
+4. Exclude physical qualification, product data, equipment selection, vehicle
+   performance, frame analysis, CAD and safety recommendations. The full module
+   report, builder and index remain separate work.
 
 ## Inputs
 
