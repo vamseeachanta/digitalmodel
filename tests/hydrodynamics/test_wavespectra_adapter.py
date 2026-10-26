@@ -11,11 +11,58 @@ import doctest
 import math
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
+import tomllib
 
 import numpy as np
+from packaging.requirements import Requirement
 import pytest
+import yaml
+
+
+@pytest.mark.parametrize("surface", ["ownership", "test_roots", "command"])
+def test_wavespectra_adapter_runs_in_hydrodynamics_ci(surface):
+    root = Path(__file__).resolve().parents[2]
+    path = Path(__file__).resolve().relative_to(root).as_posix()
+    if surface == "ownership":
+        rows = (root / "tests/DOMAINS.md").read_text(encoding="utf-8").splitlines()
+        owners = [
+            row.split("|")[1].strip()
+            for row in rows
+            if row.startswith("|") and f"`{path}`" in row
+        ]
+        assert owners == ["hydrodynamics-other"]
+        return
+
+    gates = yaml.safe_load(
+        (root / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    gate = gates["tests-hydrodynamics-other"]
+    assert gate["enabled"]
+    if surface == "test_roots":
+        owners = [
+            name for name, item in gates.items()
+            if any(path == entry or path.startswith(entry.rstrip("/") + "/")
+                   for entry in item.get("test_roots", []))
+        ]
+        assert owners == ["tests-hydrodynamics-other"]
+    else:
+        command = shlex.split(gate["command"])
+        assert path in command[command.index("pytest") + 1:]
+        assert ".[test]" in command
+
+
+def test_wavespectra_is_a_test_only_dependency():
+    root = Path(__file__).resolve().parents[2]
+    project = tomllib.loads(
+        (root / "pyproject.toml").read_text(encoding="utf-8")
+    )["project"]
+    tests = {Requirement(item).name for item in project["optional-dependencies"]["test"]}
+    runtime = {Requirement(item).name for item in project["dependencies"]}
+    assert "wavespectra" in tests
+    assert "wavespectra" not in runtime
 
 
 @pytest.mark.parametrize(

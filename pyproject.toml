@@ -182,6 +182,8 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    # Exercise the frequency adapter against the reviewed optional backend.
+    "wavespectra==4.9.0",
     # Exercise the optional adapter against the same published backend release.
     "metocean-stats==1.2.0",
     "ezdxf>=1.3,<2",
