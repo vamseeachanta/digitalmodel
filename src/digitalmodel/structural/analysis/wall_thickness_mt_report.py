@@ -23,6 +23,7 @@ interactive contour chart and envelope plot.
 
 import math
 import logging
+import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -37,6 +38,34 @@ from digitalmodel.structural.analysis.wall_thickness import (
 from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
 
 logger = logging.getLogger(__name__)
+
+F101_COMBINED_FORM_REVIEW = (
+    Path(__file__).resolve().parents[4]
+    / "docs/domains/structural/reviews/f101-combined-form-review.json"
+)
+F101_SIMPLIFIED_FORM_LABEL = "simplified form; not checked against the standard's text"
+F101_SCREENING_LABEL = (
+    "Screening envelope from the moment-tension report; not reconciled with the code strategy"
+)
+
+
+def _f101_combined_form_label() -> str:
+    """Retain the limitation unless the identified form has a passed review."""
+    try:
+        record = json.loads(F101_COMBINED_FORM_REVIEW.read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeError):
+        return F101_SIMPLIFIED_FORM_LABEL
+    if (
+        isinstance(record, dict)
+        and record.get("schema_version") == 1
+        and record.get("code") == "DNV-ST-F101"
+        and isinstance(record.get("form"), dict)
+        and record["form"].get("id") == "f101-root-sum-square"
+        and record.get("status") == "passed"
+    ):
+        return ""
+    return F101_SIMPLIFIED_FORM_LABEL
+
 
 # API RP 1111 operating conditions with design factors.
 # Designed as a replaceable data structure so other codes (DNV, PD 8010)
@@ -213,6 +242,16 @@ def generate_mt_report(
     pressure_chart_html = _build_pressure_sensitivity_chart(
         pressure_sensitivity, T_y, M_p, internal_pressure, conditions,
     )
+
+    if code == DesignCode.DNV_ST_F101:
+        limitation = _f101_combined_form_label()
+        notice = f'<p class="f101-envelope-limitation">{F101_SCREENING_LABEL}'
+        if limitation:
+            notice += f"; {limitation}"
+        notice += ".</p>"
+        contour_html = notice + contour_html
+        envelope_html = notice + envelope_html
+        pressure_chart_html = notice + pressure_chart_html
 
     # Build full HTML
     html = _build_html(
@@ -1059,6 +1098,11 @@ def _build_html(
     p_net = pi - pe
 
     code_label = code.value + edition_label
+    combined_check_subject = (
+        "The report's screening calculation"
+        if code == DesignCode.DNV_ST_F101
+        else f"The {code_label} combined check"
+    )
 
     # Pressure check rows — build dynamically from available results
     pressure_rows = ""
@@ -1409,7 +1453,7 @@ def _build_html(
         <div class="card">
             <h2>3. Combined Loading &mdash; Von Mises Interaction</h2>
             <p>
-                The {code_label} combined check evaluates the Von Mises equivalent stress:
+                {combined_check_subject} evaluates the Von Mises equivalent stress:
                 &sigma;<sub>vm</sub> = &radic;(&sigma;<sub>L</sub>&sup2;
                 &minus; &sigma;<sub>L</sub>&middot;&sigma;<sub>h</sub>
                 + &sigma;<sub>h</sub>&sup2;) &le; f<sub>d</sub>&middot;SMYS
