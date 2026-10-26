@@ -67,7 +67,10 @@ class _Components:
 def _surface_nodes(model: Deck, block: Block) -> set[int]:
     """Resolve actual element faces so unrelated face nodes are not tie-exempt."""
     nodes = set()
-    # Face node indices are zero-based, in connectivity order.
+    # Zero-based indices derived from CalculiX 2.22 User's Manual, section
+    # 7.128 (*SURFACE), with midside nodes from section 6.2.1-10 diagrams:
+    # https://www.dhondt.de/ccx_2.22.pdf. Face orientation is irrelevant here;
+    # only membership establishes the connectivity/tie-exemption node sets.
     faces = {
         4: ((0, 1, 2), (0, 3, 1), (1, 3, 2), (2, 3, 0)),
         10: ((0, 1, 2, 4, 5, 6), (0, 3, 1, 7, 8, 4),
@@ -129,9 +132,18 @@ def _references_and_sections(model: Deck) -> dict[str, set[int]]:
                 # A missing material must not count as a valid structural section.
                 if k in {"SOLID SECTION", "SHELL SECTION", "BEAM SECTION", "MEMBRANE SECTION"}:
                     model.reference("material", p["MATERIAL"], block.line)
-                assigned.update(ids)
                 if "COMPOSITE" in p:
                     raise ValueError("Composite section references require a reader extension")
+                for eid in sorted(ids):
+                    kind, _ = model.elements[eid]
+                    if kind.startswith(SECTION_KEYWORDS[k]):
+                        assigned.add(eid)
+                    else:
+                        model.error("incompatible_section", (f"element:{eid}", f"section:{k}"),
+                                    f"{k} does not support element type {kind} in this gate",
+                                    "Use a compatible section/property; see CalculiX 2.22 "
+                                    "manual sections 6.2, 7.3, 7.81, 7.117, 7.118 and 7.121.",
+                                    block.line)
             elif k == "SURFACE":
                 surfaces[p["NAME"].upper()] = _surface_nodes(model, block)
             elif k in {"CLOAD", "DLOAD", "DSLOAD"}:
@@ -190,6 +202,7 @@ def _boundary_stages(model: Deck) -> list[tuple[int, set[int]]]:
     active: set[int] = set()
     stages = []
     in_step = False
+    first_boundary = True
     step = 0
     rotational = {n for kind, nodes in model.elements.values()
                   if kind.startswith(("S", "B")) and kind != "SPRING2" for n in nodes}
@@ -200,14 +213,18 @@ def _boundary_stages(model: Deck) -> list[tuple[int, set[int]]]:
                     raise ValueError("Nested step")
                 step += 1
                 in_step = True
+                first_boundary = True
             elif block.keyword == "END STEP":
                 if not in_step:
                     raise ValueError("Unmatched end step")
                 stages.append((step, active.copy()))
                 in_step = False
             elif block.keyword == "BOUNDARY":
-                if block.params.get("OP", "MOD").upper() == "NEW":
+                # CalculiX 2.22 User's Manual, section 7.4 (*BOUNDARY): OP
+                # applies only on the first boundary card in each step.
+                if first_boundary and block.params.get("OP", "MOD").upper() == "NEW":
                     active.clear()
+                first_boundary = False
                 for row in block.rows:
                     nodes = model.target("nset", row[0], block.line)
                     kind = row[1].upper()
@@ -293,6 +310,10 @@ def check_deck(path: str | Path, *, tolerance: float = 1e-6) -> ModelCheckReport
     """Check an INP deck and included files without executable discovery.
 
     Tolerance is an absolute Euclidean distance in the input length unit.
+    The default is a screening choice, one millionth of an input length unit
+    (six orders below the synthetic fixture's unit edge), not a solver limit.
+    Select it for the actual deck units and coordinate precision; no physical
+    merge tolerance or automatic unit inference is established by this default.
     Missing input files and unsupported topology produce blocking findings.
     Findings use stable node/element IDs and case-normalized symbolic names.
     """

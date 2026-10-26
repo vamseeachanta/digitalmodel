@@ -3,6 +3,7 @@
 """Synthetic input decks exercise the pre-run gate without a solver."""
 
 import json
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -12,6 +13,8 @@ import pytest
 from digitalmodel.solvers.calculix.model_checker import check_deck, validate_model, ModelCheckError
 from digitalmodel.solvers.calculix.cli import main
 from digitalmodel.solvers.calculix.fem_chain import FEMChain
+from digitalmodel.solvers.calculix._deck import Block, Deck, read_blocks
+from digitalmodel.solvers.calculix.model_checker import _surface_nodes
 
 
 FIXTURES = Path(__file__).with_name("fixtures")
@@ -20,11 +23,11 @@ FIXTURES = Path(__file__).with_name("fixtures")
 @pytest.fixture
 def deck(tmp_path):
     """Write variations of a constrained tetrahedron."""
-    base = (FIXTURES / "supported.inp").read_text()
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
 
     def write(extra="", text=None):
         path = tmp_path / "model.inp"
-        path.write_text((base if text is None else text) + extra)
+        path.write_text((base if text is None else text) + extra, encoding="utf-8", newline="\n")
         return path
 
     return write
@@ -56,10 +59,10 @@ def test_unconstrained_component_reports_elements_and_hint():
     "*SURFACE INTERACTION, NAME=FRICTIONLESS\n",
 ])
 def test_surface_path_to_supported_component(link, tmp_path):
-    text = (FIXTURES / "disconnected.inp").read_text()
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
     text += "*SURFACE, NAME=MASTER\nBODY, S1\n*SURFACE, NAME=SLAVE\nOTHER, S1\n" + link
     path = tmp_path / "contact.inp"
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8", newline="\n")
     report = check_deck(path)
     assert "unconstrained_part" not in codes(report)
     if "CONTACT PAIR" in link:
@@ -139,7 +142,7 @@ def test_unused_definitions_warn_and_gate_passes(deck, extra, entity):
 
 
 def test_missing_section_blocks_mesh_only_deck(deck):
-    base = (FIXTURES / "supported.inp").read_text()
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
     report = check_deck(deck(text=base.replace("*SOLID SECTION, ELSET=BODY, MATERIAL=STEEL\n", "")))
     assert "missing_section" in codes(report)
 
@@ -150,7 +153,7 @@ def test_unused_section_warns(deck):
 
 
 def test_case_comments_generated_nested_sets_and_d_exponents(deck):
-    base = (FIXTURES / "supported.inp").read_text().lower()
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8").lower()
     base = base.replace("1, 0, 0, 0", "1, 0d0, 0, 0")
     base = base.replace("*boundary\nfixed", "*nset,nset=all,generate\n1,4,1\n"
                         "*nset,nset=alias\nfixed\n** comment\n*boundary\nalias")
@@ -158,7 +161,7 @@ def test_case_comments_generated_nested_sets_and_d_exponents(deck):
 
 
 def test_element_connectivity_continuation(deck):
-    base = (FIXTURES / "supported.inp").read_text().replace("1, 1, 2, 3, 4", "1, 1, 2,\n3, 4")
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8").replace("1, 1, 2, 3, 4", "1, 1, 2,\n3, 4")
     assert validate_model(deck(text=base)).status == "PASS"
 
 
@@ -175,11 +178,12 @@ def test_invalid_input_returns_errors_instead_of_crashing(deck, text):
 
 def test_includes_resolve_relative_to_containing_file_and_detect_cycles(tmp_path):
     child = tmp_path / "mesh.inp"
-    child.write_text((FIXTURES / "supported.inp").read_text())
+    child.write_text((FIXTURES / "supported.inp").read_text(encoding="utf-8"),
+                     encoding="utf-8", newline="\n")
     root = tmp_path / "model.inp"
-    root.write_text('*INCLUDE, INPUT="mesh.inp"\n')
+    root.write_text('*INCLUDE, INPUT="mesh.inp"\n', encoding="utf-8", newline="\n")
     assert validate_model(root).status == "PASS"
-    child.write_text('*INCLUDE, INPUT=model.inp\n')
+    child.write_text('*INCLUDE, INPUT=model.inp\n', encoding="utf-8", newline="\n")
     assert "parse_error" in codes(check_deck(root))
 
 
@@ -190,7 +194,7 @@ def test_invalid_tolerance_rejected(deck, value):
 
 
 def test_later_boundary_cannot_hide_unconstrained_first_step(deck):
-    base = (FIXTURES / "supported.inp").read_text()
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
     base = base.replace("*BOUNDARY\nFIXED, 1, 3", "*STEP\n*STATIC\n*END STEP\n"
                         "*STEP\n*STATIC\n*BOUNDARY\nFIXED,1,3\n*END STEP")
     assert "unconstrained_part" in codes(check_deck(deck(text=base)))
@@ -199,6 +203,137 @@ def test_later_boundary_cannot_hide_unconstrained_first_step(deck):
 def test_boundary_reset_is_checked_per_step(deck):
     report = check_deck(deck("*STEP\n*STATIC\n*BOUNDARY,OP=NEW\n*END STEP\n"))
     assert "unconstrained_part" in codes(report)
+
+
+@pytest.mark.parametrize("first_op", ["NEW", "MOD"])
+def test_only_first_boundary_card_applies_op_in_each_step(deck, first_op):
+    # Element 1 uses {1,2,3,4}; element 2 uses {5,6,7,8}; their intersection is empty.
+    # Restraints on nodes 1 and 5 therefore support two independent components.
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8").split("*BOUNDARY")[0]
+    text = base + (f"*STEP\n*STATIC\n*BOUNDARY,OP={first_op}\n1,1,3\n"
+                   "*BOUNDARY,OP=NEW\n5,1,3\n*END STEP\n")
+    assert check_deck(deck(text=text)).status == "PASS"
+
+
+def test_first_boundary_flag_restarts_at_next_step(deck):
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    text = base + ("*STEP\n*STATIC\n*BOUNDARY\n5,1,3\n*END STEP\n"
+                   "*STEP\n*STATIC\n*BOUNDARY,OP=NEW\n1,1,3\n*END STEP\n")
+    findings = [f.entity_ids for f in check_deck(deck(text=text)).findings
+                if f.code == "unconstrained_part"]
+    assert findings == [("step:2", "element:2")]
+
+
+@pytest.mark.parametrize("keyword", [
+    "SHELL SECTION", "BEAM SECTION", "BEAM GENERAL SECTION", "MEMBRANE SECTION",
+    "MASS", "ROTARY INERTIA", "SPRING", "DASHPOT",
+])
+def test_incompatible_property_does_not_assign_solid_elements(deck, keyword):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    text = base.replace("*SOLID SECTION, ELSET=BODY, MATERIAL=STEEL\n",
+                        f"*{keyword},ELSET=BODY,MATERIAL=STEEL\n1\n")
+    report = check_deck(deck(text=text))
+    assert report.status == "FAIL"
+    assert "missing_section" in codes(report)
+    finding = next(f for f in report.findings if f.code == "incompatible_section")
+    assert "element:1" in finding.entity_ids
+    assert finding.severity == "error" and finding.fix_hint
+
+
+@pytest.mark.parametrize("kind,width,section", [
+    ("C3D4", 4, "SOLID SECTION"), ("CPS3", 3, "SOLID SECTION"),
+    ("CPE4", 4, "SOLID SECTION"), ("CAX4", 4, "SOLID SECTION"),
+    ("T3D2", 2, "SOLID SECTION"), ("S3", 3, "SHELL SECTION"),
+    ("B31", 2, "BEAM SECTION"), ("SPRING2", 2, "SPRING"),
+])
+def test_matching_section_families_pass(deck, kind, width, section):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    text = base.replace("TYPE=C3D4", f"TYPE={kind}").replace(
+        "1, 1, 2, 3, 4", "1," + ",".join(str(i) for i in range(1, width + 1)))
+    text = text.replace("*SOLID SECTION, ELSET=BODY, MATERIAL=STEEL\n",
+                        f"*{section},ELSET=BODY,MATERIAL=STEEL\n1,1\n1\n")
+    assert check_deck(deck(text=text)).status == "PASS"
+
+
+@pytest.mark.parametrize("kind,width", [
+    ("S4", 4), ("B31", 2), ("SPRING2", 2), ("MASS", 1),
+])
+def test_solid_section_rejects_other_element_families(deck, kind, width):
+    extra = (f"*ELEMENT,TYPE={kind},ELSET=OTHER\n2," +
+             ",".join(str(i) for i in range(1, width + 1)) +
+             "\n*SOLID SECTION,ELSET=OTHER,MATERIAL=STEEL\n")
+    report = check_deck(deck(extra))
+    assert "incompatible_section" in codes(report)
+    assert any(f.code == "missing_section" and f.entity_ids == ("element:2",)
+               for f in report.findings)
+
+
+def test_mixed_property_set_reports_only_incompatible_members(deck):
+    extra = ("*ELEMENT,TYPE=MASS,ELSET=LUMP\n2,1\n"
+             "*ELSET,ELSET=MIXED\nBODY,LUMP\n*MASS,ELSET=MIXED\n1\n")
+    report = check_deck(deck(extra))
+    assert report.status == "FAIL"
+    finding = next(f for f in report.findings if f.code == "incompatible_section")
+    assert "element:1" in finding.entity_ids and "element:2" not in finding.entity_ids
+    assert "missing_section" not in codes(report)
+
+
+@pytest.mark.parametrize("kind,connectivity,keyword", [
+    ("ROTARYI", "1", "ROTARY INERTIA"),
+    ("DASHPOT2", "1,2", "DASHPOT"),
+    ("B31", "1,2", "BEAM GENERAL SECTION"),
+])
+def test_unqualified_property_syntax_blocks(deck, kind, connectivity, keyword):
+    report = check_deck(deck(f"*ELEMENT,TYPE={kind},ELSET=OTHER\n2,{connectivity}\n"
+                             f"*{keyword},ELSET=OTHER\n1\n"))
+    assert report.status == "FAIL"
+    assert "missing_section" in codes(report)
+
+
+@pytest.mark.parametrize("keyword", ["*", "*,", "*,,", "*,ELSET=BODY", "* ,MATERIAL=STEEL"])
+def test_empty_keyword_returns_structured_api_failure(deck, keyword):
+    report = check_deck(deck(keyword + "\n"))
+    assert report.status == "FAIL"
+    assert codes(report) == {"parse_error"}
+
+
+@pytest.mark.parametrize("keyword", ["*", "*,", "*,,", "*,ELSET=BODY", "* ,MATERIAL=STEEL"])
+def test_empty_keyword_returns_cli_json_and_failure_exit(deck, capsys, keyword):
+    assert main([deck(keyword + "\n").as_posix(), "--json"]) == 1
+    evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    assert evidence["findings"][0]["code"] == "parse_error"
+
+
+def test_utf8_bom_remains_supported(deck):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    assert check_deck(deck(text="\ufeff" + base)).status == "PASS"
+
+
+@pytest.mark.parametrize("point,expected_distance", [
+    ((3, 4, 0), 5),       # sqrt(3**2 + 4**2) = 5
+    ((1, 2, 2), 3),       # sqrt(1 + 4 + 4) = 3
+    ((2, 3, 6), 7),       # sqrt(4 + 9 + 36) = 7
+])
+def test_hand_worked_euclidean_distance_controls_coincidence(deck, point, expected_distance):
+    assert math.dist((0, 0, 0), point) == pytest.approx(expected_distance)
+    path = deck(f"*NODE\n99,{point[0]},{point[1]},{point[2]}\n")
+    pair = ("node:1", "node:99")
+    at_limit = check_deck(path, tolerance=expected_distance)
+    below_limit = check_deck(path, tolerance=expected_distance - 0.1)
+    assert pair in [f.entity_ids for f in at_limit.findings if f.code == "unmerged_nodes"]
+    assert pair not in [f.entity_ids for f in below_limit.findings if f.code == "unmerged_nodes"]
+
+
+def test_tetrahedron_face_connectivity_has_independent_expected_members(deck):
+    model = Deck(read_blocks(deck()))
+    model.parse()
+    # Each face omits the opposite vertex: 4, 3, 1, 2, respectively.
+    # CalculiX 2.22 manual, section 7.128 (*SURFACE), fixes the S1-S4 order.
+    for face, expected in [("S1", {1, 2, 3}), ("S2", {1, 2, 4}),
+                           ("S3", {2, 3, 4}), ("S4", {1, 3, 4})]:
+        surface = Block("SURFACE", {"NAME": "FACE"}, [["BODY", face]], 0)
+        assert _surface_nodes(model, surface) == expected
 
 
 def test_gate_exception_retains_report(deck):
@@ -300,7 +435,7 @@ def test_solve_rechecks_deck_after_edits(deck, monkeypatch, tmp_path):
     chain = FEMChain(tmp_path)
     chain._inp_path = deck()
     assert validate_model(chain._inp_path).status == "PASS"
-    chain._inp_path.write_text("")
+    chain._inp_path.write_text("", encoding="utf-8", newline="\n")
     with pytest.raises(ModelCheckError):
         chain.solve()
 
@@ -328,7 +463,7 @@ def test_gmsh_export_multiple_blocks_has_global_element_ids(tmp_path, monkeypatc
     path = gen.export_mesh_inp(str(tmp_path / "export.inp"))
     # Mesh-only exports are intentionally incomplete analysis decks.
     assert "missing_section" in codes(check_deck(path))
-    with path.open("a") as output:
+    with path.open("a", encoding="utf-8", newline="\n") as output:
         output.write("*MATERIAL,NAME=STEEL\n*ELASTIC\n200000,0.3\n"
                      "*SOLID SECTION,ELSET=EC3D4,MATERIAL=STEEL\n"
                      "*SOLID SECTION,ELSET=ECPS3,MATERIAL=STEEL\n"

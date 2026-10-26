@@ -1,4 +1,5 @@
-** Synthetic connectivity fixture; consistent length units.
+** Synthetic connectivity fixture; illustrative N-mm-MPa units, not design data.
+** Elastic inputs are assumed test values, not measured or material-qualified.
 *NODE
 1, 0, 0, 0
 2, 1, 0, 0

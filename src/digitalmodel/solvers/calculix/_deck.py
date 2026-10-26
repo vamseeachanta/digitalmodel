@@ -32,7 +32,10 @@ class Block:
     line: int
 
 
-# Number of connectivity nodes, including midside nodes. Unknown types fail closed.
+# Connectivity widths including midside nodes: CalculiX 2.22 User's Manual,
+# section 6.2 (Element Types), https://www.dhondt.de/ccx_2.22.pdf.
+# ROTARYI/DASHPOT2 are legacy reader aliases, not qualified CalculiX types;
+# their property cards remain blocking below. Unknown types fail closed.
 ELEMENT_NODES = {
     "C3D4": 4, "C3D10": 10, "C3D8": 8, "C3D8R": 8,
     "C3D20": 20, "C3D20R": 20, "C3D6": 6, "C3D15": 15,
@@ -45,9 +48,18 @@ ELEMENT_NODES = {
     "MASS": 1, "ROTARYI": 1, "SPRING2": 2, "DASHPOT2": 2,
 }
 MASS_TYPES = {"MASS", "ROTARYI"}
+# Compatible families within ELEMENT_NODES: CalculiX 2.22 User's Manual,
+# sections 7.3 (*BEAM SECTION), 7.81 (*MASS), 7.117 (*SHELL SECTION),
+# 7.118 (*SOLID SECTION), 7.121 (*SPRING), and 6.2.15-18 (membranes).
+# Empty tuples retain detection of unqualified legacy property syntax without
+# assigning elements; no supported membrane topology is currently read.
 SECTION_KEYWORDS = {
-    "SOLID SECTION", "SHELL SECTION", "BEAM SECTION", "BEAM GENERAL SECTION",
-    "MEMBRANE SECTION", "MASS", "ROTARY INERTIA", "SPRING", "DASHPOT",
+    "SOLID SECTION": ("C3D", "CPS", "CPE", "CAX", "T3D"),
+    "SHELL SECTION": ("S3", "S4", "S6", "S8"),
+    "BEAM SECTION": ("B31", "B32"),
+    "BEAM GENERAL SECTION": (), "MEMBRANE SECTION": (),
+    "MASS": ("MASS",), "ROTARY INERTIA": (),
+    "SPRING": ("SPRING2",), "DASHPOT": (),
 }
 DEFINITIONS = {
     "MATERIAL": ("material", "NAME"),
@@ -78,10 +90,11 @@ def read_blocks(path: Path, active: tuple[Path, ...] = ()) -> list[Block]:
     path = path.resolve()
     if path in active:
         raise ValueError("Cyclic include")
-    # A short recursion guard produces a finding rather than a Python traceback.
+    # Local resource limit, not a solver limit: reserve Python recursion
+    # headroom so excessive nesting becomes a finding rather than a traceback.
     if len(active) >= 64:
         raise ValueError("Include nesting exceeds 64 files")
-    lines = path.read_text(encoding="utf-8-sig").splitlines()
+    lines = path.read_text(encoding="utf-8").removeprefix("\ufeff").splitlines()
     result: list[Block] = []
     current: Block | None = None
     i = 0
@@ -101,10 +114,14 @@ def read_blocks(path: Path, active: tuple[Path, ...] = ()) -> list[Block]:
                     break
                 line += following
                 i += 1
-            fields = [v.strip() for v in line[1:].split(",") if v.strip()]
+            fields = [v.strip() for v in line[1:].split(",")]
+            if not fields[0]:
+                raise ValueError("Empty keyword")
             keyword = " ".join(fields[0].upper().split())
             params = {}
             for value in fields[1:]:
+                if not value:
+                    continue
                 name, sep, data = value.partition("=")
                 params[name.strip().upper()] = data.strip().strip("\"'") if sep else ""
             current = Block(keyword, params, [], start)
@@ -209,7 +226,8 @@ class Deck:
                     stride = positive_id(values[2]) if len(values) == 3 else 1
                     if stop < start:
                         raise ValueError("Descending generation")
-                    # Expand only known IDs; missing IDs still generate a diagnostic.
+                    # Local ID-span cap bounds expansion memory/time; it is not
+                    # a CalculiX limit. Missing generated IDs remain findings.
                     if stop - start > 10_000_000:
                         raise ValueError("Set generation exceeds supported size")
                     members.extend(str(v) for v in range(start, stop + 1, stride))
@@ -235,6 +253,8 @@ class Deck:
         key = (kind, name)
         if key in self.resolved:
             return self.resolved[key]
+        # Local recursion cap reserves headroom for resolution calls, not a
+        # solver restriction on set nesting (same resource policy as includes).
         if name in active or len(active) >= 64:
             self.error("parse_error", (f"{kind}:{name}",), "Cyclic set reference",
                     "Use explicit members or an acyclic set union with at most 64 levels.")
