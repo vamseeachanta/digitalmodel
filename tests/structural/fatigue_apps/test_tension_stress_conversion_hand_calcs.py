@@ -2,6 +2,16 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Check an analytic surrogate lookup, never solver evidence.
 
+Plan-lite:
+    Scope will remain this test file and a uniform-bar analytic surrogate.
+    Expected stresses will come from force/area independently of the converter.
+    Run in an environment with the converter's dependencies installed:
+    PYTHONPATH=src python -m pytest tests/structural/fatigue_apps/test_tension_stress_conversion_hand_calcs.py -q
+    Acceptance will require all three tests to pass without failures or skips,
+    covering scalar/vector nodes, interpolation, both extrapolation regions,
+    sorted source rows and preserved query order. Solver results, stress
+    concentrations and nonlinear fatigue response will remain outside scope.
+
 Basis: independent uniform-bar equilibrium, F = integral(sigma dA) = sigma*A
 for constant axial stress. Choose A = 2500 mm^2 as a synthetic test geometry;
 no material properties or measured data are assumed. SI prefix definitions give
