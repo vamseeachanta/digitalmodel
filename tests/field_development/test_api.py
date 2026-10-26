@@ -75,7 +75,9 @@ ANCHOR_FLUID = {"density_kg_per_m3": 850.0, "viscosity_pa_s": 2.0e-3}
 
 def _write_anchor_config(tmp_path: Path) -> Path:
     path = tmp_path / "flat_anchor_field.yml"
-    path.write_text(yaml.safe_dump(FLAT_ANCHOR_CONFIG), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(FLAT_ANCHOR_CONFIG), encoding="utf-8", newline="\n"
+    )
     return path
 
 
@@ -395,7 +397,9 @@ def _electrical_defaults():
 
 def _screen_electrical(tmp_path, config=None, **kwargs):
     path = tmp_path / "electrical.yml"
-    path.write_text(yaml.safe_dump(config or _electrical_config()), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(config or _electrical_config()), encoding="utf-8", newline="\n"
+    )
     return api.screen(path, screening_defaults=_electrical_defaults(), **kwargs)
 
 
@@ -552,18 +556,62 @@ def test_unity_power_factor_and_material_resistance_fallback(tmp_path):
     )
 
 
-def test_electrical_report_includes_assumptions_and_failing_conductor(tmp_path):
+@pytest.mark.parametrize(
+    "resistance,drop_limit,ampacity_ok,drop_ok,ampacity,drop_pct",
+    [
+        (0.01, 5.0, False, True, 41.403934, 4.5),
+        (0.001, 0.1, True, False, 130.930734, 0.45),
+        (0.01, 1.0, False, False, 41.403934, 4.5),
+        (0.001, 5.0, True, True, 130.930734, 0.45),
+    ],
+    ids=["ampacity-fails", "voltage-drop-fails", "both-fail", "both-pass"],
+)
+def test_electrical_report_includes_assumptions_and_failing_conductor(
+    tmp_path, resistance, drop_limit, ampacity_ok, drop_ok, ampacity, drop_pct
+):
     config = _electrical_config()
-    config["connections"][1]["resistance_ohm_per_m"] = 0.01
+    config["connections"][1]["resistance_ohm_per_m"] = resistance
+    defaults = _electrical_defaults()
+    defaults["cable_screening"]["voltage_drop_limit_pct"] = drop_limit
+    config_path = tmp_path / "electrical.yml"
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8", newline="\n")
     report_path = tmp_path / "screen.md"
-    result = _screen_electrical(tmp_path, config, report_path=report_path)
+    result = api.screen(
+        config_path, screening_defaults=defaults, report_path=report_path
+    )
     text = report_path.read_text(encoding="utf-8")
-    assert result["passes"] is False
+    passes = ampacity_ok and drop_ok
+    assert result["passes"] is passes
     assert "Balanced three-phase" in text
     assert "full rated output" in text
     assert "unity assumed" in text
-    assert "| BS |" in text
-    assert "FAIL" in text
+    cable = next(c for c in result["cables"] if c["connection"] == "BS")
+    assert (cable["selected"] is not None) is passes
+    assert cable["candidates"][0]["size_mm2"] == 25.0
+    row = next(line for line in text.splitlines() if line.startswith("| BS |"))
+    cells = [cell.strip() for cell in row.strip("|").split("|")]
+    # Independent synthetic hand checks: I = 900000/(sqrt(3)*10000*0.8)
+    # = 64.951905 A; ampacity = sqrt((90-30)/(R'*3.5)) gives the literals
+    # above; dU = sqrt(3)*I*500*R'*0.8 gives 450 or 45 V, hence 4.5 or
+    # 0.45 percent at 10000 V. These reuse the existing screening equations
+    # (IEC 60287-1-1:2023, clause 4.2.1, AC cables; IEC 60364-5-52:2009,
+    # Annex G, Voltage drop in consumers' installations); no coefficient is new.
+    assert float(cells[5].split()[0]) == 25.0
+    if not passes:
+        assert "assessed; not selected" in cells[5]
+    assert float(cells[3]) == pytest.approx(64.951905, abs=0.0005)
+    assert float(cells[6]) == pytest.approx(ampacity, abs=0.0005)
+    reported_drop, reported_limit = map(float, cells[7].split("/"))
+    assert reported_drop == pytest.approx(drop_pct, abs=0.0005)
+    assert reported_limit == pytest.approx(drop_limit, abs=0.0005)
+    assert f"ampacity {'PASS' if ampacity_ok else 'FAIL'}" in cells[8]
+    assert f"voltage drop {'PASS' if drop_ok else 'FAIL'}" in cells[8]
+    assert cells[8].startswith("PASS" if passes else "FAIL")
+    assert f"**Overall: {'PASS' if passes else 'FAIL'}**" in text
+    assert "Ampacity >= I [A]" in text
+    assert "dU / limit [%]" in text
+    assert "IEC 60287-1-1" in text
+    assert "IEC 60364-5-52:2009, Annex G" in text
 
 
 # --- screen: iteration cheapness ----------------------------------------------
