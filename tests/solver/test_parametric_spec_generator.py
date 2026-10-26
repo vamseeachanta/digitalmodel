@@ -279,11 +279,11 @@ def test_max_specs_rejects_before_expansion(base_spec_data, tmp_path, monkeypatc
     # Existing output must also remain byte-for-byte unchanged on rejection.
     output.mkdir()
     sentinel = output / "keep.yml"
-    sentinel.write_text("unchanged\n")
+    sentinel.write_text("unchanged\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="max_specs"):
         gen.generate_to_yaml(output)
     assert list(output.iterdir()) == [sentinel]
-    assert sentinel.read_text() == "unchanged\n"
+    assert sentinel.read_text(encoding="utf-8") == "unchanged\n"
     boundary = PSG(base_spec_data, [FS(0.5, 1.5, steps)], [HS(headings)],
                    max_specs=expected_count)
     assert len(boundary.generate_to_yaml(tmp_path / "boundary")) == expected_count
@@ -388,7 +388,7 @@ def _run_cli(*args):
     )
     return subprocess.run(
         [sys.executable, "-m", "digitalmodel.solvers.parametric_spec_generator", *args],
-        capture_output=True, text=True, env=env, check=False,
+        capture_output=True, text=True, encoding="utf-8", env=env, check=False,
     )
 
 
@@ -403,7 +403,7 @@ def test_module_cli_combined_sweep(base_spec_data, tmp_path):
     """Two bands times two headings produce four independently checked files."""
     base_spec_data["metadata"] = {"description": "Synthetic base"}
     base = tmp_path / "base.yml"
-    base.write_text(yaml.safe_dump(base_spec_data))
+    base.write_text(yaml.safe_dump(base_spec_data), encoding="utf-8", newline="\n")
     output = tmp_path / "output"
     result = _run_cli("--base", str(base), "--freq-sweep", "0.5:1.5:2",
                       "--heading-sweep", "0:90:2", "--output-dir", str(output))
@@ -422,7 +422,153 @@ def test_module_cli_combined_sweep(base_spec_data, tmp_path):
         itertools.product(frequencies, headings)
     )
     for spec, path in zip(restored, paths):
-        assert yaml.safe_load(path.read_text()) == spec.model_dump(mode="json", exclude_none=True)
+        assert yaml.safe_load(path.read_text(encoding="utf-8")) == spec.model_dump(mode="json", exclude_none=True)
+
+
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_frequency_sweep_replaces_period_units(base_spec_data, tmp_path, interface):
+    """Swept rad/s values must not be interpreted as periods from the base."""
+    base_spec_data["frequencies"] = {"input_type": "period", "values": [4.0, 8.0]}
+    if interface == "api":
+        PSG, FS, *_ = _get_generator()
+        specs = PSG(base_spec_data, frequency_sweeps=[FS(0.5, 1.5, 2)]).generate()
+    else:
+        base = tmp_path / "base.yml"
+        base.write_text(yaml.safe_dump(base_spec_data), encoding="utf-8", newline="\n")
+        output = tmp_path / "output"
+        result = _run_cli("--base", str(base), "--freq-sweep", "0.5:1.5:2",
+                          "--output-dir", str(output))
+        assert result.returncode == 0, result.stderr
+        specs = [DiffractionSpec.from_yaml(p) for p in sorted(output.glob("*.yml"))]
+    assert len(specs) == 2
+    # Inherited sampling: spacing 1.0, half-band 0.4, sample spacing 0.2.
+    expected = [(0.1, 0.3, 0.5, 0.7, 0.9), (1.1, 1.3, 1.5, 1.7, 1.9)]
+    for spec, values in zip(specs, expected):
+        assert spec.frequencies.to_frequencies_rad_s() == pytest.approx(values)
+    assert base_spec_data["frequencies"]["input_type"] == "period"
+
+
+@pytest.mark.parametrize("axis", ["frequency", "heading"])
+def test_api_sweep_populates_missing_axis(base_spec_data, axis):
+    """Axis normalization must retain the API's ability to supply missing values."""
+    PSG, FS, HS, _ = _get_generator()
+    section = "frequencies" if axis == "frequency" else "wave_headings"
+    del base_spec_data[section]
+    kwargs = ({"frequency_sweeps": [FS(0.5, 1.5, 2)]} if axis == "frequency"
+              else {"heading_sweeps": [HS([[0.0], [90.0]])]})
+    specs = PSG(base_spec_data, **kwargs).generate()
+    assert len(specs) == 2
+    if axis == "frequency":
+        assert [spec.frequencies.to_frequencies_rad_s()[2] for spec in specs] == pytest.approx([0.5, 1.5])
+    else:
+        assert [spec.wave_headings.to_heading_list() for spec in specs] == [[0.0], [90.0]]
+    assert section not in base_spec_data
+
+
+@pytest.mark.parametrize("interface", ["api", "cli"])
+@pytest.mark.parametrize("axis", ["frequency", "heading"])
+def test_sweeps_replace_ranges(base_spec_data, tmp_path, interface, axis):
+    """An explicit swept axis replaces its range without changing the other axis."""
+    base_spec_data["frequencies"] = {
+        "input_type": "period", "range": {"start": 4.0, "end": 8.0, "count": 3},
+    }
+    base_spec_data["wave_headings"] = {"range": {"start": 0.0, "end": 180.0, "increment": 90.0}}
+    if interface == "api":
+        PSG, FS, HS, _ = _get_generator()
+        kwargs = ({"frequency_sweeps": [FS(0.5, 1.5, 2)]} if axis == "frequency"
+                  else {"heading_sweeps": [HS([[0.0], [90.0]])]})
+        specs = PSG(base_spec_data, **kwargs).generate()
+    else:
+        base = tmp_path / "base.yml"
+        base.write_text(yaml.safe_dump(base_spec_data), encoding="utf-8", newline="\n")
+        output = tmp_path / "output"
+        option, value = (("--freq-sweep", "0.5:1.5:2") if axis == "frequency"
+                         else ("--heading-sweep", "0:90:2"))
+        result = _run_cli("--base", str(base), option, value, "--output-dir", str(output))
+        assert result.returncode == 0, result.stderr
+        specs = [DiffractionSpec.from_yaml(p) for p in sorted(output.glob("*.yml"))]
+    assert len(specs) == 2
+    for index, spec in enumerate(specs):
+        if axis == "frequency":
+            assert spec.frequencies.range is None
+            assert spec.frequencies.to_frequencies_rad_s()[2] == pytest.approx([0.5, 1.5][index])
+            assert spec.wave_headings.to_heading_list() == [0.0, 90.0, 180.0]
+        else:
+            assert spec.wave_headings.range is None
+            assert spec.wave_headings.to_heading_list() == [[0.0], [90.0]][index]
+            assert spec.frequencies.input_type == "period"
+            assert spec.frequencies.values is None
+            assert spec.frequencies.range.start == 4.0
+            assert spec.frequencies.range.end == 8.0
+            assert spec.frequencies.range.count == 3
+
+
+@pytest.mark.parametrize("multibody", [False, True])
+@pytest.mark.parametrize("absolute", [False, True])
+def test_module_cli_preserves_mesh_referents(base_spec_data, tmp_path, multibody, absolute):
+    """Relocation must retain hull, lid, free-surface and both control-surface meshes."""
+    source = tmp_path / "source"
+    source.mkdir()
+    meshes = source / "meshes"
+    meshes.mkdir()
+    expected = {}
+    for name in ("hull", "lid", "surface", "vessel-control", "body-control"):
+        mesh = meshes / f"{name}.gdf"
+        mesh.write_text("synthetic mesh\n", encoding="utf-8", newline="\n")
+        expected[name] = mesh.resolve()
+    references = {name: path.as_posix() if absolute else path.relative_to(source).as_posix()
+                  for name, path in expected.items()}
+    vessel = base_spec_data["vessel"]
+    vessel["geometry"]["mesh_file"] = references["hull"]
+    vessel["control_surface"] = {"mesh_file": references["vessel-control"]}
+    if multibody:
+        base_spec_data["bodies"] = [{"vessel": base_spec_data.pop("vessel"),
+                                    "control_surface": {"mesh_file": references["body-control"]}}]
+    base_spec_data["damping_lid"] = {"mesh_file": references["lid"], "damping_factor": 0.1}
+    base_spec_data["free_surface_zone"] = {"mesh_file": references["surface"]}
+    base = source / "base.yml"
+    original = yaml.safe_dump(base_spec_data)
+    base.write_text(original, encoding="utf-8", newline="\n")
+    output = tmp_path / "generated" / "nested"
+    result = _run_cli("--base", str(base), "--heading-sweep", "0:90:2",
+                      "--output-dir", str(output))
+    assert result.returncode == 0, result.stderr
+    paths = sorted(output.glob("*.yml"))
+    assert len(paths) == 2
+    for path in paths:
+        spec = DiffractionSpec.from_yaml(path)
+        body = spec.get_bodies()[0]
+        actual = {"hull": body.vessel.geometry.mesh_file,
+                  "lid": spec.damping_lid.mesh_file,
+                  "surface": spec.free_surface_zone.mesh_file,
+                  "vessel-control": body.vessel.control_surface.mesh_file}
+        if multibody:
+            actual["body-control"] = body.control_surface.mesh_file
+        for name, reference in actual.items():
+            assert not Path(reference).is_absolute()
+            assert "\\" not in reference
+            resolved = (path.parent / reference).resolve()
+            assert resolved == expected[name]
+            assert resolved.read_text(encoding="utf-8") == "synthetic mesh\n"
+    assert base.read_text(encoding="utf-8") == original
+
+
+def test_module_cli_reads_utf8_without_locale_support(base_spec_data, tmp_path, monkeypatch):
+    """A valid UTF-8 base must load even when the default text encoding is ASCII."""
+    base_spec_data["metadata"] = {"description": "Synthetic caf\u00e9"}
+    base = tmp_path / "base.yml"
+    base.write_text(yaml.safe_dump(base_spec_data, allow_unicode=True),
+                    encoding="utf-8", newline="\n")
+    monkeypatch.setenv("PYTHONUTF8", "0")
+    monkeypatch.setenv("PYTHONCOERCECLOCALE", "0")
+    monkeypatch.setenv("LC_ALL", "C")
+    output = tmp_path / "output"
+    result = _run_cli("--base", str(base), "--output-dir", str(output))
+    assert result.returncode == 0, result.stderr
+    paths = list(output.glob("*.yml"))
+    assert len(paths) == 1
+    assert DiffractionSpec.from_yaml(paths[0]).metadata.description == "Synthetic caf\u00e9"
+    assert b"\r" not in paths[0].read_bytes()
 
 
 @pytest.mark.parametrize("option,value", [
@@ -437,7 +583,7 @@ def test_module_cli_combined_sweep(base_spec_data, tmp_path):
 def test_module_cli_rejects_before_output(base_spec_data, tmp_path, option, value):
     """Malformed ranges and oversized products cannot leave partial files."""
     base = tmp_path / "base.yml"
-    base.write_text(yaml.safe_dump(base_spec_data))
+    base.write_text(yaml.safe_dump(base_spec_data), encoding="utf-8", newline="\n")
     output = tmp_path / "rejected"
     result = _run_cli("--base", str(base), "--freq-sweep", "0.5:1.5:2",
                       "--heading-sweep", "0:90:2", "--output-dir", str(output),

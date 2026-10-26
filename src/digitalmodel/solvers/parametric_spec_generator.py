@@ -39,6 +39,7 @@ from __future__ import annotations
 import argparse
 import copy
 import math
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -185,7 +186,11 @@ class ParametricSpecGenerator:
                 remainder //= length
             suffix = "_".join(coordinates) or "base"
             fname = output_dir / f"spec_{slug}_{suffix}.yml"
-            spec.to_yaml(fname)
+            fname.write_text(
+                yaml.safe_dump(spec.model_dump(mode="json", exclude_none=True),
+                               default_flow_style=False, sort_keys=False),
+                encoding="utf-8", newline="\n",
+            )
             paths.append(fname)
         return paths
 
@@ -215,11 +220,17 @@ class ParametricSpecGenerator:
 
         # Apply frequency sweeps
         for fsweep in self._freq_sweeps:
+            for data in variants:
+                frequencies = data.setdefault("frequencies", {})
+                frequencies["input_type"] = "frequency"
+                frequencies.pop("range", None)
             ranges = fsweep.generate_ranges()
             variants = self._expand(variants, "frequencies.values", ranges)
 
         # Apply heading sweeps
         for hsweep in self._heading_sweeps:
+            for data in variants:
+                data.setdefault("wave_headings", {}).pop("range", None)
             variants = self._expand(
                 variants, "wave_headings.values", hsweep.values
             )
@@ -251,6 +262,20 @@ class ParametricSpecGenerator:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+
+def _rebase_mesh_paths(data: Any, source_dir: Path, output_dir: Path) -> None:
+    """Keep every schema mesh referent when YAML moves to another directory."""
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key == "mesh_file" and isinstance(value, str):
+                target = (source_dir / value).resolve()
+                data[key] = Path(os.path.relpath(target, output_dir)).as_posix()
+            else:
+                _rebase_mesh_paths(value, source_dir, output_dir)
+    elif isinstance(data, list):
+        for value in data:
+            _rebase_mesh_paths(value, source_dir, output_dir)
 
 
 def _set_nested(d: dict, path: str, value: Any) -> None:
@@ -316,7 +341,10 @@ def main(argv: Optional[list[str]] = None) -> int:
         if args.heading_sweep:
             start, end, steps = args.heading_sweep
             headings = HeadingSweep([[float(h)] for h in np.linspace(start, end, steps)])
-        base = DiffractionSpec.from_yaml(args.base).model_dump(mode="json", exclude_none=True)
+        base = DiffractionSpec.model_validate(
+            yaml.safe_load(args.base.read_text(encoding="utf-8"))
+        ).model_dump(mode="json", exclude_none=True)
+        _rebase_mesh_paths(base, args.base.resolve().parent, args.output_dir.resolve())
         generator = ParametricSpecGenerator(
             base, frequency_sweeps=[frequency] if frequency else None,
             heading_sweeps=[headings] if headings else None, max_specs=args.max_specs,
