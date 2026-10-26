@@ -122,7 +122,8 @@ def assert_record_agreement(actual, expected):
         assert actual == expected
 
 
-def test_report_rebuilds_exactly(builder, tmp_path):
+def test_report_rebuild_matches_presentation_and_records(builder, tmp_path):
+    """Check normalized presentation, exact source digests and numeric agreement."""
     builder.build(tmp_path / "report", tmp_path / "calculations")
     for name in ("report.html", "changes.json"):
         rebuilt = (tmp_path / "report" / name).read_text(encoding="utf-8")
@@ -213,7 +214,7 @@ def test_rebuild_tolerates_float_representation_differences(builder, tmp_path, m
             return values
 
         monkeypatch.setattr(builder, "display_values", changed_display)
-    test_report_rebuilds_exactly(builder, tmp_path)
+    test_report_rebuild_matches_presentation_and_records(builder, tmp_path)
 
 
 @pytest.mark.parametrize("kind", ["bound", "tooltip", "scientific"])
@@ -237,7 +238,7 @@ def test_rebuild_rejects_wrong_stored_numbers(builder, tmp_path, monkeypatch, ki
 
     monkeypatch.setattr(Path, "read_text", changed)
     with pytest.raises(AssertionError):
-        test_report_rebuilds_exactly(builder, tmp_path)
+        test_report_rebuild_matches_presentation_and_records(builder, tmp_path)
 
 
 def test_perfect_straightening_reports_unbounded_radius(builder, tmp_path, monkeypatch):
