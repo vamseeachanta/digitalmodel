@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Check an explicit YAML registry; dry-run unless --apply is supplied.
@@ -14,6 +17,7 @@ import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from http import HTTPStatus
+from http.client import HTTPException
 import json
 import math
 import os
@@ -142,6 +146,10 @@ def check_url(url: str, timeout: float, retries: int,
             else:
                 status = "dead"
             retryable = code == HTTPStatus.TOO_MANY_REQUESTS or code >= HTTPStatus.INTERNAL_SERVER_ERROR
+        except HTTPException:
+            status = "dead"
+            error = "protocol_error"
+            retryable = True
         except (OSError, URLError) as exc:
             reason = exc.reason if isinstance(exc, URLError) else exc
             status = "timeout" if isinstance(reason, TimeoutError) else "dead"

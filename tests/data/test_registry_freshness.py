@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Offline contract examples for the standalone registry freshness checker.
@@ -11,8 +14,10 @@ reserved for testing by RFC 2606, section 2.
 """
 
 import copy
+from contextlib import nullcontext
 from datetime import datetime
 from http import HTTPStatus
+from http.client import BadStatusLine, LineTooLong
 import importlib.util
 import json
 import os
@@ -20,6 +25,7 @@ from pathlib import Path
 import socket
 import subprocess
 import sys
+from types import SimpleNamespace
 from urllib.error import HTTPError, URLError
 
 import pytest
@@ -61,7 +67,8 @@ def registry(tmp_path):
         "resources": [{"url": URL, "title": "Example", "download_status": "unknown",
                        "last_checked": "2024-01-01", "tags": ["fixture"]}],
     }
-    path.write_text("# Preserve exact bytes in dry-run\n" + yaml.safe_dump(document))
+    path.write_text("# Preserve exact bytes in dry-run\n" + yaml.safe_dump(document),
+                    encoding="utf-8", newline="\n")
     return path, document
 
 
@@ -103,7 +110,8 @@ def test_head_classification(checker, registry, code, status, download_status):
         "attempts": 1, "error": None, "last_checked": DATE,
     }]
     assert head.calls == [(URL, TIMEOUT)]
-    assert yaml.safe_load(path.read_text())["resources"][0]["download_status"] == download_status
+    row = yaml.safe_load(path.read_text(encoding="utf-8"))["resources"][0]
+    assert row["download_status"] == download_status
 
 
 @pytest.mark.parametrize("error,status,reason", [
@@ -121,7 +129,7 @@ def test_bounded_error_retries(checker, registry, error, status, reason):
     assert record["http_status"] is None
     assert record["attempts"] == 3  # Initial + two retries, hand counted.
     assert head.calls == [(URL, TIMEOUT)] * 3
-    row = yaml.safe_load(path.read_text())["resources"][0]
+    row = yaml.safe_load(path.read_text(encoding="utf-8"))["resources"][0]
     assert row["download_status"] == ("timeout" if status == "timeout" else "dead_link")
 
 
@@ -150,7 +158,7 @@ def test_summary_deduplication_and_order(checker, registry):
     path, document = registry
     urls = [f"https://example.test/{suffix}" for suffix in ("a", "b", "c", "d")]
     document["resources"] = [{"url": url} for url in reversed(urls)] + [{"url": urls[0]}]
-    path.write_text(yaml.safe_dump(document))
+    path.write_text(yaml.safe_dump(document), encoding="utf-8", newline="\n")
     head = FakeHead(checker.HTTPResult(HTTPStatus.OK),
                     checker.HTTPResult(HTTPStatus.FOUND, "/elsewhere"),
                     checker.HTTPResult(HTTPStatus.NOT_FOUND),
@@ -159,7 +167,7 @@ def test_summary_deduplication_and_order(checker, registry):
     assert [row["url"] for row in report["records"]] == urls
     # Four distinct fixture URLs: one in each status; duplicate adds no URL.
     assert report["summary"] == {"total": 4, "alive": 1, "redirected": 1, "dead": 1, "timeout": 1}
-    rows = yaml.safe_load(path.read_text())["resources"]
+    rows = yaml.safe_load(path.read_text(encoding="utf-8"))["resources"]
     assert [row["url"] for row in rows] == [row["url"] for row in document["resources"]]
     assert rows[-1]["download_status"] == "alive"
 
@@ -181,7 +189,7 @@ def test_apply_preserves_unrelated_fields_and_permissions(checker, registry):
     run(checker, path, FakeHead(checker.HTTPResult(HTTPStatus.OK)), apply=True)
     expected = copy.deepcopy(document)
     expected["resources"][0].update(last_checked=DATE, download_status="alive")
-    assert yaml.safe_load(path.read_text()) == expected
+    assert yaml.safe_load(path.read_text(encoding="utf-8")) == expected
     assert path.stat().st_mode & 0o777 == 0o640
 
 
@@ -194,7 +202,7 @@ def test_apply_preserves_unrelated_fields_and_permissions(checker, registry):
 ])
 def test_malformed_input_is_rejected_before_requests(checker, tmp_path, text):
     path = tmp_path / "bad.yaml"
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8", newline="\n")
     original = path.read_bytes()
     head = FakeHead()
     with pytest.raises(ValueError):
@@ -250,7 +258,7 @@ def test_interrupted_fsync_preserves_original(checker, registry, monkeypatch):
 
 def test_empty_registry(checker, tmp_path):
     path = tmp_path / "empty.yaml"
-    path.write_text("resources: []\n")
+    path.write_text("resources: []\n", encoding="utf-8", newline="\n")
     result = run(checker, path, FakeHead())
     assert result["records"] == []
     assert result["summary"] == dict(total=0, alive=0, redirected=0, dead=0, timeout=0)
@@ -280,6 +288,60 @@ def test_real_adapter_sends_head_without_following_redirects(checker, monkeypatc
     assert checker.NoRedirect().redirect_request(None, None, None, None, None, None) is None
 
 
+@pytest.mark.parametrize("error_type", [BadStatusLine, LineTooLong])
+def test_real_adapter_protocol_failure_uses_retry_budget(checker, registry, monkeypatch, error_type):
+    class Opener:
+        def open(self, request, timeout):
+            raise error_type("synthetic protocol detail")
+
+    monkeypatch.setattr(checker, "build_opener", lambda *handlers: Opener())
+    report = run(checker, registry[0], checker.head)
+    assert report["records"] == [{
+        "url": URL, "status": "dead", "http_status": None, "location": None,
+        "attempts": 3, "error": "protocol_error", "last_checked": DATE,
+    }]  # Initial attempt + two additional retries = three failed attempts.
+    assert "synthetic protocol detail" not in json.dumps(report)
+
+
+@pytest.mark.parametrize("error_type", [BadStatusLine, LineTooLong])
+@pytest.mark.parametrize("apply", [False, True])
+def test_main_protocol_failure_emits_json_and_checks_later_url(
+        checker, registry, monkeypatch, capsys, error_type, apply):
+    path, document = registry
+    urls = ["https://example.test/a", "https://example.test/b"]
+    document["resources"] = [{"url": url} for url in urls]
+    path.write_text(yaml.safe_dump(document), encoding="utf-8", newline="\n")
+    original = path.read_bytes()
+
+    class Opener:
+        def open(self, request, timeout):
+            if request.full_url == urls[0]:
+                raise error_type("synthetic protocol detail")
+            return nullcontext(SimpleNamespace(status=HTTPStatus.OK, headers={}))
+
+    monkeypatch.setattr(checker, "build_opener", lambda *handlers: Opener())
+    monkeypatch.setattr(checker, "utc_now", lambda: NOW)
+    args = [path.as_posix(), "--timeout", str(TIMEOUT), "--retries", str(RETRIES)]
+    if apply:
+        args.append("--apply")
+    assert checker.main(args) == 0
+    output = capsys.readouterr()
+    assert not output.err
+    assert "synthetic protocol detail" not in output.out
+    report = json.loads(output.out)
+    # Two distinct URLs: one exhausted protocol failure and one alive result.
+    assert report["summary"] == dict(total=2, alive=1, redirected=0, dead=1, timeout=0)
+    assert [record["url"] for record in report["records"]] == urls
+    assert [record["attempts"] for record in report["records"]] == [3, 1]
+    assert [record["error"] for record in report["records"]] == ["protocol_error", None]
+    assert report["applied"] is apply
+    if apply:
+        rows = yaml.safe_load(path.read_text(encoding="utf-8"))["resources"]
+        assert [row["download_status"] for row in rows] == ["dead_link", "alive"]
+    else:
+        assert path.read_bytes() == original
+
+
 @pytest.fixture
 def cli(tmp_path):
     # Subprocess bootstrap substitutes HTTP only; production argparse, main,
@@ -290,12 +352,14 @@ def cli(tmp_path):
         "from datetime import datetime\n"
         "def denied(*a, **kw):\n    raise AssertionError('network forbidden')\n"
         "socket.socket = socket.create_connection = socket.getaddrinfo = denied\n"
-        f"spec = importlib.util.spec_from_file_location('checker', {str(SCRIPT)!r})\n"
+        "spec = importlib.util.spec_from_file_location('checker', "
+        "'scripts/data/check-registry-freshness.py')\n"
         "m = importlib.util.module_from_spec(spec)\nsys.modules[spec.name] = m\n"
         "spec.loader.exec_module(m)\n"
         "m.head = lambda url, timeout: m.HTTPResult(m.HTTPStatus.OK)\n"
         "m.utc_now = lambda: datetime.fromisoformat('2025-02-03T12:00:00+00:00')\n"
-        "raise SystemExit(m.main(sys.argv[1:]))\n"
+        "raise SystemExit(m.main(sys.argv[1:]))\n",
+        encoding="utf-8", newline="\n",
     )
 
     def invoke(*args):
@@ -303,7 +367,8 @@ def cli(tmp_path):
         for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"):
             env.pop(key, None)
         return subprocess.run([sys.executable, str(bootstrap), *map(str, args)],
-                              capture_output=True, text=True, env=env, check=False)
+                              capture_output=True, text=True, env=env,
+                              cwd=SCRIPT.parents[2], check=False)
 
     return invoke
 
@@ -322,7 +387,7 @@ def test_subprocess_cli(cli, registry, apply):
     assert report["summary"] == dict(total=1, alive=1, redirected=0, dead=0, timeout=0)
     if apply:
         document["resources"][0].update(last_checked=DATE, download_status="alive")
-        assert yaml.safe_load(path.read_text()) == document
+        assert yaml.safe_load(path.read_text(encoding="utf-8")) == document
     else:
         assert path.read_bytes() == original
 
@@ -340,7 +405,7 @@ def test_subprocess_cli_rejects_missing_or_invalid_policy(cli, registry, argumen
 
 def test_subprocess_cli_rejects_malformed_yaml(cli, tmp_path):
     path = tmp_path / "bad.yaml"
-    path.write_text("[")
+    path.write_text("[", encoding="utf-8", newline="\n")
     result = cli(path, "--timeout", str(TIMEOUT), "--retries", str(RETRIES), "--apply")
     assert result.returncode == 2
     assert path.read_bytes() == b"["
@@ -406,7 +471,7 @@ def test_real_adapter_success_closes_response(checker, monkeypatch):
 def test_invalid_url_rejected(checker, registry, url):
     path, document = registry
     document["resources"][0]["url"] = url
-    path.write_text(yaml.safe_dump(document))
+    path.write_text(yaml.safe_dump(document), encoding="utf-8", newline="\n")
     original = path.read_bytes()
     with pytest.raises(ValueError, match="invalid registry"):
         run(checker, path, FakeHead(), apply=True)
@@ -415,7 +480,8 @@ def test_invalid_url_rejected(checker, registry, url):
 
 def test_nested_duplicate_keys_rejected(checker, registry):
     path, _ = registry
-    path.write_text(f"resources: [{{url: '{URL}', title: first, title: second}}]\n")
+    path.write_text(f"resources: [{{url: '{URL}', title: first, title: second}}]\n",
+                    encoding="utf-8", newline="\n")
     original = path.read_bytes()
     with pytest.raises(ValueError, match="duplicate"):
         run(checker, path, FakeHead(), apply=True)
@@ -425,7 +491,7 @@ def test_nested_duplicate_keys_rejected(checker, registry):
 def test_real_entrypoint_empty_fixture(tmp_path):
     # An empty generated fixture exercises __main__ without requiring transport.
     path = tmp_path / "empty.yaml"
-    path.write_text("resources: []\n")
+    path.write_text("resources: []\n", encoding="utf-8", newline="\n")
     result = subprocess.run([sys.executable, str(SCRIPT), str(path), "--timeout",
                              str(TIMEOUT), "--retries", str(RETRIES)],
                             capture_output=True, text=True, check=False)

@@ -9,6 +9,7 @@ no live inventory and changes no schedule.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-26 | Document explicit input, offline examples and opt-in updates. |
+| Update | 2026-10-26 | Document per-URL protocol failures and explicit example text encoding. |
 
 ## Input and output
 
@@ -32,13 +33,15 @@ is made. Authentication failures and servers that reject HEAD are reported as
 HTTP failures; this does not establish that their content is unavailable to
 an authenticated browser.
 
-Connection errors and timeouts are retried. The checker also retries
-`TOO_MANY_REQUESTS` and server errors, stopping after the supplied retry count
-is exhausted. Retries are immediate; backoff and Retry-After handling are not
-implemented. The supplied timeout is a socket timeout per attempt, not a strict
+Connection errors, HTTP protocol failures and timeouts are retried. The checker
+also retries `TOO_MANY_REQUESTS` and server errors, stopping after the supplied
+retry count is exhausted. Retries are immediate; backoff and Retry-After handling
+are not implemented. The supplied timeout is a socket timeout per attempt, not a strict
 wall-clock limit on DNS resolution or the complete run. Timeout records have
 `status: timeout` and `error: timeout`; connection failures have `status: dead`
-and `error: connection_error`. Exception text is not included in reports.
+and `error: connection_error`. Malformed HTTP responses have `status: dead` and
+`error: protocol_error`; later URLs are still checked. Exception text is not
+included in reports.
 
 With `--apply`, `last_checked` becomes the UTC check date and `download_status`
 becomes `alive`, `redirected`, `dead_link` or `timeout`. All records use a single
@@ -70,7 +73,7 @@ path = Path(sys.argv[1])
 path.write_text(yaml.safe_dump({
     "note": "Synthetic fixture, not a production inventory",
     "resources": [{"url": "https://example.test/resource", "title": "Example"}],
-}))
+}), encoding="utf-8", newline="\n")
 spec = importlib.util.spec_from_file_location(
     "freshness", "scripts/data/check-registry-freshness.py"
 )
