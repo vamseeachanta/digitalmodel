@@ -11,7 +11,10 @@ range represents all those cycles. Stress is nominal before the recorded SCF.
 The optional arc_distribution uses the same stress/count/SCF representation.
 
 The strength array von_mises_utilisation retains its specified array shape;
-utilisation_method and utilisation_allowable state its basis separately.
+method and allowable state its basis separately. The legacy paired fields
+utilisation_method and utilisation_allowable remain accepted without mixing.
+Curve source and numeric thickness factors follow the common export form;
+source_label and a recorded power-law correction remain local legacy inputs.
 No default curve, material parameter, safety factor or exposure is supplied.
 """
 
@@ -58,10 +61,11 @@ class SNCurve(TypedDict):
     """Single-slope curve log10(N) = log_a - m*log10(range in MPa)."""
 
     name: str
-    source_label: str
+    source: NotRequired[str]
+    source_label: NotRequired[str]
     m: float
     log_a: float
-    thickness_correction: NotRequired[ThicknessCorrection | None]
+    thickness_correction: NotRequired[float | ThicknessCorrection | None]
     reference_cycles: NotRequired[float]
     reference_range_MPa: NotRequired[float]
     endurance_limit_MPa: NotRequired[float | None]
@@ -150,6 +154,15 @@ class HangOffTension(TypedDict):
     dynamic_max: float
 
 
+class Allowable(TypedDict):
+    """Recorded stress denominator in MPa, with its source and optional basis."""
+
+    value: float
+    unit: Literal["MPa"]
+    source: str
+    basis_label: NotRequired[str]
+
+
 class StrengthResult(TypedDict):
     """Aligned strength arrays with a recorded utilisation basis."""
 
@@ -160,8 +173,10 @@ class StrengthResult(TypedDict):
     effective_tension_kN: list[float]
     bending_moment_kNm: list[float]
     von_mises_utilisation: list[float]
-    utilisation_method: str
-    utilisation_allowable: float
+    method: NotRequired[str]
+    allowable: NotRequired[Allowable]
+    utilisation_method: NotRequired[str]
+    utilisation_allowable: NotRequired[float]
     max_utilisation: MaximumUtilisation
     touchdown: Touchdown
     top_angle_deg: TopAngle
@@ -232,3 +247,7 @@ def validate_result(data: dict, kind: Literal["fatigue", "strength", "g4_checks"
         _increasing([point["arc_length_m"] for point in data["arc_distribution"]])
     if "life_years" in data and (data["damage_per_year"] == 0) != (data["life_years"] is None):
         raise ValueError("life_years must be null exactly when damage is zero")
+    if "life_years" in data and data["damage_per_year"] > 0:
+        if not math.isclose(data["damage_per_year"] * data["life_years"], 1.0,
+                            rel_tol=1e-9, abs_tol=0):
+            raise ValueError("legacy life_years must equal reciprocal annual damage")

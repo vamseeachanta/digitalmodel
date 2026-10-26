@@ -44,15 +44,17 @@ def _json(value: object) -> str:
 
 
 def _write_json(path: Path, value: object) -> None:
-    path.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    path.write_bytes((json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8"))
 
 
 def _point_result(point: dict, curve: dict, occurrence: float) -> dict:
     correction = curve.get("thickness_correction")
     factor = 1.0
     try:
-        if correction is not None:
+        if isinstance(correction, dict):
             factor = (correction["thickness_mm"] / correction["reference_thickness_mm"]) ** correction["exponent"]
+        elif correction is not None:
+            factor = correction
         if not math.isfinite(factor) or factor <= 0:
             raise ValueError("thickness factor exceeds numeric range")
         bins = point.get("range_histogram", [{"stress_range_MPa": point.get("stress_range_MPa"),
@@ -62,6 +64,8 @@ def _point_result(point: dict, curve: dict, occurrence: float) -> dict:
             stress = item["stress_range_MPa"] * point["scf"] * factor
             if not math.isfinite(stress):
                 raise ValueError("corrected stress is nonfinite")
+            if stress == 0 and item["stress_range_MPa"] > 0:
+                raise ValueError("corrected stress underflows numeric range")
             if stress == 0 or item["cycles_per_year"] == 0 or occurrence == 0:
                 damages.append(0.0)
             else:
@@ -142,7 +146,7 @@ def _load(results: Path) -> list[tuple[Path, dict, bytes]]:
 def _input_row(data: dict) -> dict:
     return {"case_id": data["case_id"], "sea_state_id": data["sea_state"]["id"],
             **{key: data["sea_state"][key] for key in ("Hs_m", "Tp_s", "direction_deg", "occurrence")},
-            "sn_name": data["sn_curve"]["name"], "sn_source_label": data["sn_curve"]["source_label"],
+            "sn_name": data["sn_curve"]["name"], "sn_source_label": data["sn_curve"].get("source", data["sn_curve"].get("source_label")),
             "m": data["sn_curve"]["m"], "log_a": data["sn_curve"]["log_a"],
             "thickness_correction": _json(data["sn_curve"].get("thickness_correction")),
             "sn_curve_record": _json(data["sn_curve"]),
@@ -300,11 +304,12 @@ def _artifact(out: Path, token: str, rows: list[dict], title: str, limit: float 
     else:
         svg_payload, scale = _table_svg(token, serialized, title)
     csv_name, svg_name = f"{token}.csv", f"{token}.svg"
-    (out / csv_name).write_text(csv_payload, encoding="utf-8")
-    (out / svg_name).write_text(svg_payload, encoding="utf-8")
+    csv_bytes, svg_bytes = csv_payload.encode("utf-8"), svg_payload.encode("utf-8")
+    (out / csv_name).write_bytes(csv_bytes)
+    (out / svg_name).write_bytes(svg_bytes)
     return {"csv": csv_name, "svg": svg_name, "rows": serialized,
-            "csv_sha256": hashlib.sha256(csv_payload.encode()).hexdigest(),
-            "svg_sha256": hashlib.sha256(svg_payload.encode()).hexdigest(),
+            "csv_sha256": hashlib.sha256(csv_bytes).hexdigest(),
+            "svg_sha256": hashlib.sha256(svg_bytes).hexdigest(),
             "title": title, "scope": SCOPE, **scale}
 
 
@@ -314,7 +319,7 @@ def _benchmark(data: dict) -> None:
         or curve.get("reference_cycles") != 2_000_000 or curve.get("reference_range_MPa") != 80
         or "endurance_limit_MPa" not in curve or curve["endurance_limit_MPa"] is not None
         or not math.isclose(curve["log_a"], math.log10(2_000_000 * 80**3), rel_tol=0, abs_tol=1e-12)
-        or curve.get("thickness_correction") is not None
+        or curve.get("thickness_correction") not in (None, 1.0)
         or any(point["scf"] != 1.2 for point in data["hot_spots"] + data.get("arc_distribution", []))):
         raise ValueError("benchmark requires recorded FAT 80, slope 3, 2 million cycles at 80 MPa, no endurance limit, SCF 1.2")
 

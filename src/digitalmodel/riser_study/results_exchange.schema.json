@@ -90,6 +90,10 @@
             },
             {
               "$ref": "#/$defs/thickness_correction"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           ]
         },
@@ -107,15 +111,30 @@
             "null"
           ],
           "minimum": 0
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "required": [
         "name",
-        "source_label",
         "m",
         "log_a"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "source"
+          ]
+        },
+        {
+          "required": [
+            "source_label"
+          ]
+        }
+      ]
     },
     "range_bin": {
       "type": "object",
@@ -492,6 +511,36 @@
         },
         "run": {
           "$ref": "#/$defs/run"
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowable": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "unit": {
+              "const": "MPa"
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "basis_label": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "value",
+            "unit",
+            "source"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -502,15 +551,55 @@
         "effective_tension_kN",
         "bending_moment_kNm",
         "von_mises_utilisation",
-        "utilisation_method",
-        "utilisation_allowable",
         "max_utilisation",
         "touchdown",
         "top_angle_deg",
         "hang_off_tension_kN",
         "run"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "method",
+            "allowable"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "utilisation_method"
+                ]
+              },
+              {
+                "required": [
+                  "utilisation_allowable"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "utilisation_method",
+            "utilisation_allowable"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "method"
+                ]
+              },
+              {
+                "required": [
+                  "allowable"
+                ]
+              }
+            ]
+          }
+        }
+      ]
     },
     "g4_check": {
       "type": "object",

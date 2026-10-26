@@ -269,13 +269,26 @@ def test_absent_thickness_record_adds_no_correction():
     assert api().calculate(data)[0]["thickness_factor"] == 1.0
 
 
-def test_input_digests_and_artifact_digests(tmp_path):
+@pytest.mark.parametrize("windows_newlines", [False, True])
+def test_input_digests_and_artifact_digests(tmp_path, monkeypatch, windows_newlines):
     import hashlib
 
+    if windows_newlines:
+        # Exercise CRLF text-stream translation even on a non-Windows host.
+        original_open = Path.open
+
+        def windows_open(path, mode="r", buffering=-1, encoding=None, errors=None, newline=None):
+            if "w" in mode and "b" not in mode and newline is None:
+                newline = "\r\n"
+            return original_open(path, mode, buffering, encoding, errors, newline)
+
+        monkeypatch.setattr(Path, "open", windows_open)
     root = campaign(tmp_path / "results")
     out = tmp_path / "out"
     api().produce(root, out)
     manifest = json.loads((out / "manifest.json").read_text())
+    assert manifest["run_record_sha256"] == hashlib.sha256((out / "run_record.json").read_bytes()).hexdigest()
+    assert all(b"\r" not in path.read_bytes() for path in out.iterdir())
     for source in manifest["sources"]:
         assert source["sha256"] == hashlib.sha256((root / source["export"]).read_bytes()).hexdigest()
     for artifact in manifest["artifacts"].values():
@@ -556,3 +569,99 @@ def test_cli_accepts_shared_g4_evidence(tmp_path):
     assert proc.returncode == 0, proc.stderr
     tokens = json.loads((tmp_path / "out/tokens.json").read_text())
     assert tokens["values"]["V-FAT-RESOLVED"] == "resolved"
+
+
+@pytest.mark.parametrize("recorded_damage", [0.0, 200_000.0])
+def test_positive_stress_product_underflow_is_rejected(recorded_damage):
+    """Exponent arithmetic gives 0.2 * 1e6 * 10**(-400 + 400) = 200000/y."""
+    data = record(stress=1e-200, distribution=False)
+    data["sn_curve"].update(m=1.0, log_a=-400.0)
+    for point in data["hot_spots"]:
+        point["scf"] = 1e-200
+    data["damage_per_year"] = recorded_damage
+    with pytest.raises(ValueError, match="corrected stress underflows"):
+        api().calculate(data)
+
+
+@pytest.mark.parametrize("factor,expected", [(1.0, 0.2), (2.0, 1.6)])
+def test_common_fatigue_exchange_fixture(factor, expected):
+    data = json.loads((Path(__file__).parent / "fixtures/fatigue-exchange.json").read_text())
+    data["sn_curve"]["thickness_correction"] = factor
+    data["damage_per_year"] = expected
+    data["life_years"] = 1 / expected
+    schema().validate_result(data, "fatigue")
+    rows = api().calculate(data)
+    assert rows[0]["damage_per_year"] == pytest.approx(expected)
+    assert rows[0]["thickness_factor"] == factor
+    assert data["sn_curve"]["source"] == "ASSUMED"
+    assert all("life_years" not in row for row in rows)
+
+
+def test_common_strength_basis_fields():
+    data = {
+        "case_id": "R08-W1-SCR", "software": {"name": "synthetic", "version": "ASSUMED"},
+        "load_case": {"id": "synthetic", "wave": {"Hs_m": 0.0},
+                      "current": {"speed_m_s": 0.0}, "offset": {"x_m": 0.0, "y_m": 0.0}},
+        "arc_length_m": [0.0, 1000.0], "effective_tension_kN": [100.0, 50.0],
+        "bending_moment_kNm": [0.0, 10.0], "von_mises_utilisation": [0.1, 0.2],
+        "method": "ASSUMED synthetic ratio",
+        "allowable": {"value": 100.0, "unit": "MPa", "source": "ASSUMED"},
+        "max_utilisation": {"value": 0.2, "arc_length_m": 1000.0, "location": "touchdown"},
+        "touchdown": {"arc_length_m": 1000.0, "utilisation": 0.2, "stress_range_MPa": 100.0},
+        "top_angle_deg": {"static": 10.0, "dynamic_min": 9.0, "dynamic_max": 11.0},
+        "hang_off_tension_kN": {"static": 100.0, "dynamic_max": 110.0},
+        "run": record()["run"],
+    }
+    schema().validate_result(data, "strength")
+    data["allowable"]["basis_label"] = "ASSUMED synthetic allowable"
+    schema().validate_result(data, "strength")
+    data["utilisation_method"] = data["method"]
+    data["utilisation_allowable"] = 1.0
+    with pytest.raises(ValueError):
+        schema().validate_result(data, "strength")
+
+
+def test_source_representations_cannot_be_mixed():
+    data = record()
+    data["sn_curve"]["source"] = "ASSUMED other source"
+    with pytest.raises(ValueError):
+        schema().validate_result(data, "fatigue")
+
+
+@pytest.mark.parametrize("factor", [0.0, -1.0, True])
+def test_numeric_thickness_factor_must_be_positive(factor):
+    data = record()
+    data["sn_curve"]["thickness_correction"] = factor
+    with pytest.raises(ValueError):
+        schema().validate_result(data, "fatigue")
+
+
+def test_zero_common_exchange_and_legacy_life_consistency():
+    data = json.loads((Path(__file__).parent / "fixtures/fatigue-exchange.json").read_text())
+    for point in data["hot_spots"]:
+        point["stress_range_MPa"] = 0.0
+    data.update(damage_per_year=0.0, life_years=None)
+    assert all(row["damage_per_year"] == 0 for row in api().calculate(data))
+    data["life_years"] = 1.0
+    with pytest.raises(ValueError):
+        schema().validate_result(data, "fatigue")
+    data = record()
+    data["life_years"] = 10.0
+    with pytest.raises(ValueError, match="reciprocal"):
+        schema().validate_result(data, "fatigue")
+
+
+def test_common_exchange_campaign_preserves_source_and_factor(tmp_path):
+    root = campaign(tmp_path / "results")
+    for path in root.glob("*/fatigue-*.json"):
+        data = json.loads(path.read_text())
+        data["sn_curve"]["source"] = data["sn_curve"].pop("source_label")
+        data["sn_curve"]["thickness_correction"] = 1.0
+        path.write_text(json.dumps(data))
+    result = api().produce(root, tmp_path / "out")
+    assert len(result["inputs"]) == 36
+    assert all(row["sn_source_label"] == "ASSUMED" for row in result["inputs"])
+    assert all(json.loads(row["sn_curve_record"])["thickness_correction"] == 1.0
+               for row in result["inputs"])
+    assert all(row["thickness_factor"] == 1.0 for row in result["hot_spots"])
+    assert result["manifest"]["values"]["V-FAT-WT-DELTA"] == pytest.approx(-87.5)

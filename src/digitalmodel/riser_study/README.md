@@ -12,6 +12,7 @@ started or queried.
 | --- | --- | --- |
 | A | 2026-10-25 | Add shared export validation and fatigue artifacts so recorded inputs can be traced to screening results. |
 | B | 2026-10-26 | Replace reciprocal results with benchmark damage, per-size range panels and damage heatmaps to align the analysis tokens with the specified outputs. |
+| C | 2026-10-26 | Write portable artifact bytes, reject positive stress underflow and accept the common exchange field forms with a tested fixture. |
 
 ## Run
 
@@ -35,8 +36,8 @@ recorded curve parameters or inconsistent exports fail before outputs are writte
 
 ## Shared results exchange
 
-`results_exchange.py` imports the single adjacent
-`results_exchange.schema.json` contract for fatigue and strength exports and G4
+`results_exchange.py` loads the adjacent `results_exchange.schema.json`, the
+validation authority for this package's fatigue and strength exports and G4
 comparison evidence. Runtime validation also checks finite numbers, increasing
 arc coordinates, aligned strength arrays, unique station names and histogram
 cycle totals. Unknown fields fail validation; booleans are not numeric inputs.
@@ -50,15 +51,45 @@ Fatigue exports record:
 | `hot_spots` | Both station names, `arc_length_m`, `cycles_per_year`, `scf`, and one range representation. |
 | `stress_range_MPa` | Nominal range before SCF, assigned to all recorded cycles. |
 | `range_histogram` | Alternative array of nominal ranges and annual bin counts; counts sum to the station's annual count. |
-| `sn_curve` | `name`, `source_label`, `m`, `log_a`, `reference_cycles`, `reference_range_MPa`, `endurance_limit_MPa`; optional `thickness_correction`. |
+| `sn_curve` | `name`, `source`, `m`, `log_a`, `reference_cycles`, `reference_range_MPa`, `endurance_limit_MPa`; optional `thickness_correction`. The legacy `source_label` replaces `source` when used. |
 | `damage_per_year` | Recorded maximum over the named stations for this case/state, checked against independent recalculation. |
 | `run` | `input_sha256`, `result_file`, calendar `date`; optional `data_basis`. |
 | `arc_distribution` | Optional ordered arc points with the same range, cycle and SCF representation. |
 
-The shared schema accepts an optional legacy reciprocal input for compatibility;
+The schema accepts an optional legacy `life_years` input for compatibility.
+It must be null at zero damage and reciprocal to positive recorded annual damage;
 it is never copied into tokens, plots, tables or the run record. Strength exports
-retain their shared array and utilisation-basis contract. No strength calculation
-or alternative exchange schema is introduced.
+retain their aligned arrays. No strength calculation is introduced.
+
+### Exchange compatibility
+
+The common interchange fields are `sn_curve.source`, a positive numeric
+`sn_curve.thickness_correction` (a multiplicative stress factor), and strength
+`method` plus `allowable` containing `value`, `unit` (`MPa`) and `source`.
+An optional `allowable.basis_label` preserves the decision consumer's metadata.
+The legacy curve `source_label` and strength pair `utilisation_method` /
+`utilisation_allowable` remain accepted. Mixing the two source fields or mixing
+strength basis forms fails validation; no source or allowable is inferred.
+Legacy correction objects retain their explicit power-law definition. An absent
+or null correction means a factor of one; a supplied numeric factor is used once.
+
+`tests/subsea/riser_study/fixtures/fatigue-exchange.json` is an assumed synthetic
+positive-damage fixture. The same bytes were accepted by this package and the
+export validators from #3517 at `cd6e9edc` and #3519 at `87d262da`. The fixture
+also passes `calculate()`; it uses a generic curve rather than the producer's
+study-specific benchmark metadata.
+
+This establishes a tested common input, not consolidation of all consumers.
+The other branches still own separate validators. Their zero-damage legacy-life
+rules conflict: the strength interface requires `life_years: null`, while the
+decision interface rejects null and accepts omission. The strength interface
+also rejects `allowable.basis_label`, which the decision interface requires.
+There is no single strength record satisfying both definitions. Both accept the
+common `method`/`allowable` field names. Migration to one schema and validator,
+including agreement on optional life and allowable metadata, remains required
+before combined use. This branch does not change either consuming branch.
+Benchmark reference metadata and optional arc/correction records are local
+extensions; the strength interface's closed schema does not accept all of them.
 
 ## Calculation basis
 
@@ -87,7 +118,9 @@ giving annual damage 0.2. Histogram bins are evaluated separately.
 
 Recorded damage permits relative serialization tolerance `1e-8`; histogram cycle
 totals permit `1e-9`. These are numerical comparison tolerances. Overflow,
-underflow and nonfinite calculations fail explicitly.
+underflow and nonfinite calculations fail explicitly. In particular, a positive
+nominal range whose corrected product rounds to zero raises an error before the
+zero-damage shortcut; representable true zero range remains valid.
 
 ## Artifacts and tokens
 
@@ -99,7 +132,9 @@ underflow and nonfinite calculations fail explicitly.
 | `FIG-FAT-HEAT-01` | Two 12 by 3 annual benchmark damage panels, one per named station, with a shared logarithmic colour scale and white for true zero. |
 | `TAB-FAT-01` | Nominal and corrected ranges, counts, SCFs and annual benchmark damage at both stations for every case/state. |
 
-Each artifact has an SVG and CSV. Its manifest rows and SVG metadata contain
+Each artifact has an SVG and CSV. Generated CSV, SVG and JSON use UTF-8 byte
+writes with LF line endings, independent of text-stream newline translation.
+Artifact digests hash those exact bytes. Manifest rows and SVG metadata contain
 exactly the serialized CSV rows. Each plotted mark carries its row and uses its
 unrounded value. CSV and SVG digests, source digests and the run-record digest
 are retained in `manifest.json`. Human-visible calculated labels use one decimal;
@@ -168,3 +203,8 @@ scatter coverage, other fatigue mechanisms and engineering review remain require
 Only the named stations define the reported maximum; optional arc inputs remain
 in the run record and do not establish complete spatial coverage. No Phase B
 result, qualified service acceptance or complete fatigue assessment is claimed.
+
+The digest test exercises native text behavior and emulated Windows CRLF text
+writes. Native Windows execution remains unverified. The Phase A identifiers
+above match the retained implementation record; registration against the
+consuming document's authoritative token map remains unverified.
