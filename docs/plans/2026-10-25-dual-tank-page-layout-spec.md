@@ -14,6 +14,14 @@ Status: implemented scope and acceptance record for maintainer review, 2026-10-2
 - A11 measurement, 2026-10-25: Chromium 151.0.7922.34 on Linux aarch64, outer viewport 1280 × 1000 px, separate iframes with zero border and exact widths of 390 px and 600 px. Both iframe bounding widths and `innerWidth` equal the requested widths. Vertical scrollbars leave document client widths of 375 px and 585 px respectively; document and body scroll widths equal those client widths, so neither iframe has sideways scroll. All 14 SVGs were measured: minimum rendered text sizes are 12.6 px and 20.2 px respectively, and no SVG text bounding box exceeds its SVG bounds. A11 is accepted for these measurements.
 - Known limits: these checks assess the implemented equations and presentation, not the physical validity of the analytical model. No new CFD assessment or archived-source digest revalidation is included. Width measurements cover the stated browser and widths; other browsers and physical touch interaction remain unmeasured. Newsletter prose is unchanged.
 
+### Verification repeat, 2026-10-25
+
+The two study test files passed 86 tests, with 0 failures, on Linux x86_64 with Python 3.11.15. The command was `uv run --no-project --with pytest python -m pytest tests/hydrodynamics/test_dual_tank_study_builder.py tests/hydrodynamics/test_dual_tank_cfd_evidence.py -q -rA -p no:cacheprovider`, with temporary output directed outside the repository.
+
+The repository-wide `python scripts/check_generated_html.py --check` passed in an isolated environment with the required generator dependencies: 29 registered outputs from 25 generators were reproduced byte for byte. The check also reported 9 excluded generators, 21 explicit page exclusions and 12 manual page classifications; those classifications are outside its regeneration coverage. Earlier attempts with incomplete dependencies did not complete the comparison and are not passing checks.
+
+The hosted docs check at the reviewed revision failed at Generated HTML freshness, after its brand and routing steps passed. Its exact failure cause is not established by the available job metadata. The local passing result does not establish a passing hosted check. The page, chart CSVs, builder, model inputs and prescribed prose retain their reviewed bytes; the browser measurements and archived-source digests were not independently repeated.
+
 ## 1. Review comments this revision answers
 
 1. General comment (maintainer review, 2026-10-25): follow the single-tank page. Put a schematic at the top and a few charts in the summary, and make every chart interactive.
