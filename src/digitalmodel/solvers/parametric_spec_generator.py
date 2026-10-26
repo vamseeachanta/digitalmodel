@@ -18,20 +18,39 @@ Usage:
     specs = gen.generate()          # List[DiffractionSpec]
     paths = gen.generate_to_yaml(output_dir)  # write YAML files
 
-Issue: #1596
+The Cartesian product is bounded by ``max_specs`` before expansion (default
+from issue #1711). YAML names use a sanitized metadata description (or ``base``)
+and zero-based axis/choice coordinates: ``f`` for frequency, ``h`` for heading,
+and ``p`` for hull parameters. Coordinates distinguish repeated axis values.
+
+Module CLI (no solver is invoked)::
+
+    python -m digitalmodel.solvers.parametric_spec_generator \\
+        --base spec.yml --freq-sweep 0.5:1.5:2 --heading-sweep 0:90:2 \\
+        --output-dir output
+
+Ranges use START:END:STEPS, inclusive endpoints; each heading step is a
+singleton heading set. The existing frequency-band sampling rule is retained.
+
+Issues: #1596, #1711
 """
 from __future__ import annotations
 
+import argparse
 import copy
-import functools
-import operator
-from dataclasses import dataclass, field
+import math
+import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
 import numpy as np
+import yaml
 
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+
+
+DEFAULT_MAX_SPECS = 1000  # Issue #1711: reject accidental products above 1000.
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +69,12 @@ class FrequencySweep:
     start: float
     end: float
     steps: int
+
+    def __post_init__(self) -> None:
+        """Reject malformed bands before allocating their samples."""
+        _validate_range(self.start, self.end, self.steps)
+        if self.start <= 0:
+            raise ValueError("frequency start must be positive")
 
     def generate_ranges(self) -> list[list[float]]:
         """Return a list of frequency value lists, one per sweep step."""
@@ -94,7 +119,12 @@ class HullParameterSweep:
 
 
 class ParametricSpecGenerator:
-    """Generate DiffractionSpec instances from a base spec + sweep defs."""
+    """Generate a bounded Cartesian product using independent spec copies.
+
+    ``max_specs`` is a positive integer, excluding booleans. The default is
+    the limit specified in issue #1711. A product exceeding it raises
+    ``ValueError`` before range generation, schema construction or output.
+    """
 
     def __init__(
         self,
@@ -102,7 +132,10 @@ class ParametricSpecGenerator:
         frequency_sweeps: Optional[list[FrequencySweep]] = None,
         heading_sweeps: Optional[list[HeadingSweep]] = None,
         hull_sweeps: Optional[list[HullParameterSweep]] = None,
+        max_specs: int = DEFAULT_MAX_SPECS,
     ) -> None:
+        _validate_max_specs(max_specs)
+        self._max_specs = max_specs
         self._base = copy.deepcopy(base_spec_data)
         self._freq_sweeps = frequency_sweeps or []
         self._heading_sweeps = heading_sweeps or []
@@ -112,6 +145,8 @@ class ParametricSpecGenerator:
 
     def generate(self) -> list[DiffractionSpec]:
         """Return a list of validated DiffractionSpec instances."""
+        if not self._check_size():
+            return []
         variants = self._build_variants()
         specs = []
         for i, data in enumerate(variants):
@@ -125,18 +160,53 @@ class ParametricSpecGenerator:
         return specs
 
     def generate_to_yaml(self, output_dir: Path) -> list[Path]:
-        """Generate specs and write each to a YAML file in *output_dir*."""
+        """Validate all specs before creating output, then write coordinate names.
+
+        Filenames use the neutral metadata description, falling back to
+        ``base``; schema fields and engineering values are unchanged.
+        """
+        specs = self.generate()
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        specs = self.generate()
+        # Naming policy for #1711: neutral metadata, never a hull name.
+        description = (self._base.get("metadata") or {}).get("description") or "base"
+        slug = re.sub(r"[^a-z0-9]+", "-", str(description).lower()).strip("-")
+        slug = slug or "base"
+        # Local naming policy for #1711: 64 ASCII bytes, leaving coordinate space.
+        slug = slug[:64].rstrip("-")
+        axes = self._axes()
         paths = []
         for i, spec in enumerate(specs):
-            fname = output_dir / f"spec_sweep_{i:03d}.yml"
+            remainder = i
+            coordinates = []
+            # _expand makes the first axis vary fastest; decode in that order.
+            for label, length in axes:
+                coordinates.append(f"{label}-{remainder % length}")
+                remainder //= length
+            suffix = "_".join(coordinates) or "base"
+            fname = output_dir / f"spec_{slug}_{suffix}.yml"
             spec.to_yaml(fname)
             paths.append(fname)
         return paths
 
     # ----- internals -----
+
+    def _axes(self) -> list[tuple[str, int]]:
+        """Describe axis sizes without generating ranges or copying variants."""
+        axes = []
+        for i, sweep in enumerate(self._freq_sweeps):
+            # Sweep dataclasses are mutable: revalidate at generation time.
+            sweep.__post_init__()
+            axes.append((f"f{i}", sweep.steps))
+        axes.extend((f"h{i}", len(s.values)) for i, s in enumerate(self._heading_sweeps))
+        axes.extend((f"p{i}", len(s.values)) for i, s in enumerate(self._hull_sweeps))
+        return axes
+
+    def _check_size(self) -> int:
+        """Bound the entire product before the first call to _expand."""
+        count = math.prod(length for _, length in self._axes())
+        _check_spec_count(count, self._max_specs)
+        return count
 
     def _build_variants(self) -> list[dict]:
         """Expand sweep dimensions into a list of spec data dicts."""
@@ -173,7 +243,7 @@ class ParametricSpecGenerator:
         for val in values:
             for base in variants:
                 new = copy.deepcopy(base)
-                _set_nested(new, path, val)
+                _set_nested(new, path, copy.deepcopy(val))
                 expanded.append(new)
         return expanded
 
@@ -189,3 +259,74 @@ def _set_nested(d: dict, path: str, value: Any) -> None:
     for k in keys[:-1]:
         d = d.setdefault(k, {})
     d[keys[-1]] = value
+
+
+def _validate_max_specs(limit: int) -> None:
+    """Require a positive integer; booleans are not cardinality limits."""
+    if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+        raise ValueError("max_specs must be a positive integer")
+
+
+def _check_spec_count(count: int, limit: int) -> None:
+    """Share the allocation guard between the API and CLI range parsing."""
+    _validate_max_specs(limit)
+    if count > limit:
+        raise ValueError(f"Sweep product {count} exceeds max_specs={limit}")
+
+
+def _validate_range(start: float, end: float, steps: int) -> None:
+    """Validate an inclusive linear range before any sample allocation."""
+    if isinstance(steps, bool) or not isinstance(steps, int) or steps <= 0:
+        raise ValueError("range steps must be a positive integer")
+    if not math.isfinite(start) or not math.isfinite(end) or end < start:
+        raise ValueError("range endpoints must be finite and nondecreasing")
+
+
+def _parse_range(value: str) -> tuple[float, float, int]:
+    """Parse START:END:STEPS without materializing the requested samples."""
+    try:
+        start_text, end_text, steps_text = value.split(":")
+        start, end, steps = float(start_text), float(end_text), int(steps_text)
+        _validate_range(start, end, steps)
+        return start, end, steps
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"expected START:END:STEPS: {exc}") from exc
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    """Generate schema-validated YAML files from optional combined sweep axes."""
+    parser = argparse.ArgumentParser(description="Generate bounded parametric spec YAML files.")
+    parser.add_argument("--base", type=Path, required=True, help="Base spec YAML file")
+    parser.add_argument("--freq-sweep", type=_parse_range, metavar="START:END:STEPS",
+                        help="Frequency band centers in rad/s")
+    parser.add_argument("--heading-sweep", type=_parse_range, metavar="START:END:STEPS",
+                        help="Singleton headings in degrees, combined with frequency bands")
+    parser.add_argument("--output-dir", type=Path, required=True, help="Directory for YAML files")
+    parser.add_argument("--max-specs", type=int, default=DEFAULT_MAX_SPECS,
+                        help=f"Maximum product size (default: {DEFAULT_MAX_SPECS})")
+    args = parser.parse_args(argv)
+    try:
+        frequency = FrequencySweep(*args.freq_sweep) if args.freq_sweep else None
+        # Count before np.linspace: an oversized heading axis must not allocate.
+        count = (frequency.steps if frequency else 1) * (
+            args.heading_sweep[2] if args.heading_sweep else 1
+        )
+        _check_spec_count(count, args.max_specs)
+        headings = None
+        if args.heading_sweep:
+            start, end, steps = args.heading_sweep
+            headings = HeadingSweep([[float(h)] for h in np.linspace(start, end, steps)])
+        base = DiffractionSpec.from_yaml(args.base).model_dump(mode="json", exclude_none=True)
+        generator = ParametricSpecGenerator(
+            base, frequency_sweeps=[frequency] if frequency else None,
+            heading_sweeps=[headings] if headings else None, max_specs=args.max_specs,
+        )
+        paths = generator.generate_to_yaml(args.output_dir)
+    except (ValueError, OSError, yaml.YAMLError) as exc:
+        parser.error(str(exc))
+    print(f"Generated {len(paths)} specs.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
