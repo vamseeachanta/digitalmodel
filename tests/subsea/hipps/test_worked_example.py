@@ -1,11 +1,12 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Read back the synthetic closure example specified in issue #3340."""
+"""Read back author-selected illustrative assumptions for issue #3340."""
 
 from fractions import Fraction
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -25,6 +26,7 @@ def run_builder(output_dir, cwd):
         env=env,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     )
     return output_dir / REPORT
@@ -38,9 +40,37 @@ def table_rows(document, table_id):
             for row in table.findall("./tbody/tr")]
 
 
-def test_closure_example_matches_hand_kinematics(tmp_path):
-    """Independent hand calculation for the synthetic case in issue #3340.
+def test_closure_example_states_input_provenance(tmp_path):
+    """Require author-selected illustrative assumptions on every basis surface."""
+    report = run_builder(tmp_path / "selected", tmp_path)
+    document = ET.fromstring(report.read_text(encoding="utf-8"))
+    basis = " ".join(document.find(".//section[@id='basis']").itertext())
+    basis = " ".join(basis.split())
+    assert "author-selected illustrative assumptions" in basis
+    assert "not supplied by issue #3340" in basis
+    assert "Maintainer acceptance of this basis is required before merge" in basis
+    assert "Draft for maintainer review" in " ".join(document.itertext())
+    method = " ".join(document.find(".//section[@id='method']").itertext())
+    assert "2016 edition" in method and "section 3.4" in method
+    assert "Equation 3.10" in method
+    assert "not a source of the selected numeric inputs" in method
 
+    # Scan every line, including adjacent comments and test documentation.
+    unsupported = re.compile(
+        r"(?:source:\s+|specified\s+in\s+|the\s+)"
+        r"(?:issue\s+#3340|issue\s+specifies)", re.IGNORECASE,
+    )
+    for path in (BUILDER, BUILDER.with_name("README.md"), Path(__file__)):
+        source = " ".join(path.read_text(encoding="utf-8").split())
+        assert "author-selected illustrative assumptions" in source
+        assert not unsupported.search(source), path.relative_to(ROOT).as_posix()
+
+
+def test_closure_example_matches_hand_kinematics(tmp_path):
+    """Independent hand calculation for author-selected illustrative assumptions.
+
+    Method: OpenStax, University Physics Volume 1, 2016 edition,
+    section 3.4, Equation 3.10, for constant velocity.
     Travel L=0.6 m=3/5 m and loaded speed v=0.2 m/s=1/5 m/s
     give T=L/v=3 s. With elapsed time measured from motion start,
     completed travel fraction is clip(t/T, 0, 1). The assumed linear
@@ -91,7 +121,7 @@ def test_closure_example_matches_hand_kinematics(tmp_path):
 def test_closure_example_rebuild_is_deterministic(tmp_path):
     """Identical synthetic inputs yield identical bytes at every destination.
 
-    The issue #3340 hand calculation T=(3/5)/(1/5)=3 s and the clipped
+    The author-selected hand calculation T=(3/5)/(1/5)=3 s and the clipped
     linear time fraction have no dependence on wall-clock time, directory
     names or external data. Importing the builder must not execute it.
     """
@@ -102,7 +132,8 @@ def test_closure_example_rebuild_is_deterministic(tmp_path):
         [sys.executable, "-c",
          "import runpy, sys; runpy.run_path(sys.argv[1], run_name='import_check')",
          str(BUILDER)],
-        cwd=caller, env=env, capture_output=True, text=True, check=True,
+        cwd=caller, env=env, capture_output=True, text=True,
+        encoding="utf-8", check=True,
     )
     assert list(caller.iterdir()) == []
     first = run_builder(tmp_path / "first", caller)
@@ -123,7 +154,7 @@ def test_closure_example_rebuild_is_deterministic(tmp_path):
     (linked_output / REPORT).symlink_to(sentinel)
     result = subprocess.run(
         [sys.executable, str(BUILDER), "--output-dir", str(linked_output)],
-        cwd=caller, env=env, capture_output=True, text=True,
+        cwd=caller, env=env, capture_output=True, text=True, encoding="utf-8",
     )
     assert result.returncode != 0
     assert "must not be a symbolic link" in result.stderr

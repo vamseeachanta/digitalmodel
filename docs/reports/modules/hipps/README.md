@@ -1,13 +1,15 @@
 # HIPPS closure-kinematics worked example
 
-This builder covers only the synthetic closure example in issue #3340. The
+This builder covers a bounded synthetic closure example for issue #3340. The
 parent module-report issue remains open. No full-module qualification is claimed.
+Draft for maintainer review.
 
 ## Revision history
 
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-25 | Added the bounded example and its rebuild command so the arithmetic can be inspected. |
+| 2 | 2026-10-25 | Corrected the input provenance to identify author-selected assumptions and added the kinematic method source. |
 
 ## Rebuild
 
@@ -26,9 +28,16 @@ Generated HTML is a rebuild artifact and is not committed or added to an index.
 
 ## Arithmetic basis and units
 
-Source: the synthetic case specified in issue #3340. Full actuator travel is
-0.6 m and constant loaded speed is 0.2 m/s. Constant-speed kinematics gives
+The travel, speed and sample times are author-selected illustrative assumptions,
+not supplied by issue #3340 and not measured equipment data. Maintainer acceptance
+of this basis is required before merge. Full actuator travel is 0.6 m and constant
+loaded speed is 0.2 m/s. Constant-speed kinematics gives
 `T = L / v = (0.6 m) / (0.2 m/s) = 3 s`.
+
+Method source: OpenStax, *University Physics Volume 1*, 2016 edition,
+section 3.4, [Motion with Constant Acceleration](https://openstax.org/books/university-physics-volume-1/pages/3-4-motion-with-constant-acceleration),
+Equation 3.10 with constant velocity. This is not a source of the selected
+numeric inputs or the separately assumed remaining-conductance law.
 
 Assume a linear remaining-conductance law
 `g(t) = 1 - clip(t / T, 0, 1)`. The bounds zero and one define normalization.

@@ -1,12 +1,13 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Build only the synthetic closure-kinematics example from issue #3340.
+"""Build a bounded synthetic closure-kinematics example for issue #3340.
 
-Numeric basis: the issue specifies 0.6 m full travel, 0.2 m/s constant loaded
-speed and elapsed samples (0, 1.5, 3, 4) s. The normalization bounds (0, 1)
-define the assumed clipped linear conductance law; no equipment data or
-standards-derived numeric criteria are used. See README.md for the hand basis.
+Numeric basis: author-selected illustrative assumptions of 0.6 m full travel,
+0.2 m/s constant loaded speed and elapsed samples (0, 1.5, 3, 4) s; these inputs
+are not supplied by issue #3340. The normalization bounds (0, 1) define the
+assumed clipped linear conductance law; no equipment data or standards-derived
+numeric criteria are used. See README.md for the hand basis and method source.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ from digitalmodel.subsea.hipps.valve_sizing import closure_fraction, stroke_time
 
 def render_example() -> str:
     """Compute the fixed synthetic case and render deterministic HTML."""
-    # Source: issue #3340 synthetic closure-kinematics specification.
+    # Author-selected illustrative inputs; issue #3340 supplies no numeric case.
     travel_m = 0.6
     loaded_speed_m_s = 0.2
     elapsed_s = (0.0, 1.5, 3.0, 4.0)
@@ -63,19 +64,23 @@ code {{ white-space: normal; }}
 of 1.0, 0.5, 0.0 and 0.0 at elapsed times 0.0, 1.5, 3.0 and 4.0 s.
 This arithmetic example is a bounded part of issue #3340; the parent issue
 remains open and full-module qualification is not established.</p>
+<p>Draft for maintainer review.</p>
 </section>
 <section id="revision-history">
 <h2>Revision history</h2>
 <table id="revisions">
 <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>1</td><td>2026-10-25</td><td>Initial synthetic closure example
-to expose travel-time and linear-conductance arithmetic.</td></tr></tbody>
+to expose travel-time and linear-conductance arithmetic.</td></tr>
+<tr><td>2</td><td>2026-10-25</td><td>Corrected input provenance to identify
+author-selected assumptions and added the kinematic method source.</td></tr></tbody>
 </table>
 </section>
 <section id="basis">
 <h2>Basis and inputs</h2>
-<p>Source: issue #3340, synthetic closure-kinematics case. The travel, speed
-and sample times are illustrative assumptions, not measured equipment data.
+<p>The travel, speed and sample times are author-selected illustrative assumptions,
+not supplied by issue #3340 and not measured equipment data.
+Maintainer acceptance of this basis is required before merge.
 Loaded speed is assumed constant for the full stroke. Elapsed time starts
 with actuator motion; no preceding detection or logic delay is included.</p>
 <table id="inputs">
@@ -90,11 +95,16 @@ with actuator motion; no preceding detection or logic delay is included.</p>
 <h2>Equations and implementation</h2>
 <p>Independent kinematic basis: constant speed means L = v T, hence
 <code>T = L / v</code>. Thus (0.6 m) / (0.2 m/s) = 3.0 s.</p>
+<p>Method source: OpenStax, <cite>University Physics Volume 1</cite>,
+2016 edition, section 3.4, <a
+href="https://openstax.org/books/university-physics-volume-1/pages/3-4-motion-with-constant-acceleration"
+>Motion with Constant Acceleration</a>, Equation 3.10 with constant velocity.
+This is not a source of the selected numeric inputs.</p>
 <p>The completed actuator travel fraction is <code>clip(t / T, 0, 1)</code>,
 where clipping restricts the ratio to the normalization interval from 0 to 1.
 The separately assumed linear remaining-conductance law is
 <code>g(t) = 1 - clip(t / T, 0, 1)</code>.
-At the specified sample times the completed fractions are 0, 1/2, 1 and 1;
+At the selected sample times the completed fractions are 0, 1/2, 1 and 1;
 subtracting from 1 gives remaining fractions 1, 1/2, 0 and 0.</p>
 <p>The calculation calls <code>stroke_time</code> and
 <code>closure_fraction(..., characteristic="linear")</code> from
