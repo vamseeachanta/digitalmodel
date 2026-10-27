@@ -163,7 +163,13 @@ def test_yaml_mapping_preserves_mass_buoyancy_raos_and_excursions(configuration)
     area = math.pi * (pipe["outer_diameter_m"]**2 - (pipe["outer_diameter_m"] - 2*pipe["wall_thickness_m"])**2) / 4
     assert model["LineTypes"][0]["MassPerUnitLength"] == pytest.approx(area*pipe["steel_density_kg_m3"]/1000)
     assert line["ContentsDensity"] == pytest.approx(pipe["contents_density_kg_m3"]/1000)
-    assert model["Vessels"][0]["SuperimposedMotion"] == "RAOs"
+    assert model["Vessels"][0]["SuperimposedMotion"] == "RAOs + harmonics"
+    harmonic_columns = "HarmonicMotionPeriod, " + ", ".join(
+        f"HarmonicMotion{dof}{field}"
+        for dof in ("Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw")
+        for field in ("Amp", "Phase")
+    )
+    assert model["Vessels"][0][harmonic_columns] == []
     vessel_type = model["VesselTypes"][0]
     assert vessel_type["RAOResponseUnits"] == "degrees"
     table = vessel_type["Draughts"][0]["DisplacementRAOs"]["RAOs"][0]

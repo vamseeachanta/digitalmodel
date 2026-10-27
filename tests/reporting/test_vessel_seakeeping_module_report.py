@@ -119,7 +119,7 @@ def test_provenance_uses_focused_rebuild_evidence(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "read_bytes", read_bytes)
     html = build.render(tmp_path / "provenance")
     for path in (Path(__file__), ORACLE):
-        evidence = f"{path.relative_to(ROOT)}; SHA-256: {hashlib.sha256(path.read_bytes()).hexdigest()}"
+        evidence = f"{path.relative_to(ROOT).as_posix()}; SHA-256: {hashlib.sha256(path.read_bytes()).hexdigest()}"
         assert evidence in html
 
 

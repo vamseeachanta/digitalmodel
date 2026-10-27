@@ -202,7 +202,9 @@ Vessels:
   Connection: Free
   Draught: screening-draught
   PrimaryMotion: None
-  SuperimposedMotion: RAOs
+  SuperimposedMotion: RAOs + harmonics
+  ? HarmonicMotionPeriod, HarmonicMotionSurgeAmp, HarmonicMotionSurgePhase, HarmonicMotionSwayAmp, HarmonicMotionSwayPhase, HarmonicMotionHeaveAmp, HarmonicMotionHeavePhase, HarmonicMotionRollAmp, HarmonicMotionRollPhase, HarmonicMotionPitchAmp, HarmonicMotionPitchPhase, HarmonicMotionYawAmp, HarmonicMotionYawPhase
+  : []
   IncludedInStatics: None
   InitialHeading: 0
   VesselType: parametric-floater

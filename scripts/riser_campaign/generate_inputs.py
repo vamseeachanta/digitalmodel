@@ -29,6 +29,10 @@ RAO_COLUMNS = "RAOPeriodOrFrequency, " + ", ".join(
     f"RAO{dof}{field}" for dof in ("Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw")
     for field in ("Amp", "Phase")
 )
+HARMONIC_COLUMNS = "HarmonicMotionPeriod, " + ", ".join(
+    f"HarmonicMotion{dof}{field}" for dof in ("Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw")
+    for field in ("Amp", "Phase")
+)
 HEADER = "# SCREENING INPUT: all engineering parameters and builder defaults are ASSUMED.\n# Native loading, equilibrium and dynamic utilization are not established.\n"
 
 
@@ -163,7 +167,8 @@ def model_data(case: dict[str, Any], manifest: dict[str, Any], rows: list[dict[s
             "line_types": _line_types(case, manifest), "vessel_types": [_vessel_type(case, manifest)],
             "vessels": [{"name": "floater", "vessel_type": "parametric-floater", "connection": "Free",
                          "initial_position": [-offset["x_m"], 0, 0], "length": case["principal_particulars"]["length_m"],
-                         "properties": {"Draught": "screening-draught", "PrimaryMotion": "None", "SuperimposedMotion": "RAOs",
+                         "properties": {"Draught": "screening-draught", "PrimaryMotion": "None", "SuperimposedMotion": "RAOs + harmonics",
+                                        HARMONIC_COLUMNS: [],
                                         "IncludedInStatics": "None", "InitialHeading": 0}}],
             "lines": [{"name": "riser", "line_type_refs": [r[0] for r in sections], "properties": {
                 "IncludeTorsion": "No", "TopEnd": "End A", "LengthAndEndOrientations": "Explicit",
