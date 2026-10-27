@@ -1,12 +1,15 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Independent hand calculations for the synthetic drive-off example.
+"""Independent hand calculations for the cited force-balance example.
 
-Basis: drive_off_balance.md, Synthetic assumptions and Analytical limit.
-All masses, forces, times and invalid-input probes below are synthetic choices.
-The factor 1/2 follows from integrating constant acceleration twice.
+Numerical basis: OpenStax, University Physics Volume 1, first edition (2016),
+section 6.1, Example 6.6; kinematics: section 3.4, equations 3.12 and 3.13.
+See drive_off_balance.md for source links and the uniform-acceleration
+idealisation. Cancellation, force switching and invalid inputs are algebraic
+probes, not additional published physical scenarios.
 """
 
+import re
 import runpy
 from pathlib import Path
 
@@ -14,55 +17,75 @@ import pytest
 
 
 @pytest.fixture
-def simulate():
+def example():
     """Load the saved example without importing the hydrodynamics package."""
     path = (
         Path(__file__).resolve().parents[2]
         / "examples/domains/hydrodynamics/drive_off_balance.py"
     )
-    return runpy.run_path(str(path))["simulate"]
+    return runpy.run_path(path.as_posix())
+
+
+@pytest.fixture
+def simulate(example):
+    """Use the integrator from the saved example."""
+    return example["simulate"]
 
 
 def test_drive_off_constant_force(simulate):
-    """Hand basis: (6000-2000)/2000 = 2 m/s**2 from rest.
+    """Example 6.6: (224-0)/70 = 3.20 m/s**2 from rest.
 
-    At 5 s, v = 2*5 = 10 m/s and x = 2*5**2/2 = 25 m.
-    Uneven sample times are synthetic to expose step-size mistakes.
+    Hand basis at 2.50 s: v=3.2*2.5=8 m/s; x=3.2*2.5**2/2=10 m.
+    The numerical partition subdivides the source duration unevenly.
     """
-    mass_kg, thrust_n, drag_n = 2000.0, 6000.0, 2000.0
-    times_s = [0.0, 0.5, 2.0, 5.0]
-    acceleration_m_s2 = (thrust_n - drag_n) / mass_kg
-    states = simulate(
-        mass_kg, times_s, [thrust_n] * 3, [drag_n] * 3
-    )
+    times_s = [0.0, 0.25, 1.0, 2.5]
+    states = simulate(70.0, times_s, [224.0] * 3, [0.0] * 3)
     assert [state.time_s for state in states] == times_s
-    for state, time_s in zip(states, times_s):
-        assert state.velocity_m_s == pytest.approx(acceleration_m_s2 * time_s)
-        assert state.position_m == pytest.approx(acceleration_m_s2 * time_s**2 / 2)
-    assert states[-1].velocity_m_s / times_s[-1] == pytest.approx(
-        acceleration_m_s2
+    # v=3.2*t; x=1.6*t**2, evaluated independently at each boundary.
+    assert [state.velocity_m_s for state in states] == pytest.approx(
+        [0.0, 0.8, 3.2, 8.0]
     )
+    assert [state.position_m for state in states] == pytest.approx(
+        [0.0, 0.1, 1.6, 10.0]
+    )
+    assert states[-1].velocity_m_s / times_s[-1] == pytest.approx(3.2)
+
+
+def test_printed_example_uses_published_reference(example, capsys):
+    """Catch uncited input sets or endpoints in the executable demonstration."""
+    example["main"]()
+    output = capsys.readouterr().out
+    inputs = next(line for line in output.splitlines() if line.startswith("Mass:"))
+    assert [float(value) for value in re.findall(r"\d+\.\d+", inputs)] == (
+        pytest.approx([70.0, 224.0, 0.0])
+    )
+    rows = re.findall(
+        r"^\s*(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)\s*$", output, re.MULTILINE
+    )
+    # Source duration 2.50 s; hand basis v=3.2*2.5=8, x=3.2*2.5**2/2=10.
+    assert [float(value) for value in rows[-1]] == pytest.approx([2.5, 8.0, 10.0])
+    assert "OpenStax" in output and "Example 6.6" in output
 
 
 def test_drive_off_zero_balance(simulate):
-    """Equal synthetic forces give a=(4000-4000)/2000=0 and no motion."""
+    """Algebraic cancellation of Example 6.6's force: (224-224)/70=0."""
     states = simulate(
-        2000.0, [0.0, 1.0, 5.0], [4000.0, 4000.0], [4000.0, 4000.0]
+        70.0, [0.0, 1.0, 2.5], [224.0, 224.0], [224.0, 224.0]
     )
     assert all(state.position_m == 0.0 for state in states)
     assert all(state.velocity_m_s == 0.0 for state in states)
 
 
 def test_drive_off_prescribed_shutdown(simulate):
-    """Synthetic hand basis: m=2 kg; first a=(6-2)/2=2 for 1 s.
+    """Algebraic sign switch using Example 6.6's mass, force and duration.
 
-    Then thrust is zero and a=(0-2)/2=-1 for 2 s. Thus (v,x) changes
-    from (2,1) to (2-1*2, 1+2*2-1*2**2/2) = (0,3) in SI units.
-    This tests interval indexing and velocity carry-over, not shutdown physics.
+    First a=224/70=3.2 for 2.5 s gives (v,x)=(8,10). Then a=-224/70=-3.2
+    for the same duration gives v=8-3.2*2.5=0 and x=10+8*2.5-3.2*2.5**2/2=20.
+    This is a constructed indexing/carry-over check, not a published shutdown.
     """
-    states = simulate(2.0, [0.0, 1.0, 3.0], [6.0, 0.0], [2.0, 2.0])
-    assert [state.velocity_m_s for state in states] == pytest.approx([0, 2, 0])
-    assert [state.position_m for state in states] == pytest.approx([0, 1, 3])
+    states = simulate(70.0, [0.0, 2.5, 5.0], [224.0, 0.0], [0.0, 224.0])
+    assert [state.velocity_m_s for state in states] == pytest.approx([0, 8, 0])
+    assert [state.position_m for state in states] == pytest.approx([0, 10, 20])
 
 
 @pytest.mark.parametrize(
