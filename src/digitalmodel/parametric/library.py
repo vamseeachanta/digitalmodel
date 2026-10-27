@@ -75,7 +75,7 @@ def build_library_atlas(
     )
     atlas_id = hashlib.sha256(blob.encode()).hexdigest()[:12]
 
-    return Atlas(
+    atlas = Atlas(
         basename=basename,
         atlas_id=atlas_id,
         physics="linear",  # interpolate the recorded value within a case
@@ -92,3 +92,5 @@ def build_library_atlas(
             ),
         },
     )
+    atlas.validate_grid()
+    return atlas

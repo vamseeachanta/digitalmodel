@@ -9,6 +9,7 @@ interpolation and the out-of-range rail live in Atlas.predict and are shared.
 from __future__ import annotations
 
 import math
+import warnings
 from pathlib import Path
 from typing import Any, Callable
 
@@ -36,6 +37,20 @@ def router(cfg: dict) -> dict:
         raise ValueError("parametric_query.atlas (workflow basename) is required")
     point = settings.get("point") or {}
     policy = settings.get("policy") or {}
+    unknown_policy = set(policy) - {"on_out_of_range", "confidence"}
+    if unknown_policy:
+        raise ValueError(f"unknown policy keys: {sorted(unknown_policy)}")
+    # Deprecated compatibility with shipped inputs. Validation is always
+    # enforced below; this legacy spelling cannot relax the confidence gate.
+    if "confidence" in policy and policy["confidence"] != "required":
+        raise ValueError("deprecated policy.confidence only permits 'required'")
+    if "confidence" in policy:
+        warnings.warn(
+            "parametric_query.policy.confidence is deprecated; remove it. "
+            "Atlas validation is always enforced.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
     on_out_of_range = policy.get("on_out_of_range", "escalate")
     if on_out_of_range not in {"escalate", "error"}:
         raise ValueError(
@@ -49,9 +64,29 @@ def router(cfg: dict) -> dict:
 
     atlas_root = Path(settings.get("atlas_root", DEFAULT_ATLAS_ROOT))
     atlas = Atlas.load(atlas_root, basename)
+    allowed = {ax.name for ax in atlas.axes}
+    for ax in atlas.axes:
+        if ax.derived:
+            allowed.update(ax.derived["inputs"])
+    if handler is _handle_fatigue_bins:
+        allowed.update(_FATIGUE_CONTROL_KEYS)
+        for bin_point in point.get("tension_range_bins", []):
+            if set(bin_point) - {"tension_range_kN", "n_cycles"}:
+                raise ValueError("unknown point keys in fatigue bin")
+    elif handler is _handle_capacity_demand:
+        allowed.update({"demand_kN", "factor_of_safety"})
+    elif handler is _handle_annual_damage:
+        allowed.update({"design_life_years", "dff"})
+    elif handler is _handle_rao:
+        allowed.add("period_s")
+    unknown_point = set(point) - allowed
+    if unknown_point:
+        raise ValueError(f"unknown point keys: {sorted(unknown_point)}")
 
     stale_reason = _staleness(atlas)
-    if stale_reason is not None:
+    if atlas.provenance.get("kind") != "library" and atlas.validation.get("passes") is not True:
+        result = _escalation(atlas, "atlas validation has not passed")
+    elif stale_reason is not None:
         result = {**_escalation(atlas, stale_reason), "stale": True}
     else:
         result = handler(atlas, point)
@@ -75,7 +110,7 @@ def _staleness(atlas: Atlas) -> str | None:
         try:
             reasons = refresh.library_drift(atlas)  # checks THIS atlas, no re-load
         except Exception:
-            return None
+            return "library staleness could not be established"
         if reasons:
             return f"library stale: {'; '.join(reasons)} — licensed run required"
         return None
@@ -83,12 +118,12 @@ def _staleness(atlas: Atlas) -> str | None:
     workflow_id = atlas.provenance.get("workflow_id")
     stored = atlas.provenance.get("content_fingerprint")
     if not workflow_id or not stored:
-        return None  # atlas predates fingerprinting; nothing to check against
+        return "atlas fingerprint or workflow identity is missing"
 
     try:
         current = refresh.content_fingerprint(workflow_id)
     except Exception:
-        return None  # cannot recompute (e.g. registry absent) -> do not false-alarm
+        return "atlas fingerprint could not be recomputed"
     if current != stored:
         return (
             "atlas stale: build basis (spec / template / source / standard) "
@@ -102,6 +137,7 @@ def _provenance(atlas: Atlas) -> dict[str, Any]:
         "atlas_id": atlas.atlas_id,
         "code_version": atlas.provenance.get("code_version"),
         "standards": atlas.provenance.get("standards"),
+        "response_kwargs": atlas.provenance.get("response_kwargs", {}),
     }
     # Licensed-solver libraries (#831/#1346): surface the solver block so a
     # STUB self-identifies at the query-result surface — a synthetic placeholder
@@ -120,7 +156,7 @@ def _escalation(atlas: Atlas, reason: str) -> dict[str, Any]:
         "reason": reason,
         "action": "escalate",
         "disclaimer": ESCALATE_DISCLAIMER,
-        "provenance": {"atlas_id": atlas.atlas_id},
+        "provenance": _provenance(atlas),
     }
 
 
@@ -142,6 +178,11 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     if bins is None:
         bins = [{"tension_range_kN": point["tension_range_kN"],
                  "n_cycles": point["n_cycles"]}]
+    if not bins or any(
+        not math.isfinite(float(b.get("n_cycles", 0))) or float(b.get("n_cycles", 0)) <= 0
+        for b in bins
+    ):
+        return _escalation(atlas, "nonempty fatigue bins with positive finite cycles required")
 
     total_damage = 0.0
     for b in bins:
@@ -157,8 +198,10 @@ def _handle_fatigue_bins(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     dff_margin = math.inf if math.isinf(life) else life / required_life
 
     # local error of the worst bin (#828) — tighter than the global figure
-    e = max((atlas.local_error({**shared, **b}) for b in bins),
-            default=atlas.max_rel_error)
+    errors = [atlas.local_error({**shared, **b}) for b in bins]
+    if any(e is None or not math.isfinite(e) or not 0 <= e < 1 for e in errors):
+        return _escalation(atlas, "fatigue interpolation error not established below unity")
+    e = max(errors)
     if math.isinf(life):
         band = [math.inf, math.inf]
     else:
@@ -207,6 +250,8 @@ def _handle_utilisation(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
         return _escalation(atlas, prediction.reason)
     u = prediction.value
     e = atlas.local_error(point)
+    if e is None or not 0 <= e < 1:
+        return _escalation(atlas, "utilisation interpolation error not established below unity")
     return _utilisation_result(atlas, u, [u * (1 - e), u * (1 + e)], e)
 
 
@@ -215,6 +260,11 @@ def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
     load case (demand, factor of safety) is applied at query time:
     utilisation = demand * FoS / capacity. The atlas axes stay geometry/soil
     only; the demand is not baked into the grid."""
+    if "factor_of_safety" not in point:
+        raise ValueError("factor_of_safety is required")
+    fos = float(point["factor_of_safety"])
+    if not math.isfinite(fos) or fos <= 0:
+        raise ValueError("factor_of_safety must be positive and finite")
     prediction = atlas.predict(point)
     if not prediction.in_range:
         return _escalation(atlas, prediction.reason)
@@ -222,14 +272,16 @@ def _handle_capacity_demand(atlas: Atlas, point: dict[str, Any]) -> dict[str, An
     if capacity <= 0:
         return _escalation(atlas, "non-positive capacity")
     demand = float(point["demand_kN"])
-    fos = float(point.get("factor_of_safety", 1.0))
     e = atlas.local_error(point)
+    if e is None or not 0 <= e < 1:
+        return _escalation(atlas, "capacity interpolation error not established below unity")
     u = demand * fos / capacity
     # capacity carries +/- e error, so utilisation carries -/+ e (inverse)
     band = [demand * fos / (capacity * (1 + e)), demand * fos / (capacity * (1 - e))]
     result = _utilisation_result(atlas, u, band, e)
     if result["in_range"]:
         result["capacity_kN"] = capacity
+    result["factor_of_safety"] = fos
     return result
 
 
@@ -244,8 +296,8 @@ def _handle_value(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]:
     return {
         "response": atlas.response,
         "value": v,
-        "confidence": {"band": [v * (1 - e), v * (1 + e)],
-                       "basis": f"local interp error = {e:.4f}"},
+        "confidence": {"band": [v * (1 - e), v * (1 + e)] if e is not None else None,
+                       "basis": f"local interp error = {e:.4f}" if e is not None else "not established"},
         "in_range": True,
         "stale": False,
         "disclaimer": SCREENING_DISCLAIMER,
@@ -274,6 +326,8 @@ def _handle_annual_damage(atlas: Atlas, point: dict[str, Any]) -> dict[str, Any]
     life = math.inf if annual <= 0 else 1.0 / annual
     dff_margin = math.inf if math.isinf(life) else life / (design_life * dff)
     e = atlas.local_error(point)
+    if e is None or not 0 <= e < 1:
+        return _escalation(atlas, "annual damage interpolation error not established below unity")
     band = ([math.inf, math.inf] if math.isinf(life)
             else [1.0 / (annual * (1 + e)), 1.0 / (annual * (1 - e))])
     return {
