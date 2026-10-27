@@ -10,6 +10,20 @@ are synthetic and are supplied explicitly; no solver package is required.
 | Revision | Date | Change and purpose |
 | --- | --- | --- |
 | 0 | 2026-10-26 | Add executable layered inputs, missing-datum rejection and coordinate-translation checks. |
+| 1 | 2026-10-27 | State the preflight scope, implementation steps and offline checks explicitly. |
+
+## Plan-lite
+
+Scope is executable profile preflight for supplied layered SI inputs.
+The implementation steps are to document the synthetic profile and datum
+convention, execute the documentation snippets in tests with independent
+relative-depth arithmetic, and clarify the validator docstring without
+changing runtime behavior.
+
+Offline checks will run the profile-validation and strength-datum suites,
+followed by writing-register, path, syntax, documentation-link and unchanged
+runtime checks. Solver execution, seepage solutions, factor-of-safety
+benchmarks and engineering design acceptance remain outside this scope.
 
 ## Input basis and units
 
