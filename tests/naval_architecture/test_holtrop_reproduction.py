@@ -4,7 +4,9 @@
 
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
+import runpy
 
 import pytest
 
@@ -76,6 +78,58 @@ def test_report_accounts_for_each_enabled_reference():
     assert any(
         path.endswith("holtrop_diagnostics.py") for path in report["source_sha256"]
     )
+
+
+@pytest.mark.parametrize(
+    "disabled_ids",
+    [
+        ("series60_cb060",),
+        ("tanker_cb080",),
+        ("form_factor_validation",),
+        ("series60_cb060", "tanker_cb080", "form_factor_validation"),
+    ],
+)
+def test_command_omits_disabled_calculations_and_reports_unavailable_comparisons(
+    disabled_ids, monkeypatch, capsys
+):
+    module = load_script()
+    fixture = module.yaml.safe_load(module.FIXTURE.read_text())
+    for case in fixture["test_cases"]:
+        if case["id"] in disabled_ids:
+            case.update(use_as_test=False, inputs={}, outputs={})
+    monkeypatch.setattr(module.yaml, "safe_load", lambda _: fixture)
+
+    runpy.run_path(str(SCRIPT), run_name="__main__")
+    report = json.loads(capsys.readouterr().out)
+    checks = {row["id"]: row for row in report["reference_checks"]}
+    for case_id in disabled_ids:
+        assert checks[case_id]["status"] == "DISABLED"
+        assert checks[case_id]["checks"] == {}
+    resistance_ids = {"series60_cb060", "tanker_cb080"}
+    enabled_ids = resistance_ids - set(disabled_ids)
+    assert {row["id"] for row in report["fixed_speed"]} == enabled_ids
+    assert len(report["common_froude"]) == 4
+    for comparison in report["common_froude"]:
+        assert {row["id"] for row in comparison["rows"]} == enabled_ids
+        for row in comparison["rows"]:
+            assert row["froude_number"] == pytest.approx(comparison["froude_number"])
+        if resistance_ids.intersection(disabled_ids):
+            assert comparison["tanker_relative_to_series60_pct"] is None
+            assert comparison["comparison_status"] == "UNAVAILABLE"
+            assert "disabled" in comparison["reason"]
+        else:
+            assert comparison["comparison_status"] == "AVAILABLE"
+            assert isinstance(comparison["tanker_relative_to_series60_pct"], float)
+    factor = report["form_factor_diagnostic"]
+    if "form_factor_validation" in disabled_ids:
+        assert factor["status"] == "DISABLED"
+        assert factor["computed"] is None
+        assert factor["reason"] == "use_as_test is false"
+        assert "unverified_fixture_range" not in factor
+    else:
+        assert factor["computed"] == pytest.approx(
+            checks["form_factor_validation"]["checks"]["k1_plus_1_min"]["computed"]
+        )
 
 
 def test_source_digests_use_portable_keys_and_normalized_text(tmp_path, monkeypatch):

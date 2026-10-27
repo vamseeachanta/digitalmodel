@@ -12,6 +12,7 @@ and approximate targets remain unchanged pending source qualification.
 | --- | --- | --- |
 | 1 | 2026-10-20 | Account for unqualified fixture targets and expose every resistance component so missing evidence cannot be interpreted as agreement. |
 | 2 | 2026-10-25 | Expose disabled rows, define reporting flags and portable digest semantics, and identify unresolved equation defects beside the predictions. |
+| 3 | 2026-10-27 | Honor disabled rows throughout the command and report unavailable comparisons without reading disabled inputs. |
 
 ## Scope and source access
 
@@ -27,6 +28,11 @@ This implements three bounded parts of issue [#2020](https://github.com/vamseeac
 The issue acceptance criteria remain open. Reporting `NOT_EVALUATED` does not
 satisfy the required assertion of `ct_approx` within `ct_tolerance_pct`, correct
 the reported coefficient defects, or provide a qualified published example.
+
+A maintainer decision permitting this partial diagnostic scope has not been
+identified in the issue discussion. The [approved plan record](https://github.com/vamseeachanta/digitalmodel/issues/2020#issuecomment-5303408217)
+requires admissible primary sources; the [revision 4 record](https://github.com/vamseeachanta/digitalmodel/issues/2020#issuecomment-5303391886)
+retains the replan gate. Recording or linking the permitted scope remains open.
 
 The input basis is **assumed, based on previous experience**; the fixture does
 not establish measured hull data or a published Series 60 experiment.
@@ -128,6 +134,16 @@ checks. The tolerance has no computed engineering value and is not an enforced
 pass/fail criterion. A number that exactly matches its target still returns
 `NOT_EVALUATED`. No target is silently accepted or removed. The fixture's
 references describe methods; its values have not been traced to those references.
+
+The command also excludes disabled resistance rows from fixed-speed and
+common-Froude calculations. When either resistance row is disabled, each
+common-Froude entry retains the enabled rows, reports `comparison_status` as
+`UNAVAILABLE` with a reason, and returns a null percentage. With both rows
+enabled, the status is `AVAILABLE` and the percentage is calculated as before.
+A disabled form-factor row returns `DISABLED`, a reason and a null computed
+value, without reading its inputs or output bounds. Command regressions cover
+each disabled row separately and all three disabled together with empty inputs
+and outputs.
 
 The command includes fixture, method, diagnostic and command source digests.
 Keys use repository-relative POSIX paths. SHA-256 is calculated on UTF-8 text

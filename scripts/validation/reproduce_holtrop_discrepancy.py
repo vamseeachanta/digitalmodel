@@ -30,7 +30,11 @@ def build_report():
     fixture = yaml.safe_load(FIXTURE.read_text())
     reference_checks = hd.assess_fixture(fixture)
     by_id = {case["id"]: case for case in fixture["test_cases"]}
-    cases = [by_id[case_id] for case_id in ("series60_cb060", "tanker_cb080")]
+    cases = [
+        by_id[case_id]
+        for case_id in ("series60_cb060", "tanker_cb080")
+        if by_id[case_id]["use_as_test"]
+    ]
     common = []
     for fn in (0.15, 0.20, 0.25, 0.30):
         rows = [
@@ -38,24 +42,40 @@ def build_report():
             for case in cases
         ]
         ct_by_id = {row["id"]: row["ct"] for row in rows}
-        common.append(
-            {
-                "froude_number": fn,
-                "rows": rows,
-                "tanker_relative_to_series60_pct": 100
+        comparison = {
+            "froude_number": fn,
+            "rows": rows,
+            "comparison_status": "UNAVAILABLE",
+            "tanker_relative_to_series60_pct": None,
+        }
+        if len(rows) == 2:
+            comparison.update(
+                comparison_status="AVAILABLE",
+                tanker_relative_to_series60_pct=100
                 * (ct_by_id["tanker_cb080"] / ct_by_id["series60_cb060"] - 1),
+            )
+        else:
+            comparison["reason"] = "one or both resistance rows are disabled"
+        common.append(comparison)
+    factor_case = by_id["form_factor_validation"]
+    if factor_case["use_as_test"]:
+        factor_inputs = factor_case["inputs"]
+        factor = hm.form_factor_k1(
+            **{
+                key: factor_inputs[key]
+                for key in ("lwl", "beam", "draft", "cp", "lcb_pct", "cstern")
             }
         )
-    factor_case = next(
-        case for case in fixture["test_cases"] if case["id"] == "form_factor_validation"
-    )
-    factor_inputs = factor_case["inputs"]
-    factor = hm.form_factor_k1(
-        **{
-            key: factor_inputs[key]
-            for key in ("lwl", "beam", "draft", "cp", "lcb_pct", "cstern")
+        factor_diagnostic = {
+            "computed": factor,
+            "unverified_fixture_range": factor_case["outputs"],
         }
-    )
+    else:
+        factor_diagnostic = {
+            "status": "DISABLED",
+            "reason": "use_as_test is false",
+            "computed": None,
+        }
     paths = [
         FIXTURE,
         Path(hm.__file__),
@@ -80,10 +100,7 @@ def build_report():
         "ct_normalization": "RT / (0.5 * rho * V^2 * S); S is Holtrop-regression wetted surface, not mesh S",
         "fixed_speed": [diagnose(case) for case in cases],
         "common_froude": common,
-        "form_factor_diagnostic": {
-            "computed": factor,
-            "unverified_fixture_range": factor_case["outputs"],
-        },
+        "form_factor_diagnostic": factor_diagnostic,
     }
 
 
