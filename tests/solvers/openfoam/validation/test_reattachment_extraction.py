@@ -108,6 +108,102 @@ def test_crossing_at_or_before_step_is_not_downstream(step):
     assert result.x is None
 
 
+@pytest.mark.parametrize("has_later_crossing", [False, True])
+def test_unequal_shear_root_at_step_cannot_mask_downstream_root(has_later_crossing):
+    """Roundoff at the step must not create a downstream crossing."""
+    # On [-2, 3], shear equals the coordinate, so its root is exactly 0.
+    # If present, the later [-1, 1] shear bracket on [4, 6] has root 5.
+    coordinates = [-2.0, 3.0, 4.0, 6.0] if has_later_crossing else [-2.0, 3.0]
+    shear = [-2.0, 3.0, -1.0, 1.0] if has_later_crossing else [-2.0, 3.0]
+    result = extract_reattachment(
+        coordinates, shear, step_location=0.0, step_height=1.0
+    )
+    if has_later_crossing:
+        assert result.status == "found"
+        assert result.crossing_coordinate == pytest.approx(5.0)
+        assert result.x == pytest.approx(5.0)
+        assert result.x_over_height == pytest.approx(5.0)
+    else:
+        assert result.status == "not_found"
+        assert result.crossing_coordinate is None
+        assert result.x is None
+        assert result.x_over_height is None
+
+
+def test_crossing_just_after_step_is_not_discarded_by_a_tolerance():
+    """A positive root next to an exact boundary still counts as downstream."""
+    # The positive shear is 3 - 2**-51, so the root is
+    # 2**-50 / (5 - 2**-51), approximately 1.7763568394002506e-16.
+    result = extract_reattachment(
+        [-2.0, 3.0, 4.0, 6.0],
+        [-2.0, math.nextafter(3.0, 0.0), -1.0, 1.0],
+        step_location=0.0,
+        step_height=1.0,
+    )
+    assert result.status == "found"
+    assert result.x == pytest.approx(1.7763568394002506e-16, rel=1e-15, abs=0.0)
+
+
+def test_representable_root_survives_underflow_of_a_normalized_shear_weight():
+    """A tiny shear weight must not turn a representable root into absence."""
+    # Root = 1e308 * 1e-100 / (1e300 + 1e-100), approximately 1e-92.
+    # With step 0 and height 1, distance and height ratio are also 1e-92.
+    result = extract_reattachment(
+        [0.0, 1e308], [-1e-100, 1e300], step_location=0.0, step_height=1.0
+    )
+    assert result.status == "found"
+    assert result.crossing_coordinate == pytest.approx(1e-92, rel=1e-15, abs=0.0)
+    assert result.x == pytest.approx(1e-92, rel=1e-15, abs=0.0)
+    assert result.x_over_height == pytest.approx(1e-92, rel=1e-15, abs=0.0)
+
+
+def test_small_negative_root_retains_its_coordinate_contribution():
+    """A rounded unit weight must not erase the other end of the bracket."""
+    # Root = -1e308 * 1e-100 / (1e300 + 1e-100), approximately -1e-92.
+    # Step -1e-91 gives distance 9e-92; height 1e-91 gives ratio 0.9.
+    result = extract_reattachment(
+        [-1e308, 0.0], [-1e300, 1e-100], step_location=-1e-91, step_height=1e-91
+    )
+    assert result.status == "found"
+    assert result.crossing_coordinate == pytest.approx(-1e-92, rel=1e-15, abs=0.0)
+    assert result.x == pytest.approx(9e-92, rel=1e-15, abs=0.0)
+    assert result.x_over_height == pytest.approx(0.9)
+
+
+@pytest.mark.parametrize(
+    "coordinates, shear, step, height",
+    [
+        ([0.0, 1.0], [-1e-100, 1e300], 0.0, 1.0),  # Root near 1e-400.
+        ([0.0, 2e-300], [-1.0, 1.0], 0.0, 1e300),  # Ratio near 1e-600.
+        ([0.0, 1e308, 1.1e308], [-1.0, 0.0, 1.0], -1e308, 1.0),
+        ([0.0, 1e308], [-1.0, 1.0], -1e308, 0.1),  # Ratio exceeds float range.
+    ],
+)
+def test_unrepresentable_positive_results_fail_instead_of_looking_absent(
+    coordinates, shear, step, height
+):
+    """Numerical range loss must be explicit rather than absence or zero."""
+    with pytest.raises(ValueError):
+        extract_reattachment(
+            coordinates, shear, step_location=step, step_height=height
+        )
+
+
+def test_step_relative_distance_survives_rounding_of_absolute_coordinate():
+    """A representable distance must not be lost when the root rounds to step."""
+    # Root = 1 + 1/(2**53 + 1), which rounds to coordinate 1.
+    # The distance 1/(2**53 + 1) is approximately 1.1102230246251564e-16.
+    result = extract_reattachment(
+        [1.0, 2.0], [-1.0, float(2**53)], step_location=1.0, step_height=1.0
+    )
+    assert result.status == "found"
+    assert result.crossing_coordinate == 1.0
+    assert result.x == pytest.approx(1.1102230246251564e-16, rel=1e-15, abs=0.0)
+    assert result.x_over_height == pytest.approx(
+        1.1102230246251564e-16, rel=1e-15, abs=0.0
+    )
+
+
 def test_bracket_can_straddle_step_when_root_is_downstream():
     """Position of the interpolated root determines whether it is downstream."""
     # Hand calculation: midpoint of [-1, 3] is 1, downstream of step = 0.

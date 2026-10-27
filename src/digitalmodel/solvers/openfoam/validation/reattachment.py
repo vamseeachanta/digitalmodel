@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from fractions import Fraction
 from typing import Literal, Sequence
 
 
@@ -65,7 +66,8 @@ def extract_reattachment(
     Raises:
         ValueError: If fewer than two matching samples are provided, data or
             geometry are nonfinite, coordinates do not increase strictly,
-            height is nonpositive, or the result exceeds finite float range.
+            height is nonpositive, or the result is outside finite float range
+            (including a positive length or ratio that would round to zero).
     """
     positions = tuple(float(value) for value in coordinates)
     shear = tuple(float(value) for value in wall_shear)
@@ -82,6 +84,7 @@ def extract_reattachment(
     if any(right <= left for left, right in zip(positions, positions[1:])):
         raise ValueError("coordinates must be strictly increasing")
 
+    exact_step = Fraction(step)
     for left in range(len(positions) - 1):
         if shear[left] >= 0.0:
             continue
@@ -92,26 +95,31 @@ def extract_reattachment(
             continue
 
         if right > left + 1:
-            crossing = positions[left + 1]
+            crossing = Fraction(positions[left + 1])
         else:
-            # Scale magnitudes before summing to avoid overflow. The fraction
-            # is the negative magnitude divided by the sum of magnitudes.
-            scale = max(-shear[left], shear[right])
-            negative = -shear[left] / scale
-            positive = shear[right] / scale
-            fraction = negative / (negative + positive)
-            # Convex form avoids overflowing a wide coordinate difference.
-            crossing = (1.0 - fraction) * positions[left] + fraction * positions[right]
+            # Retain exact float values through the local linear root: scaled
+            # weights can underflow, and rounded roots can cross the step.
+            negative = Fraction(-shear[left])
+            positive = Fraction(shear[right])
+            crossing = (
+                Fraction(positions[left]) * positive
+                + Fraction(positions[right]) * negative
+            ) / (negative + positive)
 
-        if crossing <= step:
+        if crossing <= exact_step:
             continue
-        distance = crossing - step
-        ratio = distance / height
-        if not all(math.isfinite(value) for value in (crossing, distance, ratio)):
-            raise ValueError("reattachment position, distance and ratio must be finite")
+        exact_distance = crossing - exact_step
+        try:
+            coordinate = float(crossing)
+            distance = float(exact_distance)
+            ratio = float(exact_distance / Fraction(height))
+        except OverflowError as exc:
+            raise ValueError("reattachment result exceeds finite float range") from exc
+        if distance == 0.0 or ratio == 0.0 or (crossing != 0 and coordinate == 0.0):
+            raise ValueError("reattachment result is below nonzero float range")
         return ReattachmentResult(
             status="found",
-            crossing_coordinate=crossing,
+            crossing_coordinate=coordinate,
             x=distance,
             x_over_height=ratio,
         )

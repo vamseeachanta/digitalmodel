@@ -10,6 +10,7 @@ This helper operates on supplied samples and does not execute a solver.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-27 | Define extraction and independent examples so absent crossings cannot be mistaken for zero length. |
+| 1 | 2026-10-27 | Preserve exact step-boundary decisions and small representable roots; reject numerical range loss explicitly. |
 
 ## Input and result contract
 
@@ -31,6 +32,14 @@ step. A sampled zero requires negative shear before and positive shear after it.
 For consecutive zeros, the first zero is reported once positive shear follows.
 Tangencies, terminal zeros, falling crossings and upstream roots are ignored.
 Invalid profiles raise `ValueError`; they are not silently sorted or filtered.
+
+Interpolation and the downstream comparison retain the exact values of the
+supplied floating-point samples. Each output is rounded independently after the
+distance and height ratio are calculated. A root very close to the step can
+therefore have an absolute coordinate that rounds to the step while retaining a
+positive distance. An output outside the finite float range, including a nonzero
+coordinate, positive distance or ratio that would round to zero, raises
+`ValueError` rather than returning absence or a zero length.
 
 ## Saved example and independent hand calculation
 
