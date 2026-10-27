@@ -42,6 +42,7 @@ _COUNT = re.compile(
     r"^\s*the\s+number\s+of\s+modes\s+above\s+cutoff\s+is\s*:\s*(\d+)\s*$",
     _FLAGS,
 )
+_MODE_LIST = re.compile(r"^\s*These\s+modes\s+are\s*:\s*$", _FLAGS)
 _REGION = re.compile(
     r"^\s*Mode\s+No\.\s+No\.\s+of\s+Nodes\s+Length\s+Ratio\s*$", _FLAGS
 )
@@ -59,8 +60,6 @@ def _rows(text: str, count: int, pattern: re.Pattern, label: str) -> list[tuple]
     for line in text.splitlines():
         stripped = line.strip()
         if not stripped or re.fullmatch(r"[-=]+", stripped):
-            continue
-        if not rows and re.fullmatch(r"These\s+modes\s+are\s*:", stripped, re.I):
             continue
         match = pattern.fullmatch(line)
         if match is None:
@@ -97,7 +96,8 @@ def parse_modes(text: str, *, filename: str = "") -> ModeResult:
     if count == 0:
         return ModeResult(filename, (), None, ())
     tail = text[marker.end() :]
-    modes = tuple(int(row[0]) for row in _rows(tail, count, _INT_ROW, "mode"))
+    mode_tail = _after(tail, _MODE_LIST, "mode list")
+    modes = tuple(int(row[0]) for row in _rows(mode_tail, count, _INT_ROW, "mode"))
     if min(modes) <= 0 or len(set(modes)) != count:
         raise ModeParseError("Mode identifiers must be positive and unique")
     region_tail = _after(tail, _REGION, "modal excitation region")

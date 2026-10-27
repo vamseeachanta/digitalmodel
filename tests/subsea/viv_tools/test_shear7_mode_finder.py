@@ -105,6 +105,25 @@ def test_invalid_input_is_not_empty_success(text):
         parse_modes(text)
 
 
+@pytest.mark.parametrize(
+    "heading",
+    ["", "unrelated These modes are:", "These modes are: unrelated"],
+    ids=["missing", "prefixed", "suffixed"],
+)
+def test_mode_list_requires_anchored_heading(heading):
+    """Numeric lines 3 and 999 cannot replace the required mode-list heading."""
+    text = SAMPLE.replace("  These modes are:", heading).replace("  7\n", "  999\n")
+    with pytest.raises(ModeParseError, match="mode"):
+        parse_modes(text)
+
+
+def test_mode_list_heading_must_follow_count():
+    """A heading in earlier output cannot qualify unlabelled numeric rows."""
+    text = "These modes are:\n" + SAMPLE.replace("  These modes are:\n", "")
+    with pytest.raises(ModeParseError, match="mode"):
+        parse_modes(text)
+
+
 def test_empty_first_region():
     """A declared zero node count creates no matrix rows, without a node table."""
     text = SAMPLE.split("mode number: 3")[0].replace("3 3 0.5", "3 0 0.0")
