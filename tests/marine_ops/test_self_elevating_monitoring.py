@@ -46,6 +46,77 @@ def test_storm_both_instruments_warn_before_respective_limits():
         assert alert.time_s < case.event_s
 
 
+def test_preload_warning_times_match_hand_worked_samples():
+    case = synthetic_cases()["accelerating"]
+    alerts = {alert.rule: alert for alert in
+              evaluate(case.time_s, case.channels, case.rules)}
+    # s(250), s(260), s(270) = 0.174178681197, 0.176780233111,
+    # 0.180481729959 m from the declared exponential plus quadratic log.
+    # Their second difference / 10² = 0.0000109994493503 m/s².
+    # The first three acceleration crossings are 250, 260 and 270 s.
+    acceleration = alerts["settlement acceleration"]
+    assert acceleration.time_s == 270
+    assert acceleration.value == pytest.approx(0.0000109994493503, rel=1e-9)
+    # s(470)=0.497058261624, s(480)=0.525300919691 m:
+    # (s(480)-s(470))/10 = 0.00282426580673 m/s.
+    # The first three rate crossings are 460, 470 and 480 s.
+    rate = alerts["settlement rate"]
+    assert rate.time_s == 480
+    assert rate.value == pytest.approx(0.00282426580673, rel=1e-9)
+    assert case.event_s == 660
+
+
+def test_storm_warning_and_limit_times_match_hand_calculation():
+    case = synthetic_cases()["storm"]
+    alerts = {alert.rule: alert for alert in
+              evaluate(case.time_s, case.channels, case.rules)}
+    # (0.3-0.05)/0.00006 = 4166.7 s; 60 s sampling first crosses
+    # at 4200 s and confirms at 4260 s: 0.05+0.00006*4260=0.3056 deg.
+    assert alerts["leg inclination"].time_s == 4260
+    assert alerts["leg inclination"].value == pytest.approx(0.3056)
+    # (850-80)/0.18 = 4277.8 s; first crossing 4320 s, confirmation
+    # 4380 s: 80+0.18*4380=868.4 microstrain.
+    assert alerts["leg strain"].time_s == 4380
+    assert alerts["leg strain"].value == pytest.approx(868.4)
+    # Strain limit: (1200-80)/0.18=6222.2 s -> first sample 6240 s.
+    # Inclination limit: (0.45-0.05)/0.00006=6666.7 s -> 6720 s.
+    # The first event is therefore the strain crossing, not inclination.
+    assert case.event_s == 6240
+    for channel, at, before, after in (
+        ("strain_microstrain", 6240, 1192.4, 1203.2),
+        ("inclination_deg", 6720, 0.4496, 0.4532),
+    ):
+        index = case.time_s.index(at)
+        assert case.channels[channel][index - 1] == pytest.approx(before)
+        assert case.channels[channel][index] == pytest.approx(after)
+        assert before < case.limits[channel] <= after
+
+
+@pytest.mark.parametrize("name,rule_name,confirmation", [
+    ("accelerating", "settlement acceleration", 270),
+    ("accelerating", "settlement rate", 480),
+    ("storm", "leg inclination", 4260),
+    ("storm", "leg strain", 4380),
+])
+def test_demo_warning_waits_for_literal_confirming_sample(name, rule_name, confirmation):
+    case = synthetic_cases()[name]
+    rule = next(rule for rule in case.rules if rule.name == rule_name)
+    index = case.time_s.index(confirmation)
+    for stop in (index, index + 1):
+        prefix = {channel: values[:stop] for channel, values in case.channels.items()}
+        alerts = evaluate(case.time_s[:stop], prefix, [rule])
+        assert bool(alerts) == (stop == index + 1)
+        if alerts:
+            assert alerts[0].time_s == confirmation
+
+
+def test_stability_citation_identifies_restricted_service_liftboats():
+    locator = SOURCES["stability"].locator
+    assert "174.255 Restricted service" in locator
+    assert "174.250" in locator
+    assert "liftboats" in locator
+
+
 def test_alert_is_causal_and_requires_consecutive_samples():
     rule = AlertRule("tilt", "tilt_deg", "magnitude", 0.5, "deg", 2, 5)
     values = [0, 0.5, 0, -0.5, -0.6, 99]

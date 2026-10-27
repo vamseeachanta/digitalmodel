@@ -78,7 +78,10 @@ SOURCES = {
         "46 CFR Part 174: Specific Vessel Types (2025 edition)",
         "https://www.govinfo.gov/content/pkg/CFR-2025-title46-vol7/"
         "pdf/CFR-2025-title46-vol7-part174.pdf",
-        "Sections 174.045 Intact stability requirements and 174.255 Stability",
+        "Section 174.045 Intact stability requirements; section 174.240 applicability "
+        "to liftboats inspected under subchapter L; section 174.255 Restricted service "
+        "for liftboats unable to comply with section 174.250 and limited to restricted "
+        "service, including intact stability afloat (a) and on-bottom stability (c)",
         "US federal regulation; public domain under 17 USC 105; "
         "https://www.govinfo.gov/about/policies",
     ),

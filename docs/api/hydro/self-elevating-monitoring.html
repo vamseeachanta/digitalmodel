@@ -46,7 +46,8 @@
 <section aria-labelledby="revision-title">
   <h2 id="revision-title">Revision history</h2>
   <div class="table-wrap"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-  <tbody><tr><td>0</td><td>2026-10-27</td><td>Initial synthetic instrument and warning demonstrator to connect observed response with advance planning.</td></tr></tbody></table></div>
+  <tbody><tr><td>0</td><td>2026-10-27</td><td>Initial synthetic instrument and warning demonstrator to connect observed response with advance planning.</td></tr>
+  <tr><td>1</td><td>2026-10-27</td><td>Corrected the restricted-service citation and added independent hand-worked timing checks. A public numerical basis for the demonstration settings remains unestablished.</td></tr></tbody></table></div>
 </section>
 <section aria-labelledby="replay-title">
   <h2 id="replay-title">Synthetic log replay</h2>
@@ -72,6 +73,7 @@
 </section>
 <section aria-labelledby="inputs-title">
   <h2 id="inputs-title">Explicit demonstration inputs</h2>
+  <p><strong>Numerical basis remains unestablished.</strong> The log coefficients, alert thresholds, persistence counts, maximum gaps and storm response limits below are invented demonstration inputs. The cited sources do not supply these values. The timing checks establish arithmetic for the constructed logs; they do not qualify settings for operation. A public worked example with locators and units is still required to establish the numerical basis.</p>
   <div class="table-wrap"><table><thead><tr><th>Log</th><th>Rule</th><th>Metric</th><th>Threshold</th><th>Consecutive samples</th><th>Maximum sample gap</th></tr></thead><tbody>
 <tr><td>settled</td><td>settlement acceleration</td><td>acceleration</td><td>4.0 µm/s²</td><td>3</td><td>20.0 s</td></tr>
 <tr><td>settled</td><td>settlement rate</td><td>rise_rate</td><td>2.5 mm/s</td><td>3</td><td>20.0 s</td></tr>
@@ -110,7 +112,7 @@
 <li id="source-waves"><a href="https://mdpi-res.com/d_attachment/water/water-15-00024/article_deploy/water-15-00024.pdf">Experimental Investigation of the Coupling Effect of Jackup Offshore Platforms, Towers, and Seabed Foundations under Waves of Large Wave Height</a>. Section 2.3 and Figure 2: acceleration, displacement, wave-height sensors; DOI 10.3390/w15010024. Terms: CC BY 4.0; https://creativecommons.org/licenses/by/4.0/. Retrieved 2026-10-27.</li>
 <li id="source-transit"><a href="https://mdpi-res.com/d_attachment/applsci/applsci-15-12701/article_deploy/applsci-15-12701.pdf">Investigation on Seakeeping of WTIVs Considering the Effect of Leg-Spudcan Well</a>. Abstract: roll period, damping and motion response; DOI 10.3390/app152312701. Terms: CC BY 4.0; https://creativecommons.org/licenses/by/4.0/. Retrieved 2026-10-27.</li>
 <li id="source-operation"><a href="https://www.govinfo.gov/content/pkg/CFR-2025-title46-vol4/pdf/CFR-2025-title46-vol4-part134.pdf">46 CFR Part 134: Added Provisions for Liftboats (2025 edition)</a>. Sections 134.140 Structural standards, 134.150 Liftboat-jacking systems, 134.170 Operating manual. Terms: US federal regulation; public domain under 17 USC 105; https://www.govinfo.gov/about/policies. Retrieved 2026-10-27.</li>
-<li id="source-stability"><a href="https://www.govinfo.gov/content/pkg/CFR-2025-title46-vol7/pdf/CFR-2025-title46-vol7-part174.pdf">46 CFR Part 174: Specific Vessel Types (2025 edition)</a>. Sections 174.045 Intact stability requirements and 174.255 Stability. Terms: US federal regulation; public domain under 17 USC 105; https://www.govinfo.gov/about/policies. Retrieved 2026-10-27.</li>
+<li id="source-stability"><a href="https://www.govinfo.gov/content/pkg/CFR-2025-title46-vol7/pdf/CFR-2025-title46-vol7-part174.pdf">46 CFR Part 174: Specific Vessel Types (2025 edition)</a>. Section 174.045 Intact stability requirements; section 174.240 applicability to liftboats inspected under subchapter L; section 174.255 Restricted service for liftboats unable to comply with section 174.250 and limited to restricted service, including intact stability afloat (a) and on-bottom stability (c). Terms: US federal regulation; public domain under 17 USC 105; https://www.govinfo.gov/about/policies. Retrieved 2026-10-27.</li>
   </ol>
 </section>
 <footer>Generated from the table-driven monitoring module. Reproduce with <code>PYTHONPATH=src python scripts/capabilities/build_self_elevating_monitoring.py</code>. No external plotting scripts or network requests are used by this page.</footer>

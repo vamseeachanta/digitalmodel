@@ -9,6 +9,8 @@ import re
 import subprocess
 import sys
 
+import pytest
+
 from digitalmodel.marine_ops.self_elevating_monitoring import evaluate, synthetic_cases
 from scripts.capabilities.build_self_elevating_monitoring import render_page
 
@@ -56,6 +58,26 @@ def test_new_generator_and_page_have_registry_ownership():
     assert entry.outputs == ("docs/api/hydro/self-elevating-monitoring.html",)
     assert "src/digitalmodel/marine_ops/self_elevating_monitoring.py" in entry.inputs
     assert "scripts/capabilities/self_elevating_monitoring.html.template" in entry.inputs
+
+
+def test_page_warning_times_and_leads_have_independent_worked_values():
+    match = re.search(r'<script id="monitor-data" type="application/json">(.*?)</script>',
+                      render_page(), re.S)
+    payload = json.loads(match[1])
+    # Confirmation times are hand-worked in the scenario tests. Lead times:
+    # (660-270)/60=6.5, (660-480)/60=3.0,
+    # (6240-4260)/60=33.0 and (6240-4380)/60=31.0 min.
+    assert payload["accelerating"]["event_s"] == 660
+    assert payload["storm"]["event_s"] == 6240
+    for name, rule, time_s, lead_min in (
+        ("accelerating", "settlement acceleration", 270, 6.5),
+        ("accelerating", "settlement rate", 480, 3.0),
+        ("storm", "leg inclination", 4260, 33.0),
+        ("storm", "leg strain", 4380, 31.0),
+    ):
+        alert = next(row for row in payload[name]["alerts"] if row["rule"] == rule)
+        assert alert["time_s"] == time_s
+        assert alert["lead_min"] == pytest.approx(lead_min)
 
 
 def test_generator_cli_writes_reproducibly_outside_checkout(tmp_path):

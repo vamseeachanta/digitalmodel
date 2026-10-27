@@ -46,7 +46,8 @@
 <section aria-labelledby="revision-title">
   <h2 id="revision-title">Revision history</h2>
   <div class="table-wrap"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-  <tbody><tr><td>0</td><td>2026-10-27</td><td>Initial synthetic instrument and warning demonstrator to connect observed response with advance planning.</td></tr></tbody></table></div>
+  <tbody><tr><td>0</td><td>2026-10-27</td><td>Initial synthetic instrument and warning demonstrator to connect observed response with advance planning.</td></tr>
+  <tr><td>1</td><td>2026-10-27</td><td>Corrected the restricted-service citation and added independent hand-worked timing checks. A public numerical basis for the demonstration settings remains unestablished.</td></tr></tbody></table></div>
 </section>
 <section aria-labelledby="replay-title">
   <h2 id="replay-title">Synthetic log replay</h2>
@@ -68,6 +69,7 @@
 </section>
 <section aria-labelledby="inputs-title">
   <h2 id="inputs-title">Explicit demonstration inputs</h2>
+  <p><strong>Numerical basis remains unestablished.</strong> The log coefficients, alert thresholds, persistence counts, maximum gaps and storm response limits below are invented demonstration inputs. The cited sources do not supply these values. The timing checks establish arithmetic for the constructed logs; they do not qualify settings for operation. A public worked example with locators and units is still required to establish the numerical basis.</p>
   <div class="table-wrap"><table><thead><tr><th>Log</th><th>Rule</th><th>Metric</th><th>Threshold</th><th>Consecutive samples</th><th>Maximum sample gap</th></tr></thead><tbody>
 @@RULES@@
   </tbody></table></div>
