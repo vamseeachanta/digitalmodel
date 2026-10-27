@@ -146,7 +146,8 @@ jobs:
           if [ "${{ matrix.domain }}" = "orcaflex" ]; then
             uv run --no-sources --with pyyaml==6.0.2 python scripts/ci/run_shard.py --register "$RUNNER_TEMP/flaky-register.yml" --mode report --shard ${{ matrix.domain }} --junit reports/junit-${{ matrix.domain }}.xml --max-retry-ids 20 -- ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           else
-            ${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
+            # Chromium layout tests run in quality-gates-by-domain.yml with browser provisioning.
+            ${{ steps.gate.outputs.command }} -m "not browser_layout" --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2
           fi
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"

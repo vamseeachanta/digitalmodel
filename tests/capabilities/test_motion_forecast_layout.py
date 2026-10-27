@@ -20,7 +20,7 @@ PAGE = (Path(__file__).resolve().parents[2]
 TRACES = "#cvWave, #cvMotion, #cvGov"
 
 
-def test_capabilities_ci_installs_matching_chromium(monkeypatch):
+def test_capabilities_ci_installs_matching_chromium(monkeypatch, request):
     root = PAGE.parents[3]
     workflow = yaml.safe_load(
         (root / ".github/workflows/quality-gates-by-domain.yml").read_text(
@@ -63,6 +63,36 @@ def test_capabilities_ci_installs_matching_chromium(monkeypatch):
     with pytest.raises(subprocess.CalledProcessError):
         exec(compile(script, "<browser-install>", "exec"), {})
 
+    assert "-m" not in tokens[tokens.index("pytest") + 1:], (
+        "The provisioned capabilities shard must run layout tests"
+    )
+    assert any(marker.startswith("browser_layout:")
+               for marker in request.config.getini("markers"))
+    for test in (test_phone_traces_and_status_do_not_overflow,
+                 test_resize_switches_between_mobile_and_desktop_sizing):
+        assert "browser_layout" in [marker.name for marker in test.pytestmark]
+
+    # Every other workflow that selects these tests must exclude browser layout.
+    for filename, step_id, expression in (
+        ("full-matrix-sweep.yml", "domain-gate", "not browser_layout"),
+        ("publish.yml", None, "not solver and not slow and not browser_layout"),
+    ):
+        caller = yaml.safe_load(
+            (root / ".github/workflows" / filename).read_text(encoding="utf-8")
+        )
+        run = next(step["run"] for job in caller["jobs"].values()
+                   for step in job.get("steps", [])
+                   if (step.get("id") == step_id if step_id
+                       else step.get("name") == "Run tests"))
+        if step_id:
+            # Select the capabilities branch of the shared domain invocation.
+            run = next(line.strip() for line in run.splitlines()
+                       if line.strip().startswith("${{ steps.gate.outputs.command }}"))
+        args = shlex.split(run)
+        assert args[args.index("-m") + 1] == expression, filename
+    domain_run = steps[run_index]["run"]
+    assert "-m " not in domain_run, "Provisioned layout tests must remain enabled"
+
 
 @pytest.fixture
 def page():
@@ -94,6 +124,7 @@ def resize(page, width, height):
                   "requestAnimationFrame(() => requestAnimationFrame(resolve)))")
 
 
+@pytest.mark.browser_layout
 def test_phone_traces_and_status_do_not_overflow(page):
     resize(page, 390, 844)
     sizes = canvas_sizes(page)
@@ -114,6 +145,7 @@ def test_phone_traces_and_status_do_not_overflow(page):
     ) == "none"
 
 
+@pytest.mark.browser_layout
 def test_resize_switches_between_mobile_and_desktop_sizing(page):
     desktop = canvas_sizes(page)
     # Independent fresh-load measurement at baseline 05067ed1, 1440 x 900,
