@@ -16,6 +16,7 @@ remain `NOT_EVALUATED`.
 | --- | --- | --- |
 | 0 | 2026-10-22 | Add sourced formula screening, explicit UKC budgets and a synthetic example to expose shallow-water clearance sensitivity. |
 | 1 | 2026-10-25 | Identify the 1981 equation's bow-only prediction so comparisons and UKC budgets retain its known end and unavailable stern. |
+| 2 | 2026-10-27 | Record the test command and normal-package integration coverage to distinguish executed checks from predictive validation. |
 
 ## API and inputs
 
@@ -181,6 +182,19 @@ formula calculations and speed monotonicity; full/fine bow-versus-stern cases;
 density/tide/motion/heel accounting and a speed root; formula spread and
 critical-speed negative controls; and all twelve worked-example predictions.
 They check transcription and accounting, not measured prediction accuracy.
+
+The normal package imports and repository pytest configuration were exercised
+on 2026-10-27 with Python 3.12.15 and pytest 9.1.1: all 299 parametric-hull cases
+passed, comprising 140 screening cases and 159 existing cases, with no skips.
+With the scientific dependencies installed and a temporary directory outside
+the checkout supplied in `TEST_TMP`, the command is:
+
+```sh
+PYTHONPATH=src python -m pytest tests/hydrodynamics/parametric_hull_analysis -q -rA -p no:cacheprovider --basetemp="$TEST_TMP"
+```
+
+The standalone example also ran through the normal package imports. These
+checks do not cover the full repository suite or measured squat data.
 
 Restricted critical-speed derivation, automatic trench correction, effective
 open-water width selection, authenticating supplied references, end-motion RAO
