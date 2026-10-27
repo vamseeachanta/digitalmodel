@@ -17,6 +17,7 @@ on:
       - 'data/**'
       - 'tests/asset_integrity/test_data/**'
       - 'tests/drilling_riser/fixtures/**'
+      - 'tests/capabilities/**'
       - 'mkdocs.yml'
       - '.github/workflows/docs.yml'
   pull_request:
@@ -31,6 +32,7 @@ on:
       - 'data/**'
       - 'tests/asset_integrity/test_data/**'
       - 'tests/drilling_riser/fixtures/**'
+      - 'tests/capabilities/**'
       - 'mkdocs.yml'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
@@ -72,6 +74,16 @@ jobs:
         env:
           UV_NO_SOURCES: "true"
         run: uv run --group docs python scripts/check_generated_html.py --check
+
+      - name: Generated artifact regression tests
+        env:
+          UV_NO_SOURCES: "true"
+        run: >-
+          uv run --group docs --with pytest python -m pytest
+          tests/capabilities/test_sidecar_freshness.py
+          tests/capabilities/test_wall_thickness_explorer.py
+          -q -p no:cacheprovider
+          --basetemp="$RUNNER_TEMP/generated-artifact-tests"
 
       - name: Build docs
         env:

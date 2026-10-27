@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generated capability artifacts</title>
+</head>
+<body>
+<main>
+  <h1>Generated capability artifacts</h1>
+  <p>Capability pages and their registered data sidecars are reproduced in an
+  isolated copy before byte comparison. A matching page alone does not establish
+  that the JSON consumed by a dataset builder is current.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>1</td><td>2026-10-19</td><td>Document sidecar freshness and the
+    pressure-only projection to prevent stale data from passing the HTML check.</td></tr>
+    <tr><td>2</td><td>2026-10-24</td><td>Require omitted checks to be zero and
+    non-governing, and state the Linux and LF requirement for byte comparison.</td></tr></tbody>
+  </table>
+  <p>Table 1. Documentation revision history.</p>
+
+  <h2>Regeneration contract</h2>
+  <p><code>scripts/check_generated_html.py</code> registers deterministic HTML
+  producers and explicit JSON sidecars. HTML ownership and brand checks retain
+  their existing scope. Sidecars participate in output removal, successful-output
+  validation and byte comparison. A copied sidecar is removed before execution,
+  so a producer that stops writing it cannot pass using stale bytes.</p>
+  <pre><code>uv run python scripts/check_generated_html.py --check</code></pre>
+  <p>The command copies inputs into a temporary shadow tree and leaves the
+  source checkout unchanged. The existing documentation workflow runs it for
+  generator, source and documentation changes. Required scientific dependencies
+  are declared by the repository; an isolated test environment needs the same
+  generator dependencies. A nonzero result identifies regeneration errors or
+  the relative paths with byte differences.</p>
+  <p>The shadow includes package version metadata for source-only imports.
+  Generator child processes discard inherited Git repository bindings so their
+  working directory, rather than a caller's Git environment, selects the tree.</p>
+  <p>The regeneration contract is supported on Linux with LF line endings in
+  the checkout. Generators use platform-native newlines: Windows regeneration
+  can produce CRLF bytes that differ from committed LF bytes, and a CRLF
+  checkout differs from Linux output. Newline-only drift can have an empty text
+  diff because the diagnostic splits text into lines. Run this byte comparison
+  from a Linux checkout with LF line endings.</p>
+
+  <h2>Worked example: unchanged page, stale sidecar</h2>
+  <p>Inputs: a committed page containing <code>&lt;html&gt;same&lt;/html&gt;</code>
+  and a sidecar containing <code>{"status":"current"}</code>. The regenerated
+  page is identical, while its sidecar contains
+  <code>{"status":"stale"}</code>. Method: compare both registered files as
+  bytes. Answer: the JSON differs, so freshness fails despite unchanged HTML.
+  These literal fixtures are used in
+  <code>tests/capabilities/test_sidecar_freshness.py</code>; no engineering
+  constants or solver outputs are involved.</p>
+
+  <h2>Pressure-only wall-thickness data</h2>
+  <p>The source decision is digitalmodel issue 1903, sidecar reconciliation
+  decision dated 29 July 2026. The existing sweep applies pressure with zero
+  effective tension and bending moment. Its unloaded <code>combined</code> check
+  is omitted from exported checks, because a zero could be interpreted as an
+  evaluated tension and bending capacity. Pressure-dependent checks named
+  <code>combined_loading</code> remain included. The study inputs, strategy
+  equations, governing utilizations and passing-wall results are unchanged.</p>
+  <p>Export fails if any omitted <code>combined</code> value is not exactly zero
+  or if <code>combined</code> governs the result. The value is checked before
+  rounding, so a small nonzero value cannot be hidden by the projection.</p>
+  <p>Independent projection example: input checks
+  <code>{"burst":0.5,"combined_loading":0.25,"combined":0.0}</code> become
+  <code>{"burst":0.5,"combined_loading":0.25}</code>. The largest utilization
+  remains 0.5. These arbitrary dimensionless test values establish the projection
+  behavior; they are not engineering acceptance limits. Both the HTML and JSON
+  carry the pressure-only limitation. The dataset reshaper consumes these
+  exported checks without adding the omitted check back.</p>
+
+  <h2>Coverage and limits</h2>
+  <p>The added sidecar coverage is explicit: wall-thickness, dynacard
+  troubleshooting and sloshing explorer JSON. It is not a census of every JSON
+  file. Other JSON outputs require separate registration before this freshness
+  check covers them. Existing non-reproducible HTML exclusions remain documented
+  in <code>scripts/generated_html_ownership.py</code>. Licensed solvers are not
+  needed by the registered deterministic generators.</p>
+  <p>External dataset publication is a separate maintainer action. This change
+  does not establish the contents or freshness of any hosted dataset.</p>
+</main>
+</body>
+</html>

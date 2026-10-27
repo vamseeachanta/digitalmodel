@@ -44,6 +44,15 @@ _FAB_TOL = 0.125      # fractional (DNV Table 5-5 seamless)
 # wall-thickness sweep (mm)
 _WALL_MM = [round(8.0 + 0.5 * i, 1) for i in range(0, 41)]   # 8.0 .. 28.0 mm
 
+# Source: issue 1903, sidecar reconciliation decision (2026-07-29).
+# The unloaded API STD 2RD check is omitted, while pressure-dependent
+# combined_loading results from other strategies remain part of the sweep.
+_DATA_LIMITS = (
+    "Pressure-only sweep: effective tension and bending moment are zero. "
+    "The unloaded combined check is omitted; pressure-dependent combined_loading "
+    "checks are retained. Tension and bending capacity are not evaluated."
+)
+
 
 def _run(wall_m: float, code: DesignCode) -> dict:
     geom = PipeGeometry(
@@ -60,7 +69,11 @@ def _run(wall_m: float, code: DesignCode) -> dict:
     )
     factors = DesignFactors(safety_class=_SC)
     res = WallThicknessAnalyzer(geom, mat, loads, factors, code=code).perform_analysis()
-    checks = {k: round(float(v), 4) for k, v in res.checks.items()}
+    if res.checks.get("combined", 0.0) != 0.0 or res.governing_check == "combined":
+        raise ValueError(
+            "Pressure-only export may omit combined only when zero and non-governing"
+        )
+    checks = {k: round(float(v), 4) for k, v in res.checks.items() if k != "combined"}
     return {
         "max_util": round(float(res.max_utilisation), 4),
         "governing": res.governing_check,
@@ -89,12 +102,14 @@ def build_study() -> dict:
         min_wall_pass[code.value] = passed_at
     return {
         "meta": {
+            "load_case": "pressure-only",
             "od_mm": round(_OD * 1000, 1), "grade": _GRADE,
             "smys_mpa": _SMYS / 1e6, "smts_mpa": _SMTS / 1e6,
             "p_int_mpa": _P_INT / 1e6, "p_ext_mpa": _P_EXT / 1e6,
             "safety_class": _SC.value, "fab_tol": _FAB_TOL,
             "wall_mm": _WALL_MM,
         },
+        "data_limits": _DATA_LIMITS,
         "code_reference": code_ref,
         "min_wall_pass": min_wall_pass,
         "series": series,
@@ -152,6 +167,7 @@ _HTML = """<!DOCTYPE html>
 every registered design code. Drag the wall thickness to watch each code's governing utilization move;
 a bar reaching the navy line (utilization&nbsp;=&nbsp;1.0) is at its code limit. Computed live by
 <code>WallThicknessAnalyzer</code> &mdash; values embedded from a real engine run, not mocked.</p>
+<p class="sub" id="data-limits">__DATA_LIMITS__</p>
 <div class="spec" id="spec"></div>
 
 <div class="panel">
@@ -231,6 +247,7 @@ def main() -> None:
     (_OUT_DIR / "wall-thickness-explorer.json").write_text(
         json.dumps(study, indent=2) + "\n", encoding="utf-8")
     html = _HTML.replace("{data}", json.dumps(study, separators=(",", ":")))
+    html = html.replace("__DATA_LIMITS__", study["data_limits"])
     (_OUT_DIR / "wall-thickness-explorer.html").write_text(html, encoding="utf-8")
     n = sum(1 for c in study["series"] for _ in study["series"][c])
     print(f"wrote {(_OUT_DIR / 'wall-thickness-explorer.html').relative_to(_REPO)} "
