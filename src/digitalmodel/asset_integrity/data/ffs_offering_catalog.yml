@@ -94,10 +94,11 @@ engines:
   crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175"}
   crack-growth: {module: fatigue.crack_growth, status: engine, issue: 2177}
   level3-handoff: {module: asset_integrity.assessment.level3_escalation, status: engine, issue: 2184}
-  measurement-sufficiency: {module: asset_integrity.assessment.measurement_sufficiency, status: engine, workflow: ffs-metal-loss, note: "mentioned in the 2026-06-27 record only; own record pending #2185"}
-  rbi: {module: asset_integrity.rbi_screening, status: engine, issue: 2185}
-  composite-repair: {module: asset_integrity.composite_repair, status: engine, issue: 2185}
-  inspection-planning: {module: asset_integrity.inspection_planning, status: workflow, workflow: inspection-planning, issue: 2180, note: "no validation record"}
+  campaign-demo: {module: asset_integrity.ffs_campaign, status: workflow, workflow: ffs-campaign-demo, validation: docs/domains/asset-integrity/campaign-screening-validation.html, issue: 2185, note: "offline composition; standards qualification NOT_EVALUATED"}
+  measurement-sufficiency: {module: asset_integrity.assessment.measurement_sufficiency, status: workflow, workflow: ffs-campaign-demo, validation: docs/domains/asset-integrity/campaign-screening-validation.html, note: "synthetic composition checks only; existing sufficiency practice thresholds inherited"}
+  rbi: {module: asset_integrity.rbi_screening, status: workflow, workflow: ffs-campaign-demo, validation: docs/domains/asset-integrity/campaign-screening-validation.html, issue: 2185, caveat: "synthetic hand checks only; published-case and standards qualification NOT_EVALUATED"}
+  composite-repair: {module: asset_integrity.composite_repair, status: workflow, workflow: ffs-campaign-demo, validation: docs/domains/asset-integrity/campaign-screening-validation.html, issue: 2185, caveat: "synthetic hand checks only; published-case and standards qualification NOT_EVALUATED"}
+  inspection-planning: {module: asset_integrity.inspection_planning, status: workflow, workflow: inspection-planning, validation: docs/domains/asset-integrity/campaign-screening-validation.html, issue: 2180, note: "campaign interval hand check only; code-specific qualification not established"}
   riser-joint-ffs: {module: asset_integrity.riser_joint_ffs, status: workflow, workflow: riser-joint-ffs, validation: docs/domains/asset-integrity/riser-joint-ffs-validation-2026-10-10.md, issue: 2183, note: "anonymized C-scan composition record; independent fleet qualification not established"}
   plate-panel-buckling: {module: infrastructure.base_solvers.structural.plate_buckling, status: workflow, workflow: plate-buckling, note: "DNV-RP-C201 usage-factor check; plate metal-loss FFS reuses it by reducing thickness"}
   jacket-member-joint: {module: structural.jacket_topside, status: engine, note: "API RP 2A design checks; no damaged-member capacity"}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-ffs-campaign-v1",
+  "authoritative_repository": "digitalmodel",
+  "source_id": "synthetic-demonstration-policy-v1",
+  "source_version": 1,
+  "source": "campaign-screening-validation.html, revision 1",
+  "measured": false,
+  "units": {
+    "wall": "in",
+    "pressure": "psi",
+    "time": "yr",
+    "temperature": "degF",
+    "internal_rbi_rate": "mm/yr"
+  },
+  "readiness": "partial",
+  "intended_use": "Offline software demonstration only; standards qualification NOT_EVALUATED",
+  "freshness": "Regenerate report and digests when input or campaign code changes",
+  "sha256": {
+    "input.yml": "fe7b00403ffd40889cebfeac0e92019d1cb774a43b72575d24ae42cd6b1f93f5",
+    "report.html": "71c56d489528bb2b4aeb710720c7ef600217bc816fb71cae9208afb11677e8b5"
+  }
+}

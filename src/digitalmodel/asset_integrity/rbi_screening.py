@@ -190,9 +190,9 @@ class RBIScreeningResult:
 
 
 def _band_descending(value: float, edges: Sequence[float]) -> int:
-    """Category 1..len(edges)+1 — value >= edges[i] lands in category i+1."""
+    """Inclusive descending bands, with 1e-9 relative edge tolerance for roundoff."""
     for i, edge in enumerate(edges):
-        if value >= edge:
+        if value >= edge - 1e-9 * abs(edge):
             return i + 1
     return len(edges) + 1
 

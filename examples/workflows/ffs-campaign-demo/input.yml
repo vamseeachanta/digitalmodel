@@ -1,0 +1,176 @@
+# Synthetic inputs and policy: campaign-screening-validation.html, revision 0.
+# No policy number is asserted to be a standards acceptance limit.
+basename: ffs_campaign
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+ffs_campaign:
+  policy_basis: Synthetic demonstration policy v1; campaign-screening-validation.html
+    revision 0. All example values are illustrative inputs, not standard limits.
+  rbi_policy:
+    rsf_margin_edges:
+    - 1.1
+    - 1.05
+    - 1
+    - 0.9
+    life_ratio_edges:
+    - 8
+    - 4
+    - 2
+    - 1
+    reference_interval_yr: 5
+    high_corrosion_rate_mm_yr: 0.3
+    risk_band_edges:
+    - 4
+    - 9
+    - 15
+    band_interval_cap_yr:
+      LOW: 8
+      MEDIUM: 6
+      MEDIUM-HIGH: 4
+      HIGH: 2
+    code_max_interval_yr: 8
+  repair_policy:
+    default_temperature_f: 100
+    default_repair_life_yr: 6
+    reinspection_fraction_of_repair_life: 0.5
+    max_pressure_psi_by_class:
+      A: 2000
+      B: 2000
+      C: 2000
+      D: 2000
+      E: 2000
+    max_temperature_f_by_class:
+      A: 180
+      B: 180
+      C: 180
+      D: 180
+      E: 180
+    allow_steam_service: false
+  components:
+  - component:
+      component_id: uniform-loss
+      design_code: B31.8
+      nominal_od_in: 10
+      nominal_wt_in: 0.4
+      design_pressure_psi: 1440
+      smys_psi: 50000
+      corrosion_rate_in_per_yr: 0.01
+      fca_in: 0
+      rsf_a: 0.9
+    consequence_class: B
+    force_type: GML
+    grid:
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+  - component:
+      component_id: repair-loss
+      design_code: B31.8
+      nominal_od_in: 10
+      nominal_wt_in: 0.2
+      design_pressure_psi: 1440
+      smys_psi: 50000
+      corrosion_rate_in_per_yr: 0.01
+      fca_in: 0
+      rsf_a: 0.9
+    consequence_class: D
+    force_type: GML
+    grid:
+    - - 0.19
+      - 0.19
+      - 0.19
+      - 0.19
+      - 0.19
+    - - 0.19
+      - 0.19
+      - 0.19
+      - 0.19
+      - 0.19
+    - - 0.19
+      - 0.19
+      - 0.16
+      - 0.19
+      - 0.19
+    - - 0.19
+      - 0.19
+      - 0.19
+      - 0.19
+      - 0.19
+    - - 0.19
+      - 0.19
+      - 0.19
+      - 0.19
+      - 0.19
+    repair_context:
+      active_leak: false
+      through_wall_now: false
+      through_wall_within_repair_life: false
+      defect_type: external_metal_loss
+      service: water
+      pressure_psi: 1440
+      temperature_f: 100
+      repair_life_yr: 6
+      axial_load: false
+  - component:
+      component_id: local-loss
+      design_code: B31.8
+      nominal_od_in: 10
+      nominal_wt_in: 0.4
+      design_pressure_psi: 1440
+      smys_psi: 50000
+      corrosion_rate_in_per_yr: 0.01
+      fca_in: 0
+      rsf_a: 0.9
+    consequence_class: E
+    force_type: LML
+    grid:
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+    - - 0.4
+      - 0.4
+      - 0.3
+      - 0.4
+      - 0.4
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+    - - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
+      - 0.4
