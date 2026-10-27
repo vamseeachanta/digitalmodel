@@ -2,6 +2,14 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Offline contract for marine hourly responses.
 
+Plan-lite:
+Validate the complete time axis and every requested array before the first
+record is yielded. Use the shared alias mapping for query construction and
+response parsing, preserving caller names, zero values and response order.
+Exercise malformed responses and literal expected records offline through the
+HTTP response boundary. Historical parsing and endpoint configuration are
+outside this contract.
+
 Numerical basis: independent synthetic example, not measured marine conditions.
 Two samples at the equator and prime meridian have heights zero and one metre,
 with wind speeds one and zero metres per second. The current speeds are half
