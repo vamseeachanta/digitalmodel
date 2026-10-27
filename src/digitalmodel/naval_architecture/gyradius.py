@@ -14,6 +14,7 @@ References:
 """
 
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Union
 
@@ -193,6 +194,129 @@ def gyradius_from_inertia(
         mass_kg=mass_kg,
         displacement_t=mass_kg / 1000.0,
     )
+
+
+@dataclass(frozen=True)
+class PointMassGyradiusResult:
+    """Centroidal rotational properties along the supplied coordinate axes.
+
+    Mass is in kg, the centroid in m, inertias in kg·m², and radii in m.
+    No translational factors or principal-axis transformation are applied.
+    """
+
+    mass_kg: float
+    centroid_m: tuple[float, float, float]
+    ixx: float
+    iyy: float
+    izz: float
+
+    @property
+    def roll(self) -> float:
+        """Return sqrt(Ixx/M), the radius about the centroidal x axis."""
+        return math.sqrt(self.ixx / self.mass_kg)
+
+    @property
+    def pitch(self) -> float:
+        """Return sqrt(Iyy/M), the radius about the centroidal y axis."""
+        return math.sqrt(self.iyy / self.mass_kg)
+
+    @property
+    def yaw(self) -> float:
+        """Return sqrt(Izz/M), the radius about the centroidal z axis."""
+        return math.sqrt(self.izz / self.mass_kg)
+
+
+def gyradius_from_point_masses(
+    masses_kg: Iterable[float],
+    coordinates_m: Iterable[tuple[float, float, float]],
+) -> PointMassGyradiusResult:
+    """Compute rotational gyradii from a synthetic point-mass distribution.
+
+    The mass centroid is c = sum(m*p)/M, where M = sum(m). For offsets
+    (dx, dy, dz) from c, Ixx = sum(m*(dy² + dz²)); Iyy and Izz follow by
+    cycling the axes. Each radius follows directly from k = sqrt(I/M).
+    These point-mass definitions introduce no empirical coefficients.
+
+    Args:
+        masses_kg: Finite nonnegative masses in kg, one per point.
+        coordinates_m: Finite (x, y, z) coordinates in m; x is longitudinal,
+            y transverse, and z vertical. Iterables are consumed once.
+
+    Returns:
+        Total mass, centroid, diagonal centroidal inertias, and roll/pitch/yaw
+        radii about axes parallel to the supplied axes through that centroid.
+
+    Raises:
+        ValueError: Empty or mismatched inputs, malformed coordinates, negative
+            or nonfinite masses, nonfinite coordinates, nonpositive total mass,
+            or a total, centroid offset, or inertia outside finite float range.
+
+    Zero-mass points are validated but contribute nothing. Intrinsic inertia
+    of each component, products of inertia, added mass, and translational
+    properties are outside this point-mass model.
+    """
+    try:
+        masses = tuple(float(mass) for mass in masses_kg)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("masses must be finite and non-negative") from exc
+    if any(not math.isfinite(mass) or mass < 0 for mass in masses):
+        raise ValueError("masses must be finite and non-negative")
+
+    try:
+        points = tuple(tuple(float(value) for value in p) for p in coordinates_m)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError("coordinates must be finite numbers") from exc
+    if len(masses) != len(points):
+        raise ValueError("masses and coordinates must have the same length")
+    if not masses:
+        raise ValueError("at least one point mass is required")
+    if any(len(point) != 3 for point in points):
+        raise ValueError("each point must have three coordinates")
+    if any(not math.isfinite(value) for point in points for value in point):
+        raise ValueError("coordinates must be finite")
+
+    try:
+        total_mass = math.fsum(masses)
+    except OverflowError as exc:
+        raise ValueError("total mass must be finite") from exc
+    if total_mass <= 0:
+        raise ValueError("total mass must be positive")
+
+    # Shift before averaging to avoid subtracting large raw second moments.
+    active = [(mass, point) for mass, point in zip(masses, points) if mass > 0]
+    origin = active[0][1]
+    try:
+        relative = [
+            (mass, tuple(value - base for value, base in zip(point, origin)))
+            for mass, point in active
+        ]
+        offset = tuple(
+            math.fsum((mass / total_mass) * point[axis] for mass, point in relative)
+            for axis in range(3)
+        )
+        centroid = (
+            origin[0] + offset[0],
+            origin[1] + offset[1],
+            origin[2] + offset[2],
+        )
+        centered = [
+            (mass, tuple(value - delta for value, delta in zip(point, offset)))
+            for mass, point in relative
+        ]
+        # I = sum(m*r²), using the two coordinates perpendicular to each axis.
+        inertias = tuple(
+            math.fsum(
+                mass * (point[a] ** 2 + point[b] ** 2)
+                for mass, point in centered
+            )
+            for a, b in ((1, 2), (0, 2), (0, 1))
+        )
+    except (OverflowError, ValueError) as exc:
+        raise ValueError("centroid offsets and inertias must be finite") from exc
+    if not all(math.isfinite(value) for value in (*offset, *centroid, *inertias)):
+        raise ValueError("centroid offsets and inertias must be finite")
+
+    return PointMassGyradiusResult(total_mass, centroid, *inertias)
 
 
 def estimate_inertia_from_gyradius(
