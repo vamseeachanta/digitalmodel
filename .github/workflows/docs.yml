@@ -25,12 +25,16 @@ on:
 permissions:
   contents: read
 
+# PR_GATE_RUNNER accepts self-hosted-arm64; unset/unknown values keep hosted defaults.
+# Fork pull requests always stay on hosted runners.
 jobs:
   docs:
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5

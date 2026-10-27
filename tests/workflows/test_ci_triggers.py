@@ -4,6 +4,7 @@
 """Regression checks for gate triggers on stacked pull requests."""
 
 from pathlib import Path
+import json
 import os
 import re
 import subprocess
@@ -62,17 +63,36 @@ def test_edits_cannot_skip_jobs_or_steps(filename: str) -> None:
 
 
 def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
-    """Evaluate the small Actions expression subset used by concurrency."""
+    """Evaluate the bounded Actions subset used by concurrency and routing.
+
+    Split at top level so quoted JSON and parenthesized trust guards retain
+    operator precedence and short-circuit evaluation.
+    """
     expression = expression.strip()
-    for operator in (" || ", " && ", " == "):
-        if operator in expression:
-            left, right = expression.split(operator, 1)
-            value = evaluate_expression(left, context)
-            if operator == " || ":
-                return value or evaluate_expression(right, context)
-            if operator == " && ":
-                return value and evaluate_expression(right, context)
-            return value == evaluate_expression(right, context)
+    for operator in (" || ", " && ", " == ", " != "):
+        depth = 0
+        for match in re.finditer(r"'[^']*'|[()]| \|\| | && | == | != ", expression):
+            token = match[0]
+            if token == "(":
+                depth += 1
+            elif token == ")":
+                depth -= 1
+            elif depth == 0 and token == operator:
+                left, right = expression[:match.start()], expression[match.end():]
+                value = evaluate_expression(left, context)
+                if operator == " || ":
+                    return value or evaluate_expression(right, context)
+                if operator == " && ":
+                    return value and evaluate_expression(right, context)
+                other = evaluate_expression(right, context)
+                if isinstance(value, str) and isinstance(other, str):
+                    value, other = value.casefold(), other.casefold()
+                return (value == other) if operator == " == " else (value != other)
+    if expression.startswith("(") and expression.endswith(")"):
+        return evaluate_expression(expression[1:-1], context)
+    decoded = re.fullmatch(r"fromJSON\((.*)\)", expression)
+    if decoded:
+        return json.loads(evaluate_expression(decoded[1], context))
     formatted = re.fullmatch(r"format\('([^']+)', (github\.[\w.]+)\)", expression)
     if formatted:
         template, variable = formatted.groups()

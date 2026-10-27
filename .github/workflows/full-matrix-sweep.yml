@@ -17,6 +17,8 @@ concurrency:
   group: full-matrix-sweep-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
 
+# PR_GATE_RUNNER accepts self-hosted-arm64; unset/unknown values keep hosted defaults.
+# Fork pull requests always stay on hosted runners.
 jobs:
   full-quality-gates:
     name: Full quality gates
@@ -32,13 +34,15 @@ jobs:
 
   full-matrix:
     name: Build full shard matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       total: ${{ steps.matrix.outputs.total }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -85,7 +89,8 @@ jobs:
   sweep-tests:
     name: sweep-tests-${{ matrix.domain }}
     needs: full-matrix
-    runs-on: ${{ matrix.runner }}
+    # Gmsh domains retain matrix.runner: no linux-aarch64 wheel is available.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && fromJSON('["self-hosted","Linux","ARM64"]') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || matrix.runner) }}
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -94,6 +99,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           # Citation checks read source and map revisions recorded in packs;
           # subsea also verifies a manifest pinned to an older commit.
           fetch-depth: 0
@@ -192,7 +198,7 @@ jobs:
       actions: read
       issues: write
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     steps:
       - name: Summarize shard results
         continue-on-error: true
@@ -218,6 +224,8 @@ jobs:
       - name: Checkout baseline tools
         if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Download sweep results
         if: github.ref == 'refs/heads/main'

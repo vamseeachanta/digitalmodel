@@ -17,11 +17,11 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, spark]
     steps:
       - uses: actions/checkout@v6
 
@@ -38,7 +38,7 @@ jobs:
       - name: Build docs
         env:
           UV_NO_SOURCES: "true"
-        run: uv run --group docs mkdocs build --strict
+        run: uv run --only-group docs mkdocs build --strict
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -47,7 +47,7 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, spark]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

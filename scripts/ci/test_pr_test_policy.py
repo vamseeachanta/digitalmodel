@@ -90,11 +90,15 @@ def test_full_batch_schedule_and_issue_permissions():
     assert "Scheduled full test run failing on main" in health["with"]["script"]
 
 
-def test_pages_finishes_active_deploy():
-    """Preserve the active Pages deployment."""
-    assert workflow("pages.yml")["concurrency"] == {
-        "group": "pages", "cancel-in-progress": False,
+def test_pages_matches_main_routing_and_cancellation():
+    """Preserve main's Pages runner labels and superseded-run cancellation."""
+    document = workflow("pages.yml")
+    assert document["concurrency"] == {
+        "group": "pages", "cancel-in-progress": True,
     }
+    assert set(document["jobs"]) == {"build", "deploy"}
+    for job in document["jobs"].values():
+        assert job["runs-on"] == ["self-hosted", "spark"]
 
 
 def test_harness_can_be_skipped_only_when_not_touched():
