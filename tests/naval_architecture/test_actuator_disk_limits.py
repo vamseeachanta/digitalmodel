@@ -2,12 +2,25 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Independent hand calculations for steady axial actuator-disk velocity.
 
+Reference: Wind Turbine Aerodynamics and Vorticity-Based Methods, 1st ed.
+(2017), Ch. 9, "Momentum Theory", and Section 36.2.2, "Semi-infinite vortex
+cylinder of tangential vorticity", Eq. (36.72).
+https://doi.org/10.1007/978-3-319-55164-7
+
 Calculation basis: let U be advance speed, U_d disk speed, U_w far-wake
 speed, rho density and A disk area. Momentum conservation and Bernoulli's
 pressure jump give T = rho*A*U_d*(U_w-U) = rho*A*(U_w**2-U**2)/2.
 Consequently U_d = (U+U_w)/2 and C_T = T/(rho*A*U**2/2) = (U_w/U)**2-1.
 The synthetic cases below choose U and U_w first, then hand-calculate C_T
 and U_d. No induction helper or implementation expression supplies an oracle.
+
+Spatial basis: Eq. (36.72) gives the axial induced velocity of a straight,
+semi-infinite circular vortex sheet. Setting its disk-plane increment to
+U_d-U gives U(x)=U+(U_d-U)*(1+x/sqrt(x**2+R**2)) on the centerline.
+The approximation assumes steady, incompressible, inviscid, axisymmetric
+flow, uniform disk loading, no swirl and a fixed wake radius R. Wake
+contraction, turbulent mixing and hull/rudder feedback are excluded; this
+centerline law does not establish finite-blade or measured wake accuracy.
 
 All dimensional inputs and scale factors are synthetic test choices, not
 empirical coefficients or measured data. The 1e-12 relative tolerance allows
@@ -54,7 +67,7 @@ def test_actuator_disk_geometric_similarity(scale):
     """Scaling both lengths preserves the independently calculated local speed.
 
     For synthetic x=3 m, R=4 m, the axial geometric fraction is 3/5 by
-    the 3-4-5 triangle. The selected spatial interpolation gives
+    the 3-4-5 triangle. The cited Eq. (36.72), normalized as above, gives
     U(x)=U_d+(U_w-U_d)*3/5=6+(8-6)*3/5=36/5 m/s for the first momentum case.
     The scale choices cover reduction and enlargement across six orders.
     """
@@ -80,8 +93,10 @@ def test_actuator_disk_linear_advance_velocity_scaling(speed_scale):
 def test_actuator_disk_far_wake_limit(advance, loading, disk_speed, wake_speed):
     """Approach the momentum-balance wake speed from below with bounded error.
 
-    For positive x/R, write z=(R/x)**2. The interpolation's remaining
-    geometric fraction is 1-1/sqrt(1+z), bounded strictly between 0 and z/2.
+    From the cited Eq. (36.72), for positive x/R write z=(R/x)**2. The
+    remaining geometric fraction is 1-1/sqrt(1+z), which rationalizes to
+    z/(sqrt(1+z)*(sqrt(1+z)+1)). Its denominator exceeds 2 for z>0,
+    so the fraction is bounded strictly between 0 and z/2.
     Thus 0 < U_w-U(x) < (U_w-U_d)/(2*(x/R)**2).
     Synthetic distances x/R=10, 100, 1000 test convergence; at the last,
     relative error is below 1/(2*1000**2), which is less than 1e-6.
