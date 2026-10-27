@@ -12,6 +12,8 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 
+from ._paths import converter_outputs, roundtrip_outputs, validate_write_paths
+
 DWG_RELEASES = {
     "AC1001": "2.4", "AC1002": "2.5", "AC1003": "2.6", "AC1004": "R9",
     "AC1006": "R10", "AC1009": "R11/R12", "AC1012": "R13",
@@ -35,6 +37,8 @@ def read_dwg_version(path: str | Path) -> dict[str, str]:
 
 def _convert(tool: str, source: Path, target: Path, *options: str) -> Path:
     """Run one permitted converter with a bounded runtime and a private log."""
+    destinations = converter_outputs(target, tool)
+    validate_write_paths([source], destinations)
     executable = shutil.which(tool)
     if executable is None:
         raise RuntimeError(f"{tool} is absent; install LibreDWG 0.14")
@@ -42,7 +46,7 @@ def _convert(tool: str, source: Path, target: Path, *options: str) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists():
         raise FileExistsError("converter output already exists; use a fresh directory")
-    with (target.parent / f"{tool}.log").open("wb") as log:
+    with destinations[1].open("wb") as log:
         try:
             result = subprocess.run(  # no shell; the input is an absolute path
                 [executable, *options, "-o", str(target), str(source)],
@@ -175,6 +179,7 @@ def roundtrip_check(
     Count agreement does not establish geometric or visual equivalence.
     """
     folder = Path(out_dir) if out_dir is not None else Path(tempfile.mkdtemp(prefix="cad-"))
+    validate_write_paths([Path(dwg)], roundtrip_outputs(folder))
     first = dwg_to_dxf(dwg, folder / "first")
     before = dxf_to_json(first)["entity_counts"]
     if shutil.which("dxf2dwg"):

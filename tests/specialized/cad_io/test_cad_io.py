@@ -4,10 +4,13 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import math
 import shutil
 import subprocess
+import tomllib
+from importlib.metadata import PackageNotFoundError, requires, version
 from pathlib import Path
 
 import pytest
@@ -21,6 +24,33 @@ from digitalmodel.cad_io import (
     step_checks,
 )
 from digitalmodel.cad_io.cli import main
+
+
+def test_installed_cad_extra_satisfies_shared_runtime_requirements():
+    """Check the CAD toolchain against the package's shared dependencies."""
+    try:
+        version("build123d")
+    except PackageNotFoundError:
+        pytest.skip("the optional CAD extra is not installed")
+    importlib.import_module("build123d")
+    from packaging.requirements import Requirement
+
+    project = tomllib.loads(
+        (Path(__file__).resolve().parents[3] / "pyproject.toml").read_text()
+    )["project"]
+    runtime = {r.name: r for r in map(Requirement, project["dependencies"])}
+    for spec in project["optional-dependencies"]["cad-io"]:
+        dependency = Requirement(spec)
+        assert version(dependency.name) in dependency.specifier
+        for transitive_spec in requires(dependency.name) or []:
+            transitive = Requirement(transitive_spec)
+            if transitive.marker and not transitive.marker.evaluate({"extra": ""}):
+                continue
+            if transitive.name in runtime:
+                installed = version(transitive.name)
+                assert installed in runtime[transitive.name].specifier, (
+                    f"{transitive.name} {installed} conflicts with {runtime[transitive.name]}"
+                )
 
 
 @pytest.fixture
@@ -60,7 +90,7 @@ def solids(tmp_path):
     paths = []
     for index, shape in enumerate(shapes):
         path = tmp_path / f"solid{index}.step"
-        cad.export_step(shape, path)
+        cad.export_step(shape, str(path))
         paths.append(path)
     return paths
 
@@ -134,6 +164,12 @@ def test_cli_rejects_output_inside_input_without_touching_input(drawings):
 @pytest.mark.parametrize("name", [
     "results.json", "results.json.pending",
     "F01/checkpoint.json", "F01/checkpoint.json.pending",
+    "F01/drawing.json", "F01/drawing.json.pending", "F01/drawing.svg",
+    "F01/conversion/drawing.dxf", "F01/conversion/dwg2dxf.log",
+    "F01/roundtrip/first/drawing.dxf", "F01/roundtrip/first/dwg2dxf.log",
+    "F01/roundtrip/encoded/drawing.dwg", "F01/roundtrip/encoded/dxf2dwg.log",
+    "F01/roundtrip/last/drawing.dxf", "F01/roundtrip/last/dwg2dxf.log",
+    "F01/roundtrip/resaved.dxf", "F01/part.glb", "F01/part.stl", "F01/part.inp",
 ])
 @pytest.mark.parametrize("alias", ["direct", "symlink", "hardlink"])
 def test_cli_rejects_source_record_alias_before_writes(tmp_path, name, alias):
@@ -159,7 +195,10 @@ def test_cli_rejects_source_record_alias_before_writes(tmp_path, name, alias):
 
 
 @pytest.mark.parametrize("alias", ["symlink", "hardlink"])
-def test_cli_rejects_report_checkpoint_alias_before_writes(tmp_path, alias):
+@pytest.mark.parametrize("name", [
+    "checkpoint.json", "drawing.json.pending", "conversion/dwg2dxf.log",
+])
+def test_cli_rejects_report_checkpoint_alias_before_writes(tmp_path, alias, name):
     source = tmp_path / "source.json"
     source.write_text("unsupported input")
     out = tmp_path / "out"
@@ -167,7 +206,8 @@ def test_cli_rejects_report_checkpoint_alias_before_writes(tmp_path, alias):
     report = out / "results.json"
     original = b'{"existing": "report"}\n'
     report.write_bytes(original)
-    checkpoint = out / "F01" / "checkpoint.json"
+    checkpoint = out / "F01" / name
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
     if alias == "symlink":
         checkpoint.symlink_to(report)
     else:
@@ -177,6 +217,123 @@ def test_cli_rejects_report_checkpoint_alias_before_writes(tmp_path, alias):
 
     assert report.read_bytes() == checkpoint.read_bytes() == original
     assert status == 2
+
+
+@pytest.mark.parametrize("name", ["drawing.json", "drawing.json.pending"])
+@pytest.mark.parametrize("alias", ["symlink", "hardlink"])
+def test_cli_preserves_dxf_with_metadata_alias(drawings, tmp_path, name, alias):
+    source = drawings[0]
+    original = source.read_bytes()
+    out = tmp_path / "out"
+    target = out / "F01" / name
+    target.parent.mkdir(parents=True)
+    if alias == "symlink":
+        target.symlink_to(source)
+    else:
+        target.hardlink_to(source)
+
+    status = main([str(source), "--out", str(out)])
+
+    assert source.read_bytes() == target.read_bytes() == original
+    assert status == 2
+    assert sorted(p.relative_to(out).as_posix() for p in out.rglob("*")) == [
+        "F01", f"F01/{name}"
+    ]
+
+
+@pytest.mark.parametrize("name", [
+    "conversion/dwg2dxf.log", "roundtrip/first/dwg2dxf.log",
+    "roundtrip/encoded/dxf2dwg.log", "roundtrip/last/dwg2dxf.log",
+])
+@pytest.mark.parametrize("alias", ["symlink", "hardlink"])
+def test_cli_rejects_converter_log_alias_before_writes(tmp_path, monkeypatch, name, alias):
+    from digitalmodel.cad_io import cli
+
+    source = tmp_path / "source.dwg"
+    original = b"AC1015 synthetic input"
+    source.write_bytes(original)
+    out = tmp_path / "out"
+    target = out / "F01" / name
+    target.parent.mkdir(parents=True)
+    if alias == "symlink":
+        target.symlink_to(source)
+    else:
+        target.hardlink_to(source)
+    before = sorted(p.relative_to(out).as_posix() for p in out.rglob("*"))
+
+    def unexpected(*args, **kwargs):
+        pytest.fail("preflight must reject the alias before inspection")
+
+    monkeypatch.setattr(cli, "_inspect", unexpected)
+    assert main([str(source), "--out", str(out)]) == 2
+    assert source.read_bytes() == target.read_bytes() == original
+    assert sorted(p.relative_to(out).as_posix() for p in out.rglob("*")) == before
+
+
+@pytest.mark.parametrize("alias", ["direct", "symlink", "hardlink"])
+def test_converter_preserves_source_aliased_by_log(tmp_path, monkeypatch, alias):
+    folder = tmp_path / "conversion"
+    folder.mkdir()
+    log = folder / "dwg2dxf.log"
+    source = log if alias == "direct" else tmp_path / "source.dwg"
+    original = b"AC1015 synthetic input"
+    source.write_bytes(original)
+    if alias == "symlink":
+        log.symlink_to(source)
+    elif alias == "hardlink":
+        log.hardlink_to(source)
+    monkeypatch.setattr(shutil, "which", lambda _: "synthetic-tool")
+    calls = []
+
+    def convert(*args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 1)
+
+    monkeypatch.setattr(subprocess, "run", convert)
+    with pytest.raises(ValueError, match="alias"):
+        dwg_to_dxf(source, folder)
+    assert source.read_bytes() == log.read_bytes() == original
+    assert calls == []
+    assert not (folder / "drawing.dxf").exists()
+
+
+@pytest.mark.parametrize("name", [
+    "first/dwg2dxf.log", "encoded/dxf2dwg.log", "last/dwg2dxf.log", "resaved.dxf",
+])
+def test_roundtrip_checks_later_artifacts_before_conversion(tmp_path, monkeypatch, name):
+    from digitalmodel.cad_io import drawings as drawing_api
+
+    source = tmp_path / "source.dwg"
+    original = b"AC1015 synthetic input"
+    source.write_bytes(original)
+    folder = tmp_path / "roundtrip"
+    target = folder / name
+    target.parent.mkdir(parents=True)
+    target.hardlink_to(source)
+
+    def unexpected(*args, **kwargs):
+        pytest.fail("all round-trip paths must be checked before conversion")
+
+    monkeypatch.setattr(drawing_api, "dwg_to_dxf", unexpected)
+    with pytest.raises(ValueError, match="alias"):
+        roundtrip_check(source, folder)
+    assert source.read_bytes() == original
+
+
+def test_cli_checks_all_inputs_before_metadata_writes(drawings, tmp_path):
+    inputs = tmp_path / "inputs"
+    inputs.mkdir()
+    for index, drawing in enumerate(drawings[:2]):
+        shutil.copyfile(drawing, inputs / f"{index}.dxf")
+    before = {p.name: p.read_bytes() for p in inputs.iterdir()}
+    out = tmp_path / "out"
+    target = out / "F01" / "drawing.json.pending"
+    target.parent.mkdir(parents=True)
+    target.hardlink_to(inputs / "1.dxf")
+
+    assert main([str(inputs), "--out", str(out)]) == 2
+    assert {p.name: p.read_bytes() for p in inputs.iterdir()} == before
+    assert not (out / "results.json").exists()
 
 
 def test_missing_tool_has_clear_error(drawings, tmp_path, monkeypatch):

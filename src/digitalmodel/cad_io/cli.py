@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable
 
+from ._paths import inspection_outputs, json_outputs, validate_write_paths
 from .drawings import dwg_to_dxf, dxf_to_json, dxf_to_svg, read_dwg_version, roundtrip_check
 from .solids import step_checks
 
@@ -19,7 +20,7 @@ SCHEMA_VERSION = 1
 
 def _write_json(path: Path, data: Any) -> None:
     """Write a complete checkpoint, replacing only its own previous checkpoint."""
-    temporary = path.with_suffix(".json.pending")
+    _, temporary = json_outputs(path)
     temporary.write_text(
         json.dumps(data, indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
@@ -103,26 +104,13 @@ def _digest(path: Path) -> str:
 
 
 def _validate_output_paths(files: list[Path], out: Path) -> None:
-    """Reject source/record aliases, including pending writes, before any write."""
-    def identities(path: Path) -> set[Path | tuple[int, int]]:
-        keys: set[Path | tuple[int, int]] = {path.resolve()}
-        if path.exists():
-            stat = path.stat()
-            keys.add((stat.st_dev, stat.st_ino))
-        return keys
-
-    seen: set[Path | tuple[int, int]] = set()
-    for source in files:
-        seen.update(identities(source))
-    records = [out / "results.json"]
-    records.extend(out / f"F{index:02d}" / "checkpoint.json"
-                   for index in range(1, len(files) + 1))
-    for record in records:
-        for target in (record, record.with_suffix(".json.pending")):
-            keys = identities(target)
-            if seen.intersection(keys):
-                raise ValueError("Input, report and checkpoint paths must not alias")
-            seen.update(keys)
+    """Reject aliases for every artifact, pending file and log before writes."""
+    targets = list(json_outputs(out / "results.json"))
+    for index in range(1, len(files) + 1):
+        folder = out / f"F{index:02d}"
+        targets.extend(json_outputs(folder / "checkpoint.json"))
+        targets.extend(inspection_outputs(folder))
+    validate_write_paths(files, targets)
 
 
 def main(argv: list[str] | None = None) -> int:

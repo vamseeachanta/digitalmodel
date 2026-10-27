@@ -11,6 +11,7 @@ solids; no historical input or derived output is distributed with the package.
 | --- | --- | --- |
 | 0 | 2026-10-22 | Add conversion and solid checks with synthetic inputs to assess a headless CAD workflow. |
 | 1 | 2026-10-25 | Reject input/report/checkpoint aliases before writes to preserve source bytes; document mesh and converter settings so their selection basis is explicit. |
+| 2 | 2026-10-27 | Extend alias checks to every artifact and converter log, including standalone conversions; constrain optional CAD dependencies to versions compatible with runtime requirements. |
 
 ## Placement and interfaces
 
@@ -18,8 +19,18 @@ This package follows the repository's top-level utility packages: a small public
 `__init__.py`, a `__main__.py` command, separate drawing and solid operations,
 and acceptance tests under `tests/specialized/cad_io/`, covered by the existing
 specialized test shard. Dependencies are imported inside
-operations. The optional `cad-io` extra installs the drawing and solid readers;
-`cad-io-mesh` adds gmsh on platforms for which it is available.
+operations. The optional `cad-io` extra installs the drawing and solid readers
+on platforms with compatible kernel wheels. `cad-io-mesh` adds gmsh on platforms
+for which it is available.
+
+The CAD extra uses build123d 0.7.0 because later releases require NumPy 2,
+whereas the runtime requires NumPy 1.x. Its kernel is constrained to the 7.7
+API, which provides `Shape.HashCode`; the SVG adapter excludes releases
+that import a newer kernel through a separate distribution. The 3MF binding
+is pinned to the release that provides `py_lib3mf`. These constraints avoid
+the webcolors and NumPy conflicts introduced by build123d 0.13.0 without
+changing existing runtime requirements. String filenames are passed to the
+older kernel interfaces.
 
 - `read_dwg_version(path)` returns `tag` and `release`. The six-byte header
   identifies a format family; it does not establish file validity.
@@ -94,7 +105,8 @@ tar -xf "$CAD_WORK/sources/libredwg-0.14.tar.xz" -C "$CAD_WORK/sources"
 )
 uv venv "$CAD_WORK/venv" --python python3.12
 uv pip install --python "$CAD_WORK/venv/bin/python" --only-binary=:all: \
-  ezdxf==1.4.5 build123d==0.13.0 pytest==9.1.1 pytest-asyncio==1.4.0
+  ezdxf==1.4.5 build123d==0.7.0 'cadquery-ocp>=7.7,<7.8' \
+  'ocpsvg<0.6' py-lib3mf==2.3.1 pytest==9.1.1 pytest-asyncio==1.4.0
 export VIRTUAL_ENV="$CAD_WORK/venv"
 export PATH="$VIRTUAL_ENV/bin:$CAD_WORK/tools/bin:$PATH"
 export PYTHONPATH=src
@@ -113,16 +125,22 @@ uv pip install --python "$CAD_WORK/venv/bin/python" --only-binary=:all: \
   'gmsh>=4.13,<5'
 ```
 
-The available index has no matching Arm Linux gmsh wheel. On that platform,
-leave gmsh absent: the integration test skips with a reason and the CLI records
-its mesh step as failed. Shared libraries required by the gmsh wheel also have
-to be available. No source build or alternative mesher is attempted.
+The available index has no matching Arm Linux Python 3.12 wheel for the 7.7
+kernel binding. On that platform, install ezdxf, the runtime drawing
+dependencies (Matplotlib and Pillow with NumPy 1.x), and the test dependencies
+for a drawing-only run. Solid and mesh tests skip with reasons;
+the CLI records unavailable solid or mesh operations as failed. The gmsh check
+requires its module and shared libraries. Shared
+libraries required by wheels also have to be available. No source build or
+alternative mesher is attempted for unavailable wheels.
 
-Measured synthetic suite time: **3.5 seconds** wall time, with 22 tests passed
+Earlier synthetic suite time: **3.5 seconds** wall time, with 22 tests passed
 and one gmsh integration test skipped. Python 3.12.3, LibreDWG 0.14, ezdxf 1.4.5
-and build123d 0.13.0 were used. Dependency download and LibreDWG compilation are
-excluded. The acceptance runtime target is about one minute or less. Use a new
-`--basetemp` directory for another test run.
+and build123d 0.13.0 were used in an isolated environment. That measurement
+predates the compatible CAD extra and expanded alias regressions; it does not
+validate the currently declared solid toolchain. Dependency download and
+LibreDWG compilation are excluded. The acceptance runtime target is about one
+minute or less. Use a new `--basetemp` directory for another test run.
 
 ## Command and results
 
@@ -136,12 +154,15 @@ outside an input folder. Files receive deterministic sorted codes such as `F01`,
 with independent artifact folders and `results.json` checkpoints. The result
 contains each code, format, SHA-256 input digest, status, step results and reason.
 Step failures do not stop the remaining files or independent checks.
-Before creating output directories or writing files, the command rejects source,
-report and checkpoint aliases, including their pending JSON writes. Resolved
-paths detect symlinks; filesystem identities detect existing hardlinks. The same
-check rejects aliases between output records. Rejection returns exit code 2 and
-preserves the input and existing records. This preflight assumes paths remain
-unchanged during the run; concurrent filesystem changes are outside its scope.
+Before creating output directories or writing files, the command rejects aliases
+between any input and any reserved output, and between outputs. Reserved outputs
+include reports, checkpoints, drawing metadata and all pending JSON writes;
+SVG, converted drawings, round-trip artifacts, solid exports and converter logs
+are included too. Resolved paths detect symlinks; filesystem identities detect
+existing hardlinks. Rejection returns exit code 2 and preserves the input and
+existing artifacts. Standalone converters and round trips also validate their
+destinations before writing. This preflight assumes paths remain unchanged
+during the run; concurrent filesystem changes are outside its scope.
 
 The printed converted fraction counts readable drawing metadata or successful
 STEP surface exports. A converted file can still have failed checks; the summary

@@ -64,7 +64,7 @@ def step_checks(
     folder.mkdir(parents=True, exist_ok=True)
     if any((folder / name).exists() for name in ("part.glb", "part.stl", "part.inp")):
         raise FileExistsError("solid export already exists; use a fresh directory")
-    shape = cad.import_step(source)
+    shape = cad.import_step(str(source))
     bounds = shape.bounding_box()
     valid = shape.is_valid
     if callable(valid):
@@ -87,8 +87,8 @@ def step_checks(
                 data = _mesh(source, folder / "part.inp")
             else:
                 target = folder / ("part.glb" if name == "gltf" else "part.stl")
-                ok = (cad.export_gltf(shape, target, binary=True) if name == "gltf"
-                      else cad.export_stl(shape, target))
+                ok = (cad.export_gltf(shape, str(target), binary=True) if name == "gltf"
+                      else cad.export_stl(shape, str(target)))
                 if not ok or not target.is_file() or not target.stat().st_size:
                     raise RuntimeError("geometry export produced no output")
                 data = {}

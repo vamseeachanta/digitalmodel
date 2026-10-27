@@ -117,7 +117,13 @@ fowt = [
     "matplotlib==3.10.9",
 ]
 drawings = ["ezdxf>=1.3,<2"]
-cad-io = ["ezdxf==1.4.5", "build123d==0.13.0"]
+# build123d 0.7 retains compatibility with the runtime NumPy 1.x constraint.
+# Keep its geometry bindings on the 7.7 kernel API (including Shape.HashCode).
+# Its 3MF importer uses the py_lib3mf module supplied by the 2.3 release.
+cad-io = [
+    "ezdxf==1.4.5", "build123d==0.7.0",
+    "cadquery-ocp>=7.7,<7.8", "ocpsvg<0.6", "py-lib3mf==2.3.1",
+]
 cad-io-mesh = ["gmsh>=4.13,<5"]
 cad = [
     # Optional CAD readers for client geometry ingestion (#2023).
