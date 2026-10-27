@@ -1,0 +1,121 @@
+{
+  "sha256": "af67f0fc0f42a09638d736224afd01cf964067245fc014a3952665569eb0fad6",
+  "size_bytes": 322003,
+  "source_sha256": {
+    "reviewed_payload": "9f9b135b93c274d4f8c8c2b8451e3ae9e7dece077b51b4fce4756d3e3f600e1c",
+    "reviewed_config": "9581aa9fcf6c1930aa3fafb749c1ed10f249e0e693fd44c2702a1a683df3bd9a"
+  },
+  "numerical_basis": {
+    "revision": 3,
+    "status": "assumed, based on previous experience",
+    "kN_per_Te": 9.81,
+    "conversion_convention": "9.81 kN/Te is a rounded demonstration convention. The exact reference conversion is 9.806 65 kN/Te, derived from standard gravity: BIPM, 3rd CGPM (1901), Declaration 2, Declaration on the unit of mass and on the definition of weight; conventional value of standard gravity. The rounded conversion increases the load limits by less than 0.1 %. The published demonstration limits and series are retained.",
+    "load_limits_Te": {
+      "Master-link load-path proxy: TopRigging End B": 17.7,
+      "Sling2 End B tension": 10.89
+    },
+    "load_limit_sources": {
+      "Master-link load-path proxy: TopRigging End B": "assumed, based on previous experience",
+      "Sling2 End B tension": "assumed, based on previous experience"
+    },
+    "forecast_settings": {
+      "method": "History-only ridge autoregression; fixed order 40, ridge 0.001",
+      "order": 40,
+      "ridge": 0.001,
+      "sample_interval_s": 0.5,
+      "stride_samples": 10,
+      "min_calibration_windows": 10,
+      "horizon_s": 120,
+      "time_origin_s": 0,
+      "window_count_rule": "N = floor((NOW / 0.5 - 359) / 10) + 1"
+    },
+    "alert_probability": 0.2,
+    "load_limit_rule": "limit_kN = assumed_limit_Te * kN_per_Te",
+    "probability_rule": "p = count(max(forecast + error_trajectory) > limit) / window_count",
+    "alert_rule": "alert = (p >= alert_probability)",
+    "implementation_references": [
+      "src/digitalmodel/workflows/installation_monitoring_demo.py:resolve_channels",
+      "src/digitalmodel/workflows/installation_forecast.py:exceedance_forecast"
+    ],
+    "limitations": [
+      "The conversion is a demonstration convention, not a certified component capacity or a standards criterion.",
+      "The alert cutoff is illustrative; no offshore risk tolerance or operational calibration is established.",
+      "Calibration error trajectories are not published; individual recorded probabilities cannot be independently recomputed.",
+      "The worked example is hypothetical arithmetic, not the calibration data for any published frame."
+    ],
+    "worked_example": {
+      "forecast_kN": [
+        100,
+        110
+      ],
+      "limit_kN": 110,
+      "error_trajectories_kN": [
+        [
+          -1,
+          0
+        ],
+        [
+          10,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          11,
+          0
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "window_probability": 0.6,
+      "alert": true
+    }
+  },
+  "sanitization": {
+    "findings": 0,
+    "terms_checked": 7,
+    "substring_fingerprints": [
+      {
+        "length": 15,
+        "sha256": "76ef98453de6cc365db9be912c034141139bdb3f4be41afcb7d114b732f98350"
+      },
+      {
+        "length": 52,
+        "sha256": "259077f5535ce2d0596fbb684d5915aa1e1cf612f5e3ed6350c3fc361a9ed7c6"
+      },
+      {
+        "length": 15,
+        "sha256": "4d9e47e347e542e92d45bdb886f4a2c933a11d64f8be7d8fd1d967dc818cff5c"
+      },
+      {
+        "length": 95,
+        "sha256": "df96db28f2b34c1a62280be7951dc81b07652b9ec0f3de6a1844872d9e9a8bf4"
+      },
+      {
+        "length": 22,
+        "sha256": "4f7d5f773c6ed1b5cad84c6cf00effcef1d4d32c6ead054c39c7014be5ed337f"
+      },
+      {
+        "length": 14,
+        "sha256": "a8d4f0b596db29c85a7c57efd635a85ac07796c6d3a2cae5a7e7fb36c7fe04fb"
+      },
+      {
+        "length": 12,
+        "sha256": "48317e165ae592706816e08c9a924071bffe25c58749922287828a2c80874559"
+      }
+    ]
+  },
+  "reduction": "Selected history-only scenario; chart arrays and alert values only.",
+  "provenance_carry_over": {
+    "fields": [
+      "source_sha256",
+      "sanitization"
+    ],
+    "prior_page_sha256": "144d12e76c81cc6dadb74d1f228d39d8e800939488cca17aa1b4f36c9feb441b",
+    "reason": "The original reviewed payload, configuration and scan terms were not re-read; source digests and fingerprint metadata are retained from the prior page. The retained fingerprints are checked against the revised page and manifest."
+  }
+}

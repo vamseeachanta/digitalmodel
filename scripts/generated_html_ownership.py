@@ -147,6 +147,9 @@ EXCLUDED_GENERATORS = {
 
 # Generated-looking pages which cannot yet be reproduced deterministically.
 PAGE_EXCLUSIONS = {
+    "docs/api/installation/installation-forecast.html": (
+        "builder requires reviewed inputs held outside the repository"
+    ),
     "docs/api/cfd/cylinder-re100-verification.html": (
         "upgrade_reports.py requires a caller-supplied solved cylinder run"
     ),
