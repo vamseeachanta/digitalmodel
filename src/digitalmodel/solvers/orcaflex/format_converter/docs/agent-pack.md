@@ -5,7 +5,7 @@
 | Module | solvers/orcaflex/format_converter |
 | Repository | digitalmodel |
 | Package | src/digitalmodel/solvers/orcaflex/format_converter |
-| Pack revision | 4, 2026-10-25 |
+| Pack revision | 5, 2026-10-27 |
 | Code revision | 7aad603be1c6136106dbb2381ce5096b050654f8 |
 | Analysis family | OrcaFlex riser and mooring; text conversion, routing family MR |
 | Quality role | OrcaFlex riser/mooring quality manager |
@@ -40,6 +40,7 @@ Revisions 0–3 are reconstructed from the recorded pack headers and changes; re
 | 2 | 2026-10-18 | Classified stale-fixture outcomes as SKIP to distinguish executed pytest cases from unexecuted qualification procedures. |
 | 3 | 2026-10-18 | Retained original-against-converted statics parity for both conversion routes and separated downstream model qualification. |
 | 4 | 2026-10-25 | Linked the G2 procedure to check-11a, recorded revision provenance and identified the unavailable gate source so acceptance evidence can be traced. |
+| 5 | 2026-10-27 | Restricted C0 to executed assertions and bounded whole-dictionary equality to the fully compared nested input; untested preservation remains incomplete. |
 
 ## 2. Inputs and outputs
 
@@ -133,7 +134,7 @@ These procedures define acceptance checks; offline representation checks do not 
 
 | Gate | Applicability | Check and executable procedure | Numeric pass criterion and unit | Evidence / current status |
 | --- | --- | --- | --- | --- |
-| G0 | Applicable | C0: exercise `SingleToModularConverter.convert`, `ModularToSingleConverter.convert` and `ModularToSpecConverter.convert` through the six section-4 nodes and `TestSingleToModularConverter.test_unknown_sections_quarantined_last` in the module test directory. | 0 assertion failures (count); exact source-value equality. [tests/solvers/orcaflex/format_converter/test_single_to_modular.py:L187-L225] | pytest node outcomes: PASS |
+| G0 | Applicable | C0: exercise `SingleToModularConverter.convert`, `ModularToSingleConverter.convert` and `ModularToSpecConverter.convert` through section-4 regressions 1–6 and 10, including `TestSingleToModularConverter.test_unknown_sections_quarantined_last`; retain the separate scalar serialization assertion. | 0 assertion failures (count): original-section value comparison in regression-1; section placement in regression-2; selected wave fields in regression-3; quarantine/order and warnings in regression-4; gap classification in regression-5; token serialization in regression-6. Whole-dictionary equality is established only for the fully compared nested input in regression-10. [tests/solvers/orcaflex/format_converter/test_single_to_modular.py:L187-L225] | Listed regression assertions PASS; untested source-value preservation, including complete reverse-extraction preservation, remains evidence incomplete. |
 | G0 | Applicable | C1: execute `TestModularToSingleConverter.test_missing_include_warns`; inspect `report.warnings`, never accept `success` alone. | At least 1 missing-include warning (count) for the negative fixture; 0 warnings (count) required for a production conversion. [tests/solvers/orcaflex/format_converter/test_modular_to_single.py:L99-L112] | Negative regression PASS |
 | G0 | Applicable | C2: strict-parse emitted master and all includes with duplicate keys rejected; compare source UnitsSystem and every transferred numeric value; verify every referenced include exists. | 0 duplicate keys, 0 unresolved files, 0 changed source values (counts); 0 unit-system differences (count). [src/digitalmodel/solvers/orcaflex/format_converter/single_to_modular.py:L121-L147] | Proposed acceptance inspection; no detection check exists in the shipped tests for all these conditions; issue pending (1) |
 | G1 | Applicable | C3: load the emitted `master.yml` or merged single YAML in the target OrcaFlex version, through the version-matched demo route or the licensed LoadData route; compare object inventory with source. | 0 load warnings, 0 load errors, 0 object-count differences (counts); exact version match. | NOT_RUN: licensed interface and solver execution excluded; #280 (AQG r0, section 5) |
@@ -242,6 +243,7 @@ The sweep found no int() / float() conversion of external text, no 1970 sentinel
 | 2026-10-16 | Pack revision 0 | Stale fixture roots hide available reference data and lose coverage even when pytest exits successfully | [tests/solvers/orcaflex/format_converter/conftest.py:L9-L55] | Sections 4, 6 and 10; #2008; shared-log entry not assigned |
 | 2026-10-17 | Initial pack | Distinguish representation regressions from model qualification; do not use confidence as whole-model fidelity. | [src/digitalmodel/solvers/orcaflex/format_converter/modular_to_spec.py:L189-L222] |Sections 4–6 define this boundary. Shared-log entry: Not created; issue pending (7) |
 | 2026-10-25 | Pack revision 4 | Check a gate procedure cell against its applicability cell; downstream hand checks cannot establish conversion parity. | Section 5, G2 and check-11a | G2 now links directly to the separate parity procedure; source retrieval remains open. |
+| 2026-10-27 | Pack revision 5 | Match each passing criterion to the assertions executed; selected-field, gap and serialization checks cannot establish complete reverse-extraction preservation. | Section 4, regressions 1–6 and 10 | C0 now separates the assertion types and retains incomplete preservation evidence. |
 
 ## 8. Review responsibilities and escalation
 
