@@ -186,6 +186,23 @@ def test_illustrative_geometry_is_independent(builder, monkeypatch):
         assert recomputed[key] == data[key]
 
 
+def test_related_screening_links(builder):
+    screening = "generic-hull-roll-screening.html"
+    study = PAGE.name
+    text = builder.render()
+    assert_references_resolve(text, PAGE)
+    summary = References()
+    summary.feed(text.split('id="summary"', 1)[1].split('id="revisions"', 1)[0])
+    assert screening in summary.refs
+    index = PAGE.with_name("index.html")
+    refs = assert_references_resolve(index.read_text(encoding="utf-8"), index).refs
+    assert refs[refs.index(study) + 1] == screening
+    screening_page = PAGE.with_name(screening)
+    assert study in assert_references_resolve(
+        screening_page.read_text(encoding="utf-8"), screening_page
+    ).refs
+
+
 def test_output_structure_links_and_privacy(builder):
     text = builder.render()
     parsed = assert_references_resolve(text, PAGE)
