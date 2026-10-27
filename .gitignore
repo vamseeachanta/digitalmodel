@@ -622,3 +622,10 @@ docs/reports/modules/gis/*
 /docs/reports/modules/pipe_capacity/*
 !/docs/reports/modules/pipe_capacity/build_worked_example.py
 !/docs/reports/modules/pipe_capacity/README.md
+
+# Retain module reports after the shared directory rule.
+!/docs/reports/modules/vesselseakeeping/manifest.json
+!/docs/reports/modules/riserfatigue/
+!/docs/reports/modules/riserfatigue/generate_report.py
+!/docs/reports/modules/riserfatigue/report.html
+!/docs/reports/modules/riserfatigue/changes.json
