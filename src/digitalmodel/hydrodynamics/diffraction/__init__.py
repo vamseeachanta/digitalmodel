@@ -55,19 +55,6 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_converter import (
     convert_aqwa_results
 )
 
-# OrcaWave converter (requires OrcFxAPI — lives in solver/ subpackage)
-try:
-    from digitalmodel.hydrodynamics.diffraction.solver import (
-        OrcaWaveConverter,
-        convert_orcawave_results,
-    )
-    ORCAWAVE_AVAILABLE = True
-except ImportError:
-    ORCAWAVE_AVAILABLE = False
-    # Provide placeholder classes when OrcFxAPI not available
-    OrcaWaveConverter = None
-    convert_orcawave_results = None
-
 from digitalmodel.hydrodynamics.diffraction.output_validator import (
     OutputValidator,
     validate_results
@@ -200,27 +187,39 @@ from digitalmodel.hydrodynamics.diffraction.resolver import (
     ResolverInputs,
     resolve,
 )
-# Test utilities (optional - for testing without OrcFxAPI)
-try:
-    from digitalmodel.hydrodynamics.diffraction.orcawave_test_utilities import (
-        MockDataGenerator,
-        create_test_vessel
-    )
-    from digitalmodel.hydrodynamics.diffraction.solver import (
-        OrcaWaveDataExtractor,
-        extract_all_rao_data,
-        extract_all_added_mass,
-        extract_all_damping,
-    )
-    TEST_UTILITIES_AVAILABLE = True
-except ImportError:
-    TEST_UTILITIES_AVAILABLE = False
-    MockDataGenerator = None
-    create_test_vessel = None
-    OrcaWaveDataExtractor = None
-    extract_all_rao_data = None
-    extract_all_added_mass = None
-    extract_all_damping = None
+# Pure test-data helpers are independent of licensed extraction utilities.
+from digitalmodel.hydrodynamics.diffraction.orcawave_test_utilities import (
+    MockDataGenerator,
+    create_test_vessel,
+)
+
+# PEP 562 (2017), Specification: explicit attribute access resolves optional
+# interface exports; importing numerical submodules must never request them.
+_SOLVER_EXPORTS = {
+    "OrcaWaveConverter",
+    "convert_orcawave_results",
+    "OrcaWaveDataExtractor",
+    "extract_all_rao_data",
+    "extract_all_added_mass",
+    "extract_all_damping",
+}
+
+
+def __getattr__(name):
+    if name in _SOLVER_EXPORTS or name in {
+        "ORCAWAVE_AVAILABLE", "TEST_UTILITIES_AVAILABLE",
+    }:
+        from digitalmodel.hydrodynamics.diffraction import solver
+
+        if name in {"ORCAWAVE_AVAILABLE", "TEST_UTILITIES_AVAILABLE"}:
+            return solver.OrcFxAPI is not None
+        return getattr(solver, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__():
+    return sorted(set(globals()) | set(__all__))
+
 
 __all__ = [
     # Results containers

@@ -7,20 +7,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from digitalmodel.hydrodynamics.diffraction.orcawave_runner import RunResult, RunStatus
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
 
-try:
-    from digitalmodel.hydrodynamics.diffraction.solver import (
-        OrcaWaveConverter,
-    )
+# Retain the injection point used by converter unit tests. Real conversion
+# resolves the licensed class only after an output model has been found.
+OrcaWaveConverter = None
 
-    CONVERTER_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    OrcaWaveConverter = None  # type: ignore[assignment,misc]
-    CONVERTER_AVAILABLE = False
+
+def __getattr__(name):
+    if name == "CONVERTER_AVAILABLE":
+        from digitalmodel.hydrodynamics.diffraction import solver
+
+        return solver.OrcaWaveConverter is not None
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 MODEL_FILE_PATTERNS = ["*.sim", "*.dat"]
 
@@ -74,7 +76,12 @@ class ResultExtractor:
         water_depth = self._extract_water_depth(run_result)
 
         try:
-            converter = OrcaWaveConverter(
+            converter_class = OrcaWaveConverter
+            if converter_class is None:
+                from digitalmodel.hydrodynamics.diffraction.solver.orcawave_converter import (
+                    OrcaWaveConverter as converter_class,
+                )
+            converter = converter_class(
                 model_file=model_file,
                 vessel_name=self._vessel_name,
             )
