@@ -26993,8 +26993,8 @@ families:
     what: Applies existing empirical anchor-efficiency tables.
     relation: independent
     module: geotechnical/anchors.py
-    file_sha256: b08a35629c31d3a456b2912c6be5a6a97f9383b4293e248dc7766edc8e654d19
-    body_sha256: db1d1f9434c7128f12f40351d01b13f13a9ecedb361c18759f984efe7062a044
+    file_sha256: 02691f0a9c9b15750ce00f3d8e30b2a2cd1572d3c5104f01c87faac0e74845d8
+    body_sha256: f5cbbb1c969ba33efa2508561a69a199232b0a58d5619ef028df2a1c311fa2a1
   - path: src/digitalmodel/geotechnical/anchors.py
     symbol: suction_anchor_capacity
     line: 109
@@ -27002,8 +27002,8 @@ families:
     what: Combines caisson shaft and reverse tip bearing resistance.
     relation: independent
     module: geotechnical/anchors.py
-    file_sha256: b08a35629c31d3a456b2912c6be5a6a97f9383b4293e248dc7766edc8e654d19
-    body_sha256: 1d47ff7e9bd3e78f29fd555954b7254d956930b21cd5cf4e4c7a0fcc66fe2dc6
+    file_sha256: 02691f0a9c9b15750ce00f3d8e30b2a2cd1572d3c5104f01c87faac0e74845d8
+    body_sha256: 89751789c2b6750ecb38c2dfee7777f361c022fa928796dccf82060b7205d16b
   - path: src/digitalmodel/geotechnical/mudmat.py
     symbol: bearing_capacity_factors
     line: 54
