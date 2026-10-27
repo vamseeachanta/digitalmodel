@@ -1,0 +1,7 @@
+{
+  "basis": "Invented rectangular prism: 12 m length, 4 m beam, 2 m submerged draft; hand volume 96 m^3, midship area 8 m^2, waterplane area 48 m^2. Synthetic fluid density 997 kg/m^3 is an explicit test input, not a water-property reference.",
+  "length_m": 12.0,
+  "beam_m": 4.0,
+  "draft_m": 2.0,
+  "density_kg_m3": 997.0
+}
