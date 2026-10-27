@@ -142,6 +142,68 @@ def test_similarity_ignores_start_and_edge_sampling():
     assert calculate_shape_similarity(card, resampled) == pytest.approx(1)
 
 
+@pytest.fixture(params=[(False, 0), (False, 3), (True, 0), (True, 3)])
+def interior_transfer_cards(request):
+    """The same oriented polygon before and after inserting collinear points."""
+    reflected, offset = request.param
+    position = [0, 50, 50, 100, 100, 0]
+    load = [0, 0, 100, 100, 0, 0]
+    sampled_position = [0, 49, 50, 50, 51, 100, 100, 0]
+    sampled_load = [0, 0, 0, 100, 100, 100, 0, 0]
+    cards = []
+    for positions, loads in ((position, load), (sampled_position, sampled_load)):
+        if reflected:
+            positions = [100 - value for value in positions]
+        cards.append(CardData(position=positions[offset:] + positions[:offset],
+                              load=loads[offset:] + loads[:offset]))
+    return cards
+
+
+def test_similarity_preserves_interior_vertical_transfer(interior_transfer_cards):
+    """Identical directed edges give identical centered vectors: cosine = 1."""
+    card, sampled = interior_transfer_cards
+    assert calculate_shape_similarity(card, sampled) == pytest.approx(1)
+
+
+def test_deviation_preserves_interior_vertical_transfer(context, interior_transfer_cards):
+    """Equal loads at every branch position give RMS sqrt(mean(0**2)) = 0 lb."""
+    from digitalmodel.marine_ops.artificial_lift.dynacard import IdealCardCalculator
+
+    card, sampled = interior_transfer_cards
+    context.surface_card = card
+    calculator = IdealCardCalculator(context)
+    calculator.result.ideal_surface_position = sampled.position
+    calculator.result.ideal_surface_load = sampled.load
+    calculator.result.ideal_stroke_length = 100
+    calculator._calculate_deviation_from_measured()
+    assert calculator.result.load_deviation_rms == pytest.approx(0)
+    assert calculator.result.shape_similarity == pytest.approx(1)
+
+
+@pytest.mark.parametrize("reflected", [False, True])
+def test_interior_transfer_uses_one_sided_edge_loads(reflected):
+    """At a jump use the edge on its higher-position side, for either stroke.
+
+    The retained 64-point grid samples integer positions from 0 to 63.
+    Upstroke loads jump from 0 to 100 lb at 21 in; reflection moves the
+    downstroke jump to 42 in. The other stroke has load zero throughout.
+    """
+    from digitalmodel.marine_ops.artificial_lift.dynacard.ideal_card import (
+        _comparison_branch_profiles,
+    )
+
+    position = [0, 21, 21, 63, 63, 0]
+    if reflected:
+        position = [63 - value for value in position]
+    up, down = _comparison_branch_profiles(position, [0, 0, 100, 100, 0, 0])
+    if reflected:
+        assert up == pytest.approx([0] * 64)
+        assert down == pytest.approx([100] * 42 + [0] * 22)
+    else:
+        assert up == pytest.approx([0] * 21 + [100] * 43)
+        assert down == pytest.approx([0] * 64)
+
+
 def test_reused_buckling_calculator_does_not_retain_thresholds(context):
     """Missing wellbore geometry on a second call must yield unknown verdicts."""
     from digitalmodel.marine_ops.artificial_lift.dynacard import RodBucklingCalculator

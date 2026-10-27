@@ -210,7 +210,9 @@ def _comparison_branch_profiles(position, load):
     cards therefore make the comparison unavailable.
     The computational grid uses BRANCH_RESAMPLE_POINTS, as the legacy metric
     does. Vertical load transfers have no position interval and contribute no
-    branch samples. This avoids averaging opposite loads at stroke endpoints.
+    branch samples. Each nonvertical edge retains its own endpoint loads,
+    including at interior jumps. At a jump on the grid, use the edge on the
+    higher-position side; the maximum position uses the final edge endpoint.
     """
     pos = np.asarray(position, dtype=float)
     ld = np.asarray(load, dtype=float)
@@ -229,10 +231,16 @@ def _comparison_branch_profiles(position, load):
     profiles = []
     for direction in (1, -1):
         starts = np.flatnonzero(dx * direction > 0.0)
-        indices = np.unique(np.concatenate((starts, (starts + 1) % pos.size)))
-        profile = _resample_branch(pos[indices], ld[indices], grid, p_min, p_span)
-        if profile is None:
-            return None
+        ends = (starts + 1) % pos.size
+        x0 = (pos[starts] - p_min) / p_span
+        x1 = (pos[ends] - p_min) / p_span
+        lower = np.minimum(x0, x1)
+        order = np.argsort(lower)
+        # Select by interval, never combine loads across a vertical transfer.
+        edge = order[np.clip(np.searchsorted(lower[order], grid, side="right") - 1,
+                             0, starts.size - 1)]
+        fraction = (grid - x0[edge]) / (x1[edge] - x0[edge])
+        profile = ld[starts[edge]] + fraction * (ld[ends[edge]] - ld[starts[edge]])
         profiles.append(profile)
     return tuple(profiles)
 
