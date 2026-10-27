@@ -7,9 +7,13 @@ the uniform engineering strain is epsilon = alpha * delta_T. Integrating along
 the reference length gives delta_L = integral(epsilon dx, x=0..L)
 = L * alpha * delta_T. This is a small-strain model with uniform temperature
 change and no pressure, restraint, friction, buckling or walking calculation.
+
+Basis: OpenStax, University Physics Volume 2, 2016 edition, section 1.3,
+"Thermal Expansion", equation 1.2 (linear thermal expansion).
+https://openstax.org/books/university-physics-volume-2/pages/1-3-thermal-expansion
 """
 
-from math import isfinite
+from math import frexp, isfinite, ldexp
 from numbers import Real
 
 
@@ -34,7 +38,8 @@ def free_thermal_expansion(
     Raises:
         TypeError: An input is a boolean or is not a real scalar.
         ValueError: An input is not finite in floating-point representation,
-            length or coefficient is negative, or growth is not finite.
+            length or coefficient is negative, growth is not finite, or
+            a nonzero input or growth underflows to zero.
     """
     inputs = {
         "length": length,
@@ -44,28 +49,35 @@ def free_thermal_expansion(
     for name, value in inputs.items():
         if isinstance(value, bool) or not isinstance(value, Real):
             raise TypeError(f"{name} must be a real scalar, excluding booleans")
+        if name in ("length", "thermal_expansion_coefficient") and value < 0:
+            raise ValueError(f"{name} must be nonnegative")
         try:
             inputs[name] = float(value)
         except OverflowError as exc:
             raise ValueError(f"{name} must be finite") from exc
         if not isfinite(inputs[name]):
             raise ValueError(f"{name} must be finite")
-
-    # Zero is the boundary of the nonnegative length and coefficient domains.
-    for name in ("length", "thermal_expansion_coefficient"):
-        if inputs[name] < 0.0:
-            raise ValueError(f"{name} must be nonnegative")
+        if inputs[name] == 0.0 and value != 0:
+            raise ValueError(f"{name} must remain nonzero in floating point")
 
     # A zero integration interval or zero strain gives zero growth even if
     # multiplying the other two finite inputs would overflow.
     if any(value == 0.0 for value in inputs.values()):
         return 0.0
 
-    growth = (
-        inputs["length"]
-        * inputs["thermal_expansion_coefficient"]
-        * inputs["temperature_change"]
-    )
+    # Separate powers of two so a partial product cannot lose finite growth.
+    # Each nonzero mantissa has magnitude in [0.5, 1), so three fit safely.
+    mantissa, exponent = 1.0, 0
+    for value in inputs.values():
+        fraction, power = frexp(value)
+        mantissa *= fraction
+        exponent += power
+    try:
+        growth = ldexp(mantissa, exponent)
+    except OverflowError as exc:
+        raise ValueError("growth must be finite") from exc
     if not isfinite(growth):
         raise ValueError("growth must be finite")
+    if growth == 0.0:
+        raise ValueError("nonzero growth must be representable")
     return growth
