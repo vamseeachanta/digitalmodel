@@ -1,9 +1,10 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Run a synthetic undersaturated, single-phase oil selection example offline.
+"""Run a sourced undersaturated, single-phase oil selection example offline.
 
-Input basis and hand calculation:
+Basis: Production Engineering II, 2017-2018 course text, Problem (1-4),
+pp. 40-41; equations (1.1) and (1.4), pp. 16-17. Source link and calculation:
 docs/domains/production/method-selection-example.md.
 Selection and arithmetic do not establish engineering qualification.
 """
@@ -31,7 +32,7 @@ class ExampleResult:
 
 
 def run_example() -> ExampleResult:
-    """Print and return the fixed synthetic case from the usage page.
+    """Print and return the published teaching case from the usage page.
 
     Returns:
         Inputs and outputs for the explicitly single-phase pressure interval.
@@ -39,11 +40,12 @@ def run_example() -> ExampleResult:
     Raises:
         RuntimeError: The selector does not choose the required linear model.
     """
-    # Synthetic inputs defined in the usage page, Synthetic inputs table.
+    # Course text, Problem (1-4), pp. 40-41; all pressures share a gauge basis.
+    # J = 250 / (3000 - 2500) = 0.5 bopd/psi, Eq. (1.1), p. 16.
     reservoir = ReservoirConditions(
         reservoir_pressure_psi=3000.0,
-        bubble_point_psi=2000.0,
-        productivity_index_bopd_psi=2.0,
+        bubble_point_psi=2130.0,
+        productivity_index_bopd_psi=0.5,
     )
     flowing_pressure_psi = 2500.0
     assessment = assess_ipr_selection(
@@ -65,7 +67,15 @@ def run_example() -> ExampleResult:
         assessment=assessment,
         flow_rate_bopd=model.flow_rate(flowing_pressure_psi),
     )
-    print("Scenario: synthetic undersaturated, single-phase oil")
+    print("Scenario: sourced teaching example, undersaturated single-phase oil")
+    print("Input basis: Production Engineering II (2017-2018), Problem (1-4), pp. 40-41")
+    print(
+        f"Pr = {reservoir.reservoir_pressure_psi:.3f} psig; "
+        f"Pwf = {flowing_pressure_psi:.3f} psig; "
+        f"Pb = {reservoir.bubble_point_psi:.3f} psig"
+    )
+    print("Criterion: Pr >= Pwf >= Pb; no multirate test or significant skin")
+    print(f"Productivity index: {reservoir.productivity_index_bopd_psi:.3f} bopd/psi")
     print(f"Selected method: {assessment.method}")
     print(f"Rationale: {assessment.rationale}")
     print(f"Flow rate: {result.flow_rate_bopd:.1f} bopd")
