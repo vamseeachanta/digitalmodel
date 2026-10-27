@@ -11,6 +11,13 @@ input. Pipeline-code acceptance is not evaluated.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-26 | Add a synthetic hand calculation and executable example to make the pressure basis and its limits explicit. |
+| 1 | 2026-10-27 | State the bounded scope, independent oracle and executable-example check together for review. |
+
+## Plan-lite
+
+Establish only a synthetic static pressure-input basis. Verify it by an
+independent unit-area force balance and execution of the documented example.
+Leave pipeline-code acceptance and edition qualification outside this slice.
 
 ## Synthetic basis
 
