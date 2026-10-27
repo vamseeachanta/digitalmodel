@@ -4,6 +4,17 @@ Input basis: synthetic illustrative inputs defined in the builder, assumed
 and unsourced, based on previous experience rather than measured well data.
 Equation source: Eaton (1975), SPE 5544, sonic relation documented in
 src/digitalmodel/well/drilling/pore_pressure.py (Methods).
+
+Plan-lite:
+Check that the normal sonic trend gives normal pressure independently of
+synthetic overburden, and that a JSON round trip preserves null predictions
+and the missing-calibration status and reason. Run the focused suites with
+temporary output directed outside the repository:
+    PYTHONPATH=src uv run --no-project --with pytest --with PyYAML --with pandas
+        python -m pytest tests/capabilities/test_pore_pressure_explorer.py
+        tests/well/test_pore_pressure.py -q -rA -p no:cacheprovider
+The command is shown across lines for readability; join them when running.
+Synthetic, uncalibrated inputs do not qualify an engineering prediction.
 """
 
 import importlib.util
