@@ -10,6 +10,19 @@ the broader stability issue remains open.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-26 | Add an explicit geometric derivation and synthetic example to bound the helper's use. |
+| 1 | 2026-10-27 | Add Plan-lite so the geometric scope, method and validation are explicit. |
+
+## Plan-lite
+
+- Scope: provide vertical span and positive-downward set-down for one initially
+  vertical, straight tendon of constant length attached to a translating rigid body.
+- Approach: derive both outputs from a right triangle; use scaled arithmetic and
+  rationalization to retain precision at extreme lengths and small offsets.
+- Validation: check hand-calculated triangles, independent decimal arithmetic,
+  sign symmetry, scale invariance, invalid inputs and the small-offset limit;
+  run the existing floating-platform tests and the offline example.
+- Exclusions: tendon load, slack, pretension, restoring force and stability remain
+  `NOT_EVALUATED`; geometry alone establishes neither tension nor equilibrium.
 
 ## Geometric derivation
 
