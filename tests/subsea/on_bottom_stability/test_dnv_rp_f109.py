@@ -236,6 +236,118 @@ class TestAbsoluteStability:
         assert result_high.utilisation > result_normal.utilisation
 
 
+@pytest.mark.parametrize("horizontal", [500.0, -500.0])
+@pytest.mark.parametrize("method", ["absolute", "generalized"])
+def test_stability_uses_horizontal_force_magnitude(horizontal, method):
+    """Reversing the load direction cannot make an unstable pipe stable."""
+    kwargs = dict(
+        W_s_N_m=100.0, F_H_N_m=horizontal, F_L_N_m=20.0,
+        mu_soil=0.5, gamma_SC=1.0,
+    )
+    if method == "absolute":
+        result = absolute_stability_check(**kwargs)
+        expected = (500.0 + 0.5 * 20.0) / (0.5 * 100.0)
+    else:
+        result = generalized_stability_check(**kwargs, F_R_N_m=0.0)
+        expected = 500.0 / (0.5 * (100.0 - 20.0))
+    assert result.utilisation == pytest.approx(expected)
+    assert result.is_stable is False
+
+
+@pytest.mark.parametrize("horizontal", [500.0, -500.0])
+def test_simplified_required_weight_matches_signed_load_check(horizontal):
+    """The wrapper's weight demand must agree with its canonical check."""
+    from digitalmodel.subsea.on_bottom_stability import lateral_stability_check
+
+    result = lateral_stability_check(100.0, horizontal, 20.0, 0.5, safety_factor=1.0)
+    assert result.required_weight_n_per_m == pytest.approx(1020.0)
+    assert not result.is_stable
+
+
+def test_embedded_wiki_worked_example():
+    """Reproduce the supplied page using its example coefficients, unfactored."""
+    horizontal = hydrodynamic_force_per_meter(
+        1025.0, 0.5, 1.5, 0.6, C_D=0.7, C_M=3.29,
+    )
+    lift = lift_force_per_meter(1025.0, 0.5, 1.5, C_L=0.9)
+    friction = 0.6 * (2200.0 - lift)
+    # Rounded page values: tolerances account only for displayed rounding.
+    assert horizontal == pytest.approx(800.9, abs=0.05)
+    assert lift == pytest.approx(518.9, abs=0.05)
+    assert friction == pytest.approx(1008.7, abs=0.05)
+    assert friction / horizontal == pytest.approx(1.26, abs=0.005)
+    required = horizontal / 0.6 + lift
+    assert required == pytest.approx(1854.0, abs=0.5)
+    result = absolute_stability_check(2200.0, horizontal, lift, 0.6, gamma_SC=1.0)
+    assert result.is_stable
+    assert result.utilisation == pytest.approx(required / 2200.0)
+    assert absolute_stability_check(
+        required, horizontal, lift, 0.6, gamma_SC=1.0,
+    ).utilisation == pytest.approx(1.0)
+
+
+class TestAbsoluteStabilityMargin:
+    """Check weight demand independently of the force capacity/drive ratio."""
+
+    @pytest.mark.parametrize("horizontal", [100.0, -100.0])
+    @pytest.mark.parametrize("supplied", [0.0, -10.0, 200.0, 275.0, 1000.0])
+    def test_weight_margin_and_boundary(self, horizontal, supplied):
+        from digitalmodel.subsea.on_bottom_stability import absolute_stability_margin
+
+        result = absolute_stability_margin(supplied, horizontal, 50.0, 0.5)
+        # Existing absolute equation: 1.1 * (100 / 0.5 + 50) = 275 N/m.
+        assert result.required_weight_N_m == pytest.approx(275.0)
+        assert result.supplied_weight_N_m == supplied
+        assert result.weight_margin_ratio == pytest.approx(supplied / 275.0)
+        assert result.weight_margin_N_m == pytest.approx(supplied - 275.0)
+        assert result.governing_check == "absolute_lateral"
+        assert result.is_stable == (supplied >= 275.0)
+
+    def test_wiki_weight_margin_differs_from_friction_margin(self):
+        from digitalmodel.subsea.on_bottom_stability import absolute_stability_margin
+
+        result = absolute_stability_margin(2200.0, 800.9, 518.9, 0.6, gamma_SC=1.0)
+        assert result.required_weight_N_m == pytest.approx(1853.7, abs=0.05)
+        assert result.weight_margin_ratio == pytest.approx(1.187, abs=0.0005)
+        assert result.weight_margin_N_m == pytest.approx(346.3, abs=0.05)
+
+    def test_lift_only_governs(self):
+        from digitalmodel.subsea.on_bottom_stability import absolute_stability_margin
+
+        result = absolute_stability_margin(100.0, 0.0, 100.0, 0.6, gamma_SC=1.2)
+        assert result.required_weight_N_m == pytest.approx(120.0)
+        assert result.governing_check == "uplift"
+        assert not result.is_stable
+
+    @pytest.mark.parametrize("supplied", [-10.0, 0.0, 10.0])
+    def test_zero_load_has_no_weight_ratio(self, supplied):
+        from digitalmodel.subsea.on_bottom_stability import absolute_stability_margin
+
+        result = absolute_stability_margin(supplied, 0.0, 0.0, 0.6)
+        assert result.required_weight_N_m == 0.0
+        assert result.weight_margin_ratio is None
+        assert result.weight_margin_N_m == supplied
+        assert result.governing_check == "no_load"
+        # Preserve the check's conservative treatment of nonpositive weight.
+        assert result.is_stable == (supplied > 0.0)
+
+    @pytest.mark.parametrize("field,value", [
+        ("W_s_N_m", math.nan), ("W_s_N_m", math.inf),
+        ("F_H_N_m", math.inf), ("F_L_N_m", math.nan),
+        ("F_L_N_m", -1.0), ("mu_soil", 0.0), ("mu_soil", -0.5),
+        ("mu_soil", math.nan), ("gamma_SC", 0.0),
+        ("gamma_SC", -1.0), ("gamma_SC", math.inf),
+    ])
+    def test_invalid_margin_inputs(self, field, value):
+        from digitalmodel.subsea.on_bottom_stability import absolute_stability_margin
+
+        kwargs = dict(W_s_N_m=100.0, F_H_N_m=10.0, F_L_N_m=5.0,
+                      mu_soil=0.6, gamma_SC=1.0)
+        kwargs[field] = value
+        with pytest.raises(ValueError, match=field):
+            absolute_stability_margin(**kwargs)
+
+
 # ---------------------------------------------------------------------------
 # Generalized stability check (DNV-RP-F109 S4.3.2, Eq 4.5)
 # ---------------------------------------------------------------------------

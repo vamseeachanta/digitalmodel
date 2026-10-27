@@ -33,6 +33,24 @@ class StabilityResult(NamedTuple):
     details: dict
 
 
+class AbsoluteStabilityMargin(NamedTuple):
+    """Absolute-method weight demand and reserve, with forces in N/m.
+
+    ``weight_margin_ratio`` is supplied / required, or None for zero demand.
+    ``weight_margin_N_m`` is supplied minus required (positive is a reserve).
+    ``governing_check`` is absolute_lateral for nonzero horizontal force,
+    uplift for lift alone, or no_load. The stability flag retains the
+    absolute check's conservative rejection of nonpositive supplied weight.
+    """
+
+    required_weight_N_m: float
+    supplied_weight_N_m: float
+    weight_margin_ratio: float | None
+    weight_margin_N_m: float
+    governing_check: str
+    is_stable: bool
+
+
 # ---------------------------------------------------------------------------
 # Hydrodynamic coefficients (DNV-RP-F109 Table 3-3)
 # ---------------------------------------------------------------------------
@@ -193,16 +211,19 @@ def absolute_stability_check(
 ) -> StabilityResult:
     """Absolute lateral stability check (DNV-RP-F109 S4.3.1, Eq 4.1).
 
-    utilisation = gamma_SC * (F_H + mu * F_L) / (mu * W_s)
+    utilisation = gamma_SC * (abs(F_H) + mu * F_L) / (mu * W_s)
 
-    Pipe is stable if utilisation <= 1.0.
+    Pipe is stable if utilisation <= 1.0. Horizontal load is signed; its
+    magnitude drives sliding in either direction. Lift is positive upward.
+    The existing factor applies to both horizontal force and lift. To use
+    the unfactored static balance, pass gamma_SC=1.0 explicitly.
 
     Parameters
     ----------
     W_s_N_m : float
         Submerged weight per meter [N/m].
     F_H_N_m : float
-        Horizontal hydrodynamic force per meter [N/m].
+        Signed horizontal hydrodynamic force per meter [N/m].
     F_L_N_m : float
         Lift force per meter [N/m].
     mu_soil : float
@@ -226,7 +247,7 @@ def absolute_stability_check(
     # Edge cases: zero or negative submerged weight
     if W_s_N_m <= 0.0:
         details["capacity"] = 0.0
-        details["demand"] = gamma_SC * (F_H_N_m + mu_soil * F_L_N_m)
+        details["demand"] = gamma_SC * (abs(F_H_N_m) + mu_soil * F_L_N_m)
         return StabilityResult(
             utilisation=float("inf"),
             is_stable=False,
@@ -234,7 +255,7 @@ def absolute_stability_check(
         )
 
     capacity = mu_soil * W_s_N_m
-    demand = gamma_SC * (F_H_N_m + mu_soil * F_L_N_m)
+    demand = gamma_SC * (abs(F_H_N_m) + mu_soil * F_L_N_m)
 
     if capacity <= 0.0:
         utilisation = float("inf")
@@ -251,6 +272,54 @@ def absolute_stability_check(
     )
 
 
+def absolute_stability_margin(
+    W_s_N_m: float,
+    F_H_N_m: float,
+    F_L_N_m: float,
+    mu_soil: float,
+    gamma_SC: float = GAMMA_SC_NORMAL,
+) -> AbsoluteStabilityMargin:
+    """Report required versus supplied weight using the absolute check.
+
+    Inputs use the same SI units and sign conventions as
+    :func:`absolute_stability_check`. All must be finite; lift must be
+    nonnegative, friction and safety factor positive. Supplied weight may
+    be negative to report a buoyant pipe's deficit.
+
+    Required weight is the check's demand divided by friction. Thus it
+    includes the existing factor on both horizontal force and lift, and
+    excludes passive soil resistance. The supplied/required weight ratio
+    differs from available friction divided by horizontal drive when lift
+    is nonzero. Neither ratio is a displacement prediction.
+    """
+    for name, value in (
+        ("W_s_N_m", W_s_N_m), ("F_H_N_m", F_H_N_m),
+        ("F_L_N_m", F_L_N_m), ("mu_soil", mu_soil), ("gamma_SC", gamma_SC),
+    ):
+        if not math.isfinite(value):
+            raise ValueError(f"{name} must be finite")
+    if F_L_N_m < 0.0:
+        raise ValueError("F_L_N_m must be nonnegative (upward lift)")
+    if mu_soil <= 0.0:
+        raise ValueError("mu_soil must be positive")
+    if gamma_SC <= 0.0:
+        raise ValueError("gamma_SC must be positive")
+
+    check = absolute_stability_check(W_s_N_m, F_H_N_m, F_L_N_m, mu_soil, gamma_SC)
+    required = check.details["demand"] / mu_soil
+    governing = "absolute_lateral" if F_H_N_m != 0.0 else (
+        "uplift" if F_L_N_m > 0.0 else "no_load"
+    )
+    return AbsoluteStabilityMargin(
+        required_weight_N_m=required,
+        supplied_weight_N_m=W_s_N_m,
+        weight_margin_ratio=W_s_N_m / required if required > 0.0 else None,
+        weight_margin_N_m=W_s_N_m - required,
+        governing_check=governing,
+        is_stable=check.is_stable,
+    )
+
+
 def generalized_stability_check(
     W_s_N_m: float,
     F_H_N_m: float,
@@ -261,17 +330,18 @@ def generalized_stability_check(
 ) -> StabilityResult:
     """Generalized lateral stability with soil resistance (DNV-RP-F109 S4.3.2, Eq 4.5).
 
-    utilisation = gamma_SC * F_H / (mu * (W_s - F_L) + F_R)
+    utilisation = gamma_SC * abs(F_H) / (mu * (W_s - F_L) + F_R)
 
     Includes passive soil resistance F_R which augments lateral capacity.
-    Pipe is stable if utilisation <= 1.0.
+    Pipe is stable if utilisation <= 1.0. Horizontal load may be signed;
+    sliding demand uses its magnitude. Lift is positive upward.
 
     Parameters
     ----------
     W_s_N_m : float
         Submerged weight per meter [N/m].
     F_H_N_m : float
-        Horizontal hydrodynamic force per meter [N/m].
+        Signed horizontal hydrodynamic force per meter [N/m].
     F_L_N_m : float
         Lift force per meter [N/m].
     mu_soil : float
@@ -296,7 +366,7 @@ def generalized_stability_check(
     }
 
     capacity = mu_soil * (W_s_N_m - F_L_N_m) + F_R_N_m
-    demand = gamma_SC * F_H_N_m
+    demand = gamma_SC * abs(F_H_N_m)
 
     details["capacity"] = capacity
     details["demand"] = demand

@@ -301,7 +301,7 @@ def lateral_stability_check(
     :func:`~digitalmodel.subsea.on_bottom_stability.dnv_rp_f109.generalized_stability_check`
     with ``F_R_N_m=0`` so utilisation matches the standard's Eq 4.5 form::
 
-        utilization = γ_SC * F_H / (μ * (W_s − F_L))
+        utilization = γ_SC * abs(F_H) / (μ * (W_s − F_L))
 
     Pipe is stable when ``utilization <= 1.0``.
 
@@ -344,10 +344,11 @@ def lateral_stability_check(
     )
 
     # Required weight to drive utilisation = 1.0:
-    #   γ * F_H / (μ * (W_s - F_L)) = 1  →  W_s = γ * F_H / μ + F_L
+    #   γ * abs(F_H) / (μ * (W_s - F_L)) = 1
+    # Reuse the canonical demand so load-direction handling stays consistent.
     if friction_coefficient > 0.0:
         required_ws = (
-            safety_factor * horizontal_force_n_per_m / friction_coefficient
+            canonical.details["demand"] / friction_coefficient
             + lift_force_n_per_m
         )
     else:
