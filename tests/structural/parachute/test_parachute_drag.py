@@ -29,7 +29,7 @@ from digitalmodel.structural.parachute.parachute_drag import (
 )
 
 
-def test_documented_synthetic_drag_example(capsys):
+def test_documented_cited_drag_example(capsys):
     """Execute the roadmap example against its independent hand calculation."""
     roadmap = (
         Path(__file__).resolve().parents[3]
@@ -40,25 +40,34 @@ def test_documented_synthetic_drag_example(capsys):
     )
     (snippet,) = snippets
     namespace = {"__name__": "__main__"}
-    exec(compile(snippet, str(roadmap), "exec"), namespace)
-
-    # Roadmap, Independent hand calculation: synthetic inputs give these exact
-    # speeds, circular area and force multipliers without production helpers.
-    expected_area = 25.0 * math.pi
+    exec(compile(snippet, roadmap.as_posix(), "exec"), namespace)
+    # NASA, Adventures in Rocket Science (2008), activity 23, part 2, p. 124:
+    # rho=1.22 kg/m^3, Cd=0.75, D=18 in, V=3 m/s; steady drag has Cx=1.
+    # NIST SP 811 (2008), Appendix B.8: in=0.0254 m, ft=0.3048 m,
+    # mph=0.44704 m/s, slug/ft^3=515.3788 kg/m^3, lbf=4.448222 N.
+    # A = pi*(18*0.0254/2)^2 / 0.3048^2 = 1.7671458676442586 ft^2.
+    # V = 3/0.3048 = 9.84251968503937 ft/s; 3/0.44704 mph.
+    # F = 0.5*1.22*3^2*0.75*pi*(18*0.0254/2)^2
+    #   = 0.2151721503*pi N = 0.6759832466395989 N
+    #   = 0.15196706608608987 lbf; doubling V multiplies F by four.
+    expected_area = 1.7671458676442586
     expected_cases = (
-        (namespace["baseline"], 30.0, 44.0, 72.6 * math.pi),
-        (namespace["faster"], 60.0, 88.0, 290.4 * math.pi),
+        (namespace["baseline"], 6.710808876163207, 9.84251968503937,
+         0.15196706608608987, 0.6759832466395989),
+        (namespace["faster"], 13.421617752326414, 19.68503937007874,
+         0.6078682643443595, 2.7039329865583954),
     )
     expected_lines = []
-    for result, speed_mph, speed_fps, force_lbf in expected_cases:
+    for result, speed_mph, speed_fps, force_lbf, force_n in expected_cases:
         assert isinstance(result, DragResult)
-        assert result.speed_mph == speed_mph
+        assert result.speed_mph == pytest.approx(speed_mph)
         assert result.speed_fps == pytest.approx(speed_fps)
         assert result.chute_area_ft2 == pytest.approx(expected_area)
+        assert result.cd == 0.75
+        assert result.cx == 1.0
+        assert result.rho == pytest.approx(0.002367190889497201)
         assert result.force_lbs == pytest.approx(force_lbf)
-        # NIST SP 811 Appendix B.8, pound-force: 4.448222 N/lbf.
-        # The roadmap explains the 1 ppm allowance for the API's rounded factor.
-        force_n = force_lbf * 4.448222
+        # Allow 1 ppm for the rounded NIST density and API newton factors.
         assert result.force_n == pytest.approx(force_n, rel=1e-6)
         expected_lines.append(
             f"{speed_mph:.1f} mph = {speed_fps:.1f} ft/s; "
@@ -66,7 +75,6 @@ def test_documented_synthetic_drag_example(capsys):
             f"drag = {force_lbf:.1f} lbf ({force_n:.1f} N)"
         )
 
-    # Independent hand calculation: doubling speed gives a force ratio of four.
     force_ratio = namespace["faster"].force_lbs / namespace["baseline"].force_lbs
     assert force_ratio == pytest.approx(4.0)
     expected_lines.append("force ratio = 4.0")
