@@ -226,3 +226,103 @@ def test_restore_validates_evidence_invariants(kind):
         document["cards"][0]["load"] = [1, 2]
     with pytest.raises(ValueError):
         AlarmEvidence.from_json(json.dumps(document))
+
+
+@pytest.mark.parametrize("offset", [
+    "+01:60", "-01:60", "+00:99", "-00:99", "+24:00", "-24:00",
+])
+@pytest.mark.parametrize("target", ["card", "event"])
+def test_capture_rejects_invalid_offset_components(offset, target):
+    timestamp = f"2026-01-01T02:00:00{offset}"
+    rows = cards()[:1] if target == "card" else []
+    if target == "card":
+        rows[0][1].timestamp = timestamp
+    event = "2026-01-03T00:00:00Z" if target == "card" else timestamp
+    with pytest.raises(ValueError, match="timestamp"):
+        capture(rows, event_timestamp=event)
+
+
+@pytest.mark.parametrize("offset", [
+    "+01:60", "-01:60", "+00:99", "-00:99", "+24:00", "-24:00",
+])
+@pytest.mark.parametrize("target", ["card", "event"])
+def test_restore_rejects_invalid_offset_components(offset, target):
+    document = capture(
+        cards()[:1] if target == "card" else [],
+        event_timestamp="2026-01-03T00:00:00Z",
+    ).to_dict()
+    timestamp = f"2026-01-01T02:00:00{offset}"
+    if target == "card":
+        document["cards"][0]["timestamp"] = timestamp
+    else:
+        document["event_timestamp"] = timestamp
+    with pytest.raises(ValueError, match="timestamp"):
+        AlarmEvidence.from_json(json.dumps(document))
+
+
+@pytest.mark.parametrize("timestamp", [
+    "2026-01-01T00:59:00+00:59", "2025-12-31T23:01:00-00:59",
+    "2026-01-01T23:59:00+23:59", "2025-12-31T00:01:00-23:59",
+])
+def test_offset_boundaries_preserve_exact_event_eligibility(timestamp):
+    # Each literal denotes midnight UTC; an equal-time card is retained.
+    rows = cards()[:1]
+    rows[0][1].timestamp = timestamp
+    evidence = capture(rows, event_timestamp="2026-01-01T00:00:00Z")
+    assert tuple(card.card_id for card in evidence.cards) == ("a",)
+    assert evidence.cards[0].timestamp == timestamp
+    restored = AlarmEvidence.from_json(evidence.to_json())
+    assert restored.cards[0].timestamp == timestamp
+    assert restored.cards[0].position == (0, 1, 0)
+
+
+@pytest.mark.parametrize("container", [{}, "", {"a": {}}, "cards", None, 0, True])
+def test_restore_requires_a_json_array_of_cards(container):
+    document = capture().to_dict()
+    document["cards"] = container
+    with pytest.raises(ValueError, match="cards|document"):
+        AlarmEvidence.from_json(json.dumps(document))
+
+
+@pytest.mark.parametrize("entry", [None, "card", [], 0, True])
+def test_restore_requires_card_objects(entry):
+    document = capture().to_dict()
+    document["cards"] = [entry]
+    with pytest.raises(ValueError, match="cards|document"):
+        AlarmEvidence.from_json(json.dumps(document))
+
+
+@pytest.mark.parametrize("trace", [
+    "010", {"0": 10, "1": 20, "2": 30}, ["0", "1", "0"],
+    [False, True, False], [None, 1, 0], [[0], 1, 0], None, 10,
+    [float("nan"), 1, 0], [float("inf"), 1, 0],
+])
+@pytest.mark.parametrize("field", ["position", "load"])
+@pytest.mark.parametrize("operation", ["capture", "restore"])
+def test_nonnumeric_trace_shapes_are_rejected(trace, field, operation):
+    rows = cards()[:1]
+    if operation == "capture":
+        # A caller can mutate CardData after its initial model validation.
+        setattr(rows[0][1], field, trace)
+        with pytest.raises(ValueError, match=field):
+            capture(rows)
+    else:
+        document = capture(rows).to_dict()
+        document["cards"][0][field] = trace
+        with pytest.raises(ValueError, match=field):
+            AlarmEvidence.from_json(json.dumps(document))
+
+
+def test_restore_preserves_numeric_arrays_and_an_empty_card_history():
+    document = capture(cards()[:1]).to_dict()
+    # Invented numeric literals are retained by value and by source order.
+    document["cards"][0]["position"] = [-0.5, 0, 1.25]
+    document["cards"][0]["load"] = [10, 20.5, 30]
+    restored = AlarmEvidence.from_json(json.dumps(document))
+    assert restored.cards[0].position == (-0.5, 0, 1.25)
+    assert restored.cards[0].load == (10, 20.5, 30)
+    assert restored.to_dict() == document
+    document["cards"] = []
+    restored_empty = AlarmEvidence.from_json(json.dumps(document))
+    assert restored_empty.cards == ()
+    assert restored_empty.to_dict() == document

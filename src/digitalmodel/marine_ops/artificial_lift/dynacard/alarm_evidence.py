@@ -37,7 +37,7 @@ from .models import CardData
 # Field widths are ISO extended calendar/time syntax, not engineering limits.
 _TIME_FORMAT = re.compile(
     r"(?P<whole>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})"
-    r"(?:[.,](?P<fraction>\d+))?(?P<offset>Z|[+-]\d{2}:\d{2})"
+    r"(?:[.,](?P<fraction>\d+))?(?P<offset>Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)"
 )
 _Instant = tuple[datetime, Fraction]
 
@@ -104,8 +104,13 @@ class EvidenceCard:
         _text(self.card_id, "card_id")
         _timestamp(self.timestamp, "card timestamp")
         for name in ("position", "load"):
+            trace = getattr(self, name)
+            if not isinstance(trace, (list, tuple)) or any(
+                type(value) not in (int, float) for value in trace
+            ):
+                raise ValueError(f"{name} must be a finite numeric array")
             try:
-                values = tuple(float(value) for value in getattr(self, name))
+                values = tuple(float(value) for value in trace)
             except (TypeError, ValueError, OverflowError) as exc:
                 raise ValueError(f"{name} must be a finite numeric array") from exc
             if not all(math.isfinite(value) for value in values):
@@ -191,7 +196,12 @@ class AlarmEvidence:
         """Restore immutable evidence, rejecting invalid event envelopes."""
         try:
             values = json.loads(document)
-            snapshots = tuple(EvidenceCard(**card) for card in values.pop("cards"))
+            cards = values.pop("cards")
+            if not isinstance(cards, list) or any(
+                not isinstance(card, dict) for card in cards
+            ):
+                raise ValueError("cards must be a JSON array of card objects")
+            snapshots = tuple(EvidenceCard(**card) for card in cards)
             return cls(cards=snapshots, **values)
         except (AttributeError, KeyError, TypeError) as exc:
             raise ValueError("invalid alarm evidence document") from exc
