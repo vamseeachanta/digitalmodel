@@ -1,0 +1,25 @@
+# Numerical basis and assumptions: ../README.md, Synthetic input basis.
+version: "1.0"
+analysis_type: diffraction
+vessel:
+  name: synthetic_box
+  geometry:
+    mesh_file: meshes/box.gdf
+    mesh_format: gdf
+    symmetry: none
+    reference_point: [0.0, 0.0, 0.0]
+    waterline_z: 0.0
+    length_units: m
+  inertia:
+    mass: 8000.0
+    centre_of_gravity: [0.0, 0.0, -1.0]
+    radii_of_gyration: [1.0, 1.0, 1.0]
+environment:
+  water_depth: 20.0
+  water_density: 1000.0
+  gravity: 9.80665
+frequencies:
+  input_type: frequency
+  values: [1.0]
+wave_headings:
+  values: [0.0]

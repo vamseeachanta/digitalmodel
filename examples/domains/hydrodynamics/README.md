@@ -8,6 +8,10 @@ Examples for hydrodynamic analysis, wave loads, and hydrodynamic coefficient cal
 
 ### Python Scripts
 
+**[Synthetic package example](synthetic_package/README.md)** - Convert a tiny
+closed mesh with `SpecConverter`, inspect local mesh references from another
+working directory, and distinguish package completeness from solver validation.
+
 **`generate_hydro_charts.py`** - Generate hydrodynamic coefficient charts
 - RAO (Response Amplitude Operator) generation
 - Added mass and damping coefficients
