@@ -1,0 +1,55 @@
+{
+  "basis": "Independent hand calculation for synthetic circular pipes; all dimensional inputs below are chosen test data, not measured or standard-tabulated values.",
+  "assumptions": [
+    "Uniform, straight Euler-Bernoulli beam; pinned ends; no sag or axial force; contents move with the pipe.",
+    "Incompressible, inviscid, irrotational fluid of unbounded extent; circular cylinder translating perpendicular to its axis; end effects neglected.",
+    "The synthetic gap is ten outer diameters, selecting the implementation's isolated-cylinder branch without exercising its empirical proximity fit."
+  ],
+  "hand_calculation": [
+    "Let a and b be outer and inner radii. Area integration gives A_wall = integral_b^a integral_0^(2*pi) r dtheta dr = pi*(a^2-b^2), A_bore = pi*b^2.",
+    "I = integral_b^a integral_0^(2*pi) (r*sin(theta))^2*r dtheta dr = pi*(a^4-b^4)/4. EI = E*I; wall and content masses per length are their densities times their areas.",
+    "For cylinder translation at speed U in otherwise still fluid, phi = -U*a^2*cos(theta)/r satisfies Laplace's equation, dphi/dr at r=a equals U*cos(theta), and velocity vanishes at infinity.",
+    "The squared fluid speed is |grad(phi)|^2 = U^2*a^4/r^4. Kinetic energy per length T = rho/2 * integral_a^infinity integral_0^(2*pi) |grad(phi)|^2*r dtheta dr = rho*pi*a^2*U^2/2.",
+    "Equating T to m_added*U^2/2 gives m_added = rho*pi*a^2 and Ca = 1 by derivation, without a standard table. The circular solution is unchanged by rotating the direction of translation.",
+    "Substituting w = sin(pi*x/L)*cos(omega*t) in EI*w_xxxx + m_effective*w_tt = 0 gives omega^2 = (EI/m_effective)*(pi/L)^4, hence f = pi/(2*L^2)*sqrt(EI/m_effective). Both w and w_xx vanish at the pinned ends.",
+    "For the reference a=1/5 m and b=3/20 m: A_wall/pi=7/400 m^2, A_bore/pi=9/400 m^2, I/pi=7/25600 m^4; wall/pi=273/2, content/pi=18, added/pi=40, total/pi=389/2 kg/m.",
+    "For the wider annulus a=3/10 m and b=1/4 m: A_wall/pi=11/400 m^2, A_bore/pi=1/16 m^2, I/pi=671/640000 m^4; wall/pi=429/2, content/pi=50, added/pi=90, total/pi=709/2 kg/m.",
+    "Halving/doubling L multiplies f by four/one quarter. Multiplying E alone by one quarter/four multiplies EI by one quarter/four and f by one half/two; mass stays constant."
+  ],
+  "inputs": {
+    "od_m": 0.4,
+    "wt_m": 0.05,
+    "span_length_m": 20.0,
+    "e_modulus_pa": 200000000000.0,
+    "steel_density_kgm3": 7800.0,
+    "content_density_kgm3": 800.0,
+    "water_density_kgm3": 1000.0,
+    "seabed_gap_m": 4.0,
+    "sag_m": 0.0,
+    "effective_axial_force_N": 0.0,
+    "current_velocity_ms": 0.0,
+    "wave_velocity_ms": 0.0
+  },
+  "sections": {
+    "reference": {
+      "second_moment_over_pi_m4": [7, 25600],
+      "wall_mass_over_pi_kgm": [273, 2],
+      "content_mass_over_pi_kgm": [18, 1],
+      "added_mass_over_pi_kgm": [40, 1]
+    },
+    "wider": {
+      "second_moment_over_pi_m4": [671, 640000],
+      "wall_mass_over_pi_kgm": [429, 2],
+      "content_mass_over_pi_kgm": [50, 1],
+      "added_mass_over_pi_kgm": [90, 1]
+    }
+  },
+  "cases": [
+    {"id": "reference", "overrides": {}, "section": "reference"},
+    {"id": "half-span", "overrides": {"span_length_m": 10.0}, "section": "reference", "frequency_ratio": 4.0},
+    {"id": "double-span", "overrides": {"span_length_m": 40.0}, "section": "reference", "frequency_ratio": 0.25},
+    {"id": "quarter-stiffness", "overrides": {"e_modulus_pa": 50000000000.0}, "section": "reference", "frequency_ratio": 0.5},
+    {"id": "quadruple-stiffness", "overrides": {"e_modulus_pa": 800000000000.0}, "section": "reference", "frequency_ratio": 2.0},
+    {"id": "wider-annulus", "overrides": {"od_m": 0.6, "seabed_gap_m": 6.0}, "section": "wider"}
+  ]
+}

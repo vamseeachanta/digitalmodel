@@ -13,6 +13,16 @@ Ce static-deflection correction (commentary Sec 6.8):
     pinned-pinned  Ce_IL = 0.4,  Ce_CF = 0.2
     fixed-fixed    Ce_IL = 0.2,  Ce_CF = 0.1
     fixed-pinned   Ce_IL = 0.3,  Ce_CF = 0.15
+
+Analytical reference limit (straight, untensioned, pinned at both ends):
+    EI*w_xxxx + m_e*w_tt = 0 with w proportional to sin(π*x/L) gives
+    f_1 = π/(2*L²) * sqrt(EI/m_e), identical in both transverse directions.
+    The pinned coefficient below rounds π² to two decimal places; comparisons with
+    the exact beam solution must allow that rounding discrepancy.
+    For an isolated circular cylinder of radius a, potential-flow kinetic
+    energy per unit length is ρ_w*π*a²*U²/2, hence m_added = ρ_w*π*a².
+    Independent area and energy integrations with synthetic reference cases
+    are recorded in tests/subsea/pipeline/free_span_beam_reference.json.
 """
 from __future__ import annotations
 
