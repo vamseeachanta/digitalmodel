@@ -10,6 +10,7 @@ from __future__ import annotations
 import matplotlib
 matplotlib.use("Agg")  # Must be before any other matplotlib imports
 
+import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -40,6 +41,42 @@ from digitalmodel.hydrodynamics.parametric_hull_analysis.charts import (
 # ---------------------------------------------------------------------------
 # Helpers — minimal mock data structures
 # ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def synthetic_chart_sweep():
+    """Load the hand-calculated example in synthetic_chart_sweep.json.
+
+    The fixture's basis cites the synthetic inputs and independent peak
+    calculations. Expected points are literals, never extracted from a plot
+    or computed with the chart implementation.
+    """
+    example = json.loads(
+        Path(__file__).with_name("synthetic_chart_sweep.json").read_text()
+    )
+    entries = []
+    for raw in example["entries"]:
+        rao = None
+        if raw["has_response"]:
+            rao = SimpleNamespace(
+                periods=np.array(example["periods_s"]),
+                headings=np.array(example["headings_deg"]),
+                dof_names=example["dof_names"],
+                rao_amplitude=(
+                    None if raw["amplitudes"] is None
+                    else np.array(raw["amplitudes"])
+                ),
+            )
+        entries.append(SweepResultEntry(
+            variation_id=raw["variation_id"],
+            hull_params={"beam": raw["beam"]},
+            beam=raw["beam"],
+            **example["geometry"],
+            bem_result=None,
+            rao_result=rao,
+            depth_class=DepthClassification.DEEP,
+        ))
+    return example, entries
 
 
 def _make_rao_result(
@@ -151,6 +188,30 @@ class TestForceUnit:
 class TestRaoComparisonGrid:
     """Tests for rao_comparison_grid."""
 
+    def test_fixture_coordinates_and_labels(self, synthetic_chart_sweep):
+        example, entries = synthetic_chart_sweep
+        fig = rao_comparison_grid(
+            entries,
+            dofs=(example["selected_dof"],),
+            heading_idx=example["selected_heading_idx"],
+        )
+        try:
+            ax, = fig.get_axes()
+            expected = example["expected_curves"]
+            assert len(ax.lines) == len(expected)
+            for line, curve in zip(ax.lines, expected):
+                np.testing.assert_array_equal(line.get_xdata(), curve["x"])
+                np.testing.assert_array_equal(line.get_ydata(), curve["y"])
+                assert line.get_label() == curve["label"]
+            assert [text.get_text() for text in ax.get_legend().get_texts()] == [
+                curve["label"] for curve in expected
+            ]
+            assert ax.get_xlabel() == "Wave period [s]"
+            assert ax.get_ylabel() == "RAO amplitude"
+            assert ax.get_title() == "Roll"
+        finally:
+            plt.close(fig)
+
     def test_returns_figure(self):
         results = [_make_sweep_result_entry(f"hull__beam={b}", param_val=b)
                     for b in [30.0, 32.0, 34.0]]
@@ -230,6 +291,49 @@ class TestRaoComparisonGrid:
 
 class TestParameterSensitivityPlot:
     """Tests for parameter_sensitivity_plot."""
+
+    def test_fixture_coordinates_and_labels(self, synthetic_chart_sweep):
+        example, entries = synthetic_chart_sweep
+        fig = parameter_sensitivity_plot(
+            entries,
+            param_name="beam",
+            dof=example["selected_dof"],
+            heading_idx=example["selected_heading_idx"],
+        )
+        try:
+            ax, = fig.get_axes()
+            scatter, = ax.collections
+            line, = ax.lines
+            expected = np.array(example["expected_sensitivity_points"])
+            np.testing.assert_array_equal(scatter.get_offsets(), expected)
+            np.testing.assert_array_equal(line.get_xdata(), expected[:, 0])
+            np.testing.assert_array_equal(line.get_ydata(), expected[:, 1])
+            assert ax.get_xlabel() == "beam"
+            assert ax.get_ylabel() == "Peak Roll RAO"
+            assert ax.get_title() == "Sensitivity: beam vs Peak Roll RAO"
+        finally:
+            plt.close(fig)
+
+    @pytest.mark.parametrize("missing_kind", ["missing-result", "missing-amplitude"])
+    def test_missing_response_has_no_points(self, synthetic_chart_sweep, missing_kind):
+        example, entries = synthetic_chart_sweep
+        missing, = [entry for entry in entries
+                    if entry.variation_id == f"synthetic__{missing_kind}"]
+        fig = parameter_sensitivity_plot(
+            [missing],
+            param_name="beam",
+            dof=example["selected_dof"],
+            heading_idx=example["selected_heading_idx"],
+        )
+        try:
+            ax, = fig.get_axes()
+            scatter, = ax.collections
+            line, = ax.lines
+            assert scatter.get_offsets().size == 0
+            np.testing.assert_array_equal(line.get_xdata(), [])
+            np.testing.assert_array_equal(line.get_ydata(), [])
+        finally:
+            plt.close(fig)
 
     def test_returns_figure(self):
         results = [_make_sweep_result_entry(f"hull__beam={b}", b)
