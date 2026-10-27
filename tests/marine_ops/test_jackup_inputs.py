@@ -118,6 +118,18 @@ def test_worked_example_runs_offline_and_keeps_environment_unqualified():
     assert len(result['environment_cases']) == 3
     assert all(case['actions']['horizontal_force_kn'] > 0 for case in result['environment_cases'])
     assert all(case['qualification'] == 'illustrative_only' for case in result['environment_cases'])
+    assert result['preload_sequence_status'] == 'synthetic_histories_only'
+    assert len(result['preload_sequences']) == 3
+    for history in result['preload_sequences']:
+        assert history['stage_order'] == ('preparation', 'preload', 'holding', 'discharge')
+        assert history['target_preload_per_leg_kn'] == 45000
+        assert history['hold_start_h'] == 0.25
+        assert history['hold_end_h'] == 1.25
+        assert history['hold_met']
+        assert history['settlement_rate_m_h'] == pytest.approx(0.0004)
+        assert history['punch_through']  # A settled hold does not clear the deeper drop.
+        assert all('planned_capacity_drop_below_tip' in step['punch_through_reasons']
+                   for step in history['steps'])
 
 
 def test_gumbel_moments_and_return_quantile_independently():

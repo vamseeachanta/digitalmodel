@@ -14,6 +14,7 @@ and improve the penetration method before using it for a particular installation
 | 0 | 2026-10-27 | Add public research calculations, benchmark limitations and an offline example to make the screening boundaries reproducible. |
 | 1 | 2026-10-27 | Replace the square sand reference with published circular factors and add traceable environmental extracts and load sensitivities to close the missing calculation paths. |
 | 2 | 2026-10-27 | Separate constants and bounds by their evidence basis, replace unsupported collection statistics with synthetic particulars, preserve frozen bytes across checkouts and add independent layered-curve and recovery expectations. |
+| 3 | 2026-10-27 | Add per-leg preload histories, explicit hold controls and penetration comparisons to expose settlement evidence and independent punch-through warnings. |
 
 ## Run the example
 
@@ -241,6 +242,64 @@ periods are expected. This is a load-sensitivity illustration, not an environmen
 operating envelope for a Gulf site. The added environmental scenarios are also
 sensitivities, pending input qualification. The client adapter rejects
 missing ERA5 data, empty observation records and zero or unparseable offshore depth.
+
+## Preload sequence screening
+
+[preload_sequence.py](../../../src/digitalmodel/marine_ops/preload_sequence.py)
+walks four explicit `PreloadStage` records in order: **preparation, preload,
+holding, discharge**. Each contains chronological `PreloadSample` readings of
+elapsed hours, applied load in kN and measured or computed penetration in metres.
+Supply the target preload for that leg, the existing planned penetration curve
+and `PreloadCriteria`; screen each leg separately. Times must increase across all
+stages. Depth must share the curve's datum at the widest spudcan cross-section;
+it does not use the cone apex. Computed readings need a separate settlement model.
+
+At the last holding reading, the screen requires uninterrupted load at or above
+target for at least **1.0 h**, and settlement rate strictly below the supplied
+limit over a full trailing window. A load dip restarts the clock. Preparation,
+preloading and discharge time earn no holding credit. Results report hold start,
+hold end, duration, rate, whether the criterion was met and separate failure
+reasons. A settled final window suffices; settlement need not have stopped for
+the entire hour. No time after the last reading is inferred.
+
+The default window is **0.25 h** and the default rate limit is **0.001 m/h**.
+Rate is total absolute penetration movement divided by window duration, with
+linear interpolation at the window boundary. This prevents rebound from
+cancelling settlement. A missing full window fails the criterion; sparse
+readings do not qualify motion between observations. The minimum hold can be
+increased through `minimum_hold_h`, but cannot be reduced below one hour.
+All defaults are **illustrative assumptions, based on previous experience**,
+exposed as inputs for sensitivity screening, without a standard-derived basis.
+
+Each reading reports planned penetration at its applied load and signed
+actual-minus-planned deviation. The planned depth is the shallowest intersection
+of the piecewise linear loading curve; deeper alternative roots are not chosen
+silently. Loads outside its range return unavailable depth and deviation, with
+no extrapolation. A separate indicator reports whether the actual depth lies
+within the curve's extent. Discharge comparisons remain loading-curve references,
+without an unloading or rebound model.
+
+During preloading, a positive penetration increment raises a punch-through flag
+when the load increment is at most `small_load_increment_fraction` times target
+and penetration per load increment exceeds `punch_through_rate_m_kn`. Defaults
+are **0.05** of target and **0.01 m/kN**, respectively, also illustrative inputs
+assumed, based on previous experience. Positive penetration at constant load in
+the preload stage flags separately, without division by zero; holding settlement
+uses the time-based criterion instead. The first preload reading is compared
+with the final preparation reading. At every stage, any decreasing capacity
+segment extending below the current tip raises an independent warning, even
+below peak load. Neither a settled hold nor an absent flag establishes acceptance.
+
+The offline example adds three identical synthetic per-leg histories under
+`preload_sequences` in `results.json`, labelled `synthetic_histories_only`.
+Loads, times and added settlement are assumptions; loading depths follow the
+existing illustrative mobilization branch. Each history holds from 0.25 h to
+1.25 h and satisfies the final window criterion, while retaining the deeper
+capacity-drop warning. No actual leg interaction or settlement response is
+predicted. Synthetic tests cover a passing hold, persistent settlement, a short
+hold, load interruption, missing evidence, rebound, explicit threshold changes,
+sharp penetration and a deeper capacity drop. No standard document was accessed
+or transcribed for this addition.
 
 ## Worked result and verification
 

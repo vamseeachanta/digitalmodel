@@ -17,6 +17,9 @@ from pathlib import Path
 from digitalmodel.geotechnical.spudcan import SandOverClay, penetration_curve, punch_through_screen
 from digitalmodel.marine_ops.jackup_inputs import frozen_environment, frozen_inputs, query_public_inputs
 from digitalmodel.marine_ops.jackup_screening import environmental_actions, screen_three_leg_unit
+from digitalmodel.marine_ops.preload_sequence import (
+    PreloadCriteria, PreloadSample, PreloadStage, screen_preload_sequence,
+)
 
 INPUTS = Path(__file__).resolve().parents[2] / 'data' / 'jackup_screening'
 
@@ -31,6 +34,32 @@ def make_profile(data):
     params.update({key: data['method_assumptions'][key] for key in (
         'critical_state_friction_deg', 'log_crushing_strength_kpa', 'base_cone_angle_deg')})
     return SandOverClay(diameter_m=math.sqrt(4 * area / math.pi), area_m2=area, **params)
+
+
+def synthetic_preload_stages(target_kn, curve):
+    """Build an illustrative single-leg history, not a settlement prediction.
+
+    Loads, elapsed times and added settlement are assumed, based on previous
+    experience, solely to exercise the sequence. Loading depths use the existing
+    illustrative linear mobilization branch. Repeat independently for each leg;
+    identical histories do not establish equal actual leg behaviour.
+    """
+    peak = next(point for point in curve if point.branch == 'peak')
+    if target_kn > peak.load_kn:
+        raise ValueError('synthetic history requires target no greater than planned peak')
+    depth = peak.depth_m * target_kn / peak.load_kn
+    return (
+        PreloadStage('preparation', (PreloadSample(0, 0, 0),)),
+        PreloadStage('preload', (
+            PreloadSample(0.1, target_kn / 2, depth / 2),
+            PreloadSample(0.2, target_kn, depth))),
+        PreloadStage('holding', (
+            PreloadSample(0.25, target_kn, depth),
+            PreloadSample(0.75, target_kn, depth + 0.01),
+            PreloadSample(1, target_kn, depth + 0.0101),
+            PreloadSample(1.25, target_kn, depth + 0.0102))),
+        PreloadStage('discharge', (PreloadSample(1.5, target_kn / 2, depth + 0.0102),)),
+    )
 
 
 def run_example(*, public_clients=None):
@@ -100,11 +129,17 @@ def run_example(*, public_clients=None):
     curve = penetration_curve(profile, [i / 10 for i in range(251)])
     if max(point.depth_m for point in curve) > data['soil']['qualified_bottom_m']:
         raise ValueError('curve extends below the published soil interval')
+    target = unit['preload_per_leg_kn']['value']
+    preload_histories = [asdict(screen_preload_sequence(
+        synthetic_preload_stages(target, curve), target_preload_per_leg_kn=target,
+        planned_curve=curve, criteria=PreloadCriteria())) for _ in supports]
     result = {
         'qualification': 'generic_screening_only', 'environment_status': 'illustrative_inputs_only',
         'environment': environment, 'environment_cases': environment_cases,
         'operating_envelope_status': 'synthetic_load_sensitivity_only',
         'curve': [asdict(point) for point in curve],
+        'preload_sequence_status': 'synthetic_histories_only',
+        'preload_sequences': preload_histories,
         'punch_through': asdict(punch_through_screen(profile, unit['preload_per_leg_kn']['value'])),
         'zero_environment_statics': asdict(evaluate(0, 10)),
         'static_envelope': [asdict(point) for point in jackup_operating_envelope(
@@ -115,6 +150,8 @@ def run_example(*, public_clients=None):
             'Synthetic force coefficient and application height are illustrative assumptions.',
             'Preload comparison is not structural capacity or combined foundation resistance.',
             'Interpolated post-peak curve and static recovery depth do not predict dynamic penetration.',
+            'Preload histories and threshold defaults are illustrative assumptions, based on previous experience.',
+            'A settled hold does not clear a deeper planned capacity drop or establish installation acceptance.',
         ],
     }
     return result
