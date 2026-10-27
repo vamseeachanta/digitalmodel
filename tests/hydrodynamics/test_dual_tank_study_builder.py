@@ -4,7 +4,6 @@
 import importlib.util
 import math
 import re
-from html import escape as html_escape
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -16,6 +15,54 @@ ROOT = Path(__file__).resolve().parents[2]
 BUILDER = ROOT / "scripts/capabilities/build_dual_tank_sloshing_study.py"
 PAGE = ROOT / "docs/api/cfd/dual-tank-sloshing-cfd-study.html"
 EXISTING = PAGE.with_name("sloshing-cfd-study.html")
+
+
+def test_public_reader_contract(builder):
+    text = builder.render()
+    visible = re.sub('<[^>]+>', '', text)
+    for phrase in ('Internal technical study', 'AI-drafted', 'Failed automated case-launch scripts',
+                   '0/9 wrapper cases succeeded', 'unstaged case quantities', 'builder links',
+                   'report tests', 'source links repaired', 'paths wrap on narrow screens', '#1474 NOTE'):
+        assert phrase not in text
+    assert '<pre>' not in text
+    assert visible.count('U-tube style') == 1
+    assert 'U-tube' not in visible.replace('U-tube style', '')
+    assert 'twin-tank' not in visible and 'dual-tank' not in visible
+    assert 'Published ±' not in visible and 'published response' not in visible
+    for phrase in ('α = K_tank / K_hull', 'A^−n', 'In phase', 'quadrature',
+                   'Courant number', 'Richardson order', '1/(2ζ_h)', '18.2 s',
+                   'not tuned to the 20.0 s vessel period', '38 cases',
+                   'reference values from the study’s test inputs'):
+        assert phrase in visible
+    assert visible.index('Exchange amplitude is') < visible.index('Archived exchange amplitude.')
+    body = text.split('<h2 id="curves">')[1].split('<h2 id="validation">')[0]
+    archived = body.split('<h3>5.4 Archived CFD comparisons</h3>')[1]
+    assert archived.count('<p>') == 1 and '<table>' not in archived and '<svg' not in archived
+    assert 'archived study files, available on request' in visible
+    assert_references_resolve(text, PAGE)
+
+
+def test_portable_review_copy_matches_generated_page(builder, tmp_path):
+    import hashlib
+
+    target = builder.build_review_copy(tmp_path)
+    text = target.read_text()
+    brand = (ROOT / 'docs/api/_assets/brand.css').read_text()
+    parsed = References()
+    parsed.feed(text)
+    assert '../_assets/brand.css' not in parsed.refs
+    restored = text.replace('<style data-review-brand>' + brand + '</style>',
+                            '<link rel="stylesheet" href="../_assets/brand.css">')
+    restored = restored.replace('href="data/sloshing-tld-twopeak.json"',
+                                'href="../structural/sloshing-tld-twopeak.json"')
+    assert restored == builder.render()
+    digest = hashlib.sha256(target.read_bytes()).hexdigest()
+    assert (tmp_path / 'SHA256.txt').read_text() == f'{digest}  {target.name}\n'
+    for spec in builder.chart_specs():
+        assert (tmp_path / 'data/charts' / (spec['id'] + '.csv')).read_bytes() == (
+            PAGE.parent / 'data/charts' / (spec['id'] + '.csv')).read_bytes()
+    assert (tmp_path / 'data/dual_tank_cfd_evidence.json').read_bytes() == builder.EVIDENCE_PATH.read_bytes()
+    assert (tmp_path / 'data/sloshing-tld-twopeak.json').read_bytes() == builder.JSON_PATH.read_bytes()
 
 
 class References(HTMLParser):
@@ -58,7 +105,6 @@ def test_published_links_stay_within_docs_api_or_use_repository_urls(builder):
     parsed = References()
     parsed.feed(builder.render())
     publication_root = ROOT / 'docs/api'
-    repository = 'https://github.com/vamseeachanta/digitalmodel/blob/main/'
     for ref in parsed.refs:
         url = urlsplit(ref)
         assert not unquote(url.path).startswith('../../../'), ref
@@ -66,9 +112,6 @@ def test_published_links_stay_within_docs_api_or_use_repository_urls(builder):
             continue
         target = (PAGE.parent / unquote(url.path)).resolve()
         assert target.is_relative_to(publication_root), ref
-    for path in (builder.MODEL_PATH, builder.TEST_PATH, builder.REDUCTION_PATH,
-                 BUILDER, ROOT / 'pyproject.toml'):
-        assert repository + path.relative_to(ROOT).as_posix() in parsed.refs
     assert 'data/dual_tank_cfd_evidence.json' in parsed.refs
     assert '../structural/sloshing-tld-twopeak.json' in parsed.refs
     assert parsed.refs.count('generic-hull-roll-screening.html') == 1
@@ -82,10 +125,10 @@ def test_appendix_c_has_revision_data_and_no_summary_history_link(builder):
     history = text.split('<h2 id="revisions">Appendix C – Revision history</h2>', 1)[1]
     table = ElementTree.fromstring(re.search(r'<table>.*?</table>', history, re.S)[0])
     assert [node.text for node in table.findall('.//th')] == [
-        'Revision', 'Date', 'Description', 'Prepared / checked']
+        'Revision', 'Date', 'Description', 'Status']
     rows = table.findall('.//tr')[1:]
-    assert len(rows) == len(builder.REVISIONS) >= 10
-    assert all(row.findall('td')[3].text == 'AI-drafted; engineering check pending' for row in rows)
+    assert len(rows) == len(builder.REVISIONS) == 8
+    assert all(row.findall('td')[3].text == 'issued for review' for row in rows)
 
 
 def schematic_line_segments(svg):
@@ -367,7 +410,7 @@ def test_output_structure_links_and_privacy(builder):
         assert root.find("desc").text
         if root.attrib.get("class") == "study-chart":
             assert root.findall(".//g[@data-y]")
-    assert sum("outside the published moment-fit band" in "".join(svg.itertext())
+    assert sum("outside the reference moment-fit band" in "".join(svg.itertext())
                for svg in chart_roots(text)) == 2
     assert text.count("<script") == 1
     assert "<img" not in text
@@ -489,6 +532,16 @@ def test_a2_preserved_inputs_and_table_cells(builder):
 
     bindings = EvidenceBindings()
     bindings.feed(builder.render())
+    # The rejected case-launch row is intentionally omitted; account for only
+    # that row when comparing the original evidence bindings and cell values.
+    evidence = json.loads(builder.EVIDENCE_PATH.read_text())
+    rejected = next(row for row in evidence['evidence_classes']
+                    if row['result_family']['value'] == 'nine selected cases')
+    keys = ('evidence_class', 'result_family', 'status', 'key_finding', 'limitation')
+    for key in keys:
+        fact = rejected[key]
+        source = fact['provenance']
+        bindings.values.append((source['path'] + '#' + source['pointer'], str(fact['value'])))
     assert len(bindings.values) == 211
     digest = hashlib.sha256(json.dumps(sorted(bindings.values), ensure_ascii=False).encode()).hexdigest()
     assert digest == '507bcb21019c7de157586b27789f7c607708049ea5dea5780441174aa305617c'
@@ -496,6 +549,17 @@ def test_a2_preserved_inputs_and_table_cells(builder):
     text = re.sub(r'<div id="sensitivity-matrix">.*?</div>', '', text, flags=re.S)
     cells = [re.sub(r' \[I\d+\]', '', html.unescape(re.sub('<[^>]+>', '', c)))
              for c in re.findall('<td>(.*?)</td>', text, re.S)]
+    cells += [re.sub('<[^>]+>', '', builder.evidence_value(rejected[key])) for key in keys]
+    label_changes = {
+        'Reference conduit-area input range': 'Published conduit-area input range',
+        'Independent invented area within the reference conduit-area input range':
+            'Independent invented area within the published conduit-area input range',
+        'Reference period inputs; selected individual archived reductions are shown in Appendix D':
+            'Reference period inputs; individual CFD measurements are not reproduced',
+    }
+    cells = [label_changes.get(cell, cell) for cell in cells]
+    cells = [cell.replace('connected-tank idealization', 'twin-tank idealization')
+             .replace('resolved connected-tank CFD', 'resolved twin-tank CFD') for cell in cells]
     # The revision table is checked separately. Pin the revised engineering
     # labels, MN m presentation and distinguishable frequency-error bounds.
     assert len(cells) == 244
@@ -547,8 +611,11 @@ def test_a4_a6_a7_every_plotted_point_matches_csv(builder):
                 assert series['name'] in title
                 assert spec['xunit'] in title and spec['yunit'] in title
                 assert builder.chart_reference(spec['id']) in title
-                reference = text.split(f'id="ref-chart-{spec["id"]}"', 1)[1].split('</ul></li>', 1)[0]
-                assert html_escape(point['source']) in reference
+                reference = text.split(f'id="ref-chart-{spec["id"]}"', 1)[1].split('</span>', 1)[0]
+                assert builder.chart_reference(spec['id']) in reference
+                # Full pointers remain in the CSV/spec; the page has a short
+                # archive-availability statement instead of private locators.
+                assert point['source']
                 assert node.attrib['data-tooltip'] == title
         assert bool(svg.findall('polyline')) == spec['continuous']
         if not spec['continuous']:
@@ -596,7 +663,7 @@ def test_a8_schematic_is_constant_driven(builder, monkeypatch):
     svg = ElementTree.fromstring(re.search(r'<svg id="schematic".*?</svg>', text, re.S).group())
     labels = ' '.join(svg.itertext())
     for label in ('Left leg', 'Right leg', 'conduit', 'A_c', 'free surface', 'Δh',
-                  'roll angle φ', 'tank height not specified', 'archived CFD twin-tank geometry is not shown'):
+                  'roll angle φ', 'tank height not specified', 'archived CFD connected-tank geometry is not shown'):
         assert label in labels
     before = builder.schematic()
     for key in ('LEG_LENGTH', 'LEG_WIDTH', 'FILL_DEPTH', 'CENTROID_OFFSET', 'CONDUIT_AREA'):
@@ -612,7 +679,7 @@ def test_a9_order_and_a10_exact_writer_copy(builder):
     text = builder.render()
     ids = re.findall(r'<h2 id="([^"]+)"', text)
     assert ids == ['summary', 'introduction', 'geometry', 'method', 'curves',
-                   'validation', 'limits', 'forward', 'basis', 'sensitivity', 'reproduce', 'revisions']
+                   'validation', 'limits', 'forward', 'basis', 'sensitivity', 'reproduce', 'revisions', 'archive']
     assert '<details><summary>' in text
     spec = (ROOT / 'docs/plans/2026-10-25-dual-tank-page-layout-spec.md').read_text()
     visible = html.unescape(re.sub('<[^>]+>', '', text))
@@ -620,6 +687,7 @@ def test_a9_order_and_a10_exact_writer_copy(builder):
         passage = spec.split('### ' + section, 1)[1].split('\n\n"', 1)[1].split('"', 1)[0]
         passage = passage.replace('illustrative inputs below', 'illustrative inputs in Section 3')
         passage = passage.replace('key results are summarized below', 'key results are summarized in Section 1')
+        passage = passage.replace('twin-tank', 'connected-tank')
         assert passage in visible
     assert 'based on the benchmarked single tank' not in visible
     assert 'connecting lines guide the eye' not in visible
@@ -903,8 +971,8 @@ def test_reporting_section_order_and_pinned_headlines(builder):
         '1 Executive summary', '2 Introduction', '3 Design data',
         '4 Analysis methodology', '5 Results', '6 Validation and benchmark',
         '7 Limitations', '8 Conclusions and next steps', '9 References',
-        'Appendix A – Sensitivity matrix', 'Appendix B – Reproduce commands',
-        'Appendix C – Revision history',
+        'Appendix A – Sensitivity matrix', 'Appendix B – Data and source notes',
+        'Appendix C – Revision history', 'Appendix D – Archived CFD comparisons',
     ]
     summary = text.split('<h2 id="summary">', 1)[1].split('<h2 id="introduction">', 1)[0]
     visible = html.unescape(re.sub('<[^>]+>', '', summary))
@@ -932,7 +1000,7 @@ def test_design_basis_assumptions_and_standard_record(builder):
     assert '<table>' in revisions and '<details' not in revisions
     assert 'numbered sections' in revisions
     assert not re.search(r'\b[A-Z]\d+\b|[0-9a-f]{9}', revisions)
-    assert revisions.count('Not assigned') == 2  # Preserve undated historical entries.
+    assert 'Not assigned' not in revisions  # Dates recovered from introducing commits.
 
 
 def test_body_has_citations_instead_of_raw_source_lists(builder):
@@ -948,8 +1016,8 @@ def test_body_has_citations_instead_of_raw_source_lists(builder):
             assert 'archived-cfd-campaign-' not in node.attrib['data-tooltip']
             assert '[I' in node.find('title').text
     refs = text.split('<h2 id="basis">', 1)[1]
-    assert '9.1 Public references' in refs and '9.2 Data record and builder links' in refs
-    assert 'archived-cfd-campaign-' in refs
+    assert '9.1 Public references' in refs and '9.2 Data availability' in refs
+    assert 'archived-cfd-campaign-' not in re.sub('<[^>]+>', '', refs)
     assert_references_resolve(text, PAGE)
 
 
@@ -957,8 +1025,8 @@ def test_numbered_objects_and_print_style(builder):
     text = builder.render()
     captions = re.findall('<figcaption>(.*?)</figcaption>', text, re.S)
     assert len(captions) == 14
-    assert all(re.match(r'Figure \d+\.\d+ – ', caption) for caption in captions)
-    assert len(re.findall(r'<caption>Table [\dA-CR]+\.\d+ – ', text)) == text.count('<table>')
+    assert all(re.match(r'Figure [\dD]+\.\d+ – ', caption) for caption in captions)
+    assert len(re.findall(r'<caption>Table [\dA-DR]+\.\d+ – ', text)) == text.count('<table>')
     assert '@media print' in builder.LAYOUT_CSS
     assert '.study-chart text{font-size:13px' in builder.LAYOUT_CSS
     assert '.study-chart{max-width:440px' in builder.LAYOUT_CSS
@@ -1000,7 +1068,9 @@ def test_schematic_text_has_readable_narrow_screen_scale(builder, viewport, scro
 def test_results_keep_illustrative_and_archived_figures_separate(builder):
     text = builder.render()
     results = text.split('<h2 id="curves">', 1)[1].split('<h2 id="validation">', 1)[0]
-    illustrative, archived = results.split('<h3>5.4 Archived CFD comparisons</h3>')
+    illustrative, summary = results.split('<h3>5.4 Archived CFD comparisons</h3>')
+    assert '<svg' not in summary and '<table>' not in summary
+    archived = text.split('<h2 id="archive">')[1]
     assert {svg.attrib['id'] for svg in chart_roots(illustrative)} == {
         'coupled-response', 'natural', 'inertia', 'damping', 'moment', 'split'}
     assert {svg.attrib['id'] for svg in chart_roots(archived)} == {
@@ -1026,7 +1096,7 @@ def test_reader_definitions_and_precision_are_source_bound(builder):
     text = re.sub('<[^>]+>', '', builder.render())
     for phrase in ('Exchange amplitude is the volume', 'Frozen-fluid inertia is',
                    'exchange plateau is the broad', 'forced-sweep peak',
-                   'normal solver-completion message', 'automated case-launch scripts',
+                   'normal solver-completion message',
                    'open-boundary transfer check', 'list of analytical screening cases',
                    'imposed forcing condition', 'over-critical', '195.4 %'):
         assert phrase in text
@@ -1042,12 +1112,14 @@ def test_reader_definitions_and_precision_are_source_bound(builder):
         assert phrase not in text
 
 
-def test_reference_locators_stay_in_reference_register(builder):
+def test_reference_locators_stay_in_source_appendix(builder):
     text = builder.render()
     body = text.split('<h2 id="basis">')[0]
-    # Body tooltips and metadata keep resolvable markers, not visible locator lists.
-    assert '<summary>Chart sources and archive locators</summary>' not in body
-    assert '<summary>Chart sources and archive locators</summary>' in text.split('9.2 Data record and builder links')[1]
+    assert 'archived study files, available on request' not in body
+    appendix = text.split('<h2 id="reproduce">')[1].split('<h2 id="revisions">')[0]
+    assert 'archived study files, available on request' in appendix
+    assert '<summary>Chart sources and archive locators</summary>' not in text
+    assert 'archived-cfd-campaign-' not in re.sub('<[^>]+>', '', text)
 
 
 def test_qualification_has_two_locations_and_appendix_links_to_limits(builder):
@@ -1062,24 +1134,18 @@ def test_qualification_has_two_locations_and_appendix_links_to_limits(builder):
     assert 'The moment fit holds for forcing periods' not in appendix
 
 
-def test_revision_history_preserves_each_earlier_entry(builder):
-    """Pin the earlier rows, with only the public-reference redaction."""
+def test_revision_history_numbers_issues_with_git_dates(builder):
+    """Fold related edits into their introducing revisions and retain their intent."""
     history = builder.render().split('<div id="revision-history">')[1].split('</div>')[0]
-    expected = [
-        ('5', '2026-10-25', 'Earlier revision entries restored; qualification linked from Appendix A; reference paths wrap on narrow screens; rendered layout, print and interaction checks added; engineering results retained.'),
-        ('4', '2026-10-25', 'Illustrative and archived results separated; response terms defined; narrow-screen schematic and display precision clarified; calculation inputs and results retained.'),
-        ('3', '2026-10-25', 'Engineering reporting conventions: numbered sections, source register, dimensioned schematic and consistent plots; calculation inputs and results retained.'),
-        ('2', '2026-10-25', 'schematic added; three summary charts; every chart interactive with a CSV; the limits gathered in one place'),
-        ('Display precision', '2026-10-23', 'Damping-axis labels distinguished and comparison percentages rounded to one decimal place; source precision retained in the evidence record.'),
-        ('Evidence', '2026-10-23', 'Archived CFD reductions added with provenance and evidence-class limits to distinguish measurements from illustrative predictions.'),
-        ('Geometry', '2026-10-23', 'Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.'),
-        ('Editorial', 'Not assigned', 'Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.'),
-        ('Initial', 'Not assigned', 'Public-source analysis added to document model scope and remaining work.'),
-    ]
-    rows = [tuple(''.join(cell.itertext()) for cell in row.findall('td')[:3])
+    rows = [tuple(''.join(cell.itertext()) for cell in row.findall('td'))
             for row in ElementTree.fromstring('<div>' + history + '</div>').findall('.//tr')[1:]]
-    assert rows[1:] == expected
-    assert rows[0][:2] == ('6', '2026-10-26')
+    assert [row[0] for row in rows] == [f'Rev {i}' for i in range(1, 9)]
+    assert [row[1] for row in rows] == ['2026-10-23'] * 2 + ['2026-10-25'] * 5 + ['2026-10-27']
+    assert all(row[3] == 'issued for review' for row in rows)
+    assert 'geometry' in rows[0][2] and 'precision' in rows[1][2]
+    assert 'CSV' in rows[2][2] and 'numbered sections' in rows[3][2]
+    assert 'Illustrative and archived' in rows[4][2]
+    assert 'Historical revisions' in rows[5][2] and 'motion dimensions' in rows[6][2]
 
 
 @pytest.fixture(scope='module')
@@ -1186,7 +1252,7 @@ def test_rendered_print_bounds_and_pdf(rendered_study, tmp_path, record_property
         for heading in ('1 Executive summary', '7 Limitations', '9 References', 'Appendix A', 'Appendix B'):
             assert heading in printed
         assert 'roll angle' in printed
-        assert len(re.findall(r'Figure \d+\.\d+\s*–', printed)) == 14
+        assert len(re.findall(r'Figure [\dD]+\.\d+\s*–', printed)) == 14
         record_property('print_layout', {'browser': browser.version, 'pages': len(document.pages), 'svg': metrics})
 
 

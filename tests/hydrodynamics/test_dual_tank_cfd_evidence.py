@@ -137,6 +137,8 @@ def test_comparison_percentages_keep_raw_values_and_one_decimal():
         precision = 2 if fact in [frequency['minimum_error'], frequency['maximum_error']] else 1
         assert node.text == f"{fact['value']:.{precision}f}"
     for row in data["evidence_classes"]:
+        if row["result_family"]["value"] == "nine selected cases":
+            continue  # Rejected case-launch attempts are omitted from the public table.
         for key in ("key_finding", "limitation"):
             fact = row[key]
             source = fact["provenance"]

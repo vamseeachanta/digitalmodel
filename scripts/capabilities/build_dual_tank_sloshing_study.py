@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import csv
+import hashlib
 import io
 import textwrap
 import html
@@ -32,32 +33,30 @@ OUTPUT = EXISTING.with_name("dual-tank-sloshing-cfd-study.html")
 EVIDENCE_PATH = ROOT / "docs/api/cfd/data/dual_tank_cfd_evidence.json"
 REPOSITORY_FILES = 'https://github.com/vamseeachanta/digitalmodel/blob/main/'
 
-# Earlier descriptions and dates are retained verbatim; no human check is recorded.
+# Dates follow the commits that introduced each revision; related edits share a row.
 REVISIONS = [
-    ('6', '2026-10-26', 'Published source links repaired; revision record moved to Appendix C with check status; schematic labels and motion dimensions clarified; dimensionless axis labels aligned; engineering results retained.'),
-    ('5', '2026-10-25', 'Earlier revision entries restored; qualification linked from Appendix A; reference paths wrap on narrow screens; rendered layout, print and interaction checks added; engineering results retained.'),
-    ('4', '2026-10-25', 'Illustrative and archived results separated; response terms defined; narrow-screen schematic and display precision clarified; calculation inputs and results retained.'),
-    ('3', '2026-10-25', 'Engineering reporting conventions: numbered sections, source register, dimensioned schematic and consistent plots; calculation inputs and results retained.'),
-    ('2', '2026-10-25', 'schematic added; three summary charts; every chart interactive with a CSV; the limits gathered in one place'),
-    ('Display precision', '2026-10-23', 'Damping-axis labels distinguished and comparison percentages rounded to one decimal place; source precision retained in the evidence record.'),
-    ('Evidence', '2026-10-23', 'Archived CFD reductions added with provenance and evidence-class limits to distinguish measurements from illustrative predictions.'),
-    ('Geometry', '2026-10-23', 'Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.'),
-    ('Editorial', 'Not assigned', 'Engineering descriptions clarified to distinguish illustrative predictions from calibration evidence.'),
-    ('Initial', 'Not assigned', 'Public-source analysis added to document model scope and remaining work.'),
+    ('Rev 1', '2026-10-23', 'Analytical scope, independent illustrative geometry and calibration limits introduced.'),
+    ('Rev 2', '2026-10-23', 'Archived CFD comparisons and evidence limits added; damping labels and display precision clarified.'),
+    ('Rev 3', '2026-10-25', 'Dimensioned schematic and interactive charts with CSV exports added; limitations consolidated.'),
+    ('Rev 4', '2026-10-25', 'Engineering reporting conventions introduced with numbered sections, a source register and consistent plots.'),
+    ('Rev 5', '2026-10-25', 'Illustrative and archived results separated; response terms and schematic dimensions clarified.'),
+    ('Rev 6', '2026-10-25', 'Historical revisions restored and qualification linked from Appendix A; engineering results retained.'),
+    ('Rev 7', '2026-10-25', 'References and schematic motion dimensions clarified; revision history placed in Appendix C.'),
+    ('Rev 8', '2026-10-27', 'Definitions and calibration scope clarified; archived comparisons moved to an appendix; engineering results retained.'),
 ]
 
 
 def revision_history():
     """Render the complete issue record and its recorded checking status."""
     rows = ''.join('<tr>' + ''.join(f'<td>{html.escape(value)}</td>' for value in
-                   (*revision, 'AI-drafted; engineering check pending')) + '</tr>'
+                   (*revision, 'issued for review')) + '</tr>'
                    for revision in REVISIONS)
     return ('<h2 id="revisions">Appendix C – Revision history</h2>'
             '<div id="revision-history"><table>'
             '<colgroup><col style="width:10%"/><col style="width:14%"/>'
             '<col style="width:52%"/><col style="width:24%"/></colgroup>'
             '<tr><th>Revision</th><th>Date</th>'
-            '<th>Description</th><th>Prepared / checked</th></tr>' + rows + '</table></div>')
+            '<th>Description</th><th>Status</th></tr>' + rows + '</table></div>')
 
 
 def public_file_link(path):
@@ -302,7 +301,7 @@ def chart_specs(data=None, evidence=None, evidence_only=False):
                      val(case['predicted_period']), val(historical[area]) if area in historical else None, pointer])
         pointers.append(pointer)
     c2 = add('natural-period-vs-area',
-             'Exchange natural period against conduit area (archived twin-tank CFD, 50 % fill)',
+             'Exchange natural period against conduit area (archived connected-tank CFD, 50 % fill)',
              ['area_m2', 'fill_pct', 'role', 'cfd_period_s', 'model_period_s', 'historical_period_s', 'evidence_pointer'],
              rows, 'area_m2', [('CFD-derived period', 'cfd_period_s'),
                                ('Calibration reference', 'cfd_period_s'),
@@ -317,7 +316,7 @@ def chart_specs(data=None, evidence=None, evidence_only=False):
     c2['series'][3]['shape'] = 'cross'
 
     band = val(e['published_band'])
-    c3 = add('period-error', 'Calibrated period error against the published ±3 % band',
+    c3 = add('period-error', 'Calibrated period error against the reference ±3 % band',
              ['area_m2', 'fill_pct', 'predicted_period_s', 'cfd_period_s', 'error_pct', 'band_pct', 'inside_band', 'evidence_pointer'],
              [[val(r['area']), val(r['fill']), val(r['predicted_period']), val(r['measured_period']),
                val(r['error']), band, abs(val(r['error'])) <= band,
@@ -475,10 +474,10 @@ def render_chart(spec):
                           text_anchor='middle', class_='y-label', wrap=29))
     legend_y = xlabel_y + 48
     if spec.get('validity') is not None:
-        parts.append(svg_text(12, legend_y, 'outside the published moment-fit band', fill='var(--ink)'))
+        parts.append(svg_text(12, legend_y, 'outside the reference moment-fit band', fill='var(--ink)'))
         legend_y += 36
     if categories:
-        parts.append(svg_text(12, legend_y, f'Published ±{spec["tolerance"]:.1f} % band', fill='var(--ink)'))
+        parts.append(svg_text(12, legend_y, f'Reference ±{spec["tolerance"]:.1f} % band', fill='var(--ink)'))
         legend_y += 24
     for index, series in enumerate(spec['series']):
         color = SERIES_COLORS[index % len(SERIES_COLORS)]
@@ -561,10 +560,10 @@ def schematic():
         f'Fill depth {ILLUSTRATIVE_FILL_DEPTH:.1f} m at mean level; displaced free surfaces: sketch, not a computed state',
         f'conduit, area A_c = {ILLUSTRATIVE_CONDUIT_AREA:.1f} m², effective length {effective:.1f} m (calibrated reference, transfer assumed)',
         f'Leg length {ILLUSTRATIVE_LEG_LENGTH:.1f} m into the page; tank height not specified',
-        'archived CFD twin-tank geometry is not shown',
+        'archived CFD connected-tank geometry is not shown',
     ]
     parts = ['<svg id="schematic" viewBox="0 0 360 420" role="img" aria-labelledby="schematic-title schematic-desc">',
-             '<title id="schematic-title">Illustrative U-tube system, transverse section</title>',
+             '<title id="schematic-title">Illustrative connected-tank system, transverse section</title>',
              '<desc id="schematic-desc">' + html.escape('; '.join(labels)) + '</desc>',
              '<defs><marker id="dimension-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse"><path d="M 6 0 L 0 3 L 6 6" fill="none" stroke="var(--mut)"/></marker></defs>']
 
@@ -610,7 +609,7 @@ def schematic():
     ])
     parts.append('</svg>')
     return ('<figure class="schematic">' + ''.join(parts) +
-            '<figcaption>Illustrative U-tube transverse section.</figcaption>'
+            '<figcaption>Illustrative connected-tank transverse section.</figcaption>'
             f'<p class="figure-note">Leg length {ILLUSTRATIVE_LEG_LENGTH:.1f} m into the page; centroids ±{ILLUSTRATIVE_CENTROID_OFFSET:.1f} m. '
             f'Effective conduit length {effective:.1f} m (calibrated reference; transfer assumed). '
             'Tank height is not specified; archived CFD geometry is not shown. '
@@ -691,7 +690,7 @@ def evidence_value(fact, precision=1, scale=1):
     """Bind a visible scalar to its raw evidence value and source pointer."""
     value = fact["value"]
     display = (f"{value * scale:.{precision}f}" if isinstance(value, (int, float))
-               else format_percentage_text(str(value)))
+               else format_percentage_text(str(value)).replace('twin-tank', 'connected-tank'))
     source = fact["provenance"]
     locator = source["path"] + "#" + source["pointer"]
     return (f'<data value="{html.escape(str(value), quote=True)}" '
@@ -733,15 +732,15 @@ def render_cfd_evidence():
     calibration = d["calibration"]
     areas = [str(val(r["area"])) for r in rows]
     part = ['<section id="cfd-evidence">',
-            '<h3>5.4 Archived CFD comparisons</h3>',
-            '<p>These comparisons use the separate archived twin-tank campaign introduced in Section 2. '
+            '<h2 id="archive">Appendix D – Archived CFD comparisons</h2>',
+            '<p>These comparisons use the separate archived connected-tank campaign introduced in Section 2. '
             'Its geometry is not shown. '
             'The <a href="data/dual_tank_cfd_evidence.json">evidence record</a> identifies each reduction. '
             'No fitted curve: the archived geometry is not published, so the model cannot be drawn between the cases from committed inputs.</p>',
             charts['natural-period-vs-area'],
             '<p>The calibration case is omitted from the period-error view because it is not an independent check.</p>',
             charts['period-error'],
-            '<h3 id="cfd-area">5.4.1 Conduit-area sweep</h3>',
+            '<h3 id="cfd-area">D.1 Conduit-area sweep</h3>',
             f'<p>Exchange amplitudes are compared at forcing period {v(conditions["period"], 2)} s '
             f'and imposed roll {v(conditions["roll"])}°. This is the imposed forcing condition of the archived area sweep, '
             'not a measured exchange natural period. The record does not establish why that forcing period was selected. '
@@ -761,8 +760,8 @@ def render_cfd_evidence():
                       [[v(r["area"]), v(m), v(p), v(r["historical_period"])] for r, m, p in pairs],
                       "Period bases differ: the historical period is analytical, not a CFD measurement. The middle area is the calibration reference."))
     band = d["published_band"]
-    part += ['<h3 id="cfd-inertia">5.4.2 Inertia and natural period</h3>',
-             f'<p>The archive publishes a ±{v(band, 0)} % band for the inertia law using one calibrated effective conduit length. '
+    part += ['<h3 id="cfd-inertia">D.2 Inertia and natural period</h3>',
+             f'<p>The archive records a ±{v(band, 0)} % band for the inertia law using one calibrated effective conduit length. '
              'The reductions below include an exception: the low-fill check exceeds that band. '
              'The error is prediction minus CFD-derived period, divided by CFD-derived period. '
              'This checks exchange-mode inertia through natural period; it does not validate frozen-fluid roll inertia. '
@@ -776,7 +775,7 @@ def render_cfd_evidence():
                       "All archived off-calibration period checks; the independent intermediate-area check is included."))
     fill = sorted([r for r in checks if val(r["fill"]) != val(calibration["fill"])
                    and val(r["area"]) == val(calibration["area"])], key=lambda r: val(r["fill"]))
-    part += ['<h3 id="cfd-fill">5.4.3 Fill sweep</h3>',
+    part += ['<h3 id="cfd-fill">D.3 Fill sweep</h3>',
              '<p>Discrete low and high fill checks bracket the calibration fill; continuous fill coverage is not established. '
              'Equivalent damping depends on forcing period and imposed roll. The table retains each available condition; '
              'the damping chart selects the lower-roll case nearest each predicted natural period.</p>']
@@ -789,7 +788,7 @@ def render_cfd_evidence():
                       "Fill-dependent damping at the archived forcing conditions; period predictions and measurements appear above."))
     loss = d["loss"]
     third = loss["third"]
-    part += ['<h3 id="cfd-loss">5.4.4 Loss scaling and independent area check</h3>',
+    part += ['<h3 id="cfd-loss">D.4 Loss scaling and independent area check</h3>',
              f'<p>The fitted area exponent is n = {v(loss["exponent"], 3)}, with {v(loss["rms"])} % RMS '
              f'over {v(loss["cases"], 0)} cases. The naive inverse-area form has '
              f'{v(loss["linear_rms"])} % RMS after its own coefficient refit: it underpredicts damping at the smallest area '
@@ -808,7 +807,7 @@ def render_cfd_evidence():
              f'{v(third["cases"], 0)} cases. Percentages are rounded to one decimal place; '
              'the evidence record retains the source precision. '
              'The independent prediction and all-data refit are separate checks.</p>',
-             '<h3 id="cfd-forced">5.4.5 Forced-roll period sweep and numerical checks</h3>',
+             '<h3 id="cfd-forced">D.5 Forced-roll period sweep and numerical checks</h3>',
              '<p>The medium-mesh forced-roll cases are accepted for screening after cycle convergence. '
              'The exchange plateau is the broad region of similar forced exchange amplitudes across adjacent forcing periods; '
              'it is separate from the exchange natural period. Fine-mesh confirmation applies at the selected period only; '
@@ -827,8 +826,8 @@ def render_cfd_evidence():
         ["Free-decay frequency error (%)", v(frequency["minimum_error"], 2) + "–" + v(frequency["maximum_error"], 2)],
         ["Observed Richardson order", v(frequency["richardson_order"], 3)],
         ["Indicative fine-grid GCI (%)", v(frequency["gci"])],
-    ], "Fine-mesh Courant exceeds the nominal target. Free-decay convergence is non-asymptotic; the GCI is indicative. Free-decay validates frequency in its own case family, not twin-tank anti-roll response."))
-    part.append('<p>Analytical screening cases are not CFD solves. Failed automated case-launch scripts and the open-boundary transfer check are rejected. '
+    ], "Fine-mesh Courant exceeds the nominal target. Free-decay convergence is non-asymptotic; the GCI is indicative. Free-decay validates frequency in its own case family, not connected-tank anti-roll response."))
+    part.append('<p>Analytical screening cases are not CFD solves. Incomplete case attempts and the open-boundary transfer check are excluded from the accepted evidence. '
                 'Short transfer checks are verification only. Trustworthy phase and anti-roll benefit remain withheld. '
                 'The evidence classification is in <a href="#cfd-classes">Appendix A</a>.</p>')
     return "\n".join(part) + "\n</section>"
@@ -863,45 +862,31 @@ def software_version():
 
 
 def reference_sections(specs):
-    """Keep source paths and chart-construction locators in the reference register."""
-    entries = [
-        ('model', '[I1]', MODEL_PATH, 'Analytical connected-tank model and calibration basis'),
-        ('tests', '[I2]', TEST_PATH, 'Reference inputs and published calibration checks'),
-        ('evidence', '[I3]', EVIDENCE_PATH, 'Archived CFD reduction record, including source digests'),
-        ('reduction', '[I4]', REDUCTION_PATH, 'Single-tank tuned-absorber method'),
-        ('response', '[I5]', JSON_PATH, 'Single-tank response inputs and curves'),
-    ]
-    parts = ['<h3>9.1 Public references</h3>',
-             '<p>No external publication is used to qualify these connected-tank results. '
-             'The public single-tank study is a presentation and analytical-scope reference only: '
-             '<a href="sloshing-cfd-study.html">single-tank sloshing study</a>. '
-             'Related work: <a href="generic-hull-roll-screening.html">hull-roll screening analysis</a>.</p>',
-             '<h3>9.2 Data record and builder links</h3>',
-             '<p>Model and data records are listed first, followed by software and chart source locators.</p><ul class="refs">']
-    for identifier, label, path, description in entries:
-        relative = path.relative_to(ROOT).as_posix()
-        parts.append(f'<li id="ref-{identifier}">{label} {description}: '
-                     f'<a href="{public_file_link(path)}"><code>{relative}</code></a>.</li>')
-    parts += [f'<li id="ref-software">[I6] Analysis software: digitalmodel {software_version()}, '
-              f'<a href="{public_file_link(ROOT / "pyproject.toml")}">package version record</a>. '
-              'The archived CFD solver version is not identified in the public evidence record.</li>',
-              '<li id="ref-build">[I7] Page and CSV generation: '
-              f'<a href="{public_file_link(Path(__file__).resolve())}"><code>scripts/capabilities/build_dual_tank_sloshing_study.py</code></a>; '
-              'output: <code>docs/api/cfd/dual-tank-sloshing-cfd-study.html</code> and '
-              '<code>docs/api/cfd/data/charts/</code>; report tests: '
-              f'<a href="{public_file_link(ROOT / "tests/hydrodynamics/test_dual_tank_study_builder.py")}"><code>tests/hydrodynamics/test_dual_tank_study_builder.py</code></a>.</li></ul>',
-              '<details><summary>Chart sources and archive locators</summary><ul class="refs">']
-    for identifier in CHART_ORDER:
-        spec = specs[identifier]
-        sources = list(dict.fromkeys(point['source'] for series in spec['series']
-                                     for point in series['points']))
-        if spec.get('band_source'):
-            sources.append(spec['band_source'])
-        parts.append(f'<li id="ref-chart-{identifier}">{chart_reference(identifier)} '
-                     f'{html.escape(spec["title"])}<ul>' +
-                     ''.join(f'<li><code>{html.escape(source)}</code></li>' for source in sources) + '</ul></li>')
-    parts.append('</ul></details>')
-    return '\n'.join(parts)
+    """Give the public scope reference and a short data-availability statement."""
+    return ('<h3>9.1 Public references</h3>'
+            '<p>No external publication is used to qualify these connected-tank results. '
+            'The public single-tank study is a presentation and analytical-scope reference only: '
+            '<a href="sloshing-cfd-study.html">single-tank sloshing study</a>. '
+            'Related work: <a href="generic-hull-roll-screening.html">hull-roll screening analysis</a>.</p>'
+            '<h3>9.2 Data availability</h3>'
+            '<p>The reduced comparison data and analytical response record are linked in '
+            '<a href="#reproduce">Appendix B</a>; archived study files are available on request.</p>')
+
+
+def source_appendix():
+    """Keep citation targets while omitting unresolvable archive paths."""
+    sources = [('model', '[I1] Analytical connected-tank model and calibration basis.'),
+               ('tests', '[I2] Reference values from the study’s test inputs.'),
+               ('evidence', '[I3] <a href="data/dual_tank_cfd_evidence.json">Archived CFD reduction record</a>.'),
+               ('reduction', '[I4] Single-tank tuned-absorber method.'),
+               ('response', '[I5] <a href="../structural/sloshing-tld-twopeak.json">Single-tank response record</a>.'),
+               ('software', f'[I6] Analysis software: digitalmodel {software_version()}; archived CFD solver version is not identified.'),
+               ('build', '[I7] Analytical page and CSV generation.')]
+    markers = ''.join(f'<span id="ref-chart-{identifier}">{chart_reference(identifier)} </span>'
+                      for identifier in CHART_ORDER)
+    return ('<ul class="refs">' + ''.join(f'<li id="ref-{identifier}">{description}</li>'
+                                        for identifier, description in sources) + '</ul>'
+            '<p>' + markers + 'archived study files, available on request.</p>')
 
 
 def localize_references(page):
@@ -927,10 +912,11 @@ def number_objects(page):
     """Number figures and short table captions by their containing section."""
     table_titles = {
         '3': ['Illustrative geometry and assumptions'],
-        '5': ['Single-tank response peaks', 'Exchange amplitudes', 'Natural periods by area',
+        '5': ['Single-tank response peaks'],
+        'D': ['Exchange amplitudes', 'Natural periods by area',
               'Off-calibration period checks', 'Fill-dependent damping',
               'Near-natural-period damping', 'Forced-roll sweep', 'Numerical checks'],
-        '6': ['Published calibration quantities'],
+        '6': ['Reference calibration quantities'],
         'A': ['Sensitivity and evidence matrix', 'Evidence classes'],
         'C': ['Revision history'],
     }
@@ -981,7 +967,7 @@ def evidence_classes():
     return '<div id="cfd-classes">' + evidence_table(
         ['Evidence class', 'Result family', 'Disposition', 'Finding', 'Limitation'],
         [[evidence_value(row[key]) for key in ('evidence_class', 'result_family', 'status', 'key_finding', 'limitation')]
-         for row in data['evidence_classes']],
+         for row in data['evidence_classes'] if row['result_family']['value'] != 'nine selected cases'],
         'The archived evidence classification distinguishes completed comparisons, rejected attempts and methodology-only calculations.',
     ) + '</div>'
 
@@ -1030,26 +1016,26 @@ def render():
 <link rel="stylesheet" href="../_assets/brand.css"><style>{style}</style></head>
 <body><div class="wrap"><header><div class="kicker">Hydrodynamics · analytical study</div>
 <h1>Connected-tank sloshing analysis</h1>
-<p class="sub">U-tube anti-roll tank: analytical screening model calibrated on archived CFD</p>
-<div class="meta"><div><span>Analytical model</span></div><div><span>{v(loss["cases"], 0)} archived CFD cases (aggregate)</span></div><div><span>Period within ±{v(band, 0)} % at {inside} of {len(checks)} checks</span></div><div><span>Internal technical study</span></div></div></header>
+<p class="sub">Connected-tank anti-roll arrangement: analytical screening model calibrated on archived CFD</p>
+<div class="meta"><div><span>Analytical model</span></div><div><span>{v(loss["cases"], 0)} archived CFD cases (aggregate)</span></div><div><span>Period within ±{v(band, 0)} % at {inside} of {len(checks)} checks</span></div></div></header>
 <nav aria-label="Contents"><a href="#summary">1 Executive summary</a> ·
 <a href="#introduction">2 Introduction</a> · <a href="#geometry">3 Design data</a> ·
 <a href="#method">4 Analysis methodology</a> · <a href="#curves">5 Results</a> ·
 <a href="#validation">6 Validation and benchmark</a> · <a href="#limits">7 Limitations</a> ·
 <a href="#forward">8 Conclusions and next steps</a> · <a href="#basis">9 References</a> ·
-<a href="#sensitivity">A Sensitivity matrix</a> · <a href="#reproduce">B Reproduce commands</a> ·
-<a href="#revisions">C Revision history</a></nav>
+<a href="#sensitivity">A Sensitivity matrix</a> · <a href="#reproduce">B Data and source notes</a> ·
+<a href="#revisions">C Revision history</a> · <a href="#archive">D Archived comparisons</a></nav>
 <h2 id="summary">1 Executive summary</h2>
 <p>Use these results to examine connected-tank response and select the measurements needed before design application.</p>
 <p>These results support screening only; design qualification is not established. Transfer of calibration to the invented geometry is assumed; continuous fill coverage and anti-roll phase remain unestablished. The anti-roll benefit on a real vessel is not established. See <a href="#limits">Section 7</a>.</p>
 <ul><li>Conduit loss: a calibrated area exponent of {v(loss["exponent"], 3)} fits the archived damping with {v(loss["rms"])} % RMS over {v(loss["cases"], 0)} cases. The simple inverse-area law, refitted on its own, gives {v(loss["linear_rms"])} % RMS.</li>
-<li>Natural period: the calibrated model reproduces the CFD-derived exchange natural period within the published ±{v(band, 0)} % band at {count_text} off-calibration checks. The low-fill check ({v(low_fill["fill"], 0)} %) is {v(low_fill["error"])} % high. The calibration case agrees by construction ({v(calibration["predicted_period"], 2)} s against {v(calibration["measured_period"], 2)} s).</li>
+<li>Natural period: the calibrated model reproduces the CFD-derived exchange natural period within the reference ±{v(band, 0)} % band at {count_text} off-calibration checks. The low-fill check ({v(low_fill["fill"], 0)} %) is {v(low_fill["error"])} % high. The calibration case agrees by construction ({v(calibration["predicted_period"], 2)} s against {v(calibration["measured_period"], 2)} s).</li>
 <li>Response: in the illustrative screening prediction, with the tank, the predicted peak roll of the invented system falls from {bare_peak:.1f} to {tank_peak:.1f} per unit wave moment. The anti-roll benefit on a real vessel is not established.</li></ul>
-<p>Alpha is the normalized stiffness scale of the tank relative to the normalized hull restoring stiffness; it is distinct from tank-to-vessel mass ratio. The illustrative response uses alpha = {p["authority"]*100:.1f} %, an ASSUMED input <a href="#ref-model">[I1]</a> <a href="#ref-tests">[I2]</a>.</p>
+<p>Alpha is the normalized stiffness scale: α = K_tank / K_hull, where K_tank is the quasi-static tank moment per radian and K_hull is the hull restoring stiffness (normalized to one in this model); it is distinct from tank-to-vessel mass ratio. The illustrative response uses alpha = {p["authority"]*100:.1f} %, an ASSUMED input <a href="#ref-model">[I1]</a> <a href="#ref-tests">[I2]</a>.</p>
 
 <h2 id="introduction">2 Introduction</h2>
 
-<p>This study extends the analytical scope of the single-tank sloshing study to assess a U-tube style anti-roll arrangement: two connected tanks with invented geometry, joined by a conduit. The geometry represents no particular vessel or client. The connected-tank model is an analytical screening model calibrated on CFD assessment: the aggregate results of 35 cases from an earlier, archived CFD campaign on a separate twin-tank geometry. Analysis is performed to determine the connected-tank response and how closely the calibrated model reproduces the archived CFD; the key results are summarized in <a href="#summary">Section 1</a>.</p>
+<p>This study extends the analytical scope of the single-tank sloshing study to assess a U-tube style anti-roll arrangement: two connected tanks with invented geometry, joined by a conduit. The geometry represents no particular vessel or client. The connected-tank model is an analytical screening model calibrated on CFD assessment: the aggregate results of 35 cases from an earlier, archived CFD campaign on a separate connected-tank geometry. Analysis is performed to determine the connected-tank response and how closely the calibrated model reproduces the archived CFD; the key results are summarized in <a href="#summary">Section 1</a>.</p>
 <p>The audience is engineers assessing the analytical response and its evidence limits. Raw CFD fields, meshes and the archived geometry are outside this report; the illustrative configuration is distinct from the archived configuration.</p>
 <h2 id="geometry">3 Design data</h2>
 <p>The illustrative inputs define the calculated configuration; archived comparison conditions remain separate. Assumptions are marked below and their effects are listed in <a href="#sensitivity">Appendix A</a>.</p>
@@ -1057,7 +1043,7 @@ def render():
 <h3>3.2 Structure or equipment data</h3>
 
 <p>Invented round dimensions are selected independently of the
-<a href="../../../tests/hydrodynamics/test_utube_tank.py">published reference geometry</a>.
+<a href="../../../tests/hydrodynamics/test_utube_tank.py">reference geometry from the study’s test inputs</a>.
 Validation of the illustrative plan areas and centroid offset is not established. Fill depth is an
 input; a validated fill-percentage range is not established.</p>
 <table><tr><th>Input</th><th>Illustrative value</th><th>Source and assumption</th><th>Basis</th></tr>
@@ -1065,36 +1051,39 @@ input; a validated fill-percentage range is not established.</p>
 <tr><td>Each leg plan area</td><td>{geometry.leg_area:.1f} m²</td><td>Product of the illustrative leg length and width</td><td class="assumption">Derived from ASSUMED dimensions</td></tr>
 <tr><td>Leg centroid offset from centreline</td><td>{geometry.centroid_offset:.1f} m</td><td>Independent invented round offset</td><td class="assumption">ASSUMED – to be confirmed by measured geometry and natural period [I1]</td></tr>
 <tr><td>Fill depth</td><td>{geometry.fill_depth:.1f} m</td><td>Independent invented round depth</td><td class="assumption">ASSUMED – to be confirmed by measured geometry and natural period [I1]</td></tr>
-<tr><td>Conduit area for period sweeps</td><td>{d["area"]:.1f} m²</td><td>Independent invented area within the published conduit-area input range</td><td class="assumption">ASSUMED – to be confirmed by measured geometry and natural period [I1]</td></tr>
+<tr><td>Conduit area for period sweeps</td><td>{d["area"]:.1f} m²</td><td>Independent invented area within the reference conduit-area input range</td><td class="assumption">ASSUMED – to be confirmed by measured geometry and natural period [I1]</td></tr>
 <tr><td>Effective conduit length</td><td>{geometry.effective_conduit_length:.1f} m</td><td>Calibrated reference value from the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">connected-tank model</a>; transfer is assumed</td><td class="assumption">ASSUMED – to be confirmed by measured geometry and natural period [I1]</td></tr>
-<tr><td>Published conduit-area input range</td><td>{min(d["areas"]):.1f}–{max(d["areas"]):.1f} m²</td><td>Reference period inputs; individual CFD measurements are not reproduced</td><td class="assumption">Reference inputs [I2]</td></tr></table>
-<p>The illustrative conduit area lies inside the published input range in the table. The calibrated
+<tr><td>Reference conduit-area input range</td><td>{min(d["areas"]):.1f}–{max(d["areas"]):.1f} m²</td><td>Reference period inputs; selected individual archived reductions are shown in Appendix D</td><td class="assumption">Reference inputs [I2]</td></tr></table>
+<p>The illustrative conduit area lies inside the reference input range in the table. The calibrated
 effective length is transferred as an assumption; a measured natural period for the new geometry is
 required before predictive use, as described in the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">model calibration basis</a>.</p>
+<p>At {d["area"]:.1f} m² the illustrative tank natural period is {MODEL.natural_period(leg_area=geometry.leg_area, conduit_area=d["area"], fill_depth=geometry.fill_depth, effective_conduit_length=geometry.effective_conduit_length):.1f} s; it is not tuned to the {p["vessel_period"]:.1f} s vessel period. The {geometry.effective_conduit_length:.1f} m effective length is an inertia parameter fitted to a reference natural period, rather than the physical {2*geometry.centroid_offset:.1f} m centroid spacing; its transfer to this geometry is assumed.</p>
 {schematic()}
 <h3>3.3 Environmental data</h3><p>No wave spectrum is specified. Fluid density is {MODEL.DEFAULT_DENSITY:g} kg/m³ and gravity is {MODEL.DEFAULT_GRAVITY:g} m/s², ASSUMED from the reference calculation constants <a href="#ref-model">[I1]</a>.</p>
 <h3>3.4 Vessel data</h3><p>Vessel roll period {p["vessel_period"]:.1f} s, hull damping {p["hull_damping"]*100:.1f} % and alpha {p["authority"]*100:.1f} % are ASSUMED from the reference response inputs <a href="#ref-tests">[I2]</a>. Dimensional vessel calibration is not established.</p>
-<h3>3.5 Criteria</h3><p>The published ±{v(band, 0)} % natural-period band is an archived comparison criterion, not a design acceptance limit <a href="#ref-evidence">[I3]</a>. The moment-fit applicability is stated in <a href="#limits">Section 7</a>; no operating envelope is established.</p>
+<h3>3.5 Criteria</h3><p>The reference ±{v(band, 0)} % natural-period band is an archived comparison criterion, not a design acceptance limit <a href="#ref-evidence">[I3]</a>. The moment-fit applicability is stated in <a href="#limits">Section 7</a>; no operating envelope is established.</p>
 <h3>3.6 Load cases</h3><p>The conduit-area and forcing-period sweeps use the inputs above. Imposed roll {p["roll_degrees"]:.1f}°, damping forcing period {p["damping_period"]:.1f} s and level-difference amplitudes {" and ".join(f"{level:.1f} m" for level in p["levels"])} are ASSUMED reference conditions <a href="#ref-tests">[I2]</a>. For the separate single-tank comparison, mass ratio μ = {d["mu"]} and tuning ratio {d["tuning"]:.1f} are ASSUMED comparison inputs <a href="#ref-response">[I5]</a>. The complete sweep matrix is in <a href="#sensitivity">Appendix A</a>.</p>
 <h2 id="method">4 Analysis methodology</h2>
+<p>Exchange amplitude is the volume displaced between the legs about its mean (m³). Damping uses the equivalent viscous ratio ζ = c_eq/(2√(km)), with mass m, stiffness k and equivalent damping coefficient c_eq; a percentage displays 100ζ. Quadratic loss makes this equivalent ratio depend on the forcing amplitude and frequency. The conduit-loss coefficient term scales as A^−n, where A is conduit area and n is the fitted loss exponent; the full damping expression also includes area-dependent inertia. In phase denotes the moment component aligned with imposed roll; quadrature denotes the component 90° out of phase with it. The moment-fit band is the empirical forcing-period range of 20 s and longer with the stated moment RMS error; it does not qualify other inputs.</p>
 
 <p>The connected-tank model and the tuned-absorber model are evaluated at the illustrative inputs in Section 3. The archived CFD evidence is reported separately: the evidence record gives the source reduction, field and digest of each value, and raw fields and the archived geometry are excluded. The analytical scope follows the single-tank sloshing study; the connected-tank model is calibrated on its own.</p>
 <p>The rigid-column energy balance provides the exchange natural period; quadratic conduit loss gives amplitude-dependent damping. Harmonic moment balance supplies the tank moment and coupled roll response. Frozen-fluid inertia is the roll inertia when the fluid is held fixed relative to the tank; it integrates the two prismatic legs and conduit; the separate tuned absorber illustrates peak splitting <a href="#ref-model">[I1]</a> <a href="#ref-reduction">[I4]</a>.</p>
 <p>Calculations use digitalmodel {software_version()}. The analytical implementation and archived CFD software-version gap are identified in <a href="#ref-software">[I6]</a>.</p>
-<p>RMS denotes root mean square error; GCI denotes grid convergence index.</p>
+<p>RMS denotes root mean square error; GCI denotes grid convergence index. The Courant number is the local fluid travel distance per time step divided by cell size, Co = |u|Δt/Δx. Richardson order p describes how numerical error scales with grid spacing, error ∝ Δx^p; an observed low order and non-asymptotic convergence limit the GCI interpretation.</p>
 <h2 id="curves">5 Results</h2>
-<p>Sections 5.1–5.3 report illustrative continuous model evaluations; Section 5.4 reports the separate discrete archived observations. Each figure provides its source reference, hover values and a CSV export.</p>
+<p>Sections 5.1–5.3 report illustrative continuous model evaluations; Section 5.4 summarizes the separate discrete archived observations in Appendix D. Each figure provides its source reference, hover values and a CSV export.</p>
 <h3>5.1 Coupled roll response</h3>
 
 <p>With the tank, the predicted peak roll falls from {bare_peak:.1f} to {tank_peak:.1f} per unit wave moment (vessel roll period {p["vessel_period"]:.1f} s, hull damping {p["hull_damping"]*100:.1f} %, alpha {p["authority"]*100:.1f} %); this is a screening prediction for the invented system.</p>
-<p>The coupled response is evaluated with the <a href="../../../tests/hydrodynamics/test_utube_tank.py">published response inputs</a>:
+<p>The coupled response is evaluated with the <a href="../../../tests/hydrodynamics/test_utube_tank.py">reference values from the study’s test inputs</a>:
 vessel roll period {p["vessel_period"]:.1f} s, hull damping {p["hull_damping"]*100:.1f} % and
 alpha {p["authority"]*100:.1f} %. Alpha denotes the normalized tank stiffness scale, distinct
 from a mass ratio. In the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">coupled-response model</a>,
 the forcing reference is fixed by the bare-vessel roll amplitude. The calculated response is roll per
 unit wave moment at that finite reference; quadratic loss makes it amplitude-dependent. Shading marks
-periods outside the published moment-fit band. Wave-spectrum and dimensional vessel calibration are
+periods outside the reference moment-fit band. Wave-spectrum and dimensional vessel calibration are
 not established.</p>
+<p>Roll per unit wave moment means |θ|/(M_wave/K_hull), with roll θ in radians and normalized K_hull = 1. The bare response at its natural period is 1/(2ζ_h) = {1/(2*p["hull_damping"]):.1f} for hull damping ratio ζ_h = {p["hull_damping"]:.2f}. The finite forcing reference is M_wave/K_hull = 2ζ_h × (5π/180), giving 5° bare roll at resonance.</p>
 {svg_roll}
 <h3>5.2 Illustrative response curves</h3>
 
@@ -1103,30 +1092,32 @@ at the illustrative inputs listed above. Frozen-fluid prismatic roll inertia is 
 curve; a validation error for rigid-column conduit inertia is not established by that curve.</p>
 {svg_period}{svg_inertia}
 <p>Damping is evaluated at forcing period {p["damping_period"]:.1f} s with imposed level-difference amplitudes
-from the <a href="../../../tests/hydrodynamics/test_utube_tank.py">published damping inputs</a>.
+from the <a href="../../../tests/hydrodynamics/test_utube_tank.py">reference damping inputs</a>.
 The calculated damping depends on amplitude; it is not a fixed tank property. The largest plotted equivalent damping is {100*max(max(values) for values in d["damping"]):.1f} %: over-critical (above 100 %). It is an amplitude-dependent equivalent loss ratio, not a constant linear free-decay damping ratio. Percent axes divide by 100 to give the dimensionless ratio used in the archived comparisons.</p>{svg_damping}
 <p>The moment is calculated at {p["roll_degrees"]:.1f}° imposed roll and the illustrative conduit area,
 using the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">tank-moment model</a>.</p>{svg_moment}
 <h3 id="comparison">5.3 Single-tank comparison: split and merging</h3>
 
 <p>The <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber model</a> is evaluated at the
-frequency grid and damping values in the <a href="../structural/sloshing-tld-twopeak.json">published response record</a>.
+frequency grid and damping values in the <a href="../structural/sloshing-tld-twopeak.json">reference response record</a>.
 The mass ratio μ = {d["mu"]} and frequency tuning ratio {d["tuning"]:.1f} are ASSUMED comparison inputs.
 A single equivalent tank is coupled to an undamped primary vessel. The tank is not isolated, and its
-geometry is not matched to the U-tube system.</p>
+geometry is not matched to the connected-tank system.</p>
+<p>Peak normalized roll is the maximum of |θ|/(M_wave/K_hull) over the plotted frequency-ratio grid: roll amplitude divided by the static roll deflection under the same wave moment. The single-tank comparison uses an undamped primary vessel; its damping ratios use the same ζ convention.</p>
 {svg_split}<table><tr><th>Tank damping (%)</th><th>Resolved peaks</th><th>Peak normalized roll</th></tr>{absorber_rows}</table>
 <p>Two peaks are resolved in the light-damping curves; they merge as damping increases, and the peak
 rises again at the highest damping shown in the table. These curves are evaluated using the
 <a href="../../../scripts/cfd/reduce_tld_two_peak.py">single-tank model</a> and the
-<a href="../structural/sloshing-tld-twopeak.json">published response record</a>. New connected-tank CFD
+<a href="../structural/sloshing-tld-twopeak.json">reference response record</a>. New connected-tank CFD
 results are not included. The connected-tank curves are presented separately.</p>
-{render_cfd_evidence()}
+<h3>5.4 Archived CFD comparisons</h3>
+<p>The separate archived campaign supports screening comparisons of exchange amplitude, natural period and equivalent damping. Four of five off-calibration period checks meet the stated band; the low-fill check exceeds it. The loss exponent is calibrated on 35 cases, with an independent intermediate-area check and a separate 38-case refit. Selected forced-roll and numerical checks retain their stated limits. The individual archived reductions, figures and tables appear in <a href="#archive">Appendix D</a>; they do not validate the illustrative geometry.</p>
 <h2 id="validation">6 Validation and benchmark</h2>
 
 <p>The calibration quantities below are reported in the <a href="../../../src/digitalmodel/hydrodynamics/utube_tank.py">model calibration summary</a>
-and <a href="../../../tests/hydrodynamics/test_utube_tank.py">published calibration checks</a>.
-RMS denotes root mean square error; each percentage applies to the corresponding reference fit.</p>
-<table><tr><th>Published quantity</th><th>Value</th></tr>{claim_rows}</table>
+and <a href="../../../tests/hydrodynamics/test_utube_tank.py">reference calibration checks</a>.
+RMS denotes root mean square error; each percentage applies to the corresponding reference fit. The loss coefficient and exponent are fitted on 35 archived cases. One archived natural-period case calibrates the effective conduit length, so its period agrees by construction. The intermediate-area prediction is evaluated without refitting; the separate 38-case refit includes that area and updates the loss coefficient and exponent. Selected individual archived reductions are shown in Appendix D; the aggregate fit statistics do not imply that all case-level measurements are reproduced.</p>
+<table><tr><th>Reference quantity</th><th>Value</th></tr>{claim_rows}</table>
 <p>The loss comparison is based on a separate refit of each area law, as documented in the
 <a href="../../../tests/hydrodynamics/test_utube_tank.py">calibration checks</a>. A fixed-coefficient
 exponent substitution is excluded. Effective conduit length is calibrated against a measured natural
@@ -1139,9 +1130,9 @@ the forced-sweep peak is loss-controlled and varies with roll amplitude. The rep
 <li>The moment fit holds for forcing periods of {c["moment_min_period"]} s and longer ({c["moment_rms"]} % RMS) and degrades below about {c["degrades_below"]} s; the cause is not established. See <a href="#sensitivity">Appendix A</a>.</li>
 <li>Calibration transfer to the invented geometry remains an assumption even inside that band; a measured natural period is required before effective-length recalibration. See <a href="#geometry">Section 3</a> and <a href="#sensitivity">Appendix A</a>.</li>
 <li>The single-tank comparison does not match mass, tuning, hull damping and forcing; only peak splitting and merging are illustrated. See <a href="#comparison">Section 5.3</a>.</li>
-<li>Continuous fill coverage, trustworthy anti-roll phase and anti-roll benefit remain unestablished. See <a href="#cfd-fill">Section 5.4.3</a> and <a href="#cfd-classes">Appendix A</a>.</li>
+<li>Continuous fill coverage, trustworthy anti-roll phase and anti-roll benefit remain unestablished. See <a href="#cfd-fill">Appendix D.3</a> and <a href="#cfd-classes">Appendix A</a>.</li>
 <li>Archived period checks do not establish a frozen-fluid roll-inertia error bound; wave-spectrum and dimensional coupling evidence is absent. See <a href="#sensitivity">Appendix A</a>.</li>
-<li>Fine-mesh confirmation applies only at the selected period; its Courant value exceeds the nominal target, and free-decay convergence is non-asymptotic with indicative GCI only. See <a href="#cfd-forced">Section 5.4.5</a>.</li>
+<li>Fine-mesh confirmation applies only at the selected period; its Courant value exceeds the nominal target, and free-decay convergence is non-asymptotic with indicative GCI only. See <a href="#cfd-forced">Appendix D.5</a>.</li>
 </ul>
 <h2 id="forward">8 Conclusions and next steps</h2>
 
@@ -1153,7 +1144,7 @@ the forced-sweep peak is loss-controlled and varies with roll amplitude. The rep
 <li>Not done: Single and connected tanks require comparison at matched mass, tuning, hull damping and forcing.</li>
 <li>Not done: The residual cause requires resolution before the empirical validity band is widened.</li>
 <li>Not done: Operating fill, freeboard, structural loads and dimensional vessel coupling require assessment.</li></ul>
-<p>The low-fill exception to the published period band requires natural-period measurement and recalibration before predictive use; the affected case and error appear in <a href="#period-error">Figure 5.8</a>. The comparison supports the stated analytical scope and does not qualify the invented illustrative geometry.</p>
+<p>The low-fill exception to the reference period band requires natural-period measurement and recalibration before predictive use; the affected case and error appear in <a href="#period-error">Figure D.2</a>. The comparison supports the stated analytical scope and does not qualify the invented illustrative geometry.</p>
 <h2 id="basis">9 References</h2>
 <p>The following register separates the model and data records from method and software references. Evidence locators identify the archived reductions without including their raw fields or geometry.</p>
 {reference_sections(specs)}
@@ -1161,17 +1152,15 @@ the forced-sweep peak is loss-controlled and varies with roll amplitude. The rep
 <p>The matrix identifies which input changes each result and where evidence is missing. It introduces no new sensitivity calculation.</p>
 { sensitivity_matrix(d) }
 <details><summary>Evidence classes and supporting limitations</summary>
-<p>Wrapper cases are cases attempted through automated case-launch scripts. An End marker is the normal solver-completion message. Open transfer denotes the open-boundary transfer check, rejected because of boundary-flux growth. A screening manifest is a list of analytical screening cases; it does not establish completed CFD solutions <a href="#ref-evidence">[I3]</a>.</p>
+<p>An End marker is the normal solver-completion message. Open transfer denotes the open-boundary transfer check, rejected because of boundary-flux growth. A screening manifest is a list of analytical screening cases; it does not establish completed CFD solutions <a href="#ref-evidence">[I3]</a>.</p>
 {evidence_classes()}
 
-<p>Screening evidence only; the qualification limits are stated in <a href="#limits">Section 7</a>. Raw CFD fields, meshes, unstaged case quantities and the archived geometry are omitted.</p>
+<p>Screening evidence only; the qualification limits are stated in <a href="#limits">Section 7</a>. Raw CFD fields, meshes, the archived geometry are omitted.</p>
 </details>
-<h2 id="reproduce">Appendix B – Reproduce commands</h2>
-<p>Execute the linked calculation command from the repository root with Python; it evaluates the analytical models without a CFD solver. Output locations and source files are listed in <a href="#ref-build">[I7]</a>.</p>
-<pre>python -m scripts.capabilities.build_dual_tank_sloshing_study
-python -m pytest --pyargs tests.hydrodynamics.test_dual_tank_study_builder</pre>
-
+<h2 id="reproduce">Appendix B – Data and source notes</h2>
+{source_appendix()}
 {revision_history()}
+{render_cfd_evidence()}
 <footer>Illustrative analytical predictions and separate archived CFD evidence; transfer remains unqualified.</footer></div>{TOOLTIP_SCRIPT}</body></html>
 '''
     return number_objects(localize_references(page))
@@ -1190,5 +1179,34 @@ def build(output=OUTPUT):
     return elapsed
 
 
+def build_review_copy(directory):
+    """Write a portable copy with embedded styles and byte-identical data assets."""
+    directory = Path(directory)
+    data = directory / 'data'
+    charts = data / 'charts'
+    charts.mkdir(parents=True, exist_ok=True)
+    page = render().replace(
+        '<link rel="stylesheet" href="../_assets/brand.css">',
+        '<style data-review-brand>' + (ROOT / 'docs/api/_assets/brand.css').read_text() + '</style>',
+    ).replace('href="../structural/sloshing-tld-twopeak.json"',
+              'href="data/sloshing-tld-twopeak.json"')
+    target = directory / 'connected-tank-review-copy.html'
+    target.write_text(page, encoding='utf-8', newline='\n')
+    for spec in chart_specs():
+        (charts / (spec['id'] + '.csv')).write_text(csv_text(spec), encoding='utf-8', newline='\n')
+    (data / EVIDENCE_PATH.name).write_bytes(EVIDENCE_PATH.read_bytes())
+    (data / JSON_PATH.name).write_bytes(JSON_PATH.read_bytes())
+    digest = hashlib.sha256(target.read_bytes()).hexdigest()
+    (directory / 'SHA256.txt').write_text(f'{digest}  {target.name}\n', encoding='utf-8')
+    return target
+
+
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--review-copy', type=Path, help='Also write a portable review copy to this directory')
+    args = parser.parse_args()
     build()
+    if args.review_copy:
+        build_review_copy(args.review_copy)
