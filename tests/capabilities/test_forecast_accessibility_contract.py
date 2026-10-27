@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Static accessibility contract for the authored forecast exemplar.
@@ -25,6 +28,10 @@ RANGES = {"hs", "tp", "scrub"}
 # The physical controls speak these units. The scrubber is a normalized timeline
 # position, not a physical time value; its existing name is "Scrub time".
 SPOKEN_UNITS = {"hs": "metres", "tp": "seconds"}
+FOCUS_SELECTORS = (
+    ".theme-btn", ".play", ".seg button", ".segrow button",
+    ".speed button", "input[type=range]",
+)
 
 
 @dataclass
@@ -69,6 +76,42 @@ class ForecastHTML(HTMLParser):
         return matches[0]
 
 
+def _assert_visible_outline(selector, declarations):
+    """Check the exemplar's authored syntax, not browser-computed styles.
+
+    Supported colours are opaque hex colours and the existing ink/accent brand
+    tokens. Other colour expressions fail closed and require explicit coverage.
+    """
+    properties = ("outline-width", "outline-style", "outline-color")
+    effective = {name: ("", False) for name in properties}
+    for declaration in declarations.split(";"):
+        name, _, value = declaration.partition(":")
+        name, value = name.strip().casefold(), value.strip().casefold()
+        important = bool(re.search(r"!\s*important$", value))
+        value = re.sub(r"\s*!\s*important$", "", value).strip()
+        if name == "outline":
+            parts = value.split(maxsplit=2)
+            updates = dict(zip(properties, parts if len(parts) == 3 else ("",) * 3))
+        elif name == "all":
+            updates = dict.fromkeys(properties, "")
+        elif name in properties:
+            updates = {name: value}
+        else:
+            continue
+        for property_name, property_value in updates.items():
+            if important or not effective[property_name][1]:
+                effective[property_name] = (property_value, important)
+    width, style, colour = (effective[name][0] for name in properties)
+    positive_width = re.fullmatch(r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)px", width)
+    opaque_colour = re.fullmatch(
+        r"(?:#[0-9a-f]{3}|#[0-9a-f]{6}|var\(--(?:accent|ink)\))", colour,
+    )
+    assert (
+        positive_width and float(width[:-2]) > 0
+        and style == "solid" and opaque_colour
+    ), f"{selector}: missing visible outline"
+
+
 def _assert_accessibility_contract(html):
     document = ForecastHTML(html)
     canvases = [e for e in document.elements if e.tag == "canvas"]
@@ -108,13 +151,12 @@ def _assert_accessibility_contract(html):
     rules = {}
     for selector_list, declarations in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
         for selector in selector_list.split(","):
-            rules[selector.strip()] = declarations
+            key = selector.strip()
+            rules[key] = rules.get(key, "") + ";" + declarations
     for selector in sorted(selectors):
         focus = selector + ":focus-visible"
         assert focus in rules, f"{selector}: missing focus-visible style"
-        assert re.search(r"outline\s*:\s*[^;]*\bsolid\b", rules[focus]), (
-            f"{selector}: missing visible outline"
-        )
+        _assert_visible_outline(selector, rules[focus])
 
     # Colour is supplemented by a textual verdict. Check both the real target
     # in the status banner and its authored text update, not a string in CSS.
@@ -159,10 +201,7 @@ def test_accessibility_contract_rejects_missing_names(
         _assert_accessibility_contract(mutated)
 
 
-@pytest.mark.parametrize("selector", [
-    ".theme-btn", ".play", ".seg button", ".segrow button",
-    ".speed button", "input[type=range]",
-])
+@pytest.mark.parametrize("selector", FOCUS_SELECTORS)
 def test_accessibility_contract_rejects_missing_focus_styles(forecast_html, selector):
     original = selector + ":focus-visible"
     assert original in forecast_html
@@ -176,3 +215,68 @@ def test_accessibility_contract_rejects_colour_only_status(forecast_html):
     assert original in forecast_html
     with pytest.raises(AssertionError, match="missing textual verdict update"):
         _assert_accessibility_contract(forecast_html.replace(original, ""))
+
+
+def _add_focus_declarations(html, selector, declarations, placement):
+    focus = selector + ":focus-visible"
+    if placement == "later-rule":
+        return html.replace("</style>", f"{focus}{{{declarations}}}</style>")
+    changed = 0
+
+    def add_to_target(match):
+        nonlocal changed
+        selectors = [value.strip() for value in match[1].split(",")]
+        if focus not in selectors:
+            return match[0]
+        changed += 1
+        others = [value for value in selectors if value != focus]
+        unchanged = ",".join(others) + "{" + match[2] + "}" if others else ""
+        return unchanged + focus + "{" + match[2] + ";" + declarations + "}"
+
+    style = re.search(r"<style>(.*?)</style>", html, flags=re.DOTALL)
+    assert style is not None
+    mutated_css = re.sub(r"([^{}]+)\{([^{}]*)\}", add_to_target, style[1])
+    assert changed == 1
+    return html[:style.start(1)] + mutated_css + html[style.end(1):]
+
+
+@pytest.mark.parametrize("selector", FOCUS_SELECTORS)
+@pytest.mark.parametrize("placement", ["same-rule", "later-rule"])
+@pytest.mark.parametrize("declarations", [
+    "outline:0 solid transparent",
+    "outline:0px solid var(--accent)",
+    "outline:2px solid transparent",
+    "outline:none",
+    "outline-width:0",
+    "outline-style:none",
+    "outline-color:transparent",
+    "all:unset",
+    "outline:0 solid transparent!important;outline:2px solid var(--accent)",
+])
+def test_accessibility_contract_rejects_invisible_focus_outlines(
+    forecast_html, selector, placement, declarations,
+):
+    mutated = _add_focus_declarations(
+        forecast_html, selector, declarations, placement,
+    )
+    with pytest.raises(
+        AssertionError, match=re.escape(f"{selector}: missing visible outline"),
+    ):
+        _assert_accessibility_contract(mutated)
+
+
+@pytest.mark.parametrize("selector", FOCUS_SELECTORS)
+@pytest.mark.parametrize("placement", ["same-rule", "later-rule"])
+@pytest.mark.parametrize("declarations", [
+    "outline:3px solid #123456",
+    "outline-width:3px",
+    "outline:2px solid var(--accent)!important;outline:none",
+    "outline:none;outline:2px solid var(--accent)",
+])
+def test_accessibility_contract_accepts_effective_visible_focus_outlines(
+    forecast_html, selector, placement, declarations,
+):
+    mutated = _add_focus_declarations(
+        forecast_html, selector, declarations, placement,
+    )
+    _assert_accessibility_contract(mutated)
