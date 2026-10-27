@@ -8,6 +8,9 @@ Examples for hydrodynamic analysis, wave loads, and hydrodynamic coefficient cal
 
 ### Python Scripts
 
+[**`drive_off_balance.py`**](drive_off_balance.py) - Offline synthetic translational
+force balance with a [method note and analytical references](drive_off_balance.md).
+
 **`generate_hydro_charts.py`** - Generate hydrodynamic coefficient charts
 - RAO (Response Amplitude Operator) generation
 - Added mass and damping coefficients
