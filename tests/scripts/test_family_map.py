@@ -168,18 +168,66 @@ def _module_for_source_path(source_path):
     return ".".join(parts)
 
 
-def test_registry_families_agree_with_contract(contract):
+@pytest.fixture(params=["current", "new-module", "new-submodule"])
+def registry_inventory(request, live_inventory, contract):
     registry = yaml.safe_load(
         (ROOT / "docs/registry/module-routing.yaml").read_text(encoding="utf-8")
     )
+    generated, sources = live_inventory
+    if request.param != "current":
+        generator = _generator()
+        source = "src/digitalmodel/new_domain/child/member.py"
+        paths = [*generator.tracked_paths(ROOT), source]
+        rules = generator.read_json(ROOT / generator.RULES)
+        generated = generator.build_contract(paths, {**sources, source: b""}, rules)
+        assert "digitalmodel.new_domain" not in contract["module_to_family"]
+        assert "digitalmodel.new_domain.child" not in contract["module_to_family"]
+        if request.param == "new-module":
+            registry["modules"].append(
+                {
+                    "entry_point": "src/digitalmodel/new_domain/__init__.py",
+                    "ci_family": "platform",
+                }
+            )
+        else:
+            registry["modules"][0].setdefault("submodules", {})["new_domain"] = {
+                "agent_pack": "src/digitalmodel/new_domain/child/.claude/agent-pack.md",
+                "ci_family": "platform",
+            }
+    return registry, generated
+
+
+def test_registry_families_agree_with_contract(registry_inventory):
+    registry, generated = registry_inventory
     for entry in registry["modules"]:
         module = _module_for_source_path(entry["entry_point"])
-        assert entry["ci_family"] == contract["module_to_family"][module], module
+        assert entry["ci_family"] == generated["module_to_family"][module], module
         for submodule in entry.get("submodules", {}).values():
             module = _module_for_source_path(submodule["agent_pack"])
             assert (
-                submodule["ci_family"] == contract["module_to_family"][module]
+                submodule["ci_family"] == generated["module_to_family"][module]
             ), module
+
+
+@pytest.mark.parametrize("kind", ["module", "submodule"])
+def test_incorrect_registry_family_is_rejected(live_inventory, kind):
+    generated, _ = live_inventory
+    if kind == "module":
+        entry = {"entry_point": "src/digitalmodel/engine.py", "ci_family": "platform"}
+    else:
+        entry = {
+            "entry_point": "src/digitalmodel/engine.py",
+            "ci_family": "ENGINE",
+            "submodules": {
+                "units": {
+                    "agent_pack": "src/digitalmodel/units/.claude/agent-pack.md",
+                    "ci_family": "platform",
+                }
+            },
+        }
+    expected = "digitalmodel.engine" if kind == "module" else "digitalmodel.units"
+    with pytest.raises(AssertionError, match=expected):
+        test_registry_families_agree_with_contract(({"modules": [entry]}, generated))
 
 
 @pytest.mark.parametrize(
