@@ -1,123 +1,5 @@
 {
-  "aggregate_particulars": {
-    "fields": {
-      "hull_breadth_m": {
-        "count": 97,
-        "maximum": 115.1,
-        "median": 66.4,
-        "minimum": 40.2
-      },
-      "hull_depth_m": {
-        "count": 98,
-        "maximum": 12.0,
-        "median": 7.9,
-        "minimum": 4.9
-      },
-      "hull_length_m": {
-        "count": 98,
-        "maximum": 90.5,
-        "median": 72.1,
-        "minimum": 46.6
-      },
-      "leg_length_m": {
-        "count": 95,
-        "maximum": 214.3,
-        "median": 153.4,
-        "minimum": 76.1
-      },
-      "leg_spacing_long_m": {
-        "count": 19,
-        "maximum": 66.6,
-        "median": 39.3,
-        "minimum": 26.5
-      },
-      "leg_spacing_trans_m": {
-        "count": 20,
-        "maximum": 70.1,
-        "median": 43.1,
-        "minimum": 30.5
-      },
-      "max_water_depth_m": {
-        "count": 99,
-        "maximum": 150.0,
-        "median": 114.3,
-        "minimum": 45.7
-      },
-      "spudcan_diameter_m": {
-        "count": 21,
-        "maximum": 22.0,
-        "median": 15.1,
-        "minimum": 11.0
-      },
-      "variable_load_t": {
-        "count": 98,
-        "maximum": 13000.0,
-        "median": 3470.0,
-        "minimum": 923.1
-      }
-    },
-    "row_count": 100
-  },
   "date": "2026-10-27",
-  "design_context": {
-    "fields": {
-      "hull_breadth_m": {
-        "count": 24,
-        "maximum": 99.0,
-        "median": 57.7,
-        "minimum": 32.0
-      },
-      "hull_depth_m": {
-        "count": 16,
-        "maximum": 14.5,
-        "median": 9.2,
-        "minimum": 6.0
-      },
-      "hull_length_m": {
-        "count": 15,
-        "maximum": 170.0,
-        "median": 81.0,
-        "minimum": 56.0
-      },
-      "leg_length_m": {
-        "count": 17,
-        "maximum": 163.1,
-        "median": 120.0,
-        "minimum": 75.0
-      },
-      "leg_spacing_long_m": {
-        "count": 1,
-        "maximum": 39.3,
-        "median": 39.3,
-        "minimum": 39.3
-      },
-      "leg_spacing_trans_m": {
-        "count": 1,
-        "maximum": 43.3,
-        "median": 43.3,
-        "minimum": 43.3
-      },
-      "max_water_depth_m": {
-        "count": 37,
-        "maximum": 152.4,
-        "median": 106.7,
-        "minimum": 35.0
-      },
-      "spudcan_area_m2": {
-        "count": 3,
-        "maximum": 290.0,
-        "median": 240.0,
-        "minimum": 144.0
-      },
-      "variable_load_t": {
-        "count": 16,
-        "maximum": 21000.0,
-        "median": 8750.0,
-        "minimum": 1300.0
-      }
-    },
-    "row_count": 41
-  },
   "environment": {
     "era5": {
       "reason": "Existing client requires authenticated access; no authenticated request was made.",
@@ -168,9 +50,10 @@
     "log_crushing_strength_kpa": 10.0,
     "source": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf"
   },
+  "particulars_basis": "Synthetic inputs assumed, based on previous experience; not recovered specifications or collection statistics.",
   "qualification": "generic_screening_only",
-  "reuse": "Anonymous aggregates and selected cited facts only; original tables, text and figures are excluded. Public access does not establish an unrestricted licence.",
-  "revision": 0,
+  "reuse": "Synthetic particulars and selected cited facts only; original tables, text and figures are excluded. Public access does not establish an unrestricted licence.",
+  "revision": 1,
   "soil": {
     "clay_gradient_kpa_m": 0.93,
     "clay_submerged_weight_kn_m3": 7.3,
@@ -205,13 +88,33 @@
     }
   },
   "unit": {
-    "hull_breadth_m": 66.4,
-    "hull_depth_m": 7.9,
-    "hull_length_m": 72.1,
+    "hull_breadth_m": {
+      "basis": "Assumed, based on previous experience; generic hull dimension; not used in load transfer.",
+      "status": "illustrative assumption",
+      "unit": "m",
+      "value": 66.0
+    },
+    "hull_depth_m": {
+      "basis": "Assumed, based on previous experience; generic hull dimension; not used in load transfer.",
+      "status": "illustrative assumption",
+      "unit": "m",
+      "value": 8.0
+    },
+    "hull_length_m": {
+      "basis": "Assumed, based on previous experience; generic hull dimension; not used in load transfer.",
+      "status": "illustrative assumption",
+      "unit": "m",
+      "value": 72.0
+    },
     "leg_count": 3,
-    "leg_length_m": 153.4,
+    "leg_length_m": {
+      "basis": "Assumed, based on previous experience; generic leg length; not a water-depth rating.",
+      "status": "illustrative assumption",
+      "unit": "m",
+      "value": 150.0
+    },
     "leg_spacing_m": {
-      "basis": "Near the three-leg sample medians of 39.3 m and 43.1 m; an illustrative isosceles triangle is assumed.",
+      "basis": "Assumed, based on previous experience; synthetic isosceles support triangle chosen to exercise biaxial equilibrium.",
       "status": "illustrative assumption",
       "unit": "m",
       "value": [
@@ -220,25 +123,25 @@
       ]
     },
     "lightship_t": {
-      "basis": "No lightship is supplied; an illustrative mass is chosen to exercise three-support equilibrium.",
+      "basis": "Assumed, based on previous experience; synthetic mass chosen to exercise three-support equilibrium.",
       "status": "illustrative assumption",
       "unit": "t",
       "value": 8000.0
     },
     "preload_per_leg_kn": {
-      "basis": "Illustrative load between the public Gulf per-leg preload examples; no unit rating is inferred.",
+      "basis": "Assumed, based on previous experience; synthetic load comparator; not an equipment rating.",
       "status": "illustrative assumption",
       "unit": "kN",
       "value": 45000.0
     },
     "spudcan_area_m2": {
-      "basis": "Chosen within the public design area range of 144.0 to 290.0 m2; equivalent circular diameter 14.3 m; no identified unit is represented.",
+      "basis": "Assumed, based on previous experience; synthetic circular footing area; equivalent diameter 14.3 m; actual geometry is unqualified.",
       "status": "illustrative assumption",
       "unit": "m2",
       "value": 160.0
     },
     "variable_load_t": {
-      "basis": "Rounded median of explicitly three-leg public entries; source loading conditions differ.",
+      "basis": "Assumed, based on previous experience; synthetic mass retained for numerical continuity; no collection median or equipment rating is claimed.",
       "status": "illustrative assumption",
       "unit": "t",
       "value": 3470.0

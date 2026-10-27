@@ -5,6 +5,7 @@
 import hashlib
 import json
 import math
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -242,3 +243,52 @@ def test_source_retrieval_receipt_rejects_changed_bytes(tmp_path):
     (tmp_path / 'sample.txt').write_bytes(b'1 2 4\n')
     with pytest.raises(ValueError, match='source response digest mismatch'):
         module.receipt(tmp_path, 'sample.txt')
+
+
+def test_frozen_bytes_survive_windows_text_checkout(tmp_path):
+    """Exercise Git's Windows text filters without modifying its index/config."""
+    root = Path(__file__).resolve().parents[2]
+    relative = 'examples/data/jackup_screening/'
+    for name in ('manifest.json', 'inputs.json', 'environment.json', 'ndbc_annual_maxima.txt'):
+        path = relative + name
+        original = subprocess.check_output(['git', 'show', f'HEAD:{path}'], cwd=root)
+        checked_out = subprocess.check_output([
+            'git', '-c', 'core.autocrlf=true', '-c', 'core.eol=crlf',
+            'cat-file', '--filters', f'--path={path}', f'HEAD:{path}',
+        ], cwd=root)
+        assert checked_out == original, f'checkout changed hash-bound bytes: {path}'
+        (tmp_path / name).write_bytes(checked_out)
+    assert frozen_inputs(tmp_path)['qualification'] == 'generic_screening_only'
+    assert frozen_environment(tmp_path)['noaa']['fit_years']
+    # Strict integrity remains required even for a newline-only change.
+    for name, loader in (('inputs.json', frozen_inputs), ('environment.json', frozen_environment),
+                         ('ndbc_annual_maxima.txt', frozen_environment)):
+        path = tmp_path / name
+        original = path.read_bytes()
+        path.write_bytes(original.replace(b'\n', b'\r\n'))
+        with pytest.raises(ValueError, match='digest'):
+            loader(tmp_path)
+        path.write_bytes(original)
+
+
+def test_particulars_are_explicit_synthetic_inputs_without_collection_claims():
+    import importlib.util
+
+    root = Path(__file__).resolve().parents[2]
+    directory = root / 'examples/data/jackup_screening'
+    data = frozen_inputs(directory)
+    assert 'aggregate_particulars' not in data
+    assert 'design_context' not in data
+    assert 'synthetic' in data['particulars_basis'].lower()
+    for key, value in data['unit'].items():
+        if key != 'leg_count':
+            assert value['status'] == 'illustrative assumption'
+            assert 'assumed, based on previous experience' in value['basis'].lower()
+    manifest = json.loads((directory / 'manifest.json').read_text())
+    assert 'public_specification_collection' not in manifest['external_source_digests']
+    assert 'public_design_collection' not in manifest['external_source_digests']
+    spec = importlib.util.spec_from_file_location(
+        'freeze_inputs', root / 'examples/domains/geotechnical/freeze_jackup_inputs.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert data['unit'] == module.synthetic_unit()

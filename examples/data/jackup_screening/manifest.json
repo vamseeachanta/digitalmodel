@@ -23,13 +23,11 @@
     "ndbc_2022_archive": "8d2749760fc4a0a108ef47b55098f7fe73e73969b788b501eb0fca84cebfd56c",
     "ndbc_2023_archive": "5b5a6fdc650537e10a852748bdccff521654d6fb64882852c7d0cdfeb600e905",
     "ndbc_2024_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3",
-    "ndbc_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3",
-    "public_design_collection": "f416fbcc589dbfffe934f4ac232fe1568cc5ac42f14488359e941b65965541dc",
-    "public_specification_collection": "1618e8f01b438221919fb5e3c5f7d33b945743d9d992d018a1489a91430e34b9"
+    "ndbc_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3"
   },
   "files": {
     "environment.json": "056fbb158d8cf1bfaa45cb5d520492df966d2f7bb6b94ae02136d09197307230",
-    "inputs.json": "4efdb8eea2f645427d8d3564092559d20c45c3dc175a53af50ce061bc079a3eb",
+    "inputs.json": "597fc7b2a7b08567f91718a345d34036716f3c4a9b799e82d8dc41efea1186a3",
     "ndbc_annual_maxima.txt": "a0bf574f03a949139039c5070bd79ae5cfcfde4a71884f733c68aa54f2ffbd78"
   },
   "source_copy_policy": "Originals remain external; digests refer to original bytes, not engineering qualification."

@@ -10,14 +10,22 @@ site-specific assessment or explain an incident.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-27 | Define the demonstrator and its evidence limits before implementation. |
+| 1 | 2026-10-27 | Record the circular reference and environmental extension, replace unsupported aggregate claims with synthetic particulars, and specify independent recovery and checkout checks. |
+
+## Plan-lite
+
+- Scope: generic penetration and static screening, circular homogeneous-soil arithmetic, frozen observation extracts and environmental sensitivities; no installation acceptance.
+- Changes: document each constant and restriction by its basis, use synthetic particulars where collection traceability is unavailable, preserve digest-bound checkout bytes, and supply independent curve/recovery expectations.
+- Validation: run geotechnical, input, statics, worked-example, mudmat and existing operation-envelope tests; replay frozen inputs; check source digests, file hygiene, structure and publication text directly.
+- Limits: retain the field false negative, illustrative connecting segments, static recovery, unqualified ERA5/depth assumptions and marginal extrapolations; independent engineering qualification remains open.
 
 ## Scope and methods
 
 - Place the geotechnical calculation beside the existing bearing-capacity code.
 - Implement the research formulation in [Hu et al. (2015), equations 4–14](https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf), with its stated geometry and layer-thickness bounds. Distinguish analytical peak and clay branches from illustrative connecting segments.
 - Compare selected numerical predictions and observations with [Hossain et al. (2019)](https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf). Retain disagreements; do not tune parameters to measured depths.
-- Check the uniform-clay and uniform-sand limits against independent closed-form evaluations. Reject nonfinite, out-of-domain and incomplete inputs.
-- Derive anonymous aggregate particulars from the supplied public specification collections. Label spacing, lightship, preload, area and environmental coefficients as illustrative assumptions with their bases.
+- Check uniform clay and the circular flat-base sand reference against independent closed forms. Use the cited 1961 circular-plate factors and 1970 bearing factors recorded in the domain documentation; do not use an equal-area square or extrapolate the layered calibration. Reject nonfinite, out-of-domain and incomplete inputs.
+- Use synthetic particulars assumed, based on previous experience, when a retrievable anonymous collection provenance/reuse record is unavailable. Label dimensions, spacing, mass, preload, footing area and environmental coefficients explicitly; make no collection-statistic claim.
 - Use the existing NOAA, ERA5 and GEBCO client interfaces where qualified public input is available. An observed maximum is not a return level; missing records, unauthenticated access limitations and unparseable bathymetry remain explicit gaps.
 - Solve three-support vertical equilibrium, loss of contact, sliding and preload exceedance under illustrative environmental forces. Use the existing marine operation envelope API only with explicitly illustrative response inputs.
 
@@ -34,7 +42,7 @@ unless their numerical inputs are independently qualified for the calculation.
 
 ## Outputs
 
-Deliver a calculator, deterministic tests, frozen anonymous input data, a worked
+Deliver a calculator, deterministic tests, frozen synthetic and cited input data, a worked
 example and a domain documentation page. An original load–penetration PNG and its
 reproduction script belong outside the repository. Any public awareness text
 requires the maintainers' editorial review.

@@ -13,6 +13,7 @@ and improve the penetration method before using it for a particular installation
 | --- | --- | --- |
 | 0 | 2026-10-27 | Add public research calculations, benchmark limitations and an offline example to make the screening boundaries reproducible. |
 | 1 | 2026-10-27 | Replace the square sand reference with published circular factors and add traceable environmental extracts and load sensitivities to close the missing calculation paths. |
+| 2 | 2026-10-27 | Separate constants and bounds by their evidence basis, replace unsupported collection statistics with synthetic particulars, preserve frozen bytes across checkouts and add independent layered-curve and recovery expectations. |
 
 ## Run the example
 
@@ -32,14 +33,14 @@ records scope, rights and verification.
 
 The numerical snapshot is [inputs.json](../../../examples/data/jackup_screening/inputs.json).
 Its [manifest](../../../examples/data/jackup_screening/manifest.json) hashes the
-exact committed bytes and records digests of external source collections,
-research manuscripts and the observation archive. Digests prove byte identity,
+exact committed bytes and records digests of external research manuscripts
+and observation archives. Narrow LF checkout attributes preserve all four
+frozen files under Windows text-conversion settings; digest verification remains strict. Digests prove byte identity,
 not engineering applicability or publication rights.
 
 | Input | Basis | Use and limitation |
 | --- | --- | --- |
-| Generic particulars | Anonymous aggregates of the supplied public specification collection; 100 entries explicitly state three legs | Median hull length 72.1 m, breadth 66.4 m, depth 7.9 m and leg length 153.4 m. Missing fields are excluded independently; source configurations differ. No identified unit is represented. |
-| Design context | Anonymous aggregates of 41 public design records | Context only. Different unit types, concepts and loading conditions are not combined into a unit rating. |
+| Generic particulars | Synthetic inputs assumed, based on previous experience | Hull length 72.0 m, breadth 66.0 m, depth 8.0 m and leg length 150.0 m are illustrative context only, unused in load transfer. No recovered specifications, sample medians or collection statistics are claimed. |
 | Layered soil | [Hossain et al. (2019), Table 1, Site 3 and equation 1](https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf) | Selected numerical facts for a published anonymized Gulf profile: sand to 4.9 m, clay below it. Strength is defined at the interface and increases below it. It is not colocated with the buoy. |
 | Observations | [NOAA NDBC station 42019, 2024 archive](https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2024.txt.gz) | Replayed through the existing NOAA client parser. 52,698 timestamped records; 16,693 usable wave-height and 50,597 usable wind-speed values. Sample maxima are 6.8 m and 24.3 m/s. Missing values are counted, not replaced with zero. |
 | ERA5 | Existing ERA5 client interface and [public API access instructions](https://cds.climate.copernicus.eu/how-to-api) | Authenticated retrieval remains unavailable. A separate, labelled illustrative scenario reuses the original NDBC sample maxima of 6.8 m and 24.3 m/s; these are not ERA5 estimates. Interpreting that wind at 10 m is an assumption, without a sensor-height adjustment. |
@@ -47,12 +48,14 @@ not engineering applicability or publication rights.
 | Settlement context | [Li et al. (2018)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6218051/) | Public collection identifies a post-preload settlement study. No settlement equation, numerical input or copied source content is used here. Settlement is not equated with punch-through. |
 | Shelf-strength context | [BSEE research report 552](https://www.bsee.gov/sites/bsee.gov/files/research-reports/552ab.pdf) | Collection notes identify public strength curves and proprietary extensions. Neither is digitized or used here. The selected layered profile comes from the cited research case instead. |
 
-Only selected facts, anonymous aggregates and original calculations are included;
+Only synthetic particulars, selected cited facts and original calculations are included;
 source tables, text, documents and figures are excluded. The Hossain accepted
 manuscript is identified as CC BY-NC-ND in the supplied source register. Numerical
 facts are cited; no adapted source figure is supplied. NOAA observation facts are
-United States government data. Public specification access does not establish an unrestricted
-reuse licence, so the original collections remain external. ERA5 and GEBCO reuse
+United States government data. The supplied specification and design collections
+have no retrievable anonymous provenance/reuse record suitable for this example.
+Their aggregate tables and collection hashes are therefore excluded; synthetic
+particulars replace those unsupported source claims. ERA5 and GEBCO reuse
 qualification remains open because neither supplies an observed calculation input here.
 Li and BSEE are bibliographic context from the supplied register, not claims that
 their full documents were re-fetched or numerically qualified in this work.
@@ -61,18 +64,18 @@ their full documents were re-fetched or numerically qualified in this work.
 
 | Quantity | Value | Basis |
 | --- | --- | --- |
-| Longitudinal and transverse spacing | 40.0 m and 44.0 m | Illustrative assumption near the three-leg sample medians of 39.3 m and 43.1 m; isosceles triangle centred at the origin. |
-| Lightship | 8,000.0 t | Illustrative assumption; the supplied collection has no lightship data. Chosen to exercise three-support equilibrium, not inferred from displacement. |
-| Variable load | 3,470.0 t | Illustrative assumption using the rounded three-leg sample median; published loading conditions differ. |
-| Preload per leg | 45.0 MN | Illustrative assumption within the selected public Gulf preload examples; not an equipment rating or structural capacity. |
-| Spudcan area | 160.0 m² | Illustrative assumption within the public design collection range of 144.0–290.0 m²; equivalent circular diameter 14.3 m. |
+| Longitudinal and transverse spacing | 40.0 m and 44.0 m | Assumed, based on previous experience; synthetic isosceles triangle centred at the origin, chosen to exercise biaxial equilibrium. |
+| Lightship | 8,000.0 t | Assumed, based on previous experience; synthetic mass chosen to exercise three-support equilibrium. |
+| Variable load | 3,470.0 t | Assumed, based on previous experience; synthetic mass retained for numerical continuity, with no collection median claimed. |
+| Preload per leg | 45.0 MN | Assumed, based on previous experience; synthetic load comparator, not an equipment rating or structural capacity. |
+| Spudcan area | 160.0 m² | Assumed, based on previous experience; synthetic circular footing area, with equivalent diameter 14.3 m; actual geometry is unqualified. |
 | Base cone angle | 13.0 degrees | Illustrative assumption satisfying the research model's conical-base domain. Actual geometry is unqualified. |
 | Critical-state friction and log crushing strength | 31.0 degrees and 10.0 | Illustrative assumptions for the research model's silica-sand parameters; mineralogy is unqualified. Crushing strength uses kPa inside the logarithm. |
 | Curve connections | Straight segments | Illustrative assumptions connecting zero resistance, the analytical peak and the clay branch. No published post-peak solution is claimed. |
 | Structural load sensitivity | F = C Hs²; C = 1,000.0 kN/m²; application height 50.0 m | Illustrative assumptions exercising equilibrium. The height does not assert a water depth. No metocean transfer function is established. |
 | Sliding resistance | 10.0 MN | Illustrative assumption supplied independently to exercise the inequality; not derived from the selected soil profile. |
 
-The original assumptions remain labelled in the initial snapshot. Additional
+The particulars remain explicitly labelled in the input snapshot. Additional
 environmental assumptions are labelled in
 [environment.json](../../../examples/data/jackup_screening/environment.json):
 depth 60.0 m, period 12.0 s, aligned current 0.5 m/s, air gap 10.0 m,
@@ -193,6 +196,21 @@ penetration generally.
 No industry standard document was accessed and no standard-derived criterion was
 extracted for the new calculation.
 
+## Constants, bounds and numerical controls
+
+The following categories are distinct; passing a restriction does not qualify an
+engineering input or establish a research calibration beyond its cited scope.
+
+| Category | Value and basis |
+| --- | --- |
+| Research calibration | Conical base angle greater than 7.0 degrees and H/D from 0.16 to 1.0 follow equation 7 of the cited 2015 paper. The dilatancy interval 0.0 < IR < 4.0 follows equation 10. The 0.12 H peak depth follows the discussion after equation 12. |
+| Illustrative layered-sand restriction | Critical-state friction from 20.0 to 40.0 degrees is assumed, based on previous experience, for the silica-sand example. It is not a published calibration bound. The upper cone-angle bound excludes a degenerate 90.0-degree geometry. |
+| Illustrative circular-sand restrictions | Depth/diameter at most 1.0 and friction strictly between 0.0 and 50.0 degrees are assumed, based on previous experience, to restrict shallow reference calculations and high-friction extrapolation. Neither is attributed to the cited papers as a calibration limit. |
+| Input reconciliation tolerance | Area may differ by at most 2.0% from the equivalent-diameter area to accommodate independently rounded inputs. This is a numerical consistency tolerance, not a research or physical bound. |
+| Numerical solution | The peak solver excludes IR endpoints by 1e-5, stops at relative pressure residual 1e-8 (absolute 1e-8 kPa below 1.0 kPa), and permits 100 bisections. Dispersion uses 80 bisections. Support collinearity and contact margins are numerical tolerances of 1e-12 times squared coordinate differences and 1e-10 times total vertical load respectively. |
+| Reference physical constants | Air density 1.225 kg/m³ and gravity rounded from 9.80665 to 9.81 m/s² follow Appendices B.1 and A.1 of [Definition of a 5-MW Reference Wind Turbine for Offshore System Development (2009)](https://www.osti.gov/servlets/purl/947422). Water density 1,025.0 kg/m³ follows Table 4-2 of [Definition of the Floating System for Phase IV of OC3 (2010)](https://www.osti.gov/servlets/purl/979456). These are adopted reference values, not measured site fluid properties. |
+| Illustrative wave restriction | H/depth at most 0.3 is assumed, based on previous experience, to reject large relative wave heights in the sensitivity model. It is not a published breaking criterion or a linear-theory validity test; the retained range remains unqualified. |
+
 ## Structural methods and operating envelope
 
 [jackup_screening.py](../../../src/digitalmodel/marine_ops/jackup_screening.py)
@@ -236,6 +254,8 @@ illustrative numerical results, not site limits.
 | --- | --- | --- |
 | Uniform clay | Independent q = 6.34 su test; gradient term tested separately | Reference half-space arithmetic, without deep installation corrections. |
 | Uniform sand | Independent circular-plate equations at three embedments, including pressure-to-force conversion through the homogeneous penetration branch | Checks published circular factors and arithmetic; does not extrapolate the layered calibration or qualify conical penetration. |
+| Layered curve and recovery | Independent decimal expectations for pressure and load at seven depths, sub-peak equilibrium, falling/rising connections, peak recovery, preload recovery and constant-strength clay | Checks equations 4–14 and assumed connections without deriving expectations from production functions; static depth is not a dynamic run. |
+| Frozen checkout | Git Windows-style text filters preserve all four frozen files; deliberate CRLF tampering still raises a digest error | Linux filter probe covers checkout conversion; native Windows execution remains untested. |
 | Environmental inputs | Frozen-source digests, annual NOAA replay, independent Gumbel moments/quantiles and injected existing client transports | Checks reproducibility and propagation into loads; qualified ERA5, depth and joint extremes remain open. |
 | Gulf Site 3 | Research peak 46.6 MN; calculated 46.5 MN, a 0.3% difference. Published preload 35.6 MN does not reach the calculated peak. | Numerical comparison agrees within the 1.0% test tolerance; no installation acceptance is inferred. |
 | Gulf Site 2 | Published punch-through and final depth 15.8–18.5 m at 53.4 MN preload; calculated peak 60.0 MN and static peak-recovery depth 11.1 m | **Disagreement:** the earlier formulation does not trigger at the published preload and underestimates recovery depth. This is a documented false negative, not validation success. |

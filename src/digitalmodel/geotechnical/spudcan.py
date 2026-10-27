@@ -32,7 +32,10 @@ class SandOverClay:
     The Hu conical-footing calibration requires 0.16 <= H/D <= 1.0 and a base
     cone angle greater than 7 degrees. ID is a fraction. Q is the natural log
     of crushing strength expressed in kPa, not a dimensional crushing strength.
-    Area may retain a published value rounded separately from equivalent D.
+    The [20, 40] critical-state friction interval is an illustrative silica-sand
+    restriction assumed, based on previous experience, not a research calibration
+    bound. Area may retain a value rounded separately from equivalent D; 2% is
+    an input reconciliation tolerance, not a physical or calibration limit.
     """
 
     diameter_m: float
@@ -105,7 +108,10 @@ def sand_resistance_kpa(diameter_m: float, depth_m: float, gamma_kn_m3: float,
     Ngamma use equations 2 and 4 of the 1970 research bulletin:
     https://www.geo.dk/media/1431/geodgibulletinno28.pdf
 
-    Restricted here to shallow embedment d/B <= 1 and 0 < phi < 50 degrees.
+    The restrictions d/B <= 1 and 0 < phi < 50 degrees are illustrative shallow
+    reference limits assumed, based on previous experience; neither is a
+    published calibration bound of these papers. They exclude deeper embedment
+    and high-friction extrapolation without qualifying the retained range.
     The 1961 paper reports measured capacities exceeding theoretical factors;
     this arithmetic reference does not claim to reproduce those measurements.
     """
@@ -144,6 +150,9 @@ def _peak_for_pressure(profile: SandOverClay, pressure_kpa: float) -> float:
 def hu_peak_resistance_kpa(profile: SandOverClay) -> float:
     """Solve Hu 2015 equations 4–12, requiring the stated 0 < IR < 4 bounds.
 
+    The IR endpoint margin 1e-5 avoids the singular zero-dilatancy boundary;
+    1e-8 relative pressure (1e-8 kPa below 1 kPa) and 100 iterations are numerical
+    solve tolerances, not research calibration limits.
     Bisection stays within the admissible dilatancy interval. No friction angle,
     pressure or relative density is silently clipped to force convergence.
     """

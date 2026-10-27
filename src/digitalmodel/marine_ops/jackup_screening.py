@@ -70,6 +70,8 @@ def screen_three_leg_unit(
         _signed_finite('support y', y)
     (x0, y0), (x1, y1), (x2, y2) = supports_m
     a, b, c, d = x0 - x2, x1 - x2, y0 - y2, y1 - y2
+    # Numerical geometry tolerance relative to squared coordinate differences;
+    # not a physical minimum support spacing or an acceptance criterion.
     determinant = a * d - b * c
     scale = max(abs(a), abs(b), abs(c), abs(d))
     if scale == 0 or abs(determinant) <= 1e-12 * scale**2:
@@ -81,6 +83,7 @@ def screen_three_leg_unit(
     reactions = (r0, r1, vertical_load_kn - r0 - r1)
     for value in reactions:
         _signed_finite('reaction', value)
+    # The 1e-10 contact margin resolves floating-point zero relative to V.
     return StaticScreen(
         reactions, min(reactions) > 1e-10 * vertical_load_kn,
         max(reactions) <= preload_per_leg_kn,
@@ -115,6 +118,17 @@ def environmental_actions(
     Apply that surface velocity to an assumed effective submerged area, then
     apply its resultant at half water depth. Wind acts at depth plus air gap.
     Ignore inertia, shielding, member geometry and dynamic amplification.
+
+    Reference air density 1.225 kg/m3 follows the AeroDyn input in Appendix B.1
+    of Definition of a 5-MW Reference Wind Turbine for Offshore System
+    Development (2009): https://www.osti.gov/servlets/purl/947422
+    Its Appendix A gravity 9.80665 m/s2 is rounded here to 9.81 m/s2. Reference
+    water density 1025 kg/m3 follows Table 4-2 of Definition of the Floating
+    System for Phase IV of OC3 (2010): https://www.osti.gov/servlets/purl/979456
+    These are adopted reference constants, not measured site fluid properties.
+    H/depth <= 0.3 is an illustrative exclusion assumed, based on previous
+    experience, not a cited breaking limit or a linear-theory validity test.
+    The 80 dispersion bisections are a numerical iteration budget.
     """
     inputs = locals().copy()
     for name, value in inputs.items():
