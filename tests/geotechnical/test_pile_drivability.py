@@ -303,6 +303,170 @@ def test_segment_count_is_a_positive_integer(count):
         uniform_pile(10, 0.01, 200e9, 7850, count)
 
 
+@pytest.mark.parametrize("duration", [
+    0.3, 3 * 0.1, math.nextafter(0.3, 0.0),
+    math.nextafter(0.3, math.inf), 0.25, 0.05,
+])
+def test_endpoint_rounding_never_schedules_a_duplicate_step(duration):
+    pile = LumpedPile((1, 1), (1,), (1,), (1,))
+    result = simulate(
+        pile, time_step_s=0.1, duration_s=duration,
+        initial_velocity_m_s=(1, 1),
+    )
+    assert result.time_s[-1] == duration
+    assert all(b > a for a, b in zip(result.time_s, result.time_s[1:]))
+    assert result.displacement_m[-1] == pytest.approx((duration, duration))
+    assert result.velocity_m_s[-1] == pytest.approx((1, 1))
+
+
+@pytest.mark.parametrize("increment", [0.0, -0.1, math.nan, math.inf])
+def test_numerical_advance_rejects_nonpositive_or_nonfinite_increments(increment):
+    from digitalmodel.geotechnical.pile_drivability import _advance
+
+    pile = LumpedPile((1, 1), (1,), (1,), (1,))
+    with pytest.raises(ValueError, match="increment"):
+        _advance(
+            pile, None, (SoilResistance(), SoilResistance()),
+            pile.masses_kg, [0, 0], [1, 1], [0, 0], increment,
+        )
+
+
+def test_elastic_turning_point_does_not_report_permanent_set():
+    pile = LumpedPile((1, 1), (1e6,), (1,), (1,))
+    result = simulate(
+        pile, shaft=[SoilResistance(1, 0.01, 0)],
+        initial_velocity_m_s=(0.01, 0.01),
+        time_step_s=pile.recommended_time_step_s,
+        duration_s=math.pi / (2 * math.sqrt(50)),
+    )
+    # Midpoint stiffness = 1 / 0.01 = 100 N/m; total mass = 2 kg.
+    # omega**2 = 100 / 2 = 50; quarter period = 0.2221441469 s.
+    # Turning displacement = 0.01 / sqrt(50) = 0.001414213562 m.
+    # Initial kinetic and turning elastic energy = 2 * 0.5 * 0.01**2.
+    assert result.time_s[-1] == pytest.approx(0.2221441469, abs=1e-10)
+    assert result.displacement_m[-1] == pytest.approx((0.001414213562,) * 2, abs=1e-12)
+    assert result.energy[-1].soil_elastic_j == pytest.approx(0.0001, abs=1e-14)
+    assert result.shaft_plastic_displacement_m == (0,)
+    assert result.energy[-1].soil_plastic_work_j == result.energy[-1].damping_work_j == 0
+    assert not result.settled
+    assert result.permanent_set_m is result.blows_per_m is None
+
+
+@pytest.mark.parametrize("speed,remaining", [(0.0, 0.0), (0.001, 0.000001)])
+def test_balanced_residual_stress_is_distinct_from_remaining_motion(speed, remaining):
+    from digitalmodel.geotechnical.pile_drivability import _remaining_pile_energy
+
+    pile = LumpedPile((1, 1), (1000,), (1,), (1,))
+    soils = (SoilResistance(1, 0.01, 0),) * 2
+    # Spring compression = 1000 * 0.00025 = 0.25 N.
+    # Midpoint resistance = 100 * (0.015125 - 0.020125) = -0.5 N.
+    # Toe resistance = 100 * (0.015 - 0.01) = 0.5 N: each node balances.
+    # Stored energy is 0.5*1000*0.00025**2 + 2*0.5*100*0.005**2
+    # = 0.00253125 J; remaining kinetic energy is 2*0.5*speed**2.
+    energy = _remaining_pile_energy(
+        pile, soils, [0.01525, 0.015], [speed, speed], [0.020125, 0.01],
+    )
+    assert energy == pytest.approx(remaining, abs=1e-16)
+
+
+@pytest.mark.parametrize("resistance", [1.0, 100000.0])
+def test_positive_soil_resistance_requires_an_explicit_quake(resistance):
+    with pytest.raises(ValueError, match="quake"):
+        SoilResistance(ultimate_resistance_n=resistance)
+
+
+@pytest.mark.parametrize("displacement,remaining", [(-0.02, 0.0), (0.005, 0.00125)])
+def test_remaining_energy_respects_unilateral_toe_contact(displacement, remaining):
+    from digitalmodel.geotechnical.pile_drivability import _remaining_pile_energy
+
+    pile = LumpedPile((1, 1), (1000,), (1,), (1,))
+    # No shaft: a toe gap stores nothing; contact stores 0.5*100*0.005**2 J.
+    energy = _remaining_pile_energy(
+        pile, (SoilResistance(), SoilResistance(1, 0.01, 0)),
+        [displacement] * 2, [0, 0], [0, 0],
+    )
+    assert energy == pytest.approx(remaining, abs=1e-16)
+
+
+def test_unresolved_or_yielding_equilibrium_cannot_certify_remaining_motion():
+    from digitalmodel.geotechnical.pile_drivability import _remaining_pile_energy
+
+    pile = LumpedPile((1, 1), (1000,), (1,), (1,))
+    assert math.isinf(_remaining_pile_energy(
+        pile, (SoilResistance(1, 0.01, 0),) * 2,
+        [0.2, 0], [0, 0], [0.1, 0],
+    ))
+    assert math.isinf(_remaining_pile_energy(
+        pile, (SoilResistance(1e-300, 1, 0), SoilResistance()),
+        [0.01, 0.01], [0, 0], [0, 0],
+    ))
+
+
+def test_remaining_energy_includes_toe_release_and_inactive_contact():
+    from digitalmodel.geotechnical.pile_drivability import _remaining_pile_energy
+
+    pile = LumpedPile((1, 1), (1000,), (1,), (1,))
+    soils = (SoilResistance(10, 0.1, 0), SoilResistance(1, 0.01, 0))
+    # Reference forces balance as above. A -0.01 m translation opens the toe.
+    # Shaft contribution = 0.5*100*0.01**2 = 0.005 J.
+    # Released toe contribution = 0.5*100*0.005**2 - 100*0.005*(-0.005)
+    # = 0.00375 J; the pile spring has unchanged compression.
+    assert _remaining_pile_energy(
+        pile, soils, [0.00525, 0.005], [0, 0], [0.020125, 0.01],
+    ) == pytest.approx(0.00875, abs=1e-15)
+    assert _remaining_pile_energy(
+        pile, soils, [0, 0], [0, 0], [0, 0.02],
+    ) == pytest.approx(0.0, abs=1e-16)
+
+
+def test_small_force_residual_cannot_hide_a_soft_translation_mode():
+    from digitalmodel.geotechnical.pile_drivability import _remaining_pile_energy
+
+    pile = LumpedPile((1, 1), (1e16,), (1,), (1,))
+    # The reference translation is 0.01 m, regardless of pile stiffness.
+    # A 0.0004 m offset stores 0.5*100*0.0004**2 = 0.000008 J.
+    energy = _remaining_pile_energy(
+        pile, (SoilResistance(1, 0.01, 0), SoilResistance()),
+        [0.0104, 0.0104], [0, 0], [0.01, 0],
+    )
+    assert energy >= 0.000008
+    assert energy > 0.0000005
+
+
+def test_a_separated_downward_ram_does_not_certify_permanent_set():
+    pile = LumpedPile((1, 1), (1e6,), (1,), (1,))
+    result = simulate(
+        pile, shaft=[SoilResistance(1, 1, 0)],
+        hammer=Hammer(1, 0.00000008, 1e6),
+        initial_velocity_m_s=(0.0005, 0.0005),
+        time_step_s=pile.recommended_time_step_s, duration_s=0.02,
+    )
+    # Ram speed sqrt(2*8e-8/1)=0.0004 m/s is below the pile's current
+    # speed; the gap opens, but the ram can catch the pile as it decelerates.
+    assert result.cushion_force_n[-1] == 0
+    assert result.hammer_velocity_m_s[-1] == pytest.approx(0.0004)
+    assert not result.settled
+    assert result.permanent_set_m is result.blows_per_m is None
+
+
+def test_absent_soil_has_no_assumed_quake_or_elastic_energy():
+    soil = SoilResistance()
+    assert soil.quake_m is None
+    result = simulate(
+        LumpedPile((1, 1), (1,), (1,), (1,)),
+        initial_displacement_m=(0.01, 0.01),
+        time_step_s=0.1, duration_s=0.2,
+    )
+    assert all(energy.soil_elastic_j == 0 for energy in result.energy)
+    assert result.permanent_set_m is None
+
+
+@pytest.mark.parametrize("quake", [0.0, -0.01, math.nan, math.inf])
+def test_supplied_quake_must_be_finite_and_positive(quake):
+    with pytest.raises(ValueError, match="quake"):
+        SoilResistance(0, quake)
+
+
 def test_invalid_models_and_integration_inputs_are_rejected():
     for args in ((-1, 0.01, 0), (1, 0, 0), (1, 0.01, -1), (math.nan, 0.01, 0)):
         with pytest.raises(ValueError):

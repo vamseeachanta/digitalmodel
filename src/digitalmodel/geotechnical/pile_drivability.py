@@ -115,17 +115,26 @@ class Hammer:
 
 @dataclass(frozen=True)
 class SoilResistance:
-    """Segment total resistance (N), quake (m), Smith damping factor (s/m)."""
+    """Resistance (N), explicit quake (m), damping (s/m); no default stiffness."""
 
     ultimate_resistance_n: float = 0.0
-    quake_m: float = 0.0025
+    quake_m: float | None = None
     damping_s_m: float = 0.0
 
     def __post_init__(self) -> None:
-        """Require nonnegative resistance and damping and a positive quake."""
+        """Require an explicit positive quake whenever resistance is positive."""
         _positive("ultimate resistance", self.ultimate_resistance_n, zero=True)
-        _positive("quake", self.quake_m)
+        if self.quake_m is None:
+            if self.ultimate_resistance_n > 0:
+                raise ValueError("positive resistance requires an explicit quake_m")
+        else:
+            _positive("quake", self.quake_m)
         _positive("Smith damping", self.damping_s_m, zero=True)
+
+    @property
+    def stiffness_n_m(self) -> float:
+        """Return zero for absent soil, otherwise the explicitly specified Ru/q."""
+        return self.ultimate_resistance_n / self.quake_m if self.quake_m is not None else 0.0
 
 
 @dataclass(frozen=True)
@@ -217,7 +226,10 @@ def _soil_step(
 ) -> tuple[float, float, float, float, float, float, float]:
     """Return static/dynamic forces, tangents, plastic state, energy and work."""
     resistance = soil.ultimate_resistance_n
-    stiffness = resistance / soil.quake_m
+    quake = soil.quake_m
+    if resistance == 0 or quake is None:
+        return 0.0, 0.0, 0.0, 0.0, plastic, 0.0, 0.0
+    stiffness = soil.stiffness_n_m
     force, tangent, magnitude, magnitude_tangent = _path_force(
         start - plastic, increment, stiffness, resistance, unilateral,
     )
@@ -227,14 +239,12 @@ def _soil_step(
     if unilateral and damping < -force:
         damping, damping_tangent = -force, -tangent
     end = start + increment
-    if resistance == 0:
-        return force, tangent, damping, damping_tangent, plastic, 0.0, 0.0
     if unilateral:
-        new_plastic = max(plastic, end - soil.quake_m)
+        new_plastic = max(plastic, end - quake)
         elastic = max(0.0, end - new_plastic)
     else:
-        elastic = min(soil.quake_m, max(-soil.quake_m, end - plastic))
-        new_plastic = end - elastic if abs(end - plastic) > soil.quake_m else plastic
+        elastic = min(quake, max(-quake, end - plastic))
+        new_plastic = end - elastic if abs(end - plastic) > quake else plastic
     return (force, tangent, damping, damping_tangent, new_plastic,
             0.5 * stiffness * elastic**2, resistance * abs(new_plastic - plastic))
 
@@ -258,6 +268,7 @@ def _advance(
     plastic: list[float], dt: float,
 ) -> tuple[list[float], list[float], list[float], float, float]:
     """Advance one energy-consistent step; fail explicitly on nonconvergence."""
+    _positive("time increment", dt)
     offset = int(hammer is not None)
     increment = [dt * velocity for velocity in v]
     inertia = [2 * mass / dt**2 for mass in masses]
@@ -338,8 +349,92 @@ def _stored_energy(
         elastic = displacement - plastic[i]
         if toe:
             elastic = max(0.0, elastic)
-        soil_elastic += 0.5 * soil.ultimate_resistance_n / soil.quake_m * elastic**2
+        soil_elastic += 0.5 * soil.stiffness_n_m * elastic**2
     return kinetic, pile_elastic, cushion_elastic, soil_elastic
+
+
+def _settlement_equilibrium(
+    pile: LumpedPile, stiffness: list[float], plastic: list[float],
+) -> list[float] | None:
+    """Find an elastic reference, or return None when the solve is unresolved."""
+    count = len(pile.masses_kg)
+    if not any(stiffness[:-1]):
+        return [plastic[-1]] * count
+    diagonal, off, rhs = [0.0] * count, [0.0] * (count - 1), [0.0] * count
+    for i, spring in enumerate(pile.stiffnesses_n_m):
+        soil = stiffness[i]
+        for node in (i, i + 1):
+            diagonal[node] += spring + 0.25 * soil
+            rhs[node] += 0.5 * soil * plastic[i]
+        off[i] = -spring + 0.25 * soil
+    try:
+        equilibrium = _tridiagonal(diagonal, off, rhs)
+        if stiffness[-1] > 0 and equilibrium[-1] > plastic[-1]:
+            diagonal[-1] += stiffness[-1]
+            rhs[-1] += stiffness[-1] * plastic[-1]
+            equilibrium = _tridiagonal(diagonal, off, rhs)
+    except (ZeroDivisionError, OverflowError):
+        return None  # No remaining-motion certificate from an unresolved solve.
+    return equilibrium if all(math.isfinite(x) for x in equilibrium) else None
+
+
+def _equilibrium_residual(
+    pile: LumpedPile, stiffness: list[float], plastic: list[float],
+    equilibrium: list[float],
+) -> list[float]:
+    """Evaluate physical reference forces without assembled-matrix cancellation."""
+    residual = [0.0] * len(equilibrium)
+    for i, spring in enumerate(pile.stiffnesses_n_m):
+        force = spring * (equilibrium[i] - equilibrium[i + 1])
+        soil_force = stiffness[i] * (0.5 * (equilibrium[i] + equilibrium[i + 1]) - plastic[i])
+        residual[i] += force + 0.5 * soil_force
+        residual[i + 1] += -force + 0.5 * soil_force
+    residual[-1] += stiffness[-1] * max(0.0, equilibrium[-1] - plastic[-1])
+    return residual
+
+
+def _remaining_pile_energy(
+    pile: LumpedPile, soils: tuple[SoilResistance, ...],
+    u: list[float], v: list[float], plastic: list[float],
+) -> float:
+    """Bound future pile kinetic energy; infinity means settlement is uncertified.
+
+    Use relative elastic energy about an admissible equilibrium, retaining a
+    compliance bound on solver residuals. The derivation and applicability are
+    recorded in the calculation document's numerical settlement section.
+    """
+    stiffness = [soil.stiffness_n_m for soil in soils]
+    equilibrium = _settlement_equilibrium(pile, stiffness, plastic)
+    if equilibrium is None:
+        return math.inf
+    residual = _equilibrium_residual(pile, stiffness, plastic, equilibrium)
+    norm_squared = math.fsum(force**2 for force in residual)
+    compliance = math.fsum(1 / spring for spring in pile.stiffnesses_n_m)
+    bound = min((1 / soil + compliance - 0.75 / pile.stiffnesses_n_m[i]
+                 for i, soil in enumerate(stiffness[:-1]) if soil > 0), default=0.0)
+    error = bound * math.sqrt(len(u) * norm_squared)
+    if not math.isfinite(error):
+        return math.inf
+    extensions = [0.5 * (a + b) - p for a, b, p in
+                  zip(equilibrium, equilibrium[1:], plastic)]
+    extensions.append(max(0.0, equilibrium[-1] - plastic[-1] + error))
+    if any(soil.ultimate_resistance_n > 0 and soil.quake_m is not None
+           and abs(extension) + (error if i < len(u) - 1 else 0)
+           > soil.quake_m for i, (soil, extension) in enumerate(zip(soils, extensions))):
+        return math.inf
+    delta = [a - b for a, b in zip(u, equilibrium)]
+    energy = 0.5 * math.fsum(mass * speed**2 for mass, speed in zip(pile.masses_kg, v))
+    energy += 0.5 * math.fsum(spring * (a - b)**2 for spring, a, b in
+                              zip(pile.stiffnesses_n_m, delta, delta[1:]))
+    energy += 0.5 * math.fsum(soil * (0.5 * (a + b))**2 for soil, a, b in
+                              zip(stiffness[:-1], delta, delta[1:]))
+    start, reference = u[-1] - plastic[-1], equilibrium[-1] - plastic[-1]
+    toe_relative = (max(0.0, start)**2 if reference <= 0 else
+                    ((start - reference)**2 if start >= 0 else reference**2 - 2 * reference * start))
+    energy += 0.5 * stiffness[-1] * toe_relative
+    energy += math.fsum(abs(force * change) for force, change in zip(residual, delta))
+    energy += 0.5 * len(u) * bound * norm_squared
+    return energy if math.isfinite(energy) else math.inf
 
 
 def _initial_motion(values: Sequence[float] | None, count: int, name: str) -> list[float]:
@@ -395,8 +490,7 @@ def simulate(
         if soil.ultimate_resistance_n > 0:
             mass = (pile.masses_kg[-1] if i == count
                     else min(pile.masses_kg[i], pile.masses_kg[i + 1]))
-            step_limit = min(step_limit, 0.1 * math.sqrt(mass * soil.quake_m
-                                                      / soil.ultimate_resistance_n))
+            step_limit = min(step_limit, 0.1 * math.sqrt(mass / soil.stiffness_n_m))
     if time_step_s > step_limit * (1 + 1e-12):
         raise ValueError(f"time_step_s exceeds the resolution bound {step_limit:.6g} s")
     u = _initial_motion(initial_displacement_m, len(pile.masses_kg), "displacement")
@@ -424,6 +518,8 @@ def simulate(
     initial_toe = u[-1]
     steps = math.ceil(duration_s / time_step_s)
     for step in range(steps + 1):
+        if times and times[-1] >= duration_s:
+            break
         time = min(step * time_step_s, duration_s)
         if step:
             dt = time - times[-1]
@@ -454,10 +550,18 @@ def simulate(
         energies.append(EnergyBalance(*stored, plastic_work, damping_work, residual))
     total_resistance = sum(soil.ultimate_resistance_n for soil in soils)
     settled = total_resistance > 0 and quiet_duration >= pile.settling_window_s
+    if settled:
+        remaining = _remaining_pile_energy(pile, soils, u[offset:], v[offset:], plastic)
+        settled = remaining <= 0.5 * min(pile.masses_kg) * settlement_velocity_m_s**2
+        if hammer is not None:
+            # A separated ram must remain behind even the fastest possible rebound.
+            settled = settled and u[0] <= u[1] and v[0] <= -math.sqrt(
+                2 * remaining / pile.masses_kg[0])
     permanent_set = max(0.0, u[-1] - initial_toe) if settled else None
     smith_set = None
     if total_resistance > 0 and any(row[-1] < 0 for row in velocities):
-        quake = sum(soil.ultimate_resistance_n * soil.quake_m for soil in soils) / total_resistance
+        quake = sum(soil.ultimate_resistance_n * soil.quake_m for soil in soils
+                    if soil.quake_m is not None) / total_resistance
         smith_set = max(0.0, max(row[-1] for row in displacements) - initial_toe - quake)
 
     def reciprocal(value: float | None) -> float | None:
