@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Rebuild the report against the public workflow and its numeric outputs."""
 import copy
 import csv
@@ -5,6 +8,8 @@ import hashlib
 import importlib.util
 import json
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -98,3 +103,34 @@ def test_worked_values_match_independent_hand_calculation(tmp_path):
         }
     assert actual["summary"] == expected["summary"]
     assert actual["status"] == expected["status"]
+
+
+def test_provenance_uses_focused_rebuild_evidence(tmp_path, monkeypatch):
+    """Unrelated workflow assertions shall not invalidate the delivered report."""
+    build = builder()
+    original = Path.read_bytes
+    unrelated = ROOT / "tests/workflows/test_durable_workflows.py"
+
+    def read_bytes(path):
+        if path == unrelated:
+            raise AssertionError("Unrelated workflow test is not report evidence")
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", read_bytes)
+    html = build.render(tmp_path / "provenance")
+    for path in (Path(__file__), ORACLE):
+        evidence = f"{path.relative_to(ROOT)}; SHA-256: {hashlib.sha256(path.read_bytes()).hexdigest()}"
+        assert evidence in html
+
+
+def test_cli_manifest_binds_written_deliverables(tmp_path):
+    output = tmp_path / "published"
+    subprocess.run(
+        [sys.executable, str(SCRIPT), "--scratch", str(tmp_path / "calculation"),
+         "--output-dir", str(output)], cwd=ROOT, check=True,
+        capture_output=True, text=True,
+    )
+    manifest = json.loads((output / "manifest.json").read_text())
+    for name in ("index.html", "changes.json"):
+        assert manifest["artifacts"][name] == hashlib.sha256((output / name).read_bytes()).hexdigest()
+    assert manifest["generator_sha256"] == hashlib.sha256(SCRIPT.read_bytes()).hexdigest()

@@ -608,3 +608,10 @@ docs/reports/abstracted-hulls/*
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+!/docs/reports/modules/vesselseakeeping/manifest.json
+
+# Retain both reproducible module reports after the shared directory rule.
+!/docs/reports/modules/riserfatigue/
+!/docs/reports/modules/riserfatigue/generate_report.py
+!/docs/reports/modules/riserfatigue/report.html
+!/docs/reports/modules/riserfatigue/changes.json

@@ -26474,7 +26474,7 @@ families:
   - search: constants_or_keys
     pattern: real_part|imag_part|sv_spectrum
   inventory_scope:
-    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    revision: 4f47b82fffb6f8bd136ed2d930e7e601933034ac
     source_paths:
     - src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
     - src/digitalmodel/orcawave/drift_forces.py
@@ -26487,31 +26487,31 @@ families:
   implementations:
   - path: src/digitalmodel/orcawave/drift_forces.py
     symbol: compute_mean_drift_force
-    line: 103
+    line: 108
     kind: function
     what: Integrates diagonal drift coefficients against a wave spectrum.
     relation: independent
     module: orcawave/drift_forces.py
-    file_sha256: bff988e6b6f03d1ec65d2aaa8be3db8aabdf12a5360aee668f8881f94a2addb7
+    file_sha256: 78811f9b3aee810b6c560a5a1a40c8d1f47f06da3858cf62bb541e75a58be90c
     body_sha256: d15def5d4cd236285867b8230c8707516de5ef226b71080120c0c1acfbfd66cb
   - path: src/digitalmodel/orcawave/drift_forces.py
     symbol: newman_approximation
-    line: 139
+    line: 215
     kind: function
     what: Constructs the diagonal-coefficient approximation and positive difference-frequency force spectrum.
     relation: independent
     module: orcawave/drift_forces.py
-    file_sha256: bff988e6b6f03d1ec65d2aaa8be3db8aabdf12a5360aee668f8881f94a2addb7
-    body_sha256: a30746deb69be98f2d671e945b67a1e0a820c9736408fcb805b12e606ab3a528
+    file_sha256: 78811f9b3aee810b6c560a5a1a40c8d1f47f06da3858cf62bb541e75a58be90c
+    body_sha256: 27c087837b1e4f1899d22846e01c53c8c5a9cf4f874728b6855012073f37ffc1
   - path: src/digitalmodel/orcawave/drift_forces.py
     symbol: full_qtf_slowly_varying
-    line: 191
+    line: 289
     kind: function
     what: Accumulates positive-lag complex-QTF contributions to fluctuation variance.
     relation: independent
     module: orcawave/drift_forces.py
-    file_sha256: bff988e6b6f03d1ec65d2aaa8be3db8aabdf12a5360aee668f8881f94a2addb7
-    body_sha256: b6d1f0d554aae758a047303d861fe0e8a8e2d4d8a4568e176871028aa388956c
+    file_sha256: 78811f9b3aee810b6c560a5a1a40c8d1f47f06da3858cf62bb541e75a58be90c
+    body_sha256: 47bd19bb19eeb82dc95fc8a3015fd9286166e3f427d74e8b3838dd1ae2d0dc1c
   - path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
     symbol: QTFComponent.get_mean_drift
     line: 67
@@ -26905,7 +26905,7 @@ families:
   - search: constants_or_keys
     pattern: su_kpa|phi_deg|effective_stress|n1_60cs
   inventory_scope:
-    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    revision: 4f47b82fffb6f8bd136ed2d930e7e601933034ac
     source_paths:
     - src/digitalmodel/geotechnical/anchors.py
     - src/digitalmodel/geotechnical/cfg_workflows.py
@@ -27074,7 +27074,7 @@ families:
     what: Routes anchor-capacity configuration to pure calculators.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: a052d0454226f60ed5ff271545cca87d2f1acbf16ba52fe9d0e96c84bc8529dd
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
     body_sha256: fd547dfdd35ea83dc0cd63c31fd2cf30597f013560b12df870f90125b04a7491
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: PileCapacityWorkflow.router
@@ -27083,7 +27083,7 @@ families:
     what: Routes pile-capacity configuration to pure calculators.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: a052d0454226f60ed5ff271545cca87d2f1acbf16ba52fe9d0e96c84bc8529dd
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
     body_sha256: 9ea41476ef44087442622c7825e7ca4ce0a9c3f9b7f2868289ccc6629f69524c
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: MudmatBearingCapacityWorkflow.router
@@ -27092,7 +27092,7 @@ families:
     what: Routes foundation-capacity configuration to the mudmat calculator.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: a052d0454226f60ed5ff271545cca87d2f1acbf16ba52fe9d0e96c84bc8529dd
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
     body_sha256: ceec59779c91728094d0a45a767e3e78e6eee0be00865b22f0c44b468deac608
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: LiquefactionWorkflow.router
@@ -27101,7 +27101,7 @@ families:
     what: Routes soil-layer configuration to liquefaction screening.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: a052d0454226f60ed5ff271545cca87d2f1acbf16ba52fe9d0e96c84bc8529dd
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
     body_sha256: 60079031f10d394116eebaa26f5953b8312483132bab33b6cca6e6fd64ea43b8
   - path: src/digitalmodel/geotechnical/workflow.py
     symbol: GeotechnicalWorkflow.router
@@ -27144,7 +27144,7 @@ families:
   - search: constants_or_keys
     pattern: shields_parameter|scour_depth_m|critical_shear|burial_depth_m
   inventory_scope:
-    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    revision: 4f47b82fffb6f8bd136ed2d930e7e601933034ac
     source_paths:
     - src/digitalmodel/geotechnical/cfg_workflows.py
     - src/digitalmodel/geotechnical/scour.py
@@ -27158,41 +27158,41 @@ families:
   implementations:
   - path: src/digitalmodel/geotechnical/scour.py
     symbol: critical_sediment_motion
-    line: 69
+    line: 83
     kind: function
     what: Converts explicit noncohesive thresholds into shear and friction-velocity thresholds; does not predict
       scour.
     relation: independent
     module: geotechnical/scour.py
-    file_sha256: 97188cd25e5fa21bc48498019c81f519fded970ca99488425804377402b9e8cd
+    file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
     body_sha256: 23615bab66828529b10f25e57b748aaebd525392b2a8071f91601b51dcb10470
   - path: src/digitalmodel/geotechnical/scour.py
     symbol: pipeline_scour_depth
-    line: 134
+    line: 218
     kind: function
     what: Evaluates the existing pipeline equilibrium-scour screen with burial adjustment.
     relation: independent
     module: geotechnical/scour.py
-    file_sha256: 97188cd25e5fa21bc48498019c81f519fded970ca99488425804377402b9e8cd
-    body_sha256: 2a0a9a0049e06f9cf75f81a118cdd44e497b8711ab5201139b28f26a447805e9
+    file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
+    body_sha256: 9428fbcc7de4c1df9c59ebf9065ddd06ae2cf79c091c7d4b4786338765c80aa2
   - path: src/digitalmodel/geotechnical/scour.py
     symbol: monopile_scour_depth
-    line: 207
+    line: 282
     kind: function
     what: Evaluates the existing monopile equilibrium-scour screen.
     relation: independent
     module: geotechnical/scour.py
-    file_sha256: 97188cd25e5fa21bc48498019c81f519fded970ca99488425804377402b9e8cd
-    body_sha256: acdf6979588272cc1746044206a3571ac6a73e1aeafc6f1f72915ffcde0fd3f2
+    file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
+    body_sha256: f6664d99cbb93559738abcfafd0a61f26ee7991b0aaf38882c460a32586621ae
   - path: src/digitalmodel/geotechnical/scour.py
     symbol: rock_armour_thickness
-    line: 266
+    line: 318
     kind: function
     what: Evaluates the existing simplified rock-armour thickness screen.
     relation: independent
     module: geotechnical/scour.py
-    file_sha256: 97188cd25e5fa21bc48498019c81f519fded970ca99488425804377402b9e8cd
-    body_sha256: cf7697ca9203527dc0e1401738e326f5d3076ae9cf28bffda3dcdadad13fef60
+    file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
+    body_sha256: 2fdd2faace4d0846a10a42bbc7f8a8f42b8d50c6557d387bbdf530fb570d5fc4
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: ScourWorkflow.router
     line: 179
@@ -27200,7 +27200,7 @@ families:
     what: Routes configuration to pipeline and monopile scour calculators and records results.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: a052d0454226f60ed5ff271545cca87d2f1acbf16ba52fe9d0e96c84bc8529dd
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
     body_sha256: 327c48b3d1dca144be65f4fb3ee8b343e68f5cd3ff31d4133a1f56924ef345f3
   identical_groups: []
   search_audit:
