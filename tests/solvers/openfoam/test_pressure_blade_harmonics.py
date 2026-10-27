@@ -10,7 +10,77 @@ The tolerances allow floating-point least-squares roundoff only.
 import numpy as np
 import pytest
 
+from digitalmodel.citations import Citation, CitationResolutionError
 from digitalmodel.solvers.openfoam.pressure_harmonics import fit_blade_harmonics
+
+
+@pytest.fixture(autouse=True)
+def conversion_page(tmp_path, monkeypatch):
+    """Resolve synthetic provenance locally, without copying standard text."""
+    page = tmp_path / "wikis/engineering-standards/wiki/standards/nist-sp-330.md"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "---\ncode_id: NIST-SP-330\npublisher: NIST\nrevision: 2019\n---\n",
+        encoding="utf-8", newline="\n",
+    )
+    monkeypatch.setenv("LLM_WIKI_PATH", tmp_path.as_posix())
+    return page
+
+
+def test_resolved_conversion_sidecar_preserves_numeric_results():
+    """The conversion and its resolved source travel with the fitted values."""
+    times = np.arange(200) / 200
+    # (60 / 60) * 5 = 5 Hz; cosine/sine coefficients give 3, 4, 0 Pa.
+    pressure = 100 + 3 * np.cos(2 * np.pi * 5 * times)
+    pressure += 4 * np.sin(2 * np.pi * 10 * times)
+    result = fit_blade_harmonics(times, pressure, rpm=60, blade_count=5)
+    assert result.mean_pa == pytest.approx(100.0)
+    assert result.blade_passage_hz == pytest.approx(5.0)
+    np.testing.assert_allclose(result.frequencies_hz, [5.0, 10.0, 15.0])
+    np.testing.assert_allclose(result.amplitudes_pa, [3.0, 4.0, 0.0], atol=1e-10)
+    assert len(result.citations) == 1
+    citation = result.citations[0]
+    assert isinstance(citation, Citation)
+    assert citation.code_id == "NIST-SP-330"
+    assert citation.publisher == "NIST"
+    assert citation.revision == "2019"
+    assert citation.section == "Section 4, Table 8 (Non-SI units accepted for use with SI)"
+    assert citation.wiki_path == "wikis/engineering-standards/wiki/standards/nist-sp-330.md"
+    assert citation.source_sibling == "generic"
+    assert citation.source_project is None
+
+
+def test_missing_conversion_page_stops_calculation(tmp_path, monkeypatch):
+    """An existing wiki root without the required page cannot qualify a fit."""
+    empty_root = tmp_path / "empty"
+    (empty_root / "wikis").mkdir(parents=True)
+    monkeypatch.setenv("LLM_WIKI_PATH", empty_root.as_posix())
+    times = np.arange(200) / 200
+    with pytest.raises(CitationResolutionError) as exc:
+        fit_blade_harmonics(times, np.ones(200), rpm=60, blade_count=5)
+    assert exc.value.code_id == "NIST-SP-330"
+    assert exc.value.reason == "page_missing"
+
+
+@pytest.mark.parametrize("field", ["code_id", "publisher", "revision"])
+@pytest.mark.parametrize("invalid", [None, "mismatch"])
+def test_invalid_conversion_provenance_stops_calculation(conversion_page, field, invalid):
+    """Missing or mismatched provenance cannot produce an apparently cited fit."""
+    metadata = {"code_id": "NIST-SP-330", "publisher": "NIST", "revision": "2019"}
+    if invalid is None:
+        del metadata[field]
+    else:
+        metadata[field] = invalid
+    conversion_page.write_text(
+        "---\n" + "".join(f"{key}: {value}\n" for key, value in metadata.items()) + "---\n",
+        encoding="utf-8", newline="\n",
+    )
+    times = np.arange(200) / 200
+    with pytest.raises(CitationResolutionError) as exc:
+        fit_blade_harmonics(times, np.ones(200), rpm=60, blade_count=5)
+    assert exc.value.code_id == "NIST-SP-330"
+    reason = "frontmatter_missing" if invalid is None else "frontmatter_mismatch"
+    assert exc.value.reason.startswith(f"{reason}:{field}")
 
 
 def test_exact_pressure_harmonics():
