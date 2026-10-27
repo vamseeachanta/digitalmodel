@@ -3,6 +3,7 @@
 """Synthetic per-leg preload histories and independent screening expectations."""
 
 from dataclasses import replace
+from decimal import Decimal
 
 import pytest
 
@@ -125,7 +126,7 @@ def test_decimal_time_hold_and_complete_window_are_accepted(window_h, end_depth,
 
 @pytest.mark.parametrize('offset_h,expected_reasons', [
     (-1e-9, ('hold_shorter_than_minimum', 'insufficient_settlement_window')),
-    (-5e-13, ()),
+    (-5e-13, ('hold_shorter_than_minimum', 'insufficient_settlement_window')),
     (0.0, ()),
     (5e-13, ()),
     (1e-9, ()),
@@ -143,7 +144,7 @@ def test_duration_and_window_either_side_of_equal_boundary(offset_h, expected_re
 @pytest.mark.parametrize('window_h', [0.25, 1.0])
 @pytest.mark.parametrize('end_depth,expected_met', [
     (1.000999999, True),
-    (1.0009999999999995, False),
+    (1.0009999999999995, True),
     (1.001, False),
     (1.001000001, False),
 ])
@@ -157,6 +158,47 @@ def test_settlement_rate_strict_limit_and_either_side(window_h, end_depth, expec
     assert result.hold_reasons == (() if expected_met else (
         'settlement_rate_not_below_limit',))
     assert result.settlement_rate_m_h == pytest.approx(end_depth - 1, rel=1e-10)
+
+
+@pytest.mark.parametrize('window_h', [0.25, 1.0])
+@pytest.mark.parametrize('depth_m', ['0', '1', '4', '32', '1024'])
+@pytest.mark.parametrize('limit_m_h', ['0.001', '0.0001'])
+@pytest.mark.parametrize('rate_offset_m_h,expected_met', [
+    ('-0.0000000001', True), ('0', False), ('0.0000000001', False),
+])
+def test_decimal_rate_boundaries_at_depth_offsets(
+        window_h, depth_m, limit_m_h, rate_offset_m_h, expected_met):
+    # Decimal strings define the independent linear trace before float input.
+    # The trailing quarter-hour needs interpolation between the two readings.
+    depth = Decimal(depth_m)
+    rate = Decimal(limit_m_h) + Decimal(rate_offset_m_h)
+    holding = (PreloadSample(1.3, 50, float(depth)),
+               PreloadSample(2.3, 50, float(depth + rate)))
+    result = screen(sequence(holding=holding), criteria=PreloadCriteria(
+        settlement_window_h=window_h, settlement_rate_limit_m_h=float(limit_m_h)))
+    assert result.hold_duration_h == 1.0
+    assert result.settlement_rate_m_h == pytest.approx(float(rate), rel=1e-10, abs=0)
+    assert result.hold_met == expected_met
+    assert result.hold_reasons == (() if expected_met else (
+        'settlement_rate_not_below_limit',))
+
+
+@pytest.mark.parametrize('start_h', ['0.3', '1.3', '1000.3'])
+@pytest.mark.parametrize('duration_h,expected_met', [
+    ('1.199999999999', False), ('1.2', True), ('1.200000000001', True),
+])
+def test_decimal_duration_boundaries_at_time_offsets(start_h, duration_h, expected_met):
+    end_h = float(Decimal(start_h) + Decimal(duration_h))
+    holding = (PreloadSample(float(start_h), 50, 32), PreloadSample(end_h, 50, 32))
+    stages = list(sequence(holding=holding))
+    stages[-1] = PreloadStage('discharge', (PreloadSample(end_h + 1, 10, 32),))
+    result = screen(tuple(stages), criteria=PreloadCriteria(
+        minimum_hold_h=1.2, settlement_window_h=1.2))
+    assert result.hold_duration_h == float(duration_h)
+    assert result.hold_met == expected_met
+    assert result.hold_reasons == (() if expected_met else (
+        'hold_shorter_than_minimum', 'insufficient_settlement_window'))
+    assert result.settlement_rate_m_h == (0 if expected_met else None)
 
 
 def test_sharp_penetration_at_small_load_increment_flags_punch_through():

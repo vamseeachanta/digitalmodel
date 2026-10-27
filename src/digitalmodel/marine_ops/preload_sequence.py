@@ -11,18 +11,26 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from math import isclose
+from decimal import Decimal
+from fractions import Fraction
 from typing import Literal
 
 from digitalmodel.geotechnical.spudcan import PenetrationPoint, finite
 
 StageName = Literal['preparation', 'preload', 'holding', 'discharge']
 STAGE_ORDER = ('preparation', 'preload', 'holding', 'discharge')
-# Arithmetic equality only, separate from the physical criteria. Compare elapsed
-# durations (not absolute timestamps) and rates with no absolute tolerance.
-# This covers subtraction roundoff at ordinary history scales, not measurement
-# uncertainty or arbitrary loss of precision from very large input offsets.
-_BOUNDARY_REL_TOL = 1e-12
+
+
+def _decimal_input(value: float) -> Fraction:
+    """Interpret str(value) as decimal input, then retain exact rational arithmetic.
+
+    Hold times, depths and limits use Decimal(str(value)); fractions keep window
+    interpolation and rate division exact, including recurring decimal results.
+    Comparisons use no tolerance: equal durations pass, equal rates fail. Only
+    reported results become floats. Precision already lost in inputs is not
+    recovered, and this policy supplies no measurement uncertainty allowance.
+    """
+    return Fraction(Decimal(str(value)))
 
 
 @dataclass(frozen=True)
@@ -149,22 +157,23 @@ def _planned_depth(curve: Sequence[PenetrationPoint], load_kn: float) -> float |
     return None
 
 
-def _settlement_rate(samples: Sequence[PreloadSample], window_h: float) -> float | None:
-    end = samples[-1].time_h
-    available = end - samples[0].time_h
-    if available < window_h and not isclose(
-            available, window_h, rel_tol=_BOUNDARY_REL_TOL, abs_tol=0.0):
+def _settlement_rate(samples: Sequence[PreloadSample], window_h: float) -> Fraction | None:
+    end = _decimal_input(samples[-1].time_h)
+    window = _decimal_input(window_h)
+    available = end - _decimal_input(samples[0].time_h)
+    if available < window:
         return None
-    # A slightly short window accepted as equal starts at the first reading;
-    # never extrapolate beyond the evidence to cover subtraction roundoff.
-    start = max(samples[0].time_h, end - window_h)
-    travel = 0.0
+    start = end - window
+    travel = Fraction(0)
     for left, right in zip(samples, samples[1:]):
-        if right.time_h <= start:
+        left_time = _decimal_input(left.time_h)
+        right_time = _decimal_input(right.time_h)
+        if right_time <= start:
             continue
-        fraction = (right.time_h - max(start, left.time_h)) / (right.time_h - left.time_h)
-        travel += abs(right.penetration_m - left.penetration_m) * fraction
-    return travel / window_h
+        fraction = (right_time - max(start, left_time)) / (right_time - left_time)
+        travel += abs(_decimal_input(right.penetration_m)
+                      - _decimal_input(left.penetration_m)) * fraction
+    return travel / window
 
 
 def _hold_evidence(samples: Sequence[PreloadSample], target: float,
@@ -179,18 +188,16 @@ def _hold_evidence(samples: Sequence[PreloadSample], target: float,
     if not full_load:
         return None, 0.0, None, ('full_preload_not_maintained',)
     start = full_load[0].time_h
-    duration = full_load[-1].time_h - start
+    duration = _decimal_input(full_load[-1].time_h) - _decimal_input(start)
     rate = _settlement_rate(full_load, criteria.settlement_window_h)
     reasons = []
-    if duration < criteria.minimum_hold_h and not isclose(
-            duration, criteria.minimum_hold_h, rel_tol=_BOUNDARY_REL_TOL, abs_tol=0.0):
+    if duration < _decimal_input(criteria.minimum_hold_h):
         reasons.append('hold_shorter_than_minimum')
     if rate is None:
         reasons.append('insufficient_settlement_window')
-    elif rate >= criteria.settlement_rate_limit_m_h or isclose(
-            rate, criteria.settlement_rate_limit_m_h, rel_tol=_BOUNDARY_REL_TOL, abs_tol=0.0):
+    elif rate >= _decimal_input(criteria.settlement_rate_limit_m_h):
         reasons.append('settlement_rate_not_below_limit')
-    return start, duration, rate, tuple(reasons)
+    return start, float(duration), float(rate) if rate is not None else None, tuple(reasons)
 
 
 def screen_preload_sequence(
