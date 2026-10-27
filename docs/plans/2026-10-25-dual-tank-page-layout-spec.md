@@ -1,6 +1,6 @@
 # Connected-tank sloshing page, revision 2: layout, chart and prose specification
 
-Status: implemented scope and acceptance record for maintainer review, 2026-10-25. Sections 1–8 retain the earlier layout specification; Section 9 governs the final reporting layout and its verification limits. The specification, builder, generated page, chart CSVs and tests form one connected-tank page change.
+Status: implemented scope and acceptance record for maintainer review. Sections 1–8 retain the earlier layout specification; Sections 9–10 retain historical verification records. Section 11 records acceptance checks for the present report bytes and the remaining publication limits. The specification, builder, generated page, chart CSVs and tests form one connected-tank page change.
 
 - Page: `docs/api/cfd/dual-tank-sloshing-cfd-study.html` at dd24f2094, live at https://vamseeachanta.github.io/digitalmodel/cfd/dual-tank-sloshing-cfd-study.html.
 - Builder: `scripts/capabilities/build_dual_tank_sloshing_study.py`, which writes the page.
@@ -225,10 +225,37 @@ The rendered measurements below were recorded at `a86bae42`. They are retained a
 - Reporting: use alpha for the normalized tank stiffness scale; the 10.0 to 5.7 response reduction is the illustrative screening prediction. Preserve the 0.2964–0.3264 frequency-error record and display 0.30–0.33 % so its bounds remain distinguishable. Display roll moments in MN m while retaining raw evidence values and exports. Explain the over-critical equivalent damping and the percent-to-ratio conversion.
 - Limits: the automated tests use a local headless browser; no solver is started. PDF text extraction and rendered bounds do not establish physical printing quality or every pagination preference. Other browser engines and physical touch devices remain unmeasured. Physical qualification, continuous fill coverage and calibration transfer remain unestablished. Visual review remains with the maintainer.
 
-## 10. Current report verification record
+## 10. Earlier report verification record
 
 The report at `a096a58209e33af5806a8e84472e2f0207e60b45` has SHA-256 `592721f644e8727640638f0b3001fa9c93f82fa1670470109e027162b6ef6412`. Appendix C is a visible four-column revision-history table after Appendix B, with ten retained entries. It is outside a disclosure element; Section 1 has no revision-history link.
 
 The focused builder, evidence and model suites collected 137 tests on 2026-10-26: 130 passed and seven errored during browser setup because the Playwright Chromium executable was absent. The passing tests include byte-identical report and CSV regeneration, evidence bindings, plotted values, numerical equations, schematic geometry and revision-history preservation. Browser setup errors supply no current rendered measurements. Screen widths, font sizes, print pagination and interactions from Section 9 remain historical; those historical measurements must not be attributed to the changed schematic, whose rendered acceptance requires a separately identified successful run.
 
 The pull-request description already contained the current checksum, visible Appendix C placement and a separately attributed rendered-check record when inspected. That separate record was not reproduced by this local run. The report, builder, model, evidence and CSV files are unchanged by this verification-record correction.
+
+## 11. Report acceptance and publication consistency
+
+The report checked on 2026-10-27 has SHA-256 `592721f644e8727640638f0b3001fa9c93f82fa1670470109e027162b6ef6412`. The builder, generated page, model, evidence and all 13 CSV exports remain unchanged. Earlier rendered measurements in Sections 1 and 9 remain historical; the measurements below come from a separate successful run on these exact report bytes.
+
+The focused suites passed 137 tests: 100 builder, 13 evidence and 24 model tests, with no failures, errors or skips. Seven of those tests exercise rendering through the repository's existing local HTTP fixture and installed headless Chromium 151.0.7922.34. The command supplies pytest, NumPy, SciPy, Playwright and pypdf; an existing Chromium executable is selected through `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Temporary outputs remain outside the repository.
+
+- Exact-width frames at 390, 600 and 1280 px have equal document client, scroll and body widths with disclosures expanded. All 14 SVGs have text bounds inside their rendered areas. At 390 px, light, dark and scripts-disabled cases pass; minimum SVG text is 13.1 px and schematic text is 16.6 px. At 600 and 1280 px, the corresponding minima are 15.9 and 19.6 px.
+- A4 print with 16 mm margins produces 24 pages, including all 14 figure captions and the numbered sections and appendices. Tables and figures fit the printable area with break avoidance. Minimum SVG text is 12.3 px; schematic text is 15.1 px. Appendix C is a visible four-column table after Appendix B, outside a disclosure, with ten retained revision entries. The historical-row and two-qualification-location tests pass; Appendix A links to Section 7.
+- Each of the 13 charts passes pointer hover, keyboard focus and Tab traversal, pointer movement while focused, emulated touch, Escape dismissal and byte-identical CSV download checks. Source-link and local-reference checks pass with the existing documented sibling-page exception.
+
+The generated-page freshness suite passed all 56 tests, including isolated regeneration of all registered pages. Together with the focused suites, 193 distinct tests passed. Initial freshness attempts lacked dependencies of unrelated generators; the dependency-complete run resolved those setup errors without source builds or repository changes. No generated page or manifest is stale.
+
+Portable reproduction commands follow; use separate external temporary directories for test output and caches, and select the installed Chromium executable before the focused command:
+
+```text
+uv run --no-project --with pytest --with numpy --with scipy --with playwright --with pypdf python -m pytest tests/hydrodynamics/test_dual_tank_study_builder.py tests/hydrodynamics/test_dual_tank_cfd_evidence.py tests/hydrodynamics/test_utube_tank.py -q -rA -p no:cacheprovider --basetemp=<focused-temporary-directory>
+uv run --no-project --with pytest --with 'numpy<2' --with scipy --with 'pandas<3' --with 'matplotlib==3.10.9' --with pyyaml --with pydantic --with pint --with jinja2 --with 'plotly==5.17.0' --with seaborn --with 'pyarrow==14.0.1' --with openpyxl --with loguru python -m pytest tests/capabilities/test_generated_html_freshness.py -v -rA -p no:cacheprovider --basetemp=<freshness-temporary-directory>
+```
+
+The static review copy is `out/review-copy/connected-tank-review-copy.html`, accompanied by `SHA256.txt` and relative data assets. Its SHA-256 is `316216a00bcbf39c11d14cdd8ae76d98e187d9f3c49d030db1d587c34c17a1ad`. Brand CSS is embedded and all 13 CSVs are byte-identical local copies. Reversing only the stylesheet embedding and local-link prefixes reproduces the exact published report bytes; no engineering content changes. Rendering needs no network. External source hyperlinks still require network access when followed, and the missing sibling link remains unresolved in the copy as in the report.
+
+The supplied publication paragraph agrees with the report on the analytical screening basis, 35 archived CFD cases, aggregate-only evidence, different archived and invented geometries, and assumed calibration transfer. Its statement that the connected model was built from the benchmarked single-tank analysis is stronger than the report supports. Section 2 says the analytical scope is extended; Section 4 says the connected model is calibrated on its own; Section 5.3 says the single-tank and connected-tank comparisons are unmatched; Section 7 retains that limit; Section 9.1 calls the single-tank study a presentation and analytical-scope reference only. These statements are retained because the available evidence does not establish the stronger derivation. The publication paragraph is unchanged; the maintainers must reconcile this distinction before publication.
+
+The related hull-roll page remains a sibling-page publication prerequisite: its relative target is absent from this report tree. No substitute page or new qualification evidence is introduced. Other browser engines, physical touch, physical printing, visual pagination preferences and physical qualification remain unverified.
+
+Lesson: bind rendered acceptance to the exact report digest and distinguish historical measurements from a successful current-byte run.
