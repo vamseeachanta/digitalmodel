@@ -733,7 +733,7 @@ class SolverOptions(BaseModel):
 
 def _reject_boolean_field_point_coordinate(value: Any) -> Any:
     """Reject booleans before float coercion can treat them as coordinates."""
-    if isinstance(value, bool):
+    if isinstance(value, (bool, np.bool_)):
         raise ValueError("Field point coordinates must not be booleans")
     return value
 
@@ -1083,7 +1083,7 @@ class DiffractionSpec(BaseModel):
         """Load spec from a YAML file."""
         import yaml
 
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         spec = cls.model_validate(data)
         spec._source_dir = Path(path).resolve().parent
@@ -1095,7 +1095,7 @@ class DiffractionSpec(BaseModel):
 
         path = Path(path)
         data = self.model_dump(mode="json", exclude_none=True)
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
         return path
 
