@@ -16,6 +16,9 @@ Reference values:
 """
 
 import math
+from pathlib import Path
+import re
+
 import pytest
 
 from digitalmodel.structural.parachute.parachute_drag import (
@@ -24,6 +27,50 @@ from digitalmodel.structural.parachute.parachute_drag import (
     chute_area,
     DragResult,
 )
+
+
+def test_documented_synthetic_drag_example(capsys):
+    """Execute the roadmap example against its independent hand calculation."""
+    roadmap = (
+        Path(__file__).resolve().parents[3]
+        / "docs/roadmaps/structural-parachute-example.md"
+    )
+    snippets = re.findall(
+        r"```python\n(.*?)\n```", roadmap.read_text(encoding="utf-8"), re.DOTALL
+    )
+    (snippet,) = snippets
+    namespace = {"__name__": "__main__"}
+    exec(compile(snippet, str(roadmap), "exec"), namespace)
+
+    # Roadmap, Independent hand calculation: synthetic inputs give these exact
+    # speeds, circular area and force multipliers without production helpers.
+    expected_area = 25.0 * math.pi
+    expected_cases = (
+        (namespace["baseline"], 30.0, 44.0, 72.6 * math.pi),
+        (namespace["faster"], 60.0, 88.0, 290.4 * math.pi),
+    )
+    expected_lines = []
+    for result, speed_mph, speed_fps, force_lbf in expected_cases:
+        assert isinstance(result, DragResult)
+        assert result.speed_mph == speed_mph
+        assert result.speed_fps == pytest.approx(speed_fps)
+        assert result.chute_area_ft2 == pytest.approx(expected_area)
+        assert result.force_lbs == pytest.approx(force_lbf)
+        # NIST SP 811 Appendix B.8, pound-force: 4.448222 N/lbf.
+        # The roadmap explains the 1 ppm allowance for the API's rounded factor.
+        force_n = force_lbf * 4.448222
+        assert result.force_n == pytest.approx(force_n, rel=1e-6)
+        expected_lines.append(
+            f"{speed_mph:.1f} mph = {speed_fps:.1f} ft/s; "
+            f"area = {expected_area:.1f} ft^2; "
+            f"drag = {force_lbf:.1f} lbf ({force_n:.1f} N)"
+        )
+
+    # Independent hand calculation: doubling speed gives a force ratio of four.
+    force_ratio = namespace["faster"].force_lbs / namespace["baseline"].force_lbs
+    assert force_ratio == pytest.approx(4.0)
+    expected_lines.append("force ratio = 4.0")
+    assert capsys.readouterr().out.splitlines() == expected_lines
 
 
 class TestUnitConversions:
