@@ -24,7 +24,8 @@
   <h2>Revision history</h2>
   <table>
     <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-    <tbody><tr><td>1</td><td>2026-10-25</td><td>Record the complete hosted failure inventory and qualify the coverage claims.</td></tr></tbody>
+    <tbody><tr><td>1</td><td>2026-10-25</td><td>Record the complete hosted failure inventory and qualify the coverage claims.</td></tr>
+      <tr><td>2</td><td>2026-10-27</td><td>Complete the miscellaneous result row and document stricter assignment validation.</td></tr></tbody>
     <caption>Table 1. Evidence-note revision history.</caption>
   </table>
 
@@ -42,7 +43,7 @@
       <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610724/logs">marine-ops-other</a></td><td>2823</td><td>2</td><td>38</td><td>1</td></tr>
       <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610813/logs">solver-smoke</a></td><td>2724</td><td>8</td><td>84</td><td>0</td></tr>
       <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610723/logs">workflows</a></td><td>3169</td><td>5</td><td>12</td><td>0</td></tr>
-      <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610713/logs">misc</a></td><td>100</td><td>8</td><td>1</td></tr>
+      <tr><td><a href="https://api.github.com/repositories/590299785/actions/jobs/117930610713/logs">misc</a></td><td>100</td><td>8</td><td>1</td><td>0</td></tr>
       <tr><th>Total for these four jobs</th><td>8816</td><td>23</td><td>135</td><td>1</td></tr>
     </tbody>
     <caption>Table 2. Historical hosted results for the four failed shards; these are not whole-matrix totals.</caption>
@@ -93,11 +94,18 @@ tests/data/test_slwr_store_references.py
 tests/test_fetch_steel_shapes.py
 tests/test_steel_shapes.py
 tests/test_steel_shapes_import.py</pre>
-  <p>These six assignments do not establish pull request execution. The guard currently treats
+  <p>These six assignments do not establish pull request execution. At the inspected revision, the guard treats
     selection options and collection exclusions leniently; <code>pytest.ini</code> recursion
     exclusions and the 13 entries in <code>tests/conftest.py</code>'s <code>collect_ignore</code>
     therefore limit any execution-coverage claim. The two cathodic-protection files also have
     duplicate shard ownership. No collection-control or shard-command change is made by this note.</p>
+  <p>The updated guard rejects unsupported pytest selection arguments, restricts sweep-only
+    assignments to the six named files with reasons, and checks explicit declarations for
+    the existing collection exclusions. Its output reports those exceptions separately.
+    Three targeted recursion exclusions have no recorded original rationale; the output
+    identifies that missing basis and tracks follow-up in issue 2083.
+    These checks strengthen static validation; they do not establish collection or execution
+    of excluded files, repair duplicate shard ownership, or establish a green aggregate.</p>
 
   <h2>Available-main comparison</h2>
   <p>The available main ref is <code>d43f10e93bfe98a2d01a20784bb7f55e2cb88510</code>;
