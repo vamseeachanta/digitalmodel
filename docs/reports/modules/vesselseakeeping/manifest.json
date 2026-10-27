@@ -10,11 +10,11 @@
     "src/digitalmodel/hydrodynamics/seakeeping.py": "56054b82043243015275ccfcfdf990cca0d816c705729d81a911663296bd0d92",
     "src/digitalmodel/hydrodynamics/wave_spectra.py": "5229f65a8d04826c0b5726e0113a8dc1bdfbd18396169748977a96a2300e0290",
     "tests/hydrodynamics/test_seakeeping.py": "fed19fb73145ecd7f6b2cf74756b85eda11f4da2d04150c70bb4311b37aa46d5",
-    "tests/reporting/test_vessel_seakeeping_module_report.py": "e33fcb06c448ffa00b1268b1b969ee23a831c916c2f1fe073acc5c809af87572",
+    "tests/reporting/test_vessel_seakeeping_module_report.py": "cbd259f310d10727978d3ce9e97f760c8e52a8094996799104a9b52bf4026b64",
     "tests/reporting/fixtures/vessel_seakeeping_hand_calculation.json": "df0ae3e3caa73fb9bb701a1cc6a3c8bb5b335c3a15abab223fd7633a3323808a"
   },
   "artifacts": {
-    "index.html": "fa6451f348e2bb4958eb34f6b689465171eb1601b485ea544787f0061b06d876",
+    "index.html": "6afb5ac6e5d323f00da8c8a56e45d20c72bf2bac63073fddceab1cb4275a7653",
     "changes.json": "c7ebc909bd2fd40694a23cff1f7861d9037a9f6ea259ac7c30b652758792c0df"
   }
 }
