@@ -24,12 +24,14 @@ from __future__ import annotations
 from enum import Enum
 from pathlib import Path
 import warnings
-from typing import Any, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 
 import numpy as np
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     Field,
+    FiniteFloat,
     PrivateAttr,
     field_validator,
     model_serializer,
@@ -729,6 +731,18 @@ class SolverOptions(BaseModel):
         )
 
 
+def _reject_boolean_field_point_coordinate(value: Any) -> Any:
+    """Reject booleans before float coercion can treat them as coordinates."""
+    if isinstance(value, bool):
+        raise ValueError("Field point coordinates must not be booleans")
+    return value
+
+
+_FieldPointCoordinate = Annotated[
+    FiniteFloat, BeforeValidator(_reject_boolean_field_point_coordinate)
+]
+
+
 class FieldPointSpec(BaseModel):
     """Named group of field points for wave elevation/pressure output (#501).
 
@@ -738,10 +752,12 @@ class FieldPointSpec(BaseModel):
     """
 
     name: str
-    points: list[tuple[float, float, float]] = Field(
+    points: list[
+        tuple[_FieldPointCoordinate, _FieldPointCoordinate, _FieldPointCoordinate]
+    ] = Field(
         ...,
         min_length=1,
-        description="Field point coordinates [(x, y, z), ...]",
+        description="Finite field point coordinates [(x, y, z), ...]; no booleans",
     )
     detect_inside_bodies: bool = True
 
