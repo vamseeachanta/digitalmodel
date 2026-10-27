@@ -26,7 +26,7 @@ from digitalmodel.naval_architecture.hull_form import (
 
 @pytest.fixture
 def rectangular_prism():
-    """Load invented dimensions and density; no measured source data is used."""
+    """Load the submerged prism from a cited idealized teaching example."""
     path = Path(__file__).with_name("synthetic_rectangular_prism.json")
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -100,15 +100,26 @@ class TestInterpolateWaterDensity:
 
 
 class TestSyntheticPrismGeometry:
-    """Independent hand calculations for submerged rectangular prisms."""
+    """Independent hand calculations for submerged rectangular prisms.
+
+    Inputs: CK-12 Physics FlexBook 2.0, Archimedes' Principle, Example
+    10.2.2, as reproduced in LibreTexts section 13.2 (2024-09-04 revision).
+    Coefficients: EN400 Principles of Ship Performance, July 2020 edition,
+    Chapter 2, Hull Form and Geometry. Similarity follows from the products
+    of three lengths for volume and two lengths for sectional areas.
+    Mass unit: BIPM SI Brochure, 9th edition, version 4.01 (2026),
+    Chapter 4, Non-SI units, Table 8: one tonne is exactly 1000 kg.
+    Source links and their input coverage are recorded in the fixture.
+    """
 
     def test_rectangular_prism_coefficients_and_mass(self, rectangular_prism):
-        """L=12, B=4, T=2 m give V=96 m³, Am=8 m², Awp=48 m².
+        """L=1, B=1, T=0.600 m give V=0.600 m³, Am=0.600 m², Awp=1 m².
 
-        Hand calculation: Cb=96/(12*4*2)=1, Cm=8/(4*2)=1,
-        Cp=96/(8*12)=1, Cwp=48/(12*4)=1; hence Cb=Cp*Cm.
-        The invented fluid density is 997 kg/m³, deliberately supplied:
-        mass=96*997=95712 kg=95.712 tonnes, using 1000 kg per tonne.
+        The cited cube has side 1.00 m and mass 600 kg in water with
+        density 1000 kg/m³; T=600/(1000*1*1)=0.600 m is its draft.
+        Hand calculation: Cb=0.6/(1*1*0.6)=1, Cm=0.6/(1*0.6)=1,
+        Cp=0.6/(0.6*1)=1, Cwp=1/(1*1)=1; hence Cb=Cp*Cm.
+        Mass=0.6*1000=600 kg=0.600 tonnes, using Table 8 cited above.
         """
         length = rectangular_prism["length_m"]
         beam = rectangular_prism["beam_m"]
@@ -117,7 +128,7 @@ class TestSyntheticPrismGeometry:
         volume = length * beam * draft
         midship_area = beam * draft
         waterplane_area = length * beam
-        assert (volume, midship_area, waterplane_area) == (96.0, 8.0, 48.0)
+        assert (volume, midship_area, waterplane_area) == pytest.approx((0.6, 0.6, 1.0))
 
         cb = block_coefficient(volume, length, beam, draft)
         cm = midship_coefficient(midship_area, beam, draft)
@@ -127,19 +138,25 @@ class TestSyntheticPrismGeometry:
         assert cp == pytest.approx(volume / (midship_area * length))
         assert cb == pytest.approx(cp * cm)
         mass_tonnes = displacement_from_cb(cb, length, beam, draft, rho=density)
-        assert mass_tonnes == pytest.approx(95.712)
+        assert mass_tonnes == pytest.approx(0.6)
         assert mass_tonnes * 1000.0 == pytest.approx(volume * density)
 
-    @pytest.mark.parametrize("scale", [0.5, 2.0], ids=["half", "double"])
-    def test_uniform_scaling_preserves_coefficients(self, rectangular_prism, scale):
-        """Scale the 12*4*2 m prism uniformly, with the same 997 kg/m³ fluid.
+    @pytest.mark.parametrize(
+        "scale, expected",
+        [(0.5, (0.075, 0.15, 0.25, 0.075)), (2.0, (4.8, 2.4, 4.0, 4.8))],
+        ids=["half", "double"],
+    )
+    def test_uniform_scaling_preserves_coefficients(self, rectangular_prism, scale, expected):
+        """Scale the cited 1*1*0.600 m prism in the same 1000 kg/m³ fluid.
 
-        Hand calculations: s=0.5 gives 6*2*1 m, V=12 m³, Am=2 m²,
-        Awp=12 m²; s=2 gives 24*8*4 m, V=768 m³, Am=32 m²,
-        Awp=192 m². V/V_base=s³, Am/Am_base=Awp/Awp_base=s².
+        Hand calculations: s=0.5 gives 0.5*0.5*0.3 m, V=0.075 m³,
+        Am=0.15 m², Awp=0.25 m², mass=0.075*1000/1000=0.075 tonnes;
+        s=2 gives 2*2*1.2 m, V=4.8 m³, Am=2.4 m², Awp=4 m²,
+        mass=4.8*1000/1000=4.8 tonnes. These are synthetic similarity
+        transformations, not additional published examples.
+        V/V_base=s³, Am/Am_base=Awp/Awp_base=s².
         Each coefficient remains unity, since numerator and denominator
-        scale by the same power. Mass in tonnes is V*997/1000, where
-        1000 kg per tonne converts the supplied SI density to tonnes.
+        scale by the same power. The mass conversion uses Table 8 above.
         """
         base_length = rectangular_prism["length_m"]
         base_beam = rectangular_prism["beam_m"]
@@ -151,24 +168,25 @@ class TestSyntheticPrismGeometry:
         volume = length * beam * draft
         midship_area = beam * draft
         waterplane_area = length * beam
-        assert volume == pytest.approx(96.0 * scale**3)
-        assert midship_area == pytest.approx(8.0 * scale**2)
-        assert waterplane_area == pytest.approx(48.0 * scale**2)
+        assert (volume, midship_area, waterplane_area) == pytest.approx(expected[:3])
+        assert volume == pytest.approx(0.6 * scale**3)
+        assert midship_area == pytest.approx(0.6 * scale**2)
+        assert waterplane_area == pytest.approx(1.0 * scale**2)
 
         cb = block_coefficient(volume, length, beam, draft)
         cm = midship_coefficient(midship_area, beam, draft)
         cp = prismatic_coefficient(cb, cm)
         cwp = waterplane_coefficient(waterplane_area, length, beam)
         base_coefficients = (
-            block_coefficient(96.0, base_length, base_beam, base_draft),
-            midship_coefficient(8.0, base_beam, base_draft),
+            block_coefficient(0.6, base_length, base_beam, base_draft),
+            midship_coefficient(0.6, base_beam, base_draft),
             prismatic_coefficient(cb=1.0, cm=1.0),
-            waterplane_coefficient(48.0, base_length, base_beam),
+            waterplane_coefficient(1.0, base_length, base_beam),
         )
         assert (cb, cm, cp, cwp) == pytest.approx((1.0, 1.0, 1.0, 1.0))
         assert (cb, cm, cp, cwp) == pytest.approx(base_coefficients)
         assert cp == pytest.approx(volume / (midship_area * length))
         assert cb == pytest.approx(cp * cm)
         mass_tonnes = displacement_from_cb(cb, length, beam, draft, rho=density)
-        assert mass_tonnes == pytest.approx(96.0 * scale**3 * density / 1000.0)
+        assert mass_tonnes == pytest.approx(expected[3])
         assert mass_tonnes * 1000.0 == pytest.approx(volume * density)
