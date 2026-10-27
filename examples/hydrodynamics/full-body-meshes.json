@@ -1,0 +1,40 @@
+{
+  "method": "numpy structured planar quads",
+  "ulen": 1.0,
+  "gravity": 9.80665,
+  "symmetry": [
+    0,
+    0
+  ],
+  "length_m": 231.0,
+  "beam_m": 49.0,
+  "draft_m": 11.0,
+  "taper_length_m": 16.5,
+  "end_half_breadth_m": 1.4702479338842696,
+  "displacement_m3": 116149.2,
+  "basis": "assumed, based on previous experience; equal end breadth reconstructed from displacement",
+  "limitation": "Reconstructed geometry; original surface and panel quality are not qualified. Digest agreement establishes reproducibility, not source validity.",
+  "meshes": {
+    "coarse": {
+      "file": "coarse.gdf",
+      "sha256": "2eb793069d7fa8b38f4b10019e41f5cdb234ad2b1b75953cd7daa46799cb67fc",
+      "bytes": 235960,
+      "panels": 1464,
+      "target_size_m": 3.5
+    },
+    "medium": {
+      "file": "medium.gdf",
+      "sha256": "da770cfbe605a93207a77f3a148d5c108e60baa6cc59e1efcc9678e3709808ab",
+      "bytes": 485698,
+      "panels": 3020,
+      "target_size_m": 2.47
+    },
+    "fine": {
+      "file": "fine.gdf",
+      "sha256": "f4e52b1fc8e07979ce2ffcf5c464ccf36537918619068713f664e007a7384161",
+      "bytes": 943406,
+      "panels": 5856,
+      "target_size_m": 1.75
+    }
+  }
+}

@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Low-frequency diffraction investigation request</title>
+<style>
+body { max-width: 72rem; margin: auto; padding: 2rem; font: 1rem/1.6 system-ui; color: #172a39; }
+table { border-collapse: collapse; width: 100%; } td, th { border: 1px solid #b9c8cf; padding: .6rem; text-align: left; }
+pre { overflow: auto; padding: 1rem; background: #edf2f4; } .status { border-left: .3rem solid #b06000; padding: 1rem; }
+caption { caption-side: bottom; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Low-frequency diffraction investigation request</h1>
+<p class="status">Native runs: NOT_EVALUATED. The full-body geometry preparation passes the geometry-only DF2
+buoyancy check. The campaign remains blocked on reviewed inputs and approvals. Root cause, motion correction
+and physical qualification are not established; no solver is run by these tools.</p>
+
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>2026-10-15</td><td>Prepared the matched mesh/removal campaign and export checks to investigate reported low-frequency motion.</td></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Added reconstructed full-body geometry, buoyancy and symmetry gates, proposed sampling and pilot order because the original mesh represented half the body.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Required complete preparation evidence and justification for each heading, enforced the corrected natural-frequency bound, and marked unverified geometry inputs as assumptions.</td></tr>
+</tbody>
+<caption>Retained issue history.</caption>
+</table>
+
+<h2>Geometry and loading basis</h2>
+<p>Scope: issue 1548. Geometry, loading and environmental inputs are assumed, based on previous experience;
+a reviewed source specification is not retained with this package. The assumed mass is 119,052,930 kg,
+CoG [115.5, 0, -5.5] m (estimate), gyradii [17.15, 57.75, 60.06] m (estimate), B44 = 6.0e6,
+water depth 1,000 m, density 1,025 kg/m3 and gravity 9.80665 m/s2. A weight report is MISSING.
+The heading convention, including which end is the bow, and the final frequency list are MISSING.
+The estimates do not replace a weight report.</p>
+<p>The deterministic NumPy generator constructs a full wall-sided hull of length 231.0 m, beam 49.0 m
+and draft 11.0 m, with equal end breadths and linear tapers over x = 0 to 16.5 m and 214.5 to 231.0 m.
+Both transoms are closed; the waterline is open. The end half-breadth is derived from
+V/draft = beam × (length − taper length) + 2 × taper length × end half-breadth,
+using the specified displacement of 116,149.2 m3. This is a reconstructed surface, not recovery of the
+unretained original surface. It requires geometry review. The structured quads become narrower at the ends;
+near-uniform panel size and mesh-quality acceptance are not established.</p>
+<p>The three levels contain 1,464, 3,020 and 5,856 panels, with nominal target sizes 3.5, 2.47 and 1.75 m.
+Every GDF has ULEN = 1.0, GRAV = 9.80665 and ISX = ISY = 0. SHA-256 digests, byte sizes,
+counts and generation parameters are retained in <code>examples/hydrodynamics/full-body-meshes.json</code>.
+Generated meshes remain in the controlled run package; the repository retains the generator and manifest.</p>
+<pre>python scripts/benchmark/full_body_mesh.py inputs/meshes</pre>
+<p>The generator resumes only when existing bytes match its deterministic digests and refuses different bytes.
+Copy the manifest beside the request and retain the meshes under the base-spec directory. The geometry-only
+DF2 check integrates the supplied panels without applying symmetry reflection. It returns volume, waterplane
+area, centre of buoyancy and |rho × V − M|/M; gravity cancels from this force ratio. All three full-body levels
+pass the supplied 1.0 % mass-residual criterion and transverse buoyancy within 0.001 of mesh beam.
+These are supplied investigation criteria, not independently verified standard limits. Digest agreement
+establishes reproducibility, not source validity. The half-body negative control has volume 58,074.6 m3, half the waterplane,
+an off-centre buoyancy location and 50.0 % mass residual, and returns FAIL. Missing, nonfinite, open,
+duplicated or reversed surfaces return NOT_EVALUATED. This does not qualify all hydrostatic or mesh gates.</p>
+
+<h2>Required inputs and fail-closed preparation</h2>
+<p>The template <code>examples/hydrodynamics/low-frequency-campaign.json</code> records the supported values.
+Every other field remains MISSING. Criteria status is <code>proposed</code> and approval fields read
+<code>PROPOSED: needs DF QM approval</code>. No case is issued while any input remains missing or proposed.
+The maintainer must supply a reviewed single-body base spec, heading convention, weight report, final sampling,
+corrected heave natural frequency and heading-specific asymptotic justification. Approval references must be
+recorded as <code>APPROVED: reference</code>, and each comparison criterion must be marked approved.
+These strings record evidence; they do not authenticate an approval.</p>
+<p>The required evidence fields <code>base_spec</code>, <code>heading_convention</code>,
+<code>weight_report</code> and <code>final_frequency_list</code> require nonblank reference strings.
+Within <code>criteria.asymptotic_max_rad_s</code>, <code>heave_natural_frequency_rad_s</code>
+requires a positive finite corrected frequency, and <code>heading_justification</code> requires an object
+mapping each requested heading in degrees to a nonblank evidence reference or rationale. Numeric heading
+identity is used; missing, duplicate or unrequested headings are refused. Omitted fields cannot bypass the gate.</p>
+<p>Before writing any specification the campaign checks header symmetry against the spec and requires DF2 PASS
+at every mesh level. ISX maps to the yz plane and ISY to the xz plane. A nonzero flag with symmetry none,
+a zero flag with declared symmetry, or a different plane is refused. This is a campaign-specific consistency
+contract. It does not change backend symmetry optimization semantics.</p>
+<p>The new coarse level replaces the original half mesh. The base mesh is retained only as bound provenance;
+it is never forced into the ladder. Mesh paths are portable relative paths inside the base-spec directory.
+Source and output digests are verified before assessment; changed inputs or prepared specs are rejected.
+Existing mass, inertia, reference point, damping and environment are preserved. Free-floating inferred mass,
+nonzero mesh waterline and non-metre declared units are unsupported. Auxiliary meshes are refused.</p>
+<pre>python scripts/benchmark/low_frequency_campaign.py prepare inputs/base.yml inputs/request.json prepared
+python scripts/benchmark/low_frequency_campaign.py assess prepared/manifest.json results.csv screen.json</pre>
+<p>Preparation builds the whole packet before writes and creates an exclusive destination. It does not validate
+the entire unified schema or convert native decks. The maintainer will validate cases through the existing
+<code>SpecConverter</code> workflow on a licensed installation. No subprocess or licensed import is used here.
+A partial preparation remains available for diagnosis and requires a fresh destination.</p>
+
+<h2>Proposed sampling and criteria</h2>
+<p>Retain the ten base frequencies [0.2, 0.35, 0.5, 0.575, 0.65, 0.7, 0.75, 0.8, 0.9, 1.0] rad/s.
+Add 0.25 and 0.30 rad/s strictly inside the lowest interval, plus 0.15 and 0.10 rad/s as asymptotic candidates.
+The sorted fourteen-value list and headings [0, 45, 90, 135, 180] degrees are proposals pending approval.
+Use finite-depth dispersion omega squared = g k tanh(k h) at h = 1,000 m, including the lowest samples.</p>
+<table>
+<thead><tr><th>Check</th><th>Proposed value and applicability</th></tr></thead>
+<tbody>
+<tr><td>Mesh pairs</td><td>Absolute amplitude difference no greater than 0.05 m/m; strict alternative 0.0125 m/m.
+Apply to coarse/medium and medium/fine, for both translations, holding program and treatment fixed.
+These are supplied investigation candidates, not approved limits or demonstrated convergence.</td></tr>
+<tr><td>Solver pairs</td><td>Absolute amplitude difference no greater than 0.05 m/m, holding mesh and treatment fixed.
+Convention and physical-model agreement require native evidence. Numerical agreement alone does not establish correctness.</td></tr>
+<tr><td>Asymptotic upper frequency</td><td>At most 0.236 rad/s, proposed only. A1 DF5.1 checks the longer of the
+longest period and four times the corrected heave natural period. The corrected natural frequency is MISSING;
+the final bound may need to be lower. Justify it for every heading, well below the anomaly frequencies.
+Preparation enforces both one quarter of the corrected natural angular frequency and one quarter of
+the dry natural angular frequency calculated from each mesh waterplane, density, gravity and mass.
+Finite-frequency beam-sea heave above unity can be physical and is not rejected by applying this band there.</td></tr>
+<tr><td>Long-period heave</td><td>Inclusive [0.98, 1.02] m/m at approved asymptotic samples only.
+Basis: repository <code>qa_gates.py</code>, AQ-10; supplied AQG r1 DF5 reference;
+<em>Marine Hydrodynamics</em> (1977), chapter 6. The publisher page was inaccessible (HTTP 403), so the chapter
+reference is supplied context, not independently checked source text. The band does not apply to sway.</td></tr>
+<tr><td>Removal sensitivity</td><td>Retain every off/on difference; no acceptance limit is assigned, so the diagnostic
+comparison is NOT_EVALUATED.</td></tr>
+</tbody>
+<caption>Proposed criteria; DF QM approval and body-specific applicability remain required.</caption>
+</table>
+
+<h2>Solver request and pilot order</h2>
+<ol>
+<li>Require geometry-only DF2 buoyancy PASS on every mesh and symmetry consistency before any case.</li>
+<li>Run one fine-mesh frequency per solver inside the 30-minute QA cap; retain settings, elapsed time,
+warnings, completion and native readback. Re-estimate before proceeding if the pilot exceeds the budget.</li>
+<li>After pilot review, run the six-case ladder per solver: three meshes × removal off/on.
+Both solvers together give twelve cases.</li>
+</ol>
+<p>Estimate only: about 57 to 95 minutes for OrcaWave and 49 to 81 minutes for AQWA, uncertain by about 3×.
+Basis: assumed, based on previous experience. These are not measured timings or a confirmed runtime budget;
+the pilot must replace these estimates before batch execution. No native run is performed by this package.</p>
+<p>The unified treatment is <code>irregular_frequency_method: none</code> or <code>interior_panels</code>.
+<code>orcawave_backend.py::_build_body_dict</code> maps interior panels to interior-surface triangulation;
+<code>input_schemas.py::SolverOptions</code> and <code>aqwa_backend.py</code> map it to conditional
+<code>ILID AUTO</code>. These request analogous mechanisms, not identical native panels. Unsupported mappings
+remain NOT_EVALUATED. Retain program and conversion versions, settings, native decks and lid inspection.</p>
+<p>Retain all native RAO magnitudes and phases, hydrostatics, damping, added mass, excitation, complete logs,
+warnings and input/mesh/output digests, including outliers. For every run ID retain the actual input and result
+digests, extraction tool/version and convention transformations. Bind the export digest to that record.
+The byte checker cannot establish that native results originated from the declared inputs.</p>
+
+<h2>Export contract and interpretation</h2>
+<pre>run_id,frequency_rad_s,heading_deg,dof,amplitude,unit</pre>
+<p>Require the complete exact frequency/heading grid for sway and heave with nonnegative magnitudes in m/m.
+Headings are canonical in [0, 360) degrees; duplicates are rejected. Matching uses exact decimal identity,
+without interpolation. Reject missing, additional, duplicate, malformed, nonfinite and unrepresentable values.
+Preserve requested sampling labels where native serialization rounds them and retain the reviewed mapping.</p>
+<p><code>numerical_screen</code> passes only when every applicable numerical comparison passes, including
+removal-off cases. A failed diagnostic case may coexist with a corrected candidate that passes every applicable check;
+the retained per-sample report supports that distinction. A failed screen or invalid input has a nonzero exit status.
+<code>qualification</code> and <code>native_execution</code> remain NOT_EVALUATED even for synthetic passing exports.</p>
+<p>Closure requires native evidence that reproduces the anomaly and identifies a corrected candidate with applicable
+heave, mesh-pair and solver-pair checks. Review hydrostatic equilibrium, mass/inertia, normals, panel quality,
+waterline, removal treatment, radiation damping and added mass under the applicable gates. Preserve original
+results and flags until qualification. Dataset publication and downstream flag propagation remain separate work.</p>
+
+<h2>Sources and open items</h2>
+<ul>
+<li>Dimensions, loading, environment and original sample grid: assumed, based on previous experience;
+the reviewed base specification is MISSING.</li>
+<li>Issue 1548: reported low-frequency anomaly and proposed mesh/removal investigation.</li>
+<li>Repository <code>input_schemas.py</code>, <code>orcawave_backend.py</code>, <code>aqwa_backend.py</code>,
+<code>spec_converter.py</code> and <code>qa_gates.py::EXTERNAL_CHECKS</code>: schema, mappings and screening band.</li>
+<li>Supplied references: AQG r1 DF2 and DF5; A1 DF5.1. No independently retrieved edition text is asserted.</li>
+<li>MISSING: reviewed base spec, weight report, bow/heading convention, final frequency list,
+corrected heave natural frequency, per-heading justification and approvals.</li>
+</ul>
+</body>
+</html>
