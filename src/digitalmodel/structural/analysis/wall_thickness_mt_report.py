@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Multi-code pipeline/riser wall thickness M-T interaction HTML report generator
 # ABOUTME: Supports API RP 1111, API RP 2RD, API STD 2RD with per-code conditions and envelopes
 
@@ -23,6 +26,10 @@ interactive contour chart and envelope plot.
 
 import math
 import logging
+import csv
+import json
+from dataclasses import dataclass
+from html import escape
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -75,6 +82,40 @@ CONDITIONS_BY_CODE = {
 }
 
 
+@dataclass(frozen=True)
+class WorkingPressure:
+    """Internal working pressure in MPa, on the external pressure's datum.
+
+    Values are absolute inputs rather than multipliers of the report's design
+    pressure. The basis identifies the supplied source, or explicitly ASSUMED.
+    """
+
+    pressure_mpa: float
+    basis: str = "ASSUMED"
+
+    def __post_init__(self):
+        if not math.isfinite(self.pressure_mpa) or self.pressure_mpa < 0:
+            raise ValueError("Working pressure must be finite and non-negative")
+        if not self.basis.strip():
+            raise ValueError("Working pressure needs a source basis or ASSUMED")
+
+
+DEFAULT_WORKING_PRESSURES = tuple(WorkingPressure(p) for p in (0.0, 10.0, 20.0))
+PRESSURE_SWEEP_LIMITATION = (
+    "Screening envelope from the moment-tension report; "
+    "not reconciled with the code strategy"
+)
+
+
+def _validate_working_pressures(working_pressures):
+    pressures = tuple(
+        DEFAULT_WORKING_PRESSURES if working_pressures is None else working_pressures
+    )
+    if not pressures or len({p.pressure_mpa for p in pressures}) != len(pressures):
+        raise ValueError("Working pressures must be non-empty and unique")
+    return pressures
+
+
 def generate_mt_report(
     geometry: PipeGeometry,
     material: PipeMaterial,
@@ -83,6 +124,7 @@ def generate_mt_report(
     code: DesignCode = DesignCode.API_RP_1111,
     output_path: Optional[str] = None,
     edition: Optional[int] = None,
+    working_pressures: Optional[List[WorkingPressure]] = None,
 ) -> str:
     """Generate a wall thickness M-T interaction HTML report.
 
@@ -98,10 +140,16 @@ def generate_mt_report(
         code: Design code (default API RP 1111).
         output_path: If provided, write HTML to this path.
         edition: Optional edition year (e.g. 2015 for API RP 1111 4th Ed).
+        working_pressures: Absolute internal pressures in MPa with their basis.
+            Defaults to 0, 10 and 20 MPa, each ASSUMED. Every condition is swept.
+            File output includes pressure-sweep CSV and JSON sidecars.
 
     Returns:
         Complete HTML string.
     """
+    if code not in CONDITIONS_BY_CODE:
+        raise ValueError(f"No pressure-sweep envelope implemented for {code.value}")
+    working_pressures = _validate_working_pressures(working_pressures)
     strategy_cls = CODE_REGISTRY.get(code)
     if strategy_cls is None:
         raise ValueError(f"No strategy registered for {code}")
@@ -113,9 +161,9 @@ def generate_mt_report(
     else:
         strategy = strategy_cls()
 
-    # Build edition label for report header
+    # Retain an explicitly requested legacy label; infer no edition for a sweep.
     edition_label = ""
-    if hasattr(strategy, "edition_info"):
+    if edition is not None and hasattr(strategy, "edition_info"):
         edition_label = f" — {strategy.edition_info.edition_label} ({strategy.edition_info.edition_year})"
 
     conditions = CONDITIONS_BY_CODE.get(code, API_RP_1111_CONDITIONS)
@@ -203,15 +251,16 @@ def generate_mt_report(
         envelopes, T_y, M_p, conditions, method_envelopes,
     )
 
-    # Pressure sensitivity: baseline, +50%, +100%
-    pressure_factors = [1.0, 1.5, 2.0]
     pressure_sensitivity = _compute_pressure_sensitivity(
-        A, Z, d_i, t, internal_pressure, external_pressure,
+        A, Z, d_i, t, external_pressure,
         material.smys, T_y, M_p, conditions,
-        pressure_factors,
+        working_pressures,
+    )
+    pressure_manifest = _pressure_sweep_manifest(
+        pressure_sensitivity, code, external_pressure,
     )
     pressure_chart_html = _build_pressure_sensitivity_chart(
-        pressure_sensitivity, T_y, M_p, internal_pressure, conditions,
+        pressure_manifest,
     )
 
     # Build full HTML
@@ -222,15 +271,55 @@ def generate_mt_report(
         envelopes, pressure_sensitivity, pressure_chart_html,
         conditions, edition_label=edition_label,
     )
+    manifest_json = json.dumps(pressure_manifest, ensure_ascii=True, allow_nan=False)
+    html = html.replace(
+        "</body>",
+        '<script type="application/json" id="pressure-sweep-manifest">'
+        + manifest_json.replace("<", "\\u003c") + "</script>\n</body>",
+    )
 
     if output_path is not None:
         path = Path(output_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             f.write(html)
+        path.with_suffix(".pressure-sweep.json").write_text(
+            manifest_json + "\n", encoding="utf-8",
+        )
+        with path.with_suffix(".pressure-sweep.csv").open(
+            "w", newline="", encoding="utf-8",
+        ) as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(pressure_manifest["rows"][0]))
+            writer.writeheader()
+            writer.writerows(pressure_manifest["rows"])
         logger.info("M-T report written to %s", output_path)
 
     return html
+
+
+def generate_mt_pressure_reports(
+    geometry: PipeGeometry,
+    material: PipeMaterial,
+    internal_pressure: float,
+    external_pressure: float,
+    output_directory: str,
+    working_pressures: Optional[List[WorkingPressure]] = None,
+) -> Dict[DesignCode, Path]:
+    """Write one report, CSV and manifest for each implemented envelope route.
+
+    Pressure-only routes have no envelope implementation and are excluded.
+    No strategy reconciliation or edition review is implied by these outputs.
+    """
+    pressures = _validate_working_pressures(working_pressures)
+    outputs = {}
+    for code in CONDITIONS_BY_CODE:
+        path = Path(output_directory) / f"{code.value.lower()}.html"
+        generate_mt_report(
+            geometry, material, internal_pressure, external_pressure,
+            code=code, output_path=str(path), working_pressures=pressures,
+        )
+        outputs[code] = path
+    return outputs
 
 
 # ---------------------------------------------------------------------------
@@ -511,21 +600,21 @@ def _trace_envelope_method2(
 
 def _compute_pressure_sensitivity(
     A: float, Z: float, d_i: float, t: float,
-    pi_base: float, pe: float, smys: float,
+    pe: float, smys: float,
     T_y: float, M_p: float,
     conditions: List[Dict],
-    pressure_factors: List[float],
+    working_pressures: List[WorkingPressure],
 ) -> List[Dict]:
-    """Compute capacity limits at multiple internal pressure levels.
+    """Compute screening capacity limits at stated internal pressures.
 
-    Returns:
-        List of dicts with keys: pi_factor, pi_MPa, sigma_h_MPa,
-        limits (list of per-condition dicts), envelopes (dict of
-        condition_name -> (T_vals, M_vals)).
+    The existing hoop approximation follows force balance on a longitudinal
+    cut through a unit-length cylinder: pressure force is (pi-pe)*d_i and
+    the two wall ligaments carry 2*t*sigma_h, hence
+    sigma_h = (pi-pe)*d_i/(2*t). No code criterion is introduced here.
     """
     results = []
-    for pf in pressure_factors:
-        pi = pi_base * pf
+    for pressure in _validate_working_pressures(working_pressures):
+        pi = pressure.pressure_mpa * 1e6
         p_net = pi - pe
         sigma_h = p_net * d_i / (2 * t) if t > 0 else 0.0
 
@@ -533,7 +622,6 @@ def _compute_pressure_sensitivity(
             A, Z, sigma_h, smys, T_y, M_p, conditions,
         )
 
-        # Trace envelope for Normal Operating only (f_d=0.72) to keep chart readable
         envelopes = {}
         for cond in conditions:
             lim = next(c for c in limits if c["name"] == cond["name"])
@@ -546,8 +634,8 @@ def _compute_pressure_sensitivity(
             envelopes[cond["name"]] = (T_vals, M_vals)
 
         results.append({
-            "pi_factor": pf,
-            "pi_MPa": pi / 1e6,
+            "pi_MPa": pressure.pressure_mpa,
+            "basis": pressure.basis,
             "sigma_h_MPa": sigma_h / 1e6,
             "limits": limits,
             "envelopes": envelopes,
@@ -556,94 +644,108 @@ def _compute_pressure_sensitivity(
     return results
 
 
-def _build_pressure_sensitivity_chart(
-    sensitivity: List[Dict],
-    T_y: float, M_p: float,
-    pi_base: float,
-    conditions: Optional[List[Dict]] = None,
-) -> str:
-    """Build Plotly chart comparing envelopes across pressure levels.
+def _pressure_sweep_manifest(sensitivity: List[Dict], code: DesignCode, pe: float) -> Dict:
+    """Make a row for every signed plotted point, including curve provenance.
 
-    Shows the first (most restrictive) condition's envelope at each pressure level.
+    Both chart and CSV consume these rows without resampling or rounding.
+    The wall basis describes this report's screening computation, which uses
+    nominal wall for every route; it does not describe the strategy checks.
     """
-    if conditions is None:
-        conditions = API_RP_1111_CONDITIONS
+    rows = []
+    limitations = [PRESSURE_SWEEP_LIMITATION]
+    if code == DesignCode.DNV_ST_F101:
+        limitations.append("simplified form; not checked against the standard's text")
+    for case_index, case in enumerate(sensitivity):
+        for condition_index, (condition, (tensions, moments)) in enumerate(
+            case["envelopes"].items()
+        ):
+            curve_id = f"{code.value}:{condition_index}:{case_index}"
+            # Reflect the upper branch about M=0 and explicitly close the curve.
+            points = list(zip(tensions, moments))
+            points += [(t, -m) for t, m in reversed(list(zip(tensions, moments)))]
+            points.append(points[0])
+            for point_index, (tension, moment) in enumerate(points):
+                rows.append({
+                    "curve_id": curve_id,
+                    "point_index": point_index,
+                    "code": code.value,
+                    "condition": condition,
+                    "pressure_mpa": case["pi_MPa"],
+                    "basis": case["basis"],
+                    "external_pressure_mpa": pe / 1e6,
+                    "wall_basis": "nominal wall (screening)",
+                    "source": PRESSURE_SWEEP_LIMITATION,
+                    "tension_kn": tension / 1e3,
+                    "moment_knm": moment / 1e3,
+                })
+    return {
+        "schema_version": 1,
+        "limitation": PRESSURE_SWEEP_LIMITATION,
+        "limitations": limitations,
+        "working_pressures": [
+            {"pressure_mpa": c["pi_MPa"], "basis": c["basis"]} for c in sensitivity
+        ],
+        "rows": rows,
+    }
+
+
+def _build_pressure_sensitivity_chart(manifest: Dict) -> str:
+    """Plot one closed curve per pressure and condition from manifest rows."""
     try:
         import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
     except ImportError:
         return (
             '<div class="card" style="padding:2em;color:#888;">'
             "Plotly not available — pressure sensitivity chart skipped.</div>"
         )
 
-    fig = go.Figure()
-
-    # Colors for pressure levels: blue (baseline), orange (+50%), red (+100%)
-    pressure_colors = ["#1f77b4", "#ff7f0e", "#d62728"]
-    pressure_dashes = ["solid", "dash", "dot"]
-
-    # Plot from highest pressure (outermost shrinks) to baseline so fills layer
-    for i, case in enumerate(reversed(sensitivity)):
-        idx = len(sensitivity) - 1 - i  # original index for color/dash
-        pf = case["pi_factor"]
-        label_suffix = "" if pf == 1.0 else f" (+{(pf - 1) * 100:.0f}%)"
-        pi_label = f"P_i = {case['pi_MPa']:.0f} MPa{label_suffix}"
-
-        # Show the first (most restrictive) condition's envelope
-        first_cond_name = conditions[0]["name"]
-        env = case["envelopes"].get(first_cond_name)
-        if env:
-            color = pressure_colors[idx % len(pressure_colors)]
-            r, g, b = int(color[1:3], 16), int(color[3:5], 16), int(color[5:7], 16)
-
-            # Build closed polygon: +M forward, -M reversed
-            T_kN_fwd = [v / 1e3 for v in env[0]]
-            M_kNm_pos = [v / 1e3 for v in env[1]]
-            T_kN_rev = list(reversed(T_kN_fwd))
-            M_kNm_neg = [-v / 1e3 for v in reversed(env[1])]
-
-            poly_T = T_kN_fwd + T_kN_rev
-            poly_M = M_kNm_pos + M_kNm_neg
-
-            fig.add_trace(go.Scatter(
-                x=poly_T, y=poly_M,
-                mode="lines",
-                name=pi_label,
-                line=dict(
-                    color=color,
-                    dash=pressure_dashes[idx % len(pressure_dashes)],
-                    width=2,
-                ),
-                fill="toself",
-                fillcolor=f"rgba({r},{g},{b},0.10)",
-                hovertemplate=(
-                    f"{pi_label}<br>"
-                    "T = %{x:.0f} kN<br>"
-                    "M = %{y:.0f} kN·m<extra></extra>"
-                ),
-            ))
-
-    first_cond = conditions[0]
+    conditions = list(dict.fromkeys(row["condition"] for row in manifest["rows"]))
+    fig = make_subplots(rows=len(conditions), cols=1, subplot_titles=conditions)
+    curves = {}
+    for row in manifest["rows"]:
+        curves.setdefault(row["curve_id"], []).append(row)
+    pressure_colors = ["#1f77b4", "#ff7f0e", "#d62728", "#9467bd"]
+    for curve in curves.values():
+        first = curve[0]
+        condition = first["condition"]
+        pressure = first["pressure_mpa"]
+        pressure_index = next(
+            i for i, p in enumerate(manifest["working_pressures"])
+            if p["pressure_mpa"] == pressure
+        )
+        label = escape(
+            f"{first['code']} | {condition} | P_i = {pressure} MPa | "
+            f"{first['wall_basis']} | {first['basis']}"
+        )
+        fig.add_trace(go.Scatter(
+            x=[r["tension_kn"] for r in curve],
+            y=[r["moment_knm"] for r in curve],
+            mode="lines", name=label,
+            meta={k: first[k] for k in (
+                "curve_id", "code", "condition", "pressure_mpa", "basis", "wall_basis",
+            )},
+            line=dict(color=pressure_colors[pressure_index % len(pressure_colors)], width=2),
+            fill="toself",
+            hovertemplate=(
+                f"{label}<br>T = %{{x:.1f}} kN<br>"
+                "M = %{y:.1f} kN·m<extra></extra>"
+            ),
+        ), row=conditions.index(condition) + 1, col=1)
+    fig.update_xaxes(title_text="Effective Tension (kN)")
+    fig.update_yaxes(title_text="Bending Moment (kN·m)")
     fig.update_layout(
-        title=(
-            f"Pressure Sensitivity — {first_cond['name']} Envelope "
-            f"(f<sub>d</sub> = {first_cond['f_d']})"
-        ),
-        xaxis_title="Effective Tension (kN)",
-        yaxis_title="Bending Moment (kN·m)",
-        template="plotly_white",
-        hovermode="closest",
-        showlegend=True,
-        legend=dict(
-            x=0.01, y=0.99,
-            bgcolor="rgba(255,255,255,0.8)",
-            bordercolor="#ccc", borderwidth=1,
-        ),
-        width=900,
-        height=600,
+        title="Working pressure sweep — screening envelopes",
+        template="plotly_white", hovermode="closest", showlegend=True,
+        legend=dict(orientation="h", y=-0.1),
+        height=350 * len(conditions),
         margin=dict(l=60, r=40, t=80, b=60),
     )
-
+    fig.add_annotation(
+        x=0, y=1.06, xref="paper", yref="paper", xanchor="left",
+        text="<br>".join(escape(label) for label in manifest["limitations"]),
+        showarrow=False, font=dict(size=10),
+    )
     return fig.to_html(full_html=False, include_plotlyjs="cdn")
 
 
@@ -1152,6 +1254,7 @@ def _build_html(
             "<table><thead><tr>"
             "<th>P<sub>i</sub> (MPa)</th>"
             "<th>&sigma;<sub>h</sub> (MPa)</th>"
+            "<th>Pressure basis</th>"
             "<th>Condition</th>"
             "<th>f<sub>d</sub></th>"
             "<th>T<sub>+</sub> (kN)</th>"
@@ -1160,14 +1263,12 @@ def _build_html(
             "</tr></thead><tbody>"
         )
         for case in pressure_sensitivity:
-            pf = case["pi_factor"]
-            label = f"{case['pi_MPa']:.0f}"
-            if pf != 1.0:
-                label += f" (+{(pf - 1) * 100:.0f}%)"
+            label = str(case["pi_MPa"])
             for j, lim in enumerate(case["limits"]):
                 first_col = (
                     f"<td rowspan=\"{len(case['limits'])}\">{label}</td>"
                     f"<td rowspan=\"{len(case['limits'])}\">{case['sigma_h_MPa']:.1f}</td>"
+                    f"<td rowspan=\"{len(case['limits'])}\">{escape(case['basis'])}</td>"
                     if j == 0 else ""
                 )
                 ps_table_html += (
@@ -1395,10 +1496,18 @@ def _build_html(
         <div class="card">
             <h2>2a. Pressure Sensitivity &mdash; Effect of Internal Pressure</h2>
             <p>
-                Capacity limits recomputed at baseline, +50%, and +100% internal pressure.
-                Higher hoop stress shrinks all envelopes and increases the asymmetry
-                between positive and negative tension limits.
+                Absolute internal working pressures are stated in MPa, on the same
+                datum as external pressure. Each pressure has a source basis or is
+                labelled ASSUMED. Every report condition is shown on nominal wall.
+                The report conditions are screening labels; pressure checks use one
+                fixed factor set for each route, without condition-dependent factors.
             </p>
+            <p><strong>{PRESSURE_SWEEP_LIMITATION}.</strong>
+                These curves are the result of our implementation and do not establish
+                code compliance. The screening model also retains its existing
+                numerical search limits at pressures beyond its feasible range.
+            </p>
+            <p>{"simplified form; not checked against the standard's text" if code == DesignCode.DNV_ST_F101 else ""}</p>
             {ps_table_html}
             <div class="chart-container">
                 {pressure_chart_html if pressure_chart_html else ""}
