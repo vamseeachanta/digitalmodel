@@ -12,6 +12,7 @@ Input sentinels below exercise type, sign and floating-point range only.
 
 import math
 import sys
+from decimal import Decimal, localcontext
 
 import pytest
 
@@ -162,3 +163,138 @@ def test_rejects_integer_outside_float_range(index):
 
     with pytest.raises(ValueError, match="finite real scalar"):
         elastic_layer_amplification(*values)
+
+
+@pytest.mark.parametrize(
+    "frequency_hex, status",
+    [
+        ("0x1.fffffffffffefp+0", "unbounded"),
+        ("0x1.fffffffffffeep+0", "finite"),
+        ("0x1.0000000000007p+1", "unbounded"),
+        ("0x1.0000000000008p+1", "finite"),
+    ],
+)
+def test_adjacent_inputs_straddle_each_edge_of_pole_band(frequency_hex, status):
+    """Adjacent binary64 frequencies on each side of the 2 Hz pole."""
+    result = elastic_layer_amplification(float.fromhex(frequency_hex), 25.0, 200.0)
+
+    assert result.status == status
+    assert math.isfinite(result.amplification) == (status == "finite")
+
+
+@pytest.mark.parametrize(
+    "frequency_hex, rejected",
+    [
+        ("0x1.fffffffffffffp+22", False),
+        ("0x1.0000000000000p+23", False),
+        ("0x1.0000000000001p+23", True),
+    ],
+)
+def test_adjacent_inputs_straddle_absolute_cosine_error_ceiling(
+    frequency_hex, rejected
+):
+    """8*2**-52*2**23 = 2**-26; h=1 and vs=tau isolate the cutoff."""
+    frequency = float.fromhex(frequency_hex)
+    if rejected:
+        with pytest.raises(ValueError, match="phase"):
+            elastic_layer_amplification(frequency, 1.0, math.tau)
+    else:
+        result = elastic_layer_amplification(frequency, 1.0, math.tau)
+        assert result.status == "finite"
+        assert math.isfinite(result.amplification)
+
+
+def test_phase_rejection_reports_error_budget_and_accuracy_criterion():
+    """An unresolved result must expose the measured bound and its limit."""
+    with pytest.raises(
+        ValueError,
+        match=r"phase cosine uncertainty 1.49e-08 exceeds limit 1.49e-08",
+    ):
+        elastic_layer_amplification(math.nextafter(2**23, math.inf), 1.0, math.tau)
+
+
+def _decimal_phase_and_cosine(frequency, thickness, speed, *, argument=None):
+    """Independent 100-digit reference, without binary pi or libm cosine.
+
+    The arctangent identity is pi=16*atan(1/5)-4*atan(1/239). The alternating
+    atan series after 160 terms has error below 16/(321*5**321).
+    Cosine uses its Maclaurin series after reduction to [-pi, pi]; its
+    remainder is below pi**320/320!. Decimal roundoff and reduction at
+    phases below 2**24 leave the combined reference error below 1e-80.
+    Series: NIST Handbook of Mathematical Functions (2010), sections
+    4.24(i) (Power Series) and 4.19 (Maclaurin Series and Laurent Series),
+    equations 4.24.3/4.19.2; https://dlmf.nist.gov/4.24.E3 and /4.19.E2.
+    """
+    with localcontext() as context:
+        context.prec = 100
+
+        def atan_inverse(divisor):
+            term = Decimal(1) / divisor
+            total = term
+            for index in range(1, 160):
+                term = -term / (divisor * divisor)
+                total += term / (2 * index + 1)
+            return total
+
+        pi = 16 * atan_inverse(5) - 4 * atan_inverse(239)
+        phase = 2 * pi * Decimal(frequency) * Decimal(thickness) / Decimal(speed)
+        reduced = (phase if argument is None else Decimal(argument)) % (2 * pi)
+        if reduced > pi:
+            reduced -= 2 * pi
+        term = total = Decimal(1)
+        for index in range(1, 160):
+            term *= -reduced * reduced / ((2 * index - 1) * (2 * index))
+            total += term
+        return phase, total
+
+
+@pytest.mark.parametrize(
+    "frequency, thickness, speed",
+    [
+        (0.0, 25.0, 200.0),
+        (1.0, 25.0, 200.0),
+        (2.0, 25.0, 200.0),
+        (float.fromhex("0x1.fffffffffffefp+0"), 25.0, 200.0),
+        (float.fromhex("0x1.fffffffffffeep+0"), 25.0, 200.0),
+        (float.fromhex("0x1.0000000000007p+1"), 25.0, 200.0),
+        (float.fromhex("0x1.0000000000008p+1"), 25.0, 200.0),
+        (float.fromhex("0x1.fffffffffffffp+22"), 1.0, math.tau),
+        (float(2**23), 1.0, math.tau),
+    ],
+)
+def test_cosine_error_budget_against_independent_decimal_series(
+    frequency, thickness, speed, monkeypatch
+):
+    """Catch underestimated phase and cosine uncertainty at both boundaries."""
+    evaluated = []
+    libm_cosine = math.cos
+
+    def observe_cosine(argument):
+        value = libm_cosine(argument)
+        evaluated.append((argument, value))
+        return value
+
+    # Observe actual production arguments; the native cosine still evaluates them.
+    monkeypatch.setattr(math, "cos", observe_cosine)
+    phase, reference = _decimal_phase_and_cosine(frequency, thickness, speed)
+    result = elastic_layer_amplification(frequency, thickness, speed)
+    with localcontext() as context:
+        context.prec = 100
+        epsilon = Decimal(2) ** -52
+        bound = 8 * epsilon * max(Decimal(1), abs(phase))
+        reference_error = Decimal("1e-80")
+        # Qualify the documented libm assumption at these arguments only.
+        if evaluated:
+            argument, cosine = evaluated[0]
+            assert abs(Decimal(argument) - phase) <= 3 * epsilon * max(1, abs(phase))
+            _, rounded_reference = _decimal_phase_and_cosine(
+                frequency, thickness, speed, argument=argument
+            )
+            assert abs(Decimal(cosine) - rounded_reference) <= epsilon
+        if result.status == "finite":
+            denominator = Decimal(1) / Decimal(result.amplification)
+            # One reciprocal rounding adds at most eps in absolute error.
+            assert abs(denominator - abs(reference)) <= bound + epsilon + reference_error
+        else:
+            # A computed denominator <= bound may lie another bound from truth.
+            assert abs(reference) <= 2 * bound + reference_error
