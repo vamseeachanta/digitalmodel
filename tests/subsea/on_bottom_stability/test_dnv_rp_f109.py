@@ -1,7 +1,10 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for DNV-RP-F109 on-bottom stability module.
 
-All expected values are independently calculated from the published equations
-with documented assumptions and tolerances.
+Expected values check the implemented expressions with documented assumptions
+and tolerances; synthetic cases do not establish standard qualification.
 """
 from __future__ import annotations
 
@@ -264,20 +267,28 @@ def test_simplified_required_weight_matches_signed_load_check(horizontal):
     assert not result.is_stable
 
 
-def test_embedded_wiki_worked_example():
-    """Reproduce the supplied page using its example coefficients, unfactored."""
+def test_synthetic_unfactored_worked_example():
+    """Check the synthetic case in docs/subsea/on-bottom-stability-consistency.md.
+
+    No retrievable source supports the former page attribution. These inputs
+    and coefficients define an arithmetic regression, not a sourced design case.
+    """
     horizontal = hydrodynamic_force_per_meter(
         1025.0, 0.5, 1.5, 0.6, C_D=0.7, C_M=3.29,
     )
     lift = lift_force_per_meter(1025.0, 0.5, 1.5, C_L=0.9)
     friction = 0.6 * (2200.0 - lift)
-    # Rounded page values: tolerances account only for displayed rounding.
+    # Hand arithmetic for the synthetic model, rounded only at the final step:
+    # FH = 0.5*1025*0.7*0.5*1.5^2 + 1025*3.29*pi/4*0.5^2*0.6 = 800.9 N/m.
+    # FL = 0.5*1025*0.9*0.5*1.5^2 = 518.9 N/m.
+    # Friction = 0.6*(2200 - 0.5*1025*0.9*0.5*1.5^2) = 1008.7 N/m.
+    # Required weight = FH/0.6 + FL = 1853.7 N/m (unrounded loads).
     assert horizontal == pytest.approx(800.9, abs=0.05)
     assert lift == pytest.approx(518.9, abs=0.05)
     assert friction == pytest.approx(1008.7, abs=0.05)
     assert friction / horizontal == pytest.approx(1.26, abs=0.005)
     required = horizontal / 0.6 + lift
-    assert required == pytest.approx(1854.0, abs=0.5)
+    assert required == pytest.approx(1853.7, abs=0.05)
     result = absolute_stability_check(2200.0, horizontal, lift, 0.6, gamma_SC=1.0)
     assert result.is_stable
     assert result.utilisation == pytest.approx(required / 2200.0)
@@ -303,10 +314,19 @@ class TestAbsoluteStabilityMargin:
         assert result.governing_check == "absolute_lateral"
         assert result.is_stable == (supplied >= 275.0)
 
-    def test_wiki_weight_margin_differs_from_friction_margin(self):
+    def test_synthetic_weight_margin_differs_from_friction_margin(self):
         from digitalmodel.subsea.on_bottom_stability import absolute_stability_margin
 
-        result = absolute_stability_margin(2200.0, 800.9, 518.9, 0.6, gamma_SC=1.0)
+        horizontal = hydrodynamic_force_per_meter(
+            1025.0, 0.5, 1.5, 0.6, C_D=0.7, C_M=3.29,
+        )
+        lift = lift_force_per_meter(1025.0, 0.5, 1.5, C_L=0.9)
+        result = absolute_stability_margin(
+            2200.0, horizontal, lift, 0.6, gamma_SC=1.0,
+        )
+        # Same synthetic case as above, with unrounded loads throughout:
+        # required = FH/0.6 + FL = 1853.7 N/m;
+        # ratio = 2200/required = 1.2; reserve = 2200 - required = 346.3 N/m.
         assert result.required_weight_N_m == pytest.approx(1853.7, abs=0.05)
         assert result.weight_margin_ratio == pytest.approx(1.187, abs=0.0005)
         assert result.weight_margin_N_m == pytest.approx(346.3, abs=0.05)
