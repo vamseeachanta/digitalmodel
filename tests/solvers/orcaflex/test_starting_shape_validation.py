@@ -141,6 +141,107 @@ def test_endpoint_boundary_and_excess(model, end, index):
     assert findings(model)[end].status == "FAIL"
 
 
+@pytest.mark.parametrize("translation", [0.0, 1.0, 1_000_000.0])
+@pytest.mark.parametrize("axis", [0, 1, 2])
+@pytest.mark.parametrize("direction", [-1, 1])
+def test_translated_length_limits_are_inclusive(model, translation, axis, direction):
+    """Decimal lengths .4004 and .3996 differ from .4 by exactly .1%."""
+    line = model["Lines"][0]
+    line[SECTIONS] = [["pipe", 0.4, 1]]
+    start = [translation] * 3
+    end = start.copy()
+    end[axis] = translation + 0.4 + direction * 0.0004
+    line[SHAPE] = [start, end]
+    result = findings(model)
+    assert result["arc_length"].status == "PASS"
+    assert result["sections"].status == "PASS"
+    # The added .000001 m is far above binary64 roundoff at each origin.
+    end[axis] += direction * 0.000001
+    result = findings(model)
+    assert result["arc_length"].status == "FAIL"
+    assert result["sections"].status == "FAIL"
+
+
+@pytest.mark.parametrize("translation", [0.0, 1.0, 1_000_000.0])
+@pytest.mark.parametrize("axis", [0, 1, 2])
+@pytest.mark.parametrize("end,index", [("end_a", 0), ("end_b", -1)])
+@pytest.mark.parametrize("direction", [-1, 1])
+def test_translated_endpoint_limits_are_inclusive(
+    model, translation, axis, end, index, direction,
+):
+    """One coordinate displaced by .01 m is exactly at the endpoint limit."""
+    line = model["Lines"][0]
+    target = [translation] * 3
+    point = target.copy()
+    point[axis] += direction * 0.01
+    line[CONNECTIONS][index] = ["Fixed", *target]
+    line[SHAPE][index] = point
+    assert findings(model)[end].status == "PASS"
+    point[axis] += direction * 0.000001
+    assert findings(model)[end].status == "FAIL"
+
+
+@pytest.mark.parametrize("translation", [0.0, 1.0, 1_000_000.0])
+@pytest.mark.parametrize("direction", [-1, 1])
+def test_translated_section_boundary_with_matching_total(model, translation, direction):
+    """Chords .4004 and .3996 sum to .8; each .4 section is at its limit."""
+    line = model["Lines"][0]
+    line[SECTIONS] = [["pipe", 0.4, 1], ["pipe", 0.4, 1]]
+    line[SHAPE] = [
+        [translation, 0, 0],
+        [translation + 0.4 + direction * 0.0004, 0, 0],
+        [translation + 0.8, 0, 0],
+    ]
+    result = findings(model)
+    assert result["arc_length"].status == "PASS"
+    assert result["sections"].status == "PASS"
+    line[SHAPE][1][0] += direction * 0.000001
+    result = findings(model)
+    assert result["arc_length"].status == "PASS"
+    assert result["sections"].status == "FAIL"
+
+
+def test_small_resolvable_length_excess_is_rejected(model):
+    """A 1e-12 m excess exceeds roundoff without a broad absolute epsilon."""
+    line = model["Lines"][0]
+    line[SECTIONS] = [["pipe", 0.4, 1]]
+    line[SHAPE] = [[0, 0, 0], [0.4004 + 1e-12, 0, 0]]
+    result = findings(model)
+    assert result["arc_length"].status == "FAIL"
+    assert result["sections"].status == "FAIL"
+
+
+def test_small_resolvable_endpoint_excess_is_rejected(model):
+    line = model["Lines"][0]
+    line[CONNECTIONS][0] = ["Fixed", 0, 0, 0]
+    line[SHAPE][0] = [0.01 + 1e-12, 0, 0]
+    assert findings(model)["end_a"].status == "FAIL"
+
+
+def test_coordinates_too_coarse_for_length_limit_are_not_accepted(model):
+    """At 10**15, one binary64 coordinate step is .125 m."""
+    line = model["Lines"][0]
+    line[SECTIONS] = [["pipe", 0.4, 1]]
+    line[SHAPE] = [[1e15, 0, 0], [1e15 + 0.5, 0, 0]]
+    result = findings(model)
+    assert result["arc_length"].status == "NOT_EVALUATED"
+    assert result["sections"].status == "NOT_EVALUATED"
+    line[SHAPE][-1][0] = 1e15 + 2
+    result = findings(model)
+    assert result["arc_length"].status == "FAIL"
+    assert result["sections"].status == "FAIL"
+
+
+def test_coordinates_too_coarse_for_endpoint_limit_are_not_accepted(model):
+    """Coordinate uncertainty must never turn a resolvable excess into PASS."""
+    line = model["Lines"][0]
+    line[CONNECTIONS][0] = ["Fixed", 1e15, 0, 0]
+    line[SHAPE][0] = [1e15 + 0.125, 0, 0]
+    assert findings(model)["end_a"].status == "NOT_EVALUATED"
+    line[SHAPE][0][0] = 1e15 + 2
+    assert findings(model)["end_a"].status == "FAIL"
+
+
 def test_wrong_line_table_cannot_hide_behind_other_line_geometry(model):
     """A substituted 6-8-10 segment pair totals 20, vs this line's 10.
 

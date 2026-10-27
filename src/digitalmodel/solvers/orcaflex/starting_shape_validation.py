@@ -25,7 +25,7 @@ units and coordinate frames remain explicitly NOT_EVALUATED.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import dist, fsum, isfinite
+from math import dist, fsum, isfinite, ulp
 from typing import Any, Literal
 
 # AQG r0 section 4 G0.6, C06 in solvers/orcaflex/docs/agent-pack.md:
@@ -143,6 +143,45 @@ def validate_starting_shapes(model: dict) -> list[StartingShapeFinding]:
     return findings
 
 
+def _distance_roundoff(a, b, distance):
+    """Bound binary64 input conversion and Euclidean-distance roundoff.
+
+    Reserve one ulp per coordinate (at least the half-ulp conversion error).
+    The norm is 1-Lipschitz, so the L1 sum bounds the change in distance.
+    Two distance ulps cover distance evaluation, including subnormal rounding.
+    This is a numerical allowance in metres, not an engineering tolerance.
+    """
+    return fsum(ulp(x) + ulp(y) for x, y in zip(a, b)) + 2 * ulp(distance)
+
+
+def _comparison_status(actual, limit, roundoff):
+    """Apply an inclusive limit with a bounded arithmetic allowance.
+
+    Coarse coordinate precision cannot justify acceptance: if uncertainty
+    reaches the engineering limit, defer an ambiguous result. A discrepancy
+    beyond both the limit and the error bound still fails.
+    """
+    if not isfinite(actual) or actual > limit + roundoff:
+        return "FAIL"
+    if roundoff >= limit:
+        return "NOT_EVALUATED"
+    return "PASS"
+
+
+def _length_status(length, length_roundoff, expected, expected_roundoff):
+    """Compare in metres to avoid rounding a ratio at the inclusive limit."""
+    difference = abs(length - expected)
+    limit = ARC_LENGTH_RELATIVE_LIMIT * expected
+    # Propagate section-input/sum error through both subtraction and limit
+    # multiplication; include rounding of subtraction, product and the limit
+    # constant. fsum callers reserve an ulp for each accumulated length.
+    roundoff = fsum((length_roundoff, expected_roundoff,
+                     ARC_LENGTH_RELATIVE_LIMIT * expected_roundoff,
+                     expected * ulp(ARC_LENGTH_RELATIVE_LIMIT),
+                     ulp(difference), ulp(limit)))
+    return _comparison_status(difference, limit, roundoff)
+
+
 def _validate_line(line, si, add):
     shape_columns = ("StartingShapeX", "StartingShapeY", "StartingShapeZ")
     try:
@@ -177,11 +216,13 @@ def _validate_line(line, si, add):
     except (ValueError, OverflowError):
         add("arc_length", "FAIL", "Node differences exceed finite geometry range")
         return
-    _validate_lengths(line, chords, shape_length, add)
+    chord_roundoff = [_distance_roundoff(a, b, chord)
+                      for a, b, chord in zip(points, points[1:], chords)]
+    _validate_lengths(line, chords, chord_roundoff, shape_length, add)
     _validate_endpoints(line, points, add)
 
 
-def _validate_lengths(line, chords, shape_length, add):
+def _validate_lengths(line, chords, chord_roundoff, shape_length, add):
     if line.get("LengthAndEndOrientations", "Explicit") != "Explicit":
         for check in ("arc_length", "sections"):
             add(check, "NOT_EVALUATED", "Calculated section lengths are not resolved")
@@ -205,9 +246,14 @@ def _validate_lengths(line, chords, shape_length, add):
         return
     # AQG r0 G0.6 relative mismatch = abs(Lshape - Lline) / Lline.
     error = abs(shape_length - total) / total
-    add("arc_length", "PASS" if error <= ARC_LENGTH_RELATIVE_LIMIT else "FAIL",
-        "Polyline length compared with owning line's unstretched section sum",
-        error, ARC_LENGTH_RELATIVE_LIMIT)
+    status = _length_status(
+        shape_length, fsum(chord_roundoff) + ulp(shape_length),
+        total, fsum(ulp(s["Length"]) for s in sections) + ulp(total),
+    )
+    message = ("Coordinate precision is insufficient for the length limit"
+               if status == "NOT_EVALUATED" else
+               "Polyline length compared with owning line's unstretched section sum")
+    add("arc_length", status, message, error, ARC_LENGTH_RELATIVE_LIMIT)
 
     # Orcina Structure: target length takes precedence over NumberOfSegments.
     # Rounding and automatic segmentation are deliberately deferred.
@@ -226,15 +272,24 @@ def _validate_lengths(line, chords, shape_length, add):
         add("sections", "FAIL", "Node count differs from owning line's segmentation")
         return
     offset = 0
+    unresolved_precision = False
     for section, count in zip(sections, counts):
         section_length = fsum(chords[offset:offset + count])
         error = abs(section_length - section["Length"]) / section["Length"]
-        if error > ARC_LENGTH_RELATIVE_LIMIT:
+        status = _length_status(
+            section_length, fsum(chord_roundoff[offset:offset + count]) + ulp(section_length),
+            section["Length"], ulp(section["Length"]),
+        )
+        if status == "FAIL":
             add("sections", "FAIL", "Section polyline length differs from owning section",
                 error, ARC_LENGTH_RELATIVE_LIMIT)
             return
+        unresolved_precision |= status == "NOT_EVALUATED"
         offset += count
-    add("sections", "PASS", "Node count and each section polyline length agree")
+    if unresolved_precision:
+        add("sections", "NOT_EVALUATED", "Coordinate precision is insufficient for the length limit")
+    else:
+        add("sections", "PASS", "Node count and each section polyline length agree")
 
 
 def _validate_endpoints(line, points, add):
@@ -261,5 +316,11 @@ def _validate_endpoints(line, points, add):
             add(check, "FAIL", "Connection XYZ must be finite numeric coordinates")
             continue
         error = dist(points[index], target)
-        add(check, "PASS" if error <= ENDPOINT_LIMIT_M else "FAIL",
-            "Node distance from owning line's fixed end", error, ENDPOINT_LIMIT_M)
+        status = _comparison_status(
+            error, ENDPOINT_LIMIT_M,
+            _distance_roundoff(points[index], target, error) + ulp(ENDPOINT_LIMIT_M),
+        )
+        message = ("Coordinate precision is insufficient for the endpoint limit"
+                   if status == "NOT_EVALUATED" else
+                   "Node distance from owning line's fixed end")
+        add(check, status, message, error, ENDPOINT_LIMIT_M)
