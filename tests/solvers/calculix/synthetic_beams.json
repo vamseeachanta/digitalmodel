@@ -1,0 +1,43 @@
+{
+  "basis": [
+    "Synthetic consistent-unit hand example; no engineering material properties or allowables are inferred.",
+    "Coordinates are chosen integers. M=(D+E)/2=(5,9,1); N=(E+F)/2=(9,11,1).",
+    "Node labels identify distinct points; API indices are positions in node_order, exported IDs are positions plus one.",
+    "Gmsh reference manual, Node ordering, Low order elements: Line 3 is endpoint, endpoint, midpoint; https://gmsh.info/doc/texinfo/gmsh.html#Node-ordering",
+    "CalculiX 2.18 manual, Three-node 3D beam element, Figure 73: B32 is endpoint, midpoint, endpoint; https://www.feacluster.com/CalculiX/ccx_2.18/doc/ccx/node60.html",
+    "CalculiX 2.18 manual, *BEAM SECTION: RECT dimensions and section/material set references; https://www.feacluster.com/CalculiX/ccx_2.18/doc/ccx/node215.html",
+    "RECT dimensions (2,3) and (4,2), elastic pairs (12,1/4) and (24,1/8), and unit Z section direction are arbitrary distinguishing inputs.",
+    "Tip force: magnitude 8 times direction (0,-1,0) gives DOF 2 force -8. Root constraint: DOF 1 value 0."
+  ],
+  "coordinates": {
+    "A": [2, 1, 0],
+    "B": [6, 3, 0],
+    "C": [10, 5, 0],
+    "D": [3, 8, 1],
+    "E": [7, 10, 1],
+    "F": [11, 12, 1],
+    "M": [5, 9, 1],
+    "N": [9, 11, 1]
+  },
+  "node_orders": {
+    "original": ["M", "C", "A", "N", "E", "B", "F", "D"],
+    "permuted": ["F", "A", "B", "M", "D", "C", "E", "N"]
+  },
+  "materials": {
+    "MAT_A": [12, 0.25],
+    "MAT_B": [24, 0.125]
+  },
+  "sections": {
+    "NARROW": {"material": "MAT_A", "dimensions": [2, 3]},
+    "WIDE": {"material": "MAT_B", "dimensions": [4, 2]}
+  },
+  "direction": [0, 0, 1],
+  "beams": {
+    "LOW_LEFT": {"kind": "Line 2", "input_nodes": ["A", "B"], "expected_nodes": ["A", "B"], "section": "NARROW"},
+    "LOW_RIGHT": {"kind": "Line 2", "input_nodes": ["B", "C"], "expected_nodes": ["B", "C"], "section": "WIDE"},
+    "HIGH_LEFT": {"kind": "Line 3", "input_nodes": ["D", "E", "M"], "expected_nodes": ["D", "M", "E"], "section": "WIDE"},
+    "HIGH_RIGHT": {"kind": "Line 3", "input_nodes": ["E", "F", "N"], "expected_nodes": ["E", "N", "F"], "section": "NARROW"}
+  },
+  "load": {"set": "TIP", "nodes": ["F"], "magnitude": 8, "direction": [0, -1, 0], "expected": [2, -8]},
+  "boundary": {"set": "ROOT", "nodes": ["A"], "dof": 1, "value": 0}
+}

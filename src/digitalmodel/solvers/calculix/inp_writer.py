@@ -51,6 +51,9 @@ class INPWriter:
 
     Mesh data uses 0-based indexing (gmsh convention). This writer converts
     all IDs to 1-based when writing the INP file (CalculiX convention).
+    Line 3 connectivity follows Gmsh's endpoint, endpoint, midpoint order
+    (reference manual, Node ordering). B32 is exported as endpoint, midpoint,
+    endpoint (CalculiX 2.18 manual, Three-node 3D beam element, Figure 73).
     """
 
     def __init__(self, nodes: np.ndarray, elements: dict):
@@ -302,6 +305,9 @@ class INPWriter:
                 elset = "EALL"
             lines.append(f"*ELEMENT, TYPE={ccx_type}, ELSET={elset}")
             for row in data["connectivity"]:
+                if ccx_type == "B32":
+                    # Gmsh Node ordering -> CalculiX 2.18 Figure 73.
+                    row = (row[0], row[2], row[1])
                 node_refs = ", ".join(str(int(n) + 1) for n in row)
                 lines.append(f"{elem_id}, {node_refs}")
                 elem_id += 1
@@ -381,7 +387,23 @@ class INPWriter:
             assigned.update(ids)
         if assigned != shell_ids:
             raise ValueError("Every shell element requires a shell section")
+        self._validate_beam_sections(groups, kinds)
         self._validate_pressures(groups, shell_ids, kinds)
+
+    def _validate_beam_sections(self, groups, kinds):
+        """Resolve beam section sets and materials before writing a deck.
+
+        CalculiX manual, *BEAM SECTION: ELSET identifies the beam elements
+        and MATERIAL names the assigned material. Cross-section shape and
+        dimensions retain the existing API contract.
+        """
+        materials = {material["name"] for material in self._materials}
+        for section in self._beam_sections:
+            ids = groups.get(section["elset"], set())
+            if not ids or any(kinds.get(eid) not in BEAM_ELEMENT_TYPES for eid in ids):
+                raise ValueError("Beam section requires a nonempty beam-only set")
+            if section["material"] not in materials:
+                raise ValueError("Beam section material is undefined")
 
     def _validate_pressures(self, groups, shell_ids, kinds):
         loads = self._loads + [load for step in self._steps for load in step["loads"]]

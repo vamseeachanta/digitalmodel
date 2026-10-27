@@ -4,6 +4,7 @@ ABOUTME: Tests for CalculiX FEM preprocessing chain — INP writer, result parse
 and end-to-end FEM chain. Tests run WITHOUT CalculiX installed (except integration).
 """
 
+import json
 import shutil
 import tempfile
 from pathlib import Path
@@ -502,6 +503,186 @@ class TestINPWriter:
                 parts = [int(x.strip()) for x in line.split(",")]
                 for val in parts:
                     assert val >= 1, f"0-based index in beam element: {line}"
+
+
+# ===========================================================================
+# Writer-only beam geometry and reference regressions
+# ===========================================================================
+
+def _inp_blocks(text):
+    """Read keyword cards independently of the writer's implementation."""
+    blocks = []
+    for line in text.splitlines():
+        if not line.strip() or line.startswith("**"):
+            continue
+        fields = [field.strip() for field in line.split(",")]
+        if line.startswith("*"):
+            keyword, *options = fields
+            parameters = dict(option.split("=", 1) for option in options if "=" in option)
+            rows = []
+            blocks.append((keyword, parameters, rows))
+        else:
+            rows.append(fields)
+    return blocks
+
+
+@pytest.fixture
+def synthetic_beam_case():
+    """Load the hand-calculated geometry and explicitly assigned properties."""
+    return json.loads(Path(__file__).with_name("synthetic_beams.json").read_text())
+
+
+def _synthetic_beam_writer(case, node_order, block_order, reverse_rows):
+    """Build input through the public API; expectations live in the fixture."""
+    labels = case["node_orders"][node_order]
+    node_ids = {label: index for index, label in enumerate(labels)}
+    nodes = np.array([case["coordinates"][label] for label in labels], dtype=float)
+    elements, element_ids = {}, {}
+    for kind in block_order:
+        names = [name for name, beam in case["beams"].items() if beam["kind"] == kind]
+        if reverse_rows:
+            names.reverse()
+        connectivity = []
+        for name in names:
+            element_ids[name] = len(element_ids)
+            connectivity.append([node_ids[label] for label in case["beams"][name]["input_nodes"]])
+        elements[kind] = {"connectivity": np.array(connectivity)}
+    writer = INPWriter(nodes, elements)
+    for name, elastic in case["materials"].items():
+        writer.add_material(name, *elastic)
+    for name, beam in case["beams"].items():
+        section = case["sections"][beam["section"]]
+        writer.add_element_set(name, [element_ids[name]])
+        writer.add_beam_section(name, section["material"], "RECT",
+                                tuple(section["dimensions"]), tuple(case["direction"]))
+    load, boundary = case["load"], case["boundary"]
+    for item in (load, boundary):
+        writer.add_node_set(item["set"], [node_ids[label] for label in item["nodes"]])
+    writer.add_boundary_condition(boundary["set"], boundary["dof"], boundary["value"])
+    writer.add_load(load["set"], "cload", load["magnitude"], tuple(load["direction"]))
+    writer.add_step()
+    return writer
+
+
+class TestWriterOnlyBeams:
+    """Synthetic decks only: no geometry generator or native solver calls."""
+
+    @pytest.fixture(autouse=True)
+    def forbid_external_processes(self, monkeypatch):
+        """Fail if an added case attempts to launch an external program."""
+        def forbidden(*args, **kwargs):
+            pytest.fail("Writer-only cases must not launch external programs")
+
+        monkeypatch.setattr("subprocess.Popen", forbidden)
+        monkeypatch.setattr("os.system", forbidden)
+
+    @pytest.mark.parametrize("node_order", ["original", "permuted"])
+    @pytest.mark.parametrize("block_order", [
+        pytest.param(("Line 2", "Line 3"), id="linear-first"),
+        pytest.param(("Line 3", "Line 2"), id="quadratic-first"),
+    ])
+    @pytest.mark.parametrize("reverse_rows", [False, True], ids=["rows-forward", "rows-reversed"])
+    def test_geometry_sections_and_load_references(
+        self, synthetic_beam_case, tmp_path, node_order, block_order, reverse_rows,
+    ):
+        """Check geometry and set resolution against the fixture's hand example."""
+        case = synthetic_beam_case
+        writer = _synthetic_beam_writer(case, node_order, block_order, reverse_rows)
+        original_nodes = writer.nodes.copy()
+        original_connectivity = {kind: data["connectivity"].copy()
+                                 for kind, data in writer.elements.items()}
+        blocks = _inp_blocks(writer.write(tmp_path / "beams.inp").read_text())
+        nodes, elements, element_sets, node_sets, materials, sections = {}, {}, {}, {}, {}, {}
+        for keyword, parameters, rows in blocks:
+            if keyword == "*NODE":
+                nodes.update({int(row[0]): tuple(map(float, row[1:])) for row in rows})
+            elif keyword == "*ELEMENT":
+                ids = set()
+                for row in rows:
+                    eid, *refs = map(int, row)
+                    assert eid not in elements
+                    elements[eid] = (parameters["TYPE"], refs)
+                    ids.add(eid)
+                element_sets[parameters["ELSET"]] = ids
+            elif keyword in {"*NSET", "*ELSET"}:
+                sets = node_sets if keyword == "*NSET" else element_sets
+                sets[parameters[keyword[1:]]] = {int(value) for row in rows for value in row}
+            elif keyword == "*MATERIAL":
+                material_name = parameters["NAME"]
+            elif keyword == "*ELASTIC":
+                materials[material_name] = tuple(map(float, rows[0]))
+            elif keyword == "*BEAM SECTION":
+                assert parameters["ELSET"] not in sections
+                sections[parameters["ELSET"]] = (parameters, rows)
+        # API row indices become IDs starting at one; fixture labels track identity.
+        expected_nodes = dict(enumerate(
+            (tuple(case["coordinates"][label]) for label in case["node_orders"][node_order]),
+            start=1,
+        ))
+        assert nodes == expected_nodes
+        assert materials == {name: tuple(values) for name, values in case["materials"].items()}
+        assert set(sections) == set(case["beams"])
+        assert len(elements) == len(case["beams"])
+        assigned = set()
+        for name, beam in case["beams"].items():
+            ids = element_sets[name]
+            assert len(ids) == 1
+            assert not assigned & ids
+            assigned.update(ids)
+            kind, refs = elements[next(iter(ids))]
+            assert kind == {"Line 2": "B31", "Line 3": "B32"}[beam["kind"]]
+            assert [nodes[ref] for ref in refs] == [tuple(case["coordinates"][label])
+                                                 for label in beam["expected_nodes"]]
+            assert ids <= element_sets[f"EBEAM_{kind}"]
+            parameters, rows = sections[name]
+            section = case["sections"][beam["section"]]
+            assert parameters["MATERIAL"] == section["material"]
+            assert parameters["MATERIAL"] in materials
+            assert parameters["SECTION"] == "RECT"
+            assert [tuple(map(float, row)) for row in rows] == [tuple(section["dimensions"]),
+                                                             tuple(case["direction"])]
+        assert assigned == set(elements)
+        for item in (case["load"], case["boundary"]):
+            assert {nodes[nid] for nid in node_sets[item["set"]]} == {
+                tuple(case["coordinates"][label]) for label in item["nodes"]}
+        cloads = [row for keyword, _, rows in blocks if keyword == "*CLOAD" for row in rows]
+        assert [(row[0], int(row[1]), float(row[2])) for row in cloads] == [
+            (case["load"]["set"], *case["load"]["expected"])]
+        boundaries = [row for keyword, _, rows in blocks if keyword == "*BOUNDARY" for row in rows]
+        boundary = case["boundary"]
+        assert [(row[0], int(row[1]), int(row[2]), float(row[3])) for row in boundaries] == [
+            (boundary["set"], boundary["dof"], boundary["dof"], boundary["value"])]
+        assert not any(keyword == "*SOLID SECTION" for keyword, _, _ in blocks)
+        np.testing.assert_array_equal(writer.nodes, original_nodes)
+        for kind, connectivity in original_connectivity.items():
+            np.testing.assert_array_equal(writer.elements[kind]["connectivity"], connectivity)
+
+    @pytest.mark.parametrize("target", ["SOLID", "MIXED", "UNDEFINED"])
+    def test_rejects_incompatible_beam_section_set(self, synthetic_beam_case, tmp_path, target):
+        """A beam section cannot reference solid, mixed or missing elements."""
+        case = synthetic_beam_case
+        writer = _synthetic_beam_writer(case, "original", ("Line 2", "Line 3"), False)
+        # Hand example: append one tetrahedron after all beams; MIXED also includes
+        # the first beam. Four existing node positions define the synthetic solid.
+        solid_id = len(case["beams"])
+        writer.elements["Tetrahedron 4"] = {"connectivity": np.array([[0, 1, 2, 3]])}
+        writer.add_element_set("SOLID", [solid_id])
+        writer.add_element_set("MIXED", [0, solid_id])
+        section = case["sections"]["NARROW"]
+        writer.add_beam_section(target, section["material"], "RECT", tuple(section["dimensions"]))
+        out = tmp_path / "invalid.inp"
+        with pytest.raises(ValueError, match="Beam section requires a nonempty beam-only set"):
+            writer.write(out)
+        assert not out.exists()
+
+    def test_rejects_undefined_beam_material(self, synthetic_beam_case, tmp_path):
+        """An explicitly assigned beam material must be defined in the deck."""
+        case = synthetic_beam_case
+        writer = _synthetic_beam_writer(case, "original", ("Line 2", "Line 3"), False)
+        section = case["sections"]["NARROW"]
+        writer.add_beam_section("LOW_LEFT", "UNDEFINED", "RECT", tuple(section["dimensions"]))
+        with pytest.raises(ValueError, match="Beam section material is undefined"):
+            writer.write(tmp_path / "invalid_material.inp")
 
 
 # ===========================================================================
