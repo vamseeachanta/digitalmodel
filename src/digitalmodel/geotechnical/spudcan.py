@@ -9,6 +9,12 @@ Only the analytical peak and underlying-clay branches are implemented. Straight
 connecting segments are illustrative assumptions, not Hu's post-peak solution.
 Depth refers to the lowest level of the widest spudcan cross-section. Results
 exclude dynamics, buoyancy, cyclic degradation, scour and structural interaction.
+
+Clause context: RP 6.2.1-6.2.3, 6.2.6.1-6.2.6.4, 8.3.5;
+C6.2.1-C6.2.3, C6.2.6.3, C8.3, first edition. RP document identity and
+OPEN items are recorded in docs/domains/geotechnical/jackup-screening.md.
+Only the cited research equations execute; unresolved OCR expressions have no
+execution path. Clause references do not qualify these research calculations.
 """
 
 from __future__ import annotations
@@ -51,7 +57,11 @@ class SandOverClay:
     base_cone_angle_deg: float = 13.0
 
     def validate(self) -> None:
-        """Enforce geometry, positive strengths and published method bounds."""
+        """Enforce geometry, positive strengths and published method bounds.
+
+        RP 6.2.1-6.2.3; C6.2.1-C6.2.3: SI inputs and full circular-area
+        reconciliation only; partial engagement and standard corrections OPEN.
+        """
         for item in fields(self):
             finite(item.name, getattr(self, item.name),
                    strict=item.name != 'clay_gradient_kpa_m')
@@ -74,6 +84,8 @@ def clay_resistance_kpa(su_kpa: float, gradient_kpa_m: float, diameter_m: float)
     q = 6.34 su + 0.56 k D. This is a reference half-space solution, without
     embedment or remoulding corrections; it is not a full deep-clay installation
     model. For uniform clay (k=0) q=6.34 su.
+    RP 6.2.1-6.2.3; C6.2.1-C6.2.3: research factor family only, without
+    standard backflow or deep-embedment corrections.
     """
     finite('su', su_kpa, strict=True)
     finite('gradient', gradient_kpa_m)
@@ -114,6 +126,8 @@ def sand_resistance_kpa(diameter_m: float, depth_m: float, gamma_kn_m3: float,
     and high-friction extrapolation without qualifying the retained range.
     The 1961 paper reports measured capacities exceeding theoretical factors;
     this arithmetic reference does not claim to reproduce those measurements.
+    RP 6.2.1-6.2.3; C6.2.1-C6.2.3: one research factor family and one
+    friction-angle input; standard sand-angle and backflow corrections OPEN.
     """
     finite('diameter', diameter_m, strict=True)
     finite('depth', depth_m)
@@ -155,6 +169,8 @@ def hu_peak_resistance_kpa(profile: SandOverClay) -> float:
     solve tolerances, not research calibration limits.
     Bisection stays within the admissible dilatancy interval. No friction angle,
     pressure or relative density is silently clipped to force convergence.
+    RP 6.2.1-6.2.3; C6.2.1-C6.2.3: research sand-angle adjustment occurs
+    once in each residual evaluation, without standard factor substitution.
     """
     profile.validate()
     try:
@@ -179,7 +195,11 @@ def hu_peak_resistance_kpa(profile: SandOverClay) -> float:
 
 
 def hu_clay_resistance_kpa(profile: SandOverClay, depth_m: float) -> float:
-    """Hu 2015 equations 13–14; depth and interface share a mudline datum."""
+    """Hu 2015 equations 13–14; depth and interface share a mudline datum.
+
+    RP 6.2.1-6.2.3; C6.2.1-C6.2.3: depth is the bearing plane, not the tip;
+    the sand-plug term is research-specific, not a standard backflow correction.
+    """
     profile.validate()
     finite('depth', depth_m, minimum=profile.sand_thickness_m)
     nc = 11 * profile.sand_thickness_m / profile.diameter_m + 10.5
@@ -204,6 +224,9 @@ def penetration_curve(profile: SandOverClay | UniformSand,
     Linear mobilization from zero and linear peak-to-interface interpolation are
     illustrative assumptions. Only peak and clay pressures are research equations.
     The caller must constrain depths to the qualified extent of its soil profile.
+    RP 6.2.1-6.2.3; C6.2.1-C6.2.3: kPa times full circular area gives kN;
+    bearing-plane depths must share a datum. Partial engagement is OPEN.
+    RP 6.2.6.1-6.2.6.4, 8.3.5: retain descending branches for hazard screening.
     """
     if not depths_m:
         raise ValueError('depth grid must not be empty')
@@ -257,6 +280,10 @@ def punch_through_screen(profile: SandOverClay, preload_kn: float) -> PunchThrou
     Recovery is the depth at which the clay branch again equals a load. None
     denotes no finite recovery for a zero-gradient clay, not a safe outcome.
     Preload below the peak does not rule out hazards from input uncertainty.
+    RP 6.2.6.1-6.2.6.4, 8.3.5; C6.2.6.3, C8.3: reports peak depth, peak
+    load and reduced interface load on a descending branch. The interface depth
+    is profile.sand_thickness_m. Missing finite recovery is explicit; a supplied
+    margin/plunge criterion and qualified lower support remain OPEN.
     """
     finite('preload', preload_kn, strict=True)
     peak = hu_peak_resistance_kpa(profile)

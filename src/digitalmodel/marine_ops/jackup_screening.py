@@ -4,6 +4,10 @@
 
 This is equilibrium screening, without structural capacity, foundation combined
 loading, dynamic response, load factors or a qualified environmental model.
+
+G/RP first-edition clause identities and OPEN items are recorded in
+docs/domains/geotechnical/jackup-screening.md. References below identify
+partial screening topics, without a claim of standard compliance.
 """
 
 from __future__ import annotations
@@ -56,6 +60,15 @@ def screen_three_leg_unit(
     Include any eccentric gravity moment in the supplied external moments.
     Zero or negative reaction fails contact. Sliding resistance is supplied,
     independently qualified by the caller; preload is a load-history comparator.
+
+    G 5.3.1-5.3.3; RP 3.1.2, 8.3.1.1-8.3.1.4: the raw reaction/preload
+    comparison does not implement factored Vd <= 0.90 P or horizontal limits.
+    RP 5.2-5.7, 7.1-7.3, 8.1.3-8.1.6, 8.5: concurrent input moments and
+    force only; provenance, dynamics, second order and member/holding checks OPEN.
+    RP 8.2.1-8.2.3: loss of contact only; axis checks, displaced restoring
+    geometry, 0.95 resistance and evidenced soil-moment credit remain OPEN.
+    RP 6.3.3-6.3.5, 8.3.1.5-8.3.4: concurrent horizontal-demand comparison
+    only; drained/undrained factors and combined-load interactions remain OPEN.
     """
     finite('vertical load', vertical_load_kn, strict=True)
     finite('preload', preload_per_leg_kn, strict=True)
@@ -129,6 +142,8 @@ def environmental_actions(
     H/depth <= 0.3 is an illustrative exclusion assumed, based on previous
     experience, not a cited breaking limit or a linear-theory validity test.
     The 80 dispersion bisections are a numerical iteration budget.
+    RP 5.2-5.7, 7.1-7.3, 8.1.3-8.1.6, 8.5: illustrative load assumptions
+    are explicit; dynamic response, second order and member/holding scope OPEN.
     """
     inputs = locals().copy()
     for name, value in inputs.items():
@@ -174,6 +189,9 @@ def static_operating_envelope(
     Wind, current, headings and other inputs are supplied by the evaluation
     callback. A failed state followed by a safe state is rejected rather than
     hidden. Results are static screening bounds, not forecast motion limits.
+    RP 6.3.3-6.3.5, 8.3.1.5-8.3.4: this Hs/Tp grid is not a foundation
+    interaction envelope from the still-water point; fixity/displacement
+    assessment requires escalation and remains OPEN.
     """
     if not periods_s or not heights_m:
         raise ValueError('period and height grids must not be empty')

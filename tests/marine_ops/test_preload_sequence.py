@@ -7,7 +7,13 @@ from decimal import Decimal
 
 import pytest
 
-from digitalmodel.geotechnical.spudcan import PenetrationPoint
+from digitalmodel.geotechnical.spudcan import (
+    PenetrationPoint,
+    SandOverClay,
+    UniformSand,
+    penetration_curve,
+    punch_through_screen,
+)
 from digitalmodel.marine_ops.preload_sequence import (
     PreloadCriteria,
     PreloadSample,
@@ -235,6 +241,46 @@ def test_capacity_drop_below_tip_flags_even_below_peak_load():
     # A tip past the falling branch has no deeper capacity drop on this curve.
     deep = sequence(preload=(PreloadSample(0.1, 25, 2.5), PreloadSample(0.2, 50, 2.6)))
     assert not screen(deep, curve=curve).steps[2].punch_through_reasons
+
+
+@pytest.mark.parametrize('kind,expected_drop', [
+    ('strong_over_weak', True), ('uniform', False), ('weak_over_strong', False),
+])
+def test_soil_curve_drives_preload_capacity_drop_warning(kind, expected_drop):
+    # Numerical screening inputs; a rising connection represents the stronger
+    # lower support case within the existing two-layer model's domain.
+    soil = SandOverClay(12.1, 114.7, 4.9, 22.13, 0.93, 9.4, 7.3, 0.637)
+    if kind == 'uniform':
+        soil = UniformSand(12.1, 9.4, 30)
+    elif kind == 'weak_over_strong':
+        soil = replace(soil, sand_thickness_m=0.16 * 12.1,
+                       interface_su_kpa=200, clay_gradient_kpa_m=0)
+    curve = penetration_curve(soil, [0, 1, 5, 10])
+    result = screen(curve=curve)
+    assert result.punch_through == expected_drop
+    assert ('planned_capacity_drop_below_tip' in
+            result.steps[2].punch_through_reasons) == expected_drop
+    if isinstance(soil, SandOverClay):
+        hazard = punch_through_screen(soil, 50)
+        peak = next(point for point in curve if point.branch == 'peak')
+        reduced = next(point for point in curve if point.depth_m == soil.sand_thickness_m)
+        assert hazard.capacity_drop == expected_drop
+        assert hazard.peak_depth_m == peak.depth_m
+        assert hazard.peak_load_kn == peak.load_kn
+        assert hazard.interface_load_kn == reduced.load_kn
+        assert (reduced.load_kn < peak.load_kn) == expected_drop
+
+
+@pytest.mark.parametrize('curve', [CURVE, (
+    CURVE[0], PenetrationPoint(1, 100, 100, 'peak'),
+    PenetrationPoint(2, 60, 60, 'falling'),
+)])
+def test_preload_result_always_carries_small_air_gap_mitigation(curve):
+    result = screen(curve=curve)
+    assert result.mitigation_note == (
+        'During preload, keep the hull at a small air gap, close to the water, '
+        'so that buoyancy can be regained if a leg punches through.'
+    )
 
 
 def test_curve_range_is_reported_without_extrapolation():

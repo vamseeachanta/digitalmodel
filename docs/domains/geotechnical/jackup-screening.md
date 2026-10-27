@@ -16,6 +16,7 @@ and improve the penetration method before using it for a particular installation
 | 2 | 2026-10-27 | Separate constants and bounds by their evidence basis, replace unsupported collection statistics with synthetic particulars, preserve frozen bytes across checkouts and add independent layered-curve and recovery expectations. |
 | 3 | 2026-10-27 | Add per-leg preload histories, explicit hold controls and penetration comparisons to expose settlement evidence and independent punch-through warnings. |
 | 4 | 2026-10-27 | Separate arithmetic equality from hold criteria to accept complete decimal-time windows and reject equality at the strict settlement-rate limit. |
+| 5 | 2026-10-27 | Confirm layered resistance warnings, include preload air-gap mitigation and map implemented checks to clause references with uncovered requirements OPEN. |
 
 ## Run the example
 
@@ -173,6 +174,16 @@ comparison below. Recovery depth solves static force equilibrium; it does not
 predict rapid penetration, inertia, buoyancy arrest or leg interaction. The
 caller must restrict the calculation to the known extent of its soil profile.
 
+The soil-to-preload regression covers strong-over-weak resistance, uniform sand
+and a rising two-layer connection representing stronger lower support. The first
+case flags; the other two do not. `PunchThroughScreen` reports `peak_depth_m`,
+`peak_load_kn` and the reduced `interface_load_kn`; the interface depth is the
+input `sand_thickness_m`. The warning follows the descending load-penetration
+branch below the current penetration within the supplied curve. It is independent
+of whether the preload reaches the peak. A rising connection is an illustrative
+limiting case within the existing sand-over-clay model, without a general method
+for arbitrary soil layers or an independently qualified reach calculation.
+
 Uniform-clay reference pressure follows equation 5 at zero sand thickness:
 q = 6.34 su + 0.56 k D. At zero gradient this reduces to q = 6.34 su.
 The uniform-sand branch uses
@@ -272,16 +283,13 @@ increased through `minimum_hold_h`, but cannot be reduced below one hour.
 All defaults are **illustrative assumptions, based on previous experience**,
 exposed as inputs for sensitivity screening, without a standard-derived basis.
 
-Arithmetic boundary comparisons use a relative tolerance of `1e-12` and zero
-absolute tolerance, separately from the physical input thresholds. Elapsed
-durations within that tolerance of the minimum or window count as equal; the
-comparison uses durations rather than absolute timestamps. A slightly short
-window accepted as equal starts at the first reading without extrapolation. A
-computed rate within that tolerance of the rate limit counts as equality and
-fails the strict less-than criterion. Reported durations and rates are not
-rounded or replaced. This allowance addresses floating-point subtraction at
-ordinary history scales; it does not represent measurement uncertainty or
-recover precision lost through very large time or depth offsets.
+Arithmetic boundary comparisons interpret the decimal string of each input
+exactly and retain rational arithmetic for interpolation and rate division.
+No comparison tolerance is used: equal durations pass, a short window fails
+without extrapolation, and equality at the settlement-rate limit fails the
+strict less-than criterion. Only reported results become floating-point values.
+This arithmetic does not represent measurement uncertainty or recover precision
+already lost in the supplied time or depth inputs.
 
 Each reading reports planned penetration at its applied load and signed
 actual-minus-planned deviation. The planned depth is the shallowest intersection
@@ -302,6 +310,13 @@ with the final preparation reading. At every stage, any decreasing capacity
 segment extending below the current tip raises an independent warning, even
 below peak load. Neither a settled hold nor an absent flag establishes acceptance.
 
+Every `PreloadSequenceScreen` includes `mitigation_note`: during preload, keep
+the hull at a small air gap, close to the water, so that buoyancy can be regained
+if a leg punches through. The note is returned with both flagged and unflagged
+results and is serialized in the example's per-leg `preload_sequences` output.
+It supplies no numerical clearance, hull immersion calculation or prediction of
+buoyancy arrest; installation-specific limits and procedures remain OPEN.
+
 The offline example adds three identical synthetic per-leg histories under
 `preload_sequences` in `results.json`, labelled `synthetic_histories_only`.
 Loads, times and added settlement are assumptions; loading depths follow the
@@ -312,6 +327,35 @@ predicted. Synthetic tests cover a passing hold, persistent settlement, a short
 hold, load interruption, missing evidence, rebound, explicit threshold changes,
 sharp penetration and a deeper capacity drop. No standard document was accessed
 or transcribed for this addition.
+
+## Clause references and coverage
+
+G identifies *Guideline for Site Specific Assessment of Mobile Jack-Up Units*,
+first edition. RP identifies *Recommended Practice for Site Specific Assessment
+of Mobile Jack-Up Units*, first edition; C identifies its commentary clauses.
+The references below follow the supplied implementation checklist. They locate
+assessment topics, without claiming that the research equations or illustrative
+criteria implement the standards. No standard text, table payload or figure
+values are reproduced. Standard tabulated values must remain explicit user
+inputs; the demonstrator supplies none. Exact table/figure identifiers not
+provided in the checklist remain OPEN rather than being inferred.
+
+| Clause references | Demonstrated check and boundary | Uncovered checklist items |
+| --- | --- | --- |
+| G 5.3.1-5.3.3; RP 3.1.2, 8.3.1.1-8.3.1.4 | Raw per-leg reaction versus supplied preload; four-stage history, full-load duration and trailing settlement window with explicit illustrative controls. | **OPEN:** factored Vd versus 0.90 P; horizontal-demand applicability limits; unspecified standard preload hold rules and a qualified installation procedure. |
+| RP 6.2.1-6.2.3; C6.2.1-C6.2.3 | SI input contract, finite/domain checks, circular area reconciliation and kPa-times-area conversion to kN. | **OPEN:** independent unit/provenance qualification, partially engaged area and actual spudcan geometry. |
+| RP 6.2.1-6.2.3; C6.2.1-C6.2.3 | Common mudline datum; research depth refers to the lowest level of the widest cross-section, rather than the cone tip. | **OPEN:** actual tip-to-bearing-plane conversion and paired standard backflow corrections. |
+| RP 6.2.1-6.2.3; C6.2.1-C6.2.3 | Each branch retains its declared research factor family; the layered peak evaluates its stress-dependent sand angle once per trial pressure. | **OPEN:** standard sand-angle adjustment, standard factor families, exact standard table/figure identifiers and their user-supplied values. Research factors are not substituted for standard factors. |
+| RP 6.2.6.1-6.2.6.4, 8.3.5; C6.2.6.3, C8.3 | Descending branches warn independently of peak attainment. Peak depth, peak load, reduced interface load and static recovery depths are reported. No finite recovery is explicit. | **OPEN:** enumerating and flagging multiple roots, qualified lower support within the investigated extent, a supplied margin/plunge criterion and dynamic penetration. Selecting the shallowest root does not resolve alternative equilibria. |
+| RP 6.2.6.1-6.2.6.4; C6.2.6.3 | Only named research equations execute; unresolved OCR expressions have no executable route or expression-input interface. | **OPEN:** resolving and qualifying those expressions before any future implementation; they must remain blocked until resolved. |
+| RP 5.2-5.7, 7.1-7.3, 8.1.3-8.1.6, 8.5 | Common-origin force and biaxial moment equilibrium; example reactions derive from labelled synthetic inputs and illustrative environmental actions. | **OPEN:** qualified reaction provenance, complete concurrent load vectors and joint environmental cases, dynamics, second-order treatment, member capacity and holding-system scope. Synthetic reaction inputs must remain labelled synthetic. |
+| RP 8.2.1-8.2.3 | Signed contact reactions are reported for the supplied geometry. No soil moment credit is taken. | **OPEN:** testing every candidate overturning axis, displaced restoring geometry, the 0.95 resistance treatment and supporting evidence before any soil moment credit. Contact alone does not perform these checks. |
+| RP 6.3.3-6.3.5, 8.3.1.5-8.3.4 | Concurrent scalar horizontal force is compared with independently supplied sliding resistance; the static Hs/Tp grid reports failed checks and rejects re-entry. | **OPEN:** drained/undrained resistance factors, combined-load envelope intersections from the still-water point and qualified fixity/displacement assessment. The Hs/Tp grid is not a foundation interaction envelope. |
+
+Fixity or displacement demands require escalation to a qualified foundation and
+structural assessment before installation decisions. The air-gap note is a
+qualitative mitigation only. This partial screen does not establish complete
+site approval, even when every implemented inequality and hold check passes.
 
 ## Worked result and verification
 

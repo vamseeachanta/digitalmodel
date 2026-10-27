@@ -5,6 +5,10 @@
 All threshold defaults are illustrative assumptions, based on previous
 experience. No standard-derived procedure, settlement model or dynamic
 punch-through prediction is supplied. Screen every leg independently.
+
+Clause context: G 5.3.1-5.3.3; RP 3.1.2, 8.3.1.1-8.3.1.4 and 8.3.5,
+first editions. G/RP document identities and OPEN items are recorded in
+docs/domains/geotechnical/jackup-screening.md; no clause compliance is claimed.
 """
 
 from __future__ import annotations
@@ -66,6 +70,8 @@ class PreloadCriteria:
     per load increment above 0.01 m/kN raises a punch-through flag. Positive
     penetration at zero load increment during preloading also raises a flag.
     These inputs are sensitivity controls, not qualified physical limits.
+    G 5.3.1-5.3.3; RP 3.1.2, 8.3.1.1-8.3.1.4: unspecified standard hold
+    rules remain OPEN; these explicit illustrative controls do not supply them.
     """
 
     minimum_hold_h: float = 1.0
@@ -104,6 +110,8 @@ class PreloadSequenceScreen:
     Hold start is the start of the final uninterrupted full-load interval within
     holding; hold end is the final holding reading, excluding discharge. The
     criterion is evaluated at that end. None denotes unavailable evidence.
+    The mitigation note accompanies every result, independently of hazard flags;
+    no hull clearance or buoyancy-arrest calculation is performed.
     """
 
     target_preload_per_leg_kn: float
@@ -117,6 +125,10 @@ class PreloadSequenceScreen:
     hold_reasons: tuple[str, ...]
     punch_through: bool
     steps: tuple[PreloadStepCheck, ...]
+    mitigation_note: str = (
+        'During preload, keep the hull at a small air gap, close to the water, '
+        'so that buoyancy can be regained if a leg punches through.'
+    )
 
 
 def _validate_history(stages: Sequence[PreloadStage],
@@ -221,6 +233,12 @@ def screen_preload_sequence(
     No flag is not proof of safety beyond the curve or between readings.
     Holding evidence is independent of these flags and is evaluated at its last
     reading; a settled window does not require the whole hour to be settled.
+
+    RP 6.2.6.1-6.2.6.4, 8.3.5; C6.2.6.3, C8.3: descending-branch warnings
+    and shallowest-root reporting are partial screens. Multiple-root reporting,
+    lower-support qualification and supplied margin/plunge criteria remain OPEN.
+    G 5.3.1-5.3.3; RP 3.1.2, 8.3.1.1-8.3.1.4: hold checks use illustrative
+    criteria only. The result carries the small-air-gap mitigation note.
     """
     finite('target preload per leg', target_preload_per_leg_kn, strict=True)
     criteria.validate()
