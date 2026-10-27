@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Run a synthetic resistance and effective-power screening example.
+"""Run a published-input resistance and effective-power bookkeeping example.
 
 Usage and input provenance: docs/examples/holtrop-power.md.
 Uses the package's existing method equations and physical assumptions only.
@@ -16,31 +16,32 @@ from typing import Any
 from digitalmodel.naval_architecture import holtrop_coefficients as hc
 from digitalmodel.naval_architecture import holtrop_mennen as hm
 
-# Source: the explicitly synthetic input table in the usage page. These values
-# are chosen for demonstration, not derived from measured or named hull data.
-SYNTHETIC_INPUTS: dict[str, Any] = {
-    "lwl": 100.0,
-    "beam": 16.0,
-    "draft": 5.0,
-    "cb": 0.60,
-    "cm": 0.96,
-    "cwp": 0.72,
-    "cp": 0.625,  # cb/cm, by hand: 0.60/0.96.
-    "lcb_pct": -1.0,
-    "cstern": 0,
-    "speed_ms": 5.0,
-    "abt": 16.0,
-    "tf": 5.0,
-    "hb": 1.0,
-    "at": 2.0,
-    "appendage_areas": [8.0],
+# Holtrop & Mennen (1982), section 5, p.170, hypothetical numerical example;
+# DOI: 10.3233/ISP-1982-2933501. Definitions of Cb and Cp: section 2.
+# Knot conversion: NIST SP 811 (2008), section 5.2, table 9.
+REFERENCE_INPUTS: dict[str, Any] = {
+    "lwl": 205.0,
+    "beam": 32.0,
+    "draft": 10.0,
+    "cb": 37500.0 / (205.0 * 32.0 * 10.0),
+    "cm": 0.980,
+    "cwp": 0.750,
+    "cp": 37500.0 / (205.0 * 32.0 * 10.0 * 0.980),
+    "lcb_pct": -2.02,  # Published aft offset; the API takes positive forward.
+    "cstern": 10,
+    "speed_ms": 25.0 * 1852.0 / 3600.0,
+    "abt": 20.0,
+    "tf": 10.0,
+    "hb": 4.0,
+    "at": 16.0,
+    "appendage_areas": [50.0],
     "appendage_factors": [1.5],
 }
 
 
 def build_result() -> dict[str, Any]:
     """Return component forces in N and effective power in W without writing."""
-    inputs = SYNTHETIC_INPUTS
+    inputs = REFERENCE_INPUTS
     area = hm.wetted_surface_holtrop(**{
         key: inputs[key] for key in ("lwl", "beam", "draft", "cb", "cm", "cwp", "abt")
     })
@@ -53,8 +54,7 @@ def build_result() -> dict[str, Any]:
         if key not in ("appendage_areas", "appendage_factors")
     })
     ca = hm.correlation_allowance(inputs["lwl"], inputs["cb"], inputs["draft"])
-    # Dynamic-pressure definition: q = rho*V^2/2; RA = q*S*CA, as in
-    # holtrop_mennen.total_resistance. No new empirical coefficient is used.
+    # RA = rho*V^2*S*CA/2: Holtrop & Mennen (1982), section 2, p.168.
     components = {
         "viscous_n": friction * factor,
         "appendage_n": hm.appendage_resistance(
@@ -81,8 +81,16 @@ def build_result() -> dict[str, Any]:
         raise ArithmeticError("Effective power balance failed")
     return {
         "synthetic": True,
-        "limitation": "Screening only; no real-hull numerical validation.",
+        "input_source": {
+            "doi": "10.3233/ISP-1982-2933501",
+            "section": "5. Numerical example",
+            "page": 170,
+            "case_kind": "published hypothetical hull",
+        },
+        "limitation": "Bookkeeping only; no reproduction or empirical validation.",
         "inputs": inputs,
+        # Separate historical assumptions, with external references and the
+        # fluid-state limitation given in the usage page; no constants change.
         "physical_assumptions": {
             "density_kg_m3": hc.RHO_SW,
             "kinematic_viscosity_m2_s": hc.NU_SW,
@@ -107,10 +115,12 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     # Exclusive creation preserves an existing result. JSON retains full
     # precision for arithmetic checks; console values use one decimal place.
-    with (args.output_dir / "holtrop_power.json").open("x", encoding="utf-8") as stream:
+    with (args.output_dir / "holtrop_power.json").open(
+        "x", encoding="utf-8", newline="\n",
+    ) as stream:
         json.dump(result, stream, indent=2, allow_nan=False)
         stream.write("\n")
-    print("Synthetic screening example; no real-hull numerical validation.")
+    print("Published hypothetical inputs; no reproduction or empirical validation.")
     for name, force in result["components_n"].items():
         print(f"{name}: {force:.1f} N")
     print(f"total_resistance_n: {result['total_resistance_n']:.1f} N")
