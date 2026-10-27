@@ -121,6 +121,22 @@ def reduce_roll_moment_normalized(
     Raises:
         ValueError: For invalid motion, grid, window, policies or singular fit.
     """
+    omega, theta0, velocity_amplitude = _normalization_motion(
+        drive_period, roll_amplitude_deg, min_cycles, max_condition_number,
+    )
+    t, m, cycles = _settled_roll_samples(
+        times, moment, settled_window, drive_period, min_cycles,
+    )
+    return _fit_normalized_roll(
+        t, m, drive_period, theta0, omega, velocity_amplitude,
+        max_condition_number, cycles,
+    )
+
+
+def _normalization_motion(
+    drive_period, roll_amplitude_deg, min_cycles, max_condition_number,
+):
+    """Validate motion and caller policies before converting motion units."""
     for name, value in (
         ("drive_period", drive_period), ("roll_amplitude_deg", roll_amplitude_deg),
         ("min_cycles", min_cycles), ("max_condition_number", max_condition_number),
@@ -134,7 +150,11 @@ def reduce_roll_moment_normalized(
     velocity_amplitude = omega * theta0
     if not all(math.isfinite(v) and v > 0.0 for v in (omega, theta0, velocity_amplitude)):
         raise ValueError("motion normalization must be positive and finite")
+    return omega, theta0, velocity_amplitude
 
+
+def _settled_roll_samples(times, moment, settled_window, drive_period, min_cycles):
+    """Validate the complete record and retain a resolved settled window."""
     t = np.asarray(times, dtype=float)
     m = np.asarray(moment, dtype=float)
     if t.ndim != 1 or m.ndim != 1 or t.size != m.size or t.size == 0:
@@ -159,13 +179,26 @@ def reduce_roll_moment_normalized(
         raise ValueError("settled_window contains insufficient sampled cycles")
     if np.any(np.diff(t) >= drive_period / (2.0 * 3.0)):
         raise ValueError("sampling gaps must resolve the third harmonic")
+    return t, m, cycles
 
+
+def _roll_harmonic_basis(t, drive_period):
+    """Build the joint DC and three-harmonic design matrix."""
     # Reduce absolute time modulo the period before forming bounded phases.
     phase = (np.remainder(t, drive_period) / drive_period) * (2.0 * math.pi)
     columns = [np.ones_like(t)]
     for order in (1, 2, 3):
         columns.extend((np.cos(order * phase), np.sin(order * phase)))
     basis = np.column_stack(columns)
+    return basis
+
+
+def _fit_normalized_roll(
+    t, m, drive_period, theta0, omega, velocity_amplitude,
+    max_condition_number, cycles,
+):
+    """Fit retained moments and assemble physical coefficients and diagnostics."""
+    basis = _roll_harmonic_basis(t, drive_period)
     # Scale moments to keep fitting/residual arithmetic away from overflow.
     scale = float(np.max(np.abs(m))) or 1.0
     scaled_m = m / scale
