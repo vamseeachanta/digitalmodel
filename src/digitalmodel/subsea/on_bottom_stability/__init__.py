@@ -1,25 +1,15 @@
-"""On-bottom stability design for submarine pipelines.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
 
-Implements pipeline on-bottom stability checks per DNV-RP-F109 (2021),
-including hydrodynamic loading, submerged weight, and lateral stability
-assessment (absolute and generalized methods).
+"""On-bottom stability static checks and compatibility wrappers.
 
-This package exposes two complementary surfaces:
+The canonical F109 surface implements clause 3.6.2 Eqs. (3.38)-(3.39)
+with explicit factors, eligible initial-state resistance and peak demands.
+Generalised displacement and dynamic methods remain OPEN; the historical
+``generalized_stability_check`` name is a deprecated static alias.
 
-- ``dnv_rp_f109`` submodule — the canonical, clause-referenced API with
-  separate ``absolute_stability_check`` (§4.3.1 Eq 4.1) and
-  ``generalized_stability_check`` (§4.3.2 Eq 4.5). NamedTuple results
-  named ``utilisation`` (UK spelling).
-- ``simplified`` submodule — kN-wrapper and combined-component surface
-  ported from the former ``digitalmodel.geotechnical.on_bottom_stability``
-  module (workspace-hub#2694 unification). Dataclass results named
-  ``utilization`` (US spelling) with ``utilisation`` property alias.
-  Routes to ``generalized_stability_check(F_R=0)`` for the lateral check.
-
-The package-level re-exports below favour the **simplified** surface for
-the symbol names that overlap (``lift_force_per_meter``,
-``StabilityResult``). Import directly from ``.dnv_rp_f109`` to access the
-canonical signatures.
+Package-level ``lift_force_per_meter`` and ``StabilityResult`` retain the
+simplified signatures. Import ``dnv_rp_f109`` for the canonical signatures.
 """
 from __future__ import annotations
 
@@ -32,7 +22,13 @@ from digitalmodel.subsea.on_bottom_stability.dnv_rp_f109 import (
     C_M_ROUGH,
     C_M_SMOOTH,
     GAMMA_SC_NORMAL,
+    AbsolutePeakLoads,
     AbsoluteStabilityMargin,
+    absolute_peak_loads,
+    diameter_mean_current,
+    load_reduction_factor,
+    low_kc_horizontal_coefficient,
+    transverse_current_at_height,
     absolute_stability_check,
     absolute_stability_margin,
     generalized_stability_check,
@@ -70,7 +66,13 @@ __all__ = [
     "C_M_ROUGH",
     "C_M_SMOOTH",
     "GAMMA_SC_NORMAL",
+    "AbsolutePeakLoads",
     "AbsoluteStabilityMargin",
+    "absolute_peak_loads",
+    "diameter_mean_current",
+    "load_reduction_factor",
+    "low_kc_horizontal_coefficient",
+    "transverse_current_at_height",
     "absolute_stability_check",
     "absolute_stability_margin",
     "generalized_stability_check",

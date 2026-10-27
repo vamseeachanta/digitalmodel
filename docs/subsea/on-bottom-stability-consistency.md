@@ -1,11 +1,11 @@
 # On-bottom stability margin analysis
 
-The synthetic unfactored example requires 1853.7 N/m of submerged weight against
-2200.0 N/m supplied, leaving 346.3 N/m reserve. Its calculated utilisation is
-0.843 against the implemented limit of 1.000. Required weight and reserve are
-exposed explicitly, and both canonical checks use horizontal load magnitude.
-Source provenance for the previously attributed page is unresolved; page
-equivalence and licensed-standard qualification are not established.
+The absolute static interface now checks lateral demand and uplift separately
+under clause 3.6.2, Eqs. (3.38)-(3.39), and reports the governing utilisation
+and required weight. Factors, peak coefficients and reduction inputs are
+explicit. The retained synthetic example requires 1853.7 N/m against
+2200.0 N/m supplied, leaving 346.3 N/m reserve. These arithmetic regressions
+establish neither a site design nor a qualified standard implementation.
 
 ## Revision history
 
@@ -13,141 +13,201 @@ equivalence and licensed-standard qualification are not established.
 |---|---|---|
 | 0 | 2026-10-27 | Compared the supplied page with the code, added weight margins and corrected signed sliding demand. |
 | 1 | 2026-10-27 | Reclassified the example as synthetic, removed unsupported page comparisons and recorded independent arithmetic because the source cannot be retrieved. |
+| 2 | 2026-10-27 | Aligned the absolute checks and shared inputs with the supplied clause map, added independent uplift and initial-state resistance, and distinguished peak loads from instantaneous arithmetic. |
 
 ## Evidence and scope
 
-This analysis describes the [canonical module](../../src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py),
-[simplified wrapper](../../src/digitalmodel/subsea/on_bottom_stability/simplified.py)
-and [regression tests](../../tests/subsea/on_bottom_stability/test_dnv_rp_f109.py).
-No retrievable source, revision or retained excerpt supports the earlier page
-attribution. The example is therefore **synthetic**: its stated inputs and
-coefficients define an arithmetic regression and are not measured or qualified
-design inputs. Revision 0 records the earlier attribution, which this revision
-withdraws. The test and this document retain the complete synthetic input basis.
+The [canonical module](../../src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py),
+[compatibility wrappers](../../src/digitalmodel/subsea/on_bottom_stability/simplified.py)
+and [clause regressions](../../tests/subsea/on_bottom_stability/test_f109_absolute_clauses.py)
+use the supplied clause map for the October 2010 issue amended November 2011.
+The former later-edition claim is withdrawn; conformity to that edition remains
+**OPEN**. The map identifies damaged mathematical extraction and unresolved
+empirical expressions. Original pages and numerical lookup datasets have not
+been independently qualified in this change. No licensed sentences, tables or
+figure values are reproduced.
 
-The module cites DNV-RP-F109, Edition October 2021, sections 3.2.1 (hydrodynamic
-loads), 2.2 (submerged weight), 4.3.1 (absolute lateral stability) and 4.3.2
-(generalized lateral stability). These inherited locators have not been checked
-against the licensed text. No licensed standard was opened or used to establish
-equivalence. Equations below describe the implemented arithmetic only; no
-coefficient or safety factor is qualified for a particular site.
+The concept-page column below records the supplied map's assessment of
+`pipeline-engineering/wiki/concepts/pipeline-on-bottom-stability.md`.
+It is not an independent retrieval or edit of that page. Its earlier numeric
+example remains a synthetic regression: provenance and page equivalence are
+**OPEN**. The comparison establishes specific code changes against the map,
+not complete conformity with a standard or the entire package.
 
-## Module input basis
+## Consistency comparison
 
-| Quantity or symbol | Module input or treatment | Meaning and units |
+| Topic | Concept page as assessed in the supplied map | Clause map requirement | Current module and disposition |
+|---|---|---|---|
+| Horizontal force | Constant-coefficient instantaneous drag plus inertia presented as design loading. | Clause 3.6.4, Eqs. (3.40)-(3.41): calibrated extreme-cycle peak coefficients. | `absolute_peak_loads` accepts explicit Table 3-9 and Table 3-10 coefficients; instantaneous helpers are separate. Lookup qualification **OPEN**. |
+| Current | Centreline velocity. | Clause 3.4.2, Eqs. (3.2)-(3.3): transverse profile and diameter mean. | `transverse_current_at_height` and `diameter_mean_current` added; Table 3-1 roughness is user input, headings in radians. |
+| Wave and current basis | Unspecified combined scalar. | Clauses 3.4.2-3.4.4: distinguish spectral and extreme-cycle quantities. | Explicit extreme amplitude, associated period and associated transverse current; spectral generation and extreme mapping **OPEN**. |
+| Reductions | No qualified directional correction chain. | Clause 3.4.5, Eq. (3.17): separate horizontal and upward multipliers. | `load_reduction_factor` multiplies supplied components; peak helper applies each direction once. Empirical fits **OPEN**. |
+| Weight | Component weight less buoyancy. | Clauses 1.5 and 2.3: valid annuli, phase contents and relevant loss. | Positive bore and material validation added; reference gravity aligned. Zero contents density is an empty idealisation, never a universal gas assumption. Phase/loss selection **OPEN**. |
+| Lateral acceptance | Factored horizontal demand only, described as equivalent. | Clause 3.6.2, Eq. (3.38): factor both horizontal and friction-weighted upward demand. | Correct criterion shared by absolute, deprecated static alias and lateral wrapper. |
+| Upward acceptance | No independent result. | Clause 3.6.2, Eq. (3.39): independent upward criterion. | Separate utilisation, weight boundary and combined acceptance; passive resistance cannot mask uplift failure. |
+| Factors | Unqualified default. | Clause 3.6.3, Tables 3-5 through 3-8: select the applicable basis. | Explicit positive finite factor required; no automatic selection or licensed numeric default. |
+| Soil credit | Unspecified embedment or replacement of friction. | Clauses 3.6.1 and 3.6.5: initial-state eligible resistance and no lateral slip. | Optional passive resistance requires `initial_penetration` or `prior_loading` qualification; movement-generated resistance rejected. Soil evidence remains caller responsibility; rock passive credit must be zero. |
+| Method identity | Names absolute, generalised and dynamic categories. | Clause 3.5, Eq. (3.32) requires displacement response. | Historical generalised function warns and delegates to the static criteria; actual generalised and dynamic methods **OPEN**. |
+| Example conclusion | Instantaneous arithmetic used to conclude coating sufficiency. | Governing environments, phase weights, peaks, factors and soil basis are required. | Retained example is synthetic arithmetic only; no coating or site acceptance conclusion. |
+
+Table 1. Three-way comparison of concept-page statements, the supplied clause map and implementation.
+
+## Implemented checks and explicit inputs
+
+The absolute method uses nonnegative extreme-cycle peak demands `h` and `z`,
+net downward weight `w`, friction `mu`, eligible passive resistance `p` (all
+forces N/m), and dimensionless factor `gamma`. Passing requires positive
+supported weight and **both** utilisations at most one:
+
+| Implemented operation | Clause and equation | Relation or input contract |
 |---|---|---|
-| Seawater density, rho | `rho_w_kg_m3` in load and weight routines | kg/m³. |
-| Total outer diameter, D, including coatings | `D_outer_m` in load routines | m. In the weight routine the same argument name means **steel** OD; total OD is steel OD plus twice coating thickness. |
-| Combined near-bed velocity, U | `U_m_s` | Signed scalar, m/s, at pipe centreline. The caller must combine wave/current components consistently. |
-| Acceleration, dU/dt | `a_m_s2` | Signed scalar, m/s², at pipe centreline. Drag and inertia are added before taking horizontal demand magnitude. |
-| Drag, inertia and lift coefficients, CD, CM, CL | `C_D`, `C_M`, `C_L` | Dimensionless; explicit synthetic values are required for reproduction. The drag default differs from the example. |
-| Submerged weight, Ws | `W_s_N_m` | N/m, positive downward; accepted directly by the check and margin helper. |
-| Steel, coating and contents weights per length | Computed from annular geometry and densities | N/m; component weights are not direct inputs. |
-| Gravity, g | Fixed in `submerged_weight_per_meter` | m/s²; not caller-selectable. |
-| Buoyancy and total air weight | Internal mass/area arithmetic times gravity | Buoyancy uses total coated OD; no separate air-weight or buoyancy output. |
-| Specific gravity, SG | No direct input/output | The canonical module returns net submerged weight. |
-| Friction, mu | `mu_soil` | Dimensionless Coulomb coefficient; site value is caller-supplied. The margin helper requires positive friction. |
-| Safety factor, gamma_SC | `gamma_SC` | Dimensionless; default retained. Pass `1.0` for the synthetic unfactored example. Placement differs between methods; see below. |
-| Passive resistance, FR | `F_R_N_m` in `generalized_stability_check` only | N/m; unavailable to the absolute check and its margin helper. |
-| Undrained strength, su, and embedment | No direct input or soil model | The caller must derive any passive resistance externally. No automatic clay/sand selection. |
-| Orbital velocity amplitude, Um, and period, T, for KC | No direct input in this module | m/s and s; KC is dimensionless. Coefficients are not selected from KC. |
-| Reynolds number and seabed proximity | No direct input or calculation | No coefficient-selection procedure is implemented. |
-| Sea state, return period and kinematic transformation | Caller responsibility | This module starts with near-bed velocity and acceleration. No metocean transformation or displacement analysis. |
-| Horizontal and lift forces, FH and FL | `F_H_N_m`, `F_L_N_m` | N/m. The load function returns signed FH; stability checks use its magnitude. Lift is upward; the margin helper requires nonnegative FL. |
+| No-slip decision | Clause 3.6.1 | No lateral slip in the selected extreme cycle; not a displacement prediction. `no_lateral_slip` records combined static acceptance. |
+| Lateral utilisation | Clause 3.6.2, Eq. (3.38) | `eta_h = gamma*(h + mu*z)/(mu*w + p)`. |
+| Vertical utilisation | Clause 3.6.2, Eq. (3.39) | `eta_z = gamma*z/w`; independent of passive resistance. |
+| Required weight | Clause 3.6.2, Eqs. (3.38)-(3.39) | `w_h = max(0, (gamma*(h+mu*z)-p)/mu)`, `w_z = gamma*z`, `w_required = max(w_h,w_z)`. |
+| Factor selection | Clause 3.6.3, Tables 3-5 through 3-8 | User supplies the factor for environment, region, soil and consequence class, with edition-matched evidence. No selection is inferred. |
+| Peak coordinates | Clause 3.6.4 | `KC_e = Ue*Te/D`, `M_e = Ve/Ue`. Positive amplitude and period; nonnegative associated current magnitude. |
+| Peak force generation | Clause 3.6.4, Eqs. (3.40)-(3.41) | `q_e = rho*D*(Ue+Ve)^2/2`, `h = r_h*C_H*q_e`, `z = r_z*C_Z*q_e`. Table 3-9, Table 3-10 and Figures 3-13/3-14 values are user inputs. No additional inertia term. |
+| Low-KC adjustment | Clause 3.6.4, Table 3-9 | `C_H = C_H_anchor*KC_anchor/KC_e`, restricted to positive KC at or below the supplied first-column coordinate. No zero-wave limit or other extrapolation. |
+| Directional reduction | Clause 3.4.5, Eq. (3.17) | `r_i = r_perm_i*r_pen_i*r_tr_i`, separately for horizontal and upward demand. Explicit multipliers between zero and one; use unit multipliers when coefficients already include those reductions. |
+| Current profile | Clause 3.4.2, Eq. (3.2) | `V(z) = Vref*sin(theta)*log(1+z/z0)/log(1+zref/z0)`. |
+| Diameter-mean current | Clause 3.4.2, Eq. (3.3) | `V = Vref*sin(theta)*((1+z0/D)*log(1+D/z0)-1)/log(1+zref/z0)`. |
+| Weight and geometry | Clauses 1.5 and 2.3 | Concentric steel, one coating annulus and bore contents minus displaced-water mass, multiplied by gravity. |
+| Friction-only boundary | Clause 3.6.5, Eq. (3.42) | With no passive credit, no reductions and unit factor, `w_required/q_e = C_H/mu + C_Z`. This subset does not replace the two design criteria. |
 
-Table 1. Module interface quantities and units; no page comparison is asserted.
+Table 2. Implemented expressions and their clause locators; no licensed lookup data is embedded.
 
-Additional inputs needed **only when computing weight from materials** are steel
-OD, wall thickness, coating thickness (m), and steel, coating and contents
-densities (kg/m³). They are unnecessary when Ws is supplied directly.
-The new helper introduces no additional engineering input. It requires finite
-values and a positive safety factor, permits negative supplied weight to show a
-buoyancy deficit, and does not validate the upstream pipe geometry or coefficients.
+The module rejects nonfinite inputs, negative peak demands, nonpositive
+friction or factor, invalid geometry and negative material densities. A real
+coating annulus requires positive coating density. Nonpositive supplied
+weight fails the canonical check; the margin can still show its deficit.
+Frictionless cases are outside this interface's domain. Inputs are scalars,
+with SI units and coated hydrodynamic diameter distinguished from steel OD.
+Generic instantaneous coefficients are explicit too; legacy exported constants
+remain unqualified compatibility symbols and are never chosen by a check.
 
-## Implemented balances and qualification limits
+Nonzero passive resistance requires the caller's initial-state qualification.
+The string records that assertion; it does not prove penetration, loading
+history, soil suitability or resistance magnitude. A proposed change of weight
+requires requalification if passive resistance depends on weight or contact.
+No credit may be taken for movement generated in the no-slip cycle, or for rock
+passive resistance under this model.
 
-The load routines calculate drag plus inertia and lift. The weight routine
-subtracts buoyancy from material weight using concentric areas and fixed gravity.
-For simultaneous signed loads, FH below denotes the magnitude of the net
-horizontal force. The inherited standard locators above remain unverified.
+Reduction inputs require source identity, geometry, angle units and eligibility
+under clause 3.4.5, Eqs. (3.18)-(3.22), Figures 3-5 through 3-8. The code does not
+calculate those empirical fits or infer whether coefficients were already
+reduced. A unit multiplier is an algebraic identity, not an assumed figure value.
+The same responsibility applies to Table 3-1 roughness and coefficient axes,
+interpolation domains and provenance for Tables 3-9 and 3-10.
 
-| Method | Implemented balance |
+## Outputs and compatibility changes
+
+`StabilityResult.utilisation` is `max(eta_h, eta_z)`. Its `details` include both
+utilisations, both required weights, the supplied factor and passive basis,
+clause references, load basis, no-slip result and the governing **utilisation**
+at the supplied weight. Nonpositive weight is labelled `unsupported`.
+
+`AbsoluteStabilityMargin` retains supplied and required weight, reserve,
+supplied/required ratio and stability, and adds separate lateral/vertical
+utilisations and required weights. Its governor identifies the larger
+**required weight**; it may differ from the utilisation governor when passive
+resistance is present. Equal nonzero boundaries use `uplift`; zero loading uses
+`no_load`, zero required weight and ratio `None`. Passive credit may also
+reduce required weight to zero with nonzero horizontal loading; that case
+retains the `absolute_lateral` label and has ratio `None`. Stability always requires
+positive supported weight. The weight ratio is distinct from a friction/drive
+ratio when lift or passive resistance is present.
+
+These contracts intentionally change previous behaviour:
+
+- All static checks and wrappers require an explicit factor; generic load
+  coefficients are explicit as well.
+- Signed horizontal samples are rejected by static interfaces. Resolve the
+  governing extreme cycle; taking the absolute value of one sample does not
+  qualify a peak.
+- `generalized_stability_check` emits `DeprecationWarning` and delegates to the
+  absolute static criteria. It is retained only as a compatibility name; its
+  previous horizontal-only factor placement and uplift masking are removed.
+- The N/m and kN/m lateral wrappers use the same absolute criteria and required
+  weight. The upward wrapper uses Eq. (3.39), distinct from flotation Eq. (3.1).
+- Weight geometry and instantaneous load validation are shared with the direct
+  wrappers. Gravity now follows the supplied clause 1.5 basis.
+
+Existing assertions for signed static inputs, implicit factors and the former
+compatibility formula were updated to the new contract. Negative peaks now have
+explicit rejection tests; no failing check was skipped or weakened.
+
+## Synthetic examples and reproducibility
+
+The retained instantaneous arithmetic case uses D 0.5 m, U 1.5 m/s,
+acceleration 0.6 m/s², density 1025 kg/m³, CD 0.7, CM 3.29, CL 0.9, friction
+0.6, unit factor and supplied weight 2200 N/m. These are synthetic inputs;
+they are not section 3.6.4 table data or a qualified design environment.
+
+| Quantity | Synthetic result |
 |---|---|
-| Unfactored absolute, positive supplied weight | `FH + mu*FL <= mu*Ws` with `gamma_SC=1.0`. |
-| Factored absolute | `gamma_SC*(FH + mu*FL) <= mu*Ws`; no FR. Lift is also factored. |
-| Generalized scalar balance | `gamma_SC*FH <= mu*(Ws-FL) + FR`. The simplified wrapper uses this balance with FR zero. |
-
-Table 2. Implemented force balances; licensed-standard equivalence is not established.
-
-The existing methods differ in safety-factor placement and are retained. With
-positive friction and no FR, the absolute required weight is
-`gamma_SC*(FH/mu + FL)`, whereas the generalized balance requires
-`gamma_SC*FH/mu + FL`. Neither this arithmetic nor the tests establish which
-convention is required by a licensed standard. The function
-named generalized evaluates a scalar force balance; it does not implement
-calibrated allowable displacement or a dynamic time history.
-
-The friction-to-drive margin and the supplied-to-required weight
-margin are different quantities when lift is present. They share the pass
-boundary at unity for the unfactored no-passive-resistance case, but their
-numerical values must not be interchanged. Site use requires a retrieved source
-and independent qualification of coefficients, factors, soil and metocean inputs.
-
-## Synthetic worked example and API
-
-The synthetic case uses D 0.5 m, U 1.5 m/s, acceleration 0.6 m/s², density 1025 kg/m³,
-CD 0.7, CM 3.29, CL 0.9, friction 0.6 and supplied weight 2200 N/m:
-
-| Quantity | Computed result |
-|---|---|
-| Horizontal force | 800.9 N/m |
-| Lift | 518.9 N/m |
-| Available friction | 1008.7 N/m |
+| Instantaneous horizontal force | 800.9 N/m |
+| Instantaneous lift | 518.9 N/m |
+| Available unfactored friction | 1008.7 N/m |
 | Friction / horizontal force | 1.3 |
-| Required submerged weight | 1853.7 N/m |
+| Required weight under the supplied-load static arithmetic | 1853.7 N/m |
 | Supplied / required weight | 1.2 |
-| Supplied minus required weight | 346.3 N/m |
-| Utilisation | 0.843 against limit 1.000 |
-| Governing check | `absolute_lateral`; stable because utilisation is at most 1.000 |
+| Weight reserve | 346.3 N/m |
+| Lateral utilisation | 84.3 % |
+| Vertical utilisation | 23.6 % |
+| Governing weight boundary | `absolute_lateral` |
 
-Table 3. Synthetic unfactored results for the stated inputs and implemented criterion.
+Table 3. Retained synthetic arithmetic only; no site acceptance or page equivalence.
 
-Independent hand arithmetic defines the expected values:
+Independent arithmetic uses `h = rho*CD*D*abs(U)*U/2 + rho*CM*pi*D²*a/4`,
+`z = rho*CL*D*U²/2`, `w_required = h/mu + z`, and
+`reserve = w_supplied - w_required`, retaining unrounded loads until display.
+This arithmetic test does not turn the instantaneous samples into design peaks.
 
-- Horizontal force: `0.5*1025*0.7*0.5*1.5² + 1025*3.29*(pi/4)*0.5²*0.6` gives 800.9 N/m.
-- Lift: `0.5*1025*0.9*0.5*1.5²` gives 518.9 N/m.
-- Available friction: `0.6*(2200 - FL)` gives 1008.7 N/m.
-- Required weight: `FH/0.6 + FL` gives 1853.7 N/m.
-- Weight reserve: `2200 - required weight` gives 346.3 N/m.
-
-These expressions define the synthetic regression using the implemented model;
-they are not quotations from a standard. Unrounded loads are used throughout,
-with rounding only for presentation. Reported comparisons use one decimal place;
-the decision utilisation uses three decimals beside its limit. The tests assert
-the independently calculated literals with explicit rounding tolerances.
+A separate synthetic peak regression uses density 1000 kg/m³, coated diameter
+0.5 m, extreme amplitude 2 m/s, period 5 s and associated current 1 m/s.
+Arbitrary synthetic `C_H=2.5`, `C_Z=1.5` and independent reduction products
+`r_h=0.4`, `r_z=0.6` give q 2250.0 N/m, h 2250.0 N/m and z 2025.0 N/m.
+KC is 20.0 and current ratio is 0.5. These values exercise the equations;
+none was obtained from a licensed table or figure.
 
 ```python
 from digitalmodel.subsea.on_bottom_stability.dnv_rp_f109 import (
+    absolute_peak_loads,
     absolute_stability_margin,
-    hydrodynamic_force_per_meter,
-    lift_force_per_meter,
 )
 
-horizontal = hydrodynamic_force_per_meter(1025, 0.5, 1.5, 0.6, C_D=0.7, C_M=3.29)
-lift = lift_force_per_meter(1025, 0.5, 1.5, C_L=0.9)
-margin = absolute_stability_margin(2200, horizontal, lift, 0.6, gamma_SC=1.0)
+# Synthetic coefficients and factor for arithmetic regression only.
+loads = absolute_peak_loads(1000, 0.5, 2, 5, 1, 2.5, 1.5, 0.4, 0.6)
+margin = absolute_stability_margin(
+    10000, loads.horizontal_N_m, loads.lift_N_m, 0.5, gamma_SC=1.25,
+)
 ```
 
-`AbsoluteStabilityMargin` reports `required_weight_N_m`, `supplied_weight_N_m`,
-`weight_margin_ratio`, `weight_margin_N_m`, `governing_check` and `is_stable`.
-It reuses the absolute check's demand. Nonzero horizontal load governs as
-`absolute_lateral`; lift alone gives `uplift`, the limiting case of the same
-equation rather than an independently qualified vertical check. With no load,
-the label is `no_load`, required weight is zero, and the ratio is `None` because
-division by zero has no defined margin. The stability flag retains the existing
-check's rejection of zero or negative supplied weight.
+The regressions cover both inequality boundaries, positive-passive uplift
+failure, initial-state qualification, equivalent static entry points, explicit
+factors and coefficients, invalid inputs, small-diameter current averaging,
+independent numerical integration of the current profile, weight geometry,
+low-KC anchoring and direction-specific reduction arithmetic. They do not
+supply independent authorised engineering benchmarks.
 
-The direction correction applies to both canonical checks and the simplified
-wrapper's required weight. Positive-load behaviour and safety-factor placement
-are retained. No site-specific demonstration or coefficient qualification is
-included; the example is an arithmetic regression, not a design acceptance.
+## OPEN register and way forward
+
+| Area | OPEN capability or evidence | Required next step |
+|---|---|---|
+| Edition and mathematical evidence | Later-edition conformance and flagged extraction groupings. | Qualify legible authorised source pages before extending the implementation. |
+| Environment and phases | Clause 2.2 combinations, heading selection, joint statistics, phase boundaries and clause 2.3 loss/contents selection. | Establish and run every governing phase/environment externally; this interface evaluates one supplied case. |
+| Spectrum and transfer | Clause 3.4.3, Eqs. (3.4)-(3.14), including transfer, moments and spectral normalisation. | Supply qualified measured or analytical kinematics; do not assume an empirical fit. Figure 3-2/3-3 alternatives remain user inputs. |
+| Extreme-cycle mapping and spreading | Clause 3.4.3, Eqs. (3.15)-(3.16), and clause 3.4.4. | Qualify amplitude/period mapping and directionality, including Figure 3-4 inputs; no undocumented multiplier or cosine-power normalisation. |
+| Lookup and reduction eligibility | Clauses 3.4.5 and 3.6.3-3.6.4; every table/figure input and the zero-wave limit. | Obtain edition-matched values, axes, domains, physical applicability and review. No numerical lookup qualification is claimed. |
+| Soil, penetration and trench models | Clause 3.4.6, Eqs. (3.23)-(3.31), Figures 3-9/3-10 and clause 3.6.5. | Qualify soil laws, initial/prior loading, penetration, trench geometry and piping before supplying resistance. |
+| Other common checks | Clause 3.2 Eq. (3.1), clauses 3.3 and 4.4-4.5, and clause 2.5 structural/travel consequences. | Independently assess flotation, sinking, soil flotation, scour, stress, fatigue, buckling and accumulated displacement. |
+| Generalised displacement | Clause 3.5, Eqs. (3.32)-(3.37), Tables 3-2 through 3-4, Figures 3-11/3-12 and Appendix A. | Implement a qualified response family with applicability, duration, travel limits, normalisation and interpolation; all lookup data remains user input. |
+| Dynamic method | Time-dependent pipe/soil/structural response. | Establish qualified dynamic modelling and structural acceptance; static margins are not dynamic qualification. |
+| Geometry and package integration | Multilayer materials, frictionless domain, further callers and wiki correction. | Extend supported geometry with tests, audit callers and correct the separately maintained concept page. |
+
+Table 4. Remaining gaps are OPEN; passing static arithmetic does not close them.
+
+Use the implemented margin only after the phase, peak-load, factor and soil
+inputs have been qualified. The way forward is to resolve the listed evidence
+and modelling gaps before making a design acceptance claim.
