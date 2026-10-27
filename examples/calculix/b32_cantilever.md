@@ -9,6 +9,7 @@ writing the deck alone establishes no displacement or reaction result.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-27 | Add a reproducible quadratic beam case to extend type-mapping coverage. |
+| 2 | 2026-10-27 | Qualify native support forces by solver release after an equilibrium failure. |
 
 ## Assumptions and independent reference
 
@@ -59,10 +60,38 @@ concentrated or distributed load, so its external force is the reaction.
 The existing result parser reads the FRD displacement and DAT force totals;
 expanded corner-node numbering is not used to identify the tip.
 
+The force mapping differs from displacement averaging. In the official
+[CalculiX 2.21 source](https://www.dhondt.de/ccx_2.21.src.tar.bz2),
+`map3dto1d2d.f` sums the eight expanded end-face nodes once when `iforce=1`.
+The DAT total therefore already accounts for beam expansion; multiplying an
+original-node RF value by an averaging factor would be incorrect.
+
+## Native qualification
+
+The unchanged native test and saved example were run with CalculiX 2.21 and
+2.23 on 2026-10-27. With 2.21, root Fx is approximately `-4.0 N`, exceeding
+the `1e-5 N` absolute residual limit against zero. The eight expanded support
+nodes also give an incorrect resultant before original-node mapping. This
+failure cannot be corrected by changing the parser's summation.
+
+The [CalculiX 2.23 source](https://www.dhondt.de/ccx_2.23.src.tar.bz2)
+changes MPC force recovery in `resultsforc.c`. With that release, the existing
+native test passes without a skip and the saved example's `--solve` exits
+successfully. Tip displacement is `0.311 mm` against the independent
+`0.3125 mm` reference. Relative error is calculated from the unrounded
+readback and rounded upward to `0.4%`, below the predeclared `1%` limit.
+All three DAT root force components satisfy the
+unchanged `1e-5 N` residual limit against `(0, -1, 0) N`.
+
+These results qualify this case on 2.23 only. CalculiX 2.21 does not satisfy
+its native acceptance criteria; 2.22 native behavior has not been validated.
+The test retains the failure on an incompatible solver rather than skipping
+the reaction assertions or relaxing their tolerances.
+
 ## Limits and remaining work
 
-This is partial scope for issue #1673. Native results are unverified until
-the solver test passes. The manual's section 5.14 cautions about B32 section
+This is partial scope for issue #1673. Native qualification is limited to the
+case and solver release above. The manual's section 5.14 cautions about B32 section
 forces; this example checks support equilibrium rather than section stresses
 or moments. Mesh convergence, other bending directions, torsion, other cross
 sections and nonlinear response remain outside this test's scope. No licensed
