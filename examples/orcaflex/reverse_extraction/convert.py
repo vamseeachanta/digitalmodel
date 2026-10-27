@@ -7,11 +7,18 @@ from __future__ import annotations
 import argparse
 import json
 from dataclasses import asdict
-from pathlib import Path
+from itertools import combinations
+from pathlib import Path, PurePath
 
+from digitalmodel.solvers.orcaflex.format_converter.protocols import ConversionReport
 from digitalmodel.solvers.orcaflex.format_converter.single_to_spec import (
     SingleToSpecConverter,
 )
+
+
+def format_report(report: ConversionReport) -> str:
+    """Serialize the report with portable forward-slash path metadata."""
+    return json.dumps(asdict(report), default=PurePath.as_posix, indent=2)
 
 
 def main() -> int:
@@ -26,15 +33,18 @@ def main() -> int:
     parser.add_argument("--report-output", type=Path, required=True, help="JSON report")
     args = parser.parse_args()
     paths = (args.input, args.spec_output, args.report_output)
-    if len({path.resolve() for path in paths}) != len(paths):
+    if len({path.resolve() for path in paths}) != len(paths) or any(
+        first.exists() and second.exists() and first.samefile(second)
+        for first, second in combinations(paths, 2)
+    ):
         parser.error("Input, spec output and report output paths must be distinct")
 
     report = SingleToSpecConverter().convert(
         source=args.input, target=args.spec_output,
     )
-    report_text = json.dumps(asdict(report), default=str, indent=2)
+    report_text = format_report(report)
     args.report_output.parent.mkdir(parents=True, exist_ok=True)
-    args.report_output.write_text(report_text + "\n", encoding="utf-8")
+    args.report_output.write_text(report_text + "\n", encoding="utf-8", newline="\n")
     print("Conversion report (JSON):")
     print(report_text)
     if report.success:

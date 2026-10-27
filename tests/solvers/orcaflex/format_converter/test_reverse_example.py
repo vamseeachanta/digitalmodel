@@ -4,12 +4,15 @@
 
 import json
 import os
+import runpy
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 import yaml
+
+from digitalmodel.solvers.orcaflex.format_converter.protocols import ConversionReport
 
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -46,23 +49,31 @@ def run_example(tmp_path: Path, *args: str) -> subprocess.CompletedProcess:
         cwd=tmp_path,
         env=env,
         text=True,
+        encoding="utf-8",
         capture_output=True,
         check=False,
     )
 
 
 @pytest.mark.parametrize("depth", [42.0, 84.0])
-def test_reverse_example_reports_unmapped_content(tmp_path: Path, depth: float):
+@pytest.mark.parametrize("existing_outputs", [False, True])
+def test_reverse_example_reports_unmapped_content(
+    tmp_path: Path, depth: float, existing_outputs: bool,
+):
     """Authored inputs survive while harmless grouping metadata is disclosed."""
     # Numeric basis: reverse_extraction/README.md, "Synthetic input basis".
     # The second depth is twice the authored depth, an independent input change.
     source = tmp_path / "strict.yml"
     data = yaml.safe_load((EXAMPLE / "strict.yml").read_text(encoding="utf-8"))
     data["Environment"]["WaterDepth"] = depth
-    source.write_text(yaml.safe_dump(data), encoding="utf-8")
+    source.write_text(yaml.safe_dump(data), encoding="utf-8", newline="\n")
     original = source.read_bytes()
     spec_path = tmp_path / "output" / "spec.yml"
     report_path = tmp_path / "output" / "report.json"
+    if existing_outputs:
+        spec_path.parent.mkdir()
+        spec_path.write_text("previous spec\n", encoding="utf-8", newline="\n")
+        report_path.write_text("previous report\n", encoding="utf-8", newline="\n")
 
     result = run_example(
         tmp_path,
@@ -74,6 +85,9 @@ def test_reverse_example_reports_unmapped_content(tmp_path: Path, depth: float):
     assert result.returncode == 0, result.stderr
     spec = yaml.safe_load(spec_path.read_text(encoding="utf-8"))
     report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["source_path"] == source.as_posix()
+    assert report["target_path"] == spec_path.as_posix()
+    assert b"\r\n" not in report_path.read_bytes()
     assert spec["environment"]["water"]["depth"] == depth
     assert spec["environment"]["wind"]["speed"] == 0.0
     assert "Groups" not in spec
@@ -133,10 +147,56 @@ def test_reverse_example_rejects_overlapping_paths(tmp_path: Path, collision: st
     assert sorted(p.name for p in tmp_path.rglob("*") if p.is_file()) == ["strict.yml"]
 
 
+@pytest.mark.parametrize("pair", [(0, 1), (0, 2), (1, 2)], ids=[
+    "input-spec", "input-report", "spec-report",
+])
+def test_reverse_example_rejects_hard_link_aliases(tmp_path: Path, pair: tuple):
+    """Shared file identities are rejected before any existing file is changed."""
+    paths = [tmp_path / name for name in ("strict.yml", "spec.yml", "report.json")]
+    contents = [
+        (EXAMPLE / "strict.yml").read_bytes(),
+        b"previous spec\n",
+        b"previous report\n",
+    ]
+    first, second = pair
+    for index, path in enumerate(paths):
+        if index != second:
+            path.write_bytes(contents[index])
+    os.link(paths[first], paths[second])
+    before = {path.name: path.read_bytes() for path in paths}
+
+    result = run_example(
+        tmp_path,
+        "--input", str(paths[0]),
+        "--spec-output", str(paths[1]),
+        "--report-output", str(paths[2]),
+    )
+
+    assert result.returncode != 0
+    assert "distinct" in result.stderr
+    assert {p.name: p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()} == before
+
+
+def test_reverse_example_formats_windows_report_paths():
+    """Report metadata uses forward slashes on every supported platform."""
+    report = ConversionReport(
+        success=True, source_format="single", target_format="spec",
+        source_path=PureWindowsPath("input/strict.yml"),
+        target_path=PureWindowsPath("output/spec.yml"),
+    )
+    format_report = runpy.run_path(str(EXAMPLE / "convert.py"))["format_report"]
+
+    data = json.loads(format_report(report))
+
+    assert data["source_path"] == "input/strict.yml"
+    assert data["target_path"] == "output/spec.yml"
+    assert data["success"] is True
+
+
 def test_reverse_example_displays_failure_report(tmp_path: Path):
     """An empty source returns failure, writes its report and produces no spec."""
     source = tmp_path / "empty.yml"
-    source.write_text("# No model data\n", encoding="utf-8")
+    source.write_text("# No model data\n", encoding="utf-8", newline="\n")
     spec = tmp_path / "spec.yml"
     report = tmp_path / "report.json"
     result = run_example(
