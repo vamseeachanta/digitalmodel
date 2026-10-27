@@ -2,19 +2,15 @@
 name: Quality Gates
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main, develop]
+  workflow_dispatch:
+  workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: full-quality-gates-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   quality-gates-aggregate:
@@ -132,7 +128,7 @@ jobs:
 
       - name: Check engineering register changes
         env:
-          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
+          REGISTER_BASE: ${{ github.event.before || 'HEAD^' }}
         run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
 
       - name: Create reports directory

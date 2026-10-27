@@ -1,25 +1,11 @@
-# Full Matrix Sweep (issue #1863)
-#
-# `Quality Gates by Domain` dispatches only the shards a change touches, so an
-# untouched-but-broken shard reports nothing rather than red and `main` can show
-# green indefinitely. This workflow is the counterweight: it runs EVERY domain
-# shard, ignoring touched-domain detection entirely, on
-#
-#   * every push to `main`  -> main's green is earned, not assumed
-#   * a nightly cron        -> drift is caught within a day even without merges
-#   * manual dispatch       -> on-demand "what is the true state of the matrix?"
-#
-# Job names here are deliberately distinct from the PR-gating workflow's
-# (`sweep-tests-*` / `Full matrix sweep result` vs `tests-*` / `Domain test
-# aggregate`) so a diagnostic sweep failure is never confused with, and can
-# never be mistaken for, a required pull-request context.
+# Full testing is one scheduled batch, independent of pull request gates.
+# All domain shards, quality gates, docs and atlas validation run every 12 hours.
+# Manual dispatch retains on-demand diagnosis. Main pushes do not start a batch.
 name: Full Matrix Sweep
 
 "on":
-  push:
-    branches: [main]
   schedule:
-    - cron: "17 7 * * *"
+    - cron: "17 */12 * * *"
   workflow_dispatch:
 
 permissions:
@@ -32,6 +18,18 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  full-quality-gates:
+    name: Full quality gates
+    uses: ./.github/workflows/quality-gates.yml
+
+  api-docs:
+    name: Full documentation validation
+    uses: ./.github/workflows/docs.yml
+
+  atlas-drift:
+    name: Full atlas validation
+    uses: ./.github/workflows/parametric-atlas-drift.yml
+
   full-matrix:
     name: Build full shard matrix
     runs-on: ubuntu-latest
@@ -67,6 +65,12 @@ jobs:
             echo
             echo "Dispatching all $total domain shards (no touched-domain gating)."
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate CI policy
+        run: >-
+          uv run --no-project --with pytest --with pyyaml==6.0.2 python -m pytest
+          scripts/ci/test_pr_test_policy.py -q -p no:cacheprovider
+          --basetemp="$RUNNER_TEMP/ci-policy-tests"
 
       - name: Fail if the matrix is empty
         env:
@@ -179,7 +183,10 @@ jobs:
 
   sweep-result:
     name: Full matrix sweep result
-    needs: [full-matrix, sweep-tests]
+    needs: [full-matrix, sweep-tests, full-quality-gates, api-docs, atlas-drift]
+    concurrency:
+      group: scheduled-full-test-health
+      cancel-in-progress: false
     permissions:
       contents: read
       actions: read
@@ -249,10 +256,19 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Download full quality reports
+        if: always() && github.ref == 'refs/heads/main'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: quality-gate-results-*
+          path: full-quality-results
+
       - name: Update main health
-        continue-on-error: true
-        if: github.ref == 'refs/heads/main'
+        if: always() && github.ref == 'refs/heads/main'
         uses: actions/github-script@v7
+        env:
+          BATCH_RESULTS: ${{ toJSON(needs) }}
+          REPORTING_STATUS: ${{ job.status }}
         with:
           script: |
             function healthWriteOrder(body, runNumber) {
@@ -261,14 +277,33 @@ jobs:
               return {storedRunNumber, skip: storedRunNumber !== null && storedRunNumber > runNumber};
             }
             const fs = require('fs');
-            const baseline = JSON.parse(fs.readFileSync('baseline.json', 'utf8'));
-            const previous = fs.existsSync('previous-baseline.json')
-              ? JSON.parse(fs.readFileSync('previous-baseline.json', 'utf8'))
-              : {tests: {}};
+            let baseline;
+            let baselineAvailable = true;
+            try {
+              baseline = JSON.parse(fs.readFileSync('baseline.json', 'utf8'));
+              if (!baseline.tests || !baseline.shards) throw Error('Incomplete baseline');
+            } catch {
+              baselineAvailable = false;
+              baseline = {tests: {}, shards: {}};
+            }
+            const batch = JSON.parse(process.env.BATCH_RESULTS || '{}');
+            const failedJobs = Object.entries(batch).filter(([, job]) => job.result !== 'success');
+            if (!baselineAvailable || process.env.REPORTING_STATUS === 'failure') {
+              failedJobs.push(['baseline-publication', {result: 'failure'}]);
+            }
+            const runUrl = `${context.serverUrl || 'https://github.com'}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            let previous = {tests: {}};
+            try {
+              if (fs.existsSync('previous-baseline.json')) {
+                previous = JSON.parse(fs.readFileSync('previous-baseline.json', 'utf8'));
+              }
+            } catch {
+              previous = {tests: {}};
+            }
             const {owner, repo} = context.repo;
-            const title = `main-health: ${repo}`;
+            const title = 'Scheduled full test run failing on main';
             const issues = await github.paginate(github.rest.issues.listForRepo,
-              {owner, repo, state: 'all', labels: 'main-health', per_page: 100});
+              {owner, repo, state: 'all', per_page: 100});
             const issue = issues.find(item => item.title === title && !item.pull_request);
             const order = healthWriteOrder(issue?.body, context.runNumber);
             if (order.skip) {
@@ -276,12 +311,49 @@ jobs:
               return;
             }
             const active = Object.entries(baseline.tests);
+            // Include failures specific to another Python version, which may
+            // not occur in the domain sweep's Python 3.11 baseline.
+            const seen = new Set();
+            function readQualityReports(directory) {
+              if (!fs.existsSync(directory)) return;
+              for (const entry of fs.readdirSync(directory, {withFileTypes: true})) {
+                const path = `${directory}/${entry.name}`;
+                if (entry.isDirectory()) {
+                  readQualityReports(path);
+                } else if (entry.name === 'quality_gates_results.json' || entry.name === 'quality-gates-pytest-full.log') {
+                  let texts;
+                  const content = fs.readFileSync(path, 'utf8');
+                  if (entry.name.endsWith('.json')) {
+                    try {
+                      texts = (JSON.parse(content).results || []).map(result => result.metrics?.output_tail || '');
+                    } catch {
+                      failedJobs.push(['quality-report', {result: 'unreadable'}]);
+                      continue;
+                    }
+                  } else {
+                    texts = [content];
+                  }
+                  const shard = directory.split('/')[1];
+                  for (const text of texts) {
+                    for (const line of text.split('\n')) {
+                      const match = line.match(/^(?:FAILED|ERROR)\s+(tests\/.+?)(?:\s+-\s+.*)?$/);
+                      if (!match) continue;
+                      const key = `${shard}\n${match[1]}`;
+                      if (seen.has(key)) continue;
+                      seen.add(key);
+                      active.push([match[1], {shard, first_seen_run: 'current batch', run_id: context.runId}]);
+                    }
+                  }
+                }
+              }
+            }
+            readQualityReports('full-quality-results');
             const resolved = Object.entries(previous.tests).filter(([id, row]) =>
               !baseline.tests[id] && baseline.shards[row.shard]?.parsed === true &&
               ['success', 'failure'].includes(baseline.shards[row.shard]?.conclusion));
             const cell = value => String(value).replaceAll('|', '&#124;').replaceAll('\n', ' ');
             const lines = [`<!-- main-health-order: run_number=${context.runNumber} run_id=${context.runId} sha=${context.sha} -->`,
-              'Main test failures by exact test id.', '',
+              `Run: ${runUrl}`, '', 'Main test failures by exact test id.', '',
               '| Test id | Shard | First seen run | Last seen run | Status |',
               '| --- | --- | --- | --- | --- |'];
             for (const [id, row] of active.slice(0, 200)) {
@@ -295,7 +367,10 @@ jobs:
               row.parsed !== true || !['success', 'failure'].includes(row.conclusion) ||
               (row.conclusion === 'failure' && !active.some(([node, record]) => record.shard === id)));
             if (uncertain.length) lines.push('', 'Incomplete shard evidence: ' + uncertain.map(([id]) => cell(id)).join(', '));
-            const state = active.length || uncertain.length ? 'open' : 'closed';
+            if (failedJobs.length) {
+              lines.push('', 'Failed or incomplete batch jobs: ' + failedJobs.map(([id, job]) => `${cell(id)} (${cell(job.result)})`).join(', '));
+            }
+            const state = active.length || uncertain.length || failedJobs.length ? 'open' : 'closed';
             const body = lines.join('\n');
             if (issue) {
               await github.rest.issues.update({owner, repo, issue_number: issue.number, body, state});
@@ -311,6 +386,7 @@ jobs:
         env:
           MATRIX_RESULT: ${{ needs.full-matrix.result }}
           SWEEP_RESULT: ${{ needs.sweep-tests.result }}
+          BATCH_RESULTS: ${{ toJSON(needs) }}
         run: |
           if [ "$MATRIX_RESULT" != "success" ]; then
             echo "Full matrix construction did not succeed: $MATRIX_RESULT"
@@ -323,4 +399,13 @@ jobs:
             exit 1
           fi
 
-          echo "All domain shards passed the full sweep."
+          python - <<'PYTHON'
+          import json
+          import os
+
+          results = json.loads(os.environ["BATCH_RESULTS"])
+          failed = [name for name, job in results.items() if job["result"] != "success"]
+          if failed:
+              raise SystemExit("Full batch did not pass: " + ", ".join(failed))
+          PYTHON
+          echo "All domain shards and full batch checks passed."

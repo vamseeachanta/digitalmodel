@@ -18,10 +18,9 @@ import yaml
 WORKFLOWS = Path(__file__).resolve().parents[2] / ".github" / "workflows"
 GATES = (
     "quality-gates-by-domain.yml",
-    "quality-gates.yml",
-    "parametric-atlas-drift.yml",
     "gmsh-meshing-tests.yml",
 )
+MERGE_GATES = (*GATES, "quality-gates.yml", "parametric-atlas-drift.yml")
 
 
 def load_workflow(filename: str) -> dict:
@@ -92,7 +91,7 @@ def concurrency_result(
     context = {
         "github.workflow": workflow["name"],
         "github.event_name": event,
-        "github.event.pull_request.number": number,
+        "github.event.pull_request.number": number if event == "pull_request" else None,
         "github.ref": "refs/heads/main",
         "github.run_id": run_id,
     }
@@ -124,11 +123,11 @@ def test_pull_request_concurrency(filename: str) -> None:
 @pytest.mark.parametrize("filename", GATES)
 @pytest.mark.parametrize("event", ("push", "workflow_dispatch"))
 def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
-    """Push and manual runs keep separate groups identified by run ID."""
+    """Push and manual runs never cancel an active run for the same ref."""
     first = concurrency_result(filename, event, 101)
     second = concurrency_result(filename, event, 102)
-    assert first == (f"{load_workflow(filename)['name']}-run-101", False)
-    assert second == (f"{load_workflow(filename)['name']}-run-102", False)
+    assert first == (f"{load_workflow(filename)['name']}-refs/heads/main", False)
+    assert second == first
 
 
 @pytest.mark.parametrize(
@@ -164,7 +163,7 @@ def repository_checkouts(filename: str) -> list[tuple[dict, int]]:
     ]
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", MERGE_GATES)
 def test_repository_checkouts_verify_current_merge(filename: str) -> None:
     """Every checkout builds and guards a merge of the live tip and head."""
     scripts = []
@@ -203,7 +202,7 @@ def test_repository_checkouts_verify_current_merge(filename: str) -> None:
                    if re.search(r"^\s*(?:if\b|elif\b|test\b|\[)", line))
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", MERGE_GATES)
 def test_merge_fetches_disable_automatic_maintenance(filename: str) -> None:
     """Prevent detached repacking from rewriting shallow boundaries during fetch."""
     for job, index in repository_checkouts(filename):
@@ -296,7 +295,7 @@ def merge_fixture(root: Path, case: str) -> tuple[Path, Path, Path, str, str, st
     return runner, origin, head_origin, event_base, tip, head
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", MERGE_GATES)
 @pytest.mark.parametrize("case", (
     "stale-event", "conflict", "shallow", "fork-shallow", "full-history",
     "descendant", "no-api", "missing-parent", "wrong-base-parent",
@@ -391,7 +390,7 @@ def test_base_consumers_use_local_tip() -> None:
     quality = load_workflow("quality-gates.yml")
     register = next(step for step in quality["jobs"]["quality-gates"]["steps"]
                     if step.get("name") == "Check engineering register changes")
-    assert register["env"]["REGISTER_BASE"] == "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}"
+    assert register["env"]["REGISTER_BASE"] == "${{ github.event.before || 'HEAD^' }}"
 
 
 def test_trigger_tests_run_in_harness() -> None:
@@ -407,8 +406,8 @@ def test_full_sweep_keeps_nightly_schedule() -> None:
     """The full sweep runs nightly without changing pull request selection."""
     workflow = load_workflow("full-matrix-sweep.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
-    assert triggers["schedule"] == [{"cron": "17 7 * * *"}]
-    assert triggers["push"]["branches"] == ["main"]
+    assert triggers["schedule"] == [{"cron": "17 */12 * * *"}]
+    assert "push" not in triggers
     assert "pull_request" not in triggers
     assert "workflow_dispatch" in triggers
 
@@ -497,7 +496,7 @@ def test_repo_structure_cancels_superseded_runs(
     'refs/heads/1'. A manual main run shares the main push group. Synthetic
     run IDs 101 and 102 never enter the result, so updates supersede work
     only in the same workflow/ref group. The branch named '1' remains distinct
-    from PR 1. This read-only check allows cancellation for every trigger.
+    from PR 1. Only pull request updates cancel earlier runs.
     """
     workflow = load_workflow("repo-structure.yml")
     concurrency = workflow["concurrency"]
@@ -505,7 +504,7 @@ def test_repo_structure_cancels_superseded_runs(
         "github.workflow": workflow["name"],
         "github.event_name": event,
         "github.ref": ref,
-        "github.event.pull_request.number": number,
+        "github.event.pull_request.number": number if event == "pull_request" else None,
         "github.run_id": run_id,
     }
     group = re.sub(
@@ -514,4 +513,6 @@ def test_repo_structure_cancels_superseded_runs(
         concurrency["group"],
     )
     assert group == expected
-    assert concurrency["cancel-in-progress"] is True
+    assert concurrency["cancel-in-progress"] == "${{ github.event_name == 'pull_request' }}"
+    cancellation = evaluate_expression(concurrency["cancel-in-progress"][3:-2], context)
+    assert cancellation is (event == "pull_request")

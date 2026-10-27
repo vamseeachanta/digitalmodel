@@ -11,6 +11,10 @@ on:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}

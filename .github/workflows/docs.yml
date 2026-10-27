@@ -19,21 +19,11 @@ on:
       - 'tests/drilling_riser/fixtures/**'
       - 'mkdocs.yml'
       - '.github/workflows/docs.yml'
-  pull_request:
-    paths:
-      - 'src/**'
-      - 'scripts/**'
-      - 'docs/api/**'
-      - 'docs/standards/**'
-      - 'docs/domains/**'
-      - 'assets/logo/**'
-      - 'atlases/**'
-      - 'data/**'
-      - 'tests/asset_integrity/test_data/**'
-      - 'tests/drilling_riser/fixtures/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
   workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
   docs:

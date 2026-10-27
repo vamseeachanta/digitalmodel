@@ -11,14 +11,12 @@
 name: Parametric atlas drift
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main, develop]
+  workflow_dispatch:
+  workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: atlas-drift-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 permissions:
   contents: read

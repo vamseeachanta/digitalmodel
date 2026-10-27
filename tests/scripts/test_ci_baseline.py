@@ -46,7 +46,8 @@ def evidence_metadata(monkeypatch):
     monkeypatch.setattr(ci, "gh_text", lambda endpoint: f"FAILED {EVIDENCE_NODE} - assertion\n")
 
 
-def run_health_writer(body, *, active=True, existing=True):
+def run_health_writer(body, *, active=True, existing=True, batch=None,
+                      missing=False, reporting="success", quality_tail=None):
     """Execute the shipped health script with isolated GitHub and file doubles."""
     workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
     step = next(s for s in workflow['jobs']['sweep-result']['steps']
@@ -57,8 +58,19 @@ def run_health_writer(body, *, active=True, existing=True):
     const baseline = {tests: input.active ? {'tests/example.py::test_case':
       {shard: 'example', first_seen_run: 1, run_id: 10}} : {},
       shards: {example: {parsed: true, conclusion: 'success'}}};
-    const fakeFs = {existsSync: () => false, readFileSync: () => JSON.stringify(baseline)};
-    const issue = {number: 1, title: 'main-health: example', body: input.body};
+    const fakeFs = {
+      existsSync: path => path.startsWith('full-quality-results') && input.quality_tail !== null,
+      readdirSync: path => path === 'full-quality-results'
+        ? [{name: 'quality-gate-results-3.12', isDirectory: () => true}]
+        : [{name: 'quality_gates_results.json', isDirectory: () => false}],
+      readFileSync: path => {
+      if (path.startsWith('full-quality-results/')) {
+        return JSON.stringify({results: [{metrics: {output_tail: input.quality_tail}}]});
+      }
+      if (input.missing) throw Error('Missing baseline');
+      return JSON.stringify(baseline);
+    }};
+    const issue = {number: 1, title: 'Scheduled full test run failing on main', body: input.body};
     const github = {paginate: async (method) => method === 'issues' && input.existing ? [issue] : [],
       rest: {issues: {listForRepo: 'issues', listLabelsForRepo: 'labels',
         update: async value => calls.push({kind: 'update', ...value}),
@@ -74,7 +86,9 @@ def run_health_writer(body, *, active=True, existing=True):
     '''
     completed = subprocess.run(
         ['node', '-e', harness], input=json.dumps(dict(
-            script=step['with']['script'], body=body, active=active, existing=existing)),
+            script=step['with']['script'], body=body, active=active, existing=existing,
+            missing=missing, quality_tail=quality_tail)),
+        env=dict(os.environ, BATCH_RESULTS=json.dumps(batch or {}), REPORTING_STATUS=reporting),
         text=True, capture_output=True, check=True, timeout=30)
     return json.loads(completed.stdout)
 
@@ -119,22 +133,65 @@ def test_health_preserves_close_and_create_rules(active, existing, kinds):
         assert 'main-health-order: run_number=10' in output['calls'][-1]['body']
 
 
-def test_health_workflow_names_and_soft_failure_are_preserved():
+def test_health_workflow_names_and_issue_reporting_are_preserved():
     workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
     assert {key: job['name'] for key, job in workflow['jobs'].items()} == {
         'full-matrix': 'Build full shard matrix',
         'sweep-tests': 'sweep-tests-${{ matrix.domain }}',
         'sweep-result': 'Full matrix sweep result',
+        'full-quality-gates': 'Full quality gates',
+        'api-docs': 'Full documentation validation',
+        'atlas-drift': 'Full atlas validation',
     }
     steps = workflow['jobs']['sweep-result']['steps']
     assert [step['name'] for step in steps] == [
         'Summarize shard results', 'Checkout baseline tools', 'Download sweep results',
-        'Publish main baseline', 'Upload main baseline', 'Update main health',
+        'Publish main baseline', 'Upload main baseline', 'Download full quality reports', 'Update main health',
         'Enforce full sweep result',
     ]
     step = next(s for s in steps if s['name'] == 'Update main health')
-    assert step['continue-on-error'] is True
-    assert step['if'] == "github.ref == 'refs/heads/main'"
+    assert 'continue-on-error' not in step
+    assert step['if'] == "always() && github.ref == 'refs/heads/main'"
+
+
+@pytest.mark.parametrize("job_result", ["failure", "cancelled", "skipped"])
+def test_health_does_not_close_for_incomplete_full_batch(job_result):
+    output = run_health_writer('', active=False,
+                               batch={"api-docs": {"result": job_result}})
+    update = output['calls'][0]
+    assert update['state'] == 'open'
+    assert f"api-docs ({job_result})" in update['body']
+    assert 'actions/runs/100' in update['body']
+
+
+@pytest.mark.parametrize("missing,reporting", [(True, "success"), (False, "failure")])
+def test_health_does_not_close_without_published_evidence(missing, reporting):
+    output = run_health_writer('', active=False, missing=missing, reporting=reporting)
+    update = output['calls'][0]
+    assert update['state'] == 'open'
+    assert 'baseline-publication (failure)' in update['body']
+
+
+def test_health_green_batch_closes_same_issue_and_red_reports_tests():
+    green = run_health_writer('', active=False, batch={"api-docs": {"result": "success"}})
+    assert green['calls'][0]['state'] == 'closed'
+    red = run_health_writer('', active=True, existing=False)
+    assert red['calls'][-1]['title'] == 'Scheduled full test run failing on main'
+    assert 'tests/example.py::test_case' in red['calls'][-1]['body']
+    assert 'actions/runs/100' in red['calls'][-1]['body']
+
+
+def test_health_reports_failures_outside_the_sweep_python_version():
+    tail = ('FAILED tests/example.py::test_version - assertion\n'
+            'ERROR tests/example.py::test_collection - collection failure\n'
+            'FAILED tests/example.py::test_version - repeated summary\n')
+    output = run_health_writer('', active=False, quality_tail=tail,
+                               batch={"full-quality-gates": {"result": "failure"}})
+    update = output['calls'][0]
+    assert update['state'] == 'open'
+    assert update['body'].count('tests/example.py::test_version') == 1
+    assert 'tests/example.py::test_collection' in update['body']
+    assert 'quality-gate-results-3.12' in update['body']
 
 
 def result(shard="example", ids=(SCR,), conclusion="failure", **updates):
@@ -772,7 +829,7 @@ def test_baseline_transport_failure_obeys_mode(tmp_path, mode, domain, expected,
         path.write_text(f"#!/bin/sh\nexit {code}\n")
         path.chmod(0o755)
     env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
-               DETECT_RESULT="success", HARNESS_RESULT="success", HAS_DOMAINS="true",
+               DETECT_RESULT="success", HARNESS_RESULT="success", HAS_HARNESS="true", HAS_DOMAINS="true",
                DOMAIN_RESULT=domain, GITHUB_EVENT_NAME="pull_request", CI_BASELINE_MODE=mode,
                RUNNER_TEMP=str(tmp_path), GITHUB_STEP_SUMMARY=str(tmp_path / "summary"))
     completed = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
@@ -1055,7 +1112,7 @@ def test_enforce_returns_verdict_for_green_domains(tmp_path, comparison):
                   "*) echo 2026-10-15T12:00:00Z > baseline-time.txt; exit 0;; esac\n")
     uv.chmod(0o755)
     env = dict(os.environ, PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
-               DETECT_RESULT="success", HARNESS_RESULT="success", HAS_DOMAINS="true",
+               DETECT_RESULT="success", HARNESS_RESULT="success", HAS_HARNESS="true", HAS_DOMAINS="true",
                DOMAIN_RESULT="success", GITHUB_EVENT_NAME="pull_request", CI_BASELINE_MODE="enforce",
                RUNNER_TEMP=str(tmp_path), GITHUB_STEP_SUMMARY=str(tmp_path / "summary"))
     completed = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
