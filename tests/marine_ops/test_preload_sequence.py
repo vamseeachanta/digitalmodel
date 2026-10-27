@@ -111,6 +111,54 @@ def test_criteria_are_inputs_and_one_hour_is_a_floor():
         screen(criteria=PreloadCriteria(minimum_hold_h=0.5))
 
 
+@pytest.mark.parametrize('window_h', [0.25, 1.0])
+@pytest.mark.parametrize('end_depth,expected_rate', [(1.0, 0.0), (1.0005, 0.0005)])
+def test_decimal_time_hold_and_complete_window_are_accepted(window_h, end_depth, expected_rate):
+    holding = (PreloadSample(1.3, 50, 1), PreloadSample(2.3, 50, end_depth))
+    result = screen(sequence(holding=holding), criteria=PreloadCriteria(
+        settlement_window_h=window_h))
+    assert result.hold_duration_h == pytest.approx(1.0)
+    assert result.settlement_rate_m_h == pytest.approx(expected_rate, rel=1e-10, abs=0)
+    assert result.hold_reasons == ()
+    assert result.hold_met
+
+
+@pytest.mark.parametrize('offset_h,expected_reasons', [
+    (-1e-9, ('hold_shorter_than_minimum', 'insufficient_settlement_window')),
+    (-5e-13, ()),
+    (0.0, ()),
+    (5e-13, ()),
+    (1e-9, ()),
+])
+def test_duration_and_window_either_side_of_equal_boundary(offset_h, expected_reasons):
+    # The 1.2 h custom controls also exercise a non-integer boundary.
+    holding = (PreloadSample(1.3, 50, 1), PreloadSample(2.5 + offset_h, 50, 1))
+    result = screen(sequence(holding=holding), criteria=PreloadCriteria(
+        minimum_hold_h=1.2, settlement_window_h=1.2))
+    assert result.hold_reasons == expected_reasons
+    assert result.hold_met == (not expected_reasons)
+    assert result.settlement_rate_m_h == (None if expected_reasons else 0)
+
+
+@pytest.mark.parametrize('window_h', [0.25, 1.0])
+@pytest.mark.parametrize('end_depth,expected_met', [
+    (1.000999999, True),
+    (1.0009999999999995, False),
+    (1.001, False),
+    (1.001000001, False),
+])
+def test_settlement_rate_strict_limit_and_either_side(window_h, end_depth, expected_met):
+    # Independent linear trace: one hour, starting at 1 m; the 1.001 m case
+    # moves exactly 0.001 m. Depth subtraction rounds its rate below the limit.
+    holding = (PreloadSample(0.25, 50, 1), PreloadSample(1.25, 50, end_depth))
+    result = screen(sequence(holding=holding), criteria=PreloadCriteria(
+        settlement_window_h=window_h))
+    assert result.hold_met == expected_met
+    assert result.hold_reasons == (() if expected_met else (
+        'settlement_rate_not_below_limit',))
+    assert result.settlement_rate_m_h == pytest.approx(end_depth - 1, rel=1e-10)
+
+
 def test_sharp_penetration_at_small_load_increment_flags_punch_through():
     preload = (PreloadSample(0.1, 25, 0.5), PreloadSample(0.2, 26, 1))
     result = screen(sequence(preload=preload))

@@ -11,12 +11,18 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from math import isclose
 from typing import Literal
 
 from digitalmodel.geotechnical.spudcan import PenetrationPoint, finite
 
 StageName = Literal['preparation', 'preload', 'holding', 'discharge']
 STAGE_ORDER = ('preparation', 'preload', 'holding', 'discharge')
+# Arithmetic equality only, separate from the physical criteria. Compare elapsed
+# durations (not absolute timestamps) and rates with no absolute tolerance.
+# This covers subtraction roundoff at ordinary history scales, not measurement
+# uncertainty or arbitrary loss of precision from very large input offsets.
+_BOUNDARY_REL_TOL = 1e-12
 
 
 @dataclass(frozen=True)
@@ -145,9 +151,13 @@ def _planned_depth(curve: Sequence[PenetrationPoint], load_kn: float) -> float |
 
 def _settlement_rate(samples: Sequence[PreloadSample], window_h: float) -> float | None:
     end = samples[-1].time_h
-    start = end - window_h
-    if start < samples[0].time_h:
+    available = end - samples[0].time_h
+    if available < window_h and not isclose(
+            available, window_h, rel_tol=_BOUNDARY_REL_TOL, abs_tol=0.0):
         return None
+    # A slightly short window accepted as equal starts at the first reading;
+    # never extrapolate beyond the evidence to cover subtraction roundoff.
+    start = max(samples[0].time_h, end - window_h)
     travel = 0.0
     for left, right in zip(samples, samples[1:]):
         if right.time_h <= start:
@@ -172,11 +182,13 @@ def _hold_evidence(samples: Sequence[PreloadSample], target: float,
     duration = full_load[-1].time_h - start
     rate = _settlement_rate(full_load, criteria.settlement_window_h)
     reasons = []
-    if duration < criteria.minimum_hold_h:
+    if duration < criteria.minimum_hold_h and not isclose(
+            duration, criteria.minimum_hold_h, rel_tol=_BOUNDARY_REL_TOL, abs_tol=0.0):
         reasons.append('hold_shorter_than_minimum')
     if rate is None:
         reasons.append('insufficient_settlement_window')
-    elif rate >= criteria.settlement_rate_limit_m_h:
+    elif rate >= criteria.settlement_rate_limit_m_h or isclose(
+            rate, criteria.settlement_rate_limit_m_h, rel_tol=_BOUNDARY_REL_TOL, abs_tol=0.0):
         reasons.append('settlement_rate_not_below_limit')
     return start, duration, rate, tuple(reasons)
 

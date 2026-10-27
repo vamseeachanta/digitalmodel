@@ -15,6 +15,7 @@ and improve the penetration method before using it for a particular installation
 | 1 | 2026-10-27 | Replace the square sand reference with published circular factors and add traceable environmental extracts and load sensitivities to close the missing calculation paths. |
 | 2 | 2026-10-27 | Separate constants and bounds by their evidence basis, replace unsupported collection statistics with synthetic particulars, preserve frozen bytes across checkouts and add independent layered-curve and recovery expectations. |
 | 3 | 2026-10-27 | Add per-leg preload histories, explicit hold controls and penetration comparisons to expose settlement evidence and independent punch-through warnings. |
+| 4 | 2026-10-27 | Separate arithmetic equality from hold criteria to accept complete decimal-time windows and reject equality at the strict settlement-rate limit. |
 
 ## Run the example
 
@@ -270,6 +271,17 @@ readings do not qualify motion between observations. The minimum hold can be
 increased through `minimum_hold_h`, but cannot be reduced below one hour.
 All defaults are **illustrative assumptions, based on previous experience**,
 exposed as inputs for sensitivity screening, without a standard-derived basis.
+
+Arithmetic boundary comparisons use a relative tolerance of `1e-12` and zero
+absolute tolerance, separately from the physical input thresholds. Elapsed
+durations within that tolerance of the minimum or window count as equal; the
+comparison uses durations rather than absolute timestamps. A slightly short
+window accepted as equal starts at the first reading without extrapolation. A
+computed rate within that tolerance of the rate limit counts as equality and
+fails the strict less-than criterion. Reported durations and rates are not
+rounded or replaced. This allowance addresses floating-point subtraction at
+ordinary history scales; it does not represent measurement uncertainty or
+recover precision lost through very large time or depth offsets.
 
 Each reading reports planned penetration at its applied load and signed
 actual-minus-planned deviation. The planned depth is the shallowest intersection
