@@ -276,3 +276,40 @@ def test_response_underflow_refused(coefficients):
     # The smallest positive subnormal force divided by |Z|>1 rounds to zero.
     with pytest.raises(ValueError, match="representable and nonzero"):
         solve(coefficients, excitation_moment_nm=math.ulp(0.0))
+
+
+@pytest.mark.parametrize("scale", [1e-300, 1.0, 1e308])
+def test_response_invariant_under_common_scaling(coefficients, scale):
+    # Z0=(1+1.5i)*scale, Zc=(1.1+1.6i)*scale, F=(0.1+0.1i)*scale.
+    # Cancelling scale and multiplying by each conjugate gives these fractions.
+    tank = replace(coefficients, stiffness=0.1 * scale, damping=0.05 * scale)
+    result = solve(tank, inertia_kg_m2=0.125 * scale,
+                   restoring_nm_per_rad=1.5 * scale,
+                   damping_nm_s_per_rad=0.75 * scale,
+                   excitation_moment_nm=complex(0.1 * scale, 0.1 * scale))
+    assert result.baseline_response_rad == pytest.approx(complex(0.25, -0.05) / 3.25)
+    assert result.coupled_response_rad == pytest.approx(complex(0.27, -0.05) / 3.77)
+    assert result.baseline_amplitude_rad == pytest.approx(math.sqrt(0.02 / 3.25))
+    assert result.coupled_amplitude_rad == pytest.approx(math.sqrt(0.02 / 3.77))
+    assert result.reduction_percent == pytest.approx(100.0 * (1.0 - math.sqrt(3.25 / 3.77)))
+
+
+def test_large_complex_impedance_representable_response(coefficients):
+    # Z=(1e308-4)+1e308i; the inertial term is below float resolution.
+    # F=(1e307+1e307i) therefore gives Theta=0.1 rad with zero phase.
+    result = solve(coefficients, inertia_kg_m2=1.0,
+                   restoring_nm_per_rad=1e308, damping_nm_s_per_rad=5e307,
+                   excitation_moment_nm=complex(1e307, 1e307))
+    assert result.baseline_response_rad == pytest.approx(0.1 + 0.0j)
+    assert result.coupled_response_rad == pytest.approx(0.1 + 0.0j)
+    assert result.baseline_amplitude_rad == pytest.approx(0.1)
+    assert result.coupled_amplitude_rad == pytest.approx(0.1)
+    assert result.reduction_percent == pytest.approx(0.0)
+
+
+def test_response_overflow_refused(coefficients):
+    # Z=(2+4i)*1e-300 and finite F=1e308 give an unrepresentable response.
+    with pytest.raises(ValueError, match="response.*finite"):
+        solve(coefficients, inertia_kg_m2=2e-300,
+              restoring_nm_per_rad=1e-299, damping_nm_s_per_rad=2e-300,
+              excitation_moment_nm=1e308)
