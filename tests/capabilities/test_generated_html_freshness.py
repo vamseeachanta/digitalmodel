@@ -89,6 +89,60 @@ def test_load_explorer_registers_its_fetched_sidecar() -> None:
     assert "docs/api/structural/wall-thickness-3d-explorer.json" in entry.outputs
 
 
+def test_generic_screening_page_has_matched_interactive_exports():
+    """Inspect the committed page as well as its generator's chart selections."""
+    import csv
+    import importlib.util
+    import io
+    import json
+    from html.parser import HTMLParser
+    from urllib.parse import unquote
+
+    class Page(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.charts, self.exports, self.points = [], [], []
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if tag == "svg":
+                self.charts.append(attrs["id"])
+            if tag == "circle":
+                self.points.append((float(attrs["data-x"]), float(attrs["data-y"])))
+            if tag == "a" and "download" in attrs:
+                self.exports.append(attrs["href"])
+
+    root = checker.REPO
+    script = root / "scripts/capabilities/build_generic_hull_screening.py"
+    spec = importlib.util.spec_from_file_location("screening_page", script)
+    builder = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(builder)
+    record = json.loads((root / builder.DATA).read_text(encoding="utf-8"))
+    text = (root / builder.PAGE).read_text(encoding="utf-8")
+    page = Page()
+    page.feed(text)
+    assert page.charts == ["es-alpha", "es-tank-3d", "hull-section", "tank-3d",
+                           "damping", "response", "alpha", "sens-reduction", "sens-period"]
+    expected = []
+    assert len(page.exports) == 6
+    specs = builder.chart_specs(record)
+    for chart, export in zip([specs[i] for i in (3, 0, 1, 2, 4, 5)], page.exports):
+        _, _, xs, series, xlabel, ylabel, *_ = chart
+        rows = list(csv.reader(io.StringIO(unquote(export.split(",", 1)[1]))))
+        assert rows[0] == ["series", xlabel, ylabel]
+        points = [(name, x, y) for name, ys in series for x, y in zip(xs, ys)]
+        assert rows[1:] == [[name, str(x), str(y)] for name, x, y in points]
+        expected.extend((x, y) for _, x, y in points)
+    assert page.points == expected
+    markers = ['<h1>', 'id="summary"', 'id="introduction"', 'id="design-data"',
+               'id="hull-section"', 'id="method"', 'id="comparison"', 'id="damping"',
+               'id="response"', 'id="alpha"', 'id="validation"', 'id="limits"',
+               'id="conclusions"', 'id="references"', 'id="sensitivity"',
+               'id="reproduce"', '<section id="revisions">']
+    assert [text.index(marker) for marker in markers] == sorted(text.index(marker) for marker in markers)
+    assert '<details id="revisions" open' not in text
+    assert '46.1 % at 2 % hull damping and 23.3 % at 5 %' in text
+
 @pytest.mark.parametrize("fault", ["changed", "missing", "uncommitted"])
 def test_load_explorer_sidecar_drift_is_detected(tmp_path, monkeypatch, fault):
     entry = next(
@@ -152,8 +206,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 26
-    assert len(outputs) == 30  # includes the showcase and fetched load-explorer sidecar
+    assert len(checker.GENERATORS) == 27
+    assert len(outputs) == 33  # includes screening artifacts and the showcase sidecar
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
