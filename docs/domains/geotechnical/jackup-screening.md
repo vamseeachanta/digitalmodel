@@ -17,6 +17,7 @@ and improve the penetration method before using it for a particular installation
 | 3 | 2026-10-27 | Add per-leg preload histories, explicit hold controls and penetration comparisons to expose settlement evidence and independent punch-through warnings. |
 | 4 | 2026-10-27 | Separate arithmetic equality from hold criteria to accept complete decimal-time windows and reject equality at the strict settlement-rate limit. |
 | 5 | 2026-10-27 | Confirm layered resistance warnings, include preload air-gap mitigation and map implemented checks to clause references with uncovered requirements OPEN. |
+| 6 | 2026-10-27 | Add a synthetic weak-pocket sweep, penetration changes and an assumed-rate drop indication to expose sensitivity to unsurveyed local strength loss. |
 
 ## Run the example
 
@@ -255,6 +256,59 @@ operating envelope for a Gulf site. The added environmental scenarios are also
 sensitivities, pending input qualification. The client adapter rejects
 missing ERA5 data, empty observation records and zero or unparseable offshore depth.
 
+## Weak-pocket sensitivity
+
+The example also runs a separate, fully synthetic cohesive-layer case through
+[weak_pocket.py](../../../src/digitalmodel/geotechnical/weak_pocket.py).
+It represents a leg encountering weaker soil between survey points. All case
+inputs are **assumed, based on previous experience**: footing area 160.0 m²,
+an upper interval from 0.0 to 2.0 m with strength increasing from 0.0 to 40.0 kPa,
+and a lower layer from 2.0 to 14.0 m with strength increasing from 60.0 to
+120.0 kPa. Zero surface strength represents illustrative mobilization. The pocket
+reduces the lower layer between 2.0 and 12.0 m. Nearest-survey distance is 75.0 m;
+it records the reason for sensitivity screening, without a spatial correlation,
+probability or geostatistical interpretation. Preload and storm leg reactions
+are independently assumed as 45.0 and 50.0 MN; the storm reaction does not come
+from the environmental cases above.
+
+`WeakPocket` identifies the layer, retained-strength factors, top and bottom
+depths and survey distance. The factor multiplies the interpolated strength
+inside the pocket only: 0.6 retains 60.0% of strength, a 40.0% reduction.
+The illustrative pressure model is q = 6.34 su at each depth, using the
+uniform-clay factor described above, with no gradient or embedment correction.
+Abrupt layer/pocket boundaries retain both resistance values at the same depth;
+an upward jump crosses the leg load at that boundary depth. This is a sensitivity
+reference, without a layered bearing mechanism, and does not modify the public
+sand-over-clay profile or extend its calibration.
+
+The sweep uses retained factors 1.0, 0.9, 0.8, 0.7, 0.6 and 0.5, from mild to
+severe. It reports both reaction intersections, changes from the unreduced
+profile, capacity-drop warnings and the first sampled factor with a warning.
+The first flagged factor is 0.6; the onset lies between the tested factors
+0.7 and 0.6, rather than being a solved critical factor. A warning remains
+independent of whether either reaction reaches the descending peak.
+
+| Retained factor | Capacity-drop warning | Preload depth / change | Storm depth / change | Preload / storm drop distance | Preload / storm assumed duration |
+| --- | --- | --- | --- | --- | --- |
+| 1.0 | No | 2.0 / 0.0 m | 2.0 / 0.0 m | Not applicable | Not applicable |
+| 0.8 | No | 2.0 / 0.0 m | 2.3 / +0.3 m | Not applicable | Not applicable |
+| 0.6 | Yes | 4.8 / +2.8 m | 6.4 / +4.4 m | 2.8 / 4.4 m | 27.9 / 44.3 s |
+| 0.5 | Yes | 7.7 / +5.7 m | 9.7 / +7.7 m | 5.7 / 7.7 m | 57.4 / 77.2 s |
+
+When a load reaches a descending peak, the drop indication is the distance
+from that peak to the next upward intersection at the same leg load. No recovery
+beyond the supplied profile is extrapolated. The explicitly assumed
+**constant settlement rate of 0.1 m/s** gives duration = drop distance / rate;
+these cases indicate tens of seconds, with the containing decade also reported.
+This duration is a planning assumption, without a physical upper or lower bound
+on speed or time. It supports monitoring and preload planning and is **not a
+dynamic analysis**: hull inertia, load redistribution, buoyancy, damping and
+rate-dependent soil response are absent. Missing case inputs or recovery outside
+the supplied depths produce `unresolved`, with absent values rather than zero
+penetration or zero duration. The sensitivity does not clear the
+[preload air-gap mitigation](#preload-air-gap-mitigation) or establish installation
+acceptance; qualified investigation and assessment remain required.
+
 ## Preload sequence screening
 
 [preload_sequence.py](../../../src/digitalmodel/marine_ops/preload_sequence.py)
@@ -309,6 +363,8 @@ uses the time-based criterion instead. The first preload reading is compared
 with the final preparation reading. At every stage, any decreasing capacity
 segment extending below the current tip raises an independent warning, even
 below peak load. Neither a settled hold nor an absent flag establishes acceptance.
+
+### Preload air-gap mitigation
 
 Every `PreloadSequenceScreen` includes `mitigation_note`: during preload, keep
 the hull at a small air gap, close to the water, so that buoyancy can be regained

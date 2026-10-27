@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 from digitalmodel.geotechnical.spudcan import SandOverClay, penetration_curve, punch_through_screen
+from digitalmodel.geotechnical.weak_pocket import CohesiveLayer, WeakPocket, weak_pocket_sensitivity
 from digitalmodel.marine_ops.jackup_inputs import frozen_environment, frozen_inputs, query_public_inputs
 from digitalmodel.marine_ops.jackup_screening import environmental_actions, screen_three_leg_unit
 from digitalmodel.marine_ops.preload_sequence import (
@@ -60,6 +61,27 @@ def synthetic_preload_stages(target_kn, curve):
             PreloadSample(1.25, target_kn, depth + 0.0102))),
         PreloadStage('discharge', (PreloadSample(1.5, target_kn / 2, depth + 0.0102),)),
     )
+
+
+def synthetic_weak_pocket_case():
+    """Separate synthetic clay reference, not a modification of the public soil.
+
+    Strengths, survey distance, reactions and rate are assumed, based on previous
+    experience. A constant-rate duration supports monitoring/preload planning;
+    it supplies neither a predicted speed nor a dynamic penetration bound.
+    """
+    layers = (CohesiveLayer('upper', 0, 2, 0, 40),
+              CohesiveLayer('lower', 2, 14, 60, 120))
+    return {
+        'qualification': 'synthetic_cohesive_reference_only',
+        'basis': 'assumed, based on previous experience',
+        'layers': [asdict(layer) for layer in layers],
+        'area_m2': 160,
+        'result': asdict(weak_pocket_sensitivity(
+            layers=layers, area_m2=160,
+            pocket=WeakPocket('lower', (1, 0.9, 0.8, 0.7, 0.6, 0.5), 2, 12, 75),
+            preload_kn=45000, storm_kn=50000, assumed_settlement_rate_m_s=0.1)),
+    }
 
 
 def run_example(*, public_clients=None):
@@ -140,6 +162,7 @@ def run_example(*, public_clients=None):
         'curve': [asdict(point) for point in curve],
         'preload_sequence_status': 'synthetic_histories_only',
         'preload_sequences': preload_histories,
+        'weak_pocket_sensitivity': synthetic_weak_pocket_case(),
         'punch_through': asdict(punch_through_screen(profile, unit['preload_per_leg_kn']['value'])),
         'zero_environment_statics': asdict(evaluate(0, 10)),
         'static_envelope': [asdict(point) for point in jackup_operating_envelope(
@@ -152,6 +175,8 @@ def run_example(*, public_clients=None):
             'Interpolated post-peak curve and static recovery depth do not predict dynamic penetration.',
             'Preload histories and threshold defaults are illustrative assumptions, based on previous experience.',
             'A settled hold does not clear a deeper planned capacity drop or establish installation acceptance.',
+            'Weak-pocket strengths, survey distance, reactions and settlement rate are synthetic assumptions.',
+            'Weak-pocket duration is an assumed-rate indication for planning, without dynamic analysis.',
         ],
     }
     return result

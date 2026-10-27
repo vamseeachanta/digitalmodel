@@ -130,6 +130,20 @@ def test_worked_example_runs_offline_and_keeps_environment_unqualified():
         assert history['punch_through']  # A settled hold does not clear the deeper drop.
         assert all('planned_capacity_drop_below_tip' in step['punch_through_reasons']
                    for step in history['steps'])
+    pocket = result['weak_pocket_sensitivity']
+    assert pocket['qualification'] == 'synthetic_cohesive_reference_only'
+    assert pocket['basis'] == 'assumed, based on previous experience'
+    assert pocket['result']['status'] == 'resolved'
+    assert pocket['result']['first_flag_factor'] == 0.6
+    assert pocket['result']['pocket']['nearest_survey_distance_m'] == 75
+    assert pocket['result']['pocket']['strength_factors'] == (1, 0.9, 0.8, 0.7, 0.6, 0.5)
+    flagged = pocket['result']['cases'][4]
+    assert flagged['punch_through_flag']
+    assert [r['load_kn'] for r in flagged['reactions']] == [45000, 50000]
+    assert [r['drop']['jump_m'] for r in flagged['reactions']] == pytest.approx(
+        [2.7870662461, 4.4300736067])
+    assert all(r['drop']['model'] == 'assumed_constant_settlement_rate'
+               for r in flagged['reactions'])
 
 
 def test_gumbel_moments_and_return_quantile_independently():
