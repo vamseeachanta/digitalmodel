@@ -2,9 +2,11 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Explicit design fatigue factor selection and calculated life requirements.
 
-The defaults 1, 2, 3 and 10 are common practice values, not verified code
-requirements. The user must confirm the category and factor against the
-governing code before use. No standard table is reproduced here.
+The common practice defaults 1, 2, 3 and 10 are not verified code requirements.
+They are reference values only: no factor is returned by default. The user must
+explicitly configure and confirm the category and factor against the governing
+code, with a resolvable Citation and applicability recorded in Citation.note.
+No standard table is reproduced here.
 
 Accessible categories assume access for both inspection and repair during
 service. Use NOT_ACCESSIBLE when either is unavailable, for example at a
@@ -12,10 +14,14 @@ splash zone or seabed location without practical access. Where failure has
 substantial consequences, select SUBSTANTIAL_CONSEQUENCE regardless of access.
 Location alone does not establish inspectability or repairability.
 
-For example, a 25-year service life with NOT_ACCESSIBLE's default factor 3
-requires 75 years of calculated fatigue life::
+For example, if the user has confirmed factor 3 for NOT_ACCESSIBLE against the
+governing code, a 25-year service life requires 75 years of calculated fatigue
+life. With ``confirmed_citation`` identifying that basis and its applicability::
 
-    factor = select_design_fatigue_factor(DFFCategory.NOT_ACCESSIBLE)
+    from digitalmodel.citations import CitedValue
+
+    factors = {DFFCategory.NOT_ACCESSIBLE: CitedValue(3.0, confirmed_citation)}
+    factor = select_design_fatigue_factor(DFFCategory.NOT_ACCESSIBLE, factors=factors)
     target_years = required_calculated_life(25.0, factor)
 
 Pass target_years to damage.design_life_check as target_years. Apply the factor
@@ -26,7 +32,9 @@ import math
 from collections.abc import Mapping
 from enum import Enum
 from numbers import Real
-from types import MappingProxyType
+from pathlib import Path
+
+from digitalmodel.citations import Citation, CitedValue, validate_citation
 
 
 class DFFCategory(str, Enum):
@@ -36,16 +44,6 @@ class DFFCategory(str, Enum):
     ACCESSIBLE_CRITICAL = "accessible_critical"
     NOT_ACCESSIBLE = "not_accessible"
     SUBSTANTIAL_CONSEQUENCE = "substantial_consequence"
-
-
-_DEFAULT_FACTORS: Mapping[DFFCategory, float] = MappingProxyType(
-    {
-        DFFCategory.ACCESSIBLE_NON_CRITICAL: 1.0,
-        DFFCategory.ACCESSIBLE_CRITICAL: 2.0,
-        DFFCategory.NOT_ACCESSIBLE: 3.0,
-        DFFCategory.SUBSTANTIAL_CONSEQUENCE: 10.0,
-    }
-)
 
 
 def _finite_real(value: float, name: str) -> float:
@@ -64,29 +62,46 @@ def _finite_real(value: float, name: str) -> float:
 def select_design_fatigue_factor(
     category: DFFCategory | str,
     *,
-    factors: Mapping[DFFCategory, float] | None = None,
+    factors: Mapping[DFFCategory, CitedValue] | None = None,
+    repo_root: Path | None = None,
 ) -> float:
-    """Return the selected factor, with optional per-category overrides.
+    """Return an explicitly configured factor after validating its citation.
 
     Args:
         category: Explicit access and consequence category, or its string value.
-        factors: Overrides for selected categories; omitted categories retain
-            common practice defaults. The mapping is not modified.
+        factors: User-confirmed, dimensionless factors with a Citation for each
+            configured category. Citation.note records the applicability to the
+            selected category, including inspection, repair and consequences.
+            A missing category is rejected. The mapping is not modified.
+        repo_root: Optional citation repository root; otherwise use the existing
+            citation resolver. Resolution is checked on every selection.
 
     Returns:
-        The factor for the selected category, to be confirmed by the user
-        against the governing code.
+        The user-supplied factor for the selected category. Citation resolution
+        checks source identity and revision, not the engineering interpretation;
+        the user remains responsible for confirming governing-code suitability.
 
     Raises:
-        ValueError: The category is unknown or its factor is non-finite or < 1.
+        ValueError: The category, factor, citation or applicability is missing or
+            invalid, the factor has units, or its value is non-finite or < 1.
+        CitationResolutionError: The cited page is missing or its source identity
+            or revision does not match.
     """
     selected = DFFCategory(category)
-    value = _DEFAULT_FACTORS[selected]
-    if factors is not None:
-        value = factors.get(selected, value)
-    factor = _finite_real(value, "design fatigue factor")
+    if factors is None or selected not in factors:
+        raise ValueError("an explicit design fatigue factor is required for the category")
+    value = factors[selected]
+    if not isinstance(value, CitedValue) or not isinstance(value.citation, Citation):
+        raise ValueError("design fatigue factor requires a CitedValue with a citation")
+    note = value.citation.note
+    if not isinstance(note, str) or not note.strip():
+        raise ValueError("design fatigue factor citation requires an applicability note")
+    if value.units not in ("", "1"):
+        raise ValueError("design fatigue factor must be dimensionless")
+    factor = _finite_real(value.value, "design fatigue factor")
     if factor < 1.0:
         raise ValueError("design fatigue factor must be >= 1")
+    validate_citation(value.citation, repo_root=repo_root)
     return factor
 
 
