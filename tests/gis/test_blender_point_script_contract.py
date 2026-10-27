@@ -14,7 +14,9 @@ inspection never execute the script or import the Blender interface.
 from __future__ import annotations
 
 import ast
+import os
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 
@@ -118,23 +120,39 @@ def test_blender_point_script_retains_input_order(synthetic_points):
     assert _literal_assignment(ast.parse(first), "points") == expected_order
 
 
+@pytest.mark.parametrize(
+    "line_separator", (None, "\n", "\r\n"), ids=("native", "lf", "crlf"),
+)
 def test_blender_point_script_writes_only_explicit_destination(
-    synthetic_points, tmp_path, monkeypatch,
+    synthetic_points, tmp_path, monkeypatch, line_separator,
 ):
     """Write exact UTF-8 text only beneath the explicitly supplied destination."""
     points, expected = synthetic_points
     working_directory = tmp_path / "working"
     working_directory.mkdir()
     sentinel = working_directory / "keep.txt"
-    sentinel.write_text("unchanged\n", encoding="utf-8")
+    sentinel.write_text("unchanged\n", encoding="utf-8", newline="\n")
     monkeypatch.chdir(working_directory)
     script = BlenderScriptGenerator.generate_point_cloud_script(points)
     destination = tmp_path / "selected" / "nested" / "points.py"
 
-    result = BlenderScriptGenerator.save_script(script, destination)
+    native_write_text = Path.write_text
+
+    def write_with_platform_newlines(path, text, *, encoding, newline=None):
+        if newline is None:
+            text = text.replace("\n", line_separator)
+        return native_write_text(path, text, encoding=encoding, newline="\n")
+
+    # Retain native writing and exercise both conventions through real files.
+    with monkeypatch.context() as platform:
+        if line_separator is not None:
+            platform.setattr(os, "linesep", line_separator)
+            platform.setattr(Path, "write_text", write_with_platform_newlines)
+        result = BlenderScriptGenerator.save_script(script, destination)
+        expected_bytes = script.replace("\n", os.linesep).encode("utf-8")
 
     assert result == destination
-    assert destination.read_bytes() == script.encode("utf-8")
+    assert destination.read_bytes() == expected_bytes
     assert _literal_assignment(ast.parse(destination.read_text(encoding="utf-8")),
                                "points") == expected
     assert sentinel.read_text(encoding="utf-8") == "unchanged\n"
