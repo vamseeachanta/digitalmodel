@@ -1,7 +1,15 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Synthetic signed-radius histories through the native fatigue modules."""
+"""Synthetic signed-radius histories through the native fatigue modules.
+
+The independent cases replace only curve lookup with a synthetic cubic law.
+Their written hand calculations supply stress, cycle, damage, life and exposure
+expectations while the native conversion, rainflow and Miner pipeline executes.
+The connector design tests provide companion integration coverage. Synthetic
+inputs test arithmetic and integration; they do not qualify catalogue curves,
+connector geometry, flexible-pipe layers or engineering design acceptance.
+"""
 
 import math
 
