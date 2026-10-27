@@ -26474,7 +26474,7 @@ families:
   - search: constants_or_keys
     pattern: real_part|imag_part|sv_spectrum
   inventory_scope:
-    revision: 4f47b82fffb6f8bd136ed2d930e7e601933034ac
+    revision: 6bce35df678258e116260895c4d230d9fabf661d
     source_paths:
     - src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
     - src/digitalmodel/orcawave/drift_forces.py
@@ -26905,7 +26905,7 @@ families:
   - search: constants_or_keys
     pattern: su_kpa|phi_deg|effective_stress|n1_60cs
   inventory_scope:
-    revision: 4f47b82fffb6f8bd136ed2d930e7e601933034ac
+    revision: 6bce35df678258e116260895c4d230d9fabf661d
     source_paths:
     - src/digitalmodel/geotechnical/anchors.py
     - src/digitalmodel/geotechnical/cfg_workflows.py
@@ -27144,7 +27144,7 @@ families:
   - search: constants_or_keys
     pattern: shields_parameter|scour_depth_m|critical_shear|burial_depth_m
   inventory_scope:
-    revision: 4f47b82fffb6f8bd136ed2d930e7e601933034ac
+    revision: 6bce35df678258e116260895c4d230d9fabf661d
     source_paths:
     - src/digitalmodel/geotechnical/cfg_workflows.py
     - src/digitalmodel/geotechnical/scour.py

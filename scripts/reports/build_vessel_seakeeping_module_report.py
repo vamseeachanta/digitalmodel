@@ -25,9 +25,7 @@ CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
            {"revision": "B", "date": "2026-10-24", "change":
             "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."},
            {"revision": "C", "date": "2026-10-26", "change":
-            "Provenance now records the dedicated rebuild test and independent calculation fixture instead of unrelated workflow assertions; a manifest binds the delivered files to their exact bytes."},
-           {"revision": "D", "date": "2026-10-27", "change":
-            "Provenance regression coverage now exercises POSIX and Windows paths; dependent evidence digests are refreshed without changing numerical inputs or results."}]
+            "Provenance now records the dedicated rebuild test and independent calculation fixture instead of unrelated workflow assertions; a manifest binds the delivered files to their exact bytes."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
