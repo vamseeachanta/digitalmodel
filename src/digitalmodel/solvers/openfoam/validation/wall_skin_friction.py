@@ -5,6 +5,11 @@
 The normalization is Cf = tau / q with q = rho U² / 2. The factor of one half
 is part of the definition of dynamic pressure, not an empirical constant.
 This helper performs no solver calls, turbulence modelling or reference fit.
+
+Source: NASA, CFPOST User's Guide, Wind-US 3.0 documentation, Appendix C,
+"Equations Used by CFPOST", "Variable Derivations" entries "q" and "Cf":
+https://www.grc.nasa.gov/www/winddocs/windus3.0/cfpost/appc.html
+The component definitions apply to the signed streamwise shear used here.
 """
 
 from __future__ import annotations
@@ -45,7 +50,8 @@ def skin_friction_profile(
     Raises:
         ValueError: If profiles or the mask have invalid shape, samples are
             nonfinite, references are not positive finite scalars, or dynamic
-            pressure or coefficients cannot be represented as finite floats.
+            pressure or coefficients cannot be represented as finite floats,
+            or a coefficient from nonzero shear rounds to zero.
 
     Example:
         Synthetic hand balance: rho = 2 kg/m³, U = 4 m/s gives q = 16 Pa.
@@ -64,15 +70,25 @@ def skin_friction_profile(
 
     rho = _positive_scalar(density, "density")
     velocity = _positive_scalar(speed, "speed")
-    # Exact dynamic-pressure definition given above; no fitted coefficient.
-    dynamic_pressure = 0.5 * rho * velocity * velocity
+    # Keep intermediate products normal; apply the combined exponent once.
+    rho_mantissa, rho_exponent = math.frexp(rho)
+    speed_mantissa, speed_exponent = math.frexp(velocity)
+    try:
+        dynamic_pressure = math.ldexp(
+            rho_mantissa * speed_mantissa * speed_mantissa,
+            rho_exponent + 2 * speed_exponent - 1,
+        )
+    except OverflowError as exc:
+        raise ValueError("dynamic pressure must be finite and positive") from exc
     if not math.isfinite(dynamic_pressure) or dynamic_pressure <= 0.0:
         raise ValueError("dynamic pressure must be finite and positive")
 
-    with np.errstate(over="ignore", invalid="ignore"):
+    with np.errstate(over="ignore", under="ignore", invalid="ignore"):
         cf = shear / dynamic_pressure
-    if not np.isfinite(cf).all():
-        raise ValueError("skin-friction coefficients must be finite")
+    if not np.isfinite(cf).all() or np.any((shear != 0.0) & (cf == 0.0)):
+        raise ValueError(
+            "skin-friction coefficients must be finite and nonzero for nonzero shear"
+        )
 
     if developed_mask is None:
         return coordinates.copy(), cf
