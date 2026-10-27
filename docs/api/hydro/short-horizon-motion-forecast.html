@@ -76,6 +76,11 @@
   .countdown .cap{color:var(--muted)}
   .lead-explain{font-size:13px; color:var(--muted); align-self:center; max-width:34ch}
   .lead-explain b{color:var(--ink); font-weight:640}
+  @media (max-width:560px){
+    .status{grid-template-columns:1fr; gap:8px}
+    .countdown{text-align:left}
+    .lead-explain{max-width:none}
+  }
 
   .panel{padding:8px 14px 6px}
   .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:3px}
@@ -455,10 +460,14 @@ function sizePanels(){
   const curTrace=traces.reduce((s,c)=>s+c.getBoundingClientRect().height,0);
   const tp=document.querySelector(".transport");
   if(!curTrace||!tp) return;
-  // everything above + between + below the three traces (hero, status, heads, strip, transport)
-  const nonTrace=tp.getBoundingClientRect().bottom - curTrace;
-  let avail=window.innerHeight - nonTrace - 10;           // 10px breathing room
-  avail=Math.max(150, Math.min(avail, 560));              // total height shared by the 3 trace canvases
+  // Stacked controls scroll above the traces; preserve a readable trace height.
+  let avail=420;
+  if(!window.matchMedia('(max-width: 860px)').matches){
+    // everything above + between + below the three traces (hero, status, heads, strip, transport)
+    const nonTrace=tp.getBoundingClientRect().bottom - curTrace;
+    avail=window.innerHeight - nonTrace - 10;             // 10px breathing room
+    avail=Math.max(150, Math.min(avail, 560));            // total height shared by the 3 trace canvases
+  }
   const wave=Math.round(avail*0.30), motion=Math.round(avail*0.40), gov=avail-wave-motion;
   el("cvWave").setAttribute("height", wave);
   el("cvMotion").setAttribute("height", motion);
