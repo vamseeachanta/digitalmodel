@@ -277,7 +277,7 @@ class VerticalRiser:
         quantities_si["EI"] = quantities_imperial["EI"] * 6.894745 * (0.0254**4)
         quantities_si["EA"] = quantities_imperial["EA"] * 6.894745 * (0.0254**2)
         quantities_si["GJ"] = quantities_imperial["GJ"] * 6.894745 * (0.0254**4)
-        quantities_si["E"] = quantities_imperial["E"] ** 6.894745
+        quantities_si["E"] = quantities_imperial["E"] * 6.894745
         quantities_si["SMYS"] = quantities_imperial["SMYS"] * 6.894745
         quantities_si["SMUS"] = quantities_imperial["SMUS"] * 6.894745
         quantities_si["SMUS"] = quantities_imperial["SMUS"] * 6.894745
