@@ -73,7 +73,7 @@ def test_pinned_beam_frequency_from_energy(synthetic_tube, mode):
     """
     assert synthetic_tube.cross_sectional_area == pytest.approx(pi / 625, rel=REL_TOL)
     assert synthetic_tube.second_moment_of_area == pytest.approx(
-        17 * pi / 12_500_000, rel=REL_TOL,
+        17 * pi / 12_500_000, rel=REL_TOL, abs=0,
     )
     assert synthetic_tube.mass_per_length == pytest.approx(8 * pi, rel=REL_TOL)
 
