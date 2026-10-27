@@ -64,7 +64,9 @@ def test_report_pack_renders_example(tmp_path):
     markdown = (tmp_path / "patch_test_report.md").read_text()
     assert "Synthetic MBES patch-test analysis" in html
     assert "NOT_EVALUATED" in html
-    assert "WITHIN_SCREEN" in html
+    assert "WITHIN_SCREEN" not in html
+    assert "450.7" not in html
+    assert "eligible citation evidence is unavailable" in html
     assert "0.08" in html
     assert "1.5" in html
     assert "Revision history" in markdown
@@ -77,6 +79,15 @@ def test_report_pack_renders_example(tmp_path):
     manifest = json.loads((tmp_path / "report-layer-manifest.json").read_text())
     assert manifest["privacy_classification"] == "public-synthetic"
     assert manifest["compute_environment"] == "not-recorded"
+    sidecar = json.loads((tmp_path / "patch_test_citations.json").read_text())
+    assert sidecar == {"citations": []}
+    import csv
+
+    with (tmp_path / "overlap.csv").open() as stream:
+        rows = list(csv.DictReader(stream))
+    assert rows[0]["Screen"] == "NOT_EVALUATED"
+    assert rows[0]["Min TVU ceiling mm"] == "NOT_EVALUATED"
+    assert rows[0]["Worst utilisation percent"] == "NOT_EVALUATED"
 
 
 def test_checked_in_report_reproduces(tmp_path):

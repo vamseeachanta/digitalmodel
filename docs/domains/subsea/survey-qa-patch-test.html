@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>S0000-RPT-001-00 Rev 00 - Synthetic MBES patch-test analysis</title>
-<meta name="description" content="Synthetic MBES patch-test analysis (S0000-RPT-001-00 Rev 00) - Synthetic example / Not applicable">
+<title>S0000-RPT-001-01 Rev 01 - Synthetic MBES patch-test analysis</title>
+<meta name="description" content="Synthetic MBES patch-test analysis (S0000-RPT-001-01 Rev 01) - Synthetic example / Not applicable">
 <style>
   /* ============================ TOKENS ============================ */
   :root{
@@ -410,7 +410,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 <header class="masthead" id="report-header">
   <div class="wrap">
     <span class="brand">digitalmodel</span>
-    <span class="docno num"><b>S0000-RPT-001-00</b> &middot; Rev 00</span>
+    <span class="docno num"><b>S0000-RPT-001-01</b> &middot; Rev 01</span>
     <div class="mh-legend chips" id="header-standards">
     </div>
   </div>
@@ -424,11 +424,11 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="kv">
         <div class="cap">Document</div>
         <table>
-          <tr><td>Document number</td><td>S0000-RPT-001-00</td></tr>
-          <tr><td>Revision</td><td>00</td></tr>
+          <tr><td>Document number</td><td>S0000-RPT-001-01</td></tr>
+          <tr><td>Revision</td><td>01</td></tr>
           <tr><td>Project</td><td>Synthetic example</td></tr>
           <tr><td>Client</td><td>Not applicable</td></tr>
-          <tr><td>Date</td><td>2026-10-22</td></tr>
+          <tr><td>Date</td><td>2026-10-27</td></tr>
         </table>
       </div>
       <div class="kv">
@@ -447,6 +447,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
         <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
         <tbody>
           <tr><td>00</td><td>2026-10-22</td><td>Initial synthetic method and worked calculations</td><td></td><td></td><td></td></tr>
+          <tr><td>01</td><td>2026-10-27</td><td>Withheld standards comparison without eligible citation evidence</td><td></td><td></td><td></td></tr>
         </tbody>
       </table>
     </div>
@@ -474,7 +475,7 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
       <div class="l1head"><span class="secnum"></span><h2>Summary</h2></div>
 
     <div class="prose">
-<p>A synthetic multibeam patch-test campaign recovers the injected roll 0.5 deg, pitch 1.0 deg, yaw 1.5 deg and latency 0.08 s. All estimates satisfy the chosen regression tolerances of 0.1 deg and 0.01 s. The corrected matched overlap is WITHIN_SCREEN against an explicitly supplied S-44 TVU ceiling. This is a synthetic consistency analysis; no survey-order certification is inferred.</p>
+<p>A synthetic multibeam patch-test campaign recovers the injected roll 0.5 deg, pitch 1.0 deg, yaw 1.5 deg and latency 0.08 s. All estimates satisfy the chosen regression tolerances of 0.1 deg and 0.01 s. The corrected matched overlap is reported as depth differences and coverage counts. The standards comparison is NOT_EVALUATED because eligible citation evidence is unavailable. No TVU ceiling or utilisation is calculated; no survey-order certification is inferred.</p>
     </div>
     </section>
     <section id="section-2">
@@ -482,15 +483,16 @@ figure img,figure svg{max-width:100%;height:auto;display:block}
 
     <div class="prose">
 <pre><code>Revision | Date       | What changed and why
-00       | 2026-10-22 | Added synthetic geometry and hand calculations to demonstrate patch testing.</code></pre>
+00       | 2026-10-22 | Added synthetic geometry and hand calculations to demonstrate patch testing.
+01       | 2026-10-27 | Withheld the standards comparison because eligible citation evidence is unavailable.</code></pre>
     </div>
     </section>
     <section id="section-3">
       <div class="l1head"><span class="secnum"></span><h2>Scope and data basis</h2></div>
 
     <div class="prose">
-<p>Eight synthetic lines share constant injected biases. Separate flat, sloping and point-target patches isolate each parameter. All values below are chosen inputs, except the identified S-44 table coefficients. No real survey data are used.</p>
-<ul><li>Depth datum 50 m; along-track slope 0.2 (depth increases with X).</li><li>Point target at X=0, Y=0, shoaling 5 m on the sloping patch.</li><li>Beam offsets -30 to +30 m at 10 m spacing; yaw tracks Y=-30/+30 m.</li><li>Speeds 2/4 m/s; pings at 1 s intervals for 40 s; reference starts X=-40/+40 m.</li><li>Sensor lever arm (0,0,0) m; constant sound velocity 1500 m/s at depths 0/100 m.</li><li>Exactly paired timestamps; supplied synchronization tolerance 0 s.</li><li>Independent Gaussian depth noise, standard deviation 0.002 m; seed 7 plus line index.</li><li>Chosen overlap XY matching tolerance 0.1 m; matched subset only.</li><li>Special Order coefficients a=0.25 m and b=0.0075, read from S-44 6.1.0 Table 1.</li></ul>
+<p>Eight synthetic lines share constant injected biases. Separate flat, sloping and point-target patches isolate each parameter. All values below are chosen inputs. No real survey data or standard-derived coefficients are used.</p>
+<ul><li>Depth datum 50 m; along-track slope 0.2 (depth increases with X).</li><li>Point target at X=0, Y=0, shoaling 5 m on the sloping patch.</li><li>Beam offsets -30 to +30 m at 10 m spacing; yaw tracks Y=-30/+30 m.</li><li>Speeds 2/4 m/s; pings at 1 s intervals for 40 s; reference starts X=-40/+40 m.</li><li>Sensor lever arm (0,0,0) m; constant sound velocity 1500 m/s at depths 0/100 m.</li><li>Exactly paired timestamps; supplied synchronization tolerance 0 s.</li><li>Independent Gaussian depth noise, standard deviation 0.002 m; seed 7 plus line index.</li><li>Chosen overlap XY matching tolerance 0.1 m; matched subset only.</li></ul>
     </div>
     </section>
     <section id="section-4">
@@ -517,7 +519,7 @@ Cross section: starboard b&gt;0; depth D&gt;0 below sensor.</code></pre>
 
     <div class="prose">
 <p>Standard-order coordinate RMS is 2.1 mm; reverse-order RMS is 31.3 mm on the first roll line. These truth-based diagnostics are used only for the synthetic example. Estimation uses measured returns, never truth coordinates. Tables use one decimal place.</p>
-<p>The overlap compares absolute paired depth differences against sqrt(a^2+(b*d)^2), with d the mean pair depth. This individual-sounding ceiling is used as a conservative consistency screen, not an IHO overlap rule. When table inputs are omitted, the same overlap is NOT_EVALUATED.</p>
+<p>The corrected overlap has 287 matched pairs, 0/0 unmatched points and maximum depth disagreement 8.5 mm. The S-44 standards comparison is NOT_EVALUATED. Reference URLs and table strings cannot authorize the calculation; eligible citation evidence is unavailable.</p>
     </div>
     <div class="tbl" id="table-1">
       <div class="cap">Table 1. Bias recovery</div>
@@ -544,7 +546,7 @@ Cross section: starboard b&gt;0; depth D&gt;0 below sensor.</code></pre>
             <tr><th>Screen</th><th>Matched</th><th>Unmatched first</th><th>Unmatched second</th><th>Max difference mm</th><th>Min TVU ceiling mm</th><th>Worst utilisation percent</th></tr>
           </thead>
           <tbody>
-            <tr><td>WITHIN_SCREEN</td><td>287</td><td>0</td><td>0</td><td>8.5</td><td>450.7</td><td>1.9</td></tr>
+            <tr><td>NOT_EVALUATED</td><td>287</td><td>0</td><td>0</td><td>8.5</td><td>NOT_EVALUATED</td><td>NOT_EVALUATED</td></tr>
           </tbody>
         </table>
       </div>
@@ -555,18 +557,18 @@ Cross section: starboard b&gt;0; depth D&gt;0 below sensor.</code></pre>
       <div class="l1head"><span class="secnum"></span><h2>Sources and traceability</h2></div>
 
     <div class="prose">
-<ul><li>NOAA Field Procedures Manual (2020), section 1.5.6.2, pp. 26-27: line selection and pitch, roll, heading sequence. https://nauticalcharts.noaa.gov/publications/docs/standards-and-requirements/fpm/field_procedures_manual_2020.pdf</li><li>IHO S-44, edition 6.1.0 (October 2022), section 3.2.3 and Table 1, p. 18: TVU equation and Special Order coefficients. https://iho.int/uploads/user/pubs/standards/s-44/S-44_Edition_6.1.0.pdf</li></ul>
+<ul><li>NOAA Field Procedures Manual (2020), section 1.5.6.2, pp. 26-27: line selection and pitch, roll, heading sequence. https://nauticalcharts.noaa.gov/publications/docs/standards-and-requirements/fpm/field_procedures_manual_2020.pdf</li><li>IHO S-44, edition 6.1.0 (October 2022), section 3.2.3 and Table 1, p. 18: bibliographic context only; no coefficients are used. https://iho.int/uploads/user/pubs/standards/s-44/S-44_Edition_6.1.0.pdf</li></ul>
 <p>OpenStax, Precalculus 2e (2021), section 5.4 supplies the trigonometric ratios used in the geometry derivations: https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry</p>
 <p>OpenStax, Introductory Statistics 2e (2023), section 12.3 supplies the least-squares criterion; the normal-equation rearrangement is derived here: https://openstax.org/books/introductory-statistics-2e/pages/12-3-the-regression-equation</p>
-<p>All four sources were opened from their publishers on 2026-10-22. The attempted 6.2.0 URL returned HTML, so it supplies no coefficients. The NOAA reference treats timing as a separate gross diagnostic; latency-first is the chosen synthetic sequence here. Public URLs are retained in the provenance manifest. Wiki-based citation records are not fabricated; the citation sidecar is empty.</p>
+<p>All four sources were opened from their publishers on 2026-10-22. The attempted 6.2.0 URL returned HTML, so it supplies no coefficients. The NOAA reference treats timing as a separate gross diagnostic; latency-first is the chosen synthetic sequence here. Public URLs are retained in the provenance manifest. Wiki-based citation records are not fabricated; the citation sidecar is empty. The standards comparison remains NOT_EVALUATED until an eligible Citation record can be resolved and its source, edition and section validated before calculation.</p>
     </div>
     </section>
     <section id="section-7">
       <div class="l1head"><span class="secnum"></span><h2>Conclusions and limits</h2></div>
 
     <div class="prose">
-<p>The synthetic recovery and consistency screen satisfy the stated test criteria. Use the module to exercise sign conventions and parameter coupling before considering measured-data work. Real calibration requires qualified sensor geometry, sound-velocity treatment, timing, target association and an uncertainty budget.</p>
-<p>Only two parallel headings, constant velocity, known planar suitability, prescribed beam footprints and one explicitly associated point are supported. The SVP is validated metadata; no acoustic travel times are generated. No raw survey importer, refraction, motion history, datum reduction or full S-44 order assessment is included. Estimates have no confidence intervals. A user supplies the applicable order, edition, a, b and table reference; missing evidence remains NOT_EVALUATED. The nearest-point overlap matcher is intended for small synthetic datasets.</p>
+<p>The synthetic bias recovery satisfies the stated test criteria. The standards comparison remains NOT_EVALUATED because eligible citation evidence is unavailable. Use the module to exercise sign conventions and parameter coupling before considering measured-data work. Real calibration requires qualified sensor geometry, sound-velocity treatment, timing, target association and an uncertainty budget.</p>
+<p>Only two parallel headings, constant velocity, known planar suitability, prescribed beam footprints and one explicitly associated point are supported. The SVP is validated metadata; no acoustic travel times are generated. No raw survey importer, refraction, motion history, datum reduction or full S-44 order assessment is included. Estimates have no confidence intervals. Supplying an order, edition, coefficients and table reference alone does not authorize standards evaluation. The nearest-point overlap matcher is intended for small synthetic datasets.</p>
     </div>
     </section>
     <section id="references-cited">
@@ -586,7 +588,7 @@ Cross section: starboard b&gt;0; depth D&gt;0 below sensor.</code></pre>
             <tr><td>source_artifact</td><td>https://openstax.org/books/precalculus-2e/pages/5-4-right-triangle-trigonometry</td><td></td><td></td><td>trigonometry</td></tr>
             <tr><td>source_artifact</td><td>https://openstax.org/books/introductory-statistics-2e/pages/12-3-the-regression-equation</td><td></td><td></td><td>least_squares</td></tr>
             <tr><td>csv</td><td>estimates.csv</td><td>sha256:5b12f776c311c3b3632a1b2a39610a2fb174f64df2e067c08d84e33583457904</td><td></td><td>Bias recovery</td></tr>
-            <tr><td>csv</td><td>overlap.csv</td><td>sha256:f27cc28008ef702b0f962d4114f608af5cd6eb4744d227a99e99abebc4cdb33c</td><td></td><td>Corrected overlap consistency</td></tr>
+            <tr><td>csv</td><td>overlap.csv</td><td>sha256:f8420bb0578c04c07b6321ef8aaf6b1d930def0f6d8b329935d72c79dfb3a1b2</td><td></td><td>Corrected overlap consistency</td></tr>
           </tbody>
         </table>
       </div>
@@ -624,7 +626,7 @@ Cross section: starboard b&gt;0; depth D&gt;0 below sensor.</code></pre>
       <div>
         <h3>Document</h3>
         <ul>
-          <li><span class="k">Number</span> S0000-RPT-001-00 &middot; Rev 00</li>
+          <li><span class="k">Number</span> S0000-RPT-001-01 &middot; Rev 01</li>
           <li><span class="k">Project</span> Synthetic example</li>
           <li><span class="k">Client</span> Not applicable</li>
         </ul>
@@ -646,7 +648,7 @@ Cross section: starboard b&gt;0; depth D&gt;0 below sensor.</code></pre>
       </div>
     </div>
     <div class="foot-bar">
-      <span>S0000-RPT-001-00 Rev 00 &middot; Synthetic MBES patch-test analysis</span>
+      <span>S0000-RPT-001-01 Rev 01 &middot; Synthetic MBES patch-test analysis</span>
       <span class="pdf" id="pdf-status">PDF: derivative of this HTML; render status in the manifest</span>
     </div>
   </div>

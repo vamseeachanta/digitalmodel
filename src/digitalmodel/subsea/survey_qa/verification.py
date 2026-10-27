@@ -3,7 +3,9 @@
 IHO S-44 edition 6.1.0 (October 2022), section 3.2.3 and Table 1:
 TVU_max(d)=sqrt(a**2+(b*d)**2). a [m], b [dimensionless] and order/edition
 are REQUIRED caller inputs transcribed from the applicable table. This module
-has no built-in order coefficients. Missing evidence yields NOT_EVALUATED.
+has no built-in order coefficients. No eligible calculation-time citation is
+available in this module. Table reference strings do not satisfy that contract;
+standards-dependent results remain NOT_EVALUATED, including with table inputs.
 
 An overlap difference is a consistency diagnostic, not an estimate of total
 vertical uncertainty at the standard's confidence level. Comparing it directly
@@ -50,7 +52,13 @@ def apply_corrections(
 
 @dataclass(frozen=True)
 class DepthUncertainty:
-    """User-selected S-44 table inputs and their evidence; no inferred defaults."""
+    """Unqualified table inputs retained for compatibility, not citation evidence.
+
+    Numeric domains and bibliographic strings can be checked, but do not
+    authorize a standards calculation. Evaluation is unavailable until an
+    eligible Citation can be resolved and its source, edition and section
+    validated at calculation time. No locator is inferred or fabricated.
+    """
 
     order: str
     edition: str
@@ -70,10 +78,16 @@ class DepthUncertainty:
             raise ValueError("at least one uncertainty coefficient must be positive")
 
     def limit_m(self, depth_m: float) -> float:
-        """S-44 6.1.0 (2022), 3.2.3: root sum of squared terms, at depth d."""
+        """Refuse a standards-derived ceiling without eligible citation evidence."""
+        from digitalmodel.citations import CitationResolutionError
+
         if finite(depth_m, "depth") <= 0:
             raise ValueError("screen depth must be positive")
-        return hypot(self.a_m, self.b * depth_m)
+        raise CitationResolutionError(
+            code_id="S-44",
+            wiki_path="",
+            reason="eligible_citation_unavailable",
+        )
 
 
 @dataclass(frozen=True)
@@ -99,14 +113,14 @@ def screen_overlap(
 ) -> OverlapResult:
     """One-to-one nearest XY matches within a REQUIRED user tolerance [m].
 
-    No interpolation or extrapolation. For each matched pair, compare absolute
-    depth difference to the TVU ceiling at its mean depth, and report the worst
-    ratio over all pairs. Counts limit the conclusion to the matched subset.
+    No interpolation or extrapolation. Return absolute depth differences and
+    coverage counts for the matched subset. TVU ceilings and ratios remain
+    unavailable: the budget's strings are not validated Citation evidence.
     This quadratic reference matcher is for small synthetic swaths only.
     """
     if finite(xy_tolerance_m, "XY tolerance") < 0:
         raise ValueError("XY tolerance must be nonnegative")
-    used, differences, limits = set(), [], []
+    used, differences = set(), []
     for x, y, z in a.xyz_m:
         candidates = [
             (hypot(x - p[0], y - p[1]), i)
@@ -123,27 +137,17 @@ def screen_overlap(
             raise ValueError("sounding depths must be positive")
         used.add(index)
         differences.append(abs(z - other[2]))
-        if budget is not None:
-            limits.append(budget.limit_m((z + other[2]) / 2))
     if not differences:
         raise ValueError("no overlap matches within supplied XY tolerance")
-    ratio = (
-        max(difference / limit for difference, limit in zip(differences, limits))
-        if limits
-        else None
-    )
-    status = (
-        "NOT_EVALUATED"
-        if ratio is None
-        else ("WITHIN_SCREEN" if ratio <= 1 else "EXCEEDS_SCREEN")
-    )
     return OverlapResult(
-        status,
+        "NOT_EVALUATED",
         len(differences),
         len(a.xyz_m) - len(used),
         len(b.xyz_m) - len(used),
         max(differences),
-        min(limits) if limits else None,
-        ratio,
-        budget.table_reference if budget else "S-44 table inputs not supplied",
+        None,
+        None,
+        "S-44 eligible citation evidence unavailable"
+        if budget is not None
+        else "S-44 table inputs and eligible citation evidence not supplied",
     )

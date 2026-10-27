@@ -2,7 +2,8 @@
 
 Public references are carried in source_artifacts, not invented wiki locators.
 The citations package's Citation schema requires an existing wiki reference;
-none is asserted here. No licensed source values are reproduced.
+none is asserted here. Without eligible citation evidence the standards screen
+is NOT_EVALUATED; no TVU coefficients, ceilings or utilisation are calculated.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from pathlib import Path
 
 from .calibration import estimate_patch
 from .example import EXAMPLE_OFFSETS, make_example
-from .verification import DepthUncertainty, apply_corrections, screen_overlap
+from .verification import apply_corrections, screen_overlap
 
 NOAA_URL = (
     "https://nauticalcharts.noaa.gov/publications/docs/standards-and-requirements/"
@@ -36,9 +37,9 @@ def write_example_report(output_dir: Path) -> dict:
     """Render md/html, CSVs and manifests at the caller's output directory.
 
     The noise amplitude, seed, matching tolerance and recovery tolerances are
-    chosen synthetic test inputs. Only S-44's two explicitly cited table values
-    are standard-derived. The example always uses the same inputs, with no date
-    or path inferred from the execution environment. PDF output is off.
+    chosen synthetic test inputs. The S-44 comparison remains NOT_EVALUATED
+    because eligible citation evidence is unavailable. The example uses fixed
+    inputs, with no date or path inferred from the environment. PDF output is off.
     """
     from digitalmodel.report_pack.workflow import router
 
@@ -47,17 +48,8 @@ def write_example_report(output_dir: Path) -> dict:
     lines = make_example(noise_std_m=0.002, seed=7)
     estimated = estimate_patch(lines)
     a, b = (apply_corrections(s, estimated) for s in lines.roll)
-    # Read from IHO S-44 edition 6.1.0 (October 2022), Table 1, Special Order.
-    # Section 3.2.3 defines TVU_max; these are EXPLICIT example inputs only.
-    budget = DepthUncertainty(
-        "Special Order",
-        "6.1.0 (2022)",
-        0.25,
-        0.0075,
-        "IHO S-44, Table 1, section 3.2.3",
-    )
-    overlap = screen_overlap(a, b, budget=budget, xy_tolerance_m=0.1)
-    missing = screen_overlap(a, b, budget=None, xy_tolerance_m=0.1)
+    # Bibliographic URLs do not authorize standards-derived calculations.
+    overlap = screen_overlap(a, b, budget=None, xy_tolerance_m=0.1)
 
     with (output_dir / "estimates.csv").open(
         "w", newline="", encoding="utf-8"
@@ -108,8 +100,8 @@ def write_example_report(output_dir: Path) -> dict:
                 overlap.unmatched_first,
                 overlap.unmatched_second,
                 _one_decimal(overlap.max_abs_difference_m * 1000),
-                _one_decimal(overlap.min_limit_m * 1000),
-                _one_decimal(overlap.max_ratio * 100),
+                "NOT_EVALUATED",
+                "NOT_EVALUATED",
             ]
         )
 
@@ -129,8 +121,9 @@ def write_example_report(output_dir: Path) -> dict:
                 "A synthetic multibeam patch-test campaign recovers the injected roll 0.5 deg, "
                 "pitch 1.0 deg, yaw 1.5 deg and latency 0.08 s. All estimates satisfy the chosen "
                 "regression tolerances of 0.1 deg and 0.01 s. The corrected matched overlap is "
-                "WITHIN_SCREEN against an explicitly supplied S-44 TVU ceiling. This is a "
-                "synthetic consistency analysis; no survey-order certification is inferred."
+                "reported as depth differences and coverage counts. The standards comparison is "
+                "NOT_EVALUATED because eligible citation evidence is unavailable. No TVU ceiling "
+                "or utilisation is calculated; no survey-order certification is inferred."
             ),
         },
         {
@@ -139,6 +132,7 @@ def write_example_report(output_dir: Path) -> dict:
                 "```text\n"
                 "Revision | Date       | What changed and why\n"
                 "00       | 2026-10-22 | Added synthetic geometry and hand calculations to demonstrate patch testing.\n"
+                "01       | 2026-10-27 | Withheld the standards comparison because eligible citation evidence is unavailable.\n"
                 "```"
             ),
         },
@@ -146,8 +140,8 @@ def write_example_report(output_dir: Path) -> dict:
             "title": "Scope and data basis",
             "content": (
                 "Eight synthetic lines share constant injected biases. Separate flat, sloping and "
-                "point-target patches isolate each parameter. All values below are chosen inputs, "
-                "except the identified S-44 table coefficients. No real survey data are used.\n\n"
+                "point-target patches isolate each parameter. All values below are chosen inputs. "
+                "No real survey data or standard-derived coefficients are used.\n\n"
                 "- Depth datum 50 m; along-track slope 0.2 (depth increases with X).\n"
                 "- Point target at X=0, Y=0, shoaling 5 m on the sloping patch.\n"
                 "- Beam offsets -30 to +30 m at 10 m spacing; yaw tracks Y=-30/+30 m.\n"
@@ -155,8 +149,7 @@ def write_example_report(output_dir: Path) -> dict:
                 "- Sensor lever arm (0,0,0) m; constant sound velocity 1500 m/s at depths 0/100 m.\n"
                 "- Exactly paired timestamps; supplied synchronization tolerance 0 s.\n"
                 "- Independent Gaussian depth noise, standard deviation 0.002 m; seed 7 plus line index.\n"
-                "- Chosen overlap XY matching tolerance 0.1 m; matched subset only.\n"
-                "- Special Order coefficients a=0.25 m and b=0.0075, read from S-44 6.1.0 Table 1."
+                "- Chosen overlap XY matching tolerance 0.1 m; matched subset only."
             ),
         },
         {
@@ -202,10 +195,11 @@ def write_example_report(output_dir: Path) -> dict:
                 f"reverse-order RMS is {_one_decimal(reversed_rms * 1000)} mm on the first roll line. "
                 "These truth-based diagnostics are used only for the synthetic example. Estimation "
                 "uses measured returns, never truth coordinates. Tables use one decimal place.\n\n"
-                "The overlap compares absolute paired depth differences against "
-                "sqrt(a^2+(b*d)^2), with d the mean pair depth. This individual-sounding ceiling "
-                "is used as a conservative consistency screen, not an IHO overlap rule. "
-                f"When table inputs are omitted, the same overlap is {missing.status}."
+                f"The corrected overlap has {overlap.matched_count} matched pairs, "
+                f"{overlap.unmatched_first}/{overlap.unmatched_second} unmatched points and "
+                f"maximum depth disagreement {_one_decimal(overlap.max_abs_difference_m * 1000)} mm. "
+                "The S-44 standards comparison is NOT_EVALUATED. Reference URLs and table "
+                "strings cannot authorize the calculation; eligible citation evidence is unavailable."
             ),
         },
         {
@@ -214,7 +208,7 @@ def write_example_report(output_dir: Path) -> dict:
                 "- NOAA Field Procedures Manual (2020), section 1.5.6.2, pp. 26-27: "
                 "line selection and pitch, roll, heading sequence. " + NOAA_URL + "\n"
                 "- IHO S-44, edition 6.1.0 (October 2022), section 3.2.3 and Table 1, "
-                "p. 18: TVU equation and Special Order coefficients. "
+                "p. 18: bibliographic context only; no coefficients are used. "
                 + IHO_URL
                 + "\n\n"
                 "OpenStax, Precalculus 2e (2021), section 5.4 supplies the trigonometric "
@@ -227,13 +221,16 @@ def write_example_report(output_dir: Path) -> dict:
                 "6.2.0 URL returned HTML, so it supplies no coefficients. The NOAA reference "
                 "treats timing as a separate gross diagnostic; latency-first is the chosen synthetic "
                 "sequence here. Public URLs are retained in the provenance manifest. Wiki-based "
-                "citation records are not fabricated; the citation sidecar is empty."
+                "citation records are not fabricated; the citation sidecar is empty. The "
+                "standards comparison remains NOT_EVALUATED until an eligible Citation record "
+                "can be resolved and its source, edition and section validated before calculation."
             ),
         },
         {
             "title": "Conclusions and limits",
             "content": (
-                "The synthetic recovery and consistency screen satisfy the stated test criteria. "
+                "The synthetic bias recovery satisfies the stated test criteria. The standards "
+                "comparison remains NOT_EVALUATED because eligible citation evidence is unavailable. "
                 "Use the module to exercise sign conventions and parameter coupling before "
                 "considering measured-data work. Real calibration requires qualified sensor geometry, "
                 "sound-velocity treatment, timing, target association and an uncertainty budget.\n\n"
@@ -241,8 +238,8 @@ def write_example_report(output_dir: Path) -> dict:
                 "beam footprints and one explicitly associated point are supported. The SVP is "
                 "validated metadata; no acoustic travel times are generated. No raw survey importer, "
                 "refraction, motion history, datum reduction or full S-44 order assessment is included. "
-                "Estimates have no confidence intervals. A user supplies the applicable order, edition, "
-                "a, b and table reference; missing evidence remains NOT_EVALUATED. "
+                "Estimates have no confidence intervals. Supplying an order, edition, coefficients "
+                "and table reference alone does not authorize standards evaluation. "
                 "The nearest-point overlap matcher is intended for small synthetic datasets."
             ),
         },
@@ -252,18 +249,23 @@ def write_example_report(output_dir: Path) -> dict:
         "_config_file_path": str(output_dir / "patch_test.yml"),
         "report_pack": {
             "document": {
-                "number": "S0000-RPT-001-00",
-                "revision": "00",
+                "number": "S0000-RPT-001-01",
+                "revision": "01",
                 "title": "Synthetic MBES patch-test analysis",
                 "project": "Synthetic example",
                 "client": "Not applicable",
-                "date": "2026-10-22",
+                "date": "2026-10-27",
                 "revision_history": [
                     {
                         "rev": "00",
                         "date": "2026-10-22",
                         "description": "Initial synthetic method and worked calculations",
-                    }
+                    },
+                    {
+                        "rev": "01",
+                        "date": "2026-10-27",
+                        "description": "Withheld standards comparison without eligible citation evidence",
+                    },
                 ],
             },
             "sections": sections,

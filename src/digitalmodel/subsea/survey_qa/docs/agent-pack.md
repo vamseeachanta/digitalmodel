@@ -20,7 +20,7 @@ standard library. Reporting also needs the existing house report dependencies.
 | `PatchTestLines` | Four pairs: `latency`, `pitch`, `roll`, `yaw` | Explicit test geometry |
 | `estimate_patch` | `PatchTestLines`, common constant biases | `Offsets`, estimated in latency/pitch/roll/yaw order |
 | `apply_corrections` | Swath and estimated offsets | Corrected swath, default inverse order |
-| `DepthUncertainty` | Order, edition, `a_m`, dimensionless `b`, table reference | Caller-supplied TVU ceiling |
+| `DepthUncertainty` | Order, edition, `a_m`, dimensionless `b`, table reference | Unqualified table inputs; TVU calculation unavailable |
 | `screen_overlap` | Two swaths, budget or explicit `None`, XY matching tolerance m | Matched/unmatched counts, maximum depth difference m, minimum ceiling m, worst ratio, source, status |
 
 Ground X follows the forward line, Y is starboard, Z is down. Reciprocal lines
@@ -52,7 +52,9 @@ module's declared right-handed active rotations, not an instrument convention.
 - [IHO S-44, edition 6.1.0 (October 2022), §3.2.3 and Table 1, p. 18](https://iho.int/uploads/user/pubs/standards/s-44/S-44_Edition_6.1.0.pdf):
   `TVU_max(d) = sqrt(a² + (b d)²)`. The user supplies the applicable order,
   edition, coefficients and evidence. There is no built-in order table.
-  The report explicitly supplies Special Order values read from Table 1.
+  The report does not use standard-derived coefficients. Eligible calculation-time
+  Citation evidence is unavailable, so the standards comparison is NOT_EVALUATED.
+  Public URLs and table-reference strings do not authorize calculation.
 
 All four sources were opened from their publishers on 2026-10-22. The attempted
 6.2.0 URL returned HTML and supplies no numerical basis. Public sources are
@@ -76,12 +78,16 @@ by a peak picker. Unsupported geometry and nonfinite inputs raise `ValueError`.
 
 ## Output interpretation and limits
 
-`WITHIN_SCREEN` and `EXCEEDS_SCREEN` compare matched depth differences to an
-individual-sounding TVU ceiling. This is a consistency screen,
-not an IHO crossline rule or a full 95 percent uncertainty assessment.
-`NOT_EVALUATED` means the caller supplied no table evidence; differences and
-coverage counts remain available. No overlap is an error. Nearest-point matches
-are one-to-one, have no interpolation, and report unmatched counts. The matcher
+The standards comparison is always `NOT_EVALUATED` while eligible citation
+evidence is unavailable, even when order, edition, coefficients and a table
+reference are supplied. `DepthUncertainty.limit_m` raises
+`CitationResolutionError` rather than calculating an unqualified TVU ceiling.
+An eligible Citation must resolve and its source, edition and section must be
+validated before standards calculation can be enabled. No locator is fabricated.
+The report's citation sidecar is empty and its ceiling and utilisation cells
+read `NOT_EVALUATED`; measured differences and coverage counts remain available.
+No overlap is an error. Nearest-point matches are one-to-one, have no
+interpolation, and report unmatched counts. The matcher
 is quadratic and intended for small synthetic sets.
 
 Only two parallel headings, constant speed/biases, known planar suitability and

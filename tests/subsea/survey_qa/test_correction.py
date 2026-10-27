@@ -42,10 +42,9 @@ def test_order_must_be_a_complete_permutation(survey):
 
 
 def test_overlap_hand_difference_and_source(survey):
-    """Special Order, S-44 6.1.0 Table 1 read values: a=0.25 m, b=0.0075.
-    At mean depth 50 m, sqrt(0.25^2+(0.0075*50)^2)=sqrt(0.203125) m.
-    Two planes at 49.9 and 50.1 differ by 0.2 m, below that screen.
-    This comparison is not a complete 95 percent uncertainty assessment.
+    """Planes at 49.9/50.1 m differ by 0.2 m; counts need no standard.
+
+    The previous table-reference string does not authorize a TVU ceiling.
     """
     a, b = survey(), survey(direction=-1)
     a = replace(a, xyz_m=tuple((x, y, 49.9) for x, y, z in a.xyz_m))
@@ -58,16 +57,17 @@ def test_overlap_hand_difference_and_source(survey):
         "IHO S-44, Table 1, section 3.2.3",
     )
     result = screen_overlap(a, b, budget=budget, xy_tolerance_m=0)
-    assert result.status == "WITHIN_SCREEN"
+    assert result.status == "NOT_EVALUATED"
     assert result.max_abs_difference_m == pytest.approx(0.2)
-    assert result.min_limit_m == pytest.approx(sqrt(0.203125))
+    assert result.min_limit_m is None
+    assert result.max_ratio is None
     assert result.matched_count == len(a.xyz_m)
     assert result.unmatched_first == result.unmatched_second == 0
-    assert result.source == budget.table_reference
+    assert "citation evidence unavailable" in result.source
 
 
-def test_overlap_exceeds_limit(survey):
-    """Same Table 1 basis: depths 49.5/50.5 have 1 m disagreement >0.451 m."""
+def test_large_difference_does_not_authorize_screen(survey):
+    """A 1 m depth disagreement still needs citation evidence for assessment."""
     a, b = survey(), survey(direction=-1)
     a = replace(a, xyz_m=tuple((x, y, 49.5) for x, y, z in a.xyz_m))
     b = replace(b, xyz_m=tuple((x, y, 50.5) for x, y, z in b.xyz_m))
@@ -79,8 +79,10 @@ def test_overlap_exceeds_limit(survey):
         "IHO S-44, Table 1, section 3.2.3",
     )
     result = screen_overlap(a, b, budget=budget, xy_tolerance_m=0)
-    assert result.status == "EXCEEDS_SCREEN"
-    assert result.max_ratio == pytest.approx(1 / sqrt(0.203125))
+    assert result.status == "NOT_EVALUATED"
+    assert result.max_abs_difference_m == pytest.approx(1)
+    assert result.max_ratio is None
+    assert result.min_limit_m is None
 
 
 def test_missing_table_inputs_not_evaluated(survey):
@@ -107,3 +109,53 @@ def test_overlap_reports_partial_coverage(survey):
     assert result.matched_count == 21
     assert result.unmatched_first == 84
     assert result.unmatched_second == 0
+
+
+@pytest.mark.parametrize(
+    "edition,reference",
+    [
+        ("6.1.0 (2022)", "IHO S-44, Table 1, section 3.2.3"),
+        ("6.2.0", "IHO S-44, Table 1, section 3.2.3"),
+        ("6.1.0 (2022)", "A different publisher, Table 1"),
+        ("6.1.0 (2022)", "IHO S-44, section 1"),
+        ("6.1.0 (2022)", "https://iho.int/"),
+    ],
+)
+def test_reference_strings_do_not_authorize_screen(survey, edition, reference):
+    """Correct-looking, mismatched and URL strings are not citation evidence."""
+    budget = DepthUncertainty("Special Order", edition, 0.25, 0.0075, reference)
+    result = screen_overlap(
+        survey(), survey(direction=-1), budget=budget, xy_tolerance_m=0
+    )
+    assert result.status == "NOT_EVALUATED"
+    assert result.min_limit_m is None
+    assert result.max_ratio is None
+    assert result.matched_count == len(survey().xyz_m)
+    assert "citation" in result.source.lower()
+
+
+def test_direct_tvu_calculation_requires_eligible_citation():
+    """A bibliographic string must not permit bypassing the overlap guard."""
+    from digitalmodel.citations import CitationResolutionError
+
+    budget = DepthUncertainty(
+        "Special Order",
+        "6.1.0 (2022)",
+        0.25,
+        0.0075,
+        "IHO S-44, Table 1, section 3.2.3",
+    )
+    with pytest.raises(CitationResolutionError, match="eligible_citation_unavailable"):
+        budget.limit_m(50)
+
+
+def test_overlap_does_not_call_unqualified_limit(survey, monkeypatch):
+    """No numeric ceiling is calculated before citation evidence is eligible."""
+
+    def unqualified(*args):
+        pytest.fail("an unqualified TVU calculation was attempted")
+
+    monkeypatch.setattr(DepthUncertainty, "limit_m", unqualified)
+    budget = DepthUncertainty("Special Order", "6.1.0 (2022)", 0.25, 0.0075, "Table 1")
+    result = screen_overlap(survey(), survey(), budget=budget, xy_tolerance_m=0)
+    assert result.status == "NOT_EVALUATED"
