@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 
 import pytest
 
@@ -78,7 +79,8 @@ def test_duplicate_face_rejected(checker, tmp_path):
         checker.check_mesh(path)
 
 
-@pytest.mark.parametrize("value", [float("nan"), float("inf"), None, True])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), None, True,
+                                  10**400, -(10**400)])
 def test_invalid_native_values_fail_closed(checker, value):
     result = checker.check_mesh(CANONICAL)
     observed = native_record(result)
@@ -162,6 +164,26 @@ def test_cli_native_failure_exits_one(checker, tmp_path, capsys):
     path.write_text(json.dumps(observed), encoding="utf-8")
     assert checker.main([str(CANONICAL), "--observations", str(path)]) == 1
     assert json.loads(capsys.readouterr().out)["native_hydrostatics"]["status"] == "FAIL"
+
+
+@pytest.mark.parametrize("key", ["density_kg_m3", "gravity_m_s2", "k33_n_per_m",
+                                 "volume_m3", "waterplane_area_m2", "cob_z_m"])
+@pytest.mark.parametrize("sign", [1, -1])
+def test_cli_overflowing_native_integer_fails_closed(checker, tmp_path, key, sign):
+    observed = native_record(checker.check_mesh(CANONICAL))
+    observed[key] = sign * 10**400
+    path = tmp_path / "observations.json"
+    path.write_text(json.dumps(observed), encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(CANONICAL), "--observations", str(path)],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 1
+    assert result.stderr == ""
+    assert json.loads(result.stdout) == {
+        "orientation": "NOT_EVALUATED", "status": "FAIL",
+        "reason": "invalid mesh or observation input",
+    }
 
 
 def test_mesh_digest_ignores_checkout_line_endings(checker, tmp_path):

@@ -85,7 +85,11 @@ def compare_native(mesh: dict[str, Any], observed: dict[str, Any]) -> dict[str, 
         value = observed.get(key)
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"{key} must be a finite number")
-        if not math.isfinite(value):
+        try:
+            finite = math.isfinite(value)
+        except OverflowError as exc:
+            raise ValueError(f"{key} must be a finite number") from exc
+        if not finite:
             raise ValueError(f"{key} must be a finite number")
     if observed["density_kg_m3"] <= 0 or observed["gravity_m_s2"] <= 0:
         raise ValueError("density and gravity must be positive")
