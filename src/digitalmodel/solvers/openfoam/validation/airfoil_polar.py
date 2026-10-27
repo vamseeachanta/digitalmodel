@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Reduce supplied airfoil coefficients to an unweighted linear lift fit.
@@ -8,9 +11,16 @@ The caller declares the fitting interval and supplies dimensionless Cl and Cd.
 
 The fit minimizes sum((Cl - (intercept + slope * angle))**2). Centering gives
 slope = sum(dx * dy) / sum(dx**2) and intercept = mean(Cl) - slope * mean(angle),
-from the two linear least-squares normal equations. The implementation scales
-dx before summation. Unit conversion uses pi radians = 180 degrees by definition:
-the slope per radian equals the slope per degree multiplied by 180 / pi.
+from the two linear least-squares normal equations. The implementation centers
+sample-origin offsets and scales dx before summation, retaining those offsets
+for fitted values and reconstructing the intercept in the original coordinates.
+Basis: NIST/SEMATECH e-Handbook of Statistical Methods (2012 edition),
+section 4.4.3.1, "Least Squares":
+https://www.itl.nist.gov/div898/handbook/pmd/section4/pmd431.htm
+Unit conversion uses pi radians = 180 degrees by definition: the slope per
+radian equals the slope per degree multiplied by 180 / pi. Basis: BIPM,
+The International System of Units, 9th edition (2019), section 4, Table 8:
+https://www.bipm.org/en/publications/si-brochure
 
 Saved example (synthetic hand calculation: Cl = 0.2 + 0.1 * angle_deg):
 
@@ -124,9 +134,15 @@ def reduce_airfoil_polar(
     drag = tuple(cd[i] for i in indices)
 
     try:
-        x_mean = fsum(value / len(x) for value in x)
+        x_origin = x[0]
+        offsets = tuple(value - x_origin for value in x)
+        if not all(isfinite(value) for value in offsets):
+            # Opposite-sign extremes can overflow a sample-origin subtraction.
+            x_origin = 0.0
+            offsets = x
+        offset_mean = fsum(value / len(x) for value in offsets)
         y_mean = fsum(value / len(y) for value in y)
-        dx = tuple(value - x_mean for value in x)
+        dx = tuple(value - offset_mean for value in offsets)
         scale = max(abs(value) for value in dx)
         normalized = tuple(value / scale for value in dx)
         slope = (
@@ -134,7 +150,7 @@ def reduce_airfoil_polar(
             / fsum(a * a for a in normalized)
             / scale
         )
-        intercept = y_mean - slope * x_mean
+        intercept = fsum((y_mean, -slope * offset_mean, -slope * x_origin))
         fitted = tuple(y_mean + slope * delta for delta in dx)
         residuals = tuple(observed - fit for observed, fit in zip(y, fitted))
         radians_per_degree = pi / 180  # Exact angle-unit definition above.

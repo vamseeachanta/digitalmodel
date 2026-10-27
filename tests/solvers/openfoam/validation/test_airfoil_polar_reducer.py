@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Independent hand calculations for a synthetic airfoil polar.
@@ -7,6 +10,10 @@ line is Cl = 0.2 + 0.1 * alpha_deg. The unit conversion follows directly from
 pi radians = 180 degrees. Drag values are synthetic nonnegative coefficients.
 pytest.approx supplies its standard floating point comparison tolerances;
 the explicit zero-residual bound allows roundoff in an exact linear fit.
+The least-squares basis is NIST/SEMATECH e-Handbook of Statistical Methods
+(2012 edition), section 4.4.3.1, "Least Squares"; the angle-unit basis is BIPM,
+The International System of Units, 9th edition (2019), section 4, Table 8.
+All expected fit values below are independent synthetic hand calculations.
 """
 
 from math import pi
@@ -96,6 +103,82 @@ def test_small_angle_spacing():
     )
     assert result.lift_slope_per_radian == pytest.approx(1e200)
     assert result.lift_intercept == pytest.approx(0)
+
+
+@pytest.mark.parametrize("angle_units", ["radians", "degrees"])
+@pytest.mark.parametrize("reverse", [False, True])
+def test_adjacent_angles_with_offset(angle_units, reverse):
+    """Subtracting an absolute rounded mean must not halve a two-point slope."""
+    # Hand calculation: delta Cl / delta angle = 1 / 2**-52 = 2**52;
+    # Cl(1) = 0, so intercept = -2**52 and both residuals are zero.
+    angles = [1.0, 1.0 + 2**-52]
+    cl = [0.0, 1.0]
+    if reverse:
+        angles.reverse()
+        cl.reverse()
+    result = reduce_airfoil_polar(
+        angles, cl, [0, 0], angle_units=angle_units,
+        fit_interval=(1.0, 1.0 + 2**-52),
+    )
+    slope = (result.lift_slope_per_radian if angle_units == "radians"
+             else result.lift_slope_per_degree)
+    assert slope == pytest.approx(4503599627370496.0, rel=1e-15)
+    assert result.lift_intercept == pytest.approx(-4503599627370496.0, rel=1e-15)
+    assert result.fitted_cl == pytest.approx(cl, rel=1e-15, abs=1e-15)
+    assert result.residuals == pytest.approx([0, 0], abs=1e-15)
+
+
+@pytest.mark.parametrize("angle_units", ["radians", "degrees"])
+@pytest.mark.parametrize("reverse", [False, True])
+def test_fit_is_invariant_to_angle_translation(angle_units, reverse):
+    """Translation preserves a noisy three-point fit and its signed residuals."""
+    spacing = 2**-52
+    angles = [0.0, spacing, 3 * spacing]
+    cl = [0.0, 2.0, 1.0]
+    if reverse:
+        angles.reverse()
+        cl.reverse()
+    results = [
+        reduce_airfoil_polar(
+            [origin + angle for angle in angles], cl, [0, 0, 0],
+            angle_units=angle_units, fit_interval=(origin, origin + 3 * spacing),
+        )
+        for origin in (0.0, 1.0)
+    ]
+    original, translated = results
+    # In spacing units: mean x=4/3, mean Cl=1, Sxx=14/3, Sxy=1.
+    # Slope=3/14, intercept=5/7, fitted=(5/7,13/14,19/14),
+    # residuals=(-5/7,15/14,-5/14); none depends on the angle origin.
+    expected_fitted = [5 / 7, 13 / 14, 19 / 14]
+    expected_residuals = [-5 / 7, 15 / 14, -5 / 14]
+    if reverse:
+        expected_fitted.reverse()
+        expected_residuals.reverse()
+    for result in results:
+        assert result.fitted_cl == pytest.approx(expected_fitted, abs=1e-15)
+        assert result.residuals == pytest.approx(expected_residuals, abs=1e-15)
+    assert translated.lift_slope_per_radian == pytest.approx(
+        original.lift_slope_per_radian, rel=1e-15,
+    )
+    assert translated.lift_slope_per_degree == pytest.approx(
+        original.lift_slope_per_degree, rel=1e-15,
+    )
+    assert original.lift_intercept == pytest.approx(5 / 7, abs=1e-15)
+    # Translation by one subtracts the slope in the declared angle units.
+    assert translated.lift_intercept == pytest.approx(5 / 7 - 3 / 14 / spacing)
+
+
+def test_translation_preserves_wide_finite_angle_range():
+    """Subtracting a sample origin must not overflow a representable fit."""
+    # Hand calculation: slope = 2 / 2e308 = 1e-308; intercept = 0.
+    result = reduce_airfoil_polar(
+        [-1e308, 1e308], [-1, 1], [0, 0], angle_units="radians",
+        fit_interval=(-1e308, 1e308),
+    )
+    assert result.lift_slope_per_radian == pytest.approx(1e-308, rel=1e-14, abs=0)
+    assert result.lift_intercept == pytest.approx(0, abs=1e-15)
+    assert result.fitted_cl == pytest.approx([-1, 1], abs=1e-15)
+    assert result.residuals == pytest.approx([0, 0], abs=1e-15)
 
 
 def test_unrepresentable_fit_fails_clearly():
