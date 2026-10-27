@@ -1,5 +1,11 @@
 """Tests for orcawave.hydro_coefficients module."""
 
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
 import numpy as np
 import pytest
 
@@ -150,3 +156,84 @@ def test_native_parser_preserves_valid_rows_among_blank_lines():
     matrices = from_native_added_mass("\n1 3 3 4\n\n")
     assert len(matrices) == 1
     assert matrices[0].values[2][2] == 4
+
+
+@pytest.mark.parametrize(
+    "omega",
+    [1.0, 2.0, 3.0, 4.5, 5.0],
+    ids=["lower-knot", "interior-first", "middle-knot", "interior-second", "upper-knot"],
+)
+def test_interpolate_full_symmetric_affine_matrix(omega):
+    """Check every entry against the example's independent hand calculation."""
+    # Source of all synthetic constants: Hand calculation in
+    # docs/examples/hydro-coefficient-interpolation.md. No solver data is used.
+    intercept = np.array([
+        [100, 12, 13, 14, 15, 16],
+        [12, 200, 23, 24, 25, 26],
+        [13, 23, 300, 34, 35, 36],
+        [14, 24, 34, 400, 45, 46],
+        [15, 25, 35, 45, 500, 56],
+        [16, 26, 36, 46, 56, 600],
+    ])
+    slope = np.array([
+        [2, -1, -2, -3, -4, -5],
+        [-1, 4, -1, -2, -3, -4],
+        [-2, -1, 6, -1, -2, -3],
+        [-3, -2, -1, 8, -1, -2],
+        [-4, -3, -2, -1, 10, -1],
+        [-5, -4, -3, -2, -1, 12],
+    ])
+    matrices = [
+        HydroMatrix6x6(
+            frequency_rad_s=knot,
+            values=(intercept + knot * slope).tolist(),
+        )
+        for knot in (1.0, 3.0, 5.0)
+    ]
+    # Scalar oracle: evaluate the stated affine law, not the interpolation rule.
+    expected = np.array([
+        [
+            100 * i + 2 * i * omega if i == j
+            else 10 * min(i, j) + max(i, j) + (min(i, j) - max(i, j)) * omega
+            for j in range(1, 7)
+        ]
+        for i in range(1, 7)
+    ])
+
+    result = interpolate_matrix_at_frequency(matrices, omega)
+
+    # Binary-exact inputs and arithmetic need no numerical tolerance here.
+    np.testing.assert_array_equal(result, expected)
+    np.testing.assert_array_equal(result, result.T)
+
+
+def test_hydro_coefficient_interpolation_example(tmp_path):
+    """Execute the published snippet in isolation without a licensed solver."""
+    root = Path(__file__).resolve().parents[2]
+    document = (root / "docs/examples/hydro-coefficient-interpolation.md").read_text(
+        encoding="utf-8"
+    )
+    snippets = re.findall(r"```python\n(.*?)\n```", document, re.DOTALL)
+    assert len(snippets) == 1
+    guard = """
+import importlib.abc
+import sys
+
+class RejectLicensedSolver(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname.split('.')[0] == 'OrcFxAPI':
+            raise AssertionError('The example must not import a licensed solver')
+        return None
+
+sys.meta_path.insert(0, RejectLicensedSolver())
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", guard + snippets[0]],
+        cwd=tmp_path,
+        env={**os.environ, "PYTHONPATH": str(root / "src")},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "Interpolation audit passed."
