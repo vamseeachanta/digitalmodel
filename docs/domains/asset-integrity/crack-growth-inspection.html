@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crack growth and inspection planning analysis</title>
+<style>
+body { max-width: 68em; margin: 2em auto; padding: 0 1em; font: 16px/1.6 sans-serif; color: #182b3a; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: .5em; border: 1px solid #ccd5df; text-align: left; }
+code, pre { background: #f2f5f8; } pre { padding: 1em; overflow: auto; }
+caption { caption-side: bottom; text-align: left; padding: .5em 0; }
+</style>
+</head>
+<body>
+<h1>Crack growth and inspection planning analysis</h1>
+<h2>Summary</h2>
+<p>Thresholded fatigue growth is integrated to a supplied assessment limit and converted
+to a capped inspection interval. The existing surface-flaw FAD envelope can supply that
+limit. The governing result identifies assessment, wall-penetration or coincident limits,
+and the resulting plan can feed qualitative RBI. Missing LBB evidence is reported
+as <code>NOT_EVALUATED</code>; through-wall geometry alone establishes no LBB acceptance.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-20</td><td>Growth, assessment-limit and inspection interfaces are documented with independent examples so their calculation basis can be checked.</td></tr>
+<tr><td>2</td><td>2026-10-22</td><td>Adaptive quadrature controls, error estimates, governing depth limits, total FAD length and crack-specific RBI policy evidence are clarified.</td></tr></tbody>
+<caption>Table 1. Document revisions.</caption></table>
+<h2>Method and source basis</h2>
+<p>The <a href="https://web.mit.edu/course/3/3.11/www/modules/fatigue.pdf">MIT
+Fatigue notes (2001), Equation (2)</a> give <code>da/dN = C (DeltaK)^m</code>.
+The <a href="https://afgrow.net/applications/DTDHandbook/sections/page5_1_2.aspx">AFGROW
+Damage Tolerant Design Handbook, Section 5.1.2, Equation (5.1.3)</a> gives the
+stress-ratio correction introduced in 1970. With R = Kmin/Kmax, the implemented form is:</p>
+<pre>Keq = DeltaK / (1 - R)^(1 - gamma)
+da/dN = 0                         when DeltaK &lt;= DeltaK_th(R, environment)
+da/dN = C * Keq^m                 otherwise
+N = integral from a_initial to a_limit of da / (da/dN)</pre>
+<p>C is calibrated at R = 0. The threshold is the measured raw range at service R,
+before correction. All material parameters and their calibration basis are required.
+The supported domain is 0 &lt;= R &lt; 1 and 0 &lt;= gamma &lt;= 1. These are implementation
+limits, not universal material limits. Compression and load-sequence effects require
+a different qualified model. No BS 7910 or API 579 material coefficient is supplied.</p>
+<p>Adaptive Simpson quadrature integrates the reciprocal growth rate. The initial
+panels are set by <code>steps</code>; panel bisection compares coarse and refined Simpson
+estimates using the difference divided by 15. This numerical basis is described in
+<a href="https://tobydriscoll.net/fnc-julia/localapprox/adaptive.html">Driscoll and Braun,
+<cite>Fundamentals of Numerical Computation</cite>, online Julia edition,
+Section 5.7, Equation (5.7.3)</a>.</p>
+<p>The default controls are <code>relative_tolerance = 1e-6</code> (dimensionless),
+<code>absolute_tolerance = 1e-6</code> cycles and <code>max_refinements = 20</code> bisection
+levels. The configured <code>max_refinements</code> must be an integer of at least 2;
+no upper count bound is imposed. The summed estimate is reported as
+<code>GrowthResult.estimated_error_cycles</code>
+against <code>absolute_tolerance + relative_tolerance * life_cycles</code>. Exhausting
+the refinement budget raises <code>ValueError</code>; no passing inspection plan is
+produced from an unconverged integral. A sampled threshold arrest returns null
+remaining cycles and null estimated error. History retains the initial depth and
+completed initial panels, without an unreached limiting-depth endpoint.</p>
+<p>The error estimate assumes a smooth reciprocal growth rate. An arbitrary callable
+can contain unsampled threshold dips, singularities or oscillations; finite samples
+cannot certify their absence or bound the true integration error. Material calibration
+and a compatible DeltaK function require case-specific evidence. The legacy
+<code>paris_law_life</code> API retains its signature and DataFrame result while
+delegating to the same integrator and retaining only reached arrest history.</p>
+<p><code>plan_crack_from_fad</code> calls the existing <code>critical_flaw_depth_mm</code>.
+That routine can return its depth or geometry validity cap. The limit therefore denotes
+the end of the established assessment envelope, rather than a demonstrated fracture
+depth. Growth stops at the smaller of that depth and wall thickness. The FAD input
+<code>length_mm = 2c</code> is the total surface length, held fixed; the FAD routine
+converts it to half-length c. Aspect-ratio evolution is not modeled. A compatible
+depth-dependent DeltaK solution is required. Surface depth is never substituted for
+through-wall length. Supported membrane and bending stress components are nonnegative,
+with at least one positive; either component may be zero. Compression and an all-zero
+load are outside the FAD adapter's supported loading domain.</p>
+<p><code>CrackLifeAssessment.governing_limit</code> is <code>WALL_PENETRATION</code> when
+wall thickness is smaller than the supplied assessment depth, <code>ASSESSMENT_LIMIT</code>
+when that depth is smaller than wall thickness, and <code>COINCIDENT_LIMITS</code> when
+the two are equal. This field identifies the governing depth criterion; it does not
+establish a qualified fracture or LBB conclusion.</p>
+<h2>Inspection and RBI interfaces</h2>
+<pre>years = remaining_cycles / cycles_per_year
+half_life = years / 2
+next_interval = min(years / life_divisor, supplied_max_interval)</pre>
+<p>The year, null-life and half-life semantics follow the existing
+<code>inspection_planning.plan_inspection</code> implementation. The divisor is required
+and cannot be less than that planner's divisor of 2. The maximum interval and policy
+basis are required; these inputs do not establish a crack-specific code interval.
+At or beyond the limit, remaining life and interval are zero and screening fails.
+Under threshold arrest, life and half-life are null and the supplied maximum interval
+governs only while the modeled loading and environment remain applicable.</p>
+<p>Inspection policy is validated before growth integration. At RBI entry, mutable
+plan fields are revalidated against the cycle-to-year conversion, divisor, half-life,
+cap and interval, growth/screening status and policy basis; inconsistencies raise
+<code>ValueError</code>.</p>
+<p><code>CrackInspectionPlan</code> retains <code>cycles_per_year</code> and
+<code>life_divisor</code> with the supplied maximum interval and policy basis.
+<code>screen_crack_plan</code> scores the ratio of remaining years to the supplied
+reference interval against descending life-ratio edges, combines that probability
+category with the consequence category through the PoF x CoF matrix, and returns the
+smaller of the crack-plan interval and risk-band cap. Its basis records the actual
+life-ratio edges, reference interval, matrix band edges, per-band caps, plan cap,
+divisor, cycle rate and inspection policy basis. The <code>corrosion_trend_bump</code>
+subscore is null (not applicable), rather than a measured zero. Under modeled arrest, the life-ratio
+category uses unbounded life only for the supplied model and conditions.
+The caller supplies the RBI policy; default bands remain screening-practice
+parameters rather than API RP 581 table values.</p>
+<p>The registered inspection router accepts <code>inspection_planning.crack_growth</code>
+instead of thickness inputs. Supply <code>law</code>, <code>stress_range_mpa</code>,
+<code>geometry_factor</code>, initial depth, integration steps, cycle rate, interval cap,
+divisor and policy basis. Supply either <code>fad_inputs</code> or explicit critical depth,
+wall thickness and depth basis. The router uses the existing constant-geometry SIF
+equation; the Python interface accepts a general compatible DeltaK callable. Results
+retain the ordinary <code>result</code> key and add <code>crack_assessment</code>.</p>
+<h2>Worked example: published growth problem</h2>
+<p>MIT Fatigue (2001), Table 1 and Problem 6, supplies steel C = 10<sup>-11</sup>,
+m = 3, an infinite-plate central crack from half-length 0.1 mm to 2.5 mm, and
+Delta sigma = 950 MPa. The problem's Delta sigma is treated as the range; it is
+not doubled. No threshold or R correction is specified, so zero threshold and
+gamma = 1 explicitly recover the published Paris equation. SI metres are used
+for half-length and MPa sqrt(m) for DeltaK.</p>
+<pre>DeltaK = 950 * sqrt(pi*a)
+N = 2*(1/sqrt(0.0001) - 1/sqrt(0.0025)) / (1e-11*950^3*pi^(3/2))
+  = 3351.4 cycles
+Synthetic policy: 1000 cycles/year, divisor 2, maximum interval 2 years.
+Remaining life = 3.4 years; next interval = 1.7 years (rounded).</pre>
+<p>The expected life is obtained by direct integration of Equation (2). The printed
+general expression in Problem 5 contains an extra factor m and is not used as the
+oracle. Synthetic policy values illustrate conversion only; they are not operating
+records or code limits.</p>
+<p>Run the example from the repository root with the package dependencies installed:</p>
+<pre>PYTHONPATH=src python examples/workflows/crack-growth-inspection/run_example.py</pre>
+<p>JSON output includes the published case, a separate synthetic FAD-to-inspection
+example, input basis and the LBB evidence gaps. No output file is created by the script.</p>
+<h2>LBB evidence and remaining qualification</h2>
+<p>The LBB helper optionally checks the strict prerequisite
+<code>length_margin * detectable_full_length &lt; critical_full_length</code>, with all
+lengths, margin and basis supplied. Equality fails the prerequisite. A geometric pass
+still returns <code>NOT_EVALUATED</code> overall. Leak-rate and detection qualification,
+through-wall stability under governing loads and transients, and the applicable LBB
+procedure and margins remain unestablished. API 579-1/ASME FFS-1 (2016), Part 9,
+LBB procedure is the intended qualification route; no procedure values are reproduced.</p>
+<p>Threshold calibration, short-crack behavior, environment, residual stress effects on
+R, load spectrum, crack-shape evolution and inspection detection capability require
+case-specific evidence. The closed-form and published tests validate arithmetic and
+interface behavior; they do not qualify an operating component.</p>
+</body>
+</html>

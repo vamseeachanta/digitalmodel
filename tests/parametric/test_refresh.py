@@ -8,6 +8,7 @@ from types import SimpleNamespace
 
 import pandas as pd
 import pytest
+import yaml
 
 from digitalmodel.parametric import build, refresh
 from digitalmodel.parametric.build import build_atlas_from_registry
@@ -30,6 +31,26 @@ def test_committed_atlases_are_current():
     for wid in ("mooring-fatigue", "api-rp-2rd-riser", "rao-tabulation"):
         status = refresh.refresh_status(wid)
         assert status["stale"] is False, f"{wid} unexpectedly stale: {status}"
+
+
+def test_committed_inspection_atlas_serves_registered_query(tmp_path):
+    """The shipped query must serve a current atlas after planner changes."""
+    status = refresh.refresh_status("inspection-planning")
+    assert status["stale"] is False, "inspection atlas requires regeneration"
+
+    row = refresh._row("inspection-planning-atlas-query")
+    cfg = yaml.safe_load((refresh.REPO_ROOT / row["input"]).read_text())
+    cfg["parametric_query"]["output_dir"] = str(tmp_path)
+    result = router(cfg)["parametric_query"]["result"]
+
+    assert result["in_range"] is True
+    assert result["response"] == "remaining_life_years"
+    assert "screening_status" not in result
+    # At the registered point, (11 - 6) / 0.4 = 12.5 years. The atlas
+    # interpolates between rates, so use its declared relative error limit.
+    assert result["value"] == pytest.approx(12.5, rel=0.1)
+    low, high = result["confidence"]["band"]
+    assert low <= result["value"] <= high
 
 
 def test_fresh_build_is_not_stale(tmp_path):
