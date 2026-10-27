@@ -206,8 +206,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 27
-    assert len(outputs) == 33  # includes screening artifacts and the showcase sidecar
+    assert len(checker.GENERATORS) == 28
+    assert len(outputs) == 34  # includes screening artifacts and the showcase sidecar
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
