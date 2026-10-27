@@ -86,6 +86,26 @@ def test_single_sample_and_copied_support():
 
 
 @pytest.mark.parametrize(
+    "velocity",
+    [
+        [[np.finfo(np.float64).max], [np.finfo(np.float64).max]],
+        [[1e200], [-1e200]],
+    ],
+    ids=["mean-overflow", "squared-deviation-overflow"],
+)
+def test_finite_wake_inputs_reject_reduction_overflow(velocity):
+    """Finite samples may overflow the mean sum or the squared deviations."""
+    assert np.all(np.isfinite(velocity))
+    # Equal maxima overflow the mean sum; opposite samples have mean zero
+    # but squared deviations beyond the floating-point range.
+    with pytest.raises(
+        ValueError, match="^velocity statistics exceed floating-point range$"
+    ) as error:
+        wake_profile_statistics([0, 1], velocity, [[0, 0, 0]], (0, 1))
+    assert isinstance(error.value.__cause__, FloatingPointError)
+
+
+@pytest.mark.parametrize(
     "times,velocity,coords,interval,match",
     [
         ([0, 1], [[1], [2]], [[0, 0, 0]], (2, 3), "no samples"),
