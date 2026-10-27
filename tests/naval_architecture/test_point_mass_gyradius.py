@@ -169,3 +169,118 @@ def test_nonnumeric_mass_raises(mass):
 def test_nonnumeric_coordinate_raises(point):
     with pytest.raises(ValueError, match="coordinates must be finite"):
         gyradius_from_point_masses([1], [point])
+
+
+@pytest.mark.parametrize("axis", range(3))
+@pytest.mark.parametrize("reverse", [False, True])
+def test_centroid_preserves_small_weighted_residual(axis, reverse):
+    """A remote light mass contributes the same first moment as the unit mass."""
+    masses = [1e-16, 1]
+    points = [tuple(x if i == axis else 0 for i in range(3)) for x in (1e16, 1)]
+    if reverse:
+        masses.reverse()
+        points.reverse()
+    result = gyradius_from_point_masses(masses, points)
+
+    # c=(1e-16*1e16+1)/(1+1e-16) is approximately 2 m in either order.
+    assert result.centroid_m == pytest.approx(
+        tuple(2 if i == axis else 0 for i in range(3)), rel=1e-14, abs=0
+    )
+    # M is approximately 1 kg; transverse I=m1*m2/M*(x1-x2)^2 is 1e16.
+    assert result.mass_kg == pytest.approx(1, rel=1e-14)
+    assert (result.ixx, result.iyy, result.izz) == pytest.approx(
+        tuple(0 if i == axis else 1e16 for i in range(3)), rel=1e-14, abs=0
+    )
+
+
+@pytest.mark.parametrize("coordinates", [(1e16, 1, -1e16), (-1e16, 1, 1e16)])
+def test_centroid_retains_residual_between_opposite_coordinates(coordinates):
+    """The exact first moment is 1 despite cancellation of the large terms."""
+    result = gyradius_from_point_masses([1, 1, 1], [(x, 0, 0) for x in coordinates])
+
+    # M=3 kg; sum(m*x)=1e16+1-1e16=1 kg*m, so cx=1/3 m.
+    assert result.centroid_m == pytest.approx((1 / 3, 0, 0), rel=1e-14, abs=0)
+
+
+@pytest.mark.parametrize("axis", range(3))
+@pytest.mark.parametrize(
+    "mass, distance, inertia", [(1e200, 1e-170, 2e-140), (1e-200, 1e200, 2e200)]
+)
+def test_weighted_squares_preserve_representable_inertia(axis, mass, distance, inertia):
+    """Weights keep the final inertia in range when the bare square is not."""
+    point = tuple(distance if i == axis else 0 for i in range(3))
+    result = gyradius_from_point_masses([mass, mass], [point, tuple(-x for x in point)])
+
+    # I=2*m*x*x: 2e200*(1e-170)^2=2e-140; 2e-200*(1e200)^2=2e200.
+    assert result.centroid_m == (0, 0, 0)
+    assert (result.ixx, result.iyy, result.izz) == pytest.approx(
+        tuple(0 if i == axis else inertia for i in range(3)), rel=1e-14, abs=0
+    )
+
+
+@pytest.mark.parametrize("axis", range(3))
+def test_subnormal_inertia_is_rounded_after_summing(axis):
+    """Eight terms too small individually still have a representable sum."""
+    point = tuple(1e-162 if i == axis else 0 for i in range(3))
+    result = gyradius_from_point_masses(
+        [1] * 8, [point, tuple(-x for x in point)] * 4
+    )
+
+    # I=8*(1e-162)^2=8e-324, which rounds to the nonzero float 1e-323.
+    assert (result.ixx, result.iyy, result.izz) == tuple(
+        0 if i == axis else 1e-323 for i in range(3)
+    )
+
+
+def test_nonzero_inertia_below_float_range_raises():
+    """A positive moment smaller than the float range must not become zero."""
+    # Iyy=Izz=2*(1e-200)^2=2e-400; the physical zero Ixx remains distinct.
+    with pytest.raises(ValueError, match="nonzero inertias must be representable"):
+        gyradius_from_point_masses([1, 1], [(-1e-200, 0, 0), (1e-200, 0, 0)])
+
+
+@pytest.mark.parametrize("axis", range(3))
+def test_radii_preserve_representable_root_of_underflowing_ratio(axis):
+    """A representable radius must survive when I/M is below float range."""
+    point = tuple(1e-100 if i == axis else 0 for i in range(3))
+    result = gyradius_from_point_masses([1e200, 1], [(0, 0, 0), point])
+
+    # c=1e-100/(1e200+1) is approximately 1e-300 m.
+    # Transverse I=m1*m2/(m1+m2)*d^2 is 1e-200 kg*m^2.
+    # k=sqrt(I/M)=sqrt(1e-400)=1e-200 m, despite I/M rounding to zero.
+    assert result.centroid_m == pytest.approx(
+        tuple(1e-300 if i == axis else 0 for i in range(3)), rel=1e-14, abs=0
+    )
+    assert (result.ixx, result.iyy, result.izz) == pytest.approx(
+        tuple(0 if i == axis else 1e-200 for i in range(3)), rel=1e-14, abs=0
+    )
+    assert (result.roll, result.pitch, result.yaw) == pytest.approx(
+        tuple(0 if i == axis else 1e-200 for i in range(3)), rel=1e-14, abs=0
+    )
+
+
+@pytest.mark.parametrize("axis", range(3))
+def test_radii_preserve_representable_root_of_overflowing_ratio(axis):
+    """The squared radius can exceed float range while the radius is finite."""
+    point = tuple(1e200 if i == axis else 0 for i in range(3))
+    result = gyradius_from_point_masses(
+        [1e-200, 1e-200], [point, tuple(-x for x in point)]
+    )
+
+    # M=2e-200; transverse I=2e-200*(1e200)^2=2e200; k=sqrt(1e400)=1e200.
+    assert (result.roll, result.pitch, result.yaw) == pytest.approx(
+        tuple(0 if i == axis else 1e200 for i in range(3)), rel=1e-14, abs=0
+    )
+
+
+@pytest.mark.parametrize("axis", range(3))
+def test_radius_outside_float_range_raises(axis):
+    """Finite inertias do not guarantee a representable radius."""
+    point = tuple(0 if i == axis else 1.7e308 for i in range(3))
+    result = gyradius_from_point_masses(
+        [1e-310, 1e-310], [point, tuple(-x for x in point)]
+    )
+
+    # About the selected axis, k=sqrt(2)*1.7e308 exceeds finite float range.
+    with pytest.raises(ValueError, match="radius must be finite"):
+        getattr(result, ("roll", "pitch", "yaw")[axis])
