@@ -10,6 +10,21 @@ is used.
 | Revision | Date | What changed and why |
 |---|---|---|
 | Initial | 2026-10-26 | Add executable examples to connect existing arithmetic tests to a documented calculation basis. |
+| 1 | 2026-10-27 | State the affected files, executable cases, acceptance checks and excluded decisions in an explicit Plan-lite section. |
+
+## Plan-lite
+
+- Affected files: `docs/examples/radial-layer-area-and-mass.md` defines the
+  executable examples; `tests/subsea/cross_sections/test_calculations.py`
+  executes and checks them.
+- Executable cases: annulus, solid core and missing-density refusal, each with
+  fresh shared setup and explicit synthetic-input provenance.
+- Acceptance checks: independent area and dry-mass references within the existing
+  rounding tolerance, expected printed output, explicit missing-density refusal
+  and all 14 calculation tests passing. File-level repository checks also apply.
+- Excluded engineering decisions: material selection, buoyancy, submerged weight,
+  corrosion allowance, bending or pressure capacity, multilayer interaction,
+  packed-component properties and design-code acceptance.
 
 ## Coverage gap and scope
 
