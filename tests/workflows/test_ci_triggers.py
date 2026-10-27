@@ -402,7 +402,7 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
 
 
 def test_base_consumers_use_local_tip() -> None:
-    """Detection and register checks use the base repository even for forks."""
+    """Detection uses the local base tip; full register checks scan both roots."""
     workflow = load_workflow("quality-gates-by-domain.yml")
     detect = next(step for step in workflow["jobs"]["detect-domains"]["steps"]
                   if step.get("id") == "detect")
@@ -410,7 +410,42 @@ def test_base_consumers_use_local_tip() -> None:
     quality = load_workflow("quality-gates.yml")
     register = next(step for step in quality["jobs"]["quality-gates"]["steps"]
                     if step.get("name") == "Check engineering register changes")
-    assert register["env"]["REGISTER_BASE"] == "${{ github.event.before || 'HEAD^' }}"
+    assert "REGISTER_BASE" not in register.get("env", {})
+    assert shlex.split(register["run"]) == [
+        "python", "scripts/enforcement/check-engineering-register.py", "docs/", "src/",
+    ]
+
+
+@pytest.mark.parametrize("document", ("docs/earlier.md", "src/earlier.rst"))
+def test_full_register_rejects_earlier_violation_with_clean_latest_commit(
+    document: str, tmp_path: Path,
+) -> None:
+    """Execute the full-run step against a violation outside the latest diff."""
+    merge_fixture(tmp_path, "stale-event")
+    repository = tmp_path / "source"
+    for root in ("docs", "src"):
+        (repository / root).mkdir()
+    fixture_commit(repository, document, "We verified the analysis.\n")
+    fixture_commit(repository, "docs/latest.md", "The analysis meets the criterion.\n")
+    checker = Path("scripts/enforcement/check-engineering-register.py")
+    (repository / checker.parent).mkdir(parents=True)
+    shutil.copyfile(WORKFLOWS.parents[1] / checker, repository / checker)
+    # Reproduce the former blind spot before running the shipped full-run step.
+    latest = subprocess.run(
+        ["python", str(checker), "--diff", "HEAD^"], cwd=repository,
+        capture_output=True, text=True, check=False,
+    )
+    assert latest.returncode == 0, latest.stdout + latest.stderr
+    job = load_workflow("quality-gates.yml")["jobs"]["quality-gates"]
+    register = next(step for step in job["steps"]
+                    if step.get("name") == "Check engineering register changes")
+    result = subprocess.run(
+        ["bash", "-e", "-c", register["run"]], cwd=repository,
+        env=dict(os.environ, REGISTER_BASE="HEAD^"),
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert f"{document}:1: [R1-subject]" in result.stdout
 
 
 def test_trigger_tests_run_in_harness() -> None:

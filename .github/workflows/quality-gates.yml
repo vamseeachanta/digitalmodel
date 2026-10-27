@@ -130,9 +130,8 @@ jobs:
           uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
 
       - name: Check engineering register changes
-        env:
-          REGISTER_BASE: ${{ github.event.before || 'HEAD^' }}
-        run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
+        # Full runs cover prose from every commit since the previous batch.
+        run: python scripts/enforcement/check-engineering-register.py docs/ src/
 
       - name: Create reports directory
         run: mkdir -p reports
