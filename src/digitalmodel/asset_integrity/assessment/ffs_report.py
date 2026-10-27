@@ -69,6 +69,43 @@ class FFSReport:
     """Generate an HTML FFS assessment report."""
 
     @staticmethod
+    def generate_crack_html(component_id, result):
+        """Render the plate FAD point and complete specialist handoff.
+
+        The curve check and the service disposition are reported separately:
+        an inside-envelope point still requires specialist review.
+        """
+        handoff = result["handoff"]
+        sections = {
+            "Revision history": {
+                "Initial issue": "Plate FAD screening and specialist handoff; "
+                "published-case qualification is not established.",
+                "Date": datetime.utcnow().date().isoformat(),
+            },
+            "Curve basis": {"Curve and edition": result["curve"],
+                            "Qualification": result["qualification"]},
+            "FAD point (MPa, mm, MPa sqrt(m); Lr and Kr dimensionless)":
+                result["assessment"],
+            "Critical-depth search (mm)": result["critical_depth"],
+            "Level 3 escalation": {"Triggered": handoff["triggered"],
+                                   "Notes": handoff["notes"]},
+            "Escalation triggers": dict(enumerate(handoff["triggers"], start=1)),
+            "Recommended analyses": dict(enumerate(handoff["recommended_analysis"], start=1)),
+            "Open questions for the specialist": dict(enumerate(handoff["open_questions"], start=1)),
+        }
+        for heading, values in handoff["data_package"].items():
+            sections[f"Handoff inputs: {heading}"] = values
+        sections = {
+            heading: {key: f"{value:.3f}" if isinstance(value, float) else value
+                      for key, value in values.items()}
+            for heading, values in sections.items()
+        }
+        return FFSReport.generate_screening_html(
+            component_id, "BS 7910:2013 Option 1 crack assessment",
+            result["decision"], sections, result["limitations"],
+        )
+
+    @staticmethod
     def generate_screening_html(component_id, title, decision, sections, limitations):
         """Render mechanism-specific screening without inferred metal-loss metrics."""
         from .screening_report import generate_screening_html

@@ -51,9 +51,9 @@ engines:
     circumferential: {status: validated, module: asset_integrity.circumferential_defect, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181}
     pitting: {status: workflow, module: asset_integrity.assessment.pitting, workflow: api579-pitting-screen, validation: docs/domains/asset-integrity/pitting-validation-2026-10-09.md, issue: 2182}
     dents: {status: workflow, module: asset_integrity.dent_assessment, workflow: api579-dent-screen, validation: docs/domains/asset-integrity/dent-validation-2026-10-09.md, issue: 2182}
-    crack-fad: {status: engine, module: asset_integrity.assessment.crack_fad, issue: 2184}
+    crack-fad: {status: workflow, module: asset_integrity.assessment.crack_fad_workflow, workflow: crack-fad-level2-handoff, validation: docs/domains/asset-integrity/crack-fad-handoff-validation.html, issue: 2184}
     crack-growth: {status: engine, module: fatigue.crack_growth, issue: 2177}
-    level3-handoff: {status: engine, module: asset_integrity.assessment.level3_escalation, issue: 2184}
+    level3-handoff: {status: workflow, module: asset_integrity.assessment.level3_escalation, workflow: crack-fad-level2-handoff, issue: 2184}
     measurement-sufficiency: {status: engine, module: asset_integrity.assessment.measurement_sufficiency, workflow: ffs-metal-loss}
     rbi: {status: engine, module: asset_integrity.rbi_screening, issue: 2185}
     composite-repair: {status: engine, module: asset_integrity.composite_repair, issue: 2185}
