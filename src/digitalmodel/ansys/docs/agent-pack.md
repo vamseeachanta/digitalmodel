@@ -63,7 +63,7 @@ Outputs:
 | Result summaries / digest | MPa, mm, N, dimensionless UC, node IDs | Text reader leaves unmatched optional fields unset; digest parser accepts flat label/value pairs. [src/digitalmodel/ansys/results_extractor.py:L60-L72] [src/digitalmodel/ansys/results_extractor.py:L182-L214] [src/digitalmodel/ansys/results_extractor.py:L434-L468] |
 | APDL materials / sections | Declared MPa, density field `density_kg_mm3`, mm², mm⁴ | Raw MP numbers are retained without unit conversion; SECDATA positions are interpreted as area/inertias, so this is not a universal section-command evaluator. [src/digitalmodel/ansys/apdl_reader.py:L27-L32] [src/digitalmodel/ansys/apdl_reader.py:L60-L69] [src/digitalmodel/ansys/apdl_reader.py:L105-L128] |
 | Journal metadata | Version/system strings and unevaluated expressions | Regex extraction and continuation joining; no journal execution. [src/digitalmodel/ansys/wbjn_reader.py:L78-L128] [src/digitalmodel/ansys/wbjn_reader.py:L134-L155] |
-| Evidence packages / response CSV | Canonical typed JSON with decimal strings; hashes | Strict packaging checks references and membership; diagnostic lookup reports `qualified=False`; engineering lookup requires additional live authority and qualification checks. [src/digitalmodel/ansys/analysis_evidence.py:L37-L100] [src/digitalmodel/ansys/analysis_lookup.py:L151-L183] [src/digitalmodel/ansys/analysis_lookup.py:L211-L232] |
+| Evidence packages / response CSV | Canonical typed JSON with decimal strings; hashes | Strict packaging checks references and membership; diagnostic lookup reports `qualified=False`; engineering lookup requires additional live authority and qualification checks. [src/digitalmodel/ansys/analysis_evidence.py:L37-L100] [src/digitalmodel/ansys/analysis_lookup.py:L152-L185] [src/digitalmodel/ansys/analysis_lookup.py:L213-L236] |
 
 Coordinate conventions are local to each generator: the wall slice uses X radial and Y axial; the exact cylinder reference maps hoop to Z and makes tension positive; the padeye lies in X-Y with sling angle from vertical toward +X and local cylindrical selection at the hole; the mudmat lies in X-Y with vertical load downward and soil pressure upward. No harmonic phase convention is defined by these static examples. [src/digitalmodel/ansys/pressure_vessel.py:L717-L740] [src/digitalmodel/ansys/cylinder_reference.py:L1-L5] [src/digitalmodel/ansys/padeye.py:L35-L39] [src/digitalmodel/ansys/padeye.py:L79-L84] [src/digitalmodel/ansys/padeye.py:L118-L139] [src/digitalmodel/ansys/mudmat.py:L185-L225]
 
@@ -120,7 +120,7 @@ These entry points support execution or evidence collection; they do not compute
 
 ## 4. Validated worked examples
 
-Offline results below are observations from the module test command at documentation BASE, with the code pin unchanged; a PASS is limited to the named assertion and does not establish a new native solve or engineering qualification. The native re-solve test is separately guarded. [tests/ansys/test_example_goldens.py:L155-L179] [src/digitalmodel/ansys/analysis_lookup.py:L151-L183]
+Offline results below are observations from the module test command at documentation BASE, with the code pin unchanged; a PASS is limited to the named assertion and does not establish a new native solve or engineering qualification. The native re-solve test is separately guarded. [tests/ansys/test_example_goldens.py:L155-L179] [src/digitalmodel/ansys/analysis_lookup.py:L152-L185]
 
 | ID / class | Independent basis or regression input | Expected quantity / criterion | Existing test node ID | Offline result |
 | --- | --- | --- | --- | --- |
@@ -159,7 +159,7 @@ Each row defines a check; proposed thresholds are acceptance proposals, not valu
 | FE-12 | G3 NOT_APPLICABLE to short dynamics for these examples | These example solve blocks are static structural; thermal-transient helper coverage is separate | 0 dynamic-response claims (count) for section-4 cases | Static route cited; no short-dynamics clearance claimed. [src/digitalmodel/ansys/pressure_vessel.py:L755-L762] [src/digitalmodel/ansys/padeye.py:L136-L140] [src/digitalmodel/ansys/mudmat.py:L227-L231] |
 | FE-13 | G2 applicable: element quality | Before accepting native results, evaluate the generated mesh's Jacobian, shape warnings and aspect ratios on every element; use a target-version mesh report | Proposed: 0 nonpositive Jacobians, 0 undispositioned shape warnings (counts), 100 % of elements pass the target-version default shape limits | General example gate is a gap; `assess_shape_output` already checks a complete default-limit PLANE182 shape summary with 0 warnings/errors, but establishes no stress solution, issue pending (2). [tests/ansys/padeye_pressure_quality.py:L5-L34] [src/digitalmodel/ansys/padeye_pressure_mesh.py:L108-L127] [src/digitalmodel/ansys/padeye_pressure.py:L11-L32] |
 | FE-14 | G4 NOT_APPLICABLE to diffraction checks | Direct-load example generators do not generate a hydrodynamic diffraction solution | 0 diffraction-clearance claims (count) | The documented diffraction chain explicitly separates direct-load cases. [docs/domains/ansys/workflows/aqwa-to-structural-submodel.md:L57-L84] |
-| FE-15 | G5 applicable: evidence appendix | `analysis_evidence.validate_package` plus engineering `analysis_lookup.lookup`: recheck hashes, rights, required roles and independent comparison before any qualified result enters an appendix | 0 missing/mismatched required references and 0 unresolved inherited findings (counts); 100 % of reported quantities bound to accepted evidence | Existing evidence validation supports checks; automated AQG appendix/signature integration remains a gap, issue pending (2). [src/digitalmodel/ansys/analysis_evidence.py:L87-L100] [src/digitalmodel/ansys/analysis_lookup.py:L151-L208] |
+| FE-15 | G5 applicable: evidence appendix | `analysis_evidence.validate_package` plus engineering `analysis_lookup.lookup`: recheck hashes, rights, required roles and independent comparison before any qualified result enters an appendix | 0 missing/mismatched required references and 0 unresolved inherited findings (counts); 100 % of reported quantities bound to accepted evidence | Existing evidence validation supports checks; automated AQG appendix/signature integration remains a gap, issue pending (2). [src/digitalmodel/ansys/analysis_evidence.py:L87-L100] [src/digitalmodel/ansys/analysis_lookup.py:L152-L210] |
 
 G1 for the direct examples means MAPDL, and journal loading means Workbench; the AQWA workflow's pressure transfer and global/submodel route is a separate unvalidated workflow, not satisfied by either example load check. [src/digitalmodel/ansys/runner.py:L156-L175] [src/digitalmodel/ansys/wbjn_reader.py:L8-L16] [docs/domains/ansys/workflows/aqwa-to-structural-submodel.md:L9-L11] [docs/domains/ansys/workflows/aqwa-to-structural-submodel.md:L19-L31]
 
@@ -177,7 +177,7 @@ sweep: not run (legacy pack)
 | Queue handoff not established by local runner or batch launcher | No end-to-end queue detection check exists in the main route; require manifest/dispatch/retrieval test before treating local completion as queue integration | #1724; router calls the local runner and batch helper emits launcher text. [src/digitalmodel/ansys/workflow.py:L41-L54] [src/digitalmodel/ansys/batch_runner.py:L506-L550] |
 | Outdated capability descriptions conceal changed idealization | Section-1 audit; no comprehensive capability-to-implementation check exists | Issue pending (1). [src/digitalmodel/ansys/mudmat.py:L3-L31] [src/digitalmodel/ansys/mudmat.py:L106-L126] |
 | Unit label accepted without dimensional conversion; unsupported general-SI density path | Compare `generate_header` SI declaration with unconditional density conversion; FE-02 needs a dimensional extension | Issue pending (4). [src/digitalmodel/ansys/apdl_generator.py:L133-L168] |
-| Diagnostic numerical PASS promoted as engineering qualification | FE-15; `evaluate_canary` always reports engineering qualification false; lookup requires independent authority and resolved findings | #2121 / #2123. [src/digitalmodel/ansys/cylinder_criteria.py:L65-L68] [src/digitalmodel/ansys/analysis_lookup.py:L151-L208] |
+| Diagnostic numerical PASS promoted as engineering qualification | FE-15; `evaluate_canary` always reports engineering qualification false; lookup requires independent authority and resolved findings | #2121 / #2123. [src/digitalmodel/ansys/cylinder_criteria.py:L65-L68] [src/digitalmodel/ansys/analysis_lookup.py:L152-L210] |
 | Extractor silently returns empty/default results for unmatched text or overwrites duplicate digest labels | Require field presence, finiteness and unique keys through `analysis_evidence.parse_digest`; do not treat zero defaults as retrieved physical zero | #2123; strict evidence parser differs from generic extractor. [src/digitalmodel/ansys/results_extractor.py:L182-L214] [src/digitalmodel/ansys/results_extractor.py:L356-L357] [src/digitalmodel/ansys/results_extractor.py:L453-L468] [src/digitalmodel/ansys/analysis_evidence.py:L20-L34] |
 
 ## 7. Lessons log
@@ -186,14 +186,14 @@ Append-only entries; shared-log identifiers remain pending rather than asserting
 
 | Date | Entry | Lesson / pack change | Evidence | Shared-log entry |
 | --- | --- | --- | --- | --- |
-| 2026-10-15 | L1 | Separate text reproducibility, numerical comparison and engineering qualification in sections 4–6 | Golden tests distinguish comparator classes; engineering lookup checks live qualification. [tests/ansys/test_example_goldens.py:L135-L152] [src/digitalmodel/ansys/analysis_lookup.py:L151-L183] | Pending; issue pending (3) |
+| 2026-10-15 | L1 | Separate text reproducibility, numerical comparison and engineering qualification in sections 4–6 | Golden tests distinguish comparator classes; engineering lookup checks live qualification. [tests/ansys/test_example_goldens.py:L135-L152] [src/digitalmodel/ansys/analysis_lookup.py:L152-L185] | Pending; issue pending (3) |
 | 2026-10-15 | L2 | Audit descriptions against operative commands before selecting hand references | Mudmat description and generated pressure-patch implementation differ; section 1 records the discrepancy. [src/digitalmodel/ansys/mudmat.py:L3-L31] [src/digitalmodel/ansys/mudmat.py:L106-L143] | Pending; issue pending (1) |
 
 ## 8. Ownership
 
 Proposed assignments: family quality manager — FEA quality manager; deputy — FEA deputy quality manager; production — analysis and software maintainers; escalation — the maintainer after a quality-manager disposition. UNVERIFIED: appointments to these proposed roles are not confirmed; confirmation is issue pending (2), listed as U5 in section 10.
 
-Escalate missing data, ambiguous clauses, altered tolerances and any unavailable gate evidence before making an engineering qualification claim; engineering lookup already refuses incomplete verification and unresolved inherited findings. [src/digitalmodel/ansys/analysis_lookup.py:L145-L182] [src/digitalmodel/ansys/analysis_lookup.py:L186-L208]
+Escalate missing data, ambiguous clauses, altered tolerances and any unavailable gate evidence before making an engineering qualification claim; engineering lookup already refuses incomplete verification and unresolved inherited findings. [src/digitalmodel/ansys/analysis_lookup.py:L120-L185] [src/digitalmodel/ansys/analysis_lookup.py:L188-L210]
 
 ## 9. Dependencies and alternative implementations
 
@@ -922,7 +922,7 @@ Private source access remains a reading boundary and supplies no public citation
 
 ## 10. Coverage and open items
 
-Coverage: main-path workflow/runner, batch/APDL generation, APDL/journal readers, text results, pressure wall, padeye and mudmat generation, bolt/contact/thermal helpers, weld and fatigue methods; evidence packaging and qualification predicates were inspected, while the expanded transition machinery remains indexed for follow-up. [src/digitalmodel/ansys/workflow.py:L27-L77] [src/digitalmodel/ansys/analysis_evidence.py:L20-L100] [src/digitalmodel/ansys/analysis_lookup.py:L151-L232]
+Coverage: main-path workflow/runner, batch/APDL generation, APDL/journal readers, text results, pressure wall, padeye and mudmat generation, bolt/contact/thermal helpers, weld and fatigue methods; evidence packaging and qualification predicates were inspected, while the expanded transition machinery remains indexed for follow-up. [src/digitalmodel/ansys/workflow.py:L27-L77] [src/digitalmodel/ansys/analysis_evidence.py:L20-L100] [src/digitalmodel/ansys/analysis_lookup.py:L152-L236]
 
 The documentation reading includes the domain index, Workbench guidelines/lessons and the diffraction/submodel contract; index file counts are README claims, unverified, and are not used as test or maturity evidence. Workbench lessons themselves leave the parameter-table question-mark cause unknown. [docs/domains/ansys/_index.md:L3-L9] [docs/domains/ansys/workbench/guidelines.md:L18-L28] [docs/domains/ansys/workbench/lessons.md:L5-L9]
 
@@ -1017,7 +1017,7 @@ Index entries identify existing files and their first defined callable/class; th
 | --- | --- |
 | `analysis_evidence.py` / `parse_digest` | [src/digitalmodel/ansys/analysis_evidence.py:L20-L23] |
 | `analysis_intake.py` / `_relative` | [src/digitalmodel/ansys/analysis_intake.py:L17-L20] |
-| `analysis_lookup.py` / `create_ledger` | [src/digitalmodel/ansys/analysis_lookup.py:L20-L23] |
+| `analysis_lookup.py` / `create_ledger` | [src/digitalmodel/ansys/analysis_lookup.py:L21-L24] |
 | `analysis_matrix_publish.py` / `_evidence` | [src/digitalmodel/ansys/analysis_matrix_publish.py:L15-L18] |
 | `analysis_observed.py` / `_reference` | [src/digitalmodel/ansys/analysis_observed.py:L17-L20] |
 | `analysis_pending.py` / `_validate_pending` | [src/digitalmodel/ansys/analysis_pending.py:L18-L21] |

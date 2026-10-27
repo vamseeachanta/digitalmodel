@@ -25,7 +25,7 @@ def protocol(intake, tmp_path):
     case["responses"][0]["limitations"] = []
     for role in ["input", "log", "native", "source"]:
         path = tmp_path / role
-        path.write_text("isolated protocol fixture: " + role)
+        path.write_text("isolated protocol fixture: " + role, encoding="utf-8", newline="\n")
         resolver[role] = path
         case["evidence"].append({"id": role, "sha256": digest_bytes(path.read_bytes()),
                                  "role": role, "required": True})
@@ -40,8 +40,19 @@ def protocol(intake, tmp_path):
         "required_roles": [], "allowed_limitations": [],
         "checks": {k: "passed" for k in ("source_rights", "equilibrium",
                                         "numerical_quality", "independent_method")}}
+    # Synthetic protocol inputs only: 12.5 <= 13 by independent ordering.
+    # No capacity or convergence threshold from an engineering standard is used.
+    entry["acceptance_requirements"] = {"screening": ["equilibrium", "convergence", "strength"]}
+    entry["acceptance_criteria"] = {
+        name: {"criterion_id": "synthetic-" + name, "quantity": "test scalar",
+               "unit": "MPa", "observed": "12.5", "limit": "13", "comparator": "le",
+               "source": {"document": "Synthetic protocol basis", "edition": "Revision 1",
+                          "clause": "Comparison example"},
+               "evidence": [review]}
+        for name in ("equilibrium", "convergence", "strength")}
     register = tmp_path / "register.json"
-    register.write_text(json.dumps({"entries": {"case-1:stress": entry}}))
+    register.write_text(json.dumps({"entries": {"case-1:stress": entry}}),
+                        encoding="utf-8", newline="\n")
     ref = {"id": "register", "sha256": digest_bytes(register.read_bytes())}
     resolver["register"] = register
     study["verification_reference"] = ref
@@ -69,7 +80,7 @@ def test_positive_protocol_branch_and_withdrawal(protocol):
 @pytest.mark.parametrize("identity", ["capture", "input", "log", "native", "source", "register"])
 def test_every_required_file_is_checked_at_lookup(protocol, identity):
     _, resolver, package, ledger, authority = protocol
-    resolver[identity].write_text("changed")
+    resolver[identity].write_text("changed", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError):
         lookup(package, query(), resolver, ledger=ledger, authority=authority)
 
@@ -78,7 +89,7 @@ def test_every_required_file_is_checked_at_lookup(protocol, identity):
     "not_verified", "wrong_use", "no_reference", "precision", "wrong_expected"])
 def test_verification_gate_refusals(protocol, damage):
     study, resolver, _, ledger, authority = protocol
-    register = json.loads(resolver["register"].read_text())
+    register = json.loads(resolver["register"].read_text(encoding="utf-8"))
     entry = register["entries"]["case-1:stress"]
     changes = {"same_author": ("checker", "fixture-author"), "wrong_row": ("row_hash", "wrong"),
         "negative_tolerance": ("absolute_tolerance", "-1"),
@@ -88,7 +99,7 @@ def test_verification_gate_refusals(protocol, damage):
         "wrong_expected": ("expected", "13")}
     key, value = changes[damage]
     entry[key] = value
-    resolver["register"].write_text(json.dumps(register))
+    resolver["register"].write_text(json.dumps(register), encoding="utf-8", newline="\n")
     ref = {"id": "register", "sha256": digest_bytes(resolver["register"].read_bytes())}
     study["verification_reference"] = ref
     package = build_package(study, resolver)
@@ -118,11 +129,11 @@ def test_synthetic_refuses_even_with_complete_authority(protocol):
 
 def test_comparison_does_not_round_a_difference_down_to_tolerance(protocol):
     study, resolver, _, ledger, authority = protocol
-    register = json.loads(resolver["register"].read_text())
+    register = json.loads(resolver["register"].read_text(encoding="utf-8"))
     entry = register["entries"]["case-1:stress"]
     entry.update(expected="-0.00000000000000000000000000001",
                  absolute_tolerance="12.5")
-    resolver["register"].write_text(json.dumps(register))
+    resolver["register"].write_text(json.dumps(register), encoding="utf-8", newline="\n")
     ref = {"id": "register", "sha256": digest_bytes(resolver["register"].read_bytes())}
     study["verification_reference"] = ref
     package = build_package(study, resolver)
@@ -133,9 +144,9 @@ def test_comparison_does_not_round_a_difference_down_to_tolerance(protocol):
 
 def test_duplicate_register_keys_refuse_even_with_matching_hash(protocol):
     study, resolver, _, ledger, authority = protocol
-    text = resolver["register"].read_text().replace('"expected": "12.5"',
+    text = resolver["register"].read_text(encoding="utf-8").replace('"expected": "12.5"',
                                                 '"expected": "99", "expected": "12.5"')
-    resolver["register"].write_text(text)
+    resolver["register"].write_text(text, encoding="utf-8", newline="\n")
     ref = {"id": "register", "sha256": digest_bytes(resolver["register"].read_bytes())}
     study["verification_reference"] = ref
     package = build_package(study, resolver)
@@ -160,9 +171,9 @@ def test_criteria_revision_label_alone_cannot_establish_current_criteria(protoco
 
 def test_string_intended_uses_cannot_match_by_substring(protocol):
     study, resolver, _, ledger, authority = protocol
-    register = json.loads(resolver["register"].read_text())
+    register = json.loads(resolver["register"].read_text(encoding="utf-8"))
     register["entries"]["case-1:stress"]["intended_uses"] = "non-screening"
-    resolver["register"].write_text(json.dumps(register))
+    resolver["register"].write_text(json.dumps(register), encoding="utf-8", newline="\n")
     ref = {"id": "register", "sha256": digest_bytes(resolver["register"].read_bytes())}
     study["verification_reference"] = ref
     package = build_package(study, resolver)

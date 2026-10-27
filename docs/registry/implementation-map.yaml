@@ -40502,7 +40502,7 @@ rejected_candidates:
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/ansys/analysis_lookup.py
   symbol: validate_ledger
-  line: 26
+  line: 27
   families:
   - irregular-frequency-treatment
   disposition: needs_review

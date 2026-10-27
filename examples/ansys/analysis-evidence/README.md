@@ -253,3 +253,18 @@ owners; licensed-standard originals remain at licensed locations. Generalization
 requires recorded transformations, restricted provenance and physical-meaning
 validation under the charter. This scope amendment adds no client-derived dataset
 or qualified result.
+
+## Separate acceptance criteria
+
+The [response acceptance guide](../../../docs/domains/ansys/acceptance-criteria.html)
+defines sourced equilibrium, convergence and strength checks, intended-use
+requirements and a worked offline comparison. Existing retained packages remain
+diagnostic. Engineering lookup requires a new digest-bound verification register
+with explicit requirements; execution success alone cannot supply them.
+Each criterion now requires a structured document, edition and clause citation;
+placeholder sources and unknown fields refuse qualification. Absolute comparisons
+retain the signed response, and any supplied failure blocks qualification even
+when that check is optional. Engineering answers return each status with its
+quantity, unit, observed value, limit, comparator, source and evidence; diagnostic
+answers omit acceptance results. Existing bare-status consumers shall read the
+per-check `status` field described in the guide.
