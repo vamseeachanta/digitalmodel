@@ -404,6 +404,119 @@ def test_planted_unresolved_draw_keeps_conditional_collapse_band(tmp_path, monke
     assert json.loads((tmp_path / "window.json").read_text()) == result["window"]
 
 
+@pytest.mark.parametrize("reverse_depths", [False, True], ids=["forward", "reverse"])
+def test_multi_depth_unresolved_draw_accounting(tmp_path, monkeypatch, reverse_depths):
+    """Independent synthetic records exercise depth isolation in both orders.
+
+    Four draws per depth, with an illustrative caller limit of 1/4:
+    * 1000 ft: [100, None, 150, 200] psi; resolved=3, unresolved=1, f=1/4.
+      Linear h=(n-1)*p gives h=[0.2, 1, 1.8], Q=[110, 150, 190] psi.
+    * 2000 ft: [None, 400, None, 600] psi; resolved=2, unresolved=2, f=1/2.
+      Resolved-only h=[0.1, 0.5, 0.9] gives Q=[420, 500, 580] psi, withheld
+      because 1/2 exceeds 1/4; all reported quantiles must be null.
+    * 3000 ft: [1000, 1200, 1400, 1600] psi; resolved=4, unresolved=0, f=0.
+      h=[0.3, 1.5, 2.7] gives Q=[1060, 1300, 1540] psi.
+
+    These hand calculations use Definition 7 cited in the band test above.
+    Synthetic pore pressures 100, 400, 1000 psi identify the depth to the
+    scripted bounds; all fracture/ceiling values are 4000 psi. A separate
+    nominal call returns 2500 psi and is excluded from the four-draw counts.
+    EMW divisors are 52, 104, 156 psi/ppg from the workflow README's 0.052*TVD.
+    The policy is supplied for this test, without an engineering acceptance claim.
+    """
+    records = [
+        {
+            "tvd_ft": 1000, "pore_pressure_psi": 100,
+            "draws": [100, None, 150, 200],
+            "resolved": 3, "unresolved": 1, "fraction": 0.25,
+            "status": "RESOLVED_DRAWS_ONLY", "reason": None,
+            "quantiles": [110, 150, 190], "emw_divisor": 52,
+        },
+        {
+            "tvd_ft": 2000, "pore_pressure_psi": 400,
+            "draws": [None, 400, None, 600],
+            "resolved": 2, "unresolved": 2, "fraction": 0.5,
+            "status": "INDETERMINATE",
+            "reason": "UNRESOLVED_FRACTION_EXCEEDS_LIMIT",
+            "quantiles": [None, None, None], "emw_divisor": 104,
+        },
+        {
+            "tvd_ft": 3000, "pore_pressure_psi": 1000,
+            "draws": [1000, 1200, 1400, 1600],
+            "resolved": 4, "unresolved": 0, "fraction": 0,
+            "status": "ALL_DRAWS_RESOLVED", "reason": None,
+            "quantiles": [1060, 1300, 1540], "emw_divisor": 156,
+        },
+    ]
+    if reverse_depths:
+        records.reverse()
+    cfg = yaml.safe_load(INPUT.read_text())
+    cfg["profile"] = [
+        {key: record[key] for key in ("tvd_ft", "pore_pressure_psi")}
+        for record in records
+    ]
+    cfg["ensemble"] = {"samples": 4, "sigma": {}, "max_unresolved_fraction": 0.25}
+    cfg["polar"] = {"inclinations_deg": []}
+    pressures = {
+        record["pore_pressure_psi"]: iter(record["draws"] + [2500])
+        for record in records
+    }
+    calls = []
+
+    def scripted_bounds(case, **kwargs):
+        calls.append(case.pore_pressure_psi)
+        pressure = next(pressures[case.pore_pressure_psi])
+        return {
+            "collapse": {"pressure_psi": pressure},
+            "fracture_initiation": {"pressure_psi": 4000},
+            "conservative_ceiling_psi": None if pressure is None else 4000,
+            "feasible": pressure is not None,
+        }
+
+    monkeypatch.setattr(
+        "digitalmodel.well.drilling.wellbore_stability.pressure_bounds", scripted_bounds
+    )
+    result = run_workflow(cfg, tmp_path)
+    assert calls == [record["pore_pressure_psi"] for record in records for _ in range(5)]
+    assert result["screening_only"] is True
+    assert result["validation_status"] == "NOT_VALIDATED"
+    assert result["model"]["validation_status"] == "NOT_VALIDATED"
+    assert result["uncertainty"]["validation_status"] == "NOT_VALIDATED"
+    assert result["uncertainty"]["max_unresolved_fraction"] == 0.25
+    assert [row["tvd_ft"] for row in result["window"]] == [
+        record["tvd_ft"] for record in records
+    ]
+    for row, expected in zip(result["window"], records):
+        band = row["curves"]["collapse"]
+        assert row["inputs"]["pore_pressure_psi"] == expected["pore_pressure_psi"]
+        assert row["nominal"]["collapse"]["pressure_psi"] == 2500
+        assert band["resolved_draws"] == expected["resolved"]
+        assert band["unresolved_draws"] == row["failed_draws"] == expected["unresolved"]
+        assert row["infeasible_draws"] == expected["unresolved"]
+        assert band["unresolved_fraction"] == expected["fraction"]
+        assert band["numerical_status"] == expected["status"]
+        assert band["indeterminate_reason"] == expected["reason"]
+        assert band["quantile_basis"] == "resolved_draws_only"
+        assert band["max_unresolved_fraction"] == 0.25
+        assert band["unresolved_fraction_check"] == "EVALUATED"
+        assert row["validation_status"] == "NOT_VALIDATED"
+        for curve in row["curves"].values():
+            assert curve["validation_status"] == "NOT_VALIDATED"
+        for name, value in zip(("p10", "p50", "p90"), expected["quantiles"]):
+            assert band[name + "_psi"] == pytest.approx(value)
+            assert band[name + "_emw_ppg"] == pytest.approx(
+                None if value is None else value / expected["emw_divisor"]
+            )
+        window = row["conservative_window"]
+        assert window["validation_status"] == "NOT_VALIDATED"
+        if expected["unresolved"]:
+            assert window["low_psi"] is None
+            assert window["high_psi"] is None
+            assert window["feasible"] is False
+    assert json.loads((tmp_path / "summary.json").read_text()) == result
+    assert json.loads((tmp_path / "window.json").read_text()) == result["window"]
+
+
 @pytest.fixture
 def numerical_miss_ensemble(monkeypatch):
     """Prescribe two synthetic realizations while retaining real pressure searches."""
