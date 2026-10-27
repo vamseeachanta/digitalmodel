@@ -5,6 +5,10 @@ Hydrostatics calculations for naval architecture.
 
 Covers buoyant force, submerged volume, center of gravity shifts,
 and inclining experiment analysis from USNA EN400 Chapters 2-3.
+
+For independent instructional arithmetic using synthetic weights, see
+``docs/examples/hydrostatic-weight-moment-balance.md``. Its runnable example
+covers addition, removal, vertical shifting, and inverse operations.
 """
 from __future__ import annotations
 
@@ -92,7 +96,19 @@ def vertical_cg_after_weight_change(
     """New KG after adding/removing weight.
 
     KG_new = (W1*KG1 + w*kg) / (W1 + w)
-    Use negative weight_lt for removal.
+    This follows the moment balance W_new*KG_new = W1*KG1 + w*kg,
+    with W_new = W1 + w. The return value is KG only; the caller tracks W_new.
+
+    Use positive weight_lt for addition and negative weight_lt for removal.
+    All heights are in feet above the same fixed datum; for removal,
+    weight_kg_ft is the removed weight's original height. The caller must
+    ensure the remaining total weight is positive and the removed weight
+    exists in the initial loading condition.
+
+    A vertical shift can be composed as removal at the old height followed
+    by addition at the new height, passing the intermediate weight and KG
+    into the second call. This composition requires a positive intermediate
+    weight. See the synthetic example linked in the module docstring.
     """
     new_disp = displacement_lt + weight_lt
     return (
