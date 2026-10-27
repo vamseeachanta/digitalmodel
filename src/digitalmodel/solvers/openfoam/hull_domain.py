@@ -280,6 +280,9 @@ def preflight_wake_extent(
 
     Basis: linear deep-water dispersion omega**2=g*k and U=omega/k imply
     lambda=2*pi*U**2/g (also used by hull_free_surface.deep_water_wavelength).
+    See "Ship wakes: Kelvin or Mach angle?" (2013), pp. 1-2,
+    https://arxiv.org/abs/1304.2653, for the dispersion and wavelength basis.
+    Example and test criteria are synthetic, not engineering recommendations.
     The widening is right-triangle geometry, not a prescribed wake angle.
     The open angular interval (0, 90 degrees) excludes a degenerate wedge and
     an unbounded tangent. No engineering acceptance threshold is inferred.
