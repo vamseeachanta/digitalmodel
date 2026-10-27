@@ -6,6 +6,12 @@ Source of all physical numbers: the synthetic case defined here, chosen for
 exact arithmetic; these inputs are assumptions, not calibrated design values.
 The reference is displaced circular fluid mass times acceleration, multiplied
 by the explicitly specified inertia coefficient. Only inertia is evaluated.
+
+Plan-lite: keep the added coverage in this one test file. Derive expected
+forces independently from displaced-fluid mass, then validate the seven cases
+with the neighboring hydrodynamic and simplified-interface tests. Exclude
+production changes, drag, lift, structural reaction distribution, external
+data and licensed solvers.
 """
 
 import math
