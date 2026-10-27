@@ -265,6 +265,7 @@ gates:
         "tests/installation/",
         "tests/marine_ops/marine_analysis/",
         "tests/marine_ops/reservoir/",
+        "tests/marine_ops/towing/",
         "tests/marine_ops/__init__.py",
         "tests/marine_ops/test_operation_envelope.py",
         "tests/marine_ops/test_envelope_*.py",
@@ -274,7 +275,18 @@ gates:
         "tests/test_fluids_integration.py",
         "tests/test_reservoir_framework.py",
       ]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/marine_ops/artificial_lift/ tests/marine_ops/installation/ tests/installation/ tests/marine_ops/marine_analysis/ tests/marine_ops/reservoir/ tests/marine_ops/__init__.py tests/marine_ops/test_operation_envelope.py tests/marine_ops/test_envelope_*.py tests/production_engineering/ tests/reservoir/ tests/well/ tests/test_fluids_integration.py tests/test_reservoir_framework.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: >-
+      uv run --no-sources
+      --with "assetutilities @ git+https://github.com/${GITHUB_REPOSITORY_OWNER:?repository owner required}/assetutilities.git@main"
+      --with-editable '.[test]' python -m pytest
+      tests/marine_ops/artificial_lift/ tests/marine_ops/installation/
+      tests/installation/ tests/marine_ops/marine_analysis/
+      tests/marine_ops/reservoir/ tests/marine_ops/towing/
+      tests/marine_ops/__init__.py tests/marine_ops/test_operation_envelope.py
+      tests/marine_ops/test_envelope_*.py tests/production_engineering/
+      tests/reservoir/ tests/well/ tests/test_fluids_integration.py
+      tests/test_reservoir_framework.py
+      -rfE -p no:randomly -p no:sugar --no-header -q --tb=line
     failure_action: "block"
     warning_action: "report"
 

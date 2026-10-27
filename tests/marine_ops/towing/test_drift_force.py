@@ -8,7 +8,13 @@ Zero and negative values probe the specified input boundaries; NaN and both
 infinities probe finite-value validation for every input independently.
 """
 
+from pathlib import Path
+import shlex
+
 import pytest
+import yaml
+
+from scripts.ci.detect_touched_domains import parse_domains, path_matches_root
 
 from digitalmodel.marine_ops.towing.drift_force import current_drift_force
 
@@ -89,3 +95,37 @@ def test_current_drift_force_rejects_zero_density():
     """Density is strictly positive, including when the current is zero."""
     with pytest.raises(ValueError, match="density_kg_m3"):
         current_drift_force(0.0, 0.0, 12.0, 1.5)
+
+
+def test_towing_tests_have_exactly_one_ci_domain():
+    """Every towing test belongs to the marine operations shard."""
+    root = Path(__file__).resolve().parents[3]
+    domains = parse_domains(root / "tests/DOMAINS.md")
+    for test_file in Path(__file__).parent.glob("test_*.py"):
+        relative = test_file.relative_to(root).as_posix()
+        owners = [
+            domain.name
+            for domain in domains
+            if any(path_matches_root(relative, entry) for entry in domain.roots)
+        ]
+        assert owners == ["marine-ops-other"], relative
+
+
+@pytest.mark.parametrize("registration", ["test_roots", "command"])
+def test_towing_tests_are_in_blocking_ci_gate(registration):
+    """The blocking shard registers and executes every towing test file."""
+    root = Path(__file__).resolve().parents[3]
+    config = yaml.safe_load(
+        (root / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )
+    gate = config["gates"]["tests-marine-ops-other"]
+    assert gate["enabled"] is True
+    assert gate["failure_action"] == "block"
+    if registration == "command":
+        arguments = shlex.split(gate[registration])
+        entries = arguments[arguments.index("pytest") + 1:]
+    else:
+        entries = gate[registration]
+    for test_file in Path(__file__).parent.glob("test_*.py"):
+        relative = test_file.relative_to(root).as_posix()
+        assert any(path_matches_root(relative, entry) for entry in entries), relative
