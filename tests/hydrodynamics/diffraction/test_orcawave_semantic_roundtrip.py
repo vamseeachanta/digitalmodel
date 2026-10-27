@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from math import pi
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,10 @@ import yaml
 from digitalmodel.hydrodynamics.diffraction.benchmark_input_comparison import (
     build_semantic_equivalence_html,
 )
-from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+    DiffractionSpec,
+    FrequencyInputType,
+)
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
 
@@ -46,7 +50,92 @@ def _generate_orcawave_yml(spec: DiffractionSpec, tmp_path: Path) -> Path:
     return backend.generate_single(spec, tmp_path)
 
 
+@pytest.fixture
+def synthetic_spec() -> DiffractionSpec:
+    """Small offline input for value-level roundtrip coverage (#524).
+
+    All inputs are synthetic assumptions: supplied mass 12500 kg, density
+    1000 kg/m^3, infinite depth, zero centre of gravity, unit gyration radii
+    in metres, and headings 0, 90, 225 degrees. The mesh is a reference only;
+    the text backend does not need mesh contents for symmetry 'none'.
+
+    One cycle is 2*pi radians, so omega = 2*pi/T. Choosing T = 8, 2, 4 s
+    gives the unsorted, nonuniform explicit grid pi/4, pi, pi/2 rad/s.
+    These integer periods are exact at the export precision.
+    """
+    return DiffractionSpec.model_validate(
+        {
+            "vessel": {
+                "name": "body",
+                "geometry": {"mesh_file": "mesh.gdf", "mesh_format": "gdf"},
+                "inertia": {
+                    "mode": "explicit",
+                    "mass": 12500.0,
+                    "centre_of_gravity": [0.0, 0.0, 0.0],
+                    "radii_of_gyration": [1.0, 1.0, 1.0],
+                },
+            },
+            "environment": {"water_depth": "infinite", "water_density": 1000.0},
+            "frequencies": {
+                "input_type": "frequency",
+                "values": [pi / 4, pi, pi / 2],
+            },
+            "wave_headings": {"values": [0.0, 90.0, 225.0]},
+        }
+    )
+
+
 class TestOrcaWaveSemanticRoundTripSingleBody:
+    def test_roundtrip_preserves_supplied_mass_and_density(
+        self, synthetic_spec: DiffractionSpec, tmp_path: Path
+    ) -> None:
+        """Check each unit conversion before and after parsing (#524)."""
+        yml_path = _generate_orcawave_yml(synthetic_spec, tmp_path)
+        native = yaml.safe_load(yml_path.read_text(encoding="utf-8"))
+        parsed = OrcaWaveInputParser().parse(yml_path)
+
+        # Definition: 1 tonne = 1000 kg. Hand calculations, independently:
+        # mass: 12500 / 1000 = 12.5 t; 12.5 * 1000 = 12500 kg.
+        # density: 1000 / 1000 = 1 t/m^3; 1 * 1000 = 1000 kg/m^3.
+        # Checking native values prevents reciprocal conversion errors hiding.
+        assert native["UnitsSystem"] == "SI"
+        assert native["Bodies"][0]["BodyMass"] == 12.5
+        assert native["WaterDensity"] == 1.0
+        assert parsed.vessel is not None
+        assert parsed.vessel.inertia.mode == "explicit"
+        assert parsed.vessel.inertia.mass == 12500.0
+        assert parsed.environment.water_density == 1000.0
+
+    def test_roundtrip_preserves_infinite_depth_and_explicit_grid_values(
+        self, synthetic_spec: DiffractionSpec, tmp_path: Path
+    ) -> None:
+        """Assert all grid values in sorted-period canonical order (#524)."""
+        yml_path = _generate_orcawave_yml(synthetic_spec, tmp_path)
+        native = yaml.safe_load(yml_path.read_text(encoding="utf-8"))
+        parsed = OrcaWaveInputParser().parse(yml_path)
+
+        # _periods_from_spec documents ascending periods. From T = 2*pi/omega:
+        # pi/4 -> 8 s, pi -> 2 s, pi/2 -> 4 s; sorting gives [2, 4, 8] s.
+        # In that order, omega = [2*pi/2, 2*pi/4, 2*pi/8]
+        # = [pi, pi/2, pi/4] rad/s, not the original sequence order.
+        # Integer periods and binary divisions of pi permit exact assertions.
+        expected_periods = [2.0, 4.0, 8.0]
+        expected_frequencies = [pi, pi / 2, pi / 4]
+        # Headings are the synthetic degree inputs, with no unit conversion.
+        expected_headings = [0.0, 90.0, 225.0]
+
+        assert native["WaterDepth"] == "Infinity"
+        assert parsed.environment.water_depth == "infinite"
+        assert native["WavesReferredToBy"] == "period (s)"
+        assert native["PeriodOrFrequency"] == expected_periods
+        assert native["WaveHeading"] == expected_headings
+        assert parsed.frequencies.input_type == FrequencyInputType.FREQUENCY
+        assert parsed.frequencies.range is None
+        assert parsed.frequencies.values == expected_frequencies
+        assert parsed.frequencies.to_frequencies_rad_s() == expected_frequencies
+        assert parsed.frequencies.to_periods_s() == expected_periods
+        assert parsed.wave_headings.to_heading_list() == expected_headings
+
     def test_preserves_frequency_values(self, tmp_path: Path) -> None:
         original = _load_ship_spec()
         yml_path = _generate_orcawave_yml(original, tmp_path)
