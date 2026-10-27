@@ -2,6 +2,7 @@
 # ABOUTME: Covers unit conversions, buoyancy, water density interpolation
 
 import re
+from fractions import Fraction
 from math import ulp
 from pathlib import Path
 
@@ -89,6 +90,36 @@ class TestInterpolateWaterDensity:
             interpolate_water_density(60.0, water="saltwater")
 
 
+class TestCitedWeightMomentBalance:
+    """EN400, Summer 2020, section 3.2.2.1, Example 3.2, page 3-12."""
+
+    def test_documented_reference_case(self):
+        example = (
+            Path(__file__).resolve().parents[2]
+            / "docs/examples/hydrostatic-weight-moment-balance.md"
+        )
+        snippets = re.findall(
+            r"```python\n(.*?)```", example.read_text(encoding="utf-8"), re.DOTALL
+        )
+        assert len(snippets) == 2
+        namespace = {}
+        exec(compile(snippets[0], example.as_posix(), "exec"), namespace)
+
+        # Independent hand calculation from the cited inputs:
+        # W = 4092 - 75 + 200 = 4217 LT.
+        # M = 4092*18.9 - 75*20 + 200*10 = 77838.8 LT ft.
+        # KG = (389194/5)/4217 = 389194/21085 ft; displayed as 18.5 ft.
+        expected_kg_ft = float(Fraction(389194, 21085))
+        assert namespace["reference_weight_lt"] == 4217.0
+        assert namespace["reference_moment_lt_ft"] == pytest.approx(
+            77838.8, rel=0.0, abs=4 * ulp(77838.8)
+        )
+        assert namespace["reference_kg_ft"] == pytest.approx(
+            expected_kg_ft, rel=0.0, abs=4 * ulp(expected_kg_ft)
+        )
+        assert round(namespace["reference_kg_ft"], 1) == 18.5
+
+
 class TestSyntheticWeightMomentBalance:
     """Independent arithmetic in docs/examples/hydrostatic-weight-moment-balance.md.
 
@@ -171,9 +202,9 @@ class TestSyntheticWeightMomentBalance:
         snippets = re.findall(
             r"```python\n(.*?)```", example.read_text(encoding="utf-8"), re.DOTALL
         )
-        assert len(snippets) == 1
+        assert len(snippets) == 2
         namespace = {}
-        exec(compile(snippets[0], str(example), "exec"), namespace)
+        exec(compile(snippets[1], example.as_posix(), "exec"), namespace)
 
         # Independent results from the component moment sums above.
         expected = {
