@@ -193,7 +193,7 @@ def test_repository_checkouts_verify_current_merge(filename: str) -> None:
         assert '"${parents[1]:-missing}" != "$PR_HEAD_SHA"' in script
     assert scripts
     assert len(set(scripts)) == 1
-    workflow = (WORKFLOWS / filename).read_text()
+    workflow = (WORKFLOWS / filename).read_text(encoding="utf-8")
     assert "merge_commit_sha" not in workflow
     assert "resolve_merge" not in workflow
     assert not re.search(r"gh\s+api", "\n".join(scripts))

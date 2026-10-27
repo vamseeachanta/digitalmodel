@@ -937,7 +937,7 @@ def test_unpinned_source_keeps_own_shard() -> None:
 
 
 def test_replay_pr_2481_changed_paths() -> None:
-    """Replay the committed 15-path diff with and without record routing."""
+    """Unowned atlas inputs in a mixed diff require every shard, with or without pins."""
     detector = load_detector_module()
     domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
     paths = json.loads((Path(__file__).parent / "fixtures/pr_2481_changed_paths.json").read_text())
@@ -945,10 +945,10 @@ def test_replay_pr_2481_changed_paths() -> None:
     assert {d.name for d in detector.touched_domains(
         paths, domains, pinned_paths=detector.git_pinned_paths("HEAD"),
         pinned_domains=detector.git_pinned_domains("HEAD", domains),
-    )} == {"contracts", "orcaflex", "workflows"}
+    )} == {d.name for d in domains}
     assert {d.name for d in detector.touched_domains(
         paths, domains, pinned_paths=set(),
-    )} == {"orcaflex", "workflows"}
+    )} == {d.name for d in domains}
 
 
 def test_domain_record_document_selects_contracts() -> None:
@@ -1394,3 +1394,19 @@ def test_bha_database_owned_and_executed_by_subsea():
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
     assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
+
+
+@pytest.mark.parametrize("paths", [
+    ["scripts/unmapped_example.py"], ["tests/unmapped_example.py"],
+    ["config/unmapped.yml"],
+    ["tests/citations/test_registry.py", "scripts/unmapped_example.py"],
+])
+def test_unowned_paths_dispatch_full_production_matrix(paths, monkeypatch, capsys):
+    """The workflow's detector entry point must retain the conservative fallback."""
+    detector = load_detector_module()
+    monkeypatch.setattr(detector, "git_changed_files", lambda base, head: paths)
+    monkeypatch.setattr(detector, "git_pinned_domains", lambda ref, domains: {})
+    assert detector.main(["--mode", "touched", "--base", "base", "--head", "head"]) == 0
+    matrix = json.loads(capsys.readouterr().out)
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    assert matrix == detector.matrix_for(domains)

@@ -19,7 +19,7 @@ WORKFLOWS = ROOT / ".github/workflows"
 
 def workflow(name):
     """Parse Actions YAML, including its unquoted on key."""
-    return yaml.safe_load((WORKFLOWS / name).read_text())
+    return yaml.safe_load((WORKFLOWS / name).read_text(encoding="utf-8"))
 
 
 def events(document):
@@ -129,6 +129,8 @@ def load_policy():
     (["tests/scripts/test_ci_baseline.py"], True),
     (["tests/conftest.py"], True),
     (["pyproject.toml"], True),
+    ([".github/ci/flaky-register.yml"], True),
+    (["scripts/implementation_map_search.py"], True),
 ])
 def test_harness_selection(paths, expected):
     """Recognize harness inputs without selecting unrelated source changes."""
@@ -186,3 +188,43 @@ def test_aggregate_enforces_harness_selection(selection, result, expected, tmp_p
     completed = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
                                env=env, capture_output=True, text=True, check=False)
     assert completed.returncode == expected, completed.stdout + completed.stderr
+
+
+@pytest.mark.parametrize("path", [
+    "scripts/unmapped_example.py", "tests/unmapped_example.py",
+    "config/unmapped.yml", ".github/ci/unmapped.json",
+    "src/other_package/module.py", "tools/check", "unmapped.toml",
+    "tests/unmapped/fixture.md",
+])
+@pytest.mark.parametrize("mixed", [False, True])
+def test_unowned_inputs_select_full_matrix_and_enforce_aggregate(path, mixed, tmp_path):
+    """Unowned inputs require every domain, even beside a known module."""
+    policy = load_policy()
+    paths = [path]
+    if mixed:
+        paths.append("src/digitalmodel/orcaflex/installation_analysis.py")
+    result = policy.trace(paths, pinned_domains={})
+    domains = policy.parse_domains(ROOT / "tests/DOMAINS.md")
+    assert result["domains"] == [domain.name for domain in domains]
+    assert all(f"tests-{domain.name}" in result["jobs"] for domain in domains)
+    aggregate = workflow("quality-gates-by-domain.yml")["jobs"]["domain-tests-required"]
+    step = next(step for step in aggregate["steps"]
+                if step.get("name") == "Enforce required domain result")
+    for domain_result, expected in (("success", 0), ("skipped", 1), ("failure", 1)):
+        env = dict(os.environ, HAS_HARNESS=str(result["harness"]).lower(),
+                   HARNESS_RESULT="success" if result["harness"] else "skipped",
+                   DETECT_RESULT="success", HAS_DOMAINS="true", DOMAIN_RESULT=domain_result)
+        completed = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
+                                   env=env, capture_output=True, text=True, check=False)
+        assert completed.returncode == expected, completed.stdout + completed.stderr
+
+
+@pytest.mark.parametrize("paths", [
+    ["README.md"], ["docs/unpinned-note.md"], ["docs/guide.rst"],
+    ["README.md", "src/digitalmodel/orcaflex/installation_analysis.py"],
+])
+def test_unpinned_prose_preserves_narrow_selection(paths):
+    """Explicit prose exclusions do not widen known module routes."""
+    result = load_policy().trace(paths, pinned_domains={})
+    expected = ["marine-ops-other", "orcaflex", "workflows"] if len(paths) > 1 else []
+    assert result["domains"] == expected

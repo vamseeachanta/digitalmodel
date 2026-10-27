@@ -25,7 +25,8 @@ HARNESS_FILES = {
     "tests/workflows/test_ci_triggers.py", "tests/workflows/test_durable_workflows.py",
     "tests/contracts/test_flaky_register_schema.py",
     "tests/docs/test_implementation_map.py", "tests/docs/test_implementation_map_search.py",
-    "scripts/generate_implementation_map.py",
+    "scripts/generate_implementation_map.py", "scripts/implementation_map_search.py",
+    ".github/ci/flaky-register.yml",
     "tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py",
 }
 
