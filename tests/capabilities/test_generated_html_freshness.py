@@ -133,6 +133,20 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     }
 
 
+def test_surface_crack_report_has_scoped_ownership(monkeypatch) -> None:
+    """Classify the domain report while keeping producer discovery enforced."""
+    script = "scripts/studies/surface_crack_verdict.py"
+    reason = checker.DISCOVERY_FALSE_POSITIVES.get(script, "")
+    assert "docs/domains" in reason
+    assert "tests/solvers/calculix/test_surface_crack_verdict.py" in reason
+    assert script in checker.discover_candidate_generators(checker.REPO)
+
+    monkeypatch.delitem(checker.DISCOVERY_FALSE_POSITIVES, script)
+    assert checker.validate_registry(checker.REPO) == [
+        f"unregistered candidate generator(s): {script}"
+    ]
+
+
 def test_page_census_rejects_unclassified_html(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(checker, "build_output_pages", lambda repo: set())
     pages = (

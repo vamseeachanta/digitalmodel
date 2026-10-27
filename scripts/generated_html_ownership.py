@@ -102,6 +102,10 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/semantic_validate.py": (
         "writes caller-selected validation reports, not committed docs/api pages"
     ),
+    "scripts/studies/surface_crack_verdict.py": (
+        "renders the surface-crack analysis under docs/domains, not docs/api; "
+        "tests/solvers/calculix/test_surface_crack_verdict.py verifies reproduction"
+    ),
     "docs/api/cfd/report_build/house.py": (
         "shared HTML rendering helpers; it does not write a page"
     ),
