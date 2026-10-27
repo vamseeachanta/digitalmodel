@@ -1,0 +1,14 @@
+{
+  "algorithm": "sha256",
+  "external_source_digests": {
+    "hossain_2019_manuscript": "61748301f2250a23aca3df29b9e28127eda6ce703d4623603f89dcdab3dcd9e2",
+    "hu_2015_manuscript": "86170b237c324931503f328dcab68b1dd20b4cf4aaf44de3b02ca19b71d13bf3",
+    "ndbc_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3",
+    "public_design_collection": "f416fbcc589dbfffe934f4ac232fe1568cc5ac42f14488359e941b65965541dc",
+    "public_specification_collection": "1618e8f01b438221919fb5e3c5f7d33b945743d9d992d018a1489a91430e34b9"
+  },
+  "files": {
+    "inputs.json": "4efdb8eea2f645427d8d3564092559d20c45c3dc175a53af50ce061bc079a3eb"
+  },
+  "source_copy_policy": "Originals remain external; digests refer to original bytes, not engineering qualification."
+}

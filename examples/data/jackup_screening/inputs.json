@@ -1,0 +1,247 @@
+{
+  "aggregate_particulars": {
+    "fields": {
+      "hull_breadth_m": {
+        "count": 97,
+        "maximum": 115.1,
+        "median": 66.4,
+        "minimum": 40.2
+      },
+      "hull_depth_m": {
+        "count": 98,
+        "maximum": 12.0,
+        "median": 7.9,
+        "minimum": 4.9
+      },
+      "hull_length_m": {
+        "count": 98,
+        "maximum": 90.5,
+        "median": 72.1,
+        "minimum": 46.6
+      },
+      "leg_length_m": {
+        "count": 95,
+        "maximum": 214.3,
+        "median": 153.4,
+        "minimum": 76.1
+      },
+      "leg_spacing_long_m": {
+        "count": 19,
+        "maximum": 66.6,
+        "median": 39.3,
+        "minimum": 26.5
+      },
+      "leg_spacing_trans_m": {
+        "count": 20,
+        "maximum": 70.1,
+        "median": 43.1,
+        "minimum": 30.5
+      },
+      "max_water_depth_m": {
+        "count": 99,
+        "maximum": 150.0,
+        "median": 114.3,
+        "minimum": 45.7
+      },
+      "spudcan_diameter_m": {
+        "count": 21,
+        "maximum": 22.0,
+        "median": 15.1,
+        "minimum": 11.0
+      },
+      "variable_load_t": {
+        "count": 98,
+        "maximum": 13000.0,
+        "median": 3470.0,
+        "minimum": 923.1
+      }
+    },
+    "row_count": 100
+  },
+  "date": "2026-10-27",
+  "design_context": {
+    "fields": {
+      "hull_breadth_m": {
+        "count": 24,
+        "maximum": 99.0,
+        "median": 57.7,
+        "minimum": 32.0
+      },
+      "hull_depth_m": {
+        "count": 16,
+        "maximum": 14.5,
+        "median": 9.2,
+        "minimum": 6.0
+      },
+      "hull_length_m": {
+        "count": 15,
+        "maximum": 170.0,
+        "median": 81.0,
+        "minimum": 56.0
+      },
+      "leg_length_m": {
+        "count": 17,
+        "maximum": 163.1,
+        "median": 120.0,
+        "minimum": 75.0
+      },
+      "leg_spacing_long_m": {
+        "count": 1,
+        "maximum": 39.3,
+        "median": 39.3,
+        "minimum": 39.3
+      },
+      "leg_spacing_trans_m": {
+        "count": 1,
+        "maximum": 43.3,
+        "median": 43.3,
+        "minimum": 43.3
+      },
+      "max_water_depth_m": {
+        "count": 37,
+        "maximum": 152.4,
+        "median": 106.7,
+        "minimum": 35.0
+      },
+      "spudcan_area_m2": {
+        "count": 3,
+        "maximum": 290.0,
+        "median": 240.0,
+        "minimum": 144.0
+      },
+      "variable_load_t": {
+        "count": 16,
+        "maximum": 21000.0,
+        "median": 8750.0,
+        "minimum": 1300.0
+      }
+    },
+    "row_count": 41
+  },
+  "environment": {
+    "era5": {
+      "reason": "Existing client requires authenticated access; no authenticated request was made.",
+      "source": "https://cds.climate.copernicus.eu/",
+      "status": "unavailable"
+    },
+    "gebco": {
+      "reason": "Existing numerical query endpoint returned HTTP 404; a WMS map image is not numerical depth evidence.",
+      "source": "https://www.gebco.net/data-products/gebco-web-services/web-map-service",
+      "status": "unavailable"
+    },
+    "noaa": {
+      "reuse": "Selected US government observation facts only; no raw archive is copied.",
+      "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2024.txt.gz",
+      "station": "42019",
+      "summary": {
+        "coverage_qualification": "not_evaluated",
+        "first_timestamp": "2024-01-01T00:00:00",
+        "last_timestamp": "2024-12-31T23:50:00",
+        "record_count": 52698,
+        "return_period_years": null,
+        "status": "observed_sample_only",
+        "units": {
+          "wave_height": "m",
+          "wind_speed": "m/s"
+        },
+        "wave_height": {
+          "maximum": 6.83,
+          "missing_count": 36005,
+          "valid_count": 16693
+        },
+        "wind_speed": {
+          "maximum": 24.3,
+          "missing_count": 2101,
+          "valid_count": 50597
+        }
+      }
+    },
+    "qualification": "No site-specific extremes or colocated environmental model is established.",
+    "return_period_years": null,
+    "water_depth_m": null
+  },
+  "method_assumptions": {
+    "base_cone_angle_deg": 13.0,
+    "basis": "Illustrative assumptions for silica sand and a conical underside; actual mineralogy and geometry are unqualified.",
+    "critical_state_friction_deg": 31.0,
+    "curve_connections": "Illustrative linear mobilization and post-peak segments; only peak and clay branches follow research equations.",
+    "log_crushing_strength_kpa": 10.0,
+    "source": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf"
+  },
+  "qualification": "generic_screening_only",
+  "reuse": "Anonymous aggregates and selected cited facts only; original tables, text and figures are excluded. Public access does not establish an unrestricted licence.",
+  "revision": 0,
+  "soil": {
+    "clay_gradient_kpa_m": 0.93,
+    "clay_submerged_weight_kn_m3": 7.3,
+    "datum_note": "Strength is evaluated relative to the interface, following equation 1; no datum is inferred from a collection column name.",
+    "interface_su_kpa": 22.13,
+    "locator": "Table 1, Site 3; equation 1 interface definition",
+    "qualified_bottom_m": 52.1,
+    "relative_density": 0.637,
+    "sand_submerged_weight_kn_m3": 9.4,
+    "sand_thickness_m": 4.9,
+    "scope": "Published anonymized Gulf profile; not colocated with the buoy or bathymetry query.",
+    "source": "https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf"
+  },
+  "structural_sensitivity": {
+    "application_height_m": {
+      "basis": "Synthetic force lever arm above the seabed; no water depth is inferred.",
+      "status": "illustrative assumption",
+      "unit": "m",
+      "value": 50.0
+    },
+    "force_coefficient_kn_m2": {
+      "basis": "Synthetic F=C Hs squared sensitivity; no physical wave transfer is established.",
+      "status": "illustrative assumption",
+      "unit": "kN/m2",
+      "value": 1000.0
+    },
+    "sliding_resistance_kn": {
+      "basis": "Independent synthetic resistance to exercise the sliding inequality; not derived from the soil.",
+      "status": "illustrative assumption",
+      "unit": "kN",
+      "value": 10000.0
+    }
+  },
+  "unit": {
+    "hull_breadth_m": 66.4,
+    "hull_depth_m": 7.9,
+    "hull_length_m": 72.1,
+    "leg_count": 3,
+    "leg_length_m": 153.4,
+    "leg_spacing_m": {
+      "basis": "Near the three-leg sample medians of 39.3 m and 43.1 m; an illustrative isosceles triangle is assumed.",
+      "status": "illustrative assumption",
+      "unit": "m",
+      "value": [
+        40.0,
+        44.0
+      ]
+    },
+    "lightship_t": {
+      "basis": "No lightship is supplied; an illustrative mass is chosen to exercise three-support equilibrium.",
+      "status": "illustrative assumption",
+      "unit": "t",
+      "value": 8000.0
+    },
+    "preload_per_leg_kn": {
+      "basis": "Illustrative load between the public Gulf per-leg preload examples; no unit rating is inferred.",
+      "status": "illustrative assumption",
+      "unit": "kN",
+      "value": 45000.0
+    },
+    "spudcan_area_m2": {
+      "basis": "Chosen within the public design area range of 144.0 to 290.0 m2; equivalent circular diameter 14.3 m; no identified unit is represented.",
+      "status": "illustrative assumption",
+      "unit": "m2",
+      "value": 160.0
+    },
+    "variable_load_t": {
+      "basis": "Rounded median of explicitly three-leg public entries; source loading conditions differ.",
+      "status": "illustrative assumption",
+      "unit": "t",
+      "value": 3470.0
+    }
+  }
+}
