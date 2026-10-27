@@ -269,6 +269,7 @@ markitdown = ["markitdown>=0.0.1,<0.1.0"]
 
 [project.scripts]
 digital_model = "digitalmodel.__main__:main"
+modular-generator = "digitalmodel.solvers.orcaflex.modular_generator.cli:main"
 run-to-sim = "digitalmodel.solvers.orcaflex.run_to_sim_cli:main"
 orcaflex-universal = "digitalmodel.solvers.orcaflex.universal_cli:main"
 orcaflex-sim = "digitalmodel.solvers.orcaflex.universal_cli:main"
