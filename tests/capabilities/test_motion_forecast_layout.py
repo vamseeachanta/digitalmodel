@@ -6,15 +6,62 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH may select an existing Chromium binary.
 """
 
 import os
+import shlex
+import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 from playwright.sync_api import sync_playwright
 
 
 PAGE = (Path(__file__).resolve().parents[2]
         / "docs/api/hydro/short-horizon-motion-forecast.html")
 TRACES = "#cvWave, #cvMotion, #cvGov"
+
+
+def test_capabilities_ci_installs_matching_chromium(monkeypatch):
+    root = PAGE.parents[3]
+    workflow = yaml.safe_load(
+        (root / ".github/workflows/quality-gates-by-domain.yml").read_text(
+            encoding="utf-8"
+        )
+    )
+    steps = next(job["steps"] for job in workflow["jobs"].values()
+                 if any(step.get("id") == "domain-gate"
+                        for step in job.get("steps", [])))
+    installs = [step for step in steps
+                if "playwright" in step.get("run", "")]
+    assert len(installs) == 1, "Capabilities CI must install Chromium"
+    install = installs[0]
+    assert install["if"] == "matrix.domain == 'capabilities'"
+    gate_index = next(i for i, step in enumerate(steps)
+                      if step.get("id") == "gate")
+    run_index = next(i for i, step in enumerate(steps)
+                     if step.get("id") == "domain-gate")
+    assert gate_index < steps.index(install) < run_index
+    assert install["env"]["DOMAIN_GATE_COMMAND"] == "${{ steps.gate.outputs.command }}"
+    gates = yaml.safe_load(
+        (root / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )
+    command = gates["gates"]["tests-capabilities"]["command"]
+    monkeypatch.setenv("DOMAIN_GATE_COMMAND", command)
+    calls = []
+    monkeypatch.setattr(subprocess, "run",
+                        lambda args, **kwargs: calls.append((args, kwargs)))
+    script = install["run"].split("<<'PY'\n", 1)[1].rsplit("\nPY", 1)[0]
+    exec(compile(script, "<browser-install>", "exec"), {})
+    tokens = shlex.split(command)
+    prefix = tokens[:tokens.index("pytest")]
+    assert calls == [(prefix + ["playwright", "install", "--with-deps", "chromium"],
+                      {"check": True})]
+
+    def fail_install(args, **kwargs):
+        raise subprocess.CalledProcessError(1, args)
+
+    monkeypatch.setattr(subprocess, "run", fail_install)
+    with pytest.raises(subprocess.CalledProcessError):
+        exec(compile(script, "<browser-install>", "exec"), {})
 
 
 @pytest.fixture
@@ -50,6 +97,9 @@ def resize(page, width, height):
 def test_phone_traces_and_status_do_not_overflow(page):
     resize(page, 390, 844)
     sizes = canvas_sizes(page)
+    # Application requirement: see sizePanels() in the HTML. Hand calculation:
+    # wave = 420 x 0.30 = 126; motion = 420 x 0.40 = 168;
+    # governing = 420 - 126 - 168 = 126 CSS px, all above the chosen 100 px floor.
     assert [height for _, height in sizes] == [126, 168, 126]
     assert all(height >= 100 for _, height in sizes)
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
@@ -66,15 +116,10 @@ def test_phone_traces_and_status_do_not_overflow(page):
 
 def test_resize_switches_between_mobile_and_desktop_sizing(page):
     desktop = canvas_sizes(page)
-    # Desktop retains the original measured viewport budget and 30/40/30 split.
-    total = page.evaluate("""() => {
-        const traceHeight = ['cvWave', 'cvMotion', 'cvGov'].reduce(
-            (sum, id) => sum + document.getElementById(id).getBoundingClientRect().height, 0);
-        const nonTrace = document.querySelector('.transport').getBoundingClientRect().bottom - traceHeight;
-        return Math.max(150, Math.min(innerHeight - nonTrace - 10, 560));
-    }""")
-    wave, motion = int(total * .3 + .5), int(total * .4 + .5)
-    assert [height for _, height in desktop] == [wave, motion, int(total - wave - motion)]
+    # Independent fresh-load measurement at baseline 05067ed1, 1440 x 900,
+    # Chromium, light theme, scale 1, external fonts blocked (see HTML basis).
+    assert [width for width, _ in desktop] == [864, 864, 864]
+    assert [height for _, height in desktop] == [100, 133, 99]
     for width, height in [(390, 844), (844, 390), (860, 900)]:
         resize(page, width, height)
         # Fractional CSS widths can scale the canvas by a fraction of a pixel.
