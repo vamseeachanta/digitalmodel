@@ -168,3 +168,66 @@ def test_normal_limit_state_handles_combined_deviation_overflow():
     beta, probability = normal_limit_state(scale, scale, 0.0, scale)
     assert beta == pytest.approx(1 / math.sqrt(2))
     assert 0.0 < probability < 0.5
+
+
+@pytest.mark.parametrize("sign", [1.0, -1.0])
+@pytest.mark.parametrize(
+    "mean,std,expected_beta",
+    [
+        (1e308, 0.8, 1.7677669529663688e308),
+        (1e308, 1.0, 1.4142135623730951e308),
+        (1e308, 2.0, 7.071067811865476e307),
+        (1.7e308, 2.0, 1.2020815280171309e308),
+    ],
+)
+def test_normal_limit_state_preserves_finite_beta_when_margin_overflows(
+    sign, mean, std, expected_beta
+):
+    """Opposite means overflow on subtraction while their beta remains finite."""
+    # Hand beta: (mean - (-mean)) / sqrt(2*std**2) = sqrt(2)*(mean/std).
+    # For std = 1, sqrt(2)*1e308 = 1.4142135623730951e308, within float range.
+    beta, probability = normal_limit_state(sign * mean, std, -sign * mean, std)
+    assert math.isfinite(beta)
+    assert beta == pytest.approx(sign * expected_beta, rel=2e-15)
+    assert probability == (0.0 if sign > 0 else 1.0)
+
+
+@pytest.mark.parametrize("sign", [1.0, -1.0])
+@pytest.mark.parametrize(
+    "scale", [math.ulp(0.0), 2 * math.ulp(0.0), 3 * math.ulp(0.0), 1e-310, 1.0]
+)
+def test_normal_limit_state_preserves_subnormal_deviation_ratios(sign, scale):
+    """Unit rescaling must preserve beta and the independently integrated tail."""
+    # Hand beta: (scale - 0) / sqrt(2*scale**2) = 1/sqrt(2).
+    # The standardized density integral from 1/sqrt(2) to infinity is
+    # 0.23975006109347674; truncating at 10 omits less than 1e-22.
+    expected_tail = _simpson(
+        lambda value: math.exp(-value**2 / 2) / math.sqrt(2 * math.pi),
+        1 / math.sqrt(2),
+        10.0,
+        8000,
+    )
+    assert expected_tail == pytest.approx(0.23975006109347674, abs=2e-14)
+    beta, probability = normal_limit_state(sign * scale, scale, 0.0, scale)
+    assert beta == pytest.approx(sign * 0.7071067811865475, rel=2e-15)
+    expected_probability = expected_tail if sign > 0 else 1 - expected_tail
+    assert probability == pytest.approx(expected_probability, abs=2e-14)
+
+
+@pytest.mark.parametrize("sign", [1.0, -1.0])
+def test_normal_limit_state_preserves_finite_beta_when_scaled_margin_overflows(sign):
+    """The normalized margin overflows, but division by the norm rescues beta."""
+    # Hand beta: 1.7e308 / sqrt(2*0.8**2) = 1.5026019100214134e308.
+    beta, probability = normal_limit_state(sign * 1.7e308, 0.8, 0.0, 0.8)
+    assert math.isfinite(beta)
+    assert beta == pytest.approx(sign * 1.5026019100214134e308, rel=2e-15)
+    assert probability == (0.0 if sign > 0 else 1.0)
+
+
+@pytest.mark.parametrize("sign", [1.0, -1.0])
+def test_normal_limit_state_allows_truly_unrepresentable_beta(sign):
+    """Beta beyond the float range retains its sign and limiting probability."""
+    # Hand beta: sqrt(2)*(1e308/0.5) exceeds the largest finite float.
+    beta, probability = normal_limit_state(sign * 1e308, 0.5, -sign * 1e308, 0.5)
+    assert beta == math.copysign(math.inf, sign)
+    assert probability == (0.0 if sign > 0 else 1.0)
