@@ -28,8 +28,18 @@
     <caption>Table 1. Changes to this example.</caption>
     <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
     <tbody><tr><td>1</td><td>2026-10-27</td><td>Added the analytical integral and
-    unit example to distinguish local friction from the plate mean.</td></tr></tbody>
+    unit example to distinguish local friction from the plate mean.</td></tr>
+    <tr><td>2</td><td>2026-10-27</td><td>Recorded the analytical scope,
+    independent checks and validation command to make the limits explicit.</td></tr></tbody>
   </table>
+
+  <h2>Plan-lite</h2>
+  <p>Scope: derive the local-to-plate analytical coefficient and compare it
+  with the unchanged helper; validate with an independent integral, hand
+  arithmetic, equivalent units and saved-example execution; solved-flow
+  comparison and mesh convergence remain outside this slice.</p>
+  <p>Run the analytical example checks and the existing flat-plate tests:</p>
+  <pre>PYTHONPATH=src uv run --no-project --with pytest --with loguru --with numpy --with scipy --with pyyaml python -m pytest tests/solvers/openfoam/validation/test_flat_plate.py tests/solvers/openfoam/validation/test_blasius_integral_example.py -q -rA -p no:cacheprovider</pre>
 
   <h2>Basis and coefficient definition</h2>
   <p>The existing public
