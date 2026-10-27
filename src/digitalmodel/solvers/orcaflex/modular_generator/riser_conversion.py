@@ -15,7 +15,7 @@ from copy import deepcopy
 from typing import Any
 
 from .schema.generic import GenericModel, TYPED_FIELD_MAP
-from .schema.riser import Riser
+from .schema.riser import EndConnection, Riser
 
 # Native property names from the existing riser and generic schema/builders.
 _LINE_TYPE_FIELDS = {
@@ -96,6 +96,13 @@ def _extract_scalars(obj: dict, fields: dict[str, str]) -> dict[str, Any]:
     return extracted
 
 
+def _connection_table(properties: dict) -> tuple[str, list[str], list]:
+    """Reject standalone angles whose precedence is not mapped by this bridge."""
+    if any(native in properties for native in _END_FIELDS.values()):
+        raise ValueError("Standalone riser connection angles are not supported")
+    return _table(properties, {"Connection", *_POSITION_COLUMNS})
+
+
 def extract_riser(generic: dict) -> Riser:
     """Extract the supported single-line subset, modifying only a deep copy.
 
@@ -115,7 +122,7 @@ def extract_riser(generic: dict) -> Riser:
          for field, native in _SECTION_FIELDS.items()}
         for row in section_rows
     ]
-    _, columns, rows = _table(props, {"Connection", *_POSITION_COLUMNS})
+    _, columns, rows = _connection_table(props)
     if len(rows) != 2:
         raise ValueError("Riser conversion requires exactly two end connections")
     vessel_name = vessels[0]["name"]
@@ -159,6 +166,9 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
     for field, native in fields.items():
         if field in typed.model_fields_set:
             properties[native] = getattr(typed, field)
+            for generic_field, generic_native in TYPED_FIELD_MAP.items():
+                if generic_native == native:
+                    obj.pop(generic_field, None)
 
 
 def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
@@ -193,7 +203,7 @@ def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
     for row, section in zip(rows, typed_line.sections, strict=True):
         for field, native in _SECTION_FIELDS.items():
             row[columns.index(native)] = getattr(section, field)
-    _, columns, rows = _table(props, {"Connection", *_POSITION_COLUMNS})
+    _, columns, rows = _connection_table(props)
     if len(rows) != 2:
         raise ValueError("Riser fallback requires exactly two end connections")
     for row, end in zip(rows, (typed_line.end_a, typed_line.end_b), strict=True):
@@ -206,4 +216,6 @@ def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
         for field, native in _END_FIELDS.items():
             if native in columns[:len(row)]:
                 row[columns.index(native)] = getattr(end, field)
+            elif getattr(end, field) != EndConnection.model_fields[field].default:
+                raise ValueError(f"Cannot render riser connection angle without a table cell: {native}")
     return GenericModel.model_validate(generic)

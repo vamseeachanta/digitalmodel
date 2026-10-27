@@ -85,7 +85,7 @@ def generated_mapping(spec, output):
     generator = ModularModelGenerator.from_spec(ProjectInputSpec(**spec))
     generator.generate(output)
     return {
-        str(path.relative_to(output)): yaml.safe_load(path.read_text())
+        path.relative_to(output).as_posix(): yaml.safe_load(path.read_text(encoding="utf-8"))
         for path in output.rglob("*.yml")
     }
 
@@ -144,6 +144,33 @@ def test_upgrade_riser_yaml_round_trip(single_riser, tmp_path):
     assert generated_mapping(upgraded, tmp_path / "after") == before
 
 
+def test_validated_model_serialization_preserves_mapped_scalars(single_riser, tmp_path):
+    upgraded = ProjectInputSpec(**upgrade_spec(single_riser, DetectedModelType.RISER))
+    reloaded = yaml.safe_load(yaml.safe_dump(upgraded.model_dump(mode="json")))
+    objects = generated_mapping(reloaded, tmp_path / "serialized")["includes/20_generic_objects.yml"]
+    line_type = objects["LineTypes"][0]
+    assert [line_type[key] for key in ("OD", "ID", "MassPerUnitLength", "EI", "EA")] == [
+        0.3, 0.2, 0.1, 120, 500000,
+    ]
+    assert objects["Vessels"][0]["VesselType"] == "SupportType"
+    assert objects["Vessels"][0]["InitialPosition"] == [1, 2, 3]
+
+
+@pytest.mark.parametrize("alias_value", [None, 0.4])
+def test_typed_edits_override_conflicting_fallback_aliases(single_riser, tmp_path, alias_value):
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    upgraded["generic"]["line_types"][0]["outer_diameter"] = alias_value
+    upgraded["generic"]["vessels"][0].update(vessel_type="OtherType", initial_position=[9, 9, 9])
+    upgraded["riser"]["line_types"][0]["outer_diameter"] = 0.35
+    upgraded["riser"]["vessel"]["position"] = [4, 5, 6]
+    original = deepcopy(upgraded)
+    objects = generated_mapping(upgraded, tmp_path / "conflict")["includes/20_generic_objects.yml"]
+    assert objects["LineTypes"][0]["OD"] == 0.35
+    assert objects["Vessels"][0]["VesselType"] == "SupportType"
+    assert objects["Vessels"][0]["InitialPosition"] == [4, 5, 6]
+    assert upgraded == original
+
+
 @pytest.mark.parametrize("target", [DetectedModelType.MOORING, DetectedModelType.PIPELINE,
                                     DetectedModelType.GENERIC])
 def test_other_upgrades_remain_unsupported(single_riser, target):
@@ -163,6 +190,56 @@ def test_typed_edits_reach_generated_yaml(single_riser, tmp_path):
     assert objects["Lines"][0][SECTIONS][0][1] == 125
     assert objects["Lines"][0][CONNECTIONS][1][1:4] == [160, 9, 0.3]
     assert objects["LineTypes"][0]["OD"] == 0.35
+
+
+@pytest.mark.parametrize("field,value", [("azimuth", 45), ("declination", 60), ("gamma", 12)])
+@pytest.mark.parametrize("end_name", ["end_a", "end_b"])
+@pytest.mark.parametrize("layout", ["four_columns", "short_row"])
+def test_unrepresentable_angular_edits_are_rejected(single_riser, tmp_path, field, value, end_name, layout):
+    props = single_riser["generic"]["lines"][0]["properties"]
+    rows = props.pop(CONNECTIONS)
+    key = ", ".join(CONNECTIONS.split(", ")[:4]) if layout == "four_columns" else CONNECTIONS
+    props[key] = [row[:4] for row in rows]
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    upgraded["riser"]["lines"][0][end_name][field] = value
+    original = deepcopy(upgraded)
+    with pytest.raises(ValueError, match="Cannot render riser connection angle"):
+        generated_mapping(upgraded, tmp_path / "unrepresentable")
+    assert upgraded == original
+
+
+@pytest.mark.parametrize("native", ["ConnectionAzimuth", "ConnectionDeclination", "ConnectionGamma"])
+@pytest.mark.parametrize("stage", ["upgrade", "render"])
+def test_standalone_connection_angles_are_rejected(single_riser, tmp_path, native, stage):
+    spec = single_riser if stage == "upgrade" else upgrade_spec(single_riser, DetectedModelType.RISER)
+    props = spec["generic"]["lines"][0]["properties"]
+    rows = props.pop(CONNECTIONS)
+    props[", ".join(CONNECTIONS.split(", ")[:4])] = [row[:4] for row in rows]
+    props[native] = [row[CONNECTIONS.split(", ").index(native)] for row in rows]
+    original = deepcopy(spec)
+    with pytest.raises(ValueError, match="Standalone riser connection angles are not supported"):
+        if stage == "upgrade":
+            upgrade_spec(spec, DetectedModelType.RISER)
+        else:
+            generated_mapping(spec, tmp_path / "standalone")
+    assert spec == original
+
+
+def test_unedited_four_column_connections_round_trip(single_riser, tmp_path):
+    props = single_riser["generic"]["lines"][0]["properties"]
+    rows = props.pop(CONNECTIONS)
+    props[", ".join(CONNECTIONS.split(", ")[:4])] = [row[:4] for row in rows]
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    assert generated_mapping(upgraded, tmp_path / "after") == generated_mapping(single_riser, tmp_path / "before")
+
+
+@pytest.mark.parametrize("field,column,value", [("azimuth", 4, 45), ("declination", 5, 60), ("gamma", 6, 12)])
+@pytest.mark.parametrize("end_name,row", [("end_a", 0), ("end_b", 1)])
+def test_representable_angular_edits_reach_generated_yaml(single_riser, tmp_path, field, column, value, end_name, row):
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    upgraded["riser"]["lines"][0][end_name][field] = value
+    objects = generated_mapping(upgraded, tmp_path / "angle")["includes/20_generic_objects.yml"]
+    assert objects["Lines"][0][CONNECTIONS][row][column] == value
 
 
 def test_reordered_table_columns_extract_by_header(single_riser):
