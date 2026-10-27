@@ -1,8 +1,8 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Compare analytic RAO curves; see README.md, 'Analytic basis'.
+"""Compare analytic oscillator response curves; see README.md, 'Analytic basis'.
 
-These synthetic amplitudes illustrate comparison and establish no physical
+These analytic amplitudes illustrate comparison and establish no physical
 shielding qualification. Importing or building the figure writes nothing.
 Only the executable entrypoint exports HTML, to the required --output path.
 """
@@ -18,22 +18,32 @@ from digitalmodel.hydrodynamics.rao_analysis import RAOAnalysis
 
 def build_figure() -> go.Figure:
     """Return an in-memory comparison using the documented hand calculation."""
-    # All curve constants are synthetic choices in README.md, 'Analytic basis'.
-    periods = (4.0, 8.0, 12.0, 16.0)
-    reference = tuple(1.0 / (1.0 + (period / 8.0 - 1.0) ** 2) for period in periods)
-    comparison = tuple(0.75 * amplitude for amplitude in reference)
+    # Lamar University, Mechanical Vibrations, Examples 5-6; see README.md.
+    mass = 3.0  # kg
+    stiffness = 75.0  # N/m
+    damping = 90.0  # N s/m
+    forcing_frequency = 5.0  # rad/s
+    # Static limit and integer harmonics of the published forcing frequency.
+    frequencies = tuple(n * forcing_frequency for n in range(4))
+    # Divide |F / (k - m*w**2 + i*c*w)| by static deflection F/k.
+    # The published forcing amplitude cancels; no reduction factor is imposed.
+    reference = tuple(1.0 for _ in frequencies)
+    comparison = tuple(
+        stiffness / abs(complex(stiffness - mass * omega**2, damping * omega))
+        for omega in frequencies
+    )
 
     # One subplot is required by the row/column trace-admission API.
     figure = make_subplots(rows=1, cols=1)
     analysis = RAOAnalysis()
     for name, amplitudes, color in (
-        ("Synthetic reference", reference, "blue"),
-        ("Synthetic scaled comparison", comparison, "orange"),
+        ("Static reference", reference, "blue"),
+        ("Damped oscillator", comparison, "orange"),
     ):
         analysis.add_trace_to_fig(
             figure,
             {
-                "x": periods,
+                "x": frequencies,
                 "y": amplitudes,
                 "name": name,
                 "line_color": color,
@@ -45,9 +55,9 @@ def build_figure() -> go.Figure:
             },
         )
     figure.update_layout(
-        title="Synthetic RAO comparison — no physical shielding qualification",
-        xaxis_title="Period (s)",
-        yaxis_title="Amplitude RAO (m/m)",
+        title="Oscillator comparison — no physical shielding qualification",
+        xaxis_title="Angular frequency (rad/s)",
+        yaxis_title="Displacement / static deflection (m/m)",
     )
     return figure
 

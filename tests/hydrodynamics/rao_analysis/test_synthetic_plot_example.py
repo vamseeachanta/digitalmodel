@@ -2,6 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Exercise the synthetic comparison without result files or a browser."""
 
+import math
 import os
 import runpy
 import subprocess
@@ -24,16 +25,19 @@ EXAMPLE = (
 
 @pytest.fixture
 def hand_values():
-    """Independent fractions from README.md, 'Analytic basis'.
+    """Independent values for the cited oscillator, normalized by 10/75 m.
 
-    T/8 - 1 = -1/2, 0, 1/2, 1 gives squared denominators
-    5/4, 1, 5/4, 2; reciprocals and their three-quarter multiples
-    below are evaluated independently of the example.
+    At angular frequencies 0, 5, 10, 15 rad/s the real/imaginary
+    dynamic stiffness pairs are (75, 0), (0, 450), (-225, 900),
+    (-600, 1350). Their moduli are 75, 450, 225 sqrt(17),
+    150 sqrt(97), so the normalized amplitudes below follow by hand.
     """
     return {
-        "periods": (4, 8, 12, 16),
-        "Synthetic reference": (4 / 5, 1, 4 / 5, 1 / 2),
-        "Synthetic scaled comparison": (3 / 5, 3 / 4, 3 / 5, 3 / 8),
+        "frequencies": (0, 5, 10, 15),
+        "Static reference": (1, 1, 1, 1),
+        "Damped oscillator": (
+            1, 1 / 6, 1 / (3 * math.sqrt(17)), 1 / (2 * math.sqrt(97))
+        ),
     }
 
 
@@ -45,16 +49,16 @@ def test_synthetic_rao_plot_preserves_hand_values(hand_values, tmp_path, monkeyp
         add_trace.side_effect = original
         figure = example["build_figure"]()
 
-    expected_names = tuple(name for name in hand_values if name != "periods")
+    expected_names = tuple(name for name in hand_values if name != "frequencies")
     assert add_trace.call_count == len(expected_names)
     assert tuple(trace.name for trace in figure.data) == expected_names
     for trace in figure.data:
-        assert tuple(trace.x) == hand_values["periods"]
+        assert tuple(trace.x) == hand_values["frequencies"]
         assert tuple(trace.y) == pytest.approx(hand_values[trace.name])
         assert trace.mode == "lines+markers"
         assert trace.showlegend
-    assert figure.layout.xaxis.title.text == "Period (s)"
-    assert figure.layout.yaxis.title.text == "Amplitude RAO (m/m)"
+    assert figure.layout.xaxis.title.text == "Angular frequency (rad/s)"
+    assert figure.layout.yaxis.title.text == "Displacement / static deflection (m/m)"
     assert "no physical shielding qualification" in figure.layout.title.text
     assert list(tmp_path.iterdir()) == []
 
@@ -86,11 +90,11 @@ def test_executable_entrypoint_writes_requested_html(tmp_path):
     assert not result.stdout
     html = output.read_text(encoding="utf-8")
     assert "Plotly.newPlot" in html
-    assert "Synthetic reference" in html
-    assert "Synthetic scaled comparison" in html
-    assert "Period (s)" in html
-    # Plotly escapes slashes in embedded JSON; the decoded label retains units.
-    assert "Amplitude RAO (m/m)" in html.replace(r"\u002f", "/")
+    assert "Static reference" in html
+    assert "Damped oscillator" in html
+    # Plotly escapes slashes in embedded JSON; decoded labels retain units.
+    assert "Angular frequency (rad/s)" in html.replace(r"\u002f", "/")
+    assert "Displacement / static deflection (m/m)" in html.replace(r"\u002f", "/")
     assert "no physical shielding qualification" in html
     assert 'src="https://' not in html
     assert list(tmp_path.iterdir()) == [output]
