@@ -1349,3 +1349,17 @@ workflows:
     result:
       kind: in_memory
       key: on_bottom_stability_e305_result
+
+  - id: api579-tank-settlement-level3
+    basename: api579_tank_settlement_level3
+    title: Tank settlement Level 3 preparation and unevaluated-check handoff
+    version: 1
+    status: experimental
+    latest: false
+    input: examples/workflows/api579-tank-settlement-level3/input.json
+    invocation: "uv run --no-sources python -m digitalmodel.asset_integrity.tank_settlement_level3 {input} --output-dir {output_dir}"
+    outputs:
+      - "{output_dir}/handoff.json"
+      - "{output_dir}/report.html"
+    test: tests/asset_integrity/test_tank_settlement_level3.py::test_cli_and_registry
+    runtime: standalone
