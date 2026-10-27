@@ -9,6 +9,7 @@ each returned mode without sorting or reversing the solver results.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-26 | Add a runnable example to expose mode identity and period order. |
+| 2 | 2026-10-27 | Add the smoke-test command to make the example checks reproducible. |
 
 ## Independent reference
 
@@ -85,3 +86,17 @@ The first printed row is `1 (fundamental): T=12.0 s; f=0.083 Hz`.
 Display rounding does not enter the comparisons. The smoke test also asserts
 strictly descending periods and strictly increasing reciprocal frequencies.
 The numerical implementation and downstream mode indices are unchanged.
+
+## Run the smoke test
+
+From the repository root, run the complete hand-check test module, including the
+test that executes the Python block above:
+
+```sh
+PYTHONPATH=src uv run --no-project --with pytest --with numpy --with scipy --with 'pydantic>=2,<3' --with pyyaml --with pytest-asyncio python -m pytest tests/drilling_riser/global_model/test_hand_checks.py -q -rA -p no:cacheprovider --basetemp="$TMPDIR/beam-mode-order-tests"
+```
+
+Set `TMPDIR` to a writable temporary directory outside the checkout before running
+the command. Dependencies are supplied without changing project metadata or a
+lock file. The checks cover the synthetic string reference and mode identities;
+they do not establish qualification for other inputs.
