@@ -10,6 +10,27 @@ safety factor and supplies no code-compliance verdict.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | A | 2026-10-26 | Added synthetic boundary cases and hand calculations to audit the raw MBL helper. |
+| B | 2026-10-27 | Added the bounded audit plan and validation commands; isolated the audit tests and retained pinned source bytes to preserve existing evidence digests. |
+
+## Plan-lite
+
+- Scope: audit raw tension/MBL ratios below, equal to and above unity.
+- Input basis: use only the independently authored Source S synthetic rows and
+  supplied tensions below.
+- Oracle: compare all nine results with the independent hand divisions in the
+  table; check material-library restoration on success and an injected exception.
+- Validation: run the mooring and citation suites with the commands below and
+  run the engineering-register, repository-structure and file-level checks.
+- Exclusions: material qualification, design factors, environmental response,
+  licensed solvers, compliance verdicts and a broader coverage inventory.
+
+Run these commands from the repository root. Here `uv` denotes the supplied
+executable and `${AUDIT_SCRATCH}` denotes an external temporary-output directory.
+
+```sh
+PYTHONPATH=src uv run --no-project --with pytest --with numpy --with pandas --with scipy --with pydantic --with pyyaml python -m pytest tests/orcaflex/test_mooring_design.py tests/orcaflex/test_raw_mbl_audit.py -q -rA -p no:cacheprovider --basetemp="${AUDIT_SCRATCH}/bt-mooring"
+PYTHONPATH=src uv run --no-project --with pytest --with numpy --with pandas --with scipy --with pydantic --with pyyaml python -m pytest tests/orcaflex/test_mooring_design_citations.py -q -rA -p no:cacheprovider --basetemp="${AUDIT_SCRATCH}/bt-citations"
+```
 
 ## Synthetic input basis and hand calculation
 

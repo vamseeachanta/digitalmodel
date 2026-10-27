@@ -408,19 +408,13 @@ class MooringLineDesign(BaseModel):
         )
 
     def check_mbl(self, max_tension_kn: float) -> Dict[str, float]:
-        """Return raw tension / MBL utilisation for each segment material.
-
-        No design safety factor is applied, including the intact and damaged
-        factors on this model. A ratio below unity is not a code-compliance
-        verdict. See ``docs/examples/mooring-explicit-factor-check.md`` for
-        synthetic inputs and independent hand calculations.
+        """Check MBL utilisation for each segment.
 
         Args:
             max_tension_kn: Maximum line tension (kN).
 
         Returns:
-            Dict of segment material -> raw utilisation, rounded as below.
-            Repeated material keys share one entry.
+            Dict of segment material -> utilisation (ratio of max tension / MBL).
         """
         results = {}
         for seg in self.segments:
