@@ -5,6 +5,12 @@ reporting/assets/calc_report_format.html, numbered L1/L2 sections (repository
 revision at introduction). Fixture labels are independent ordinal calculations:
 the first section's first and second subsections are 1.1 and 1.2; the next
 section's first subsection is 2.1. These are document positions, not limits.
+
+Plan-lite: before merge, run this module to confirm assessment isolation across
+valid/invalid/valid documents and the appended third section's 3.1 ordinal.
+Separate negative controls will check contents order and subsection labels.
+The audit implementation will remain unchanged; CSS/browser visibility will
+remain NOT_EVALUATED.
 """
 
 import importlib.util
