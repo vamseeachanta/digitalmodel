@@ -948,6 +948,8 @@ def screen_preload_plan(plan: PreloadPlan, legs: Sequence[PreloadInput]) -> Scre
             if not stage.samples:
                 return _unresolved(('nonempty samples in every equilibrium stage',))
             for sample in stage.samples:
+                if missing := _missing(sample):
+                    return _unresolved(tuple('stage sample.' + name for name in missing))
                 finite('stage sample time', sample.time_h)
                 finite('stage sample load', sample.applied_load_kn)
                 if sample.time_h <= previous:

@@ -51,7 +51,8 @@ class PreloadStage:
 class PreloadCriteria:
     """Explicit illustrative controls, assumed based on previous experience.
 
-    Hold at least one hour at or above target load. Settlement stops when total
+    The illustrative default holds one hour at or above target load; callers
+    may supply any positive minimum duration. Settlement stops when total
     absolute depth movement per hour over the trailing 0.25 h is strictly below
     0.001 m/h. Readings are joined linearly; unobserved motion is unqualified.
     A preload increment up to 0.05 times target is small; positive penetration
@@ -67,11 +68,9 @@ class PreloadCriteria:
     small_load_increment_fraction: float = 0.05
 
     def validate(self) -> None:
-        """Reject nonfinite controls and a hold minimum below one hour."""
+        """Reject nonfinite or nonpositive controls and invalid fractions."""
         for name in self.__dataclass_fields__:
             finite(name, getattr(self, name), strict=True)
-        if self.minimum_hold_h < 1:
-            raise ValueError('minimum hold must be at least one hour')
         if self.small_load_increment_fraction > 1:
             raise ValueError('small load increment fraction must not exceed one')
 
@@ -213,7 +212,7 @@ def screen_preload_sequence(
     raises a separate capacity-drop flag, even if target load is below the peak.
     No flag is not proof of safety beyond the curve or between readings.
     Holding evidence is independent of these flags and is evaluated at its last
-    reading; a settled window does not require the whole hour to be settled.
+    reading; a settled window does not require the whole hold to be settled.
     """
     finite('target preload per leg', target_preload_per_leg_kn, strict=True)
     criteria.validate()

@@ -101,14 +101,25 @@ def test_window_interpolation_and_rebound_do_not_cancel_settlement():
     assert result.settlement_rate_m_h == pytest.approx(0.02)
 
 
-def test_criteria_are_inputs_and_one_hour_is_a_floor():
+def test_criteria_are_caller_inputs():
     holding = (PreloadSample(0.25, 50, 1), PreloadSample(1.25, 50, 1.002))
     assert not screen(sequence(holding=holding)).hold_met
     assert screen(sequence(holding=holding), criteria=PreloadCriteria(
         settlement_rate_limit_m_h=0.003)).hold_met
     assert not screen(criteria=PreloadCriteria(minimum_hold_h=2)).hold_met
-    with pytest.raises(ValueError, match='one hour'):
-        screen(criteria=PreloadCriteria(minimum_hold_h=0.5))
+    assert screen(criteria=PreloadCriteria(minimum_hold_h=0.5)).hold_met
+
+
+@pytest.mark.parametrize('minimum_h,expected_met', [(0.25, True), (0.5, True), (0.75, False)])
+def test_supplied_subhour_hold_is_compared_with_observed_duration(minimum_h, expected_met):
+    # Independent duration: 0.75 - 0.25 = 0.5 h; constant depth gives 0 m/h.
+    holding = (PreloadSample(0.25, 50, 1), PreloadSample(0.75, 50, 1))
+    result = screen(sequence(holding=holding), criteria=PreloadCriteria(minimum_hold_h=minimum_h))
+    assert result.criteria.minimum_hold_h == minimum_h
+    assert result.hold_duration_h == pytest.approx(0.5)
+    assert result.settlement_rate_m_h == pytest.approx(0.0)
+    assert result.hold_met == expected_met
+    assert result.hold_reasons == (() if expected_met else ('hold_shorter_than_minimum',))
 
 
 @pytest.mark.parametrize('window_h', [0.25, 1.0])
@@ -204,6 +215,10 @@ def test_curve_range_is_reported_without_extrapolation():
 
 
 @pytest.mark.parametrize('criteria', [
+    PreloadCriteria(minimum_hold_h=0),
+    PreloadCriteria(minimum_hold_h=-0.5),
+    PreloadCriteria(minimum_hold_h=float('nan')),
+    PreloadCriteria(minimum_hold_h=float('inf')),
     PreloadCriteria(settlement_window_h=0),
     PreloadCriteria(settlement_rate_limit_m_h=float('nan')),
     PreloadCriteria(punch_through_rate_m_kn=-1),

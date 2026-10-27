@@ -386,6 +386,30 @@ def test_integrated_missing_configuration_link_and_unproven_preload_are_unresolv
     assert result.metrics['storm'].status == 'unresolved'
 
 
+@pytest.mark.parametrize('field', ['time_h', 'applied_load_kn', 'penetration_m'])
+@pytest.mark.parametrize('stage_index', range(4))
+@pytest.mark.parametrize('leg_index', range(3))
+def test_integrated_missing_stage_sample_is_unresolved(field, stage_index, leg_index):
+    from digitalmodel.marine_ops.liftboat_screening import screen_liftboat
+    preloads = list(legs())
+    stages = list(preloads[leg_index].stages)
+    stage = stages[stage_index]
+    sample = replace(stage.samples[0], **{field: None})
+    stages[stage_index] = replace(stage, samples=(sample, *stage.samples[1:]))
+    preloads[leg_index] = replace(preloads[leg_index], stages=tuple(stages))
+    result = screen_liftboat(
+        preloads=tuple(preloads), preload_plan=plan(), storm=storm(),
+        bending_templates=(replace(bending(), guide_height_m=12),) * 3,
+        transit=stability(), interface_evidence='synthetic phase link',
+        transit_weight_change_kn=0, interface_weight_tolerance_kn=0.01, adjacent_evidence={},
+    )
+    assert result.status == 'unresolved'
+    assert result.metrics['preload_plan'].status == 'unresolved'
+    assert field in result.metrics['preload_plan'].by_name('inputs').note
+    assert result.metrics['preloads'][leg_index].status == 'unresolved'
+    assert result.metrics['storm'].status == 'unresolved'
+
+
 def test_preload_short_hold_settlement_and_missing_window():
     from digitalmodel.marine_ops.liftboat_screening import screen_preload
     value = preload()

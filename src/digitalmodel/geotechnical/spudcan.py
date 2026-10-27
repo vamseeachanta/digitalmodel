@@ -2,11 +2,12 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Illustrative spudcan screening using open research, with SI inputs.
 
-Hu et al. (2015), equations 4–14:
+Spudcan penetration analyses for three case histories in sand overlying clay
+(2015), equations 4–14:
 https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf
 
 Only the analytical peak and underlying-clay branches are implemented. Straight
-connecting segments are illustrative assumptions, not Hu's post-peak solution.
+connecting segments are illustrative assumptions, not the published post-peak solution.
 Depth refers to the lowest level of the widest spudcan cross-section. Results
 exclude dynamics, buoyancy, cyclic degradation, scour and structural interaction.
 """
@@ -29,7 +30,7 @@ def finite(name: str, value: float, *, minimum: float = 0.0, strict: bool = Fals
 class SandOverClay:
     """Two layers; clay strength is defined at the sand–clay interface.
 
-    The Hu conical-footing calibration requires 0.16 <= H/D <= 1.0 and a base
+    The 2015 conical-footing calibration requires 0.16 <= H/D <= 1.0 and a base
     cone angle greater than 7 degrees. ID is a fraction. Q is the natural log
     of crushing strength expressed in kPa, not a dimensional crushing strength.
     The [20, 40] critical-state friction interval is an illustrative silica-sand
@@ -56,7 +57,7 @@ class SandOverClay:
             finite(item.name, getattr(self, item.name),
                    strict=item.name != 'clay_gradient_kpa_m')
         if not 0.16 <= self.sand_thickness_m / self.diameter_m <= 1.0:
-            raise ValueError('Hu conical-footing calibration requires 0.16 <= H/D <= 1.0')
+            raise ValueError('2015 conical-footing calibration requires 0.16 <= H/D <= 1.0')
         if self.relative_density > 1.0:
             raise ValueError('relative density must be a fraction in (0, 1]')
         if not 7.0 < self.base_cone_angle_deg < 90.0:
@@ -69,7 +70,7 @@ class SandOverClay:
 
 
 def clay_resistance_kpa(su_kpa: float, gradient_kpa_m: float, diameter_m: float) -> float:
-    """Circular reference pressure, Hu 2015 equation 5 at zero sand thickness.
+    """Circular reference pressure, 2015 penetration study, equation 5 at H=0.
 
     q = 6.34 su + 0.56 k D. This is a reference half-space solution, without
     embedment or remoulding corrections; it is not a full deep-clay installation
@@ -83,7 +84,7 @@ def clay_resistance_kpa(su_kpa: float, gradient_kpa_m: float, diameter_m: float)
 
 @dataclass(frozen=True)
 class UniformSand:
-    """Drained circular flat-base reference, separate from the Hu calibration.
+    """Drained circular flat-base reference, separate from the 2015 calibration.
 
     No clay interface, conical-base correction or stress-dependent dilatancy is
     implied. This is an explicit homogeneous-soil branch, not an extrapolation
@@ -129,7 +130,7 @@ def sand_resistance_kpa(diameter_m: float, depth_m: float, gamma_kn_m3: float,
 
 
 def _peak_for_pressure(profile: SandOverClay, pressure_kpa: float) -> float:
-    """Evaluate Hu equations 4–12 at a trial pressure for the implicit solve."""
+    """Evaluate 2015 penetration study equations 4–12 at a trial pressure."""
     p = profile
     ir = p.relative_density * (p.log_crushing_strength_kpa - math.log(pressure_kpa)) - 1
     phi = math.radians(p.critical_state_friction_deg + 2.65 * ir)
@@ -148,7 +149,7 @@ def _peak_for_pressure(profile: SandOverClay, pressure_kpa: float) -> float:
 
 
 def hu_peak_resistance_kpa(profile: SandOverClay) -> float:
-    """Solve Hu 2015 equations 4–12, requiring the stated 0 < IR < 4 bounds.
+    """Solve 2015 penetration study equations 4–12 within 0 < IR < 4 bounds.
 
     The IR endpoint margin 1e-5 avoids the singular zero-dilatancy boundary;
     1e-8 relative pressure (1e-8 kPa below 1 kPa) and 100 iterations are numerical
@@ -179,7 +180,7 @@ def hu_peak_resistance_kpa(profile: SandOverClay) -> float:
 
 
 def hu_clay_resistance_kpa(profile: SandOverClay, depth_m: float) -> float:
-    """Hu 2015 equations 13–14; depth and interface share a mudline datum."""
+    """2015 penetration study equations 13–14, using a shared mudline datum."""
     profile.validate()
     finite('depth', depth_m, minimum=profile.sand_thickness_m)
     nc = 11 * profile.sand_thickness_m / profile.diameter_m + 10.5

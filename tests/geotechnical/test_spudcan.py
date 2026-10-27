@@ -1,6 +1,14 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Closed forms, domain rejection and public spudcan research comparisons."""
+"""Closed forms, domain rejection and public spudcan research comparisons.
+
+[1] Spudcan penetration analyses for three case histories in sand overlying
+clay (2015), equations 4–14:
+https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf
+[2] Measured and calculated spudcan penetration profiles for case histories
+in sand-over-clay (2019), Tables 1–2 and section 4.1(c):
+https://doi.org/10.1016/j.apor.2018.10.027
+"""
 
 import math
 from dataclasses import replace
@@ -20,7 +28,7 @@ from digitalmodel.geotechnical.spudcan import (
 
 
 def profile():
-    # Hossain 2019, Tables 1–2, Site 3; no unit identity is retained.
+    # [2], Tables 1–2, Site 3; no unit identity is retained.
     return SandOverClay(
         diameter_m=12.1, area_m2=114.7, sand_thickness_m=4.9,
         interface_su_kpa=22.13, clay_gradient_kpa_m=0.93,
@@ -30,7 +38,7 @@ def profile():
 
 
 def test_uniform_clay_closed_form():
-    # Hu 2015 equation 5 at k=0, flat circular footing reference factor.
+    # [1], equation 5 at k=0: 6.34*20=126.8; adding 0.56*2*12 gives 140.24.
     assert clay_resistance_kpa(20.0, 0.0, 12.0) == pytest.approx(126.8)
     assert clay_resistance_kpa(20.0, 2.0, 12.0) == pytest.approx(140.24)
 
@@ -64,7 +72,7 @@ def test_circular_sand_rejects_invalid_or_deep_inputs(diameter, depth, gamma, fr
 def test_published_gulf_site3_peak_and_non_event():
     p = profile()
     peak_mn = hu_peak_resistance_kpa(p) * p.area_m2 / 1000
-    # Hossain 2019 section 4.1(c): Hu prediction 46.6 MN, preload 35.6 MN.
+    # [2], section 4.1(c): 2015-method prediction 46.6 MN, preload 35.6 MN.
     # 1% accommodates the conference-formulation and rounded-input differences.
     assert peak_mn == pytest.approx(46.6, rel=0.01)
     result = punch_through_screen(p, 35600)
@@ -80,8 +88,8 @@ def test_clay_branch_uses_interface_datum_and_sand_plug():
         nc * (22.13 + 0.93 * 5.1) + 0.9 * 4.9 * 7.3)
 
 
-# Independent reference arithmetic: Hossain 2019 Tables 1–2, Site 3 inputs;
-# Hu 2015 equations 4–12 give qpeak = 405.061054 kPa from a separate
+# Independent reference arithmetic: [2], Tables 1–2, Site 3 inputs;
+# [1], equations 4–12 give qpeak = 405.061054 kPa from a separate
 # 60-digit decimal evaluation (Taylor sin/cos; no production imports).
 # Equations 13–14 give Nc = 14.95454545 and
 # q(z) = 363.13709091 + 13.90772727 * (z - 4.9) kPa in clay.
@@ -132,7 +140,7 @@ def test_sub_peak_equilibrium_uses_independent_mobilization_depth():
 def test_no_recovery_is_explicit_for_zero_clay_gradient():
     p = replace(profile(), clay_gradient_kpa_m=0.0)
     r = punch_through_screen(p, 100000)
-    # Independent Hu peak solve with k=0; clay is constant at 363.13709091 kPa.
+    # Independent [1] peak solve with k=0; clay is constant at 363.13709091 kPa.
     assert r.peak_load_kn == pytest.approx(44663.40176331, rel=3e-8)
     assert r.interface_load_kn == pytest.approx(41651.82432727)
     assert r.capacity_drop
@@ -177,8 +185,8 @@ def test_invalid_preload_rejected(preload):
 
 
 def test_published_gulf_site2_disagreement_is_exposed():
-    # Hossain 2019 Site 2: observed final penetration 15.8–18.5 m at 53.4 MN,
-    # with punch-through. The earlier Hu 2015 formulation does not reproduce it.
+    # [2], Site 2: observed final penetration 15.8–18.5 m at 53.4 MN,
+    # with punch-through. The earlier [1] formulation does not reproduce it.
     p = SandOverClay(13.5, 143.6, 7.0, 17.87, 1.31, 9.4, 6.7, 0.649)
     result = punch_through_screen(p, 53400)
     assert result.capacity_drop
@@ -191,7 +199,7 @@ def test_published_gulf_site2_disagreement_is_exposed():
 def test_increasing_connection_uses_its_first_equilibrium_not_the_interface():
     p = replace(profile(), sand_thickness_m=0.16 * 12.1,
                 interface_su_kpa=200, clay_gradient_kpa_m=0)
-    # Independent 60-digit Hu peak: 2201.77322196 kPa; equations 13–14:
+    # Independent 60-digit [1] peak: 2201.77322196 kPa; equations 13–14:
     # qinterface = (11 * 0.16 + 10.5) * 200 + 0.9 * 1.936 * 7.3
     #            = 2464.71952 kPa. Mean load gives the midpoint of the
     # assumed rising connection: z = 0.56 * 1.936 = 1.08416 m.
