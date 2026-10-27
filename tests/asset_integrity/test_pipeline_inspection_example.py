@@ -1,12 +1,9 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Independent checks of the synthetic pipeline inspection arithmetic.
+"""Independent checks of a cited public thickness-planning worked example.
 
-Synthetic input basis S1: previous wall 12 mm, current wall 11 mm,
-elapsed time 4 yr, assumed required wall 8 mm, and supplied cap 3 yr.
-The alternate cap 9 yr exercises the existing half-life convention.
-Control S2 substitutes a wall of 7 mm, below the assumed required wall.
-These are invented test inputs, not standard-derived or field measurements.
+Numerical basis: the public article's "A worked example" section, linked below.
+The exhausted-wall control reuses its required wall as the current wall.
 """
 
 import json
@@ -21,6 +18,10 @@ EXAMPLE = (
     Path(__file__).resolve().parents[2]
     / "examples/asset_integrity/example_pipeline_inspection.py"
 )
+SOURCE_URL = (
+    "https://highpointsolutions.com.au/knowledge/"
+    "how-often-should-ultrasonic-thickness-testing-be-done/"
+)
 
 
 @pytest.fixture
@@ -29,13 +30,14 @@ def example():
     return runpy.run_path(str(EXAMPLE))
 
 
-@pytest.mark.parametrize("cap", [3.0, 9.0])  # S1 and alternate cap above.
+@pytest.mark.parametrize("cap", [3.0, 3.8])  # Published schedule and comparison.
 def test_pipeline_inspection_example_hand_life(example, cap):
-    # Independent rational arithmetic from S1, never planner output.
-    previous, current, elapsed, required = map(Fraction, (12, 11, 4, 8))
-    rate = (previous - current) / elapsed  # 1/4 mm/yr.
-    life = (current - required) / rate  # 12 yr.
-    half_life = life / 2  # Existing planner convention, not a standard claim.
+    # Public worked example: (7.3 - 6.4) / 3 = 0.300 mm/yr;
+    # (6.4 - 4.5) / 0.3 = 19/3 yr; half-life = 19/6 yr.
+    previous, current, elapsed, required = map(Fraction, ("7.3", "6.4", "3", "4.5"))
+    rate = (previous - current) / elapsed
+    life = (current - required) / rate
+    half_life = life / 2
 
     result = example["build_example"](max_interval_years=cap)
     inputs = result["cases"]["above_required_wall"]["inputs"]
@@ -47,24 +49,31 @@ def test_pipeline_inspection_example_hand_life(example, cap):
     ):
         assert inputs[name]["value"] == float(expected)
     plan = result["cases"]["above_required_wall"]["plan"]
+    assert plan["corrosion_rate_mm_yr"] == pytest.approx(0.300)
     assert plan["corrosion_rate_mm_yr"] == pytest.approx(float(rate))
-    assert plan["remaining_life_years"] == pytest.approx(float(life))
-    assert plan["half_life_interval_years"] == pytest.approx(float(half_life))
+    assert plan["remaining_life_years"] == pytest.approx(6.333, abs=0.0005)
+    assert plan["remaining_life_years"] == pytest.approx(float(life), abs=0.0005)
+    assert plan["half_life_interval_years"] == pytest.approx(3.167, abs=0.0005)
+    assert plan["half_life_interval_years"] == pytest.approx(float(half_life), abs=0.0005)
     assert plan["code_max_interval_years"] == cap
-    assert plan["next_inspection_interval_years"] == min(float(half_life), cap)
+    assert plan["next_inspection_interval_years"] == pytest.approx(
+        min(float(half_life), cap), abs=0.0005
+    )
     assert plan["screening_status"] == "pass"
 
 
-def test_pipeline_inspection_example_below_required_wall(example):
-    result = example["build_example"](max_interval_years=3.0)  # S1 cap.
-    control = result["cases"]["below_required_wall"]
+def test_pipeline_inspection_example_exhausted_wall(example):
+    result = example["build_example"](max_interval_years=3.0)
+    control = result["cases"]["at_required_wall"]
     inputs = control["inputs"]
-    assert inputs["current_mm"]["value"] == 7.0  # S2.
-    assert inputs["current_mm"]["value"] < inputs["required_mm"]["value"]
-    # S2: (12 - 7) / 4 = 5/4 mm/yr; wall margin = 7 - 8 = -1 mm.
+    assert inputs["current_mm"]["value"] == 4.5
+    assert inputs["current_mm"]["value"] == inputs["required_mm"]["value"]
+    assert control["case_kind"] == "boundary_control"
+    assert "not a reading" in inputs["current_mm"]["basis"]
+    # Boundary: (7.3 - 4.5) / 3 = 14/15 mm/yr; margin = 4.5 - 4.5 = 0 mm.
     plan = control["plan"]
-    assert plan["corrosion_rate_mm_yr"] == pytest.approx(float(Fraction(5, 4)))
-    assert plan["corrosion_allowance_remaining_mm"] == -1.0
+    assert plan["corrosion_rate_mm_yr"] == pytest.approx(float(Fraction(14, 15)), abs=0.0005)
+    assert plan["corrosion_allowance_remaining_mm"] == 0.0
     # Exhausted wall means no positive life or deferred inspection claim.
     assert plan["remaining_life_years"] == 0.0
     assert plan["half_life_interval_years"] == 0.0
@@ -73,7 +82,10 @@ def test_pipeline_inspection_example_below_required_wall(example):
 
 
 def test_pipeline_inspection_example_explicit_input_basis(example):
-    result = example["build_example"](max_interval_years=3.0)  # S1 cap.
+    result = example["build_example"](max_interval_years=3.0)
+    assert result["source"]["url"] == SOURCE_URL
+    assert result["source"]["published"] == "2026-09-09"
+    assert result["source"]["section"] == "A worked example"
     for case in result["cases"].values():
         inputs = case["inputs"]
         assert set(inputs) == {
@@ -83,14 +95,28 @@ def test_pipeline_inspection_example_explicit_input_basis(example):
         for name, item in inputs.items():
             assert item["measured"] is False
             assert item["assumed"] is True
-            assert "synthetic" in item["basis"].lower()
+            assert item["source_url"] == SOURCE_URL
+            assert item["source_section"] == "A worked example"
+            assert item["basis"]
             assert item["unit"] == ("yr" if "years" in name else "mm")
         assert inputs["max_interval_years"]["value"] == 3.0
+        assert "suggested schedule" in inputs["max_interval_years"]["basis"]
+    alternative = example["build_example"](max_interval_years=3.8)
+    cap = alternative["cases"]["above_required_wall"]["inputs"]["max_interval_years"]
+    assert "counterfactual" in cap["basis"]
 
 
 def test_pipeline_inspection_example_requires_supplied_cap(example):
     with pytest.raises(TypeError, match="max_interval_years"):
         example["build_example"]()
+
+
+@pytest.mark.parametrize(
+    "cap", [-1.0, 0.0, 9.0, float("nan"), float("inf"), None, "3.0", True]
+)
+def test_pipeline_inspection_example_rejects_uncited_cap(example, cap):
+    with pytest.raises(ValueError, match="cited"):
+        example["build_example"](max_interval_years=cap)
 
 
 def test_pipeline_inspection_example_console_scope(capsys):
@@ -101,4 +127,12 @@ def test_pipeline_inspection_example_console_scope(capsys):
     assert "qualified inspection interval" in result["scope"]
     assert "min(remaining_life / 2, supplied cap)" in result["planner_convention"]
     assert "not standard-derived" in result["planner_convention"]
-    assert "repair" in result["cases"]["below_required_wall"]["way_forward"].lower()
+    assert result["source"]["url"] == SOURCE_URL
+    assert "repair" in result["cases"]["at_required_wall"]["way_forward"].lower()
+    for case in result["cases"].values():
+        assert "current wall" in case["screening_basis"]
+        assert "required wall 4.500 mm" in case["screening_basis"]
+        assert "supplied cap 3.000 yr" in case["screening_basis"]
+        for value in case["plan"].values():
+            if isinstance(value, float):
+                assert value == round(value, 3)
