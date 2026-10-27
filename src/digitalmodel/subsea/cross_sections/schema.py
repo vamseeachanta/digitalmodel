@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Pydantic v2 schema models for subsea product cross-sections."""
 
 from __future__ import annotations
@@ -136,6 +138,10 @@ class RadialLayer(BaseModel):
                 value.require_nonnegative(field_name)
             else:
                 value.require_positive(field_name)
+        self._require_same_length_units([item for item in geometry if item is not None])
+        inner = self.derived_inner_diameter
+        if inner is not None:
+            inner.require_nonnegative("derived inner_diameter")
         if self.inner_diameter and self.outer_diameter and self.thickness:
             self._require_same_length_units(
                 [self.inner_diameter, self.outer_diameter, self.thickness]

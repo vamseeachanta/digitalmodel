@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Validation helpers for subsea cross-section definitions."""
 
 from __future__ import annotations
@@ -26,9 +28,10 @@ def validate_cross_section(definition: CrossSectionDefinition | dict[str, Any]) 
 
     try:
         if isinstance(definition, CrossSectionDefinition):
-            parsed = definition
-        else:
-            parsed = CrossSectionDefinition.model_validate(definition)
+            # Models are mutable, including nested UnitValue instances. Validate
+            # their current data rather than trusting a previously accepted object.
+            definition = definition.model_dump()
+        parsed = CrossSectionDefinition.model_validate(definition)
     except ValidationError as exc:
         errors = [_error_to_issue(error) for error in exc.errors()]
         return ValidationReport(
@@ -36,13 +39,6 @@ def validate_cross_section(definition: CrossSectionDefinition | dict[str, Any]) 
             errors=errors,
             warnings=[],
             summary=f"{len(errors)} validation error(s)",
-        )
-    except ValueError as exc:
-        issue = ValidationIssue(
-            code="value_error", path="definition", message=str(exc), severity="error"
-        )
-        return ValidationReport(
-            is_valid=False, errors=[issue], warnings=[], summary="1 validation error(s)"
         )
     return ValidationReport(
         is_valid=True,
