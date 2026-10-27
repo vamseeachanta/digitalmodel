@@ -12,9 +12,21 @@ All dimensional numbers below are chosen synthetic inputs, not material data.
 
 import builtins
 import importlib
+import tomllib
 from math import asinh, sqrt
+from pathlib import Path
 
 import pytest
+
+
+def test_test_extra_provisions_pinned_backend():
+    """The CI test extra must install the real backend used by acceptance tests."""
+    metadata = tomllib.loads(
+        (Path(__file__).resolve().parents[3] / "pyproject.toml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert "moorpy==1.3.0" in metadata["project"]["optional-dependencies"]["test"]
 
 
 def solve(**overrides):
