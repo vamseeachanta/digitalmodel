@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "basis": "Repository snapshot; documentation inventory, not an engineering dataset catalog.",
+  "basis": "Repository evidence reconciled with base revision 6581c271d0346288d6d34173495c22d2121c2781; documentation inventory, not an engineering dataset catalog.",
   "wrapper_status": "absent",
   "wrapper_pages": [],
   "capabilities": [
@@ -291,6 +291,14 @@
       "exists": true,
       "page_node": "p42",
       "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c36",
+      "id": "wall-thickness-load-explorer",
+      "target": "docs/api/structural/wall-thickness-3d-explorer.html",
+      "exists": true,
+      "page_node": "p49",
+      "evidence": "scripts/capabilities/build_onepagers.py"
     }
   ],
   "pages": [
@@ -410,6 +418,26 @@
       "evidence": [
         "scripts/generated_html_ownership.py"
       ]
+    },
+    {
+      "node": "p53",
+      "path": "docs/api/cfd/dual-tank-sloshing-cfd-study.html",
+      "group": "cfd",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_dual_tank_sloshing_study.py",
+      "prerequisites": [],
+      "inputs": [
+        "docs/api/cfd/data/dual_tank_cfd_evidence.json",
+        "tests/hydrodynamics/test_utube_tank.py"
+      ],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ],
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py"
     },
     {
       "node": "p6",
@@ -778,18 +806,78 @@
       "node": "p25",
       "path": "docs/api/ffs/ffs-showcase.html",
       "group": "ffs",
-      "provenance": "inline, no generator",
-      "producer": null,
+      "provenance": "registered generator",
+      "producer": "examples/demos/asset_integrity/ffs_showcase.py",
       "prerequisites": [],
-      "inputs": [],
-      "calculations": [],
+      "inputs": [
+        "examples/demos/asset_integrity/ffs_showcase.py"
+      ],
+      "calculations": [
+        "src/digitalmodel/asset_integrity/assessment/__init__.py",
+        "src/digitalmodel/asset_integrity/corroded_pipe.py",
+        "src/digitalmodel/asset_integrity/dnv_rp_f101.py",
+        "src/digitalmodel/structural/structural_analysis/models.py",
+        "src/digitalmodel/structural/structural_analysis/plate_metal_loss_ffs.py"
+      ],
       "artifacts": [],
-      "limitation": "hand-maintained showcase; no scripts producer found",
-      "execution": "committed page only; calculation execution NOT_EVALUATED",
-      "execution_evidence": "scripts/generated_html_ownership.py",
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
       "evidence": [
-        "scripts/generated_html_ownership.py"
+        "scripts/check_generated_html.py"
       ]
+    },
+    {
+      "node": "p54",
+      "path": "docs/api/ffs/pipeline-ffs-assessment.html",
+      "group": "ffs",
+      "provenance": "registered generator",
+      "producer": "scripts/reporting/build_pipeline_ffs_report.py",
+      "prerequisites": [],
+      "inputs": [
+        "examples/workflows/ffs-metal-loss/input.yml",
+        "examples/workflows/pipeline-corroded-defect-screen/synthetic.yml",
+        "examples/workflows/pipeline-ffs-assessment/assumptions.yml",
+        "examples/workflows/pipeline-ffs-assessment/input.yml",
+        "pyproject.toml"
+      ],
+      "calculations": [
+        "src/digitalmodel/asset_integrity/applicability.py",
+        "src/digitalmodel/asset_integrity/assessment/__init__.py",
+        "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py",
+        "src/digitalmodel/asset_integrity/assessment/ffs_decision.py",
+        "src/digitalmodel/asset_integrity/assessment/level2_engine.py",
+        "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py",
+        "src/digitalmodel/asset_integrity/corroded_pipe.py",
+        "src/digitalmodel/asset_integrity/pipeline_defect_screen.py",
+        "src/digitalmodel/reporting/engine.py",
+        "src/digitalmodel/reporting/provenance.py",
+        "src/digitalmodel/reporting/spec.py",
+        "src/digitalmodel/units.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/ffs/pipeline-ffs-assessment.manifest.json",
+          "state": "committed",
+          "writer": "scripts/reporting/build_pipeline_ffs_report.py"
+        },
+        {
+          "path": "docs/reports/pipeline-ffs-assessment.html",
+          "state": "committed",
+          "writer": "scripts/reporting/build_pipeline_ffs_report.py"
+        },
+        {
+          "path": "docs/reports/pipeline-ffs-assessment.manifest.json",
+          "state": "committed",
+          "writer": "scripts/reporting/build_pipeline_ffs_report.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ],
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py"
     },
     {
       "node": "p26",
@@ -1274,6 +1362,12 @@
           "path": "docs/api/structural/wall-thickness-3d.json",
           "state": "generated prerequisite",
           "writer": "scripts/capabilities/build_wall_thickness_3d.py"
+        },
+        {
+          "path": "docs/api/structural/wall-thickness-3d-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_wall_thickness_3d_page.py",
+          "consumed_by_page": true
         }
       ],
       "limitation": "Upstream analysis not executed by this inventory.",
@@ -1361,7 +1455,7 @@
     },
     "hugging_face": {
       "evidence": "scripts/hf/build_capability_datasets.py",
-      "status": "integrity and corrosion dataset preparation implemented; remaining page coverage not established",
+      "status": "dataset preparation implemented for ten tables in seven dataset groups; remote publication not evaluated",
       "remote_status": "NOT_EVALUATED"
     },
     "website": {

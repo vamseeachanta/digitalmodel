@@ -1,6 +1,6 @@
 flowchart LR
   pages["GitHub Pages: configured docs/api root<br/>remote status NOT_EVALUATED"]
-  hf["Hugging Face: preparation implemented for integrity and corrosion<br/>remaining coverage not established; remote status NOT_EVALUATED"]
+  hf["Hugging Face: ten table projections in seven dataset groups<br/>remote status NOT_EVALUATED"]
   web["aceengineer.com: canonical capabilities redirect configured<br/>downstream hydration NOT_EVALUATED"]
   tidy["scripts/hf/build_capability_datasets.py<br/>tidy JSON preparation; publication separate"]
   licenses["Licensed solve boundary<br/>OrcaFlex / OrcaWave: Windows solver execution<br/>AQWA: licensed execution<br/>Reading committed output does not require a solve"]
@@ -33,6 +33,14 @@ flowchart LR
     p4 --> pages
     p5["docs/api/cfd/dam-break-verification.html<br/>external input or non-reproducible copy"]
     p5 --> pages
+    p53["docs/api/cfd/dual-tank-sloshing-cfd-study.html<br/>registered generator"]
+    p53 --> pages
+    sp53["scripts/capabilities/build_dual_tank_sloshing_study.py<br/>direct calculation import not established"]
+    sp53 --> p53
+    ip53_0["docs/api/cfd/data/dual_tank_cfd_evidence.json<br/>registered input"]
+    ip53_0 --> sp53
+    ip53_1["tests/hydrodynamics/test_utube_tank.py<br/>registered input"]
+    ip53_1 --> sp53
     p6["docs/api/cfd/flat-plate-blasius-verification.html<br/>external input or non-reproducible copy"]
     p6 --> pages
     p7["docs/api/cfd/floating-body-decay-verification.html<br/>external input or non-reproducible copy"]
@@ -96,8 +104,32 @@ flowchart LR
     p23 --> pages
     p24["docs/api/ffs/ffs-field-dashboard.html<br/>inline, no generator"]
     p24 --> pages
-    p25["docs/api/ffs/ffs-showcase.html<br/>inline, no generator"]
+    p25["docs/api/ffs/ffs-showcase.html<br/>registered generator"]
     p25 --> pages
+    sp25["examples/demos/asset_integrity/ffs_showcase.py<br/>src/digitalmodel/asset_integrity/assessment/__init__.py<br/>src/digitalmodel/asset_integrity/corroded_pipe.py<br/>src/digitalmodel/asset_integrity/dnv_rp_f101.py<br/>src/digitalmodel/structural/structural_analysis/models.py<br/>src/digitalmodel/structural/structural_analysis/plate_metal_loss_ffs.py"]
+    sp25 --> p25
+    ip25_0["examples/demos/asset_integrity/ffs_showcase.py<br/>registered input"]
+    ip25_0 --> sp25
+    p54["docs/api/ffs/pipeline-ffs-assessment.html<br/>registered generator"]
+    p54 --> pages
+    sp54["scripts/reporting/build_pipeline_ffs_report.py<br/>src/digitalmodel/asset_integrity/applicability.py<br/>src/digitalmodel/asset_integrity/assessment/__init__.py<br/>src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py<br/>src/digitalmodel/asset_integrity/assessment/ffs_decision.py<br/>src/digitalmodel/asset_integrity/assessment/level2_engine.py<br/>src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py<br/>src/digitalmodel/asset_integrity/corroded_pipe.py<br/>src/digitalmodel/asset_integrity/pipeline_defect_screen.py<br/>src/digitalmodel/reporting/engine.py<br/>src/digitalmodel/reporting/provenance.py<br/>src/digitalmodel/reporting/spec.py<br/>src/digitalmodel/units.py"]
+    sp54 --> p54
+    ip54_0["examples/workflows/ffs-metal-loss/input.yml<br/>registered input"]
+    ip54_0 --> sp54
+    ip54_1["examples/workflows/pipeline-corroded-defect-screen/synthetic.yml<br/>registered input"]
+    ip54_1 --> sp54
+    ip54_2["examples/workflows/pipeline-ffs-assessment/assumptions.yml<br/>registered input"]
+    ip54_2 --> sp54
+    ip54_3["examples/workflows/pipeline-ffs-assessment/input.yml<br/>registered input"]
+    ip54_3 --> sp54
+    ip54_4["pyproject.toml<br/>registered input"]
+    ip54_4 --> sp54
+    ap54_0["docs/api/ffs/pipeline-ffs-assessment.manifest.json<br/>committed"]
+    sp54 --> ap54_0
+    ap54_1["docs/reports/pipeline-ffs-assessment.html<br/>committed"]
+    sp54 --> ap54_1
+    ap54_2["docs/reports/pipeline-ffs-assessment.manifest.json<br/>committed"]
+    sp54 --> ap54_2
     p26["docs/api/ffs/riser-joint-acceptance-explorer.html<br/>registered generator"]
     p26 --> pages
     sp26["scripts/ffs/build_riser_joint_explorer.py<br/>src/digitalmodel/asset_integrity/riser_joint_ffs.py"]
@@ -166,6 +198,7 @@ flowchart LR
     sp41 --> p41
     ap41_0["docs/api/structural/anchor-holding-explorer.json<br/>committed"]
     sp41 --> ap41_0
+    ap41_0 --> tidy
     p42["docs/api/structural/cathodic-protection-explorer.html<br/>registered generator"]
     p42 --> pages
     sp42["scripts/capabilities/build_cathodic_protection_explorer.py<br/>src/digitalmodel/cathodic_protection/marine_structure_cp.py"]
@@ -179,24 +212,28 @@ flowchart LR
     sp43 --> p43
     ap43_0["docs/api/structural/field-economics-explorer.json<br/>committed"]
     sp43 --> ap43_0
+    ap43_0 --> tidy
     p44["docs/api/structural/ipr-explorer.html<br/>registered generator"]
     p44 --> pages
     sp44["scripts/capabilities/build_ipr_explorer.py<br/>src/digitalmodel/production_engineering/ipr_models.py"]
     sp44 --> p44
     ap44_0["docs/api/structural/ipr-explorer.json<br/>committed"]
     sp44 --> ap44_0
+    ap44_0 --> tidy
     p45["docs/api/structural/pore-pressure-explorer.html<br/>registered generator"]
     p45 --> pages
     sp45["scripts/capabilities/build_pore_pressure_explorer.py<br/>src/digitalmodel/well/drilling/pore_pressure.py"]
     sp45 --> p45
     ap45_0["docs/api/structural/pore-pressure-explorer.json<br/>committed"]
     sp45 --> ap45_0
+    ap45_0 --> tidy
     p46["docs/api/structural/ship-resistance-explorer.html<br/>registered generator"]
     p46 --> pages
     sp46["scripts/capabilities/build_ship_resistance_explorer.py<br/>src/digitalmodel/naval_architecture/__init__.py"]
     sp46 --> p46
     ap46_0["docs/api/structural/ship-resistance-explorer.json<br/>committed"]
     sp46 --> ap46_0
+    ap46_0 --> tidy
     p47["docs/api/structural/sloshing-explorer.html<br/>registered generator"]
     p47 --> pages
     sp47["scripts/capabilities/build_sloshing_explorer.py<br/>direct calculation import not established"]
@@ -209,6 +246,7 @@ flowchart LR
     sp48 --> p48
     ap48_0["docs/api/structural/viv-explorer.json<br/>committed"]
     sp48 --> ap48_0
+    ap48_0 --> tidy
     p49["docs/api/structural/wall-thickness-3d-explorer.html<br/>registered generator"]
     p49 --> pages
     sp49["scripts/capabilities/build_wall_thickness_3d_page.py<br/>direct calculation import not established"]
@@ -218,6 +256,9 @@ flowchart LR
     rp49 --> ap49_0
     ap49_0 --> sp49
     ap49_0 --> tidy
+    ap49_1["docs/api/structural/wall-thickness-3d-explorer.json<br/>committed"]
+    sp49 --> ap49_1
+    ap49_1 --> p49
     p50["docs/api/structural/wall-thickness-explorer.html<br/>registered generator"]
     p50 --> pages
     sp50["scripts/capabilities/build_wall_thickness_explorer.py<br/>src/digitalmodel/structural/analysis/wall_thickness.py"]
@@ -302,8 +343,10 @@ flowchart LR
     c34 --> p47
     c35["cathodic-protection-explorer"]
     c35 --> p42
+    c36["wall-thickness-load-explorer"]
+    c36 --> p49
   end
   classDef gap fill:#fff1d6,stroke:#875800,color:#191919
   classDef licensed fill:#fce4e4,stroke:#9c2020,color:#191919
   class licenses licensed
-  class p1,p2,p4,p5,p6,p7,p8,p9,p10,p12,p14,p15,p16,p17,p18,p19,p23,p24,p25,p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p38,p39,p51 gap
+  class p1,p2,p4,p5,p6,p7,p8,p9,p10,p12,p14,p15,p16,p17,p18,p19,p23,p24,p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p38,p39,p51 gap

@@ -250,7 +250,14 @@ def test_drawing_preserves_sibling_outputs_and_generated_prerequisite(inventory)
                 assert f"{node} --> s{row['node']}" in drawing
             else:
                 assert f"s{row['node']} --> {node}" in drawing
-                assert f"{node} --> {row['node']}\n" not in drawing
+                producer = (ROOT / row["producer"]).read_text(encoding="utf-8")
+                fetched_sidecar = (
+                    "fetch(" in producer
+                    and 'output.with_suffix(".json")' in producer
+                    and artifact["path"] == str(Path(row["path"]).with_suffix(".json"))
+                )
+                assert artifact.get("consumed_by_page", False) == fetched_sidecar
+                assert (f"{node} --> {row['node']}\n" in drawing) == fetched_sidecar
 
 
 def test_every_implemented_dataset_projection_has_a_source_edge(inventory):
@@ -292,3 +299,48 @@ def test_registered_inputs_remain_visible_before_page_generation(inventory):
                 assert (ROOT / path).is_file()
                 assert path in drawing
                 assert f"i{row['node']}_{index} --> s{row['node']}" in drawing
+
+
+def test_dataset_dispatch_includes_parameterized_projection_sources(
+    inventory, monkeypatch
+):
+    """Trace every dispatched table to its first read, without loading results.
+
+    Literal loader arguments alone miss the shared parameterized series helper.
+    Stopping at the read also avoids generating the full wall-thickness study.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "architecture_datasets", ROOT / "scripts/hf/build_capability_datasets.py"
+    )
+    datasets = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(datasets)
+
+    class SourceRead(Exception):
+        pass
+
+    def record_read(path):
+        raise SourceRead("docs/api/" + path)
+
+    monkeypatch.setattr(datasets, "_load", record_read)
+    artifacts = {
+        artifact["path"]: f"a{row['node']}_{index}"
+        for row in inventory["pages"]
+        for index, artifact in enumerate(row["artifacts"])
+    }
+    drawing = (ARTIFACTS / "repo-architecture.mmd").read_text(encoding="utf-8")
+    for tables in datasets.DATASETS.values():
+        for builder in tables.values():
+            with pytest.raises(SourceRead) as source:
+                builder()
+            path = str(source.value)
+            assert path in artifacts, builder.__name__
+            assert f"{artifacts[path]} --> tidy" in drawing, builder.__name__
+
+
+def test_summary_counts_and_page_evidence_match_inventory(inventory):
+    report = (ARTIFACTS / "repo-architecture.html").read_text(encoding="utf-8")
+    assert f"{len(inventory['capabilities'])} capability work declarations" in report
+    assert f"{len(inventory['pages'])} observed domain pages" in report
+    for row in inventory["pages"]:
+        assert f"<code>{row['path']}</code>" in report
+        assert row["execution"] in report
