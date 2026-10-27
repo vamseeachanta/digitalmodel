@@ -67,7 +67,7 @@ def test_registration_guard_runs_in_the_independent_hosted_harness():
         )
     )
     harness = workflow["jobs"]["ci-harness-tests"]
-    assert "if" not in harness
+    assert harness["if"] == "needs.detect-domains.outputs.has-harness == 'true'"
     step = next(step for step in harness["steps"] if step["name"] == "Run harness tests")
     assert "if" not in step
     assert "tests/scripts/test_reporting_ci_registration.py" in shlex.split(step["run"])

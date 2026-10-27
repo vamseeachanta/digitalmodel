@@ -2,27 +2,25 @@
 name: Quality Gates
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main, develop]
+  workflow_dispatch:
+  workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: full-quality-gates-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
+# PR_GATE_RUNNER accepts self-hosted-arm64; unset/unknown values keep hosted defaults.
+# Fork pull requests always stay on hosted runners.
 jobs:
   quality-gates-aggregate:
     name: Run Quality Gates
     permissions: {}
     needs: quality-gates
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     steps:
       - name: Verify matrix result
         env:
@@ -31,7 +29,7 @@ jobs:
 
   quality-gates:
     name: Quality Gates (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -41,6 +39,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0  # need history so the abs-path guard can diff vs base
@@ -131,9 +130,8 @@ jobs:
           uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
 
       - name: Check engineering register changes
-        env:
-          REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
-        run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
+        # Full runs cover prose from every commit since the previous batch.
+        run: python scripts/enforcement/check-engineering-register.py docs/ src/
 
       - name: Create reports directory
         run: mkdir -p reports

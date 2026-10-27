@@ -4,6 +4,7 @@
 """Regression checks for gate triggers on stacked pull requests."""
 
 from pathlib import Path
+import json
 import os
 import re
 import subprocess
@@ -18,10 +19,9 @@ import yaml
 WORKFLOWS = Path(__file__).resolve().parents[2] / ".github" / "workflows"
 GATES = (
     "quality-gates-by-domain.yml",
-    "quality-gates.yml",
-    "parametric-atlas-drift.yml",
     "gmsh-meshing-tests.yml",
 )
+MERGE_GATES = (*GATES, "quality-gates.yml", "parametric-atlas-drift.yml")
 
 
 def load_workflow(filename: str) -> dict:
@@ -63,17 +63,36 @@ def test_edits_cannot_skip_jobs_or_steps(filename: str) -> None:
 
 
 def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
-    """Evaluate the small Actions expression subset used by concurrency."""
+    """Evaluate the bounded Actions subset used by concurrency and routing.
+
+    Split at top level so quoted JSON and parenthesized trust guards retain
+    operator precedence and short-circuit evaluation.
+    """
     expression = expression.strip()
-    for operator in (" || ", " && ", " == "):
-        if operator in expression:
-            left, right = expression.split(operator, 1)
-            value = evaluate_expression(left, context)
-            if operator == " || ":
-                return value or evaluate_expression(right, context)
-            if operator == " && ":
-                return value and evaluate_expression(right, context)
-            return value == evaluate_expression(right, context)
+    for operator in (" || ", " && ", " == ", " != "):
+        depth = 0
+        for match in re.finditer(r"'[^']*'|[()]| \|\| | && | == | != ", expression):
+            token = match[0]
+            if token == "(":
+                depth += 1
+            elif token == ")":
+                depth -= 1
+            elif depth == 0 and token == operator:
+                left, right = expression[:match.start()], expression[match.end():]
+                value = evaluate_expression(left, context)
+                if operator == " || ":
+                    return value or evaluate_expression(right, context)
+                if operator == " && ":
+                    return value and evaluate_expression(right, context)
+                other = evaluate_expression(right, context)
+                if isinstance(value, str) and isinstance(other, str):
+                    value, other = value.casefold(), other.casefold()
+                return (value == other) if operator == " == " else (value != other)
+    if expression.startswith("(") and expression.endswith(")"):
+        return evaluate_expression(expression[1:-1], context)
+    decoded = re.fullmatch(r"fromJSON\((.*)\)", expression)
+    if decoded:
+        return json.loads(evaluate_expression(decoded[1], context))
     formatted = re.fullmatch(r"format\('([^']+)', (github\.[\w.]+)\)", expression)
     if formatted:
         template, variable = formatted.groups()
@@ -92,7 +111,7 @@ def concurrency_result(
     context = {
         "github.workflow": workflow["name"],
         "github.event_name": event,
-        "github.event.pull_request.number": number,
+        "github.event.pull_request.number": number if event == "pull_request" else None,
         "github.ref": "refs/heads/main",
         "github.run_id": run_id,
     }
@@ -124,11 +143,11 @@ def test_pull_request_concurrency(filename: str) -> None:
 @pytest.mark.parametrize("filename", GATES)
 @pytest.mark.parametrize("event", ("push", "workflow_dispatch"))
 def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
-    """Push and manual runs keep separate groups identified by run ID."""
+    """Push and manual runs never cancel an active run for the same ref."""
     first = concurrency_result(filename, event, 101)
     second = concurrency_result(filename, event, 102)
-    assert first == (f"{load_workflow(filename)['name']}-run-101", False)
-    assert second == (f"{load_workflow(filename)['name']}-run-102", False)
+    assert first == (f"{load_workflow(filename)['name']}-refs/heads/main", False)
+    assert second == first
 
 
 @pytest.mark.parametrize(
@@ -164,7 +183,7 @@ def repository_checkouts(filename: str) -> list[tuple[dict, int]]:
     ]
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", MERGE_GATES)
 def test_repository_checkouts_verify_current_merge(filename: str) -> None:
     """Every checkout builds and guards a merge of the live tip and head."""
     scripts = []
@@ -194,7 +213,7 @@ def test_repository_checkouts_verify_current_merge(filename: str) -> None:
         assert '"${parents[1]:-missing}" != "$PR_HEAD_SHA"' in script
     assert scripts
     assert len(set(scripts)) == 1
-    workflow = (WORKFLOWS / filename).read_text()
+    workflow = (WORKFLOWS / filename).read_text(encoding="utf-8")
     assert "merge_commit_sha" not in workflow
     assert "resolve_merge" not in workflow
     assert not re.search(r"gh\s+api", "\n".join(scripts))
@@ -203,7 +222,7 @@ def test_repository_checkouts_verify_current_merge(filename: str) -> None:
                    if re.search(r"^\s*(?:if\b|elif\b|test\b|\[)", line))
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", MERGE_GATES)
 def test_merge_fetches_disable_automatic_maintenance(filename: str) -> None:
     """Prevent detached repacking from rewriting shallow boundaries during fetch."""
     for job, index in repository_checkouts(filename):
@@ -296,7 +315,7 @@ def merge_fixture(root: Path, case: str) -> tuple[Path, Path, Path, str, str, st
     return runner, origin, head_origin, event_base, tip, head
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", MERGE_GATES)
 @pytest.mark.parametrize("case", (
     "stale-event", "conflict", "shallow", "fork-shallow", "full-history",
     "descendant", "no-api", "missing-parent", "wrong-base-parent",
@@ -383,7 +402,7 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
 
 
 def test_base_consumers_use_local_tip() -> None:
-    """Detection and register checks use the base repository even for forks."""
+    """Detection uses the local base tip; full register checks scan both roots."""
     workflow = load_workflow("quality-gates-by-domain.yml")
     detect = next(step for step in workflow["jobs"]["detect-domains"]["steps"]
                   if step.get("id") == "detect")
@@ -391,7 +410,42 @@ def test_base_consumers_use_local_tip() -> None:
     quality = load_workflow("quality-gates.yml")
     register = next(step for step in quality["jobs"]["quality-gates"]["steps"]
                     if step.get("name") == "Check engineering register changes")
-    assert register["env"]["REGISTER_BASE"] == "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}"
+    assert "REGISTER_BASE" not in register.get("env", {})
+    assert shlex.split(register["run"]) == [
+        "python", "scripts/enforcement/check-engineering-register.py", "docs/", "src/",
+    ]
+
+
+@pytest.mark.parametrize("document", ("docs/earlier.md", "src/earlier.rst"))
+def test_full_register_rejects_earlier_violation_with_clean_latest_commit(
+    document: str, tmp_path: Path,
+) -> None:
+    """Execute the full-run step against a violation outside the latest diff."""
+    merge_fixture(tmp_path, "stale-event")
+    repository = tmp_path / "source"
+    for root in ("docs", "src"):
+        (repository / root).mkdir()
+    fixture_commit(repository, document, "We verified the analysis.\n")
+    fixture_commit(repository, "docs/latest.md", "The analysis meets the criterion.\n")
+    checker = Path("scripts/enforcement/check-engineering-register.py")
+    (repository / checker.parent).mkdir(parents=True)
+    shutil.copyfile(WORKFLOWS.parents[1] / checker, repository / checker)
+    # Reproduce the former blind spot before running the shipped full-run step.
+    latest = subprocess.run(
+        ["python", str(checker), "--diff", "HEAD^"], cwd=repository,
+        capture_output=True, text=True, check=False,
+    )
+    assert latest.returncode == 0, latest.stdout + latest.stderr
+    job = load_workflow("quality-gates.yml")["jobs"]["quality-gates"]
+    register = next(step for step in job["steps"]
+                    if step.get("name") == "Check engineering register changes")
+    result = subprocess.run(
+        ["bash", "-e", "-c", register["run"]], cwd=repository,
+        env=dict(os.environ, REGISTER_BASE="HEAD^"),
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert f"{document}:1: [R1-subject]" in result.stdout
 
 
 def test_trigger_tests_run_in_harness() -> None:
@@ -407,8 +461,8 @@ def test_full_sweep_keeps_nightly_schedule() -> None:
     """The full sweep runs nightly without changing pull request selection."""
     workflow = load_workflow("full-matrix-sweep.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
-    assert triggers["schedule"] == [{"cron": "17 7 * * *"}]
-    assert triggers["push"]["branches"] == ["main"]
+    assert triggers["schedule"] == [{"cron": "17 */12 * * *"}]
+    assert "push" not in triggers
     assert "pull_request" not in triggers
     assert "workflow_dispatch" in triggers
 
@@ -497,7 +551,7 @@ def test_repo_structure_cancels_superseded_runs(
     'refs/heads/1'. A manual main run shares the main push group. Synthetic
     run IDs 101 and 102 never enter the result, so updates supersede work
     only in the same workflow/ref group. The branch named '1' remains distinct
-    from PR 1. This read-only check allows cancellation for every trigger.
+    from PR 1. Only pull request updates cancel earlier runs.
     """
     workflow = load_workflow("repo-structure.yml")
     concurrency = workflow["concurrency"]
@@ -505,7 +559,7 @@ def test_repo_structure_cancels_superseded_runs(
         "github.workflow": workflow["name"],
         "github.event_name": event,
         "github.ref": ref,
-        "github.event.pull_request.number": number,
+        "github.event.pull_request.number": number if event == "pull_request" else None,
         "github.run_id": run_id,
     }
     group = re.sub(
@@ -514,4 +568,6 @@ def test_repo_structure_cancels_superseded_runs(
         concurrency["group"],
     )
     assert group == expected
-    assert concurrency["cancel-in-progress"] is True
+    assert concurrency["cancel-in-progress"] == "${{ github.event_name == 'pull_request' }}"
+    cancellation = evaluate_expression(concurrency["cancel-in-progress"][3:-2], context)
+    assert cancellation is (event == "pull_request")

@@ -107,7 +107,7 @@ def normalize_root(root: str) -> str:
 def parse_domains(domains_file: Path) -> list[Domain]:
     """Read shard roots from the ownership table."""
     domains: list[Domain] = []
-    for raw_line in domains_file.read_text().splitlines():
+    for raw_line in domains_file.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line.startswith("|") or "`tests/" not in line:
             continue
@@ -440,8 +440,8 @@ def touched_domains(
     """Select the union of shards affected by changed paths."""
     selected_names: set[str] = set()
     for path in changed_files:
-        if pinned_domains:
-            selected_names.update(pinned_domains.get(normalize_root(path), set()))
+        record_names = (pinned_domains or {}).get(normalize_root(path), set())
+        selected_names.update(record_names)
         # A pin adds record tests even for paths otherwise handled outside the matrix.
         if pinned_paths and normalize_root(path) in pinned_paths:
             selected_names.add("contracts")
@@ -465,9 +465,22 @@ def touched_domains(
         if is_full_matrix_trigger(path):
             return domains
 
-        for domain in domains:
-            if any(path_matches_root(path, root) for root in domain.roots):
-                selected_names.add(domain.name)
+        owners = {
+            domain.name for domain in domains
+            if any(path_matches_root(path, root) for root in domain.roots)
+        }
+        if owners:
+            selected_names.update(owners)
+            continue
+
+        # Only unowned prose is exempt. Unknown code, tests, configuration and
+        # extensionless inputs must not silently produce an empty selection.
+        normalized = normalize_root(path)
+        prose_only = (Path(normalized).suffix.lower() in {".md", ".rst"}
+                      and ("/" not in normalized or normalized.startswith("docs/")))
+        record_owned = record_names or (pinned_paths and normalized in pinned_paths)
+        if not prose_only and not record_owned:
+            return domains
 
     if "contracts" in selected_names and not any(d.name == "contracts" for d in domains):
         return domains

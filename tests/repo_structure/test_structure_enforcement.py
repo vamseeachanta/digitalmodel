@@ -51,8 +51,9 @@ def test_structure_workflow_runs_unconditionally_for_pull_requests():
 
 def test_docs_workflow_covers_structure_and_domain_docs_with_routing_tests():
     config = workflow("docs.yml")
-    for event in ("push", "pull_request"):
-        assert {"docs/standards/**", "docs/domains/**"} <= set(config["on"][event]["paths"])
+    assert {"docs/standards/**", "docs/domains/**"} <= set(config["on"]["push"]["paths"])
+    assert "pull_request" not in config["on"]
+    assert {"workflow_call", "workflow_dispatch"} <= set(config["on"])
     steps = config["jobs"]["docs"]["steps"]
     validations = [step for step in steps
                    if "tests/docs/test_digitalmodel_routing_contract.py" in step.get("run", "")]

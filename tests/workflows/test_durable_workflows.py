@@ -4,6 +4,7 @@
 import json
 import logging
 import math
+import warnings
 from pathlib import Path
 
 import pandas as pd
@@ -2451,3 +2452,11 @@ def test_riser_joint_ffs_grid(riser_joint_report_run, grid_name, min_mm, depth_f
     source = next(s for s in result["provenance"]["sources"] if s["path"].endswith(grid_name))
     assert source["sha256"] == hashlib.sha256((REPO_ROOT / source["path"]).read_bytes()).hexdigest()
     assert source["sha256"] in Path(result["report_html"]).read_text()
+
+
+def test_asset_integrity_data_compiles_without_warnings():
+    """Fresh imports must work when syntax warnings are treated as errors."""
+    source = REPO_ROOT / "src/digitalmodel/asset_integrity/common/data.py"
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        compile(source.read_text(encoding="utf-8"), str(source), "exec")

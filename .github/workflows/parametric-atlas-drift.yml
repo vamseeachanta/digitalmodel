@@ -11,26 +11,27 @@
 name: Parametric atlas drift
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main, develop]
+  workflow_dispatch:
+  workflow_call:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: atlas-drift-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
+# PR_GATE_RUNNER accepts self-hosted-arm64; unset/unknown values keep hosted defaults.
+# Fork pull requests always stay on hosted runners.
 jobs:
   atlas-drift:
     name: Atlas staleness check
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 

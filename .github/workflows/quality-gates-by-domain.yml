@@ -1,17 +1,8 @@
 # Quality Gates by Domain
 #
-# This workflow is the FAST, touched-domain-gated lane: pull requests and pushes
-# dispatch only the shards their diff touches. That scoping is deliberate, but it
-# means a green result here says "the shards we ran passed", not "all shards
-# passed" (issue #1863). Two things keep that honest:
-#
-#   1. Every run reports its own scope -- how many shards ran, how many did not,
-#      and which -- in the "Detect touched test domains" and "Domain test
-#      aggregate" job summaries.
-#   2. `.github/workflows/full-matrix-sweep.yml` runs EVERY shard on every push
-#      to `main` and nightly, under its own distinct check names. The nightly
-#      cron formerly lived here; it moved there so that a full-sweep failure is
-#      never posted under the same check names as the gated pull-request lane.
+# Pull requests dispatch touched domains and known dependents. Shared inputs
+# retain conservative full-matrix routing. Full testing runs every 12 hours in
+# full-matrix-sweep.yml under separate, non-required check names.
 name: Quality Gates by Domain
 
 "on":
@@ -23,20 +14,23 @@ name: Quality Gates by Domain
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   actions: read
   contents: read
 
+# PR_GATE_RUNNER accepts self-hosted-arm64; unset/unknown values keep hosted defaults.
+# Fork pull requests always stay on hosted runners.
 jobs:
   detect-domains:
     name: Detect touched test domains
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       has-domains: ${{ steps.detect.outputs.has_domains }}
+      has-harness: ${{ steps.detect.outputs.has_harness }}
       selected-count: ${{ steps.scope.outputs.selected-count }}
       total-count: ${{ steps.scope.outputs.total-count }}
       skipped-count: ${{ steps.scope.outputs.skipped-count }}
@@ -46,6 +40,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
@@ -157,14 +152,22 @@ jobs:
               --domains-file tests/DOMAINS.md \
               --output-format json-matrix)
           else
-            # workflow_dispatch runs the full sweep on demand. The nightly cron
-            # now lives in full-matrix-sweep.yml.
+            # workflow_dispatch runs every domain on demand. The scheduled
+            # full batch lives in full-matrix-sweep.yml.
             matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
               --mode full \
               --domains-file tests/DOMAINS.md \
               --output-format json-matrix)
           fi
 
+          has_harness=true
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            has_harness=$(python scripts/ci/pr_test_policy.py --base "$PR_BASE_SHA" --head "$PR_HEAD_SHA")
+          elif [ "$EVENT_NAME" = "push" ]; then
+            # Unreadable push history keeps the harness enabled.
+            has_harness=$(python scripts/ci/pr_test_policy.py --base "$PUSH_BEFORE_SHA" --head "$PUSH_AFTER_SHA") || has_harness=true
+          fi
+          echo "has_harness=$has_harness" >> "$GITHUB_OUTPUT"
           has_domains=$(uv run --no-sources python -c 'import json,sys; print("true" if json.loads(sys.argv[1])["include"] else "false")' "$matrix")
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "has_domains=$has_domains" >> "$GITHUB_OUTPUT"
@@ -189,12 +192,14 @@ jobs:
 
   ci-harness-tests:
     name: CI harness and compliance tests
+    if: needs.detect-domains.outputs.has-harness == 'true'
     needs: detect-domains
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -280,6 +285,7 @@ jobs:
         run: |
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
+            scripts/ci/test_pr_test_policy.py \
             tests/scripts/test_reporting_ci_registration.py \
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
@@ -289,6 +295,7 @@ jobs:
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
+            tests/workflows/test_ci_runner_routing.py \
             -q --tb=line
 
       - name: Report implementation map staleness
@@ -298,7 +305,8 @@ jobs:
     name: tests-${{ matrix.domain }}
     needs: detect-domains
     if: needs.detect-domains.outputs.has-domains == 'true'
-    runs-on: ${{ matrix.runner }}
+    # Gmsh domains retain matrix.runner: no linux-aarch64 wheel is available.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && fromJSON('["self-hosted","Linux","ARM64"]') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || matrix.runner) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect-domains.outputs.matrix) }}
@@ -306,6 +314,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           # Citation checks read source and map revisions recorded in packs;
           # subsea also verifies a manifest pinned to an older commit.
           fetch-depth: 0
@@ -477,7 +486,7 @@ jobs:
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
     steps:
       - name: Report scope of this result
         # States what this check actually covered, so a green aggregate cannot be
@@ -504,7 +513,7 @@ jobs:
             {
               echo "A pass here means **${SELECTED_COUNT:-?} of ${TOTAL_COUNT:-?} shards**"
               echo "passed. The other ${SKIPPED_COUNT:-?} were not executed by this run;"
-              echo "they run in full on every push to \`main\` and nightly via the"
+              echo "they run in full every 12 hours on \`main\` via the"
               echo "\`Full Matrix Sweep\` workflow."
               echo
               echo "Not run: \`${SKIPPED_DOMAINS}\`"
@@ -522,6 +531,7 @@ jobs:
       - name: Checkout baseline tools
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
@@ -611,6 +621,7 @@ jobs:
           CI_BASELINE_MODE: report
           GH_TOKEN: ${{ github.token }}
           HAS_DOMAINS: ${{ needs.detect-domains.outputs.has-domains }}
+          HAS_HARNESS: ${{ needs.detect-domains.outputs.has-harness }}
           DETECT_RESULT: ${{ needs.detect-domains.result }}
           HARNESS_RESULT: ${{ needs.ci-harness-tests.result }}
           DOMAIN_RESULT: ${{ needs.domain-tests.result }}
@@ -620,8 +631,13 @@ jobs:
             exit 1
           fi
 
-          if [ "$HARNESS_RESULT" != "success" ]; then
-            echo "CI harness detector tests did not succeed: $HARNESS_RESULT"
+          if [ "$HAS_HARNESS" = "true" ]; then
+            if [ "$HARNESS_RESULT" != "success" ]; then
+              echo "CI harness detector tests did not succeed: $HARNESS_RESULT"
+              exit 1
+            fi
+          elif [ "$HAS_HARNESS" != "false" ] || [ "$HARNESS_RESULT" != "skipped" ]; then
+            echo "Unexpected CI harness selection or result"
             exit 1
           fi
 
