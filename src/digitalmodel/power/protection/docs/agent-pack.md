@@ -5,7 +5,7 @@
 | Module | power/protection |
 | Repository | digitalmodel |
 | Path | `src/digitalmodel/power/protection` |
-| Pack revision | 0, 2026-10-26 |
+| Pack revision | 1, 2026-10-27 |
 | Code revision | `2aa19e88306d9b4294e49a2b7849b07ae036b205` |
 | Analysis family | Engineering calculations (EC); AQG r0, section 10, Python calculations |
 | Quality role | Engineering calculations family quality manager |
@@ -18,6 +18,13 @@ The package provides overcurrent settings, differential settings, an inverse-tim
 `DifferentialRelay` stores settings and validates slope and minimum operate current; it does not calculate a differential operating criterion. `coordination_check` and `time_current_intersection` use pickup, time dial and curve type, without using `relay_type` or `instantaneous_pickup_A`; do not treat their outputs as instantaneous-element or differential trip predictions. [src/digitalmodel/power/protection/relay_coordination.py:L114-L144] [src/digitalmodel/power/protection/relay_coordination.py:L228-L246] [src/digitalmodel/power/protection/relay_coordination.py:L283-L327]
 
 The containing power domain is registered as beta; that label is a routing maturity designation, not independent numerical qualification of this package. [docs/registry/module-routing.yaml:L333-L338]
+
+### Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 0 | 2026-10-26 | Document calculation boundaries, regression evidence and qualification gaps. |
+| 1 | 2026-10-27 | Retain offline H1 and D1–D3 probes with source and script digests so the diagnostic record can be repeated. |
 
 ## 2. Inputs and outputs
 
@@ -102,12 +109,22 @@ Required gate allocation: AQG r0, *Analysis QA gates*, revision 0, section 10, P
 | C03 | G1 | Run `tests/power/protection/` by the section-4 command; 23 passed, 0 failed/skipped/NOT_RUN (test cases). Collection exercises the explicit Python import route. | PASS at BASE and after. [tests/power/protection/test_relay_coordination.py:L14-L22] [tests/power/protection/test_relay_coordination.py:L28-L332] |
 | C04 | G1 | Run `tests/docs/test_digitalmodel_routing_contract.py`; require 10 passes and 0 failures (test cases); compare parsed registry before/after with exactly 1 added submodule and 0 changed existing entries (mappings). | PASS at BASE and after for tests; parsed mapping comparison confirms only the new protection entry. [tests/docs/test_digitalmodel_routing_contract.py:L46-L150] |
 | C05 | G2 | Run E1–E3; require 3 repeated-formula comparisons within `1e-6` relative error (dimensionless), returned times in s. | PASS at BASE and after; regression only; do not use as independent standard validation. [tests/power/protection/test_relay_coordination.py:L151-L185] |
-| H1 | G2 | Hand check with definite-time relays: pickup 100.0 A, fault 500.0 A, time dials 2.0 s and 0.5 s; calculate `2.0 - 0.5` outside the module, compare `coordination_check()['margin_s']` with 1.5 s within `1e-12` s; require `pass` true at the default margin. | PASS in a separate scalar hand-check script; these synthetic settings use the existing fixture values and definite-time branch; this is not a shipped worked-example node. [tests/power/protection/test_relay_coordination.py:L187-L194] [tests/power/protection/test_relay_coordination.py:L218-L248] [src/digitalmodel/power/protection/relay_coordination.py:L189-L194] [src/digitalmodel/power/protection/relay_coordination.py:L240-L246] |
+| H1 | G2 | Hand check with definite-time relays: pickup 100.0 A, fault 500.0 A, time dials 2.0 s and 0.5 s; calculate `2.0 - 0.5` outside the module, compare `coordination_check()['margin_s']` with 1.5 s within `1e-12` s; require `pass` true at the default margin. | PASS in the retained H1 probe below; these synthetic settings use the existing fixture values and definite-time branch; this is not a shipped worked-example node. [tests/power/protection/test_relay_coordination.py:L187-L194] [tests/power/protection/test_relay_coordination.py:L218-L248] [src/digitalmodel/power/protection/relay_coordination.py:L189-L194] [src/digitalmodel/power/protection/relay_coordination.py:L240-L246] |
 | C06 | G2 | Run E6 and `tests/power/protection/test_relay_coordination.py::TestTimecurrentIntersection::test_no_intersection_returns_none`; require 2 passes (test cases), crossing time agreement within `1e-2` relative error, same-curve/different-time-dial case returns `None` (1 absent result). | PASS at BASE and after; boundary accuracy is not established by these assertions. [tests/power/protection/test_relay_coordination.py:L290-L332] |
 | D1 | G0 | Diagnostic reproduction, not an input-acceptance gate: demonstrate 5 unguarded cases (NaN overcurrent pickup, NaN differential minimum, negative direct definite time, negative restraint and negative requested margin); require 5 observed reproductions (cases) and link each limitation to draft 1. | Reproduced; correct physical input rejection remains open. [src/digitalmodel/power/protection/relay_coordination.py:L103-L111] [src/digitalmodel/power/protection/relay_coordination.py:L130-L144] [src/digitalmodel/power/protection/relay_coordination.py:L183-L194] [src/digitalmodel/power/protection/relay_coordination.py:L228-L246] |
 | D2 | G1 | Attribute-read audit: check the 2 relay calculation functions for 0 reads of `relay_type` or `instantaneous_pickup_A`; inspect `DifferentialRelay` for 0 operating-result methods (methods); changing instantaneous setting must leave the coordination dictionary equal (0 differing keys). | Reproduced/documented capability boundary; draft 2 holds missing behavior. [src/digitalmodel/power/protection/relay_coordination.py:L114-L144] [src/digitalmodel/power/protection/relay_coordination.py:L228-L246] [src/digitalmodel/power/protection/relay_coordination.py:L283-L327] |
 | D3 | G2 | Diagnostic audit/reproduction: 6 conditions (lower-bound clipping, empty effective interval, no sign change, 0 iterations, coincident curves, exact lower-endpoint root), 0 undocumented outcomes (conditions). Reproduce endpoint loss with a very-inverse relay and a definite-time relay set to its value at 150.0 A over 150.0–5000.0 A; flag returned current > 4999.9 A as a defect, not convergence. | Reproduced; inspect termination at the time-residual or current-width branch separately; no independent current-error guarantee. [src/digitalmodel/power/protection/relay_coordination.py:L283-L327] [tests/power/protection/test_relay_coordination.py:L290-L332] |
 | C07 | G5 | Match E1–E6 node IDs against retained pytest output at the code pin; require 6/6 paired BASE/after results, 0 missing records (cases), and 0 unresolved ranged citations (citations). Preserve diagnostics and issue dispositions with the evidence. | PASS: BASE and after have 6/6 records; every ranged citation resolves at its stated pin. [tests/power/protection/test_relay_coordination.py:L151-L194] [tests/power/protection/test_relay_coordination.py:L239-L248] [tests/power/protection/test_relay_coordination.py:L290-L313] |
+
+### Retained diagnostic evidence
+
+The offline [probe script](../../../../../scripts/validation/protection_relay_probe.py) retains H1 and D1–D3 assertions. The [evidence record](evidence/protection-relay-probes.json) pins the source revision and SHA-256 digests of both the calculation file and the script. The script rejects calculation bytes that differ from the pin and compares its deterministic output byte for byte with the retained record. Displayed results use one decimal place; comparisons use unrounded values. These diagnostics reproduce the documented limitations and do not add independently validated examples.
+
+```sh
+PYTHONPATH=src python scripts/validation/protection_relay_probe.py --check src/digitalmodel/power/protection/docs/evidence/protection-relay-probes.json
+```
+
+H1 retains the literal hand-calculated expectation **1.5 s**, independent of the subtraction inside `coordination_check`. D3 records every relay field, current range and search control. Its exact lower-endpoint case uses a very-inverse relay with 100.0 A pickup and time dial 1.0, and a definite-time relay with 100.0 A pickup whose time dial is exactly `inverse_time_curve(150.0, 100.0, 1.0, CurveType.VERY_INVERSE)`. Both use `OVERCURRENT_51` with no instantaneous setting. The range is 150.0–5000.0 A, tolerance is `1e-3` A and the iteration limit is 100. The probe explicitly identifies the returned current above 4999.9 A as endpoint loss, not successful root convergence.
 
 ## 6. Known failure modes and pitfalls
 
