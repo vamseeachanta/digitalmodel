@@ -11,11 +11,12 @@ import json
 import math
 import sys
 from dataclasses import asdict
+from datetime import datetime
 from pathlib import Path
 
 from digitalmodel.geotechnical.spudcan import SandOverClay, penetration_curve, punch_through_screen
-from digitalmodel.marine_ops.jackup_inputs import frozen_inputs
-from digitalmodel.marine_ops.jackup_screening import screen_three_leg_unit
+from digitalmodel.marine_ops.jackup_inputs import frozen_environment, frozen_inputs, query_public_inputs
+from digitalmodel.marine_ops.jackup_screening import environmental_actions, screen_three_leg_unit
 
 INPUTS = Path(__file__).resolve().parents[2] / 'data' / 'jackup_screening'
 
@@ -32,8 +33,13 @@ def make_profile(data):
     return SandOverClay(diameter_m=math.sqrt(4 * area / math.pi), area_m2=area, **params)
 
 
-def run_example():
-    """Return geotechnical results and explicitly synthetic structural sensitivity."""
+def run_example(*, public_clients=None):
+    """Return screening results, frozen environmental cases and assumptions.
+
+    Configured NOAA, ERA5 and GEBCO clients may be supplied as a tuple to query
+    2024 observations instead. Their sample maxima carry no return period.
+    The default performs no network request and uses verified frozen extracts.
+    """
     from digitalmodel.marine_ops.operation_envelope import jackup_operating_envelope
 
     data = frozen_inputs(INPUTS)
@@ -44,6 +50,43 @@ def run_example():
                 (-longitudinal / 3, -transverse / 2))
     weight_kn = (unit['lightship_t']['value'] + unit['variable_load_t']['value']) * 9.81
     sensitivity = data['structural_sensitivity']
+    environment = frozen_environment(INPUTS)
+    load_assumptions = environment['load_assumptions']
+    load_parameters = {key: value['value'] for key, value in environment['load_assumptions'].items()}
+    scenarios = []
+    if public_clients is not None:
+        environment = query_public_inputs(
+            *public_clients, datetime(2024, 1, 1), datetime(2024, 12, 31, 23, 59),
+            environment['location'], environment['noaa']['station'])
+        environment['load_assumptions'] = load_assumptions
+        water_depth = environment['water_depth_m']
+        for provider in ('noaa', 'era5'):
+            scenarios.append((provider, None, environment[provider]['wave_height']['maximum'],
+                              environment[provider]['wind_speed']['maximum']))
+    else:
+        water_depth = environment['depth']['value']
+        for period in ('50', '100'):
+            scenarios.append(('noaa_gumbel', int(period),
+                              environment['noaa']['wave_height']['return_levels'][period],
+                              environment['noaa']['wind_speed']['return_levels'][period]))
+        scenarios.append(('era5_illustrative_assumption', None,
+                          environment['era5']['wave_height_m'], environment['era5']['wind_speed_10m_m_s']))
+    environment_cases = []
+    for source, period, hs, wind in scenarios:
+        actions = environmental_actions(hs_m=hs, wind_m_s=wind, water_depth_m=water_depth,
+                                        **load_parameters)
+        statics = screen_three_leg_unit(
+            vertical_load_kn=weight_kn, supports_m=supports, moment_x_knm=0,
+            moment_y_knm=actions.moment_y_knm,
+            horizontal_force_kn=actions.horizontal_force_kn,
+            preload_per_leg_kn=unit['preload_per_leg_kn']['value'],
+            sliding_resistance_kn=sensitivity['sliding_resistance_kn']['value'])
+        environment_cases.append({
+            'source': source, 'marginal_return_period_years': period,
+            'joint_return_period_years': None, 'qualification': 'illustrative_only',
+            'hs_m': hs, 'wind_m_s': wind, 'water_depth_m': water_depth,
+            'actions': asdict(actions), 'statics': asdict(statics),
+        })
 
     def evaluate(hs, tp):
         # The period is intentionally inactive: no dynamic response is supplied.
@@ -58,7 +101,8 @@ def run_example():
     if max(point.depth_m for point in curve) > data['soil']['qualified_bottom_m']:
         raise ValueError('curve extends below the published soil interval')
     result = {
-        'qualification': 'generic_screening_only', 'environment_status': 'not_evaluated',
+        'qualification': 'generic_screening_only', 'environment_status': 'illustrative_inputs_only',
+        'environment': environment, 'environment_cases': environment_cases,
         'operating_envelope_status': 'synthetic_load_sensitivity_only',
         'curve': [asdict(point) for point in curve],
         'punch_through': asdict(punch_through_screen(profile, unit['preload_per_leg_kn']['value'])),
@@ -66,7 +110,7 @@ def run_example():
         'static_envelope': [asdict(point) for point in jackup_operating_envelope(
             [6.0, 10.0, 14.0], [i / 4 for i in range(33)], evaluate)],
         'limits': [
-            'No qualified ERA5 input, GEBCO depth or return levels are available.',
+            'ERA5 scenario, depth fallback and environmental actions remain illustrative.',
             'Public soil profile and buoy records are not colocated.',
             'Synthetic force coefficient and application height are illustrative assumptions.',
             'Preload comparison is not structural capacity or combined foundation resistance.',

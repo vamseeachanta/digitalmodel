@@ -9,6 +9,7 @@ import pytest
 
 from digitalmodel.geotechnical.spudcan import (
     SandOverClay,
+    UniformSand,
     clay_resistance_kpa,
     hu_clay_resistance_kpa,
     hu_peak_resistance_kpa,
@@ -34,14 +35,30 @@ def test_uniform_clay_closed_form():
     assert clay_resistance_kpa(20.0, 2.0, 12.0) == pytest.approx(140.24)
 
 
-def test_uniform_sand_square_surrogate_closed_form():
-    # Independent Hansen expression for B=L, c=0, d/B=0.25.
+@pytest.mark.parametrize('depth', [0.0, 3.0, 12.0])
+def test_uniform_circular_sand_closed_form_and_penetration_branch(depth):
+    # Circular plates: 1961 paper, equations 3 and 5 (printed page 662).
+    # Bearing factors: 1970 bulletin, equations 2 and 4. B is diameter.
     phi = math.radians(30)
     nq = math.exp(math.pi * math.tan(phi)) * math.tan(math.pi / 4 + phi / 2)**2
     ng = 1.5 * (nq - 1) * math.tan(phi)
-    dq = 1 + 2 * math.tan(phi) * (1 - math.sin(phi))**2 * 0.25
-    expected = 10 * 3 * nq * (1 + math.tan(phi)) * dq + 0.5 * 10 * 12 * ng * 0.6
-    assert sand_resistance_kpa(12.0, 3.0, 10.0, 30.0) == pytest.approx(expected)
+    expected = 0.3 * 10 * 12 * ng + 1.2 * 10 * depth * (1 + 0.1 * depth / 12) * nq
+    assert sand_resistance_kpa(12.0, depth, 10.0, 30.0) == pytest.approx(expected)
+    sand = UniformSand(diameter_m=12.0, submerged_weight_kn_m3=10.0, friction_deg=30.0)
+    point, = penetration_curve(sand, [depth])
+    assert point.branch == 'uniform_sand_circular'
+    assert point.pressure_kpa == pytest.approx(expected)
+    assert point.load_kn == pytest.approx(expected * math.pi * 12**2 / 4)
+
+
+@pytest.mark.parametrize('diameter,depth,gamma,friction', [
+    (0, 0, 10, 30), (12, -1, 10, 30), (12, 13, 10, 30),
+    (12, 0, 0, 30), (12, 0, 10, 0), (12, 0, 10, 50),
+    (True, 0, 10, 30), (12, float('nan'), 10, 30),
+])
+def test_circular_sand_rejects_invalid_or_deep_inputs(diameter, depth, gamma, friction):
+    with pytest.raises(ValueError):
+        penetration_curve(UniformSand(diameter, gamma, friction), [depth])
 
 
 def test_published_gulf_site3_peak_and_non_event():

@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 # ABOUTME: GEBCO global bathymetry client for water depth data
 # ABOUTME: Streaming, location-based queries for seabed elevation/depth
 
@@ -48,7 +50,7 @@ class GEBCOClient(BaseAPIClient):
         auth_config = {'method': 'none'}
 
         super().__init__(
-            base_url="https://www.gebco.net",
+            base_url="https://wms.gebco.net",
             auth_config=auth_config,
             rate_limit=None,  # Fair use
             **kwargs
@@ -92,18 +94,21 @@ class GEBCOClient(BaseAPIClient):
             'service': 'WMS',
             'version': '1.3.0',
             'request': 'GetFeatureInfo',
-            'layers': 'GEBCO_LATEST',
-            'query_layers': 'GEBCO_LATEST',
+            'layers': 'GEBCO_LATEST_2',
+            'query_layers': 'GEBCO_LATEST_2',
             'info_format': 'text/plain',
             'i': 50,  # Pixel position
             'j': 50,
             'width': 101,
             'height': 101,
             'crs': 'EPSG:4326',
-            'bbox': f"{lon-0.1},{lat-0.1},{lon+0.1},{lat+0.1}"
+            # WMS 1.3.0 EPSG:4326 uses latitude, longitude axis order.
+            'bbox': f"{lat-0.1},{lon-0.1},{lat+0.1},{lon+0.1}",
+            'styles': '',
+            'format': 'image/png',
         }
 
-        response = self.get("data_and_products/gebco_web_services/web_map_service/mapserv", params=params)
+        response = self.get("mapserv", params=params)
 
         # Parse text response
         text = response.text

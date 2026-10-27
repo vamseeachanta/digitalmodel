@@ -78,26 +78,48 @@ def clay_resistance_kpa(su_kpa: float, gradient_kpa_m: float, diameter_m: float)
     return 6.34 * su_kpa + 0.56 * gradient_kpa_m * diameter_m
 
 
-def sand_resistance_kpa(width_m: float, depth_m: float, gamma_kn_m3: float,
-                        friction_deg: float) -> float:
-    """Return the existing Hansen square-footing surrogate for uniform sand.
+@dataclass(frozen=True)
+class UniformSand:
+    """Drained circular flat-base reference, separate from the Hu calibration.
 
-    The repository mudmat calculator supplies the general bearing-capacity
-    expression from Hansen (1970). This separate reference is for an equal-area
-    square footing, not a circular-spudcan shape or a Hu layered-soil limit.
+    No clay interface, conical-base correction or stress-dependent dilatancy is
+    implied. This is an explicit homogeneous-soil branch, not an extrapolation
+    of the bounded layered model to infinite sand thickness.
     """
-    from .mudmat import mudmat_bearing_capacity
 
-    finite('width', width_m, strict=True)
+    diameter_m: float
+    submerged_weight_kn_m3: float
+    friction_deg: float
+
+
+def sand_resistance_kpa(diameter_m: float, depth_m: float, gamma_kn_m3: float,
+                        friction_deg: float) -> float:
+    """Circular sand pressure using the circular-plate research expression.
+
+    The Bearing Capacity of Sand, tested by Loading Circular Plates (1961),
+    equations 3 and 5, printed page 662:
+    https://www.issmge.org/uploads/publications/1/40/1961_01_0110.pdf
+    q = 0.3 gamma B Ngamma + 1.2 gamma d (1 + 0.1 d/B) Nq, B = diameter.
+    Thus sgamma=0.6, sq=1.2, dgamma=1 and dq=1+0.1 d/B. Apparent cohesion,
+    extra surface loading and settlement correction are zero here. Nq and
+    Ngamma use equations 2 and 4 of the 1970 research bulletin:
+    https://www.geo.dk/media/1431/geodgibulletinno28.pdf
+
+    Restricted here to shallow embedment d/B <= 1 and 0 < phi < 50 degrees.
+    The 1961 paper reports measured capacities exceeding theoretical factors;
+    this arithmetic reference does not claim to reproduce those measurements.
+    """
+    finite('diameter', diameter_m, strict=True)
     finite('depth', depth_m)
     finite('submerged unit weight', gamma_kn_m3, strict=True)
     finite('friction angle', friction_deg, strict=True)
-    if friction_deg >= 50 or depth_m > width_m:
-        raise ValueError('sand surrogate requires phi < 50 degrees and depth/width <= 1')
-    return mudmat_bearing_capacity(
-        width_m, width_m, depth_m, 'drained', gamma_kn_m3, 1.0,
-        friction_angle_deg=friction_deg,
-    ).q_ult_kpa
+    if friction_deg >= 50 or depth_m > diameter_m:
+        raise ValueError('circular sand reference requires phi < 50 degrees and depth/diameter <= 1')
+    phi = math.radians(friction_deg)
+    nq = math.exp(math.pi * math.tan(phi)) * math.tan(math.pi / 4 + phi / 2)**2
+    ngamma = 1.5 * (nq - 1) * math.tan(phi)
+    dq = 1 + 0.1 * depth_m / diameter_m
+    return 0.3 * gamma_kn_m3 * diameter_m * ngamma + 1.2 * gamma_kn_m3 * depth_m * dq * nq
 
 
 def _peak_for_pressure(profile: SandOverClay, pressure_kpa: float) -> float:
@@ -166,7 +188,8 @@ class PenetrationPoint:
     branch: str
 
 
-def penetration_curve(profile: SandOverClay, depths_m: list[float]) -> list[PenetrationPoint]:
+def penetration_curve(profile: SandOverClay | UniformSand,
+                      depths_m: list[float]) -> list[PenetrationPoint]:
     """Sample the curve, adding the exact peak and interface to prevent aliasing.
 
     Linear mobilization from zero and linear peak-to-interface interpolation are
@@ -177,6 +200,15 @@ def penetration_curve(profile: SandOverClay, depths_m: list[float]) -> list[Pene
         raise ValueError('depth grid must not be empty')
     for depth in depths_m:
         finite('depth', depth)
+    if isinstance(profile, UniformSand):
+        result = []
+        for depth in sorted(set(depths_m)):
+            pressure = sand_resistance_kpa(profile.diameter_m, depth,
+                                           profile.submerged_weight_kn_m3, profile.friction_deg)
+            result.append(PenetrationPoint(depth, pressure,
+                          pressure * math.pi * profile.diameter_m**2 / 4,
+                          'uniform_sand_circular'))
+        return result
     peak = hu_peak_resistance_kpa(profile)
     h = profile.sand_thickness_m
     peak_depth = 0.12 * h
