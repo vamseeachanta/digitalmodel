@@ -237,6 +237,7 @@ class GMSHMeshGenerator:
             for i, (x, y, z) in enumerate(nodes):
                 f.write(f"{i + 1}, {x:.10g}, {y:.10g}, {z:.10g}\n")
 
+            element_id = 1
             for elem_name, elem_data in elements.items():
                 ccx_type = element_type_map.get(elem_name)
                 if ccx_type is None or elem_data['dimension'] < 2:
@@ -245,9 +246,10 @@ class GMSHMeshGenerator:
                 f.write(
                     f"*ELEMENT, TYPE={ccx_type}, ELSET={elset_name}\n"
                 )
-                for j, conn in enumerate(elem_data['connectivity']):
+                for conn in elem_data['connectivity']:
                     node_ids = ", ".join(str(int(n) + 1) for n in conn)
-                    f.write(f"{j + 1}, {node_ids}\n")
+                    f.write(f"{element_id}, {node_ids}\n")
+                    element_id += 1
 
             f.write("*NSET, NSET=NALL, GENERATE\n")
             f.write(f"1, {len(nodes)}, 1\n")
