@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Reconstruct historical atlas fingerprints without importing historical code.
 
 The trusted index pins raw source blobs and unchanged atlas artifacts. Its
@@ -13,10 +16,13 @@ import argparse
 import ast
 import hashlib
 import json
+import os
 import re
 import subprocess
+from http.client import HTTPException, HTTPSConnection
 from pathlib import Path, PurePosixPath
 from typing import Callable
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -24,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[3]
 REGISTRY = "docs/registry/workflows.yaml"
 REFRESH = "src/digitalmodel/parametric/refresh.py"
 WRAPPER = "src/digitalmodel/parametric/generate.py"
+INDEX = "atlases/historical-provenance.json"
 MISMATCH = "Stored fingerprint does not match retained publication basis."
 Reader = Callable[[str], bytes]
 
@@ -74,9 +81,14 @@ def archive_reader(root: Path) -> Reader:
 
 
 def _git(root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+                          "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"}}
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
     try:
         return subprocess.check_output(
-            ["git", "-C", str(root), *args], input=input_bytes, stderr=subprocess.DEVNULL
+            ["git", "-C", str(root), *args], input=input_bytes, stderr=subprocess.DEVNULL,
+            env=env,
         )
     except (OSError, subprocess.CalledProcessError):
         raise EvidenceError("Unavailable Git evidence or retained history") from None
@@ -222,11 +234,225 @@ def _working_tree_drift(record: dict, root: Path, revision: str) -> list[str]:
     return sorted(drift)
 
 
-def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/main") -> dict:
-    """Verify committed evidence and report checkout artifact drift separately."""
+def _commit(root: Path, ref: str) -> str:
+    return _git(root, "rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}").decode().strip()
+
+
+def _ancestor(root: Path, revision: str, head: str) -> bool:
+    try:
+        _git(root, "merge-base", "--is-ancestor", revision, head)
+    except EvidenceError:
+        return False
+    return True
+
+
+def _inventory_at(root: Path, revision: str) -> dict[str, dict]:
+    if not _git(root, "ls-tree", revision, "--", INDEX):
+        return {}
+    try:
+        rows = json.loads(git_reader(root, revision)(INDEX))["atlases"]
+        entries = {row["manifest"]: row for row in rows}
+        if len(entries) != len(rows):
+            raise ValueError("Duplicate manifest")
+        return entries
+    except (KeyError, TypeError, ValueError):
+        raise EvidenceError("Invalid committed inventory") from None
+
+
+def _ci_head(root: Path, ci_ref: str, retained: str, revision: str) -> str:
+    pull_ref = ci_ref.rsplit("/", 1)[0] + "/head"
+    event_path = os.environ.get("GITHUB_EVENT_PATH")
+    if event_path:
+        try:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+            head = event["pull_request"]["head"]["sha"]
+            if not isinstance(head, str) or not re.fullmatch(r"[0-9a-f]{40}", head):
+                raise ValueError("Invalid head object ID")
+            return _commit(root, head)
+        except (OSError, ValueError, KeyError, TypeError):
+            raise EvidenceError("Unavailable or invalid CI pull request head in event payload") from None
+    try:
+        return _commit(root, pull_ref)
+    except EvidenceError:
+        parents = _git(root, "rev-list", "--parents", "-n", "1", revision).decode().split()
+        if ci_ref.endswith("/merge") and len(parents) == 3 and parents[1] == retained:
+            return parents[2]
+        raise EvidenceError(
+            f"Missing CI pull request head ref {pull_ref}; provide the event head SHA "
+            "or a two-parent merge whose first parent is the retained tip"
+        ) from None
+
+
+def _origin_repository(root: Path) -> str:
+    remote = _git(root, "remote", "get-url", "origin").decode("utf-8").strip()
+    prefix, separator, path = remote.partition(":")
+    if separator and prefix.split("@") == ["git", "github.com"]:
+        return path.removesuffix(".git")
+    parsed = urlsplit(remote)
+    if (parsed.hostname != "github.com" or parsed.port is not None
+            or parsed.query or parsed.fragment or parsed.password
+            or not (parsed.scheme == "https" and parsed.username is None
+                    or parsed.scheme == "ssh" and parsed.username == "git")):
+        raise ValueError("Unsupported destination")
+    return parsed.path.removeprefix("/").removesuffix(".git")
+
+
+def _integration_repository(root: Path) -> str:
+    ci = (os.environ.get("GITHUB_ACTIONS") == "true"
+          or os.environ.get("GITHUB_REF", "").startswith("refs/pull/"))
+    repository = os.environ.get("GITHUB_REPOSITORY") if ci else None
+    try:
+        if not repository:
+            if ci:
+                raise ValueError("Missing CI destination")
+            repository = _origin_repository(root)
+        if (not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository)
+                or any(part in {".", ".."} for part in repository.split("/"))):
+            raise ValueError("Invalid destination")
+        event_path = os.environ.get("GITHUB_EVENT_PATH")
+        if event_path:
+            event = json.loads(Path(event_path).read_text(encoding="utf-8"))
+            destination = event["pull_request"]["base"]["repo"]["full_name"]
+            if not isinstance(destination, str) or destination.casefold() != repository.casefold():
+                raise ValueError("Mismatched destination")
+    except (OSError, ValueError, KeyError, TypeError):
+        raise EvidenceError("Unavailable or invalid integration policy destination") from None
+    return repository
+
+
+def _integration_policy(root: Path, retained_ref: str) -> dict:
+    repository = _integration_repository(root)
+    headers = {"Accept": "application/vnd.github+json", "User-Agent": "historical-provenance"}
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    connection = HTTPSConnection("api.github.com", timeout=10)
+    try:
+        connection.request("GET", "/repos/" + repository, headers=headers)
+        response = connection.getresponse()
+        if response.status != 200:
+            raise ValueError("Unavailable policy response")
+        policy = json.loads(response.read(1048577))
+        if (not isinstance(policy, dict)
+                or not isinstance(policy.get("full_name"), str)
+                or policy["full_name"].casefold() != repository.casefold()
+                or policy.get("default_branch") != retained_ref.rsplit("/", 1)[-1]):
+            raise ValueError("Mismatched destination or branch")
+    except (OSError, ValueError, TypeError, HTTPException):
+        raise EvidenceError("Unavailable or invalid integration policy evidence") from None
+    finally:
+        connection.close()
+    return policy
+
+
+def _ci_event_base(root: Path, retained_ref: str, revision: str) -> str:
+    try:
+        _integration_repository(root)
+        event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
+        base = event["pull_request"]["base"]
+        value = base["sha"]
+        if (base["ref"] != retained_ref.rsplit("/", 1)[-1]
+                or not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{40}", value)):
+            raise ValueError("Invalid destination base")
+        retained = _commit(root, value)
+        if not _ancestor(root, retained, revision):
+            raise ValueError("Destination base outside checkout")
+    except (OSError, ValueError, KeyError, TypeError):
+        raise EvidenceError("Unavailable or invalid CI destination base or retained branch in event payload") from None
+    return retained
+
+
+def _check_ci_base(root: Path, ci_ref: str, retained: str, revision: str) -> None:
+    try:
+        destination = _integration_repository(root)
+        if _origin_repository(root).casefold() != destination.casefold():
+            raise ValueError("Origin does not identify destination")
+        parents = _git(root, "rev-list", "--parents", "-n", "1", revision).decode().split()
+        if not ci_ref.endswith("/merge") or len(parents) != 3 or parents[1] != retained:
+            raise ValueError("Unproven destination base")
+    except (OSError, ValueError, KeyError, TypeError):
+        raise EvidenceError("Unavailable or invalid CI destination base without event evidence") from None
+
+
+def _retention_context(root: Path, retained_ref: str, revision: str,
+                       pr_head: str | None) -> tuple[str, str | None]:
+    ci_ref = re.fullmatch(r"refs/pull/([0-9]+)/(?:head|merge)", os.environ.get("GITHUB_REF", ""))
+    event = ci_ref is not None and bool(os.environ.get("GITHUB_EVENT_PATH"))
+    retained = _ci_event_base(root, retained_ref, revision) if event else _commit(root, retained_ref)
+    if not ci_ref:
+        return retained, None
+    head = _ci_head(root, ci_ref[0], retained, revision)
+    if pr_head and _commit(root, pr_head) != head:
+        raise EvidenceError("Explicit head does not match the CI pull request head")
+    if not _ancestor(root, head, revision):
+        raise EvidenceError("Pull request head is outside the current checkout ancestry")
+    if not event:
+        _check_ci_base(root, ci_ref[0], retained, revision)
+    return retained, head
+
+
+def _verify_retention(record: dict, root: Path, retained_ref: str,
+                      revision: str, pr_head: str | None) -> None:
+    retained, head = _retention_context(root, retained_ref, revision, pr_head)
+    source = record["source_revision"]
+    on_default = _ancestor(root, source, retained)
+    retained_label = "CI destination base" if head and os.environ.get("GITHUB_EVENT_PATH") else retained_ref
+    remedy = "refresh trusted destination event evidence." if retained_label != retained_ref else (
+        "or the retained ref is stale; fetch it.")
+    retention_hint = f" Retained ref {retained_label} ({retained}) does not retain source {source}; {remedy}"
+    try:
+        branch = _git(root, "symbolic-ref", "--quiet", "HEAD").decode().strip()
+    except EvidenceError:
+        branch = ""
+    default_branch = "refs/heads/" + retained_ref.rsplit("/", 1)[-1]
+    if (_ancestor(root, revision, retained)
+            or branch == default_branch or os.environ.get("GITHUB_REF") == default_branch):
+        if not on_default:
+            raise EvidenceError(
+                "Source revision is not retained on the default branch; possible squash-merged "
+                "orphan. Provenance-entry changes require a merge commit, not a squash merge."
+                + retention_hint
+            )
+        return
+
+    if head is None:
+        head = _commit(root, pr_head or "HEAD")
+        if not _ancestor(root, head, revision):
+            raise EvidenceError("Pull request head is outside the current checkout ancestry")
+    base = _git(root, "merge-base", retained, head).decode().strip()
+    before = _inventory_at(root, base)
+    current = _inventory_at(root, head).get(record["manifest"])
+    changed = current is not None and current != before.get(record["manifest"])
+    if changed:
+        if current != record:
+            raise EvidenceError("Entry does not match the committed inventory at the pull request head")
+        if not _ancestor(root, source, head):
+            raise EvidenceError("Changed entry source revision is not contained in the pull request head")
+        if not on_default:
+            policy = _integration_policy(root, retained_ref)
+            if (policy.get("allow_merge_commit") is not True
+                    or policy.get("allow_squash_merge") is not False
+                    or policy.get("allow_rebase_merge") is not False):
+                raise EvidenceError(
+                    "Branch-only sources require merge-only integration: merge commits enabled, "
+                    "squash and rebase disabled, with explicit policy evidence. Retain the source "
+                    "on the default branch or establish that policy before integration."
+                )
+    elif not on_default:
+        raise EvidenceError("An unchanged entry requires source retention on the default branch."
+                            + retention_hint)
+
+
+def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/main",
+               pr_head: str | None = None) -> dict:
+    """Verify committed evidence and report checkout artifact drift separately.
+
+    Changed, committed entries may use pull-request ancestry under merge-only policy.
+    Default-branch checks always require ancestry in the retained default ref.
+    """
     read = git_reader(root, record["source_revision"])
-    _git(root, "merge-base", "--is-ancestor", record["source_revision"], retained_ref)
     revision = _git(root, "rev-parse", "HEAD").decode("ascii").strip()
+    _verify_retention(record, root, retained_ref, revision, pr_head)
     verify_artifacts(record, root, revision=revision)
     try:
         fingerprint = verify_sources(record, read)
@@ -246,12 +472,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--index", type=Path, default=ROOT / "atlases/historical-provenance.json")
     parser.add_argument("--retained-ref", default="origin/main")
+    parser.add_argument("--pr-head", help="Pull request head ref contained in the checked revision")
     args = parser.parse_args(argv)
     inventory = json.loads(args.index.read_text(encoding="utf-8"))
     incomplete = False
     for record in inventory["atlases"]:
         try:
-            result = verify_git(record, retained_ref=args.retained_ref)
+            options = {"pr_head": args.pr_head} if args.pr_head else {}
+            result = verify_git(record, retained_ref=args.retained_ref, **options)
         except EvidenceError as error:
             result = {"status": "REJECTED", "reason": str(error)}
         print(json.dumps({"manifest": record["manifest"], **result}, sort_keys=True))
