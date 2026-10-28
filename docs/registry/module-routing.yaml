@@ -98,6 +98,7 @@ modules:
     key_tests: [tests/citations/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
   - module: corrosion
+    agent_pack: src/digitalmodel/corrosion/docs/agent-pack.md
     entry_point: src/digitalmodel/corrosion/
     maturity: development
     owner_wiki: docs/domains/README.md
