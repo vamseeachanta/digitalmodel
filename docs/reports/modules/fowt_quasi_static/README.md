@@ -14,6 +14,11 @@ Scratch must be outside the checkout. Only the four deliverables are written to
 the output directory. No native solver, named study data or campaign is used.
 The manifest binds source bytes and artifact digests, excluding its own digest.
 Two independent rebuilds must reproduce every committed deliverable byte.
+Calculated report values are rounded to 12 decimal places before serialization
+and hashing. The maximum rounding contribution is 5e-13 in the stated normalized
+units, below the 1e-12 absolute test tolerance. Adjacent binary64 rounding in both
+directions is exercised by byte comparisons of all four deliverables. This bound
+applies to these synthetic controls, without changing the solver arithmetic.
 
 The positive natural roots follow from det(K−ω²I)=product(j²−ω²), giving T=2π/j.
 The scalar response follows from 2/(2−i)=(4+2i)/5. These independent calculations

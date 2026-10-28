@@ -1,15 +1,15 @@
 {
   "artifacts": {
-    "README.md": "6b34d47cef7e9990b189058b4f94f2ef8bfb9630bb6cf4fd17446d632b8288a7",
-    "changes.json": "eb8b3d485e7ca71790e4b5f475c2e5eb6c4d43ec2a4c20347f45f6ae4bf63b15",
-    "index.html": "dbc54dc252f716ca3b5b4821bee9b61aa31996cb4d39d8be357669e3337b24dc"
+    "README.md": "09d6fbbc834104523a498b297e559c3651a0bf757e1ed31af74a6b37419e5495",
+    "changes.json": "69439451df565955e6d6145f8ca7507bd87b2c65e216f7e029c516231488e959",
+    "index.html": "b339ac1be8d9a6dd8d3fc69a6306e5a382347452827ee16d4226af6edfe8c2f5"
   },
   "basis": "S1 synthetic controls; H1 diagonal factorization; H2 scalar complex division",
   "scope": "Response arithmetic only; native BEM and engineering acceptance NOT_EVALUATED",
   "sources": {
     "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
     "docs/api/cfd/turbulent-flat-plate-verification.html": "bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25",
-    "scripts/reports/build_fowt_quasi_static_module_report.py": "11b7a9e2141b71ac0aa2fb19e20dfb4490b53f17dafb38449d64577261980c20",
+    "scripts/reports/build_fowt_quasi_static_module_report.py": "2c88bf464f2256264033128c4a5ab592e1c38f6cc7848e622e6743871f042040",
     "src/digitalmodel/marine_ops/fowt_quasi_static/__init__.py": "76a8c5fccedc5d5a5f053d95a5fdf6119f5332e9180b172ff97992d1fd481500",
     "src/digitalmodel/marine_ops/fowt_quasi_static/basis.py": "67f2ab379539c34d576ce23d111ec709b01b3419ca34cecfb81d85f7e32093bb",
     "src/digitalmodel/marine_ops/fowt_quasi_static/geometry.py": "5a7266163c90162834a3e3699e52131114b949bf9888e91bb6207be5d0abdd8d",
@@ -20,6 +20,6 @@
     "src/digitalmodel/marine_ops/fowt_quasi_static/workflow.py": "4e6d850e2dfb0412cd6bcde45e1e434b926554e51aca71bb1859c6c76424ed69",
     "tests/marine_ops/fowt_quasi_static/test_module_report_hand_values.py": "079490b40e0b5b4bddd65f4c1b92a66609d1908c777f84d409d45716394bb1c4",
     "tests/marine_ops/fowt_quasi_static/test_response.py": "15e887dc0efd01e8bf0ddb8bac0e5da3d79c243d231822e229d1c39cd10efdd6",
-    "tests/reporting/test_fowt_quasi_static_module_report.py": "548787de837f9c1fb1bd0ccc44cdcf22b414cd9f170119e4859024abfc2393b8"
+    "tests/reporting/test_fowt_quasi_static_module_report.py": "3baddd0a39984f6752db31312f3ebf623fdd83fe3fc51ec732dcf5fb59e12f6c"
   }
 }

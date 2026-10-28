@@ -87,6 +87,36 @@ def test_rebuild_is_deterministic(tmp_path):
         assert (first / name).read_bytes() == (REPORT / name).read_bytes()
 
 
+@pytest.mark.parametrize("direction", [-np.inf, np.inf])
+def test_rebuild_tolerates_final_bit_rounding(tmp_path, monkeypatch, direction):
+    """Adjacent binary64 results must retain the same qualified report bytes."""
+    build = builder()
+    first, second = tmp_path / "first", tmp_path / "second"
+    build.build(tmp_path / "scratch-a", first)
+    natural = build.natural_periods
+    response = build.response_operators
+    angle = build.np.angle
+
+    def perturbed_natural(*args, **kwargs):
+        return np.nextafter(natural(*args, **kwargs), direction)
+
+    def perturbed_response(*args, **kwargs):
+        values = response(*args, **kwargs)
+        real = np.where(values.real, np.nextafter(values.real, direction), 0.)
+        imag = np.where(values.imag, np.nextafter(values.imag, direction), 0.)
+        return real + 1j * imag
+
+    def perturbed_angle(*args, **kwargs):
+        return np.nextafter(angle(*args, **kwargs), direction)
+
+    monkeypatch.setattr(build, "natural_periods", perturbed_natural)
+    monkeypatch.setattr(build, "response_operators", perturbed_response)
+    monkeypatch.setattr(build.np, "angle", perturbed_angle)
+    build.build(tmp_path / "scratch-b", second)
+    for name in build.DELIVERABLES:
+        assert (first / name).read_bytes() == (second / name).read_bytes(), name
+
+
 def test_cli_manifest_matches_written_files(tmp_path):
     output = tmp_path / "output"
     subprocess.run(

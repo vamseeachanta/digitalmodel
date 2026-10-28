@@ -36,7 +36,9 @@ INPUTS = {
                  "excitation_real": [2., 0., 0., 0., 0., 0.]},
 }
 CHANGES = [{"revision": "A", "date": "2026-10-28", "change":
-            "Initial synthetic methods analysis; sampled natural roots are retained and arithmetic evidence is separated from engineering acceptance."}]
+            "Initial synthetic methods analysis; sampled natural roots are retained and arithmetic evidence is separated from engineering acceptance."},
+           {"revision": "B", "date": "2026-10-28", "change":
+            "Calculated report values are rounded to 12 decimal places before serialization to remove final-bit numerical differences within the test tolerances."}]
 # Contracts are based on the bounded source review, not execution of a campaign.
 CONTRACTS = {
     "basis": ("Rigid mass and inertia assembly", "Supply attributed component masses, tensors and reference origins; tower density is piecewise linear."),
@@ -133,8 +135,21 @@ def calculate(scratch):
             "phase_rad": [float(np.angle(q)) if abs(q) else None for q in response],
             "assessments": {key: "NOT_EVALUATED" for key in
                             ("campaign_convergence", "mooring_design_acceptance", "native_bem")}}
+    data = canonical_numbers(data)
     (scratch / "calculation.json").write_text(json_text(data), encoding="utf-8")
     return data
+
+
+def canonical_numbers(value):
+    """Bound synthetic report rounding to 5e-13 before rendering and hashing."""
+    if isinstance(value, float):
+        rounded = round(value, 12)
+        return rounded if rounded else 0.0
+    if isinstance(value, list):
+        return [canonical_numbers(item) for item in value]
+    if isinstance(value, dict):
+        return {key: canonical_numbers(item) for key, item in value.items()}
+    return value
 
 
 def json_text(value):
@@ -209,6 +224,7 @@ def render(data):
         ("Mode", "Real q", "Imaginary q", "Amplitude", "Phase (rad)", "Source"),
         [response_row(i, data) for i in range(6)]))
     section(6, "Key Findings", """<p>Strict sign-change bracketing missed exact sampled roots. Explicit sampled-root candidates correct that defect while retaining the modal assignment step [C1, C3]. The diagonal response control establishes complex sign, amplitude and phase for this impedance convention.</p>
+<p>Calculated report values are rounded to 12 decimal places before scratch output, HTML serialization and artifact hashing. Rounding contributes at most 5e-13 in the stated normalized units, below the 1e-12 absolute test tolerance. Undefined phase remains null. This precision applies to these bounded synthetic controls; it does not change solver arithmetic or establish reproducibility for arbitrary inputs [S1, H1, H2, C3].</p>
 <p>Period tests use relative tolerance 1e-11 and absolute tolerance 1e-12 s, allowing the bracket solver's default absolute frequency tolerance and binary64 rounding over this bounded range. The diagonal impedance has condition number one; relative and absolute response tolerances of 1e-12 are conservative relative to binary64 rounding for this small solve. These are software-test tolerances, not engineering acceptance criteria [H1, H2, C3].</p>""")
     section(7, "Limitations and Not Covered", '<ul>' + ''.join(
         f'<li>{escape(key)}: {value}</li>' for key, value in data["assessments"].items()) + """</ul>
@@ -227,7 +243,7 @@ def render(data):
     section(10, "Acronyms and Symbols", """<p>BEM: boundary element method. CG: centre of gravity. RAO: response amplitude operator. M: rigid mass. A: added mass. K: restoring stiffness. B: radiation damping. Z: complex impedance. F: generalized excitation. q: complex displacement. ω: angular frequency. T: natural period. I: identity matrix. i: imaginary unit. All example coordinates are normalized modal coordinates [S1].</p>""")
     changes = json.dumps(CHANGES, sort_keys=True).replace('<', '\\u003c')
     payload = json.dumps(data, sort_keys=True, allow_nan=False).replace('<', '\\u003c')
-    panel = '''<details id="changes-panel"><summary>Change panel</summary><p>Revision A: initial synthetic analysis and sampled-root correction.</p><button id="save-changes" type="button">Save change record</button></details>
+    panel = '''<details id="changes-panel"><summary>Change panel</summary><p>Revision A: initial synthetic analysis and sampled-root correction.</p><p>Revision B: bounded numerical serialization for reproducible report bytes.</p><button id="save-changes" type="button">Save change record</button></details>
 <script>document.getElementById('save-changes').addEventListener('click', async () => {
 const text = document.getElementById('change-data').textContent;
 if ('showSaveFilePicker' in window) {
@@ -265,6 +281,11 @@ Scratch must be outside the checkout. Only the four deliverables are written to
 the output directory. No native solver, named study data or campaign is used.
 The manifest binds source bytes and artifact digests, excluding its own digest.
 Two independent rebuilds must reproduce every committed deliverable byte.
+Calculated report values are rounded to 12 decimal places before serialization
+and hashing. The maximum rounding contribution is 5e-13 in the stated normalized
+units, below the 1e-12 absolute test tolerance. Adjacent binary64 rounding in both
+directions is exercised by byte comparisons of all four deliverables. This bound
+applies to these synthetic controls, without changing the solver arithmetic.
 
 The positive natural roots follow from det(K−ω²I)=product(j²−ω²), giving T=2π/j.
 The scalar response follows from 2/(2−i)=(4+2i)/5. These independent calculations
