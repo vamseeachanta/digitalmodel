@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 import re
@@ -96,7 +97,7 @@ def test_missing_source_and_invalid_line_bounds_are_diagnosed(
     document, check, locator, diagnostic,
 ):
     root, _, markdown = document
-    markdown.write_text(f"Evidence: `{locator}`.\n", encoding="utf-8")
+    markdown.write_text(f"Evidence: `{locator}`.\n", encoding="utf-8", newline="\n")
     assert check(markdown, root) == [f"pack.md:1: {locator}: {diagnostic}"]
 
 
@@ -105,7 +106,9 @@ def test_bounds_are_inclusive(document, check, bounds):
     root, source, markdown = document
     # Two literal lines, with no final newline: both endpoints still exist.
     source.write_bytes(b"# first source line\n# second source line")
-    markdown.write_text(f"`[src/example/__init__.py:{bounds}]`\n", encoding="utf-8")
+    markdown.write_text(
+        f"`[src/example/__init__.py:{bounds}]`\n", encoding="utf-8", newline="\n",
+    )
     assert check(markdown, root) == []
 
 
@@ -130,15 +133,80 @@ def test_external_links_and_ordinary_prose_are_not_local_locators(document, chec
         "[src/absent.py:L1-L2][external]\n"
         "[external]: https://example.org/source\n"
         "Discuss src/absent.py and inclusive L1-L2 in ordinary prose.\n",
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
     assert check(markdown, root) == []
+
+
+@pytest.mark.parametrize("spacing", [" ", "\t", "   "])
+def test_bare_locator_before_parenthetical_prose_is_checked(document, check, spacing):
+    root, _, markdown = document
+    markdown.write_text(
+        f"[src/absent.py:L1-L2]{spacing}(explanation)\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == [
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    ]
+
+
+@pytest.mark.parametrize(
+    "separator", ["\v", "\f", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029"],
+)
+def test_control_characters_do_not_add_source_lines(document, check, separator):
+    root, source, markdown = document
+    source.write_text(
+        f"value = 'first{separator}last'\n", encoding="utf-8", newline="\n",
+    )
+    # One assignment on physical line one; its string contains no CR or LF.
+    parsed = ast.parse(source.read_text(encoding="utf-8"))
+    assert parsed.body[0].lineno == parsed.body[0].end_lineno == 1
+    markdown.write_bytes(b"[src/example/__init__.py:L1-L1]\n")
+    assert check(markdown, root) == []
+    # Line two does not exist, independently of the checker's line counter.
+    markdown.write_bytes(b"[src/example/__init__.py:L2-L2]\n")
+    assert check(markdown, root) == [
+        "pack.md:1: [src/example/__init__.py:L2-L2]: line bounds outside source"
+    ]
+
+
+@pytest.mark.parametrize(
+    "separator", ["\v", "\f", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029"],
+)
+def test_control_characters_do_not_add_document_lines(document, check, separator):
+    root, _, markdown = document
+    markdown.write_text(
+        f"Prose{separator} [src/absent.py:L1-L2]\n[src/absent.py:L1-L2]\n",
+        encoding="utf-8", newline="\n",
+    )
+    # Only the LF advances the document: the two locators are on lines one and two.
+    assert check(markdown, root) == [
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source",
+        "pack.md:2: [src/absent.py:L1-L2]: missing Python source",
+    ]
+
+
+@pytest.mark.parametrize("newline", [b"\n", b"\r\n", b"\r"])
+def test_physical_newlines_define_source_bounds_and_document_lines(
+    document, check, newline,
+):
+    root, source, markdown = document
+    source.write_bytes(b"# first" + newline + b"# second" + newline)
+    markdown.write_bytes(
+        b"[src/example/__init__.py:L1-L2]" + newline
+        + b"[src/example/__init__.py:L3-L3]" + newline
+    )
+    # Two physical source lines validate the first range and reject line three.
+    assert check(markdown, root) == [
+        "pack.md:2: [src/example/__init__.py:L3-L3]: line bounds outside source"
+    ]
 
 
 def test_bare_table_locator_is_checked(document, check):
     root, _, markdown = document
     markdown.write_text(
-        "| Evidence |\n|---|\n| [src/absent.py:L1-L2] |\n", encoding="utf-8",
+        "| Evidence |\n|---|\n| [src/absent.py:L1-L2] |\n",
+        encoding="utf-8", newline="\n",
     )
     # Header, separator, then the missing-source row: the diagnostic is on line three.
     assert check(markdown, root) == [
@@ -149,7 +217,7 @@ def test_bare_table_locator_is_checked(document, check):
 def test_source_must_resolve_inside_root(document, check, tmp_path):
     root, source, markdown = document
     outside = tmp_path.parent / (tmp_path.name + "-outside.py")
-    outside.write_text("# source outside root\n", encoding="utf-8")
+    outside.write_text("# source outside root\n", encoding="utf-8", newline="\n")
     source.unlink()
     source.symlink_to(outside)
     assert check(markdown, root) == [
@@ -161,7 +229,7 @@ def test_source_must_resolve_inside_root(document, check, tmp_path):
 def test_cli_checks_only_supplied_markdown_and_reports_failure(document):
     root, _, markdown = document
     other = root / "other.md"
-    other.write_text("[src/absent.py:L1-L2]\n", encoding="utf-8")
+    other.write_text("[src/absent.py:L1-L2]\n", encoding="utf-8", newline="\n")
     command = [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)]
     good = subprocess.run(command, capture_output=True, text=True, check=False)
     assert good.returncode == 0, good.stdout + good.stderr

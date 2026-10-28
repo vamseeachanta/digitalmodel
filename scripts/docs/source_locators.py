@@ -20,7 +20,7 @@ LOCATOR = re.compile(
     r"(?<![!\\\w/])\["
     r"(?P<source>(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\.py)"
     r":L(?P<first>[0-9]+)-L(?P<last>[0-9]+)\]"
-    r"(?!\s*(?:\(|\[|:))"
+    r"(?!\(|\s*(?:\[|:))"
 )
 
 
@@ -43,13 +43,14 @@ def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
     if resolved.suffix.lower() != ".md":
         return [f"{label}: expected Markdown file"]
     try:
-        text = resolved.read_text(encoding="utf-8")
+        with resolved.open(encoding="utf-8") as document:
+            lines = list(document)
     except (OSError, UnicodeError):
         return [f"{label}: cannot read Markdown file"]
 
     errors = []
     # Markdown diagnostics and inclusive source bounds use one-based numbering.
-    for number, line in enumerate(text.splitlines(), start=1):
+    for number, line in enumerate(lines, start=1):
         for match in LOCATOR.finditer(line):
             source = (root / match["source"]).resolve()
             first, last = int(match["first"]), int(match["last"])
@@ -62,7 +63,8 @@ def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
                 reason = "reversed line bounds"
             else:
                 try:
-                    count = len(source.read_text(encoding="utf-8").splitlines())
+                    with source.open(encoding="utf-8") as source_file:
+                        count = sum(1 for _ in source_file)
                     if not 1 <= first <= last <= count:
                         reason = "line bounds outside source"
                 except (OSError, UnicodeError):
