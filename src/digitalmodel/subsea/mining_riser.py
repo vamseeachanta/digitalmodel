@@ -2,7 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Public-source mining lift-riser screening, in SI units.
 
-Formula IDs R1 and D1-D7 refer to ``docs/domains/risers/mining-lift-screening.md``.
+Formula IDs R1 and D1-D9 refer to ``docs/domains/risers/mining-lift-screening.md``.
 Inputs describe a fully immersed vertical string, ordered from top to bottom.
 These linear reference calculations do not establish strength or operability.
 """
@@ -413,4 +413,42 @@ def axial_modes(
         tuple(float(f) for f in frequencies),
         tuple(float(1.0 / f) for f in frequencies),
         tuple(shapes),
+    )
+
+
+@dataclass(frozen=True)
+class WavePeriodScreen:
+    """Fundamental axial period and inclusive interval membership, not acceptance."""
+
+    first_axial_period_s: float
+    within_wave_period_range: bool
+
+
+def wave_period_screen(
+    *,
+    first_axial_frequency_hz: float,
+    wave_period_min_s: float,
+    wave_period_max_s: float,
+) -> WavePeriodScreen:
+    """Compare T=1/f with a caller-supplied closed wave-period interval (D9).
+
+    Basis: OpenStax University Physics Vol. 1, section 15.1, equation 15.1 (R5),
+    https://openstax.org/books/university-physics-volume-1/pages/15-1-simple-harmonic-motion
+    The caller supplies the fundamental frequency, e.g. axial_modes(...).
+    frequencies_hz[0], in cycles/s, not rad/s. Equal bounds are permitted.
+    No separation margin is invented: false does not establish operability,
+    and true does not predict response amplitude. Higher modes are not screened.
+    """
+    for name, value in (
+        ("first_axial_frequency_hz", first_axial_frequency_hz),
+        ("wave_period_min_s", wave_period_min_s),
+        ("wave_period_max_s", wave_period_max_s),
+    ):
+        _number(name, value, strict=True)
+    if wave_period_min_s > wave_period_max_s:
+        raise ValueError("wave period bounds must be ordered minimum to maximum")
+    period = 1.0 / first_axial_frequency_hz
+    _number("first axial period", period, strict=True)
+    return WavePeriodScreen(
+        period, bool(wave_period_min_s <= period <= wave_period_max_s)
     )
