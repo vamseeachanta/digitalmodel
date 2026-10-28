@@ -1,0 +1,18 @@
+{
+  "source_commit": "3a5ea5e79f1197335d032c6d6b17cb8751d9911f",
+  "data_basis": "assumed, based on previous experience",
+  "pressure_basis": "ASSUMED gauge",
+  "pipe": {
+    "outer_diameter_mm": 400.0,
+    "corrosion_allowance_mm": 3.0,
+    "fabrication_tolerance_fraction": 0.125,
+    "smys_mpa": 400.0,
+    "smts_mpa": 500.0,
+    "youngs_modulus_mpa": 207000.0,
+    "poissons_ratio": 0.3
+  },
+  "external_pressure_mpa": 5.0,
+  "pressures_mpa": [10.0, 15.0, 20.0, 25.0],
+  "stock_walls_mm": [8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 25.0, 28.0, 32.0, 36.0, 40.0],
+  "stock_basis": "illustrative stock wall list; availability not established"
+}
