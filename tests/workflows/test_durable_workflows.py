@@ -389,7 +389,17 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         }
         by_loc = {row["location_id"]: row for _, row in location_summary.iterrows()}
         assert bool(by_loc["riser-splash-zone"]["passes"]) is False
-        assert bool(by_loc["riser-keel-joint"]["passes"]) is True
+        assert bool(by_loc["riser-keel-joint"]["passes"]) is False
+        # Independent trapezoidal Hz moments and analytic Dirlik range integral;
+        # arithmetic and the 75-year criterion are recorded in the example README.
+        for location_id, life in {
+            "riser-splash-zone": 4.050061,
+            "riser-keel-joint": 70.301122,
+        }.items():
+            assert by_loc[location_id]["fatigue_life_years"] == pytest.approx(
+                life, rel=1e-6
+            )
+            assert by_loc[location_id]["required_life_years"] == 75.0
         # life = 1 / accumulated annual damage; governing = smallest margin
         for _, row in location_summary.iterrows():
             assert row["fatigue_life_years"] == pytest.approx(
@@ -428,6 +438,16 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         by_loc = {row["location_id"]: row for _, row in location_summary.iterrows()}
         assert bool(by_loc["riser-splash-zone"]["passes"]) is False
         assert bool(by_loc["riser-keel-joint"]["passes"]) is True
+        # Independent JONSWAP/RAO integration and analytic Dirlik range integral;
+        # use the unchanged example inputs and the same numerical grid.
+        for location_id, life in {
+            "riser-splash-zone": 66.187220,
+            "riser-keel-joint": 567.653761,
+        }.items():
+            assert by_loc[location_id]["fatigue_life_years"] == pytest.approx(
+                life, rel=1e-6
+            )
+            assert by_loc[location_id]["required_life_years"] == 75.0
         for _, row in location_summary.iterrows():
             assert row["fatigue_life_years"] == pytest.approx(
                 1.0 / row["annual_damage"]

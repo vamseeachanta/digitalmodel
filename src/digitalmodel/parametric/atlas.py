@@ -9,6 +9,7 @@ contract (never clamp, never extrapolate).
 from __future__ import annotations
 
 import json
+import itertools
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -122,8 +123,34 @@ class Atlas:
         return cats[0] if cats else None
 
     @property
-    def max_rel_error(self) -> float:
-        return float(self.validation.get("max_rel_error", 0.0))
+    def max_rel_error(self) -> float | None:
+        value = self.validation.get("max_rel_error")
+        if value is None:
+            return None
+        error = float(value)
+        return error if math.isfinite(error) and error >= 0 else None
+
+    def validate_grid(self) -> None:
+        """Require exactly one finite response per declared Cartesian knot."""
+        names = [ax.name for ax in self.axes]
+        knots = [ax.values if ax.is_categorical else ax.grid for ax in self.axes]
+        if len(set(names)) != len(names) or any(not k for k in knots):
+            raise ValueError("atlas grid requires distinct axes and nonempty knots")
+        if any(len(set(k)) != len(k) for k in knots):
+            raise ValueError("atlas grid contains duplicate declared knots")
+        expected = set(itertools.product(*knots))
+        try:
+            actual = (list(self.grid[names].itertuples(index=False, name=None))
+                      if names else [()] * len(self.grid))
+            values = self.grid[self.response].to_numpy(dtype=float)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("atlas grid columns are invalid") from exc
+        if len(actual) != len(expected) or set(actual) != expected:
+            raise ValueError("atlas grid must contain exactly one row per declared knot")
+        if not np.isfinite(values).all():
+            raise ValueError("atlas grid responses must be finite")
+        if self.physics == "log_log" and (values <= 0).any():
+            raise ValueError("log atlas grid responses must be positive")
 
     # -- transforms ------------------------------------------------------
     def _axis_coords(self, axis: Axis) -> np.ndarray:
@@ -184,7 +211,7 @@ class Atlas:
             else:
                 return Prediction(math.nan, False, f"missing axis {ax.name}")
             lo, hi = min(ax.grid), max(ax.grid)
-            if raw < lo or raw > hi:
+            if not math.isfinite(raw) or raw < lo or raw > hi:
                 return Prediction(
                     math.nan,
                     False,
@@ -194,16 +221,15 @@ class Atlas:
 
         interp = self._interpolator(cat_value)
         raw_value = float(interp(np.array([query]))[0])
-        if math.isnan(raw_value):
-            return Prediction(math.nan, False, "interpolation returned NaN")
+        if not math.isfinite(raw_value):
+            return Prediction(math.nan, False, "interpolation returned non-finite value")
         return Prediction(self._untransform_response(raw_value), True)
 
-    def local_error(self, point: dict[str, Any]) -> float:
+    def local_error(self, point: dict[str, Any]) -> float | None:
         """Per-point error estimate (#828): the held-out error of the grid
         interval the query falls into, taken over the worst continuous axis.
-        Tighter than the global max_rel_error in smooth regions, wider near a
-        feature. Falls back to the global error if no local map is present (an
-        older atlas) or on any miss — so it is always at least as honest."""
+        Returns None when error evidence is absent. Missing interval maps use
+        the measured global bound; missing derived inputs remain unknown."""
         slice_map = (self.validation.get("local_error_map") or {})
         if not slice_map:
             return self.max_rel_error
@@ -219,8 +245,8 @@ class Atlas:
             elif ax.derived is not None:
                 try:
                     val = ax.derived_value(point)
-                except Exception:
-                    return self.max_rel_error
+                except KeyError:
+                    return None
             else:
                 return self.max_rel_error
             intervals = per_axis.get(ax.name)
@@ -276,7 +302,7 @@ class Atlas:
         spec = json.loads((out / "surrogate.json").read_text())
         manifest = yaml.safe_load((out / "manifest.yaml").read_text())
         validation = json.loads((out / "validation.json").read_text())
-        return cls(
+        atlas = cls(
             basename=spec["basename"],
             atlas_id=spec["atlas_id"],
             physics=spec["physics"],
@@ -286,3 +312,5 @@ class Atlas:
             validation=validation,
             provenance=manifest.get("provenance", {}),
         )
+        atlas.validate_grid()
+        return atlas

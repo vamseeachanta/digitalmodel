@@ -58,5 +58,6 @@ def build_atlas_from_registry(
         workflow_id=workflow_id,
         content_fingerprint=refresh.content_fingerprint(workflow_id, repo_root),
     )
-    atlas.save(atlas_root or (repo_root / "atlases"))
+    if atlas.validation.get("passes") is True:
+        atlas.save(atlas_root or (repo_root / "atlases"))
     return atlas
