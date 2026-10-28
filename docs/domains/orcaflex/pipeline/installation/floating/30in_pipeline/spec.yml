@@ -35,7 +35,9 @@ environment:
     profile:                          # [depth (m), factor]
       - [0, 0.46]                     # Surface: 46% of ref speed
       - [6, 0.39]                     # 6m depth: 39% of ref speed
-      - [15, 0.33]                    # 15m depth: 33% of ref speed
+      # End at the declared bottom. Hand calculation from the original points:
+      # 0.39 + (8 - 6) * (0.33 - 0.39) / (15 - 6), rounded to two decimals.
+      - [8, 0.38]                      # Bottom factor from linear interpolation
   wind:
     speed: 8.87                       # Wind speed (m/s)
     direction: 270                    # Wind direction (deg from North)
