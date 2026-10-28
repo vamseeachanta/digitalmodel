@@ -73,7 +73,7 @@ jobs:
       - name: Validate CI policy
         run: >-
           uv run --no-project --with pytest --with pyyaml==6.0.2 python -m pytest
-          scripts/ci/test_pr_test_policy.py -q -p no:cacheprovider
+          tests/scripts/test_pr_test_policy.py -q -p no:cacheprovider
           --basetemp="$RUNNER_TEMP/ci-policy-tests"
 
       - name: Fail if the matrix is empty
@@ -87,10 +87,16 @@ jobs:
           echo "Full matrix contains $TOTAL shards."
 
   sweep-tests:
+    env:
+      # Match setup-python even when uv prefers a newer managed interpreter.
+      UV_PYTHON: "3.11"
     name: sweep-tests-${{ matrix.domain }}
     needs: full-matrix
     # Gmsh domains retain matrix.runner: no linux-aarch64 wheel is available.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && fromJSON('["self-hosted","Linux","ARM64"]') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || matrix.runner) }}
+    # Marine engineering retains hosted Capytaine binaries.
+    # Subsea retains x64 byte-identical Parquet fixtures.
+    # Infrastructure other retains the hosted multiprocessing speed baseline.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && matrix.domain != 'marine-engineering' && matrix.domain != 'subsea' && matrix.domain != 'infrastructure-other' && fromJSON('["self-hosted","Linux","ARM64"]') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || matrix.runner) }}
     timeout-minutes: 40
     strategy:
       fail-fast: false

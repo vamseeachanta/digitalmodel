@@ -53,7 +53,7 @@ def runner_context(
         "github.event_name": event,
         "github.event.pull_request.head.repo.full_name": head,
         "github.event.pull_request.draft": draft,
-        "matrix.domain": "subsea",
+        "matrix.domain": "contracts",
         "matrix.runner": "ubuntu-latest",
         "matrix.os": "ubuntu-latest",
     }
@@ -160,18 +160,21 @@ def test_drafts_cannot_skip_jobs_or_steps(filename: str) -> None:
     ("quality-gates-by-domain.yml", "domain-tests"),
     ("full-matrix-sweep.yml", "sweep-tests"),
 ))
-@pytest.mark.parametrize("domain", ("solver-smoke", "specialized"))
+@pytest.mark.parametrize("domain", (
+    "solver-smoke", "specialized", "marine-engineering", "subsea",
+    "infrastructure-other",
+))
 @pytest.mark.parametrize("setting", (None, "", "unknown", "self-hosted-arm64"))
 @pytest.mark.parametrize("event,head,draft", (
     ("pull_request", "base/repo", False),
     ("pull_request", "base/repo", True),
     ("schedule", "", False),
 ))
-def test_gmsh_exceptions_keep_original_matrix_runner(
+def test_arm_incompatible_shards_keep_original_matrix_runner(
     filename: str, job_id: str, domain: str, setting: str | None,
     event: str, head: str, draft: bool,
 ) -> None:
-    """Both Gmsh shards preserve the configured hosted fallback."""
+    """Native builds, binary fixtures and timing baselines keep the fallback."""
     context = runner_context(event, head, setting, draft)
     context.update({"matrix.domain": domain, "matrix.runner": "ubuntu-22.04"})
     assert selected_runner(filename, job_id, context) == "ubuntu-22.04"
@@ -225,3 +228,15 @@ def test_routing_contract_runs_in_harness() -> None:
     job = load_workflow("quality-gates-by-domain.yml")["jobs"]["ci-harness-tests"]
     commands = "\n".join(step.get("run", "") for step in job["steps"])
     assert "tests/workflows/test_ci_runner_routing.py" in commands
+
+
+@pytest.mark.parametrize("filename,job_id", (
+    ("quality-gates-by-domain.yml", "domain-tests"),
+    ("full-matrix-sweep.yml", "sweep-tests"),
+))
+def test_shard_uv_uses_configured_python(filename: str, job_id: str) -> None:
+    """Managed uv interpreters must match the shard's Python setup."""
+    job = load_workflow(filename)["jobs"][job_id]
+    setup = next(step for step in job["steps"]
+                 if step.get("uses", "").startswith("actions/setup-python@"))
+    assert job["env"]["UV_PYTHON"] == setup["with"]["python-version"] == "3.11"

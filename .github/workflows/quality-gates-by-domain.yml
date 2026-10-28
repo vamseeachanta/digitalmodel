@@ -285,7 +285,7 @@ jobs:
         run: |
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
-            scripts/ci/test_pr_test_policy.py \
+            tests/scripts/test_pr_test_policy.py \
             tests/scripts/test_reporting_ci_registration.py \
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
@@ -302,11 +302,17 @@ jobs:
         run: uv run --no-sources python scripts/generate_implementation_map.py
 
   domain-tests:
+    env:
+      # Match setup-python even when uv prefers a newer managed interpreter.
+      UV_PYTHON: "3.11"
     name: tests-${{ matrix.domain }}
     needs: detect-domains
     if: needs.detect-domains.outputs.has-domains == 'true'
     # Gmsh domains retain matrix.runner: no linux-aarch64 wheel is available.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && fromJSON('["self-hosted","Linux","ARM64"]') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || matrix.runner) }}
+    # Marine engineering retains hosted Capytaine binaries.
+    # Subsea retains x64 byte-identical Parquet fixtures.
+    # Infrastructure other retains the hosted multiprocessing speed baseline.
+    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && matrix.domain != 'marine-engineering' && matrix.domain != 'subsea' && matrix.domain != 'infrastructure-other' && fromJSON('["self-hosted","Linux","ARM64"]') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || matrix.runner) }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect-domains.outputs.matrix) }}
