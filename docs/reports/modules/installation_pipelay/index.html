@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pipelay stress and integrity analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+body{margin:0;background:var(--ground);color:var(--ink);font:1rem/1.6 system-ui,sans-serif}
+main{max-width:var(--wrap);margin:auto;padding:2rem}table{border-collapse:collapse;width:100%;margin-top:1rem}
+th,td{padding:.6rem;border:1px solid var(--edge);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+th{background:var(--panel-2)}h1,h2,h3{color:var(--brand)}code{overflow-wrap:anywhere}
+.table-wrap{overflow-x:auto}details{padding:1rem;background:var(--panel)}textarea{width:100%}
+@media print{main{padding:0}button,textarea{display:none}}
+</style></head><body class="hs-doc"><main>
+<h1>Pipelay stress and integrity analysis</h1>
+<p>Pure calculation routes · Synthetic arithmetic controls · No compliance claim</p>
+<h2 id="s1">1. Executive Summary</h2>
+<p>The synthetic combined longitudinal stress is 220.0 N/mm² and meets the supplied
+arithmetic threshold of 300.0 N/mm² [S1, S2]. This comparison qualifies the demonstrated
+arithmetic only. Physical installation acceptance is NOT_EVALUATED.</p>
+<h3>Revision history</h3>
+<div class="table-wrap"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>A</td><td>2026-10-28</td><td>Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.</td></tr></tbody></table></div><p>Table R. Issue history; earlier rows will be retained on reissue.</p>
+<details id="changes-panel"><summary>Engineering changes</summary><p>Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.</p></details>
+<h2 id="s2">2. Introduction</h2>
+<p>The pipelay public stress and integrity helpers are reviewed for dimensional consistency.
+Independent hand calculations check the worked stress and route-equilibrium results [S1, S4].
+The examples are separate controls, not an integrated installation design. No licensed solver is used.</p>
+<h2 id="s3">3. Design Data and Basis</h2>
+<p>Every input below is SYNTHETIC: supplied for arithmetic demonstration [S1]. No material
+certificate, surveyed route, coating measurement or standard acceptance factor is supplied.
+The geometry is in mm for stress and the route weight is in N/m for the separate equilibrium example.
+No implicit conversion is applied. Strength and allowable fraction are supplied controls.</p>
+<div class="table-wrap"><table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+<tbody><tr><td>stress.outer_diameter</td><td>200.0</td><td>mm</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.bend_radius</td><td>100000.0</td><td>mm</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.youngs_modulus</td><td>200000.0</td><td>N/mm²</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.axial_force</td><td>20000.0</td><td>N</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.steel_area</td><td>1000.0</td><td>mm²</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.smys</td><td>400.0</td><td>N/mm²</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.allowable_fraction</td><td>3/4</td><td>1</td><td>S1; supplied synthetic control</td></tr><tr><td>route.bottom_tension</td><td>100000.0</td><td>N</td><td>S1; supplied synthetic control</td></tr><tr><td>route.lateral_friction</td><td>1/2</td><td>1</td><td>S1; supplied synthetic control</td></tr><tr><td>route.submerged_weight_per_length</td><td>1000.0</td><td>N/m</td><td>S1; supplied synthetic control</td></tr></tbody></table></div><p>Table D. Complete synthetic design data with units and sources.</p>
+<h2 id="s4">4. Analysis Methodology</h2>
+<p>Small-curvature outer-fibre strain is OD/(2R), and elastic bending stress is E times that
+strain. Axial stress is force divided by steel area; the demonstrated tensile outer-fibre stress
+is their sum. The supplied fraction times supplied strength is the arithmetic threshold.
+Utilisation is total stress divided by that threshold; percent strength is total divided by
+strength times the percent conversion [S1, S2, S4]. These geometric and ratio identities
+introduce no standard-derived criteria. The route calculation balances F/R = μw [S1, S3, S4].</p>
+<p>Every public function in the two source modules is inventoried below. DIMENSIONALLY_REVIEWED
+records a source review; INDEPENDENTLY_CHECKED records only the independent synthetic arithmetic
+in this report. Neither establishes physical qualification. The returned immutable records
+SmysCheck and CrushingCheck hold stress and coating results respectively [S2, S3].</p>
+<div class="table-wrap"><table><thead><tr><th>Public function</th><th>Review</th><th>Arithmetic status</th>
+<th>Limits</th><th>Evidence needed for qualification</th></tr></thead><tbody><tr><td>integrity.bending_strain_from_radius</td><td>DIMENSIONALLY_REVIEWED</td><td>INDEPENDENTLY_CHECKED</td><td>Length divided by length gives strain; small-curvature geometry only.</td><td>Measured curvature and valid geometry for the intended installation case.</td></tr><tr><td>integrity.concrete_crushing_check</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>Strain scaling and ratios are dimensionless; coating transfer and strict inequality at the limit are unqualified.</td><td>Identified coating-model edition and clause, composite-section response, interface behavior, measured strain limit and approved safety factor.</td></tr><tr><td>integrity.concrete_crushing_strain</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>Strain scaling and ratios are dimensionless; coating transfer and strict inequality at the limit are unqualified.</td><td>Identified coating-model edition and clause, composite-section response, interface behavior, measured strain limit and approved safety factor.</td></tr><tr><td>integrity.displaced_weight_per_length</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>kg/m³*m/s²*m² gives N/m; dry weight must already be N/m. Physical sign, finiteness and geometry validation are incomplete.</td><td>Independent buoyancy reference, total coated geometry, fluid density and dry weight.</td></tr><tr><td>integrity.horizontal_lay_tension</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>N/m*m gives N; the flexible static catenary omits bending stiffness and dynamics.</td><td>Independent catenary reference with boundary conditions, submerged weight, water depth and touchdown radius.</td></tr><tr><td>integrity.is_weld_repair_acceptable</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>Both return consistent length comparisons, but a fractional maximum below the minimum makes the helper contracts disagree.</td><td>Governing standard edition, repair clause and approved interpretation when the fractional cap is below the minimum; retain the expected-failure test.</td></tr><tr><td>integrity.minimum_route_radius</td><td>DIMENSIONALLY_REVIEWED</td><td>INDEPENDENTLY_CHECKED</td><td>N/(dimensionless*N/m) gives m; static uniform friction and positive weight.</td><td>Qualified soil friction, effective bottom tension, weight and route geometry.</td></tr><tr><td>integrity.route_radius_factor_of_safety</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>Length/length gives a ratio; the documented target is not adopted.</td><td>Independent reference and an approved route-radius criterion.</td></tr><tr><td>integrity.submerged_weight_per_length</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>kg/m³*m/s²*m² gives N/m; dry weight must already be N/m. Physical sign, finiteness and geometry validation are incomplete.</td><td>Independent buoyancy reference, total coated geometry, fluid density and dry weight.</td></tr><tr><td>integrity.top_lay_tension</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>N/m*m gives N; the flexible static catenary omits bending stiffness and dynamics.</td><td>Independent catenary reference with boundary conditions, submerged weight, water depth and touchdown radius.</td></tr><tr><td>integrity.weld_repair_allowable_length</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>Both return consistent length comparisons, but a fractional maximum below the minimum makes the helper contracts disagree.</td><td>Governing standard edition, repair clause and approved interpretation when the fractional cap is below the minimum; retain the expected-failure test.</td></tr><tr><td>stress.allowable_bend_radius</td><td>DIMENSIONALLY_REVIEWED</td><td>NOT_EVALUATED</td><td>Stress cancels in E*(OD/2)/(f*SMYS), leaving length; pure bending only.</td><td>Independent inverse-radius reference and an approved pure-bending criterion.</td></tr><tr><td>stress.axial_stress</td><td>DIMENSIONALLY_REVIEWED</td><td>INDEPENDENTLY_CHECKED</td><td>Consistent N/mm² arithmetic only; tensile outer fibre.</td><td>Approved load case, wall-force definition, material data and installation criterion.</td></tr><tr><td>stress.bending_stress_from_radius</td><td>DIMENSIONALLY_REVIEWED</td><td>INDEPENDENTLY_CHECKED</td><td>Consistent N/mm² arithmetic only; tensile outer fibre.</td><td>Approved load case, wall-force definition, material data and installation criterion.</td></tr><tr><td>stress.smys_stress_check</td><td>DIMENSIONALLY_REVIEWED</td><td>INDEPENDENTLY_CHECKED</td><td>Consistent N/mm² arithmetic only; tensile outer fibre.</td><td>Approved load case, wall-force definition, material data and installation criterion.</td></tr></tbody></table></div>
+<p>Table M. Complete public-method inventory, dimensional findings and outstanding evidence [S2, S3, S4].</p>
+<h2 id="s5">5. Detailed Results</h2>
+<p>Every displayed result is calculated by the public functions. Dimensionless ratios are
+shown as fractions; other displayed values use one decimal place. Comparisons use unrounded
+returned values. The complete precision payload is embedded for reproducible readback.</p>
+<div class="table-wrap"><table><thead><tr><th>Result</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
+<tbody><tr><td>bending_strain</td><td>1/1000</td><td>1</td><td>S1; S3</td></tr><tr><td>bending_stress</td><td>200.0</td><td>N/mm²</td><td>S1; S2</td></tr><tr><td>axial_stress</td><td>20.0</td><td>N/mm²</td><td>S1; S2</td></tr><tr><td>longitudinal_stress</td><td>220.0</td><td>N/mm²</td><td>S1; S2</td></tr><tr><td>allowable_stress</td><td>300.0</td><td>N/mm²</td><td>S1; S2</td></tr><tr><td>utilisation</td><td>11/15</td><td>1</td><td>S1; S2</td></tr><tr><td>percent_smys</td><td>55.0</td><td>%</td><td>S1; S2</td></tr><tr><td>passes</td><td>True</td><td>boolean</td><td>S1; S2</td></tr><tr><td>route_radius</td><td>200.0</td><td>m</td><td>S1; S3</td></tr></tbody></table></div><p>Table V. Complete worked-result payload and source register keys.</p>
+<h2 id="s6">6. Key Findings</h2>
+<p>The combined-stress result meets its supplied arithmetic criterion (220.0 compared
+with 300.0 N/mm²) [S1, S2]. The independent force-equilibrium example checks radius in m,
+as required by N divided by N/m [S1, S3, S4]. These results do not establish installation suitability.</p>
+<p>The stress module's inconsistent force/area unit example is corrected to distinguish N/mm²
+from N/m². The executable examples are covered by the independent arithmetic test [S2, S4].</p>
+<h2 id="s7">7. Limitations and Not Covered</h2>
+<p>Weld-repair acceptance is NOT_EVALUATED: the fractional-cap/minimum-length interpretation
+is unresolved, and the existing expected-failure test is retained [S3, S5]. Coating response is
+NOT_EVALUATED because strain transfer, material limits and the governing model are unverified.
+No default criterion or standard-derived value is reproduced or changed.</p>
+<p>The stress combination describes a tensile outer fibre; signed compression, the opposite
+fibre, equivalent stress, ovalisation, buckling, plasticity and load interaction require separate
+assessment. Physical sign and geometry validation are incomplete. The integrity helpers do not
+systematically reject nonfinite values. The demonstrated inputs are finite and positive; this
+report does not qualify those input domains [S2, S3]. Dynamic lay behavior, stinger contact,
+soil variability and native solver comparisons are not calculated.</p>
+<h2 id="s8">8. Recommendations</h2>
+<p>Before engineering use, supply the load case, effective versus wall tension definition,
+material certificate, qualified geometry and an approved installation criterion. Supply measured
+pipe-soil friction and submerged weight for route equilibrium. Resolve the repair-length conflict
+against the governing edition and repair clause before adopting either helper's result. Obtain
+coating-section evidence and strain limits before using a coating acceptance flag. Independently
+check the buoyancy and catenary methods with qualified boundary conditions. These missing inputs
+are required evidence, rather than zeroes or inferred criteria [S2–S5].</p>
+<h2 id="s9">9. References and Appendices</h2>
+<ol><li id="S1">S1 — Committed synthetic inputs in the standalone report builder; authority:
+the pipelay report worked-example specification. Inputs are arithmetic controls, not field data.</li>
+<li id="S2">S2 — Public stress module: geometric elasticity, axial stress and supplied-strength comparison.</li>
+<li id="S3">S3 — Public integrity module: geometric strain, force equilibrium and inventoried helpers.</li>
+<li id="S4">S4 — Independent hand-value test and dedicated report tests, listed below.
+The test docstrings derive the reference values and justify a binary64 roundoff tolerance.</li>
+<li id="S5">S5 — Existing stress, finite-input and integrity tests; the repair interpretation
+remains an explicit expected failure. Existing tests alone are not independent physical evidence.</li></ol>
+<p>The exact source editions are bound by the following SHA-256 digests. The manifest hashes
+all source dependencies and the other delivered artifacts; its own bytes are checked by deterministic
+rebuild. The canonical report palette is inlined from the existing brand stylesheet. No licensed
+numerical content is copied; no standard-compliance conclusion is made.</p><ol><li><code>scripts/reports/build_installation_pipelay_module_report.py</code>; SHA-256 <code>140de6486ba052e61c8b318df12ddda65606a3f21b18cde1685c834b04d595af</code></li><li><code>src/digitalmodel/installation/pipelay/stress.py</code>; SHA-256 <code>5fe942bc4dd276ffdb83dd56934e94e2f05fbfbd9243d19f030f0eae3bc81146</code></li><li><code>src/digitalmodel/installation/pipelay/integrity.py</code>; SHA-256 <code>b6807e5fee6ecb4a84a116d905d2e5dc3ee4927ba6bb294025b5cdcea892a107</code></li><li><code>tests/installation/test_pipelay_report_hand_values.py</code>; SHA-256 <code>3238e5f17a7963f9885df4bcae8cd7c0ecb8533352e2e9f0ac3bf3a70ef6c007</code></li><li><code>tests/installation/test_pipelay_stress.py</code>; SHA-256 <code>5a1a62d4d6cc56b62bfbab32f4dae15f4b958f94439930226edde77e332a4530</code></li><li><code>tests/installation/test_pipelay_stress_finite_inputs.py</code>; SHA-256 <code>685cd0d384152a8225f069015fd8ef1e9e666caaba6f6d48970f24c98b238d99</code></li><li><code>tests/installation/test_pipelay_integrity.py</code>; SHA-256 <code>072c1ffe1d99afc3ad49ff59f2011bf1ff7f6f8b3f499d748cd986a06cac1564</code></li><li><code>tests/reporting/test_installation_pipelay_module_report.py</code>; SHA-256 <code>2660baf5d6030099762ef121a4492602ae8d0b4ab7c43798e0038b85fbd424d7</code></li><li><code>docs/api/_assets/brand.css</code>; SHA-256 <code>a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</code></li></ol>
+<p>Rebuild: <code>PYTHONPATH=src uv run --no-project python scripts/reports/build_installation_pipelay_module_report.py --scratch "$TMPDIR/pipelay-report"</code>.
+The scratch location must be supplied outside the checkout. The builder accepts
+<code>--output-dir</code>; published files are index.html, changes.json, manifest.json and README.md.
+Temporary staging is external and is removed after publication.</p>
+<h2 id="s10">10. Acronyms and Review Notes</h2>
+<p>OD: outer diameter. E: Young's modulus. SMYS: specified minimum yield strength.
+N: newton. mm: millimetre. m: metre. NOT_EVALUATED: the required qualification evidence is absent.</p>
+<label for="notes">Engineering review notes</label><textarea id="notes" rows="5"></textarea>
+<button id="save-notes" type="button">Save comments beside report</button>
+<p id="save-status" aria-live="polite">Comments remain unsaved until exported.</p>
+</main><script id="calculation" type="application/json">{
+  "input_units": {
+    "route": {
+      "bottom_tension": "N",
+      "lateral_friction": "1",
+      "submerged_weight_per_length": "N/m"
+    },
+    "stress": {
+      "allowable_fraction": "1",
+      "axial_force": "N",
+      "bend_radius": "mm",
+      "outer_diameter": "mm",
+      "smys": "N/mm²",
+      "steel_area": "mm²",
+      "youngs_modulus": "N/mm²"
+    }
+  },
+  "inputs": {
+    "route": {
+      "bottom_tension": 100000,
+      "lateral_friction": 0.5,
+      "submerged_weight_per_length": 1000
+    },
+    "stress": {
+      "allowable_fraction": 0.75,
+      "axial_force": 20000,
+      "bend_radius": 100000,
+      "outer_diameter": 200,
+      "smys": 400,
+      "steel_area": 1000,
+      "youngs_modulus": 200000
+    }
+  },
+  "methods": [
+    {
+      "evidence_needed": "Measured curvature and valid geometry for the intended installation case.",
+      "limits": "Length divided by length gives strain; small-curvature geometry only.",
+      "name": "integrity.bending_strain_from_radius",
+      "qualification": "INDEPENDENTLY_CHECKED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Identified coating-model edition and clause, composite-section response, interface behavior, measured strain limit and approved safety factor.",
+      "limits": "Strain scaling and ratios are dimensionless; coating transfer and strict inequality at the limit are unqualified.",
+      "name": "integrity.concrete_crushing_check",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Identified coating-model edition and clause, composite-section response, interface behavior, measured strain limit and approved safety factor.",
+      "limits": "Strain scaling and ratios are dimensionless; coating transfer and strict inequality at the limit are unqualified.",
+      "name": "integrity.concrete_crushing_strain",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Independent buoyancy reference, total coated geometry, fluid density and dry weight.",
+      "limits": "kg/m³*m/s²*m² gives N/m; dry weight must already be N/m. Physical sign, finiteness and geometry validation are incomplete.",
+      "name": "integrity.displaced_weight_per_length",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Independent catenary reference with boundary conditions, submerged weight, water depth and touchdown radius.",
+      "limits": "N/m*m gives N; the flexible static catenary omits bending stiffness and dynamics.",
+      "name": "integrity.horizontal_lay_tension",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Governing standard edition, repair clause and approved interpretation when the fractional cap is below the minimum; retain the expected-failure test.",
+      "limits": "Both return consistent length comparisons, but a fractional maximum below the minimum makes the helper contracts disagree.",
+      "name": "integrity.is_weld_repair_acceptable",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Qualified soil friction, effective bottom tension, weight and route geometry.",
+      "limits": "N/(dimensionless*N/m) gives m; static uniform friction and positive weight.",
+      "name": "integrity.minimum_route_radius",
+      "qualification": "INDEPENDENTLY_CHECKED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Independent reference and an approved route-radius criterion.",
+      "limits": "Length/length gives a ratio; the documented target is not adopted.",
+      "name": "integrity.route_radius_factor_of_safety",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Independent buoyancy reference, total coated geometry, fluid density and dry weight.",
+      "limits": "kg/m³*m/s²*m² gives N/m; dry weight must already be N/m. Physical sign, finiteness and geometry validation are incomplete.",
+      "name": "integrity.submerged_weight_per_length",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Independent catenary reference with boundary conditions, submerged weight, water depth and touchdown radius.",
+      "limits": "N/m*m gives N; the flexible static catenary omits bending stiffness and dynamics.",
+      "name": "integrity.top_lay_tension",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Governing standard edition, repair clause and approved interpretation when the fractional cap is below the minimum; retain the expected-failure test.",
+      "limits": "Both return consistent length comparisons, but a fractional maximum below the minimum makes the helper contracts disagree.",
+      "name": "integrity.weld_repair_allowable_length",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Independent inverse-radius reference and an approved pure-bending criterion.",
+      "limits": "Stress cancels in E*(OD/2)/(f*SMYS), leaving length; pure bending only.",
+      "name": "stress.allowable_bend_radius",
+      "qualification": "NOT_EVALUATED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Approved load case, wall-force definition, material data and installation criterion.",
+      "limits": "Consistent N/mm² arithmetic only; tensile outer fibre.",
+      "name": "stress.axial_stress",
+      "qualification": "INDEPENDENTLY_CHECKED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Approved load case, wall-force definition, material data and installation criterion.",
+      "limits": "Consistent N/mm² arithmetic only; tensile outer fibre.",
+      "name": "stress.bending_stress_from_radius",
+      "qualification": "INDEPENDENTLY_CHECKED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    },
+    {
+      "evidence_needed": "Approved load case, wall-force definition, material data and installation criterion.",
+      "limits": "Consistent N/mm² arithmetic only; tensile outer fibre.",
+      "name": "stress.smys_stress_check",
+      "qualification": "INDEPENDENTLY_CHECKED",
+      "review": "DIMENSIONALLY_REVIEWED"
+    }
+  ],
+  "qualification": "ARITHMETIC_ONLY",
+  "results": {
+    "allowable_stress": {
+      "source": "S1; S2",
+      "unit": "N/mm²",
+      "value": 300.0
+    },
+    "axial_stress": {
+      "source": "S1; S2",
+      "unit": "N/mm²",
+      "value": 20.0
+    },
+    "bending_strain": {
+      "source": "S1; S3",
+      "unit": "1",
+      "value": 0.001
+    },
+    "bending_stress": {
+      "source": "S1; S2",
+      "unit": "N/mm²",
+      "value": 200.0
+    },
+    "longitudinal_stress": {
+      "source": "S1; S2",
+      "unit": "N/mm²",
+      "value": 220.0
+    },
+    "passes": {
+      "source": "S1; S2",
+      "unit": "boolean",
+      "value": true
+    },
+    "percent_smys": {
+      "source": "S1; S2",
+      "unit": "%",
+      "value": 55.00000000000001
+    },
+    "route_radius": {
+      "source": "S1; S3",
+      "unit": "m",
+      "value": 200.0
+    },
+    "utilisation": {
+      "source": "S1; S2",
+      "unit": "1",
+      "value": 0.7333333333333333
+    }
+  }
+}
+</script>
+<script id="changes" type="application/json">[
+  {
+    "change": "Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.",
+    "date": "2026-10-28",
+    "revision": "A"
+  }
+]
+</script><script>
+document.getElementById('save-notes').addEventListener('click', async () => {
+  const text = document.getElementById('notes').value;
+  try {
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({suggestedName:'comments.txt'});
+      const stream = await handle.createWritable(); await stream.write(text); await stream.close();
+    } else {
+      const url = URL.createObjectURL(new Blob([text], {type:'text/plain'}));
+      const link = document.createElement('a'); link.href = url; link.download = 'comments.txt';
+      link.click(); URL.revokeObjectURL(url);
+    }
+    document.getElementById('save-status').textContent = 'Comments exported; retain beside report.';
+  } catch (error) {
+    document.getElementById('save-status').textContent = 'Export incomplete; comments remain unsaved.';
+  }
+});
+</script></body></html>

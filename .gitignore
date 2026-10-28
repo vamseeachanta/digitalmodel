@@ -636,3 +636,11 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain the pipelay builder and its four published deliverables only.
+!/scripts/reports/build_installation_pipelay_module_report.py
+!/docs/reports/modules/installation_pipelay/
+!/docs/reports/modules/installation_pipelay/index.html
+!/docs/reports/modules/installation_pipelay/changes.json
+!/docs/reports/modules/installation_pipelay/manifest.json
+!/docs/reports/modules/installation_pipelay/README.md

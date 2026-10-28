@@ -4,6 +4,9 @@ This is the canonical documentation entry point for digitalmodel issue routing.
 Use it with the repo entry surfaces before changing source, tests, docs, or
 routing registries.
 
+The [pipelay stress and integrity analysis](reports/modules/installation_pipelay/index.html)
+documents the pure calculation methods, independent synthetic examples and unresolved qualification evidence.
+
 ## Required Routing Surfaces
 
 | Surface | Role |
