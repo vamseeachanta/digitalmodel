@@ -39,11 +39,19 @@ References
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 # Common installation %SMYS acceptance values (fractions, not percentages).
 DEFAULT_OVERBEND_FRACTION: float = 0.85
 DEFAULT_SAGBEND_FRACTION: float = 0.72
+
+
+def _require_finite(**quantities: float) -> None:
+    """Reject nonfinite quantities with their input or result name."""
+    for name, value in quantities.items():
+        if not math.isfinite(value):
+            raise ValueError(f"{name} must be finite")
 
 
 def bending_stress_from_radius(
@@ -67,10 +75,23 @@ def bending_stress_from_radius(
     -------
     float
         Outer-fibre bending stress [stress].
+
+    Raises
+    ------
+    ValueError
+        If an input or the resulting stress is nonfinite, or the radius is
+        nonpositive. The message names the invalid quantity.
     """
+    _require_finite(
+        outer_diameter=outer_diameter,
+        bend_radius=bend_radius,
+        youngs_modulus=youngs_modulus,
+    )
     if bend_radius <= 0.0:
         raise ValueError("bend_radius must be positive")
-    return youngs_modulus * (outer_diameter / 2.0) / bend_radius
+    stress = youngs_modulus * (outer_diameter / 2.0) / bend_radius
+    _require_finite(bending_stress=stress)
+    return stress
 
 
 def axial_stress(axial_force: float, steel_area: float) -> float:
@@ -82,10 +103,19 @@ def axial_stress(axial_force: float, steel_area: float) -> float:
         Wall (axial) force carried by the steel cross-section [force].
     steel_area : float
         Steel cross-sectional area [length^2].
+
+    Raises
+    ------
+    ValueError
+        If an input or the resulting stress is nonfinite, or the area is
+        nonpositive. Signed finite axial forces are supported.
     """
+    _require_finite(axial_force=axial_force, steel_area=steel_area)
     if steel_area <= 0.0:
         raise ValueError("steel_area must be positive")
-    return axial_force / steel_area
+    stress = axial_force / steel_area
+    _require_finite(axial_stress=stress)
+    return stress
 
 
 @dataclass(frozen=True)
@@ -131,13 +161,26 @@ def smys_stress_check(
         Wall (axial) force carried by the steel section [force]. Default 0.
     steel_area : float, optional
         Steel cross-sectional area [length^2]. Required only when
-        ``axial_force`` is non-zero.
+        ``axial_force`` is non-zero. Any supplied area must be finite, even
+        when the axial force is zero; ``None`` omits the area.
 
     Returns
     -------
     SmysCheck
         Combined stress, allowable, utilisation, %SMYS and pass/fail flag.
+
+    Raises
+    ------
+    ValueError
+        If a supplied input or a numeric result is nonfinite, a denominator
+        is nonpositive, or the allowable fraction is outside its stated range.
+        The message names the invalid quantity.
     """
+    _require_finite(
+        smys=smys, allowable_fraction=allowable_fraction, axial_force=axial_force
+    )
+    if steel_area is not None:
+        _require_finite(steel_area=steel_area)
     if not 0.0 < allowable_fraction <= 1.0:
         raise ValueError("allowable_fraction must be in (0, 1]")
     if smys <= 0.0:
@@ -151,12 +194,21 @@ def smys_stress_check(
         sigma_axial = axial_stress(axial_force, steel_area)
 
     sigma_long = sigma_axial + sigma_bend
+    _require_finite(longitudinal_stress=sigma_long)
     allowable = allowable_fraction * smys
+    # A positive finite product can underflow to zero in floating-point arithmetic.
+    if allowable <= 0.0:
+        raise ValueError("allowable_stress must be positive")
+    utilisation = sigma_long / allowable
+    percent_smys = sigma_long / smys * 100.0
+    _require_finite(
+        allowable_stress=allowable, utilisation=utilisation, percent_smys=percent_smys
+    )
     return SmysCheck(
         longitudinal_stress=sigma_long,
         allowable_stress=allowable,
-        utilisation=sigma_long / allowable,
-        percent_smys=sigma_long / smys * 100.0,
+        utilisation=utilisation,
+        percent_smys=percent_smys,
         passes=sigma_long <= allowable,
     )
 
@@ -188,9 +240,26 @@ def allowable_bend_radius(
     -------
     float
         Minimum admissible bend radius [length].
+
+    Raises
+    ------
+    ValueError
+        If an input or the resulting radius is nonfinite, SMYS or the computed
+        allowable stress is nonpositive, or the fraction is outside its range.
     """
+    _require_finite(
+        outer_diameter=outer_diameter,
+        youngs_modulus=youngs_modulus,
+        smys=smys,
+        allowable_fraction=allowable_fraction,
+    )
     if not 0.0 < allowable_fraction <= 1.0:
         raise ValueError("allowable_fraction must be in (0, 1]")
     if smys <= 0.0:
         raise ValueError("smys must be positive")
-    return youngs_modulus * (outer_diameter / 2.0) / (allowable_fraction * smys)
+    allowable = allowable_fraction * smys
+    if allowable <= 0.0:
+        raise ValueError("allowable_stress must be positive")
+    radius = youngs_modulus * (outer_diameter / 2.0) / allowable
+    _require_finite(bend_radius=radius)
+    return radius
