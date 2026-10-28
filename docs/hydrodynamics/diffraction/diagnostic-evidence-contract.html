@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Diffraction diagnostic evidence contract</title>
+<style>body{font:16px system-ui;max-width:960px;margin:2rem auto;padding:1rem;line-height:1.5}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:.5rem;text-align:left}code{background:#eee}caption{caption-side:bottom;text-align:left;padding:.5rem}</style></head>
+<body>
+<h1>Diffraction diagnostic evidence contract</h1>
+<h2>Summary</h2>
+<p>Frequency alignment, statistic quality and sampling are retained from producer to export. A diagnostic correlation does not establish physical acceptance. Missing comparison policy, malformed matrices and invalid hydrostatic differences produce explicit refusals.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Legacy acceptance and diagnostic exports are consolidated to prevent unqualified agreement claims.</td></tr></table>
+<h2>Consumer map</h2>
+<table><tr><th>Surface</th><th>Authoritative producer</th><th>Disposition</th></tr>
+<tr><td>Legacy DiffractionComparator and compare CLI</td><td>MultiSolverComparator policy and matrix comparison</td><td>An explicit scalar tolerance is rejected; omitted policy produces REFUSED with UNCONFIGURED_POLICY.</td></tr>
+<tr><td>Radiation coefficients</td><td>benchmark_matrix_alignment.align_matrix_sets</td><td>Collection axes, individual sample frequencies, sample counts and six-DOF matrix dimensions are checked before signed interpolation.</td></tr>
+<tr><td>Coupling JSON, separate heatmap and multibody index</td><td>benchmark_evidence.matrix_diagnostic</td><td>Both frequency axes are required. Nullable correlation, quality, RMS and actual aligned row count are retained. Refusal remains visible.</td></tr>
+<tr><td>Benchmark JSON</td><td>MultiSolverComparator._serialize_pairwise, reused by BenchmarkRunner</td><td>The same pairwise evidence reaches both exporters; coverage remains available in the runner export.</td></tr>
+<tr><td>Hydrodynamic YAML</td><td>BenchmarkRunner using producer sample_count</td><td>RAO and coefficient sampling counts are explicit. Refused alignment has a null count; undefined correlation retains its known aligned count. Invalid raw matrices are null with their locations listed in raw_data_refusals.</td></tr>
+<tr><td>Compatibility benchmark_verdict.derive_status</td><td>Shared REFUSAL_QUALITIES vocabulary</td><td>This retained scalar projection is not a production acceptance gate. It cannot bind arrays, alignment or error budgets and shall not replace the canonical comparator.</td></tr>
+<tr><td>Hydrostatic diagnostics</td><td>MultiSolverComparator.compare_hydrostatics</td><td>Missing one leg, nonfinite values, invalid dimensions or unrepresentable differences produce INVALID_HYDROSTATICS; unavailable differences are null.</td></tr>
+</table><p>Table 1. Production consumers and compatibility boundary.</p>
+<h2>Method and sources</h2>
+<p>Radiation and coupling coefficients remain signed. Piecewise linear interpolation is applied on the coarser source grid within the qualified overlap, using the existing <code>benchmark_abscissa</code> sampling and coverage policy. No new physical threshold is introduced.</p>
+<p>For matching aligned vectors, Pearson correlation is Cxy / sqrt(Cxx Cyy), as defined by the <a href="https://numpy.org/doc/stable/reference/generated/numpy.corrcoef.html">NumPy corrcoef reference</a> (accessed 2026-10-20). A constant vector has zero variance, so its correlation is unavailable even when the two vectors are equal. The <a href="https://numpy.org/doc/stable/reference/generated/numpy.interp.html">NumPy interpolation reference</a> defines the piecewise linear interpolant (accessed 2026-10-20). RMS difference is sqrt(sum((b-a)^2)/n), from the root-mean-square definition; positive scaling preserves both RMS algebra and correlation while limiting intermediate overflow.</p>
+<p>Six-DOF matrix dimensions and three-component coordinates follow the repository's <code>output_schemas.HydrodynamicMatrix</code> and <code>HydrostaticResults</code>. Acceptance thresholds remain required inputs to <code>ComparisonPolicy</code>, with uncertainty, absolute resolution and a justification. Correlation alone is insufficient.</p>
+<h2>Worked example</h2>
+<p>The executable example is <code>examples/diffraction_evidence_contract.py</code>. The first frequency grid is [1.00, 1.08, 1.16, 1.24, 1.32] rad/s; the second grid has six evenly spaced samples over the same interval. Each coefficient is the synthetic affine function y = omega - 1.16 in arbitrary consistent units.</p>
+<p>Linear interpolation retains the signed crossing and gives the aligned vector [-0.16, -0.08, 0.00, 0.08, 0.16] for both inputs. Their difference is zero, so RMS is 0.0, correlation is 1.0 and the aligned sample count is 5. Equal constant vectors instead produce null correlation with INSUFFICIENT_DATA. Missing axes produce null correlation and sample count with INVALID_ABSCISSA. These are algebraic test results, not engineering measurements.</p>
+<h2>Limits and way forward</h2>
+<p>Native solver validity is not established by these offline diagnostics. Physical-zero qualification remains a separate provenance task. The existing abscissa defaults are reused without re-qualifying their physical basis. Scalar compatibility status output is retained for callers but is not evidence of production acceptance. A complete uncertainty budget and qualified input provenance are required before numerical acceptance can be established.</p>
+</body></html>
