@@ -26,6 +26,8 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/reports/build_parachute_module_report.py"
 REPORT = ROOT / "docs/reports/modules/parachute"
 ARTIFACTS = {"index.html", "results.json", "changes.json", "README.md", "manifest.json"}
+REBUILD = ("Rebuild with: PYTHONPATH=src python scripts/reports/build_parachute_module_report.py "
+           "--scratch <external-scratch> --output-dir docs/reports/modules/parachute")
 
 
 def builder():
@@ -102,19 +104,80 @@ def test_cantilever_report_matches_integrated_elastic_curve(tmp_path):
 
 
 def test_report_values_have_independent_oracles():
-    assert_numerical_oracles(json.loads((REPORT / "results.json").read_text()))
+    assert_numerical_oracles(json.loads((REPORT / "results.json").read_text(encoding="utf-8")))
 
 
 def test_production_replay_is_separate_from_oracles(tmp_path):
-    """Exact replay establishes freshness only, without validating the method."""
-    assert builder().calculate(tmp_path / "replay") == json.loads((REPORT / "results.json").read_text())
+    """Numerical replay establishes freshness only, without validating the method."""
+    actual = builder().calculate(tmp_path / "replay")
+    stored = json.loads((REPORT / "results.json").read_text(encoding="utf-8"))
+    assert actual["inputs"] == stored["inputs"]
+    assert actual["cantilever"] == pytest.approx(stored["cantilever"], rel=1e-10, abs=0)
+    for raw, delivered in zip(actual["drag"], stored["drag"], strict=True):
+        assert raw == pytest.approx(delivered, rel=1e-12, abs=0)
+
+
+def test_canonical_results_preserve_input_precision():
+    data = {
+        "inputs": {"length_in": 100.00000000000001},
+        "drag": [{"speed_mph": 40.00000000000001, "cd": 1.10000000000001,
+                  "cx": 1.25000000000001, "rho": 0.00230000000000001,
+                  "speed_fps": 58.666666666666664, "chute_area_ft2": 19.634954084936208,
+                  "force_lbs": 106.85952878260481, "force_n": 475.3346931213584}],
+        "cantilever": {"tip_uy_in": -1.1494252873563218,
+                       "root_fy_lbf": 999.9999999999999,
+                       "root_mz_lbf_in": 100000.00000000001},
+    }
+    original = copy.deepcopy(data)
+    result = builder().canonical_results(data)
+    assert data == original
+    assert result["inputs"] == original["inputs"]
+    for key in ("speed_mph", "cd", "cx", "rho"):
+        assert result["drag"][0][key] == original["drag"][0][key]
+    # 13 significant digits retain the independently integrated -100/87 response;
+    # static balance gives -P = 1000 and -P*L = 100000 for P=-1000, L=100.
+    assert result["cantilever"] == {
+        "tip_uy_in": -1.149425287356, "root_fy_lbf": 1000.0, "root_mz_lbf_in": 100000.0,
+    }
+    assert result["drag"][0]["force_lbs"] == 106.8595287826
+
+
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_canonical_results_reject_nonfinite_values(tmp_path, value):
+    build = builder()
+    data = build.calculate(tmp_path / "raw")
+    data["cantilever"]["root_fy_lbf"] = value
+    with pytest.raises(ValueError, match="finite"):
+        build.canonical_results(data)
+
+
+def test_backend_roundoff_does_not_change_delivered_bytes(tmp_path, monkeypatch):
+    build = builder()
+    original = build.calculate
+    first, second = tmp_path / "first", tmp_path / "second"
+    build.build(tmp_path / "raw-first", first)
+
+    def perturbed(scratch):
+        data = original(scratch)
+        for key, value in data["cantilever"].items():
+            data["cantilever"][key] = math.nextafter(value, math.inf)
+        for row in data["drag"]:
+            for key in ("speed_fps", "chute_area_ft2", "force_lbs", "force_n"):
+                row[key] = math.nextafter(row[key], math.inf)
+        return data
+
+    monkeypatch.setattr(build, "calculate", perturbed)
+    build.build(tmp_path / "raw-second", second)
+    for name in ARTIFACTS:
+        assert (first / name).read_bytes() == (second / name).read_bytes(), name
+    assert_numerical_oracles(json.loads((second / "results.json").read_text(encoding="utf-8")))
 
 
 def build_delivery(path):
     output = path / "delivery"
     subprocess.run([sys.executable, str(SCRIPT), "--scratch", str(path / "scratch"),
                     "--output-dir", str(output)], cwd=ROOT, check=True,
-                   capture_output=True, text=True)
+                   capture_output=True, text=True, encoding="utf-8")
     return output
 
 
@@ -124,21 +187,21 @@ def test_rebuild_is_byte_identical(tmp_path):
     assert {p.name for p in first.iterdir()} == ARTIFACTS
     assert {p.name for p in second.iterdir()} == ARTIFACTS
     for name in ARTIFACTS:
-        assert (first / name).read_bytes() == (second / name).read_bytes()
-        assert (first / name).read_bytes() == (REPORT / name).read_bytes(), name
+        assert (first / name).read_bytes() == (second / name).read_bytes(), f"{name}; {REBUILD}"
+        assert (first / name).read_bytes() == (REPORT / name).read_bytes(), f"{name}; {REBUILD}"
 
 
 def assert_manifest(directory):
     """Read exact bytes independently; no builder digest helper is used."""
-    manifest = json.loads((directory / "manifest.json").read_text())
-    assert set(manifest["artifacts"]) == ARTIFACTS - {"manifest.json"}
+    manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+    assert set(manifest["artifacts"]) == ARTIFACTS - {"manifest.json"}, REBUILD
     for name, digest in manifest["artifacts"].items():
-        assert hashlib.sha256((directory / name).read_bytes()).hexdigest() == digest, name
-    assert manifest["generator"] == SCRIPT.relative_to(ROOT).as_posix()
-    assert manifest["generator_sha256"] == hashlib.sha256(SCRIPT.read_bytes()).hexdigest()
-    assert manifest["sources"]
+        assert hashlib.sha256((directory / name).read_bytes()).hexdigest() == digest, f"{name}; {REBUILD}"
+    assert manifest["generator"] == SCRIPT.relative_to(ROOT).as_posix(), REBUILD
+    assert manifest["generator_sha256"] == hashlib.sha256(SCRIPT.read_bytes()).hexdigest(), REBUILD
+    assert manifest["sources"], REBUILD
     for name, digest in manifest["sources"].items():
-        assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest, name
+        assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest, f"{name}; {REBUILD}"
     assert manifest["reviewed_source_revision"] == "09089a121a16069c4b657d1a320a630a23ab1dd5"
 
 
@@ -149,15 +212,15 @@ def test_manifest_binds_delivered_bytes(tmp_path):
 
 def test_tampered_result_is_detected(tmp_path):
     output = build_delivery(tmp_path)
-    data = json.loads((output / "results.json").read_text())
+    data = json.loads((output / "results.json").read_text(encoding="utf-8"))
     data["cantilever"]["tip_uy_in"] *= -1
-    (output / "results.json").write_text(json.dumps(data) + "\n")
+    (output / "results.json").write_text(json.dumps(data) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(AssertionError, match="results.json"):
         assert_manifest(output)
     # Re-signing the changed bytes still cannot satisfy the independent equation.
-    manifest = json.loads((output / "manifest.json").read_text())
+    manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
     manifest["artifacts"]["results.json"] = hashlib.sha256((output / "results.json").read_bytes()).hexdigest()
-    (output / "manifest.json").write_text(json.dumps(manifest) + "\n")
+    (output / "manifest.json").write_text(json.dumps(manifest) + "\n", encoding="utf-8", newline="\n")
     assert_manifest(output)
     with pytest.raises(AssertionError):
         assert_numerical_oracles(data)
@@ -182,8 +245,8 @@ def test_internally_consistent_wrong_calculation_fails(tmp_path, monkeypatch, ca
     output = tmp_path / "changed"
     build.build(tmp_path / "scratch", output)
     # Builder, HTML and delivered JSON agree; digest replay alone would pass.
-    data = json.loads((output / "results.json").read_text())
-    assert embedded_data((output / "index.html").read_text()) == data
+    data = json.loads((output / "results.json").read_text(encoding="utf-8"))
+    assert embedded_data((output / "index.html").read_text(encoding="utf-8")) == data
     assert_manifest(output)
     with pytest.raises(AssertionError):
         assert_numerical_oracles(data)
@@ -211,7 +274,7 @@ class Links(HTMLParser):
 
 
 def test_report_links_and_required_sections():
-    page = (REPORT / "index.html").read_text()
+    page = (REPORT / "index.html").read_text(encoding="utf-8")
     assert all(line == line.rstrip() for line in page.splitlines())
     assert "@import" not in page and "url(" not in page
     parser = Links()
@@ -228,7 +291,7 @@ def test_report_links_and_required_sections():
                       "5. Worked calculation", "6. Checks", "7. Results",
                       "8. Limits / NOT_EVALUATED", "9. Way forward", "10. References and evidence"]
     assert page.index("1. Summary") < page.index("Revision history") < page.index("2. Context and scope")
-    changes = json.loads((REPORT / "changes.json").read_text())
+    changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     for change in changes:
         for value in change.values():
             assert value in page
@@ -236,7 +299,7 @@ def test_report_links_and_required_sections():
     assert "class=\"hs-doc\"" in page and "<svg" in page
     assert "NOT_EVALUATED" in page
     data = embedded_data(page)
-    assert data == json.loads((REPORT / "results.json").read_text())
+    assert data == json.loads((REPORT / "results.json").read_text(encoding="utf-8"))
     # Display rounding must be linked to the actual unrounded values.
     for row in data["drag"]:
         for key in ("speed_mph", "speed_fps", "chute_area_ft2", "force_n", "force_lbs"):

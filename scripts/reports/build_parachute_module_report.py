@@ -12,6 +12,7 @@ from dataclasses import asdict
 import hashlib
 import html
 import json
+import math
 from pathlib import Path
 import re
 
@@ -26,7 +27,9 @@ SOURCES = [f"{PACKAGE}/{name}.py" for name in REVIEWED_MODULES] + [
     WORKED, FRAME_TEST, "tests/reporting/test_parachute_module_report.py", *STYLE,
 ]
 CHANGES = [{"revision": "A", "date": "2026-10-28", "change":
-            "Initial method inventory and synthetic drag and cantilever calculations establish arithmetic evidence and explicit limits."}]
+            "Initial method inventory and synthetic drag and cantilever calculations establish arithmetic evidence and explicit limits."},
+           {"revision": "B", "date": "2026-10-28", "change":
+            "Computed outputs use 13 significant digits to remove backend roundoff from delivered bytes; input precision and independent arithmetic checks are retained."}]
 INPUTS = {
     # Synthetic assumptions: WORKED input table and FRAME_TEST TestCantileverBeam.
     "drag": {"chute_diameter_ft": 5.0, "cd": 1.1, "cx": 1.25, "rho": 0.0023,
@@ -73,6 +76,24 @@ def calculate(scratch):
 def source_link(path, label=None):
     """Link a source within the repository from the delivered report folder."""
     return f'<a href="../../../../{html.escape(path, quote=True)}">{html.escape(label or path)}</a>'
+
+
+def canonical_results(data):
+    """Encode computed outputs to 13 significant digits; preserve input values.
+
+    The precision bounds decimal rounding below the tightest relative oracle
+    tolerance (1e-12) for these bounded cases. Raw API values remain in scratch.
+    """
+    def number(value):
+        if not math.isfinite(value):
+            raise ValueError("Computed results must be finite")
+        return float(f"{value:.13g}")
+
+    computed = {"speed_fps", "chute_area_ft2", "force_lbs", "force_n"}
+    return {"inputs": data["inputs"],
+            "drag": [{key: number(value) if key in computed else value
+                      for key, value in row.items()} for row in data["drag"]],
+            "cantilever": {key: number(value) for key, value in data["cantilever"].items()}}
 
 
 def inventory():
@@ -139,7 +160,7 @@ def render(data):
 <title>Parachute module analysis</title><style>{brand}\n{layout}</style></head>
 <body class="hs-doc"><main class="wrap">
 <header><h1>Parachute module analysis</h1><p>Existing methods and synthetic arithmetic evidence</p></header>
-<nav aria-label="Evidence"><a href="results.json">Unrounded results</a> · <a href="manifest.json">Byte manifest</a> · <a href="README.md">Rebuild instructions</a> · <a href="#changes-panel">Change history</a></nav>
+<nav aria-label="Evidence"><a href="results.json">Canonical results</a> · <a href="manifest.json">Byte manifest</a> · <a href="README.md">Rebuild instructions</a> · <a href="#changes-panel">Change history</a></nav>
 <h2 id="s1">1. Summary</h2>
 <p>The existing drag law and linear frame solver reproduce independent arithmetic for the synthetic inputs below. The computed force and signed displacement/reaction tables come from normal public API calls [D, S]. This is an existing-method inventory, not equipment qualification. Physical response and transient deployment are NOT_EVALUATED.</p>
 <h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>{history}</tbody></table>
@@ -173,14 +194,14 @@ def render(data):
 <p>The independent SI route in [W] uses exact definitions: ft = 0.3048 m, mile = 1609.344 m, hour = 3600 s and lbf = 4.4482216152605 N. The coherent mass conversion is slug = (4.4482216152605 / 0.3048) kg. Density becomes 0.0023 × (4.4482216152605 / 0.3048) / 0.3048³ kg/m³. Integrating the disk gives A = π(5 × 0.3048 / 2)² m². For each assumed speed, V = speed × 1609.344 / 3600 m/s and F = ρ V² × 1.1 × A × 1.25 / 2 N [W]. Dimensions reduce to kg m/s². No production helper is used for this independent calculation.</p>
 <p>[H] independently integrates EI v″ = P(L − x). With v(0) = v′(0) = 0, EI v′ = P(Lx − x²/2) and EI v = P(Lx²/2 − x³/6). Thus v(L) = P L³/(3 E I) = -100/87 in for [T]. Force balance gives root vertical force −P = +1000 lbf; moment balance gives root moment −PL = +100000 lbf in (counterclockwise), of the same magnitude. These factors and zero boundary values are algebraic identities and idealized restraints, not empirical constants.</p>
 <h2 id="s6">6. Checks</h2>
-<p>The independent report tests [Q] compare unrounded normal API and delivered values with [W, H]. Relative tolerance is 5e-7 for N, covering the rounded production N/lbf factor; 1e-12 for lbf, area, speed and the speed-square force ratio, covering floating-point roundoff; and 1e-10 for the signed cantilever displacement and reactions in this small well-scaled linear system. Absolute tolerance is zero. These are arithmetic consistency tolerances, not physical accuracy estimates.</p>
-<p>With all other drag inputs fixed, F(60)/F(40) = (60/40)² = 9/4 [W]. Negative controls alter a result value or sign, regenerate an internally consistent report and manifest, and require the independent numerical assertions to fail [Q]. Separate exact production replay is only a freshness check. Two clean external builds and an independent readback of all manifest digests check reproducibility; changing a delivered result fails the byte binding even before the numerical oracle is applied [Q].</p>
+<p>The independent report tests [Q] compare raw normal API values and canonical delivered values with [W, H]. Relative tolerance is 5e-7 for N, covering the rounded production N/lbf factor; 1e-12 for lbf, area, speed and the speed-square force ratio, covering floating-point and serialization roundoff; and 1e-10 for the signed cantilever displacement and reactions in this small well-scaled linear system. Absolute tolerance is zero. These are arithmetic consistency tolerances, not physical accuracy estimates.</p>
+<p>With all other drag inputs fixed, F(60)/F(40) = (60/40)² = 9/4 [W]. Negative controls alter a result value or sign, regenerate an internally consistent report and manifest, and require the independent numerical assertions to fail [Q]. Separate production replay compares numerical values within the stated tolerances and is only a freshness check. Computed outputs are encoded to 13 significant decimal digits, below the tightest relative tolerance for these cases; input values retain their precision. Non-finite computed values are rejected. Two clean external builds and an independent readback of all manifest digests check exact-byte reproducibility; a regression also perturbs computed outputs by one representable float step and requires unchanged delivered bytes for these cases. Changing a delivered result fails the byte binding even before the numerical oracle is applied [Q].</p>
 <h2 id="s7">7. Results</h2>
-<p>Every cell below is formatted from a returned public API value [D, S]. Results are displayed to one decimal place; unrounded values are retained in <a href="results.json">results.json</a> and embedded below for audit. No expected force is taken from a rounded display.</p>
+<p>Every cell below is formatted from a canonical public API result [D, S]. Results are displayed to one decimal place; computed values at 13 significant digits are retained in <a href="results.json">results.json</a> and embedded below for audit. Raw API values remain in external calculation scratch. No expected force is taken from a rounded display.</p>
 <table><thead><tr><th>Speed (mph)</th><th>Speed (ft/s)</th><th>Disk area (ft²)</th><th>Force (lbf)</th><th>Force (N)</th><th>Basis</th></tr></thead><tbody>{drag_rows}</tbody></table>
 <figure><svg viewBox="0 0 760 180" role="img" aria-label="Computed synthetic drag forces at the assumed speeds">{bars}</svg><figcaption>Generated force bars, with lengths scaled to the largest returned force; no external assets [D, W].</figcaption></figure>
 <table><thead><tr><th>Cantilever output</th><th>Value</th><th>Unit</th><th>Basis</th></tr></thead><tbody>{frame_rows}</tbody></table>
-<details><summary>Unrounded public API calculation data</summary><pre>{html.escape(json_text(data))}</pre></details>
+<details><summary>Canonical public API calculation data</summary><pre>{html.escape(json_text(data))}</pre></details>
 <h2 id="s8">8. Limits / NOT_EVALUATED</h2>
 <p>Physical canopy coefficients, inflation history, fluid–structure coupling, transient peak loading, physical frame geometry, material properties, connections, buckling, fatigue and operational qualification are NOT_EVALUATED. The synthetic elastic case does not qualify a physical material or frame. Drag and cantilever loads are independent demonstrations; this report does not transfer the computed drag to an actual structure.</p>
 <p>Open method findings from source: the drag API accepts non-positive diameter as zero area while the area helper rejects it, and finite-value/coefficient/density validation is incomplete [D]. The frame solver requires a restrained, nonsingular, unit-consistent model and performs no general conditioning assessment [S]. No broader input-validity claim is made.</p>
@@ -223,7 +244,11 @@ Both arguments are required. Output directories contain only the small report
 artifacts. Fixed revision metadata and exact-byte digests exclude execution
 timestamps, absolute paths and environment identities.
 
-[results.json](results.json) retains unrounded public API values;
+[results.json](results.json) retains computed public API outputs at 13 significant
+decimal digits; input values retain their original precision. Raw API values
+remain in external scratch as `calculation.json`. This encoding removes backend
+roundoff for the bounded examples while remaining within the independent
+numerical tolerances. Non-finite computed values are rejected.
 [changes.json](changes.json) matches the report revision history.
 [manifest.json](manifest.json) binds the report, results, history and this guide,
 the builder and its source evidence using SHA-256. The manifest does not hash
@@ -232,14 +257,16 @@ itself. Digests prove byte identity, not physical accuracy or authenticity.
 Independent numerical tests use the exact SI definitions in the
 [existing worked example](../../../../src/digitalmodel/structural/parachute/docs/worked-synthetic-canopy-drag.md)
 and an integrated elastic curve with force/moment balance. Replaying the builder
-alone is a freshness check. Test assertions also reject sign/value mutations
+alone is a freshness check using numerical tolerances. Exact delivered bytes and
+digests are checked separately, including a one-step float perturbation test for
+these examples. Test assertions also reject sign/value mutations
 even when the regenerated page, result data and digests agree.
 """
 
 
 def build(scratch, output_dir):
     """Write deterministic deliverables, then bind their exact delivered bytes."""
-    data = calculate(scratch)
+    data = canonical_results(calculate(scratch))
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     outputs = {"index.html": render(data), "results.json": json_text(data),

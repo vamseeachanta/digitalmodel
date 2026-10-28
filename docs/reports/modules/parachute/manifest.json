@@ -1,13 +1,13 @@
 {
   "artifacts": {
-    "README.md": "5072c02292ef639ea27e93c8362e89c07fdcfc2da22451e818fca453f6d78e31",
-    "changes.json": "129b4a934b5fc608c266222132095cf17f829f1b0395e50e9bd14a8e3c3b3e12",
-    "index.html": "509ce5abdecd961194c3e8076b5df16b26d429a129fe61b9e896385e9926eb64",
-    "results.json": "dce810a48c49d90fc01805eca5ebbcc6a849a459d275a5017c02e62dbe11db59"
+    "README.md": "a889a30f546369f8ea6761b105898257f3b05a96b48844a955c0360a24dc8d69",
+    "changes.json": "4296ba325485cf8580687ee10210764f9ef51a61c3a1f8da7297d98592129a16",
+    "index.html": "2cc8d0a36ee55f3ac63ec9bb82d06d6d89ae5c24b3175cc25acff6af91e7b436",
+    "results.json": "1815f69510b18ecf37deba93f776a2fd85ab3b349861fca7cd43693e3784fcfd"
   },
   "digest_convention": "SHA-256 over exact UTF-8 delivered bytes with LF line endings; manifest excludes itself.",
   "generator": "scripts/reports/build_parachute_module_report.py",
-  "generator_sha256": "dbb585267e7956879a5b2a75bece67cea3923ab3b8ad8b429e05ffe4c21da78c",
+  "generator_sha256": "53ee349ee4b45d26012808a9f1252b261ac920f63766861555eb36bcec5540d0",
   "reviewed_source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
   "schema_version": 1,
   "sources": {
@@ -19,7 +19,7 @@
     "src/digitalmodel/structural/parachute/frame_solver.py": "3752781cb66925f4403d06ea99bfda62264f1b4a997e0e9403457fd1e7158954",
     "src/digitalmodel/structural/parachute/member_check.py": "020c6d3814b58dd279f926e2bd3ccfb158abcf9af45dad96a9a6f448f6728aa2",
     "src/digitalmodel/structural/parachute/parachute_drag.py": "a3cb0b36a08f003fc333edd03a4e13d54e69f829173f9ef580dd8e2e29fb303d",
-    "tests/reporting/test_parachute_module_report.py": "a463dd5efb378ec64cbf8a07be5ab66078746afe6dce300818d5735a3941602a",
+    "tests/reporting/test_parachute_module_report.py": "34a7bcac1cb62a4a724ee4494ef99a2e95e506c281eb2ce50d04d475c1d20a21",
     "tests/structural/parachute/test_frame_solver.py": "d02d2e38eb99d6361e2417122f21035ffb1b4bf7caa2552a714b0426fea398e0"
   }
 }
