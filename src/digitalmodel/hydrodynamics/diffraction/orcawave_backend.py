@@ -42,8 +42,11 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
     FrequencyInputType,
     LoadRAOMethod,
-    SymmetryType,
     IrregularFrequencyMethod,
+)
+
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import (
+    buoyancy_preflight, parse_symmetry_flags, validate_symmetry,
 )
 
 
@@ -272,9 +275,7 @@ def _zero_6x6() -> list[list[float]]:
 
 
 def _check_full_gdf(geom: Any, spec: DiffractionSpec) -> None:
-    """Reject partial or unreadable GDFs for declared body symmetry."""
-    if geom.symmetry == SymmetryType.NONE:
-        return
+    """Fail closed for every GDF declaration, including symmetry none."""
     path = Path(geom.mesh_file)
     if geom.mesh_format.value != "gdf" and path.suffix.lower() != ".gdf":
         return
@@ -284,17 +285,47 @@ def _check_full_gdf(geom: Any, spec: DiffractionSpec) -> None:
         with path.open(encoding="utf-8", errors="replace") as stream:
             stream.readline()  # title
             stream.readline()  # length unit and gravity
-            flags = stream.readline().split()
-        isx, isy = int(flags[0]), int(flags[1])
-    except (OSError, ValueError, IndexError) as exc:
+            flags = parse_symmetry_flags(stream.readline())
+            validate_symmetry(flags, geom.symmetry)
+            import numpy as np
+
+            try:
+                panel_count = int(stream.readline().split()[0])
+            except (ValueError, IndexError) as exc:
+                raise ValueError("Invalid GDF panel count: expected a positive integer") from exc
+            if panel_count <= 0:
+                raise ValueError("Invalid GDF panel count: expected a positive integer")
+            # WAMIT v7.4 section 6.1 permits sequential coordinates across
+            # line breaks. Read all twelve scalars per panel, not one vertex
+            # per line, so packed full bodies cannot masquerade as sectors.
+            tokens = []
+            for line in stream:
+                coordinates, marker, annotation = line.partition("end of panel")
+                tokens.extend(coordinates.split())
+                # Retain the numbered panel annotations in existing GDFs,
+                # but accept them only after a complete, correctly numbered panel.
+                if marker and (
+                    len(tokens) % 12
+                    or annotation.strip() != str(len(tokens) // 12)
+                ):
+                    raise ValueError("Invalid GDF coordinates: invalid panel annotation")
+            if len(tokens) != 12 * panel_count:
+                raise ValueError(
+                    "Invalid GDF coordinates: expected "
+                    f"{12 * panel_count} values for {panel_count} panels, "
+                    f"got {len(tokens)}"
+                )
+            try:
+                vertices = np.asarray(tokens, dtype=float).reshape(-1, 3)
+            except ValueError as exc:
+                raise ValueError("Invalid GDF coordinates: expected numeric values") from exc
+            if not np.isfinite(vertices).all():
+                raise ValueError("Invalid GDF coordinates: expected finite values")
+            validate_symmetry(flags, geom.symmetry, vertices)
+    except OSError as exc:
         raise ValueError(
             f"Cannot verify GDF symmetry for mesh {Path(geom.mesh_file).name!r}"
         ) from exc
-    if isx != 0 or isy != 0:
-        raise ValueError(
-            f"Partial GDF mesh {Path(geom.mesh_file).name!r} has symmetry flags; "
-            "provide a full mesh with ISX and ISY zero"
-        )
 
 
 def _build_body_dict(
@@ -311,8 +342,9 @@ def _build_body_dict(
         geom.mesh_format.value, geom.mesh_file, context=f"body {vessel.name!r}"
     )
     _check_full_gdf(geom, spec)
-    # Full meshes must not be expanded a second time.
-    mesh_sym = "None"
+    # OrcaWave web help, Data: Bodies, Body mesh: explicit stored-sector symmetry.
+    mesh_sym = {"none": "None", "xz": "xz plane", "yz": "yz plane",
+                "xz+yz": "xz and yz planes"}[geom.symmetry]
 
     body: dict[str, Any] = {}
     body["BodyName"] = vessel.name
@@ -811,6 +843,7 @@ class OrcaWaveBackend:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         _check_supported_solver_options(spec)
+        self.preflight_reports = buoyancy_preflight(spec)
 
         # Build the complete YAML document by merging all sections
         data: dict[str, Any] = {}
@@ -871,6 +904,7 @@ class OrcaWaveBackend:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         _check_supported_solver_options(spec)
+        self.preflight_reports = buoyancy_preflight(spec)
 
         sections = [
             ("01_general.yml", _build_general_section(spec)),
