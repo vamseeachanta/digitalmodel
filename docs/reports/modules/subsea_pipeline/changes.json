@@ -1,0 +1,7 @@
+[
+  {
+    "change": "Independent synthetic calculations and a public-method inventory are added to distinguish arithmetic checks from unresolved engineering qualification. Stale calculation-package imports are corrected so the public functions can be used.",
+    "date": "2026-10-28",
+    "revision": "A"
+  }
+]
