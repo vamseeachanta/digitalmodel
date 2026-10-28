@@ -248,6 +248,67 @@ main()
         assert case["case_id"] in run.stdout
 
 
+def test_module_cli_writes_expected_outputs_in_fresh_process(tmp_path):
+    output = tmp_path / "cli"
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(ROOT / "src"), str(ROOT)])}
+    run = subprocess.run(
+        [sys.executable, "-m", "scripts.riser_campaign.generate_inputs",
+         "--manifest", str(CAMPAIGN / "manifest.json"), "--output-dir", str(output)],
+        cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    assert run.returncode == 0, run.stderr
+    assert "48 cases; 288 solver inputs; 0 licensed runs" in run.stdout
+    index = json.loads((output / "index.json").read_bytes())
+    assert len(index["cases"]) == 48
+    inputs = [entry for case in index["cases"] for entry in case["inputs"]]
+    assert len(inputs) == 288
+    for entry in inputs:
+        assert hashlib.sha256((output / entry["path"]).read_bytes()).hexdigest() == entry["sha256"]
+    packet = json.loads((ROOT / "docs/verification/riser-mesh-review.json").read_bytes())
+    frozen = [entry for case in index["frozen_tranche"]["cases"] for entry in case["inputs"]]
+    assert len(frozen) == len(packet["inputs"]) == 144
+    for actual, expected in zip(frozen, packet["inputs"]):
+        payload = (output / actual["path"]).read_bytes()
+        assert hashlib.sha256(payload).hexdigest() == actual["sha256"] == expected["sha256"]
+
+
+@pytest.mark.parametrize("module", [
+    "digitalmodel.marine_ops.marine_analysis.extraction.run_extraction",
+    "digitalmodel.marine_ops.marine_analysis.analysis.hydro_usage_example",
+])
+def test_hydro_import_preserves_standard_streams_in_fresh_process(module):
+    # Reload after dependencies load so the Windows guard is exercised on every OS.
+    script = """
+import gc
+import importlib
+import sys
+assert 'pytest' not in sys.modules
+stdout, stderr = sys.stdout, sys.stderr
+module = importlib.import_module(sys.argv[1])
+platform = sys.platform
+try:
+    sys.platform = 'win32'
+    importlib.reload(module)
+finally:
+    sys.platform = platform
+gc.collect()
+assert sys.stdout is stdout
+assert sys.stderr is stderr
+for stream in (stdout, stderr):
+    assert not stream.closed
+    stream.write('stream usable\\n')
+    stream.flush()
+"""
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(ROOT / "src"), str(ROOT)])}
+    run = subprocess.run(
+        [sys.executable, "-c", script, module], cwd=ROOT, env=env,
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    assert run.returncode == 0, run.stderr
+    assert "stream usable" in run.stdout
+    assert "stream usable" in run.stderr
+
+
 def test_committed_worked_examples_match_generated_inputs(tmp_path):
     index = api().generate(CAMPAIGN / "manifest.json", tmp_path / "examples")
     examples = json.loads((CAMPAIGN / "examples/index.json").read_text(encoding="utf-8"))
