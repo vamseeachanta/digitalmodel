@@ -137,7 +137,7 @@ rao_diverse_results.txt
 
 .venv/
 venv/
-ENV/
+/ENV/
 /env/
 # Nested environments are ignored by specific environment paths, not by env/.
 **/env/pyvenv.cfg
