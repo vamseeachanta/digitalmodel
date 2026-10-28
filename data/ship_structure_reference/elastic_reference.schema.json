@@ -1,0 +1,305 @@
+{
+  "type": "object",
+  "required": [
+    "schema_version",
+    "geometry_basis",
+    "section_property_basis",
+    "axes",
+    "units",
+    "sources",
+    "materials",
+    "cases"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "geometry_basis": {
+      "const": "author_selected_synthetic_not_stock"
+    },
+    "section_property_basis": {
+      "const": "no_section_properties_used"
+    },
+    "axes": {
+      "const": "x_along_span_y_along_breadth"
+    },
+    "units": {
+      "type": "object",
+      "required": [
+        "length",
+        "stress"
+      ],
+      "properties": {
+        "length": {
+          "const": "mm"
+        },
+        "stress": {
+          "const": "MPa"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "issuer",
+          "url",
+          "edition",
+          "source_date",
+          "retrieved_on",
+          "locator",
+          "catalog_source_id",
+          "rights_status"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "issuer": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https://[^/\\s]+/[^\\s]+$"
+          },
+          "edition": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "state",
+                  "reason"
+                ],
+                "properties": {
+                  "state": {
+                    "const": "unknown"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "pattern": "\\S"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "source_date": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "state",
+                  "reason"
+                ],
+                "properties": {
+                  "state": {
+                    "const": "unknown"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "pattern": "\\S"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "retrieved_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "locator": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "catalog_source_id": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "state",
+                  "reason"
+                ],
+                "properties": {
+                  "state": {
+                    "const": "unknown"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "pattern": "\\S"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "rights_status": {
+            "const": "metadata_only"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "materials": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "\\S"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "youngs_modulus_MPa",
+          "poisson_ratio",
+          "basis",
+          "condition",
+          "source_keys",
+          "readiness"
+        ],
+        "properties": {
+          "youngs_modulus_MPa": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "poisson_ratio": {
+            "type": "number",
+            "exclusiveMinimum": -1,
+            "exclusiveMaximum": 0.5,
+            "$comment": "MIT 2.080J (2013), Lecture 4, Eqs. 4.14 and 4.16: positive bulk and shear moduli."
+          },
+          "basis": {
+            "const": "author_selected_synthetic"
+          },
+          "condition": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "source_keys": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "\\S"
+            }
+          },
+          "readiness": {
+            "const": "analytical_fixture_only"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "structure",
+          "profile",
+          "span_mm",
+          "breadth_mm",
+          "initial_thickness_mm",
+          "material_id",
+          "sigma_x_MPa",
+          "sigma_y_MPa",
+          "tau_MPa",
+          "plate_loss_mm",
+          "web_loss_mm",
+          "flange_loss_mm",
+          "support",
+          "loss_model",
+          "load_basis"
+        ],
+        "properties": {
+          "structure": {
+            "enum": [
+              "plate",
+              "panel"
+            ]
+          },
+          "profile": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "span_mm": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "breadth_mm": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "initial_thickness_mm": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "material_id": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "sigma_x_MPa": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "sigma_y_MPa": {
+            "type": "number"
+          },
+          "tau_MPa": {
+            "type": "number"
+          },
+          "plate_loss_mm": {
+            "type": "number",
+            "minimum": 0
+          },
+          "web_loss_mm": {
+            "type": "number",
+            "minimum": 0
+          },
+          "flange_loss_mm": {
+            "type": "number",
+            "minimum": 0
+          },
+          "support": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "loss_model": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "load_basis": {
+            "type": "string",
+            "pattern": "\\S"
+          }
+        },
+        "additionalProperties": false
+      },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Synthetic elastic plate reference inputs; no engineering acceptance",
+  "$comment": "Authored input contract. JSON Schema 2020-12 Validation (2022), sections 6 and 7. Geometry, stresses and moduli are explicit synthetic inputs; no default material or acceptance limit."
+}
