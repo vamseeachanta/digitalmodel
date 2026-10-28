@@ -74,6 +74,81 @@ class TestStressIntensityFactor:
 # ── paris_law_life ────────────────────────────────────────────────────
 
 class TestParisLawLife:
+    @pytest.mark.parametrize("step", [0.001, 0.0005])
+    def test_threshold_at_critical_depth_has_finite_life(self, step):
+        """For K=5 -> 2, N=(1/2-1/5)/(C*3000)=1000000 cycles."""
+        life, history = paris_law_life(
+            1e-10, 2, lambda a: 5 - 3000 * (a - 0.001),
+            0.001, 0.002, da_step=step, threshold=2,
+        )
+        assert life == pytest.approx(1000000)
+        assert history.iloc[-1]["crack_size"] == 0.002
+        assert history.iloc[-1]["cycles"] == pytest.approx(life)
+        assert history.iloc[-1]["da_dN"] == 0
+
+    def test_shared_threshold_integration_and_arrest_history(self):
+        """Linear 5 -> 1 reaches threshold 2 after 750000 cycles."""
+        from digitalmodel.asset_integrity.assessment.fe_crack_growth import growth_life
+
+        law = dict(
+            c=1e-10, m=2, threshold=2, e_ratio=1,
+            threshold_rule="unchanged", basis="Artificial hand calculation",
+        )
+
+        def dk(a):
+            return 5 - 4000 * (a - 0.001)
+
+        expected = growth_life([[0.001, 5], [0.002, 1]], law)
+        life, history = paris_law_life(
+            1e-10, 2, dk, 0.001, 0.002, da_step=0.001, threshold=2
+        )
+        assert math.isinf(life)
+        assert history.iloc[-1]["crack_size"] == pytest.approx(0.00175)
+        assert history.iloc[-1]["cycles"] == pytest.approx(750000)
+        assert history.iloc[-1]["cycles"] == pytest.approx(expected["cycles_to_arrest"])
+        assert history.iloc[-1]["da_dN"] == 0
+
+    def test_threshold_at_sampled_endpoint_before_target_still_arrests(self):
+        life, history = paris_law_life(
+            1e-10, 2, lambda a: max(2, 5 - 3000 * (a - 0.001)),
+            0.001, math.nextafter(0.002, math.inf), da_step=0.001, threshold=2,
+        )
+        assert math.isinf(life)
+        assert history.iloc[-1]["crack_size"] == 0.002
+        assert history.iloc[-1]["cycles"] == pytest.approx(1000000)
+        assert history.iloc[-1]["da_dN"] == 0
+
+    @pytest.mark.parametrize("exponent", [0.5, 1, 2])
+    def test_zero_threshold_endpoint_convergence(self, exponent):
+        """Integral to K=0 is finite only for m<1: da/(C*5^m*(1-m))."""
+        life, history = paris_law_life(
+            1e-10, exponent, lambda a: 5 * (0.002 - a) / 0.001,
+            0.001, 0.002, da_step=0.001,
+        )
+        if exponent < 1:
+            expected = 0.001 / (1e-10 * 5**exponent * (1 - exponent))
+            assert life == pytest.approx(expected)
+            assert history.iloc[-1]["cycles"] == pytest.approx(expected)
+        else:
+            assert math.isinf(life)
+            assert math.isinf(history.iloc[-1]["cycles"])
+        assert history.iloc[-1]["crack_size"] == 0.002
+        assert history.iloc[-1]["da_dN"] == 0
+
+    def test_linear_delta_k_uses_shared_exact_integral(self):
+        """Integral of 1/(C*(10+10000*(a-.001))**2) is 50000."""
+        life, history = paris_law_life(
+            1e-10, 2, lambda a: 10 + 10000 * (a - 0.001),
+            0.001, 0.002, da_step=0.001,
+        )
+        assert life == pytest.approx(50000)
+        assert history.iloc[-1]["cycles"] == pytest.approx(50000)
+
+    @pytest.mark.parametrize("step", [0, -1, float("nan"), float("inf")])
+    def test_invalid_increment_is_rejected(self, step):
+        with pytest.raises(ValueError):
+            paris_law_life(1e-10, 2, 10, 0.001, 0.002, da_step=step)
+
     def test_constant_delta_k_analytical(self):
         """With constant DeltaK, analytical solution:
         N = (a_crit - a_init) / (C * DeltaK^m)
