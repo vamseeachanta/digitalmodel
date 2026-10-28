@@ -165,10 +165,10 @@
 {%- if citations %}
       <div class="tbl-wrap">
         <table class="refs-table">
-          <thead><tr><th>#</th><th>Code</th><th>Revision</th><th>Section</th><th>Wiki path</th><th>Note</th></tr></thead>
+          <thead><tr><th>#</th><th>Code</th><th>Revision</th><th>Section</th><th>{{ 'Source' if citations|selectattr('url')|list else 'Wiki path' }}</th><th>Note</th></tr></thead>
           <tbody>
 {%- for c in citations %}
-            <tr><td>{{ loop.index }}</td><td>{{ c.code_id }}</td><td>{{ c.revision }}</td><td>{{ c.section }}</td><td class="path">{{ c.wiki_path }}</td><td>{{ c.note }}</td></tr>
+            <tr><td>{{ loop.index }}</td><td>{% if c.url %}{{ c.publisher }}: {% endif %}{{ c.code_id }}</td><td>{{ c.revision }}</td><td>{{ c.section }}</td><td class="path">{% if c.url %}<a href="{{ c.url }}">{{ c.url }}</a>{% else %}{{ c.wiki_path }}{% endif %}</td><td>{{ c.note }}{% if c.url %} Retrieved {{ c.retrieved }}.{% endif %}</td></tr>
 {%- endfor %}
           </tbody>
         </table>
