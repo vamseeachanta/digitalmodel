@@ -269,13 +269,42 @@ reports/
 docs/reports/*
 !docs/reports/orcaflex-smoke-artifact-freshness.html
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
-!docs/reports/modules/
-docs/reports/modules/*
-!docs/reports/modules/riserfatigue/
-docs/reports/modules/riserfatigue/*
-!docs/reports/modules/riserfatigue/generate_report.py
-!docs/reports/modules/riserfatigue/report.html
-!docs/reports/modules/riserfatigue/changes.json
+# BEGIN shared module-report retention rules
+# Open the parent and exclude module directories before named exceptions.
+!/docs/reports/modules/
+/docs/reports/modules/*
+
+# Preserve the GIS module report and its rebuild sources.
+!/docs/reports/modules/gis/
+/docs/reports/modules/gis/*
+!/docs/reports/modules/gis/build_report.py
+!/docs/reports/modules/gis/changes.json
+!/docs/reports/modules/gis/report.html
+!/docs/reports/modules/gis/sources.json
+
+# Retain the normalized-section example source; generated output stays ignored.
+!/docs/reports/modules/passing_ship/
+/docs/reports/modules/passing_ship/*
+!/docs/reports/modules/passing_ship/build_worked_example.py
+!/docs/reports/modules/passing_ship/README.md
+
+!/docs/reports/modules/pipe_capacity/
+/docs/reports/modules/pipe_capacity/*
+!/docs/reports/modules/pipe_capacity/build_worked_example.py
+!/docs/reports/modules/pipe_capacity/README.md
+
+!/docs/reports/modules/riserfatigue/
+/docs/reports/modules/riserfatigue/*
+!/docs/reports/modules/riserfatigue/generate_report.py
+!/docs/reports/modules/riserfatigue/report.html
+!/docs/reports/modules/riserfatigue/changes.json
+
+!/docs/reports/modules/vesselseakeeping/
+/docs/reports/modules/vesselseakeeping/*
+!/docs/reports/modules/vesselseakeeping/index.html
+!/docs/reports/modules/vesselseakeeping/changes.json
+!/docs/reports/modules/vesselseakeeping/manifest.json
+# END shared module-report retention rules
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
@@ -478,16 +507,6 @@ docs/reports/abstracted-hulls/*
 !docs/reports/pipeline-ffs-assessment.manifest.json
 !docs/reports/padeye-lift-point-analysis.html
 
-# Preserve the GIS module report and its rebuild sources.
-!docs/reports/modules/
-docs/reports/modules/*
-!docs/reports/modules/gis/
-docs/reports/modules/gis/*
-!docs/reports/modules/gis/build_report.py
-!docs/reports/modules/gis/changes.json
-!docs/reports/modules/gis/report.html
-!docs/reports/modules/gis/sources.json
-
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
 # directory named lib at ANY depth -- it silently swallowed the files that fix
@@ -613,26 +632,3 @@ docs/reports/modules/gis/*
 /scripts/reports/*
 !/scripts/reports/build_vessel_seakeeping_module_report.py
 !/docs/reports/
-!/docs/reports/modules/
-/docs/reports/modules/*
-
-# Retain the normalized-section example source; generated output stays ignored.
-!/docs/reports/modules/passing_ship/
-/docs/reports/modules/passing_ship/*
-!/docs/reports/modules/passing_ship/build_worked_example.py
-!/docs/reports/modules/passing_ship/README.md
-
-!/docs/reports/modules/vesselseakeeping/
-!/docs/reports/modules/vesselseakeeping/index.html
-!/docs/reports/modules/vesselseakeeping/changes.json
-!/docs/reports/modules/pipe_capacity/
-/docs/reports/modules/pipe_capacity/*
-!/docs/reports/modules/pipe_capacity/build_worked_example.py
-!/docs/reports/modules/pipe_capacity/README.md
-
-# Retain module reports after the shared directory rule.
-!/docs/reports/modules/vesselseakeeping/manifest.json
-!/docs/reports/modules/riserfatigue/
-!/docs/reports/modules/riserfatigue/generate_report.py
-!/docs/reports/modules/riserfatigue/report.html
-!/docs/reports/modules/riserfatigue/changes.json
