@@ -863,3 +863,9 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/workflow_api/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#workflow_api
+  - module: riser_study
+    entry_point: src/digitalmodel/riser_study/
+    maturity: beta
+    owner_wiki: src/digitalmodel/riser_study/README.md
+    key_tests: [tests/subsea/riser_study/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_study
