@@ -365,6 +365,9 @@ modules:
       protocols:
         agent_pack: src/digitalmodel/power/protocols/docs/agent-pack.md
         qa_family: EC
+      protection:
+        agent_pack: src/digitalmodel/power/protection/docs/agent-pack.md
+        qa_family: EC
   - module: process_diagrams
     entry_point: src/digitalmodel/process_diagrams/
     maturity: beta
