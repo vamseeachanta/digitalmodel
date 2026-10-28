@@ -98,6 +98,9 @@ class HydroRow:
     tpc_t_per_cm: float | None = None
 
     def __post_init__(self) -> None:
+        for name in ("draft_m", "displacement_t", "km_m"):
+            if not math.isfinite(getattr(self, name)):
+                raise ValueError(f"hydrostatic row: {name} must be finite")
         if self.draft_m <= 0.0:
             raise ValueError("hydrostatic row: draft_m must be > 0")
         if self.displacement_t <= 0.0:
