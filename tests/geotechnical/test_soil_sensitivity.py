@@ -12,6 +12,7 @@ No expected resistance is obtained from a production calculation.
 
 import copy
 import csv
+import hashlib
 import importlib.util
 import json
 import math
@@ -119,7 +120,8 @@ def test_seeded_mc_count_uses_independent_bernoulli_hand_equation(hand_case, tmp
     assert abs(result['probability'] - 0.5) < 0.02  # two percentage points
     assert result['interval_95'][0] < 0.5 < result['interval_95'][1]
     assert result['n'] == 10000 and result['seed'] == 17
-    rows = list(csv.DictReader(output.open()))
+    with output.open(encoding='utf-8') as stream:
+        rows = list(csv.DictReader(stream))
     assert len(rows) == 10000
     assert sum(row['punch_through'] == 'True' for row in rows) == count
     assert monte_carlo(hand_case, n=10000, seed=17) == result
@@ -224,26 +226,87 @@ def test_named_inputs_and_offline_exports_resume_and_detect_tampering(tmp_path, 
     monkeypatch.setattr(module, 'monte_carlo', unexpected_recalculation)
     module.write_study(tmp_path, n=12, seed=17)
     assert first == {p.name: p.read_bytes() for p in tmp_path.iterdir()}
-    probability = json.loads((tmp_path / 'probability.figure.json').read_text())
-    tornado_spec = json.loads((tmp_path / 'tornado.figure.json').read_text())
+    probability = json.loads((tmp_path / 'probability.figure.json').read_text(encoding='utf-8'))
+    tornado_spec = json.loads((tmp_path / 'tornado.figure.json').read_text(encoding='utf-8'))
     assert probability['data'][0]['type'] == 'bar'
     assert probability['data'][0]['error_y']['symmetric'] is False
     assert tornado_spec['layout']['xaxis']['title']['text'] == 'Change in margin from nominal (MN)'
     for path in tmp_path.glob('*.cases.json'):
-        cases = json.loads(path.read_text())['cases']
+        cases = json.loads(path.read_text(encoding='utf-8'))['cases']
         assert 'nominal' in cases
         assert all('input' in payload and 'values' in payload for payload in cases.values())
-    control = json.loads((tmp_path / 'uniform_soft.summary.json').read_text())
+    control = json.loads((tmp_path / 'uniform_soft.summary.json').read_text(encoding='utf-8'))
     assert control['result']['punch_through_count'] == 0  # monotone uniform clay
-    spread = list(csv.DictReader((tmp_path / 'sand_over_soft.samples.csv').open()))
-    punching = list(csv.DictReader((tmp_path / 'sand_over_soft_punching.samples.csv').open()))
+    with (tmp_path / 'sand_over_soft.samples.csv').open(encoding='utf-8') as stream:
+        spread = list(csv.DictReader(stream))
+    with (tmp_path / 'sand_over_soft_punching.samples.csv').open(encoding='utf-8') as stream:
+        punching = list(csv.DictReader(stream))
     for a, b in zip(spread, punching):
         for parameter in ('layers.0.friction_deg', 'layers.1.su_kpa', 'top_thickness_m'):
             assert a[parameter] == b[parameter]  # common random soil draws
     sample = tmp_path / 'uniform_soft.samples.csv'
-    sample.write_text(sample.read_text() + '\n')
+    sample.write_text(sample.read_text(encoding='utf-8') + '\n', encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match='digest'):
         module.write_study(tmp_path, n=12, seed=17)
+
+
+@pytest.mark.parametrize('field,value', [
+    (('result', 'n'), 13),
+    (('result', 'seed'), 18),
+    (('result', 'punch_through_count'), 12),
+    (('result', 'probability'), 1.0),
+    (('result', 'interval_95'), [1.0, 1.0]),
+    (('result', 'unsupported_count'), -1),
+    (('result', 'no_loss_count'), 0),
+    (('result',), {}),
+    (('tornado', 0, 'low_delta_kn'), 0.0),
+    (('tornado',), []),
+    (('preload_kn',), 1.0),
+    (('name',), 'changed'),
+    (('basis',), 'changed'),
+    (('schema_version',), 0),
+])
+def test_reuse_rejects_summary_corruption_before_rewriting_outputs(tmp_path, field, value):
+    # Uniform clay has 0/12 descending peaks and 12/12 no-loss samples.
+    # Changing only the summary must never publish a different interpretation.
+    module = load_example()
+    module.write_study(tmp_path, n=12, seed=17)
+    outputs = {name: (tmp_path / name).read_bytes() for name in (
+        'probabilities.csv', 'tornado.csv', 'probability.figure.json', 'tornado.figure.json')}
+    path = tmp_path / 'uniform_soft.summary.json'
+    summary = json.loads(path.read_text(encoding='utf-8'))
+    target = summary
+    for key in field[:-1]:
+        target = target[key]
+    target[field[-1]] = value
+    module.write_json(path, summary)
+    with pytest.raises(ValueError, match='summary'):
+        module.write_study(tmp_path, n=12, seed=17)
+    assert outputs == {name: (tmp_path / name).read_bytes() for name in outputs}
+
+
+def test_reuse_requires_every_expected_artifact_digest(tmp_path):
+    module = load_example()
+    module.write_study(tmp_path, n=12, seed=17)
+    path = tmp_path / 'uniform_soft.summary.json'
+    summary = json.loads(path.read_text(encoding='utf-8'))
+    del summary['artifacts']['uniform_soft.samples.csv']
+    module.write_json(path, summary)
+    with pytest.raises(ValueError, match='artifact'):
+        module.write_study(tmp_path, n=12, seed=17)
+
+
+def test_reference_digests_bind_current_sources_inputs_and_outputs():
+    root = Path(__file__).resolve().parents[2]
+    inputs = root / 'examples/data/jackup_soil_sensitivity'
+    reference = inputs / 'reference'
+    manifest = json.loads((reference / 'manifest.json').read_text(encoding='utf-8'))
+    rebuild = ('PYTHONPATH=src python examples/domains/geotechnical/'
+               'jackup_soil_sensitivity.py OUTPUT --samples 10000 --seed 20261028')
+    for group, directory in (('sources', root), ('inputs', inputs), ('outputs', reference)):
+        for name, expected in manifest[group].items():
+            actual = hashlib.sha256((directory / name).read_bytes()).hexdigest()
+            assert actual == expected, f'{group}/{name}: rebuild with {rebuild} and refresh the manifest'
 
 
 def test_cli_refuses_fewer_than_required_samples(tmp_path):

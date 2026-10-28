@@ -13,11 +13,15 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import io
 import json
+import math
 from pathlib import Path
 
 from digitalmodel.geotechnical import soil_sensitivity, spudcan
-from digitalmodel.geotechnical.soil_sensitivity import monte_carlo, tornado, validate_case
+from digitalmodel.geotechnical.soil_sensitivity import (
+    monte_carlo, tornado, validate_case, wilson_interval,
+)
 
 INPUTS = Path(__file__).resolve().parents[2] / 'data' / 'jackup_soil_sensitivity'
 DEFAULT_SEED = 20261028
@@ -25,7 +29,8 @@ DEFAULT_SEED = 20261028
 
 def write_json(path: Path, value: dict) -> None:
     """Serialize finite values with stable keys and portable UTF-8 encoding."""
-    path.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + '\n', encoding='utf-8')
+    path.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + '\n',
+                    encoding='utf-8', newline='\n')
 
 
 def digest(path: Path) -> str:
@@ -45,10 +50,48 @@ def fingerprint(case: dict, n: int, seed: int) -> str:
 
 def write_csv(path: Path, rows: list[dict]) -> None:
     """Write ordered dictionaries using the first row's named columns."""
-    with path.open('w', newline='', encoding='utf-8') as output:
+    with path.open('w', newline='\n', encoding='utf-8') as output:
         writer = csv.DictWriter(output, fieldnames=sorted(rows[0]), lineterminator='\n')
         writer.writeheader()
         writer.writerows(rows)
+
+
+def validate_summary(summary: dict, case: dict, artifacts: dict[str, bytes], n: int, seed: int) -> None:
+    """Check every exported summary value against inputs and verified CSVs."""
+    name = case['name']
+    metadata = {'schema_version': 1, 'name': name, 'basis': case['basis'],
+                'preload_kn': case['input']['preload_kn']}
+    try:
+        if any(summary[key] != value for key, value in metadata.items()):
+            raise ValueError('metadata differs from the named input')
+        count = unsupported = no_loss = total = 0
+        with io.StringIO(artifacts[f'{name}.samples.csv'].decode('utf-8')) as stream:
+            for index, row in enumerate(csv.DictReader(stream)):
+                if (row['sample'] != str(index)
+                        or row['punch_through'] not in ('True', 'False')
+                        or row['unsupported'] not in ('True', 'False')
+                        or (row['margin_kn'] and not math.isfinite(float(row['margin_kn'])))):
+                    raise ValueError('invalid completed sample')
+                total += 1
+                count += row['punch_through'] == 'True'
+                unsupported += row['unsupported'] == 'True'
+                no_loss += row['margin_kn'] == ''
+        if total != n:
+            raise ValueError('completed sample count differs from the requested count')
+        result = {'n': n, 'seed': seed, 'punch_through_count': count,
+                  'probability': count / n, 'interval_95': list(wilson_interval(count, n)),
+                  'unsupported_count': unsupported, 'no_loss_count': no_loss}
+        if (json.dumps(summary['result'], sort_keys=True, allow_nan=False)
+                != json.dumps(result, sort_keys=True, allow_nan=False)):
+            raise ValueError('result differs from the verified samples')
+        with io.StringIO(artifacts[f'{name}.tornado.csv'].decode('utf-8')) as stream:
+            rows = list(csv.DictReader(stream))
+        summary_rows = [{key: '' if value is None else str(value) for key, value in row.items()}
+                        for row in summary['tornado']]
+        if rows != summary_rows:
+            raise ValueError('tornado differs from the verified CSV')
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError(f'{name}: completed summary mismatch') from error
 
 
 def probability_figure(summaries: list[dict]) -> dict:
@@ -124,10 +167,20 @@ def write_study(destination: Path, *, n: int = 10000, seed: int = DEFAULT_SEED) 
             summary = json.loads(summary_path.read_text(encoding='utf-8'))
             if summary['fingerprint'] != key:
                 raise ValueError(f'{name}: completed input/source digest mismatch')
-            for filename, expected in summary['artifacts'].items():
+            artifacts = summary.get('artifacts')
+            expected_names = {f'{name}.{suffix}' for suffix in ('samples.csv', 'cases.json', 'tornado.csv')}
+            if not isinstance(artifacts, dict) or set(artifacts) != expected_names:
+                raise ValueError(f'{name}: completed artifact digest set mismatch')
+            verified = {}
+            for filename in sorted(expected_names):
                 path = destination / filename
-                if not path.is_file() or digest(path) != expected:
+                if not path.is_file():
                     raise ValueError(f'{name}: completed artifact digest mismatch')
+                payload = path.read_bytes()
+                if hashlib.sha256(payload).hexdigest() != artifacts[filename]:
+                    raise ValueError(f'{name}: completed artifact digest mismatch')
+                verified[filename] = payload
+            validate_summary(summary, case, verified, n, seed)
         else:
             result = monte_carlo(case, n=n, seed=seed, sample_path=sample_path)
             rows, cases = tornado(case)
