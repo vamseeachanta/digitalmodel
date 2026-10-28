@@ -26998,21 +26998,21 @@ families:
     body_sha256: 8259d5c4c84e7e2873c1908990bae8e5d39f3e156efc382e9006313e92dd57a2
   - path: src/digitalmodel/geotechnical/anchors.py
     symbol: drag_anchor_capacity
-    line: 61
+    line: 110
     kind: function
     what: Applies existing empirical anchor-efficiency tables.
     relation: independent
     module: geotechnical/anchors.py
-    file_sha256: b08a35629c31d3a456b2912c6be5a6a97f9383b4293e248dc7766edc8e654d19
+    file_sha256: 81a46b8935d52bf19bcf53f3090e2366e7454a05f04b28aa11e626e90d115da8
     body_sha256: db1d1f9434c7128f12f40351d01b13f13a9ecedb361c18759f984efe7062a044
   - path: src/digitalmodel/geotechnical/anchors.py
     symbol: suction_anchor_capacity
-    line: 109
+    line: 158
     kind: function
     what: Combines caisson shaft and reverse tip bearing resistance.
     relation: independent
     module: geotechnical/anchors.py
-    file_sha256: b08a35629c31d3a456b2912c6be5a6a97f9383b4293e248dc7766edc8e654d19
+    file_sha256: 81a46b8935d52bf19bcf53f3090e2366e7454a05f04b28aa11e626e90d115da8
     body_sha256: 1d47ff7e9bd3e78f29fd555954b7254d956930b21cd5cf4e4c7a0fcc66fe2dc6
   - path: src/digitalmodel/geotechnical/mudmat.py
     symbol: bearing_capacity_factors
@@ -54510,7 +54510,7 @@ rejected_candidates:
     implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/anchors.py
   symbol: DragAnchorResult
-  line: 39
+  line: 42
   families:
   - geotechnics
   disposition: needs_review
@@ -54518,7 +54518,7 @@ rejected_candidates:
     implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/anchors.py
   symbol: SuctionAnchorResult
-  line: 51
+  line: 54
   families:
   - geotechnics
   disposition: needs_review
