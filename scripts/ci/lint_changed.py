@@ -27,7 +27,8 @@ EXTRA_RULES = "W605"
 
 
 def git(*args: str) -> str:
-    return subprocess.run(["git", *args], check=True, capture_output=True, text=True).stdout
+    return subprocess.run(["git", *args], check=True, capture_output=True, text=True,
+                          encoding="utf-8", errors="surrogateescape").stdout
 
 
 def changed_python_files(base: str) -> list[str]:
@@ -39,7 +40,7 @@ def findings(path: str, source: str) -> Counter[tuple[str, str]]:
     result = subprocess.run(
         ["ruff", "check", "--force-exclude", "--no-cache", "--output-format", "json",
          "--extend-select", EXTRA_RULES, "--stdin-filename", path, "-"],
-        input=source, capture_output=True, text=True,
+        input=source, capture_output=True, text=True, encoding="utf-8",
     )
     if result.returncode not in (0, 1):
         raise SystemExit(f"ruff failed on {path}: {result.stderr.strip()}")
