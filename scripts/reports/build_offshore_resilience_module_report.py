@@ -396,6 +396,9 @@ def build(scratch: Path, output_dir: Path = DESTINATION) -> None:
     output_dir = Path(output_dir).resolve()
     if (output_dir == ROOT or ROOT in output_dir.parents) and output_dir != DESTINATION:
         raise ValueError("Output inside the checkout must be the named report directory")
+    for name in ("index.html", "changes.json", "README.md", "manifest.json"):
+        if (output_dir / name).is_symlink():
+            raise ValueError("Output targets must not be symlinks")
     outputs = {"index.html": render(calculate()),
                "changes.json": json.dumps(CHANGES, indent=2) + "\n",
                "README.md": readme()}

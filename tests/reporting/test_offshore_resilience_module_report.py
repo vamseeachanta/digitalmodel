@@ -13,6 +13,7 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from html.parser import HTMLParser
@@ -257,3 +258,50 @@ def test_output_cannot_overwrite_unrelated_checkout_files(tmp_path, monkeypatch)
         build.build(tmp_path / "scratch", link)
     assert (disposable_root / "README.md").read_bytes() == before
     assert {path.name for path in disposable_root.iterdir()} == {"README.md"}
+
+
+@pytest.mark.parametrize("name", sorted(DELIVERABLES))
+@pytest.mark.parametrize("dangling", [False, True], ids=["existing", "dangling"])
+@pytest.mark.parametrize("inside_checkout", [False, True], ids=["external", "report"])
+def test_output_file_symlinks_are_rejected_before_any_write(
+    tmp_path, monkeypatch, name, dangling, inside_checkout,
+):
+    """All targets are preflighted; unrelated files and artifacts are preserved."""
+    build = builder()
+    checkout = tmp_path / "checkout"
+    for source in build.SOURCES:
+        destination = checkout / source
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / source, destination)
+    report = checkout / "docs/reports/modules/offshore_resilience"
+    output = report if inside_checkout else tmp_path / "output"
+    output.mkdir(parents=True)
+    unrelated = tmp_path / "unrelated.txt"
+    preserved = b"Unrelated fixture content\n"
+    if not dangling:
+        unrelated.write_bytes(preserved)
+    for artifact in DELIVERABLES - {name}:
+        (output / artifact).write_bytes(b"Existing artifact\n")
+    (output / name).symlink_to(unrelated)
+    before = {artifact: hashlib.sha256((output / artifact).read_bytes()).hexdigest()
+              for artifact in DELIVERABLES - {name}}
+    sources_before = {source: hashlib.sha256((checkout / source).read_bytes()).hexdigest()
+                      for source in build.SOURCES}
+    monkeypatch.setattr(build, "ROOT", checkout)
+    monkeypatch.setattr(build, "DESTINATION", report)
+    with pytest.raises(ValueError, match="Output targets must not be symlinks"):
+        build.build(tmp_path / "scratch", output)
+    assert {path.name for path in output.iterdir()} == DELIVERABLES
+    assert (output / name).is_symlink()
+    assert (output / name).readlink() == unrelated
+    assert unrelated.exists() is not dangling
+    if not dangling:
+        assert unrelated.read_bytes() == preserved
+    assert before == {
+        artifact: hashlib.sha256((output / artifact).read_bytes()).hexdigest()
+        for artifact in DELIVERABLES - {name}
+    }
+    assert sources_before == {
+        source: hashlib.sha256((checkout / source).read_bytes()).hexdigest()
+        for source in build.SOURCES
+    }
