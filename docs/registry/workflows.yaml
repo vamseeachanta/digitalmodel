@@ -1360,3 +1360,16 @@ workflows:
     result:
       kind: in_memory
       key: on_bottom_stability_e305_result
+
+  - id: hull-wastage-screen
+    basename: hull_wastage_screen
+    title: Hull-structure wastage analysis from representative thickness inputs
+    input: examples/workflows/hull-wastage-screen/input.yml
+    outputs:
+      - examples/workflows/hull-wastage-screen/results/hull-wastage.json
+      - examples/workflows/hull-wastage-screen/results/hull-wastage.html
+    test: tests/asset_integrity/hull_wastage_screen/test_workflow.py::test_example_workflow
+    runtime: offline
+    result:
+      kind: in_memory
+      key: hull_wastage_screen

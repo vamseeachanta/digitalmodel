@@ -58,7 +58,14 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
     if workflow.get("runtime", "offline") != "offline":
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
 
+    output_root = REPO_ROOT
     input_path = REPO_ROOT / workflow["input"]
+    if workflow["id"] == "hull-wastage-screen":
+        # Each run retains its outputs, so execute the example in a fresh tree.
+        output_root = tmp_path
+        input_path = output_root / workflow["input"]
+        input_path.parent.mkdir(parents=True)
+        input_path.write_bytes((REPO_ROOT / workflow["input"]).read_bytes())
     if workflow["id"] == "fowt-mooring":
         (tmp_path / "wikis").mkdir()
         monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
@@ -89,7 +96,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
     assert cfg["basename"] == workflow["basename"]
 
     for output in workflow["outputs"]:
-        assert (REPO_ROOT / output).exists()
+        assert (output_root / output).exists()
 
     if workflow["id"] == "catenary":
         assert cfg["S"] == pytest.approx(173.2050808)
@@ -1742,6 +1749,21 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert len(result["scans"]) == len(result["placements"]) == 4
         assert result["rollup"]["n_joints"] == 26
         assert len(result["provenance"]["sources"]) == 6
+    elif workflow["id"] == "hull-wastage-screen":
+        result = cfg["hull_wastage_screen"]["result"]
+        assert result["elements"][0]["renewal_mm"] == pytest.approx(8.0)
+        assert result["elements"][0]["status"] == "MONITOR"
+        assert result["status"] == "NOT_EVALUATED"
+        outputs = [output_root / output for output in workflow["outputs"]]
+        numeric, report = outputs
+        assert json.loads(numeric.read_text(encoding="utf-8")) == result
+        html = report.read_text(encoding="utf-8")
+        assert "Hull-structure wastage analysis" in html
+        assert "MONITOR" in html and "NOT_EVALUATED" in html
+        retained = {path: path.read_bytes() for path in outputs}
+        with pytest.raises(FileExistsError, match="retain previous analysis"):
+            engine(inputfile=str(input_path))
+        assert {path: path.read_bytes() for path in outputs} == retained
     elif workflow["id"] == "pipeline-corroded-defect-screen":
         result = cfg["pipeline_defect_screen"]
         assert len(result["methods"]) == 6
