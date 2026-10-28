@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .domain_builder import DomainBuilder
 from .hull_manifest import HullManifest
@@ -46,6 +46,10 @@ __all__ = [
     "UPSTREAM_LPP",
     "HullDomain",
     "HullDomainError",
+    "HullWakeCoverage",
+    "HullWakeExtent",
+    "HullWakeExtentError",
+    "preflight_wake_extent",
     "block_divisions",
     "build_hull_domain",
     "refinement_boxes",
@@ -160,6 +164,224 @@ class HullDomain:
     @property
     def volume(self) -> float:
         return self.length * self.width * self.height
+
+
+@dataclass(frozen=True)
+class HullWakeCoverage:
+    """Available horizontal coverage in one domain or refinement box."""
+
+    name: str
+    aft_extent_m: float
+    lateral_half_width_m: float
+    wake_wavelengths: float
+    meets_requirement: bool
+
+    def to_provenance(self) -> Dict[str, Any]:
+        """Return named coverage quantities with explicit units."""
+        return {
+            "name": self.name,
+            "aft_extent_m": self.aft_extent_m,
+            "lateral_half_width_m": self.lateral_half_width_m,
+            "wake_wavelengths": self.wake_wavelengths,
+            "meets_requirement": self.meets_requirement,
+        }
+
+
+@dataclass(frozen=True)
+class HullWakeExtent:
+    """Geometric preflight result, also retained on a coverage refusal."""
+
+    speed_m_s: float
+    gravity_m_s2: float
+    required_wake_wavelengths: float
+    wedge_half_angle_deg: float
+    wavelength_m: float
+    stern_x_m: float
+    bow_x_m: float
+    hull_half_beam_m: float
+    required_aft_extent_m: float
+    required_aft_x_m: float
+    required_lateral_half_width_m: float
+    domain: HullWakeCoverage
+    boxes: Tuple[HullWakeCoverage, ...]
+
+    @property
+    def meets_requirement(self) -> bool:
+        """Whether the domain and every supplied stage cover the envelope."""
+        return self.domain.meets_requirement and all(
+            box.meets_requirement for box in self.boxes
+        )
+
+    def to_provenance(self) -> Dict[str, Any]:
+        """Return JSON-compatible required and achieved geometric coverage."""
+        coverage = (self.domain, *self.boxes)
+        return {
+            "status": "PASS" if self.meets_requirement else "FAIL",
+            "speed_m_s": self.speed_m_s,
+            "gravity_m_s2": self.gravity_m_s2,
+            "wedge_half_angle_deg": self.wedge_half_angle_deg,
+            "wavelength_m": self.wavelength_m,
+            "stern_x_m": self.stern_x_m,
+            "bow_x_m": self.bow_x_m,
+            "hull_half_beam_m": self.hull_half_beam_m,
+            "required": {
+                "wake_wavelengths": self.required_wake_wavelengths,
+                "aft_extent_m": self.required_aft_extent_m,
+                "aft_x_m": self.required_aft_x_m,
+                "lateral_half_width_m": self.required_lateral_half_width_m,
+            },
+            "achieved": {
+                "aft_extent_m": min(c.aft_extent_m for c in coverage),
+                "lateral_half_width_m": min(c.lateral_half_width_m for c in coverage),
+                "wake_wavelengths": min(c.wake_wavelengths for c in coverage),
+            },
+            "domain": self.domain.to_provenance(),
+            "boxes": [box.to_provenance() for box in self.boxes],
+            "basis": (
+                "lambda = 2*pi*speed^2/gravity; aft extent starts at the actual "
+                "stern; the wedge starts at the bow with the hull half beam; "
+                "aft half width = half_beam + (bow_x - aft_x)*tan(half_angle). "
+                "Achieved wavelengths are limited by both aft and lateral reach."
+            ),
+            "limits": (
+                "geometry only, assuming linear deep-water dispersion; no depth "
+                "validity, cell resolution, wave amplitude, mesh quality, "
+                "reflection or CFD accuracy assessment; boxes are not resized "
+                "and the solver builder is not changed"
+            ),
+        }
+
+
+class HullWakeExtentError(HullDomainError):
+    """Unsupported inputs or inadequate coverage; a shortfall retains its report."""
+
+    def __init__(self, message: str, report: Optional[HullWakeExtent] = None) -> None:
+        """Store the report when valid geometry fails the requested coverage."""
+        super().__init__(message)
+        self.report = report
+
+
+def preflight_wake_extent(
+    manifest: HullManifest,
+    domain: HullDomain,
+    boxes: Sequence[Box],
+    *,
+    speed_m_s: float,
+    gravity_m_s2: float,
+    required_wake_wavelengths: float,
+    wedge_half_angle_deg: float,
+) -> HullWakeExtent:
+    """Check supplied boxes without changing geometry or writing case files.
+
+    Every criterion is mandatory. This API supports the existing half domain:
+    flow in negative x, centreplane y=0, waterline strictly inside every box.
+    Each stage must contain the hull and the entire bow-origin wedge through
+    N wavelengths aft of the stern. Nested axis-aligned boxes cover that wedge
+    exactly when they contain its bounding rectangle at the waterline.
+
+    Basis: linear deep-water dispersion omega**2=g*k and U=omega/k imply
+    lambda=2*pi*U**2/g (also used by hull_free_surface.deep_water_wavelength).
+    See "Ship wakes: Kelvin or Mach angle?" (2013), pp. 1-2,
+    https://arxiv.org/abs/1304.2653, for the dispersion and wavelength basis.
+    Example and test criteria are synthetic, not engineering recommendations.
+    The widening is right-triangle geometry, not a prescribed wake angle.
+    The open angular interval (0, 90 degrees) excludes a degenerate wedge and
+    an unbounded tangent. No engineering acceptance threshold is inferred.
+    """
+    # Local import avoids the existing free-surface module's constant import.
+    from .hull_free_surface import deep_water_wavelength
+
+    for name, value in (
+        ("speed_m_s", speed_m_s),
+        ("gravity_m_s2", gravity_m_s2),
+        ("required_wake_wavelengths", required_wake_wavelengths),
+    ):
+        if not math.isfinite(value) or value <= 0:
+            raise HullWakeExtentError(f"{name} must be finite and positive")
+    if not math.isfinite(wedge_half_angle_deg) or not 0 < wedge_half_angle_deg < 90:
+        raise HullWakeExtentError("wedge_half_angle_deg must be finite and between 0 and 90")
+
+    bounds = _wake_domain_bounds(domain)
+    if not boxes:
+        raise HullWakeExtentError("at least one refinement box is required; boxes are empty")
+    for stage, (lo, hi) in enumerate(boxes, start=1):
+        if (len(lo) != 3 or len(hi) != 3
+                or not all(math.isfinite(v) for v in (*lo, *hi))
+                or not all(a < b for a, b in zip(lo, hi))):
+            raise HullWakeExtentError(f"box {stage} must have finite, ordered 3D bounds")
+        if not all(bounds[0][i] <= lo[i] < hi[i] <= bounds[1][i] for i in range(3)):
+            raise HullWakeExtentError(f"box {stage} lies outside domain bounds")
+        if not lo[2] < domain.waterline < hi[2]:
+            raise HullWakeExtentError(f"box {stage} must straddle the waterline")
+    assert_boxes_contain_hull(manifest, domain, boxes)
+    for outer, inner in zip(boxes, boxes[1:]):
+        assert_inner_inside_outer(inner, outer)
+
+    stern, bow = manifest.bbox_min_m[0], manifest.bbox_max_m[0]
+    half_beam = max(manifest.half_beam_m, -manifest.bbox_min_m[1])
+    if (not all(math.isfinite(v) for v in (stern, bow, half_beam))
+            or not stern < bow or half_beam <= 0):
+        raise HullWakeExtentError("hull must have finite ordered x bounds and positive half beam")
+    if not bounds[0][0] <= stern < bow <= bounds[1][0] or -half_beam < bounds[0][1]:
+        raise HullWakeExtentError("hull horizontal envelope lies outside domain bounds")
+
+    for stage, (_, hi) in enumerate(boxes, start=1):
+        if hi[0] < bow or hi[1] != domain.y_centreplane:
+            raise HullWakeExtentError(f"box {stage} must contain the bow and centreplane")
+
+    wavelength = deep_water_wavelength(speed_m_s, gravity=gravity_m_s2)
+    reach = required_wake_wavelengths * wavelength
+    aft_x = stern - reach
+    slope = math.tan(math.radians(wedge_half_angle_deg))
+    if not math.isfinite(slope) or slope <= 0:
+        raise HullWakeExtentError("wedge_half_angle_deg must produce a finite positive tangent")
+    width = half_beam + (bow - aft_x) * slope
+    if (not all(math.isfinite(v) for v in (wavelength, reach, aft_x, width))
+            or wavelength <= 0 or reach <= 0 or aft_x >= stern):
+        raise HullWakeExtentError("inputs must produce finite, positive, representable wake extents")
+
+    failures = []
+
+    def coverage(name: str, box: Box) -> HullWakeCoverage:
+        lo, _ = box
+        aft = stern - lo[0]
+        lateral = -lo[1]
+        # Invert b+(bow-stern+reach)*tan(angle) <= lateral for reach.
+        lateral_reach = (lateral - half_beam) / slope - (bow - stern)
+        supported = max(0.0, min(aft, lateral_reach)) / wavelength
+        if not all(math.isfinite(v) for v in (aft, lateral, supported)):
+            raise HullWakeExtentError(f"{name} coverage must be finite and serializable")
+        aft_ok, lateral_ok = lo[0] <= aft_x, lateral >= width
+        if not aft_ok:
+            failures.append(f"{name} aft extent is insufficient")
+        if not lateral_ok:
+            failures.append(f"{name} lateral envelope is insufficient")
+        return HullWakeCoverage(name, aft, lateral, supported, aft_ok and lateral_ok)
+
+    report = HullWakeExtent(
+        speed_m_s, gravity_m_s2, required_wake_wavelengths, wedge_half_angle_deg,
+        wavelength, stern, bow, half_beam, reach, aft_x, width, coverage("domain", bounds),
+        tuple(coverage(f"box {stage}", box) for stage, box in enumerate(boxes, start=1)),
+    )
+    if failures:
+        raise HullWakeExtentError("; ".join(failures), report)
+    return report
+
+
+def _wake_domain_bounds(domain: HullDomain) -> Box:
+    """Refuse unsupported coordinates and invalid free-surface domains."""
+    z = domain.z_levels
+    if (not domain.half_domain or domain.y_centreplane != 0
+            or domain.flow_direction != (-1.0, 0.0, 0.0)):
+        raise HullWakeExtentError("domain must be a y=0 half domain with flow in negative x")
+    if (len(z) < 2 or not all(math.isfinite(v) for v in (
+            domain.x_outlet, domain.x_inlet, domain.y_side, domain.waterline, *z))
+            or not domain.x_outlet < domain.x_inlet or not domain.y_side < 0
+            or not all(a < b for a, b in zip(z, z[1:]))
+            or not z[0] < domain.waterline < z[-1]):
+        raise HullWakeExtentError("domain must have finite ordered bounds and straddle the waterline")
+    return ((domain.x_outlet, domain.y_side, z[0]),
+            (domain.x_inlet, domain.y_centreplane, z[-1]))
 
 
 def build_hull_domain(
