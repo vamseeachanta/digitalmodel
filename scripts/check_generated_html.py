@@ -71,6 +71,16 @@ class Generator:
 
 GENERATORS = (
     Generator(
+        "scripts/capabilities/build_self_elevating_monitoring.py",
+        ("docs/api/hydro/self-elevating-monitoring.html",),
+        inputs=(
+            "pyproject.toml",
+            "scripts/capabilities/build_self_elevating_monitoring.py",
+            "scripts/capabilities/self_elevating_monitoring.html.template",
+            "src/digitalmodel/marine_ops/self_elevating_monitoring.py",
+        ),
+    ),
+    Generator(
         "examples/demos/asset_integrity/ffs_showcase.py",
         ("docs/api/ffs/ffs-showcase.html",),
         inputs=("examples/demos/asset_integrity/ffs_showcase.py",),
