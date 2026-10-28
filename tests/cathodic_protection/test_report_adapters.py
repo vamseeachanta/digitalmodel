@@ -1146,20 +1146,46 @@ def test_comparison_wording_check_rejects_summary_injection(name: str, title: st
         _assert_comparison_only_wording(injected)
 
 
-def _assert_no_standard_value_sources(html: str) -> None:
-    """Reject numerical table rows attributed to a licensed standard."""
-    standard = re.compile(r"DNV[\s-]*RP[\s-]*B\s*401", re.I)
+_LICENSED_STANDARD = re.compile(r"DNV[\s-]*RP[\s-]*B\s*401", re.I)
+# An edition year or a clause, table, section, figure, annex or equation number.
+_STANDARD_LOCATOR = re.compile(
+    r"\b(?:19|20)\d{2}\b"
+    r"|\b(?:table|clause|section|sec\.|figure|fig\.|annex|appendix|equation|eq\.)\s*[A-Z]?\d"
+    r"|\u00a7\s*\d",
+    re.I,
+)
+# More numeric rows than this from one standard in one table reads as a copied table.
+MAX_CITED_STANDARD_ROWS = 5
+
+
+def _assert_standard_values_cited_not_copied(html: str) -> None:
+    """Allow cited standard values; reject uncited values and whole copied tables.
+
+    Quoting a licensed standard's values with a citation is allowed (maintainer
+    ruling, 28 Oct 2026); original documents and whole tables or sections are not.
+    A numeric row whose source cell names the standard must also cite its edition
+    or a clause, table or section, and one table may carry at most
+    ``MAX_CITED_STANDARD_ROWS`` such rows.
+    """
     for table in re.findall(r"<table\b.*?</table>", html, re.S):
         heading = re.search(r"<tr>(.*?)</tr>", table, re.S)
         if heading is None:
             continue
         columns = [_visible_text(c).lower() for c in re.findall(r"<th[^>]*>(.*?)</th>", heading[1], re.S)]
         source_indices = [i for i, c in enumerate(columns) if re.search(r"source|basis|reference|locator", c)]
+        attributed = 0
         for row in re.findall(r"<tr>(.*?)</tr>", table, re.S):
             cells = [_visible_text(c) for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)]
-            for i in source_indices:
-                if i < len(cells) and standard.search(cells[i]):
-                    assert not any(re.search(r"\d", c) for j, c in enumerate(cells) if j != i), cells[0]
+            hits = [i for i in source_indices if i < len(cells) and _LICENSED_STANDARD.search(cells[i])]
+            if not hits or not any(re.search(r"\d", c) for j, c in enumerate(cells) if j not in hits):
+                continue
+            assert any(_STANDARD_LOCATOR.search(_LICENSED_STANDARD.sub("", cells[i])) for i in hits), (
+                f"uncited standard value: {cells[0]}"
+            )
+            attributed += 1
+        assert attributed <= MAX_CITED_STANDARD_ROWS, (
+            f"{attributed} rows sourced to one standard in one table (limit {MAX_CITED_STANDARD_ROWS})"
+        )
 
 
 @pytest.mark.parametrize("name,title", _ANALYSIS_CASES)
@@ -1167,7 +1193,7 @@ def test_analysis_design_values_have_declared_sources(name: str, title: str) -> 
     """Design inputs retain numbers while sources distinguish papers and assumptions."""
     spec = anode_design_report(_run(name))
     html = render_html(spec)
-    _assert_no_standard_value_sources(html)
+    _assert_standard_values_cited_not_copied(html)
     table = _tables(spec)["Design input sources" if name == "reference_jacket_60m_members" else "Design data"]
     for quantity in ("Utilisation factor", "Electrochemical capacity"):
         row = next(r for r in table.rows if r[0] == quantity)
@@ -1187,11 +1213,43 @@ def test_analysis_design_values_have_declared_sources(name: str, title: str) -> 
 
 @pytest.mark.parametrize("name,title", _ANALYSIS_CASES)
 def test_standard_source_check_rejects_injected_numeric_row(name: str, title: str) -> None:
-    """The source-column rule is checked with an injected negative control."""
+    """An injected standard-sourced value without edition or clause is rejected."""
     html = render_html(anode_design_report(_run(name)))
     html += '<table><tr><th>Value</th><th>Source</th></tr><tr><td>1</td><td>dnv rp b401</td></tr></table>'
-    with pytest.raises(AssertionError):
-        _assert_no_standard_value_sources(html)
+    with pytest.raises(AssertionError, match="uncited"):
+        _assert_standard_values_cited_not_copied(html)
+
+
+@pytest.mark.parametrize("name,title", _ANALYSIS_CASES)
+def test_standard_source_check_accepts_injected_cited_row(name: str, title: str) -> None:
+    """A standard-sourced value that cites its edition and table is accepted."""
+    html = render_html(anode_design_report(_run(name)))
+    html += ('<table><tr><th>Value</th><th>Source</th></tr>'
+             '<tr><td>0.90</td><td>DNV-RP-B401 (2021), Table 10-8</td></tr></table>')
+    _assert_standard_values_cited_not_copied(html)
+
+
+def _standard_table(rows: int) -> str:
+    body = "".join(
+        f"<tr><td>{0.1 * (k + 1):.2f}</td><td>DNV-RP-B401 (2021), Table 10-{k + 1}</td></tr>"
+        for k in range(rows)
+    )
+    return f"<table><tr><th>Value</th><th>Source</th></tr>{body}</table>"
+
+
+def test_standard_source_check_rejects_whole_copied_table() -> None:
+    """Cited rows up to the limit pass; one more in the same table is a copied table."""
+    _assert_standard_values_cited_not_copied(_standard_table(MAX_CITED_STANDARD_ROWS))
+    with pytest.raises(AssertionError, match="rows sourced to one standard"):
+        _assert_standard_values_cited_not_copied(_standard_table(MAX_CITED_STANDARD_ROWS + 1))
+
+
+def test_standard_source_check_rejects_year_only_in_value_column() -> None:
+    """The citation must sit in the source cell; the standard's own number is not a locator."""
+    html = ('<table><tr><th>Value</th><th>Source</th></tr>'
+            '<tr><td>2021</td><td>DNV RP B401</td></tr></table>')
+    with pytest.raises(AssertionError, match="uncited"):
+        _assert_standard_values_cited_not_copied(html)
 
 
 def test_reference_example_inputs_are_labelled_individually() -> None:
