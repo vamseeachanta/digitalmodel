@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, Dict
 # in the emitted mesh that no test comparing the two would attribute to
 # formatting.
 from .hull_case_dicts import _fmt, _vec, surfaces_provenance
+from .near_wall_acceptance import pending_near_wall
 from .region_refinement import finest_in_plane_cell
 from .hull_case_regions import region_tokens
 
@@ -312,6 +313,7 @@ def _mesh_provenance(derivation: "DoubleBodyDerivation") -> Dict[str, Any]:
             "The post-mesh face-area gate (#2033) scores the written hull "
             "patch against it."
         ),
+        "near_wall_acceptance": pending_near_wall(),
         "wall_normal_first_cell_height_m": derivation.first_cell_height,
         "y_plus_target": derivation.config.y_plus_target,
         "wall_resolution_note": (
