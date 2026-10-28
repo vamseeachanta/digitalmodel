@@ -46,4 +46,9 @@ python -m digitalmodel.solvers.orcaflex.modular_generator validate --input examp
 python -m digitalmodel.solvers.orcaflex.modular_generator campaign --help
 ```
 
-Generator retirement and conversion changes are outside this interface change.
+## Plan-lite
+
+The console entry point will delegate to the existing validated generator,
+retaining mandatory post-validation. Synthetic subprocess tests will cover
+arguments, failure preservation and direct-generation equality. Generator
+retirement and conversion refactors will remain outside this slice.
