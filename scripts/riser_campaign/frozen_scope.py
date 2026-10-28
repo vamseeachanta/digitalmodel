@@ -178,7 +178,7 @@ def _turning_points(shape: list[list[float]]) -> list[list[float]]:
 
 
 def _mesh_sections(scope: dict[str, str], g: dict[str, Any], c: dict[str, Any]) -> list[list[Any]]:
-    """Place fine windows on fixed material stations over the offset envelope."""
+    """Place graded counted sections on fixed material fine-window stations."""
     total = g["installed_length_m"]
     hotspots = [0.0, *[row["suspended_length_m"] for row in g["offsets"]]]
     buoyed_start, buoyed_end = g["buoyancy_start_m"], g["buoyancy_end_m"]
@@ -200,7 +200,44 @@ def _mesh_sections(scope: dict[str, str], g: dict[str, Any], c: dict[str, Any]) 
         fine = any(a <= middle <= b for a, b in windows)
         step = c["numerics"]["fine_segment_m" if fine else "coarse_segment_m"]
         sections.append([kind, right-left, step])
-    return sections
+    return _grade_mesh(sections)
+
+
+def _grade_mesh(targets: list[list[Any]]) -> list[list[Any]]:
+    """Refine boundary cells until adjacent Length/NumberOfSegments <= 2.
+
+    Ceiling counts first keep every element within its local target. At an
+    abrupt join, bisect only the larger boundary cell, retaining the remaining
+    coarse interior. Recheck both sides after each split, including material
+    joins and short overlapping fine windows. Each split preserves the section
+    length and line type; no physical boundary is moved. Explicit native counts
+    avoid delegating the transition criterion to target-length rounding.
+    """
+    sections = []
+    for kind, length, target in targets:
+        if not all(math.isfinite(v) and v > 0 for v in (length, target)):
+            raise ValueError("mesh lengths and targets must be finite and positive")
+        sections.append([kind, length, math.ceil(length / target)])
+    while True:
+        for index in range(len(sections) - 1):
+            left = sections[index][1] / sections[index][2]
+            right = sections[index + 1][1] / sections[index + 1][2]
+            if max(left / right, right / left) <= 2.0:
+                continue
+            larger = index if left > right else index + 1
+            kind, length, count = sections[larger]
+            if count == 1:
+                sections[larger] = [kind, length, 2]
+            else:
+                cell = length / count
+                edge = [kind, cell, 2]
+                interior = [kind, length - cell, count - 1]
+                sections[larger:larger + 1] = (
+                    [interior, edge] if larger == index else [edge, interior]
+                )
+            break
+        else:
+            return sections
 
 
 def expand_loads(t: dict[str, Any], c: dict[str, Any] | None = None) -> list[dict[str, Any]]:
@@ -307,7 +344,7 @@ def native_model(scope: dict[str, str], load: dict[str, Any], g: dict[str, Any],
                 "EndAConnection": "floater", "EndAX": 0, "EndAY": 0, "EndAZ": g["hangoff_m"][2],
                 "EndBConnection": "Fixed", "EndBX": g["anchor_m"][0], "EndBY": 0, "EndBZ": g["anchor_m"][2],
                 "ConnectionxBendingStiffness, ConnectionyBendingStiffness": [[0, None], [0, None]],
-                "LineType, Length, TargetSegmentLength": sections,
+                "LineType, Length, NumberOfSegments": sections,
                 "ContentsMethod": "Uniform", "ContentsDensity": c["properties"]["contents_density_kg_m3"]/1000,
                 "ContentsPressureRefZ": 0, "ContentsPressure": float(scope["design_pressure_MPa_g"])*1000,
                 "IncludedInStatics": "Yes", "StaticsStep1": "Catenary", "StaticsStep2": "Full statics"}}]}})

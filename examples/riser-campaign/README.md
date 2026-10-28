@@ -32,6 +32,7 @@ its native input templates remain unreleased pending readback and motion clearan
 | 1 | 2026-10-25 | Define an assumed comparison matrix and reproducible inputs for later licensed analysis. |
 | 2 | 2026-10-25 | Place inputs under examples and bind each input group to explicit source terms, versions and digests. |
 | 3 | 2026-10-26 | Add the frozen twelve-section tranche, depth-dependent pressure and three-sea expansion with explicit release gates. |
+| 4 | 2026-10-28 | Grade frozen mesh transitions with explicit segment counts and retain a solver-free audit for native readback. |
 
 ## Matrix and existing code
 
@@ -143,6 +144,67 @@ resistance qualification. Mesh targets are 3 m coarse and 0.5 m fine, with
 20 m fine windows around hang-off, the analytical touchdown envelope, buoyancy
 transitions and sag/hog material stations. The fine-window width is inherited
 from the existing catenary template and remains an assumed starting mesh.
+Frozen inputs now emit `LineType, Length, NumberOfSegments`. Initial counts
+round upward so actual elements do not exceed their local targets. At each
+abrupt join, the larger boundary cell is bisected until both directions of
+every adjacent Length/NumberOfSegments ratio are at most 2.0. This also checks
+material joins and short overlaps between fine windows. The remaining coarse
+interiors are retained. Splitting preserves interval length and line type;
+the installed length, physical properties and buoyancy boundaries do not move.
+
+### Solver-free mesh audit and native handoff
+
+The [mesh review packet](../../docs/verification/riser-mesh-review.json) records
+the reviewed reference revision, source and test digests, generated index digest,
+case order, all 144 frozen input digests and the twelve transition audits.
+Ratios are evaluated on the serialized Length/NumberOfSegments values, with
+both directions checked at every join. Display bounds round upward to one
+decimal place; acceptance uses unrounded values and the unchanged 2.0 limit.
+Geometry and section-property bytes and every model field outside the mesh
+table are compared with output generated from the reviewed reference source.
+The original 288 comparison inputs and the frozen scope, criteria, load ledger,
+manifest and basis retain their reference bytes. The two committed worked
+examples belong to the original comparison and do not require regeneration.
+
+The audit is solver-free. It does not establish native MR0, G1 loading, statics,
+baseline stress, perturbation stiffness or dynamic qualification. The following
+steps remain required before dependent calculations:
+
+1. Obtain independent review of the exact packet, source and input bytes. Any
+   subsequent byte change invalidates that review and requires a fresh packet.
+2. Obtain a current-revision release from the maintainer. Verify the packet,
+   generated index, source snapshots and each input digest before loading.
+   Retain the packet's case order and use the R10-W1 SCR/SLWR nominal pair for
+   the first native readback.
+3. Read back native Length and NumberOfSegments for every section and check
+   positive integer counts and both adjacent ratios against 2.0. Compare total
+   length, endpoints, buoyancy arcs, properties, offsets, headings, pressures
+   and environments with the packet. Check centreline/contact interpretation
+   and retain all messages. Stop on a digest mismatch, renewed MR0 failure,
+   load failure, changed physical input or undisposed warning.
+4. Qualify matching native equilibria, whole-line baseline stress at both
+   fibres and the 1 mm transverse, 15 s stiffness perturbation with linearity
+   QA. Retain the existing 1.0 % allowable-stress uncertainty budget; a failure
+   requires targeted refinement and disposition. Statics remain independent
+   of RAO clearance; dynamic inputs remain blocked on qualified motions and
+   matching converged equilibria.
+5. Select the four governing QA statics and ten QA dynamics/fatigue inputs
+   from completed native responses. Their pending status does not change.
+   Separate hydrodynamic and robustness qualification remains outstanding.
+
+To reproduce the audit, retain a reference output generated from the reviewed
+revision and a candidate output from the current generator, then run:
+
+```bash
+PYTHONPATH=src:. uv run python -m scripts.riser_campaign.audit_mesh \
+  --reference-dir <reference-output> --candidate-dir <candidate-output> \
+  --reference-revision <reviewed-revision> --output <new-audit-file>
+```
+
+The audit checks reference source snapshots against Git, verifies each indexed
+file before comparing it and refuses changed physical fields or failing mesh
+ratios. Candidate source snapshots must match the current working bytes. It
+preserves existing outputs and rejects a mismatching existing audit file.
 
 The analytical reference uses the 1490 m hang-off separation and transforms
 ASB elevation to global z by subtracting the physical 1500 m water depth. The

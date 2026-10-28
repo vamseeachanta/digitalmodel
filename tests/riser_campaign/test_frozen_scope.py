@@ -209,7 +209,7 @@ def test_native_fields_and_fatigue_seas(kind):
         assert section["SeabedLateralFrictionCoefficient"] == 0.5
         assert section["StressOD"] == 0.2731
         assert section["StressID"] == pytest.approx(0.2731 - 2 * 0.0194)
-    assert sum(r[1] for r in line["LineType, Length, TargetSegmentLength"]) == pytest.approx(g["installed_length_m"])
+    assert sum(r[1] for r in line["LineType, Length, NumberOfSegments"]) == pytest.approx(g["installed_length_m"])
     wave = model["Environment"]["WaveTrains"][0]
     if kind == "fatigue":
         assert wave["WaveType"] == "JONSWAP"
@@ -260,7 +260,11 @@ def test_all_native_loads_have_exact_offset_pressure_current_and_seas(tmp_path):
             model = yaml.safe_load((tmp_path / "all-loads" / item["path"]).read_text(encoding="utf-8"))
             line, env = model["Lines"][0], model["Environment"]
             anchors.append((line["EndBX"], line["EndBY"], line["EndBZ"]))
-            sections = line["LineType, Length, TargetSegmentLength"]
+            sections = line["LineType, Length, NumberOfSegments"]
+            assert all(type(count) is int and count > 0 and length > 0
+                       for _, length, count in sections)
+            sizes = [length / count for _, length, count in sections for _ in range(count)]
+            assert all(max(a / b, b / a) <= 2.0 for a, b in zip(sizes, sizes[1:]))
             lengths.append(sum(r[1] for r in sections))
             arcs.append([r[1] for r in sections])
             assert model["Vessels"][0]["InitialPosition"][0] == -item["span_offset_m"]
@@ -291,8 +295,9 @@ def test_mesh_has_coarse_spans_and_fine_material_hotspots(index):
     g = api().prepare_geometry(scope)
     load = next(r for r in api().expand_loads(tranche()) if r["case_id"] == scope["case_id"])
     model = api().native_model(scope, load, g)
-    sections = model["Lines"][0]["LineType, Length, TargetSegmentLength"]
-    assert {s[2] for s in sections} == {0.5, 3}
+    sections = model["Lines"][0]["LineType, Length, NumberOfSegments"]
+    assert max(length / count for _, length, count in sections) <= 3
+    assert max(length / count for _, length, count in sections) > 2.5
     hotspots = [0, *[r["suspended_length_m"] for r in g["offsets"]]]
     if scope["configuration"] == "SLWR":
         hotspots += [g["buoyancy_start_m"], g["buoyancy_end_m"]]
@@ -303,11 +308,11 @@ def test_mesh_has_coarse_spans_and_fine_material_hotspots(index):
     for station in hotspots:
         start = 0
         covering = []
-        for _, length, step in sections:
+        for _, length, count in sections:
             if start - 1e-6 <= station <= start + length + 1e-6:
-                covering.append(step)
+                covering.append(length / count)
             start += length
-        assert covering and set(covering) == {0.5}
+        assert covering and max(covering) <= 0.5
 
 
 @pytest.mark.parametrize("duplicate", [False, True])

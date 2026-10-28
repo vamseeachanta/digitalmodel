@@ -126,3 +126,5 @@ src/digitalmodel/solvers/orcaflex/modular_generator/schema/environment.py text e
 src/digitalmodel/solvers/orcaflex/yaml_utils.py text eol=lf
 docs/domains/orcaflex/library/campaigns/generic-scr-slwr/basis.yml text eol=lf
 src/digitalmodel/materials/grades.py text eol=lf
+docs/verification/riser-mesh-review.json text eol=lf
+scripts/riser_campaign/audit_mesh.py text eol=lf

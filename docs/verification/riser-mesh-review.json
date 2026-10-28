@@ -1,0 +1,1662 @@
+{
+  "adjacent_element_ratio_limit": 2.0,
+  "candidate_index": {
+    "bytes": 214027,
+    "path": "index.json",
+    "sha256": "3843d0537e5f0eb7d41b40818b8c631ffdb71552d61cd1bf68ff345d90e9cb2a"
+  },
+  "case_order": [
+    "R08-W1-SCR",
+    "R08-W1-SLWR",
+    "R08-W2-SCR",
+    "R08-W2-SLWR",
+    "R10-W1-SCR",
+    "R10-W1-SLWR",
+    "R10-W2-SCR",
+    "R10-W2-SLWR",
+    "R12-W1-SCR",
+    "R12-W1-SLWR",
+    "R12-W2-SCR",
+    "R12-W2-SLWR"
+  ],
+  "counts": {
+    "pending": {
+      "dynamics_including_fatigue": 10,
+      "statics": 4
+    },
+    "planned": {
+      "dynamics_including_fatigue": 70,
+      "statics": 88
+    },
+    "written": {
+      "dynamics": 24,
+      "fatigue": 36,
+      "statics": 84
+    }
+  },
+  "inputs": [
+    {
+      "bytes": 4198,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--Q0",
+      "kind": "statics",
+      "path": "R08-W1-SCR/R08-W1-SCR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "3b7e6a48c8eaa8501cc159982f6c62369c552c2d18a86c31a35cc5b337c48e9c"
+    },
+    {
+      "bytes": 4205,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--S--90-15",
+      "kind": "statics",
+      "path": "R08-W1-SCR/R08-W1-SCR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "d49935655416c48a5c9a7130dfd3af289169a02572bb16120df772adaa343a44"
+    },
+    {
+      "bytes": 4208,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--S--90-195",
+      "kind": "statics",
+      "path": "R08-W1-SCR/R08-W1-SCR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "c2c476978a6787235cfc357e642ee2b5d2850e47ea5bc7f77d6e7070f54139f1"
+    },
+    {
+      "bytes": 4204,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--S-+0-15",
+      "kind": "statics",
+      "path": "R08-W1-SCR/R08-W1-SCR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "88d1a4a9cf6f4802901caeffc663f02160ae614a856a286f6159f859d706e3c4"
+    },
+    {
+      "bytes": 4312,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--D-0",
+      "kind": "dynamics",
+      "path": "R08-W1-SCR/R08-W1-SCR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "04de953a31ffca89d4494973c00e6971a65cd82a498cd8bb38e74709432bdced"
+    },
+    {
+      "bytes": 4207,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--S-+0-195",
+      "kind": "statics",
+      "path": "R08-W1-SCR/R08-W1-SCR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "4feca1c27189edf7f97123ed14fbd931c7680ba451f9a3addc91133cc5e26845"
+    },
+    {
+      "bytes": 4315,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--D-180",
+      "kind": "dynamics",
+      "path": "R08-W1-SCR/R08-W1-SCR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "2e3b54b89d43b3685989ee21100190312e1916820f7591ff628795afab934e16"
+    },
+    {
+      "bytes": 4206,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--S-+90-15",
+      "kind": "statics",
+      "path": "R08-W1-SCR/R08-W1-SCR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "36d76f8cf5be07250a7aebce516e5ffd12cf017e60d05c2f244ef3ddb4064271"
+    },
+    {
+      "bytes": 4209,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--S-+90-195",
+      "kind": "statics",
+      "path": "R08-W1-SCR/R08-W1-SCR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "6113ee91a0cb438eaa09c74ba6f73190bf03e8a2f8488d9f7cae8bca60bb5ee3"
+    },
+    {
+      "bytes": 4255,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--F03",
+      "kind": "fatigue",
+      "path": "R08-W1-SCR/R08-W1-SCR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "2cf34c71b914b181d4ccfdbc0be38f82c41cb9c56ae69979301931822f60b40b"
+    },
+    {
+      "bytes": 4254,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--F04",
+      "kind": "fatigue",
+      "path": "R08-W1-SCR/R08-W1-SCR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "4f9ce95a342beebbd213e8a67cef1909b808a47acd6927e07dd28c4da5c975d8"
+    },
+    {
+      "bytes": 4254,
+      "case_id": "R08-W1-SCR",
+      "id": "R08-W1-SCR--F05",
+      "kind": "fatigue",
+      "path": "R08-W1-SCR/R08-W1-SCR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "d2f6962ceb9edc9a70141156b1a4e4883a605bb1864e8efa5decc03e0f0ebf4d"
+    },
+    {
+      "bytes": 5887,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--Q0",
+      "kind": "statics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "4cc57fbd242afd02a21cb9a9d386d14c42797f57b0ae75f33d4d92038a6b4567"
+    },
+    {
+      "bytes": 5894,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--S--90-15",
+      "kind": "statics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "e6745df5ad52669f621be1fe139560436bacbd2df584a945e8ba0f2b4f456b69"
+    },
+    {
+      "bytes": 5897,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--S--90-195",
+      "kind": "statics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "3b7360364cfe1b46c404801656daeaae29ad2bcd8637c505257289d954d554be"
+    },
+    {
+      "bytes": 5893,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--S-+0-15",
+      "kind": "statics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "154aee73364bf0fecf42d1437c19ff3c2f14926558c8eb835fd70c24887936ec"
+    },
+    {
+      "bytes": 6001,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--D-0",
+      "kind": "dynamics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "bedfe882fb29c3b8fee3c2b2d225519f81ebadcd3ae7dec9846579fc6176ed96"
+    },
+    {
+      "bytes": 5896,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--S-+0-195",
+      "kind": "statics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "3da707ddc36aaac61570791b673478cc090a5fb182bc5bedbd15c26115196bdf"
+    },
+    {
+      "bytes": 6004,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--D-180",
+      "kind": "dynamics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "9af0123b09387a59d7c60481a7b8defae9ebc6c71ab7a7db42bebe7f7a7ccd00"
+    },
+    {
+      "bytes": 5895,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--S-+90-15",
+      "kind": "statics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "d38c28a00bc21736ef54c893a92a7dc78f069f70e0370383adc85e7f247ecad9"
+    },
+    {
+      "bytes": 5898,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--S-+90-195",
+      "kind": "statics",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "b6b368211edd6b959be60d1c28819f06ab469913ed4f9a4b4c5a2099eba2cff7"
+    },
+    {
+      "bytes": 5944,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--F03",
+      "kind": "fatigue",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "739abd2612f96d0f567b5d6c35ac3fb8fd05cfd26aa898debd0cd16f0f48ae4d"
+    },
+    {
+      "bytes": 5943,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--F04",
+      "kind": "fatigue",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "6c625a71662bb9aafb359854e7aefdcd59881e95c1dee7cf097631eb2d7431b0"
+    },
+    {
+      "bytes": 5943,
+      "case_id": "R08-W1-SLWR",
+      "id": "R08-W1-SLWR--F05",
+      "kind": "fatigue",
+      "path": "R08-W1-SLWR/R08-W1-SLWR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "b2b21cedfa97414d4556a48bb04ad7ab87798057d8dffde1a20daca8476f39bb"
+    },
+    {
+      "bytes": 4212,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--Q0",
+      "kind": "statics",
+      "path": "R08-W2-SCR/R08-W2-SCR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "388eade75ed1548fb1bd8adaa5a20c54d8b5822842450ea2c417e7058a5c862e"
+    },
+    {
+      "bytes": 4219,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--S--90-15",
+      "kind": "statics",
+      "path": "R08-W2-SCR/R08-W2-SCR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "efd01ea73343316832c68800ec115967358e677a014a8ec3749332069d0a5072"
+    },
+    {
+      "bytes": 4222,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--S--90-195",
+      "kind": "statics",
+      "path": "R08-W2-SCR/R08-W2-SCR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a04bfa6eec4aa5e1b4a7f62945811bed258a2f006478bccd6489d925d503d5fd"
+    },
+    {
+      "bytes": 4218,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--S-+0-15",
+      "kind": "statics",
+      "path": "R08-W2-SCR/R08-W2-SCR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "c66906770cae3c1a1a6c8cb669ac4bf6785c0c8c511371de880f470da49cb616"
+    },
+    {
+      "bytes": 4326,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--D-0",
+      "kind": "dynamics",
+      "path": "R08-W2-SCR/R08-W2-SCR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "9476810e03345334d8e7818ba6b13661ed5f3727a338570a29c371a6d13ae92b"
+    },
+    {
+      "bytes": 4221,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--S-+0-195",
+      "kind": "statics",
+      "path": "R08-W2-SCR/R08-W2-SCR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "64a5c12e3fb94d242113ffbb34a3ceb2baced3ec02b21a4151071702b19ea2cd"
+    },
+    {
+      "bytes": 4329,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--D-180",
+      "kind": "dynamics",
+      "path": "R08-W2-SCR/R08-W2-SCR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "8c481b34fad729236e670596e42f522369d251b8b2da49ed487c8d0daadd789e"
+    },
+    {
+      "bytes": 4220,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--S-+90-15",
+      "kind": "statics",
+      "path": "R08-W2-SCR/R08-W2-SCR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "2b40acc00da8418ddea517f50ba2b61c9d736b736d0100dac78f061883063db5"
+    },
+    {
+      "bytes": 4223,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--S-+90-195",
+      "kind": "statics",
+      "path": "R08-W2-SCR/R08-W2-SCR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "4d4c962f063f98765aead0e983525aac34081fefe2057fb31e173af1e356f341"
+    },
+    {
+      "bytes": 4269,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--F03",
+      "kind": "fatigue",
+      "path": "R08-W2-SCR/R08-W2-SCR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "9707a694399c30e955bb080ee71503b6426db17abff1eed31012150033f7ec87"
+    },
+    {
+      "bytes": 4268,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--F04",
+      "kind": "fatigue",
+      "path": "R08-W2-SCR/R08-W2-SCR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "cd838292151671458b8bc2a6e74d6773470ff06bb0c8c4fa1b61c64ed40e9482"
+    },
+    {
+      "bytes": 4268,
+      "case_id": "R08-W2-SCR",
+      "id": "R08-W2-SCR--F05",
+      "kind": "fatigue",
+      "path": "R08-W2-SCR/R08-W2-SCR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "3e2dadc3b33e3d33b5c14a139248f90e39f5e47e98ab633e98db5416cc9dfe2c"
+    },
+    {
+      "bytes": 5970,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--Q0",
+      "kind": "statics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "ed70dac87e45d855ffdd45fdcbcf071a807aefb6048adc35bef2f1a6cf6300cd"
+    },
+    {
+      "bytes": 5977,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--S--90-15",
+      "kind": "statics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "1c267f16e75c20f62a5c54588da2ee62c9e61bbc15999e2a7a6228e3a34ff65d"
+    },
+    {
+      "bytes": 5980,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--S--90-195",
+      "kind": "statics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "91801fb08cbcbb3b3df802281fc486150a607aae8a9dfa8fd1fbd7a7fffb92c1"
+    },
+    {
+      "bytes": 5976,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--S-+0-15",
+      "kind": "statics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "aa176d440b9c718df8eabd55ca4bb47ac2ab410cc9f983a12d8f4df79f3e6a0e"
+    },
+    {
+      "bytes": 6084,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--D-0",
+      "kind": "dynamics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "6015a23e65e92beef88dce62e6026bf0af513fc4bb3e682aecea12f1004e39c4"
+    },
+    {
+      "bytes": 5979,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--S-+0-195",
+      "kind": "statics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "0d9aad282b365c40f37748816c7defeec8a259d48810205c7c7f4c4d16e21fb8"
+    },
+    {
+      "bytes": 6087,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--D-180",
+      "kind": "dynamics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "47c4bcf793dfbc0eb98b8ec385356782151e9f2121587776715c8de95517e83c"
+    },
+    {
+      "bytes": 5978,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--S-+90-15",
+      "kind": "statics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "99d2084cb81556ae037c5bc2658a5babf9e879eac5c2ff26ad63763f39b5e5cb"
+    },
+    {
+      "bytes": 5981,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--S-+90-195",
+      "kind": "statics",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "e9cffb347612c9857cc7acf50a1d1d5db1a54b084664a45bdbf767a4327616ed"
+    },
+    {
+      "bytes": 6027,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--F03",
+      "kind": "fatigue",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "701a6c01bf3897376c1ca011f1e1e59bd025b3e17be4b756d03638444c072d07"
+    },
+    {
+      "bytes": 6026,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--F04",
+      "kind": "fatigue",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a2bf950c79b60e7094d565b2a95eb2e5aef35ee51b2dfe01742e519e1e36cf39"
+    },
+    {
+      "bytes": 6026,
+      "case_id": "R08-W2-SLWR",
+      "id": "R08-W2-SLWR--F05",
+      "kind": "fatigue",
+      "path": "R08-W2-SLWR/R08-W2-SLWR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "af26d6b19dfecd59a6c362d394973f6130438f296666dc8551e85e4040439c44"
+    },
+    {
+      "bytes": 4214,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--Q0",
+      "kind": "statics",
+      "path": "R10-W1-SCR/R10-W1-SCR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "2b67cf6e90c22879bf90231b2c395e01975b796e58792d6c1e39b35a8109181a"
+    },
+    {
+      "bytes": 4221,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--S--90-15",
+      "kind": "statics",
+      "path": "R10-W1-SCR/R10-W1-SCR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "f81f0cf9f16614b85d7dbb5c7e6bfd3ea1dc42185721cfd28d97514c6f3f96d2"
+    },
+    {
+      "bytes": 4224,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--S--90-195",
+      "kind": "statics",
+      "path": "R10-W1-SCR/R10-W1-SCR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "f05fe2f5751e59d4eada99f55eb03886d4c4888ec961f98a393ffc8eed244369"
+    },
+    {
+      "bytes": 4220,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--S-+0-15",
+      "kind": "statics",
+      "path": "R10-W1-SCR/R10-W1-SCR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "c8bf40f7bbb094d2f5a0a071a0d400433f77e3651ae43b66bb943deabb0094b1"
+    },
+    {
+      "bytes": 4328,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--D-0",
+      "kind": "dynamics",
+      "path": "R10-W1-SCR/R10-W1-SCR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "92b5fc397184f83ba7830748f4cc52a23cda2511a7d7faaa0b7087574ae2b873"
+    },
+    {
+      "bytes": 4223,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--S-+0-195",
+      "kind": "statics",
+      "path": "R10-W1-SCR/R10-W1-SCR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "1b85fd00f2d43f674106e0abee094c637ffe6d772f744694acd4fbb6353a08ba"
+    },
+    {
+      "bytes": 4331,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--D-180",
+      "kind": "dynamics",
+      "path": "R10-W1-SCR/R10-W1-SCR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a45a8b067bddd0adb8eb8757f7245f9dc2416d415b571a74d10f9ed33edfc189"
+    },
+    {
+      "bytes": 4222,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--S-+90-15",
+      "kind": "statics",
+      "path": "R10-W1-SCR/R10-W1-SCR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "464df3a3aade93c5552ddf924701d2e27faa1bc27580738a06807d51540c2681"
+    },
+    {
+      "bytes": 4225,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--S-+90-195",
+      "kind": "statics",
+      "path": "R10-W1-SCR/R10-W1-SCR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "fcd74e8cc6c34bf55a8d61397d76a6c09a9a0131fa86f1420c81ccfd3954ab74"
+    },
+    {
+      "bytes": 4271,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--F03",
+      "kind": "fatigue",
+      "path": "R10-W1-SCR/R10-W1-SCR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "c692a6ff0e55d307df499b1baa99e3e5d64ac155b1f9cd4c25b999bde0ea65b7"
+    },
+    {
+      "bytes": 4270,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--F04",
+      "kind": "fatigue",
+      "path": "R10-W1-SCR/R10-W1-SCR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a6686f28f38f29c87af94a10c894f30ffaadeae188ddc67b8762225b524fe3ec"
+    },
+    {
+      "bytes": 4270,
+      "case_id": "R10-W1-SCR",
+      "id": "R10-W1-SCR--F05",
+      "kind": "fatigue",
+      "path": "R10-W1-SCR/R10-W1-SCR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "97812ef0da571588453fec3b6435c98d1285f282092361551f9a01b002ac393d"
+    },
+    {
+      "bytes": 5876,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--Q0",
+      "kind": "statics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "034d647e2869b0a4239d7644c7605d715fdfea8d7c55cb9c43d4b22eb91cf72b"
+    },
+    {
+      "bytes": 5883,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--S--90-15",
+      "kind": "statics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "f6def0212d4a22babe00f6678a41653087bf6273263b058d6b92ed36663390e9"
+    },
+    {
+      "bytes": 5886,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--S--90-195",
+      "kind": "statics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "ee3d6a178864f525b03cb4b9aa5b3444bf81a490008eec24178c5c1b0300c550"
+    },
+    {
+      "bytes": 5882,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--S-+0-15",
+      "kind": "statics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "b8539922a58ad7874838be82713b03770d633bf56945ea93af71188415cd5231"
+    },
+    {
+      "bytes": 5990,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--D-0",
+      "kind": "dynamics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "f3a042402325b0ea466eaea080ba294140bdaaf62f917a2866d3ca9b790c183b"
+    },
+    {
+      "bytes": 5885,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--S-+0-195",
+      "kind": "statics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "fbca8780a3e2617180fe7aa133e7d4292d80c696b1d8a9c06382d88277cc3e7a"
+    },
+    {
+      "bytes": 5993,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--D-180",
+      "kind": "dynamics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "8ea03769c164fb0d799243997af099400a002c06c5514c90a70445b8364e581d"
+    },
+    {
+      "bytes": 5884,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--S-+90-15",
+      "kind": "statics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "6a57c6d98f2441288bd036880b69f2845038e165309e6707f9deaba0e60e13fd"
+    },
+    {
+      "bytes": 5887,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--S-+90-195",
+      "kind": "statics",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "1580bfd42f96ac19331bb19a6d84b012396976e3145a63a3cee074296c3186d8"
+    },
+    {
+      "bytes": 5933,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--F03",
+      "kind": "fatigue",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "699d9c0c91a50f2d770bf93ac6e770e2cbf81f129ae1f682b9651d6bedbd3323"
+    },
+    {
+      "bytes": 5932,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--F04",
+      "kind": "fatigue",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "cbf01687e6b71765b11c409c14fa716d8756c021317ec2951dcad047567f3c96"
+    },
+    {
+      "bytes": 5932,
+      "case_id": "R10-W1-SLWR",
+      "id": "R10-W1-SLWR--F05",
+      "kind": "fatigue",
+      "path": "R10-W1-SLWR/R10-W1-SLWR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "4b8b71a2053077fd621640fba6812fe52579fdaa1a864cbed4f40cee15d4ba24"
+    },
+    {
+      "bytes": 4198,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--Q0",
+      "kind": "statics",
+      "path": "R10-W2-SCR/R10-W2-SCR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a9deb816e78d07853f7d29822c1a13e7d89f8fd3a48e5e6daed4e986944d87cb"
+    },
+    {
+      "bytes": 4205,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--S--90-15",
+      "kind": "statics",
+      "path": "R10-W2-SCR/R10-W2-SCR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "10da7e8ae1842e68d258d43ab4d72ed35e81dea819f58662a162874940e125bb"
+    },
+    {
+      "bytes": 4208,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--S--90-195",
+      "kind": "statics",
+      "path": "R10-W2-SCR/R10-W2-SCR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "8112d60a50b18198b6fb26b6b68005f1e193944610b1c0b37e8eaa978ba6f6a8"
+    },
+    {
+      "bytes": 4204,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--S-+0-15",
+      "kind": "statics",
+      "path": "R10-W2-SCR/R10-W2-SCR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "35bcaffb460ed2f7d6f3df3a16553157e78ff5fa72cb0b33a0a82c88323ee9d2"
+    },
+    {
+      "bytes": 4312,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--D-0",
+      "kind": "dynamics",
+      "path": "R10-W2-SCR/R10-W2-SCR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "7ef20278ec565ea71d8bca920be13a0173a1d730f65cde705fd99752edf5f3d8"
+    },
+    {
+      "bytes": 4207,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--S-+0-195",
+      "kind": "statics",
+      "path": "R10-W2-SCR/R10-W2-SCR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "c89a6f33c4eba6f1ea2829feaa4681631d111cf6df9a1ff1e1cc878bc8931e69"
+    },
+    {
+      "bytes": 4315,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--D-180",
+      "kind": "dynamics",
+      "path": "R10-W2-SCR/R10-W2-SCR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "2dd00a270e9432c1f625a4b31ce74062c07232309aaef9967e281b9c500633a7"
+    },
+    {
+      "bytes": 4206,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--S-+90-15",
+      "kind": "statics",
+      "path": "R10-W2-SCR/R10-W2-SCR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "bbfaa72da4261fc57355d2efb56bc86a12f48e096ec63f3de36bb8cabbd85d4a"
+    },
+    {
+      "bytes": 4209,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--S-+90-195",
+      "kind": "statics",
+      "path": "R10-W2-SCR/R10-W2-SCR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "8e70c901364967fe77ec95f76d90fea85210b82110a1e9c48da8039a3478cf79"
+    },
+    {
+      "bytes": 4255,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--F03",
+      "kind": "fatigue",
+      "path": "R10-W2-SCR/R10-W2-SCR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "3d10f697e6574c6eb408d6222aa9d92398b201815b7f95cd2b5da007f653f1fa"
+    },
+    {
+      "bytes": 4254,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--F04",
+      "kind": "fatigue",
+      "path": "R10-W2-SCR/R10-W2-SCR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "f53de47e236ca9f2f70611eea65c1ff22a90aad7f0c83a83f65410c3cd2a3591"
+    },
+    {
+      "bytes": 4254,
+      "case_id": "R10-W2-SCR",
+      "id": "R10-W2-SCR--F05",
+      "kind": "fatigue",
+      "path": "R10-W2-SCR/R10-W2-SCR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a6080b25088bd7d871e0bd71484e723e7cd6ae1affc1e8ef30b51cddae37b209"
+    },
+    {
+      "bytes": 5899,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--Q0",
+      "kind": "statics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "c6643fe7692d4efa4cd271eba24e0388281b4462f92842155aca4bb96a43e073"
+    },
+    {
+      "bytes": 5906,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--S--90-15",
+      "kind": "statics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "48826b94fdb265c2189b7a9401951fb7a93668cc0860002b4bafb5fac205dd60"
+    },
+    {
+      "bytes": 5909,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--S--90-195",
+      "kind": "statics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "ac4f1afc50e776df5973d4d62293cac88b16a4ff4ba84d6943c10cbb3426919c"
+    },
+    {
+      "bytes": 5905,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--S-+0-15",
+      "kind": "statics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "3fe3fc549671d57e4f83a0fd6b44b916f1e33652873c0dda4a48a37753ee6619"
+    },
+    {
+      "bytes": 6013,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--D-0",
+      "kind": "dynamics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "6a19356654b17a72d0ed360844bed9bbdfff77503c2d68bd036ddd11b82274f9"
+    },
+    {
+      "bytes": 5908,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--S-+0-195",
+      "kind": "statics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "e52f092764821036fd39e33b6d0fa055a5901fc4b4abf2ad2b6e0d4b2f3bb688"
+    },
+    {
+      "bytes": 6016,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--D-180",
+      "kind": "dynamics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "63eb5f2e6f9c9c7d7f415d45417479e8140c1af672e882b7153966e04790b920"
+    },
+    {
+      "bytes": 5907,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--S-+90-15",
+      "kind": "statics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "8ea51eb71ac9dbd487519d6187048554d618ba5e5798d115d4d28aa4429fa459"
+    },
+    {
+      "bytes": 5910,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--S-+90-195",
+      "kind": "statics",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "5830de34c8726788c445c1bce1c25568877be3beb05d3e300b568b072e5d6fe1"
+    },
+    {
+      "bytes": 5956,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--F03",
+      "kind": "fatigue",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "32c9eee73b02d863ccda7a2ba22903dcb57705f38b26453cc35f436cee896bd2"
+    },
+    {
+      "bytes": 5955,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--F04",
+      "kind": "fatigue",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "61a0291c656efe139762eec90d6f39088f3e2f491136765d0caed505f597416e"
+    },
+    {
+      "bytes": 5955,
+      "case_id": "R10-W2-SLWR",
+      "id": "R10-W2-SLWR--F05",
+      "kind": "fatigue",
+      "path": "R10-W2-SLWR/R10-W2-SLWR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "f9190b9bc6a88cae3b7a77b94a96f1703b19b53cbd1f9046b101d4a63e0304e7"
+    },
+    {
+      "bytes": 4225,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--Q0",
+      "kind": "statics",
+      "path": "R12-W1-SCR/R12-W1-SCR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "32c2101bc88be1e0d93dbbd6ff192104653778b864431d0e8e14f649acb87fe4"
+    },
+    {
+      "bytes": 4232,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--S--90-15",
+      "kind": "statics",
+      "path": "R12-W1-SCR/R12-W1-SCR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "921103866d2824ce09446a2b0c7bd96f2814f2d7d8ee1c775a6c2082d670cd3d"
+    },
+    {
+      "bytes": 4235,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--S--90-195",
+      "kind": "statics",
+      "path": "R12-W1-SCR/R12-W1-SCR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "c9834e6651737fc371541ca7f379546d50ff4822429eae68f16c37fbf63cd909"
+    },
+    {
+      "bytes": 4231,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--S-+0-15",
+      "kind": "statics",
+      "path": "R12-W1-SCR/R12-W1-SCR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "db061d45f374b62e647aa2efc2920f8f433b3ea9bdb80c2b30e2a1544a59d01b"
+    },
+    {
+      "bytes": 4339,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--D-0",
+      "kind": "dynamics",
+      "path": "R12-W1-SCR/R12-W1-SCR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "eb774e511734fc4a01af2c9b77befe209a4a472f7253b88abf5a26212f610ffc"
+    },
+    {
+      "bytes": 4234,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--S-+0-195",
+      "kind": "statics",
+      "path": "R12-W1-SCR/R12-W1-SCR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "889e0fa5f5cb6c3876d3148146cfa122c4d8dbca8bc347c2bc8b5182af40a579"
+    },
+    {
+      "bytes": 4342,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--D-180",
+      "kind": "dynamics",
+      "path": "R12-W1-SCR/R12-W1-SCR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "2f156c8b28ddb96a6b783b072a374e37de5b0cb8f24bc2a5fed0ef7becd98116"
+    },
+    {
+      "bytes": 4233,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--S-+90-15",
+      "kind": "statics",
+      "path": "R12-W1-SCR/R12-W1-SCR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "9c36b94d2cc9acab23df092533dfa47f9b3a18268b2030aa7291d41dd99749ff"
+    },
+    {
+      "bytes": 4236,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--S-+90-195",
+      "kind": "statics",
+      "path": "R12-W1-SCR/R12-W1-SCR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "7d516914d712b26e5068f080b3fa725c16837a47d2c017bd78c8bf2a0a2d6587"
+    },
+    {
+      "bytes": 4282,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--F03",
+      "kind": "fatigue",
+      "path": "R12-W1-SCR/R12-W1-SCR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "828a002e6472716d7d70da611ff6a6d487ce2f21e5a478d520b2901f9ab28cb6"
+    },
+    {
+      "bytes": 4281,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--F04",
+      "kind": "fatigue",
+      "path": "R12-W1-SCR/R12-W1-SCR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "f1659d1f8296033ebc80d2cdf92f60ea110ebd2d72c107a83b0cc5c94f4d46e7"
+    },
+    {
+      "bytes": 4281,
+      "case_id": "R12-W1-SCR",
+      "id": "R12-W1-SCR--F05",
+      "kind": "fatigue",
+      "path": "R12-W1-SCR/R12-W1-SCR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "ae435b4d12b4889ea4b985ef17eedcf4e6c95b1dd3cf93ae3a6409fea3e9e03d"
+    },
+    {
+      "bytes": 5890,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--Q0",
+      "kind": "statics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "cdcc7811cbb7898c91fc2dffe8a94be56c7fa10579c36382784bdcd93682e139"
+    },
+    {
+      "bytes": 5897,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--S--90-15",
+      "kind": "statics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "38c1fff808056f47d37f65bad9f61c99b89a84a08bbc3fbe614e0d55e63645e9"
+    },
+    {
+      "bytes": 5900,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--S--90-195",
+      "kind": "statics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "4aefaa1c6f62a853b8e6e0d776f239a6814273f6a48d741fd365f609342cb449"
+    },
+    {
+      "bytes": 5896,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--S-+0-15",
+      "kind": "statics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "bbb69554dd2e3007fef610161200115129ee570d836cfe76da8b9d5ef60f8ff8"
+    },
+    {
+      "bytes": 6004,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--D-0",
+      "kind": "dynamics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "e54dc11816d240d5740da84abfa170cd9a81937c4f1e05e0873b1aba4fa0c6b2"
+    },
+    {
+      "bytes": 5899,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--S-+0-195",
+      "kind": "statics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "6a6679c58fb39201bb1e4d87d444555debfe2c4bc4d285dcddb6d4466e7ca078"
+    },
+    {
+      "bytes": 6007,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--D-180",
+      "kind": "dynamics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "00961c872ea7a48e4cf2c8f5352f104cb67f4a8780d19aff65d10e7285a4a32e"
+    },
+    {
+      "bytes": 5898,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--S-+90-15",
+      "kind": "statics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "cbff22261d438d7f12687a6b2f102f5b91e74fff5cc19723a38fd7d92377e680"
+    },
+    {
+      "bytes": 5901,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--S-+90-195",
+      "kind": "statics",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "5ee9a7c874497e3032eedf9cd3accd7862aa05c8ba2ef82569419644bbf227d8"
+    },
+    {
+      "bytes": 5947,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--F03",
+      "kind": "fatigue",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "e1295f2debf907579f443793171ba4225edc5bdeaf6a6a1b97c529d4726dc185"
+    },
+    {
+      "bytes": 5946,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--F04",
+      "kind": "fatigue",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "bdc2cf5ea86ce0cc4a994fa24cb1b8526635e1388d7e0edd03e17a0cae26d08f"
+    },
+    {
+      "bytes": 5946,
+      "case_id": "R12-W1-SLWR",
+      "id": "R12-W1-SLWR--F05",
+      "kind": "fatigue",
+      "path": "R12-W1-SLWR/R12-W1-SLWR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "6860309b6f004ba57411f664441923e2538514fa636258a28477846a00c1e2b0"
+    },
+    {
+      "bytes": 4226,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--Q0",
+      "kind": "statics",
+      "path": "R12-W2-SCR/R12-W2-SCR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "97b858dcf4ea5baadccf4a7dd4c9bdf14a08f325d0bf632df9c51d6906e6c634"
+    },
+    {
+      "bytes": 4233,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--S--90-15",
+      "kind": "statics",
+      "path": "R12-W2-SCR/R12-W2-SCR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "3dee614676be59d1517386a7f06dc8bbf5568555d0769987c8381ec0050c6f91"
+    },
+    {
+      "bytes": 4236,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--S--90-195",
+      "kind": "statics",
+      "path": "R12-W2-SCR/R12-W2-SCR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a674c201282c490b76696e2d7103625888ef8b4114f916ffa439782975046103"
+    },
+    {
+      "bytes": 4232,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--S-+0-15",
+      "kind": "statics",
+      "path": "R12-W2-SCR/R12-W2-SCR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "fb20759cf7589fe53757fddf23a26174a3f622c46a468910069f64ddc2492608"
+    },
+    {
+      "bytes": 4340,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--D-0",
+      "kind": "dynamics",
+      "path": "R12-W2-SCR/R12-W2-SCR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "652312db5c4924abf6272ce42b35d1161f6269827b1b2f36ef91c3ba8102b3e4"
+    },
+    {
+      "bytes": 4235,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--S-+0-195",
+      "kind": "statics",
+      "path": "R12-W2-SCR/R12-W2-SCR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "9f59892b68b960025f86a2f6fa5500a0fc6864fa23927bc7c18675af36fd0e12"
+    },
+    {
+      "bytes": 4343,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--D-180",
+      "kind": "dynamics",
+      "path": "R12-W2-SCR/R12-W2-SCR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "d9170c1b798f1a53cacadf2e5d1fe628e835a82e968d6ac06a6c45539e07a251"
+    },
+    {
+      "bytes": 4234,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--S-+90-15",
+      "kind": "statics",
+      "path": "R12-W2-SCR/R12-W2-SCR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "e8fa7ff1a615af7c42439906f63460199202c2ec195e8d5afebee6185997dc58"
+    },
+    {
+      "bytes": 4237,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--S-+90-195",
+      "kind": "statics",
+      "path": "R12-W2-SCR/R12-W2-SCR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "ba800ddd3c286fceba395e7f3caf2c7e403e5eee11dd91a3e187611514dd7224"
+    },
+    {
+      "bytes": 4283,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--F03",
+      "kind": "fatigue",
+      "path": "R12-W2-SCR/R12-W2-SCR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "fd58ffaaa86e2ec740a1c868fca06c68337f34549c55e1b7c046f32e3af57632"
+    },
+    {
+      "bytes": 4282,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--F04",
+      "kind": "fatigue",
+      "path": "R12-W2-SCR/R12-W2-SCR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "0b03b28f1a34f70519ed39ef91208007eccfea23bf8973e0a665ad7e260b5da1"
+    },
+    {
+      "bytes": 4282,
+      "case_id": "R12-W2-SCR",
+      "id": "R12-W2-SCR--F05",
+      "kind": "fatigue",
+      "path": "R12-W2-SCR/R12-W2-SCR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "9539a7d1d57e4608a3a1cedf2ecda3241867519bf3f23c59c7d7d7376917b25f"
+    },
+    {
+      "bytes": 5901,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--Q0",
+      "kind": "statics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--Q0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "75376fe4f14d4058b815a078fc6cf6232854129b5f3e8e2d10f27588d0d5db31"
+    },
+    {
+      "bytes": 5908,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--S--90-15",
+      "kind": "statics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--S--90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "4ca6f17d32384a82f630002e91efc4cbd3cd3a55184576ce0c6e3802921148d2"
+    },
+    {
+      "bytes": 5911,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--S--90-195",
+      "kind": "statics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--S--90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a092658213f7aeaaa483cce04591497a8c3b28addc24087e30b47e63443ed670"
+    },
+    {
+      "bytes": 5907,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--S-+0-15",
+      "kind": "statics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--S-+0-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "969a35776f616876c84c74daad054b217c3da0b237c8b93dd9dc8f2d01e29c00"
+    },
+    {
+      "bytes": 6015,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--D-0",
+      "kind": "dynamics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--D-0.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "f48ad0e1b475690583d3246504a48a6ccb57fd25b2751db129dc36a32eb30437"
+    },
+    {
+      "bytes": 5910,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--S-+0-195",
+      "kind": "statics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--S-+0-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "de85b6a176adfba8e8b4d12ea4c7cdf8dc308230c83e43b95b43274aadfb3e7d"
+    },
+    {
+      "bytes": 6018,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--D-180",
+      "kind": "dynamics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--D-180.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "2c23258917ef68807b0e46cacac2f0df0f710b65b13d09ff9e45de023f9dd4d0"
+    },
+    {
+      "bytes": 5909,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--S-+90-15",
+      "kind": "statics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--S-+90-15.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "88d96b6ceb2995579db5b1618fd5ee359ada2169f43a2981acba2c9647bf4bf4"
+    },
+    {
+      "bytes": 5912,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--S-+90-195",
+      "kind": "statics",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--S-+90-195.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "17a63b3edd1276ae493d0cdf2da179c5283185e1f2455300ee14421e69641de5"
+    },
+    {
+      "bytes": 5958,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--F03",
+      "kind": "fatigue",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--F03.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "a7661e48d8bd18a94b7950dd2223cdf715473275493f9c77fe0fcf3b54ca86f8"
+    },
+    {
+      "bytes": 5957,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--F04",
+      "kind": "fatigue",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--F04.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "e341af111dea3039a057462a5925bca854d115ff85f0f2ac09a38ea98af6b1a9"
+    },
+    {
+      "bytes": 5957,
+      "case_id": "R12-W2-SLWR",
+      "id": "R12-W2-SLWR--F05",
+      "kind": "fatigue",
+      "path": "R12-W2-SLWR/R12-W2-SLWR--F05.yml",
+      "qualification": "NOT_RUN",
+      "sha256": "bfb2ec36f94ce4a1f68d85debe0bbeb8b0d9c13a7043e76c90b44ec9db5c21f9"
+    }
+  ],
+  "mesh_audits": [
+    {
+      "case_id": "R08-W1-SCR",
+      "elements": 796,
+      "geometry": {
+        "bytes": 68138,
+        "path": "R08-W1-SCR/geometry.json",
+        "sha256": "5d5b2e0e91389d1d8e562b34d60cbd63b5cffc2a65c20406624bed16fa49a0de"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 275,
+        "path": "R08-W1-SCR/section.json",
+        "sha256": "fecc79e67fe5a200c1095329ab314d60804fed553e1796dd19ab967c778a0585"
+      },
+      "sections": 22,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R08-W1-SLWR",
+      "elements": 1519,
+      "geometry": {
+        "bytes": 69062,
+        "path": "R08-W1-SLWR/geometry.json",
+        "sha256": "1943c73c5c39b425e2b41a935b987184334fbec409ddafc1b5ef2df234253115"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 532,
+        "path": "R08-W1-SLWR/section.json",
+        "sha256": "7ddf8f935897957e8c2525d5af0317217ecc74a3967ae68378b40c2ccecc0392"
+      },
+      "sections": 49,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R08-W2-SCR",
+      "elements": 796,
+      "geometry": {
+        "bytes": 68103,
+        "path": "R08-W2-SCR/geometry.json",
+        "sha256": "d07899b5dbf48e986c4982be2abee6294567d94e39d39af7be727bc59eea8b67"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 263,
+        "path": "R08-W2-SCR/section.json",
+        "sha256": "a2a72dba985739b6cca2312996c8770c278a8b2a611a4ea9e3a9f4aa04031982"
+      },
+      "sections": 22,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R08-W2-SLWR",
+      "elements": 1520,
+      "geometry": {
+        "bytes": 69037,
+        "path": "R08-W2-SLWR/geometry.json",
+        "sha256": "93df22e5a31d54d61b498203ebf795fd59dc44653c025274bd4fd8931068f8c2"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 518,
+        "path": "R08-W2-SLWR/section.json",
+        "sha256": "6da0ef0608fd121145982443d5f6a3a098a4635608e98402593ce775b8709d56"
+      },
+      "sections": 50,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R10-W1-SCR",
+      "elements": 796,
+      "geometry": {
+        "bytes": 68092,
+        "path": "R10-W1-SCR/geometry.json",
+        "sha256": "b56b1984c1507beca6dd992efe7b165f2454e2ab49a3d91630fb453b6a8ca69e"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 275,
+        "path": "R10-W1-SCR/section.json",
+        "sha256": "8f60824fb451dc1ef2421ff0517eb28bf47a911d5fa941112e300e53ab5fd8f0"
+      },
+      "sections": 22,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R10-W1-SLWR",
+      "elements": 1518,
+      "geometry": {
+        "bytes": 69020,
+        "path": "R10-W1-SLWR/geometry.json",
+        "sha256": "fc14608ca6671ed1b70567961dacea2c1a8b22a74bdc144c97717e514391f768"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 531,
+        "path": "R10-W1-SLWR/section.json",
+        "sha256": "03d378f75a03fc322a95397eb3ef52abd895f4fd8712fe28662d25b5326bc865"
+      },
+      "sections": 48,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R10-W2-SCR",
+      "elements": 796,
+      "geometry": {
+        "bytes": 68013,
+        "path": "R10-W2-SCR/geometry.json",
+        "sha256": "756cba7ab6ee8e002855a50b00bd899cb67f6b728f2711ef87111038fea6009b"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 259,
+        "path": "R10-W2-SCR/section.json",
+        "sha256": "f0f7bd72595cd87d03dd43a6278f031abece81673f1bc09d01c9062063cad23d"
+      },
+      "sections": 22,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R10-W2-SLWR",
+      "elements": 1519,
+      "geometry": {
+        "bytes": 69031,
+        "path": "R10-W2-SLWR/geometry.json",
+        "sha256": "10bd069682f0a36dd0b132c6094ac74ca5f05805bb3d20f9d0c823ca8cee8b37"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 515,
+        "path": "R10-W2-SLWR/section.json",
+        "sha256": "9f488de70b7392474249c71c8c2295602b0af51ed7a422ac4c50d4f21b748f3c"
+      },
+      "sections": 49,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R12-W1-SCR",
+      "elements": 796,
+      "geometry": {
+        "bytes": 68015,
+        "path": "R12-W1-SCR/geometry.json",
+        "sha256": "c873d18a740e2540e903c61b4310ca894e18fb18f36e09025ae4c72cdd5abe44"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 289,
+        "path": "R12-W1-SCR/section.json",
+        "sha256": "f1204e65fb944dd7d448ece79c008cde29acafb570b471dd482ad96bbbb17716"
+      },
+      "sections": 22,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R12-W1-SLWR",
+      "elements": 1518,
+      "geometry": {
+        "bytes": 68940,
+        "path": "R12-W1-SLWR/geometry.json",
+        "sha256": "39acb408ea7c8485d4b26ebf25b905238c291e1dd1eb39a90231c5234af68385"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 545,
+        "path": "R12-W1-SLWR/section.json",
+        "sha256": "0f4d9174f34a9c2a7b5003e517be5c478b13a8bacc8b486ec8e665080fd54109"
+      },
+      "sections": 48,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R12-W2-SCR",
+      "elements": 796,
+      "geometry": {
+        "bytes": 68128,
+        "path": "R12-W2-SCR/geometry.json",
+        "sha256": "d284be2ed6dbd69098fdf3d52d44afb8628e74d64f9b80dece67518cb90740e0"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 288,
+        "path": "R12-W2-SCR/section.json",
+        "sha256": "369f7589c4c0580eab10fac89ba81df9e9774a314beea5ca52b37d8952512dee"
+      },
+      "sections": 22,
+      "unrounded_adjacent_ratio_pass": true
+    },
+    {
+      "case_id": "R12-W2-SLWR",
+      "elements": 1518,
+      "geometry": {
+        "bytes": 68982,
+        "path": "R12-W2-SLWR/geometry.json",
+        "sha256": "e01b6a2460431960b4fc25c7ccf5bb1468e91c439c9984c11d87c7e12f2c8008"
+      },
+      "maximum_adjacent_ratio_bound": 2.0,
+      "physical_model_matches": 12,
+      "section": {
+        "bytes": 542,
+        "path": "R12-W2-SLWR/section.json",
+        "sha256": "4b528cab55950809980826f5822fd8f0a1699b9a440e54bcf311b7d1bb820552"
+      },
+      "sections": 48,
+      "unrounded_adjacent_ratio_pass": true
+    }
+  ],
+  "native_handoff": "examples/riser-campaign/README.md#solver-free-mesh-audit-and-native-handoff",
+  "native_qualification": "NOT_RUN",
+  "preservation": {
+    "frozen_physical_model_matches": 144,
+    "geometry_and_section_byte_matches": 12,
+    "original_input_byte_matches": 288,
+    "scope_criteria_load_ledger_and_manifest": "BYTE_IDENTICAL"
+  },
+  "reference_index": {
+    "bytes": 214027,
+    "path": "index.json",
+    "sha256": "999a8d4d9d161bb620fc2d0725ced676b3ca8b519034ae1ea567fbf836705440"
+  },
+  "reference_revision": "25b63cd1cdc96e9843e8010b52a8ea70010037a5",
+  "review_status": "INDEPENDENT_REVIEW_REQUIRED; any later byte change invalidates the packet",
+  "source_files": [
+    {
+      "bytes": 6124,
+      "path": ".gitattributes",
+      "sha256": "55b9b27c3a093c7fee1f2dd78372f7a7b6612d88fcf496b92113ee3399ff1d73"
+    },
+    {
+      "bytes": 24388,
+      "path": "docs/domains/orcaflex/library/campaigns/generic-scr-slwr/basis.yml",
+      "sha256": "262fed28756484e928a2580e40f86bc1bde41fc0f2c14870584440a562717009"
+    },
+    {
+      "bytes": 20385,
+      "path": "examples/riser-campaign/README.md",
+      "sha256": "a712b18896c62946f038b60dceba6559d43eeffabdb92077b46e046941991187"
+    },
+    {
+      "bytes": 9519,
+      "path": "scripts/riser_campaign/audit_mesh.py",
+      "sha256": "2331e80c8674d5b6057689d31e1b38e1dbf89cdd9c94b9bd20f73c560097a9db"
+    },
+    {
+      "bytes": 21636,
+      "path": "scripts/riser_campaign/frozen_scope.py",
+      "sha256": "565ab1ad15bd7fb867049e6cee208247027165ba7848c3c15610e0b1626fab1c"
+    },
+    {
+      "bytes": 21902,
+      "path": "scripts/riser_campaign/generate_inputs.py",
+      "sha256": "1bc41d7e1bde41ee9a56f791c1ea49e7d6a3501caf155b4bfa3fe5dc80b60013"
+    },
+    {
+      "bytes": 9908,
+      "path": "scripts/riser_campaign/validate_manifest.py",
+      "sha256": "96a7056bc1d1e33c5a795fb5c20f6f59cbe0b7473f3f547b3702e0726ded1322"
+    },
+    {
+      "bytes": 29277,
+      "path": "src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py",
+      "sha256": "a22950e6640006721649df7db82e686bfce4037c7895469d5b23d01c4a37a17b"
+    },
+    {
+      "bytes": 10953,
+      "path": "src/digitalmodel/marine_ops/marine_analysis/catenary/solver.py",
+      "sha256": "b2f1bf00a1252f64e0c2d34b89312d1e6d0a5467bacf997affad4e3a88ad5e50"
+    },
+    {
+      "bytes": 19424,
+      "path": "src/digitalmodel/materials/grades.py",
+      "sha256": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90"
+    },
+    {
+      "bytes": 9446,
+      "path": "src/digitalmodel/riser_configuration_screen/static.py",
+      "sha256": "8c0bf520da414a67915031844f5c5c98ca7edcad41381b22becbd192f0af92da"
+    },
+    {
+      "bytes": 19603,
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py",
+      "sha256": "d89c8b3a88ede433c9056f5a7f83cfeda0650cdf6a9fd1b172db8fa1f76f3634"
+    },
+    {
+      "bytes": 16062,
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/builders/generic_builder.py",
+      "sha256": "90862dae9aadab6f10a505cb3264f070d8b40f4254385a0707972ba97da0df34"
+    },
+    {
+      "bytes": 4192,
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/schema/__init__.py",
+      "sha256": "ae2941ccad35ac78b622e4c3705730ac7bbcb252d2b43ea6d0d23556b69ec4e6"
+    },
+    {
+      "bytes": 12363,
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/schema/environment.py",
+      "sha256": "3c4c4c5458e2f5778a4cc0066b7879aa9464630f9f8af7cfd16e22db593ba97f"
+    },
+    {
+      "bytes": 3708,
+      "path": "src/digitalmodel/solvers/orcaflex/yaml_utils.py",
+      "sha256": "b0e676a83e9237e5d0f359a8c37fc58b1d3331b54f0eaeb1a0e6e2b7d0176210"
+    },
+    {
+      "bytes": 16689,
+      "path": "tests/riser_campaign/test_frozen_scope.py",
+      "sha256": "23e9ddd9c21b78827480684a51b4a106dc7af7643f1546ab554c81f2f6e9a78a"
+    },
+    {
+      "bytes": 8234,
+      "path": "tests/riser_campaign/test_mesh.py",
+      "sha256": "3af1c05bffd64056f40e8a84aa656aeb722da9500730503c3bb5a55cbb492e90"
+    }
+  ],
+  "status": "SOLVER_FREE_ONLY",
+  "summary": "Solver-free serialized mesh audit; native qualification remains required."
+}
