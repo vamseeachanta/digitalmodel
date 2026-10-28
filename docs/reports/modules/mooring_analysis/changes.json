@@ -1,0 +1,9 @@
+{
+  "report": "mooring-touchdown-catenary",
+  "revision": "00",
+  "date": "2026-10-28",
+  "changes": [
+    "Added a synthetic touchdown example with independent geometry and force balance, so numerical agreement is distinguished from design acceptance.",
+    "Added a source-linked method map, explicit qualification gaps and a reproducible report builder with visible-value checks."
+  ]
+}

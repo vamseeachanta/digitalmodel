@@ -1,0 +1,70 @@
+{
+  "sources": [
+    {
+      "id": "case-a",
+      "path": "tests/subsea/mooring_analysis/test_catenary_geometry.py",
+      "locator": "test_vertical_span_closed_form: Case A; synthetic inputs and 0.1% numerical criterion",
+      "sha256": "2a0e8996a27ed46da703c8e3dc3b783e8323a80c67d492fc09e1f8fc31221785"
+    },
+    {
+      "id": "catenary",
+      "path": "src/digitalmodel/subsea/mooring_analysis/catenary.py",
+      "locator": "CatenaryAnalyzer: current touchdown formulation and other methods",
+      "sha256": "74f0549c19b9aaae60619e021151ea3b3c68b1da957580a3c242a4ae5c0fcb1c"
+    },
+    {
+      "id": "models",
+      "path": "src/digitalmodel/subsea/mooring_analysis/models.py",
+      "locator": "MooringLineProperties, CatenaryResult and MooringLine.axial_stiffness",
+      "sha256": "6c907a2db26444337cbff8decf62f43a471c67ecc9b0dca12b52e72f2e6bce0e"
+    },
+    {
+      "id": "designer",
+      "path": "src/digitalmodel/subsea/mooring_analysis/designer.py",
+      "locator": "MooringDesigner: environmental, offset and condition screens",
+      "sha256": "83f3d23cc3dfb5a7be7d09a16970c2f8b763420043c6acaedb1b1f3f8f7ad6e5"
+    },
+    {
+      "id": "cli",
+      "path": "src/digitalmodel/subsea/mooring_analysis/cli.py",
+      "locator": "catenary_analysis, design_verification, generate_orcaflex_model",
+      "sha256": "f38b06edddf6dffe68173b329a9dc1f976bfb54c8c452691ecd8faab3dd94480"
+    },
+    {
+      "id": "entry-point",
+      "path": "pyproject.toml",
+      "locator": "project.scripts: mooring-analysis",
+      "sha256": "2059519a2334da4db9309059143bec2d3bd71b8985c182f3b9bb0bf79db5f1e8"
+    },
+    {
+      "id": "series-tests",
+      "path": "tests/subsea/mooring_analysis/test_series_stiffness.py",
+      "locator": "Independent series-elongation regressions; no geometric-stiffness qualification",
+      "sha256": "a36cb91be86518a22bd116d29e167326384b3c9963d1efc15e79b85fc99d5642"
+    },
+    {
+      "id": "pinned-tests",
+      "path": "tests/subsea/mooring_analysis/test_pinned_catenary_example.py",
+      "locator": "Separate CatenarySolver pinned-end route; not calculated by this report",
+      "sha256": "9d3b559d5e7dc7da85393c3b3c12a1d6f98fda46bdf31cd9de6ee44cb81ce5e8"
+    },
+    {
+      "id": "module-pack",
+      "path": "src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md",
+      "locator": "Discovery context; historical formulas require reconciliation with current catenary.py",
+      "sha256": "813896f4e8ad6ce6b8a94cdf35da9bfadf1b3c8973d3f50ca4837f925fae1601"
+    },
+    {
+      "id": "report-tests",
+      "path": "tests/subsea/mooring_analysis/test_module_report.py",
+      "locator": "Independent oracle, visible-result mutations, escaping and rebuild checks",
+      "sha256": "31c8b1e51be2d29581125b899513b03f3d86273d86682fef819bd283baa16afd"
+    },
+    {
+      "id": "builder",
+      "path": "docs/reports/modules/mooring_analysis/build_report.py",
+      "locator": "Calculation and rendering implementation",
+      "sha256": "f202b0b701f6c632930ec26101b20b52dc087de5bc350dd1a9ee6c996d096ccb"
+    }
+  ]
+}
