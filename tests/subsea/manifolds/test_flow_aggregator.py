@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from itertools import permutations
 
 import pytest
 
@@ -71,3 +72,89 @@ def test_invalid_inputs_raise():
         aggregate_flow([{"q_oil": -1.0}])
     with pytest.raises(ValueError):
         aggregate_flow([{"q_oil": 1.0}], q_capacity=-1.0)
+
+
+@pytest.fixture
+def synthetic_wells():
+    """Supply invented volumetric rates on one common unit and reference basis.
+
+    Source: independent hand calculation, not standard or field data.  The
+    (oil, gas, water) triples are (12.5, 2, 0.5), (3, 6.5, 4.5), (0.5, 1.5, 1).
+    Oil = 12.5 + 3 + 0.5 = 16; gas = 2 + 6.5 + 1.5 = 10;
+    water = 0.5 + 4.5 + 1 = 6; liquid = 16 + 6 = 22.
+    Per-well totals are 15, 14, 3, so total = 15 + 14 + 3 = 32.
+    Water cut = 6 / (16 + 6) = 3 / 11; gas/oil ratio = 10 / 16 = 5 / 8.
+    Binary-exact phase inputs permit exact rate assertions in every order.
+    """
+    return [
+        {"q_oil": 12.5, "q_gas": 2.0, "q_water": 0.5},
+        {"q_oil": 3.0, "q_gas": 6.5, "q_water": 4.5},
+        {"q_oil": 0.5, "q_gas": 1.5, "q_water": 1.0},
+    ]
+
+
+@pytest.mark.parametrize(
+    "order", permutations(range(3)), ids=["abc", "acb", "bac", "bca", "cab", "cba"]
+)
+def test_unequal_streams_conserve_phases_in_every_order(synthetic_wells, order):
+    """Each ordering must match the independent balances in synthetic_wells.
+
+    Oil/gas/water sums are 16/10/6; liquid = 22 and total = 32.
+    Water cut = 6 / 22 = 3 / 11; gas/oil ratio = 10 / 16 = 5 / 8.
+    Matching the same exact expectations also establishes order invariance.
+    """
+    r = aggregate_flow([synthetic_wells[index] for index in order])
+
+    assert r.n_wells == 3
+    assert r.q_oil == 16.0
+    assert r.q_gas == 10.0
+    assert r.q_water == 6.0
+    assert r.q_liquid == 22.0
+    assert r.q_total == 32.0
+    assert r.water_cut == 3 / 11
+    assert r.gor == 5 / 8
+    assert r.within_capacity is None
+
+
+@pytest.mark.parametrize("position", range(4), ids=["first", "second", "third", "last"])
+def test_explicit_zero_rate_contributor_preserves_balance(synthetic_wells, position):
+    """An explicit zero-rate dict is valid and counts as an additional well.
+
+    Source: the synthetic_wells hand balance with zero added to every phase:
+    oil = 16 + 0; gas = 10 + 0; water = 6 + 0; liquid = 22; total = 32.
+    Water cut remains 6 / 22 = 3 / 11 and gas/oil remains 10 / 16 = 5 / 8.
+    Three producing streams plus the zero-rate stream give four wells.
+    """
+    wells = synthetic_wells.copy()
+    wells.insert(position, {"q_oil": 0.0, "q_gas": 0.0, "q_water": 0.0})
+    r = aggregate_flow(wells)
+
+    assert r.n_wells == 4
+    assert r.q_oil == 16.0
+    assert r.q_gas == 10.0
+    assert r.q_water == 6.0
+    assert r.q_liquid == 22.0
+    assert r.q_total == 32.0
+    assert r.water_cut == 3 / 11
+    assert r.gor == 5 / 8
+    assert r.within_capacity is None
+
+
+def test_single_explicit_zero_rate_well_has_undefined_ratios():
+    """The nonempty zero-rate input satisfies the existing per-phase contract.
+
+    Source: hand balance, oil = gas = water = 0, liquid = 0 + 0 = 0,
+    total = 0 + 0 + 0 = 0.  Both water cut = 0 / 0 and gas/oil = 0 / 0
+    are undefined, represented by None.  The supplied well still counts as one.
+    """
+    r = aggregate_flow([{"q_oil": 0.0, "q_gas": 0.0, "q_water": 0.0}])
+
+    assert r.n_wells == 1
+    assert r.q_oil == 0.0
+    assert r.q_gas == 0.0
+    assert r.q_water == 0.0
+    assert r.q_liquid == 0.0
+    assert r.q_total == 0.0
+    assert r.water_cut is None
+    assert r.gor is None
+    assert r.within_capacity is None
