@@ -849,7 +849,7 @@
     "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
     "src/digitalmodel/materials/grades.py": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90",
     "src/digitalmodel/reporting/assets/assessment_report.html.j2": "6ca3b435cf7104e4a8500fa97c514ceff8723f4a0e255adef08b484ea5740fb0",
-    "src/digitalmodel/reporting/engine.py": "f79f7b30faacf70af10d1469c75a4f334ba25f55fbe5a2f6f7a980966897ab50",
+    "src/digitalmodel/reporting/engine.py": "98723c8735157f2ae839bc8cd6ebf94ad6e1702ea780da3f119d62a76aed76f4",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
   },
   "configuration_sha256_lf": "936345b41c861a322461ad7f6d0591a71a7dac0151a6786287ea9bc82170c680",
