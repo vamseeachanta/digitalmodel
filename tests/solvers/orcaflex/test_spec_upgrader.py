@@ -139,8 +139,8 @@ class TestDetectionResult:
 
 
 class TestUpgradeSpec:
-    def test_upgrade_not_implemented(self):
-        with pytest.raises(NotImplementedError, match="planned for v2"):
+    def test_upgrade_without_generic_riser_is_invalid(self):
+        with pytest.raises(ValueError, match="requires a generic section"):
             upgrade_spec({}, DetectedModelType.RISER)
 
 

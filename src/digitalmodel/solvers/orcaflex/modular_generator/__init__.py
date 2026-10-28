@@ -159,6 +159,14 @@ class ModularModelGenerator:
         into GenericModel-compatible dicts, then merge them into
         spec.generic for processing by GenericModelBuilder.
         """
+        if self.spec.riser is not None and self.spec.generic is not None:
+            from .riser_conversion import render_riser
+
+            # A single generic emitter avoids replacing native collections with
+            # duplicate typed includes or introducing typed builder defaults.
+            generic = render_riser(self.spec.riser, self.spec.generic)
+            self.spec = self.spec.model_copy(update={"riser": None, "generic": generic})
+
         router_outputs: list[dict[str, Any]] = []
 
         # Route mooring system
