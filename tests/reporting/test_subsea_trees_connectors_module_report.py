@@ -5,11 +5,12 @@
 Hand basis: integrate dA=r dr dtheta over radii 1/20 to 1/10 m.
 A=3*pi/400 m2; I=integral(y² dA)=3*pi/128000 m4; Z=I/(1/10).
 Linear strain y/R and sigma=E*strain give 200e6 Pa at R=100 m,
-E=200e9 Pa; M=E*I/R and sigma/(400e6 Pa)=1/2.
-For the independent bore, integrate over radius 1/10 m: A=pi/100 m2.
-The stipulated C=2*sqrt(1000), rho=1000 gives v=2 m/s, Q=pi/50 m3/s.
-Continuity retains pi/100 m3/s; subtraction gives (5-1)*1e6=4e6 Pa.
-These are synthetic choices and calculus identities, not standard values.
+E=200e9 Pa; M=E*I/R and sigma/(700e6 Pa)=2/7.
+For the public nozzle, radius=0.0025 m and C=25.5*sqrt(1000).
+At rho=1000, v=25.5 m/s and Q=pi*(0.0025**2)*25.5 m3/s.
+Continuity retains 0.0005 m3/s; subtraction gives (5-1)*1e6=4e6 Pa.
+The modulus and comparison limit have public source locators; geometry and
+pressure remain illustrative. A plate yield datum is not a connector allowable.
 """
 
 import ast
@@ -31,7 +32,12 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/reports/build_subsea_trees_connectors_module_report.py"
 REPORT = ROOT / "docs/reports/modules/subsea_trees_connectors"
 FILES = {"index.html", "changes.json", "results.json", "manifest.json", "README.md"}
-REBUILD = "Rebuild with the report command in the report README."
+REBUILD = (
+    'Rebuild: PYTHONPATH=src uv run python '
+    'scripts/reports/build_subsea_trees_connectors_module_report.py '
+    '--scratch "$TMPDIR/subsea-report-scratch" '
+    '--output-dir docs/reports/modules/subsea_trees_connectors'
+)
 # Binary64 arithmetic roundoff only; no absolute floor can hide a wrong sign/zero.
 RELATIVE_ROUNDOFF = 1e-12
 
@@ -53,9 +59,9 @@ def assert_independent_outputs(data):
                      "section_modulus_m3": 3 * math.pi / 12800},
         "bending": {"curvature_per_m": 0.01, "stress_pa": 200e6,
                     "moment_nm": 200e9 * (3 * math.pi / 128000) / 100,
-                    "utilization": 0.5, "within_supplied_limit": True},
-        "tree": {"velocity_ceiling_m_s": 2.0, "rate_ceiling_m3_s": math.pi / 50},
-        "handoff": {"production_rate_m3_s": math.pi / 100,
+                    "utilization": 0.2857142857142857, "within_supplied_limit": True},
+        "tree": {"velocity_ceiling_m_s": 25.5, "rate_ceiling_m3_s": 0.0005006913291658733},
+        "handoff": {"production_rate_m3_s": 0.0005,
                     "annulus_rate_m3_s": 0.0, "downstream_pressure_pa": 4e6,
                     "within_supplied_ceiling": True},
     }
@@ -114,7 +120,7 @@ def read_delivery(directory):
     manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
     assert set(manifest["files"]) == FILES - {"manifest.json"}
     for name, digest in manifest["files"].items():
-        assert hashlib.sha256((directory / name).read_bytes()).hexdigest() == digest, name
+        assert hashlib.sha256((directory / name).read_bytes()).hexdigest() == digest, f"{name}: {REBUILD}"
     data = json.loads((directory / "results.json").read_text(encoding="utf-8"))
     page = Page((directory / "index.html").read_text(encoding="utf-8"))
     assert json.loads(page.payloads["calculation"]) == data
@@ -131,7 +137,7 @@ def build_delivery(directory):
     env["PYTHONPATH"] = str(ROOT / "src")
     subprocess.run([sys.executable, str(SCRIPT), "--scratch", str(directory / "scratch"),
                     "--output-dir", str(directory / "output")],
-                   cwd=directory, env=env, check=True, capture_output=True, text=True)
+                   cwd=directory, env=env, check=True, capture_output=True, text=True, encoding="utf-8")
     return directory / "output"
 
 
@@ -141,9 +147,9 @@ def test_static_connector_and_tree_outputs_match_annulus_and_flow_balance():
 
     section = connectors.PipeSection(outer_diameter=0.2, wall_thickness=0.05)
     bend = connectors.bending_from_radius(section, radius=100, youngs_modulus=200e9,
-                                          allowable_stress=400e6)
-    bore = trees.bore_capacity(0.2, 1000, 2 * math.sqrt(1000))
-    handoff = trees.flow_handoff(math.pi / 100, 0, bore, None, 5e6, 1e6)
+                                          allowable_stress=700e6)
+    bore = trees.bore_capacity(0.005, 1000, 25.5 * math.sqrt(1000))
+    handoff = trees.flow_handoff(0.0005, 0, bore, None, 5e6, 1e6)
     assert_independent_outputs({"outputs": {
         "geometry": {"inner_diameter_m": section.inner_diameter, "area_m2": section.area,
                      "bore_area_m2": section.bore_area,
@@ -181,7 +187,7 @@ def test_report_values_have_independent_oracles(tmp_path):
                                  for key in values}
     for group, values in data["outputs"].items():
         for key, value in values.items():
-            assert page.results[f"{group}.{key}"] == build.format_value(value)
+            assert page.results[f"{group}.{key}"] == build.format_value(value, decision=key == "utilization")
     assert set(page.cells) == {f"{group}.{key}" for group, values in data["inputs"].items()
                                for key in values}
     for group, values in data["inputs"].items():
@@ -193,14 +199,14 @@ def test_manifest_binds_delivered_bytes():
     """Detect altered outputs and source drift relative to the reviewed revision."""
     _, _, manifest = read_delivery(REPORT)
     for path, digest in manifest["sources"].items():
-        assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == digest, path
+        assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == digest, f"{path}: {REBUILD}"
     env = {key: value for key, value in os.environ.items()
            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
     for path, digest in manifest["sources"].items():
         if path.startswith("src/"):
             pinned = subprocess.run(["git", "show", f'{manifest["reviewed_source_revision"]}:{path}'],
                                     cwd=ROOT, env=env, capture_output=True, check=True).stdout
-            assert hashlib.sha256(pinned).hexdigest() == digest, path
+            assert hashlib.sha256(pinned).hexdigest() == digest, f"{path}: {REBUILD}"
 
 
 @pytest.mark.parametrize("group,key,factor", [
@@ -230,7 +236,7 @@ def test_delivered_byte_tampering_is_detected(tmp_path):
     target = tmp_path / "output/results.json"
     data = json.loads(target.read_text(encoding="utf-8"))
     data["outputs"]["bending"]["stress_pa"] *= -1  # Deliberate sign corruption.
-    target.write_text(json.dumps(data), encoding="utf-8")
+    target.write_text(json.dumps(data), encoding="utf-8", newline="\n")
     with pytest.raises(AssertionError, match="results.json"):
         read_delivery(tmp_path / "output")
 
@@ -302,3 +308,41 @@ def test_embedded_text_and_json_are_escaped(tmp_path, monkeypatch):
     assert probe not in text
     assert "&lt;/script&gt;&lt;img" in text
     assert json.loads(Page(text).payloads["calculation"])["inventory"][0]["limits"] == probe
+
+
+def test_public_input_basis_reaches_delivery_and_independent_results(tmp_path):
+    """Reject unreferenced engineering inputs even when delivery is consistent."""
+    build = builder()
+    build.build(tmp_path / "scratch", tmp_path / "output")
+    data = json.loads((tmp_path / "output/results.json").read_text(encoding="utf-8"))
+    text = (tmp_path / "output/index.html").read_text(encoding="utf-8")
+    page = Page(text)
+    expected_sources = {
+        "S1": "https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus",
+        "S2": "https://www.ssab.com/en-ca/brands-and-products/strenx/product-offer/700/e-f",
+        "S3": "https://openstax.org/books/university-physics-volume-1/pages/14-5-fluid-dynamics",
+        "S4": "https://openstax.org/books/university-physics-volume-1/pages/14-6-bernoullis-equation",
+    }
+    assert {key: value["url"] for key, value in data["sources"].items()} == expected_sources
+    for key in ("connector.youngs_modulus_pa", "connector.supplied_stress_limit_pa",
+                "tree.coefficient_si"):
+        basis = data["input_basis"][key]
+        assert basis["sources"] and basis["derivation"]
+        for source_id in basis["sources"]:
+            source = data["sources"][source_id]
+            assert source["url"] in page.links
+            assert source["locator"] in text
+            assert source["edition"] and source["accessed_on"] == "2026-10-28"
+    assert data["inputs"]["connector"]["youngs_modulus_pa"] == 200e9
+    assert data["inputs"]["connector"]["supplied_stress_limit_pa"] == 700e6
+    assert data["inputs"]["tree"]["diameter_m"] == 0.005
+    # sigma=(200e9)*(0.1/100)=200e6 Pa; u=200/700=2/7.
+    assert data["outputs"]["bending"]["stress_pa"] == pytest.approx(200e6, rel=1e-12, abs=0)
+    assert data["outputs"]["bending"]["utilization"] == pytest.approx(0.2857142857142857, rel=1e-12, abs=0)
+    # Q=pi*(0.005/2)^2*25.5=0.0005006913291658733 m3/s.
+    assert data["outputs"]["tree"]["rate_ceiling_m3_s"] == pytest.approx(0.0005006913291658733, rel=1e-12, abs=0)
+    # M=(200e9)*(3*pi/128000)/100=147262.15563702155 N*m.
+    assert data["outputs"]["bending"]["moment_nm"] == pytest.approx(147262.15563702155, rel=1e-12, abs=0)
+    assert "not a connector design allowable" in text
+    assert "not an erosional design coefficient" in text
+    assert "No independent design basis is supplied for either" not in text

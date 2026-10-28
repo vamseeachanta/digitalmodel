@@ -1,22 +1,61 @@
 {
+  "input_basis": {
+    "connector.supplied_stress_limit_pa": {
+      "derivation": "700 MPa transverse plate yield at 50 mm thickness; not a connector design allowable.",
+      "sources": [
+        "S2"
+      ]
+    },
+    "connector.youngs_modulus_pa": {
+      "derivation": "Generic steel modulus 20.0 times 10^10 Pa; not a grade certificate.",
+      "sources": [
+        "S1"
+      ]
+    },
+    "handoff.production_rate_m3_s": {
+      "derivation": "Published flow 0.500 L/s converted to 0.0005 m3/s.",
+      "sources": [
+        "S3"
+      ]
+    },
+    "tree.coefficient_si": {
+      "derivation": "C = 25.5 times sqrt(1000), from the rounded published speed and density; not an erosional design coefficient.",
+      "sources": [
+        "S3",
+        "S4"
+      ]
+    },
+    "tree.density_kg_m3": {
+      "derivation": "Published example water density 1000 kg/m3.",
+      "sources": [
+        "S4"
+      ]
+    },
+    "tree.diameter_m": {
+      "derivation": "Published nozzle diameter 0.500 cm converted to 0.005 m.",
+      "sources": [
+        "S3"
+      ]
+    }
+  },
   "inputs": {
     "connector": {
       "bend_radius_m": 100.0,
       "outer_diameter_m": 0.2,
-      "supplied_stress_limit_pa": 400000000.0,
+      "supplied_stress_limit_pa": 700000000.0,
       "wall_thickness_m": 0.05,
       "youngs_modulus_pa": 200000000000.0
     },
     "handoff": {
       "annulus_rate_m3_s": 0.0,
-      "production_rate_m3_s": 0.031415926535897934,
+      "production_rate_m3_s": 0.0005,
       "supplied_drop_pa": 1000000.0,
       "upstream_pressure_pa": 5000000.0
     },
     "tree": {
-      "coefficient_si": 63.245553203367585,
+      "coefficient_si": 806.3808033429367,
       "density_kg_m3": 1000.0,
-      "diameter_m": 0.2
+      "diameter_m": 0.005
     }
   },
   "inventory": [
@@ -110,7 +149,7 @@
       "curvature_per_m": 0.01,
       "moment_nm": 147262.15563702158,
       "stress_pa": 200000000.0,
-      "utilization": 0.5,
+      "utilization": 0.2857142857142857,
       "within_supplied_limit": true
     },
     "geometry": {
@@ -123,14 +162,44 @@
     "handoff": {
       "annulus_rate_m3_s": 0.0,
       "downstream_pressure_pa": 4000000.0,
-      "production_rate_m3_s": 0.031415926535897934,
+      "production_rate_m3_s": 0.0005,
       "within_supplied_ceiling": true
     },
     "tree": {
-      "rate_ceiling_m3_s": 0.06283185307179587,
-      "velocity_ceiling_m_s": 2.0
+      "rate_ceiling_m3_s": 0.0005006913291658733,
+      "velocity_ceiling_m_s": 25.5
     }
   },
   "schema_version": "1",
+  "sources": {
+    "S1": {
+      "accessed_on": "2026-10-28",
+      "edition": "2016 online edition",
+      "locator": "Section 12.3, Table 12.1, steel row; Equation 12.33",
+      "title": "OpenStax University Physics Volume 1",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus"
+    },
+    "S2": {
+      "accessed_on": "2026-10-28",
+      "edition": "Online data accessed 2026-10-28",
+      "locator": "Mechanical Properties, thickness 4.0-53.0 mm, transverse test pieces",
+      "title": "SSAB Strenx 700 E/F product data",
+      "url": "https://www.ssab.com/en-ca/brands-and-products/strenx/product-offer/700/e-f"
+    },
+    "S3": {
+      "accessed_on": "2026-10-28",
+      "edition": "2016 online edition",
+      "locator": "Section 14.5, Example 14.5, nozzle diameter, flow rate and rounded outlet speed",
+      "title": "OpenStax University Physics Volume 1",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/14-5-fluid-dynamics"
+    },
+    "S4": {
+      "accessed_on": "2026-10-28",
+      "edition": "2016 online edition",
+      "locator": "Section 14.6, Example 14.6, water density",
+      "title": "OpenStax University Physics Volume 1",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/14-6-bernoullis-equation"
+    }
+  },
   "status": "SYNTHETIC_STATIC_ONLY"
 }

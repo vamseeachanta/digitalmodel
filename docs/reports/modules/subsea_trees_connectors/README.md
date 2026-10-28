@@ -1,11 +1,12 @@
 # Subsea trees and connectors module analysis
 
 Open [index.html](index.html) for the self-contained analysis. The example uses
-synthetic inputs and normal public package imports; it establishes static
+public reference inputs, explicitly illustrative geometry and pressure boundaries,
+and normal public package imports; it establishes static
 arithmetic only. Fatigue assessment, dynamic response, network coupling and
 standards compliance remain NOT_EVALUATED.
 
-From the repository root, use the existing x86 Python environment with the
+From the repository root, use a Python environment with the
 package calculation dependencies, including pylife. Set `TMPDIR` to external
 scratch and run:
 
@@ -32,6 +33,9 @@ balance oracles check numerical meaning. Negative controls reject consistently
 regenerated wrong values and sign reversals. Rebuild equality alone establishes
 freshness, not numerical or physical validity.
 
+Public input URLs, editions, source locators and access dates are retained in
+results.json and the report. The plate yield comparison is not a connector
+design allowable, and the nozzle-derived coefficient does not qualify erosion.
 All methods and assumptions are traced in the report. A changed package source
 requires renewed source review and a revised source pin; regeneration alone
 does not qualify a changed engineering method.
