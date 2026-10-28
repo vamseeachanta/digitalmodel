@@ -8,7 +8,7 @@ def test_fracture_mechanics_fixture_is_loadable():
         Path(__file__).parent
         / "test_data"
         / "fracture_mechanics"
-        / "fracture_mechanics_py_ecs_2500ft_buoy_jt.yml"
+        / "fracture_mechanics_py_riser-sys-a_2500ft_buoy_jt.yml"
     )
     cfg = ymlInput(str(ymlfile), updateYml=None)
     assert isinstance(cfg, dict)
