@@ -636,3 +636,13 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Reproducible offshore-container module analysis; exact delivery only.
+!/scripts/reports/build_offshore_container_module_report.py
+!/docs/reports/modules/offshore_container/
+/docs/reports/modules/offshore_container/*
+!/docs/reports/modules/offshore_container/index.html
+!/docs/reports/modules/offshore_container/changes.json
+!/docs/reports/modules/offshore_container/results.json
+!/docs/reports/modules/offshore_container/manifest.json
+!/docs/reports/modules/offshore_container/README.md

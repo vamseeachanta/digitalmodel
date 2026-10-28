@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offshore-container module analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+.wrap{max-width:1100px;margin:2rem auto;padding:0 1.25rem}
+header,section,details{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);padding:1.25rem;margin:1rem 0}
+h1,h2,h3{color:var(--brand)}a{color:var(--brand)}nav{line-height:2}
+table{border-collapse:collapse;width:100%;font-size:.92rem}th,td{text-align:left;vertical-align:top;border:1px solid var(--edge);padding:.6rem;overflow-wrap:anywhere}
+th,.eq{background:var(--panel-2)}caption,figcaption{text-align:left;color:var(--muted);padding:.6rem 0;caption-side:bottom}
+.eq{padding:1rem;overflow-wrap:anywhere}svg{width:100%;height:auto}.scroll{overflow-x:auto}code{overflow-wrap:anywhere}
+@media print{header,section,details{break-inside:avoid}.wrap{max-width:none}}
+</style></head><body class="hs-doc"><main class="wrap">
+<header><p class="lbl">Structural calculation evidence</p><h1>Offshore-container module analysis</h1>
+<p>Ideal section geometry, sling geometry and caller-factor arithmetic. Physical qualification: NOT_EVALUATED.</p><nav aria-label="Report sections"><a href="#s1">Summary</a> · <a href="#s2">Scope</a> · <a href="#s3">Inputs</a> · <a href="#s4">Method</a> · <a href="#s5">Worked calculation</a> · <a href="#s6">Checks</a> · <a href="#s7">Results</a> · <a href="#s8">Limits</a> · <a href="#s9">Way forward</a> · <a href="#s10">Evidence</a></nav></header>
+<section><h2 id="s1">1. Summary</h2>
+<p>The public package calculates ideal SHS properties, a centred sling angle and reduced member demand-to-allowable ratios.
+The independently derived section and sling example is reproduced: A = 0.03 m², I = 0.000125 m⁴,
+Z = 0.00125 m³ and v = 45.0° [D1/D2].
+An explicitly synthetic usage scalar gives 1e+08 Pa [A3]. These are arithmetic checks, not accepted design factors or a resistance assessment.</p>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Added a reproducible module analysis with independent geometry and caller-factor arithmetic to expose the evidence and unresolved method limits.</td></tr></tbody></table>
+<details id="changes-panel"><summary>Change evidence</summary><p>The revision row is generated from <a href="changes.json">changes.json</a>.
+Machine-readable calculation evidence is in <a href="results.json">results.json</a>; <a href="manifest.json">manifest.json</a> binds source and delivered bytes.
+The <a href="README.md">rebuild instructions</a> explain the evidence boundary.</p></details></section>
+<section><h2 id="s2">2. Context and scope</h2>
+<p>Decision: determine which software outputs have independent arithmetic support and which claims require further engineering evidence.
+The exact reviewed source revision is <code>09089a121a16069c4b657d1a320a630a23ab1dd5</code>. No calculation source is changed by this report.
+It is a single synthetic example; range coverage, physical validation and acceptance-policy review are NOT_EVALUATED.</p>
+<p>The load path assumed by the implementation is mass → factored weight → attachment vertical load → resolved sling tension and inward horizontal load → top-rail axial stress.
+Separately, a factored internal weight becomes a uniform load shared between long floor rails, then simple-span bending stress.
+A padeye receives only a scalar net-area stress check [API].</p></section>
+<section><h2 id="s3">3. Input basis</h2>
+<p>A1 is the synthetic sharp-cornered, concentric section in D1: outer side b and uniform wall t. A2 is the centred rectangle and link height in D2.
+All four attachments are at the plan corners. The origin is the plan centre at the attachment plane; x follows length, y follows width and z points upward.
+The sling angle v is measured from positive vertical toward a corner. Stress and returned ratios are unsigned scalar magnitudes; signed force equilibrium is not solved.</p>
+<p>A3 consists of arbitrary mass, yield stress, net area and explicit factor inputs chosen only to exercise arithmetic.
+Every DesignFactors field is supplied. Synthetic factors are not prescribed by a standard and are not an accepted design basis.
+The unused angle and single-attachment fields are retained to expose their lack of effect.
+Inputs and outputs, units and their bases are all in the numbers table in Results.</p>
+<p>The SI prefix milli gives mm = m × 10³; centi gives cm = m × 10²; kilo gives kN = N / 10³ [SI].
+The public gravity definition is 980.665 cm/s², giving G = 9.80665 m/s² [GRAVITY, SI]. G is conventional gravity, not site gravity.</p>
+<figure><svg viewBox="0 0 760 255" role="img" aria-labelledby="geometry-title geometry-description">
+<title id="geometry-title">Ideal SHS and centred sling triangle</title>
+<desc id="geometry-description">b=0.2 m; t=0.05 m; L=6 m; B=8 m; h=5 m. Sketch only; the triangle lies in the corner-to-centre vertical plane.</desc>
+<rect x="25" y="30" width="160" height="160" fill="var(--panel-2)" stroke="currentColor"/>
+<rect x="65" y="70" width="80" height="80" fill="var(--panel)" stroke="currentColor"/>
+<text x="25" y="220">Ideal concentric section</text>
+<path d="M395 190 L555 190 L555 30 Z" fill="none" stroke="currentColor"/>
+<text x="565" y="110">h</text><text x="455" y="213">r</text>
+<text x="455" y="88">sling</text><text x="535" y="65">v</text>
+<text x="395" y="240">r = half-diagonal; v from vertical</text>
+</svg><figcaption>b=0.2 m; t=0.05 m; L=6 m; B=8 m; h=5 m [A1, A2]. Positive h is upward; r is outward from plan centre to corner. Figure generated by the builder.</figcaption></figure></section>
+<section><h2 id="s4">4. Method</h2>
+<p>Let R be mass in kg, g acceleration in m/s², kS the structure scalar, kP the attachment scalar, fT the tare fraction and u the usage scalar.
+The following equations describe the existing algorithm, with scalar factors provided by the caller [API].</p>
+<div class="eq">T = fT R; FL = kS R g [N]; Fi = (kS R − T) g [N]; σallow = u fy [Pa].</div>
+<div class="eq">n = clamp(ninput, 2, 4); Q = kP R g / (n − 1) [N]; RSL = Q / cos(v) [N]; H = Q tan(v) [N].</div>
+<p>The count bounds are the implementation policy [API], not a standard prescription adopted here. A single requested attachment is mapped to the lower bound; there is no separate single-attachment calculation.</p>
+<div class="eq">Utop = (H/A) / σallow; w = Fi/(2L) [N/m]; Mmax = w L²/8 = Fi L/16 [N m];
+Ufloor = (Mmax/Z)/σallow; Upad = (RSL/Apad)/σallow; Ugov = max(Utop, Ufloor, Upad).</div>
+<p>The rail share divisor represents two long rails. For a simply supported beam, reactions are wL/2 and M(x) = wLx/2 − wx²/2;
+setting its derivative to zero gives x = L/2 and the displayed maximum moment. This independently derives the beam coefficient, but does not establish that the actual floor behaves as that beam.
+N/m² = Pa; N m/m³ = Pa; stress divided by allowable stress is dimensionless. Loads returned in kN divide the calculated newtons by the SI kilo scale.
+Angle in degrees is radians × 180/π by the definitions of a full turn and a degree [D2].</p>
+<h3>Public function and data inventory</h3>
+<table><thead><tr><th>Public item</th><th>Inputs → outputs and review disposition</th></tr></thead><tbody>
+<tr><td>DesignFactors</td><td>Caller scalars, angle in degrees and tare fraction → frozen factor record. Defaults are not reproduced or adopted here.</td></tr>
+<tr><td>SHS; area, inertia, modulus; from_mm; __str__</td><td>b,t in m → A in m², I in m⁴, Z in m³; from_mm converts b,t from mm; string formatting gives a nominal mm label. Ideal geometry only; input validation absent.</td></tr>
+<tr><td>sling_angle_to_vertical</td><td>L,B,h in m → atan2(half-diagonal,h) in rad; centred geometry only.</td></tr>
+<tr><td>allowable_stress</td><td>fy in Pa and factor record → u fy in Pa; multiplication does not establish material suitability or the correct design criterion.</td></tr>
+<tr><td>utilization</td><td>L,B,h [m], R [kg], section, fy [Pa], factor record, attachment count, net area [m²] → Utilization. All arguments used by the example are explicit.</td></tr>
+<tr><td>Utilization</td><td>top_rail, floor, pad_eye and governing [1]; sling_angle_to_vertical_deg [deg]; rsl_kN and FL_kN [kN]. All returned fields appear in Results.</td></tr>
+<tr><td>factor_citations</td><td>Optional repository root → mapping of factor names to CitedValue records. Independent from utilization; no runtime citation resolution is requested for this synthetic report.</td></tr>
+<tr><td>SECTION_CATALOGUE</td><td>Predefined named SHS objects. Catalogue selection, real corner radii and material qualification are outside this example.</td></tr>
+</tbody></table>
+<p>factor_citations imports a separate registry and requests citation-backed values. CitationResolutionError produces an empty mapping and a warning, issued once through module state.
+The schema validates code identity, publisher and revision in metadata; it does not validate clause locators or clause text [CITATIONS, VALIDATOR].
+The wrapper catches resolution errors including missing or mismatched metadata; the underlying validator's fail-closed behavior therefore does not make utilization fail closed.
+The tare fraction is not requested by this citation wrapper. Caller overrides are not tied to resolved citation values. Standard-factor provenance and suitability remain NOT_EVALUATED.</p></section>
+<section><h2 id="s5">5. Worked calculation</h2>
+<p>D1 subtracts the inner square from the outer: bi = b − 2t = 0.1 m. Integrating y² over each concentric square gives
+I = ∫ y² dA = (b⁴ − bi⁴)/12. Thus A = 0.2² − 0.1² = 0.03 m²,
+I = (0.2⁴ − 0.1⁴)/12 = 0.000125 m⁴ and Z = I/(b/2) = 0.00125 m³.
+The integral of y² over a centred rectangle gives the denominator; it is not a fitted coefficient [D1].</p>
+<p>D2 gives r = √((6/2)² + (8/2)²) = √(3² + 4²) = 5 m. Height is also 5 m,
+so tan(v) = r/h = 1 and v = π/4 rad. Both SI constructor routes are checked against the same integrals.</p>
+<p>A3 sets u = 0.5 and fy = 200 × 10⁶ Pa, hence σallow = 100 × 10⁶ Pa.
+With the explicit mass and factors in Results, Q = 400g N, RSL = 400g√2 N, H = 400g N,
+Fi = 1500g N, Mmax = 562.5g N m and FL = 1600g N. These coefficients follow solely from A3 substituted into Method.
+Independent assertions use these closed expressions and the D1 section integrals. They establish arithmetic, not a strength or acceptance basis.</p></section>
+<section><h2 id="s6">6. Checks</h2>
+<p>The test file [TEST] checks the normal public API against D1/D2 and the explicit A3 allowable scalar, separately from production replay.
+The synthetic load expressions check every returned Utilization field. Section properties use relative tolerance 1e−12 with zero absolute allowance;
+angles use absolute tolerance 1e−12 in the relevant angular unit with zero relative allowance. Other synthetic arithmetic uses relative tolerance 1e−12 with zero absolute allowance.
+These tolerances permit floating-point rounding only; they are not measurement uncertainties or design margins.</p>
+<p>Separate tests generate two clean external deliveries, compare all bytes with the committed delivery, read every manifest digest independently,
+and check local links, sections and embedded JSON. Changed values and reversed signs fail the analytical oracle even when builder and report agree.
+Altering a delivered result also fails the byte manifest. Rebuilding or replaying the same calculation is a freshness check, not independent numerical evidence.</p>
+<p>No claim of physical validation, input-domain coverage or design acceptance follows from these software checks.</p></section>
+<section><h2 id="s7">7. Results</h2>
+<p>The numbers table is generated from public-method outputs and explicit inputs, rather than typed result values.
+Human-readable values are rounded; the exact floating-point serialization is retained in results.json. The governing value is only the largest of the implemented scalar ratios.
+There is no pass/fail or compliance decision.</p>
+<div class="scroll"><table><caption>Input → method → answer chain. A1/A2: synthetic geometry; A3: caller arithmetic; API: implementation equation; D1/D2: independent derivations.</caption>
+<thead><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Source or derivation</th></tr></thead><tbody><tr><td>b_m</td><td>0.2</td><td>m</td><td>A1 / D1: synthetic section input</td></tr><tr><td>t_m</td><td>0.05</td><td>m</td><td>A1 / D1: synthetic section input</td></tr><tr><td>b_mm</td><td>200</td><td>mm</td><td>A1 + SI: same section in millimetres</td></tr><tr><td>t_mm</td><td>50</td><td>mm</td><td>A1 + SI: same section in millimetres</td></tr><tr><td>length_m</td><td>6</td><td>m</td><td>A2 / D2: synthetic centred corner attachments</td></tr><tr><td>width_m</td><td>8</td><td>m</td><td>A2 / D2: synthetic centred corner attachments</td></tr><tr><td>lift_height_m</td><td>5</td><td>m</td><td>A2 / D2: synthetic centred corner attachments</td></tr><tr><td>rating_kg</td><td>1000</td><td>kg</td><td>A3: synthetic arithmetic input; no accepted design basis</td></tr><tr><td>fy_Pa</td><td>2e+08</td><td>Pa</td><td>A3: synthetic arithmetic input; no accepted design basis</td></tr><tr><td>n_padeyes</td><td>4</td><td>count</td><td>A2 / D2: synthetic centred corner attachments</td></tr><tr><td>padeye_area_m2</td><td>0.02</td><td>m²</td><td>A3: synthetic arithmetic input; no accepted design basis</td></tr><tr><td>gravity_m_s2</td><td>9.80665</td><td>m/s²</td><td>GRAVITY + SI: conventional input G, not site gravity</td></tr><tr><td>structure_load_factor</td><td>1.6</td><td>1</td><td>A3: explicit synthetic factor; no standard prescription</td></tr><tr><td>padeye_load_factor</td><td>1.2</td><td>1</td><td>A3: explicit synthetic factor; no standard prescription</td></tr><tr><td>single_padeye_load_factor</td><td>1.7</td><td>1</td><td>A3: explicit synthetic factor; no standard prescription</td></tr><tr><td>usage_factor</td><td>0.5</td><td>1</td><td>A3: explicit synthetic factor; no standard prescription</td></tr><tr><td>default_sling_angle_to_vertical_deg</td><td>12</td><td>deg</td><td>A3: explicit synthetic factor; no standard prescription</td></tr><tr><td>tare_fraction</td><td>0.1</td><td>1</td><td>A3: explicit synthetic factor; no standard prescription</td></tr><tr><td>metres.area_m2</td><td>0.03</td><td>m²</td><td>SHS public property / D1 integral</td></tr><tr><td>metres.inertia_m4</td><td>0.000125</td><td>m⁴</td><td>SHS public property / D1 integral</td></tr><tr><td>metres.modulus_m3</td><td>0.00125</td><td>m³</td><td>SHS public property / D1 integral</td></tr><tr><td>millimetres.area_m2</td><td>0.03</td><td>m²</td><td>SHS public property / D1 integral</td></tr><tr><td>millimetres.inertia_m4</td><td>0.000125</td><td>m⁴</td><td>SHS public property / D1 integral</td></tr><tr><td>millimetres.modulus_m3</td><td>0.00125</td><td>m³</td><td>SHS public property / D1 integral</td></tr><tr><td>angle_rad</td><td>0.785398</td><td>rad</td><td>sling_angle_to_vertical / D2 right triangle</td></tr><tr><td>allowable_stress_Pa</td><td>1e+08</td><td>Pa</td><td>allowable_stress / A3: usage_factor × fy</td></tr><tr><td>utilization.top_rail</td><td>0.00130755</td><td>1</td><td>utilization / API equations + A3; arithmetic only</td></tr><tr><td>utilization.floor</td><td>0.0441299</td><td>1</td><td>utilization / API equations + A3; arithmetic only</td></tr><tr><td>utilization.pad_eye</td><td>0.00277374</td><td>1</td><td>utilization / API equations + A3; arithmetic only</td></tr><tr><td>utilization.governing</td><td>0.0441299</td><td>1</td><td>utilization / API equations + A3; arithmetic only</td></tr><tr><td>utilization.sling_angle_to_vertical_deg</td><td>45</td><td>deg</td><td>utilization / API equations + A3; arithmetic only</td></tr><tr><td>utilization.rsl_kN</td><td>5.54748</td><td>kN</td><td>utilization / API equations + A3; arithmetic only</td></tr><tr><td>utilization.FL_kN</td><td>15.6906</td><td>kN</td><td>utilization / API equations + A3; arithmetic only</td></tr></tbody></table></div></section>
+<section><h2 id="s8">8. Limits and NOT_EVALUATED findings</h2>
+<table><thead><tr><th>Topic</th><th>Status</th><th>Open finding</th></tr></thead><tbody><tr><td>Strength</td><td>NOT_EVALUATED</td><td>The scalar axial and bending demands omit frame action, projection of horizontal pull onto individual rail axes, member buckling, combined stress, real-section effects, joints, welds, corrosion and other load cases.</td></tr><tr><td>Padeye</td><td>NOT_EVALUATED</td><td>Net-area axial stress omits pin bearing, tear-out, bending, welds, shackle fit, out-of-plane load and local geometry.</td></tr><tr><td>Sharing</td><td>NOT_EVALUATED</td><td>Attachment count is silently clamped to the implemented range; equal sharing over n minus one attachments is a model assumption, not an equilibrium solution for actual rigging.</td></tr><tr><td>Input domain</td><td>NOT_EVALUATED</td><td>Public methods do not reject invalid dimensions, nonpositive areas, material stresses or inappropriate factors. The worked inputs are positive with a nonzero hollow core; wider domain behaviour is not qualified.</td></tr><tr><td>Unused fields</td><td>NOT_EVALUATED</td><td>single_padeye_load_factor and default_sling_angle_to_vertical_deg do not affect utilization. A single attachment is mapped to the lower supported count; geometry always determines angle.</td></tr><tr><td>Factor provenance</td><td>NOT_EVALUATED</td><td>utilization does not call factor_citations. The citation registry has its own values, validates metadata rather than clause content and does not bind caller overrides. No licensed standard was accessed.</td></tr><tr><td>Certification</td><td>NOT_EVALUATED</td><td>No accepted design basis, independent design review, fabrication evidence, prototype test, operational qualification or certification is supplied.</td></tr></tbody></table>
+<p>The implementation cites DNVGL-ST-E271 (2.7-1), Offshore containers, August 2017. The licensed text was not accessed;
+clause content, factor values and standard conformity are NOT_EVALUATED. No default factor values are published in this report.</p></section>
+<section><h2 id="s9">9. Way forward</h2>
+<p>Before physical use, establish an accepted load and resistance basis with the applicable standard and material data;
+resolve attachment count, rigging geometry and eccentric load sharing; qualify frame, floor and padeye resistance with the relevant failure modes;
+and add input-domain validation with reviewed boundary cases. Obtain independent engineering review and required test evidence.
+Treat these as open method and acceptance-policy findings; this report does not replace algorithms or select a design basis.</p>
+<p>A parameter study and physical-use readiness remain NOT_EVALUATED. This single-point example supplies no lookup envelope or range qualification.</p></section>
+<section><h2 id="s10">10. References and evidence</h2><ul><li><a href="../../../../src/digitalmodel/structural/offshore_container/docs/worked-shs-sling-geometry.md">D1/D2</a>: Committed hand derivation: concentric square integrals and centred sling triangle; synthetic geometry only.</li><li><a href="../../../../src/digitalmodel/structural/offshore_container/dnv_2_7_1.py">API</a>: Reviewed calculation source; equations are described as implemented, without adopting its standard-derived defaults.</li><li><a href="../../../../src/digitalmodel/structural/offshore_container/__init__.py">EXPORTS</a>: Public package exports; inventory below includes data classes and the section catalogue.</li><li><a href="../../../../src/digitalmodel/citations/registry.py">CITATIONS</a>: Registry plumbing reviewed as code, without publishing its numeric standard factors.</li><li><a href="../../../../src/digitalmodel/citations/schema.py">VALIDATOR</a>: Citation validation checks metadata, not clause content or the selected design basis.</li><li><a href="https://www.bipm.org/en/measurement-units/si-prefixes">SI</a>: BIPM SI prefixes: milli, centi, kilo. Public page checked on the revision date.</li><li><a href="https://www.bipm.org/en/committees/cg/cgpm/3-1901/resolution-2">GRAVITY</a>: BIPM standard-gravity definition, third CGPM resolution 2. Public page checked on the revision date.</li><li><a href="../../../../tests/reporting/test_offshore_container_module_report.py">TEST</a>: Analytical assertions, corrupted-result controls, byte rebuilds, manifest readback and local-link checks.</li><li><a href="../../../../scripts/reports/build_offshore_container_module_report.py">BUILDER</a>: Explicit public API calls and deterministic presentation generation.</li></ul>
+<p>The manifest records exact SHA-256 source and artifact bytes. Its own digest is excluded to avoid a circular binding;
+the rebuild test compares its complete bytes. Source revision describes the reviewed calculation, while individual digests bind the delivered evidence.</p></section>
+<script id="calculation" type="application/json">{
+  "allowable_stress_Pa": 100000000.0,
+  "angle_rad": 0.7853981633974483,
+  "evidence_class": "Synthetic geometry and caller-factor arithmetic; physical suitability NOT_EVALUATED",
+  "inputs": {
+    "b_m": 0.2,
+    "b_mm": 200.0,
+    "factors": {
+      "default_sling_angle_to_vertical_deg": 12.0,
+      "padeye_load_factor": 1.2,
+      "single_padeye_load_factor": 1.7,
+      "structure_load_factor": 1.6,
+      "tare_fraction": 0.1,
+      "usage_factor": 0.5
+    },
+    "fy_Pa": 200000000.0,
+    "gravity_m_s2": 9.80665,
+    "length_m": 6.0,
+    "lift_height_m": 5.0,
+    "n_padeyes": 4,
+    "padeye_area_m2": 0.02,
+    "rating_kg": 1000.0,
+    "t_m": 0.05,
+    "t_mm": 50.0,
+    "width_m": 8.0
+  },
+  "open_findings": [
+    {
+      "finding": "The scalar axial and bending demands omit frame action, projection of horizontal pull onto individual rail axes, member buckling, combined stress, real-section effects, joints, welds, corrosion and other load cases.",
+      "status": "NOT_EVALUATED",
+      "topic": "Strength"
+    },
+    {
+      "finding": "Net-area axial stress omits pin bearing, tear-out, bending, welds, shackle fit, out-of-plane load and local geometry.",
+      "status": "NOT_EVALUATED",
+      "topic": "Padeye"
+    },
+    {
+      "finding": "Attachment count is silently clamped to the implemented range; equal sharing over n minus one attachments is a model assumption, not an equilibrium solution for actual rigging.",
+      "status": "NOT_EVALUATED",
+      "topic": "Sharing"
+    },
+    {
+      "finding": "Public methods do not reject invalid dimensions, nonpositive areas, material stresses or inappropriate factors. The worked inputs are positive with a nonzero hollow core; wider domain behaviour is not qualified.",
+      "status": "NOT_EVALUATED",
+      "topic": "Input domain"
+    },
+    {
+      "finding": "single_padeye_load_factor and default_sling_angle_to_vertical_deg do not affect utilization. A single attachment is mapped to the lower supported count; geometry always determines angle.",
+      "status": "NOT_EVALUATED",
+      "topic": "Unused fields"
+    },
+    {
+      "finding": "utilization does not call factor_citations. The citation registry has its own values, validates metadata rather than clause content and does not bind caller overrides. No licensed standard was accessed.",
+      "status": "NOT_EVALUATED",
+      "topic": "Factor provenance"
+    },
+    {
+      "finding": "No accepted design basis, independent design review, fabrication evidence, prototype test, operational qualification or certification is supplied.",
+      "status": "NOT_EVALUATED",
+      "topic": "Certification"
+    }
+  ],
+  "reviewed_source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "schema_version": 1,
+  "sections": {
+    "metres": {
+      "area_m2": 0.030000000000000006,
+      "inertia_m4": 0.00012500000000000003,
+      "modulus_m3": 0.0012500000000000002
+    },
+    "millimetres": {
+      "area_m2": 0.030000000000000006,
+      "inertia_m4": 0.00012500000000000003,
+      "modulus_m3": 0.0012500000000000002
+    }
+  },
+  "utilization": {
+    "FL_kN": 15.69064,
+    "floor": 0.04412992499999999,
+    "governing": 0.04412992499999999,
+    "pad_eye": 0.0027737394862892223,
+    "rsl_kN": 5.547478972578445,
+    "sling_angle_to_vertical_deg": 45.0,
+    "top_rail": 0.0013075533333333329
+  }
+}
+</script>
+<script id="change-history" type="application/json">[
+  {
+    "change": "Added a reproducible module analysis with independent geometry and caller-factor arithmetic to expose the evidence and unresolved method limits.",
+    "date": "2026-10-28",
+    "revision": "A"
+  }
+]
+</script>
+</main></body></html>
