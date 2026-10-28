@@ -137,7 +137,7 @@ rao_diverse_results.txt
 
 .venv/
 venv/
-ENV/
+/ENV/
 /env/
 # Nested environments are ignored by specific environment paths, not by env/.
 **/env/pyvenv.cfg
@@ -478,6 +478,16 @@ docs/reports/abstracted-hulls/*
 !docs/reports/pipeline-ffs-assessment.manifest.json
 !docs/reports/padeye-lift-point-analysis.html
 
+# Preserve the GIS module report and its rebuild sources.
+!docs/reports/modules/
+docs/reports/modules/*
+!docs/reports/modules/gis/
+docs/reports/modules/gis/*
+!docs/reports/modules/gis/build_report.py
+!docs/reports/modules/gis/changes.json
+!docs/reports/modules/gis/report.html
+!docs/reports/modules/gis/sources.json
+
 # scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
 # build output. The bare `lib/` above is packaging boilerplate and matches any
 # directory named lib at ANY depth -- it silently swallowed the files that fix
@@ -606,6 +616,24 @@ docs/reports/abstracted-hulls/*
 !/docs/reports/modules/
 /docs/reports/modules/*
 !/docs/reports/modules/.gitignore
+
+# Retain the normalized-section example source; generated output stays ignored.
+!/docs/reports/modules/passing_ship/
+/docs/reports/modules/passing_ship/*
+!/docs/reports/modules/passing_ship/build_worked_example.py
+!/docs/reports/modules/passing_ship/README.md
+
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
+!/docs/reports/modules/pipe_capacity/
+/docs/reports/modules/pipe_capacity/*
+!/docs/reports/modules/pipe_capacity/build_worked_example.py
+!/docs/reports/modules/pipe_capacity/README.md
+
+# Retain module reports after the shared directory rule.
+!/docs/reports/modules/vesselseakeeping/manifest.json
+!/docs/reports/modules/riserfatigue/
+!/docs/reports/modules/riserfatigue/generate_report.py
+!/docs/reports/modules/riserfatigue/report.html
+!/docs/reports/modules/riserfatigue/changes.json

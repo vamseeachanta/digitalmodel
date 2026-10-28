@@ -1,0 +1,20 @@
+CHECK trailing_whitespace_fixer exit 0
+CHECK end_of_file_fixer exit 0
+CHECK check_json exit 0
+CHECK check_yaml exit 0
+CHECK check_merge_conflict exit 0
+CHECK check_case_conflict exit 0
+CHECK check_symlinks exit 0
+CHECK check_executables_have_shebangs exit 0
+CHECK check_shebang_scripts_are_executable exit 0
+CHECK detect_private_key exit 0
+CHECK check_added_large_files exit 0
+CHECK fix_byte_order_marker exit 0
+CHECK mixed_line_ending exit 0
+CHECK mypy exit 0
+Success: no issues found in 8 source files
+CHECK pydocstyle exit 0
+CHECK structure exit 0
+repository structure OK: 18293 paths
+CHECK windows-paths exit 0
+FAILED: []

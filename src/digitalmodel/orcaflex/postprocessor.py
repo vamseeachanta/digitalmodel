@@ -162,6 +162,72 @@ def generate_range_graph(
 # Extreme value analysis
 # ---------------------------------------------------------------------------
 
+def encounter_probability(return_period: float, design_life: float) -> float:
+    """Calculate the chance of at least one exceedance over a design life.
+
+    Basis: USACE EM 1110-2-1415, Hydrologic Frequency Analysis,
+    5 March 1993 edition, paragraph 3-5, "Risk" (binomial model):
+    https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-2-1415.pdf
+
+    Independent years have constant annual exceedance probability ``q = 1 / T``.
+    The probability of no exceedance in N years is ``(1 - q) ** N``;
+    its complement gives ``p = 1 - (1 - 1 / T) ** N``. For noninteger N,
+    the same survival power is an interpolation assumption. Applicability
+    of independence and constant annual probability requires a separate
+    assessment for a particular design. A return period does not specify
+    the time between successive events.
+
+    Args:
+        return_period: Finite return period T in years, at least 1.
+        design_life: Finite design life N in years, greater than 0.
+
+    Returns:
+        Probability of at least one exceedance, between 0 and 1.
+
+    Raises:
+        ValueError: If either input is outside its stated range.
+    """
+    if not math.isfinite(return_period) or return_period < 1:
+        raise ValueError("return_period must be finite and at least 1 year")
+    if not math.isfinite(design_life) or design_life <= 0:
+        raise ValueError("design_life must be finite and greater than 0 years")
+    if return_period == 1:
+        return 1.0
+    return -math.expm1(design_life * math.log1p(-1.0 / return_period))
+
+
+def return_period_for_probability(probability: float, design_life: float) -> float:
+    """Calculate the return period for a target lifetime encounter probability.
+
+    Basis: USACE EM 1110-2-1415, Hydrologic Frequency Analysis,
+    5 March 1993 edition, paragraph 3-5, "Risk"; the retrievable reference
+    and model assumptions are given in :func:`encounter_probability`.
+    Algebraic rearrangement of that model gives ``1 - p = (1 - 1 / T) ** N``,
+    then ``(1 - p) ** (1 / N) = 1 - 1 / T``, and hence
+    ``T = 1 / (1 - (1 - p) ** (1 / N))``.
+
+    Args:
+        probability: Finite target probability, greater than 0 and at most 1.
+            Zero is excluded because it requires an infinite return period.
+        design_life: Finite design life in years, greater than 0.
+
+    Returns:
+        Required return period in years, at least 1. Returns ``math.inf``
+        if the required period exceeds the floating-point range.
+
+    Raises:
+        ValueError: If either input is outside its stated range.
+    """
+    if not math.isfinite(probability) or not 0 < probability <= 1:
+        raise ValueError("probability must be finite, greater than 0 and at most 1")
+    if not math.isfinite(design_life) or design_life <= 0:
+        raise ValueError("design_life must be finite and greater than 0 years")
+    if probability == 1:
+        return 1.0
+    annual_probability = -math.expm1(math.log1p(-probability) / design_life)
+    return 1.0 / annual_probability if annual_probability > 0 else math.inf
+
+
 class ExtremeValueResult(BaseModel):
     """Result of extreme value analysis."""
     distribution: str = Field(..., description="Distribution fitted (Gumbel or Weibull)")

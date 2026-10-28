@@ -20,6 +20,7 @@ Critical: JSON streaming with date-based queries - NO file storage!
 """
 
 import logging
+from math import isfinite
 from typing import Dict, Any, Iterator
 from datetime import datetime, timedelta
 from ...common.base_client import BaseAPIClient
@@ -43,6 +44,17 @@ class OpenMeteoClient(BaseAPIClient):
             print(f"Forecast Hs: {record['wave_height']} m")
             # Data discarded after use
     """
+
+    _VARIABLE_MAP = {
+        "wave_height": "wave_height",
+        "wave_direction": "wave_direction",
+        "wave_period": "wave_period",
+        "wind_speed_10m": "wind_speed_10m",
+        "wind_speed_80m": "wind_speed_80m",
+        "wind_speed_120m": "wind_speed_120m",
+        "current_speed": "ocean_current_velocity",
+        "current_direction": "ocean_current_direction"
+    }
 
     def __init__(self, **kwargs):
         """
@@ -91,18 +103,7 @@ class OpenMeteoClient(BaseAPIClient):
         parameters = parameters or ["wave_height", "wind_speed_10m"]
 
         # Map parameter names to Open-Meteo variable names
-        variable_map = {
-            "wave_height": "wave_height",
-            "wave_direction": "wave_direction",
-            "wave_period": "wave_period",
-            "wind_speed_10m": "wind_speed_10m",
-            "wind_speed_80m": "wind_speed_80m",
-            "wind_speed_120m": "wind_speed_120m",
-            "current_speed": "ocean_current_velocity",
-            "current_direction": "ocean_current_direction"
-        }
-
-        variables = [variable_map.get(p, p) for p in parameters]
+        variables = [self._VARIABLE_MAP.get(p, p) for p in parameters]
 
         # Check date range (max 16 days)
         max_forecast_date = datetime.now() + timedelta(days=16)
@@ -136,18 +137,55 @@ class OpenMeteoClient(BaseAPIClient):
 
         Yields:
             Parsed marine forecast records (streaming)
+
+        Raises:
+            ValueError: Malformed hourly times or requested samples, before any
+                record is yielded.
         """
         response = self.get("marine", params=params)
         data = response.json()
 
-        # Extract hourly forecast data
-        hourly = data.get('hourly', {})
-        times = hourly.get('time', [])
+        # Validate the complete response before delivering any weather inputs.
+        if not isinstance(data, dict) or not isinstance(data.get('hourly'), dict):
+            raise ValueError("Open-Meteo hourly must be an object")
+        hourly = data['hourly']
+        times = hourly.get('time')
+        if not isinstance(times, list):
+            raise ValueError("Open-Meteo hourly.time must be an array")
+
+        timestamps = []
+        for i, time_str in enumerate(times):
+            try:
+                timestamps.append(datetime.fromisoformat(time_str))
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    f"Open-Meteo hourly.time has an invalid timestamp at index {i}"
+                ) from exc
+
+        requested_arrays = {}
+        for param in parameters:
+            variable = self._VARIABLE_MAP.get(param, param)
+            samples = hourly.get(variable)
+            if not isinstance(samples, list):
+                raise ValueError(f"Open-Meteo hourly.{variable} must be an array")
+            if len(samples) != len(times):
+                raise ValueError(
+                    f"Open-Meteo hourly.{variable} must contain {len(times)} "
+                    f"samples to match hourly.time; got {len(samples)}"
+                )
+            for i, sample in enumerate(samples):
+                # JSON integers are finite; booleans are not weather samples.
+                if (isinstance(sample, bool)
+                        or not isinstance(sample, (int, float))
+                        or (isinstance(sample, float) and not isfinite(sample))):
+                    raise ValueError(
+                        f"Open-Meteo hourly.{variable} must contain finite numeric "
+                        f"samples; invalid sample at index {i}"
+                    )
+            requested_arrays[param] = samples
 
         # Convert to records (time series)
-        for i, time_str in enumerate(times):
-            timestamp = datetime.fromisoformat(time_str)
-
+        for i, timestamp in enumerate(timestamps):
             record = {
                 'timestamp': timestamp,
                 'latitude': data['latitude'],
@@ -155,9 +193,8 @@ class OpenMeteoClient(BaseAPIClient):
             }
 
             # Add forecast parameters
-            for param in parameters:
-                if param in hourly:
-                    record[param] = hourly[param][i]
+            for param, samples in requested_arrays.items():
+                record[param] = samples[i]
 
             yield record
 

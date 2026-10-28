@@ -48,7 +48,7 @@ def test_column_deck_gdf_preserves_volume(tmp_path, monkeypatch):
     assert result is not None and result.mesh_kind == "parametric"
     assert result.form == "column_pontoon"
     assert result.mesh_path.name == "hull.gdf"
-    lines = result.mesh_path.read_text().splitlines()
+    lines = result.mesh_path.read_text(encoding="utf-8").splitlines()
     assert int(lines[3]) == result.n_panels
     vertices = np.loadtxt(lines[4:]).reshape(-1, 4, 3)
     # Same signed divergence volume as column_pontoon_form._hydrostatics;
@@ -59,7 +59,7 @@ def test_column_deck_gdf_preserves_volume(tmp_path, monkeypatch):
     ))
     assert captured["parameters"] == generic_semi_parameters(96.2, 90.0, 22.75, 4.0)
     assert volume == pytest.approx(captured["report"].displacement, rel=0.01)
-    manifest = json.loads((result.mesh_path.parent / "manifest.json").read_text())
+    manifest = json.loads((result.mesh_path.parent / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["mesh"]["kind"] == "parametric"
 
 
@@ -91,9 +91,9 @@ def test_assumed_geometry_labels_and_repeatable_outputs(tmp_path):
     assert spec.vessel.name == result.vessel
     assert "assumed proportions" in spec.vessel.type
     assert result.vessel in result.deck_path.stem
-    assert result.vessel in result.deck_path.read_text()
-    assert result.vessel in result.mesh_path.read_text().splitlines()[0]
-    manifest = json.loads((result.mesh_path.parent / "manifest.json").read_text())
+    assert result.vessel in result.deck_path.read_text(encoding="utf-8")
+    assert result.vessel in result.mesh_path.read_text(encoding="utf-8").splitlines()[0]
+    manifest = json.loads((result.mesh_path.parent / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["vessel"] == result.vessel
     assert manifest["geometry_basis"] == "assumed proportions"
     assert manifest["source_record_id"] == source.vessel_id()
@@ -102,7 +102,17 @@ def test_assumed_geometry_labels_and_repeatable_outputs(tmp_path):
     repeated = build_deck(source, tmp_path / "second")
     first = {p.name: p.read_bytes() for p in result.deck_path.parent.iterdir()}
     second = {p.name: p.read_bytes() for p in repeated.deck_path.parent.iterdir()}
-    assert set(first) == {"hull.gdf", "spec.yml", "manifest.json", result.deck_path.name}
+    assert set(first) == {
+        "hull.gdf", "spec.yml", "manifest.json", result.deck_path.name,
+        "external_matrices.orcawave.json",
+    }
+    assert json.loads(first["external_matrices.orcawave.json"]) == {
+        "conversion_revision": "external-matrices-v1",
+        "backend": "orcawave",
+        "dof_order": ["surge", "sway", "heave", "roll", "pitch", "yaw"],
+        "sign_convention": "opposes displacement and velocity",
+        "matrices": [],
+    }
     assert first == second
 
 
@@ -131,7 +141,7 @@ def test_demo_index_uses_output_label_and_is_repeatable(tmp_path, monkeypatch, c
     outputs = []
     for name in ("first", "second"):
         out = tmp_path / name
-        monkeypatch.setattr("sys.argv", ["prepare_vessel_decks.py", "--out", str(out)])
+        monkeypatch.setattr("sys.argv", ["prepare_vessel_decks.py", "--out", out.as_posix()])
         module.main()
         outputs.append((out / "index.json").read_bytes())
         assert json.loads(outputs[-1])[0]["vessel"] == label

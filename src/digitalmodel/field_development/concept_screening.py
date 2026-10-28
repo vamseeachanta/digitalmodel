@@ -44,6 +44,7 @@ Usage
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from math import isfinite
 from pathlib import Path
 from typing import Any, Optional, cast
 
@@ -255,22 +256,23 @@ def capex_line_items(
     ----------
     capex_override : dict, optional
         Map of ``HostType`` (or ``host.value`` string) -> absolute total CAPEX in
-        USD bn. Entries must be > 0. A host absent from the map falls back to the
-        generic fraction path, so a partial override is allowed.
+        USD bn. Entries must be finite and > 0. A host absent from the map falls
+        back to the generic fraction path, so a partial override is allowed.
 
     Raises
     ------
     ValueError
-        If an override total supplied for ``host`` is <= 0.
+        If an override total supplied for ``host`` is nonfinite or <= 0.
     """
     cap = params["capex"]
 
     override_total = _override_for_host(host, capex_override)
     if override_total is not None:
         override_total = float(override_total)
-        if override_total <= 0:
+        if not isfinite(override_total) or override_total <= 0:
             raise ValueError(
-                f"capex_override for {host.value!r} must be > 0, got {override_total!r} "
+                f"capex_override for {host.value!r} must be finite and > 0, "
+                f"got {override_total!r} "
                 "(absolute CAPEX total in USD bn)."
             )
         # Absolute override: the supplied total IS the concept CAPEX. No fraction

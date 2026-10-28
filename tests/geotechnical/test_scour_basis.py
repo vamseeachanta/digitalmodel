@@ -18,6 +18,98 @@ from digitalmodel.geotechnical import scour
 from digitalmodel.geotechnical.cfg_workflows import ScourWorkflow
 
 
+SYNTHETIC_MOTION = json.loads(
+    Path(__file__).with_name("synthetic_sediment_motion.json").read_text(encoding="utf-8")
+)
+MOTION_CASES = [
+    SYNTHETIC_MOTION["reference_case"],
+    *SYNTHETIC_MOTION["scaling_cases"],
+]
+# Arithmetic roundoff allowance only; not a physical acceptance tolerance.
+MOTION_ROUNDOFF = 1e-12
+
+
+@pytest.mark.parametrize("case", MOTION_CASES, ids=lambda case: case["id"])
+def test_shields_thresholds_match_synthetic_hand_balance(case):
+    """Check independent fixture values from submerged grain weight.
+
+    USACE HEC-RAS v6.4.1 (2023), section 2.14.1 equation 132:
+    submerged unit weight [N/m^3] times grain diameter [m] is a stress
+    scale [Pa]; multiplying by the supplied Shields parameter gives tau_cr.
+    Section 2.13.1, definition after equation 111: u_star=sqrt(tau_cr/rho_w).
+    The public equation locator is in critical_sediment_motion's docstring.
+    The fixture writes out the independent reference and scaling arithmetic.
+    """
+    values = SYNTHETIC_MOTION["reference_inputs"] | case["overrides"]
+    result = scour.critical_sediment_motion(**values)
+    assert result.critical_shear_stress_pa == pytest.approx(
+        case["stress_pa"], rel=MOTION_ROUNDOFF, abs=0.0
+    )
+    assert result.critical_shear_velocity_ms == pytest.approx(
+        case["velocity_ms"], rel=MOTION_ROUNDOFF, abs=0.0
+    )
+
+
+@pytest.mark.parametrize("case", MOTION_CASES, ids=lambda case: case["id"])
+def test_shields_thresholds_satisfy_inverse_balances(case):
+    """Recover theta and d from USACE eq. 132; rho_w*u_star^2=tau_cr.
+
+    These inverse dimensional balances use only the supplied positive
+    synthetic inputs and returned thresholds, with no empirical constants.
+    """
+    values = SYNTHETIC_MOTION["reference_inputs"] | case["overrides"]
+    result = scour.critical_sediment_motion(**values)
+    submerged_unit_weight = (
+        values["sediment_density_kg_m3"] - values["water_density_kg_m3"]
+    ) * values["gravity_ms2"]
+    recovered_shields = result.critical_shear_stress_pa / (
+        submerged_unit_weight * values["sediment_d50_m"]
+    )
+    recovered_diameter = result.critical_shear_stress_pa / (
+        values["critical_shields_parameter"] * submerged_unit_weight
+    )
+    recovered_stress = (
+        values["water_density_kg_m3"] * result.critical_shear_velocity_ms**2
+    )
+    assert recovered_shields == pytest.approx(
+        values["critical_shields_parameter"], rel=MOTION_ROUNDOFF, abs=0.0
+    )
+    assert recovered_diameter == pytest.approx(
+        values["sediment_d50_m"], rel=MOTION_ROUNDOFF, abs=0.0
+    )
+    assert recovered_stress == pytest.approx(
+        result.critical_shear_stress_pa, rel=MOTION_ROUNDOFF, abs=0.0
+    )
+
+
+@pytest.mark.parametrize(
+    "case", SYNTHETIC_MOTION["scaling_cases"], ids=lambda case: case["id"]
+)
+def test_shields_thresholds_scale_independently(case):
+    """Check the fixture's hand ratios from USACE eq. 132 and shear velocity.
+
+    Each case changes one independent factor; the water-density case holds
+    submerged density contrast fixed to isolate the velocity denominator.
+    """
+    values = SYNTHETIC_MOTION["reference_inputs"]
+    reference = scour.critical_sediment_motion(**values)
+    scaled = scour.critical_sediment_motion(**(values | case["overrides"]))
+    assert scaled.critical_shear_stress_pa / reference.critical_shear_stress_pa == (
+        pytest.approx(case["stress_ratio"], rel=MOTION_ROUNDOFF, abs=0.0)
+    )
+    assert scaled.critical_shear_velocity_ms / reference.critical_shear_velocity_ms == (
+        pytest.approx(case["velocity_ratio"], rel=MOTION_ROUNDOFF, abs=0.0)
+    )
+
+
+def test_shields_thresholds_reject_equal_positive_densities():
+    """Equal densities remove submerged grain weight in USACE eq. 132."""
+    values = dict(SYNTHETIC_MOTION["reference_inputs"])
+    values["sediment_density_kg_m3"] = values["water_density_kg_m3"]
+    with pytest.raises(ValueError, match="sediment_density_kg_m3 must exceed"):
+        scour.critical_sediment_motion(**values)
+
+
 def test_critical_current_hand_calculation():
     """FHWA eq. 3: 31.08*sqrt(.04)*64**(1/6)*.001**(1/3).
 

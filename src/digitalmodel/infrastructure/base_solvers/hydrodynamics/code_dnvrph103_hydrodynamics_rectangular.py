@@ -1,5 +1,8 @@
 import os
 import math
+import logging
+from collections.abc import Mapping
+from numbers import Real
 import numpy as np
 from scipy import interpolate
 from assetutilities.common.data import SaveData
@@ -120,6 +123,9 @@ class DNVRPH103_hydrodynamics_rectangular:
         buoy_data.update({"AddedInertiaCoefficient": AddedInertiaCoefficient})
 
     def update_6d_buoy_inertia(self, properties, buoy_data):
+        # kg.m^2 -> t.m^2: NIST SP 811 (2008), section 5.1.1, Table 6.
+        # https://www.nist.gov/pml/special-publication-811/nist-guide-si-chapter-5-units-outside-si
+        # Preserve the existing three-decimal export representation.
         MomentsOfInertia = [
             round(properties["I"]["Ix"] / 1000, 3),
             round(properties["I"]["Iy"] / 1000, 3),
@@ -399,27 +405,80 @@ class DNVRPH103_hydrodynamics_rectangular:
         return mass_added_with_perforation
 
     def get_mass_moment_of_inertia(self):
+        """Estimate homogeneous-box inertia about the centre of mass (kg.m^2).
+
+        Length/width/height follow the local principal x/y/z directions.
+        This is a box estimate, not a reconstruction of component masses.
+        Alternatively, inputs.moments_of_inertia_at_cog shall contain Ix/Iy/Iz
+        in kg.m^2, about principal axes parallel to local x/y/z through CoM.
+        Those supplied values override the box estimate; full tensors and
+        inertia about any other reference point are not supported. Alignment
+        and the underlying mass distribution remain the caller's responsibility.
+        The supplied CoG locates the mass centre relative to the buoy origin;
+        it does not change intrinsic inertia or establish mass distribution.
+
+        Source: OpenStax, University Physics Volume 1 (2016), section 10.5,
+        Eq. 10.19: integrate (y^2 + z^2) dm over a uniform centred box.
+        https://openstax.org/books/university-physics-volume-1/pages/10-5-calculating-moments-of-inertia
+        Orcina, OrcaFlex online help, "6D buoys: Common data", sections
+        "Mass moments of inertia" and "Centre of mass" (accessed 2026-10-19):
+        https://www.orcina.com/webhelp/OrcaFlex/Content/html/6Dbuoys,Commondata.htm
+        The export requires inertia through CoM, so no parallel-axis shift
+        (OpenStax Eq. 10.20) to the buoy origin is applied.
+        """
         inputs = self.cfg["inputs"]
+        if "moments_of_inertia_at_cog" in inputs:
+            return self._get_supplied_mass_inertia(inputs["moments_of_inertia_at_cog"])
+        if any(inputs.get("cog", {}).get(axis, 0) != 0 for axis in ("x", "y", "z")):
+            logging.getLogger(__name__).warning(
+                "Using homogeneous-box estimate with displaced CoG; dimensions "
+                "and CoG do not define the mass distribution. Supply "
+                "moments_of_inertia_at_cog for known principal moments."
+            )
         m_air = inputs["m_air"]
-        l = inputs["l"]
-        w = inputs["w"]
-        h = inputs["h"]
+        length = inputs["l"]
+        width = inputs["w"]
+        height = inputs["h"]
 
-        term_1 = 1 / 12 * m_air * (w**2 + h**2)
-        term_2 = m_air * (inputs["cog"]["y"] ** 2 + inputs["cog"]["z"] ** 2)
-        Ix = term_1 + term_2
+        # OpenStax (2016), section 10.5, Eq. 10.19: the centred integral
+        # of u^2 over an edge of length a, divided by a, is a^2 / 12.
+        return {
+            "Ix": 1 / 12 * m_air * (width**2 + height**2),
+            "Iy": 1 / 12 * m_air * (height**2 + length**2),
+            "Iz": 1 / 12 * m_air * (length**2 + width**2),
+        }
 
-        term_1 = 1 / 12 * m_air * (h**2 + l**2)
-        term_2 = m_air * (inputs["cog"]["x"] ** 2 + inputs["cog"]["z"] ** 2)
-        Iy = term_1 + term_2
-
-        term_1 = 1 / 12 * m_air * (l**2 + w**2)
-        term_2 = m_air * (inputs["cog"]["y"] ** 2 + inputs["cog"]["x"] ** 2)
-        Iz = term_1 + term_2
-
-        I = {"Ix": Ix, "Iy": Iy, "Iz": Iz}
-
-        return I
+    def _get_supplied_mass_inertia(self, supplied):
+        """Validate positive finite principal moments for a 3D mass distribution."""
+        error = (
+            "moments_of_inertia_at_cog requires exactly Ix, Iy, Iz in kg.m^2; "
+            "values must be positive finite numbers satisfying triangle inequalities"
+        )
+        if not isinstance(supplied, Mapping) or set(supplied) != {"Ix", "Iy", "Iz"}:
+            raise ValueError(error)
+        inertia = {}
+        for axis in ("Ix", "Iy", "Iz"):
+            value = supplied[axis]
+            if isinstance(value, bool) or not isinstance(value, Real):
+                raise ValueError(error)
+            try:
+                value = float(value)
+            except (OverflowError, ValueError) as exc:
+                raise ValueError(error) from exc
+            if not math.isfinite(value) or value <= 0:
+                raise ValueError(error)
+            inertia[axis] = value
+        # OpenStax (2016), section 10.5, Eq. 10.19:
+        # Iy + Iz - Ix = 2 * integral x^2 dm >= 0, with cyclic permutations.
+        # Allow relative binary rounding at the planar boundary (e.g. 0.8
+        # versus 0.7 + 0.1), without an absolute tolerance that would admit
+        # impossible moments at small scales. If the sum overflows, any finite
+        # largest value is necessarily less than that sum.
+        smallest, middle, largest = sorted(inertia.values())
+        total = middle + smallest
+        if largest > total and not math.isclose(largest, total, rel_tol=1e-15):
+            raise ValueError(error)
+        return inertia
 
     def get_rotational_properties(self, translational_properties):
         am = self.get_area_moment_of_intertia(translational_properties)

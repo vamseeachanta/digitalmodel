@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capability report evidence inventory</title>
+<style>body{font:16px system-ui;line-height:1.5;max-width:1100px;margin:2rem auto;padding:0 1rem}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:.5rem;text-align:left;vertical-align:top}
+code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
+@media print{body{max-width:none}a{color:inherit}}</style></head><body>
+<h1>Capability report evidence inventory</h1>
+<h2>Summary</h2>
+<p>5 reviewed inventory records: RETAINED: 1; INDICATIVE: 2; MISSING: 1; UNKNOWN: 1.</p>
+<p>RETAINED requires an accessible result record, source digest and criterion. It does not establish engineering qualification. Tests listed here are source pointers; this inventory does not execute them or infer execution from a green check.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody>
+<tr><td>0</td><td>2026-10-25</td><td>Initial reviewed subset separates accessible records, indicative examples and unresolved evidence so report improvements can be prioritized.</td></tr>
+</tbody></table>
+<h2>Scope and method</h2>
+<p>Observation time: 2026-10-25T01:31:50.079551+00:00. Source revision: <code>44b88d703865cd5489ec95bf2a32ab750ce72dcf</code>.</p>
+<p>Discovery roots: docs/benchmarks, docs/domains/openfoam, docs/reports, docs/subsea/cross_sections.</p>
+<p>35 tracked HTML pages were enumerated; 30 are outside the reviewed subset. Supporting pages are included in discovery. This is not a complete repository census.</p>
+<p>Only tracked, public paths are eligible. No report producer or solver runs. Audit outputs are excluded from discovery and source hashes. The JSON observations block preserves judgments, criteria, observation time and source digests. Regeneration refuses stale source digests. Links assume publication in docs/audits; an output directory elsewhere is staging only. There is no generated timestamp to exclude.</p>
+<h2>Reviewed reports and proposed card links</h2>
+<section id="cfd-calm-water"><h3>CFD calm-water resistance</h3>
+<p>Evidence status: <strong>INDICATIVE</strong>; qualification: INDICATIVE.</p>
+<p>Report and proposed card target: <a href="../domains/openfoam/calm-water-resistance-study.html">docs/domains/openfoam/calm-water-resistance-study.html</a>.</p>
+<p>Report source: <a href="../domains/openfoam/calm-water-resistance-study.html">docs/domains/openfoam/calm-water-resistance-study.html</a>. Generator: <a href="../../scripts/cfd/build_calm_water_study.py">scripts/cfd/build_calm_water_study.py</a>.</p>
+<p>Test sources (execution not asserted): <a href="../../tests/solvers/openfoam/test_calm_water_study_committed_data.py">tests/solvers/openfoam/test_calm_water_study_committed_data.py</a>, <a href="../../tests/solvers/openfoam/test_calm_water_study_criteria.py">tests/solvers/openfoam/test_calm_water_study_criteria.py</a>.</p>
+<p>Criterion: The local study configuration requires an opened matched experimental reference and completed three-mesh uncertainty evaluation before resistance qualification.</p>
+<p>Observation: The report explicitly labels the resistance indicative and states zero qualified resistance results. The local manifest records descriptive force histories; these do not resolve the missing experimental reference or grid uncertainty.</p>
+<p>Evidence references:</p><ul>
+<li>criterion: <a href="../../config/cfd/calm_water_study.json">config/cfd/calm_water_study.json</a></li>
+<li>result: <a href="../../data/cfd/calm_water_study/manifest.json">data/cfd/calm_water_study/manifest.json</a></li>
+<li>result: <a href="../../data/cfd/calm_water_study/raw/coarse-full-window-coefficients.csv">data/cfd/calm_water_study/raw/coarse-full-window-coefficients.csv</a></li>
+<li>result: <a href="../../data/cfd/calm_water_study/raw/medium-full-window-coefficients.csv">data/cfd/calm_water_study/raw/medium-full-window-coefficients.csv</a></li>
+</ul><p>Limitations:</p><ul>
+<li>Primary geometry-source access and the matched experimental table are unavailable in the reviewed record.</li>
+<li>Only two completed mesh continuations are reported; the declared three-mesh uncertainty evaluation is not established.</li>
+<li>Native full histories and case files indexed outside this checkout were not fetched or verified.</li>
+<li>The report and implementation are not independent engineering references.</li>
+</ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
+<li><a href="../../config/cfd/calm_water_study.json">config/cfd/calm_water_study.json</a>: <code>e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec</code></li>
+<li><a href="../../data/cfd/calm_water_study/manifest.json">data/cfd/calm_water_study/manifest.json</a>: <code>c359820b5abc9577bc8e98d1198119ceae3c93d129665897c9d31cea0130c474</code></li>
+<li><a href="../../data/cfd/calm_water_study/raw/coarse-full-window-coefficients.csv">data/cfd/calm_water_study/raw/coarse-full-window-coefficients.csv</a>: <code>d0806c2d85e6436871335cb5a902db92582417e124a5c617344db49ef78aa23a</code></li>
+<li><a href="../../data/cfd/calm_water_study/raw/medium-full-window-coefficients.csv">data/cfd/calm_water_study/raw/medium-full-window-coefficients.csv</a>: <code>17baadc32b576fa40e5c074fa87cc1b8c178afb41d44921abbf347cee7a6b586</code></li>
+<li><a href="../domains/openfoam/calm-water-resistance-study.html">docs/domains/openfoam/calm-water-resistance-study.html</a>: <code>c384dafce539fedd11b8f36cece1e231f09adc7a9babfeb067a91a3adbb0c427</code></li>
+<li><a href="../../scripts/cfd/build_calm_water_study.py">scripts/cfd/build_calm_water_study.py</a>: <code>4d5c29b600ede9eed46e378f0281cf4604cb6d1224d5798d132ed40fa8ae7975</code></li>
+<li><a href="../../tests/solvers/openfoam/test_calm_water_study_committed_data.py">tests/solvers/openfoam/test_calm_water_study_committed_data.py</a>: <code>b1211af28c3849556ca508efa01d7578966b7a0f7dd50702168a2490fb1aeae8</code></li>
+<li><a href="../../tests/solvers/openfoam/test_calm_water_study_criteria.py">tests/solvers/openfoam/test_calm_water_study_criteria.py</a>: <code>1be7f089828f666c4063815c7d382b653c3b1f02dbf8fc1ec9cc7215104f8eee</code></li>
+</ul></details></section>
+<section id="cross-section-report"><h3>Subsea cross-section reporting</h3>
+<p>Evidence status: <strong>UNKNOWN</strong>; qualification: UNKNOWN.</p>
+<p>Report and proposed card target: <a href="../subsea/cross_sections/offshore_cross_section_report.html">docs/subsea/cross_sections/offshore_cross_section_report.html</a>.</p>
+<p>Report source: <a href="../subsea/cross_sections/offshore_cross_section_report.html">docs/subsea/cross_sections/offshore_cross_section_report.html</a>. Generator: <a href="../../src/digitalmodel/subsea/cross_sections/reporting.py">src/digitalmodel/subsea/cross_sections/reporting.py</a>.</p>
+<p>Test sources (execution not asserted): <a href="../../tests/subsea/cross_sections/test_reporting.py">tests/subsea/cross_sections/test_reporting.py</a>.</p>
+<p>Criterion: Accessible source records and a retained report-specific execution record are needed before reproducibility or engineering accuracy can be asserted.</p>
+<p>Observation: The report, deterministic renderer and source tests exist. The report cites reconnaissance and catalogue-derived fixture provenance outside this checkout; independent source access and retained execution were not established.</p>
+<p>Evidence references:</p><ul>
+</ul><p>Limitations:</p><ul>
+<li>The report describes schematic cross sections and explicitly defers mechanical capacity and other design duties.</li>
+<li>External reconnaissance paths are not resolved or copied into this inventory.</li>
+<li>Presence of deterministic-rendering tests does not establish a retained test run.</li>
+</ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
+<li><a href="../subsea/cross_sections/offshore_cross_section_report.html">docs/subsea/cross_sections/offshore_cross_section_report.html</a>: <code>2e1a8b71a26797d3a34414e79b6e216b010364d126da79048eadbafb1abfa79b</code></li>
+<li><a href="../../src/digitalmodel/subsea/cross_sections/reporting.py">src/digitalmodel/subsea/cross_sections/reporting.py</a>: <code>a2644995057ad0634ebb8503afb8071b1a67c9118124b277a6292547af25ce0e</code></li>
+<li><a href="../../tests/subsea/cross_sections/test_reporting.py">tests/subsea/cross_sections/test_reporting.py</a>: <code>e480bc4445513991e907a8a896d7d20bcc5519b90694c52a316d0225cd3c2d92</code></li>
+</ul></details></section>
+<section id="diffraction-report-pipeline"><h3>Diffraction report pipeline</h3>
+<p>Evidence status: <strong>INDICATIVE</strong>; qualification: INDICATIVE.</p>
+<p>Report and proposed card target: <a href="../benchmarks/unit_box/benchmark_report.html">docs/benchmarks/unit_box/benchmark_report.html</a>.</p>
+<p>Report source: <a href="../benchmarks/unit_box/benchmark_report.html">docs/benchmarks/unit_box/benchmark_report.html</a>. Generator: <a href="../../src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py">src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py</a>.</p>
+<p>Test sources (execution not asserted): <a href="../../tests/hydrodynamics/diffraction/test_unit_box_benchmark.py">tests/hydrodynamics/diffraction/test_unit_box_benchmark.py</a>, <a href="../../tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py">tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py</a>.</p>
+<p>Criterion: The result sidecar declares a synthetic comparison policy. This can illustrate the report pipeline but cannot establish independent solver validation.</p>
+<p>Observation: The sidecar identifies synthetic series and provisional comparison-policy assumptions. Source tests enforce synthetic report-pipeline labels; no licensed solver run or physical benchmark validation is established here.</p>
+<p>Evidence references:</p><ul>
+<li>result: <a href="../benchmarks/unit_box/benchmark_report.json">docs/benchmarks/unit_box/benchmark_report.json</a></li>
+</ul><p>Limitations:</p><ul>
+<li>Agreement between constructed series is a report-pipeline self-test.</li>
+<li>Provisional comparison-policy values are not independently qualified physical tolerances.</li>
+<li>No report-specific test execution record is asserted.</li>
+</ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
+<li><a href="../benchmarks/unit_box/benchmark_report.html">docs/benchmarks/unit_box/benchmark_report.html</a>: <code>1519db4683059bdde303d7bfe9a459ea18762d0475f11624d2f7828bd7a2b3bd</code></li>
+<li><a href="../benchmarks/unit_box/benchmark_report.json">docs/benchmarks/unit_box/benchmark_report.json</a>: <code>57a751c8cc09e9b8c7b128b8792885bfc13d9e58dc63fa19ffce9f45f03fb9c5</code></li>
+<li><a href="../../src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py">src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py</a>: <code>85df0b21710539b8ff29ca84acb34b85fbb0524a2296022f233187f46b82d1fb</code></li>
+<li><a href="../../tests/hydrodynamics/diffraction/test_unit_box_benchmark.py">tests/hydrodynamics/diffraction/test_unit_box_benchmark.py</a>: <code>0de9c11cf8db9e8fa4a156138b3d916f196cff98f36d01c34a66f9f241082e79</code></li>
+<li><a href="../../tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py">tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py</a>: <code>43c37403e9b52b2911459ffd2473fdb2dd49dcb449732388a5165bc19325ba55</code></li>
+</ul></details></section>
+<section id="padeye-analysis"><h3>Lift point analysis</h3>
+<p>Evidence status: <strong>MISSING</strong>; qualification: INDICATIVE.</p>
+<p>Report and proposed card target: <a href="../reports/padeye-lift-point-analysis.html">docs/reports/padeye-lift-point-analysis.html</a>.</p>
+<p>Report source: <a href="../reports/padeye-lift-point-analysis.html">docs/reports/padeye-lift-point-analysis.html</a>. Generator: <a href="../../src/digitalmodel/lifting_lug/report.py">src/digitalmodel/lifting_lug/report.py</a>.</p>
+<p>Test sources (execution not asserted): <a href="../../tests/lifting_lug/test_assessment.py">tests/lifting_lug/test_assessment.py</a>, <a href="../../tests/lifting_lug/test_report.py">tests/lifting_lug/test_report.py</a>.</p>
+<p>Criterion: A separate accessible result record and retained execution evidence are required for an evidence-backed result claim; source assertions alone are insufficient.</p>
+<p>Observation: A synthetic report and tests with explicit hand arithmetic exist. No separate result sidecar or execution receipt was identified among these reviewed sources. The report preserves unevaluated lifting qualification checks.</p>
+<p>Evidence references:</p><ul>
+</ul><p>Limitations:</p><ul>
+<li>MISSING describes the retained evidence record, not the existence of the HTML report.</li>
+<li>Report-specific tests have not been executed by this inventory.</li>
+<li>Illustrative allowables and incomplete lifting checks prevent qualification.</li>
+</ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
+<li><a href="../reports/padeye-lift-point-analysis.html">docs/reports/padeye-lift-point-analysis.html</a>: <code>72fa87b7be27807b51dd785441381245bc7ea8398892460154a0ae9163c23959</code></li>
+<li><a href="../../src/digitalmodel/lifting_lug/report.py">src/digitalmodel/lifting_lug/report.py</a>: <code>445c19750756ed643884cc2ad0e46f2c23d2c067fa6bdbd7078d3b4470b7b40f</code></li>
+<li><a href="../../tests/lifting_lug/test_assessment.py">tests/lifting_lug/test_assessment.py</a>: <code>71fca544bdba226b4c99d5c542cf16a3832c7628fb04de002956e29feaaee20d</code></li>
+<li><a href="../../tests/lifting_lug/test_report.py">tests/lifting_lug/test_report.py</a>: <code>b08518ca478814d33b793742761f54223d0caf0735873b91924cc0bb631a9171</code></li>
+</ul></details></section>
+<section id="pipeline-assessment"><h3>Pipeline fitness-for-service assessment</h3>
+<p>Evidence status: <strong>RETAINED</strong>; qualification: INDICATIVE.</p>
+<p>Report and proposed card target: <a href="../reports/pipeline-ffs-assessment.html">docs/reports/pipeline-ffs-assessment.html</a>.</p>
+<p>Report source: <a href="../reports/pipeline-ffs-assessment.html">docs/reports/pipeline-ffs-assessment.html</a>. Generator: <a href="../../scripts/reporting/build_pipeline_ffs_report.py">scripts/reporting/build_pipeline_ffs_report.py</a>.</p>
+<p>Test sources (execution not asserted): <a href="../../tests/asset_integrity/test_pipeline_ffs_assessment.py">tests/asset_integrity/test_pipeline_ffs_assessment.py</a>.</p>
+<p>Criterion: Record-retention criterion only: an accessible result sidecar, explicit scenario inputs and decision assumptions, and source digests. No operating-asset or engineering-accuracy criterion is assessed.</p>
+<p>Observation: The sidecar contains synthetic assessment outputs, input and calculation-source digest fields, and a report digest. Its stated intended use excludes actual operating-asset qualification. RETAINED refers only to accessible records.</p>
+<p>Evidence references:</p><ul>
+<li>criterion: <a href="../../examples/workflows/pipeline-ffs-assessment/assumptions.yml">examples/workflows/pipeline-ffs-assessment/assumptions.yml</a></li>
+<li>criterion: <a href="../../examples/workflows/pipeline-ffs-assessment/input.yml">examples/workflows/pipeline-ffs-assessment/input.yml</a></li>
+<li>result: <a href="../reports/pipeline-ffs-assessment.manifest.json">docs/reports/pipeline-ffs-assessment.manifest.json</a></li>
+</ul><p>Limitations:</p><ul>
+<li>The example uses synthetic inputs and assumed decision and remaining-life routes.</li>
+<li>Embedded calculation-source digest fields were located but not independently revalidated by this inventory.</li>
+<li>Listed tests were inspected as sources, not executed; no numerical agreement or engineering accuracy is asserted.</li>
+<li>The scenario assumptions are declared criteria, not independent validation references.</li>
+</ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
+<li><a href="../reports/pipeline-ffs-assessment.html">docs/reports/pipeline-ffs-assessment.html</a>: <code>488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f</code></li>
+<li><a href="../reports/pipeline-ffs-assessment.manifest.json">docs/reports/pipeline-ffs-assessment.manifest.json</a>: <code>2fcf9c16dddd995421a44e49c11e4df5db48d5b59d70f34446f36913d9240e23</code></li>
+<li><a href="../../examples/workflows/pipeline-ffs-assessment/assumptions.yml">examples/workflows/pipeline-ffs-assessment/assumptions.yml</a>: <code>f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952</code></li>
+<li><a href="../../examples/workflows/pipeline-ffs-assessment/input.yml">examples/workflows/pipeline-ffs-assessment/input.yml</a>: <code>af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b</code></li>
+<li><a href="../../scripts/reporting/build_pipeline_ffs_report.py">scripts/reporting/build_pipeline_ffs_report.py</a>: <code>194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578</code></li>
+<li><a href="../../tests/asset_integrity/test_pipeline_ffs_assessment.py">tests/asset_integrity/test_pipeline_ffs_assessment.py</a>: <code>91e4a179b40e22d1eaa199b7c450d28f0f6d96b5770ddc0a16ef3c0e52996e14</code></li>
+</ul></details></section>
+<h2>Evidence gaps and prioritized next actions</h2>
+<ol>
+<li>Priority 1; cfd-calm-water; qualification: Obtain an accessible matched experimental reference and primary geometry basis; complete the additional mesh and uncertainty review before stronger CFD claims.</li>
+<li>Priority 2; cross-section-report; unreviewed-evidence: Open and retain permitted public source evidence for fixture dimensions and preserve a report-specific execution record; keep schematic scope explicit.</li>
+<li>Priority 2; diffraction-report-pipeline; qualification: Keep the synthetic report-pipeline label; obtain retained independent solver outputs and justified physical comparison criteria for a program benchmarking analysis.</li>
+<li>Priority 2; padeye-analysis; missing-evidence: Run the report-specific tests and retain a digest-bound result record; resolve sourced allowables and outstanding lifting checks before qualification claims.</li>
+<li>Priority 2; pipeline-assessment; qualification: Execute and retain the report-specific tests and independent expected-answer evidence before presenting numerical verification; preserve the synthetic-input label.</li>
+<li>Priority 3; coverage; coverage: Review 30 additional tracked HTML pages in the declared roots; these include supporting pages and are not counts of missing reports.</li>
+</ol>
+<h2>Known limits</h2>
+<p>This inventory establishes record accessibility and review boundaries, not engineering accuracy or completion of missing reports. Private data, external records, solver results not retained here, engineering calculations and website linking are not evaluated. Implementation sources cannot serve as independent engineering references. Proposed links are local files; website changes require separate work.</p>
+</body></html>

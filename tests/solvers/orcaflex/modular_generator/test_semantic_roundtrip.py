@@ -469,3 +469,14 @@ class TestSemanticExclusionList:
         assert result.missing_in_mod[0].significance == Significance.COSMETIC, (
             "State should be downgraded to COSMETIC"
         )
+
+    def test_scoped_taxonomy_keeps_group_reference_changes_significant(self):
+        """Legacy allowances do not authorize new reference downgrades."""
+        from digitalmodel.solvers.orcaflex.semantic_diff import (
+            DiffCategory,
+            classify_diff,
+        )
+
+        assert classify_diff(
+            "Groups", "Structure", {"Child": "Parent"}, {"Child": "Absent"}
+        ) == DiffCategory.REFERENCE_RESOLUTION_SIGNIFICANT

@@ -1014,12 +1014,22 @@ def run_comparison(
             spec_m = coupling_spec[key]
 
             # Compare AM and Damping
-            am_corr = _compute_matrix_correlation(owd_m["added_mass"], spec_m["added_mass"])
-            damp_corr = _compute_matrix_correlation(owd_m["damping"], spec_m["damping"])
+            from digitalmodel.hydrodynamics.diffraction.benchmark_evidence import matrix_diagnostic
+            am_evidence = matrix_diagnostic(
+                owd_m["added_mass"], spec_m["added_mass"],
+                owd_m.get("frequencies"), spec_m.get("frequencies"),
+            )
+            damp_evidence = matrix_diagnostic(
+                owd_m["damping"], spec_m["damping"],
+                owd_m.get("frequencies"), spec_m.get("frequencies"),
+            )
+            am_corr, damp_corr = am_evidence["correlation"], damp_evidence["correlation"]
 
             coupling_report[str(key)] = {
                 "added_mass_correlation": am_corr,
                 "damping_correlation": damp_corr,
+                "added_mass_evidence": am_evidence,
+                "damping_evidence": damp_evidence,
             }
 
             # Generate coupling heatmap
@@ -1029,7 +1039,8 @@ def run_comparison(
 
             try:
                 html_path = BenchmarkPlotter.build_coupling_heatmap_html(
-                    coupling_dir, am_corr, damp_corr, bi_name, bj_name
+                    coupling_dir, am_corr, damp_corr, bi_name, bj_name,
+                    am_quality=am_evidence["quality"], damp_quality=damp_evidence["quality"],
                 )
                 print(f"  Coupling Heatmap: {html_path}")
             except Exception as exc:
@@ -1037,7 +1048,7 @@ def run_comparison(
 
         # Save coupling report
         with open(coupling_dir / "coupling_report.json", "w") as f:
-            json.dump(coupling_report, f, indent=2)
+            json.dump(coupling_report, f, indent=2, allow_nan=False)
 
     # 4. Combined multi-body overview page
     if len(bodies) > 1:
@@ -1140,25 +1151,28 @@ def _build_multibody_index_html(
                     d[(i + 1, j + 1)] = matrix[i][j]
             return d
 
-        am_table = BenchmarkPlotter._render_6x6_matrix(_to_dict(am_corr), dof_labels)
+        am_evidence = data.get("added_mass_evidence", {})
+        damp_evidence = data.get("damping_evidence", {})
+        am_quality = am_evidence.get("quality", [["INSUFFICIENT_DATA"] * 6 for _ in range(6)])
+        damp_quality = damp_evidence.get("quality", [["INSUFFICIENT_DATA"] * 6 for _ in range(6)])
+        am_table = BenchmarkPlotter._render_6x6_matrix(_to_dict(am_corr), dof_labels, _to_dict(am_quality))
         damp_table = BenchmarkPlotter._render_6x6_matrix(
-            _to_dict(damp_corr), dof_labels,
+            _to_dict(damp_corr), dof_labels, _to_dict(damp_quality),
         )
 
-        # Compute min correlation across both matrices
-        all_vals = [v for row in am_corr for v in row] + [
-            v for row in damp_corr for v in row
-        ]
-        min_corr = min(all_vals) if all_vals else 0.0
-        badge_bg = "#d5f5e3" if min_corr >= 0.999 else (
-            "#fef9e7" if min_corr >= 0.99 else "#fadbd8"
-        )
+        # A coupling statistic is diagnostic, without an acceptance threshold.
+        all_vals = [v for matrix in (am_corr, damp_corr) for row in matrix for v in row if v is not None]
+        refused = any(e.get("comparison_status") == "REFUSED" for e in (am_evidence, damp_evidence))
+        badge = "REFUSED" if refused else "Diagnostic only"
+        if all_vals:
+            badge += f"; available min r={min(all_vals):.1f}"
+        badge_bg = "#fdebd0" if refused else "#eef2f5"
 
         coupling_sections.append(f"""
 <div style="margin-bottom:2em">
   <h3>Body {bi_idx} ({html_mod.escape(bi_name)}) &harr; Body {bj_idx} ({html_mod.escape(bj_name)})
     <span style="background:{badge_bg};padding:2px 8px;border-radius:4px;
-    font-size:0.8em;margin-left:0.5em">min r={min_corr:.6f}</span>
+    font-size:0.8em;margin-left:0.5em">{badge}</span>
   </h3>
   <div style="display:flex;gap:2em;flex-wrap:wrap">
     <div>
@@ -1294,21 +1308,10 @@ def _build_multibody_index_html(
     return index_path
 
 
-def _compute_matrix_correlation(m1, m2):
-    # m1, m2 are (nfreq, 6, 6)
-    # Compute correlation per element (i, j) across frequencies
-    corr = np.zeros((6, 6))
-    for i in range(6):
-        for j in range(6):
-            v1 = m1[:, i, j]
-            v2 = m2[:, i, j]
-            if np.std(v1) > 0 and np.std(v2) > 0:
-                corr[i, j] = np.corrcoef(v1, v2)[0, 1]
-            elif np.allclose(v1, v2, atol=1e-6):
-                corr[i, j] = 1.0
-            else:
-                corr[i, j] = float("nan")
-    return corr.tolist()  # return as list of lists
+def _compute_matrix_correlation(m1, m2, frequencies1=None, frequencies2=None):
+    """Compatibility projection; absent axes cannot authorize positional comparison."""
+    from digitalmodel.hydrodynamics.diffraction.benchmark_evidence import matrix_diagnostic
+    return matrix_diagnostic(m1, m2, frequencies1, frequencies2)["correlation"]
 
 
 def _compare_orcawave_ymls(

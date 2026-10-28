@@ -9,6 +9,10 @@ All dimensions and densities below are synthetic arithmetic inputs, not material
 properties or acceptance limits. Expected values are independent hand calculations.
 """
 
+import math
+import re
+from pathlib import Path
+
 import pytest
 
 from digitalmodel.subsea.cross_sections.calculations import calculate_annular_layer
@@ -117,3 +121,48 @@ def test_unrepresentable_results_are_rejected(scale):
     )
     with pytest.raises(ValueError, match="finite and positive"):
         calculate_annular_layer(layer)
+
+
+@pytest.mark.parametrize("example", ["annulus", "solid-core", "missing-density"])
+def test_documented_radial_layer_example(example, capsys):
+    """Execute the published setup and each case in a fresh namespace.
+
+    Independent references use the circle/density equations cited above:
+    annulus R=2, r=1 gives 3*pi m² and 30*pi kg/m for rho=10;
+    solid R=1, r=0 gives pi m² and 10*pi kg/m for the same rho.
+    Relative tolerance 1e-12 retains the existing rounding-only convention.
+    """
+    document = (
+        Path(__file__).resolve().parents[3]
+        / "docs/examples/radial-layer-area-and-mass.md"
+    )
+    blocks = re.findall(r"```python\n(.*?)\n```", document.read_text(), re.DOTALL)
+    setup, *cases = blocks
+    snippets = dict(zip(("annulus", "solid-core", "missing-density"), cases, strict=True))
+    namespace = {}
+    exec(compile(setup, str(document), "exec"), namespace)
+    exec(compile(snippets[example], str(document), "exec"), namespace)
+
+    layer = namespace["layer"]
+    assert layer.inner_diameter.unit == layer.outer_diameter.unit == "m"
+    assert layer.provenance.source_id == "synthetic-arithmetic-example"
+    assert layer.provenance.source_type == "project_assumption"
+    if example == "missing-density":
+        assert layer.density is None
+        assert namespace["refusal_message"] == (
+            "density is required to calculate mass per length"
+        )
+        assert capsys.readouterr().out.strip() == namespace["refusal_message"]
+    else:
+        assert layer.density.unit == "kg/m^3"
+        assert layer.density.value == 10
+        expected_area, expected_mass = {
+            "annulus": (3 * math.pi, 30 * math.pi),
+            "solid-core": (math.pi, 10 * math.pi),
+        }[example]
+        result = namespace["result"]
+        assert result.area_m2 == pytest.approx(expected_area, rel=1e-12)
+        assert result.mass_per_length_kg_m == pytest.approx(expected_mass, rel=1e-12)
+        assert capsys.readouterr().out.strip() == (
+            f"area={expected_area:.1f} m²; dry mass/length={expected_mass:.1f} kg/m"
+        )

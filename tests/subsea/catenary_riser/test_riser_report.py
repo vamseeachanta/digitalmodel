@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the riser report-template generator (deliverable of record, #814).
 """
 Deterministic tests for digitalmodel.subsea.catenary_riser.report.
@@ -14,7 +17,6 @@ from dataclasses import asdict
 import pytest
 
 from digitalmodel.subsea.catenary_riser.report import (
-    CodeCheck,
     FatigueResult,
     Provenance,
     RiserReportData,
@@ -107,7 +109,7 @@ def test_custom_mode_label():
     d = sample_riser_report_data()
     d.provenance.mode = "custom"
     html = render_html(d)
-    assert "CERTIFIED (custom)" in html
+    assert "CUSTOM (not certified)" in html
     assert "SCREENING (atlas)" not in html
 
 
@@ -161,7 +163,7 @@ def test_empty_results_handled(tmp_path):
     assert "No strength results provided." in html
     assert "No fatigue results provided." in html
     assert "No code checks provided." in html
-    assert "CERTIFIED (custom)" in html
+    assert "CUSTOM (not certified)" in html
 
     # Markdown twin too.
     md = out["markdown"].read_text(encoding="utf-8")
