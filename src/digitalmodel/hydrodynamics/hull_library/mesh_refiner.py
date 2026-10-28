@@ -64,6 +64,15 @@ def refine_mesh(mesh: PanelMesh, levels: int = 1) -> PanelMesh:
     ``mesh_cutouts._assemble`` follow retained children in panel order. Other
     metadata (including cumulative ``cutouts``) is carried unchanged.
 
+    Generated geometry is governed by child edge spacing relative to coordinate
+    magnitude (floating-point resolution) and the absolute ten-decimal-place
+    welding in ``_subdivide_once``. Children with fewer than three distinct
+    vertex indices after welding are removed. For a planar rectangle, each
+    level halves both edge lengths and quarters the child area. Resolved
+    children can therefore fall below the advisory area threshold documented
+    in ``compute_quality_metrics`` and remain in the mesh. Normal computation
+    also inherits the small-cross-product fallback in ``PanelMesh``.
+
     Args:
         mesh: Source panel mesh to refine.
         levels: Number of subdivision levels (each level multiplies panels by 4).
@@ -188,6 +197,14 @@ def _subdivide_once(mesh: PanelMesh) -> PanelMesh:
 
 def compute_quality_metrics(mesh: PanelMesh) -> MeshQualityMetrics:
     """Compute quality metrics for a panel mesh.
+
+    ``degenerate_count`` is the existing absolute advisory count of areas
+    strictly below 1e-6 in squared coordinate units (m^2 for metre coordinates).
+    It does not remove panels or impose a source-quality acceptance floor.
+    Subdivision and uniform scaling change this count as child area scales
+    with the square of edge length. Collapse removal is handled separately
+    by ``_subdivide_once`` using distinct welded vertex indices; aspect ratio
+    statistics alone do not qualify a mesh.
 
     Args:
         mesh: The panel mesh to analyse.
