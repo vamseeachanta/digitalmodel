@@ -1,7 +1,6 @@
 schema_version: 1
 repository: digitalmodel
 revision: 270c8759c374b67a7f032953e7fcdb14e0224461
-# Pack references are maintained separately from the historical method snapshot.
 agent_packs:
   subsea/capping_stack:
     agent_pack: src/digitalmodel/subsea/capping_stack/docs/agent-pack.md
@@ -26498,8 +26497,7 @@ families:
     basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
   coverage: partial
   limitations:
-  - Force spectra and mean loads are catalogued; coupled response and finite-duration extremes are NOT_EVALUATED.
-    Related issue 2617 is recorded separately; inventory membership does not resolve it.
+  - Force spectra and mean loads are catalogued; coupled response and finite-duration extremes are NOT_EVALUATED. Related issue 2617 is recorded separately; inventory membership does not resolve it.
   implementations:
   - path: src/digitalmodel/orcawave/drift_forces.py
     symbol: compute_mean_drift_force
@@ -26557,8 +26555,7 @@ families:
   reconciliation:
     matched_definitions: 10
     unresolved_definitions: 5
-  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
-    completeness.
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic completeness.
 - id: extreme-statistics
   title: Extreme statistics and return levels
   search_signals:
@@ -26569,7 +26566,7 @@ families:
   - search: constants_or_keys
     pattern: samples_per_year|return_periods|location|scale|shape
   inventory_scope:
-    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    revision: 09089a121a16069c4b657d1a320a630a23ab1dd5
     source_paths:
     - src/digitalmodel/drilling_riser/postprocess/extremes.py
     - src/digitalmodel/hydrodynamics/river_currents/extremes.py
@@ -26580,28 +26577,28 @@ families:
     basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
   coverage: partial
   limitations:
-  - Block-maxima fits, probability-plot fits and response tails have different sampling assumptions. Distribution
-    selection, uncertainty qualification and design acceptance are NOT_EVALUATED; issue 2618 is retained for independent
-    assessment.
+  - Block-maxima fits, probability-plot fits and response tails have different sampling assumptions. Distribution selection, uncertainty qualification and design acceptance are NOT_EVALUATED; issue 2618 is retained for independent assessment.
   implementations:
   - path: src/digitalmodel/orcaflex/postprocessor.py
     symbol: fit_gumbel
-    line: 177
+    line: 243
     kind: function
     what: Fits a maximum-type Gumbel distribution by maximum likelihood and returns quantiles.
     relation: independent
     module: orcaflex/postprocessor.py
-    file_sha256: 2d8f7ce7a5148f258ed665192aed546bd134667ccbe3fd4c25d0ccc8500f237a
+    file_sha256: 9045028cd751ae8b88aa58dec23a5b646d2c34912feb1fd800719216f7c6b9b3
     body_sha256: fdc5c90c838f8dd198842bcaab43fc6b9d0695153db56eb7b7a986edc75c1f0e
+    signals: []
   - path: src/digitalmodel/orcaflex/postprocessor.py
     symbol: fit_weibull
-    line: 223
+    line: 289
     kind: function
     what: Estimates Weibull shape, location and scale with degeneracy checks; distinct from zero-location fits.
     relation: independent
     module: orcaflex/postprocessor.py
-    file_sha256: 2d8f7ce7a5148f258ed665192aed546bd134667ccbe3fd4c25d0ccc8500f237a
+    file_sha256: 9045028cd751ae8b88aa58dec23a5b646d2c34912feb1fd800719216f7c6b9b3
     body_sha256: 6e113509970cf47d2989543a0c88be11a50d8f546feb0c377f3697239b4d9477
+    signals: []
   - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
     symbol: fit_weibull
     line: 92
@@ -26611,6 +26608,7 @@ families:
     module: hydrodynamics/river_currents/extremes.py
     file_sha256: 77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40
     body_sha256: b2c5e0c12cb0bc885eb2d2123b9c7cb0a115cdf426ae7ef3a604a8d13531b200
+    signals: []
   - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
     symbol: fit_gumbel
     line: 100
@@ -26620,6 +26618,7 @@ families:
     module: hydrodynamics/river_currents/extremes.py
     file_sha256: 77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40
     body_sha256: 47a38685de85c3bb4fdd72b2ee31296eca7f7bb85d8b714a43cd9e4e06346748
+    signals: []
   - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
     symbol: WeibullFit.return_level
     line: 67
@@ -26629,6 +26628,7 @@ families:
     module: hydrodynamics/river_currents/extremes.py
     file_sha256: 77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40
     body_sha256: 354846d0aceaa25a4b3cfb3ba7df029908b93763055fad11fef2481ff891fdf5
+    signals: []
   - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
     symbol: GumbelFit.return_level
     line: 87
@@ -26638,6 +26638,7 @@ families:
     module: hydrodynamics/river_currents/extremes.py
     file_sha256: 77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40
     body_sha256: 09a2c406aafcd68cba46c213e01cc93e8419e74d2d32560a4b5d838e4edb5dc1
+    signals: []
   - path: src/digitalmodel/drilling_riser/postprocess/extremes.py
     symbol: gumbel_quantile
     line: 49
@@ -26647,6 +26648,7 @@ families:
     module: drilling_riser/postprocess/extremes.py
     file_sha256: efba24665e376003bbc7679cd315c12f3a6db83f1319972f23bd88cf008df729
     body_sha256: 244c18e288260c976030a989bcfea9e3f724ff002319267d4af1b1c0694767fa
+    signals: []
   - path: src/digitalmodel/drilling_riser/postprocess/extremes.py
     symbol: gumbel_fit
     line: 97
@@ -26656,6 +26658,7 @@ families:
     module: drilling_riser/postprocess/extremes.py
     file_sha256: efba24665e376003bbc7679cd315c12f3a6db83f1319972f23bd88cf008df729
     body_sha256: d4b494fc48f1a8844c5d89a577422b4cc586922c52f6002ca7cd8875ca19ef9e
+    signals: []
   - path: src/digitalmodel/orcawave/motion_statistics.py
     symbol: short_term_statistics
     line: 171
@@ -26665,6 +26668,7 @@ families:
     module: orcawave/motion_statistics.py
     file_sha256: 50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d
     body_sha256: 9e2c6e018edd9a3599493101c86817a244dd658faa46d03d79d9f73bd39b0658
+    signals: []
   - path: src/digitalmodel/orcawave/motion_statistics.py
     symbol: rayleigh_exceedance
     line: 225
@@ -26674,6 +26678,7 @@ families:
     module: orcawave/motion_statistics.py
     file_sha256: 50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d
     body_sha256: 9f8f3b26e71dfeb7c1f4202653de51614ad73c6d81c45b23bf48908396287805
+    signals: []
   - path: src/digitalmodel/orcawave/motion_statistics.py
     symbol: rayleigh_quantile
     line: 256
@@ -26683,6 +26688,7 @@ families:
     module: orcawave/motion_statistics.py
     file_sha256: 50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d
     body_sha256: 1aba482aa9fbd88da59e19d8b1526a5b748ebb61cce01d542f6cabccbe1054f9
+    signals: []
   - path: src/digitalmodel/orcawave/motion_statistics.py
     symbol: long_term_extreme
     line: 282
@@ -26692,6 +26698,7 @@ families:
     module: orcawave/motion_statistics.py
     file_sha256: 50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d
     body_sha256: 05a2b46dab5d8cc5663cb35ec243a8ff67faa8bcb4559163da61c28ef6f44073
+    signals: []
   - path: src/digitalmodel/subsea/pipeline/free_span/weibull_current.py
     symbol: fit_weibull_current
     line: 51
@@ -26701,6 +26708,7 @@ families:
     module: subsea/pipeline/free_span/weibull_current.py
     file_sha256: cefe4243f898afcdd3a1b7bf5f23af01c2130aaca48d91dfb333ee1a7aac8e64
     body_sha256: 153f5fc3d33bae997f646e30ecb708be81b3e6d32414728d4759e37f12d81e01
+    signals: []
   - path: src/digitalmodel/subsea/pipeline/free_span/weibull_current.py
     symbol: extrapolate_current
     line: 130
@@ -26710,6 +26718,7 @@ families:
     module: subsea/pipeline/free_span/weibull_current.py
     file_sha256: cefe4243f898afcdd3a1b7bf5f23af01c2130aaca48d91dfb333ee1a7aac8e64
     body_sha256: c1462200f474d4dd78cdfedb64117246710ecf5001ba0daf1311fffa5ad1ec15
+    signals: []
   identical_groups: []
   search_audit:
   - search: algorithm
@@ -26721,8 +26730,7 @@ families:
   reconciliation:
     matched_definitions: 18
     unresolved_definitions: 4
-  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
-    completeness.
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic completeness.
 - id: design-waves
   title: Design-wave inputs and regular-wave representations
   search_signals:
@@ -26743,9 +26751,7 @@ families:
     basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
   coverage: partial
   limitations:
-  - This family covers prescribed regular-wave representations and input builders. A conditioned design-wave or
-    NewWave constructor, crest selection, return-period derivation and breaking limits are NOT_EVALUATED. Selecting
-    a theory in an input file does not implement or validate that theory.
+  - This family covers prescribed regular-wave representations and input builders. A conditioned design-wave or NewWave constructor, crest selection, return-period derivation and breaking limits are NOT_EVALUATED. Selecting a theory in an input file does not implement or validate that theory.
   implementations:
   - path: src/digitalmodel/solvers/openfoam/wave_models.py
     symbol: RegularWaveBC
@@ -26803,8 +26809,7 @@ families:
   reconciliation:
     matched_definitions: 6
     unresolved_definitions: 2
-  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
-    completeness.
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic completeness.
 - id: sloshing
   title: Tank sloshing periods and resonance screening
   search_signals:
@@ -26822,9 +26827,7 @@ families:
     basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
   coverage: partial
   limitations:
-  - Analytical and equivalent-geometry screens are catalogued. Empirical constants, resonance tolerances, nonlinear
-    impact loads and CFD qualification are NOT_EVALUATED. Referenced standards are source claims in existing code,
-    not independently verified compliance.
+  - Analytical and equivalent-geometry screens are catalogued. Empirical constants, resonance tolerances, nonlinear impact loads and CFD qualification are NOT_EVALUATED. Referenced standards are source claims in existing code, not independently verified compliance.
   implementations:
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: rectangular_tank_periods
@@ -26909,8 +26912,7 @@ families:
   reconciliation:
     matched_definitions: 8
     unresolved_definitions: 1
-  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
-    completeness.
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic completeness.
 - id: geotechnics
   title: Geotechnical foundation and soil-response methods
   search_signals:
@@ -26935,9 +26937,7 @@ families:
     basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
   coverage: partial
   limitations:
-  - Reviewed foundation, liquefaction and workflow entry points are included; soil data quality, empirical factors
-    and standard compliance are NOT_EVALUATED. Slope analysis is an external numerical delegate and was not executed.
-    Scour has its own family.
+  - Reviewed foundation, liquefaction and workflow entry points are included; soil data quality, empirical factors and standard compliance are NOT_EVALUATED. Slope analysis is an external numerical delegate and was not executed. Scour has its own family.
   implementations:
   - path: src/digitalmodel/geotechnical/piles.py
     symbol: skin_friction_clay
@@ -27148,8 +27148,7 @@ families:
   reconciliation:
     matched_definitions: 27
     unresolved_definitions: 12
-  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
-    completeness.
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic completeness.
 - id: scour
   title: Sediment-motion thresholds, scour and protection screening
   search_signals:
@@ -27168,16 +27167,13 @@ families:
     basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
   coverage: partial
   limitations:
-  - The incipient-motion threshold is not a scour-depth predictor. Legacy scour curves and protection coefficients
-    are NOT_EVALUATED; their source attribution and suitability require separate qualification. The configuration
-    route does not establish design acceptance.
+  - The incipient-motion threshold is not a scour-depth predictor. Legacy scour curves and protection coefficients are NOT_EVALUATED; their source attribution and suitability require separate qualification. The configuration route does not establish design acceptance.
   implementations:
   - path: src/digitalmodel/geotechnical/scour.py
     symbol: critical_sediment_motion
     line: 83
     kind: function
-    what: Converts explicit noncohesive thresholds into shear and friction-velocity thresholds; does not predict
-      scour.
+    what: Converts explicit noncohesive thresholds into shear and friction-velocity thresholds; does not predict scour.
     relation: independent
     module: geotechnical/scour.py
     file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
@@ -27229,8 +27225,7 @@ families:
   reconciliation:
     matched_definitions: 7
     unresolved_definitions: 3
-  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
-    completeness.
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic completeness.
 byte_identical_groups:
 - id: file-001
   sha256: 62095d6e678265a526f70da009a8909b60d9e8fed8d790d3e091f7b5f32656f3
@@ -27807,8 +27802,7 @@ other_defects:
   symbol: full_qtf_slowly_varying
   line: 191
   evidence: src/digitalmodel/orcawave/drift_forces.py:L191-L239
-  what: Current source uses positive frequency lags and excludes the constant diagonal. Independent variance acceptance
-    for issue 2617 is NOT_EVALUATED by this inventory change.
+  what: Current source uses positive frequency lags and excludes the constant diagonal. Independent variance acceptance for issue 2617 is NOT_EVALUATED by this inventory change.
   status: not_checked
 - issue: 2618
   family: extreme-statistics
@@ -27816,8 +27810,7 @@ other_defects:
   symbol: fit_weibull
   line: 223
   evidence: src/digitalmodel/orcaflex/postprocessor.py:L223-L287
-  what: Current source estimates shape, location and scale; the issue describes an earlier fixed-location implementation.
-    Statistical qualification and issue resolution are NOT_EVALUATED by this inventory change.
+  what: Current source estimates shape, location and scale; the issue describes an earlier fixed-location implementation. Statistical qualification and issue resolution are NOT_EVALUATED by this inventory change.
   status: not_checked
 seed_verification:
 - {path: examples/asset_integrity/, exists: 'yes', family: none, symbol: null, status: different, evidence: The tracked location does not contain a verified implementation of a mapped family.}
@@ -54424,215 +54417,187 @@ rejected_candidates:
   families:
   - second-order-slow-drift-response
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
   symbol: QTFComponent
   line: 23
   families:
   - second-order-slow-drift-response
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
   symbol: QTFComponent.complex_qtf
   line: 62
   families:
   - second-order-slow-drift-response
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
   symbol: QTFData
   line: 81
   families:
   - second-order-slow-drift-response
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/orcawave/drift_forces.py
   symbol: QTFMatrix
   line: 43
   families:
   - second-order-slow-drift-response
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/drilling_riser/postprocess/extremes.py
   symbol: GumbelFit
   line: 29
   families:
   - extreme-statistics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
   symbol: WeibullFit
   line: 56
   families:
   - extreme-statistics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
   symbol: GumbelFit
   line: 74
   families:
   - extreme-statistics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/subsea/pipeline/free_span/weibull_current.py
   symbol: WeibullFitResult
   line: 30
   families:
   - extreme-statistics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/solvers/openfoam/wave_models.py
   symbol: RegularWaveBC.phase_speed
   line: 90
   families:
   - design-waves
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/solvers/openfoam/wave_models.py
   symbol: IrregularWaveBC
   line: 114
   families:
   - design-waves
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/hydrodynamics/sloshing.py
   symbol: SloshingResult
   line: 66
   families:
   - sloshing
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/anchors.py
   symbol: DragAnchorResult
   line: 42
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/anchors.py
   symbol: SuctionAnchorResult
   line: 54
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/cfg_workflows.py
   symbol: AnchorCapacityWorkflow
   line: 45
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/cfg_workflows.py
   symbol: PileCapacityWorkflow
   line: 115
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/cfg_workflows.py
   symbol: MudmatBearingCapacityWorkflow
   line: 212
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/cfg_workflows.py
   symbol: LiquefactionWorkflow
   line: 291
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/liquefaction.py
   symbol: LiquefactionResult
   line: 45
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/pile_capacity.py
   symbol: PileCapacityResult
   line: 24
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/piles.py
   symbol: validate_pile_inputs
   line: 28
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/workflow.py
   symbol: GeotechnicalWorkflow._run_pile_axial_capacity
   line: 63
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/workflow.py
   symbol: GeotechnicalWorkflow._run_drag_anchor
   line: 117
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/workflow.py
   symbol: GeotechnicalWorkflow._run_suction_anchor
   line: 155
   families:
   - geotechnics
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/cfg_workflows.py
   symbol: ScourWorkflow
   line: 176
   families:
   - scour
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/scour.py
   symbol: PipelineScourResult
   line: 27
   families:
   - scour
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/scour.py
   symbol: MonopileScourResult
   line: 38
   families:
   - scour
   disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
-    implementation counts pending inspection.
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 notes: ['Built by search with git ls-files, grep and ast; no solver was executed.', 'Function and class body digests use ast.dump without location attributes after removal of docstrings; names, defaults and decorators remain part of the digest.', 'A family can include examples, test helpers, model-section builders and explicit delegates; these relations are not independent numerical validation.', 'not_checked is an unresolved defect assessment, including delegates and non-AQWA readers; issue state does not establish whether a code path is affected.', Python table modules without a defining class are script entries; table contents and licensed strength values are not reproduced., Python module table entries use a null symbol with table_name because their defining assignment is not a function or class., Fresh main-signal search hits in prose and single-case input data are not implementations; rejected_candidates records the named or executable candidates retained after syntax inspection.]
-
