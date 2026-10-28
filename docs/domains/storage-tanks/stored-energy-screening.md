@@ -11,6 +11,26 @@ compliance or predict blast effects.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 0 | 2026-10-27 | Added gas and liquid calculations with explicit units and an optional review criterion. |
+| 1 | 2026-10-28 | Added the bounded calculation, validation and documentation plan to make the screening scope explicit. |
+
+## Plan-lite
+
+- API scope: one `stored_energy` helper and immutable input and result records
+  in `digitalmodel.code_checks.stored_energy`, with pressure-unit conversion,
+  input validation, energy, TNT equivalent and an optional strict threshold flag.
+- Model assumptions: gas uses total reversible isentropic ideal-gas boundary
+  work to ambient pressure with constant specific-heat ratio; liquid uses
+  small compression with constant bulk modulus. Fluid properties and any
+  review threshold require qualification for the equipment being assessed.
+- Independent validation: hand-calculated gas cases at gamma 2 and 1.4 give
+  2000.0 J and 24000.0 J; the water case gives 1000.0 J. Tests also cover unit
+  conversion, monotonic behaviour, threshold boundaries, immutable provenance,
+  invalid inputs and numerical stability, alongside existing code-check regressions.
+- Documentation scope: equations and public basis, units, defaults, a usage
+  example, reproducible input records and limits are documented on this page.
+- Exclusions: no dependency or solver integration, design-compliance decision,
+  universal acceptance threshold, container strain, trapped gas, phase change,
+  chemical energy, real-gas model or prediction of blast effects is included.
 
 ## Equations and public basis
 
