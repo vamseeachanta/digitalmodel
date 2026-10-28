@@ -174,7 +174,7 @@ def _write_json(path: Path, value: dict, *, compact: bool = False) -> None:
     """Write portable finite JSON; compact figure specs avoid redundant whitespace."""
     path.write_text(json.dumps(value, indent=None if compact else 2, sort_keys=True,
                                separators=(',', ':') if compact else None,
-                               allow_nan=False)+'\n', encoding='utf-8')
+                               allow_nan=False)+'\n', encoding='utf-8', newline='\n')
 
 
 def write_examples(destination: Path) -> None:
