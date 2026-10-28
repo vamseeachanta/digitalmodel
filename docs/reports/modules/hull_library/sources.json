@@ -161,7 +161,7 @@
     },
     {
       "path": "tests/hydrodynamics/hull_library/test_module_report.py",
-      "sha256": "c7030e5bbf6e9b13a6a099452eb82a44627db771301c4efb06c79a9322edb3d0",
+      "sha256": "a6d6ad30858aa6b0a5bb553ab49e578186436c10c868921f806efa3757a00737",
       "basis": "repository implementation or documentation; not physical qualification",
       "locator": "public interfaces and report evidence"
     }

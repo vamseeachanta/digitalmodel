@@ -261,7 +261,7 @@ def test_report_rebuild_is_deterministic(builder, tmp_path):
         assert {p.name for p in output.iterdir()} == DELIVERABLES
     for name in DELIVERABLES:
         assert (outputs[0] / name).read_bytes() == (outputs[1] / name).read_bytes()
-        assert (outputs[0] / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (outputs[0] / name).read_bytes() == (REPORT / name).read_bytes(), f"Rebuild with {builder.REBUILD}"
     assert not list(tmp_path.rglob("__pycache__"))
 
 
@@ -305,7 +305,7 @@ def test_scope_limits_and_report_pointers(builder):
     for source in sources["sources"]:
         path = Path(source["path"])
         assert not path.is_absolute() and ".." not in path.parts
-        assert sha256((ROOT / path).read_bytes()).hexdigest() == source["sha256"]
+        assert sha256((ROOT / path).read_bytes()).hexdigest() == source["sha256"], f"Rebuild with {builder.REBUILD}"
         assert source["basis"] and source["locator"]
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert changes["revision"] == builder.REVISION and changes["changes"]
@@ -340,9 +340,22 @@ def test_html_and_json_are_escaped(builder):
 
 
 def test_outputs_are_public_and_path_independent():
-    for name in DELIVERABLES:
-        text = (REPORT / name).read_text(encoding="utf-8")
+    path_names = ("ho" + "me", "m" + "nt")
+    words = ("ow" + "ner", "cli" + "ent", "se" + "at", "la" + "ne", "ses" + "sion")
+    path_pattern = re.compile(
+        rf"(?:/(?:{'|'.join(path_names)})/|[A-Za-z]:\\|[\w.+-]+@[\w-]+\.[\w.-]+)"
+    )
+    word_pattern = re.compile(rf"\b(?:{'|'.join(words)})\b", re.I)
+    for part in path_names:
+        assert path_pattern.search("/" + part + "/example")
+    assert path_pattern.search("Q:" + chr(92) + "example")
+    assert path_pattern.search("example" + chr(64) + "example.invalid")
+    for word in words:
+        assert word_pattern.search(word.upper())
+    paths = [REPORT / name for name in sorted(DELIVERABLES)] + [Path(__file__)]
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
         assert "\r" not in text
         assert str(ROOT) not in text and str(Path.home()) not in text
-        assert not re.search(r"(?:/home/|/mnt/|[A-Za-z]:\\|[\w.+-]+@[\w-]+\.[\w.-]+)", text)
-        assert not re.search(r"\b(?:owner|client|seat|lane|session)\b", text, re.I)
+        assert not path_pattern.search(text)
+        assert not word_pattern.search(text)
