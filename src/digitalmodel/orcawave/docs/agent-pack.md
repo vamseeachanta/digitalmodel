@@ -87,7 +87,7 @@ The inventory labels below enumerate calculating definitions, including definiti
 | --- | --- |
 | ISO 2631-1 | Source names the standard and Annex D, but supplies no edition or clause title; the docstring expression differs from the implemented power expression. Clause text not checked against the licensed copy. UNVERIFIED U2: edition, exact governing clause and compliance of the simplification; issue pending (4). [src/digitalmodel/orcawave/motion_statistics.py:L290-L339] |
 | DNV-RP-C205 | No use was found in the eight direct Python files; references in discovery documentation are not evidence that these algorithms implement a clause. UNVERIFIED U3: governing edition and clause for this package; issue pending (4). [src/digitalmodel/orcawave/__init__.py:L1-L11] |
-| Torsethaugen and Haver (2004) | Source names a simplified partition; no external publication was opened, so this is a code attribution rather than independent validation. [src/digitalmodel/orcawave/wave_spectrum.py:L282-L328] |
+| Published two-peak parameterization | NOT_EVALUATED: the heuristic is explicitly unqualified; the deprecated callable warns, and the high-level published name raises. See [offline-audit-example.md](offline-audit-example.md). |
 | Orcina second-order load theory | Source and synthetic tests state the complete-Hermitian convention and exclusion of mean-load diagonals; the finite-component closed forms below validate that convention, not solver agreement. [src/digitalmodel/orcawave/drift_forces.py:L185-L228] [tests/orcawave/test_drift_force_variance.py:L1-L6] |
 | Calculation citation sidecars | UNVERIFIED U4: standards-derived results have no runtime `Citation` sidecar in the inspected MSI and spectral calculation return paths; traceable standards qualification remains open, issue pending (4). [src/digitalmodel/orcawave/motion_statistics.py:L324-L339] [src/digitalmodel/orcawave/wave_spectrum.py:L374-L390] |
 
@@ -161,7 +161,7 @@ package producer map; wider historical discovery is retained as snapshot data.
 | C4-NORMALS | qa_gates.check_normals | positive 8 m3 volume, nonzero area, opposite shared edges; reject reversed or inconsistent orientation | offline; full closed mesh only |
 | C4-IRREGULAR | qa_gates.native_gate_record / require_native_gate | status NOT_RUN; require_native_gate raises for missing native lid/pressure/spike evidence | native NOT_RUN |
 | C4-HYDRO | qa_gates.check_hydrodynamics | added-mass and radiation-damping reciprocity<=2% using diagonal/coupling normalization, nonnegative damping, longest supplied-period heave=1±2% across all headings; reject excessive asymmetry/negative damping/bad heave | offline |
-| C4-WIND | drift_forces.compute_wind_current_drift | beam wind588 kN, current922.5 kN, yaw37762.5 kN m within rel1e-9 | offline |
+| C4-WIND | drift_forces.compute_wind_current_drift | explicit-input beam wind588 kN, current922.5 kN; head wind surge-735 kN within rel1e-9; assumed-arm yaw arithmetic | offline; empirical yaw model NOT_EVALUATED |
 | C4-HULL | vessel_database.generate_parametric_hull | rectangular midsection half breadth=15 m within1% | offline |
 | C5-TRACE | qa_gates.build_trace | SHA256, quantity producer/value/unit, gate/disposition/maintainer signature present; required-quantity coverage=100%; incomplete coverage or missing gate rejected | offline; native/report qualification NOT_RUN |
 
@@ -173,6 +173,18 @@ The canonical offline pack-report required set is `offline_pack_report_v1`:
 cannot replace any required quantity. The smaller C5-TRACE volume fixture tests
 one producer and is not a complete pack report. Native/report qualification
 remains NOT_RUN.
+
+The [offline worked example](offline-audit-example.md) records the hand
+calculations, sources and unresolved qualification checks from issue #2748.
+`test_audit_acceptance_values.py` supplements C4-WIND with explicit coefficients,
+densities, areas and speeds, and C4-FRAME with independent restoring values.
+The self-transpose coefficient test is replaced by refusal of an asymmetric
+added-mass matrix at `qa_gates.check_hydrodynamics`; raw matrices remain intact
+for diagnostics. `VesselParameters.synthetic` marks the preliminary inputs as
+well as the existing synthetic RAO outputs. Section 17's four unresolved 25 s
+pitch-band cases are strict expected failures, each citing #2748, rather than
+claims of completed qualification. Sections 3 and 13 retain NOT_EVALUATED
+licensed-clause status. These limits do not qualify any native gate.
 
 C4-HYDRO uses `abs(Mij-Mji) / max(sqrt(abs(Mii*Mjj)), abs(Mij), abs(Mji))`
 for both matrix families, with a 2% limit. A zero denominator denotes a zero
