@@ -48,7 +48,7 @@ class _Line:
 _ABSENT = object()
 
 
-def _fake_api(state, *, complete=True, lines=None):
+def _fake_api(state, *, complete=True, lines=None, frequency_domain=False):
     api = types.ModuleType("OrcFxAPI")
     api.ModelState = ModelState
     api.pnWholeSimulation = 0
@@ -58,6 +58,8 @@ def _fake_api(state, *, complete=True, lines=None):
     class Model:
         def __init__(self, path):
             self.state = state
+            if frequency_domain is not _ABSENT:
+                self.isFrequencyDomainDynamics = frequency_domain
             if complete is not _ABSENT:
                 self.simulationComplete = complete
             self.objects = [_Line("L1")] if lines is None else lines
@@ -162,3 +164,100 @@ def test_no_line_fails(monkeypatch, capsys):
 def test_missing_path_exits_2(monkeypatch, capsys):
     rc, out = _run(monkeypatch, capsys, _fake_api(ModelState.SimulationStopped), argv=("x",))
     assert rc == 2
+
+
+class _FrequencyDomainLine(_CountingLine):
+    """Whole-simulation fields per Orcina's OrcaFlexLineObject.RangeGraph reference.
+
+    Public online reference, accessed 2026-10-19:
+    https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,OrcaFlexLineObject.htm
+    Empty arrays suffice: no physical values are evaluated in the deferred check.
+    """
+
+    def RangeGraph(self, var, period):
+        self.calls += 1
+        return types.SimpleNamespace(X=[], StaticValue=[], StdDev=[], Upper=[], Lower=[])
+
+
+def test_frequency_domain_is_not_evaluated(monkeypatch, capsys):
+    """Issue #2325 permits deferral, never PASS or missing-variable FAIL.
+
+    Exit 3 is the application's distinct deferred status, not a solver value.
+    The documented whole-simulation fields lack Min/Max, so no extrema query
+    should occur; the hand-counted expected number of queries is zero.
+    """
+    lines = [_FrequencyDomainLine("LineA"), _FrequencyDomainLine("LineB")]
+    api = _fake_api(ModelState.SimulationStopped, lines=lines, frequency_domain=True)
+    rc, out = _run(monkeypatch, capsys, api)
+    assert rc == 3
+    assert "VALIDATE: NOT_EVALUATED" in out
+    assert "not evaluated (frequency domain)" in out
+    assert "LineA" in out and "LineB" in out
+    assert [line.calls for line in lines] == [0, 0]
+    assert "VALIDATE: PASS" not in out
+    assert "VALIDATE: FAIL" not in out
+    assert "missing strength variables" not in out
+
+
+@pytest.mark.parametrize(
+    "state, complete",
+    [
+        (ModelState.SimulationPaused, True),
+        (ModelState.SimulationStoppedUnstable, True),
+        (ModelState.RunningSimulation, True),
+        (ModelState.Reset, True),
+        (ModelState.CalculatingStatics, True),
+        (ModelState.InStaticState, True),
+        (ModelState.SimulationStopped, False),
+        (ModelState.SimulationStopped, _ABSENT),
+    ],
+)
+def test_frequency_domain_does_not_bypass_completion(monkeypatch, capsys, state, complete):
+    """The existing completion contract takes precedence over domain deferral."""
+    line = _FrequencyDomainLine("LineA")
+    api = _fake_api(state, complete=complete, lines=[line], frequency_domain=True)
+    rc, out = _run(monkeypatch, capsys, api)
+    assert rc == 1
+    assert "VALIDATE: FAIL" in out
+    assert "NOT_EVALUATED" not in out
+    assert line.calls == 0
+
+
+def test_frequency_domain_without_lines_fails(monkeypatch, capsys):
+    """The existing requirement for at least one Line remains in force."""
+    api = _fake_api(ModelState.SimulationStopped, lines=[], frequency_domain=True)
+    rc, out = _run(monkeypatch, capsys, api)
+    assert rc == 1
+    assert "no Line object" in out
+    assert "NOT_EVALUATED" not in out
+
+
+@pytest.mark.parametrize("domain", [_ABSENT, None, "False"])
+def test_unavailable_domain_is_not_assumed_time_domain(monkeypatch, capsys, domain):
+    """Only the documented boolean False establishes time-domain applicability.
+
+    Orcina Model.isFrequencyDomainDynamics reference, accessed 2026-10-19:
+    https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,Model.htm
+    No numerical acceptance criterion is applied to missing or malformed metadata.
+    """
+    line = _CountingLine("LineA")
+    api = _fake_api(ModelState.SimulationStopped, lines=[line], frequency_domain=domain)
+    rc, out = _run(monkeypatch, capsys, api)
+    assert rc == 3
+    assert "VALIDATE: NOT_EVALUATED" in out
+    assert "dynamics domain unavailable" in out
+    assert "VALIDATE: PASS" not in out
+    assert "VALIDATE: FAIL" not in out
+    assert line.calls == 0
+
+
+def test_time_domain_extrema_are_unchanged(monkeypatch, capsys):
+    """Independent hand calculation using the existing synthetic time-domain data.
+
+    Min contains [-1, -2], whose least value is -2; Max contains [3, 4], whose
+    greatest value is 4. These exact integers need no rounding or tolerance.
+    This is an extrema-retrieval check, not a physical strength acceptance limit.
+    """
+    rc, out = _run(monkeypatch, capsys, _fake_api(ModelState.SimulationStopped))
+    assert rc == 0
+    assert "(-2.0, 4.0)" in out
