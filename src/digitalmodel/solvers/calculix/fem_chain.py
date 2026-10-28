@@ -168,9 +168,10 @@ class FEMChain:
         boundary_conditions: list,
         *,
         shell_sections: list | None = None,
+        beam_sections: list | None = None,
         step: dict | None = None,
     ) -> Path:
-        """Write the INP file from current mesh and analysis parameters."""
+        """Write the INP file, passing section dictionaries to INPWriter."""
         if self._nodes is None:
             raise RuntimeError("No mesh data — call set_mesh or create_plate_with_hole first")
 
@@ -180,6 +181,8 @@ class FEMChain:
             writer.add_plasticity(material["name"], material["plastic_rows"])
         for section in shell_sections or []:
             writer.add_shell_section(**section)
+        for section in beam_sections or []:
+            writer.add_beam_section(**section)
 
         for name, ids in self._node_sets.items():
             writer.add_node_set(name, ids)
