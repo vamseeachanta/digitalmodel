@@ -1,7 +1,6 @@
 default:
   Analysis:
     GML:
-      data_source: xlsx # xlsx, simulated
       Circumference: True
       Length: False
     LML: False
@@ -16,7 +15,7 @@ Outer_Pipe:
   Geometry:
     Nominal_ID: NULL
     Nominal_OD: 6.625
-    Design_WT : 0.864
+    Design_WT : 0.840
     Corrosion_Allowance: 0
   Material:
     Material: Steel
@@ -26,7 +25,7 @@ Outer_Pipe:
     Insulation: NULL
     Buoyancy: NULL
   Code:
-     - API RP 1111-2009 Risers
+     - ASME B31.4-2016 Chapter IX Risers
   Manufacturing:
     Coupling Mass Ratio: 0.0
 Inner_Pipe: NULL
@@ -39,9 +38,9 @@ API579Parameters:
 Geometry:
    NominalID: NULL
    NominalOD: 6.625
-   DesignWT : 0.864
+   DesignWT : 0.840
    StartWTFactor : 1
-   tmin: 0.7619
+   tmin: 0.74977
    AssessmentLengthCeilingFactor_Circumference: NULL
    AssessmentLengthCeilingFactor_Length: 1.0
    CorrosionAllowance: 0.0
@@ -62,7 +61,7 @@ Design:
     Torsion: 0
     Condition: Restrained
     Code:
-       - {Outer_Pipe: API RP 1111-2009 Risers}
+       - {Outer_Pipe: ASME B31.4-2016 Chapter IX Risers}
 
 
 Material:
@@ -73,17 +72,16 @@ Material:
      ThermalExpansionCoefficient: 6.5E-6
      Grades:
        API 5L X65:
-          SMYS: 65000
+          SMYS: 65300
           SMUS: 77500
           Reference:
 
 DesignFactors:
-   API RP 1111-2009 Risers:
-      internal_pressure :
-        Fd: 0.60
-      collapse_propagation :
-        Fp: 0.80
-      D_over_T_Trasition_Ratio: 15
+   ASME B31.4-2016 Chapter IX Risers:
+      internal_pressure : 0.60
+      Longitudinal : 0.80
+      EquivalentStress : 0.90
+      D_over_T_Trasition_Ratio: 30
 
 ReadingSets:
   -
@@ -115,18 +113,18 @@ ReadingSets:
 
 PlotSettings:
   Data:
-    PltSupTitle: Sample Platform, Block 518, 6 inch FFS
+    PltSupTitle: Sample Platform, field-k, 6 inch FFS
     PltTitle: Measured WT
     PltXLabel: Circumference (inch)
     PltYLabel: Length (inch)
   LML:
-    PltSupTitle: Sample Platform, Block 518, 6 inch FFS
+    PltSupTitle: Sample Platform, field-k, 6 inch FFS
     PltTitle: Local Metal Loss, Levels 1 & 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)
     ylim: [5000, 12000]
   GML:
-    PltSupTitle: Sample Platform, Block 518, 6 inch FFS
+    PltSupTitle: Sample Platform, field-k, 6 inch FFS
     PltTitle: General Metal Loss, Level 2
     PltXLabel: Future Corrosion Allowance (inch)
     PltYLabel: Maximum Allowable Working Pressure (psi)
