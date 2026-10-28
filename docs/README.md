@@ -29,6 +29,12 @@ New and materially revised engineering analysis deliverables shall follow the [p
 | Infrastructure, configs, or workflow routing | `src/digitalmodel/infrastructure/`, `src/digitalmodel/workflows/`, or `src/digitalmodel/data_systems/` | matching tests plus integration tests | domain docs and this routing entry point |
 | Documentation/indexing maintenance | `docs/README.md`, `docs/domains/README.md`, operator map, and registry | `tests/docs/test_digitalmodel_routing_contract.py` | this file |
 
+## Operational runbooks
+
+- [Codex exec standard input in automation](runbooks/codex-exec-stdin.md):
+  disconnect inherited input when supplying only a prompt argument, or supply
+  finite stdin context intentionally.
+
 ## Curated Routing Surfaces
 
 Curated routing surfaces are authoritative for issue work because they are small,
