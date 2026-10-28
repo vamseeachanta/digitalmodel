@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-elevating unit monitoring — early-warning demonstrator</title>
+<link rel="stylesheet" href="../_assets/brand.css">
+<style>
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:20px clamp(14px,3vw,32px) 40px}
+  header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
+  h1{font-size:clamp(22px,3vw,32px);color:var(--brand);margin:10px 0}
+  h2{font-size:20px;color:var(--brand)} h3{font-size:16px;color:var(--brand)}
+  a{color:var(--accent)} .muted{color:var(--muted)}
+  .card{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin:16px 0}
+  .controls{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+  .scrub{flex:1;min-width:220px} input[type=range]{width:100%;accent-color:var(--accent)}
+  select,button{font:inherit;background:var(--panel-2);color:var(--ink);border:1px solid var(--edge);border-radius:8px;padding:8px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  #status{border-left:5px solid var(--accent);padding:10px 14px;font-weight:650}
+  #status[data-alert="true"]{border-color:#b75d00}
+  svg{width:100%;height:auto;display:block;color:var(--muted)}
+  .plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,450px),1fr));gap:16px}
+  .plots .card{margin:0} .readout{min-height:2.5em;font-variant-numeric:tabular-nums}
+  .table-wrap{overflow:auto} table{border-collapse:collapse;width:100%;font-size:14px}
+  td,th{text-align:left;vertical-align:top;border-bottom:1px solid var(--edge);padding:10px}
+  th{color:var(--brand)} #mapping{min-width:1100px} li{margin:12px 0}
+  .legend{font-size:13px;color:var(--muted)} .c1{color:#2477b3}.c2{color:#00877b}
+  footer{border-top:1px solid var(--edge);margin-top:24px;padding-top:14px;color:var(--muted)}
+  @media print{.controls,#theme{display:none}.card{box-shadow:none}.table-wrap{overflow:visible}#mapping{min-width:0}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header>
+  <div><a href="short-horizon-motion-forecast.html">Marine operations · motion forecast</a>
+  <h1>Self-elevating unit monitoring</h1>
+  <p class="muted">Liftboats and jack-ups · which instrument catches each failure mode early?</p></div>
+  <button id="theme" type="button" aria-label="Toggle colour theme">Theme</button>
+</header>
+<section class="card" aria-labelledby="summary-title">
+  <h2 id="summary-title">Summary</h2>
+  <p>Preload settlement that stops is compared with settlement that accelerates. In the elevated-storm example, leg inclination and strain rise toward illustrative limits. The instrument table connects six failure modes to observable precursors, explicit alert inputs and conditional lead times.</p>
+  <p><strong>Synthetic demonstration only.</strong> The mappings are engineering proposals based on the open literature below. The sources support mechanisms and measured quantities; they do not validate these warning algorithms or thresholds. No measured, client or earlier study data is used.</p>
+  <p><a href="short-horizon-motion-forecast.html">The motion-forecast demonstrator</a> shows phase-resolved seconds ahead within a predictable wave zone. Qualified metocean forecasts can provide hours for preparation; monitoring confirms the response as it happens. This page does not connect to a forecast feed.</p>
+</section>
+<section aria-labelledby="revision-title">
+  <h2 id="revision-title">Revision history</h2>
+  <div class="table-wrap"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+  <tbody><tr><td>0</td><td>2026-10-27</td><td>Initial synthetic instrument and warning demonstrator to connect observed response with advance planning.</td></tr>
+  <tr><td>1</td><td>2026-10-27</td><td>Corrected the restricted-service citation and added independent hand-worked timing checks. A public numerical basis for the demonstration settings remains unestablished.</td></tr></tbody></table></div>
+</section>
+<section aria-labelledby="replay-title">
+  <h2 id="replay-title">Synthetic log replay</h2>
+  <div class="card controls">
+    <label for="scenario">Evaluated log <select id="scenario"><option value="accelerating">Accelerating preload</option><option value="settled">Settled preload</option><option value="storm">Elevated storm</option></select></label>
+    <div class="scrub"><label for="cursor">Replay time <output id="clock" for="cursor">0.0 min</output></label><input id="cursor" type="range" min="0" max="90" step="1" value="0"></div>
+  </div>
+  <p class="muted">Move the time slider, or point across a plot. Full traces show the constructed outcome retrospectively; the status uses only warnings confirmed by the selected time. Blue and teal distinguish the preload logs; amber marks warnings, red the imposed event and dotted purple the replay time.</p>
+  <p id="status" role="status" aria-live="polite">No configured alert at 0.0 min. This is not a safety verdict.</p>
+  <div id="plots" class="plots"></div>
+  <noscript><p>Enable JavaScript for the interactive replay. The warning summary, settings, instrument table and sources below remain available.</p></noscript>
+</section>
+<section class="card" aria-labelledby="warning-title">
+  <h2 id="warning-title">Warning lead time in these constructed logs</h2>
+  <div class="table-wrap"><table><thead><tr><th>Log</th><th>Confirmed warning</th><th>Warning time (min)</th><th>First event or limit (min)</th><th>Lead time (min)</th></tr></thead><tbody>
+<tr><td>settled</td><td>No configured alert</td><td>—</td><td>No imposed event</td><td>—</td></tr>
+<tr><td>accelerating</td><td>settlement acceleration</td><td>4.5</td><td>11.0</td><td>6.5</td></tr>
+<tr><td>accelerating</td><td>settlement rate</td><td>8.0</td><td>11.0</td><td>3.0</td></tr>
+<tr><td>storm</td><td>leg inclination</td><td>71.0</td><td>104.0</td><td>33.0</td></tr>
+<tr><td>storm</td><td>leg strain</td><td>73.0</td><td>104.0</td><td>31.0</td></tr>
+  </tbody></table></div>
+  <p>Lead time is the separately imposed event time minus the first confirming alert time. It is measured after construction of the log, not predicted by the monitor. Both storm alerts precede the first sampled response limit. A real sudden failure may have no precursor and zero lead time.</p>
+</section>
+<section aria-labelledby="inputs-title">
+  <h2 id="inputs-title">Explicit demonstration inputs</h2>
+  <p><strong>Numerical basis remains unestablished.</strong> The log coefficients, alert thresholds, persistence counts, maximum gaps and storm response limits below are invented demonstration inputs. The cited sources do not supply these values. The timing checks establish arithmetic for the constructed logs; they do not qualify settings for operation. A public worked example with locators and units is still required to establish the numerical basis.</p>
+  <div class="table-wrap"><table><thead><tr><th>Log</th><th>Rule</th><th>Metric</th><th>Threshold</th><th>Consecutive samples</th><th>Maximum sample gap</th></tr></thead><tbody>
+<tr><td>settled</td><td>settlement acceleration</td><td>acceleration</td><td>4.0 µm/s²</td><td>3</td><td>20.0 s</td></tr>
+<tr><td>settled</td><td>settlement rate</td><td>rise_rate</td><td>2.5 mm/s</td><td>3</td><td>20.0 s</td></tr>
+<tr><td>accelerating</td><td>settlement acceleration</td><td>acceleration</td><td>4.0 µm/s²</td><td>3</td><td>20.0 s</td></tr>
+<tr><td>accelerating</td><td>settlement rate</td><td>rise_rate</td><td>2.5 mm/s</td><td>3</td><td>20.0 s</td></tr>
+<tr><td>storm</td><td>leg inclination</td><td>magnitude</td><td>300.0 mdeg</td><td>2</td><td>120.0 s</td></tr>
+<tr><td>storm</td><td>leg strain</td><td>magnitude</td><td>850.0 µε</td><td>2</td><td>120.0 s</td></tr>
+  </tbody></table></div>
+  <p>Preload is sampled every 10.0 s; it ramps to 1000.0 kN at 4.0 min and then holds. Both logs start with exponentially decaying settlement. The accelerating log adds quadratic penetration after the hold begins, followed by an imposed jump at 11.0 min. The storm is sampled every 60.0 s with linearly increasing inclination and strain; illustrative limits are 450.0 mdeg and 1200.0 µε. Inclination is plotted in millidegrees (1000.0 mdeg = 1.0 deg).</p>
+  <p>Each rule requires a channel, metric, threshold, unit, persistence and maximum gap. Magnitude uses absolute values; rise rate and acceleration retain their sign, with positive settlement downward. Backward differences use actual elapsed time, with acceleration between interval midpoints. Equality counts as a crossing; a non-crossing sample resets persistence. Confirmation is timestamped at the final required sample. Invalid values, missing channels and excessive gaps raise an error: the monitor is unavailable, not safe.</p>
+  <p>All settings and synthetic formulas are declared in <code>digitalmodel.marine_ops.self_elevating_monitoring</code>. Use <code>evaluate(time_s, channels, rules)</code> with caller-supplied settings and consistent units. Preload rules apply only to the selected loading phase; a real adapter must confirm the preload hold. No automatic hold detection, sensor ingestion or unit conversion is implemented.</p>
+</section>
+<section aria-labelledby="mapping-title">
+  <h2 id="mapping-title">Failure modes and instrument selection</h2>
+  <p>Typical alert forms below require site-specific values. Lead-time descriptions are conditional engineering estimates, not published guarantees or recommended operating margins.</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="Instrument mapping table, scroll horizontally"><table id="mapping"><thead><tr><th>Failure mode</th><th>Instruments</th><th>Precursor signal</th><th>Explicit alert logic inputs</th><th>Time potentially available</th><th>Open source basis</th></tr></thead><tbody>
+<tr><td>Punch-through during preload</td><td>Preload and settlement logging per leg<br>Leg inclination<br>Hull motion IMU</td><td>Preload/settlement logs: increasing penetration rate at held load. Leg inclination: rotation. Hull IMU: tilt or downward acceleration, possibly only after support is lost. Soil resistance can drop after a peak.</td><td>Input settlement rate or acceleration threshold and persistence during a confirmed preload hold; cross-check per-leg loads and inclination.</td><td>Potentially seconds to minutes if progressive; zero for sudden loss of support. Synthetic lead only is measured below.</td><td><a href="#source-penetration">[penetration]</a> <a href="#source-structure">[structure]</a></td></tr>
+<tr><td>Uneven settlement</td><td>Settlement logging per leg<br>Leg inclination<br>Hull motion IMU</td><td>Settlement logs: growing difference between leg penetrations. Leg inclination: local tilt drift. Hull IMU: persistent heel or trim; hull attitude alone cannot locate the affected footing.</td><td>Input maximum differential settlement, tilt magnitude or their rise rates, with persistence and a common surveyed reference.</td><td>Minutes to hours for slow drift; none guaranteed for abrupt settlement.</td><td><a href="#source-structure">[structure]</a> <a href="#source-waves">[waves]</a></td></tr>
+<tr><td>Leg overload or bending in an elevated storm</td><td>Opposed leg strain gauges<br>Leg inclination<br>Metocean: wave, wind, current</td><td>Strain gauges: rising mean axial strain or opposed-gauge difference (bending). Inclination: leg tilt. Metocean sensors: increasing wave, wind and current demand, not the resulting structural utilization.</td><td>Input strain magnitude, bending-strain difference or tilt threshold below assessed limits; temperature-compensate and require persistence.</td><td>Seconds to minutes for measured response; longer weather preparation time comes from a qualified forecast, not a strain sensor.</td><td><a href="#source-structure">[structure]</a> <a href="#source-waves">[waves]</a> <a href="#source-operation">[operation]</a></td></tr>
+<tr><td>Sliding or overturning</td><td>Leg inclination<br>Hull motion IMU<br>Leg strain gauges<br>Jacking load readings<br>Metocean: wave, wind, current</td><td>Inclination: leg rotation. IMU: hull tilt or acceleration. Strain gauges: load redistribution. Jacking loads: support unloading. Metocean: growing environmental demand. Pure translation can escape these instruments; add a position reference.</td><td>Input tilt rate, load-imbalance or minimum support-load threshold and site-assessed metocean envelope. Fuse position data for sliding detection.</td><td>Seconds to minutes if progressive; no guaranteed warning of sudden sliding or overturning. These signals do not measure a stability margin.</td><td><a href="#source-structure">[structure]</a> <a href="#source-waves">[waves]</a> <a href="#source-stability">[stability]</a></td></tr>
+<tr><td>Afloat transit motion and stability</td><td>Hull motion IMU<br>Metocean: wave, wind, current</td><td>Hull IMU: increasing roll, pitch, acceleration or persistent heel. Metocean: worsening waves, wind and current. IMU motion does not establish intact or damaged stability.</td><td>Input roll or pitch magnitude, persistent heel or acceleration threshold from the approved loading condition and transit assessment.</td><td>Seconds for measured motions; weather forecasts can support hours of planning. Flooding or abrupt wind shifts may give little warning.</td><td><a href="#source-transit">[transit]</a> <a href="#source-waves">[waves]</a> <a href="#source-operation">[operation]</a> <a href="#source-stability">[stability]</a></td></tr>
+<tr><td>Jacking system overload</td><td>Jacking load readings per leg or drive<br>Leg strain gauges<br>Leg inclination</td><td>Jacking readings: increasing drive load or unequal sharing. Strain gauges: rising axial response. Inclination: out-of-level elevation. Load readings cannot replace hydraulic pressure and fluid-level alarms.</td><td>Input drive-load magnitude, load rise rate or imbalance threshold below the rated envelope, plus persistence; retain independent protective trips.</td><td>Seconds to minutes for a gradual overload; an abrupt drive failure may have no precursor.</td><td><a href="#source-operation">[operation]</a> <a href="#source-structure">[structure]</a></td></tr>
+  </tbody></table></div>
+</section>
+<section class="card" aria-labelledby="limits-title">
+  <h2 id="limits-title">Limits and way forward</h2>
+  <p>Soil layering, foundation capacity, structural utilization, sliding resistance, overturning margin and intact or damaged stability are not solved. IMU attitude does not measure stability reserve; inclination and strain alone cannot reliably detect pure sliding. A position reference, load assessment and geotechnical investigation are needed. The wave experiment cited below supports displacement and acceleration monitoring, not a field warning performance claim.</p>
+  <p>Before field use, the maintainer should obtain site and equipment assessments, survey references, sensor calibration and temperature compensation, clock synchronization, noise filtering, data-quality alarms and independent protective trips. Set thresholds below assessed limits with sufficient time for the approved response; qualify them on representative logs and a holdout set. A warning calls for review under approved procedures. No configured alert is not permission to continue.</p>
+</section>
+<section aria-labelledby="sources-title">
+  <h2 id="sources-title">Open literature and public guidance</h2>
+  <p>Sources were retrieved on 2026-10-27. Only paraphrased physical mechanisms and monitoring proposals are included; numerical limits from licensed standards are not reproduced. The journal articles provide the mechanism basis. Strain, inclination and drive-load warning rules are proposed engineering extensions, not algorithms validated by those articles. The federal regulations address liftboats; they are context for the demonstrator, not a claim of applicability to every jack-up.</p>
+  <ol>
+<li id="source-penetration"><a href="https://mdpi-res.com/d_attachment/jmse/jmse-10-01607/article_deploy/jmse-10-01607.pdf">On Cubic Spudcan Deep Penetration in Dense Sand Overlying Non-Uniform Clay</a>. Introduction and load-penetration discussion; DOI 10.3390/jmse10111607. Terms: CC BY 4.0; https://creativecommons.org/licenses/by/4.0/. Retrieved 2026-10-27.</li>
+<li id="source-structure"><a href="https://mdpi-res.com/d_attachment/jmse/jmse-11-01833/article_deploy/jmse-11-01833.pdf">Structural Analysis Procedure and Applicability Review of Spudcan Considering Soil Types</a>. Sections 2.1 and 2.2; DOI 10.3390/jmse11091833. Terms: CC BY 4.0; https://creativecommons.org/licenses/by/4.0/. Retrieved 2026-10-27.</li>
+<li id="source-waves"><a href="https://mdpi-res.com/d_attachment/water/water-15-00024/article_deploy/water-15-00024.pdf">Experimental Investigation of the Coupling Effect of Jackup Offshore Platforms, Towers, and Seabed Foundations under Waves of Large Wave Height</a>. Section 2.3 and Figure 2: acceleration, displacement, wave-height sensors; DOI 10.3390/w15010024. Terms: CC BY 4.0; https://creativecommons.org/licenses/by/4.0/. Retrieved 2026-10-27.</li>
+<li id="source-transit"><a href="https://mdpi-res.com/d_attachment/applsci/applsci-15-12701/article_deploy/applsci-15-12701.pdf">Investigation on Seakeeping of WTIVs Considering the Effect of Leg-Spudcan Well</a>. Abstract: roll period, damping and motion response; DOI 10.3390/app152312701. Terms: CC BY 4.0; https://creativecommons.org/licenses/by/4.0/. Retrieved 2026-10-27.</li>
+<li id="source-operation"><a href="https://www.govinfo.gov/content/pkg/CFR-2025-title46-vol4/pdf/CFR-2025-title46-vol4-part134.pdf">46 CFR Part 134: Added Provisions for Liftboats (2025 edition)</a>. Sections 134.140 Structural standards, 134.150 Liftboat-jacking systems, 134.170 Operating manual. Terms: US federal regulation; public domain under 17 USC 105; https://www.govinfo.gov/about/policies. Retrieved 2026-10-27.</li>
+<li id="source-stability"><a href="https://www.govinfo.gov/content/pkg/CFR-2025-title46-vol7/pdf/CFR-2025-title46-vol7-part174.pdf">46 CFR Part 174: Specific Vessel Types (2025 edition)</a>. Section 174.045 Intact stability requirements; section 174.240 applicability to liftboats inspected under subchapter L; section 174.255 Restricted service for liftboats unable to comply with section 174.250 and limited to restricted service, including intact stability afloat (a) and on-bottom stability (c). Terms: US federal regulation; public domain under 17 USC 105; https://www.govinfo.gov/about/policies. Retrieved 2026-10-27.</li>
+  </ol>
+</section>
+<footer>Generated from the table-driven monitoring module. Reproduce with <code>PYTHONPATH=src python scripts/capabilities/build_self_elevating_monitoring.py</code>. No external plotting scripts or network requests are used by this page.</footer>
+</main>
+<script id="monitor-data" type="application/json">{"settled":{"time_s":[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,310,320,330,340,350,360,370,380,390,400,410,420,430,440,450,460,470,480,490,500,510,520,530,540,550,560,570,580,590,600,610,620,630,640,650,660,670,680,690,700,710,720,730,740,750,760,770,780,790,800,810,820,830,840,850,860,870,880,890,900],"event_s":null,"charts":[{"title":"Preload settlement: stops versus accelerates","unit":"mm","traces":[{"label":"settled","values":[0.0,22.5,42.1,59.3,74.4,87.6,99.1,109.2,118.1,125.8,132.6,138.5,143.7,148.2,152.2,155.6,158.7,161.3,163.7,165.7,167.5,169.1,170.4,171.6,172.7,173.6,174.4,175.1,175.7,176.2,176.7,177.1,177.5,177.8,178.1,178.3,178.5,178.7,178.9,179.0,179.1,179.2,179.3,179.4,179.5,179.6,179.6,179.7,179.7,179.7,179.8,179.8,179.8,179.8,179.9,179.9,179.9,179.9,179.9,179.9,179.9,179.9,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0]},{"label":"accelerating","values":[0.0,22.5,42.1,59.3,74.4,87.6,99.1,109.2,118.1,125.8,132.6,138.5,143.7,148.2,152.2,155.6,158.7,161.3,163.7,165.7,167.5,169.1,170.4,171.6,172.7,174.2,176.8,180.5,185.3,191.2,198.3,206.5,215.9,226.4,238.1,250.9,264.9,280.1,296.5,314.0,332.7,352.6,373.7,396.0,419.5,444.2,470.0,497.1,525.3,554.7,585.4,617.2,650.2,684.4,719.9,756.5,794.3,833.3,873.5,914.9,957.5,1001.3,1046.4,1092.6,1140.0,1188.6,2038.4,2089.4,2141.6,2195.0,2249.6,2305.4,2362.4,2420.6,2480.0,2540.6,2602.4,2665.4,2729.6,2795.0,2861.6,2929.4,2998.4,3068.6,3140.0,3212.6,3286.4,3361.4,3437.6,3515.0,3593.6]}]},{"title":"Applied preload per leg","unit":"kN","traces":[{"label":"preload","values":[0.0,41.7,83.3,125.0,166.7,208.3,250.0,291.7,333.3,375.0,416.7,458.3,500.0,541.7,583.3,625.0,666.7,708.3,750.0,791.7,833.3,875.0,916.7,958.3,1000.0,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000]}]}],"alerts":[]},"accelerating":{"time_s":[0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240,250,260,270,280,290,300,310,320,330,340,350,360,370,380,390,400,410,420,430,440,450,460,470,480,490,500,510,520,530,540,550,560,570,580,590,600,610,620,630,640,650,660,670,680,690,700,710,720,730,740,750,760,770,780,790,800,810,820,830,840,850,860,870,880,890,900],"event_s":660,"charts":[{"title":"Preload settlement: stops versus accelerates","unit":"mm","traces":[{"label":"settled","values":[0.0,22.5,42.1,59.3,74.4,87.6,99.1,109.2,118.1,125.8,132.6,138.5,143.7,148.2,152.2,155.6,158.7,161.3,163.7,165.7,167.5,169.1,170.4,171.6,172.7,173.6,174.4,175.1,175.7,176.2,176.7,177.1,177.5,177.8,178.1,178.3,178.5,178.7,178.9,179.0,179.1,179.2,179.3,179.4,179.5,179.6,179.6,179.7,179.7,179.7,179.8,179.8,179.8,179.8,179.9,179.9,179.9,179.9,179.9,179.9,179.9,179.9,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0,180.0]},{"label":"accelerating","values":[0.0,22.5,42.1,59.3,74.4,87.6,99.1,109.2,118.1,125.8,132.6,138.5,143.7,148.2,152.2,155.6,158.7,161.3,163.7,165.7,167.5,169.1,170.4,171.6,172.7,174.2,176.8,180.5,185.3,191.2,198.3,206.5,215.9,226.4,238.1,250.9,264.9,280.1,296.5,314.0,332.7,352.6,373.7,396.0,419.5,444.2,470.0,497.1,525.3,554.7,585.4,617.2,650.2,684.4,719.9,756.5,794.3,833.3,873.5,914.9,957.5,1001.3,1046.4,1092.6,1140.0,1188.6,2038.4,2089.4,2141.6,2195.0,2249.6,2305.4,2362.4,2420.6,2480.0,2540.6,2602.4,2665.4,2729.6,2795.0,2861.6,2929.4,2998.4,3068.6,3140.0,3212.6,3286.4,3361.4,3437.6,3515.0,3593.6]}]},{"title":"Applied preload per leg","unit":"kN","traces":[{"label":"preload","values":[0.0,41.7,83.3,125.0,166.7,208.3,250.0,291.7,333.3,375.0,416.7,458.3,500.0,541.7,583.3,625.0,666.7,708.3,750.0,791.7,833.3,875.0,916.7,958.3,1000.0,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000]}]}],"alerts":[{"rule":"settlement acceleration","time_s":270,"lead_min":6.5},{"rule":"settlement rate","time_s":480,"lead_min":3.0}]},"storm":{"time_s":[0,60,120,180,240,300,360,420,480,540,600,660,720,780,840,900,960,1020,1080,1140,1200,1260,1320,1380,1440,1500,1560,1620,1680,1740,1800,1860,1920,1980,2040,2100,2160,2220,2280,2340,2400,2460,2520,2580,2640,2700,2760,2820,2880,2940,3000,3060,3120,3180,3240,3300,3360,3420,3480,3540,3600,3660,3720,3780,3840,3900,3960,4020,4080,4140,4200,4260,4320,4380,4440,4500,4560,4620,4680,4740,4800,4860,4920,4980,5040,5100,5160,5220,5280,5340,5400,5460,5520,5580,5640,5700,5760,5820,5880,5940,6000,6060,6120,6180,6240,6300,6360,6420,6480,6540,6600,6660,6720,6780,6840,6900,6960,7020,7080,7140,7200],"event_s":6240,"charts":[{"title":"Leg inclination","unit":"mdeg","traces":[{"label":"Leg inclination","values":[50.0,53.6,57.2,60.8,64.4,68.0,71.6,75.2,78.8,82.4,86.0,89.6,93.2,96.8,100.4,104.0,107.6,111.2,114.8,118.4,122.0,125.6,129.2,132.8,136.4,140.0,143.6,147.2,150.8,154.4,158.0,161.6,165.2,168.8,172.4,176.0,179.6,183.2,186.8,190.4,194.0,197.6,201.2,204.8,208.4,212.0,215.6,219.2,222.8,226.4,230.0,233.6,237.2,240.8,244.4,248.0,251.6,255.2,258.8,262.4,266.0,269.6,273.2,276.8,280.4,284.0,287.6,291.2,294.8,298.4,302.0,305.6,309.2,312.8,316.4,320.0,323.6,327.2,330.8,334.4,338.0,341.6,345.2,348.8,352.4,356.0,359.6,363.2,366.8,370.4,374.0,377.6,381.2,384.8,388.4,392.0,395.6,399.2,402.8,406.4,410.0,413.6,417.2,420.8,424.4,428.0,431.6,435.2,438.8,442.4,446.0,449.6,453.2,456.8,460.4,464.0,467.6,471.2,474.8,478.4,482.0]}],"threshold":300.0,"limit":450.0},{"title":"Leg strain","unit":"µε","traces":[{"label":"Leg strain","values":[80.0,90.8,101.6,112.4,123.2,134.0,144.8,155.6,166.4,177.2,188.0,198.8,209.6,220.4,231.2,242.0,252.8,263.6,274.4,285.2,296.0,306.8,317.6,328.4,339.2,350.0,360.8,371.6,382.4,393.2,404.0,414.8,425.6,436.4,447.2,458.0,468.8,479.6,490.4,501.2,512.0,522.8,533.6,544.4,555.2,566.0,576.8,587.6,598.4,609.2,620.0,630.8,641.6,652.4,663.2,674.0,684.8,695.6,706.4,717.2,728.0,738.8,749.6,760.4,771.2,782.0,792.8,803.6,814.4,825.2,836.0,846.8,857.6,868.4,879.2,890.0,900.8,911.6,922.4,933.2,944.0,954.8,965.6,976.4,987.2,998.0,1008.8,1019.6,1030.4,1041.2,1052.0,1062.8,1073.6,1084.4,1095.2,1106.0,1116.8,1127.6,1138.4,1149.2,1160.0,1170.8,1181.6,1192.4,1203.2,1214.0,1224.8,1235.6,1246.4,1257.2,1268.0,1278.8,1289.6,1300.4,1311.2,1322.0,1332.8,1343.6,1354.4,1365.2,1376.0]}],"threshold":850,"limit":1200}],"alerts":[{"rule":"leg inclination","time_s":4260,"lead_min":33.0},{"rule":"leg strain","time_s":4380,"lead_min":31.0}]}}</script>
+<script>
+"use strict";
+const cases = JSON.parse(document.getElementById("monitor-data").textContent);
+const scenario = document.getElementById("scenario");
+const cursor = document.getElementById("cursor");
+const colors = ["#2477b3", "#00877b"];
+const fmt = value => Number(value).toFixed(1);
+
+function plot(chart, data, now) {
+  const w = 800, h = 260, left = 72, right = 22, top = 60, bottom = 42;
+  const tmax = data.time_s[data.time_s.length - 1];
+  const ymax = Math.max(1, chart.limit || 0, chart.threshold || 0,
+    ...chart.traces.flatMap(trace => trace.values)) * 1.12;
+  const x = t => left + t / tmax * (w-left-right);
+  const y = v => h-bottom - v / ymax * (h-top-bottom);
+  let svg = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${chart.title}: ${chart.unit} against time in minutes"><title>${chart.title}</title>`;
+  for (let i=0;i<=4;i++) {
+    const v = ymax*i/4, t=tmax*i/4;
+    svg += `<path d="M${left},${y(v)}H${w-right}" stroke="currentColor" opacity=".15"/>`;
+    svg += `<text x="${left-8}" y="${y(v)+4}" fill="currentColor" text-anchor="end" font-size="12">${fmt(v)}</text>`;
+    svg += `<text x="${x(t)}" y="${h-20}" fill="currentColor" text-anchor="middle" font-size="12">${fmt(t/60)}</text>`;
+  }
+  svg += `<text x="${left}" y="18" fill="currentColor" font-size="13">${chart.unit}</text><text x="${w-right}" y="${h-2}" fill="currentColor" text-anchor="end" font-size="12">Time (min)</text>`;
+  for (const [index, trace] of chart.traces.entries()) {
+    const path = trace.values.map((v,i) => `${i ? "L" : "M"}${x(data.time_s[i])},${y(v)}`).join(" ");
+    svg += `<path d="${path}" fill="none" stroke="${colors[index]}" stroke-width="2.5"/>`;
+  }
+  for (const [field,label,color] of [["threshold","Warning threshold","#b75d00"],["limit","Response limit","#bd2636"]]) {
+    if (chart[field] !== undefined) {
+      svg += `<path d="M${left},${y(chart[field])}H${w-right}" stroke="${color}" stroke-dasharray="6 4"/>`;
+      svg += `<text x="${w-right}" y="${y(chart[field])-5}" text-anchor="end" fill="${color}" font-size="12">${label}: ${fmt(chart[field])}</text>`;
+    }
+  }
+  for (const [index,alert] of data.alerts.entries()) {
+    svg += `<path d="M${x(alert.time_s)},${top}V${h-bottom}" stroke="#b75d00" stroke-dasharray="5 4"/>`;
+    svg += `<text x="${left+index*270}" y="${34+index*16}" fill="#b75d00" font-size="12">${alert.rule}: ${fmt(alert.time_s/60)} min</text>`;
+  }
+  if (data.event_s !== null) {
+    svg += `<path d="M${x(data.event_s)},${top}V${h-bottom}" stroke="#bd2636" stroke-width="2"/>`;
+    svg += `<text x="${w-right}" y="18" text-anchor="end" fill="#bd2636" font-size="12">Event: ${fmt(data.event_s/60)} min</text>`;
+  }
+  return svg + `<path d="M${x(now)},${top}V${h-bottom}" stroke="#9055bf" stroke-width="2" stroke-dasharray="2 3"/></svg>`;
+}
+
+function render() {
+  const data = cases[scenario.value];
+  cursor.max = data.time_s.length-1;
+  const index = Math.min(Number(cursor.value), data.time_s.length-1);
+  cursor.value = index;
+  const now = data.time_s[index];
+  document.getElementById("clock").textContent = `${fmt(now/60)} min`;
+  const alerts = data.alerts.filter(alert => alert.time_s <= now);
+  const status = document.getElementById("status");
+  status.dataset.alert = String(alerts.length > 0);
+  const event = data.event_s !== null && now >= data.event_s ? " Synthetic event reached." : "";
+  status.textContent = alerts.length ? `Confirmed: ${alerts.map(a=>a.rule).join("; ")}.${event}` : "No configured alert. This is not a safety verdict.";
+  const plots = document.getElementById("plots");
+  plots.innerHTML = data.charts.map(chart => `<article class="card"><h3>${chart.title}</h3><p class="legend">${chart.traces.map((trace,i)=>`<span class="c${i+1}">${trace.label}</span>`).join(" · ")}</p>${plot(chart,data,now)}<p class="readout">${chart.traces.map(trace=>`${trace.label}: ${fmt(trace.values[index])} ${chart.unit}`).join(" · ")}</p></article>`).join("");
+  for (const svg of plots.querySelectorAll("svg")) {
+    svg.addEventListener("pointermove", event => {
+      const box = svg.getBoundingClientRect();
+      const fraction = ((event.clientX-box.left)/box.width*800-72)/(800-72-22);
+      const next = Math.round(Math.max(0,Math.min(1,fraction))*(data.time_s.length-1));
+      if (Number(cursor.value) !== next) { cursor.value = next; render(); }
+    });
+  }
+}
+scenario.addEventListener("change", () => { cursor.value=0; render(); });
+cursor.addEventListener("input", render);
+document.getElementById("theme").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+});
+render();
+</script>
+</body>
+</html>
