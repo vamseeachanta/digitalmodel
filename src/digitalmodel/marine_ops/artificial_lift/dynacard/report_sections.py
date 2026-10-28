@@ -75,6 +75,12 @@ def build_diagnostic_report_html(
     lines = _report_header()
     lines.extend(["    <h1>Dynacard Diagnostic Report</h1>"])
     lines.extend(_verdict_section(verdict))
+    if results.diagnostic_card is not None:
+        lines.append(
+            "<p>Classification and diagnostic plot use the unsmoothed solver "
+            "strain card. Calculation metrics use the smoothed downhole card. "
+            "Classifier field accuracy: NOT_EVALUATED.</p>"
+        )
     if ctx is not None:
         lines.extend(_input_section(cfg, ctx, results.solver_method))
         lines.extend(_input_checks_section(cfg, ctx))

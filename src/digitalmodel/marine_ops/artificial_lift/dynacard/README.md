@@ -253,3 +253,84 @@ from digitalmodel.marine_ops.artificial_lift.dynacard import (
 - API RP 11L: Recommended Practice for Design Calculations for Sucker Rod Pumping Systems
 - API 11E: Specification for Pumping Units
 - Gibbs, S.G.: "Predicting the Behavior of Sucker-Rod Pumping Systems" (JPT, 1963)
+
+## Diagnostic round trip
+
+The default context solver retains two outputs from a single displacement solve:
+
+- `downhole_card`: the historical smoothed card used for engineering calculations.
+- `diagnostic_card`: unsmoothed strain load used by `classify_with_context` and
+  the diagnostic report plot. Both cards are serialized in `AnalysisResults`.
+
+The classifier is trained on raw generated pump cards. Smoothing its input
+removes oscillations and valve-closure detail used by that classifier. The
+diagnostic load uses the same backward strain stencil at every cyclic sample:
+`F[j] = E A (u[last,j] - u[last-1,j]) / dx`, from stress = modulus times strain
+and stress = force / area: [OpenStax, University Physics vol. 1 (2016),
+section 12.3, equations 12.34-12.36](https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus).
+The discrete basis is the forward boundary
+in `card_generators.surface_card_from_pump_card` and the strain reconstruction
+in `everitt_jennings.solver._full_load`. Substituting the forward boundary
+`u[last-1] = u[last] - F dx/(EA)` gives `EA(F dx/(EA))/dx = F` independently
+of the classifier. The final sample duplicates the first to close the cycle.
+The historical calculation load retains its existing filtering and endpoint
+stencil. Filter behavior is documented in the
+[SciPy `savgol_filter` API, Parameters and Notes](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.savgol_filter.html).
+
+### Worked synthetic example
+
+The following inputs are taken from
+`examples/workflows/artificial-lift-field-health/input.yml`: rod diameter
+1.0 in, rod length 5000.0 ft, pump diameter 1.75 in, pump depth 5000.0 ft and
+speed 10.0 strokes/min. They define a synthetic test, not a field design basis.
+Seed zero is a reproducibility input. Run with the source package on `PYTHONPATH`:
+
+```python
+from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
+    ALL_GENERATORS, surface_card_from_pump_card,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import PumpDiagnostics
+from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter import (
+    EverittJenningsContextSolver,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
+    DynacardAnalysisContext, PumpProperties, RodSection,
+)
+
+retained = 0
+for mode, generate in ALL_GENERATORS.items():
+    pump = generate(seed=0)
+    ctx = DynacardAnalysisContext(
+        api14="SYNTHETIC", surface_card=pump,
+        rod_string=[RodSection(diameter=1.0, length=5000.0)],
+        pump=PumpProperties(diameter=1.75, depth=5000.0), spm=10.0,
+    )
+    ctx.surface_card = surface_card_from_pump_card(pump, ctx)
+    result = EverittJenningsContextSolver(ctx).solve()
+    label = PumpDiagnostics().classify_with_context(result).classification
+    retained += label == mode
+    print(mode, label)
+print(f"Labels retained: {retained}/{len(ALL_GENERATORS)}")
+```
+
+Answer: all 20 supplied labels are recovered at this geometry and seed,
+including `ROD_PARTING`. The field-health mapping assigns that label `failure`,
+which precedes a `BENT_BARREL` warning in the worst-wells ordering. The former
+smoothed-card classification retains 16 of these 20 labels at the same inputs.
+These are synthetic label-retention counts, not field accuracy.
+
+At seeds zero, seven and forty-two, 59 of 60 supplied labels are recovered.
+The remaining `DELAYED_TV_CLOSURE` example at seed forty-two becomes
+`VALVE_LEAK_TV` even when the raw generated card is merely closed, before any
+solver is run. A strict expected-failure test preserves the desired supplied
+label; another test verifies that the solver retains the equivalent closed-input
+classification. Recalibrating that classifier/generator disagreement remains
+unresolved. No alternative diagnosis is qualified by this example.
+
+Classifier field accuracy is **NOT_EVALUATED**. Labelled real-card evidence is
+still required under [the field-validation issue](https://github.com/vamseeachanta/digitalmodel/issues/1864).
+Unsmoothing also preserves measurement noise; no noise acceptance limit or field
+reliability is established. `classify_card(card)` classifies exactly the card
+provided; callers that need the diagnostic path should use the context solver
+and `classify_with_context`. Older stored results and comparison solvers without
+a diagnostic card retain their existing explicit downhole-card path.
