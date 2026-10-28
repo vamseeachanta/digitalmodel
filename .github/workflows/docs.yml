@@ -34,6 +34,16 @@ jobs:
           python -m pytest tests/docs/test_digitalmodel_routing_contract.py
           -q -p no:cacheprovider --basetemp="$RUNNER_TEMP/docs-routing-tests"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Validate structure standard links
+        # Keep the version aligned with the configured markdown-link-check hook.
+        run: >-
+          npx --yes markdown-link-check@3.11.2
+          --config config/markdown-link-check.json docs/standards/repo-structure.md
+
       # Runs inside the project environment, not the bare interpreter: the
       # generators import numpy, scipy, pandas, matplotlib, pydantic and yaml
       # transitively through src/digitalmodel, all of which are already declared

@@ -536,7 +536,12 @@ def _riser_fatigue_annual_damage(point: dict[str, Any]) -> float:
         "wall_thickness_mm": 22.2,
         "wave": {
             "scf": float(point["scf"]),
+            "scf_basis": "Synthetic nominal stresses with the selected concentration factor",
             "histogram_period_years": 1.0,
+            "histogram_basis": {
+                "period_years": 1.0,
+                "evidence": "Synthetic cycle counts representing one year",
+            },
             "stress_ranges_MPa": [6.0, 10.0, 16.0, 24.0, 36.0],
             "cycles": [4.0e6, 6.0e5, 45000.0, 2500.0, 90.0],
         },

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "database": "flexible_pipe",
+  "units": {
+    "id_m": "m",
+    "od_m": "m",
+    "axial_stiffness_n": "N",
+    "bending_stiffness_n_m2": "N*m^2",
+    "torsional_stiffness_n_m2": "N*m^2",
+    "dry_mass_kg_per_m": "kg/m",
+    "minimum_bend_radius_m": "m",
+    "design_pressure_pa": "Pa",
+    "temperature_deg_c": "degC"
+  },
+  "records": []
+}

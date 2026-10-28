@@ -239,6 +239,9 @@ def build_coupling_heatmap_html(
     damp_corr: list[list[float]],
     body_i_name: str,
     body_j_name: str,
+    *,
+    am_quality=None,
+    damp_quality=None,
 ) -> Path:
     """Render 6x6 correlation heatmaps for coupling matrices."""
     dof_labels = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
@@ -253,8 +256,9 @@ def build_coupling_heatmap_html(
     am_dict = _to_dict(am_corr)
     damp_dict = _to_dict(damp_corr)
 
-    am_table = render_6x6_matrix(am_dict, dof_labels)
-    damp_table = render_6x6_matrix(damp_dict, dof_labels)
+    missing = [["INSUFFICIENT_DATA"] * 6 for _ in range(6)]
+    am_table = render_6x6_matrix(am_dict, dof_labels, _to_dict(am_quality or missing))
+    damp_table = render_6x6_matrix(damp_dict, dof_labels, _to_dict(damp_quality or missing))
 
     title = f"Coupling: {body_i_name} \u2194 {body_j_name}"
     safe_i = "".join(c for c in body_i_name if c.isalnum() or c in "_-")
@@ -281,7 +285,8 @@ def build_coupling_heatmap_html(
 <div class="container">
   <h1>{html_mod.escape(title)}</h1>
   <p>Correlation of frequency-dependent coupling coefficients between .owd and spec.yml results.
-     Values near 1.000 indicate identical coefficients.</p>
+     Signed coefficients are aligned in frequency before correlation.
+     Refused cells have no usable statistic; correlation alone establishes no acceptance.</p>
 
   <h2>Added Mass Coupling</h2>
   {am_table}

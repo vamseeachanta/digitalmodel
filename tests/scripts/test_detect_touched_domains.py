@@ -1,8 +1,10 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
+import fnmatch
 import importlib.util
 import json
+import posixpath
 import re
 import shlex
 import subprocess
@@ -58,6 +60,102 @@ def test_shared_skew_basis_routes(path: str, expected: set[str]) -> None:
     domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
     selected = {domain.name for domain in detector.touched_domains([path], domains)}
     assert selected == expected
+
+
+def assert_corrosion_gate_coverage(gate: dict, pytestconfig: pytest.Config) -> None:
+    """Require folder registration and reject argv-level path exclusions."""
+    root = "tests/corrosion"
+    assert gate["enabled"] is True
+    assert gate["domain"] == "specialized"
+    assert gate["failure_action"] == "block"
+    assert root in {posixpath.normpath(item) for item in gate["test_roots"]}
+    command = shlex.split(gate["command"])
+    pytest_args = command[command.index("pytest") + 1:]
+    parsed = pytestconfig._parser.parse(pytest_args)
+    assert root in {posixpath.normpath(item) for item in parsed.file_or_dir}
+    test_paths = [root, *(path.as_posix() for path in Path(root).rglob("test_*.py"))]
+    exclusions = (parsed.ignore or []) + (parsed.ignore_glob or []) + (parsed.deselect or [])
+    for value in exclusions:
+        excluded = posixpath.normpath(value.split("::", 1)[0])
+        assert not (
+            excluded == root or excluded.startswith(root + "/")
+            or root.startswith(excluded + "/")
+            or any(fnmatch.fnmatchcase(path, excluded) for path in test_paths)
+        )
+
+
+def test_corrosion_ci_coverage(pytestconfig: pytest.Config) -> None:
+    gates = yaml.safe_load(
+        Path(".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    assert_corrosion_gate_coverage(gates["tests-specialized"], pytestconfig)
+
+
+@pytest.mark.parametrize("field", ["test_roots", "command"])
+@pytest.mark.parametrize("replacement", [None, "tests/corrosion_extra/"])
+def test_corrosion_ci_coverage_guard_rejects_missing_folder(
+    field: str, replacement: str | None, pytestconfig: pytest.Config,
+) -> None:
+    """Calibrate metadata and command omissions, including a near-match root."""
+    gates = yaml.safe_load(
+        Path(".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    gate = gates["tests-specialized"]
+    # Start from a complete registration to isolate the mutation under test.
+    gate["test_roots"] = ["tests/corrosion/"]
+    gate["command"] = "python -m pytest tests/corrosion/"
+    if field == "test_roots":
+        gate[field] = [replacement] if replacement else []
+    else:
+        gate[field] = "python -m pytest" + (f" {replacement}" if replacement else "")
+    with pytest.raises(AssertionError):
+        assert_corrosion_gate_coverage(gate, pytestconfig)
+
+
+@pytest.mark.parametrize("command", [
+    "python -m pytest tests/specialized/ --ignore tests/corrosion/",
+    "python -m pytest tests/corrosion/ --ignore=tests/corrosion/",
+    "python -m pytest tests/corrosion/ --ignore-glob tests/*",
+    "python -m pytest tests/corrosion/ --deselect tests/corrosion/test_module_report.py",
+    "python -m pytest tests/specialized/ --confcutdir tests/corrosion/",
+    "python -m pytest tests/specialized/ --rootdir tests/corrosion/",
+    "python -m pytest tests/corrosion/ --ignore tests/./corrosion/",
+    "python -m pytest tests/corrosion/ --ignore-glob=*.py",
+    "python -m pytest tests/corrosion/ --ignore-glob=tests/c*/test_*.py",
+])
+def test_corrosion_ci_coverage_guard_rejects_exclusions(
+    command: str, pytestconfig: pytest.Config,
+) -> None:
+    gate = {
+        "enabled": True, "domain": "specialized", "failure_action": "block",
+        "test_roots": ["tests/corrosion/"], "command": command,
+    }
+    with pytest.raises(AssertionError):
+        assert_corrosion_gate_coverage(gate, pytestconfig)
+
+
+@pytest.mark.parametrize("changed_path", [
+    "tests/corrosion/test_galvanic_screening.py",
+    "tests/corrosion/test_module_report.py",
+    "scripts/corrosion/build_module_report.py",
+    "docs/reports/modules/corrosion/changes.json",
+    "docs/reports/modules/corrosion/report.html",
+])
+def test_corrosion_inputs_select_specialized(changed_path: str) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains([changed_path], domains)
+    assert [domain.name for domain in selected] == ["specialized"]
+
+
+def test_corrosion_source_keeps_full_matrix() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains(
+        ["src/digitalmodel/corrosion/galvanic_screening.py"], domains
+    )
+    assert selected == domains
+    assert "specialized" in {domain.name for domain in selected}
 
 
 def run_detector(

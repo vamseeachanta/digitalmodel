@@ -1,11 +1,19 @@
 name: Workflow Automation Tests
 
+# Daily dependency-drift coverage (issue #1958) now comes from the daily
+# "Main full run" (full-matrix-sweep.yml), which calls this workflow; our own
+# cron dispatches it, so there is no GitHub schedule or push trigger here
+# (owner ruling, 28 Oct 2026).
 on:
   pull_request:
     paths:
       - 'src/digitalmodel/workflows/workflow_automation/**'
       - 'tests/workflows/workflow_automation/**'
       - '.github/workflows/workflow-automation-tests.yml'
+      - 'pyproject.toml'
+      - '.coveragerc'
+      - 'uv.lock'
+      - 'pytest.ini'
   workflow_dispatch:
   workflow_call:
 
@@ -17,6 +25,7 @@ jobs:
     name: test (${{ matrix.python-version }})
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.11', '3.12']
 
@@ -39,11 +48,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install --no-sources -e ".[dev]"
+        # pytest-cov and the benchmark fixture are declared in the test extra.
+        uv pip install --no-sources -e ".[dev,test]"
 
     - name: Run workflow automation tests
       run: |
-        uv run --no-sync pytest tests/workflows/workflow_automation/ -v --cov=digitalmodel.workflows.workflow_automation --cov-report=xml --cov-report=term
+        uv run --no-sync pytest tests/workflows/workflow_automation/ -v --cov=digitalmodel.workflows.workflow_automation --cov-config=pyproject.toml --cov-fail-under=0 --cov-report=xml --cov-report=term
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
@@ -55,9 +65,16 @@ jobs:
         name: workflow-automation-coverage
 
     - name: Test CLI commands
+      if: ${{ !cancelled() }}
       run: |
         uv run --no-sync workflow-automation list
 
     - name: Verify package installation
+      if: ${{ !cancelled() }}
       run: |
         uv run --no-sync python -c "from digitalmodel.workflows.workflow_automation import WorkflowOrchestrator, CompleteRiserAnalysisWorkflow; print('Workflow automation module installed')"
+
+    - name: Enforce coverage threshold
+      if: ${{ !cancelled() }}
+      run: |
+        uv run --no-sync coverage report --rcfile=pyproject.toml

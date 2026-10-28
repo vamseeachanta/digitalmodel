@@ -390,15 +390,24 @@ class BenchmarkRunner:
                     "phase_deg": _round_list(comp.phase, 4),
                 }
 
-            # Added mass: list of 6x6 matrices indexed by frequency
-            am_matrices = []
-            for hm in dr.added_mass.matrices:
-                am_matrices.append(_round_list(hm.matrix, 6))
+            raw_data_refusals = []
 
-            # Damping: same structure
-            damp_matrices = []
-            for hm in dr.damping.matrices:
-                damp_matrices.append(_round_list(hm.matrix, 6))
+            def matrix_arrays(matrix_set, label):
+                arrays = []
+                for index, sample in enumerate(matrix_set.matrices):
+                    try:
+                        values = np.asarray(sample.matrix, dtype=float)
+                        # Shape follows output_schemas.HydrodynamicMatrix.
+                        if values.shape != (6, 6) or not np.all(np.isfinite(values)):
+                            raise ValueError("invalid matrix array")
+                        arrays.append(_round_list(values, 6))
+                    except (TypeError, ValueError):
+                        arrays.append(None)
+                        raw_data_refusals.append(f"{label}:{index}")
+                return arrays
+
+            am_matrices = matrix_arrays(dr.added_mass, "added_mass")
+            damp_matrices = matrix_arrays(dr.damping, "damping")
 
             solvers_data[solver_name] = {
                 "vessel_name": dr.vessel_name,
@@ -409,6 +418,7 @@ class BenchmarkRunner:
                 "raos": raos_dict,
                 "added_mass": am_matrices,
                 "damping": damp_matrices,
+                "raw_data_refusals": raw_data_refusals,
             }
 
         # -- build comparison section ----------------------------------------
@@ -426,6 +436,7 @@ class BenchmarkRunner:
                         comp.magnitude_stats.correlation, 8,
                     ),
                     "magnitude_quality": comp.magnitude_stats.quality,
+                    "sample_count": comp.magnitude_stats.sample_count,
                     "phase_r": optional_round(
                         comp.phase_stats.correlation, 8,
                     ),
@@ -455,6 +466,8 @@ class BenchmarkRunner:
                 "comparison_status": pr.comparison_status,
                 "refusal_reason": pr.refusal_reason,
                 "rao_correlations": rao_corrs,
+                "added_mass_sample_counts": {f"{i},{j}": n for (i, j), n in pr.added_mass_sample_counts.items()},
+                "damping_sample_counts": {f"{i},{j}": n for (i, j), n in pr.damping_sample_counts.items()},
                 "added_mass_correlations": am_corrs,
                 "added_mass_quality": {
                     f"{k[0]},{k[1]}": v
@@ -510,79 +523,14 @@ class BenchmarkRunner:
         solver_metadata: Optional[Dict[str, Dict]] = None,
     ) -> Dict[str, Any]:
         """Convert a BenchmarkReport dataclass to a JSON-safe dict."""
-        pairwise_data: Dict[str, Any] = {}
+        pairwise_data = MultiSolverComparator._serialize_pairwise(report.pairwise_results)
         for pair_key, pr in report.pairwise_results.items():
-            rao_dict: Dict[str, Any] = {}
-            for dof_name, comp in pr.rao_comparisons.items():
-                rao_dict[dof_name] = {
-                    "magnitude_correlation": optional_float(
-                        comp.magnitude_stats.correlation,
-                    ),
-                    "magnitude_quality": comp.magnitude_stats.quality,
-                    "magnitude_rms_error": float(
-                        comp.magnitude_stats.rms_error,
-                    ),
-                    "phase_correlation": optional_float(
-                        comp.phase_stats.correlation,
-                    ),
-                    "phase_quality": comp.phase_stats.quality,
-                    "max_magnitude_diff": float(comp.max_magnitude_diff),
-                    "max_phase_diff": float(comp.max_phase_diff),
-                    "refusal_reason": comp.refusal_reason,
-                }
-
-            am_corrs = {
-                f"{k[0]},{k[1]}": optional_float(v)
-                for k, v in pr.added_mass_correlations.items()
-            }
-            damp_corrs = {
-                f"{k[0]},{k[1]}": optional_float(v)
-                for k, v in pr.damping_correlations.items()
-            }
-
-            hc_dict = None
-            if pr.hydrostatic_comparison:
-                hc = pr.hydrostatic_comparison
-                hc_dict = {
-                    "displacement_volume_diff": float(hc.displacement_volume_diff),
-                    "mass_diff": float(hc.mass_diff),
-                    "cog_diff": [float(v) for v in hc.cog_diff],
-                    "cob_diff": [float(v) for v in hc.cob_diff],
-                    "waterplane_area_diff": float(hc.waterplane_area_diff),
-                    "stiffness_matrix_correlation": optional_float(
-                        hc.stiffness_matrix_correlation,
-                    ),
-                }
-
-            pairwise_data[pair_key] = {
-                "solver_a": pr.solver_a,
-                "solver_b": pr.solver_b,
-                "overall_agreement": pr.overall_agreement,
-                "comparison_status": pr.comparison_status,
-                "refusal_reason": pr.refusal_reason,
-                "rao_comparisons": rao_dict,
-                "added_mass_correlations": am_corrs,
-                "added_mass_quality": {
-                    f"{k[0]},{k[1]}": v
-                    for k, v in pr.added_mass_quality.items()
-                },
-                # How much of each matrix carried a real comparison. Without
-                # this, a matrix that is 78% uncompared is indistinguishable
-                # from a fully compared one in the machine-readable record
-                # (#1633).
-                "added_mass_coverage": coefficient_coverage(
-                    pr.added_mass_quality, pr.added_mass_correlations,
-                ),
-                "damping_correlations": damp_corrs,
-                "damping_quality": {
-                    f"{k[0]},{k[1]}": v
-                    for k, v in pr.damping_quality.items()
-                },
-                "damping_coverage": coefficient_coverage(
-                    pr.damping_quality, pr.damping_correlations,
-                ),
-                "hydrostatic_comparison": hc_dict,
-            }
+            pairwise_data[pair_key]["added_mass_coverage"] = coefficient_coverage(
+                pr.added_mass_quality, pr.added_mass_correlations,
+            )
+            pairwise_data[pair_key]["damping_coverage"] = coefficient_coverage(
+                pr.damping_quality, pr.damping_correlations,
+            )
 
         consensus_data: Dict[str, Any] = {}
         for dof_key, cm in report.consensus_by_dof.items():

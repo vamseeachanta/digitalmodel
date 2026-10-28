@@ -1,0 +1,11 @@
+{"title": "FE10 NAFEMS LE1 and patch test, MYSTRAN (gate FE10)",
+ "steps": [
+  ["build expected.json", ["python", "tools/build_expected.py", "<pkg>"]],
+  ["build decks", ["python", "tools/build_decks.py", "<pkg>"]],
+  ["check deck le1_8x24", ["python", "tools/check_bdf.py", "inputs/le1_8x24.bdf", "--kind", "le1"]],
+  ["check deck le1_16x48", ["python", "tools/check_bdf.py", "inputs/le1_16x48.bdf", "--kind", "le1"]],
+  ["check deck le1_32x96", ["python", "tools/check_bdf.py", "inputs/le1_32x96.bdf", "--kind", "le1"]],
+  ["check deck patch", ["python", "tools/check_bdf.py", "inputs/patch.bdf", "--kind", "patch"]],
+  ["compare.py self-test", ["python", "compare.py", "--selftest"]],
+  ["negative probes", ["python", "tools/negative_probes.py", "<pkg>", "<scratch>/negative-probes"]]
+ ]}

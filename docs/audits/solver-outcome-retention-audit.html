@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solver outcome retention audit</title>
+  <style>
+    body { font-family: sans-serif; max-width: 76rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.5; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #bbb; padding: .5rem; text-align: left; vertical-align: top; }
+    caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+    code { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+<h1>Solver outcome retention audit</h1>
+<h2>Summary</h2>
+<p>The canary wrapper previously raised when its final outcome write failed,
+discarding the structured return value after attempts had been consumed. The
+wrapper now returns an <code>INCOMPLETE</code> disposition with the recording error,
+retains the original execution reason, and preserves existing or partial evidence.
+The diagnostic exit check rejects that unretained outcome. These changes meet the
+consumed-attempt/no-retry contract in
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2128">issue 2128</a>
+for the synthetic failure paths exercised below; durable storage is not established
+when an outcome write fails.</p>
+
+<h2>Revision history</h2>
+<table>
+  <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+  <tbody><tr><td>Initial</td><td>2026-10-19</td><td>Record the bounded wrapper inventory,
+  canary correction and fault regressions because failed terminal retention can
+  suppress a consumed-attempt disposition.</td></tr></tbody>
+  <caption>Revision history.</caption>
+</table>
+
+<h2>Scope and basis</h2>
+<p>This is a source audit and synthetic fault analysis, not a solver campaign.
+The originating defect is documented in
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2121">issue 2121</a>
+and its reusable contract is recorded in issue 2128. No equation, engineering
+coefficient, acceptance tolerance or licensed reference value is introduced.
+Expected counts are independent event traces in the test docstrings: a launch
+failure after the first claim consumes the first attempt; a completed synthetic
+sequence consumes its complete case order; recording errors cannot reverse either
+history. Each wrapper is classified from its own source contract rather than
+assuming that every wrapper uses a consumed-attempt ledger.</p>
+<p>The source inventory is based on <code>6476218e</code> plus the canary and
+diagnostic corrections in this change. Later source revisions will require a
+fresh audit before these dispositions can be reused.</p>
+
+<h2>Inspected boundaries</h2>
+<table>
+  <thead><tr><th>Source and boundary</th><th>Observed failure handling</th><th>Disposition</th></tr></thead>
+  <tbody>
+    <tr><td><a href="../../src/digitalmodel/ansys/cylinder_canary.py"><code>cylinder_canary.run_canary</code></a></td>
+    <td>The final outcome write was outside the exception handler. The correction
+    catches recording errors independently, returns INCOMPLETE and retains attempted
+    and unattempted identities without retrying the write or launching again.</td>
+    <td>Corrected; synthetic write, partial-file, existing-file and readback failures
+    are covered before and after a completed synthetic sequence.</td></tr>
+    <tr><td><a href="../../scripts/ansys/run_zero_control_diagnostic.py"><code>execute_diagnostic / diagnostic_exit_code</code></a></td>
+    <td>The reservation is released in a finally block according to process settlement.
+    An unguarded canary write previously prevented the independent operator return.
+    The exit check now also rejects the outcome recording-error field.</td>
+    <td>Corrected caller disposition; settled and uncertain synthetic launches are
+    covered. The final operator-file write remains a separate persistence boundary.</td></tr>
+    <tr><td><a href="../../src/digitalmodel/ansys/cylinder_pressure_resume.py"><code>execute_pressure_resume / _terminal_records</code></a></td>
+    <td>Terminal and independent outcome writes already have separate handlers.
+    Terminal failure does not suppress the outcome attempt. Returned errors do not
+    reset the consumed claim.</td>
+    <td>No implementation change. Regressions cover either write failing and both
+    failing together for both supported pressure ordinals, including no readmission.</td></tr>
+    <tr><td><a href="../../src/digitalmodel/workflows/openfoam_batch_execution.py"><code>run_case_pool / _run_case_mpi_unlocked / run_cases</code></a></td>
+    <td>Checkpoint writes occur after the per-case exception handlers. A write error
+    can escape the MPI return boundary; the pool wrapper replaces a raised future
+    with a generic failed row. Checkpoints are resumable results, not the pressure
+    wrapper's no-retry ledger.</td><td>Source-level follow-up candidate; persistence-fault
+    reproduction and resume semantics remain unevaluated.</td></tr>
+    <tr><td><a href="../../src/digitalmodel/solvers/openfoam/runner.py"><code>OpenFOAMRunner.run</code></a></td>
+    <td>Prebuilt verification failures become failed results, while release runs in
+    finally. Release failure can override the return. No consumed-attempt journal
+    is established by this boundary.</td><td>Source-level follow-up candidate; cleanup-fault
+    reproduction remains unevaluated.</td></tr>
+    <tr><td><a href="../../src/digitalmodel/solvers/orcaflex/parallel_runner.py"><code>run_one / reextract / run_cases</code></a></td>
+    <td>Worker failures are classified. Parent ledger append, callback and final stop
+    record are outside that worker handler and can suppress the aggregate return.
+    This wrapper has its own bounded retry policy.</td><td>Source-level follow-up candidate;
+    no import or native execution is performed. Retry policy remains unchanged.</td></tr>
+    <tr><td><a href="../../src/digitalmodel/solvers/orcaflex/universal/universal_runner.py"><code>_process_single_model</code></a></td>
+    <td>Processing and simulation-save failures populate the returned error field.
+    There is no independent terminal journal at this boundary.</td><td>Source inspection
+    only; no blanket persistence or wrapper-family coverage claim.</td></tr>
+    <tr><td><a href="../../src/digitalmodel/solvers/ghs/runner.py"><code>run_approved_capture / run_synthetic_capture</code></a></td>
+    <td>Live capture is disabled. The synthetic backend catches launch errors, but
+    subsequent stage verification can raise before returning its synthetic result.</td>
+    <td>Synthetic-only follow-up candidate; a live consumed attempt is not established.</td></tr>
+    <tr><td><a href="../../src/digitalmodel/solvers/benchmark/runner.py"><code>_run_once / run_pack</code></a></td>
+    <td>Per-repeat callback exceptions become failed repeat records. The aggregate
+    is returned to the caller; no independent terminal persistence is provided here.</td>
+    <td>Source inspection only; receipt consumers are outside this audit.</td></tr>
+  </tbody>
+  <caption>Bounded source inventory; candidate findings are not reproduced defects.</caption>
+</table>
+
+<h2>Regression evidence</h2>
+<p><a href="../../tests/ansys/test_cylinder_outcome_retention.py">The retention regression
+module</a> contains seventeen synthetic cases. Nine cases reproduced the unguarded
+canary write and the caller exit-code gap before implementation; all seventeen
+passed after correction. The tests inject no native adapter. Existing and partial
+outcome bytes and claim bytes are checked for preservation. Both pressure ordinals
+retain their no-readmission behavior when terminal and outcome writes fail together.</p>
+
+<h2>Limits and next work</h2>
+<p>The inventory is bounded to the linked entry points; it is not an exhaustive
+repository audit. A failed write can leave an absent, partial or unverified outcome
+file; the structured return is available for independent retention, not proof of
+durability. A receipt written before a readback failure may still contain its
+earlier status, so callers must use the returned recording error. Existing evidence
+is never rewritten to repair that discrepancy. Process termination, abrupt
+interpreter exit, filesystem-wide failure and engineering qualification remain
+outside the synthetic evidence. Failures between approval consumption and the
+per-attempt record retain their existing behavior and require separate coverage.</p>
+<p>Existing hash-bound runtime bundles will require their normal source rebinding
+and review before the changed wrapper can be used for execution.</p>
+<p>Follow-up work under issue 2128 will reproduce the listed persistence and cleanup
+candidates at their actual callers before changing their independent retry and
+resume policies. Other solver and automation entry points will be inventoried
+separately. Independent second-provider review will precede merge; this audit
+does not claim that review has occurred.</p>
+</body>
+</html>

@@ -63,3 +63,21 @@ def test_docs_workflow_covers_structure_and_domain_docs_with_routing_tests():
     assert len(validations) == 1
     assert "if" not in validations[0]
     assert validations[0].get("continue-on-error", "false") == "false"
+
+
+def test_docs_workflow_checks_structure_standard_links():
+    config = workflow("docs.yml")
+    hooks = yaml.safe_load((ROOT / ".pre-commit-config.yaml").read_text())["repos"]
+    link_hook = next(repo for repo in hooks if repo["repo"].endswith("/markdown-link-check"))
+    steps = config["jobs"]["docs"]["steps"]
+    checks = [step for step in steps if "markdown-link-check@" in step.get("run", "")]
+    assert len(checks) == 1
+    step = checks[0]
+    # The configured hook revision is the source of the CI tool version.
+    assert f"markdown-link-check@{link_hook['rev'].removeprefix('v')}" in step["run"]
+    assert "--config config/markdown-link-check.json" in step["run"]
+    assert "docs/standards/repo-structure.md" in step["run"]
+    assert "if" not in step
+    assert step.get("continue-on-error", "false") == "false"
+    # Runs in the daily Main full run, which calls docs.yml (28 Oct 2026).
+    assert set(config["on"]) == {"workflow_dispatch", "workflow_call"}

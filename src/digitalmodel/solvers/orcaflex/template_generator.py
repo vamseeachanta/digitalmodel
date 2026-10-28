@@ -17,7 +17,6 @@ Example:
 """
 
 import argparse
-import os
 import sys
 import yaml
 import logging
@@ -208,7 +207,7 @@ class TemplateGenerator:
 
     Supports two output modes:
     1. Merged YAML: Combines base and variation into a single flat YAML file.
-    2. Reference format: Creates a case file with BaseFile + IncludeFile references.
+    2. Reference format: Creates BaseFile plus guarded named-object modifications.
     """
 
     def merge_yaml_files(
@@ -338,8 +337,8 @@ class TemplateGenerator:
             base_file: Path to base template.
             variation_file: Path to variation file.
             output_file: Path to output file.
-            as_reference: If True, generate BaseFile + IncludeFile reference format
-                         instead of merged content.
+            as_reference: If True, generate BaseFile with inline named-object
+                         modifications instead of merged content.
 
         Returns:
             Result dictionary with 'success' and optional 'error' keys.
@@ -355,9 +354,6 @@ class TemplateGenerator:
             if not variation_file.exists():
                 return {'success': False, 'error': f'Variation file not found: {variation_file}'}
 
-            # Create output directory if needed
-            output_file.parent.mkdir(parents=True, exist_ok=True)
-
             if as_reference:
                 # Generate reference-style case file
                 content = self._generate_reference(base_file, variation_file, output_file)
@@ -366,6 +362,7 @@ class TemplateGenerator:
                 content = self.merge_yaml_files(base_file, variation_file)
 
             # Write output
+            output_file.parent.mkdir(parents=True, exist_ok=True)
             with open(output_file, 'w') as f:
                 f.write("%YAML 1.1\n")
                 f.write(f"# Generated from: {base_file.name} + {variation_file.name}\n")
@@ -384,9 +381,13 @@ class TemplateGenerator:
         base_file: Path,
         variation_file: Path,
         output_file: Path
-    ) -> Dict[str, str]:
+    ) -> Dict[str, Any]:
         """
-        Generate reference-style content with relative paths.
+        Generate a guarded property-only variation with a relative BaseFile.
+
+        Orcina, Variation models, Text data format (accessed 2026-10-22):
+        https://www.orcina.com/webhelp/OrcaFlex/Content/html/Variationmodels.htm
+        Raw IncludeFile lists can recreate objects and detach connections.
 
         Args:
             base_file: Path to base template.
@@ -394,30 +395,23 @@ class TemplateGenerator:
             output_file: Path to output file.
 
         Returns:
-            Dictionary with BaseFile and IncludeFile keys.
+            BaseFile followed by named-object modifications. Both source files
+            are retained; neither may alias the destination.
         """
-        # Calculate relative paths from output location
-        try:
-            base_relative = base_file.relative_to(output_file.parent)
-        except ValueError:
-            # Not inside the output directory: compute the actual relative
-            # path from the output directory (os.path.relpath handles '..'
-            # traversal, which Path.relative_to does not).
-            base_relative = Path(os.path.relpath(
-                base_file.resolve(), output_file.parent.resolve()
-            ))
+        from .modular_generator.writers.basefile import (
+            _check_source_destination,
+            build_variation_document,
+        )
+        from .modular_generator.writers.variation_audit import _ArtifactLoader
 
+        _check_source_destination(base_file, output_file)
+        _check_source_destination(variation_file, output_file)
         try:
-            variation_relative = variation_file.relative_to(output_file.parent)
-        except ValueError:
-            variation_relative = Path(os.path.relpath(
-                variation_file.resolve(), output_file.parent.resolve()
-            ))
-
-        return {
-            'BaseFile': str(base_relative).replace('\\', '/'),
-            'IncludeFile': str(variation_relative).replace('\\', '/')
-        }
+            with variation_file.open(encoding='utf-8-sig') as handle:
+                overrides = yaml.load(handle, Loader=_ArtifactLoader)
+        except yaml.YAMLError:
+            raise ValueError('Invalid variation YAML') from None
+        return build_variation_document(base_file, overrides, output_file)
 
 
 class ModelValidator:
@@ -847,7 +841,7 @@ Examples:
     gen_parser.add_argument(
         '--as-reference',
         action='store_true',
-        help='Generate as BaseFile + IncludeFile reference instead of merged YAML'
+        help='Generate BaseFile with named-object modifications instead of merged YAML'
     )
     gen_parser.set_defaults(func=cmd_generate)
 
