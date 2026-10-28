@@ -18,6 +18,7 @@ and improve the penetration method before using it for a particular installation
 | 4 | 2026-10-27 | Separate arithmetic equality from hold criteria to accept complete decimal-time windows and reject equality at the strict settlement-rate limit. |
 | 5 | 2026-10-27 | Confirm layered resistance warnings, include preload air-gap mitigation and map implemented checks to clause references with uncovered requirements OPEN. |
 | 6 | 2026-10-27 | Add a synthetic weak-pocket sweep, penetration changes and an assumed-rate drop indication to expose sensitivity to unsurveyed local strength loss. |
+| 7 | 2026-10-28 | Replace personal citation labels with publication titles and years while retaining source links and equation references. |
 
 ## Run the example
 
@@ -45,24 +46,25 @@ not engineering applicability or publication rights.
 | Input | Basis | Use and limitation |
 | --- | --- | --- |
 | Generic particulars | Synthetic inputs assumed, based on previous experience | Hull length 72.0 m, breadth 66.0 m, depth 8.0 m and leg length 150.0 m are illustrative context only, unused in load transfer. No recovered specifications, sample medians or collection statistics are claimed. |
-| Layered soil | [Hossain et al. (2019), Table 1, Site 3 and equation 1](https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf) | Selected numerical facts for a published anonymized Gulf profile: sand to 4.9 m, clay below it. Strength is defined at the interface and increases below it. It is not colocated with the buoy. |
+| Layered soil | [Measured and Calculated Spudcan Penetration Profiles for Case Histories in Sand-over-Clay (2019), Table 1, Site 3 and equation 1](https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf) | Selected numerical facts for a published anonymized Gulf profile: sand to 4.9 m, clay below it. Strength is defined at the interface and increases below it. It is not colocated with the buoy. |
 | Observations | [NOAA NDBC station 42019, 2024 archive](https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2024.txt.gz) | Replayed through the existing NOAA client parser. 52,698 timestamped records; 16,693 usable wave-height and 50,597 usable wind-speed values. Sample maxima are 6.8 m and 24.3 m/s. Missing values are counted, not replaced with zero. |
 | ERA5 | Existing ERA5 client interface and [public API access instructions](https://cds.climate.copernicus.eu/how-to-api) | Authenticated retrieval remains unavailable. A separate, labelled illustrative scenario reuses the original NDBC sample maxima of 6.8 m and 24.3 m/s; these are not ERA5 estimates. Interpreting that wind at 10 m is an assumption, without a sensor-height adjustment. |
 | Bathymetry | Existing GEBCO client and [current public service description](https://www.gebco.net/data-products/gebco-web-services/web-map-service) | Correct the obsolete endpoint, select a queryable layer and use latitude–longitude axis order for WMS 1.3.0 EPSG:4326. The current query at the rounded buoy coordinates returns no numerical result. A separately labelled 60.0 m shelf-depth sensitivity is used; no measured depth is inferred. |
-| Settlement context | [Li et al. (2018)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6218051/) | Public collection identifies a post-preload settlement study. No settlement equation, numerical input or copied source content is used here. Settlement is not equated with punch-through. |
+| Settlement context | [Causes of post-installation penetration of jack-up spudcan foundations in clays (2018)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6218051/) | Public collection identifies a post-preload settlement study. No settlement equation, numerical input or copied source content is used here. Settlement is not equated with punch-through. |
 | Shelf-strength context | [BSEE research report 552](https://www.bsee.gov/sites/bsee.gov/files/research-reports/552ab.pdf) | Collection notes identify public strength curves and proprietary extensions. Neither is digitized or used here. The selected layered profile comes from the cited research case instead. |
 
 Only synthetic particulars, selected cited facts and original calculations are included;
-source tables, text, documents and figures are excluded. The Hossain accepted
-manuscript is identified as CC BY-NC-ND in the supplied source register. Numerical
-facts are cited; no adapted source figure is supplied. NOAA observation facts are
+source tables, text, documents and figures are excluded. The 2019 penetration
+study's accepted manuscript is identified as CC BY-NC-ND in the supplied source
+register. Numerical facts are cited; no adapted source figure is supplied.
+NOAA observation facts are
 United States government data. The supplied specification and design collections
 have no retrievable anonymous provenance/reuse record suitable for this example.
 Their aggregate tables and collection hashes are therefore excluded; synthetic
 particulars replace those unsupported source claims. ERA5 and GEBCO reuse
 qualification remains open because neither supplies an observed calculation input here.
-Li and BSEE are bibliographic context from the supplied register, not claims that
-their full documents were re-fetched or numerically qualified in this work.
+The settlement study and BSEE report provide bibliographic context from the
+supplied register; neither supplies numerically qualified inputs here.
 
 ## Illustrative assumptions
 
@@ -150,7 +152,7 @@ authenticated ERA5 retrieval remains unqualified.
 ## Geotechnical methods
 
 [spudcan.py](../../../src/digitalmodel/geotechnical/spudcan.py) implements
-[Hu et al. (2015), equations 4–12](https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf)
+[Spudcan penetration analyses for three case histories in sand overlying clay (2015), equations 4–12](https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf)
 for peak pressure using an implicit, stress-dependent sand strength. Bisection
 stays inside the stated dilatancy interval. Equations 13–14 provide the underlying
 clay branch, including a sand-plug contribution. Conical-base calculations require
@@ -158,8 +160,9 @@ sand thickness divided by equivalent diameter between 0.16 and 1.0, and a base
 angle greater than 7.0 degrees. Inputs outside these bounds are rejected.
 
 Clay strength is evaluated as interface strength plus gradient times depth below
-the interface, following equation 1's definition in Hossain. The collection warns
-that depth origins must be reconciled rather than inferred from column labels.
+the interface, following equation 1's definition in the cited 2019 penetration
+study. The collection warns that depth origins must be reconciled rather than
+inferred from column labels.
 This interface interpretation reproduces the selected published peak comparison;
 it does not independently qualify the original boring interpretation.
 
@@ -203,8 +206,8 @@ and converts pressure to force with πB²/4. Independent closed forms check
 surface, quarter-diameter and one-diameter embedment. The implementation restricts
 d/B to at most 1.0 and friction to between 0.0 and 50.0 degrees exclusive.
 This is an explicit uniform-soil limiting case, **not** an infinite-thickness
-extrapolation of Hu's bounded H/D calibration. It does not add a conical-base
-correction. The 1961 paper reports measured capacities exceeding the theoretical
+extrapolation of the 2015 study's bounded H/D calibration. It does not add a
+conical-base correction. The 1961 paper reports measured capacities exceeding the theoretical
 factors; arithmetic agreement does not validate those measurements or sand
 penetration generally.
 No industry standard document was accessed and no standard-derived criterion was
@@ -435,8 +438,8 @@ illustrative numerical results, not site limits.
 | Existing operation envelope | Existing motion-envelope regression suite | Retains the existing floating-vessel calculation while adding a separate static entry point. |
 
 The Site 2 test preserves the disagreement rather than calibrating the method to
-an observation. Hossain's later paper evaluates subsequent formulations and also
-records method limitations. Agreement at one case and arithmetic tests cannot
+an observation. The 2019 penetration study evaluates subsequent formulations and
+also records method limitations. Agreement at one case and arithmetic tests cannot
 qualify a penetration model across layered Gulf soils.
 
 ## Remaining work
