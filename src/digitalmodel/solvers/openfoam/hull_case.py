@@ -345,6 +345,7 @@ def derive_hull_case(config: HullCaseConfig) -> HullCaseDerivation:
             ranks=config.ranks,
             safety_factor=config.cell_safety_factor,
             cap=config.max_global_cells,
+            surface_regions=config.surface_regions,
         ),
         turbulence=derive_inlet_turbulence(
             config.velocity,
