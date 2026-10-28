@@ -3,6 +3,8 @@
 """Independent Case A oracle and visible, deterministic report contracts.
 
 Basis: test_catenary_geometry.py, Case A; issue 3319 bounded report scope.
+Theory: Classical Mechanics, online revision 8 August 2022, section 18.3,
+equations 18.3.2-18.3.9 (Physics LibreTexts page 7046), with z=y-a.
 All inputs are synthetic arithmetic choices, never material recommendations.
 Integrating dz/dx=sinh(x/a), ds/dx=cosh(x/a) from a horizontal tangent gives
 z=a(cosh(x/a)-1), s=a*sinh(x/a). At z=a=100 m, cosh(x/a)=2, hence
@@ -16,6 +18,7 @@ import importlib.util
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 from dataclasses import replace
@@ -23,8 +26,10 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 
 from digitalmodel.subsea.mooring_analysis.catenary import CatenaryAnalyzer
+from digitalmodel.subsea.mooring_analysis.cli import cli
 from digitalmodel.subsea.mooring_analysis.models import LineType, MooringLineProperties
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -214,7 +219,27 @@ def test_report_rebuild_is_deterministic(tmp_path):
         )
         assert set(p.name for p in output.iterdir()) == set(OUTPUTS)
         for filename in OUTPUTS:
-            assert (output / filename).read_bytes() == (REPORT / filename).read_bytes()
+            assert (output / filename).read_bytes() == (REPORT / filename).read_bytes(), (
+                f"{filename} differs; rebuild with: {load_builder().REBUILD}"
+            )
+
+
+@pytest.mark.parametrize("version", ["rebuilt", "committed"])
+def test_documented_cli_routes_are_registered(version):
+    """Every documented command must resolve without running an analysis."""
+    builder = load_builder()
+    text = (builder.build(builder.calculate()) if version == "rebuilt"
+            else (REPORT / "report.html").read_text(encoding="utf-8"))
+    routes = {route for fragment in Page(text).visible
+              for route in re.findall(r"\bmooring-analysis ([a-z][a-z-]*)\b", fragment)}
+    assert routes, "The report must document the command routes"
+    runner = CliRunner()
+    for route in sorted(routes):
+        assert route in cli.commands, f"Documented command is not registered: {route}"
+        result = runner.invoke(cli, [route, "--help"])
+        assert result.exit_code == 0, result.output
+        assert f"{route} [OPTIONS]" in result.output
+    assert routes == set(cli.commands)
 
 
 def test_scope_limits_and_report_pointers():
@@ -246,10 +271,12 @@ def test_scope_limits_and_report_pointers():
     for source in sources["sources"]:
         path = ROOT / source["path"]
         assert path.is_file()
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == source["sha256"]
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == source["sha256"], (
+            f"Source digest changed; rebuild with: {builder.REBUILD}"
+        )
     record = builder.calculate()
     assert json.loads(page.records["calculation-record"]) == record
-    assert json.loads(page.records["change-record"]) == json.loads((REPORT / "changes.json").read_text())
+    assert json.loads(page.records["change-record"]) == json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert json.loads(page.records["source-record"]) == sources
     bound = record["agreement_bound_percent"]
     assert bound >= max(record["difference"].values())

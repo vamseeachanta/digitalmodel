@@ -19,7 +19,7 @@ from digitalmodel.subsea.mooring_analysis.catenary import CatenaryAnalyzer
 from digitalmodel.subsea.mooring_analysis.models import LineType, MooringLineProperties
 
 ROOT = Path(__file__).resolve().parents[4]
-REVISION, DATE = "00", "2026-10-28"  # Fixed issue revision, never runtime metadata.
+REVISION, DATE = "01", "2026-10-28"  # Fixed issue revision, never runtime metadata.
 CASE = "tests/subsea/mooring_analysis/test_catenary_geometry.py"
 PACKAGE = "src/digitalmodel/subsea/mooring_analysis/"
 TESTS = "tests/subsea/mooring_analysis/"
@@ -30,14 +30,24 @@ REBUILD = (
     'docs/reports/modules/mooring_analysis/build_report.py '
     '--output-dir "$TMPDIR/mooring-report"'
 )
-CHANGES = {
+FIRST_ISSUE = {
     "report": "mooring-touchdown-catenary",
-    "revision": REVISION,
-    "date": DATE,
+    "revision": "00",
+    "date": "2026-10-28",
     "changes": [
         "Added a synthetic touchdown example with independent geometry and force balance, so numerical agreement is distinguished from design acceptance.",
         "Added a source-linked method map, explicit qualification gaps and a reproducible report builder with visible-value checks.",
     ],
+}
+CHANGES = {
+    "report": FIRST_ISSUE["report"],
+    "revision": REVISION,
+    "date": DATE,
+    "changes": [
+        "Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.",
+        "Added the textbook equation basis and retained the first issue in the revision history.",
+    ],
+    "history": [FIRST_ISSUE],
 }
 # These are repository evidence, not a second material dataset or standards copy.
 SOURCE_PATHS = {
@@ -71,6 +81,9 @@ EQUATIONS = {
     "fairlead_angle": "theta=atan2(w*s,H)=60 degrees",
     "grounded_length": "L_ground=L-s=500-100*sqrt(3) (L exceeds s)",
 }
+# Geometry and force basis: Classical Mechanics, online revision 8 August 2022,
+# section 18.3, equations 18.3.2-18.3.9 (Physics LibreTexts page 7046).
+# Translate its y coordinate to the touchdown height z=y-a.
 
 
 def quantity(value, unit, equation="synthetic prescribed input"):
@@ -187,8 +200,10 @@ def build(record: dict) -> str:
     """Render the ten-section report from computed quantities and fixed sources."""
     titles = ["Summary", "Introduction and method map", "Data basis", "Theory and equations",
               "Worked example", "Validation evidence", "Limits of use", "Way forward", "References", "Appendix and rebuild"]
-    revisions = table(["Revision", "Date", "What changed and why"], [[REVISION, DATE,
-        html.escape("; ".join(CHANGES["changes"]))]], "Revision history. First report issue.")
+    revisions = table(["Revision", "Date", "What changed and why"], [
+        [revision["revision"], revision["date"], html.escape("; ".join(revision["changes"]))]
+        for revision in [*CHANGES["history"], CHANGES]
+    ], "Revision history. Report issues and reasons for change.")
     inputs = table(["Input", "Value and unit", "Basis and use"], [
         [html.escape(key), numeric(record, "inputs", key),
          html.escape(item["basis"]) + "; " + ("unused positive placeholder" if key in {"diameter", "mbl", "ea", "drag_coeff"} else "Case A arithmetic input")]
@@ -226,7 +241,13 @@ def build(record: dict) -> str:
         'x=100*ln(2+sqrt(3)) m. Force balance gives T_top=H+w*z=1962 kN, '
         'T_touchdown=H=981 kN and tan(theta)=sqrt(3), hence theta=60 degrees. '
         'The remaining grounded length is 500−100*sqrt(3) m. These identities are independently derived, '
-        'rather than inferred from module outputs.</p>' + link("case-a", "Input and equation basis: existing synthetic Case A"),
+        'rather than inferred from module outputs.</p>'
+        '<p>Textbook basis: Classical Mechanics, online revision 8 August 2022, section 18.3, '
+        'Equation of the Catenary in Rectangular Coordinates, and Other Simple Relations, '
+        'equations 18.3.2 to 18.3.9 (Physics LibreTexts page 7046). '
+        'The coordinate translation is z=y-a. Unit conversion uses the exact SI kilo prefix; '
+        'the prescribed gravity and numerical criterion come from synthetic Case A.</p>'
+        + link("case-a", "Synthetic input and numerical-criterion basis: existing Case A"),
         '<p>CatenaryAnalyzer.solve_catenary is called once with the declared height, length, mass-equivalent and horizontal tension. '
         'The following displayed quantities are bound to the calculation record, including unit and equation metadata.</p>' + results,
         '<p>' + html.escape(comparison) + '</p><p>The existing catenary geometry suite covers both closed-form cases, '
@@ -234,7 +255,8 @@ def build(record: dict) -> str:
         'common-force elongation, splitting invariance and invalid segment guards. Those regressions do not establish geometric stiffness accuracy.</p>'
         '<p>The report suite checks all unrounded quantities against hand arithmetic and a fresh module call; parsed HTML checks every visible value and unit. '
         'Controlled mutations of every solver result field must change visible results and the numerical disposition. '
-        'Two isolated rebuilds compare every delivered output byte. Reproducibility does not establish physical validation.</p>'
+        'Two isolated rebuilds compare every delivered output byte. Documented CLI routes are checked against registered commands '
+        'and invoked with --help only; no command analysis is run. Reproducibility does not establish physical validation.</p>'
         '<p>The roundoff budget is 256 binary64 spacings at unity: fewer than 32 elementary operations, '
         'a factor-two library-rounding margin and a factor-four conditioning allowance. '
         'The largest subtraction condition is (500+100*sqrt(3))/(500−100*sqrt(3)), below four for this Case A. '
@@ -258,9 +280,9 @@ def build(record: dict) -> str:
         references + '<p>The module pack is historical discovery evidence: its catenary equation descriptions and issue-pending entries are not current qualification. '
         'Current source and the closed-form regression govern this report. No licensed standard tables or numerical design factors are reproduced.</p>',
         '<p>Source-inspected CLI routes: mooring-analysis catenary accepts mass per length and a horizontal or fairlead tension, '
-        'then also calculates stiffness. It is therefore not executed by this report. mooring-analysis design-verification '
+        'then also calculates stiffness. It is therefore not executed by this report. mooring-analysis design '
         'builds a screening system, calculates environmental loads and analyzes conditions; the shared material object is mutated by its length assignment. '
-        'mooring-analysis generate-model is a placeholder; list-materials lists the library. '
+        'mooring-analysis generate-model is a placeholder; mooring-analysis list-materials lists the library. '
         'The Python designer routes through analyze_line_tension and intact/damaged condition checks. No exporter or commercial tool is executed.</p>'
         + link("cli", "CLI source") + '; ' + link("entry-point", "Installed command declaration")
         + '<p>From the repository root, use the prepared scratch interpreter with the module dependencies. '
