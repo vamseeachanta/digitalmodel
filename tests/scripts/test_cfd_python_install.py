@@ -157,8 +157,9 @@ def test_gmsh_workflow_pins_sibling_and_validation_tools() -> None:
     assert "repository: vamseeachanta/assetutilities" in workflow
     assert f"ref: {ASSETUTILITIES_COMMIT}" in workflow
     assert "path: repos/assetutilities" in workflow
-    assert workflow.count('"examples/cfd/synthetic_l_tank/input.yml"') == 2
-    assert workflow.count('"docs/api/cfd/synthetic-l-tank-smoke.json"') == 2
+    # Pull-request paths only; main runs the bridge in the daily Main full run.
+    assert workflow.count('"examples/cfd/synthetic_l_tank/input.yml"') == 1
+    assert workflow.count('"docs/api/cfd/synthetic-l-tank-smoke.json"') == 1
     assert (
         "go install github.com/rhysd/actionlint/cmd/actionlint@"
         f"{ACTIONLINT_COMMIT}" in workflow
