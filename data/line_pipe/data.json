@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "database": "line_pipe",
+  "units": {
+    "od_m": "m",
+    "wt_m": "m",
+    "smys_mpa": "MPa",
+    "smts_mpa": "MPa"
+  },
+  "records": []
+}
