@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Mapping, Sequence
 
+from .near_wall_acceptance import pending_near_wall
 from .region_refinement import finest_in_plane_cell
 from .hull_case_regions import region_provenance, region_tokens
 from .hull_wave_extent import wave_selection_tokens
@@ -267,6 +268,7 @@ def _mesh_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
             "The post-mesh face-area gate (#2033) scores the written hull "
             "patch against it."
         ),
+        "near_wall_acceptance": pending_near_wall(),
         "wall_normal_first_cell_height_m": derivation.first_cell_height,
         "y_plus_target": derivation.config.y_plus_target,
         "wall_resolution_note": (
