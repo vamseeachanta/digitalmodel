@@ -209,7 +209,7 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     assert len(checker.GENERATORS) == 27
     assert len(outputs) == 33  # includes screening artifacts and the showcase sidecar
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
-    assert len(checker.PAGE_EXCLUSIONS) == 21
+    assert len(checker.PAGE_EXCLUSIONS) == 22
     assert len(checker.EXCLUDED_GENERATORS) == 9
     # The verification generator needs a caller-supplied solved case;
     # repository inputs alone cannot reproduce its page.
