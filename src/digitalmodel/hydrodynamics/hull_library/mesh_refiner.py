@@ -21,12 +21,13 @@ from pathlib import Path
 
 import numpy as np
 
-from digitalmodel.hydrodynamics.bemrosetta.models.mesh_models import (
-    MeshFormat,
-    PanelMesh,
-)
+from digitalmodel.hydrodynamics.bemrosetta.models.mesh_models import PanelMesh
 
 logger = logging.getLogger(__name__)
+
+# Explicit panel keys written by mesh_cutouts._assemble; ordinary lists are
+# mesh metadata, regardless of whether their length matches the panel count.
+_PANEL_CLASSIFICATION_KEYS = ("moonpool_wall", "moonpool_index")
 
 
 @dataclass(frozen=True)
@@ -85,7 +86,7 @@ def refine_mesh(mesh: PanelMesh, levels: int = 1) -> PanelMesh:
 def _subdivide_once(mesh: PanelMesh) -> PanelMesh:
     """Single level of quad subdivision."""
     classifications = {}
-    for key in ("moonpool_wall", "moonpool_index"):
+    for key in _PANEL_CLASSIFICATION_KEYS:
         if key not in mesh.metadata:
             continue
         try:
@@ -238,9 +239,17 @@ def generate_mesh_family(
         source_mesh: The base mesh (factor=1.0).
         factors: Density multipliers. Default [0.25, 0.5, 1.0, 2.0, 4.0].
             factor < 1.0 -> coarsen, factor > 1.0 -> refine, factor == 1.0 -> original.
+            For classified sources, pass explicit identity/refinement factors
+            whenever the defaults would reduce panel count. Below-unity factors
+            remain valid if the four-panel target floor leaves the source unchanged.
 
     Returns:
         List of MeshFamilyMember sorted by ascending panel count.
+
+    Raises:
+        ValueError: If the coarsening target is below the source panel count for
+            a mesh with known panel classifications. The coarsening backends do
+            not map those fields.
     """
     if factors is None:
         factors = [0.25, 0.5, 1.0, 2.0, 4.0]
@@ -274,8 +283,14 @@ def generate_mesh_family(
                 metadata={**source_mesh.metadata, "density_factor": 1.0},
             )
         elif factor < 1.0:
-            # Coarsen
             target_panels = max(4, int(base_panels * factor))
+            # Backends omit classifications only when the target reduces the
+            # mesh; targets at or above the source count return it unchanged.
+            if target_panels < base_panels and any(
+                key in source_mesh.metadata for key in _PANEL_CLASSIFICATION_KEYS
+            ):
+                raise ValueError("Cannot coarsen meshes with panel classifications")
+            # Coarsen
             mesh = coarsen_mesh(
                 source_mesh, target_panels=target_panels, preserve_features=True
             )
@@ -308,6 +323,11 @@ def generate_mesh_family(
                 metadata={**mesh.metadata, "density_factor": factor},
             )
 
+        # Each member owns its classification lists, including backend no-ops.
+        for key in _PANEL_CLASSIFICATION_KEYS:
+            if key in mesh.metadata:
+                mesh.metadata[key] = list(mesh.metadata[key])
+
         level_name = level_names.get(factor, f"x{factor:.1f}")
         metrics = compute_quality_metrics(mesh)
 
@@ -337,7 +357,10 @@ def export_mesh_family(
     family: list[MeshFamilyMember],
     output_dir: Path,
 ) -> list[Path]:
-    """Export all members of a mesh family as GDF files.
+    """Export unclassified members of a mesh family as GDF files.
+
+    GDFHandler.write serializes geometry and symmetry, without the known
+    panel classifications. Reject classified families before writing any files.
 
     Args:
         family: List of mesh family members to export.
@@ -345,7 +368,17 @@ def export_mesh_family(
 
     Returns:
         List of output file paths.
+
+    Raises:
+        ValueError: If any member carries known panel classifications.
     """
+    if any(
+        key in member.mesh.metadata
+        for member in family
+        for key in _PANEL_CLASSIFICATION_KEYS
+    ):
+        raise ValueError("GDF family export cannot preserve panel classifications")
+
     from digitalmodel.hydrodynamics.bemrosetta.mesh.gdf_handler import GDFHandler
 
     output_dir.mkdir(parents=True, exist_ok=True)
