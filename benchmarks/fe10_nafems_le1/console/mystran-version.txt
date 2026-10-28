@@ -1,0 +1,33 @@
+ MYSTRAN Version 19.0.0   JUN 28 2026
+
+
+ Optional Initialization file:
+ MYSTRAN.INI
+ does not exist. Internal defaults will be used instead.
+ If you want to use the INI file, see the MYSTRAN Installation and Run Manual
+
+ >> MYSTRAN BEGIN  : 10/20/2026 at 10:18:59.596. The input file is:
+ Input data file:
+ --help.DAT
+ does not exist. Specify complete file name with drive and extension
+ or hit Ctrl-Break to start over.
+
+At line 185 of file /tmp/mystran-src/Source/MAIN/READ_INPUT_FILE_NAME.f90 (unit = 5, file = 'stdin')
+Fortran runtime error: End of file
+
+Error termination. Backtrace:
+#0  0x7a658f223e59 in ???
+#1  0x7a658f224a71 in ???
+#2  0x7a658f2256dc in ???
+#3  0x7a658f4bb6c3 in ???
+#4  0x7a658f4bbcda in ???
+#5  0x7a658f4b7e84 in ???
+#6  0x7a658f4bd274 in ???
+#7  0x7a658f4be5e2 in ???
+#8  0x5fc1b9faa918 in read_input_file_name_
+	at /tmp/mystran-src/Source/MAIN/READ_INPUT_FILE_NAME.f90:185
+#9  0x5fc1b9f1ab0e in mystran
+	at /tmp/mystran-src/Source/MAIN/MYSTRAN.f90:183
+#10  0x5fc1b9f1d945 in main
+	at /tmp/mystran-src/Source/MAIN/MYSTRAN.f90:70
+exit 2

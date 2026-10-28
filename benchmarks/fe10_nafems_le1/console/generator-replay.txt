@@ -1,0 +1,5 @@
+wrote inputs/le1_8x24.bdf: 225 grids, 192 CQUAD4, point D = grid 1
+wrote inputs/le1_16x48.bdf: 833 grids, 768 CQUAD4, point D = grid 1
+wrote inputs/le1_32x96.bdf: 3201 grids, 3072 CQUAD4, point D = grid 1
+wrote inputs/patch.bdf: 8 grids, 5 CQUAD4
+All four regenerated decks match received bytes.
