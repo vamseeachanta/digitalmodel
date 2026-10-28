@@ -6,7 +6,10 @@ Reference case (all tests unless noted):
   L=34 m (pinned-pinned) → fn_IL ≈ 0.42 Hz
   Uc=0.8 m/s, water depth 120 m, oil content 900 kg/m³
 """
+import json
 import math
+from dataclasses import replace
+from pathlib import Path
 import pytest
 
 from digitalmodel.subsea.pipeline.free_span.models import (
@@ -82,6 +85,118 @@ def below_onset_input(ref_input):
 # ---------------------------------------------------------------------------
 # Natural Frequency tests (F105 Sec 6.8)
 # ---------------------------------------------------------------------------
+
+# The adjacent fixture supplies synthetic inputs, exact rational multiples of
+# pi, and the area, kinetic-energy and beam-equation hand derivations. No
+# expected value is obtained from SpanNaturalFrequency or its private helpers.
+_BEAM_REFERENCE = json.loads(
+    Path(__file__).with_name("free_span_beam_reference.json").read_text()
+)
+# Exact integral/mass balances and scaling incur floating-point roundoff only.
+_BALANCE_REL_TOL = 1e-12
+# The existing pinned coefficient rounds pi**2 to two decimal places. Allow
+# precisely that relative discrepancy plus the balance roundoff allowance.
+_BEAM_FREQUENCY_REL_TOL = (
+    abs(round(math.pi**2, 2) / math.pi**2 - 1) + _BALANCE_REL_TOL
+)
+
+
+@pytest.fixture(params=_BEAM_REFERENCE["cases"], ids=lambda case: case["id"])
+def pinned_beam_case(request):
+    """Return independent inputs and hand-integrated section properties."""
+    case = request.param
+    inp = PipeSpanInput(
+        **(_BEAM_REFERENCE["inputs"] | case["overrides"]),
+        bc=BoundaryConditionF105.PINNED_PINNED,
+    )
+    section = {
+        key.replace("_over_pi", ""): math.pi * numerator / denominator
+        for key, (numerator, denominator) in
+        _BEAM_REFERENCE["sections"][case["section"]].items()
+    }
+    return inp, section
+
+
+class TestPinnedBeamReference:
+    """Independent straight-beam checks in the isolated-cylinder domain."""
+
+    def test_annular_bending_stiffness(self, pinned_beam_case):
+        inp, section = pinned_beam_case
+        expected_ei = inp.e_modulus_pa * section["second_moment_m4"]
+        result = SpanNaturalFrequency(inp).compute()
+        assert result.EI_Nm2 == pytest.approx(
+            expected_ei, rel=_BALANCE_REL_TOL, abs=0.0
+        )
+
+    def test_effective_mass_balance(self, pinned_beam_case):
+        inp, section = pinned_beam_case
+        wall = section["wall_mass_kgm"]
+        content = section["content_mass_kgm"]
+        added = section["added_mass_kgm"]
+        # Independently remove each fluid to expose the individual mass terms;
+        # a compensating error cannot hide in the total effective mass.
+        dry_empty = SpanNaturalFrequency(replace(
+            inp, content_density_kgm3=0.0, water_density_kgm3=0.0
+        )).compute()
+        dry_filled = SpanNaturalFrequency(replace(
+            inp, water_density_kgm3=0.0
+        )).compute()
+        wet_empty = SpanNaturalFrequency(replace(
+            inp, content_density_kgm3=0.0
+        )).compute()
+        wet_filled = SpanNaturalFrequency(inp).compute()
+        assert dry_empty.m_effective_kgm == pytest.approx(
+            wall, rel=_BALANCE_REL_TOL, abs=0.0
+        )
+        assert dry_filled.m_effective_kgm - dry_empty.m_effective_kgm == (
+            pytest.approx(content, rel=_BALANCE_REL_TOL, abs=0.0)
+        )
+        assert wet_empty.m_effective_kgm - dry_empty.m_effective_kgm == (
+            pytest.approx(added, rel=_BALANCE_REL_TOL, abs=0.0)
+        )
+        assert wet_filled.m_effective_kgm == pytest.approx(
+            wall + content + added, rel=_BALANCE_REL_TOL, abs=0.0
+        )
+
+    def test_first_bending_frequency(self, pinned_beam_case):
+        inp, section = pinned_beam_case
+        expected_ei = inp.e_modulus_pa * section["second_moment_m4"]
+        expected_mass = sum(section[key] for key in (
+            "wall_mass_kgm", "content_mass_kgm",
+            "added_mass_kgm",
+        ))
+        # From EI*w_xxxx + m*w_tt = 0 with w = sin(pi*x/L)*cos(omega*t).
+        expected_hz = math.pi / (2 * inp.span_length_m**2) * math.sqrt(
+            expected_ei / expected_mass
+        )
+        calc = SpanNaturalFrequency(inp)
+        result = calc.compute()
+        for frequency in (calc.fn_IL(), calc.fn_CF(),
+                          result.fn_IL_hz, result.fn_CF_hz):
+            assert frequency == pytest.approx(
+                expected_hz, rel=_BEAM_FREQUENCY_REL_TOL, abs=0.0
+            )
+        assert result.fn_IL_hz == result.fn_CF_hz
+
+    @pytest.mark.parametrize(
+        "case",
+        [case for case in _BEAM_REFERENCE["cases"] if "frequency_ratio" in case],
+        ids=lambda case: case["id"],
+    )
+    def test_length_and_stiffness_scaling(self, case):
+        base = PipeSpanInput(
+            **_BEAM_REFERENCE["inputs"], bc=BoundaryConditionF105.PINNED_PINNED
+        )
+        reference = SpanNaturalFrequency(base).compute()
+        varied = SpanNaturalFrequency(replace(base, **case["overrides"])).compute()
+        # The fixture ratios follow f proportional to sqrt(EI)/L**2.
+        for field in ("fn_IL_hz", "fn_CF_hz"):
+            assert getattr(varied, field) / getattr(reference, field) == (
+                pytest.approx(case["frequency_ratio"], rel=_BALANCE_REL_TOL,
+                              abs=0.0)
+            )
+        assert varied.m_effective_kgm == reference.m_effective_kgm
+
 
 class TestAddedMassCoefficient:
     """Unit tests for Ca(e/D) seabed proximity function."""
