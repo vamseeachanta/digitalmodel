@@ -25,12 +25,14 @@ from enum import Enum
 import math
 from pathlib import Path
 import warnings
-from typing import Any, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 
 import numpy as np
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     Field,
+    FiniteFloat,
     PrivateAttr,
     field_validator,
     model_serializer,
@@ -761,6 +763,18 @@ class SolverOptions(BaseModel):
         )
 
 
+def _reject_boolean_field_point_coordinate(value: Any) -> Any:
+    """Reject booleans before float coercion can treat them as coordinates."""
+    if isinstance(value, (bool, np.bool_)):
+        raise ValueError("Field point coordinates must not be booleans")
+    return value
+
+
+_FieldPointCoordinate = Annotated[
+    FiniteFloat, BeforeValidator(_reject_boolean_field_point_coordinate)
+]
+
+
 class FieldPointSpec(BaseModel):
     """Named group of field points for wave elevation/pressure output (#501).
 
@@ -770,10 +784,12 @@ class FieldPointSpec(BaseModel):
     """
 
     name: str
-    points: list[tuple[float, float, float]] = Field(
+    points: list[
+        tuple[_FieldPointCoordinate, _FieldPointCoordinate, _FieldPointCoordinate]
+    ] = Field(
         ...,
         min_length=1,
-        description="Field point coordinates [(x, y, z), ...]",
+        description="Finite field point coordinates [(x, y, z), ...]; no booleans",
     )
     detect_inside_bodies: bool = True
 
@@ -1099,7 +1115,7 @@ class DiffractionSpec(BaseModel):
         """Load spec from a YAML file."""
         import yaml
 
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         spec = cls.model_validate(data)
         spec._source_dir = Path(path).resolve().parent
@@ -1111,7 +1127,7 @@ class DiffractionSpec(BaseModel):
 
         path = Path(path)
         data = self.model_dump(mode="json", exclude_none=True)
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
         return path
 
