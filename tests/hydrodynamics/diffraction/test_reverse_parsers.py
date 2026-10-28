@@ -9,6 +9,7 @@ Strategy:
 - Compare the round-trip result to the original spec.
 """
 
+from math import pi
 from pathlib import Path
 
 import pytest
@@ -205,6 +206,70 @@ class TestAQWAInputParserEnvironment:
 class TestAQWAInputParserFrequencies:
     """Test frequency extraction from AQWA .dat HRTZ cards."""
 
+    @pytest.mark.parametrize(
+        "cards", ["", "* DECK 6\nDIRN 0.0\n"], ids=["no-deck", "no-hrtz"]
+    )
+    def test_aqwa_missing_frequencies_rejected(self, tmp_path: Path, cards):
+        """Synthetic input without deck 6 or HRTZ cards has no frequency basis."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            AQWAInputParser,
+        )
+
+        dat_path = tmp_path / "missing_frequencies.dat"
+        dat_path.write_text(cards, encoding="utf-8")
+
+        with pytest.raises(ValueError, match="AQWA.*positive.*HRTZ.*deck 6"):
+            AQWAInputParser().parse(dat_path)
+
+    @pytest.mark.parametrize(
+        "cards",
+        [
+            "HRTZ 0.0\n",
+            "HRTZ -0.5\n",
+            "1HRTZ 0.0\n2HRTZ -0.5\n",
+            "HRTZ invalid\n",
+        ],
+        ids=["zero", "negative", "indexed-nonpositive", "nonnumeric"],
+    )
+    def test_aqwa_nonpositive_frequencies_rejected(self, tmp_path: Path, cards):
+        """Synthetic zero, negative and nonnumeric values supply no positive Hz."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            AQWAInputParser,
+        )
+
+        dat_path = tmp_path / "nonpositive_frequencies.dat"
+        dat_path.write_text("* DECK 6\n" + cards, encoding="utf-8")
+
+        with pytest.raises(ValueError, match="AQWA.*positive.*HRTZ.*deck 6"):
+            AQWAInputParser().parse(dat_path)
+
+    def test_aqwa_frequency_units_hand_calculation(self, tmp_path: Path):
+        """Preserve synthetic Hz values, including their order and duplicates.
+
+        Independent hand calculation: one cycle spans two times pi radians,
+        so omega = two times pi times f. Chosen f = [0.5, 0.125, 1, 0.5] Hz
+        gives omega = [pi, pi/4, 2*pi, pi] rad/s. Card indices identify records
+        and are not frequencies; 1.25E-1 is exactly 0.125 Hz.
+        """
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            AQWAInputParser,
+        )
+
+        dat_path = tmp_path / "frequency_units.dat"
+        dat_path.write_text(
+            "* DECK 6\n"
+            "1HRTZ 0.5\n"
+            "2HRTZ 1.25E-1\n"
+            "3HRTZ 1.0\n"
+            "4HRTZ 0.5\n",
+            encoding="utf-8",
+        )
+
+        result = AQWAInputParser().parse(dat_path)
+
+        assert result.frequencies.input_type.value == "frequency"
+        assert result.frequencies.values == pytest.approx([pi, pi / 4, 2 * pi, pi])
+
     def test_frequency_count(self, tmp_path: Path):
         """Parsed spec has correct number of frequencies."""
         from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
@@ -358,12 +423,15 @@ class TestAQWAInputParserIndentedTitle:
         )
 
         dat_path = tmp_path / "indented_title.dat"
+        # Synthetic frequency: half a cycle per second gives pi rad/s.
         dat_path.write_text(
             "* DECK 0\n"
             " JOB AQWA LINE\n"
             "   TITLE My Ship\n"
             "* DECK 5\n"
             "      DPTH  100.0\n"
+            "* DECK 6\n"
+            "      HRTZ  0.5\n"
         )
 
         parser = AQWAInputParser()
