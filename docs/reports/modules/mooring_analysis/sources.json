@@ -58,7 +58,7 @@
       "id": "report-tests",
       "path": "tests/subsea/mooring_analysis/test_module_report.py",
       "locator": "Independent oracle, visible-result mutations, escaping and rebuild checks",
-      "sha256": "31c8b1e51be2d29581125b899513b03f3d86273d86682fef819bd283baa16afd"
+      "sha256": "ddd139693eb2d95d1df0cb35b44d05a797c25a67a4eb820ecdbe0d1595c07017"
     },
     {
       "id": "builder",

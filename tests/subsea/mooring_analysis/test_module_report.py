@@ -257,7 +257,11 @@ def test_scope_limits_and_report_pointers():
     index = (REPORT / "README.md").read_text(encoding="utf-8")
     assert "[report](report.html)" in index
     pointer = ROOT / "src/digitalmodel/subsea/mooring_analysis/README.md"
-    assert "../../../../docs/reports/modules/mooring_analysis/README.md" in pointer.read_text()
+    pointer_text = pointer.read_text(encoding="utf-8")
+    assert "../../../../docs/reports/modules/mooring_analysis/README.md" in pointer_text
+    # Keep the original package metadata and standalone examples ahead of the
+    # new pointer; the existing README has version metadata at both ends.
+    assert pointer_text.index("## Bounded module report") > pointer_text.rindex("**Version**:")
     for filename in OUTPUTS:
         text = (REPORT / filename).read_text(encoding="utf-8")
         assert str(ROOT) not in text and str(Path.home()) not in text

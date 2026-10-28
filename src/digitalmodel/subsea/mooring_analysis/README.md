@@ -1,15 +1,6 @@
 # Mooring Analysis Module
 
 **Version**: 1.0.0
-
-## Bounded module report
-
-The [mooring analysis report index](../../../../docs/reports/modules/mooring_analysis/README.md)
-links the synthetic touchdown example, independent numerical checks, source-linked
-method map and reproducible report. Design-code compliance, actual line strength,
-stiffness qualification, environmental loading and dynamic mooring behavior remain
-`NOT_EVALUATED`. The separate pinned-end example retains its own solver contract;
-the legacy dynamic port is excluded from this report.
 **Status**: ✅ Production Ready
 **Standards**: DNV-OS-E301, API RP 2SK, ABS Position Mooring
 
@@ -401,3 +392,12 @@ Contributions welcome! Please:
 **Maintained by**: Digital Model Development Team
 **Last Updated**: 2026-01-04
 **Version**: 1.0.0
+
+## Bounded module report
+
+The [mooring analysis report index](../../../../docs/reports/modules/mooring_analysis/README.md)
+links the synthetic touchdown example, independent numerical checks, source-linked
+method map and reproducible report. Design-code compliance, actual line strength,
+stiffness qualification, environmental loading and dynamic mooring behavior remain
+`NOT_EVALUATED`. The separate pinned-end example retains its own solver contract;
+the legacy dynamic port is excluded from this report.
