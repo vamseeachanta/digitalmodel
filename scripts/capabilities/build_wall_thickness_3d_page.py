@@ -11,6 +11,9 @@ import json
 import math
 import re
 from pathlib import Path
+from urllib.parse import quote
+
+from digitalmodel._output_paths import relative_artifact_path, validate_output_paths
 
 
 _REPO = Path(__file__).resolve().parents[2]
@@ -233,8 +236,10 @@ def build_page(study: dict, *, data_url: str | None = None) -> str:
         bootstrap = 'initialise(JSON.parse(document.getElementById("study-data").textContent));'
         page = _HTML.replace("__PAYLOAD__", payload)
     else:
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*\.json", data_url):
-            raise ValueError("sidecar must be a local JSON filename")
+        if not re.fullmatch(
+            r"(?:[A-Za-z0-9_.%~-]+/)*[A-Za-z0-9_.%~-]+\.json", data_url, re.I,
+        ):
+            raise ValueError("sidecar must be a relative local JSON path")
         page = _HTML.replace(
             '<script id="study-data" type="application/json">__PAYLOAD__</script>', ""
         )
@@ -514,18 +519,26 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, default=_SOURCE)
     parser.add_argument("--output", type=Path, default=_OUTPUT)
+    parser.add_argument(
+        "--sidecar", type=Path,
+        help="JSON destination; defaults to the output with a .json suffix",
+    )
     args = parser.parse_args(argv or [])
     source, output = args.source, args.output
+    sidecar = args.sidecar if args.sidecar is not None else output.with_suffix(".json")
+    # Protect the study as well as the two outputs, including filesystem aliases.
+    validate_output_paths(source, output, sidecar)
+    data_url = quote(relative_artifact_path(sidecar, output), safe="/")
     if not source.exists():
         raise FileNotFoundError(
             f"{source.name} is missing; run "
             "scripts/capabilities/build_wall_thickness_3d.py first"
         )
     study = json.loads(source.read_text(encoding="utf-8"))
-    sidecar = output.with_suffix(".json")
     payload, byte_count = _encode_payload(_payload(study))
-    html = build_page(study, data_url=sidecar.name)
+    html = build_page(study, data_url=data_url)
     output.parent.mkdir(parents=True, exist_ok=True)
+    sidecar.parent.mkdir(parents=True, exist_ok=True)
     sidecar.write_text(payload, encoding="utf-8")
     output.write_text(html, encoding="utf-8")
     payload_meta = json.loads(payload)["m"]

@@ -346,7 +346,7 @@ def test_units_row_and_svg_figure_render(tmp_path):
     out = tmp_path / "results"
     md = (out / "case_report.md").read_text(encoding="utf-8")
     assert "| frame | x | utilisation |\n|---|---|---|\n| - | m | - |\n| Midship |" in md
-    assert "![Margin plot](plot.svg)" in md
+    assert "![Margin plot](../data/plot.svg)" in md
     html = (out / "case_report.html").read_text(encoding="utf-8")
     assert '<tr class="units"><th>-</th><th>m</th><th>-</th></tr>' in html
     assert "<script" not in html

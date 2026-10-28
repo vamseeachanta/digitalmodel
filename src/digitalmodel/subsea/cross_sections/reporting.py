@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from html import escape
 from importlib import resources
 from pathlib import Path
+from stat import S_IMODE
+import uuid
 
+from digitalmodel._output_paths import validate_output_paths
 from digitalmodel.subsea.cross_sections.io import load_cross_section_fixture
 from digitalmodel.subsea.cross_sections.schema import CrossSectionDefinition, Provenance, UnitValue
 from digitalmodel.subsea.cross_sections.visualization import render_cross_section_svg
@@ -175,6 +178,12 @@ def render_html_report(report: CrossSectionReport) -> str:
 
 
 def write_report_files(output_dir: Path, formats: set[str]) -> list[Path]:
+    destinations = []
+    if "md" in formats:
+        destinations.append(output_dir / REPORT_MD)
+    if "html" in formats:
+        destinations.append(output_dir / REPORT_HTML)
+    validate_output_paths(*destinations)
     report = build_report_model()
     output_dir.mkdir(parents=True, exist_ok=True)
     generated: list[Path] = []
@@ -186,12 +195,24 @@ def write_report_files(output_dir: Path, formats: set[str]) -> list[Path]:
 
 
 def _atomic_write(path: Path, text: str) -> Path:
-    tmp = path.with_suffix(path.suffix + ".tmp")
+    # Exclusive creation owns this temporary file; never reuse <name>.tmp.
+    # Source: Python 3.11 open: 'x' creates exclusively with the active umask.
+    # https://docs.python.org/3.11/library/functions.html#open
     try:
-        tmp.write_text(text, encoding="utf-8")
+        mode = S_IMODE(path.stat().st_mode)
+    except FileNotFoundError:
+        mode = None
+    candidate = path.with_name(path.name + f".{uuid.uuid4().hex}.tmp")
+    tmp = None
+    try:
+        with candidate.open(mode="x", encoding="utf-8", newline="\n") as stream:
+            tmp = candidate
+            stream.write(text)
+        if mode is not None:
+            tmp.chmod(mode)
         tmp.replace(path)
     finally:
-        if tmp.exists():
+        if tmp is not None and tmp.exists():
             tmp.unlink()
     return path
 
