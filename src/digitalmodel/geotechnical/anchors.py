@@ -125,10 +125,10 @@ def drag_anchor_capacity(
         DragAnchorResult with holding capacity and efficiency.
 
     Raises:
-        ValueError: If anchor_weight_kn <= 0, soil_type unknown, or anchor_type unknown.
+        ValueError: If weight is nonfinite or nonpositive, or a type is unknown.
     """
-    if anchor_weight_kn <= 0:
-        raise ValueError("anchor_weight_kn must be positive")
+    if not math.isfinite(anchor_weight_kn) or anchor_weight_kn <= 0:
+        raise ValueError("anchor_weight_kn must be finite and positive")
 
     if soil_type not in VALID_SOIL_TYPES:
         raise ValueError(
@@ -174,22 +174,31 @@ def suction_anchor_capacity(
         diameter_m: Outer diameter (m).
         length_m: Embedded length (m).
         su_kpa: Undrained shear strength (kPa).
-        alpha: Adhesion factor (default 0.65).
-        nc: Bearing capacity factor (default 9.0).
-        wall_thickness_m: Caisson wall thickness (default 0.04 m).
+        alpha: Finite positive adhesion factor (default 0.65).
+        nc: Finite positive bearing capacity factor (default 9.0).
+        wall_thickness_m: Finite nonnegative caisson wall thickness (default
+            0.04 m), less than half the outer diameter. Zero is accepted as
+            a limiting geometry, not a constructible caisson design.
 
     Returns:
         SuctionAnchorResult with total, skin friction, and reverse end bearing.
 
     Raises:
-        ValueError: If any geometric parameter is non-positive.
+        ValueError: If any scalar is nonfinite; diameter, length, strength or
+            either factor is nonpositive; thickness is negative; or the inner
+            diameter is nonpositive.
     """
-    if diameter_m <= 0:
-        raise ValueError("diameter_m must be positive")
-    if length_m <= 0:
-        raise ValueError("length_m must be positive")
-    if su_kpa <= 0:
-        raise ValueError("su_kpa must be positive")
+    for name, value in (
+        ("diameter_m", diameter_m),
+        ("length_m", length_m),
+        ("su_kpa", su_kpa),
+        ("alpha", alpha),
+        ("nc", nc),
+    ):
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError(f"{name} must be finite and positive")
+    if not math.isfinite(wall_thickness_m) or wall_thickness_m < 0:
+        raise ValueError("wall_thickness_m must be finite and nonnegative")
 
     inner_diameter = diameter_m - 2.0 * wall_thickness_m
     if inner_diameter <= 0:
