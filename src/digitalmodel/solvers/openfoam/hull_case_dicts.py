@@ -268,10 +268,9 @@ def _mesh_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
         "wall_normal_first_cell_height_m": derivation.first_cell_height,
         "y_plus_target": derivation.config.y_plus_target,
         "wall_resolution_note": (
-            "snappyHexMesh is scale-invariant here (relativeSizes true, hull "
-            "level (0 0), refinement from length-scaled topoSet boxes) but the "
-            "requirement it must satisfy scales with Reynolds number, not with "
-            "geometry. This height is what the near-wall mesh has to deliver "
-            "at this condition; it is recorded, not enforced."
+            "this height is the wall-normal requirement at this condition; "
+            "it is recorded, not enforced. Surface refinement targets are "
+            "recorded separately from the requested box scale and do not "
+            "establish achieved wall-normal spacing."
         ),
     }
