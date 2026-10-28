@@ -6,11 +6,11 @@ in the [existing hydrostatics tests](../../../../tests/unit/hydrodynamics/test_p
 The [source register](source_register.json) gives inputs, units, source locators
 and readiness. The [change record](changes.json) preserves revision rows.
 
-From the repository root, with NumPy available, run:
+From the repository root, run with the numerical dependencies supplied:
 
 ```bash
-PYTHONPATH=src uv run --no-project --with pytest python docs/reports/modules/planing_hull/build_report.py --scratch "$TMPDIR/planing-calculation-a" --output "$TMPDIR/planing-report-a"
-PYTHONPATH=src uv run --no-project --with pytest python docs/reports/modules/planing_hull/build_report.py --scratch "$TMPDIR/planing-calculation-b" --output "$TMPDIR/planing-report-b"
+PYTHONPATH=src uv run --no-project --with pytest --with numpy --with scipy python docs/reports/modules/planing_hull/build_report.py --scratch "$TMPDIR/planing-calculation-a" --output "$TMPDIR/planing-report-a"
+PYTHONPATH=src uv run --no-project --with pytest --with numpy --with scipy python docs/reports/modules/planing_hull/build_report.py --scratch "$TMPDIR/planing-calculation-b" --output "$TMPDIR/planing-report-b"
 ```
 
 `TMPDIR` shall name an external scratch directory. Each calculation writes only
@@ -29,7 +29,7 @@ standalone, while repository links resolve in the delivered repository folder.
 Run the specified checks with external basetemp and no pytest cache:
 
 ```bash
-PYTHONPATH=src uv run --no-project --with pytest python -m pytest tests/unit/hydrodynamics/test_planing_hull.py tests/unit/hydrodynamics/test_planing_hull_hydrostatics.py tests/reporting/test_planing_hull_module_report.py -q -rA -p no:cacheprovider --basetemp "$TMPDIR/planing-tests"
+PYTHONPATH=src uv run --no-project --with pytest --with numpy --with scipy python -m pytest tests/unit/hydrodynamics/test_planing_hull.py tests/unit/hydrodynamics/test_planing_hull_hydrostatics.py tests/reporting/test_planing_hull_module_report.py -q -rA -p no:cacheprovider --basetemp "$TMPDIR/planing-tests"
 ```
 
 The dedicated report test compares every worked value, unit and display with an

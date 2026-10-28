@@ -16,6 +16,7 @@ import json
 import math
 import os
 import re
+import shlex
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -293,3 +294,20 @@ def test_scratch_must_be_external_and_separate_from_output(tmp_path):
         build.render(REPORT / "scratch")
     with pytest.raises(ValueError, match="overlap"):
         build.build(tmp_path, tmp_path / "output")
+
+
+def test_documented_commands_include_runtime_dependencies():
+    commands = re.findall(r"^PYTHONPATH=src uv .+$", (REPORT / "README.md").read_text(), re.M)
+    assert len(commands) == 3
+    commands.append(builder().REBUILD)
+    for command in commands:
+        tokens = shlex.split(command)
+        dependencies = {tokens[i + 1] for i, token in enumerate(tokens) if token == "--with"}
+        assert {"pytest", "numpy", "scipy"} <= dependencies, command
+
+
+def test_pressure_integral_uses_horizontal_projection(tmp_path):
+    html = builder().render(tmp_path / "projection")
+    assert "horizontal projection of both straight sides" in html
+    assert "dFz = p cos(beta) ds = p dx" in html
+    assert "vertical projection of both straight sides" not in html

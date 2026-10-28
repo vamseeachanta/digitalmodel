@@ -15,10 +15,13 @@ REGISTER = HERE / "source_register.json"
 CHANGES = [{
     "revision": "A", "date": "2026-10-28",
     "change": "The synthetic below-chine hydrostatic example, independent pressure integral and method limitations are presented to establish a reproducible calculation basis.",
+}, {
+    "revision": "B", "date": "2026-10-28",
+    "change": "Numerical dependencies are declared in the isolated rebuild and test commands, and the pressure projection is corrected to the horizontal plane to make the calculation reproducible and its force direction explicit.",
 }]
 # H: REL_TOL rationale in the existing independent hydrostatics test note.
 REL_TOL = 64 * math.ulp(1.0)
-REBUILD = ('PYTHONPATH=src uv run --no-project --with pytest python '
+REBUILD = ('PYTHONPATH=src uv run --no-project --with pytest --with numpy --with scipy python '
            'docs/reports/modules/planing_hull/build_report.py '
            '--scratch "$TMPDIR/planing-calculation-a" --output "$TMPDIR/planing-report-a"')
 
@@ -222,7 +225,7 @@ def render(scratch):
 {input_table(data)}<p>Table: Synthetic worked inputs, units and source basis.</p>
 <p>The strip length is {number("strip_length", data["strip_length"], "m", 3)} m. Strip centres from the bow are {centres} m [M]. This layout exposes an accidental length multiplier: a force reported per unit length does not acquire the strip length. A total strip force would require a separate integration and would have force units.</p>
 <h2 id="s4">4. Analysis Methodology</h2>
-<p>For the specified wedge, height above keel equals absolute transverse distance. Integrating submerged width gives cross-sectional area. Independently, gauge pressure is integrated over the vertical projection of both straight sides [H].</p>
+<p>For the specified wedge, height above keel equals absolute transverse distance. Integrating submerged width gives cross-sectional area. Independently, gauge pressure is integrated over the horizontal projection of both straight sides [H]. The upward force differential is dFz = p cos(beta) ds = p dx, where beta is the side angle to the horizontal, ds is side length and dx is horizontal width.</p>
 <div class="eq">h₊ = max(h, 0); b = h₊; A = ∫ 2z dz = h₊²;<br>F′ = 2∫ ρg(h₊ − x) dx = 2ρg(h₊b − b²/2) = ρgA [H].</div>
 <p>The integrals run from the keel/centreline to the waterline. Here h is keel depth (m), b is waterline half-width (m), A is area (m²), ρ is density (kg/m³), g is gravity (m/s²), and F′ is upward load per length (N/m). The side count and integral factors are mathematical definitions. Gravity follows the rounded convention in H; G supplies a public reference for that convention.</p>
 <p>The production body evaluates area as squared depth divided by the deadrise tangent [M]. The independent hand expression uses the elementary unit slope. Raw forces are compared using relative tolerance equal to 64 binary64 epsilons [H], with zero absolute tolerance; dry cases require exact zero. This allowance covers degree conversion, trigonometry and short arithmetic chains, not model uncertainty or discretisation. Differences are displayed to one decimal place; acceptance uses unrounded values.</p>

@@ -3,5 +3,10 @@
     "change": "The synthetic below-chine hydrostatic example, independent pressure integral and method limitations are presented to establish a reproducible calculation basis.",
     "date": "2026-10-28",
     "revision": "A"
+  },
+  {
+    "change": "Numerical dependencies are declared in the isolated rebuild and test commands, and the pressure projection is corrected to the horizontal plane to make the calculation reproducible and its force direction explicit.",
+    "date": "2026-10-28",
+    "revision": "B"
   }
 ]
