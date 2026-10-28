@@ -450,3 +450,76 @@ def test_revision_history_renders_appended_entries(generator, example, tmp_path,
     assert '<td>99</td><td>2031-04-05</td>' in source
     assert '<option value="99">' in source
     assert "Initial module analysis; calculated cylinder evidence is distinguished from unassessed design behaviour." in source
+
+
+@pytest.fixture
+def numerical_checkout(generator, example, tmp_path, monkeypatch):
+    """Copy only numerical sources; preserve the retained evidence and checkout."""
+    checkout = tmp_path / "numerical"
+    checkout.mkdir()
+    for name in ("analytical_cylinder", "long_wave_limits"):
+        shutil.copyfile(generator.MODULE / (name + ".py"), checkout / (name + ".py"))
+        monkeypatch.delitem(sys.modules, "diffraction_report_" + name, raising=False)
+    monkeypatch.setattr(generator, "MODULE", checkout)
+    return checkout
+
+
+@pytest.mark.parametrize("converted", [
+    ("analytical_cylinder.py",),
+    ("long_wave_limits.py",),
+    ("analytical_cylinder.py", "long_wave_limits.py"),
+], ids=["cylinder", "long-wave", "both"])
+def test_crlf_checkout_rebuilds_with_original_provenance(
+    generator, example, numerical_checkout, tmp_path, converted,
+):
+    for name in converted:
+        path = numerical_checkout / name
+        original = path.read_bytes().replace(b"\r\n", b"\n")
+        path.write_bytes(original.replace(b"\n", b"\r\n"))
+        assert ast.dump(ast.parse(path.read_text(encoding="utf-8"))) == ast.dump(
+            ast.parse(original.decode("utf-8"))
+        )
+    result = generator.compute_example()
+    for actual, expected in zip(result["coefficients"], example["coefficients"], strict=True):
+        assert actual == pytest.approx(expected, rel=1e-12, abs=1e-12)
+    output = tmp_path / "report.html"
+    generator.build_report(result, output)
+    assert normalized_report(output.read_text(encoding="utf-8")) == normalized_report(
+        (REPORT / "report.html").read_text(encoding="utf-8")
+    ), "Rebuild with python docs/reports/modules/diff/generate_report.py --cache-dir <scratch>"
+    record = json.loads((REPORT / "execution.json").read_text(encoding="utf-8"))
+    assert generator.numerical_source_digest() == record["numerical_source_digest"], (
+        "Rebuild with python docs/reports/modules/diff/generate_report.py --cache-dir <scratch>"
+    )
+
+
+@pytest.mark.parametrize("name", ["analytical_cylinder.py", "long_wave_limits.py"])
+def test_source_content_change_still_rejects_recorded_execution(
+    generator, example, numerical_checkout, tmp_path, name,
+):
+    """Even a non-numerical source edit must invalidate the recorded provenance."""
+    path = numerical_checkout / name
+    path.write_bytes(path.read_bytes() + b"\n# Source provenance probe.\n")
+    with pytest.raises(ValueError, match="Recorded execution inputs or numerical source do not match"):
+        generator.build_report(example, tmp_path / "report.html")
+
+
+def test_crlf_checkout_reuses_exact_cylinder_cache(generator, numerical_checkout, tmp_path):
+    cache = tmp_path / "cache"
+    generator.compute_example(cache)
+    before = {p.name: p.read_bytes() for p in cache.glob("*.json")}
+    assert len(before) == 4
+    path = numerical_checkout / "analytical_cylinder.py"
+    original = path.read_bytes().replace(b"\r\n", b"\n")
+    path.write_bytes(original.replace(b"\n", b"\r\n"))
+    generator.compute_example(cache)
+    assert {p.name: p.read_bytes() for p in cache.glob("*.json")} == before
+
+
+def test_report_numbers_match_hand_calculations(example):
+    # Volume = pi * 1^2 * 2; mass in tonnes = 1025 * volume / 1000.
+    assert example["displaced_volume"] == pytest.approx(6.28318530718, rel=1e-11)
+    assert example["displaced_mass_t"] == pytest.approx(6.44026493986, rel=1e-11)
+    # Quasi-static heave follows surface elevation: displacement / amplitude = 1.
+    heave = next(row for row in example["long_wave"]["heave"] if row["heading"] == 45.0)
+    assert heave["value"] == pytest.approx(1.0, abs=1e-12)

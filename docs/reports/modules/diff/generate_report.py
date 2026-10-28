@@ -106,7 +106,7 @@ def compute_example(cache_dir: Path | None = None):
     basis = read_basis()
     cylinder = load_numerical("analytical_cylinder")
     geom = cylinder.CylinderGeometry(**basis["geometry"])
-    implementation = hashlib.sha256((MODULE / "analytical_cylinder.py").read_bytes()).hexdigest()
+    implementation = hashlib.sha256(source_fingerprint_bytes("analytical_cylinder.py")).hexdigest()
     coefficients = []
     for omega in basis["frequencies"]:
         for modes in basis["mode_counts"]:
@@ -163,10 +163,15 @@ def example_digest(example):
     return hashlib.sha256(json.dumps(example, sort_keys=True).encode()).hexdigest()
 
 
+def source_fingerprint_bytes(name):
+    """Canonicalize checkout CRLF pairs to LF; retain every other source byte."""
+    return (MODULE / name).read_bytes().replace(b"\r\n", b"\n")
+
+
 def numerical_source_digest():
-    """Identify the numerical source files used by the recorded computation."""
+    """Identify the numerical sources in the recorded computation's LF form."""
     return hashlib.sha256(b"".join(
-        (MODULE / name).read_bytes() for name in ("analytical_cylinder.py", "long_wave_limits.py")
+        source_fingerprint_bytes(name) for name in ("analytical_cylinder.py", "long_wave_limits.py")
     )).hexdigest()
 
 
