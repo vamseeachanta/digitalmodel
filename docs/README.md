@@ -82,3 +82,9 @@ for that bulk store, not a path that should be hard-coded into portable repo log
 ## Operational runbooks
 
 - [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.
+
+## Module analyses
+
+- [Parachute module analysis](reports/modules/parachute/index.html): existing
+  methods, synthetic drag and elastic cantilever arithmetic, independent checks
+  and explicit `NOT_EVALUATED` qualification limits.
