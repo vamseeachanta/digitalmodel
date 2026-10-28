@@ -1017,8 +1017,9 @@ def surface_card_from_pump_card(
         The surface card in oilfield units (inches, pounds).
 
     Raises:
-        ValueError: If the context has no rod sections, or the card is too
-            short to march.
+        ValueError: If inputs are invalid, the march produces nonfinite
+            values, or the surface turnaround does not converge. A returned
+            card always uses the damping switch selected by its own position.
     """
     # Imported lazily: this pulls in scipy, and most callers of this module
     # only ever want the generators.
@@ -1029,7 +1030,33 @@ def surface_card_from_pump_card(
         survey_from_context,
     )
     from .everitt_jennings.damping import estimate_damping_profile
-    from .everitt_jennings.solver import build_coefficients, build_simulation
+    from .everitt_jennings.solver import (
+        MIN_CARD_SAMPLES,
+        build_coefficients,
+        build_simulation,
+    )
+
+    pump_position_m = np.asarray(pump_card.position, dtype=np.float64) * U.IN2M
+    pump_load_n = np.asarray(pump_card.load, dtype=np.float64) * U.LB2N
+    if len(pump_position_m) != len(pump_load_n):
+        raise ValueError("pump position and load must have the same number of samples")
+    # The periodic time stencil needs the duplicated endpoint and neighbours;
+    # this is the same minimum used by build_simulation, not a physical limit.
+    if len(pump_position_m) < MIN_CARD_SAMPLES:
+        raise ValueError(f"pump card needs at least {MIN_CARD_SAMPLES} samples to march")
+    if not (
+        np.all(np.isfinite(pump_position_m)) and np.all(np.isfinite(pump_load_n))
+    ):
+        raise ValueError("pump position and load must contain only finite values")
+    # Three rows supply the two boundaries and an interior recurrence row.
+    if (
+        isinstance(n_nodes, bool)
+        or not isinstance(n_nodes, (int, np.integer))
+        or n_nodes < 3
+    ):
+        raise ValueError("n_nodes must be an integer of at least 3")
+    if not np.isfinite(ctx.spm) or ctx.spm <= 0:
+        raise ValueError("spm must be finite and positive")
 
     if tubing_id_in is None:
         tubing_id_in = DEFAULT_TUBING_ID_IN
@@ -1046,16 +1073,12 @@ def surface_card_from_pump_card(
         viscosity=viscosity_cp * 1.0e-3,
     )
 
-    pump_position_m = np.asarray(pump_card.position, dtype=np.float64) * U.IN2M
-    pump_load_n = np.asarray(pump_card.load, dtype=np.float64) * U.LB2N
-
     # The grid depends on the surface card only through the index at which the
     # stroke turns around, which selects upstroke from downstroke damping. Seed
     # that with the pump card and iterate to a fixed point: the card is
     # self-consistent once the turnaround read off the card we produced is the
     # one that was used to produce it.
     guess_position, guess_load = pump_position_m, pump_load_n
-    turnaround_used = None
     surface_position = surface_load = None
 
     for _ in range(_MAX_TURNAROUND_ITERATIONS):
@@ -1069,41 +1092,59 @@ def surface_card_from_pump_card(
             friction_coefficient=ctx.calc_params.coulomb_friction_coefficient,
             n_nodes=n_nodes,
         )
-        # ``sim.up_dn`` is the turnaround of ``guess_position``, so on every
-        # pass but the first this is the turnaround of the card the previous
-        # pass produced.
-        if sim.up_dn == turnaround_used:
-            break
-        turnaround_used = sim.up_dn
-
         coeff = build_coefficients(sim, survey)
         last = sim.n_x - 1
 
         # Solver sign convention is positive-down, and the downward march reads
         # the pump load off the strain between the last two nodes.
-        u_pump = -pump_position_m
-        u_pump_above = u_pump - pump_load_n * sim.dx / (
-            coeff.moduli[last] * coeff.areas[last]
-        )
-        u = _march_up(u_pump, u_pump_above, sim, coeff)
+        try:
+            with np.errstate(over="raise", invalid="raise", divide="raise"):
+                u_pump = -pump_position_m
+                u_pump_above = u_pump - pump_load_n * sim.dx / (
+                    coeff.moduli[last] * coeff.areas[last]
+                )
+                u = _march_up(u_pump, u_pump_above, sim, coeff)
+                if not np.all(np.isfinite(u)):
+                    raise ValueError("forward march produced a nonfinite displacement field")
+                surface_position = -u[0]
+                # Mirror the downward boundary: the buoyant string weight
+                # lives at the surface boundary with kernel gravity muted.
+                surface_load = (coeff.moduli[0] * coeff.areas[0] / sim.dx) * (
+                    u[1] - u[0]
+                ) + sim.buoyant_weight
+        except FloatingPointError as exc:
+            raise ValueError("forward march produced a nonfinite surface card") from exc
 
-        surface_position = -u[0]
-        # Mirror of the downward solve's boundary row: with gravity muted in
-        # the kernel, the buoyant string weight lives at the surface boundary
-        # and nowhere else, so it goes back on here.
-        surface_load = (coeff.moduli[0] * coeff.areas[0] / sim.dx) * (
-            u[1] - u[0]
-        ) + sim.buoyant_weight
-
+        if not (
+            np.all(np.isfinite(surface_position)) and np.all(np.isfinite(surface_load))
+        ):
+            raise ValueError("forward march produced a nonfinite surface card")
+        # Match build_simulation's exact discrete turnaround convention,
+        # including a plateau maximum. No fitted tolerance is involved.
+        turnaround = int(np.mean(np.flatnonzero(
+            surface_position == np.max(surface_position)
+        )))
+        if turnaround == sim.up_dn:
+            break
         guess_position, guess_load = surface_position, surface_load
+    else:
+        raise ValueError(
+            "surface turnaround did not converge; no consistent synthetic "
+            "surface card was constructed"
+        )
 
-    position_in = surface_position * U.M2IN
-    if zero_position_datum:
-        position_in = position_in - np.min(position_in)
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise"):
+            position_in = surface_position * U.M2IN
+            load_lbs = surface_load * U.N2LB
+            if zero_position_datum:
+                position_in = position_in - np.min(position_in)
+    except FloatingPointError as exc:
+        raise ValueError("forward march produced a nonfinite surface card") from exc
 
     return CardData(
         position=position_in.tolist(),
-        load=(surface_load * U.N2LB).tolist(),
+        load=load_lbs.tolist(),
     )
 
 
