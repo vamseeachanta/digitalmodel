@@ -9,7 +9,7 @@
   "scope": "Synthetic sealed dry-bore arithmetic only; physical qualification NOT_EVALUATED.",
   "sources": {
     "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
-    "scripts/reports/build_pipe_cross_section_module_report.py": "38782ae7d06d12b7d9d4c221b451c073f4c69e393b6e9767f3654688b4dbabf0",
+    "scripts/reports/build_pipe_cross_section_module_report.py": "9e5059b56a73473c8c230fbea6ecba4b2506184ce515d2743d8503586c9ed032",
     "src/digitalmodel/structural/pipe_cross_section/__init__.py": "2c834f4b75a73733c22efc959f65d9d396054b8880b561f2a18a415668b57bd7",
     "src/digitalmodel/structural/pipe_cross_section/calculator.py": "8a18373919c49ea2203907bf269680f1be861e9ff58b7725fc7542eb94ea218d",
     "src/digitalmodel/structural/pipe_cross_section/cli.py": "cecf1505ca548dfb1093bbfeeb1ef204e8706d0e7a8a8af3b09dfa6fbb3897ee",
@@ -17,7 +17,7 @@
     "src/digitalmodel/structural/pipe_cross_section/models.py": "f55edcca19d261ead60020be1e717ec5f4bfd01ea6758eaacb52677eb28dbbaf",
     "src/digitalmodel/structural/pipe_cross_section/visualization.py": "d6f342d49c6914fafdf9809ba1101ab2499b0cae188c7141b389d25237f0d7c6",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90",
-    "tests/reporting/test_pipe_cross_section_module_report.py": "ad5fee68692e7b836e73d43f7fe9840de4f7691409ee678252af5441257b92fc",
+    "tests/reporting/test_pipe_cross_section_module_report.py": "d20745a2477a9d38a6c24f210503ea1c0ffd5006258419a583e8f40d273e0f41",
     "tests/structural/pipe_cross_section/test_documented_layered_pipe_buoyancy.py": "38bf2595d45e4329776552c7b8208844fbf39ab5a5210f79a7d6b6ebc9292b57",
     "tests/structural/pipe_cross_section/test_pipe_calculator.py": "f7b5a2b83d5ffd270ffd30d7955ce316fda776acb8408f689ed2f2ec05824ed1"
   }

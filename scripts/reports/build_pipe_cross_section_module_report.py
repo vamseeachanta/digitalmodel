@@ -163,7 +163,7 @@ def figure(data):
 
 def render(data):
     """Render the ten-section analysis; every result comes from calculate."""
-    brand = re.sub(r"/\*.*?\*/", "", (ROOT / "docs/api/_assets/brand.css").read_text(), flags=re.S)
+    brand = re.sub(r"/\*.*?\*/", "", (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8"), flags=re.S)
     brand = "\n".join(line.rstrip() for line in brand.splitlines())
     history = table(("Revision", "Date", "What changed and why"), [
         [escaped(item[key]) for key in ("revision", "date", "change")] for item in CHANGES

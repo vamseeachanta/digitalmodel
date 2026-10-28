@@ -32,6 +32,10 @@ SCRIPT = ROOT / "scripts/reports/build_pipe_cross_section_module_report.py"
 REPORT = ROOT / "docs/reports/modules/pipe_cross_section"
 EXAMPLE = ROOT / "src/digitalmodel/structural/pipe_cross_section/docs/worked-layered-pipe-buoyancy.md"
 DELIVERABLES = {"index.html", "results.json", "changes.json", "manifest.json", "README.md"}
+REBUILD = (
+    "Rebuild: PYTHONPATH=src python scripts/reports/build_pipe_cross_section_module_report.py "
+    "--scratch EXTERNAL_SCRATCH --output-dir docs/reports/modules/pipe_cross_section"
+)
 # Same binary-roundoff allowances as the executable worked example: relative
 # 1e-12, absolute 1e-15 m² and 1e-10 kg/m. Force floor is the mass floor
 # converted with the implementation's 9.81 / 1000 kN/N convention.
@@ -177,9 +181,28 @@ def build_delivery(folder):
     subprocess.run(
         [sys.executable, str(SCRIPT), "--scratch", str(folder / "scratch"),
          "--output-dir", str(output)],
-        cwd=folder, env=environment, check=True, capture_output=True, text=True, timeout=30,
+        cwd=folder, env=environment, check=True, capture_output=True, text=True,
+        encoding="utf-8", timeout=30,
     )
     return output
+
+
+def test_builder_uses_utf8_with_ascii_locale(tmp_path):
+    environment = os.environ.copy()
+    environment.update({
+        "PYTHONPATH": (ROOT / "src").as_posix(), "PYTHONUTF8": "0",
+        "PYTHONCOERCECLOCALE": "0", "LC_ALL": "C",
+    })
+    output = tmp_path / "output"
+    returncode = subprocess.run(
+        [sys.executable, SCRIPT.as_posix(), "--scratch", (tmp_path / "scratch").as_posix(),
+         "--output-dir", output.as_posix()],
+        cwd=tmp_path, env=environment, capture_output=True, text=True,
+        encoding="utf-8", timeout=30,
+    ).returncode
+    assert returncode == 0, "UTF-8 report sources must build under an ASCII locale"
+    assert (output / "index.html").read_bytes() == (REPORT / "index.html").read_bytes(), REBUILD
+    assert_manifest(output)
 
 
 @pytest.fixture(scope="module")
@@ -191,13 +214,13 @@ def test_rebuild_is_byte_identical(fresh_pair):
     for output in (*fresh_pair, REPORT):
         assert {p.name for p in output.iterdir()} == DELIVERABLES
     for name in sorted(DELIVERABLES):
-        assert (fresh_pair[0] / name).read_bytes() == (fresh_pair[1] / name).read_bytes()
-        assert (REPORT / name).read_bytes() == (fresh_pair[0] / name).read_bytes(), name
+        assert (fresh_pair[0] / name).read_bytes() == (fresh_pair[1] / name).read_bytes(), REBUILD
+        assert (REPORT / name).read_bytes() == (fresh_pair[0] / name).read_bytes(), f"{name}; {REBUILD}"
 
 
 def test_report_values_have_independent_oracles(fresh_pair):
     for output in (*fresh_pair, REPORT):
-        data = json.loads((output / "results.json").read_text())
+        data = json.loads((output / "results.json").read_text(encoding="utf-8"))
         assert_cases_match_oracle(data["cases"])
         assert data["source_revision"] == "09089a121a16069c4b657d1a320a630a23ab1dd5"
         for name, inputs in data["inputs"].items():
@@ -213,7 +236,7 @@ def test_report_values_have_independent_oracles(fresh_pair):
 def test_visible_results_match_independent_arithmetic():
     """Check rendered cells as well as JSON, without builder formatting helpers."""
     parsed = Page()
-    parsed.feed((REPORT / "index.html").read_text())
+    parsed.feed((REPORT / "index.html").read_text(encoding="utf-8"))
     expected = independent_cases()
     for key, label, unit, spec in (
         ("inner_diameter_mm", "Bore diameter", "mm", "g"),
@@ -245,17 +268,17 @@ def test_visible_results_match_independent_arithmetic():
 
 def test_production_replay_matches_executable_example(fresh_pair, tmp_path):
     """Freshness against public APIs and the document is not the numeric oracle."""
-    data = json.loads((fresh_pair[0] / "results.json").read_text())
+    data = json.loads((fresh_pair[0] / "results.json").read_text(encoding="utf-8"))
     assert data["cases"] == public_cases()
-    blocks = re.findall(r"```python\n(.*?)\n```", EXAMPLE.read_text(), re.S)
+    blocks = re.findall(r"```python\n(.*?)\n```", EXAMPLE.read_text(encoding="utf-8"), re.S)
     assert len(blocks) == 1
     script = tmp_path / "example.py"
-    script.write_text(blocks[0])
+    script.write_text(blocks[0], encoding="utf-8", newline="\n")
     environment = os.environ.copy()
     environment["PYTHONPATH"] = str(ROOT / "src")
     subprocess.run([sys.executable, str(script), str(tmp_path)], cwd=tmp_path,
                    env=environment, check=True, capture_output=True, timeout=30)
-    documented = json.loads((tmp_path / "layered-pipe-buoyancy.json").read_text())
+    documented = json.loads((tmp_path / "layered-pipe-buoyancy.json").read_text(encoding="utf-8"))
     for case in documented:
         for field, value in documented[case]["live"].items():
             assert data["cases"][case][field] == value
@@ -263,7 +286,7 @@ def test_production_replay_matches_executable_example(fresh_pair, tmp_path):
 
 def assert_manifest(directory):
     """Independently read delivered bytes; do not use a builder hash helper."""
-    manifest = json.loads((directory / "manifest.json").read_text())
+    manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
     assert set(manifest["artifacts"]) == DELIVERABLES - {"manifest.json"}
     assert "scripts/reports/build_pipe_cross_section_module_report.py" in manifest["sources"]
     assert "tests/reporting/test_pipe_cross_section_module_report.py" in manifest["sources"]
@@ -271,7 +294,7 @@ def assert_manifest(directory):
         for relative, digest in manifest[category].items():
             path = Path(relative)
             assert not path.is_absolute() and ".." not in path.parts
-            assert hashlib.sha256((root / path).read_bytes()).hexdigest() == digest, relative
+            assert hashlib.sha256((root / path).read_bytes()).hexdigest() == digest, f"{relative}; {REBUILD}"
 
 
 def test_manifest_binds_delivered_bytes(fresh_pair):
@@ -283,16 +306,16 @@ def test_manifest_binds_delivered_bytes(fresh_pair):
 def test_tampered_result_is_detected(fresh_pair, tmp_path, fault):
     for path in fresh_pair[0].iterdir():
         (tmp_path / path.name).write_bytes(path.read_bytes())
-    data = json.loads((tmp_path / "results.json").read_text())
+    data = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
     original = data["cases"]["coated"]["submerged_mass_kg_m"]
     data["cases"]["coated"]["submerged_mass_kg_m"] = original + 1 if fault == "value" else -original
-    (tmp_path / "results.json").write_text(json.dumps(data))
+    (tmp_path / "results.json").write_text(json.dumps(data), encoding="utf-8", newline="\n")
     with pytest.raises(AssertionError, match="results.json"):
         assert_manifest(tmp_path)
     # Even a consistently rehashed delivery cannot defeat the numeric oracle.
-    manifest = json.loads((tmp_path / "manifest.json").read_text())
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
     manifest["artifacts"]["results.json"] = hashlib.sha256((tmp_path / "results.json").read_bytes()).hexdigest()
-    (tmp_path / "manifest.json").write_text(json.dumps(manifest))
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8", newline="\n")
     assert_manifest(tmp_path)
     with pytest.raises(AssertionError, match="submerged_mass_kg_m"):
         assert_cases_match_oracle(data["cases"])
@@ -312,8 +335,8 @@ def test_consistent_regeneration_still_fails_oracle(tmp_path, monkeypatch, fault
     monkeypatch.setattr(build, "calculate", changed)
     output = tmp_path / "output"
     build.build(tmp_path / "scratch", output)
-    data = json.loads((output / "results.json").read_text())
-    page = (output / "index.html").read_text()
+    data = json.loads((output / "results.json").read_text(encoding="utf-8"))
+    page = (output / "index.html").read_text(encoding="utf-8")
     payload = re.search(r'<script id="calculation" type="application/json">(.*?)</script>', page, re.S)
     assert json.loads(payload[1]) == data
     assert_manifest(output)
@@ -369,7 +392,7 @@ class Page(HTMLParser):
 
 
 def test_report_links_and_required_sections():
-    page = (REPORT / "index.html").read_text()
+    page = (REPORT / "index.html").read_text(encoding="utf-8")
     parsed = Page()
     parsed.feed(page)
     assert {f"s{number}" for number in range(1, 11)} <= parsed.ids
@@ -389,8 +412,8 @@ def test_report_links_and_required_sections():
     assert all("src" not in script and script.get("type") == "application/json"
                for script in parsed.scripts)
     payload = re.search(r'<script id="calculation" type="application/json">(.*?)</script>', page, re.S)
-    assert json.loads(payload[1]) == json.loads((REPORT / "results.json").read_text())
-    changes = json.loads((REPORT / "changes.json").read_text())
+    assert json.loads(payload[1]) == json.loads((REPORT / "results.json").read_text(encoding="utf-8"))
+    changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     for change in changes:
         for value in change.values():
             assert value in page
@@ -423,7 +446,7 @@ def test_inventory_covers_public_functions_and_classes():
     for module in ("models", "calculator", "visualization", "cli"):
         source = f"{build.PACKAGE}/{module}.py"
         expected = {}
-        for node in ast.parse((ROOT / source).read_text()).body:
+        for node in ast.parse((ROOT / source).read_text(encoding="utf-8")).body:
             if isinstance(node, (ast.ClassDef, ast.FunctionDef)) and not node.name.startswith("_"):
                 expected[node.name] = node.lineno
                 if isinstance(node, ast.ClassDef):
