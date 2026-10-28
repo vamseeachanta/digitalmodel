@@ -103,6 +103,23 @@ def test_router_flags_allowable_exceedance(tmp_path):
     assert mid["bending_utilization"] == pytest.approx(1.25, rel=1e-2)
 
 
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf")])
+@pytest.mark.parametrize("index", range(3))
+@pytest.mark.parametrize(
+    ("field", "curve_field"),
+    [("x_m", "x_m"), ("hogging_t_m", "positive"), ("sagging_t_m", "negative")],
+)
+def test_router_rejects_nonfinite_bending_allowables(
+    tmp_path, field, curve_field, index, invalid
+):
+    """The synthetic golden fixture's finite shear cannot mask invalid bending."""
+    cfg = _cfg(tmp_path)
+    bending = cfg["hull_girder_screening"]["allowables"]["bending_moment"]
+    bending[field][index] = invalid
+    with pytest.raises(ValueError, match=rf"{curve_field}.*finite"):
+        router(cfg)
+
+
 def test_router_writes_report_pack_ready_csvs(tmp_path):
     cfg = router(_cfg(tmp_path))
     result = cfg["hull_girder_screening"]
