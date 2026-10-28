@@ -13,6 +13,7 @@ assumptions with investigated inputs and assess the coupled transient response.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 0 | 2026-10-28 | Added reusable threshold ranking, two hull states, strength sensitivities and an air-gap sweep to identify which assumed limits are reached first. |
+| 1 | 2026-10-28 | Limited rotating-hull buoyancy reserve by deck-edge immersion and added independent clearance and moment checks to prevent a false balance. |
 
 ## Inputs and source basis
 
@@ -125,9 +126,23 @@ A hypothetical single-leg run rotates the hull about the other two supports.
 For equilateral support radius `R`, the failed-leg lever is `1.5R`, while the
 hull-centre buoyancy lever is `0.5R`. A footing reaction loss `dQ` therefore needs
 `3dQ` extra buoyancy for moment equilibrium. Centre sinkage is leg travel divided
-by three, giving required leg travel `9dQ/(gamma Awp)`. Reserve is limited by
-`gamma Awp (hull depth - draft)`. This is a quasi-static balance hypothesis,
-without kinetic energy, hydrodynamic inertia or flooding.
+by three, giving required leg travel `9dQ/(gamma Awp)`. For hull length `L`, the
+descending edge has lever `(L+R)/2`; the centre has lever `R/2`. The freeboard
+criterion therefore limits centre sinkage to `(hull depth - draft) R/(L+R)`
+and reserve to `gamma Awp (hull depth - draft) R/(L+R)`. These relations combine
+moment equilibrium and displaced-water weight, as described in OpenStax,
+*University Physics Volume 1* (2016), sections
+[12.1, Conditions for Static Equilibrium](https://openstax.org/books/university-physics-volume-1/pages/12-1-conditions-for-static-equilibrium)
+and [14.4, Archimedes' Principle and Buoyancy](https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy).
+The constant waterplane and centre of buoyancy are screening assumptions.
+For the base geometry, the 6.0 m freeboard permits 4.5 m failed-leg travel and
+1.5 m centre sinkage, giving 33.2 MN reserve before edge immersion. A synthetic
+20.0 MN reaction loss requires 60.0 MN additional buoyancy and 8.1 m travel;
+the resulting 10.8 m edge descent exceeds the 6.0 m freeboard. That balance
+is rejected. When neither buoyancy balance nor static soil recovery is
+established, travel remains a lower bound. This quasi-static hypothesis omits
+kinetic energy, hydrodynamic inertia and flooding; exact rotating hydrostatics
+and dynamic arrest are not established.
 
 For the base stiff-over-soft case, the first reaction loss is 4.4 MN and the
 static soil recovery travel is 5.4 m. The in-water buoyancy balance needs 13.2 MN
