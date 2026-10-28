@@ -1,0 +1,59 @@
+{
+  "hand-calculation": {
+    "status": "synthetic software reference",
+    "source": "Maintainer-specified synthetic observer-frequency case",
+    "derivation": "For phi=k*x*cos(beta)-omega*t and x=U*t, phi=-(omega-k*U*cos(beta))*t. Signed encounter frequency is therefore omega-k*U*cos(beta). Deep-water dispersion gives k=omega squared/g. With synthetic g=8 m/s², omega=[2,4] rad/s and U=1 m/s, k=[4/8,16/8]=[0.5,2] 1/m. Exact cardinal cosines [1,0,-1] at beta=[0,pi/2,pi] give rows [2-0.5,2,2+0.5]=[1.5,2,2.5] and [4-2,4,4+2]=[2,4,6] rad/s. At U=0, each row equals its input omega.",
+    "readiness": "Arithmetic illustration only; synthetic gravity is not a physical recommendation.",
+    "units": "Gravity m/s²; angular frequencies rad/s; speed m/s; headings rad; wave number 1/m; depth m.",
+    "issue": "https://github.com/vamseeachanta/digitalmodel/issues/3327"
+  },
+  "numerical-control": {
+    "source": "Specified roundoff criterion for the synthetic hand calculation",
+    "criterion": "abs(actual-reference) <= 1e-12 + 1e-12*abs(reference)",
+    "display": "Worked inputs and frequencies use one decimal place; headings retain exact symbolic radians. Signed differences use scientific notation with one decimal in the mantissa. All comparisons use unrounded values; these bounds concern floating-point roundoff, not engineering uncertainty."
+  },
+  "methods": {
+    "path": "src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py",
+    "symbols": ["wave_number", "encounter_frequency", "correct_rao_for_speed", "strip_theory_speed_correction"],
+    "role": "Production arithmetic and static review; only wave_number and encounter_frequency are executed."
+  },
+  "direction-contract": {
+    "path": "tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py",
+    "symbols": ["TestEncounterFrequency.test_head_seas_increases_frequency", "TestEncounterFrequency.test_following_seas_decreases_frequency"],
+    "role": "Existing software heading convention: zero is following seas and pi is head seas. External convention alignment is not established."
+  },
+  "routes": {
+    "paths": [
+      "src/digitalmodel/hydrodynamics/parametric_hull_analysis/__init__.py",
+      "src/digitalmodel/hydrodynamics/parametric_hull_analysis/models.py",
+      "src/digitalmodel/hydrodynamics/parametric_hull_analysis/sweep.py",
+      "src/digitalmodel/hydrodynamics/parametric_hull_analysis/shallow_water.py",
+      "src/digitalmodel/hydrodynamics/parametric_hull_analysis/passing_ship_sweep.py",
+      "src/digitalmodel/hydrodynamics/parametric_hull_analysis/charts.py",
+      "src/digitalmodel/hydrodynamics/parametric_hull_analysis/squat_screening.py"
+    ],
+    "role": "Static interface inventory only; empirical coefficients and standard attributions are not adopted as a design basis."
+  },
+  "delegates": {
+    "paths": [
+      "src/digitalmodel/hydrodynamics/hull_library/parametric_hull.py",
+      "src/digitalmodel/hydrodynamics/hull_library/mesh_generator.py",
+      "src/digitalmodel/hydrodynamics/hull_library/rao_database.py",
+      "src/digitalmodel/hydrodynamics/capytaine/models.py",
+      "src/digitalmodel/hydrodynamics/capytaine/solver.py",
+      "src/digitalmodel/hydrodynamics/capytaine/rao.py",
+      "src/digitalmodel/hydrodynamics/passing_ship/calculator.py",
+      "src/digitalmodel/hydrodynamics/passing_ship/configuration.py",
+      "src/digitalmodel/hydrodynamics/passing_ship/force_time_history.py"
+    ],
+    "role": "Static route tracing; no meshing, solver or interaction campaign is executed."
+  },
+  "report-checks": {
+    "path": "tests/reporting/test_parametric_hull_module_report.py",
+    "role": "Independent rational oracle, every displayed value and unit, input preservation, stale calculation rejection, exact rebuilds, links and report structure."
+  },
+  "layout": {
+    "paths": ["scripts/reports/build_vessel_seakeeping_module_report.py", "docs/api/cfd/turbulent-flat-plate-verification.html", "docs/api/_assets/brand.css"],
+    "role": "Existing self-contained report layout and palette only; numerical answers and empirical assumptions are not reused. SVG coordinates are schematic drawing dimensions, not engineering inputs."
+  }
+}
