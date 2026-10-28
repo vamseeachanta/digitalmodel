@@ -261,6 +261,12 @@ class VerticalRiser:
         self.pipe_properties.append(property_dictionary)
 
     def update_property_dictionary_to_si_units(self, quantities_imperial):
+        """Convert section properties in place for the SI model builder.
+
+        PipeSizing passes material E through in psi, as declared in
+        base_configs/modules/vertical_riser/vertical_riser.yml. Return E in
+        kPa (kN/m**2), the model builder's SI stress basis.
+        """
         # TODO implement KGs lamda concept for unit conversion
         quantities_si = quantities_imperial
         _in2_to_m2 = Q_(1, 'inch**2').to('m**2').magnitude
@@ -277,7 +283,7 @@ class VerticalRiser:
         quantities_si["EI"] = quantities_imperial["EI"] * 6.894745 * (0.0254**4)
         quantities_si["EA"] = quantities_imperial["EA"] * 6.894745 * (0.0254**2)
         quantities_si["GJ"] = quantities_imperial["GJ"] * 6.894745 * (0.0254**4)
-        quantities_si["E"] = quantities_imperial["E"] ** 6.894745
+        quantities_si["E"] = Q_(quantities_imperial["E"], "psi").to("kPa").magnitude
         quantities_si["SMYS"] = quantities_imperial["SMYS"] * 6.894745
         quantities_si["SMUS"] = quantities_imperial["SMUS"] * 6.894745
         quantities_si["SMUS"] = quantities_imperial["SMUS"] * 6.894745
