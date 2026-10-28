@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planing hull module analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style></head>
+<body class="hs-doc"><main class="wrap">
+<header><h1>Planing hull module analysis</h1><p>Draft — synthetic below-chine hydrostatics</p>
+<p>Strip forces and motion data flow, with a bounded independent worked calculation.</p></header>
+<h2 id="s1">1. Executive Summary</h2>
+<p>The strip hydrostatics are compared with an independently integrated side-pressure load for a synthetic straight-sided wedge. The reference force is <span data-value="summary_force" data-unit="N/m">613.125</span> N/m [H, M]. All worked cases meet the binary64 roundoff criterion stated in the method; dry cases return exact zero. This conclusion covers the specified below-chine geometry and gravity convention.</p>
+<p>Dynamic accuracy and physical release are NOT_EVALUATED because experimental or qualified public response targets are absent. A reproducible rebuild establishes calculation freshness only.</p>
+<h3>Revision history</h3><table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr><tr><td>A</td><td>2026-10-28</td><td>The synthetic below-chine hydrostatic example, independent pressure integral and method limitations are presented to establish a reproducible calculation basis.</td></tr></table>
+<h2 id="s2">2. Introduction</h2>
+<p>The public interface exports geometry, strip-force methods, the motion solver, a response data class and a response convenience function [P]. The analysis will support review of the implementation without extending its engineering qualification. The <a href="https://github.com/vamseeachanta/digitalmodel/issues/3329">module issue</a> remains open for the deferred methods.</p>
+<p>The calculation calls only the geometry and strip hydrostatics. No response campaign or empirical coefficient adjustment is performed by this builder.</p>
+<h2 id="s3">3. Design Data and Basis</h2>
+<p>Synthetic straight-sided wedge from the existing independent hydrostatic test note; no measured hull or experimental response data. Inputs are selected for hand integration, not taken from an operating hull. The chine lies on each straight side at half-beam [H, D]. All worked submerged depths lie strictly below it.</p>
+<table><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis</th></tr><tr><td>length</td><td><span data-value="length" data-unit="m">3.000</span></td><td>m</td><td>H: _synthetic_strip</td></tr><tr><td>beam</td><td><span data-value="beam" data-unit="m">2.000</span></td><td>m</td><td>H: _synthetic_strip</td></tr><tr><td>deadrise</td><td><span data-value="deadrise" data-unit="deg">45.0</span></td><td>deg</td><td>H: WEDGE_SIDES, elementary unit-slope right triangle</td></tr><tr><td>chine height</td><td><span data-value="chine_height" data-unit="m">1.000</span></td><td>m</td><td>H: _synthetic_strip, unit slope at half-beam</td></tr><tr><td>Longitudinal centre from bow</td><td><span data-value="lcg" data-unit="m">1.500</span></td><td>m</td><td>H: _synthetic_strip</td></tr><tr><td>n strips</td><td><span data-value="n_strips" data-unit="1">4</span></td><td>1</td><td>H: _synthetic_strip</td></tr><tr><td>Synthetic fluid density</td><td><span data-value="density" data-unit="kg/m^3">1000.0</span></td><td>kg/m^3</td><td>H: synthetic density parameter</td></tr><tr><td>gravity</td><td><span data-value="gravity" data-unit="m/s^2">9.81</span></td><td>m/s^2</td><td>H: GRAVITY, rounded convention; G: section 2.6</td></tr></table><p>Table: Synthetic worked inputs, units and source basis.</p>
+<p>The strip length is <span data-value="strip_length" data-unit="m">0.750</span> m. Strip centres from the bow are <span data-value="centre_0" data-unit="m">0.375</span>, <span data-value="centre_1" data-unit="m">1.125</span>, <span data-value="centre_2" data-unit="m">1.875</span>, <span data-value="centre_3" data-unit="m">2.625</span> m [M]. This layout exposes an accidental length multiplier: a force reported per unit length does not acquire the strip length. A total strip force would require a separate integration and would have force units.</p>
+<h2 id="s4">4. Analysis Methodology</h2>
+<p>For the specified wedge, height above keel equals absolute transverse distance. Integrating submerged width gives cross-sectional area. Independently, gauge pressure is integrated over the vertical projection of both straight sides [H].</p>
+<div class="eq">h₊ = max(h, 0); b = h₊; A = ∫ 2z dz = h₊²;<br>F′ = 2∫ ρg(h₊ − x) dx = 2ρg(h₊b − b²/2) = ρgA [H].</div>
+<p>The integrals run from the keel/centreline to the waterline. Here h is keel depth (m), b is waterline half-width (m), A is area (m²), ρ is density (kg/m³), g is gravity (m/s²), and F′ is upward load per length (N/m). The side count and integral factors are mathematical definitions. Gravity follows the rounded convention in H; G supplies a public reference for that convention.</p>
+<p>The production body evaluates area as squared depth divided by the deadrise tangent [M]. The independent hand expression uses the elementary unit slope. Raw forces are compared using relative tolerance equal to 64 binary64 epsilons [H], with zero absolute tolerance; dry cases require exact zero. This allowance covers degree conversion, trigonometry and short arithmetic chains, not model uncertainty or discretisation. Differences are displayed to one decimal place; acceptance uses unrounded values.</p>
+<h3>Strip and motion data flow — inspection only</h3>
+<p>Geometry validation and properties feed the strip constructor, which sets longitudinal centres, strip length and the deadrise tangent [D, M]. Added mass takes a supplied half-wetted beam; the contact-width method takes entry velocity and duration; the simplified entry load takes entry velocity; hydrostatics take keel depth; steady lift takes speed and trim, with wetted length unused [M]. These methods return per-length quantities.</p>
+<p>The motion constructor estimates displacement mass and pitch inertia. Its added-mass delegate integrates a full-half-beam strip value along the hull; restoring coefficients use a prescribed waterplane approximation and damping uses a critical-damping fraction [S]. Wave number and encounter-phase delegates feed clipped wave-velocity strip loads, which are multiplied by strip length and summed into force and moment. Separate heave and pitch state equations are advanced by the time integrator. The convenience function discards an initial transient window, selects nearest Fourier bins at encounter harmonics, normalises amplitudes and returns phase angles [S]. These steps are described, not qualified by the worked hydrostatic case.</p>
+<h2 id="s5">5. Detailed Results</h2>
+<table><tr><th>Depth (m)</th><th>Hand area (m²)</th><th>Module force (N/m)</th><th>Hand force (N/m)</th><th>Module − hand (N/m)</th><th>Roundoff criterion</th></tr><tr><td><span data-value="row_0_depth" data-unit="m">-0.250</span></td><td><span data-value="row_0_area" data-unit="m^2">0.0000</span></td><td><span data-value="row_0_force" data-unit="N/m">0.000</span></td><td><span data-value="row_0_hand_force" data-unit="N/m">0.000</span></td><td><span data-value="row_0_difference" data-unit="N/m">0.0</span></td><td>PASS</td></tr><tr><td><span data-value="row_1_depth" data-unit="m">0.000</span></td><td><span data-value="row_1_area" data-unit="m^2">0.0000</span></td><td><span data-value="row_1_force" data-unit="N/m">0.000</span></td><td><span data-value="row_1_hand_force" data-unit="N/m">0.000</span></td><td><span data-value="row_1_difference" data-unit="N/m">0.0</span></td><td>PASS</td></tr><tr><td><span data-value="row_2_depth" data-unit="m">0.250</span></td><td><span data-value="row_2_area" data-unit="m^2">0.0625</span></td><td><span data-value="row_2_force" data-unit="N/m">613.125</span></td><td><span data-value="row_2_hand_force" data-unit="N/m">613.125</span></td><td><span data-value="row_2_difference" data-unit="N/m">0.0</span></td><td>PASS</td></tr><tr><td><span data-value="row_3_depth" data-unit="m">0.500</span></td><td><span data-value="row_3_area" data-unit="m^2">0.2500</span></td><td><span data-value="row_3_force" data-unit="N/m">2452.500</span></td><td><span data-value="row_3_hand_force" data-unit="N/m">2452.500</span></td><td><span data-value="row_3_difference" data-unit="N/m">0.0</span></td><td>PASS</td></tr></table><p>Table: Hand area and force from H compared with the fresh module call M; signed difference is module minus hand. The source register supplies all input units. Zero denotes a true dry result, not missing data.</p>
+<figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 375" role="img" aria-label="Upward hydrostatic force per length against keel submergence" style="width:100%;height:auto">
+<path d="M80 60 V300 H680" fill="none" stroke="currentColor"/>
+<polyline id="force-curve" points="80.000,300.000 105.000,300.000 130.000,300.000 155.000,300.000 180.000,300.000 205.000,300.000 230.000,300.000 255.000,300.000 280.000,300.000 305.000,299.062 330.000,296.250 355.000,291.562 380.000,285.000 405.000,276.562 430.000,266.250 455.000,254.062 480.000,240.000 505.000,224.062 530.000,206.250 555.000,186.562 580.000,165.000 605.000,141.562 630.000,116.250 655.000,89.062 680.000,60.000" fill="none" stroke="var(--brand)" stroke-width="3"/>
+<circle class="hand-anchor" cx="80.000" cy="300.000" r="5" fill="white" stroke="currentColor"><title>Independent pressure integral</title></circle><circle class="hand-anchor" cx="280.000" cy="300.000" r="5" fill="white" stroke="currentColor"><title>Independent pressure integral</title></circle><circle class="hand-anchor" cx="480.000" cy="240.000" r="5" fill="white" stroke="currentColor"><title>Independent pressure integral</title></circle><circle class="hand-anchor" cx="680.000" cy="60.000" r="5" fill="white" stroke="currentColor"><title>Independent pressure integral</title></circle><text x="80.000" y="325" text-anchor="middle"><tspan data-value="axis_depth_0" data-unit="m">-0.25</tspan></text><text x="280.000" y="325" text-anchor="middle"><tspan data-value="axis_depth_1" data-unit="m">0.00</tspan></text><text x="480.000" y="325" text-anchor="middle"><tspan data-value="axis_depth_2" data-unit="m">0.25</tspan></text><text x="680.000" y="325" text-anchor="middle"><tspan data-value="axis_depth_3" data-unit="m">0.50</tspan></text><text x="72" y="300.000" text-anchor="end"><tspan data-value="axis_force_0" data-unit="N/m">0.0</tspan></text><text x="72" y="180.000" text-anchor="end"><tspan data-value="axis_force_1" data-unit="N/m">1226.2</tspan></text><text x="72" y="60.000" text-anchor="end"><tspan data-value="axis_force_2" data-unit="N/m">2452.5</tspan></text><text x="380" y="357" text-anchor="middle">Keel submergence (m)</text>
+<text x="80" y="30">Upward force per length (N/m)</text></svg>
+<figcaption>Builder-computed strip hydrostatics (solid curve, M) and independently integrated hand anchors (circles, H). The plotted interval remains below the chine; emerged cases are dry.</figcaption></figure>
+<p>The deeper hand anchor follows the squared-depth relation in H. The below-chine curve is generated by fresh calls to the strip method; circles use the independent pressure integral. No dynamic response is plotted.</p>
+<h2 id="s6">6. Concrete Correctness Findings</h2>
+<p>The following source findings are separated from the passing hydrostatic comparison. Source locations refer to the exact bytes pinned in the register. No production correction is made within this report scope.</p>
+<table><tr><th>Location</th><th>Finding</th><th>Effect on this analysis</th></tr>
+<tr><td>M, strip_model.py:156–159</td><td>The hydrostatic docstring first multiplies squared depth by a tangent of a different angle, then states division by the deadrise tangent. The body at lines 173–174 uses division.</td><td>The pressure integral supports the body for straight sides. The selected unit slope cannot distinguish multiplication from division; the existing multi-angle tests in H provide that separate evidence.</td></tr>
+<tr><td>M, strip_model.py:12–26, 95–118, 124–146</td><td>The contact-width square root has inconsistent length dimensions. The displayed derivative simplification has a different coefficient from its preceding expression; the simplified entry-force expression is dimensionally incomplete for load per length. The entry-force body does not use duration or the contact-width method.</td><td>Contact width and impact load remain outside computed qualification; the formulas require a separate dimensional and primary-source review.</td></tr>
+<tr><td>S, solver.py:7–18, 165–198, 260–295, 346–354</td><td>The overview describes nonlinear coupling and damping from an added-mass derivative. The derivative body advances separate heave and pitch equations with excitation from wave velocity alone; damping is a prescribed critical-damping fraction. The restoring delegate does not use its speed argument or call steady planing lift.</td><td>Coupled dynamic accuracy, damping and speed-dependent restoring are not established by the overview or this example.</td></tr>
+<tr><td>S, solver.py:45–50, 437–467</td><td>Phases are described relative to a wave crest; the body returns Fourier angles after slicing the transient without explicitly restoring the original time reference or comparing a wave-reference transform.</td><td>The phase-reference convention requires an independent synthetic-signal check before use.</td></tr>
+<tr><td>D, geometry.py:42–62; M, strip_model.py:53–71, 171–174; S, solver.py:339–344, 413–449</td><td>Finite-value checks are incomplete, strip count and time settings are not guarded, the wedge area is not capped at the chine, and calm/short-window convenience branches return zero without distinguishing invalid or insufficient settings.</td><td>The report fixes finite synthetic inputs and stays below the chine. General input robustness, above-chine behavior and silent fallback status remain deferred.</td></tr>
+</table><p>Table: Inspected inconsistencies and their consequence for the stated qualification boundary [D, M, S].</p>
+<h2 id="s7">7. Limitations and Not Covered</h2>
+<p>The worked case is a static straight-sided pressure balance. It does not establish hull equilibrium, total displacement, design loading, drag, resistance, power or suitability for an operating hull. Surface tension, free-surface transients, chine immersion and geometries outside the selected wedge are not represented. No dimensional defect is corrected by a passing rebuild.</p>
+<ul><li>Impact added mass: NOT_EVALUATED against experiments or public benchmark data.</li>
+<li>Wetting: NOT_EVALUATED against experiments or public benchmark data.</li>
+<li>Dynamic damping: NOT_EVALUATED against experiments or public benchmark data.</li>
+<li>Time integration: NOT_EVALUATED for accuracy or convergence against an independent dynamic reference.</li>
+<li>Phase extraction: NOT_EVALUATED against an independent phase reference.</li>
+<li>Response amplitudes: NOT_EVALUATED against experiments or public benchmark data.</li></ul>
+<p>Existing tests T check shapes, finiteness, scaling, zero response and broad plausibility ranges. Those checks are behavioral evidence, not experimental targets. The hydrostatic tolerance is a roundoff criterion only; no engineering release tolerance is inferred for the deferred methods.</p>
+<h2 id="s8">8. Way Forward</h2>
+<p>The calculation maintainer should reconcile the hydrostatic docstring with the integral, then review impact dimensions and source attributions before selecting a dynamic benchmark. Input-domain guards and explicit insufficient-window status should be specified and tested. The coordinate, velocity and phase-reference conventions should be documented together.</p>
+<p>For motion qualification, independently sourced nonzero targets, governing geometry and loading, units, applicable speed and frequency ranges, and acceptance criteria are required. A synthetic signal should first establish phase and amplitude extraction; time-step, strip and window refinement should then be assessed against those criteria. No operating recommendation follows until that evidence is available. Deferred work remains on the open module issue.</p>
+<h2 id="s9">9. References and Appendices</h2>
+<p>The <a href="source_register.json">source register</a> records the synthetic basis, public gravity citation, units and intended use. The <a href="README.md">local README</a> provides rebuild and test commands. Local sources are bound by SHA-256 digests; public gravity is a cited convention, not a local measurement. The legacy gravity query cited in H did not resolve during source inspection; the alternative public reference G supplies the stated convention.</p>
+<ol><li id="ref-H"><b>H</b>: <a href="../../../../tests/unit/hydrodynamics/test_planing_hull_hydrostatics.py">tests/unit/hydrodynamics/test_planing_hull_hydrostatics.py</a>; module note; GRAVITY; REL_TOL; _synthetic_strip; test_wedge_buoyancy_matches_hand_integral. Independent integral, synthetic geometry/density and roundoff basis.</li><li id="ref-G"><b>G</b>: <a href="https://www.nist.gov/system/files/documents/srd/jpcrd574.pdf">CODATA recommended values, section 2.6, Acceleration of Free Fall, equation (30)</a>; CODATA recommended values, section 2.6, Acceleration of Free Fall, equation (30). Public standard-gravity convention; the rounded value in H is retained.</li><li id="ref-M"><b>M</b>: <a href="../../../../src/digitalmodel/hydrodynamics/planing_hull/strip_model.py">src/digitalmodel/hydrodynamics/planing_hull/strip_model.py</a>; PlaningStripModel.__init__; buoyancy_force_per_length; other public method bodies. Production hydrostatic result and inspection of unevaluated force methods.</li><li id="ref-D"><b>D</b>: <a href="../../../../src/digitalmodel/hydrodynamics/planing_hull/geometry.py">src/digitalmodel/hydrodynamics/planing_hull/geometry.py</a>; PlaningHullGeometry and validation/properties. Production geometry and units.</li><li id="ref-S"><b>S</b>: <a href="../../../../src/digitalmodel/hydrodynamics/planing_hull/solver.py">src/digitalmodel/hydrodynamics/planing_hull/solver.py</a>; PlaningRAO; PlaningMotionSolver and all delegates; compute_rao; _nearest_freq_index. Code inspection of motion data flow only; no dynamic qualification.</li><li id="ref-P"><b>P</b>: <a href="../../../../src/digitalmodel/hydrodynamics/planing_hull/__init__.py">src/digitalmodel/hydrodynamics/planing_hull/__init__.py</a>; public exports. Public interface discovery.</li><li id="ref-T"><b>T</b>: <a href="../../../../tests/unit/hydrodynamics/test_planing_hull.py">tests/unit/hydrodynamics/test_planing_hull.py</a>; geometry, strip, integration and response tests. Existing behavioral tests; plausibility bounds do not supply experimental targets.</li><li id="ref-R"><b>R</b>: <a href="../../../../tests/reporting/test_planing_hull_module_report.py">tests/reporting/test_planing_hull_module_report.py</a>; independent oracle, deterministic CLI, stale calculation and structural tests. Dedicated report evidence.</li><li id="ref-B"><b>B</b>: <a href="../../../../docs/reports/modules/planing_hull/build_report.py">docs/reports/modules/planing_hull/build_report.py</a>; calculate; validate; force_figure; render; build. All displayed results, comparisons and figure coordinates.</li><li id="ref-L"><b>L</b>: <a href="../../../../docs/api/cfd/turbulent-flat-plate-verification.html">docs/api/cfd/turbulent-flat-plate-verification.html</a>; first style block. Existing layout only; no numerical answers reused.</li><li id="ref-C"><b>C</b>: <a href="../../../../docs/api/_assets/brand.css">docs/api/_assets/brand.css</a>; canonical palette. Inlined existing asset; no shared style edits.</li><li id="ref-E"><b>E</b>: <a href="../../../../scripts/reports/build_vessel_seakeeping_module_report.py">scripts/reports/build_vessel_seakeeping_module_report.py</a>; render and change panel. House-style structure and local comment export pattern only.</li></ol><details><summary>Exact source digests</summary><ul><li>docs/api/_assets/brand.css; SHA-256: <code>a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</code></li><li>docs/api/cfd/turbulent-flat-plate-verification.html; SHA-256: <code>bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25</code></li><li>docs/reports/modules/planing_hull/README.md; SHA-256: <code>73f4cd108bfaec10784a7e89da1c0cbacd8ffe15c03aa4515df7fb3da7979deb</code></li><li>docs/reports/modules/planing_hull/build_report.py; SHA-256: <code>bf7a745f85a54b007c9c3bcb4d1a7c4b764359a88161b439ac5ca023da8efb3c</code></li><li>docs/reports/modules/planing_hull/source_register.json; SHA-256: <code>ed8ed651de1340173740b73a8c904bb766834754a39127c4c40f3146e96f09db</code></li><li>scripts/reports/build_vessel_seakeeping_module_report.py; SHA-256: <code>ad21f01ee82a757110a2fdcac514c5d3ec3fc2c16ad53230b25ad32f7146b244</code></li><li>src/digitalmodel/hydrodynamics/planing_hull/__init__.py; SHA-256: <code>4274856a1793ca1d056e1110a10cc23bf40789c5b1da77087e5a1dcd52807e4d</code></li><li>src/digitalmodel/hydrodynamics/planing_hull/geometry.py; SHA-256: <code>8eb236812da17bdd8dbb1a9b5b2030a0183d2ad9914d4b28f765bf4719169f59</code></li><li>src/digitalmodel/hydrodynamics/planing_hull/solver.py; SHA-256: <code>e2cb01cfe0d21b175b9911875737331622955f7e172e87c4d204884ad79f7124</code></li><li>src/digitalmodel/hydrodynamics/planing_hull/strip_model.py; SHA-256: <code>e11514bff39a82fce09e29fc518f58a2d06514a5752367627e7ef8ab35bff23e</code></li><li>tests/reporting/test_planing_hull_module_report.py; SHA-256: <code>6c379b001a7e7bd2dbb242a2e4369ca242da5c6c6b8d38008e90a12a902f97ba</code></li><li>tests/unit/hydrodynamics/test_planing_hull.py; SHA-256: <code>fd3fa51f7eca22d45564a0c92427002d41ddb55261af4122a514a9bc208b0339</code></li><li>tests/unit/hydrodynamics/test_planing_hull_hydrostatics.py; SHA-256: <code>ff5f0b616c5bb6c39b002383f59e09b888de2ce9fddadcf5827727f12dd5ae8b</code></li></ul></details>
+<h3>Rebuild and actual checks</h3><pre>PYTHONPATH=src uv run --no-project --with pytest python docs/reports/modules/planing_hull/build_report.py --scratch &quot;$TMPDIR/planing-calculation-a&quot; --output &quot;$TMPDIR/planing-report-a&quot;</pre>
+<p>Scratch and output shall be distinct, with scratch outside the checkout. The builder writes its complete calculation to scratch and emits only the report and <a href="changes.json">change record</a> to output. No volatile metadata is generated. The source digests identify the evaluated source state; a changed source requires a rebuild.</p>
+<p>The builder executes the pressure-integral comparison at every worked depth and checks every plotted sample before rendering. The dedicated tests independently assert all worked inputs, raw values, units, displayed rounding, curve coordinates and hand anchors; compare two separate CLI builds byte for byte with the delivered files; alter a returned force to require visible change or freshness rejection; and check links, revision rows and the section count without a browser [R]. Test execution counts and outcomes accompany the delivery record; a clean rebuild is not physical qualification.</p>
+<details id="changes-panel"><summary>Engineering changes</summary><p>The synthetic below-chine hydrostatic example, independent pressure integral and method limitations are presented to establish a reproducible calculation basis.</p></details>
+<h2 id="s10">10. Acronyms and Review Notes</h2>
+<p>LCG denotes longitudinal centre of gravity; RAO denotes response amplitude operator; FFT denotes fast Fourier transform; RK denotes the explicit staged time integration described in S. PASS means the unrounded hydrostatic comparison meets the criterion in H. NOT_EVALUATED identifies missing qualification evidence, not a numerical zero.</p>
+<label for="review-comments">Review comments</label><textarea id="review-comments" rows="4" style="width:100%"></textarea>
+<button id="save-comments" type="button">Save comments</button><p id="save-status" role="status"></p>
+<footer>Report scope: synthetic below-chine hydrostatic calculation. Dynamic qualification remains open.</footer>
+<script id="calculation" type="application/json">{
+  "curve": [
+    {
+      "depth": -0.25,
+      "force": 0.0
+    },
+    {
+      "depth": -0.21875,
+      "force": 0.0
+    },
+    {
+      "depth": -0.1875,
+      "force": 0.0
+    },
+    {
+      "depth": -0.15625,
+      "force": 0.0
+    },
+    {
+      "depth": -0.125,
+      "force": 0.0
+    },
+    {
+      "depth": -0.09375,
+      "force": 0.0
+    },
+    {
+      "depth": -0.0625,
+      "force": 0.0
+    },
+    {
+      "depth": -0.03125,
+      "force": 0.0
+    },
+    {
+      "depth": 0.0,
+      "force": 0.0
+    },
+    {
+      "depth": 0.03125,
+      "force": 9.580078125000002
+    },
+    {
+      "depth": 0.0625,
+      "force": 38.32031250000001
+    },
+    {
+      "depth": 0.09375,
+      "force": 86.22070312500001
+    },
+    {
+      "depth": 0.125,
+      "force": 153.28125000000003
+    },
+    {
+      "depth": 0.15625,
+      "force": 239.50195312500003
+    },
+    {
+      "depth": 0.1875,
+      "force": 344.88281250000006
+    },
+    {
+      "depth": 0.21875,
+      "force": 469.42382812500006
+    },
+    {
+      "depth": 0.25,
+      "force": 613.1250000000001
+    },
+    {
+      "depth": 0.28125,
+      "force": 775.9863281250001
+    },
+    {
+      "depth": 0.3125,
+      "force": 958.0078125000001
+    },
+    {
+      "depth": 0.34375,
+      "force": 1159.1894531250002
+    },
+    {
+      "depth": 0.375,
+      "force": 1379.5312500000002
+    },
+    {
+      "depth": 0.40625,
+      "force": 1619.0332031250002
+    },
+    {
+      "depth": 0.4375,
+      "force": 1877.6953125000002
+    },
+    {
+      "depth": 0.46875,
+      "force": 2155.5175781250005
+    },
+    {
+      "depth": 0.5,
+      "force": 2452.5000000000005
+    }
+  ],
+  "inputs": {
+    "beam": {
+      "decimals": 3,
+      "source": "H: _synthetic_strip",
+      "unit": "m",
+      "value": 2.0
+    },
+    "chine_height": {
+      "decimals": 3,
+      "source": "H: _synthetic_strip, unit slope at half-beam",
+      "unit": "m",
+      "value": 1.0
+    },
+    "deadrise": {
+      "decimals": 1,
+      "source": "H: WEDGE_SIDES, elementary unit-slope right triangle",
+      "unit": "deg",
+      "value": 45.0
+    },
+    "density": {
+      "decimals": 1,
+      "source": "H: synthetic density parameter",
+      "unit": "kg/m^3",
+      "value": 1000.0
+    },
+    "gravity": {
+      "decimals": 2,
+      "source": "H: GRAVITY, rounded convention; G: section 2.6",
+      "unit": "m/s^2",
+      "value": 9.81
+    },
+    "lcg": {
+      "decimals": 3,
+      "source": "H: _synthetic_strip",
+      "unit": "m",
+      "value": 1.5
+    },
+    "length": {
+      "decimals": 3,
+      "source": "H: _synthetic_strip",
+      "unit": "m",
+      "value": 3.0
+    },
+    "n_strips": {
+      "decimals": 0,
+      "source": "H: _synthetic_strip",
+      "unit": "1",
+      "value": 4
+    }
+  },
+  "rows": [
+    {
+      "area": 0.0,
+      "depth": -0.25,
+      "difference": 0.0,
+      "force": 0.0,
+      "hand_force": 0.0,
+      "passes": true,
+      "units": {
+        "area": "m^2",
+        "depth": "m",
+        "force": "N/m"
+      }
+    },
+    {
+      "area": 0.0,
+      "depth": 0.0,
+      "difference": 0.0,
+      "force": 0.0,
+      "hand_force": 0.0,
+      "passes": true,
+      "units": {
+        "area": "m^2",
+        "depth": "m",
+        "force": "N/m"
+      }
+    },
+    {
+      "area": 0.0625,
+      "depth": 0.25,
+      "difference": 1.1368683772161603e-13,
+      "force": 613.1250000000001,
+      "hand_force": 613.125,
+      "passes": true,
+      "units": {
+        "area": "m^2",
+        "depth": "m",
+        "force": "N/m"
+      }
+    },
+    {
+      "area": 0.25,
+      "depth": 0.5,
+      "difference": 4.547473508864641e-13,
+      "force": 2452.5000000000005,
+      "hand_force": 2452.5,
+      "passes": true,
+      "units": {
+        "area": "m^2",
+        "depth": "m",
+        "force": "N/m"
+      }
+    }
+  ],
+  "source_digests": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "docs/api/cfd/turbulent-flat-plate-verification.html": "bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25",
+    "docs/reports/modules/planing_hull/README.md": "73f4cd108bfaec10784a7e89da1c0cbacd8ffe15c03aa4515df7fb3da7979deb",
+    "docs/reports/modules/planing_hull/build_report.py": "bf7a745f85a54b007c9c3bcb4d1a7c4b764359a88161b439ac5ca023da8efb3c",
+    "docs/reports/modules/planing_hull/source_register.json": "ed8ed651de1340173740b73a8c904bb766834754a39127c4c40f3146e96f09db",
+    "scripts/reports/build_vessel_seakeeping_module_report.py": "ad21f01ee82a757110a2fdcac514c5d3ec3fc2c16ad53230b25ad32f7146b244",
+    "src/digitalmodel/hydrodynamics/planing_hull/__init__.py": "4274856a1793ca1d056e1110a10cc23bf40789c5b1da77087e5a1dcd52807e4d",
+    "src/digitalmodel/hydrodynamics/planing_hull/geometry.py": "8eb236812da17bdd8dbb1a9b5b2030a0183d2ad9914d4b28f765bf4719169f59",
+    "src/digitalmodel/hydrodynamics/planing_hull/solver.py": "e2cb01cfe0d21b175b9911875737331622955f7e172e87c4d204884ad79f7124",
+    "src/digitalmodel/hydrodynamics/planing_hull/strip_model.py": "e11514bff39a82fce09e29fc518f58a2d06514a5752367627e7ef8ab35bff23e",
+    "tests/reporting/test_planing_hull_module_report.py": "6c379b001a7e7bd2dbb242a2e4369ca242da5c6c6b8d38008e90a12a902f97ba",
+    "tests/unit/hydrodynamics/test_planing_hull.py": "fd3fa51f7eca22d45564a0c92427002d41ddb55261af4122a514a9bc208b0339",
+    "tests/unit/hydrodynamics/test_planing_hull_hydrostatics.py": "ff5f0b616c5bb6c39b002383f59e09b888de2ce9fddadcf5827727f12dd5ae8b"
+  },
+  "strip_centres": [
+    0.375,
+    1.125,
+    1.875,
+    2.625
+  ],
+  "strip_length": 0.75
+}
+</script>
+<script>document.getElementById('save-comments').addEventListener('click', async () => {
+  const text = JSON.stringify({comments: document.getElementById('review-comments').value}, null, 2);
+  const status = document.getElementById('save-status');
+  try {
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({suggestedName:'comments.json',
+        types:[{description:'JSON comments',accept:{'application/json':['.json']}}]});
+      const writable = await handle.createWritable(); await writable.write(text); await writable.close();
+      status.textContent = 'Comments were saved to the selected file.';
+    } else {
+      const url = URL.createObjectURL(new Blob([text],{type:'application/json'}));
+      const link = document.createElement('a'); link.href=url; link.download='comments.json'; link.click();
+      setTimeout(() => URL.revokeObjectURL(url),1000);
+      status.textContent = 'A download was requested. Confirm the comments file is present.';
+    }
+  } catch (error) { status.textContent = 'Comments were not saved. Select a writable file and retry.'; }
+});</script></main></body></html>

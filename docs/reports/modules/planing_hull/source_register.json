@@ -1,0 +1,35 @@
+{
+  "basis": "Synthetic straight-sided wedge from the existing independent hydrostatic test note; no measured hull or experimental response data.",
+  "readiness": "Below-chine software comparison only; physical and dynamic qualification NOT_EVALUATED.",
+  "inputs": {
+    "length": {"value": 3.0, "unit": "m", "decimals": 3, "source": "H: _synthetic_strip"},
+    "beam": {"value": 2.0, "unit": "m", "decimals": 3, "source": "H: _synthetic_strip"},
+    "deadrise": {"value": 45.0, "unit": "deg", "decimals": 1, "source": "H: WEDGE_SIDES, elementary unit-slope right triangle"},
+    "chine_height": {"value": 1.0, "unit": "m", "decimals": 3, "source": "H: _synthetic_strip, unit slope at half-beam"},
+    "lcg": {"value": 1.5, "unit": "m", "decimals": 3, "source": "H: _synthetic_strip"},
+    "n_strips": {"value": 4, "unit": "1", "decimals": 0, "source": "H: _synthetic_strip"},
+    "density": {"value": 1000.0, "unit": "kg/m^3", "decimals": 1, "source": "H: synthetic density parameter"},
+    "gravity": {"value": 9.81, "unit": "m/s^2", "decimals": 2, "source": "H: GRAVITY, rounded convention; G: section 2.6"}
+  },
+  "worked_depths": {
+    "value": [-0.25, 0.0, 0.25, 0.5],
+    "unit": "m",
+    "source": "H: dry and submerged synthetic cases; the deepest case doubles the reference depth by the note's quadratic relation."
+  },
+  "oracle": "For unit slope z=abs(x), b=max(h,0), A=integral(2*z dz,0..b)=b^2, and F'=2*rho*g*(b*b-b*b/2). This pressure integral uses no production trigonometry or geometry helper.",
+  "roundoff": "H: REL_TOL = 64 binary64 epsilons; degree conversion, trigonometry and short arithmetic chains only. Dry cases require exact zero. No empirical or discretisation tolerance.",
+  "sources": [
+    {"id": "H", "path": "tests/unit/hydrodynamics/test_planing_hull_hydrostatics.py", "locator": "module note; GRAVITY; REL_TOL; _synthetic_strip; test_wedge_buoyancy_matches_hand_integral", "use": "Independent integral, synthetic geometry/density and roundoff basis."},
+    {"id": "G", "url": "https://www.nist.gov/system/files/documents/srd/jpcrd574.pdf", "locator": "CODATA recommended values, section 2.6, Acceleration of Free Fall, equation (30)", "use": "Public standard-gravity convention; the rounded value in H is retained."},
+    {"id": "M", "path": "src/digitalmodel/hydrodynamics/planing_hull/strip_model.py", "locator": "PlaningStripModel.__init__; buoyancy_force_per_length; other public method bodies", "use": "Production hydrostatic result and inspection of unevaluated force methods."},
+    {"id": "D", "path": "src/digitalmodel/hydrodynamics/planing_hull/geometry.py", "locator": "PlaningHullGeometry and validation/properties", "use": "Production geometry and units."},
+    {"id": "S", "path": "src/digitalmodel/hydrodynamics/planing_hull/solver.py", "locator": "PlaningRAO; PlaningMotionSolver and all delegates; compute_rao; _nearest_freq_index", "use": "Code inspection of motion data flow only; no dynamic qualification."},
+    {"id": "P", "path": "src/digitalmodel/hydrodynamics/planing_hull/__init__.py", "locator": "public exports", "use": "Public interface discovery."},
+    {"id": "T", "path": "tests/unit/hydrodynamics/test_planing_hull.py", "locator": "geometry, strip, integration and response tests", "use": "Existing behavioral tests; plausibility bounds do not supply experimental targets."},
+    {"id": "R", "path": "tests/reporting/test_planing_hull_module_report.py", "locator": "independent oracle, deterministic CLI, stale calculation and structural tests", "use": "Dedicated report evidence."},
+    {"id": "B", "path": "docs/reports/modules/planing_hull/build_report.py", "locator": "calculate; validate; force_figure; render; build", "use": "All displayed results, comparisons and figure coordinates."},
+    {"id": "L", "path": "docs/api/cfd/turbulent-flat-plate-verification.html", "locator": "first style block", "use": "Existing layout only; no numerical answers reused."},
+    {"id": "C", "path": "docs/api/_assets/brand.css", "locator": "canonical palette", "use": "Inlined existing asset; no shared style edits."},
+    {"id": "E", "path": "scripts/reports/build_vessel_seakeeping_module_report.py", "locator": "render and change panel", "use": "House-style structure and local comment export pattern only."}
+  ]
+}
