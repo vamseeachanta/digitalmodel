@@ -160,6 +160,11 @@ def test_review_packet_binds_sources_and_exact_frozen_coverage():
         payload = (root / entry["path"]).read_bytes()
         assert hashlib.sha256(payload).hexdigest() == entry["sha256"], entry["path"]
         assert len(payload) == entry["bytes"]
+    from scripts.riser_campaign.generate_inputs import _json_bytes
+    runtime_payload = _json_bytes(packet["producing_runtime"]["versions"])
+    assert packet["producing_runtime"]["record"]["sha256"] == hashlib.sha256(runtime_payload).hexdigest()
+    assert packet["producing_runtime"]["record"]["bytes"] == len(runtime_payload)
+    assert "examples/riser-campaign/reviewed-geometry.json" in {entry["path"] for entry in packet["source_files"]}
     audits = packet["mesh_audits"]
     assert [row["case_id"] for row in audits] == packet["case_order"]
     assert all(row["unrounded_adjacent_ratio_pass"] for row in audits)
@@ -189,3 +194,77 @@ def test_packet_audit_refuses_changed_raw_bytes(tmp_path):
     path.write_bytes(b"modified input\n")
     with pytest.raises(ValueError, match="packet digest mismatch"):
         _verified(tmp_path, entry)
+
+
+def test_regeneration_matches_every_reviewed_input_digest(tmp_path):
+    from scripts.riser_campaign.generate_inputs import generate
+
+    packet = json.loads((CAMPAIGN.parents[1] / "docs/verification/riser-mesh-review.json").read_bytes())
+    index = generate(CAMPAIGN / "manifest.json", tmp_path / "regenerated")
+    actual = [entry for case in index["frozen_tranche"]["cases"] for entry in case["inputs"]]
+    assert len(actual) == len(packet["inputs"]) == 144
+    for generated, reviewed in zip(actual, packet["inputs"]):
+        for key in ("id", "path", "sha256", "bytes"):
+            assert generated[key] == reviewed[key], (generated["id"], key)
+
+
+def test_frozen_handoff_does_not_resolve_platform_dependent_geometry(tmp_path, monkeypatch):
+    from scripts.riser_campaign.generate_inputs import generate
+
+    def unexpected_solve(*args, **kwargs):
+        raise AssertionError("frozen handoff must use digest-bound reviewed geometry")
+
+    monkeypatch.setattr(frozen, "prepare_geometry", unexpected_solve)
+    index = generate(CAMPAIGN / "manifest.json", tmp_path / "retained")
+    packet = json.loads((CAMPAIGN.parents[1] / "docs/verification/riser-mesh-review.json").read_bytes())
+    assert [entry["sha256"] for case in index["frozen_tranche"]["cases"] for entry in case["inputs"]] == [
+        entry["sha256"] for entry in packet["inputs"]]
+
+
+def test_runtime_is_recorded_and_digest_bound(tmp_path):
+    from scripts.riser_campaign.audit_mesh import _verified
+    from scripts.riser_campaign.generate_inputs import generate, producing_runtime
+
+    index = generate(CAMPAIGN / "manifest.json", tmp_path / "runtime")
+    runtime = index["producing_runtime"]
+    assert json.loads(_verified(tmp_path / "runtime", runtime)) == producing_runtime()
+    assert set(producing_runtime()["libraries"]) >= {"numpy", "scipy", "PyYAML", "pydantic", "jsonschema"}
+    (tmp_path / "runtime" / runtime["path"]).write_bytes(b"{}\n")
+    with pytest.raises(ValueError, match="packet digest mismatch"):
+        _verified(tmp_path / "runtime", runtime)
+
+
+def test_native_serialization_uses_fixed_float_spelling_and_lf(monkeypatch):
+    import os
+    from scripts.riser_campaign.generate_inputs import _native_bytes
+
+    monkeypatch.setattr(os, "linesep", "\r\n")
+    from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexDumper
+    monkeypatch.setitem(OrcaFlexDumper.yaml_representers, float,
+                        lambda dumper, value: dumper.represent_scalar("tag:yaml.org,2002:float", "1,0"))
+    tree = {"values": [0.0, -0.0, 1.0, 1e-8, 1e20, 0.12345678901234566]}
+    expected = (b"# numerical fixture\nvalues:\n- 0.0\n- -0.0\n- 1.0\n"
+                b"- 1.0e-08\n- 1.0e+20\n- 0.12345678901234566\n")
+    assert _native_bytes(tree, "# numerical fixture\n") == expected
+
+
+def test_reviewed_geometry_refuses_changed_basis():
+    from scripts.riser_campaign.generate_inputs import reviewed_geometries
+
+    manifest = json.loads((CAMPAIGN / "manifest.json").read_bytes())
+    changed = copy.deepcopy(manifest["frozen_tranche"])
+    changed["rows"][0]["water_depth_m"] = "1501"
+    with pytest.raises(ValueError, match="reviewed geometry basis"):
+        reviewed_geometries(changed, frozen.source_payloads())
+
+
+def test_reviewed_geometry_refuses_modified_snapshot(tmp_path, monkeypatch):
+    from scripts.riser_campaign import generate_inputs as writer
+
+    manifest = json.loads((CAMPAIGN / "manifest.json").read_bytes())
+    payload = json.loads((CAMPAIGN / writer.REVIEWED_GEOMETRY).read_bytes())
+    payload["geometries"][0]["installed_length_m"] += 1
+    (tmp_path / writer.REVIEWED_GEOMETRY).write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(writer, "CAMPAIGN", tmp_path)
+    with pytest.raises(ValueError, match="snapshot digest mismatch"):
+        writer.reviewed_geometries(manifest["frozen_tranche"], frozen.source_payloads())

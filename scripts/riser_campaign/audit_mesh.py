@@ -16,7 +16,7 @@ from typing import Any
 
 import yaml
 
-from .generate_inputs import CAMPAIGN, _json_bytes, _write
+from .generate_inputs import CAMPAIGN, _json_bytes, _write, producing_runtime
 
 COUNT_TABLE = "LineType, Length, NumberOfSegments"
 TARGET_TABLE = "LineType, Length, TargetSegmentLength"
@@ -73,6 +73,12 @@ def audit(reference: Path, candidate: Path, reference_revision: str) -> dict[str
     old = json.loads((reference / "index.json").read_bytes())
     new = json.loads((candidate / "index.json").read_bytes())
     before, after = old["frozen_tranche"], new["frozen_tranche"]
+    runtime = json.loads(_verified(candidate, new["producing_runtime"]))
+    if not all(runtime.get(key) for key in ("python", "implementation", "system", "architecture", "libraries")):
+        raise ValueError("candidate producing runtime is incomplete")
+    if not all(runtime["libraries"].get(name) for name in (
+            "numpy", "scipy", "PyYAML", "pydantic", "pydantic_core", "jsonschema")):
+        raise ValueError("candidate numerical library versions are incomplete")
     for source in before["code_sources"]:
         committed = subprocess.run(
             ["git", "show", f"{reference_revision}:{source['path'].removeprefix('source/')}"],
@@ -141,7 +147,8 @@ def audit(reference: Path, candidate: Path, reference_revision: str) -> dict[str
         raise ValueError("campaign coverage differs from the frozen plan")
     source_paths = [source["path"].removeprefix("source/") for source in after["code_sources"]]
     source_paths += ["scripts/riser_campaign/audit_mesh.py", "tests/riser_campaign/test_mesh.py",
-                     "tests/riser_campaign/test_frozen_scope.py", "examples/riser-campaign/README.md", ".gitattributes"]
+                     "tests/riser_campaign/test_frozen_scope.py", "tests/riser_campaign/test_checkout.py",
+                     "examples/riser-campaign/README.md", ".gitattributes"]
     for entry in after["code_sources"]:
         if _verified(candidate, entry) != (repo / entry["path"].removeprefix("source/")).read_bytes():
             raise ValueError("candidate source snapshot differs from the working source")
@@ -149,6 +156,8 @@ def audit(reference: Path, candidate: Path, reference_revision: str) -> dict[str
             "status": "SOLVER_FREE_ONLY", "native_qualification": "NOT_RUN",
             "reference_revision": reference_revision, "adjacent_element_ratio_limit": 2.0,
             "reference_index": _entry(reference, "index.json"), "candidate_index": _entry(candidate, "index.json"),
+            "producing_runtime": {"record": new["producing_runtime"], "versions": runtime},
+            "audit_runtime": producing_runtime(),
             "source_files": [_entry(repo, path) for path in sorted(set(source_paths))],
             "case_order": [case["case_id"] for case in after["cases"]],
             "counts": {"written": after["written_counts"], "planned": after["phase_a_required"],

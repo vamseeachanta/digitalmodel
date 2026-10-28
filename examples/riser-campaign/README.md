@@ -33,6 +33,7 @@ its native input templates remain unreleased pending readback and motion clearan
 | 2 | 2026-10-25 | Place inputs under examples and bind each input group to explicit source terms, versions and digests. |
 | 3 | 2026-10-26 | Add the frozen twelve-section tranche, depth-dependent pressure and three-sea expansion with explicit release gates. |
 | 4 | 2026-10-28 | Grade frozen mesh transitions with explicit segment counts and retain a solver-free audit for native readback. |
+| 5 | 2026-10-28 | Retain exact reviewed numerical geometry for portable input bytes and bind the producing runtime. |
 
 ## Matrix and existing code
 
@@ -166,6 +167,26 @@ The original 288 comparison inputs and the frozen scope, criteria, load ledger,
 manifest and basis retain their reference bytes. The two committed worked
 examples belong to the original comparison and do not require regeneration.
 
+The frozen handoff uses [reviewed numerical geometry](reviewed-geometry.json)
+whose source revision and runtime are recorded with the exact input digests.
+The snapshot was captured only after all 144 generated input digests matched
+the existing packet. Its scope rows and raw criteria digest must match before
+use, and the generator binds the snapshot's exact bytes. Frozen inputs are
+rebuilt from these retained material coordinates, rather than repeating the
+SLWR bounded least-squares solve on each platform. That solve feeds suspended
+lengths and sampled turning points into mesh-window boundaries; small numerical
+differences can change printed section lengths and integer grading decisions.
+The general analytical solver remains available for independent checks.
+
+No frozen physical value or input digest changes in this retention repair.
+Native serialization explicitly uses UTF-8, LF and finite binary64 float spelling.
+The generated `runtime.json` records Python, operating system, architecture and
+numerical/serialization library versions; its digest is part of the generated
+index and review packet. Index metadata changes when source bytes or the
+producing runtime change, even when all native input bytes remain identical.
+The original comparison geometry continues to use the analytical solver and
+is outside this frozen numerical snapshot's portability guarantee.
+
 The audit is solver-free. It does not establish native MR0, G1 loading, statics,
 baseline stress, perturbation stiffness or dynamic qualification. The following
 steps remain required before dependent calculations:
@@ -203,8 +224,9 @@ PYTHONPATH=src:. uv run python -m scripts.riser_campaign.audit_mesh \
 
 The audit checks reference source snapshots against Git, verifies each indexed
 file before comparing it and refuses changed physical fields or failing mesh
-ratios. Candidate source snapshots must match the current working bytes. It
-preserves existing outputs and rejects a mismatching existing audit file.
+ratios. Candidate source snapshots must match the current working bytes. The audit
+verifies the producing runtime record and binds its digest and versions; the
+runtime used for the audit is recorded separately. It preserves existing outputs and rejects a mismatching existing audit file.
 
 The analytical reference uses the 1490 m hang-off separation and transforms
 ASB elevation to global z by subtracting the physical 1500 m water depth. The

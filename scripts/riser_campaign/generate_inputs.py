@@ -5,9 +5,10 @@
 
 import argparse
 import hashlib
-import io
+import importlib.metadata
 import json
 import math
+import platform
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,9 @@ HARMONIC_COLUMNS = "HarmonicMotionPeriod, " + ", ".join(
     f"HarmonicMotion{dof}{field}" for dof in ("Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw")
     for field in ("Amp", "Phase")
 )
+REVIEWED_GEOMETRY = "reviewed-geometry.json"
+REVIEWED_GEOMETRY_SHA256 = "0ad653e242f5c3b2d6147edacd79228d874024ef99829f269de7face969c988f"
+
 HEADER = "# SCREENING INPUT: all engineering parameters and builder defaults are ASSUMED.\n# Native loading, equilibrium and dynamic utilization are not established.\n"
 
 
@@ -188,6 +192,56 @@ def model_data(case: dict[str, Any], manifest: dict[str, Any], rows: list[dict[s
     return data
 
 
+def producing_runtime() -> dict[str, Any]:
+    """Describe the numerical and serialization runtime without local paths."""
+    return {"python": platform.python_version(), "implementation": platform.python_implementation(),
+            "system": platform.system(), "architecture": platform.machine(),
+            "libraries": {name: importlib.metadata.version(name) for name in (
+                "numpy", "scipy", "PyYAML", "pydantic", "pydantic_core", "jsonschema")}}
+
+
+class _CampaignDumper(OrcaFlexDumper):
+    """Fix finite binary64 spelling independently of YAML emitter defaults."""
+
+
+def _represent_float(dumper: yaml.Dumper, value: float) -> yaml.ScalarNode:
+    if not math.isfinite(value):
+        raise ValueError("native input requires finite floats")
+    text = repr(value).lower()
+    if "e" in text and "." not in text:
+        text = text.replace("e", ".0e")
+    return dumper.represent_scalar("tag:yaml.org,2002:float", text)
+
+
+_CampaignDumper.add_representer(float, _represent_float)
+
+
+def _native_bytes(model: dict[str, Any], header: str) -> bytes:
+    """Serialize alias-free UTF-8/LF native data with fixed float spelling."""
+    tree = json.loads(json.dumps(model, allow_nan=False))
+    return (header + yaml.dump(tree, Dumper=_CampaignDumper, sort_keys=False,
+                              width=1000, allow_unicode=True, line_break="\n")).encode("utf-8")
+
+
+def reviewed_geometries(tranche: dict[str, Any], payloads: dict[str, bytes]) -> list[dict[str, Any]]:
+    """Reuse exact reviewed material coordinates instead of a platform solve.
+
+    The analytical least-squares solve remains available for independent checks.
+    A different engineering basis needs an explicitly regenerated, reviewed
+    snapshot; no numerical tolerance or rounding substitutes for that review.
+    """
+    from .frozen_scope import CRITERIA
+
+    payload = (CAMPAIGN / REVIEWED_GEOMETRY).read_bytes()
+    if hashlib.sha256(payload).hexdigest() != REVIEWED_GEOMETRY_SHA256:
+        raise ValueError("reviewed geometry snapshot digest mismatch")
+    snapshot = json.loads(payload)
+    if (snapshot["rows"] != tranche["rows"] or snapshot["scope_sha256"] != tranche["scope_sha256"]
+            or snapshot["criteria_sha256"] != hashlib.sha256(payloads[CRITERIA]).hexdigest()):
+        raise ValueError("reviewed geometry basis differs from the frozen scope or criteria")
+    return snapshot["geometries"]
+
+
 def _json_bytes(data: dict[str, Any]) -> bytes:
     return (json.dumps(data, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
 
@@ -241,10 +295,8 @@ def generate(manifest_path: Path | str, output_dir: Path | str) -> dict[str, Any
     geometries = [geometry(case, data) for case in data["cases"]]
     frozen_geometries = []
     if "frozen_tranche" in data:
-        from .frozen_scope import prepare_geometry
-        from .frozen_scope import CRITERIA
-        frozen_criteria = json.loads(frozen_payloads[CRITERIA])
-        frozen_geometries = [prepare_geometry(row, frozen_criteria) for row in data["frozen_tranche"]["rows"]]
+        frozen_geometries = reviewed_geometries(data["frozen_tranche"], frozen_payloads)
+    index["producing_runtime"] = _write(output, "runtime.json", _json_bytes(producing_runtime()))
     index["manifest"] = _write(output, "manifest.json", manifest_payload)
     index["schema"] = _write(output, "manifest.schema.json", schema_payload)
     index["basis"] = _write(output, "basis.md", basis_payload)
@@ -256,14 +308,8 @@ def generate(manifest_path: Path | str, output_dir: Path | str) -> dict[str, Any
         for offset_index, offset in enumerate(case["offset_cases"]):
             for sea_index, state in enumerate(case["sea_states"]):
                 model = model_data(case, data, rows, offset_index, sea_index)
-                stream = io.StringIO()
-                stream.write(HEADER)
-                # Native YAML cannot contain aliases. Copy the value tree before
-                # serialization so shared builder lists cannot introduce them.
-                tree = json.loads(json.dumps(model, allow_nan=False))
-                yaml.dump(tree, stream, Dumper=OrcaFlexDumper, sort_keys=False, width=1000, allow_unicode=True)
                 relative = f"{case['case_id']}/{offset['id']}--{state['id']}.yml"
-                file = _write(output, relative, stream.getvalue().encode("utf-8"))
+                file = _write(output, relative, _native_bytes(model, HEADER))
                 record["inputs"].append({**file, "offset_id": offset["id"], "sea_state_id": state["id"]})
         index["cases"].append(record)
     if frozen_payloads is not None:
@@ -291,7 +337,7 @@ def _frozen_inputs(output: Path, tranche: dict[str, Any], payloads: dict[str, by
              "qa_status": criteria["qa"]["status"],
              "snapshots": [_write(output, name, payload) for name, payload in payloads.items()],
              "code_sources": []}
-    source_paths = ["scripts/riser_campaign/generate_inputs.py", "scripts/riser_campaign/validate_manifest.py",
+    source_paths = ["examples/riser-campaign/" + REVIEWED_GEOMETRY, "scripts/riser_campaign/generate_inputs.py", "scripts/riser_campaign/validate_manifest.py",
                     "scripts/riser_campaign/frozen_scope.py", "src/digitalmodel/riser_configuration_screen/static.py",
                     "src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py",
                     "src/digitalmodel/marine_ops/marine_analysis/catenary/solver.py",
@@ -312,13 +358,10 @@ def _frozen_inputs(output: Path, tranche: dict[str, Any], payloads: dict[str, by
         record["section"] = _write(output, f"{case_id}/section.json", _json_bytes(section_properties(scope, criteria)))
         for load in (r for r in loads if r["case_id"] == case_id):
             model = native_model(scope, load, geometry, criteria)
-            stream = io.StringIO()
-            stream.write("# UNRELEASED SCREENING INPUT: native QA and readback required.\n")
+            header = "# UNRELEASED SCREENING INPUT: native QA and readback required.\n"
             if load["kind"] != "statics":
-                stream.write("# BLOCKED: qualified heading/band motions and matching equilibrium required; motions absent.\n")
-            tree = json.loads(json.dumps(model, allow_nan=False))
-            yaml.dump(tree, stream, Dumper=OrcaFlexDumper, sort_keys=False, width=1000, allow_unicode=True)
-            file = _write(output, f"{case_id}/{load['id']}.yml", stream.getvalue().encode("utf-8"))
+                header += "# BLOCKED: qualified heading/band motions and matching equilibrium required; motions absent.\n"
+            file = _write(output, f"{case_id}/{load['id']}.yml", _native_bytes(model, header))
             blockers = ["NATIVE_INPUT_READBACK_REQUIRED", "CONTACT_CENTRELINE_READBACK_REQUIRED"]
             if load["kind"] != "statics":
                 blockers += ["RAO_CLEARANCE_REQUIRED", "MATCHING_CONVERGED_EQUILIBRIUM_REQUIRED"]

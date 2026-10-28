@@ -1,9 +1,23 @@
 {
   "adjacent_element_ratio_limit": 2.0,
+  "audit_runtime": {
+    "architecture": "aarch64",
+    "implementation": "CPython",
+    "libraries": {
+      "PyYAML": "6.0.3",
+      "jsonschema": "4.26.0",
+      "numpy": "2.5.4",
+      "pydantic": "2.14.1",
+      "pydantic_core": "2.50.1",
+      "scipy": "1.18.1"
+    },
+    "python": "3.12.15",
+    "system": "Linux"
+  },
   "candidate_index": {
-    "bytes": 214027,
+    "bytes": 214384,
     "path": "index.json",
-    "sha256": "3843d0537e5f0eb7d41b40818b8c631ffdb71552d61cd1bf68ff345d90e9cb2a"
+    "sha256": "0e90995d411c7178637a373c8b6f7219b608a99e35cc4d4d6c780740c6ac35a4"
   },
   "case_order": [
     "R08-W1-SCR",
@@ -1558,6 +1572,27 @@
     "original_input_byte_matches": 288,
     "scope_criteria_load_ledger_and_manifest": "BYTE_IDENTICAL"
   },
+  "producing_runtime": {
+    "record": {
+      "bytes": 281,
+      "path": "runtime.json",
+      "sha256": "a88f3519ca489d37dbffc73550f0e914065d340722501f504199b0a7220fc255"
+    },
+    "versions": {
+      "architecture": "aarch64",
+      "implementation": "CPython",
+      "libraries": {
+        "PyYAML": "6.0.3",
+        "jsonschema": "4.26.0",
+        "numpy": "2.5.4",
+        "pydantic": "2.14.1",
+        "pydantic_core": "2.50.1",
+        "scipy": "1.18.1"
+      },
+      "python": "3.12.15",
+      "system": "Linux"
+    }
+  },
   "reference_index": {
     "bytes": 214027,
     "path": "index.json",
@@ -1577,14 +1612,19 @@
       "sha256": "262fed28756484e928a2580e40f86bc1bde41fc0f2c14870584440a562717009"
     },
     {
-      "bytes": 20385,
+      "bytes": 22022,
       "path": "examples/riser-campaign/README.md",
-      "sha256": "a712b18896c62946f038b60dceba6559d43eeffabdb92077b46e046941991187"
+      "sha256": "31c9f4fcba100265052ce9dcb875103a578699bfb7700495552788f58d46a2e7"
     },
     {
-      "bytes": 9519,
+      "bytes": 780016,
+      "path": "examples/riser-campaign/reviewed-geometry.json",
+      "sha256": "0ad653e242f5c3b2d6147edacd79228d874024ef99829f269de7face969c988f"
+    },
+    {
+      "bytes": 10223,
       "path": "scripts/riser_campaign/audit_mesh.py",
-      "sha256": "2331e80c8674d5b6057689d31e1b38e1dbf89cdd9c94b9bd20f73c560097a9db"
+      "sha256": "c025ea90149bc51a56e7a1b474001fcd4e759034cfd80555d988f4719e93d6fa"
     },
     {
       "bytes": 21636,
@@ -1592,9 +1632,9 @@
       "sha256": "565ab1ad15bd7fb867049e6cee208247027165ba7848c3c15610e0b1626fab1c"
     },
     {
-      "bytes": 21902,
+      "bytes": 23799,
       "path": "scripts/riser_campaign/generate_inputs.py",
-      "sha256": "1bc41d7e1bde41ee9a56f791c1ea49e7d6a3501caf155b4bfa3fe5dc80b60013"
+      "sha256": "bed70aecb175b53da5868dfa4590c8431602f8b8657262b53c8825ba84454bf6"
     },
     {
       "bytes": 9908,
@@ -1647,14 +1687,19 @@
       "sha256": "b0e676a83e9237e5d0f359a8c37fc58b1d3331b54f0eaeb1a0e6e2b7d0176210"
     },
     {
+      "bytes": 2999,
+      "path": "tests/riser_campaign/test_checkout.py",
+      "sha256": "297fe598dfa2fd5b0b5e087d430b78eb5348134cb5055e61e98830632e0e6768"
+    },
+    {
       "bytes": 16689,
       "path": "tests/riser_campaign/test_frozen_scope.py",
       "sha256": "23e9ddd9c21b78827480684a51b4a106dc7af7643f1546ab554c81f2f6e9a78a"
     },
     {
-      "bytes": 8234,
+      "bytes": 12546,
       "path": "tests/riser_campaign/test_mesh.py",
-      "sha256": "3af1c05bffd64056f40e8a84aa656aeb722da9500730503c3bb5a55cbb492e90"
+      "sha256": "a084b824289b406dd73221bcc750c37114419c2d9450923d0fe2439a2748910e"
     }
   ],
   "status": "SOLVER_FREE_ONLY",

@@ -39,13 +39,20 @@ def test_hash_bound_paths_declare_lf_checkout(pinned_paths):
 @pytest.mark.parametrize("autocrlf", ["true", "false", "input"])
 def test_checkout_preserves_committed_campaign_bytes(pinned_paths, autocrlf):
     for relative in pinned_paths:
+        # A new path has no HEAD blob before staging. A committed LF probe
+        # still exercises Git's real checkout filters for that exact path.
+        blob = f"HEAD:{relative}"
+        exists = subprocess.run(["git", "cat-file", "-e", blob], cwd=ROOT, capture_output=True)
+        if exists.returncode:
+            blob = "HEAD:examples/riser-campaign/manifest.json"
+            assert b"\r" not in (ROOT / relative).read_bytes(), relative
         committed = subprocess.run(
-            ["git", "show", f"HEAD:{relative}"],
+            ["git", "show", blob],
             cwd=ROOT, check=True, capture_output=True,
         ).stdout
         checked_out = subprocess.run(
             ["git", "-c", f"core.autocrlf={autocrlf}", "-c", "core.eol=crlf",
-             "cat-file", "--filters", f"HEAD:{relative}"],
+             "cat-file", "--filters", f"--path={relative}", blob],
             cwd=ROOT, check=True, capture_output=True,
         ).stdout
         assert checked_out == committed, relative
