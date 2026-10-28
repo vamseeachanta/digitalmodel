@@ -33,9 +33,11 @@ def test_local_structure_hook_checks_all_paths_on_every_commit():
 
 def test_structure_workflow_runs_unconditionally_for_pull_requests():
     config = workflow("repo-structure.yml")
-    assert set(config["on"]) == {"pull_request", "push", "workflow_dispatch"}
+    assert set(config["on"]) == {"pull_request", "workflow_dispatch", "workflow_call"}
     assert not config["on"]["pull_request"]
-    assert config["on"]["push"]["branches"] == ["main"]
+    # main is covered by the daily Main full run, which calls this workflow.
+    sweep = workflow("full-matrix-sweep.yml")
+    assert sweep["jobs"]["repo-structure"]["uses"] == "./.github/workflows/repo-structure.yml"
     job = config["jobs"]["repo-structure"]
     assert "if" not in job
     assert job.get("continue-on-error", "false") == "false"
@@ -51,8 +53,10 @@ def test_structure_workflow_runs_unconditionally_for_pull_requests():
 
 def test_docs_workflow_covers_structure_and_domain_docs_with_routing_tests():
     config = workflow("docs.yml")
-    for event in ("push", "pull_request"):
-        assert {"docs/standards/**", "docs/domains/**"} <= set(config["on"][event]["paths"])
+    # Generated-artifact currency checks run in the daily Main full run (28 Oct 2026).
+    assert set(config["on"]) == {"workflow_dispatch", "workflow_call"}
+    sweep = workflow("full-matrix-sweep.yml")
+    assert sweep["jobs"]["docs"]["uses"] == "./.github/workflows/docs.yml"
     steps = config["jobs"]["docs"]["steps"]
     validations = [step for step in steps
                    if "tests/docs/test_digitalmodel_routing_contract.py" in step.get("run", "")]

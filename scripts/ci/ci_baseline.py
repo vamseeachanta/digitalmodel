@@ -392,8 +392,12 @@ def gh_json(endpoint: str) -> dict[str, Any]:
 
 
 def is_main_sweep(run: dict[str, Any], repository: str) -> bool:
-    """Require a completed push or schedule from this repository's own main."""
-    return (run.get("event") in {"push", "schedule"}
+    """Require a completed main run from this repository's own main.
+
+    The Main full run is dispatched by our own cron (workflow_dispatch); push and
+    schedule stay accepted so older published baselines remain readable.
+    """
+    return (run.get("event") in {"push", "schedule", "workflow_dispatch"}
             and run.get("head_branch") == "main"
             and run.get("head_repository", {}).get("full_name") == repository
             and run.get("path") == ".github/workflows/full-matrix-sweep.yml"

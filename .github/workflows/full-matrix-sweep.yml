@@ -1,25 +1,25 @@
-# Full Matrix Sweep (issue #1863)
+# Main full run (issue #1863; owner ruling 28 Oct 2026)
 #
 # `Quality Gates by Domain` dispatches only the shards a change touches, so an
-# untouched-but-broken shard reports nothing rather than red and `main` can show
-# green indefinitely. This workflow is the counterweight: it runs EVERY domain
-# shard, ignoring touched-domain detection entirely, on
+# untouched-but-broken shard reports nothing rather than red. This workflow is
+# the counterweight: once a day on `main` it runs EVERY domain shard, ignoring
+# touched-domain detection, plus everything that left the pull-request path:
+# the full quality-gates CLI on both Python versions, docs routing + generated
+# HTML freshness + strict docs build, parametric atlas drift, repository
+# structure, the meshing bridge, workflow automation, the content store and the
+# public capability-page link check.
 #
-#   * every push to `main`  -> main's green is earned, not assumed
-#   * a nightly cron        -> drift is caught within a day even without merges
-#   * manual dispatch       -> on-demand "what is the true state of the matrix?"
+# Trigger: workflow_dispatch only. Our own cron runs
+# scripts/ci/dispatch_main_full_run.sh once a day (`gh workflow run`); there is
+# deliberately no GitHub `schedule:` or push trigger.
 #
 # Job names here are deliberately distinct from the PR-gating workflow's
 # (`sweep-tests-*` / `Full matrix sweep result` vs `tests-*` / `Domain test
 # aggregate`) so a diagnostic sweep failure is never confused with, and can
 # never be mistaken for, a required pull-request context.
-name: Full Matrix Sweep
+name: Main full run
 
 "on":
-  push:
-    branches: [main]
-  schedule:
-    - cron: "17 7 * * *"
   workflow_dispatch:
 
 permissions:
@@ -81,7 +81,7 @@ jobs:
   sweep-tests:
     name: sweep-tests-${{ matrix.domain }}
     needs: full-matrix
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux","X64"]') }}
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -105,7 +105,7 @@ jobs:
           enable-cache: true
 
       - name: Install Gmsh runtime libraries
-        if: matrix.domain == 'solver-smoke'
+        if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
         run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
 
       - name: Create reports directory
@@ -122,7 +122,10 @@ jobs:
 
           with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
               gates = yaml.safe_load(handle)["gates"]
-          print(gates[os.environ["GATE_NAME"]]["command"])
+          command = gates[os.environ["GATE_NAME"]]["command"]
+          if os.environ["GATE_NAME"] == "tests-subsea":
+              command += " tests/riser_fatigue/"
+          print(command)
           PY
           )
           {
@@ -151,6 +154,13 @@ jobs:
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
+
+      - name: Run geotechnical solver benchmarks
+        if: matrix.domain == 'specialized'
+        run: >-
+          PYTHONPATH=src uv run --no-sources --with-editable '.[test]'
+          --with 'xslope==1.0.3' --with 'gmsh>=4.15'
+          python -m pytest tests/geotechnical -q -rA -p no:cacheprovider
 
       - name: Extract shard result
         if: always()
@@ -218,6 +228,12 @@ jobs:
         with:
           pattern: full-sweep-*
           path: baseline-results
+
+      - name: Set up Python
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
       - name: Publish main baseline
         if: github.ref == 'refs/heads/main'
@@ -324,3 +340,79 @@ jobs:
           fi
 
           echo "All domain shards passed the full sweep."
+
+  # --- Checks that left the pull-request path (owner ruling, 28 Oct 2026) ---
+
+  quality-gates-report:
+    name: Quality gates CLI (Python ${{ matrix.python-version }})
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+          UV_NO_SOURCES=true uv pip install -e .
+          uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
+
+      - name: Run quality gates CLI
+        run: |
+          mkdir -p reports
+          python -m digitalmodel.workflows.automation.quality_gates_cli check --json
+
+      - name: Upload quality gate results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-gate-results-${{ matrix.python-version }}
+          path: |
+            reports/quality_gates_results.json
+            reports/bandit_report.json
+            coverage.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  atlas-drift:
+    name: Atlas drift
+    uses: ./.github/workflows/parametric-atlas-drift.yml
+
+  docs:
+    name: Docs and generated HTML
+    uses: ./.github/workflows/docs.yml
+
+  repo-structure:
+    name: Repository structure
+    uses: ./.github/workflows/repo-structure.yml
+
+  meshing-bridge:
+    name: Meshing bridge
+    uses: ./.github/workflows/gmsh-meshing-tests.yml
+
+  workflow-automation:
+    name: Workflow automation
+    uses: ./.github/workflows/workflow-automation-tests.yml
+
+  content-store:
+    name: Content store
+    uses: ./.github/workflows/store-data-tests.yml
+
+  capability-card-links:
+    name: Capability card links
+    uses: ./.github/workflows/capability-card-links.yml

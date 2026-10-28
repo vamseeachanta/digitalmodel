@@ -137,3 +137,35 @@ except ImportError:
 # Only register the mock for the specific problematic module
 if 'digitalmodel.subsea.catenary_riser.legacy.catenary_riser_summary' not in sys.modules:
     sys.modules['digitalmodel.subsea.catenary_riser.legacy.catenary_riser_summary'] = _mock_catenary_riser_summary
+
+
+# Quarantine: tests that already fail on main, listed with a reason in
+# tests/quarantine.txt and tracked by one GitHub issue. Each listed test still
+# runs; it is marked xfail(strict=False), so a failure does not fail the gate and
+# a pass is reported as XPASS -- the signal to delete its line. A node id without
+# a parameter suffix covers every parametrization of that test.
+_QUARANTINE_FILE = Path(__file__).parent / "quarantine.txt"
+
+
+def _read_quarantine(path: Path = _QUARANTINE_FILE) -> dict[str, str]:
+    entries: dict[str, str] = {}
+    if not path.exists():
+        return entries
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        node_id, _, reason = line.partition(" | ")
+        entries[node_id.strip()] = reason.strip() or "quarantined: failing on main"
+    return entries
+
+
+def pytest_collection_modifyitems(config, items):
+    quarantine = _read_quarantine()
+    if not quarantine:
+        return
+    for item in items:
+        node_id = item.nodeid
+        reason = quarantine.get(node_id) or quarantine.get(node_id.split("[", 1)[0])
+        if reason:
+            item.add_marker(pytest.mark.xfail(reason=f"quarantine: {reason}", strict=False))

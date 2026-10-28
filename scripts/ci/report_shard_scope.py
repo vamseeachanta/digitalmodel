@@ -59,8 +59,8 @@ def summary_markdown(selected: list[str], total: list[str], event: str) -> str:
         lines += [
             "A green result on this run means **the dispatched shards passed**,",
             "not that every shard passed. The shards below were not executed",
-            "here; they run in full on every push to `main` and nightly via",
-            "`.github/workflows/full-matrix-sweep.yml`.",
+            "here; they run in full once a day on `main` in the Main full run",
+            "(`.github/workflows/full-matrix-sweep.yml`).",
             "",
             f"<details><summary>Shards not run ({len(skipped)})</summary>",
             "",

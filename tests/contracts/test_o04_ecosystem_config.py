@@ -16,10 +16,11 @@ def test_publishing_is_manual_only():
 
 
 def test_matrix_artifacts_are_unique():
+    # The full quality-gates CLI runs in the daily Main full run (28 Oct 2026).
     workflow = yaml.safe_load(
-        (ROOT / ".github/workflows/quality-gates.yml").read_text()
+        (ROOT / ".github/workflows/full-matrix-sweep.yml").read_text()
     )
-    job = workflow["jobs"]["quality-gates"]
+    job = workflow["jobs"]["quality-gates-report"]
     assert job["strategy"]["matrix"]["python-version"] == ["3.11", "3.12"]
     for step in job["steps"]:
         if step.get("uses", "").startswith("actions/upload-artifact@"):

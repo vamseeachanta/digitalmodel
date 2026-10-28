@@ -1,11 +1,17 @@
-# Quality Gates CI/CD Workflow
+# Quality Gates -- the fast pull-request lint gate (owner ruling, 28 Oct 2026).
+#
+# Required check "Run Quality Gates" = lint only: engineering-register check on
+# changed prose plus ruff on changed Python files, failing only on findings the
+# pull request adds (scripts/ci/lint_changed.py). Minutes, not hours.
+#
+# The full quality-gates CLI (documentation, coverage, bandit, both Python
+# versions) moved to the "Main full run" workflow (full-matrix-sweep.yml), which
+# our own cron dispatches once a day on main. No push or schedule trigger here.
 name: Quality Gates
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main, develop]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
@@ -13,8 +19,6 @@ concurrency:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   quality-gates-aggregate:
@@ -24,18 +28,15 @@ jobs:
     if: always()
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
-      - name: Verify matrix result
+      - name: Verify lint result
         env:
           QUALITY_GATES_RESULT: ${{ needs.quality-gates.result }}
         run: test "$QUALITY_GATES_RESULT" = success
 
   quality-gates:
-    name: Quality Gates (Python ${{ matrix.python-version }})
+    name: Lint changed files
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.11', '3.12']
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
@@ -43,7 +44,7 @@ jobs:
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          fetch-depth: 0  # need history so the abs-path guard can diff vs base
+          fetch-depth: 0  # need history so the lint and register checks can diff vs base
 
       - name: Build and guard local pull request merge
         id: build_merge
@@ -116,101 +117,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
 
-      - name: Install dependencies
-        run: |
-          uv venv
-          echo "$PWD/.venv/bin" >> $GITHUB_PATH
-          UV_NO_SOURCES=true uv pip install -e .
-          uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
-
       - name: Check engineering register changes
         env:
           REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
         run: python scripts/enforcement/check-engineering-register.py --diff "$REGISTER_BASE"
 
-      - name: Create reports directory
-        run: mkdir -p reports
-
-      - name: Run Quality Gates
-        run: |
-          python -m digitalmodel.workflows.automation.quality_gates_cli check --json
-        continue-on-error: false
-
-      - name: Upload quality gate results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: quality-gate-results-${{ matrix.python-version }}
-          path: |
-            reports/quality_gates_results.json
-            reports/bandit_report.json
-            reports/quality-gates-pytest-full.log
-            coverage.json
-          retention-days: 30
-
-      - name: Upload coverage reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-reports-${{ matrix.python-version }}
-          path: |
-            htmlcov/
-            coverage.xml
-          retention-days: 30
-
-      - name: Comment PR with results
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-
-            try {
-              const results = JSON.parse(fs.readFileSync('reports/quality_gates_results.json', 'utf8'));
-
-              const statusEmoji = {
-                'pass': '✅',
-                'warning': '⚠️',
-                'failure': '❌',
-                'skipped': '⏭️'
-              };
-
-              let comment = '## Quality Gates Report\n\n';
-              comment += `**Overall Status:** ${statusEmoji[results.overall_status]} ${results.overall_status.toUpperCase()}\n\n`;
-              comment += `**Summary:**\n`;
-              comment += `- ✅ Passed: ${results.gates_passed}\n`;
-              comment += `- ⚠️ Warned: ${results.gates_warned}\n`;
-              comment += `- ❌ Failed: ${results.gates_failed}\n`;
-              comment += `- ⏭️ Skipped: ${results.gates_skipped}\n\n`;
-              comment += `**Gate Results:**\n\n`;
-
-              results.results.forEach(result => {
-                comment += `### ${statusEmoji[result.status]} ${result.gate_name}\n`;
-                comment += `${result.message}\n\n`;
-
-                if (Object.keys(result.metrics).length > 0) {
-                  comment += '**Metrics:**\n';
-                  for (const [key, value] of Object.entries(result.metrics)) {
-                    comment += `- ${key}: ${typeof value === 'number' ? value.toFixed(2) : value}\n`;
-                  }
-                  comment += '\n';
-                }
-              });
-
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-            } catch (error) {
-              console.error('Failed to post comment:', error);
-            }
+      - name: Lint changed Python files (new findings only)
+        env:
+          LINT_BASE: ${{ steps.build_merge.outputs.tip }}
+        run: uv run --no-project --with ruff==0.6.9 python scripts/ci/lint_changed.py --base "$LINT_BASE"
