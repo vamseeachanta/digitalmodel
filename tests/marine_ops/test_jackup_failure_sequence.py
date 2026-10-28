@@ -23,11 +23,11 @@ from digitalmodel.marine_ops.jackup_failure_sequence import (
 )
 
 
-def synthetic_curve(recovered=True):
+def synthetic_curve(recovered=True, loss_kn=4000):
     peak = PenetrationPoint(2, 200, 20000, 'synthetic_peak')
-    trough = PenetrationPoint(3, 160, 16000, 'synthetic_trough')
-    event = CapacityDrop(peak, trough, 4000, 20, 6 if recovered else None, None, None)
-    return LayeredPenetrationCurve((peak, trough), peak, peak, 4000, (event,),
+    trough = PenetrationPoint(3, (20000-loss_kn)/100, 20000-loss_kn, 'synthetic_trough')
+    event = CapacityDrop(peak, trough, loss_kn, loss_kn/200, 6 if recovered else None, None, None)
+    return LayeredPenetrationCurve((peak, trough), peak, peak, loss_kn, (event,),
                                    None, None, None, (2, 10))
 
 
@@ -88,10 +88,52 @@ def test_buoyancy_balance_uses_moment_lever_and_reserve_not_force_alone():
     assert result.buoyancy_balance_travel_m == pytest.approx(delta)
     assert result.travel_m == pytest.approx(delta)
     assert result.buoyancy_can_balance_loss
-    assert result.reserve_buoyancy_kn == pytest.approx(gamma*2200*(7-1))
+    # Freeboard=6 m, edge lever=40 m, centre lever=10 m: centre sinkage=1.5 m.
+    # Reserve=1.025*9.81*2200*1.5=33182.325 kN before edge immersion.
+    assert result.reserve_buoyancy_kn == pytest.approx(33182.325)
     assert result.initial_buoyancy_kn == pytest.approx(gamma*2200)
     # Full loss of initial buoyancy must be replaced by that much ballast.
     assert result.ballast_to_replace_initial_buoyancy_kn == pytest.approx(gamma*2200)
+
+
+def test_rotating_edge_immersion_prevents_a_false_buoyancy_balance():
+    result = punch_consequence(synthetic_curve(False, 20000), JackupInputs(), 'in_water', 0)
+    # Pivot x=-10 m; failed leg x=20 m, centre x=0 m and edge x=30 m.
+    # Moment equilibrium: 20000*30/10=60000 kN required at the centre.
+    # Required travel=3*60000/(1.025*9.81*2200)=8.136862019 m.
+    # Edge descent=travel*40/30=10.849149359 m exceeds freeboard=6 m.
+    assert not result.buoyancy_can_balance_loss
+    assert result.buoyancy_replacement_kn == pytest.approx(60000)
+    assert result.buoyancy_balance_travel_m == pytest.approx(8.136862019)
+    assert result.buoyancy_balance_travel_m*40/30 == pytest.approx(10.849149359)
+    assert result.buoyancy_replacement_kn > result.reserve_buoyancy_kn
+    assert result.travel_is_lower_bound
+    assert result.travel_m == 1  # Unresolved peak-to-trough travel, not arrest.
+
+
+@pytest.mark.parametrize('changes, reserve_kn', [
+    ({}, 33182.325),
+    ({'hull_length_m': 80}, 26545.860),
+    ({'leg_plan_radius_m': 30}, 44243.100),
+    ({'draft_m': 2, 'hull_depth_m': 5, 'dry_weight_kn': 50000}, 16591.1625),
+])
+def test_rotating_reserve_tracks_edge_lever_and_freeboard(changes, reserve_kn):
+    # Centre sinkages at immersion: 6*10/40=1.5, 6*10/50=1.2,
+    # 6*15/45=2.0 and 3*10/40=0.75 m; multiply each by 1.025*9.81*2200.
+    p = replace(JackupInputs(), **changes)
+    result = punch_consequence(synthetic_curve(False, 20000), p, 'in_water', 0)
+    assert result.reserve_buoyancy_kn == pytest.approx(reserve_kn)
+    assert not result.buoyancy_can_balance_loss
+    assert result.travel_is_lower_bound
+
+
+@pytest.mark.parametrize('loss_kn, balances', [(10000, True), (12000, False)])
+def test_buoyancy_balance_requires_clearance_at_the_rotating_edge(loss_kn, balances):
+    result = punch_consequence(synthetic_curve(False, loss_kn), JackupInputs(), 'in_water', 0)
+    # Max travel before immersion=6*30/40=4.5 m; allowable loss=33182.325/3 kN.
+    assert result.buoyancy_can_balance_loss is balances
+    assert (result.buoyancy_balance_travel_m <= 4.5) is balances
+    assert result.travel_is_lower_bound is not balances
 
 
 def test_no_soil_recovery_stays_a_lower_bound_unless_buoyancy_can_balance():
@@ -187,13 +229,17 @@ def test_portable_export_has_case_selector_and_gap_transition_brackets(tmp_path)
     example = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(example)
     example.write_examples(tmp_path)
-    summary = json.loads((tmp_path / 'summary.json').read_text())
-    figure = json.loads((tmp_path / 'utilization.figure.json').read_text())
-    inputs = json.loads((tmp_path / 'inputs.json').read_text())
+    summary = json.loads((tmp_path / 'summary.json').read_text(encoding='utf-8'))
+    figure = json.loads((tmp_path / 'utilization.figure.json').read_text(encoding='utf-8'))
+    inputs = json.loads((tmp_path / 'inputs.json').read_text(encoding='utf-8'))
     assert len(summary['cases']) == 54  # 9 soils * (2 preload patterns + storm) * 2 hull states
     assert len(inputs['soil_cases']) == 9
     assert all(case['ordered_thresholds'] for case in summary['cases'])
     assert all(case['not_reached'] is not None for case in summary['cases'])
+    for case in summary['cases']:
+        consequence = case['consequence_at_first_soil_peak']
+        expected_reserve = 33182.325 if case['name'].endswith('in_water') else 0
+        assert consequence['reserve_buoyancy_kn'] == pytest.approx(expected_reserve)
     assert len(figure['layout']['updatemenus'][0]['buttons']) == 54
     assert len(figure['layout']['updatemenus'][0]['buttons'][0]['args'][0]['visible']) == len(figure['data'])
     assert summary['air_gap_changes']
