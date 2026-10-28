@@ -129,6 +129,14 @@ jobs:
           test "$(git -C ../assetutilities rev-parse 'HEAD^{tree}')" = \
             "5f7434fcb3a348a7e04bf9de228e6ce2c49a87cb"
 
+      # Self-hosted runners carry no Go toolchain (main run failed with
+      # "go: command not found", 28 Oct 2026); install one for actionlint.
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache: false
+
       - name: Install pinned actionlint
         run: >-
           go install github.com/rhysd/actionlint/cmd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca

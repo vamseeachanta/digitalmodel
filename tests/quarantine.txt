@@ -1,0 +1,17 @@
+# Quarantined tests: they fail on main today, so they cannot gate pull requests.
+#
+# Format: one pytest node id per line, then " | ", then the reason. A node id
+# without a [parameter] suffix covers every parametrization. tests/conftest.py
+# marks each entry xfail(strict=False): it still runs, a failure does not fail
+# the gate, and an XPASS means the cause is gone -- delete the line in the fix PR.
+#
+# Tracking issue: https://github.com/vamseeachanta/digitalmodel/issues/3720
+# Evidence: every domain shard command from .claude/quality-gates.yaml run on
+# origin/main 1fb773f44 on ace-linux-1 (our self-hosted x64 runner host), 28 Oct 2026.
+tests/test_performance_baselines.py::TestPerformanceBaselines::test_basic_math_operations_baseline | wall-clock threshold on a shared self-hosted runner (1.760 ms > 1.000 ms at load ~19)
+tests/test_performance_baselines.py::TestPerformanceBaselines::test_matrix_operations_baseline | wall-clock threshold on a shared self-hosted runner (1326.8 ms > 20.0 ms at load ~19)
+tests/test_pygmt_integration.py::test_pygmt_imports | GMT C library (libgmt.so) is not installed on the self-hosted runners
+tests/test_pygmt_integration.py::test_pygmt_create_figure | GMT C library (libgmt.so) is not installed on the self-hosted runners
+tests/test_pygmt_integration.py::test_pygmt_load_earth_relief | GMT C library (libgmt.so) is not installed on the self-hosted runners
+tests/test_pygmt_integration.py::test_pygmt_save_figure_to_png | GMT C library (libgmt.so) is not installed on the self-hosted runners
+tests/workflows/test_openfoam_batch_layout.py::test_trusted_local_requires_precreated_absolute_non_git_root | ace-linux-1 has a stray /tmp/.git (recreated by an unidentified process), so pytest tmp_path counts as inside a Git checkout
