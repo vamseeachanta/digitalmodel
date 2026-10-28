@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capytaine module analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+main{max-width:70rem;margin:auto;padding:2rem} section{margin-block:2rem}
+table{border-collapse:collapse;width:100%;margin-top:1rem} th,td{border:1px solid var(--edge);padding:.5rem;text-align:left;vertical-align:top}
+th{background:var(--panel-2)} pre{white-space:pre-wrap;overflow-wrap:anywhere} code{overflow-wrap:anywhere}
+@media(max-width:50rem){table{display:block;overflow-x:auto}}
+</style></head><body><main>
+<header><h1>Capytaine module analysis</h1><p>Supplied-coefficient harmonic-response controls and open-source wrapper review.</p></header>
+<section><h2 id="s1">1. Executive Summary</h2>
+<p>The manual response method is PASS against the independent complex-displacement, amplitude and phase controls [H1, H2].
+The synthetic coefficients are supplied rather than BEM-computed; they establish neither mesh convergence nor physical accuracy of radiation/diffraction.
+Native execution, delegated response and NetCDF export remain NOT_EVALUATED against their required evidence.</p></section>
+<section id="revision-history"><h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>The manual harmonic-response controls, public method review and reproducible report are added to distinguish algebra evidence from unperformed native accuracy and convergence checks.</td></tr></tbody></table><p>Revision history; earlier issues will remain unchanged on re-issue.</p></section>
+<details id="changes-panel"><summary>Engineering changes</summary><p>The manual harmonic-response controls, public method review and reproducible report are added to distinguish algebra evidence from unperformed native accuracy and convergence checks.</p></details>
+<section><h2 id="s2">2. Introduction</h2>
+<p>The wrapper exposes configuration, mesh conversion, radiation/diffraction solve, manual and delegated response calculation, tables, export and plots [module sources below].
+This analysis qualifies the stated algebra controls only. No licensed interface is imported and no native boundary-element solve is performed.</p>
+<table><thead><tr><th>Source file</th><th>Public entry points</th><th>Review and qualification</th></tr></thead><tbody><tr><td>models.py</td><td>MeshFormat; DOF.all_dofs/translational/rotational; MeshConfig; BodyConfig.rotation_center_or_com; SolverConfig; BEMResult; RAOResult</td><td>STATIC_REVIEW; array containers do not enforce units or all metadata contracts.</td></tr><tr><td>models.py</td><td>WaveConditions; omega_array; period_array; from_period_range; from_omega_range</td><td>PARTIAL_SYNTHETIC; angular-frequency/period conversion is used by the worked controls. Range constructors and invalid-input coverage remain NOT_EVALUATED here.</td></tr><tr><td>mesh_adapter.py</td><td>create_floating_body</td><td>NOT_EVALUATED; imports the optional backend, loads/converts geometry, applies symmetry, immerses the body and may generate a lid. Geometry and conversion evidence are absent.</td></tr><tr><td>solver.py</td><td>CapytaineSolver.__init__; validate_inputs; solve; dataset; body; run_bem_analysis</td><td>NOT_EVALUATED for native execution. Coordinate extraction has a separate synthetic regression; it does not establish BEM coefficient accuracy.</td></tr><tr><td>rao.py</td><td>compute_rao_manual</td><td>SYNTHETIC_CONTROLS; the computed verdict below applies only to the named controls. Finite-shape contracts and coupled sign regressions are separate evidence. Singular least squares is not an acceptance criterion.</td></tr><tr><td>rao.py</td><td>compute_rao</td><td>NOT_EVALUATED; delegates to optional native post-processing and requires dataset inertia and hydrostatic stiffness. Native axis ordering and normalization need readback.</td></tr><tr><td>results.py</td><td>export_netcdf</td><td>NOT_EVALUATED; delegates to native export. Exact complex coefficient/coordinate round-trip evidence and backend-version compatibility are absent.</td></tr><tr><td>results.py</td><td>added_mass_table; excitation_force_table</td><td>PARTIAL_SYNTHETIC; existing excitation-table regressions cover reordered labeled coordinates. Added-mass tabulation is positional in frequency and remains unqualified.</td></tr><tr><td>results.py</td><td>plot_added_mass_damping; plot_excitation_force; plot_rao</td><td>NOT_EVALUATED; coefficient plots pair stored frequency order with periods; rotational response labels require explicit angular and wave-amplitude unit confirmation.</td></tr></tbody></table><p>Method inventory; review is distinct from numerical qualification.</p></section>
+<section><h2 id="s3">3. Design Data and Basis</h2><table><thead><tr><th>Quantity</th><th>Supplied value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>omega</td><td>[1.0]</td><td>rad/s</td><td>H1</td></tr><tr><td>heading</td><td>[0, pi]</td><td>rad</td><td>H1; pi is the half-turn definition</td></tr><tr><td>mass</td><td>[[2.0]]</td><td>kg</td><td>H1</td></tr><tr><td>added_mass</td><td>[[[1.0]]]</td><td>kg</td><td>H1</td></tr><tr><td>stiffness</td><td>[[5.0]]</td><td>N/m</td><td>H1</td></tr><tr><td>radiation_damping</td><td>[[[1.0]]]</td><td>N s/m</td><td>H1</td></tr><tr><td>force</td><td>[[[2.0], [-2.0]]]</td><td>N</td><td>H1</td></tr><tr><td>extra_damping</td><td>[[1.0]]</td><td>N s/m</td><td>H1</td></tr></tbody></table><p>Single-degree synthetic design data; coefficients are supplied controls.</p>
+<p>H1 is a synthetic single-degree translational oscillator with positive and negative real force at opposite heading labels.
+The heading labels do not model a physical diffraction pattern. Extra damping is absent in the first control and supplied in the second.
+H2 is an explicitly separate coupled translational hand example, retained from the existing sign regression.</p>
+<p>Response is dimensional displacement in m for the supplied force in N. It is not a motion-to-wave ratio in m/m:
+no incident wave amplitude is supplied for normalization. The numeric containers do not enforce units.
+Array axes are omega, heading, DOF; matrix rows are influenced DOFs and columns are radiating DOFs. Headings use rad and phases use deg [models.py, H1].</p></section>
+<section><h2 id="s4">4. Analysis Methodology</h2>
+<p>With exp(-i*omega*t), differentiation gives qdot=-i*omega*q and qddot=-omega^2*q.
+Force balance therefore gives Z=K-omega^2*(M+A)-i*omega*(B+B_extra), and Z*q=F [H1].
+The public function <code>compute_rao_manual</code> is called with independently constructible <code>BEMResult</code> arrays.
+Amplitude and phase are returned by that function; periods are obtained through <code>WaveConditions.period_array</code>.</p>
+<h3>Independent single-degree calculations [H1]</h3>
+<p>For radiation damping alone, Z=5-(2+1)-i=2-i N/m.
+Thus q=2/(2-i)=(4+2i)/5 m, |q|=2/sqrt(5) m and phase=atan(1/2) radians converted to degrees.
+With extra damping, Z=2-2i N/m and q=(1+i)/2 m, |q|=1/sqrt(2) m and phase=atan(1) radians converted to degrees.
+Reversing the real force reverses the complex response; its amplitude is unchanged and the principal phase decreases by a half turn.</p>
+<h3>Independent coupled calculation [H2]</h3>
+<p>M=I kg, A=0 kg, B=I N s/m, K=[[2,1],[1,2]] N/m, omega=1 rad/s and F=[1,i] N.
+Hence Z=[[1-i,1],[1,1-i]] N/m; direct multiplication gives
+Z*[(3+4i)/5,(-2-i)/5]=[1,i] N. This reuses the existing coupled sign evidence and is separate from H1.</p>
+<p>Each absolute complex, amplitude and phase error is compared with 1e-12 in m, m and deg respectively.
+This is a double-precision algebra criterion, not an engineering acceptance threshold. Expected values use literal fractions and elementary angles; no second numerical solve is used [H1, H2].</p></section>
+<section><h2 id="s5">5. Detailed Results</h2><h3>single_radiation</h3><table><thead><tr><th>Omega (rad/s)</th><th>Heading (deg)</th><th>DOF</th><th>Real (m)</th><th>Imaginary (m)</th><th>Amplitude (m)</th><th>Phase (deg)</th><th>Source</th></tr></thead><tbody><tr><td>1.0</td><td>0.0</td><td>Heave</td><td>0.800</td><td>0.400</td><td>0.894</td><td>26.6</td><td>H1</td></tr><tr><td>1.0</td><td>180.0</td><td>Heave</td><td>-0.800</td><td>-0.400</td><td>0.894</td><td>-153.4</td><td>H1</td></tr></tbody></table><p>Computed harmonic displacements; headings are displayed in degrees from radian coordinates.</p>
+<p>PASS: maximum absolute complex error 0.0e+00 m; amplitude error 0.0e+00 m; phase error 0.0e+00 deg. Each is compared with its absolute criterion of 1e-12 in the same unit [H1, H2].</p>
+<h3>single_extra_damping</h3><table><thead><tr><th>Omega (rad/s)</th><th>Heading (deg)</th><th>DOF</th><th>Real (m)</th><th>Imaginary (m)</th><th>Amplitude (m)</th><th>Phase (deg)</th><th>Source</th></tr></thead><tbody><tr><td>1.0</td><td>0.0</td><td>Heave</td><td>0.500</td><td>0.500</td><td>0.707</td><td>45.0</td><td>H1</td></tr><tr><td>1.0</td><td>180.0</td><td>Heave</td><td>-0.500</td><td>-0.500</td><td>0.707</td><td>-135.0</td><td>H1</td></tr></tbody></table><p>Computed harmonic displacements; headings are displayed in degrees from radian coordinates.</p>
+<p>PASS: maximum absolute complex error 0.0e+00 m; amplitude error 0.0e+00 m; phase error 0.0e+00 deg. Each is compared with its absolute criterion of 1e-12 in the same unit [H1, H2].</p>
+<h3>coupled_existing_hand</h3><table><thead><tr><th>Omega (rad/s)</th><th>Heading (deg)</th><th>DOF</th><th>Real (m)</th><th>Imaginary (m)</th><th>Amplitude (m)</th><th>Phase (deg)</th><th>Source</th></tr></thead><tbody><tr><td>1.0</td><td>0.0</td><td>Surge</td><td>0.600</td><td>0.800</td><td>1.000</td><td>53.1</td><td>H2</td></tr><tr><td>1.0</td><td>0.0</td><td>Heave</td><td>-0.400</td><td>-0.200</td><td>0.447</td><td>-153.4</td><td>H2</td></tr></tbody></table><p>Computed harmonic displacements; headings are displayed in degrees from radian coordinates.</p>
+<p>PASS: maximum absolute complex error 1.1e-16 m; amplitude error 1.1e-16 m; phase error 7.1e-15 deg. Each is compared with its absolute criterion of 1e-12 in the same unit [H1, H2].</p></section>
+<section><h2 id="s6">6. Key Findings</h2><table><thead><tr><th>Method or criterion</th><th>Status</th><th>Basis or source needed</th></tr></thead><tbody><tr><td>manual_rao</td><td>PASS</td><td>H1 and H2 synthetic algebra controls only; no native coefficient generation.</td></tr><tr><td>native_bem</td><td>NOT_EVALUATED</td><td>A public worked benchmark with published geometry, environment, coefficient tables, normalization and comparison criteria, plus native output readback.</td></tr><tr><td>mesh_conversion</td><td>NOT_EVALUATED</td><td>Original and converted public meshes with checked units, normals, waterline, wetted surface and DOF centers.</td></tr><tr><td>mesh_convergence</td><td>NOT_EVALUATED</td><td>A common public benchmark with successively refined meshes, coefficient/response changes and a predefined convergence criterion.</td></tr><tr><td>radiation_diffraction_accuracy</td><td>NOT_EVALUATED</td><td>Independent published radiation/diffraction coefficients at matching frequencies, headings, DOFs and physical conditions.</td></tr><tr><td>delegated_rao</td><td>NOT_EVALUATED</td><td>Native post-processing output with inertia/stiffness, complex response, dimension order and units checked against the same independent hand problem.</td></tr><tr><td>native_netcdf</td><td>NOT_EVALUATED</td><td>Native exported and reopened datasets preserving complex coefficients, dimensions, coordinate order, units and exact benchmark inputs.</td></tr></tbody></table><p>Evidence status applies only to the stated method and criterion.</p>
+<p>The existing coordinate regression covers requested frequency, heading and DOF ordering in extracted synthetic datasets,
+and the excitation table uses labeled selection. This does not qualify native BEM accuracy or every table and plot.</p>
+<p>Static review observations remain unresolved: solver engine/method fields do not select alternate implementations;
+unknown Green-function names fall back to a default; configured hydrostatic stiffness is not consumed;
+native input validation does not establish rejection of all nonfinite inputs; and hydrostatic failures may leave partial results.
+Delegated response ordering and normalization need readback. Added-mass tables and coefficient plots can pair stored frequency order positionally with periods.
+Rotational plot labels require angular-unit confirmation. The manual singular-system fallback does not enforce a residual or condition criterion [solver.py, rao.py, results.py].
+These observations are not independently reproduced defects fixed by this report.</p></section>
+<section><h2 id="s7">7. Recommendations</h2>
+<p>The next qualification step should obtain the public benchmark source described in the evidence table, including its geometry, fluid conditions,
+coordinate definitions, coefficient normalization and published numerical values. Native readback should then compare matching coordinates
+and execute a defined mesh-refinement sequence before physical use. No benchmark outcome is asserted.</p>
+<p>Targeted independent regressions should resolve the static API observations before affected methods are relied on.
+No BEM accuracy setting, screening threshold, default geometry or engineering acceptance criterion is changed.</p></section>
+<section><h2 id="s8">8. Conclusion</h2>
+<p>The specified synthetic algebra controls are PASS against their absolute criteria.
+Physical radiation/diffraction accuracy, convergence and native export qualification cannot be established without the listed sources and retained native outputs.
+The remaining module qualification scope stays open.</p></section>
+<section><h2 id="s9">9. Data Register and Provenance</h2>
+<p>H1: independent force-balance derivation stated in the builder and <code>test_module_report_hand_values.py</code>.
+H2: existing coupled example in <code>test_rao_manual_sign.py</code>.
+All numeric engineering inputs are synthetic controls from H1 or H2; mathematical constants and degree conversion are definitions.
+No measured data or licensed-publication values are used. The authoritative inputs are the builder's committed INPUTS mapping.</p>
+<ul><li><code>scripts/reports/build_capytaine_module_report.py</code></li><li><code>src/digitalmodel/hydrodynamics/capytaine/__init__.py</code></li><li><code>src/digitalmodel/hydrodynamics/capytaine/models.py</code></li><li><code>src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py</code></li><li><code>src/digitalmodel/hydrodynamics/capytaine/lid.py</code></li><li><code>src/digitalmodel/hydrodynamics/capytaine/solver.py</code></li><li><code>src/digitalmodel/hydrodynamics/capytaine/rao.py</code></li><li><code>src/digitalmodel/hydrodynamics/capytaine/results.py</code></li><li><code>tests/hydrodynamics/capytaine/test_module_report_hand_values.py</code></li><li><code>tests/hydrodynamics/capytaine/test_rao_manual_sign.py</code></li><li><code>tests/hydrodynamics/capytaine/test_rao_manual_input_contract.py</code></li><li><code>tests/hydrodynamics/capytaine/test_result_coordinates.py</code></li><li><code>tests/reporting/test_capytaine_module_report.py</code></li><li><code>docs/api/_assets/brand.css</code></li></ul>
+<p><code>manifest.json</code> records SHA-256 source and artifact digests. The manifest excludes its own digest to avoid self-reference;
+the rebuild test compares all deliverables, including the manifest, byte for byte. Exact machine-readable values are embedded below;
+visible values are rounded for presentation and comparisons use unrounded values.</p>
+<p>Rebuild: <code>PYTHONPATH=src python scripts/reports/build_capytaine_module_report.py --scratch "$TMPDIR/capytaine-work"</code>.
+The optional <code>--output-dir</code> selects an external delivery directory. Scratch is resolved outside the checkout;
+the calculations remain in memory. No runtime timestamp or environment path enters the artifacts.</p></section>
+<section><h2 id="s10">10. Acronyms and Review Notes</h2>
+<p>BEM means boundary element method; DOF means degree of freedom; RAO means response amplitude operator.
+PASS denotes only agreement with the stated synthetic criterion. NOT_EVALUATED means the evidence needed to calculate or accept that method's result is absent.
+Independent review should address the unresolved methods and their evidence requirements before physical application.</p></section>
+<script id="calculation" type="application/json">{"absolute_criteria": {"amplitude_m": 1e-12, "complex_m": 1e-12, "phase_deg": 1e-12, "source": "H1/H2; double-precision roundoff allowance only"}, "checks": [{"coordinates": {"axis_order": ["omega", "heading", "dof"], "dof_names": ["Heave"], "headings_rad": [0.0, 3.141592653589793], "omegas_rad_s": [1.0]}, "id": "single_radiation", "maximum_absolute_errors": {"amplitude_m": 0.0, "complex_m": 0.0, "phase_deg": 0.0}, "responses": [{"amplitude_m": 0.894427190999916, "dof": "Heave", "heading_rad": 0.0, "imag_m": 0.4, "omega_rad_s": 1.0, "period_s": 6.283185307179586, "phase_deg": 26.56505117707799, "real_m": 0.8}, {"amplitude_m": 0.894427190999916, "dof": "Heave", "heading_rad": 3.141592653589793, "imag_m": -0.4, "omega_rad_s": 1.0, "period_s": 6.283185307179586, "phase_deg": -153.434948822922, "real_m": -0.8}], "source": "H1", "status": "PASS"}, {"coordinates": {"axis_order": ["omega", "heading", "dof"], "dof_names": ["Heave"], "headings_rad": [0.0, 3.141592653589793], "omegas_rad_s": [1.0]}, "id": "single_extra_damping", "maximum_absolute_errors": {"amplitude_m": 0.0, "complex_m": 0.0, "phase_deg": 0.0}, "responses": [{"amplitude_m": 0.7071067811865476, "dof": "Heave", "heading_rad": 0.0, "imag_m": 0.5, "omega_rad_s": 1.0, "period_s": 6.283185307179586, "phase_deg": 45.0, "real_m": 0.5}, {"amplitude_m": 0.7071067811865476, "dof": "Heave", "heading_rad": 3.141592653589793, "imag_m": -0.5, "omega_rad_s": 1.0, "period_s": 6.283185307179586, "phase_deg": -135.0, "real_m": -0.5}], "source": "H1", "status": "PASS"}, {"coordinates": {"axis_order": ["omega", "heading", "dof"], "dof_names": ["Surge", "Heave"], "headings_rad": [0.0], "omegas_rad_s": [1.0]}, "id": "coupled_existing_hand", "maximum_absolute_errors": {"amplitude_m": 1.1102230246251565e-16, "complex_m": 1.1102230246251565e-16, "phase_deg": 7.105427357601002e-15}, "responses": [{"amplitude_m": 0.9999999999999999, "dof": "Surge", "heading_rad": 0.0, "imag_m": 0.7999999999999999, "omega_rad_s": 1.0, "period_s": 6.283185307179586, "phase_deg": 53.13010235415598, "real_m": 0.6}, {"amplitude_m": 0.4472135954999579, "dof": "Heave", "heading_rad": 0.0, "imag_m": -0.2, "omega_rad_s": 1.0, "period_s": 6.283185307179586, "phase_deg": -153.434948822922, "real_m": -0.39999999999999997}], "source": "H2", "status": "PASS"}], "evidence": {"delegated_rao": {"source_needed": "Native post-processing output with inertia/stiffness, complex response, dimension order and units checked against the same independent hand problem.", "status": "NOT_EVALUATED"}, "manual_rao": {"basis": "H1 and H2 synthetic algebra controls only; no native coefficient generation.", "status": "PASS"}, "mesh_convergence": {"source_needed": "A common public benchmark with successively refined meshes, coefficient/response changes and a predefined convergence criterion.", "status": "NOT_EVALUATED"}, "mesh_conversion": {"source_needed": "Original and converted public meshes with checked units, normals, waterline, wetted surface and DOF centers.", "status": "NOT_EVALUATED"}, "native_bem": {"source_needed": "A public worked benchmark with published geometry, environment, coefficient tables, normalization and comparison criteria, plus native output readback.", "status": "NOT_EVALUATED"}, "native_netcdf": {"source_needed": "Native exported and reopened datasets preserving complex coefficients, dimensions, coordinate order, units and exact benchmark inputs.", "status": "NOT_EVALUATED"}, "radiation_diffraction_accuracy": {"source_needed": "Independent published radiation/diffraction coefficients at matching frequencies, headings, DOFs and physical conditions.", "status": "NOT_EVALUATED"}}, "inputs": {"coupled": {"added_mass_kg": [[[0.0, 0.0], [0.0, 0.0]]], "dof_names": ["Surge", "Heave"], "force_imag_n": [[[0.0, 1.0]]], "force_real_n": [[[1.0, 0.0]]], "headings_rad": [0.0], "mass_kg": [[1.0, 0.0], [0.0, 1.0]], "omega_rad_s": [1.0], "radiation_damping_n_s_per_m": [[[1.0, 0.0], [0.0, 1.0]]], "source": "H2", "stiffness_n_per_m": [[2.0, 1.0], [1.0, 2.0]]}, "single_degree": {"added_mass_kg": [[[1.0]]], "dof_names": ["Heave"], "extra_damping_n_s_per_m": [[1.0]], "force_real_n": [[[2.0], [-2.0]]], "headings_rad": [0.0, 3.141592653589793], "mass_kg": [[2.0]], "omega_rad_s": [1.0], "radiation_damping_n_s_per_m": [[[1.0]]], "source": "H1", "stiffness_n_per_m": [[5.0]]}}, "methods": [["models.py", "MeshFormat; DOF.all_dofs/translational/rotational; MeshConfig; BodyConfig.rotation_center_or_com; SolverConfig; BEMResult; RAOResult", "STATIC_REVIEW; array containers do not enforce units or all metadata contracts."], ["models.py", "WaveConditions; omega_array; period_array; from_period_range; from_omega_range", "PARTIAL_SYNTHETIC; angular-frequency/period conversion is used by the worked controls. Range constructors and invalid-input coverage remain NOT_EVALUATED here."], ["mesh_adapter.py", "create_floating_body", "NOT_EVALUATED; imports the optional backend, loads/converts geometry, applies symmetry, immerses the body and may generate a lid. Geometry and conversion evidence are absent."], ["solver.py", "CapytaineSolver.__init__; validate_inputs; solve; dataset; body; run_bem_analysis", "NOT_EVALUATED for native execution. Coordinate extraction has a separate synthetic regression; it does not establish BEM coefficient accuracy."], ["rao.py", "compute_rao_manual", "SYNTHETIC_CONTROLS; the computed verdict below applies only to the named controls. Finite-shape contracts and coupled sign regressions are separate evidence. Singular least squares is not an acceptance criterion."], ["rao.py", "compute_rao", "NOT_EVALUATED; delegates to optional native post-processing and requires dataset inertia and hydrostatic stiffness. Native axis ordering and normalization need readback."], ["results.py", "export_netcdf", "NOT_EVALUATED; delegates to native export. Exact complex coefficient/coordinate round-trip evidence and backend-version compatibility are absent."], ["results.py", "added_mass_table; excitation_force_table", "PARTIAL_SYNTHETIC; existing excitation-table regressions cover reordered labeled coordinates. Added-mass tabulation is positional in frequency and remains unqualified."], ["results.py", "plot_added_mass_damping; plot_excitation_force; plot_rao", "NOT_EVALUATED; coefficient plots pair stored frequency order with periods; rotational response labels require explicit angular and wave-amplitude unit confirmation."]], "revision_history": [{"change": "The manual harmonic-response controls, public method review and reproducible report are added to distinguish algebra evidence from unperformed native accuracy and convergence checks.", "date": "2026-10-28", "revision": "A"}], "units": {"added_mass": "kg", "amplitude": "m", "extra_damping": "N s/m", "force": "N", "heading": "rad", "mass": "kg", "omega": "rad/s", "period": "s", "phase": "deg", "radiation_damping": "N s/m", "response": "m", "stiffness": "N/m"}}</script>
+</main></body></html>
