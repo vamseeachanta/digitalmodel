@@ -15,6 +15,7 @@ import pytest
 from digitalmodel.subsea.on_bottom_stability.dnv_rp_f109 import (
     StabilityResult,
     absolute_stability_check,
+    absolute_stability_margin,
     generalized_stability_check,
     hydrodynamic_force_per_meter,
     lift_force_per_meter,
@@ -266,8 +267,10 @@ def test_simplified_required_weight_matches_peak_load_check(horizontal):
 def test_synthetic_unfactored_worked_example():
     """Check the synthetic case in docs/subsea/on-bottom-stability-consistency.md.
 
-    No retrievable source supports the former page attribution. These inputs
-    and coefficients define an arithmetic regression, not a sourced design case.
+    See that document's "Synthetic examples and reproducibility" section for
+    the complete input basis and independent arithmetic. No retrievable source
+    supports the former page attribution; every input and coefficient here is
+    synthetic, with no claim of page equivalence or standard qualification.
     """
     horizontal = hydrodynamic_force_per_meter(
         1025.0, 0.5, 1.5, 0.6, C_D=0.7, C_M=3.29,
@@ -279,15 +282,29 @@ def test_synthetic_unfactored_worked_example():
     # FL = 0.5*1025*0.9*0.5*1.5^2 = 518.9 N/m.
     # Friction = 0.6*(2200 - 0.5*1025*0.9*0.5*1.5^2) = 1008.7 N/m.
     # Required weight = FH/0.6 + FL = 1853.7 N/m (unrounded loads).
+    expected_horizontal = (
+        0.5 * 1025.0 * 0.7 * 0.5 * 1.5**2
+        + 1025.0 * 3.29 * math.pi / 4 * 0.5**2 * 0.6
+    )
+    expected_lift = 0.5 * 1025.0 * 0.9 * 0.5 * 1.5**2
+    expected_required = expected_horizontal / 0.6 + expected_lift
+    assert horizontal == pytest.approx(expected_horizontal)
+    assert lift == pytest.approx(expected_lift)
     assert horizontal == pytest.approx(800.9, abs=0.05)
     assert lift == pytest.approx(518.9, abs=0.05)
     assert friction == pytest.approx(1008.7, abs=0.05)
     assert friction / horizontal == pytest.approx(1.26, abs=0.005)
     required = horizontal / 0.6 + lift
+    assert required == pytest.approx(expected_required)
     assert required == pytest.approx(1853.7, abs=0.05)
     result = absolute_stability_check(2200.0, horizontal, lift, 0.6, gamma_SC=1.0)
     assert result.is_stable
     assert result.utilisation == pytest.approx(required / 2200.0)
+    margin = absolute_stability_margin(
+        2200.0, horizontal, lift, 0.6, gamma_SC=1.0,
+    )
+    assert margin.required_weight_N_m == pytest.approx(expected_required)
+    assert margin.weight_margin_N_m == pytest.approx(2200.0 - expected_required)
     assert absolute_stability_check(
         required, horizontal, lift, 0.6, gamma_SC=1.0,
     ).utilisation == pytest.approx(1.0)

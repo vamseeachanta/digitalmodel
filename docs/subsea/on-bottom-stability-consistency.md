@@ -14,43 +14,54 @@ establish neither a site design nor a qualified standard implementation.
 | 0 | 2026-10-27 | Compared the supplied page with the code, added weight margins and corrected signed sliding demand. |
 | 1 | 2026-10-27 | Reclassified the example as synthetic, removed unsupported page comparisons and recorded independent arithmetic because the source cannot be retrieved. |
 | 2 | 2026-10-27 | Aligned the absolute checks and shared inputs with the supplied clause map, added independent uplift and initial-state resistance, and distinguished peak loads from instantaneous arithmetic. |
+| 3 | 2026-10-28 | Removed the unverified concept-page comparison, clarified the source basis and linked the synthetic example to independent expected-value arithmetic. |
 
 ## Evidence and scope
 
 The [canonical module](../../src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py),
 [compatibility wrappers](../../src/digitalmodel/subsea/on_bottom_stability/simplified.py)
 and [clause regressions](../../tests/subsea/on_bottom_stability/test_f109_absolute_clauses.py)
-use the supplied clause map for the October 2010 issue amended November 2011.
-The former later-edition claim is withdrawn; conformity to that edition remains
-**OPEN**. The map identifies damaged mathematical extraction and unresolved
-empirical expressions. Original pages and numerical lookup datasets have not
-been independently qualified in this change. No licensed sentences, tables or
-figure values are reproduced.
+use clause locators from a supplied map identified as the October 2010 issue
+amended November 2011. No retrievable, versioned source or rights-cleared excerpt
+for the concept page or that map is retained with this analysis. The locators
+are unverified references, not evidence of conformity to that edition. Original
+pages and numerical lookup datasets have not been independently qualified in
+this change. No licensed sentences, tables or figure values are reproduced.
 
-The concept-page column below records the supplied map's assessment of
-`pipeline-engineering/wiki/concepts/pipeline-on-bottom-stability.md`.
-It is not an independent retrieval or edit of that page. Its earlier numeric
-example remains a synthetic regression: provenance and page equivalence are
-**OPEN**. The comparison establishes specific code changes against the map,
-not complete conformity with a standard or the entire package.
+The former concept-page comparison is withdrawn because its source cannot be
+independently checked. No page equivalence is claimed. All inputs and
+coefficients of the retained instantaneous example are synthetic; their
+original provenance remains unresolved. The table below records the local
+implementation and the supplied map's unverified locators only.
 
-## Consistency comparison
+## Plan-lite
 
-| Topic | Concept page as assessed in the supplied map | Clause map requirement | Current module and disposition |
-|---|---|---|---|
-| Horizontal force | Constant-coefficient instantaneous drag plus inertia presented as design loading. | Clause 3.6.4, Eqs. (3.40)-(3.41): calibrated extreme-cycle peak coefficients. | `absolute_peak_loads` accepts explicit Table 3-9 and Table 3-10 coefficients; instantaneous helpers are separate. Lookup qualification **OPEN**. |
-| Current | Centreline velocity. | Clause 3.4.2, Eqs. (3.2)-(3.3): transverse profile and diameter mean. | `transverse_current_at_height` and `diameter_mean_current` added; Table 3-1 roughness is user input, headings in radians. |
-| Wave and current basis | Unspecified combined scalar. | Clauses 3.4.2-3.4.4: distinguish spectral and extreme-cycle quantities. | Explicit extreme amplitude, associated period and associated transverse current; spectral generation and extreme mapping **OPEN**. |
-| Reductions | No qualified directional correction chain. | Clause 3.4.5, Eq. (3.17): separate horizontal and upward multipliers. | `load_reduction_factor` multiplies supplied components; peak helper applies each direction once. Empirical fits **OPEN**. |
-| Weight | Component weight less buoyancy. | Clauses 1.5 and 2.3: valid annuli, phase contents and relevant loss. | Positive bore and material validation added; reference gravity aligned. Zero contents density is an empty idealisation, never a universal gas assumption. Phase/loss selection **OPEN**. |
-| Lateral acceptance | Factored horizontal demand only, described as equivalent. | Clause 3.6.2, Eq. (3.38): factor both horizontal and friction-weighted upward demand. | Correct criterion shared by absolute, deprecated static alias and lateral wrapper. |
-| Upward acceptance | No independent result. | Clause 3.6.2, Eq. (3.39): independent upward criterion. | Separate utilisation, weight boundary and combined acceptance; passive resistance cannot mask uplift failure. |
-| Factors | Unqualified default. | Clause 3.6.3, Tables 3-5 through 3-8: select the applicable basis. | Explicit positive finite factor required; no automatic selection or licensed numeric default. |
-| Soil credit | Unspecified embedment or replacement of friction. | Clauses 3.6.1 and 3.6.5: initial-state eligible resistance and no lateral slip. | Optional passive resistance requires `initial_penetration` or `prior_loading` qualification; movement-generated resistance rejected. Soil evidence remains caller responsibility; rock passive credit must be zero. |
-| Method identity | Names absolute, generalised and dynamic categories. | Clause 3.5, Eq. (3.32) requires displacement response. | Historical generalised function warns and delegates to the static criteria; actual generalised and dynamic methods **OPEN**. |
-| Example conclusion | Instantaneous arithmetic used to conclude coating sufficiency. | Governing environments, phase weights, peaks, factors and soil basis are required. | Retained example is synthetic arithmetic only; no coating or site acceptance conclusion. |
+- Source basis: local code and synthetic arithmetic; page provenance and
+  edition-matched clause evidence remain unresolved.
+- Scope: one static margin slice and its compatibility entry points; the
+  separately maintained concept page is not changed.
+- Verification: direct regression tests and independent arithmetic for loads,
+  required weight, reserve and both static criteria.
+- Qualification limits: no site acceptance, licensed lookup qualification,
+  generalised displacement response or dynamic qualification is established.
 
-Table 1. Three-way comparison of concept-page statements, the supplied clause map and implementation.
+## Implementation and evidence gaps
+
+| Topic | Supplied map locator (unverified) | Current module and disposition |
+|---|---|---|
+| Horizontal force | Clause 3.6.4, Eqs. (3.40)-(3.41) | `absolute_peak_loads` accepts explicit Table 3-9 and Table 3-10 coefficients; instantaneous helpers are separate. Lookup qualification **OPEN**. |
+| Current | Clause 3.4.2, Eqs. (3.2)-(3.3) | `transverse_current_at_height` and `diameter_mean_current` added; Table 3-1 roughness is user input, headings in radians. |
+| Wave and current basis | Clauses 3.4.2-3.4.4 | Explicit extreme amplitude, associated period and associated transverse current; spectral generation and extreme mapping **OPEN**. |
+| Reductions | Clause 3.4.5, Eq. (3.17) | `load_reduction_factor` multiplies supplied components; peak helper applies each direction once. Empirical fits **OPEN**. |
+| Weight | Clauses 1.5 and 2.3 | Positive bore and material validation added; reference gravity aligned. Zero contents density is an empty idealisation, never a universal gas assumption. Phase/loss selection **OPEN**. |
+| Lateral acceptance | Clause 3.6.2, Eq. (3.38) | Both horizontal and friction-weighted upward demand are factored in the shared absolute, deprecated static alias and lateral wrapper criteria. |
+| Upward acceptance | Clause 3.6.2, Eq. (3.39) | Separate utilisation, weight boundary and combined acceptance; passive resistance cannot mask uplift failure. |
+| Factors | Clause 3.6.3, Tables 3-5 through 3-8 | Explicit positive finite factor required; no automatic selection or licensed numeric default. |
+| Soil credit | Clauses 3.6.1 and 3.6.5 | Optional passive resistance requires `initial_penetration` or `prior_loading` qualification; movement-generated resistance rejected. Soil evidence remains caller responsibility; rock passive credit must be zero. |
+| Method identity | Clause 3.5, Eq. (3.32) | Historical generalised function warns and delegates to the static criteria; actual generalised and dynamic methods **OPEN**. |
+| Example conclusion | No retained source | Retained example is synthetic arithmetic only; no coating or site acceptance conclusion. |
+
+Table 1. Local implementation and evidence gaps; clause locators remain unverified.
 
 ## Implemented checks and explicit inputs
 
@@ -143,6 +154,10 @@ The retained instantaneous arithmetic case uses D 0.5 m, U 1.5 m/s,
 acceleration 0.6 m/s², density 1025 kg/m³, CD 0.7, CM 3.29, CL 0.9, friction
 0.6, unit factor and supplied weight 2200 N/m. These are synthetic inputs;
 they are not section 3.6.4 table data or a qualified design environment.
+The complete case is retained in
+[`test_synthetic_unfactored_worked_example`](../../tests/subsea/on_bottom_stability/test_dnv_rp_f109.py).
+That test is the reproducible definition of this synthetic case, not an external
+source citation. The coefficients do not establish calibrated design loads.
 
 | Quantity | Synthetic result |
 |---|---|
@@ -162,6 +177,10 @@ Table 3. Retained synthetic arithmetic only; no site acceptance or page equivale
 Independent arithmetic uses `h = rho*CD*D*abs(U)*U/2 + rho*CM*pi*D²*a/4`,
 `z = rho*CL*D*U²/2`, `w_required = h/mu + z`, and
 `reserve = w_supplied - w_required`, retaining unrounded loads until display.
+Substitution gives `h = 0.5*1025*0.7*0.5*1.5² +
+1025*3.29*pi*0.5²*0.6/4`, `z = 0.5*1025*0.9*0.5*1.5²`, and
+available friction `0.6*(2200-z)`. The test evaluates these expressions
+independently of the load helpers before checking required weight and reserve.
 This arithmetic test does not turn the instantaneous samples into design peaks.
 
 A separate synthetic peak regression uses density 1000 kg/m³, coated diameter
