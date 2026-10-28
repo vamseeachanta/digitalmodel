@@ -1,13 +1,15 @@
 # Quarantined tests: they fail on main today, so they cannot gate pull requests.
 #
 # Format: one pytest node id per line, then " | ", then the reason. A node id
-# without a [parameter] suffix covers every parametrization. tests/conftest.py
+# without a [parameter] suffix covers every parametrization; a bare file path
+# covers the whole file. tests/conftest.py
 # marks each entry xfail(strict=False): it still runs, a failure does not fail
 # the gate, and an XPASS means the cause is gone -- delete the line in the fix PR.
 #
 # Tracking issue: https://github.com/vamseeachanta/digitalmodel/issues/3720
 # Evidence: every domain shard command from .claude/quality-gates.yaml run on
-# origin/main 1fb773f44 on ace-linux-1 (our self-hosted x64 runner host), 28 Oct 2026.
+# origin/main 1fb773f44 on ace-linux-1 (our self-hosted x64 runner host), 28 Oct 2026,
+# plus the hosted Main full run of 09089a121 after batch #3719 (see below).
 tests/test_performance_baselines.py::TestPerformanceBaselines::test_basic_math_operations_baseline | wall-clock threshold on a shared self-hosted runner (1.760 ms > 1.000 ms at load ~19)
 tests/test_performance_baselines.py::TestPerformanceBaselines::test_matrix_operations_baseline | wall-clock threshold on a shared self-hosted runner (1326.8 ms > 20.0 ms at load ~19)
 tests/test_pygmt_integration.py::test_pygmt_imports | GMT C library (libgmt.so) is not installed on the self-hosted runners
@@ -15,3 +17,34 @@ tests/test_pygmt_integration.py::test_pygmt_create_figure | GMT C library (libgm
 tests/test_pygmt_integration.py::test_pygmt_load_earth_relief | GMT C library (libgmt.so) is not installed on the self-hosted runners
 tests/test_pygmt_integration.py::test_pygmt_save_figure_to_png | GMT C library (libgmt.so) is not installed on the self-hosted runners
 tests/workflows/test_openfoam_batch_layout.py::test_trusted_local_requires_precreated_absolute_non_git_root | ace-linux-1 has a stray /tmp/.git (recreated by an unidentified process), so pytest tmp_path counts as inside a Git checkout
+# Added after batch #3719 landed (main 09089a121); evidence: GitHub-hosted shard logs.
+tests/capabilities/test_repo_architecture.py::test_every_observed_domain_page_is_inventoried | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert {'docs/api/ar...on.html', ...} == {'docs/api/ar...on.html', ...}
+tests/docs/test_agent_pack_node_ids.py::test_agent_pack_node_ids[src/digitalmodel/subsea/manifolds/docs/agent-pack.md] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: ============================= test session starts ==============================
+tests/docs/test_implementation_map.py::test_implementation_map_references | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert ['missing qua...ainflowCycle'] == []
+tests/docs/test_implementation_map_families.py::test_supplement_has_current_evidence_and_bounded_claims[design-waves] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): assert 65 == 77
+tests/docs/test_implementation_map_families.py::test_supplement_has_current_evidence_and_bounded_claims[extreme-statistics] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): assert 177 == 243
+tests/docs/test_production_nde_agent_packs.py::test_pack_public_functions_and_locators[production_engineering] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert ['missing fun...nearIpr', ...] == []
+tests/docs/test_subsea_agent_pack_registry.py::test_new_pack_registration_and_section_order | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): KeyError: 'subsea/capping_stack'
+tests/reporting/test_capability_report_inventory.py::test_saved_inventory_rebuilds_and_counts_agree | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): capability_report_inventory.InventoryError: stale observation digest: docs/benchmarks/unit_box/benchmark_report.json
+tests/reporting/test_vessel_seakeeping_module_report.py::test_cli_manifest_binds_written_deliverables | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: Delivered manifest has drifted. Rebuild with PYTHONPATH=src python scripts/reports/build_vessel_seakeeping_module_report.py --scratch ...
+tests/reporting/test_vessel_seakeeping_module_report.py::test_rebuild_and_every_worked_value | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: Rebuild with PYTHONPATH=src python scripts/reports/build_vessel_seakeeping_module_report.py --scratch <scratch>.
+tests/riser_fatigue/test_module_report.py | module fixture raises "ValueError: histogram_basis requires period_years and evidence" since batch #3719
+tests/scripts/test_audit_solver_cleanup.py::test_repository_inventory_is_current_and_explicitly_bounded | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): assert False is True
+tests/scripts/test_cfd_deploy_parity.py::test_deploy_uses_repository_bytes_not_dirty_worktree | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: <tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory
+tests/scripts/test_cfd_deploy_parity.py::test_dry_run_never_writes_remote | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: <tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory
+tests/scripts/test_cfd_deploy_parity.py::test_existing_same_size_same_mtime_drift_is_repaired | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: <tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory
+tests/scripts/test_cfd_deploy_parity.py::test_failed_redeployment_preserves_previous_stamp | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: <tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory
+tests/scripts/test_cfd_deploy_parity.py::test_invalid_remote_script_prevents_new_stamp[False-mesh_store.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'syntax error' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_invalid_remote_script_prevents_new_stamp[False-prune_case.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'syntax error' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_invalid_remote_script_prevents_new_stamp[False-solve_case.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'syntax error' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_invalid_remote_script_prevents_new_stamp[False-stage45_driver.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'syntax error' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_invalid_remote_script_prevents_new_stamp[True-mesh_store.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'syntax error' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_invalid_remote_script_prevents_new_stamp[True-prune_case.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'syntax error' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_invalid_remote_script_prevents_new_stamp[True-solve_case.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'syntax error' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_invalid_remote_script_prevents_new_stamp[True-stage45_driver.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'syntax error' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_same_size_same_mtime_corruption_prevents_stamp[cfd/campaign/scripts/payload.sh] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'parity' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_same_size_same_mtime_corruption_prevents_stamp[cfd/dm_src/digitalmodel/payload.py] | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: assert 'parity' in '<tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory\n'
+tests/scripts/test_cfd_deploy_parity.py::test_verified_stamp_identifies_exact_revision | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: <tmp> line 75: TMPDIR: TMPDIR must name the deployment scratch directory
+tests/solvers/orcaflex/test_model_catalogue.py::test_committed_page_is_fresh | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): assert b'<!doctype h.../ul></html>\n' == b'<!doctype h.../ul></html>\n'
+tests/specialized/cli/test_installed_wall_thickness.py::test_harness_rejects_mismatched_entry_point | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: Regex pattern did not match.
+tests/specialized/cli/test_installed_wall_thickness.py::test_wall_thickness_entry_point_matches_project | fails on main 09089a121 (Main full run 40681832429 / domain run 40681832270): AssertionError: Install digitalmodel in the test environment

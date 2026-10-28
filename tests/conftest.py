@@ -143,7 +143,8 @@ if 'digitalmodel.subsea.catenary_riser.legacy.catenary_riser_summary' not in sys
 # tests/quarantine.txt and tracked by one GitHub issue. Each listed test still
 # runs; it is marked xfail(strict=False), so a failure does not fail the gate and
 # a pass is reported as XPASS -- the signal to delete its line. A node id without
-# a parameter suffix covers every parametrization of that test.
+# a parameter suffix covers every parametrization of that test; a bare file
+# path covers every test in that file.
 _QUARANTINE_FILE = Path(__file__).parent / "quarantine.txt"
 
 
@@ -166,6 +167,8 @@ def pytest_collection_modifyitems(config, items):
         return
     for item in items:
         node_id = item.nodeid
-        reason = quarantine.get(node_id) or quarantine.get(node_id.split("[", 1)[0])
+        reason = (quarantine.get(node_id)
+                  or quarantine.get(node_id.split("[", 1)[0])
+                  or quarantine.get(node_id.split("::", 1)[0]))
         if reason:
             item.add_marker(pytest.mark.xfail(reason=f"quarantine: {reason}", strict=False))
