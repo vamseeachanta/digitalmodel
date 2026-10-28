@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Regression cases for the PR 2338 review; synthetic inputs only."""
 
 from copy import deepcopy
@@ -103,7 +106,7 @@ def test_length_confirmation_requires_boolean(reference, confirmation):
 
 def test_confirmed_boundary_preserves_reference_pressures(reference):
     result = assess(reference)
-    assert result["decision"]["verdict"] == "ACCEPT"
+    assert result["decision"]["verdict"] == "ESCALATE"  # A14
     assert any(
         "full defect length is caller confirmed." in note
         for note in result["limitations"]

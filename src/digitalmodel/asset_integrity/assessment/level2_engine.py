@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS Level 2 detailed assessment — RSF and Folias-factor calculations.
 
 Implements API 579-1/ASME FFS-1 Level 2 acceptance criterion:
@@ -45,10 +48,13 @@ import math
 import numpy as np
 import pandas as pd
 
+from digitalmodel.asset_integrity._validation import finite_number, measured_grid
 from digitalmodel.asset_integrity.applicability import (
     API579_FOLIAS_LAMBDA_FLAG,
     Applicability,
     check_upper_limit,
+    flagged,
+    merge,
 )
 
 _SUPPORTED_TYPES = {"GML", "LML"}
@@ -81,6 +87,8 @@ class Level2Engine:
         nominal_wt_in: float,
         t_min_in: float,
         rsf_a: float = 0.9,
+        *,
+        row_spacing_in: float | None = None,
     ) -> None:
         normalised = assessment_type.strip().upper()
         if normalised not in _SUPPORTED_TYPES:
@@ -93,6 +101,17 @@ class Level2Engine:
         self._nominal_wt = nominal_wt_in
         self._t_min = t_min_in
         self._rsf_a = rsf_a
+        self._row_spacing = row_spacing_in
+        for name, value in (("nominal_od_in", nominal_od_in),
+                            ("nominal_wt_in", nominal_wt_in), ("t_min_in", t_min_in),
+                            ("rsf_a", rsf_a)):
+            finite_number(value, name)
+        if nominal_od_in <= 2 * max(nominal_wt_in, t_min_in):
+            raise ValueError("Supported geometry requires OD > 2 times nominal and required wall")
+        if rsf_a > 1:
+            raise ValueError("rsf_a must be in (0, 1]")
+        if row_spacing_in is not None:
+            finite_number(row_spacing_in, "row spacing")
 
     # ------------------------------------------------------------------
     # Public interface
@@ -117,21 +136,22 @@ class Level2Engine:
                     ``API579_FOLIAS_LAMBDA_GT_20`` when the shell parameter
                     exceeds the Table 4.4 range and M_t was frozen (#1094)
         """
+        values = measured_grid(grid_df)
+        if 2 * float(values.max()) >= self._od:
+            raise ValueError("Measured wall requires OD > 2 times wall")
         if self._type == "GML":
             return self._evaluate_gml(grid_df)
         return self._evaluate_lml(grid_df)
 
     def local_loss_projection_domain(self, grid_df: pd.DataFrame):
-        """Lambda-range wall interval when only current minima decrease.
+        """Supported wall interval when only current minima decrease.
 
-        Geometry is checked without evaluating an unsupported strength result.
-        The existing Table 4.4 cap and Rt=1 exception govern this interval;
-        remaining-thickness ratio and minimum-wall limits are not checked.
-        Zero is a mathematical endpoint, not a qualified perforated wall.
-        ``None`` means the current geometry is outside that lambda range.
+        Wall at or above the required reference needs no reduced-wall credit.
+        Below it, the missing circumferential criterion withholds a projection;
+        ``None`` means no supported depletion interval is established.
         """
-        values = grid_df.to_numpy(dtype=float)
-        present = values[~np.isnan(values)]
+        values = measured_grid(grid_df)
+        present = values.ravel()
         dimensions = (self._od, self._nominal_wt, self._t_min)
         if (self._type != "LML" or not present.size
                 or not np.isfinite(present).all() or (present <= 0).any()
@@ -139,17 +159,10 @@ class Level2Engine:
                 or self._od <= 2 * self._t_min):
             raise ValueError("Local-loss projection requires positive finite geometry")
         upper = float(present.min())
-        projected = grid_df.copy()
-        projected[grid_df == upper] = 0.0  # Geometry only; no strength calculation.
-        _, projected_lam, _ = self._lml_geometry(projected)
-        if projected_lam <= _LAMBDA_UPPER:
-            return 0.0, upper
-        lower = self._t_min  # Rt=1 remains supported by the existing engine.
-        _, current_lam, _ = self._lml_geometry(grid_df)
-        threshold = self._nominal_wt * _FLAW_THRESHOLD_RATIO
-        if current_lam <= _LAMBDA_UPPER and upper >= threshold:
-            lower = min(lower, threshold)
-        return (lower, upper) if lower <= upper else None
+        self._lml_geometry(grid_df)  # Validate the physical axial convention.
+        # Below the required wall an independent circumferential criterion is
+        # needed. Only unreduced wall (Rt=1) has a qualified interval here.
+        return (self._t_min, upper) if upper >= self._t_min else None
 
     # ------------------------------------------------------------------
     # GML assessment (Part 4 Level 2)
@@ -166,9 +179,10 @@ class Level2Engine:
         t_mm = float(grid_df.min(skipna=True).min())
         t_c = self._t_min  # conservative: use t_min as the reference
 
-        rsf = t_am / t_c if t_c > 0 else float("inf")
+        rsf = t_am / t_c
         rsf = min(rsf, 1.0)  # RSF cannot exceed 1.0
 
+        # Strength criterion: RSF >= the validated allowable.
         verdict = "ACCEPT" if rsf >= self._rsf_a else "FAIL_LEVEL_2"
 
         return {
@@ -204,7 +218,7 @@ class Level2Engine:
         l_a, lam, mt = self._lml_geometry(grid_df)
 
         # Thickness ratio Rt = t_mm / t_c
-        rt = t_mm / t_c if t_c > 0 else 1.0
+        rt = t_mm / t_c
         rt = min(rt, 1.0)  # cap at 1.0
 
         # Applicability (finding #1094-11): beyond lambda = 20 M_t is frozen at
@@ -227,7 +241,16 @@ class Level2Engine:
             rsf = rt / denominator
         rsf = min(rsf, 1.0)
 
-        verdict = "ACCEPT" if rsf >= self._rsf_a else "FAIL_LEVEL_2"
+        # The axial estimate cannot clear the missing independent width check.
+        if rt < 1:
+            applicability = merge(applicability, flagged(
+                "LML_CIRCUMFERENTIAL_NOT_EVALUATED",
+                "Circumferential extent criterion is not implemented; provide a "
+                "qualified width assessment before crediting reduced wall",
+            ))
+        # Full code-required wall (Rt=1) needs no reduced-wall width credit.
+        verdict = ("FAIL_LEVEL_2" if rsf < self._rsf_a else
+                   "NOT_EVALUATED" if not applicability.ok else "ACCEPT")
 
         return {
             "verdict": verdict,
@@ -246,9 +269,11 @@ class Level2Engine:
     def _lml_geometry(self, grid_df: pd.DataFrame):
         """Shared geometry for assessment and projection-domain qualification."""
         flaw_mask = grid_df < self._nominal_wt * _FLAW_THRESHOLD_RATIO
-        flaw_row_count = int(flaw_mask.any(axis=1).sum())
-        spacing = self._infer_spacing(grid_df.index)
-        length = max(flaw_row_count * spacing, spacing)
+        spacing = self._infer_spacing(grid_df.index, self._row_spacing)
+        # Numeric coordinates are cell starts in inches on a uniform lattice.
+        # Include sound gaps between separated flaws in the complete extent.
+        rows = np.flatnonzero(flaw_mask.any(axis=1).to_numpy())
+        length = (int(rows[-1] - rows[0]) + 1) * spacing if rows.size else spacing
         nominal_id = self._od - 2.0 * self._t_min
         return (length, self._shell_parameter(length, nominal_id, self._t_min),
                 self._folias_factor(length, nominal_id, self._t_min))
@@ -277,9 +302,6 @@ class Level2Engine:
         Returns:
             Folias factor M_t (always >= 1.0).
         """
-        if nominal_id <= 0 or t_c <= 0:
-            return 1.0
-
         lam = Level2Engine._shell_parameter(l_a, nominal_id, t_c)
 
         if lam <= _LAMBDA_LOWER:
@@ -296,23 +318,33 @@ class Level2Engine:
     def _shell_parameter(l_a: float, nominal_id: float, t_c: float) -> float:
         """API 579 shell parameter ``lambda = 1.285 L_a / sqrt(D t_c)``.
 
-        Returns 0.0 for a degenerate geometry (M_t is then 1.0).
+        Degenerate or non-finite geometry has no supported shell parameter.
         """
-        if nominal_id <= 0 or t_c <= 0:
-            return 0.0
+        for name, value in (("flaw length", l_a), ("internal diameter", nominal_id),
+                            ("reference wall", t_c)):
+            finite_number(value, name)
         return 1.285 * l_a / math.sqrt(nominal_id * t_c)
 
     @staticmethod
-    def _infer_spacing(index: pd.Index) -> float:
-        """Infer the row spacing from a numeric index, defaulting to 1.0."""
-        try:
-            idx_vals = [float(v) for v in index]
-        except (TypeError, ValueError):
-            return 1.0
-        if len(idx_vals) < 2:
-            return 1.0
-        gaps = [idx_vals[i + 1] - idx_vals[i] for i in range(len(idx_vals) - 1)]
-        positive_gaps = [g for g in gaps if g > 0]
-        if not positive_gaps:
-            return 1.0
-        return min(positive_gaps)
+    def _infer_spacing(index: pd.Index, explicit_pitch: float | None = None) -> float:
+        """Require ordered finite numeric cell starts and a uniform inch pitch.
+
+        A single row requires an explicit physical pitch. Irregular sampling
+        needs a different integration method and is rejected here.
+        """
+        values = index.to_numpy()
+        if (not values.size or values.dtype.kind not in "iuf"
+                or not np.isfinite(values).all()):
+            raise ValueError("Axial coordinates require finite numeric inch spacing")
+        if explicit_pitch is not None:
+            finite_number(explicit_pitch, "explicit pitch")
+        if len(values) == 1:
+            if explicit_pitch is None:
+                raise ValueError("Single-row coordinates require explicit physical pitch")
+            return explicit_pitch
+        gaps = np.diff(values.astype(float))
+        if (gaps <= 0).any() or not np.allclose(gaps, gaps[0], rtol=1e-9, atol=0):
+            raise ValueError("Axial coordinates require strictly increasing uniform spacing")
+        if explicit_pitch is not None and not math.isclose(explicit_pitch, gaps[0], rel_tol=1e-9):
+            raise ValueError("Explicit pitch disagrees with axial coordinates")
+        return float(gaps[0])

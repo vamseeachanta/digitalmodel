@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Grid parser for FFS wall thickness inspection data.
 
 Normalises any supported input format to a 2-D pandas DataFrame where:
@@ -21,6 +24,8 @@ from typing import IO, Optional, Union
 
 import numpy as np
 import pandas as pd
+
+from digitalmodel.asset_integrity._validation import finite_number, measured_grid
 
 # Conversion constant — 1 inch = 25.4 mm
 _MM_PER_INCH = 25.4
@@ -67,6 +72,8 @@ class GridParser:
                 f"Use one of: {sorted(_SUPPORTED_UNITS)}"
             )
 
+        measured_grid(df)
+        finite_number(data_correction_factor, "data_correction_factor")
         result = df.copy().astype(float)
 
         # Apply vendor data correction factor (e.g. C-scan %)
@@ -77,9 +84,8 @@ class GridParser:
         if normalised_units in {"mm", "millimeter", "millimeters"}:
             result = result / _MM_PER_INCH
 
-        if drop_all_nan_rows:
-            result = result.dropna(how="all")
-
+        # Missing readings cannot be dropped to obtain an apparently sound grid.
+        measured_grid(result)
         return result
 
     @staticmethod
@@ -161,14 +167,14 @@ class GridParser:
     @staticmethod
     def min_thickness(df: pd.DataFrame) -> float:
         """Return the minimum (non-NaN) thickness value in the grid (inches)."""
-        return float(df.min(skipna=True).min())
+        return float(measured_grid(df).min())
 
     @staticmethod
     def max_thickness(df: pd.DataFrame) -> float:
         """Return the maximum (non-NaN) thickness value in the grid (inches)."""
-        return float(df.max(skipna=True).max())
+        return float(measured_grid(df).max())
 
     @staticmethod
     def mean_thickness(df: pd.DataFrame) -> float:
         """Return the area-averaged mean thickness over the grid (inches)."""
-        return float(df.mean(skipna=True).mean())
+        return float(measured_grid(df).mean())
