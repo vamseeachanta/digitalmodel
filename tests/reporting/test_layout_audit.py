@@ -5,6 +5,12 @@ reporting/assets/calc_report_format.html, numbered L1/L2 sections (repository
 revision at introduction). Fixture labels are independent ordinal calculations:
 the first section's first and second subsections are 1.1 and 1.2; the next
 section's first subsection is 2.1. These are document positions, not limits.
+
+Plan-lite: before merge, run this module to confirm assessment isolation across
+valid/invalid/valid documents and the appended third section's 3.1 ordinal.
+Separate negative controls will check contents order and subsection labels.
+The audit implementation will remain unchanged; CSS/browser visibility will
+remain NOT_EVALUATED.
 """
 
 import importlib.util
@@ -38,6 +44,87 @@ def test_explicit_labels_follow_document_order_and_reset_per_section():
     assert checks["contents_order"].status == "PASS"
     assert checks["subsection_labels"].status == "PASS"
     assert checks["visible_numbering"].status == "NOT_EVALUATED"
+
+
+def test_layout_assessment_is_independent_between_documents():
+    """Hand count: each unrelated section has its first subsection, 1.1/2.1.
+
+    Both labels below are wrong; repeated IDs and reversed contents are
+    separate structural failures. No browser visibility is inferred.
+    """
+    first_checks = audit_calc_report_html(DOCUMENT)
+    assert first_checks["anchors"].status == "PASS"
+    assert first_checks["contents_order"].status == "PASS"
+    assert first_checks["subsection_labels"].status == "PASS"
+    assert first_checks["visible_numbering"].status == "NOT_EVALUATED"
+    original_checks = first_checks.copy()
+
+    unrelated_document = """
+    <nav class="toc"><a href="#closing">Closing</a><a href="#opening">Opening</a></nav>
+    <main class="main">
+      <section id="opening">
+        <div class="l2" id="repeated"><div class="l2head">
+          <span class="n">1.2</span><h3>Opening method</h3></div></div>
+      </section>
+      <section id="closing">
+        <div class="l2" id="repeated"><div class="l2head">
+          <span class="n">2.2</span><h3>Closing method</h3></div></div>
+      </section>
+    </main>
+    """
+    unrelated_checks = audit_calc_report_html(unrelated_document)
+    assert unrelated_checks["anchors"].status == "FAIL"
+    assert unrelated_checks["contents_order"].status == "FAIL"
+    assert unrelated_checks["subsection_labels"].status == "FAIL"
+    assert unrelated_checks["visible_numbering"].status == "NOT_EVALUATED"
+    assert first_checks == original_checks
+
+    repeated_checks = audit_calc_report_html(DOCUMENT)
+    assert repeated_checks == original_checks
+    assert repeated_checks["visible_numbering"].status == "NOT_EVALUATED"
+
+
+def test_appended_section_uses_document_ordinal():
+    """Hand count: after DOCUMENT's two sections, the new first label is 3.1.
+
+    A 2.2 label would instead continue the second section's subsection count.
+    Contents positions are first, next, appended, independently of labels.
+    """
+    document = DOCUMENT.replace(
+        "</nav>", '<a href="#appended">Appended</a></nav>'
+    ).replace(
+        "</main>",
+        """
+        <section id="appended">
+          <div class="l2" id="appended-method"><div class="l2head">
+            <span class="n">3.1</span><h3>Appended method</h3></div></div>
+        </section>
+        </main>
+        """,
+    )
+    checks = audit_calc_report_html(document)
+    assert checks["anchors"].status == "PASS"
+    assert checks["contents_order"].status == "PASS"
+    assert checks["subsection_labels"].status == "PASS"
+    assert checks["visible_numbering"].status == "NOT_EVALUATED"
+
+    wrong_contents = document.replace(
+        '<a href="#next">Next</a><a href="#appended">Appended</a>',
+        '<a href="#appended">Appended</a><a href="#next">Next</a>',
+    )
+    contents_checks = audit_calc_report_html(wrong_contents)
+    assert contents_checks["anchors"].status == "PASS"
+    assert contents_checks["contents_order"].status == "FAIL"
+    assert contents_checks["subsection_labels"].status == "PASS"
+    assert contents_checks["visible_numbering"].status == "NOT_EVALUATED"
+
+    wrong_label = document.replace(">3.1<", ">2.2<")
+    label_checks = audit_calc_report_html(wrong_label)
+    assert label_checks["anchors"].status == "PASS"
+    assert label_checks["contents_order"].status == "PASS"
+    assert label_checks["subsection_labels"].status == "FAIL"
+    assert "3.1" in " ".join(label_checks["subsection_labels"].details)
+    assert label_checks["visible_numbering"].status == "NOT_EVALUATED"
 
 
 @pytest.mark.parametrize("replacement", ['id="method-a"', 'id=""'])
