@@ -44,6 +44,16 @@ DISCOVERY_FALSE_POSITIVES = {
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
     ),
+    "scripts/reporting/report_evidence_audit.py": (
+        "writes docs/audits/module-report-evidence.json and "
+        "docs/audits/module-report-evidence.html, not docs/api pages; "
+        "command: python scripts/reporting/report_evidence_audit.py --root . "
+        "--observations docs/audits/module-report-evidence.json "
+        "--out-dir docs/audits; inputs: the JSON observations, the Git tree at "
+        "its inspection_revision and current bytes of its frozen source_files; "
+        "tests/reporting/test_report_evidence_audit.py checks output stability "
+        "and stale-input handling without executing report builders"
+    ),
     "scripts/reports/build_vessel_seakeeping_module_report.py": (
         "renders the seakeeping analysis under docs/reports, not docs/api; "
         "dedicated reporting tests verify byte reproduction and worked values"
