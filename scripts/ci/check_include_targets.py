@@ -100,7 +100,8 @@ def broken_references(root, tracked):
             continue
         try:
             for reference in extract_references((root / source).read_bytes()):
-                if resolve_target(source, reference) not in tracked:
+                target = resolve_target(source, reference)
+                if target not in tracked or not (root / target).is_file():
                     broken.add((source, reference))
         except (OSError, UnicodeError, yaml.YAMLError, ValueError, TypeError) as exc:
             errors.append(f"{source}: reference extraction failed: {exc}")
@@ -135,7 +136,9 @@ def write_baseline(path, broken):
 
 def report_broken(root, source, reference):
     target = resolve_target(source, reference)
-    print(f"untracked include target: {source} -> {reference} (target: {target})")
+    print(f"unresolved include target: {source} -> {reference} (target: {target})")
+    if not (root / target).is_file():
+        print("  target missing from working tree or not a regular file")
     if git(root, "check-ignore", "-q", "--", target).returncode == 0:
         ignored = git(root, "check-ignore", "-v", "--", target)
         if ignored.returncode:
