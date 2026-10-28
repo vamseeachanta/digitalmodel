@@ -636,3 +636,13 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain only the HIPPS module report builder and its exact delivery files.
+!/scripts/reports/build_hipps_module_report.py
+!/docs/reports/modules/hipps/
+/docs/reports/modules/hipps/*
+!/docs/reports/modules/hipps/index.html
+!/docs/reports/modules/hipps/changes.json
+!/docs/reports/modules/hipps/results.json
+!/docs/reports/modules/hipps/manifest.json
+!/docs/reports/modules/hipps/README.md
