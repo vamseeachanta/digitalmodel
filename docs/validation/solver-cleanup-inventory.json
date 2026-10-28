@@ -1,0 +1,207 @@
+{
+  "scope": "Bounded manual source inventory of selected local solver harnesses and containment helpers; not an exhaustive repository or runtime process inventory.",
+  "entries": [
+    {
+      "id": "native-smoke-model",
+      "classification": "QUERY_BEFORE_CLOSE",
+      "sources": [
+        {
+          "path": "docs/plans/evidence/issue-2082-native.ps1",
+          "sha256": "98a1bb2ee2ec2106d27b1fae52af1987ac908ae556f9444a0fcbeeed999d33dc"
+        }
+      ],
+      "observations": {
+        "termination_requested": "drain_owned requests TerminateJobObject when members or the root remain; cleanup_owned also handles an unassigned root.",
+        "root_exited": "drain_owned observes the retained root handle separately from job accounting.",
+        "whole_owned_job_drained": "active_processes queries ActiveProcesses while the job remains open; drain_owned requires both an empty job and an exited root.",
+        "cleanup_unknown": "Query, termination, deadline and close errors propagate; Model mode sets cleanup_state unknown before each phase."
+      },
+      "follow_up": "Retain the repaired issue #2093 contract; qualify actual operating-system behavior separately."
+    },
+    {
+      "id": "cylinder-windows",
+      "classification": "QUERY_BEFORE_CLOSE",
+      "sources": [
+        {
+          "path": "src/digitalmodel/ansys/cylinder_process.py",
+          "sha256": "6a91eddc2a9dfffff6d9ca55bd89b53d224106b42cd9f3c15d69773339b0fb59"
+        },
+        {
+          "path": "src/digitalmodel/ansys/cylinder_process_windows.py",
+          "sha256": "b746ae57e916a31d2025fee9ede11fc73a423575cabcbca49b6997cc1f5d0338"
+        },
+        {
+          "path": "src/digitalmodel/ansys/cylinder_runner.py",
+          "sha256": "5091b6969b65250ba05642a7c016ed71f64ca0dc5aee2c7d45d94391a44ac5f9"
+        }
+      ],
+      "observations": {
+        "termination_requested": "WindowsSupervisor.terminate requests job termination after assignment or direct-root kill after failed assignment.",
+        "root_exited": "WindowsSupervisor.wait and close wait on the launched process.",
+        "whole_owned_job_drained": "_settle polls supervisor.active before close; WindowsJob.active queries job accounting using a retained handle.",
+        "cleanup_unknown": "_settle records unknown member counts on errors and retains unsettled supervisors in an in-memory dictionary."
+      },
+      "follow_up": "Review restart persistence and resource-release consumers before treating in-memory retention as a durable interlock."
+    },
+    {
+      "id": "cylinder-posix",
+      "classification": "GROUP_ONLY",
+      "sources": [
+        {
+          "path": "src/digitalmodel/ansys/cylinder_process.py",
+          "sha256": "6a91eddc2a9dfffff6d9ca55bd89b53d224106b42cd9f3c15d69773339b0fb59"
+        },
+        {
+          "path": "src/digitalmodel/ansys/cylinder_runner.py",
+          "sha256": "5091b6969b65250ba05642a7c016ed71f64ca0dc5aee2c7d45d94391a44ac5f9"
+        }
+      ],
+      "observations": {
+        "termination_requested": "PosixSupervisor.terminate signals the process group while retaining the unreaped leader.",
+        "root_exited": "PosixSupervisor.wait uses waitid without reaping until close.",
+        "whole_owned_job_drained": "active scans the original group and excludes zombies; escaped descendants are outside that census. containment_verified is false.",
+        "cleanup_unknown": "_settle retains unresolved supervisors, but group absence cannot establish whole-owned-tree absence."
+      },
+      "follow_up": "Preserve the explicit unqualified containment status; require an approved containment design before reuse qualification."
+    },
+    {
+      "id": "ghs-sentinel",
+      "classification": "CALLER_CENSUS",
+      "sources": [
+        {
+          "path": "src/digitalmodel/solvers/ghs/_owned_process.py",
+          "sha256": "07e9ab44593629cb32351e020d6d67a1d839695fe26f7391f5b076be2f4d7107"
+        },
+        {
+          "path": "src/digitalmodel/solvers/ghs/_qualification_scenarios.py",
+          "sha256": "65d57f4b87707e0d841e303abbce1445ca3bd5b8f724195d61e3167106a61c05"
+        },
+        {
+          "path": "src/digitalmodel/solvers/ghs/_qualification_state.py",
+          "sha256": "b43340534980e5df464584d7e2620be7ec77784da533fd119c4d1732859a60dc"
+        },
+        {
+          "path": "src/digitalmodel/solvers/ghs/_windows_job.py",
+          "sha256": "03351f97a44d81e78afa051e58d7ec00954e05a3683afb53420f94fcd0ef9f1c"
+        },
+        {
+          "path": "src/digitalmodel/solvers/ghs/runner.py",
+          "sha256": "364c67969ad59d4b19d81f3c07f3d416bb2b516c2c9161a52e381ef20d75981b"
+        }
+      ],
+      "observations": {
+        "termination_requested": "Owned.cleanup closes the kill-on-close job; cleanup_failed_launch can request direct-root termination.",
+        "root_exited": "Owned.cleanup waits only on the root handle after closing the job.",
+        "whole_owned_job_drained": "The helper alone has no drain query. Resources.close_all additionally waits retained identities and requires complete_census with no pending creation.",
+        "cleanup_unknown": "Resources.close_all refuses confirmation on errors or incomplete census; the qualification journal preserves unfinished stages. The live capture backend is disabled."
+      },
+      "follow_up": "Do not generalize the root-only helper to arbitrary solvers; review census completeness and crash paths together with its caller."
+    },
+    {
+      "id": "orcaflex-reproduce",
+      "classification": "ROOT_ONLY",
+      "sources": [
+        {
+          "path": "src/digitalmodel/workflows/orcaflex_reproduce.py",
+          "sha256": "b55829f21be631d8e956b8f5f3cdab02f41b8499737b40f309637247b0bce9a3"
+        }
+      ],
+      "observations": {
+        "termination_requested": "_terminate invokes taskkill on Windows or signals a POSIX group; fallback requests direct-root kill on Windows.",
+        "root_exited": "_solve and _terminate wait for the launched child.",
+        "whole_owned_job_drained": "No retained Job Object or complete descendant census is present in these functions, including normal completion before readback.",
+        "cleanup_unknown": "Root wait failures can propagate; successful root wait does not establish descendant absence or a persistent cleanup interlock."
+      },
+      "follow_up": "Prepare a reviewed containment-and-drain change before this route can supply whole-process cleanup evidence."
+    },
+    {
+      "id": "orcawave-batch",
+      "classification": "ROOT_ONLY",
+      "sources": [
+        {
+          "path": "src/digitalmodel/solvers/orcawave/diffraction/orchestrator.py",
+          "sha256": "62b46c533f6541861f370a166521f659c9f112e719ea17af873bd895e46cfbee"
+        }
+      ],
+      "observations": {
+        "termination_requested": "_phase2_orcawave_execution has no explicit tree termination or process budget around the batch invocation.",
+        "root_exited": "subprocess.run waits for the shell-launched batch process and checks its return code.",
+        "whole_owned_job_drained": "The inspected method supplies no whole-job drain observation before later phases.",
+        "cleanup_unknown": "Exceptions return failure but no explicit cleanup-unknown state or durable interlock is established here."
+      },
+      "follow_up": "Review shell and batch ownership plus timeout behavior before proposing cleanup changes."
+    },
+    {
+      "id": "aqwa-external-force",
+      "classification": "ROOT_ONLY",
+      "sources": [
+        {
+          "path": "src/digitalmodel/hydrodynamics/aqwa/aqwa_utilities.py",
+          "sha256": "f7d71b942e0d0341149cd933d79976ed02763e0d268c849363275284bb8c5e74"
+        },
+        {
+          "path": "src/digitalmodel/hydrodynamics/aqwa/aqwa_analysis_ef_server.py",
+          "sha256": "b45a9676c0c2c99f3fdeda4ce1c740811beef707c39befeaff3c5182bbd99933"
+        }
+      ],
+      "observations": {
+        "termination_requested": "The external-force failure path terminates the launched root when still running.",
+        "root_exited": "The synchronous utility uses subprocess.run; the external-force caller waits on the launch-only Popen before the next iteration.",
+        "whole_owned_job_drained": "Neither inspected route supplies a whole-job membership/drain query; the external-force root wait has no timeout.",
+        "cleanup_unknown": "Root or server failures do not establish descendant absence; explicit cleanup uncertainty and restart quarantine are not established here."
+      },
+      "follow_up": "Plan the external server and solver lifetime together, retaining the existing explicit native opt-in."
+    },
+    {
+      "id": "orcaflex-pool",
+      "classification": "IN_PROCESS",
+      "sources": [
+        {
+          "path": "src/digitalmodel/solvers/orcaflex/parallel_runner.py",
+          "sha256": "d3ded9564b753fdaec7a974df462652d3cba4ed5d82dde0a2ca2e4e69d7b0fc6"
+        }
+      ],
+      "observations": {
+        "termination_requested": "run_cases cancels pending futures on shutdown; this is not an observed whole-process termination result.",
+        "root_exited": "Future completion is observed for submitted work; broken pools use shutdown with wait false before possible replacement.",
+        "whole_owned_job_drained": "The inspected scheduler has no Job Object census; in-process native calls and broken-worker replacement need a separate ownership analysis.",
+        "cleanup_unknown": "Worker exceptions produce infrastructure-fault records; these records do not assert whole-owned-job drain."
+      },
+      "follow_up": "Review broken-pool replacement and native worker lifetime before proposing any scheduler change."
+    },
+    {
+      "id": "openfoam-detached",
+      "classification": "ROOT_ONLY",
+      "sources": [
+        {
+          "path": "src/digitalmodel/solvers/openfoam/runner.py",
+          "sha256": "e9762f9609f2bafca3ed5f117e5f0b4e4deb2248cbd0b84ae82b0caea3467cb5"
+        }
+      ],
+      "observations": {
+        "termination_requested": "_terminate_group signals the original process group; ProcessLookupError and PermissionError return without a drain result.",
+        "root_exited": "_process_alive checks the recorded root PID; poll_detached_run sets running false and terminated true after the termination helper returns.",
+        "whole_owned_job_drained": "No complete descendant census or empty-group observation accompanies that result.",
+        "cleanup_unknown": "The terminated flag records the helper path, not confirmed owned-tree absence. Detached execution intentionally returns before completion."
+      },
+      "follow_up": "Treat as an unlicensed comparison case; plan identity-bound group observation before strengthening termination claims."
+    },
+    {
+      "id": "calculix-chain",
+      "classification": "ROOT_ONLY",
+      "sources": [
+        {
+          "path": "src/digitalmodel/solvers/calculix/fem_chain.py",
+          "sha256": "855c7be3208f45220a39dea7dc760168d093752460fad068af3ce442d53a5808"
+        }
+      ],
+      "observations": {
+        "termination_requested": "solve delegates process timeout handling to subprocess.run.",
+        "root_exited": "CompletedProcess.returncode supplies direct-child exit evidence.",
+        "whole_owned_job_drained": "The inspected method has no explicit descendant containment or whole-job drain query.",
+        "cleanup_unknown": "A subprocess timeout is not a whole-tree cleanup receipt."
+      },
+      "follow_up": "Treat as an unlicensed comparison case; review child spawning before proposing containment changes."
+    }
+  ]
+}
