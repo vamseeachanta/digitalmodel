@@ -61,17 +61,27 @@ class ModelValidationError(ValueError):
 
 
 @contextmanager
-def _staged_output(output_dir: Path):
+def _staged_output(output_dir: Path, failure_dir: Path | None = None):
     """Publish model files only after generation and validation succeed.
 
     A validation or builder failure leaves even an existing output untouched.
     Publication copies files after validation; it is not an atomic transaction
     against I/O failures during the copy itself.
+    Optional failure retention copies staging before temporary cleanup. A copy
+    failure is noted without replacing the original generation exception.
     """
     with TemporaryDirectory(prefix="modular-model-") as temporary:
         staging = Path(temporary)
-        yield staging
-        shutil.copytree(staging, output_dir, dirs_exist_ok=True)
+        try:
+            yield staging
+            shutil.copytree(staging, output_dir, dirs_exist_ok=True)
+        except BaseException as exc:
+            if failure_dir is not None:
+                try:
+                    shutil.copytree(staging, failure_dir)
+                except Exception as error:
+                    exc.add_note(f"Failed staging could not be retained ({type(error).__name__})")
+            raise
 
 
 class _NoAliasDumper(yaml.Dumper):
@@ -194,13 +204,18 @@ class ModularModelGenerator:
             data = yaml.safe_load(f)
         return ProjectInputSpec(**data)
 
-    def generate(self, output_dir: Path, *, allow_validation_errors: bool = False) -> None:
+    def generate(
+        self, output_dir: Path, *, allow_validation_errors: bool = False,
+        failure_dir: Path | None = None,
+    ) -> None:
         """Validate then publish inputs; errors raise ModelValidationError.
 
         Set allow_validation_errors=True only to write diagnostic inputs. Error
         findings remain logged at ERROR level. Collection collisions still raise.
+        If failure_dir is supplied, copy failed staging there before cleanup.
+        An existing diagnostic directory is never overwritten.
         """
-        with _staged_output(Path(output_dir)) as staging:
+        with _staged_output(Path(output_dir), failure_dir) as staging:
             self._generate(staging, allow_validation_errors=allow_validation_errors)
 
     def _generate(self, output_dir: Path, *, allow_validation_errors: bool) -> None:
