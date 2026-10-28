@@ -46397,9 +46397,9 @@ rejected_candidates:
   - wind-and-current-force-routes
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: *ad21dec18f1
+- path: src/digitalmodel/structural/rainflow_cycles.py
   symbol: RainflowCycle
-  line: 23
+  line: 16
   families:
   - wind-and-current-force-routes
   disposition: needs_review
@@ -46761,9 +46761,9 @@ rejected_candidates:
   - *a71442a175b
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: *ad21dec18f1
+- path: src/digitalmodel/structural/rainflow_cycles.py
   symbol: RainflowCycle
-  line: 23
+  line: 16
   families:
   - *a71442a175b
   disposition: needs_review
