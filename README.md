@@ -177,7 +177,7 @@ MIT -- see [LICENSE](LICENSE)
 <!-- repo-architecture:start -->
 ## Capability architecture and provenance
 
-This drawing inventories 55 observed domain pages and 37 capability work declarations.
+This drawing inventories 58 observed domain pages and 37 capability work declarations.
 Evidence is reconciled with base revision `6581c271`; the branch does not merge that
 revision. Acceptance checks run against that base with these documentation changes.
 Amber nodes have inline data or incomplete reproduction evidence. Solid arrows
@@ -271,6 +271,14 @@ flowchart LR
     p18 --> pages
     p19["docs/api/cfd/wave-tank-verification.html<br/>external input or non-reproducible copy"]
     p19 --> pages
+    p55["docs/api/cfd/generic-hull-roll-screening.html<br/>registered generator"]
+    p55 --> pages
+    sp55["scripts/capabilities/build_generic_hull_screening.py<br/>direct calculation import not established"]
+    sp55 --> p55
+    ap55_0["docs/api/cfd/data/generic_hull_roll_screening.json<br/>committed"]
+    sp55 --> ap55_0
+    ip55_0["src/digitalmodel/hydrodynamics/utube_tank.py<br/>registered input"]
+    ip55_0 --> sp55
   end
   subgraph g_corrosion["corrosion"]
     p20["docs/api/corrosion/galvanic-compatibility-explorer.html<br/>registered generator"]
@@ -358,6 +366,18 @@ flowchart LR
     p36["docs/api/hydro/unit-box-benchmark/benchmark_report.html<br/>external input or non-reproducible copy"]
     p36 --> pages
     licenses -.-> p36
+    p56["docs/api/hydro/self-elevating-monitoring.html<br/>registered generator"]
+    p56 --> pages
+    sp56["scripts/capabilities/build_self_elevating_monitoring.py<br/>src/digitalmodel/marine_ops/self_elevating_monitoring.py"]
+    sp56 --> p56
+    ip56_0["pyproject.toml<br/>registered input"]
+    ip56_0 --> sp56
+    ip56_1["scripts/capabilities/build_self_elevating_monitoring.py<br/>registered input"]
+    ip56_1 --> sp56
+    ip56_2["scripts/capabilities/self_elevating_monitoring.html.template<br/>registered input"]
+    ip56_2 --> sp56
+    ip56_3["src/digitalmodel/marine_ops/self_elevating_monitoring.py<br/>registered input"]
+    ip56_3 --> sp56
   end
   subgraph g_installation["installation"]
     p37["docs/api/installation/installation-heading-explorer.html<br/>registered generator"]
@@ -372,6 +392,8 @@ flowchart LR
     ip37_2 --> sp37
     ap37_0["docs/api/installation/installation-heading-explorer.manifest.json<br/>committed"]
     sp37 --> ap37_0
+    p57["docs/api/installation/installation-forecast.html<br/>external input or non-reproducible copy"]
+    p57 --> pages
   end
   subgraph g_orcaflex["orcaflex"]
     p38["docs/api/orcaflex/riser-mesh-sensitivity.html<br/>external input or non-reproducible copy"]
