@@ -7,6 +7,11 @@ option value never selects tests, and removing any required path or node
 invalidates full coverage. No CI result supplies these expectations.
 """
 
+import os
+import shlex
+import subprocess
+import sys
+
 import pytest
 
 from tests.scripts._pytest_selection import pytest_selects_target
@@ -50,6 +55,9 @@ from tests.scripts._pytest_selection import pytest_selects_target
     ("{target} --ignore=tests/reporting/test_calc_report.py", False),
     ("{target} --ignore-glob tests/*", False),
     ("{target} --ignore-glob=tests/*", False),
+    ("tests/ --ignore-glob tests/reportin?", False),
+    ("tests/ --ignore-glob=tests/reportin?", False),
+    ("tests/ --ignore-glob=tests/reportin?_extra", True),
     ("{target} --ignore-glob *.py", False),
     ("{target} --ignore-glob=*.py", False),
     ("{target} --ignore-glob=./tests/reporting/test_*.py", False),
@@ -89,3 +97,47 @@ def test_explicit_registration_keeps_its_operand_requirement(
         ["tests/reporting/test_calc_report.py"],
         require_explicit_target=require_explicit,
     ) is expected
+
+
+@pytest.mark.parametrize("target", [
+    "tests/reporting/",
+    "tests/reporting/nested/test_example.py",
+], ids=["folder", "file"])
+@pytest.mark.parametrize("exclusion,expected_nodes", [
+    ("", ["tests/reporting/nested/test_example.py::test_example"]),
+    ("--ignore-glob tests/reportin?", []),
+    ("--ignore-glob=tests/reportin?", []),
+    ("--ignore-glob=tests/reporting/neste?", []),
+    ("--ignore-glob=tests/reportin?_extra", [
+        "tests/reporting/nested/test_example.py::test_example",
+    ]),
+])
+def test_ancestor_globs_match_real_collection(
+    tmp_path, pytestconfig, target, exclusion, expected_nodes,
+):
+    # Pruning either directory removes the sole test; unrelated globs keep it.
+    candidate = "tests/reporting/nested/test_example.py"
+    test_file = tmp_path / candidate
+    test_file.parent.mkdir(parents=True)
+    test_file.write_text(
+        "def test_example():\n    assert True\n", encoding="utf-8", newline="\n",
+    )
+    (tmp_path / "pytest.ini").write_text(
+        "[pytest]\n", encoding="utf-8", newline="\n",
+    )
+    env = os.environ.copy()
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        env.pop(name, None)
+    args = ["tests/", *shlex.split(exclusion)]
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", *args, "--collect-only", "-q",
+         "-p", "no:cacheprovider"],
+        cwd=tmp_path, env=env, capture_output=True, text=True, encoding="utf-8",
+        timeout=30,
+    )
+    assert result.returncode == (0 if expected_nodes else 5), result.stdout + result.stderr
+    collected = [line for line in result.stdout.splitlines() if "::" in line]
+    assert collected == expected_nodes
+    assert pytest_selects_target(
+        pytestconfig, f"python -m pytest tests/ {exclusion}", target, [candidate],
+    ) is bool(expected_nodes)

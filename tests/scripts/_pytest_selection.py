@@ -6,6 +6,7 @@ import fnmatch
 import posixpath
 import shlex
 from collections.abc import Iterable
+from pathlib import PurePosixPath
 
 import pytest
 
@@ -46,12 +47,16 @@ def pytest_selects_target(
         return False
 
     required_paths = {target, *(posixpath.normpath(path) for path in candidate_test_files)}
+    # Collection visits directories first, so a matching ancestor prunes its tests.
+    glob_paths = required_paths | {
+        parent.as_posix() for path in required_paths for parent in PurePosixPath(path).parents
+    }
     exclusions = (parsed.ignore or []) + (parsed.ignore_glob or []) + (parsed.deselect or [])
     for value in exclusions:
         excluded = posixpath.normpath(value.split("::", 1)[0])
         if (
             _covers(excluded, target) or _covers(target, excluded)
-            or any(fnmatch.fnmatchcase(path, excluded) for path in required_paths)
+            or any(fnmatch.fnmatchcase(path, excluded) for path in glob_paths)
         ):
             return False
     # Pytest deselects by node-id prefix, including a partial file name.
