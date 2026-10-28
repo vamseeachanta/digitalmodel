@@ -46,6 +46,7 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("docs/domains/", ("contracts",)),
     ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
     ("docs/maps/", ("contracts",)),
+    ("docs/development/example-test-policy.md", ("workflows",)),
     ("config/repo_structure.yml", ("contracts",)),
     ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),
     ("src/digitalmodel/cathodic_protection/", ("cathodic-protection",)),
@@ -78,6 +79,11 @@ PACKAGE_DATA_DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("naval_architecture/", ("naval-architecture",)),
 )
 NO_DOMAIN_PATHS = (
+    # Issue #1992, option 2: example demonstrations are explicitly non-gating.
+    # Their tests remain collectable; external intake resources and stale golden
+    # results must be repaired before assigning a gating shard. Policy and the
+    # worked routing example: docs/development/example-test-policy.md.
+    "examples/",
     # These paths are covered by CI harness tests or repo-wide
     # quality gates instead of the domain matrix.
     ".github/workflows/quality-gates.yml",
