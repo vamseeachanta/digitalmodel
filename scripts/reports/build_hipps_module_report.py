@@ -23,6 +23,9 @@ REVIEWED_REVISION = "09089a121a16069c4b657d1a320a630a23ab1dd5"
 CHANGES = [{
     "revision": "A", "date": "2026-10-28",
     "change": "Present synthetic reliability integrals and valve closure kinematics with independent arithmetic and byte-bound evidence to make the module scope and qualification gaps reviewable.",
+}, {
+    "revision": "B", "date": "2026-10-28",
+    "change": "Add captions below the history, input, results and inventory tables to identify their evidence and scope.",
 }]
 # These inputs are stipulated synthetic assumptions, not reliability data,
 # measured equipment properties, recommended design inputs or safety limits.
@@ -251,6 +254,7 @@ def render(data):
 <title>HIPPS module analysis</title><style>{brand}\n{layout}
 .wrap{{max-width:1100px;margin:auto;padding:28px;background:var(--panel)}}
 td{{vertical-align:top;overflow-wrap:anywhere}} code{{overflow-wrap:anywhere}}
+caption{{caption-side:bottom;text-align:left;padding:8px 0}}
 .scroll{{overflow-x:auto}} svg{{max-width:100%;height:auto}} nav a{{padding:6px}}
 @media print{{details{{display:block}} nav{{display:none}}}}
 </style></head><body class="hs-doc"><main class="wrap">
@@ -260,13 +264,13 @@ td{{vertical-align:top;overflow-wrap:anywhere}} code{{overflow-wrap:anywhere}}
 <h2 id="s1">1. Summary</h2>
 <p>The public package evaluates reliability approximations, encoded classification, a linear overpressure envelope, caller-factor liquid/gas sizing and ideal liquid surge. This report demonstrates only synthetic reliability integrals and valve kinematics. The answers are generated through public methods and checked against independent hand calculations [H].</p>
 <p>A returned band is not an achieved system SIL. Physical protection, architectural capability and functional-safety qualification are NOT_EVALUATED [P]. No equipment selection, compliance or operational release follows from these answers.</p>
-<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>{history}</tbody></table>
+<h3>Revision history</h3><table><caption>Table 1. Report revisions and reasons for each issue.</caption><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>{history}</tbody></table>
 <h2 id="s2">2. Context and scope</h2>
 <p>HIPPS means High Integrity Pressure Protection System. The intended package context is an instrumented closure function protecting a pressure boundary. This analysis inventories the available software, its units and known limits, without choosing a design basis or recommending reliability data. The full exported inventory is in the evidence section [P].</p>
 <p>Reviewed source revision: <code>{REVIEWED_REVISION}</code>. Package digests are checked before calculation. Classification, overpressure, liquid/gas capacity and surge APIs are inventoried only; this report executes no sizing or coupled transient case. No licensed solver is imported or queried.</p>
 <h2 id="s3">3. Input basis</h2>
 <p>All rates, dimensions, times and rangeability below are synthetic assumptions [H], not recommended reliability data, equipment properties or safety limits. The dangerous-undetected failure rate is constant; the proof interval has a perfect reset. Independent channels, synchronized interval origin, no repairs, no diagnosed-mode contribution and no proof-test outage are stipulated solely to define the integral.</p>
-<div class="scroll"><table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis [H]</th></tr></thead><tbody>{input_rows}</tbody></table></div>
+<div class="scroll"><table><caption>Table 2. Stipulated synthetic inputs, units and assumptions [H].</caption><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis [H]</th></tr></thead><tbody>{input_rows}</tbody></table></div>
 <p>Hours belong to the reliability integral; seconds belong to closure. No cross-domain time conversion or physical transient coupling is performed. A numerical sample at seating uses the stipulated seating instant rather than inferring a measured closure profile.</p>
 <h2 id="s4">4. Method</h2>
 <div class="eq">[H] p(t)=lambda*t; average = (integral from zero to T of p(t) dt)/T = lambda*T/2.</div>
@@ -282,7 +286,7 @@ td{{vertical-align:top;overflow-wrap:anywhere}} code{{overflow-wrap:anywhere}}
 <p>Separate tests compare delivered values with the independent targets, replay production outputs for freshness, build into two fresh external output directories and compare every byte with the committed delivery. Independent SHA-256 readback checks all manifest bindings. Changed signs and values fail numerical assertions even when the builder, report and newly calculated hashes agree. Tampering with a delivered result also fails its artifact digest [T]. Reproducibility is not physical validation.</p>
 <p>Local links, required sections, input/result units, public export inventory and escaped embedded JSON are checked. Execution counts are recorded in the delivery description rather than embedded as a time-dependent assertion. All intermediate calculation files stay in explicit external scratch.</p>
 <h2 id="s7">7. Results</h2>
-<div class="scroll"><table><thead><tr><th>Quantity</th><th>API answer</th><th>Unit</th><th>Public API</th><th>Basis</th></tr></thead><tbody>{result_rows}</tbody></table></div>
+<div class="scroll"><table><caption>Table 3. Public-API arithmetic results with independent derivation bases [H].</caption><thead><tr><th>Quantity</th><th>API answer</th><th>Unit</th><th>Public API</th><th>Basis</th></tr></thead><tbody>{result_rows}</tbody></table></div>
 <p>Displayed answers are rounded; <a href="results.json">results.json</a> retains full finite values. The comparisons use unrounded values. The reciprocal is arithmetic only; it is not demonstrated system risk reduction. No classification band table or design acceptance verdict is published.</p>
 <h2 id="s8">8. Limits / NOT_EVALUATED</h2>
 <ul><li>Functional safety: achieved system integrity, demand mode qualification, hazard/risk assessment, required integrity, lifecycle evidence and independent assessment are NOT_EVALUATED.</li>
@@ -299,7 +303,7 @@ td{{vertical-align:top;overflow-wrap:anywhere}} code{{overflow-wrap:anywhere}}
 <h2 id="s10">10. References and evidence</h2>
 <p>[H] Hand derivation in this report and <code>tests/reporting/test_hipps_module_report.py::test_reliability_integrals_and_closure_kinematics_match_hand_calculation</code>. Inputs are the synthetic stipulations in Input basis. Integration coefficients, reciprocal, uniform-speed quotient and normalized closure laws follow from the stated mathematics; no licensed equation or tabulated value is needed.</p>
 <p>[P] Reviewed repository package and its knowledge pack at the revision above. Code behavior is the software evidence, not an independent engineering authority. [T] Dedicated report tests, listed below, supply independent targets, negative controls and delivery checks. Palette and layout are inlined from the existing house style; no domain claims are inherited from the layout exemplar.</p>
-<details><summary>Complete public function and result-type inventory [P]</summary><div class="scroll"><table><thead><tr><th>Symbol, signature and source line</th><th>Inputs and units</th><th>Outputs and method</th><th>Status and limits</th></tr></thead><tbody>{contracts}</tbody></table></div></details>
+<details><summary>Complete public function and result-type inventory [P]</summary><div class="scroll"><table><caption>Table 4. Exported functions and result types, contracts and qualification limits [P].</caption><thead><tr><th>Symbol, signature and source line</th><th>Inputs and units</th><th>Outputs and method</th><th>Status and limits</th></tr></thead><tbody>{contracts}</tbody></table></div></details>
 <details><summary>Source byte evidence</summary><ul>{provenance}</ul></details>
 <p>The <a href="manifest.json">manifest</a> binds exact delivered bytes and current source digests; it excludes its own digest to avoid self-reference. The reviewed revision identifies the package basis, while the generator and report tests are bound by their own digests. <a href="changes.json">Change history</a> matches the revision table. <a href="README.md">Rebuild instructions</a> describe explicit output and scratch paths. The page works offline with inline styles and generated SVG; the embedded JSON is inert evidence.</p>
 </main><script id="calculation" type="application/json">{payload}</script></body></html>

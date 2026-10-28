@@ -224,6 +224,12 @@ def test_report_links_and_required_sections():
     parsed = Links()
     parsed.feed(page)
     assert not parsed.remote_assets
+    tables = re.findall(r"<table>(.*?)</table>", page, re.S)
+    assert len(tables) == 4
+    for number, table in enumerate(tables, 1):
+        assert re.match(rf"<caption>Table {number}\. [^<]+</caption><thead>", table)
+        assert table.count("<caption>") == 1
+    assert "caption{caption-side:bottom;" in page
     expected = ["Summary", "Context and scope", "Input basis", "Method", "Worked calculation",
                 "Checks", "Results", "Limits / NOT_EVALUATED", "Way forward", "References and evidence"]
     assert [text for tag, text in parsed.headings if tag == "h2"] == [

@@ -1,13 +1,13 @@
 {
   "artifacts": {
     "README.md": "25f02a64eef7c8d0e9c3d8380821eeda10e894eea2d56627272d4bc0c2eecb2a",
-    "changes.json": "70c0f30781decee760eb108db237c0134363d1f3c1f5859a399b5ec7223f9067",
-    "index.html": "2c118fbd0f40d4f1683dc11cd7f88f7e4d7d27b1553b73d2235cc0f890294c75",
+    "changes.json": "986beaa6e1e49e6fed91a9981abd39082dcbdd62c52a2f4e59a794805cc35a16",
+    "index.html": "a9813e1aacb1bd6db5c32745b2e0d4790492e655a2a5913e08a629797607b800",
     "results.json": "3c5b12d723cc671a044a5b0aed793f63ce5a95665ae9cbd6a2626b6c22ecd724"
   },
   "digest_convention": "SHA-256 over exact UTF-8 artifact bytes with LF line endings; manifest excludes itself.",
   "generator": "scripts/reports/build_hipps_module_report.py",
-  "generator_sha256": "7806f7fcc49e657808f3ab9b6fc198e48d6c1d51f14d35d5ccf747d18b10ad82",
+  "generator_sha256": "c06acf16e0156d7c753221cc4ea8523b6e8fef7b5e3509ea30037b8c727fda03",
   "reviewed_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
   "schema_version": 1,
   "sources": {
@@ -19,6 +19,6 @@
     "src/digitalmodel/subsea/hipps/pressure_surge.py": "e5a9c708ff5dc5dff92ff5108c2ca65718b9ed6edcca38b959c0a682ff1cde6a",
     "src/digitalmodel/subsea/hipps/sil_analysis.py": "a9f5317206f61b3eea8fc162d893c4c1666e8dbd87a9c9857ba81015b6dfa02c",
     "src/digitalmodel/subsea/hipps/valve_sizing.py": "9ae6b984ae9b02c170022e46f2b2cb11eb74b07a6af39232b813fca82820ae84",
-    "tests/reporting/test_hipps_module_report.py": "ae2b437be3f622a5ea255832faeaed6a3cda9930dcf110590c831c690cd9d08c"
+    "tests/reporting/test_hipps_module_report.py": "a9a4318a6da53faab4900a29ad3ed575a6121ad1070298189e85f538fda59d67"
   }
 }
