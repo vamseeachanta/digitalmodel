@@ -37,6 +37,7 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("scripts/enforcement/", ("workflows",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),
