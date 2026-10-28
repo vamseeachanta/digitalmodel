@@ -35,9 +35,10 @@ class TypicalRiserStackUpCalculations:
             "component_top_effective_tension",
             "true_tension",
         ]
+        # Labels are text; engineering quantities must retain fractional values.
         self.stack_up_properties_df = pd.DataFrame(
-            0, index=np.arange(len(self.riser_model.stack_up_table)), columns=columns
-        )
+            0.0, index=np.arange(len(self.riser_model.stack_up_table)), columns=columns
+        ).astype({"component": object})
 
         self.populate_elevation_from_endA_in_df()
         self.populate_shear7_x_by_L_in_df()
