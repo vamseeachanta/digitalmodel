@@ -66,6 +66,8 @@ except ImportError:  # pragma: no cover
 
 
 DEFAULT_NUM_NODES = 100
+# The periodic time stencil includes a duplicated endpoint and neighbours.
+MIN_CARD_SAMPLES = 4
 DEFAULT_SAVGOL_WINDOW = 21
 DEFAULT_SAVGOL_ORDER = 5
 STEEL_MODULUS_PA = 2.07e11
@@ -296,9 +298,9 @@ def build_simulation(
             f"position ({len(position)}) and load ({len(load)}) must have "
             "the same number of samples"
         )
-    if len(position) < 4:
+    if len(position) < MIN_CARD_SAMPLES:
         raise ValueError(
-            f"card needs at least 4 samples to march; got {len(position)}"
+            f"card needs at least {MIN_CARD_SAMPLES} samples to march; got {len(position)}"
         )
     if strokes_per_minute <= 0:
         raise ValueError(f"strokes_per_minute must be positive; got {strokes_per_minute}")
