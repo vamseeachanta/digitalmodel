@@ -9,6 +9,20 @@ existing mesh packaging and quality gates enabled. It checks every emitted
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-27 | Added a synthetic example to demonstrate the existing packaging API. |
+| A | 2026-10-27 | Added Plan-lite to state the example scope, focused checks and exclusions. |
+
+## Plan-lite
+
+Scope will remain limited to the synthetic single-body packaging example using
+`SpecConverter` and its existing mesh packaging and quality gates. Focused checks
+will cover single-file and modular output, emitted mesh references, package
+relocation, command execution from an unrelated working directory and missing
+mesh failures, using `test_spec_converter.py` and
+`test_synthetic_package_example.py`.
+
+Solver execution, hydrodynamic accuracy, mesh convergence and remaining issue
+#605 requirements will remain outside this example. Transactional replacement,
+package ownership and manifest guarantees will require separate work.
 
 ## Run from another working directory
 
