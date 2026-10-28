@@ -69,6 +69,7 @@ def _condition_tokens(derivation: "DoubleBodyDerivation") -> Dict[str, str]:
         "KINLET": f"{turb.k:.10e}",
         "OMEGAINLET": f"{turb.omega:.10e}",
         "NUTINLET": f"{turb.nut:.10e}",
+        "NUTWALLFUNCTION": cfg.wall_treatment["selected"],
     }
 
 
@@ -157,6 +158,7 @@ def double_body_case_provenance(
             "n": list(derivation.decomposition),
         },
         "turbulence": derivation.turbulence.to_provenance(),
+        "wall_treatment": cfg.wall_treatment,
         "force_reference": derivation.force_reference.to_provenance(),
         "iterations": {
             "end_time": cfg.end_time,
