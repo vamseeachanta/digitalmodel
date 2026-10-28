@@ -1,0 +1,169 @@
+{
+  "report": "hull-library-panel-scaling",
+  "revision": "00",
+  "data_basis": "Synthetic assumptions only; no response datasets are consumed.",
+  "sources": [
+    {
+      "path": "docs/reports/modules/hull_library/build_report.py",
+      "sha256": "4c741a160df33e8061dadd7131b9d82a523522dfb08ef9750b4036739ebc3a3e",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "docs/reports/pipeline-ffs-assessment.html",
+      "sha256": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/bemrosetta/models/mesh_models.py",
+      "sha256": "53dee64da737de511d94db38e6591b51705fb7796b23f8c679d51d5ad00ecc19",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/__init__.py",
+      "sha256": "f684af1e6515b36a497caeb8acc00b20820936737455081ecf1be364a9a1d2d2",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/catalog.py",
+      "sha256": "1195246e42356022d8567c3fcd6e8bbd33e9792e60063238a969df2ffe853fb8",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/coarsen_mesh.py",
+      "sha256": "f05fa2715c0d1d36fed45e32a0c21195b2da0dd3fa7f31bd4e60c8c20a05862b",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/column_pontoon_form.py",
+      "sha256": "49602a46c21242b9c805374c93804197ed06d45fbc965f86b2efb3fde2efd112",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/curvature_screen.py",
+      "sha256": "849d11ef756d9d03a693c14be03adb9d23f79f46261362dde3231ceeb89350ab",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md",
+      "sha256": "6d632cd93a5755a6684499ed3b5c22885d62bab2fb9e965a06c1800b86cec2d0",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/docs/worked-panel-scaling.md",
+      "sha256": "699774a1627a21a30b9bb6546199d07b69447ccd7ab204de1a14bd341f71cc7a",
+      "basis": "synthetic input and hand derivation",
+      "locator": "Inputs; Derivation; Tolerance basis"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/hull_surface_brep.py",
+      "sha256": "f425f4edd9958639869b83c1516f41cef427ceecc908101987dd715492e7b7b3",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/lookup.py",
+      "sha256": "11c30c33c8814a28f78ff7c7299c796ce5b048ecb30896ab1aaed6729f43dc01",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/mesh_cutouts.py",
+      "sha256": "0dabce0f8f94f24f5ccd5134a915fc38e7a5952805f593b11839542c48f0fd05",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/mesh_generator.py",
+      "sha256": "dd62cbc0d2509ba39d5afa730b699455bdd1059c9ddc7b48245b4971fc3221ea",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/mesh_refiner.py",
+      "sha256": "a3f2fa469155e70d6dff08764a5c242d2658487ae6b6211dee5811294d2bd966",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/mesh_scaler.py",
+      "sha256": "fc32e77e7956de09b8624b34dfb0527b3b831afc581357a3fa3c6f79719021d6",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/panel_catalog.py",
+      "sha256": "709df020fbbf303022c61d02a6e1615ff01b404608fc256313ff92a2a73fa2f7",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/parametric_form.py",
+      "sha256": "524ac040ed2bf927040e98cd5d8a3c30a2db0406b992582f12c0219799c3cbcd",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/parametric_hull.py",
+      "sha256": "a915f9146d296ea8f4fd925c462ec1a24e42368af4405b6c64b53abffd678159",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/profile_schema.py",
+      "sha256": "1ea4de03aed7abb31d3bf16bab7fc0a778b4f09277c4db059b7e56c996eb998a",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/rao_database.py",
+      "sha256": "223f13596fafd2b8bb80323b47590716a2d0187603d4103ee2a9aaa191f3f1a4",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/rao_lookup_plots.py",
+      "sha256": "2b9de827f15e6d7d92148df5088456107513c7af84947f534e671c784d061bf5",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/rao_registry.py",
+      "sha256": "8c59dac36971d1bd63f327ea4ad7980611c0bd94393804a77f6b127739e352b2",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/hull_library/schematic_generator.py",
+      "sha256": "6b14e37142897051aae9431b9790f5b2c877eba3ba7477194cbfae681bc532f9",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "tests/hydrodynamics/hull_library/test_documented_panel_scaling.py",
+      "sha256": "550f7074ad73d18bd86a22c106a94bf6b28139245e1e3ba72b8e55b4bf7f3ae5",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "tests/hydrodynamics/hull_library/test_mesh_scaler.py",
+      "sha256": "2f36a4c509b6dec546e1cdebf7438267558c84e63e0129cfc0fb0c631040ee50",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    },
+    {
+      "path": "tests/hydrodynamics/hull_library/test_module_report.py",
+      "sha256": "c7030e5bbf6e9b13a6a099452eb82a44627db771301c4efb06c79a9322edb3d0",
+      "basis": "repository implementation or documentation; not physical qualification",
+      "locator": "public interfaces and report evidence"
+    }
+  ]
+}
