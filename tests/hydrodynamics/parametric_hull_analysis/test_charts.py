@@ -3,6 +3,17 @@ Tests for parametric_hull_analysis.charts module.
 
 Covers all public plot functions, save_figure, and private helpers.
 Uses Agg backend for headless operation.
+
+Plan-lite
+---------
+Scope: assert plotting coordinates, response selection, labels, input order
+and missing-response omission without changing executable chart behavior.
+Oracle: synthetic_chart_sweep.json records arbitrary inputs and independent
+hand-calculated curves and peaks; expected values are literal fixture data.
+Acceptance: the complete 36-case chart suite passes offline, retaining the
+32 existing cases and all four synthetic cases without weaker assertions.
+Exclusion: these plotting checks establish no physical validation and require
+no solver run, engineering calibration or hull dataset.
 """
 
 from __future__ import annotations
