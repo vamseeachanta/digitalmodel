@@ -274,10 +274,15 @@ def validate_loads(t: dict[str, Any], loads: list[dict[str, Any]], c: dict[str, 
 
 def _line_types(scope: dict[str, str], c: dict[str, Any]) -> list[dict[str, Any]]:
     p = section_properties(scope, c)
+    # LineTypeBuilder.DEFAULT_HYDRO_COEFFS (builders/linetype_builder.py)
+    # names n as normal and z as axial. With torsion disabled, the normal
+    # value applies to both local x and y; use named fields, not a short
+    # positional Cd/Ca list that assigns the axial value to local y.
     properties = {"StressOD": p["outer_diameter_m"], "StressID": p["outer_diameter_m"] - 2*p["checked_wall_m"],
                   "PoissonRatio": c["properties"]["poisson_ratio"],
-                  "Cd": [c["numerics"]["drag_coefficient"], c["numerics"]["axial_drag_coefficient"]],
-                  "Ca": [c["numerics"]["added_mass_coefficient"], 0],
+                  "Cdn": c["numerics"]["drag_coefficient"],
+                  "Cdz": c["numerics"]["axial_drag_coefficient"],
+                  "Can": c["numerics"]["added_mass_coefficient"], "Caz": 0,
                   "NormalDragLiftDiameter": p["coated_od_m"],
                   "SeabedLateralFrictionCoefficient": c["seabed"]["friction"],
                   "SeabedAxialFrictionCoefficient": c["seabed"]["friction"]}
@@ -339,6 +344,9 @@ def native_model(scope: dict[str, str], load: dict[str, Any], g: dict[str, Any],
                          "initial_position": [-load["span_offset_m"], 0, 0], "length": c["geometry"]["floater_length_m"],
                          "properties": {"Draught": "reference-draught", "PrimaryMotion": "None", "SuperimposedMotion": "None",
                                         "IncludedInStatics": "None", "InitialHeading": 0}}],
+            # Equal normal coefficients need no material-axis orientation.
+            # Retain RiserLine.include_torsion=False (schema/riser.py); adding
+            # torsion would introduce a different stiffness/orientation model.
             "lines": [{"name": "riser", "line_type_refs": [r[0] for r in sections], "properties": {
                 "IncludeTorsion": "No", "TopEnd": "End A", "LengthAndEndOrientations": "Explicit", "Representation": "Finite element",
                 "EndAConnection": "floater", "EndAX": 0, "EndAY": 0, "EndAZ": g["hangoff_m"][2],

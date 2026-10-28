@@ -22,6 +22,26 @@ COUNT_TABLE = "LineType, Length, NumberOfSegments"
 TARGET_TABLE = "LineType, Length, TargetSegmentLength"
 
 
+def _correct_coefficient_axes(model: dict[str, Any]) -> None:
+    """Normalize only the known positional defect for a strict comparison.
+
+    LineTypeBuilder.DEFAULT_HYDRO_COEFFS names n as normal and z as axial.
+    With IncludeTorsion=No, n applies equally to local x and y. No other
+    value, torsion setting or model field is allowed to change.
+    """
+    if not model["LineTypes"] or not model["Lines"] or any(
+        line["IncludeTorsion"] != "No" for line in model["Lines"]
+    ):
+        raise ValueError("coefficient correction requires torsion disabled")
+    expected = {"Cdn": 1.2, "Cdz": 0.008, "Can": 1.0, "Caz": 0}
+    for line_type in model["LineTypes"]:
+        if (line_type.get("Cd") != [1.2, 0.008] or line_type.get("Ca") != [1.0, 0]
+                or expected.keys() & line_type.keys()):
+            raise ValueError("reference coefficients differ from the known positional defect")
+        del line_type["Cd"], line_type["Ca"]
+        line_type.update(expected)
+
+
 def _entry(root: Path, relative: str) -> dict[str, Any]:
     payload = (root / relative).read_bytes()
     return {"path": relative, "sha256": hashlib.sha256(payload).hexdigest(), "bytes": len(payload)}
@@ -67,7 +87,8 @@ def mesh_statistics(sections: list[list[Any]]) -> dict[str, Any]:
             "unrounded_adjacent_ratio_pass": True}
 
 
-def audit(reference: Path, candidate: Path, reference_revision: str) -> dict[str, Any]:
+def audit(reference: Path, candidate: Path, reference_revision: str,
+          coefficient_axes: bool = False) -> dict[str, Any]:
     """Verify source ancestry, serialized meshes and physical preservation."""
     repo = CAMPAIGN.parents[1]
     old = json.loads((reference / "index.json").read_bytes())
@@ -124,10 +145,14 @@ def audit(reference: Path, candidate: Path, reference_revision: str) -> dict[str
                 raise ValueError("frozen load metadata changed")
             old_model = yaml.safe_load(_verified(reference, old_input))
             new_model = yaml.safe_load(_verified(candidate, new_input))
-            original_sections = old_model["Lines"][0].pop(TARGET_TABLE)
+            original_sections = old_model["Lines"][0].pop(COUNT_TABLE if coefficient_axes else TARGET_TABLE)
             sections = new_model["Lines"][0].pop(COUNT_TABLE)
+            if coefficient_axes:
+                if original_sections != sections:
+                    raise ValueError("counted mesh changed during coefficient correction")
+                _correct_coefficient_axes(old_model)
             if old_model != new_model:
-                raise ValueError("model field outside the mesh changed")
+                raise ValueError("model field outside the permitted correction changed")
             statistics = mesh_statistics(sections)
             old_spans, new_spans = _material_spans(original_sections), _material_spans(sections)
             if len(old_spans) != len(new_spans) or any(
@@ -149,10 +174,13 @@ def audit(reference: Path, candidate: Path, reference_revision: str) -> dict[str
     source_paths += ["scripts/riser_campaign/audit_mesh.py", "tests/riser_campaign/test_mesh.py",
                      "tests/riser_campaign/test_frozen_scope.py", "tests/riser_campaign/test_checkout.py",
                      "examples/riser-campaign/README.md", ".gitattributes"]
+    if coefficient_axes:
+        source_paths += ["src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py",
+                         "src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py"]
     for entry in after["code_sources"]:
         if _verified(candidate, entry) != (repo / entry["path"].removeprefix("source/")).read_bytes():
             raise ValueError("candidate source snapshot differs from the working source")
-    return {"summary": "Solver-free serialized mesh audit; native qualification remains required.",
+    packet = {"summary": "Solver-free serialized mesh audit; native qualification remains required.",
             "status": "SOLVER_FREE_ONLY", "native_qualification": "NOT_RUN",
             "reference_revision": reference_revision, "adjacent_element_ratio_limit": 2.0,
             "reference_index": _entry(reference, "index.json"), "candidate_index": _entry(candidate, "index.json"),
@@ -169,6 +197,18 @@ def audit(reference: Path, candidate: Path, reference_revision: str) -> dict[str
             "mesh_audits": audits, "inputs": inputs,
             "review_status": "INDEPENDENT_REVIEW_REQUIRED; any later byte change invalidates the packet",
             "native_handoff": "examples/riser-campaign/README.md#solver-free-mesh-audit-and-native-handoff"}
+    if coefficient_axes:
+        packet["coefficient_axis_correction"] = {
+            "removed_fields": {"Cd": [1.2, 0.008], "Ca": [1.0, 0]},
+            "named_fields": {"Cdn": 1.2, "Cdz": 0.008, "Can": 1.0, "Caz": 0},
+            "axis_values": {"drag": {"x": 1.2, "y": 1.2, "z": 0.008},
+                            "added_mass": {"x": 1.0, "y": 1.0, "z": 0}},
+            "include_torsion": "No",
+            "counted_mesh": "IDENTICAL",
+            "all_other_model_fields": "IDENTICAL",
+            "convention": "LineTypeBuilder.DEFAULT_HYDRO_COEFFS: n normal (x/y), z axial; RiserLine.include_torsion defaults to false",
+        }
+    return packet
 
 
 def main() -> None:
@@ -177,9 +217,11 @@ def main() -> None:
     parser.add_argument("--reference-dir", type=Path, required=True)
     parser.add_argument("--candidate-dir", type=Path, required=True)
     parser.add_argument("--reference-revision", required=True)
+    parser.add_argument("--coefficient-axes", action="store_true",
+                        help="Compare counted meshes and allow only the known named-axis coefficient correction")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    packet = audit(args.reference_dir, args.candidate_dir, args.reference_revision)
+    packet = audit(args.reference_dir, args.candidate_dir, args.reference_revision, args.coefficient_axes)
     _write(args.output.parent, args.output.name, _json_bytes(packet))
     print("Solver-free audit passed: 12 configurations, 144 counted inputs; native qualification NOT_RUN")
 

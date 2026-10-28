@@ -10,6 +10,7 @@ import math
 from pathlib import Path
 
 import pytest
+import yaml
 
 from scripts.riser_campaign import frozen_scope as frozen
 
@@ -42,6 +43,83 @@ def assert_adjacent_limit(sections):
 
 def scopes():
     return json.loads((CAMPAIGN / "manifest.json").read_text(encoding="utf-8"))["frozen_tranche"]["rows"]
+
+
+def assert_named_hydrodynamic_axes(model):
+    """With torsion disabled, the named normal coefficient serves x and y."""
+    assert all(line["IncludeTorsion"] == "No" for line in model["Lines"])
+    for line_type in model["LineTypes"]:
+        assert "Cd" not in line_type and "Ca" not in line_type
+        drag = {"x": line_type["Cdn"], "y": line_type["Cdn"], "z": line_type["Cdz"]}
+        added_mass = {"x": line_type["Can"], "y": line_type["Can"], "z": line_type["Caz"]}
+        assert drag == {"x": 1.2, "y": 1.2, "z": 0.008}, line_type["Name"]
+        assert added_mass == {"x": 1.0, "y": 1.0, "z": 0.0}, line_type["Name"]
+
+
+@pytest.mark.parametrize("scope", scopes(), ids=lambda row: row["case_id"])
+def test_serialized_coefficients_use_named_normal_and_axial_fields(scope):
+    from scripts.riser_campaign.generate_inputs import _native_bytes, reviewed_geometries
+
+    tranche = json.loads((CAMPAIGN / "manifest.json").read_bytes())["frozen_tranche"]
+    geometry = reviewed_geometries(tranche, frozen.source_payloads())[scopes().index(scope)]
+    load = frozen.expand_loads({"rows": [scope]})[0]
+    serialized = _native_bytes(frozen.native_model(scope, load, geometry), "")
+    assert_named_hydrodynamic_axes(yaml.safe_load(serialized))
+
+
+@pytest.mark.parametrize("name", ["pipe", "buoyed-pipe"])
+def test_old_positional_coefficients_fail_axis_regression(name):
+    model = {"Lines": [{"IncludeTorsion": "No"}], "LineTypes": [
+        {"Name": name, "Cd": [1.2, 0.008], "Ca": [1.0, 0]}]}
+    with pytest.raises(AssertionError):
+        assert_named_hydrodynamic_axes(model)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("Cd", [1.2, 0.008, 0.008]), ("Ca", [1.0, 0.0, 0.0]),
+    ("Cd", [1.3, 0.008]), ("Ca", [1.1, 0]), ("Cdn", 1.2),
+])
+def test_axis_audit_rejects_an_unexpected_reference(field, value):
+    from scripts.riser_campaign.audit_mesh import _correct_coefficient_axes
+
+    model = {"Lines": [{"IncludeTorsion": "No"}], "LineTypes": [
+        {"Name": "pipe", "Cd": [1.2, 0.008], "Ca": [1.0, 0]}]}
+    model["LineTypes"][0][field] = value
+    with pytest.raises(ValueError, match="known positional defect"):
+        _correct_coefficient_axes(model)
+
+
+def test_axis_audit_preserves_every_other_field():
+    from scripts.riser_campaign.audit_mesh import _correct_coefficient_axes
+
+    before = {"Lines": [{"IncludeTorsion": "No", COUNT_TABLE: [["pipe", 10.0, 20]]}],
+              "LineTypes": [{"Name": "pipe", "Cd": [1.2, 0.008], "Ca": [1.0, 0], "EA": 123.0}]}
+    after = copy.deepcopy(before)
+    _correct_coefficient_axes(after)
+    assert_named_hydrodynamic_axes(after)
+    assert before["Lines"] == after["Lines"]
+    for key in ("Name", "EA"):
+        assert before["LineTypes"][0][key] == after["LineTypes"][0][key]
+
+
+def test_axis_audit_rejects_a_torsion_change():
+    from scripts.riser_campaign.audit_mesh import _correct_coefficient_axes
+
+    with pytest.raises(ValueError, match="torsion disabled"):
+        _correct_coefficient_axes({"Lines": [{"IncludeTorsion": "Yes"}], "LineTypes": [
+            {"Name": "pipe", "Cd": [1.2, 0.008], "Ca": [1.0, 0]}]})
+
+
+@pytest.mark.parametrize("horizontal,vertical", [(3.0, 4.0), (3.0, -4.0), (5.0, 0.0)])
+def test_inextensible_straight_line_dependency_is_rejected(horizontal, vertical):
+    from digitalmodel.marine_ops.marine_analysis.catenary.solver import CatenaryInput, CatenarySolver
+
+    # A weighted inextensible line at its chord length has no finite sagging
+    # catenary solution. Retain the dependency's explicit singular-case guard.
+    with pytest.raises(ValueError, match="must exceed straight distance for an inextensible catenary"):
+        CatenarySolver().solve(CatenaryInput(
+            length=5.0, horizontal_span=horizontal, vertical_span=vertical,
+            weight_per_length=100.0, ea_stiffness=math.inf))
 
 
 @pytest.mark.parametrize("scope", scopes(), ids=lambda row: row["case_id"])
@@ -147,6 +225,9 @@ def test_review_packet_binds_sources_and_exact_frozen_coverage():
     assert packet["status"] == "SOLVER_FREE_ONLY"
     assert packet["adjacent_element_ratio_limit"] == 2.0
     assert packet["native_qualification"] == "NOT_RUN"
+    correction = packet["coefficient_axis_correction"]
+    assert correction["counted_mesh"] == correction["all_other_model_fields"] == "IDENTICAL"
+    assert correction["include_torsion"] == "No"
     assert packet["case_order"] == [scope["case_id"] for scope in scopes()]
     expected = frozen.expand_loads({"rows": scopes()})
     assert [item["id"] for item in packet["inputs"]] == [item["id"] for item in expected]
@@ -159,7 +240,7 @@ def test_review_packet_binds_sources_and_exact_frozen_coverage():
     for entry in packet["source_files"]:
         payload = (root / entry["path"]).read_bytes()
         assert hashlib.sha256(payload).hexdigest() == entry["sha256"], entry["path"]
-        assert len(payload) == entry["bytes"]
+        assert len(payload) == entry["bytes"], entry["path"]
     from scripts.riser_campaign.generate_inputs import _json_bytes
     runtime_payload = _json_bytes(packet["producing_runtime"]["versions"])
     assert packet["producing_runtime"]["record"]["sha256"] == hashlib.sha256(runtime_payload).hexdigest()
@@ -206,6 +287,7 @@ def test_regeneration_matches_every_reviewed_input_digest(tmp_path):
     for generated, reviewed in zip(actual, packet["inputs"]):
         for key in ("id", "path", "sha256", "bytes"):
             assert generated[key] == reviewed[key], (generated["id"], key)
+        assert_named_hydrodynamic_axes(yaml.safe_load((tmp_path / "regenerated" / generated["path"]).read_bytes()))
 
 
 def test_frozen_handoff_does_not_resolve_platform_dependent_geometry(tmp_path, monkeypatch):

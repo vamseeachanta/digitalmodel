@@ -34,6 +34,7 @@ its native input templates remain unreleased pending readback and motion clearan
 | 3 | 2026-10-26 | Add the frozen twelve-section tranche, depth-dependent pressure and three-sea expansion with explicit release gates. |
 | 4 | 2026-10-28 | Grade frozen mesh transitions with explicit segment counts and retain a solver-free audit for native readback. |
 | 5 | 2026-10-28 | Retain exact reviewed numerical geometry for portable input bytes and bind the producing runtime. |
+| 6 | 2026-10-28 | Name normal and axial hydrodynamic coefficients explicitly and refresh source bindings after regeneration; preserve the counted mesh and physical basis. |
 
 ## Matrix and existing code
 
@@ -161,8 +162,8 @@ case order, all 144 frozen input digests and the twelve transition audits.
 Ratios are evaluated on the serialized Length/NumberOfSegments values, with
 both directions checked at every join. Display bounds round upward to one
 decimal place; acceptance uses unrounded values and the unchanged 2.0 limit.
-Geometry and section-property bytes and every model field outside the mesh
-table are compared with output generated from the reviewed reference source.
+Geometry and section-property bytes and every model field outside the permitted
+correction are compared with output generated from the reviewed reference source.
 The original 288 comparison inputs and the frozen scope, criteria, load ledger,
 manifest and basis retain their reference bytes. The two committed worked
 examples belong to the original comparison and do not require regeneration.
@@ -178,7 +179,30 @@ lengths and sampled turning points into mesh-window boundaries; small numerical
 differences can change printed section lengths and integer grading decisions.
 The general analytical solver remains available for independent checks.
 
-No frozen physical value or input digest changes in this retention repair.
+The geometry retention repair preserved frozen physical values and input bytes.
+The subsequent coefficient correction replaces positional `Cd` and `Ca` lists
+with `Cdn: 1.2`, `Cdz: 0.008`, `Can: 1.0` and `Caz: 0` for every frozen line type.
+The existing [line-type builder convention](../../src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py)
+names `n` as normal and `z` as axial in `DEFAULT_HYDRO_COEFFS` and emits those
+named fields in `_build_line_type_entry`. Normal applies equally to local x/y;
+local z follows the line axis. `IncludeTorsion: No` is retained, consistent with
+the [riser schema default](../../src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py).
+Equal normal coefficients require no separate material-axis orientation; enabling
+torsion would introduce a different stiffness and orientation model. Native
+readback must still confirm x/y/z drag of 1.2/1.2/0.008 and added mass of 1.0/1.0/0.
+All 144 frozen input digests therefore change, including both pipe and buoyed
+line types, while counted sections and every other input field remain identical.
+The audit's explicit coefficient mode accepts only the known old lists and the
+four named replacements, checks unchanged counted sections and then compares
+the complete remaining model. The default mesh-only audit remains available.
+
+The catenary dependency's inextensible straight-line rejection is retained.
+At chord length an inextensible weighted line has no finite sagging-catenary
+solution; the guard rejects that singular case before root finding. Regression
+tests cover rising, falling and horizontal chords. Retained geometry and section
+bytes are compared exactly across the correction, so this dependency review
+does not retune any campaign geometry.
+
 Native serialization explicitly uses UTF-8, LF and finite binary64 float spelling.
 The generated `runtime.json` records Python, operating system, architecture and
 numerical/serialization library versions; its digest is part of the generated
@@ -200,7 +224,9 @@ steps remain required before dependent calculations:
 3. Read back native Length and NumberOfSegments for every section and check
    positive integer counts and both adjacent ratios against 2.0. Compare total
    length, endpoints, buoyancy arcs, properties, offsets, headings, pressures
-   and environments with the packet. Check centreline/contact interpretation
+   and environments with the packet. Read back the normal x/y and axial z drag
+   and added-mass coefficients for every line type and confirm torsion remains
+   disabled. Check centreline/contact interpretation
    and retain all messages. Stop on a digest mismatch, renewed MR0 failure,
    load failure, changed physical input or undisposed warning.
 4. Qualify matching native equilibria, whole-line baseline stress at both
@@ -219,14 +245,18 @@ revision and a candidate output from the current generator, then run:
 ```bash
 PYTHONPATH=src:. uv run python -m scripts.riser_campaign.audit_mesh \
   --reference-dir <reference-output> --candidate-dir <candidate-output> \
-  --reference-revision <reviewed-revision> --output <new-audit-file>
+  --reference-revision <reviewed-revision> --coefficient-axes \
+  --output <new-audit-file>
 ```
 
 The audit checks reference source snapshots against Git, verifies each indexed
-file before comparing it and refuses changed physical fields or failing mesh
+file before comparing it and refuses unexpected physical changes or failing mesh
 ratios. Candidate source snapshots must match the current working bytes. The audit
 verifies the producing runtime record and binds its digest and versions; the
 runtime used for the audit is recorded separately. It preserves existing outputs and rejects a mismatching existing audit file.
+For the coefficient correction, the reference must contain the counted mesh and
+the old positional lists. Omit `--coefficient-axes` only for the earlier audit
+from target segment lengths to graded explicit counts.
 
 The analytical reference uses the 1490 m hang-off separation and transforms
 ASB elevation to global z by subtracting the physical 1500 m water depth. The

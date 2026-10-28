@@ -6,7 +6,7 @@
   "artifacts": [
     {
       "path": "docs/registry/implementation-map.yaml",
-      "sha256": "f96af6d7a62a6d4a237590a540a48f59e5d5baabc957a8ce71a00c966b18b2dc"
+      "sha256": "dca8cef1b5bd980fb34988511b4c1811b5af4cc98c410ba45b0900ecd319099a"
     }
   ]
 }
