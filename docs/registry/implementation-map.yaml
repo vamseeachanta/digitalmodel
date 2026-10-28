@@ -26741,7 +26741,7 @@ families:
   - search: constants_or_keys
     pattern: WaveHeight|WavePeriod|wave_height|wave_period|phase
   inventory_scope:
-    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    revision: 09089a121a16069c4b657d1a320a630a23ab1dd5
     source_paths:
     - src/digitalmodel/hydrodynamics/planing_hull/solver.py
     - src/digitalmodel/solvers/openfoam/validation/wave_tank.py
@@ -26762,6 +26762,7 @@ families:
     module: solvers/openfoam/wave_models.py
     file_sha256: ec88f360f80849c9a2f2ccaccf2481b7879e6259fcf8a12d48093c7dc7ebeaa3
     body_sha256: ad2ba4e2644bca20d515775ace1d470e4e4b979060131e7b858528c13e7c09b8
+    signals: []
   - path: src/digitalmodel/solvers/openfoam/wave_models.py
     symbol: RegularWaveBC.to_dict
     line: 95
@@ -26771,6 +26772,7 @@ families:
     module: solvers/openfoam/wave_models.py
     file_sha256: ec88f360f80849c9a2f2ccaccf2481b7879e6259fcf8a12d48093c7dc7ebeaa3
     body_sha256: 7a083dd4ebf3ce7a900ddc8ff8a8cd5712a9be222e714ca185c8d4c7f105f126
+    signals: []
   - path: src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py
     symbol: EnvironmentBuilder._build_wave_trains
     line: 251
@@ -26780,6 +26782,7 @@ families:
     module: solvers/orcaflex/modular_generator/builders/environment_builder.py
     file_sha256: d89c8b3a88ede433c9056f5a7f83cfeda0650cdf6a9fd1b172db8fa1f76f3634
     body_sha256: 82e2c2a9874824341fe571ad569a0c1ded8b6d51c91807bfe2324894bc1149c7
+    signals: []
   - path: src/digitalmodel/hydrodynamics/planing_hull/solver.py
     symbol: PlaningMotionSolver._wave_surface
     line: 209
@@ -26789,15 +26792,17 @@ families:
     module: hydrodynamics/planing_hull/solver.py
     file_sha256: e2cb01cfe0d21b175b9911875737331622955f7e172e87c4d204884ad79f7124
     body_sha256: 1eec33fc086f5a884656ce5315a6b8a180089e10733a7e4332dfe8c777c39c55
+    signals: []
   - path: src/digitalmodel/solvers/openfoam/validation/wave_tank.py
     symbol: dispersion_wavenumber
-    line: 65
+    line: 77
     kind: function
     what: Solves finite-depth linear dispersion for prescribed wave-tank period and depth.
     relation: independent
     module: solvers/openfoam/validation/wave_tank.py
-    file_sha256: 8a8b989ce376b0c1162e4e2756ace9ccca771c9a3adb61a8ac795fae0652d299
-    body_sha256: 8f3ebdd455a7d77c972a0674ec488d7a2a577559b1e418634378db1389e65b7c
+    file_sha256: 6be64cb0018691ecaf3e770e7754a1a0146f5b31e1d3ce187f95852d4db24f2a
+    body_sha256: 9c5b0201073b3b1dbbb0529737e2bd899c40a56209dda0e562676e664012c3c3
+    signals: []
   identical_groups: []
   search_audit:
   - search: algorithm
