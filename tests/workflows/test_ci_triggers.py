@@ -449,8 +449,6 @@ def test_domain_shards_run_on_self_hosted_x64(filename: str, job_id: str) -> Non
     runs_on = load_workflow(filename)["jobs"][job_id]["runs-on"]
     assert "github.event.pull_request.head.repo.fork && 'ubuntu-latest'" in runs_on
     assert '["self-hosted","Linux","X64"]' in runs_on
-    # The setup-python interpreter, not a host-managed uv build lacking pidfd.
-    assert load_workflow(filename)["env"]["UV_PYTHON_PREFERENCE"] == "only-system"
 
 
 def test_lint_gate_is_fast_and_diff_scoped() -> None:

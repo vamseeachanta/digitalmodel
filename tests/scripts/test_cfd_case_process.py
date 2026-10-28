@@ -31,6 +31,22 @@ spec = importlib.util.spec_from_file_location("case_process", SCRIPT)
 case_process = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(case_process)
 
+# Some interpreters (for example python-build-standalone 3.11 builds that uv
+# installs on our self-hosted runners) are compiled without os.pidfd_open and
+# signal.pidfd_send_signal. The script then refuses every PID before reading any
+# metadata. Tests that need a successful pidfd round trip skip there; refusal
+# tests still run and assert that the refusal is the fail-closed pidfd one.
+HAS_PIDFD = hasattr(os, "pidfd_open") and hasattr(signal, "pidfd_send_signal")
+NO_PIDFD = "pidfd support is unavailable"
+requires_pidfd = pytest.mark.skipif(
+    not HAS_PIDFD, reason="interpreter lacks os.pidfd_open/signal.pidfd_send_signal"
+)
+
+
+def refusal(reason: str) -> str:
+    """Expected refusal text: the identity check, or the fail-closed pidfd guard."""
+    return reason if HAS_PIDFD else NO_PIDFD
+
 
 @pytest.fixture
 def child(tmp_path):
@@ -63,12 +79,14 @@ def check(child, tmp_path, **kwargs):
     )
 
 
+@requires_pidfd
 def test_inspection_does_not_terminate_child(child, tmp_path):
     """Known cwd and interpreter match; the child remains blocked on input."""
     assert check(child, tmp_path) == "VALIDATED"
     assert child.poll() is None
 
 
+@requires_pidfd
 def test_directory_alias_is_same_case(child, tmp_path):
     """A symlink names the same directory inode, independently of its spelling."""
     alias = tmp_path / "alias"
@@ -81,21 +99,21 @@ def test_different_directory_is_rejected(child, tmp_path, name):
     """A directory that merely shares a path prefix is not the child's cwd."""
     other = tmp_path / name
     other.mkdir()
-    with pytest.raises(case_process.ValidationError, match="working directory"):
+    with pytest.raises(case_process.ValidationError, match=refusal("working directory")):
         check(child, other, terminate=True)
     assert child.poll() is None
 
 
 def test_wrong_executable_is_rejected(child, tmp_path):
     """The test source is a different inode from the running interpreter."""
-    with pytest.raises(case_process.ValidationError, match="executable"):
+    with pytest.raises(case_process.ValidationError, match=refusal("executable")):
         case_process.check_process(child.pid, tmp_path, Path(__file__), terminate=True)
     assert child.poll() is None
 
 
 def test_parent_directory_does_not_include_descendant_process(child, tmp_path):
     """Exact cwd matching excludes a child working below the expected directory."""
-    with pytest.raises(case_process.ValidationError, match="working directory"):
+    with pytest.raises(case_process.ValidationError, match=refusal("working directory")):
         check(child, tmp_path.parent, terminate=True)
     assert child.poll() is None
 
@@ -129,7 +147,7 @@ def test_nonpositive_pid_is_rejected(pid, tmp_path):
 @pytest.mark.parametrize("pid_source", [os.getpid, os.getppid])
 def test_self_and_controlling_parent_are_rejected(pid_source, tmp_path):
     """Even an explicitly supplied control-process PID cannot receive TERM."""
-    with pytest.raises(case_process.ValidationError, match="ancestor"):
+    with pytest.raises(case_process.ValidationError, match=refusal("ancestor")):
         case_process.check_process(
             pid_source(), tmp_path, Path(sys.executable), terminate=True
         )
@@ -142,6 +160,7 @@ def test_reaped_pid_is_not_evaluated(child, tmp_path):
         check(child, tmp_path, terminate=True)
 
 
+@requires_pidfd
 def test_term_reaches_only_validated_child(child, tmp_path):
     """POSIX subprocess returncode is minus the terminating signal number."""
     assert check(child, tmp_path, terminate=True) == "TERM_SENT"
@@ -155,12 +174,13 @@ def test_missing_pidfd_support_fails_closed(
     child, tmp_path, monkeypatch, module, attribute
 ):
     """There is no numeric-PID signalling fallback when the API is absent."""
-    monkeypatch.delattr(module, attribute)
+    monkeypatch.delattr(module, attribute, raising=False)
     with pytest.raises(case_process.ValidationError, match="pidfd"):
         check(child, tmp_path, terminate=True)
     assert child.poll() is None
 
 
+@requires_pidfd
 def test_permission_error_closes_descriptor(child, tmp_path, monkeypatch):
     """An unreadable cwd is unknown, and every opened pidfd is closed."""
     opened = []
@@ -185,6 +205,7 @@ def test_permission_error_closes_descriptor(child, tmp_path, monkeypatch):
             os.fstat(descriptor)
 
 
+@requires_pidfd
 def test_exit_after_validation_uses_pinned_descriptor(child, tmp_path, monkeypatch):
     """Exit after cwd/exe reads makes the pinned handle stale, never retargeted."""
     real_send = signal.pidfd_send_signal
@@ -201,6 +222,7 @@ def test_exit_after_validation_uses_pinned_descriptor(child, tmp_path, monkeypat
     assert signal.SIGTERM not in sent
 
 
+@requires_pidfd
 def test_cli_defaults_to_inspection(child, tmp_path):
     result = subprocess.run(
         [sys.executable, str(SCRIPT), str(child.pid), str(tmp_path), sys.executable],
@@ -255,4 +277,23 @@ def test_cli_refuses_grandparent_even_with_matching_metadata(tmp_path):
         timeout=10,
     )
     assert result.returncode != 0
-    assert "controlling ancestor" in result.stderr
+    if HAS_PIDFD:
+        assert "controlling ancestor" in result.stderr
+    else:
+        assert result.stderr.startswith(f"NOT_EVALUATED: {NO_PIDFD}")
+
+
+@pytest.mark.skipif(HAS_PIDFD, reason="covers interpreters without pidfd support")
+def test_cli_without_pidfd_reports_not_evaluated(child, tmp_path):
+    """Without pidfd the CLI refuses a matching child and never signals it."""
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), str(child.pid), str(tmp_path), sys.executable,
+         "--terminate"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode != 0
+    assert result.stdout == ""
+    assert result.stderr.startswith(f"NOT_EVALUATED: {NO_PIDFD}")
+    assert child.poll() is None

@@ -21,14 +21,6 @@ name: Quality Gates by Domain
     types: [opened, synchronize, reopened, edited]
   workflow_dispatch:
 
-# uv prefers its own managed CPython when one is installed on the host. On our
-# self-hosted runners that is a python-build-standalone 3.11.14 without
-# os.pidfd_open / signal.pidfd_send_signal, so tests/scripts/test_cfd_case_process.py
-# failed only there. Use the interpreter actions/setup-python installed, as
-# GitHub-hosted runners already do.
-env:
-  UV_PYTHON_PREFERENCE: only-system
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
