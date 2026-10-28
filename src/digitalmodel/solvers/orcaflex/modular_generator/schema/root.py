@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import logging
-
 from pydantic import BaseModel, Field, model_validator
 
 from .metadata import Metadata
 
-logger = logging.getLogger(__name__)
 from .environment import Environment
 from .generic import GenericModel
 from .pipeline import Pipeline
@@ -87,6 +84,7 @@ class ProjectInputSpec(BaseModel):
         Checks:
         - Exactly one of pipeline, riser, mooring, or generic must be defined
         - Water depth consistency with seabed features
+        - Current profile points must be at or above the water bottom
         - Tug positions relative to pipeline length
         - Buoyancy module spacing vs segment length
         """
@@ -122,12 +120,11 @@ class ProjectInputSpec(BaseModel):
             max_profile_depth = max(
                 (p[0] for p in self.environment.current.profile), default=0
             )
-            if max_profile_depth > self.environment.water.depth * 1.01:  # 1% tolerance
-                logger.warning(
-                    "Current profile extends to %.1fm but water depth is only %.1fm. "
-                    "OrcaFlex may extrapolate or clamp the profile.",
-                    max_profile_depth,
-                    self.environment.water.depth,
+            if max_profile_depth > self.environment.water.depth:
+                raise ValueError(
+                    f"Current profile depth {max_profile_depth} m exceeds "
+                    f"water depth {self.environment.water.depth} m; "
+                    "profile points must be at or above the water bottom."
                 )
 
         # Pipeline-specific validation
