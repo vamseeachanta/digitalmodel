@@ -1154,37 +1154,66 @@ _STANDARD_LOCATOR = re.compile(
     r"|\u00a7\s*\d",
     re.I,
 )
-# More numeric rows than this from one standard in one table reads as a copied table.
+_STANDARD_TABLE_LOCATOR = re.compile(r"\btable\s+([A-Z]?\d+(?:[-.]\d+)*)\b", re.I)
+# Quote policy per source table across the report, not evidence of completeness.
 MAX_CITED_STANDARD_ROWS = 5
 
 
-def _assert_standard_values_cited_not_copied(html: str) -> None:
-    """Allow cited standard values; reject uncited values and whole copied tables.
+def _assert_standard_values_cited_not_copied(
+    html: str, *,
+    source_table_rows: dict[tuple[str, str], frozenset[tuple[str, ...]]] | None = None,
+) -> None:
+    """Check citation syntax, a quote budget, and known source-table coverage.
 
     Quoting a licensed standard's values with a citation is allowed (maintainer
     ruling, 28 Oct 2026); original documents and whole tables or sections are not.
-    A numeric row whose source cell names the standard must also cite its edition
-    or a clause, table or section, and one table may carry at most
-    ``MAX_CITED_STANDARD_ROWS`` such rows.
+    Numeric rows attributed to the standard need an edition or clause locator.
+    The five-row policy budget applies separately to each source table across
+    all output tables; it cannot establish whether a complete table was copied.
+
+    For this standard, known inventories are keyed by (edition, table number)
+    and contain tuples of visible non-source cells for each original row.
+    Coverage is the union of those row tuples across the report. Without a known
+    inventory, or when row text/columns are transformed, completeness cannot be
+    established by this helper. Whole sections and original PDFs need separate
+    review; these checks do not qualify the quoted data for engineering use.
     """
+    attributed: dict[tuple[str, str], int] = {}
+    coverage: dict[tuple[str, str], set[tuple[str, ...]]] = {}
     for table in re.findall(r"<table\b.*?</table>", html, re.S):
         heading = re.search(r"<tr>(.*?)</tr>", table, re.S)
         if heading is None:
             continue
         columns = [_visible_text(c).lower() for c in re.findall(r"<th[^>]*>(.*?)</th>", heading[1], re.S)]
         source_indices = [i for i, c in enumerate(columns) if re.search(r"source|basis|reference|locator", c)]
-        attributed = 0
         for row in re.findall(r"<tr>(.*?)</tr>", table, re.S):
             cells = [_visible_text(c) for c in re.findall(r"<td[^>]*>(.*?)</td>", row, re.S)]
             hits = [i for i in source_indices if i < len(cells) and _LICENSED_STANDARD.search(cells[i])]
-            if not hits or not any(re.search(r"\d", c) for j, c in enumerate(cells) if j not in hits):
+            values = tuple(c for j, c in enumerate(cells) if j not in source_indices)
+            if not hits or not any(re.search(r"\d", c) for c in values):
                 continue
-            assert any(_STANDARD_LOCATOR.search(_LICENSED_STANDARD.sub("", cells[i])) for i in hits), (
-                f"uncited standard value: {cells[0]}"
-            )
-            attributed += 1
-        assert attributed <= MAX_CITED_STANDARD_ROWS, (
-            f"{attributed} rows sourced to one standard in one table (limit {MAX_CITED_STANDARD_ROWS})"
+            identities = set()
+            for i in hits:
+                locator = _LICENSED_STANDARD.sub("", cells[i])
+                assert _STANDARD_LOCATOR.search(locator), f"uncited standard value: {cells[0]}"
+                edition = re.search(r"\b(?:19|20)\d{2}\b", locator)
+                table_locator = _STANDARD_TABLE_LOCATOR.search(locator)
+                # Clause-only or edition-only quotes still have a policy budget.
+                identity = (
+                    edition[0] if edition else "",
+                    table_locator[1].lower() if table_locator else " ".join(locator.lower().split()),
+                )
+                identities.add(identity)
+            for identity in identities:
+                attributed[identity] = attributed.get(identity, 0) + 1
+                coverage.setdefault(identity, set()).add(values)
+    for identity, count in attributed.items():
+        assert count <= MAX_CITED_STANDARD_ROWS, (
+            f"quote budget exceeded for {identity}: {count} rows (limit {MAX_CITED_STANDARD_ROWS})"
+        )
+        known_rows = (source_table_rows or {}).get(identity)
+        assert not known_rows or not known_rows.issubset(coverage[identity]), (
+            f"complete source table reproduced: {identity}"
         )
 
 
@@ -1229,19 +1258,86 @@ def test_standard_source_check_accepts_injected_cited_row(name: str, title: str)
     _assert_standard_values_cited_not_copied(html)
 
 
-def _standard_table(rows: int) -> str:
+# Synthetic row inventory only; these values do not qualify standard data.
+_SYNTHETIC_SOURCE_ROWS = frozenset((f"{0.1 * (k + 1):.2f}",) for k in range(4))
+
+
+def _standard_table(
+    rows: int, *, table: str = "10-1", edition: str = "2021",
+    values: tuple[str, ...] | None = None,
+) -> str:
+    values = values if values is not None else tuple(f"{0.1 * (k + 1):.2f}" for k in range(rows))
+    assert len(values) == rows
     body = "".join(
-        f"<tr><td>{0.1 * (k + 1):.2f}</td><td>DNV-RP-B401 (2021), Table 10-{k + 1}</td></tr>"
-        for k in range(rows)
+        f"<tr><td>{value}</td><td>DNV-RP-B401 ({edition}), Table {table}</td></tr>"
+        for value in values
     )
     return f"<table><tr><th>Value</th><th>Source</th></tr>{body}</table>"
 
 
 def test_standard_source_check_rejects_whole_copied_table() -> None:
-    """Cited rows up to the limit pass; one more in the same table is a copied table."""
-    _assert_standard_values_cited_not_copied(_standard_table(MAX_CITED_STANDARD_ROWS))
-    with pytest.raises(AssertionError, match="rows sourced to one standard"):
-        _assert_standard_values_cited_not_copied(_standard_table(MAX_CITED_STANDARD_ROWS + 1))
+    """All four known source rows are rejected even below the quote budget."""
+    with pytest.raises(AssertionError, match="complete source table"):
+        _assert_standard_values_cited_not_copied(
+            _standard_table(4), source_table_rows={("2021", "10-1"): _SYNTHETIC_SOURCE_ROWS},
+        )
+
+
+@pytest.mark.parametrize("rows,rejected", [(5, False), (6, True)])
+def test_standard_source_quote_budget_boundary(rows: int, rejected: bool) -> None:
+    """Five excerpts from one source table pass; six exceed the policy budget."""
+    html = _standard_table(rows)
+    if rejected:
+        with pytest.raises(AssertionError, match="quote budget"):
+            _assert_standard_values_cited_not_copied(html)
+    else:
+        _assert_standard_values_cited_not_copied(html)
+
+
+@pytest.mark.parametrize("combined", [False, True])
+def test_standard_source_check_accepts_independent_excerpts(combined: bool) -> None:
+    """Six excerpts from six incomplete source tables pass in either layout."""
+    tables = [_standard_table(1, table=f"10-{k}") for k in range(1, 7)]
+    html = "".join(tables)
+    if combined:
+        rows = "".join(re.findall(r"<tr><td>.*?</tr>", html, re.S))
+        html = f"<table><tr><th>Value</th><th>Source</th></tr>{rows}</table>"
+    _assert_standard_values_cited_not_copied(
+        html, source_table_rows={("2021", f"10-{k}"): _SYNTHETIC_SOURCE_ROWS for k in range(1, 7)},
+    )
+
+
+def test_standard_source_check_rejects_complete_table_split_across_output_tables() -> None:
+    """Known source coverage is aggregated across output tables and citation styles."""
+    html = _standard_table(3) + _standard_table(1, values=("0.40",)).replace(
+        "DNV-RP-B401 (2021), Table", "dnv rp b401 (2021), table",
+    )
+    with pytest.raises(AssertionError, match="complete source table"):
+        _assert_standard_values_cited_not_copied(
+            html, source_table_rows={("2021", "10-1"): _SYNTHETIC_SOURCE_ROWS},
+        )
+
+
+def test_standard_source_check_does_not_count_duplicate_excerpts_as_complete() -> None:
+    """Four repeated excerpts do not cover a four-row source table."""
+    _assert_standard_values_cited_not_copied(
+        _standard_table(4, values=("0.10",) * 4),
+        source_table_rows={("2021", "10-1"): _SYNTHETIC_SOURCE_ROWS},
+    )
+
+
+def test_standard_source_check_keeps_editions_distinct() -> None:
+    """Rows attributed to another edition do not complete the known source table."""
+    html = _standard_table(2) + _standard_table(2, edition="2020", values=("0.30", "0.40"))
+    _assert_standard_values_cited_not_copied(
+        html, source_table_rows={("2021", "10-1"): _SYNTHETIC_SOURCE_ROWS},
+    )
+
+
+def test_standard_source_quote_budget_cannot_be_reset_by_output_table() -> None:
+    """Splitting six excerpts across output tables still exceeds the policy budget."""
+    with pytest.raises(AssertionError, match="quote budget"):
+        _assert_standard_values_cited_not_copied(_standard_table(3) + _standard_table(3))
 
 
 def test_standard_source_check_rejects_year_only_in_value_column() -> None:
