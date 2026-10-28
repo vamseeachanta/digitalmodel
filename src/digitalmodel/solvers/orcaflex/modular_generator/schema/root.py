@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import logging
-
 from pydantic import BaseModel, Field, model_validator
 
 from .metadata import Metadata
 
-logger = logging.getLogger(__name__)
 from .environment import Environment
 from .generic import GenericModel
 from .pipeline import Pipeline
@@ -59,7 +56,7 @@ class ProjectInputSpec(BaseModel):
         pipeline: Pipeline definition (optional, for pipeline models).
         riser: Riser definition (optional, for riser models).
         mooring: Mooring system definition (optional, for mooring models).
-        generic: Generic OrcaFlex model (optional, for arbitrary models).
+        generic: Generic OrcaFlex model or retained riser fallback (optional).
         equipment: Installation equipment (tugs, rollers, buoyancy modules).
         simulation: Simulation control parameters.
     """
@@ -85,8 +82,9 @@ class ProjectInputSpec(BaseModel):
         Cross-validate model components for physical consistency.
 
         Checks:
-        - Exactly one of pipeline, riser, mooring, or generic must be defined
+        - One domain must be defined; risers may retain a generic fallback
         - Water depth consistency with seabed features
+        - Current profile points must be at or above the water bottom
         - Tug positions relative to pipeline length
         - Buoyancy module spacing vs segment length
         """
@@ -102,7 +100,11 @@ class ProjectInputSpec(BaseModel):
             raise ValueError(
                 "Either 'pipeline', 'riser', 'mooring', or 'generic' must be defined in spec"
             )
-        if model_types_defined > 1:
+        riser_with_fallback = (
+            self.riser is not None and self.generic is not None
+            and self.pipeline is None and self.mooring is None
+        )
+        if model_types_defined > 1 and not riser_with_fallback:
             defined = []
             if self.pipeline is not None:
                 defined.append("pipeline")
@@ -122,12 +124,11 @@ class ProjectInputSpec(BaseModel):
             max_profile_depth = max(
                 (p[0] for p in self.environment.current.profile), default=0
             )
-            if max_profile_depth > self.environment.water.depth * 1.01:  # 1% tolerance
-                logger.warning(
-                    "Current profile extends to %.1fm but water depth is only %.1fm. "
-                    "OrcaFlex may extrapolate or clamp the profile.",
-                    max_profile_depth,
-                    self.environment.water.depth,
+            if max_profile_depth > self.environment.water.depth:
+                raise ValueError(
+                    f"Current profile depth {max_profile_depth} m exceeds "
+                    f"water depth {self.environment.water.depth} m; "
+                    "profile points must be at or above the water bottom."
                 )
 
         # Pipeline-specific validation

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "code": "DNV-ST-F101",
+  "review_date": "2026-10-26",
+  "form": {
+    "id": "f101-root-sum-square",
+    "implementation": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+    "symbol": "DnvStF101Strategy._check_combined_loading",
+    "reviewed_revision": "3a5ea5e79f1197335d032c6d6b17cb8751d9911f",
+    "sha256": "1ecb39c1bf52a2b64bc3a71933324cdaf48c63c13b142d5e155f702cc1eb506e",
+    "expression": "sqrt(m**2 + n**2 + q**2)",
+    "terms": {
+      "m": "gamma_sc * gamma_m * abs(bending_moment) / M_p",
+      "n": "gamma_sc * gamma_m * abs(effective_tension) / S_p",
+      "q": "(internal_pressure - external_pressure) / p_c"
+    },
+    "wall_basis": "t2: nominal wall minus corrosion allowance",
+    "normalisation": "M_p and S_p are the implementation's plastic capacities; p_c is its characteristic collapse pressure",
+    "domain": "Positive plastic capacities and positive collapse pressure; degenerate branches are not validated"
+  },
+  "source": {
+    "title": "Yield and Plastic Flow",
+    "series": "Modules in Mechanics of Materials",
+    "publisher": "Massachusetts Institute of Technology",
+    "year": 2001,
+    "pages": [5, 6],
+    "locator": "Principal-stress expression preceding equation (2), and Figure 7",
+    "url": "https://web.mit.edu/course/3/3.11/www/modules/yield.pdf",
+    "textbook_context_url": "https://web.mit.edu/course/3/3.11/www/modules/",
+    "scope": "Open textbook module on material yielding; not a pipeline local-buckling criterion",
+    "access": {
+      "retrieved_utc": "2026-10-26T04:09:37Z",
+      "http_status": 200,
+      "sha256": "a40a701d569ff0a924658447ef7fd29947eb4819ef327e8c97b0ca7be0690e42"
+    }
+  },
+  "comparison_points": [
+    {
+      "id": "single-load-limits",
+      "agreement": true,
+      "reason": "The simplified form reaches unity on each independently normalised load axis. This algebraic endpoint agreement does not establish the capacity definitions or a mixed-load criterion."
+    },
+    {
+      "id": "mixed-moment-tension",
+      "agreement": false,
+      "reason": "Independent zero-pressure, unit-factor, perfectly plastic thin-ring equilibrium gives a cosine interaction rather than a circle. The simplified unity boundary permits 22.5 % more moment at half the plastic tension in this idealised counterexample.",
+      "basis": "First-principles angular stress integration in the review document and test docstring; not an example from earlier work",
+      "hand_calculation": {
+        "normalised_tension": 0.5,
+        "ring_moment": "1 / sqrt(2)",
+        "simplified_moment": "sqrt(3) / 2",
+        "excess_percent": 22.5
+      }
+    },
+    {
+      "id": "pressure-coupling",
+      "agreement": false,
+      "reason": "The source's principal-stress differences produce an axial-hoop cross term in plane stress. The implementation instead adds a squared net-pressure/collapse-pressure ratio. The source supplies no mapping from collapse resistance to the yield stress normalisation or validation of that substitution."
+    },
+    {
+      "id": "report-envelope",
+      "agreement": false,
+      "reason": "The report traces a separate elastic von Mises stress envelope on nominal wall with report factors, while the strategy uses plastic capacities on corroded wall. A secondary-source review does not reconcile these calculations."
+    }
+  ],
+  "agreement": false,
+  "status": "failed",
+  "reason": "Equivalence is not established: the mixed-load shape differs from ring equilibrium and the published yield criterion does not validate the collapse-pressure term. This is a failed equivalence review, not a failed structural design or a finding about a standard's text.",
+  "limitation_label": "simplified form; not checked against the standard's text",
+  "label_policy": "Retain the limitation unless a record for this form is explicitly marked passed. Missing, unreadable, incomplete or unknown records retain it. Report-to-strategy reconciliation remains a separate limitation even if this review later passes.",
+  "next_steps": [
+    "Retain the simplified-form label and use the report envelope as screening only.",
+    "Have the maintainer obtain a secondary source that directly treats pipeline combined loading and its applicability limits before any passing re-review.",
+    "Reconcile the report with the strategy separately; no strategy change is made by this review."
+  ],
+  "standard_text_consulted": false
+}

@@ -222,10 +222,39 @@ def _working_tree_drift(record: dict, root: Path, revision: str) -> list[str]:
     return sorted(drift)
 
 
+def _regeneration_revision(record: dict, root: Path) -> str:
+    """Find the first reachable publication matching every recorded byte.
+
+    Regenerations cannot pin their own commit ID inside that commit. Bind the
+    artifact and source digests instead, and resolve only committed candidates
+    in HEAD ancestry. Existing full-revision historical records remain pinned.
+    """
+    if "source_revision" in record:
+        raise EvidenceError("Ambiguous source publication")
+    if record["source_publication"] != "first-matching-artifact-publication":
+        raise EvidenceError("Unsupported source publication selection")
+    manifest = _relative(record["manifest"])
+    paths = [manifest, *(_relative(name) for name in record["sources"])]
+    candidates = _git(root, "log", "--reverse", "--format=%H", "HEAD", "--", *paths)
+    for revision in candidates.decode("ascii").splitlines():
+        try:
+            verify_artifacts(record, root, revision=revision)
+            verify_sources(record, git_reader(root, revision))
+        except EvidenceError:
+            continue
+        return revision
+    raise EvidenceError("No committed publication matches regeneration evidence")
+
+
 def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/main") -> dict:
     """Verify committed evidence and report checkout artifact drift separately."""
-    read = git_reader(root, record["source_revision"])
-    _git(root, "merge-base", "--is-ancestor", record["source_revision"], retained_ref)
+    regeneration = "source_publication" in record
+    if regeneration:
+        source_revision = _regeneration_revision(record, root)
+    else:
+        source_revision = record["source_revision"]
+        _git(root, "merge-base", "--is-ancestor", source_revision, retained_ref)
+    read = git_reader(root, source_revision)
     revision = _git(root, "rev-parse", "HEAD").decode("ascii").strip()
     verify_artifacts(record, root, revision=revision)
     try:
@@ -239,6 +268,8 @@ def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/m
             raise EvidenceError("Recorded status contradicts reconstructed evidence")
         result = {"status": "VERIFIED", "fingerprint": fingerprint}
     result["working_tree_drift"] = _working_tree_drift(record, root, revision)
+    if regeneration:
+        result["source_revision"] = source_revision
     return result
 
 

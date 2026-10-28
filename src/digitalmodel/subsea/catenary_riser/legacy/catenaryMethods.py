@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Legacy calculation methods for catenary riser analysis."""
 
 import math
@@ -29,7 +32,7 @@ def catenaryEquation(data):
         stacklevel=2
     )
 
-    if data["F"] != None:
+    if data.get("F") is not None:
         # Share the corrected E1-E2 force route, with w already in N/m.
         from .catenary_equation import CatenaryCalculator
         CatenaryCalculator().calculate(data)
@@ -37,24 +40,15 @@ def catenaryEquation(data):
 
         return data
 
-    elif data["q"] != None:
-        tanq = math.tan(math.radians(90 - data["q"]))
-        BendRadius = (
-            data["d"]
-            * (math.cos(math.radians(90 - data["q"])))
-            / (1 - math.cos(math.radians(90 - data["q"])))
-        )
-        S = BendRadius * tanq
-        X = BendRadius * math.asinh(tanq)
-
-        data.update({"S": S, "X": X, "BendRadius": BendRadius})
-
-        return data
+    elif data.get("q") is not None:
+        from .catenary_equation import CatenaryCalculator
+        return CatenaryCalculator().calculate(data)
 
     # The X-driven branch is unimplemented; keep it LAST so a re-invocation on a
     # dict whose "X" was populated by the q-branch above still resolves via q.
-    elif data["X"] != None:
+    elif data.get("X") is not None:
         raise NotImplementedError("Not implemented yet")
+    raise ValueError("provide force, weight and depth, or q and depth")
 
 
 def catenaryForces(data):
@@ -331,7 +325,7 @@ def simple_catenary_plot(data, spacing=10):
 
 
 def genericPlot(data):
-    if data["label"] == None:
+    if data["label"] is None:
         plt.plot(data["X"], data["Y"])
     else:
         plt.plot(data["X"], data["Y"], label=data["label"])
@@ -347,7 +341,7 @@ def genericPlot(data):
     )
     # Gridlines
     plt.grid()
-    if data["SaveAndShow"] == True:
+    if data["SaveAndShow"]:
         # plt.savefig(data["fileName"].replace(".", ""), dpi=800)
         plt.savefig(data["fileName"], dpi=800)
         plt.legend(
@@ -361,7 +355,7 @@ def genericPlot(data):
 
 def buoyancyProperties(cfg, WeightPerUnitLengthWithOutBuoyancy):
 
-    if cfg["commonDefinition"]["UniformBuoyancy"]["Thickness"] != None:
+    if cfg["commonDefinition"]["UniformBuoyancy"]["Thickness"] is not None:
         cfg = pipeProperties(
             cfg, FluidDensity=cfg["Material"]["Reference_Fluid"]["Rho"], Buoyancy=True
         )
@@ -370,7 +364,7 @@ def buoyancyProperties(cfg, WeightPerUnitLengthWithOutBuoyancy):
             WeightPerUnitLengthWithBuoyancy / WeightPerUnitLengthWithOutBuoyancy
         )
         # Add buoyancy Ratio and also buoyancy module detailed properties
-    elif cfg["commonDefinition"]["UniformBuoyancy"]["BuoyancyFactor"] != None:
+    elif cfg["commonDefinition"]["UniformBuoyancy"]["BuoyancyFactor"] is not None:
         BuoyancyOD = (
             math.sqrt(
                 2

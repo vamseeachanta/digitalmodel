@@ -1,0 +1,62 @@
+{% extends "verification_report.html.j2" %}
+{% set report_status = "Draft for maintainer review" %}
+{% block body_end %}
+<section class="wrap" aria-label="Report comments">
+<h2>Report comments</h2>
+<p>Enter a section and comment. Save the comments JSON beside this HTML.
+Load the saved file to continue. Engineering changes are listed in changes.json.</p>
+<label>Section <input id="comment-section"></label>
+<label>Comment <textarea id="comment-text"></textarea></label>
+<button id="comment-add" type="button">Add comment</button>
+<button id="comment-save" type="button">Save comments</button>
+<label>Load comments <input id="comment-load" type="file" accept=".json"></label>
+<p id="comment-message" role="status"></p>
+<pre id="comment-list"></pre>
+</section>
+<script>
+(() => {
+  'use strict';
+  const title = document.title;
+  let comments = [];
+  const element = id => document.getElementById(id);
+  const show = () => { element('comment-list').textContent = JSON.stringify(comments, null, 2); };
+  element('comment-add').onclick = () => {
+    const section = element('comment-section').value.trim();
+    const text = element('comment-text').value.trim();
+    if (!section || !text) return;
+    comments.push({section, text});
+    element('comment-text').value = '';
+    show();
+  };
+  element('comment-load').onchange = async event => {
+    try {
+      const saved = JSON.parse(await event.target.files[0].text());
+      if (saved.title !== title || !Array.isArray(saved.comments)) throw Error('Report title differs.');
+      if (!saved.comments.every(c => typeof c.section === 'string' && typeof c.text === 'string'))
+        throw Error('Invalid comment data.');
+      comments = saved.comments;
+      show();
+    } catch (error) { element('comment-message').textContent = error.message; }
+  };
+  element('comment-save').onclick = async () => {
+    const text = JSON.stringify({title, comments}, null, 2) + '\n';
+    try {
+      if (window.showSaveFilePicker) {
+        const handle = await window.showSaveFilePicker({suggestedName: 'report.comments.json'});
+        const file = await handle.createWritable();
+        await file.write(text);
+        await file.close();
+      } else {
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(new Blob([text], {type: 'application/json'}));
+        link.href = url;
+        link.download = 'report.comments.json';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      element('comment-message').textContent = 'Reload the saved JSON to check the copy.';
+    } catch (error) { element('comment-message').textContent = error.message; }
+  };
+})();
+</script>
+{% endblock %}

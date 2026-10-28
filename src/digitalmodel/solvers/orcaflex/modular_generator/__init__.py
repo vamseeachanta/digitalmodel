@@ -15,6 +15,7 @@ import yaml
 
 from ..yaml_utils import _represent_none
 
+from .input_manifest import write_input_manifest
 from .schema import ProjectInputSpec
 from .builders.base import BaseBuilder
 from .builders.context import BuilderContext
@@ -60,17 +61,27 @@ class ModelValidationError(ValueError):
 
 
 @contextmanager
-def _staged_output(output_dir: Path):
+def _staged_output(output_dir: Path, failure_dir: Path | None = None):
     """Publish model files only after generation and validation succeed.
 
     A validation or builder failure leaves even an existing output untouched.
     Publication copies files after validation; it is not an atomic transaction
     against I/O failures during the copy itself.
+    Optional failure retention copies staging before temporary cleanup. A copy
+    failure is noted without replacing the original generation exception.
     """
     with TemporaryDirectory(prefix="modular-model-") as temporary:
         staging = Path(temporary)
-        yield staging
-        shutil.copytree(staging, output_dir, dirs_exist_ok=True)
+        try:
+            yield staging
+            shutil.copytree(staging, output_dir, dirs_exist_ok=True)
+        except BaseException as exc:
+            if failure_dir is not None:
+                try:
+                    shutil.copytree(staging, failure_dir)
+                except Exception as error:
+                    exc.add_note(f"Failed staging could not be retained ({type(error).__name__})")
+            raise
 
 
 class _NoAliasDumper(yaml.Dumper):
@@ -115,6 +126,7 @@ class GenerationResult:
     include_files: list[Path]
     variables_resolved: dict[str, Any] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    manifest_file: Path | None = None
 
 
 class ModularModelGenerator:
@@ -147,6 +159,14 @@ class ModularModelGenerator:
         into GenericModel-compatible dicts, then merge them into
         spec.generic for processing by GenericModelBuilder.
         """
+        if self.spec.riser is not None and self.spec.generic is not None:
+            from .riser_conversion import render_riser
+
+            # A single generic emitter avoids replacing native collections with
+            # duplicate typed includes or introducing typed builder defaults.
+            generic = render_riser(self.spec.riser, self.spec.generic)
+            self.spec = self.spec.model_copy(update={"riser": None, "generic": generic})
+
         router_outputs: list[dict[str, Any]] = []
 
         # Route mooring system
@@ -192,13 +212,18 @@ class ModularModelGenerator:
             data = yaml.safe_load(f)
         return ProjectInputSpec(**data)
 
-    def generate(self, output_dir: Path, *, allow_validation_errors: bool = False) -> None:
+    def generate(
+        self, output_dir: Path, *, allow_validation_errors: bool = False,
+        failure_dir: Path | None = None,
+    ) -> None:
         """Validate then publish inputs; errors raise ModelValidationError.
 
         Set allow_validation_errors=True only to write diagnostic inputs. Error
         findings remain logged at ERROR level. Collection collisions still raise.
+        If failure_dir is supplied, copy failed staging there before cleanup.
+        An existing diagnostic directory is never overwritten.
         """
-        with _staged_output(Path(output_dir)) as staging:
+        with _staged_output(Path(output_dir), failure_dir) as staging:
             self._generate(staging, allow_validation_errors=allow_validation_errors)
 
     def _generate(self, output_dir: Path, *, allow_validation_errors: bool) -> None:
@@ -230,7 +255,7 @@ class ModularModelGenerator:
 
             # Write include file
             file_path = includes_dir / file_name
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, 'w', encoding='utf-8', newline='\n') as f:
                 yaml.dump(data, f, Dumper=_NoAliasDumper, default_flow_style=False, allow_unicode=True, sort_keys=False)
             generated_files.append(file_name)
 
@@ -249,6 +274,15 @@ class ModularModelGenerator:
 
         # Post-generation cross-builder validation
         self._run_post_validation(includes_dir, allow_validation_errors=allow_validation_errors)
+        self._write_input_manifest(output_dir, generated_files)
+
+    @staticmethod
+    def _write_input_manifest(output_dir: Path, generated_files: list[str]) -> Path:
+        """Cover every generated input, including parameters outside the include graph."""
+        return write_input_manifest(output_dir, [
+            "master.yml", "inputs/parameters.yml",
+            *(f"includes/{name}" for name in generated_files),
+        ])
 
     def _run_post_validation(
         self, includes_dir: Path, *, allow_validation_errors: bool = False,
@@ -300,7 +334,7 @@ class ModularModelGenerator:
             params['wave_direction'] = env.waves.direction
         params['stage_durations'] = self.spec.simulation.stages
         params['time_step'] = self.spec.simulation.time_step
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
             yaml.dump(params, f, default_flow_style=False)
 
     def _write_master(self, path: Path, generated_files: list[str] | None = None) -> None:
@@ -316,7 +350,7 @@ class ModularModelGenerator:
         for file_name in include_order:
             lines.append(f'- includefile: includes/{file_name}')
 
-        with open(path, 'w', encoding='utf-8') as f:
+        with open(path, 'w', encoding='utf-8', newline='\n') as f:
             f.write('\n'.join(lines))
 
     def generate_with_overrides(
@@ -342,6 +376,8 @@ class ModularModelGenerator:
             )
             result.master_file = output_dir / result.master_file.relative_to(staging)
             result.include_files = [output_dir / p.relative_to(staging) for p in result.include_files]
+            if result.manifest_file is not None:
+                result.manifest_file = output_dir / result.manifest_file.relative_to(staging)
         return result
 
     def _generate_with_overrides(
@@ -409,7 +445,7 @@ class ModularModelGenerator:
                 resolved_content = VariableResolver.resolve(
                     template_content, merged_vars
                 )
-                file_path.write_text(resolved_content, encoding='utf-8')
+                file_path.write_text(resolved_content, encoding='utf-8', newline='\n')
                 resolved_vars.update(merged_vars)
             else:
                 # Standard builder path
@@ -421,7 +457,7 @@ class ModularModelGenerator:
                 data = builder.build()
                 context.update_from_dict(builder.get_generated_entities())
 
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, 'w', encoding='utf-8', newline='\n') as f:
                     yaml.dump(
                         data, f,
                         Dumper=_NoAliasDumper,
@@ -450,8 +486,10 @@ class ModularModelGenerator:
                 f"[{finding.level}] {finding.category}: {finding.message}"
             )
 
+        manifest_path = self._write_input_manifest(output_dir, generated_files)
         return GenerationResult(
             master_file=master_path,
+            manifest_file=manifest_path,
             include_files=include_paths,
             variables_resolved=resolved_vars,
             warnings=warnings,

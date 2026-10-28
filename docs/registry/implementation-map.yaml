@@ -1,6 +1,16 @@
 schema_version: 1
 repository: digitalmodel
 revision: 270c8759c374b67a7f032953e7fcdb14e0224461
+# Pack references are maintained separately from the historical method snapshot.
+agent_packs:
+  subsea/capping_stack:
+    agent_pack: src/digitalmodel/subsea/capping_stack/docs/agent-pack.md
+    qa_family: EC
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
+  subsea/hipps:
+    agent_pack: src/digitalmodel/subsea/hipps/docs/agent-pack.md
+    qa_family: EC
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
 searched:
   tracked_files: 17815
   text_files_searched: 15629
@@ -5237,7 +5247,7 @@ families:
     signals: *a509c5dfbb2
     relation: independent
     module: scripts
-    file_sha256: 26d2feef6eea371f7b9c698b335feffb058e47a92d42d704465b2e832987b9fc
+    file_sha256: 9b7faf2ec52146bededa16d5ae58d3851391d3337b68f47479d01413ee4806cd
     body_sha256: 7189a055e2e1560419691ee5b136b3ae0e6e217513e9edd2c97f86100ba66476
   - path: scripts/consolidate_panels.py
     symbol: _build_manual_entries
@@ -26988,21 +26998,21 @@ families:
     body_sha256: 8259d5c4c84e7e2873c1908990bae8e5d39f3e156efc382e9006313e92dd57a2
   - path: src/digitalmodel/geotechnical/anchors.py
     symbol: drag_anchor_capacity
-    line: 61
+    line: 110
     kind: function
     what: Applies existing empirical anchor-efficiency tables.
     relation: independent
     module: geotechnical/anchors.py
-    file_sha256: b08a35629c31d3a456b2912c6be5a6a97f9383b4293e248dc7766edc8e654d19
+    file_sha256: 81a46b8935d52bf19bcf53f3090e2366e7454a05f04b28aa11e626e90d115da8
     body_sha256: db1d1f9434c7128f12f40351d01b13f13a9ecedb361c18759f984efe7062a044
   - path: src/digitalmodel/geotechnical/anchors.py
     symbol: suction_anchor_capacity
-    line: 109
+    line: 158
     kind: function
     what: Combines caisson shaft and reverse tip bearing resistance.
     relation: independent
     module: geotechnical/anchors.py
-    file_sha256: b08a35629c31d3a456b2912c6be5a6a97f9383b4293e248dc7766edc8e654d19
+    file_sha256: 81a46b8935d52bf19bcf53f3090e2366e7454a05f04b28aa11e626e90d115da8
     body_sha256: 1d47ff7e9bd3e78f29fd555954b7254d956930b21cd5cf4e4c7a0fcc66fe2dc6
   - path: src/digitalmodel/geotechnical/mudmat.py
     symbol: bearing_capacity_factors
@@ -54500,7 +54510,7 @@ rejected_candidates:
     implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/anchors.py
   symbol: DragAnchorResult
-  line: 39
+  line: 42
   families:
   - geotechnics
   disposition: needs_review
@@ -54508,7 +54518,7 @@ rejected_candidates:
     implementation counts pending inspection.
 - path: src/digitalmodel/geotechnical/anchors.py
   symbol: SuctionAnchorResult
-  line: 51
+  line: 54
   families:
   - geotechnics
   disposition: needs_review
@@ -54619,3 +54629,12 @@ rejected_candidates:
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
     implementation counts pending inspection.
 notes: ['Built by search with git ls-files, grep and ast; no solver was executed.', 'Function and class body digests use ast.dump without location attributes after removal of docstrings; names, defaults and decorators remain part of the digest.', 'A family can include examples, test helpers, model-section builders and explicit delegates; these relations are not independent numerical validation.', 'not_checked is an unresolved defect assessment, including delegates and non-AQWA readers; issue state does not establish whether a code path is affected.', Python table modules without a defining class are script entries; table contents and licensed strength values are not reproduced., Python module table entries use a null symbol with table_name because their defining assignment is not a function or class., Fresh main-signal search hits in prose and single-case input data are not implementations; rejected_candidates records the named or executable candidates retained after syntax inspection.]
+
+# Documentation bindings; calculation inventory above remains the pinned snapshot.
+agent_packs:
+  nde:
+    agent_pack: src/digitalmodel/nde/docs/agent-pack.md
+    qa_family: EC
+  production_engineering:
+    agent_pack: src/digitalmodel/production_engineering/docs/agent-pack.md
+    qa_family: EC

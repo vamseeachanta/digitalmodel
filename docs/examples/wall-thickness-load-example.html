@@ -25,7 +25,10 @@ stated to distinguish the material basis from a qualified design input.</td></tr
 <tr><td>3</td><td>2026-10-21</td><td>The assumed strength conversions are
 identified and source references are retained as text to avoid broken site links.</td></tr>
 <tr><td>4</td><td>2026-10-21</td><td>The yield and tensile rounding rules are
-stated to explain the displayed precision; calculation inputs are unchanged.</td></tr></tbody></table>
+stated to explain the displayed precision; calculation inputs are unchanged.</td></tr>
+<tr><td>5</td><td>2026-10-22</td><td>Sample controls and a point readout make the
+fallback usable without hover or WebGL; source-grid validation and exact load
+coordinates prevent missing rows and shifted contours.</td></tr></tbody></table>
 <p>Table 1. Revision history of the worked example.</p>
 <h2>Inputs</h2>
 <p>All case inputs are <strong>assumed, based on previous experience</strong>, inherited
@@ -100,6 +103,24 @@ The existing dataset builder prepares the full rows for publication; it does not
 It retains every second wall and every third load sample, including endpoints.
 Displayed utilisation is quantized; cell colours use the majority governing check
 among the corners. Neither cell colour nor interpolated boundaries establish off-grid capacity.</p>
+<h2>Reading a sampled point in either view</h2>
+<p>Select <strong>API-STD-2RD</strong> and a wall thickness of <strong>18.000 mm</strong>.
+Select <strong>2D heatmap</strong> to work without a rotating surface, or keep the
+automatic view. Move both sample sliders to their upper endpoints; the sliders
+also accept arrow keys. The readout shows <strong>4,649.8 kN</strong> tension,
+<strong>355.6 kN m</strong> moment, <strong>154.5%</strong> utilisation and
+<strong>Combined</strong> as the governing check, corresponding to the last row
+of Table 3. At the two lower endpoints it shows collapse as the governing check
+and <strong>39.7%</strong> utilisation. This change of governing check is present
+in the sampled data, independently of the renderer.</p>
+<p>The readout uses quantized grid-point values rather than a cell average.
+Its rounding quantum is 0.01 percentage points; the displayed percentage is
+rounded to one decimal place. The native canvas marks the selected point and
+labels both load-axis endpoints when the plotting library cannot load.
+For a nonuniform load grid, cell widths and the interpolated utilisation
+boundary use the supplied physical coordinates. The builder rejects incomplete,
+duplicate or out-of-axis full-grid rows before downsampling, and requires at
+least two strictly increasing coordinates on each load axis.</p>
 <h2>Limits and way forward</h2>
 <p>Qualification is NOT_EVALUATED because the governing standards and source case have
 not been independently qualified. Compression, fatigue, defects and installation history

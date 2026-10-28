@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "dataset_id": "synthetic-riser-bom",
+  "revision": "1",
+  "authoritative_owner": "digitalmodel",
+  "data_kind": "synthetic",
+  "intended_use": "Arithmetic testing only; not engineering or commercial input",
+  "freshness": "Not applicable to invented data; fixture revision governs reproducibility",
+  "source": "Invented quantity schedule and first five prime numbers; no real cost data",
+  "files": [
+    {
+      "path": "synthetic_cost_basis.json",
+      "sha256": "d13095019c72e39b5f6306a74efae0d58724dbcfbe9ff4e8a21d51393fd7cc40"
+    },
+    {
+      "path": "wikis/engineering/concepts/synthetic-bom.md",
+      "sha256": "226cc3e96b3d51112c40147ab29de6e249652f6f442e1ffd0a111a3da39c4e9f"
+    }
+  ]
+}

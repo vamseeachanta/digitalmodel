@@ -514,6 +514,10 @@ def engine(
         )
 
         cfg_base = passing_ship_forces(cfg_base)
+    elif basename == "hull_wastage_screen":
+        from digitalmodel.hull_wastage_screen.workflow import router as hull_wastage_screen
+
+        cfg_base = hull_wastage_screen(cfg_base)
     elif basename == "hull_girder_screening":
         from digitalmodel.hull_girder_screening.workflow import (
             router as hull_girder_screening,

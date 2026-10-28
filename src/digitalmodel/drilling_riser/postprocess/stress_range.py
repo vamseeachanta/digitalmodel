@@ -24,7 +24,7 @@ from __future__ import annotations
 import math
 from typing import Any, Iterable, Mapping, Sequence
 
-from .station_geometry import section_lengths
+from .station_geometry import finite_parameter, joint_counts, section_lengths
 
 SCHEMA = "riser-w5-stress-range/1"
 SCHEMA_SIG = "riser-w5-stress-range/2"
@@ -194,18 +194,25 @@ def significant_over_theta(histories: Mapping[float, Any]) -> tuple[float, float
 
 
 def coupling_positions(sections_m: Sequence[float], joint_length_m: float = JOINT_LENGTH_M, *,
-                       tol_m: float = 1e-3) -> list[float]:
+                       tol_m: float = 1e-3, max_couplings: int | None = None) -> list[float]:
     """Arc lengths (from End A) of the riser couplings: every section boundary and End B, plus k x joint length
-    inside a section longer than one joint. Such a section must hold a whole number of joints (``ValueError``)."""
+    inside a section longer than one joint. Such a section must hold a whole number of joints (``ValueError``).
+
+    All sections and counts are validated before expansion. ``max_couplings`` is
+    an optional caller-supplied resource budget, including section endpoints and
+    End B. Without it no resource bound is imposed; no engineering limit is
+    inferred. Arithmetic source: OpenStax, College Algebra 2e (2021), section 9.2.
+    """
     lengths = section_lengths(sections_m)
+    counts = joint_counts(lengths, joint_length_m, tol_m)
+    if max_couplings is not None:
+        if isinstance(max_couplings, bool) or not isinstance(max_couplings, int) or max_couplings <= 0:
+            raise ValueError("max_couplings must be a positive integer")
+        if sum(counts) > max_couplings:
+            raise ValueError("coupling count exceeds max_couplings; expansion was not started")
     out, arc = [], 0.0
-    for i, length in enumerate(lengths):
-        if length > joint_length_m + tol_m:
-            n = length / joint_length_m
-            if abs(n - round(n)) * joint_length_m > tol_m:
-                raise ValueError(f"section {i} ({length} m) is longer than a joint and not a whole number of "
-                                 f"{joint_length_m} m joints")
-            out.extend(arc + k * joint_length_m for k in range(1, int(round(n))))
+    for length, count in zip(lengths, counts):
+        out.extend(arc + k * joint_length_m for k in range(1, count))
         arc += length
         out.append(arc)
     return sorted(out)
@@ -234,7 +241,7 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
                       exclude_below_m: float, exclude_above_m: float | None = None,
                       hot_spot_m: float | None = None, hot_spot_tol_m: float = 1.0,
                       pup_side_couplings_m: Sequence[float] = (), pup_side_tol_m: float = 1.0,
-                      coupling_tol_m: float | None = None) -> list[str]:
+                      coupling_tol_m: float | None = None, max_couplings: int | None = None) -> list[str]:
     """Kind of each result point for CR-10 (``STATION_KINDS``), in this order of precedence:
 
     ``excluded`` - arc below ``exclude_below_m`` (the tension-ring / telescopic-joint section) or above
@@ -254,13 +261,26 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
     is not taken as the coupling's station. End B needs only its inward side. A rounded explicit exclusion
     selects its nearest geometry boundary within ``_ON_TOL`` (ties select the earlier boundary); only that
     boundary's exterior side is exempt, and couplings beyond it need no samples.
+
+    Coordinates must be finite and sampling distances nonnegative and finite.
+    ``max_couplings`` passes a caller-supplied expansion budget to coupling_positions.
     """
+    exclude_below_m = finite_parameter(exclude_below_m, "exclude_below_m")
+    if exclude_above_m is not None:
+        exclude_above_m = finite_parameter(exclude_above_m, "exclude_above_m")
+    if hot_spot_m is not None:
+        hot_spot_m = finite_parameter(hot_spot_m, "hot_spot_m")
+    hot_spot_tol_m = finite_parameter(hot_spot_tol_m, "hot_spot_tol_m", nonnegative=True)
+    pup_side_tol_m = finite_parameter(pup_side_tol_m, "pup_side_tol_m", nonnegative=True)
+    if coupling_tol_m is not None:
+        coupling_tol_m = finite_parameter(coupling_tol_m, "coupling_tol_m", nonnegative=True)
+    pup_side_couplings_m = [finite_parameter(v, "pup_side_couplings_m") for v in pup_side_couplings_m]
     a = [float(x) for x in arcs]
     if not all(math.isfinite(x) for x in a) or any(y < x - _ARC_TOL for x, y in zip(a, a[1:])):
         raise ValueError("the arc-length axis is not finite and non-decreasing")
     # End B is taken from the section geometry (below), so the geometry must cover every result point and the
     # exclusion boundary: sections that stop short would make an interior coupling "End B" and drop its upper side
-    couplings = coupling_positions(sections_m, joint_length_m)
+    couplings = coupling_positions(sections_m, joint_length_m, max_couplings=max_couplings)
     end_b = couplings[-1]
     if a and a[-1] > end_b + _ON_TOL:
         raise ValueError(f"result point at {a[-1]} m lies beyond End B ({end_b} m from the section geometry)")
