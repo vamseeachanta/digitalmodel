@@ -1,0 +1,7 @@
+[
+  {
+    "change": "Added the public-function inventory, synthetic stress calculation and independent checks to make the module scope and unqualified methods explicit.",
+    "date": "2026-10-28",
+    "revision": "A"
+  }
+]

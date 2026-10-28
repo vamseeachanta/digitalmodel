@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Well tubulars module analysis</title>
+<style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+.wrap{max-width:var(--wrap);margin:auto;padding:2rem}
+header,section,details{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);padding:1.4rem;margin:1rem 0}
+h1,h2,h3{color:var(--brand)} p,li{line-height:1.65}
+.table-scroll{overflow:auto} table{border-collapse:collapse;width:100%;margin:1rem 0}
+th,td{text-align:left;padding:.65rem;border:1px solid var(--edge);vertical-align:top}
+th{background:var(--panel-2)}caption,figcaption{caption-side:bottom;text-align:left;color:var(--muted);padding:.6rem 0}
+code,pre{overflow-wrap:anywhere}pre{white-space:pre-wrap;background:var(--panel-2);padding:1rem}
+svg{width:100%;height:auto;color:var(--ink)}.notice{border-left:4px solid var(--caution);padding-left:1rem}
+@media print{header,section,details{break-inside:auto}.wrap{padding:0}}
+</style></head><body class="hs-doc"><main class="wrap">
+<header><h1>Well tubulars module analysis</h1>
+<p>Casing, tubing, stress envelopes and rod strings: source inventory and a synthetic thin-wall calculation.</p>
+<p class="notice">Arithmetic evidence only. Design acceptance and physical qualification are NOT_EVALUATED.</p>
+<p><a href="results.json">Calculation JSON</a> · <a href="manifest.json">Byte manifest</a> ·
+<a href="changes.json">Change history</a> · <a href="README.md">Rebuild instructions</a></p></header>
+<section><h2 id="s1">1. Summary</h2>
+<p>The documented thin-wall stress helpers are executed for internal pressure, reversed differential pressure and pure shear. Hoop stresses are
+10000.0 psi and -10000.0 psi for the pressure cases;
+the equivalent stresses are 9380.8 psi,
+14422.2 psi and 2598.1 psi, respectively [A, B].
+Independent equilibrium and principal-stress checks cover these assumed cases only [C].</p>
+<h3>Revision history</h3><div class="table-scroll"><table>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Added the public-function inventory, synthetic stress calculation and independent checks to make the module scope and unqualified methods explicit.</td></tr></tbody>
+<caption>Initial issue and change basis; the same records are delivered in changes.json.</caption></table></div></section>
+<section><h2 id="s2">2. Context and scope</h2>
+<p>The package exposes product lookups, pressure profiles, axial loads, design-factor comparisons,
+stress-envelope coordinates and rod-string cycle checks. Their presence is an inventory fact, not qualification.
+Only <code>compute_hoop_stress</code> and <code>compute_vme_stress</code> are executed for engineering results in this report.</p>
+<p>Reviewed source revision: <code>09089a121a16069c4b657d1a320a630a23ab1dd5</code>. The manifest records the actual source digests used for this build;
+the fixed revision identifies the review basis rather than a claim that later source edits have been reviewed [D].</p>
+<details><summary>Public function and class inventory</summary>
+<p>Every public top-level definition in the package is listed, including module helpers not re-exported by
+<code>__init__.py</code>. Public members are listed under their class. Private helpers are outside this API inventory.
+Optional marks describe the implementation, without adopting its defaults.</p>
+<div class="table-scroll"><table><thead><tr><th>Entry point</th><th>Required inputs and optional arguments</th><th>Output contract</th><th>Evidence status</th></tr></thead>
+<tbody><tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>CasingGrade</code></td><td>name (required), min_yield_psi (required), max_yield_psi (required), min_tensile_psi (required), standard (optional)</td><td>Grade holder: minimum/maximum yield and minimum tensile strengths (psi), standard identifier.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>casing_grade</code></td><td>name</td><td>CasingGrade lookup; no material qualification is inferred.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>internal_yield_pressure</code></td><td>od_in, wt_in, min_yield_psi</td><td>Internal yield pressure (psi); wall-tolerance basis unqualified.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>pipe_body_yield_strength</code></td><td>od_in, wt_in, min_yield_psi</td><td>Pipe-body axial yield force (lbf).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>collapse_pressure</code></td><td>od_in, wt_in, min_yield_psi</td><td>Collapse pressure (psi) and regime label; all regime qualifications remain open.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>Casing</code></td><td>od_in (required), wt_in (required), grade (required), weight_ppf (optional), code_reference (optional)<br>Members: id_in(No call arguments; object state where applicable.); d_over_t(No call arguments; object state where applicable.); metal_area_in2(No call arguments; object state where applicable.); burst_psi(No call arguments; object state where applicable.); body_yield_lbf(No call arguments; object state where applicable.); collapse_psi(No call arguments; object state where applicable.); collapse_regime(No call arguments; object state where applicable.); reference(No call arguments; object state where applicable.); to_tubular_geometry(No call arguments; object state where applicable.)</td><td>Product object with ID/wall (in), area (in²), diameter/wall ratio, burst/collapse (psi), body yield (lbf), regime/reference and geometry bridge.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>list_sizes</code></td><td>No call arguments; object state where applicable.</td><td>Sorted casing OD (in), nominal weight (lb/ft) pairs.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>wall_for_size</code></td><td>od_in, weight_ppf</td><td>Catalogue wall thickness (in).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>casing</code></td><td>grade, od_in (required), weight_ppf (optional), wt_in (optional)</td><td>Casing product from grade and either nominal weight or explicit wall, exclusively.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>list_tubing_sizes</code></td><td>No call arguments; object state where applicable.</td><td>Sorted tubing OD (in), nominal weight (lb/ft) pairs.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>tubing_wall_for_size</code></td><td>od_in, weight_ppf</td><td>Tubing catalogue wall thickness (in).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing.py">casing</a>:<code>tubing</code></td><td>grade, od_in (required), weight_ppf (optional), wt_in (optional)</td><td>Casing product using the tubing catalogue or an explicit wall, exclusively.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>api_round_pressure_psi</code></td><td>p_psi</td><td>Rounded pressure (psi); source rounding convention is not independently qualified.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>api_round_force_lbf</code></td><td>f_lbf</td><td>Rounded axial force (lbf); source rounding convention is not independently qualified.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>PressureProfile</code></td><td>depths_ft (required), pressures_psi (required), label (optional)<br>Members: at(depth_ft)</td><td>Piecewise-linear depth (ft), pressure (psi) holder; at interpolates pressure (psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>fluid_column_profile</code></td><td>density_ppg, td_ft, surface_pressure_psi (optional), label (optional)</td><td>PressureProfile in ft/psi for a fluid column and surface pressure.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>shut_in_tubing_pressure</code></td><td>reservoir_pressure_psi, reservoir_depth_ft, gas_gradient_psi_ft (optional)</td><td>Surface shut-in pressure (psi) from reservoir pressure and gas gradient.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>tubing_leak_internal_profile</code></td><td>reservoir_pressure_psi, reservoir_depth_ft, packer_fluid_ppg, td_ft, gas_gradient_psi_ft (optional)</td><td>Internal tubing-leak PressureProfile (ft/psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>injection_internal_profile</code></td><td>surface_pressure_psi, fluid_ppg, td_ft</td><td>Internal static injection PressureProfile (ft/psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>burst_external_profile</code></td><td>mud_ppg, toc_ft, outer_shoe_ft, td_ft, mix_water_ppg (optional), pore_ppg (optional)</td><td>External backup PressureProfile (ft/psi), with top-of-cement and shoe anchors.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>full_evacuation_internal_profile</code></td><td>td_ft</td><td>Evacuated internal PressureProfile (ft/psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>DesignFactors</code></td><td>burst (optional), burst_low_sicp (optional), sicp_threshold_psi (optional), collapse (optional), tension (optional), compression (optional), triaxial (optional), reference (optional)<br>Members: burst_for_sicp(sicp_psi)</td><td>Factor holder (dimensionless), pressure threshold (psi) and reference; burst_for_sicp selects a factor. Defaults are not an adopted design basis.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>ModeCheckResult</code></td><td>mode (required), rating (required), max_load (required), min_design_factor (required), governing_depth_ft (required), required_design_factor (required), passes (required), load_case (optional)<br>Members: as_dict(No call arguments; object state where applicable.)</td><td>Mode, rating/load (psi for pressure or equivalent-stress modes; lbf for tension), dimensionless factors, governing depth (ft), flag and load-case label; as_dict serializes them.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>check_burst</code></td><td>casing_product, internal, external, td_ft, factors (optional), sicp_psi (optional)</td><td>ModeCheckResult for net internal pressure versus burst rating.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>reduced_yield_under_tension</code></td><td>min_yield_psi, axial_stress_psi</td><td>Axial-stress-equivalent yield (psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>collapse_pressure_under_tension</code></td><td>od_in, wt_in, min_yield_psi, axial_stress_psi</td><td>Derated collapse pressure (psi) and regime label.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>check_collapse</code></td><td>casing_product, external, td_ft, internal (optional), factors (optional), weight_ppf (optional), mud_ppg_for_buoyancy (optional)</td><td>ModeCheckResult for net external pressure, optionally tension-derated.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>buoyancy_factor</code></td><td>mud_ppg</td><td>Dimensionless buoyancy factor using the source steel density assumption.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>axial_load_profile</code></td><td>weight_ppf, td_ft, mud_ppg, extra_tension_lbf (optional), n (optional)</td><td>Arrays of depth (ft) and buoyed axial load (lbf).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>ballooning_tension_delta_lbf</code></td><td>delta_internal_psi, casing_product</td><td>Restrained ballooning axial-force increment (lbf).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>cooling_tension_delta_lbf</code></td><td>delta_temp_f, casing_product</td><td>Restrained cooling axial-force increment (lbf); temperature drop is positive.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>check_tension</code></td><td>casing_product, weight_ppf, td_ft, mud_ppg, extra_tension_lbf (optional), factors (optional)</td><td>ModeCheckResult for buoyed weight and additional axial force versus body yield.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>check_triaxial</code></td><td>casing_product, internal, external, weight_ppf, td_ft, mud_ppg, extra_tension_lbf (optional), factors (optional)</td><td>ModeCheckResult from thin-wall hoop plus axial plane stress; name does not establish through-wall stress treatment.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>max_frac_surface_pressure</code></td><td>casing_product, frac_fluid_ppg, external, td_ft, factors (optional), design_factor (optional)</td><td>Surface pressure (psi) conditional on supplied burst factor and profiles.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>h2s_partial_pressure_psia</code></td><td>h2s_ppm, total_pressure_psia</td><td>H₂S partial absolute pressure (psia).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>SourServiceAssessment</code></td><td>is_sour (required), h2s_partial_psia (required), total_pressure_psia (required), well_type (required), acceptable_grades (optional), reference (optional)</td><td>Screening flag, partial/total pressure (psia), well type, grade names and reference; criteria unqualified.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>sour_service_screen</code></td><td>h2s_ppm, total_pressure_psia, well_type (optional), service_temp_f (optional)</td><td>SourServiceAssessment; no environmental or grade acceptance established.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>grade_sour_ok</code></td><td>grade_name, service_temp_f</td><td>Grade/temperature screening flag; no material acceptance established.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>ConnectionClass</code></td><td>name (required), full_name (required), threads_per_inch (required), tension_efficiency (required), strength_basis (required), notes (optional)<br>Members: joint_strength_lbf(casing_product, conservative (optional))</td><td>Connection metadata with thread count (per in), dimensionless efficiency range and strength basis; joint_strength_lbf returns a screening force (lbf).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>connection_class</code></td><td>name</td><td>ConnectionClass lookup; joint performance unqualified.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>ProductionCasingWell</code></td><td>td_ft (required), mud_ppg (required), toc_ft (required), outer_shoe_ft (required), reservoir_pressure_psi (required), packer_fluid_ppg (required), frac_surface_pressure_psi (optional), frac_fluid_ppg (optional), mix_water_ppg (optional), pore_ppg (optional), gas_gradient_psi_ft (optional)</td><td>Well/load holder: depths (ft), fluid densities (lb/gal), pressures (psi), gas gradient (psi/ft).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">casing_design</a>:<code>check_production_casing</code></td><td>casing_product, weight_ppf, well, factors (optional)</td><td>Mapping of burst, collapse, tension and equivalent-stress ModeCheckResult records.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">design_envelope</a>:<code>TubularGeometry</code></td><td>od_in (required), id_in (required), smys_psi (required), burst_rating_psi (required), collapse_rating_psi (required)</td><td>Geometry holder: wall and mean diameter (in), metal area (in²), yield force (lbf); supplied strength and ratings (psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">design_envelope</a>:<code>compute_hoop_stress</code></td><td>differential_pressure_psi, od_in, id_in</td><td>Signed mean-diameter hoop membrane stress (psi).</td><td>ARITHMETIC_CHECKED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">design_envelope</a>:<code>compute_vme_stress</code></td><td>sigma_axial_psi, sigma_hoop_psi, tau_psi (optional)</td><td>Nonnegative plane-stress equivalent stress including shear (psi).</td><td>ARITHMETIC_CHECKED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">design_envelope</a>:<code>IsotropicVmeEnvelope</code></td><td>geometry, design_factor<br>Members: compute(n_points (optional))</td><td>Envelope object; compute returns axial-force (lbf), differential-pressure (psi) pairs.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">design_envelope</a>:<code>ApiEllipseEnvelope</code></td><td>geometry, design_factor<br>Members: compute(n_points (optional))</td><td>Envelope object; compute returns axial-force (lbf), differential-pressure (psi) pairs.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">design_envelope</a>:<code>AnisotropicVmeEnvelope</code></td><td>geometry, yield_hoop_ratio, design_factor<br>Members: compute(n_points (optional))</td><td>Envelope object with directional yield ratio; compute returns lbf/psi pairs.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">design_envelope</a>:<code>design_envelope_points</code></td><td>geometry, design_factor (optional), n_points (optional), yield_hoop_ratio (optional)</td><td>Mapping of named envelope arrays, each containing lbf/psi coordinate pairs.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">sucker_rod</a>:<code>RodGrade</code></td><td>name (required), min_tensile_psi (required), max_tensile_psi (required), description (optional)</td><td>Rod grade and minimum/maximum tensile-strength holder (psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">sucker_rod</a>:<code>rod_grade</code></td><td>name</td><td>RodGrade lookup; no material qualification is inferred.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">sucker_rod</a>:<code>rod_area</code></td><td>nominal_in</td><td>Circular rod metal area (in²).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">sucker_rod</a>:<code>modified_goodman_allowable</code></td><td>min_tensile_psi, min_stress_psi, service_factor (optional)</td><td>Modified-Goodman peak allowable stress (psi), conditional on service factor.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">sucker_rod</a>:<code>SuckerRod</code></td><td>nominal_in (required), grade (required), service_factor (optional), code_reference (optional)<br>Members: area_in2(No call arguments; object state where applicable.); stress_psi(load_lbf); allowable_stress_psi(min_stress_psi); goodman_check(peak_load_lbf, min_load_lbf); to_rod_section(length_ft, count (optional))</td><td>Rod product; area (in²), stress/allowable (psi), cycle loading (dimensionless), flag/reference and to_rod_section bridge.</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">sucker_rod</a>:<code>sucker_rod</code></td><td>grade, nominal_in, service_factor (optional)</td><td>SuckerRod product from grade, diameter (in) and service factor (dimensionless).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">sucker_rod</a>:<code>RodTaperSection</code></td><td>rod (required), length_ft (required)</td><td>Rod product and section length (ft).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">sucker_rod</a>:<code>rod_string_goodman</code></td><td>sections</td><td>Per-section stress/allowable (psi), loading ratio, flag, diameter (in), length (ft), reference; sections include peak/minimum loads (lbf).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/tubing_design.py">tubing_design</a>:<code>shut_in_tubing_profile</code></td><td>sitp_psi, td_ft, gas_gradient_psi_ft (optional)</td><td>Internal shut-in PressureProfile (ft/psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/tubing_design.py">tubing_design</a>:<code>packer_fluid_annulus_profile</code></td><td>packer_fluid_ppg, td_ft, surface_pressure_psi (optional)</td><td>Annulus fluid PressureProfile (ft/psi).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/tubing_design.py">tubing_design</a>:<code>shut_in_piston_force_lbf</code></td><td>packer_bore_in, tubing_product, tubing_pressure_psi, annulus_pressure_psi (optional)</td><td>Signed packer pressure-area axial force (lbf).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/tubing_design.py">tubing_design</a>:<code>TubingWell</code></td><td>td_ft (required), packer_fluid_ppg (required), reservoir_pressure_psi (required), surface_casing_pressure_psi (optional), packer_bore_in (optional), gas_gradient_psi_ft (optional)</td><td>Well/load holder: depth (ft), fluid density (lb/gal), pressures (psi), optional packer bore (in), gas gradient (psi/ft).</td><td>NOT_EVALUATED</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/well/tubulars/tubing_design.py">tubing_design</a>:<code>check_production_tubing</code></td><td>tubing_product, weight_ppf, well, factors (optional)</td><td>Mapping of shut-in burst, evacuated collapse and tension ModeCheckResult records.</td><td>NOT_EVALUATED</td></tr></tbody><caption>Public API at the recorded source revision [D]. Output contracts are descriptive; only the two stress helpers have arithmetic evidence here.</caption></table></div>
+<p>Shared unit key: <code>_in</code> = inches; <code>_in2</code> = square inches;
+<code>_ft</code> = feet of true vertical depth unless a section length is stated;
+<code>_psi</code> = lbf/in²; <code>_psia</code> = absolute psi;
+<code>_lbf</code> = force; <code>_ppf</code> = nominal weight in lb/ft;
+<code>_ppg</code> = density in lb/gal; <code>_psi_ft</code> = pressure gradient;
+<code>_f</code> = degrees Fahrenheit (temperature drop for cooling);
+<code>_ppm</code> = parts per million. Design/service factors, yield ratios, efficiencies and loading ratios are dimensionless.
+Counts select numerical resolution. Profile objects contain ft/psi pairs; product, geometry, grade, well and factor objects carry the fields listed above.</p>
+<p>Exported data containers are also present: <code>API_5CT_GRADES</code>, <code>CASING_SIZES</code>,
+<code>TUBING_SIZES</code>, <code>CONNECTION_CLASSES</code>, <code>NACE_MIN_SERVICE_TEMP_F</code>,
+<code>API_11B_ROD_GRADES</code> and <code>ROD_SIZES_IN</code>. Values are not reproduced or qualified.</p></details></section>
+<section><h2 id="s3">3. Input basis</h2>
+<p>Synthetic assumptions from worked-tubular-stress-invariants.md, Table 1; no material strength or design factor is supplied. Outside diameter is 10.200 in and inside diameter is
+9.800 in [A]. Positive normal stress denotes tension. Differential pressure is internal minus external pressure.
+No unit conversion is performed; supplied axial stress is independent, with no implicit closed-end load.</p>
+<div class="table-scroll"><table><thead><tr><th>Case</th><th>Internal (psi)</th><th>External (psi)</th><th>Axial (psi)</th><th>Shear (psi)</th><th>Basis</th></tr></thead>
+<tbody><tr><th scope="row">internal</th><td>500.0</td><td>100.0</td><td>6000.0</td><td>2000.0</td><td>Assumed [A]</td></tr><tr><th scope="row">reversed</th><td>100.0</td><td>500.0</td><td>6000.0</td><td>2000.0</td><td>Assumed [A]</td></tr><tr><th scope="row">pure_shear</th><td>0.0</td><td>0.0</td><td>0.0</td><td>1500.0</td><td>Assumed [A]</td></tr></tbody><caption>Synthetic inputs reproduced unchanged from the worked example [A], not measurements or catalogue data.</caption></table></div>
+</section>
+<section><h2 id="s4">4. Method</h2>
+<p>The hoop helper replaces both pressure surfaces by the mean diameter and balances a longitudinal half-cylinder.
+The equivalent-stress helper assumes plane stress with zero radial normal stress and includes in-plane shear [A, B].</p>
+<pre>D = (OD + ID)/2; t = (OD − ID)/2
+Δp D L = 2 σh t L
+T = [[a, s, 0], [s, h, 0], [0, 0, 0]]
+m = (a + h)/2; r = sqrt(((a − h)/2)² + s²)
+Principal stresses: λ = (m + r, m − r, 0)
+q = sqrt(((λ₁ − λ₂)² + (λ₂ − λ₃)² + (λ₃ − λ₁)²)/2)</pre>
+<p>The factors of two arise from cut-wall count, mean geometry and invariant normalization.
+The independent test uses equilibrium and tensor eigenvalues, rather than the expanded production expression [A, C].</p>
+</section>
+<section><h2 id="s5">5. Worked calculation</h2>
+<p>The hand derivation uses an arbitrary one-inch length, mean diameter 10.0 in and wall thickness 0.200 in.
+The positive-pressure resultant is 400.0 × 10.0 × 1.0 = 4000.0 lbf. The two cut strips have combined
+area 2 × 0.200 × 1.0 = 0.4 in², giving 10000.0 psi [A, B].</p>
+<figure><svg viewBox="0 0 760 220" role="img" aria-labelledby="cut-title cut-description">
+<title id="cut-title">Longitudinal half-cylinder free body</title>
+<desc id="cut-description">A mean-surface pressure resultant is balanced by two tensile cut-wall forces. The diagram is schematic and not to scale.</desc>
+<path d="M150 160 Q150 30 380 30 Q610 30 610 160" fill="var(--panel-2)" stroke="currentColor" stroke-width="2"/>
+<path d="M150 160 L150 205 M140 190 L150 205 L160 190 M610 160 L610 205 M600 190 L610 205 L620 190 M380 90 L380 5 M370 20 L380 5 L390 20" fill="none" stroke="currentColor" stroke-width="2"/>
+<text x="405" y="55">Δp D L</text><text x="175" y="195">σh t L</text><text x="515" y="195">σh t L</text>
+<text x="225" y="140">Mean surface, length L</text></svg>
+<figcaption>Builder-generated equilibrium schematic [A]. Geometry is conceptual; pressure reversal reverses the force signs.</figcaption></figure>
+<p>For the in-plane tensor [[6000.0, 2000.0], [2000.0, 10000.0]] psi, the characteristic equation gives
+8000.0 ± sqrt(8000000.0) psi and zero. Principal differences give sqrt(88000000.0) psi.
+Reversing pressure alone gives −10000.0 psi hoop stress and principal values −2000.0 ± sqrt(68000000.0) psi and zero;
+the equivalent stress becomes sqrt(208000000.0) psi. Pure shear of 1500.0 psi has principal values
+(+1500.0, −1500.0, 0.0) psi and gives 1500.0 × sqrt(3) psi [A]. These are hand-derived expectations, not separate production results.</p>
+</section>
+<section><h2 id="s6">6. Checks</h2>
+<p>The independent regression compares signed hoop stress and equivalent stress against the force balance and
+principal differences above. The retained relative tolerance is <code>1e-12</code> and absolute tolerance is
+<code>1e-8 psi</code> [A, C]. This rounding budget covers decimal geometry subtraction and square-root arithmetic;
+it is not model uncertainty or a physical accuracy bound.</p>
+<p>Separate checks rebuild into fresh external directories, compare all delivered bytes, replay the public helpers,
+read every manifest digest independently, check local links and exercise tampered results. Negative controls change
+a value or a hoop sign and regenerate mutually consistent HTML, JSON and hashes; the independent numerical assertion
+still rejects them [C]. Replaying the same calculation is a freshness check only.</p>
+</section>
+<section><h2 id="s7">7. Results</h2>
+<div class="table-scroll"><table><thead><tr><th>Case</th><th>Δp (psi)</th><th>Axial (psi)</th><th>Shear (psi)</th><th>Hoop (psi)</th><th>Equivalent (psi)</th><th>Basis</th></tr></thead>
+<tbody><tr><th scope="row">internal</th><td>400.0</td><td>6000.0</td><td>2000.0</td><td>10000.0</td><td>9380.8</td><td>[A, B]</td></tr><tr><th scope="row">reversed</th><td>-400.0</td><td>6000.0</td><td>2000.0</td><td>-10000.0</td><td>14422.2</td><td>[A, B]</td></tr><tr><th scope="row">pure_shear</th><td>0.0</td><td>0.0</td><td>1500.0</td><td>0.0</td><td>2598.1</td><td>[A, B]</td></tr></tbody><caption>Public-helper results, displayed to one decimal place [A, B]. Unrounded values are retained in results.json for numerical checks.</caption></table></div>
+<p>No capacity, utilisation, allowable stress or design acceptance is calculated. The negative hoop value demonstrates
+pressure sign only; it is not collapse resistance. A stress invariant alone does not establish elastic response for a material.</p>
+<details><summary>Unrounded calculation evidence</summary><pre>{
+  &quot;basis&quot;: &quot;Synthetic assumptions from worked-tubular-stress-invariants.md, Table 1; no material strength or design factor is supplied.&quot;,
+  &quot;cases&quot;: {
+    &quot;internal&quot;: {
+      &quot;axial_psi&quot;: 6000.0,
+      &quot;differential_pressure_psi&quot;: 400.0,
+      &quot;external_pressure_psi&quot;: 100.0,
+      &quot;hoop_psi&quot;: 10000.000000000036,
+      &quot;internal_pressure_psi&quot;: 500.0,
+      &quot;shear_psi&quot;: 2000.0,
+      &quot;vme_psi&quot;: 9380.831519646887
+    },
+    &quot;pure_shear&quot;: {
+      &quot;axial_psi&quot;: 0.0,
+      &quot;differential_pressure_psi&quot;: 0.0,
+      &quot;external_pressure_psi&quot;: 0.0,
+      &quot;hoop_psi&quot;: 0.0,
+      &quot;internal_pressure_psi&quot;: 0.0,
+      &quot;shear_psi&quot;: 1500.0,
+      &quot;vme_psi&quot;: 2598.076211353316
+    },
+    &quot;reversed&quot;: {
+      &quot;axial_psi&quot;: 6000.0,
+      &quot;differential_pressure_psi&quot;: -400.0,
+      &quot;external_pressure_psi&quot;: 500.0,
+      &quot;hoop_psi&quot;: -10000.000000000036,
+      &quot;internal_pressure_psi&quot;: 100.0,
+      &quot;shear_psi&quot;: 2000.0,
+      &quot;vme_psi&quot;: 14422.205101855989
+    }
+  },
+  &quot;geometry&quot;: {
+    &quot;id_in&quot;: 9.8,
+    &quot;od_in&quot;: 10.2
+  },
+  &quot;stress_unit&quot;: &quot;psi&quot;
+}
+</pre></details>
+</section>
+<section><h2 id="s8">8. Limits / NOT_EVALUATED</h2>
+<p>The stress example assumes a straight circular uniform thin wall, small deformation, uniform loads and plane stress
+away from discontinuities. The mean-surface substitution omits the distinct inner/outer pressure-surface correction;
+absolute pressures and radial stress can matter. No universal thin-wall accuracy threshold is selected [A].</p>
+<ul><li>Collapse regimes, regime transitions and imperfection sensitivity: NOT_EVALUATED. Independent method and applicability evidence are absent.</li>
+<li>Catalogue dimensions/grades, connections, anisotropy and sour-service criteria: NOT_EVALUATED. Qualified source editions, clauses and material/environment evidence are absent.</li>
+<li>Design acceptance and default factors: NOT_EVALUATED. No design basis or acceptance policy is adopted.</li>
+<li>Rod fatigue/service factors, wear, corrosion, ovality, stability, thermal loads and operating qualification: NOT_EVALUATED. This calculation supplies no evidence for them.</li></ul>
+<h3>Open source-review findings</h3>
+<ul><li><code>check_production_casing</code> chooses the governing burst result but passes the tubing-leak profile to
+<code>check_triaxial</code> even when injection governs burst. Cross-case triaxial adequacy is not established [D].</li>
+<li>The isotropic and anisotropic VME implementations switch quadratic roots halfway through a single axial sweep.
+Full envelope branch coverage is not established by this report. No envelope is plotted or used as an acceptance boundary [D].</li>
+<li>The function named <code>check_triaxial</code> uses a plane-stress membrane invariant; it does not evaluate radial stress through the wall [D].</li></ul>
+<p>These findings require separate method review. No algorithm or acceptance policy is replaced here.</p>
+</section>
+<section><h2 id="s9">9. Way forward</h2>
+<p>The maintainers should obtain independent review of the stress derivation and resolve the source-review findings
+before selecting design load combinations. Qualification of a design requires a stated standard edition and applicable clauses,
+qualified product/material data, load and environment evidence, explicit acceptance factors and independent checks
+for every governing failure mode. Unqualified methods remain open; this report does not close their acceptance decisions.</p>
+</section>
+<section><h2 id="s10">10. References and evidence</h2>
+<ul><li id="ref-a">[A] <a href="../../../../src/digitalmodel/well/tubulars/docs/worked-tubular-stress-invariants.md">Worked tubular stress invariants</a>: Table 1 synthetic assumptions, half-cylinder derivation,
+principal-difference derivation and tolerance rationale. Its cited open teaching references are background; they have not been independently retrieved for this report.</li>
+<li id="ref-b">[B] <a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">Stress helper implementation</a>: public methods used for every calculated stress result.</li>
+<li id="ref-c">[C] <a href="../../../../tests/reporting/test_well_tubulars_module_report.py">Report regression tests</a>: independent oracle, mutation controls, byte rebuild, manifest and links.
+<a href="../../../../scripts/reports/build_well_tubulars_module_report.py">Report builder</a>: generated figures and rendering.</li>
+<li id="ref-d">[D] Package source at the reviewed revision above; citation attributes are inventoried below.
+Metadata is a discovery lead, not evidence that the named standard or workshop method has been checked.</li></ul>
+<ul><li><code>casing.py</code>: CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.</li><li><code>casing_design.py</code>: SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.</li><li><code>tubing_design.py</code>: SOURCE_REFERENCE: workshop presentation and API 5C3; module docstring also names API TR 5C3 and tubing-packer force analysis. Editions and clauses are unspecified.</li><li><code>design_envelope.py</code>: Module docstring: API TR 5C3 / ISO 10400:2011, drilling textbook chapter and SPE 48330. No helper-level structured citation metadata. Only the local worked-example derivations are used for arithmetic checks.</li><li><code>sucker_rod.py</code>: CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.</li></ul>
+<p>No licensed tables, catalogue values or default acceptance-factor values are reproduced. Bibliographic names from legacy
+metadata are omitted; the linked source at the recorded revision retains the original attributes. No external source was used
+to qualify these methods. The independent hand derivation [A] is the numerical basis.</p>
+<details><summary>Source files bound by the manifest</summary><ul><li><a href="../../../../docs/api/_assets/brand.css">docs/api/_assets/brand.css</a></li>
+<li><a href="../../../../scripts/reports/build_well_tubulars_module_report.py">scripts/reports/build_well_tubulars_module_report.py</a></li>
+<li><a href="../../../../src/digitalmodel/well/tubulars/__init__.py">src/digitalmodel/well/tubulars/__init__.py</a></li>
+<li><a href="../../../../src/digitalmodel/well/tubulars/casing.py">src/digitalmodel/well/tubulars/casing.py</a></li>
+<li><a href="../../../../src/digitalmodel/well/tubulars/casing_design.py">src/digitalmodel/well/tubulars/casing_design.py</a></li>
+<li><a href="../../../../src/digitalmodel/well/tubulars/design_envelope.py">src/digitalmodel/well/tubulars/design_envelope.py</a></li>
+<li><a href="../../../../src/digitalmodel/well/tubulars/docs/worked-tubular-stress-invariants.md">src/digitalmodel/well/tubulars/docs/worked-tubular-stress-invariants.md</a></li>
+<li><a href="../../../../src/digitalmodel/well/tubulars/sucker_rod.py">src/digitalmodel/well/tubulars/sucker_rod.py</a></li>
+<li><a href="../../../../src/digitalmodel/well/tubulars/tubing_design.py">src/digitalmodel/well/tubulars/tubing_design.py</a></li>
+<li><a href="../../../../tests/reporting/test_well_tubulars_module_report.py">tests/reporting/test_well_tubulars_module_report.py</a></li></ul></details>
+<p><a href="../../../../docs/README.md">Documentation index</a> ·
+<a href="../../../../src/digitalmodel/well/tubulars/README.md">Package guide</a></p>
+</section>
+<details id="changes-panel"><summary>Engineering changes</summary><p>Added the public-function inventory, synthetic stress calculation and independent checks to make the module scope and unqualified methods explicit.</p>
+<p><a href="changes.json" download>Download change history</a></p></details>
+<script id="calculation" type="application/json">{
+  "basis": "Synthetic assumptions from worked-tubular-stress-invariants.md, Table 1; no material strength or design factor is supplied.",
+  "cases": {
+    "internal": {
+      "axial_psi": 6000.0,
+      "differential_pressure_psi": 400.0,
+      "external_pressure_psi": 100.0,
+      "hoop_psi": 10000.000000000036,
+      "internal_pressure_psi": 500.0,
+      "shear_psi": 2000.0,
+      "vme_psi": 9380.831519646887
+    },
+    "pure_shear": {
+      "axial_psi": 0.0,
+      "differential_pressure_psi": 0.0,
+      "external_pressure_psi": 0.0,
+      "hoop_psi": 0.0,
+      "internal_pressure_psi": 0.0,
+      "shear_psi": 1500.0,
+      "vme_psi": 2598.076211353316
+    },
+    "reversed": {
+      "axial_psi": 6000.0,
+      "differential_pressure_psi": -400.0,
+      "external_pressure_psi": 500.0,
+      "hoop_psi": -10000.000000000036,
+      "internal_pressure_psi": 100.0,
+      "shear_psi": 2000.0,
+      "vme_psi": 14422.205101855989
+    }
+  },
+  "geometry": {
+    "id_in": 9.8,
+    "od_in": 10.2
+  },
+  "stress_unit": "psi"
+}
+</script>
+<script id="change-history" type="application/json">[
+  {
+    "change": "Added the public-function inventory, synthetic stress calculation and independent checks to make the module scope and unqualified methods explicit.",
+    "date": "2026-10-28",
+    "revision": "A"
+  }
+]
+</script>
+</main></body></html>

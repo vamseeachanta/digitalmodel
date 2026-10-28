@@ -1,0 +1,738 @@
+{
+  "inventory": [
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "name (required), min_yield_psi (required), max_yield_psi (required), min_tensile_psi (required), standard (optional)",
+      "line": 45,
+      "methods": [],
+      "module": "casing",
+      "name": "CasingGrade",
+      "outputs": "Grade holder: minimum/maximum yield and minimum tensile strengths (psi), standard identifier.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "name",
+      "line": 70,
+      "methods": [],
+      "module": "casing",
+      "name": "casing_grade",
+      "outputs": "CasingGrade lookup; no material qualification is inferred.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "od_in, wt_in, min_yield_psi",
+      "line": 128,
+      "methods": [],
+      "module": "casing",
+      "name": "internal_yield_pressure",
+      "outputs": "Internal yield pressure (psi); wall-tolerance basis unqualified.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "od_in, wt_in, min_yield_psi",
+      "line": 134,
+      "methods": [],
+      "module": "casing",
+      "name": "pipe_body_yield_strength",
+      "outputs": "Pipe-body axial yield force (lbf).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "od_in, wt_in, min_yield_psi",
+      "line": 157,
+      "methods": [],
+      "module": "casing",
+      "name": "collapse_pressure",
+      "outputs": "Collapse pressure (psi) and regime label; all regime qualifications remain open.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "od_in (required), wt_in (required), grade (required), weight_ppf (optional), code_reference (optional)",
+      "line": 193,
+      "methods": [
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "id_in"
+        },
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "d_over_t"
+        },
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "metal_area_in2"
+        },
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "burst_psi"
+        },
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "body_yield_lbf"
+        },
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "collapse_psi"
+        },
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "collapse_regime"
+        },
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "reference"
+        },
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "to_tubular_geometry"
+        }
+      ],
+      "module": "casing",
+      "name": "Casing",
+      "outputs": "Product object with ID/wall (in), area (in²), diameter/wall ratio, burst/collapse (psi), body yield (lbf), regime/reference and geometry bridge.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "No call arguments; object state where applicable.",
+      "line": 269,
+      "methods": [],
+      "module": "casing",
+      "name": "list_sizes",
+      "outputs": "Sorted casing OD (in), nominal weight (lb/ft) pairs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "od_in, weight_ppf",
+      "line": 274,
+      "methods": [],
+      "module": "casing",
+      "name": "wall_for_size",
+      "outputs": "Catalogue wall thickness (in).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "grade, od_in (required), weight_ppf (optional), wt_in (optional)",
+      "line": 282,
+      "methods": [],
+      "module": "casing",
+      "name": "casing",
+      "outputs": "Casing product from grade and either nominal weight or explicit wall, exclusively.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "No call arguments; object state where applicable.",
+      "line": 309,
+      "methods": [],
+      "module": "casing",
+      "name": "list_tubing_sizes",
+      "outputs": "Sorted tubing OD (in), nominal weight (lb/ft) pairs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "od_in, weight_ppf",
+      "line": 314,
+      "methods": [],
+      "module": "casing",
+      "name": "tubing_wall_for_size",
+      "outputs": "Tubing catalogue wall thickness (in).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 5CT / API 5C3; CasingGrade.standard: API 5CT. Editions and clauses are unspecified.",
+      "inputs": "grade, od_in (required), weight_ppf (optional), wt_in (optional)",
+      "line": 323,
+      "methods": [],
+      "module": "casing",
+      "name": "tubing",
+      "outputs": "Casing product using the tubing catalogue or an explicit wall, exclusively.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "p_psi",
+      "line": 74,
+      "methods": [],
+      "module": "casing_design",
+      "name": "api_round_pressure_psi",
+      "outputs": "Rounded pressure (psi); source rounding convention is not independently qualified.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "f_lbf",
+      "line": 79,
+      "methods": [],
+      "module": "casing_design",
+      "name": "api_round_force_lbf",
+      "outputs": "Rounded axial force (lbf); source rounding convention is not independently qualified.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "depths_ft (required), pressures_psi (required), label (optional)",
+      "line": 88,
+      "methods": [
+        {
+          "inputs": "depth_ft",
+          "name": "at"
+        }
+      ],
+      "module": "casing_design",
+      "name": "PressureProfile",
+      "outputs": "Piecewise-linear depth (ft), pressure (psi) holder; at interpolates pressure (psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "density_ppg, td_ft, surface_pressure_psi (optional), label (optional)",
+      "line": 108,
+      "methods": [],
+      "module": "casing_design",
+      "name": "fluid_column_profile",
+      "outputs": "PressureProfile in ft/psi for a fluid column and surface pressure.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "reservoir_pressure_psi, reservoir_depth_ft, gas_gradient_psi_ft (optional)",
+      "line": 120,
+      "methods": [],
+      "module": "casing_design",
+      "name": "shut_in_tubing_pressure",
+      "outputs": "Surface shut-in pressure (psi) from reservoir pressure and gas gradient.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "reservoir_pressure_psi, reservoir_depth_ft, packer_fluid_ppg, td_ft, gas_gradient_psi_ft (optional)",
+      "line": 128,
+      "methods": [],
+      "module": "casing_design",
+      "name": "tubing_leak_internal_profile",
+      "outputs": "Internal tubing-leak PressureProfile (ft/psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "surface_pressure_psi, fluid_ppg, td_ft",
+      "line": 148,
+      "methods": [],
+      "module": "casing_design",
+      "name": "injection_internal_profile",
+      "outputs": "Internal static injection PressureProfile (ft/psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "mud_ppg, toc_ft, outer_shoe_ft, td_ft, mix_water_ppg (optional), pore_ppg (optional)",
+      "line": 163,
+      "methods": [],
+      "module": "casing_design",
+      "name": "burst_external_profile",
+      "outputs": "External backup PressureProfile (ft/psi), with top-of-cement and shoe anchors.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "td_ft",
+      "line": 200,
+      "methods": [],
+      "module": "casing_design",
+      "name": "full_evacuation_internal_profile",
+      "outputs": "Evacuated internal PressureProfile (ft/psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "burst (optional), burst_low_sicp (optional), sicp_threshold_psi (optional), collapse (optional), tension (optional), compression (optional), triaxial (optional), reference (optional)",
+      "line": 209,
+      "methods": [
+        {
+          "inputs": "sicp_psi",
+          "name": "burst_for_sicp"
+        }
+      ],
+      "module": "casing_design",
+      "name": "DesignFactors",
+      "outputs": "Factor holder (dimensionless), pressure threshold (psi) and reference; burst_for_sicp selects a factor. Defaults are not an adopted design basis.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "mode (required), rating (required), max_load (required), min_design_factor (required), governing_depth_ft (required), required_design_factor (required), passes (required), load_case (optional)",
+      "line": 234,
+      "methods": [
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "as_dict"
+        }
+      ],
+      "module": "casing_design",
+      "name": "ModeCheckResult",
+      "outputs": "Mode, rating/load (psi for pressure or equivalent-stress modes; lbf for tension), dimensionless factors, governing depth (ft), flag and load-case label; as_dict serializes them.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "casing_product, internal, external, td_ft, factors (optional), sicp_psi (optional)",
+      "line": 268,
+      "methods": [],
+      "module": "casing_design",
+      "name": "check_burst",
+      "outputs": "ModeCheckResult for net internal pressure versus burst rating.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "min_yield_psi, axial_stress_psi",
+      "line": 284,
+      "methods": [],
+      "module": "casing_design",
+      "name": "reduced_yield_under_tension",
+      "outputs": "Axial-stress-equivalent yield (psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "od_in, wt_in, min_yield_psi, axial_stress_psi",
+      "line": 300,
+      "methods": [],
+      "module": "casing_design",
+      "name": "collapse_pressure_under_tension",
+      "outputs": "Derated collapse pressure (psi) and regime label.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "casing_product, external, td_ft, internal (optional), factors (optional), weight_ppf (optional), mud_ppg_for_buoyancy (optional)",
+      "line": 317,
+      "methods": [],
+      "module": "casing_design",
+      "name": "check_collapse",
+      "outputs": "ModeCheckResult for net external pressure, optionally tension-derated.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "mud_ppg",
+      "line": 385,
+      "methods": [],
+      "module": "casing_design",
+      "name": "buoyancy_factor",
+      "outputs": "Dimensionless buoyancy factor using the source steel density assumption.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "weight_ppf, td_ft, mud_ppg, extra_tension_lbf (optional), n (optional)",
+      "line": 390,
+      "methods": [],
+      "module": "casing_design",
+      "name": "axial_load_profile",
+      "outputs": "Arrays of depth (ft) and buoyed axial load (lbf).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "delta_internal_psi, casing_product",
+      "line": 404,
+      "methods": [],
+      "module": "casing_design",
+      "name": "ballooning_tension_delta_lbf",
+      "outputs": "Restrained ballooning axial-force increment (lbf).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "delta_temp_f, casing_product",
+      "line": 416,
+      "methods": [],
+      "module": "casing_design",
+      "name": "cooling_tension_delta_lbf",
+      "outputs": "Restrained cooling axial-force increment (lbf); temperature drop is positive.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "casing_product, weight_ppf, td_ft, mud_ppg, extra_tension_lbf (optional), factors (optional)",
+      "line": 428,
+      "methods": [],
+      "module": "casing_design",
+      "name": "check_tension",
+      "outputs": "ModeCheckResult for buoyed weight and additional axial force versus body yield.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "casing_product, internal, external, weight_ppf, td_ft, mud_ppg, extra_tension_lbf (optional), factors (optional)",
+      "line": 446,
+      "methods": [],
+      "module": "casing_design",
+      "name": "check_triaxial",
+      "outputs": "ModeCheckResult from thin-wall hoop plus axial plane stress; name does not establish through-wall stress treatment.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "casing_product, frac_fluid_ppg, external, td_ft, factors (optional), design_factor (optional)",
+      "line": 486,
+      "methods": [],
+      "module": "casing_design",
+      "name": "max_frac_surface_pressure",
+      "outputs": "Surface pressure (psi) conditional on supplied burst factor and profiles.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "h2s_ppm, total_pressure_psia",
+      "line": 530,
+      "methods": [],
+      "module": "casing_design",
+      "name": "h2s_partial_pressure_psia",
+      "outputs": "H₂S partial absolute pressure (psia).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "is_sour (required), h2s_partial_psia (required), total_pressure_psia (required), well_type (required), acceptable_grades (optional), reference (optional)",
+      "line": 537,
+      "methods": [],
+      "module": "casing_design",
+      "name": "SourServiceAssessment",
+      "outputs": "Screening flag, partial/total pressure (psia), well type, grade names and reference; criteria unqualified.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "h2s_ppm, total_pressure_psia, well_type (optional), service_temp_f (optional)",
+      "line": 548,
+      "methods": [],
+      "module": "casing_design",
+      "name": "sour_service_screen",
+      "outputs": "SourServiceAssessment; no environmental or grade acceptance established.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "grade_name, service_temp_f",
+      "line": 580,
+      "methods": [],
+      "module": "casing_design",
+      "name": "grade_sour_ok",
+      "outputs": "Grade/temperature screening flag; no material acceptance established.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "name (required), full_name (required), threads_per_inch (required), tension_efficiency (required), strength_basis (required), notes (optional)",
+      "line": 592,
+      "methods": [
+        {
+          "inputs": "casing_product, conservative (optional)",
+          "name": "joint_strength_lbf"
+        }
+      ],
+      "module": "casing_design",
+      "name": "ConnectionClass",
+      "outputs": "Connection metadata with thread count (per in), dimensionless efficiency range and strength basis; joint_strength_lbf returns a screening force (lbf).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "name",
+      "line": 641,
+      "methods": [],
+      "module": "casing_design",
+      "name": "connection_class",
+      "outputs": "ConnectionClass lookup; joint performance unqualified.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "td_ft (required), mud_ppg (required), toc_ft (required), outer_shoe_ft (required), reservoir_pressure_psi (required), packer_fluid_ppg (required), frac_surface_pressure_psi (optional), frac_fluid_ppg (optional), mix_water_ppg (optional), pore_ppg (optional), gas_gradient_psi_ft (optional)",
+      "line": 653,
+      "methods": [],
+      "module": "casing_design",
+      "name": "ProductionCasingWell",
+      "outputs": "Well/load holder: depths (ft), fluid densities (lb/gal), pressures (psi), gas gradient (psi/ft).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE and DesignFactors.reference: workshop presentation, API 5C3, NACE MR0175. SourServiceAssessment.reference: NACE MR0175 / ISO 15156; source comments name Table A.3. Editions and applicability are unqualified.",
+      "inputs": "casing_product, weight_ppf, well, factors (optional)",
+      "line": 669,
+      "methods": [],
+      "module": "casing_design",
+      "name": "check_production_casing",
+      "outputs": "Mapping of burst, collapse, tension and equivalent-stress ModeCheckResult records.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "Module docstring: API TR 5C3 / ISO 10400:2011, drilling textbook chapter and SPE 48330. No helper-level structured citation metadata. Only the local worked-example derivations are used for arithmetic checks.",
+      "inputs": "od_in (required), id_in (required), smys_psi (required), burst_rating_psi (required), collapse_rating_psi (required)",
+      "line": 47,
+      "methods": [],
+      "module": "design_envelope",
+      "name": "TubularGeometry",
+      "outputs": "Geometry holder: wall and mean diameter (in), metal area (in²), yield force (lbf); supplied strength and ratings (psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "Module docstring: API TR 5C3 / ISO 10400:2011, drilling textbook chapter and SPE 48330. No helper-level structured citation metadata. Only the local worked-example derivations are used for arithmetic checks.",
+      "inputs": "differential_pressure_psi, od_in, id_in",
+      "line": 95,
+      "methods": [],
+      "module": "design_envelope",
+      "name": "compute_hoop_stress",
+      "outputs": "Signed mean-diameter hoop membrane stress (psi).",
+      "status": "ARITHMETIC_CHECKED"
+    },
+    {
+      "citation_metadata": "Module docstring: API TR 5C3 / ISO 10400:2011, drilling textbook chapter and SPE 48330. No helper-level structured citation metadata. Only the local worked-example derivations are used for arithmetic checks.",
+      "inputs": "sigma_axial_psi, sigma_hoop_psi, tau_psi (optional)",
+      "line": 122,
+      "methods": [],
+      "module": "design_envelope",
+      "name": "compute_vme_stress",
+      "outputs": "Nonnegative plane-stress equivalent stress including shear (psi).",
+      "status": "ARITHMETIC_CHECKED"
+    },
+    {
+      "citation_metadata": "Module docstring: API TR 5C3 / ISO 10400:2011, drilling textbook chapter and SPE 48330. No helper-level structured citation metadata. Only the local worked-example derivations are used for arithmetic checks.",
+      "inputs": "geometry, design_factor",
+      "line": 155,
+      "methods": [
+        {
+          "inputs": "n_points (optional)",
+          "name": "compute"
+        }
+      ],
+      "module": "design_envelope",
+      "name": "IsotropicVmeEnvelope",
+      "outputs": "Envelope object; compute returns axial-force (lbf), differential-pressure (psi) pairs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "Module docstring: API TR 5C3 / ISO 10400:2011, drilling textbook chapter and SPE 48330. No helper-level structured citation metadata. Only the local worked-example derivations are used for arithmetic checks.",
+      "inputs": "geometry, design_factor",
+      "line": 252,
+      "methods": [
+        {
+          "inputs": "n_points (optional)",
+          "name": "compute"
+        }
+      ],
+      "module": "design_envelope",
+      "name": "ApiEllipseEnvelope",
+      "outputs": "Envelope object; compute returns axial-force (lbf), differential-pressure (psi) pairs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "Module docstring: API TR 5C3 / ISO 10400:2011, drilling textbook chapter and SPE 48330. No helper-level structured citation metadata. Only the local worked-example derivations are used for arithmetic checks.",
+      "inputs": "geometry, yield_hoop_ratio, design_factor",
+      "line": 346,
+      "methods": [
+        {
+          "inputs": "n_points (optional)",
+          "name": "compute"
+        }
+      ],
+      "module": "design_envelope",
+      "name": "AnisotropicVmeEnvelope",
+      "outputs": "Envelope object with directional yield ratio; compute returns lbf/psi pairs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "Module docstring: API TR 5C3 / ISO 10400:2011, drilling textbook chapter and SPE 48330. No helper-level structured citation metadata. Only the local worked-example derivations are used for arithmetic checks.",
+      "inputs": "geometry, design_factor (optional), n_points (optional), yield_hoop_ratio (optional)",
+      "line": 440,
+      "methods": [],
+      "module": "design_envelope",
+      "name": "design_envelope_points",
+      "outputs": "Mapping of named envelope arrays, each containing lbf/psi coordinate pairs.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.",
+      "inputs": "name (required), min_tensile_psi (required), max_tensile_psi (required), description (optional)",
+      "line": 35,
+      "methods": [],
+      "module": "sucker_rod",
+      "name": "RodGrade",
+      "outputs": "Rod grade and minimum/maximum tensile-strength holder (psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.",
+      "inputs": "name",
+      "line": 52,
+      "methods": [],
+      "module": "sucker_rod",
+      "name": "rod_grade",
+      "outputs": "RodGrade lookup; no material qualification is inferred.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.",
+      "inputs": "nominal_in",
+      "line": 67,
+      "methods": [],
+      "module": "sucker_rod",
+      "name": "rod_area",
+      "outputs": "Circular rod metal area (in²).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.",
+      "inputs": "min_tensile_psi, min_stress_psi, service_factor (optional)",
+      "line": 75,
+      "methods": [],
+      "module": "sucker_rod",
+      "name": "modified_goodman_allowable",
+      "outputs": "Modified-Goodman peak allowable stress (psi), conditional on service factor.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.",
+      "inputs": "nominal_in (required), grade (required), service_factor (optional), code_reference (optional)",
+      "line": 89,
+      "methods": [
+        {
+          "inputs": "No call arguments; object state where applicable.",
+          "name": "area_in2"
+        },
+        {
+          "inputs": "load_lbf",
+          "name": "stress_psi"
+        },
+        {
+          "inputs": "min_stress_psi",
+          "name": "allowable_stress_psi"
+        },
+        {
+          "inputs": "peak_load_lbf, min_load_lbf",
+          "name": "goodman_check"
+        },
+        {
+          "inputs": "length_ft, count (optional)",
+          "name": "to_rod_section"
+        }
+      ],
+      "module": "sucker_rod",
+      "name": "SuckerRod",
+      "outputs": "Rod product; area (in²), stress/allowable (psi), cycle loading (dimensionless), flag/reference and to_rod_section bridge.",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.",
+      "inputs": "grade, nominal_in, service_factor (optional)",
+      "line": 156,
+      "methods": [],
+      "module": "sucker_rod",
+      "name": "sucker_rod",
+      "outputs": "SuckerRod product from grade, diameter (in) and service factor (dimensionless).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.",
+      "inputs": "rod (required), length_ft (required)",
+      "line": 169,
+      "methods": [],
+      "module": "sucker_rod",
+      "name": "RodTaperSection",
+      "outputs": "Rod product and section length (ft).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "CODE_REFERENCE: API 11B / modified Goodman; module docstring also names API 11BR. Editions, clauses and service-factor basis are unspecified.",
+      "inputs": "sections",
+      "line": 176,
+      "methods": [],
+      "module": "sucker_rod",
+      "name": "rod_string_goodman",
+      "outputs": "Per-section stress/allowable (psi), loading ratio, flag, diameter (in), length (ft), reference; sections include peak/minimum loads (lbf).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE: workshop presentation and API 5C3; module docstring also names API TR 5C3 and tubing-packer force analysis. Editions and clauses are unspecified.",
+      "inputs": "sitp_psi, td_ft, gas_gradient_psi_ft (optional)",
+      "line": 67,
+      "methods": [],
+      "module": "tubing_design",
+      "name": "shut_in_tubing_profile",
+      "outputs": "Internal shut-in PressureProfile (ft/psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE: workshop presentation and API 5C3; module docstring also names API TR 5C3 and tubing-packer force analysis. Editions and clauses are unspecified.",
+      "inputs": "packer_fluid_ppg, td_ft, surface_pressure_psi (optional)",
+      "line": 89,
+      "methods": [],
+      "module": "tubing_design",
+      "name": "packer_fluid_annulus_profile",
+      "outputs": "Annulus fluid PressureProfile (ft/psi).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE: workshop presentation and API 5C3; module docstring also names API TR 5C3 and tubing-packer force analysis. Editions and clauses are unspecified.",
+      "inputs": "packer_bore_in, tubing_product, tubing_pressure_psi, annulus_pressure_psi (optional)",
+      "line": 108,
+      "methods": [],
+      "module": "tubing_design",
+      "name": "shut_in_piston_force_lbf",
+      "outputs": "Signed packer pressure-area axial force (lbf).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE: workshop presentation and API 5C3; module docstring also names API TR 5C3 and tubing-packer force analysis. Editions and clauses are unspecified.",
+      "inputs": "td_ft (required), packer_fluid_ppg (required), reservoir_pressure_psi (required), surface_casing_pressure_psi (optional), packer_bore_in (optional), gas_gradient_psi_ft (optional)",
+      "line": 139,
+      "methods": [],
+      "module": "tubing_design",
+      "name": "TubingWell",
+      "outputs": "Well/load holder: depth (ft), fluid density (lb/gal), pressures (psi), optional packer bore (in), gas gradient (psi/ft).",
+      "status": "NOT_EVALUATED"
+    },
+    {
+      "citation_metadata": "SOURCE_REFERENCE: workshop presentation and API 5C3; module docstring also names API TR 5C3 and tubing-packer force analysis. Editions and clauses are unspecified.",
+      "inputs": "tubing_product, weight_ppf, well, factors (optional)",
+      "line": 156,
+      "methods": [],
+      "module": "tubing_design",
+      "name": "check_production_tubing",
+      "outputs": "Mapping of shut-in burst, evacuated collapse and tension ModeCheckResult records.",
+      "status": "NOT_EVALUATED"
+    }
+  ],
+  "manifest_note": "Manifest excludes itself; file digests bind bytes, not engineering qualification.",
+  "outputs": {
+    "README.md": "6ba232943617acb213062e323d5dcbcff8c6d88fb4fb5aca1d6cc744921d2e08",
+    "changes.json": "18074845619ae95654cd0815d21a5d21d306fef9950cf566d78df51bf3b06c0b",
+    "index.html": "6a40db51d57472c37e61faf387881bf60e765b9524f152a4dc0041b78ffd9612",
+    "results.json": "a13b06a20b7156b46c69cc54442f8b53041867fc153d5df4ba29fa85c6436b2b"
+  },
+  "reviewed_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "scope": "Thin-wall helper arithmetic only; design acceptance NOT_EVALUATED.",
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "scripts/reports/build_well_tubulars_module_report.py": "b27671d66c0604abe731cd2b0b81aba897bebf9a196c7740052aa8720d3020e6",
+    "src/digitalmodel/well/tubulars/__init__.py": "04cf3a9f7dc7e523bcd3b91b56777bd06f4053037192416c4e8872e1f858976f",
+    "src/digitalmodel/well/tubulars/casing.py": "d43556c10b6ab2c8a1a92a5ecdc7abaecfb0c787232c02b4b51669006d102235",
+    "src/digitalmodel/well/tubulars/casing_design.py": "ba46b34f25cdc19c3dcece50e33ac1a28330a6911e43ed0e20665ac267671efc",
+    "src/digitalmodel/well/tubulars/design_envelope.py": "89ddd04257a5ce94d1a5cc3ffa43aa5a18e47e2e9fd532446d4cf99d40796bd5",
+    "src/digitalmodel/well/tubulars/docs/worked-tubular-stress-invariants.md": "9c99eff8cd78a44a87d9e28fa9a1bd062b3d3270476c4b3a9b55666ac24a67ce",
+    "src/digitalmodel/well/tubulars/sucker_rod.py": "46a223b83a32f3c55d6a57046199088aacfa9c57aa7a3911c96bb0bd85c1fbbc",
+    "src/digitalmodel/well/tubulars/tubing_design.py": "3e6b359944ab8dd356fbf0d008847e22f94a2ab0a550105899802a66d11aa663",
+    "tests/reporting/test_well_tubulars_module_report.py": "45b661c9d3c063f5addfc6f2f0f218187178f1ac8327b5ee14cf2804f1760698"
+  }
+}

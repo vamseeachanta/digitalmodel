@@ -82,3 +82,10 @@ for that bulk store, not a path that should be hard-coded into portable repo log
 ## Operational runbooks
 
 - [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.
+
+## Module analyses
+
+- [Well tubulars](reports/modules/well_tubulars/index.html): casing, tubing,
+  stress-envelope and rod-string inventory, with a reproducible thin-wall
+  stress example and independent arithmetic checks. Design acceptance remains
+  `NOT_EVALUATED`.

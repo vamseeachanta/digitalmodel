@@ -1,0 +1,37 @@
+{
+  "basis": "Synthetic assumptions from worked-tubular-stress-invariants.md, Table 1; no material strength or design factor is supplied.",
+  "cases": {
+    "internal": {
+      "axial_psi": 6000.0,
+      "differential_pressure_psi": 400.0,
+      "external_pressure_psi": 100.0,
+      "hoop_psi": 10000.000000000036,
+      "internal_pressure_psi": 500.0,
+      "shear_psi": 2000.0,
+      "vme_psi": 9380.831519646887
+    },
+    "pure_shear": {
+      "axial_psi": 0.0,
+      "differential_pressure_psi": 0.0,
+      "external_pressure_psi": 0.0,
+      "hoop_psi": 0.0,
+      "internal_pressure_psi": 0.0,
+      "shear_psi": 1500.0,
+      "vme_psi": 2598.076211353316
+    },
+    "reversed": {
+      "axial_psi": 6000.0,
+      "differential_pressure_psi": -400.0,
+      "external_pressure_psi": 500.0,
+      "hoop_psi": -10000.000000000036,
+      "internal_pressure_psi": 100.0,
+      "shear_psi": 2000.0,
+      "vme_psi": 14422.205101855989
+    }
+  },
+  "geometry": {
+    "id_in": 9.8,
+    "od_in": 10.2
+  },
+  "stress_unit": "psi"
+}
