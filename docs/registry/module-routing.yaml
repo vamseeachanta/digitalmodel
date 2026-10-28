@@ -311,6 +311,10 @@ modules:
     key_tests: [tests/report_pack/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#report_pack
   - module: nde
+    submodules:
+      nde:
+        agent_pack: src/digitalmodel/nde/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/nde/
     maturity: development
     owner_wiki: docs/domains/README.md
@@ -368,6 +372,10 @@ modules:
     key_tests: [tests/production_chemistry/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#production_chemistry
   - module: production_engineering
+    submodules:
+      production_engineering:
+        agent_pack: src/digitalmodel/production_engineering/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/production_engineering/
     maturity: production
     owner_wiki: docs/domains/README.md
