@@ -41,6 +41,9 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),
+    ("scripts/risers/analytical_riser_regression.py", ("subsea",)),
+    ("docs/audits/analytical-riser-regression.json", ("subsea",)),
+    ("docs/audits/analytical-riser-regression.html", ("subsea",)),
     ("docs/bha_database.md", ("subsea",)),
     ("scripts/corrosion/", ("specialized",)),
     ("docs/reports/modules/corrosion/", ("specialized",)),
@@ -116,7 +119,7 @@ def normalize_root(root: str) -> str:
 def parse_domains(domains_file: Path) -> list[Domain]:
     """Read shard roots from the ownership table."""
     domains: list[Domain] = []
-    for raw_line in domains_file.read_text().splitlines():
+    for raw_line in domains_file.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line.startswith("|") or "`tests/" not in line:
             continue
