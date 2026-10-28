@@ -14,6 +14,7 @@ are NOT_EVALUATED. The empirical fit is not a standards-derived value.
 | Revision | Date       | What changed and why                                                                                                       |
 | -------- | ---------- | -------------------------------------------------------------------------------------------------------------------------- |
 | Initial  | 2026-10-28 | Document the residual API and executable metric example so inventory drift and arithmetic inconsistencies can be detected. |
+| 1 | 2026-10-28 | Restore source filenames and the inventory evidence column; add locator and table guards and record the required failure sweep. |
 
 | Header       | Value                                                                                       |
 | ------------ | ------------------------------------------------------------------------------------------- |
@@ -21,7 +22,7 @@ are NOT_EVALUATED. The empirical fit is not a standards-derived value.
 | Repository   | `digitalmodel`                                                                              |
 | Package      | `src/digitalmodel/residual/`                                                                |
 | Source basis | `09089a121a16069c4b657d1a320a630a23ab1dd5`; implementation files are unchanged by this pack |
-| Status       | DRAFT; software consistency only; independent engineering clearance pending                 |
+| Status       | Draft for maintainer review; software consistency only; independent engineering clearance pending |
 
 ## 1. Purpose and scope
 
@@ -37,12 +38,11 @@ The registry points to the Python package and its residual tests. There is no
 package-specific command or configuration router. The demonstrated route is
 `from digitalmodel.residual import ...`; direct submodule imports are also used
 by the response-correction adapter.
-[src/digitalmodel/residual/**init**.py:L20-L42]
+`[src/digitalmodel/residual/__init__.py:L20-L42]`
 [src/digitalmodel/drilling_riser/response_correction.py:L27-L29]
 
-This pack covers only `residual`. The seismic and uncertainty packs in the
-[parent issue](https://github.com/vamseeachanta/digitalmodel/issues/3338) remain
-follow-up work.
+This pack covers only `residual`. The seismic and uncertainty packs in #3338
+remain follow-up work.
 
 ## 2. Inputs and outputs
 
@@ -51,7 +51,7 @@ including public class members. The initializer re-exports these definitions;
 it has no additional definitions. Generated dataclass methods, imported helpers
 and constants do not require duplicate definition rows under the existing AST
 checker contract.
-[src/digitalmodel/residual/**init**.py:L20-L42]
+`[src/digitalmodel/residual/__init__.py:L20-L42]`
 [scripts/docs/check_agent_pack_functions.py:L1-L10]
 
 | Public symbol              | Inputs and units                                                                                                                             | Output and convention                                                                                                | Evidence                                       |
@@ -167,6 +167,22 @@ Passing these checks supports software behavior for those fixtures; it does not
 qualify arbitrary input data or the output interval.
 [tests/residual/test_residual_model.py]
 
+The source-locator guard checks every locator in this pack against a real file
+and its line count; the table guard checks every table row against its header.
+`tests/docs/test_residual_agent_pack.py::test_all_source_locators_resolve`
+`tests/docs/test_residual_agent_pack.py::test_tables_preserve_every_cell`
+
+Detection checks used by the section-6 sweep:
+
+- E: `tests/docs/test_residual_agent_pack.py::test_empty_and_constant_series_limits`.
+- B: `tests/docs/test_residual_agent_pack.py::test_documented_example_matches_independent_calculation`.
+- F: `tests/residual/test_residual_model.py::test_fit_out_of_bounds_escalates_and_applies_identity`.
+- S: `tests/residual/test_residual_model.py::test_insufficient_pairs_escalates`.
+- O: `tests/residual/test_residual_model.py::test_out_of_domain_query_escalates`.
+- C: `tests/residual/test_residual_model.py::test_apply_active_clips_to_output_bounds`.
+- P: `tests/residual/test_residual_model.py::test_provenance_marks_data_driven_not_cited`.
+- G: `tests/residual/test_residual_model.py::test_fit_recovers_known_scale_bias`.
+
 Required verification routes:
 
 ```text
@@ -177,27 +193,53 @@ python scripts/docs/check_agent_pack_functions.py --pack src/digitalmodel/residu
 Basetemp and log output are directed to scratch when executing these commands.
 Routing-test results are reported separately from residual/checker results;
 distribution metadata and optional dependency availability affect that root.
-[src/digitalmodel/**main**.py:L51-L68]
-[src/digitalmodel/**main**.py:L117-L120]
+`[src/digitalmodel/__main__.py:L51-L68]`
+`[src/digitalmodel/__main__.py:L117-L120]`
 
 ## 6. Known failure modes and pitfalls
 
-| Condition                                             | Existing behavior and limitation                                                                                                                               | Evidence                                                                                      |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Empty RMSE inputs                                     | Returns NaN, not zero error; equal-shape validation precedes the empty branch                                                                                  | [src/digitalmodel/residual/skill.py:L13-L21]                                                  |
-| Empty, singleton or constant correlation series       | Returns NaN for the documented paired cases; constant observed values in the example cannot establish correlation skill                                        | [src/digitalmodel/residual/skill.py:L24-L30]                                                  |
-| Mismatched metric shapes                              | RMSE raises `ValueError`; correlation relies on NumPy behavior and provides no explicit equal-shape check                                                      | [src/digitalmodel/residual/skill.py:L13-L30]                                                  |
-| Nonfinite metric inputs                               | Standalone RMSE/correlation do not filter missing data; unavailable or infinite results must not become qualified evidence                                     | [src/digitalmodel/residual/skill.py:L15-L30]                                                  |
-| Invalid noise                                         | Negative or nonfinite sigma returns `False`; before/after errors have no separate finite-value guard                                                           | [src/digitalmodel/residual/skill.py:L38-L47]                                                  |
-| Empty/short fit or constant predicted training series | Returns inactive identity; caller receives an escalation reason, not fitted skill                                                                              | [src/digitalmodel/residual/model.py:L113-L123]                                                |
-| Discarded nonfinite training pairs                    | Pair count covers only retained finite pairs; alignment, missing-data bias and representativeness are not established                                          | [src/digitalmodel/residual/model.py:L113-L129]                                                |
-| Coefficient bounds exceeded                           | Stores the rejected fit's details but escalates; application returns the raw prediction                                                                        | [src/digitalmodel/residual/model.py:L131-L140] [src/digitalmodel/residual/model.py:L152-L158] |
-| Out-of-domain/nonfinite active query                  | Escalates and returns raw input, which may itself be nonfinite or outside output bounds                                                                        | [src/digitalmodel/residual/model.py:L152-L165]                                                |
-| Invalid caller controls                               | Ordering/finiteness of output or coefficient bounds and suitability of minimum-pair settings are not comprehensively validated; NumPy exceptions may propagate | [src/digitalmodel/residual/model.py:L93-L149]                                                 |
-| Direct dataclass construction                         | Can bypass the `fit` gates; a stored `active` status alone is not proof that training or bounds were qualified                                                 | [src/digitalmodel/residual/model.py:L57-L90]                                                  |
-| Provenance mistaken for retained evidence             | The dictionary records model state but contains no dataset digest, source identity or held-out validation record                                               | [src/digitalmodel/residual/model.py:L168-L189]                                                |
+sweep: 21 found
+
+The sweep covers all three package Python files at the source basis above.
+Each row below is one reviewed failure mode or default/conversion group; labels
+refer to the existing checks listed in section 5, with their limits stated here.
+Untested cases are recorded in issue pending (1); no implementation change is
+implied by this inventory.
+
+```text
+rg -n --glob '*.py' 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|int\(|float\(|dtype=float|MIN_PAIRS|SCALE_MIN|SCALE_MAX|BIAS_MAX|_tol|unit|cache|write' src/digitalmodel/residual
+```
+
+| Condition | Existing behavior and limitation | Evidence | Detection check |
+| --- | --- | --- | --- |
+| Empty RMSE inputs | Returns NaN rather than zero error | [src/digitalmodel/residual/skill.py:L19-L20] | E |
+| Empty, singleton or constant correlation series | Returns NaN; correlation skill is unavailable | [src/digitalmodel/residual/skill.py:L28-L29] | E |
+| Mismatched metric shapes | RMSE raises; correlation has no explicit shape guard | [src/digitalmodel/residual/skill.py:L13-L30] | E checks RMSE; no detection check exists for correlation shape mismatch; issue pending (1) |
+| Nonfinite metric inputs | Standalone metrics do not filter missing values; invalid errors must not qualify a gain | [src/digitalmodel/residual/skill.py:L13-L47] | no detection check exists; issue pending (1) |
+| Invalid noise | Negative or nonfinite sigma returns `False`; no independent before/after finite-value gate exists | [src/digitalmodel/residual/skill.py:L38-L47] | B checks a valid strict threshold only; no detection check exists for invalid noise; issue pending (1) |
+| Empty/short fit | Returns inactive identity with an insufficient-pairs reason | [src/digitalmodel/residual/model.py:L120-L121] | E, S |
+| Constant predicted training series | Returns inactive identity rather than a fitted slope | [src/digitalmodel/residual/model.py:L122-L123] | E |
+| Discarded nonfinite training pairs | Finite filtering drops pairs; retained count does not establish representativeness | [src/digitalmodel/residual/model.py:L117-L119] | no detection check exists; issue pending (1) |
+| Coefficient bounds exceeded | Stores a rejected fit, escalates and returns raw predictions on application | [src/digitalmodel/residual/model.py:L131-L140] [src/digitalmodel/residual/model.py:L157-L158] | F |
+| Out-of-domain query | Returns an escalated raw input rather than a clipped correction | [src/digitalmodel/residual/model.py:L161-L163] | O |
+| Nonfinite active query | Returns an escalated raw input which may itself be nonfinite | [src/digitalmodel/residual/model.py:L159-L160] | no detection check exists; issue pending (1) |
+| Invalid caller controls | Ordering/finiteness of bounds and minimum-pair suitability are not comprehensively validated | [src/digitalmodel/residual/model.py:L93-L149] | no detection check exists; issue pending (1) |
+| Direct dataclass construction | Can bypass fit gates; an `active` status alone does not establish qualification | [src/digitalmodel/residual/model.py:L39-L90] | no detection check exists; issue pending (1) |
+| Provenance mistaken for retained evidence | State dictionary has no dataset digest or held-out validation record | [src/digitalmodel/residual/model.py:L168-L189] | P checks empirical markers only; no detection check exists for retained evidence; issue pending (1) |
+| Software bounds and pair defaults | Scale/bias limits and minimum pairs are software defaults without engineering qualification; initializer only re-exports them | [src/digitalmodel/residual/model.py:L25-L29] [src/digitalmodel/residual/model.py:L73-L75] [src/digitalmodel/residual/model.py:L100-L102] | F, S check rejection; no detection check exists for engineering suitability; issue pending (1) |
+| Zero, identity and unbounded defaults | Default bias, output floor and pair count are zero; unbounded domains and NaN fit errors do not establish a trained model | [src/digitalmodel/residual/model.py:L64-L76] [src/digitalmodel/residual/model.py:L88-L90] [src/digitalmodel/residual/model.py:L98-L99] | no detection check exists for all default fields; issue pending (1) |
+| Caller array/scalar conversion | Float conversion accepts numeric input, not a locale-aware external-text format; invalid text may raise | [src/digitalmodel/residual/model.py:L113-L116] [src/digitalmodel/residual/model.py:L156-L156] [src/digitalmodel/residual/skill.py:L15-L16] [src/digitalmodel/residual/skill.py:L26-L27] | no detection check exists for formatted external text; issue pending (1) |
+| Internal count/result conversion and clipping | Casts operate on in-memory counts or arithmetic results; clipping can conceal a large pre-clip output | [src/digitalmodel/residual/model.py:L119-L129] [src/digitalmodel/residual/model.py:L164-L165] [src/digitalmodel/residual/skill.py:L21-L35] | G, B check ordinary arithmetic; C checks clipping |
+| Coefficient comparison tolerance | Floating comparison tolerance is a software boundary choice, not an engineering allowance | [src/digitalmodel/residual/model.py:L132-L133] | no detection check exists for tolerance-edge cases; issue pending (1) |
+| Nonfinite fitted coefficients | A fallback branch exists; the earlier bounds check can also reject these coefficients | [src/digitalmodel/residual/model.py:L131-L142] | no detection check exists; issue pending (1) |
+| Unit/alignment assumptions | Generic arrays carry no unit or sample-alignment metadata; compatible channel units and aligned pairs are caller obligations | [src/digitalmodel/residual/model.py:L93-L111] [src/digitalmodel/residual/skill.py:L13-L47] | no detection check exists; issue pending (1) |
 
 Table: Software limits; missing results are distinct from true zero error.
+
+No swallowed exception, record-skipping `continue`, `return None`, empty-container
+error return, epoch default or cache write is present in the package Python files.
+The initializer re-exports the software defaults without a second implementation.
+`[src/digitalmodel/residual/__init__.py:L20-L42]`
 
 Empty/constant behavior is executed in
 `tests/docs/test_residual_agent_pack.py::test_empty_and_constant_series_limits`.
@@ -230,9 +272,9 @@ source only; adapter integration and physical suitability were not tested here.
 
 ## 9. Dependencies and implementation inventory
 
-| Source file   | Role and dependencies                                                                                      | Inspection boundary                                                                                  |
-| ------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `__init__.py` | Public re-exports from `model` and `skill`                                                                 | Complete file; no additional function/class definitions; export list includes the software constants | [src/digitalmodel/residual/**init**.py:L1-L42] |
+| Source file   | Role and dependencies                                                                                      | Inspection boundary                                                                                  | Evidence |
+| ------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --- |
+| `__init__.py` | Public re-exports from `model` and `skill`                                                                 | Complete file; no additional function/class definitions; export list includes the software constants | `[src/digitalmodel/residual/__init__.py:L1-L42]` |
 | `model.py`    | NumPy, standard-library dataclasses/math/typing and local RMSE; private `_escalate` formats status strings | Complete file; public definitions appear in section 2                                                | [src/digitalmodel/residual/model.py:L1-L189]   |
 | `skill.py`    | NumPy array conversion, mean, correlation and finite checks                                                | Complete file; metric definitions appear in section 2                                                | [src/digitalmodel/residual/skill.py:L1-L47]    |
 
@@ -241,7 +283,7 @@ Table: Complete package Python source inventory at the source basis above.
 The generic package performs no file I/O or solver invocation. The initializer's
 reference to future cross-domain reuse is not proof of an implemented consumer.
 The inspected response adapter imports and fits `ResidualModel` directly.
-[src/digitalmodel/residual/**init**.py:L1-L42]
+`[src/digitalmodel/residual/__init__.py:L1-L42]`
 [src/digitalmodel/drilling_riser/response_correction.py:L61-L80]
 
 ## 10. Coverage and open items
@@ -249,7 +291,7 @@ The inspected response adapter imports and fits `ResidualModel` directly.
 | Test root/file                            | Observations supported by its assertions                                                                                                                    | Limit                                                                                           |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `tests/residual/test_residual_model.py`   | Fit recovery, synthetic interior holdout gain, bounds/short-fit/domain escalation, clipping, provenance, no citation imports and generic-array correction   | Synthetic regression fixtures; no measured-data qualification                                   |
-| `tests/docs/test_residual_agent_pack.py`  | Real inventory, registry resolution, added/stale copied-source rejection, independent example arithmetic, empty/constant behavior and numbered-section form | Software/documentation consistency                                                              |
+| `tests/docs/test_residual_agent_pack.py`  | Real inventory, registry resolution, added/stale copied-source rejection, independent example arithmetic, empty/constant behavior, numbered-section form, every source locator and table cell | Software/documentation consistency |
 | `tests/docs/test_agent_pack_functions.py` | Existing checker calibration, class-member inventory, exports, source locators, nested definitions and CLI status                                           | AST inventory does not check engineering correctness                                            |
 | `tests/test_main_module_routing.py`       | General module/console-script routing, file/unknown-argument dispatch and help behavior                                                                     | Not a residual workflow or forecast test; environment-dependent results are reported separately |
 

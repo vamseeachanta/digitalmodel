@@ -64,14 +64,14 @@ def test_added_and_stale_symbols_are_rejected(tmp_path):
             nested = copied / "nested"
             nested.mkdir()
             (nested / "extra.py").write_text(
-                "class Extra:\n    def added(self):\n        pass\n", encoding="utf-8"
+                "class Extra:\n    def added(self):\n        pass\n", encoding="utf-8", newline="\n"
             )
             expected = "code-to-pack: Extra.added missing"
         else:
             source = copied / "skill.py"
             source.write_text(
                 source.read_text(encoding="utf-8").replace("def rmse(", "def renamed_rmse("),
-                encoding="utf-8",
+                encoding="utf-8", newline="\n",
             )
             expected = "pack-to-code: rmse not defined"
         result = _check_pack(root)
@@ -130,3 +130,31 @@ def test_pack_keeps_ten_numbered_sections():
     assert re.findall(r"^## (\d+)\.", text, re.MULTILINE) == [
         str(number) for number in range(1, 11)
     ]
+
+
+def test_all_source_locators_resolve():
+    text = (ROOT / PACK).read_text(encoding="utf-8")
+    locators = re.findall(r"\[([^\]\n]+):L(\d+)-L(\d+)\]", text)
+    assert locators
+    assert len(locators) == text.count(":L"), "Malformed source locator"
+    errors = []
+    for relative, start, end in locators:
+        path = (ROOT / relative).resolve()
+        if (Path(relative).is_absolute() or "\\" in relative
+                or not path.is_relative_to(ROOT) or not path.is_file()):
+            errors.append(f"Invalid source: {relative}")
+            continue
+        count = len(path.read_text(encoding="utf-8").splitlines())
+        if not 1 <= int(start) <= int(end) <= count:
+            errors.append(f"Invalid line range: {relative}:L{start}-L{end}")
+    assert not errors, "\n".join(errors)
+
+
+def test_tables_preserve_every_cell():
+    text = (ROOT / PACK).read_text(encoding="utf-8")
+    tables = re.findall(r"(?m)(?:^\|[^\n]+\|\n)+", text)
+    assert tables
+    for table in tables:
+        header, *rows = table.splitlines()
+        for row in rows:
+            assert row.count("|") == header.count("|"), row
