@@ -82,3 +82,8 @@ for that bulk store, not a path that should be hard-coded into portable repo log
 ## Operational runbooks
 
 - [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.
+
+## Subsea module reports
+
+- [Capping-stack scalar module analysis](reports/modules/capping_stack/index.html):
+  public API inventory, synthetic pressure boundaries, buoyancy ratio and limits.
