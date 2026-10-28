@@ -19,7 +19,7 @@ SECTIONS = [
 
 def check(tmp_path, content):
     path = tmp_path / "model.yml"
-    path.write_text(textwrap.dedent(content), encoding="utf-8")
+    path.write_text(textwrap.dedent(content), encoding="utf-8", newline="\n")
     return validate_orcaflex_yaml(path)
 
 
@@ -156,7 +156,8 @@ def test_known_wrong_section_errors(tmp_path, section):
 
 
 def test_intervening_include_invalidates_known_prefix(tmp_path):
-    (tmp_path / "overlay.yml").write_text(f"{MODE}: false\n", encoding="utf-8")
+    (tmp_path / "overlay.yml").write_text(
+        f"{MODE}: false\n", encoding="utf-8", newline="\n")
     result = check(tmp_path, general(
         f"{METHOD}: Implicit time domain", f"{MODE}: true",
         "includefile: overlay.yml", f"{MAXIMUM}: 0.125"))
@@ -246,15 +247,16 @@ def test_generator_preserves_and_reorders_maximum_then_validator_recognizes(tmp_
     output = GenericModelBuilder(spec, BuilderContext()).build()
     settings = output["General"]
     assert settings[MAXIMUM] == properties[MAXIMUM]
-    assert list(settings).index(MODE) < list(settings).index(MAXIMUM)
+    assert (list(settings).index(METHOD) < list(settings).index(MODE)
+            < list(settings).index(MAXIMUM))
     assert spec.generic.general_properties == properties
-    # The method arrives from the earlier base include in real generation.
     overlay = check(tmp_path, yaml.safe_dump(output, sort_keys=False))
-    assert_unresolved(overlay)
-    combined = {METHOD: "Implicit time domain", **settings}
-    result = check(tmp_path, yaml.safe_dump({"General": combined}, sort_keys=False))
-    assert not result.errors
-    assert not result.warnings
+    assert not overlay.errors
+    assert not overlay.warnings
+    # A fragment without the method still requires inherited context.
+    fragment = {key: value for key, value in settings.items() if key != METHOD}
+    assert_unresolved(check(
+        tmp_path, yaml.safe_dump({"General": fragment}, sort_keys=False)))
 
 
 @pytest.mark.parametrize("misplaced", [
@@ -277,7 +279,8 @@ def test_production_validator_refuses_wrong_load_format(tmp_path, misplaced):
         vessel[misplaced] = vessel["Draughts"][0].pop(misplaced)
         expected = "Draughts"
     path = tmp_path / "wrong.yml"
-    path.write_text(yaml.safe_dump(wrong, sort_keys=False), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(wrong, sort_keys=False), encoding="utf-8", newline="\n")
     result = validate_orcaflex_yaml(path)
     assert not result.valid
     assert any(misplaced in issue.message and expected in issue.message
