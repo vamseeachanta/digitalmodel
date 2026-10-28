@@ -178,8 +178,9 @@ MIT -- see [LICENSE](LICENSE)
 ## Capability architecture and provenance
 
 This drawing inventories 58 observed domain pages and 37 capability work declarations.
-Evidence is reconciled with base revision `6581c271`; the branch does not merge that
-revision. Acceptance checks run against that base with these documentation changes.
+Evidence is reconciled with retained source revision `09089a121`.
+The architecture acceptance checks compare this inventory with the current tree.
+Remote execution and publication remain `NOT_EVALUATED`.
 Amber nodes have inline data or incomplete reproduction evidence. Solid arrows
 show local production or routing; dotted arrows show licensed execution dependencies
 or intended downstream integration, without asserting a live remote result.

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "basis": "Repository evidence reconciled with base revision 6581c271d0346288d6d34173495c22d2121c2781; documentation inventory, not an engineering dataset catalog.",
+  "basis": "Repository evidence reconciled with retained source revision 09089a121a16069c4b657d1a320a630a23ab1dd5; documentation inventory, not an engineering dataset catalog.",
   "wrapper_status": "absent",
   "wrapper_pages": [],
   "capabilities": [
