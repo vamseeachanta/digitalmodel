@@ -56,7 +56,15 @@ def alpha_method_capacity(
 
     Returns:
         PileCapacityResult with total capacity and breakdown.
+
+    Raises:
+        ValueError: If D or L is not finite and positive.
     """
+    if not math.isfinite(D) or D <= 0:
+        raise ValueError("D must be finite and positive")
+    if not math.isfinite(L) or L <= 0:
+        raise ValueError("L must be finite and positive")
+
     sf = skin_friction_clay(
         undrained_shear_strength_kpa=Su,
         effective_overburden_kpa=sigma_v,
@@ -102,10 +110,16 @@ def alpha_method_capacity_multilayer(
         plus alpha and unit_skin_friction from the last (tip) layer.
 
     Raises:
-        ValueError: If layers is empty.
+        ValueError: If layers is empty, or D or any layer thickness is not
+            finite and positive.
     """
+    if not math.isfinite(D) or D <= 0:
+        raise ValueError("D must be finite and positive")
     if not layers:
         raise ValueError("layers must not be empty")
+    for index, (thickness, _, _) in enumerate(layers):
+        if not math.isfinite(thickness) or thickness <= 0:
+            raise ValueError(f"layers[{index}] thickness must be finite and positive")
 
     perimeter = math.pi * D
     tip_area = math.pi * (D / 2.0) ** 2
