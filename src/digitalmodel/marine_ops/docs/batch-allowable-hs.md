@@ -10,6 +10,22 @@ module's complex crane-tip transfer. All supplied criteria apply in every cell.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-27 | Add a batch table for planning several operations over periods and headings. |
+| 2 | 2026-10-28 | Record wrapper scope, reused interfaces, acceptance checks and exclusions. |
+
+## Plan-lite
+
+- Scope: tabulate allowable Hs by operation, period and requested heading in a
+  DataFrame and optional CSV, retaining each cell's governing criterion and status.
+- Reuse: envelope quadrature, bounded heading selection, coverage checks,
+  spectral response moments and linear Hs scaling; installation complex
+  crane-tip transfer supplies point responses.
+- Acceptance: hand-calculated constant-gain limits, independent derivative
+  quadrature, phase-aware point transfer, governing labels, coverage and cap
+  status, invalid-input rejection and CSV round-trip; retain the existing
+  envelope and installation tests and run the synthetic example.
+- Exclusions: new numerical methods, changes to existing APIs or dependencies,
+  nonlinear installation criteria and engineering qualification of limits,
+  alpha selection or higher-moment bandwidth.
 
 ## Inputs and example
 
