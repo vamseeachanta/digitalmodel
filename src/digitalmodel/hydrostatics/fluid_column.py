@@ -99,14 +99,19 @@ def hydrostatic_pressure(
     height: ArrayLike,
     gravity: float = G_STANDARD,
 ) -> ArrayLike:
-    """Hydrostatic pressure of a fluid column, ``Δp = rho * g * h``.
+    """Pressure rise down a static column, ``Δp = rho * g * h``.
+
+    This is gauge pressure relative to the pressure at the column top.
+    It does not evaluate pipeline-code acceptance. An executable synthetic
+    basis is in ``docs/examples/pipeline-hydrostatic-pressure-basis.md``.
 
     Parameters
     ----------
     density : float or array-like
         Fluid density in kg/m^3.
     height : float or array-like
-        Column height (depth) in metres.
+        Vertical column height in metres, positive downward from the top;
+        use the elevation difference rather than an absolute datum.
     gravity : float
         Gravitational acceleration in m/s^2 (default 9.81).
 
@@ -124,18 +129,25 @@ def seabed_pressure(
     surface_pressure: ArrayLike = 0.0,
     gravity: float = G_STANDARD,
 ) -> ArrayLike:
-    """Absolute pressure at the bottom of a fluid column.
+    """Bottom pressure on the supplied surface-pressure reference.
 
     ``p_seabed = p_surface + rho * g * h``
+
+    The result is absolute only when surface pressure is absolute.
+    A gauge surface input gives a gauge result; the default gives only
+    the column pressure rise. No atmospheric pressure is added implicitly.
+    This calculation does not evaluate pipeline-code acceptance.
 
     Parameters
     ----------
     density : float or array-like
         Fluid density in kg/m^3.
     height : float or array-like
-        Column height (depth) in metres.
+        Vertical column height in metres, positive downward from the top;
+        use the elevation difference rather than an absolute datum.
     surface_pressure : float or array-like
-        Pressure at the top of the column in Pa (default 0 = gauge).
+        Pressure at the top in Pa, using the intended absolute or gauge
+        reference (default zero returns the column pressure rise).
     gravity : float
         Gravitational acceleration in m/s^2 (default 9.81).
 
