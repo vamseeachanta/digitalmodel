@@ -1,6 +1,6 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
-"""Per-leg preload history screening, without installation acceptance criteria.
+"""Preload history and three-leg method screening, without installation acceptance criteria.
 
 All threshold defaults are illustrative assumptions, based on previous
 experience. No standard-derived procedure, settlement model or dynamic
@@ -13,13 +13,14 @@ docs/domains/geotechnical/jackup-screening.md; no clause compliance is claimed.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from fractions import Fraction
+import math
 from typing import Literal
 
-from digitalmodel.geotechnical.spudcan import PenetrationPoint, finite
+from digitalmodel.geotechnical.spudcan import LayeredPenetrationCurve, PenetrationPoint, finite
 
 StageName = Literal['preparation', 'preload', 'holding', 'discharge']
 STAGE_ORDER = ('preparation', 'preload', 'holding', 'discharge')
@@ -278,3 +279,312 @@ def screen_preload_sequence(
         start, holding[-1].time_h, duration, settlement_rate, not hold_reasons,
         hold_reasons, any(step.punch_through_reasons for step in steps), tuple(steps),
     )
+
+
+@dataclass(frozen=True)
+class HullGeometry:
+    """Rectangular waterplane, flat bottom and three noncollinear leg positions.
+
+    Coordinates are metres from the waterplane centre; x is transverse and y
+    longitudinal. Length spans y, breadth spans x. The rigid hull follows three
+    prescribed support levels. Small-angle vertical geometry retains exact
+    arctangent reporting. Horizontal CG motion and structural flexibility are
+    excluded. Weight density is kN/m3; hull depth limits deck immersion.
+    """
+
+    length_m: float
+    breadth_m: float
+    depth_m: float
+    leg_xy_m: tuple[tuple[float, float], ...]
+    water_weight_kn_m3: float
+
+    def validate(self) -> None:
+        """Reject degenerate geometry and nonfinite hydrostatic inputs."""
+        for name in ('length_m', 'breadth_m', 'depth_m', 'water_weight_kn_m3'):
+            finite(name, getattr(self, name), strict=True)
+        if len(self.leg_xy_m) != 3:
+            raise ValueError('exactly three leg coordinates are required')
+        for xy in self.leg_xy_m:
+            if len(xy) != 2:
+                raise ValueError('each leg needs x and y coordinates')
+            for value in xy:
+                finite('leg coordinate', value, minimum=-math.inf)
+        _support_plane(self.leg_xy_m, (0, 0, 0))
+
+
+@dataclass(frozen=True)
+class MethodStage:
+    """One held-weight state, with signed reference draft and a trial loss leg.
+
+    dry_leg_loads_kn encode total weight and both CG moments as equivalent dry
+    support reactions. Actual ballast compartment layout is not qualified.
+    Positive draft is immersion; negative draft is air gap at zero tide. Tide
+    changes water level at fixed jacking position and fixed ballast in a state.
+    A null trial leg requests independent loss cases for each of the three legs.
+    """
+
+    method: str
+    number: int
+    dry_leg_loads_kn: tuple[float, float, float]
+    reference_draft_m: float
+    trial_leg: int | None
+    substep: int = 1
+
+
+@dataclass(frozen=True)
+class HullResponse:
+    """Required static reactions at imposed support levels, before soil limits.
+
+    Negative reactions expose loss of contact and invalidate the three-support
+    equilibrium. Reactions above soil resistance are unresolved demands. The
+    result neither caps those demands nor predicts transient load transfer.
+    First moments use integral(x*dB) and integral(y*dB), in kN m.
+    """
+
+    reactions_kn: tuple[float, ...]
+    reaction_changes_kn: tuple[float, ...]
+    buoyancy_kn: float
+    buoyancy_first_moment_x_kn_m: float
+    buoyancy_first_moment_y_kn_m: float
+    centre_draft_m: float
+    minimum_draft_m: float
+    maximum_draft_m: float
+    wetted_area_m2: float
+    trim_deg: float
+    heel_deg: float
+    contact_valid: bool
+
+
+def _support_plane(xy: Sequence[tuple[float, float]], values: Sequence[float]
+                   ) -> tuple[float, float, float]:
+    """Interpolate a+b*x+c*y through three support levels."""
+    (x0, y0), (x1, y1), (x2, y2) = xy
+    determinant = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0)
+    if determinant == 0 or not math.isfinite(determinant):
+        raise ValueError('leg coordinates must form a finite noncollinear triangle')
+    v0, v1, v2 = values
+    b = ((v1 - v0) * (y2 - y0) - (v2 - v0) * (y1 - y0)) / determinant
+    c = ((x1 - x0) * (v2 - v0) - (x2 - x0) * (v1 - v0)) / determinant
+    return v0 - b * x0 - c * y0, b, c
+
+
+def _wet_polygon(corners: list[tuple[float, float]],
+                 draft: Callable[[tuple[float, float]], float]) -> list[tuple[float, float]]:
+    """Clip the rectangular bottom at the waterline, retaining partial contact."""
+    wet = []
+    for left, right in zip(corners, corners[1:] + corners[:1]):
+        dl, dr = draft(left), draft(right)
+        if dl >= 0:
+            wet.append(left)
+        if (dl < 0 < dr) or (dr < 0 < dl):
+            fraction = dl / (dl - dr)
+            wet.append((left[0] + fraction * (right[0] - left[0]),
+                        left[1] + fraction * (right[1] - left[1])))
+    return wet
+
+
+def _buoyancy(hull: HullGeometry, plane: tuple[float, float, float]
+              ) -> tuple[float, float, float, float, float, float]:
+    """Integrate linear draft and its quadratic first moments exactly on triangles."""
+    a, b, c = plane
+    corners = [(-hull.breadth_m / 2, -hull.length_m / 2),
+               (hull.breadth_m / 2, -hull.length_m / 2),
+               (hull.breadth_m / 2, hull.length_m / 2),
+               (-hull.breadth_m / 2, hull.length_m / 2)]
+
+    def draft(xy: tuple[float, float]) -> float:
+        return a + b * xy[0] + c * xy[1]
+
+    depths = [draft(xy) for xy in corners]
+    if max(depths) >= hull.depth_m:
+        raise ValueError('deck immersion is outside the hull hydrostatic model')
+    wet = _wet_polygon(corners, draft)
+    volume = moment_x = moment_y = area = 0.0
+    for i in range(1, len(wet) - 1):
+        triangle = (wet[0], wet[i], wet[i + 1])
+        (x0, y0), (x1, y1), (x2, y2) = triangle
+        size = abs((x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0)) / 2
+        ds = [draft(xy) for xy in triangle]
+        total = sum(ds)
+        volume += size * total / 3
+        moment_x += size / 12 * (sum(x for x, _ in triangle) * total
+                                 + sum(x * d for (x, _), d in zip(triangle, ds)))
+        moment_y += size / 12 * (sum(y for _, y in triangle) * total
+                                 + sum(y * d for (_, y), d in zip(triangle, ds)))
+        area += size
+    weight = hull.water_weight_kn_m3
+    return (volume * weight, moment_x * weight, moment_y * weight,
+            area, min(depths), max(depths))
+
+
+def hull_response(hull: HullGeometry, stage: MethodStage, *, tide_m: float = 0,
+                  failed_leg: int | None = None, settlement_m: float = 0) -> HullResponse:
+    """Balance force and both moments after a prescribed one-leg displacement.
+
+    Positive tide increases immersion. Hull downward displacement interpolates
+    the supplied leg settlement; the two other supports are held fixed. Weight
+    and dry CG moments are unchanged. Hydrostatic pressure redistributes the
+    remaining reactions. Without water contact this model has no load transfer.
+    No stiffness, inertia, jacking controller or dynamic arrest is represented.
+    """
+    hull.validate()
+    finite('tide', tide_m, minimum=-math.inf)
+    finite('settlement', settlement_m)
+    finite('reference draft', stage.reference_draft_m, minimum=-math.inf)
+    if len(stage.dry_leg_loads_kn) != 3:
+        raise ValueError('three dry equivalent leg loads are required')
+    for load in stage.dry_leg_loads_kn:
+        finite('dry equivalent load', load)
+    if failed_leg is not None and (type(failed_leg) is not int or failed_leg not in range(3)):
+        raise ValueError('failed leg must be an integer from zero to two')
+    if failed_leg is None and settlement_m != 0:
+        raise ValueError('settlement requires a failed leg')
+    levels = tuple(settlement_m if i == failed_leg else 0 for i in range(3))
+    heave, slope_x, slope_y = _support_plane(hull.leg_xy_m, levels)
+    reference = stage.reference_draft_m + tide_m
+    buoyancy, mx, my, area, minimum, maximum = _buoyancy(
+        hull, (reference + heave, slope_x, slope_y))
+    base_b, base_mx, base_my, _, _, _ = _buoyancy(hull, (reference, 0, 0))
+    reactions, changes = [], []
+    for i, load in enumerate(stage.dry_leg_loads_kn):
+        # Barycentric shape function Ni=ai+bi*x+ci*y transfers a distributed
+        # waterplane force into three reactions while retaining both moments.
+        ai, bi, ci = _support_plane(hull.leg_xy_m, tuple(int(j == i) for j in range(3)))
+        share = ai * buoyancy + bi * mx + ci * my
+        baseline = ai * base_b + bi * base_mx + ci * base_my
+        reactions.append(load - share)
+        changes.append(baseline - share)
+    return HullResponse(tuple(reactions), tuple(changes), buoyancy, mx, my,
+                        reference + heave, minimum, maximum, area,
+                        math.degrees(math.atan(slope_y)), math.degrees(math.atan(slope_x)),
+                        all(load >= 0 for load in reactions))
+
+
+def preload_method_stages(*, target_kn: float, reserve_kn: float,
+                          maximum_weight_kn: float, wet_draft_m: float,
+                          elevated_air_gap_m: float, early_fraction: float = 0.6
+                          ) -> tuple[MethodStage, ...]:
+    """Build ballast-limited dry-load commands for three assumed methods.
+
+    One-leg-at-a-time has three elevated states. All-legs has one elevated
+    state. The staged variant has six stages, each with three sequential
+    single-leg substeps; the first four stages are in water and the final two
+    elevated. Between states the active load returns to reserve and the ballast
+    is transferred. No penetration memory, rebound or elapsed time is implied.
+    The public 2021 case paper, Example Rig Move 1 (p. 5), describes a 2006
+    six-stage operation with the first four stages in water. The within-stage
+    three-leg sweeps, load fractions and final elevation here are assumptions;
+    detailed case stages are unpublished. This is not a qualified case replay.
+    Each method: SNAME T&RB 5-5A Rev 3 (2008), clause: TO CONFIRM;
+    ISO 19905-1 (2012), clause: TO CONFIRM. No compliance is claimed.
+    """
+    for name, value in (('target', target_kn), ('reserve', reserve_kn),
+                        ('maximum weight', maximum_weight_kn), ('wet draft', wet_draft_m),
+                        ('elevated air gap', elevated_air_gap_m), ('early fraction', early_fraction)):
+        finite(name, value, strict=True)
+    if reserve_kn > target_kn or maximum_weight_kn < 3 * reserve_kn:
+        raise ValueError('reserve exceeds target or available weight')
+    if early_fraction > 1 or early_fraction * target_kn < reserve_kn:
+        raise ValueError('early target fraction must lie between reserve/target and one')
+
+    def loads(active: tuple[int, ...], target: float) -> tuple[float, float, float]:
+        demand = len(active) * (target - reserve_kn)
+        available = maximum_weight_kn - 3 * reserve_kn
+        extra = (min(demand, available) / len(active))
+        result = [reserve_kn + extra if i in active else reserve_kn for i in range(3)]
+        return result[0], result[1], result[2]
+
+    stages = [MethodStage('one_leg_at_a_time', i + 1, loads((i,), target_kn),
+                          -elevated_air_gap_m, i) for i in range(3)]
+    stages.append(MethodStage('all_legs', 1, loads((0, 1, 2), target_kn),
+                              -elevated_air_gap_m, None))
+    fractions = (early_fraction, (early_fraction + 1) / 2, 1, 1, 1, 1)
+    for number, fraction in enumerate(fractions, 1):
+        for leg in range(3):
+            stages.append(MethodStage('staged_in_water_then_elevated', number,
+                                      loads((leg,), fraction * target_kn),
+                                      wet_draft_m if number <= 4 else -elevated_air_gap_m,
+                                      leg, substep=leg + 1))
+    return tuple(stages)
+
+
+@dataclass(frozen=True)
+class PreloadMethodCheck:
+    """Per-leg capacity headroom and unresolved demand, with signed margins.
+
+    Peak headroom is peak minus reaction; post-peak reserve is first trough
+    minus reaction. Target margin is reaction minus target. Positive headroom
+    does not establish stability, and reaching a peak is flagged at equality.
+    Without a descending branch the interval maximum is used and post-peak
+    reserve is None. All results describe only the supplied curve interval.
+    """
+
+    method: str
+    stage: int
+    substep: int
+    tide_m: float
+    reference_draft_m: float
+    condition: str
+    leg: int
+    trial_leg: int | None
+    reaction_kn: float
+    reaction_change_kn: float
+    target_margin_kn: float
+    peak_headroom_kn: float
+    post_peak_reserve_kn: float | None
+    capacity_drop_kn: float
+    reaches_descending_peak: bool
+    within_evaluated_capacity: bool
+    contact_valid: bool
+    buoyancy_kn: float
+    centre_draft_m: float
+    minimum_draft_m: float
+    maximum_draft_m: float
+    trim_deg: float
+    heel_deg: float
+
+
+def compare_preload_methods(curves: Sequence[LayeredPenetrationCurve], hull: HullGeometry,
+                            stages: Sequence[MethodStage], *, tide_levels_m: Sequence[float],
+                            target_kn: float, settlement_m: float) -> tuple[PreloadMethodCheck, ...]:
+    """Evaluate every state, tide and leg before and after a trial support loss.
+
+    Curves may differ by leg. Settlement is prescribed, never inferred from
+    peak/trough depths. Required reactions are not capped at available soil
+    capacity. The one-leg history hold checker remains separate: these snapshots
+    contain no observed penetration or hold-time evidence.
+    """
+    finite('target', target_kn, strict=True)
+    finite('settlement', settlement_m, strict=True)
+    if len(curves) != 3 or not stages or not tide_levels_m:
+        raise ValueError('three curves, stages and tide levels are required')
+    rows = []
+    for stage in stages:
+        if stage.trial_leg is not None and (type(stage.trial_leg) is not int
+                                           or stage.trial_leg not in range(3)):
+            raise ValueError('trial leg must be an integer from zero to two or None')
+        trials = range(3) if stage.trial_leg is None else (stage.trial_leg,)
+        conditions: list[tuple[str, int | None]] = [('nominal', None)]
+        conditions.extend(('prescribed_settlement', i) for i in trials)
+        for tide in tide_levels_m:
+            for condition, trial in conditions:
+                response = hull_response(hull, stage, tide_m=tide, failed_leg=trial,
+                                         settlement_m=settlement_m if trial is not None else 0)
+                for leg, (curve, reaction) in enumerate(zip(curves, response.reactions_kn)):
+                    trough = curve.events[0].trough.load_kn if curve.events else None
+                    # A higher earlier capacity shields a later descending peak.
+                    reached = any(reaction >= max(p.load_kn for p in curve.points
+                                                  if p.depth_m <= event.peak.depth_m)
+                                  for event in curve.events)
+                    rows.append(PreloadMethodCheck(
+                        stage.method, stage.number, stage.substep, tide, stage.reference_draft_m,
+                        condition, leg, trial if trial is not None else stage.trial_leg,
+                        reaction, response.reaction_changes_kn[leg], reaction - target_kn,
+                        curve.peak.load_kn - reaction,
+                        None if trough is None else trough - reaction,
+                        curve.post_peak_drop_kn, reached,
+                        0 <= reaction <= curve.maximum.load_kn, response.contact_valid,
+                        response.buoyancy_kn, response.centre_draft_m,
+                        response.minimum_draft_m, response.maximum_draft_m,
+                        response.trim_deg, response.heel_deg))
+    return tuple(rows)
