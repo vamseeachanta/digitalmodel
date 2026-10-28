@@ -1,0 +1,104 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+[path removed]
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+collected 76 items
+
+tests/solvers/mystran/test_fe10_benchmark.py ......................      [ 28%]
+tests/repo_structure/test_generated_retirements.py ..................... [ 56%]
+....                                                                     [ 61%]
+tests/repo_structure/test_repo_structure_contract.py ................... [ 86%]
+.......                                                                  [ 96%]
+tests/repo_structure/test_structure_enforcement.py ...                   [100%]
+
+==================================== PASSES ====================================
+____________ test_retained_native_centroids_reproduce_csv[le1_8x24] ____________
+----------------------------- Captured stdout call -----------------------------
+recovered.csv: 192 global mid-surface centroid rows
+___________ test_retained_native_centroids_reproduce_csv[le1_16x48] ____________
+----------------------------- Captured stdout call -----------------------------
+recovered.csv: 768 global mid-surface centroid rows
+___________ test_retained_native_centroids_reproduce_csv[le1_32x96] ____________
+----------------------------- Captured stdout call -----------------------------
+recovered.csv: 3072 global mid-surface centroid rows
+_____________ test_retained_native_centroids_reproduce_csv[patch] ______________
+----------------------------- Captured stdout call -----------------------------
+recovered.csv: 5 global mid-surface centroid rows
+=========================== short test summary info ============================
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_8x24]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_16x48]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_32x96]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[patch]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_8x24-192]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_16x48-768]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_32x96-3072]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[patch-5]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_perturbed_csv_fails[le1_32x96]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_perturbed_csv_fails[patch]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_comparator_selftest
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_artifacts_match_manifest
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_decks_retain_received_digests
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_unequal_fibres_are_averaged_then_tensor_rotated
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 nan 20 3\n]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 10 20 3\n1 CENTER -50 10 20 3\n50 10 20 3\n]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_sanitizer_preserves_numeric_results
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_native_centroids_reproduce_csv[le1_8x24]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_native_centroids_reproduce_csv[le1_16x48]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_native_centroids_reproduce_csv[le1_32x96]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_native_centroids_reproduce_csv[patch]
+PASSED tests/repo_structure/test_generated_retirements.py::test_deletion_requires_matching_committed_digest[False]
+PASSED tests/repo_structure/test_generated_retirements.py::test_deletion_requires_matching_committed_digest[True]
+PASSED tests/repo_structure/test_generated_retirements.py::test_tracked_and_reintroduced_retirements_are_refused
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[path-../escape.pdf]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[path-/escape.pdf]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[path-src/example.py]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[sha256-ABC]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[date-2026-02-30]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[reason-TBD]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[follow_up-https://example.com/issues/1]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[surprise-unknown]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[disposition-value8]
+PASSED tests/repo_structure/test_generated_retirements.py::test_invalid_entries_never_authorize_deletion[disposition-value9]
+PASSED tests/repo_structure/test_generated_retirements.py::test_missing_fields_are_rejected[path]
+PASSED tests/repo_structure/test_generated_retirements.py::test_missing_fields_are_rejected[sha256]
+PASSED tests/repo_structure/test_generated_retirements.py::test_missing_fields_are_rejected[date]
+PASSED tests/repo_structure/test_generated_retirements.py::test_missing_fields_are_rejected[reason]
+PASSED tests/repo_structure/test_generated_retirements.py::test_missing_fields_are_rejected[disposition]
+PASSED tests/repo_structure/test_generated_retirements.py::test_missing_fields_are_rejected[follow_up]
+PASSED tests/repo_structure/test_generated_retirements.py::test_duplicate_paths_and_yaml_keys_are_rejected
+PASSED tests/repo_structure/test_generated_retirements.py::test_rename_retires_source_and_destination_is_classified
+PASSED tests/repo_structure/test_generated_retirements.py::test_retired_path_cannot_remain_in_durable_classification
+PASSED tests/repo_structure/test_generated_retirements.py::test_committed_deletions_use_merge_base_digest
+PASSED tests/repo_structure/test_generated_retirements.py::test_base_ref_is_resolved_before_comparing_deletions
+PASSED tests/repo_structure/test_generated_retirements.py::test_digest_uses_common_ancestor_when_base_has_advanced
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_repo_structure_config_loads
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_current_control_files_and_checker_artifacts_pass
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[_count_tests.py]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[_coverage_map.py]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[orcaflex_maturity_analysis.py]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[surprise/file.txt]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[src/digitalmodel/tests/test_bad.py]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[src/tests/bad.py]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[notebooks/new.ipynb]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[outputs/new/result.json]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[coverage.xml]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[reports/quality_gates_results.json]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[dist/new.whl]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[../escape]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_planted_violations_fail[/escape]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_generated_evidence_requires_complete_metadata
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_exception_follow_up_rejects_placeholders[TODO]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_exception_follow_up_rejects_placeholders[TBD]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_exception_follow_up_rejects_placeholders[pending]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_exception_follow_up_rejects_placeholders[Create/link follow-up]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_exception_follow_up_rejects_placeholders[]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_exception_follow_up_rejects_placeholders[#0]
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_invalid_review_date_and_permanent_justification
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_current_inventory_has_no_generated_exception_to_grandfather
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_cli_clean_and_violation
+PASSED tests/repo_structure/test_repo_structure_contract.py::test_structure_tests_run_in_contracts_domain
+PASSED tests/repo_structure/test_structure_enforcement.py::test_local_structure_hook_checks_all_paths_on_every_commit
+PASSED tests/repo_structure/test_structure_enforcement.py::test_structure_workflow_runs_unconditionally_for_pull_requests
+PASSED tests/repo_structure/test_structure_enforcement.py::test_docs_workflow_covers_structure_and_domain_docs_with_routing_tests
+============================== 76 passed in 3.59s ==============================
