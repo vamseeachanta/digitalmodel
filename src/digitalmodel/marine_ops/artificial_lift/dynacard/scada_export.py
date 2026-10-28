@@ -203,11 +203,16 @@ def load_scada_export(path: str | Path) -> list[ScadaSurfaceCard]:
         return read_scada_export(stream)
 
 
-def summarize_cards(cards: Sequence[ScadaSurfaceCard]) -> dict:
+def summarize_cards(
+    cards: Sequence[ScadaSurfaceCard], *, include_acquisition: bool = False,
+) -> dict:
     """Inventory each card and retain distributions instead of a mean alone.
 
     Ranges and ratios are descriptive arithmetic, with no acceptance limits.
     Units, independent inversion and diagnoses cannot be established here.
+    Opt-in acquisition metadata retains timestamp text, acquisition type and
+    optional declared numbers in input order. Missing numbers remain null;
+    source identities and unknown columns are never copied into the inventory.
     """
     records = [
         {
@@ -219,6 +224,15 @@ def summarize_cards(cards: Sequence[ScadaSurfaceCard]) -> dict:
         }
         for card in cards
     ]
+    if include_acquisition:
+        for card, record in zip(cards, records):
+            record["acquisition"] = {
+                "timestamp": card.timestamp,
+                "card_type": card.card_type,
+                "stroke_period": card.stroke_period,
+                "spm": card.spm,
+                "stroke_length": card.stroke_length,
+            }
 
     def distribution(values: Iterable[float | None]) -> dict:
         present = [value for value in values if value is not None]
@@ -250,6 +264,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Print an inventory of local exports, without downloading source data."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("exports", nargs="+", type=Path)
+    parser.add_argument(
+        "--include-acquisition", action="store_true",
+        help="Include timestamps, acquisition types and optional declared numbers",
+    )
     args = parser.parse_args(argv)
     try:
         cards = [card for path in args.exports for card in load_scada_export(path)]
@@ -260,7 +278,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ValueError as error:
         print(f"Cannot read export: {error}", file=sys.stderr)
         return 2
-    print(json.dumps(summarize_cards(cards), indent=2, allow_nan=False))
+    report = summarize_cards(cards, include_acquisition=args.include_acquisition)
+    print(json.dumps(report, indent=2, allow_nan=False))
     return 0
 
 
