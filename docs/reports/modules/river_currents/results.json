@@ -1,0 +1,188 @@
+{
+  "inputs": {
+    "beam_m": {
+      "basis": "Stipulated rectangular obstruction [H].",
+      "unit": "m",
+      "value": 4.0
+    },
+    "depth_m": {
+      "basis": "Stipulated rectangular channel [H].",
+      "unit": "m",
+      "value": 8.0
+    },
+    "draft_m": {
+      "basis": "Stipulated rectangular obstruction [H].",
+      "unit": "m",
+      "value": 2.0
+    },
+    "exponent_m": {
+      "basis": "Stipulated square-root profile [H].",
+      "unit": "dimensionless",
+      "value": 2.0
+    },
+    "retardation": {
+      "basis": "Assumed lateral shape only [H].",
+      "unit": "dimensionless",
+      "value": 0.4
+    },
+    "surface_speed_m_s": {
+      "basis": "Stipulated surface speed [H].",
+      "unit": "m/s",
+      "value": 3.0
+    },
+    "width_m": {
+      "basis": "Stipulated rectangular channel [H].",
+      "unit": "m",
+      "value": 20.0
+    }
+  },
+  "profile": {
+    "basis": "Public river_velocity_profile with the stipulated inputs [H, P]; uniform plotting samples only.",
+    "height_m": [
+      0.0,
+      0.25,
+      0.5,
+      0.75,
+      1.0,
+      1.25,
+      1.5,
+      1.75,
+      2.0,
+      2.25,
+      2.5,
+      2.75,
+      3.0,
+      3.25,
+      3.5,
+      3.75,
+      4.0,
+      4.25,
+      4.5,
+      4.75,
+      5.0,
+      5.25,
+      5.5,
+      5.75,
+      6.0,
+      6.25,
+      6.5,
+      6.75,
+      7.0,
+      7.25,
+      7.5,
+      7.75,
+      8.0
+    ],
+    "speed_m_s": [
+      0.0,
+      0.5303300858899107,
+      0.75,
+      0.9185586535436917,
+      1.0606601717798214,
+      1.1858541225631423,
+      1.299038105676658,
+      1.403121520040228,
+      1.5,
+      1.590990257669732,
+      1.6770509831248424,
+      1.758905909933786,
+      1.8371173070873834,
+      1.9121323175972942,
+      1.984313483298443,
+      2.053959590644373,
+      2.121320343559643,
+      2.186606960566988,
+      2.25,
+      2.311655251113366,
+      2.3717082451262845,
+      2.4302777619029476,
+      2.48746859276655,
+      2.5433737436719754,
+      2.598076211353316,
+      2.6516504294495533,
+      2.7041634565979917,
+      2.7556759606310752,
+      2.806243040080456,
+      2.8559149146989657,
+      2.904737509655563,
+      2.9527529527544294,
+      3.0
+    ]
+  },
+  "results": {
+    "bed_speed_m_s": {
+      "basis": "u at bed [H, P]",
+      "method": "power_law_profile",
+      "unit": "m/s",
+      "value": 0.0
+    },
+    "centre_factor": {
+      "basis": "x = mid-width [H, B]",
+      "method": "lateral_factor",
+      "unit": "dimensionless",
+      "value": 1.2000000000000002
+    },
+    "corrected_quarter_speed_m_s": {
+      "basis": "Fixed centre \u00d7 confinement at quarter depth [H, B, P]",
+      "method": "corrected_profile",
+      "unit": "m/s",
+      "value": 1.8947368421052633
+    },
+    "corrected_surface_speed_m_s": {
+      "basis": "Fixed centre \u00d7 confinement at surface [H, B, P]",
+      "method": "corrected_profile",
+      "unit": "m/s",
+      "value": 3.7894736842105265
+    },
+    "discharge_per_width_m2_s": {
+      "basis": "Depth integral [H, P]",
+      "method": "H \u00d7 power_law_depth_averaged",
+      "unit": "m\u00b2/s",
+      "value": 16.0
+    },
+    "lateral_mean_factor": {
+      "basis": "Exact quadratic integral over normalized width [H, B]",
+      "method": "Simpson integral of lateral_factor",
+      "unit": "dimensionless",
+      "value": 1.0
+    },
+    "left_bank_factor": {
+      "basis": "x = left bank [H, B]",
+      "method": "lateral_factor",
+      "unit": "dimensionless",
+      "value": 0.6
+    },
+    "mean_speed_m_s": {
+      "basis": "Depth integral divided by H [H, P]",
+      "method": "power_law_depth_averaged",
+      "unit": "m/s",
+      "value": 2.0
+    },
+    "quarter_speed_m_s": {
+      "basis": "u at quarter depth [H, P]",
+      "method": "power_law_profile",
+      "unit": "m/s",
+      "value": 1.5
+    },
+    "remaining_area_factor": {
+      "basis": "A/(A - beam \u00d7 draft) [H, B]",
+      "method": "blockage_factor",
+      "unit": "dimensionless",
+      "value": 1.0526315789473684
+    },
+    "right_bank_factor": {
+      "basis": "x = right bank [H, B]",
+      "method": "lateral_factor",
+      "unit": "dimensionless",
+      "value": 0.6
+    },
+    "surface_speed_m_s": {
+      "basis": "u at surface [H, P]",
+      "method": "power_law_profile",
+      "unit": "m/s",
+      "value": 3.0
+    }
+  },
+  "reviewed_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "status": "Synthetic arithmetic only; physical and operational qualification NOT_EVALUATED"
+}
