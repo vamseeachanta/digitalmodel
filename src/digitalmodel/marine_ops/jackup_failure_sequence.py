@@ -158,15 +158,21 @@ def punch_consequence(curve: LayeredPenetrationCurve, p: JackupInputs,
 
     Failed-leg lever=1.5R; buoyancy at the hull centre has lever=0.5R.
     Therefore replacing a reaction loss dQ needs 3dQ buoyancy. Centre descent
-    is leg travel/3, giving leg travel=9dQ/(gamma Awp). Available reserve and
-    soil recovery cap this quasi-static hypothesis. No impact or energy balance
-    is solved. Elevated travel uses step-1 peak-to-static-recovery distance;
-    absent recovery, peak-to-trough travel is only a lower bound.
+    is leg travel/3, giving leg travel=9dQ/(gamma Awp). Edge descent has lever
+    (L+R)/2, so centre sinkage before edge immersion is freeboard*R/(L+R).
+    Reserve uses this sinkage with an assumed constant waterplane. Moment
+    equilibrium and buoyancy: OpenStax, University Physics Volume 1 (2016),
+    sections 12.1 and 14.4. Available reserve and soil recovery cap this
+    quasi-static hypothesis. No impact or energy balance is solved. Elevated
+    travel uses step-1 peak-to-static-recovery distance; absent recovery,
+    peak-to-trough travel is only a lower bound.
     """
     _check_state(hull_state, air_gap_m)
     wet = hull_state == 'in_water'
     initial = WATER_WEIGHT_KN_M3*p.waterplane_area_m2*p.draft_m if wet else 0.0
-    reserve = WATER_WEIGHT_KN_M3*p.waterplane_area_m2*(p.hull_depth_m-p.draft_m) if wet else 0.0
+    centre_sinkage_limit = ((p.hull_depth_m-p.draft_m)*p.leg_plan_radius_m
+                            /(p.hull_length_m+p.leg_plan_radius_m))
+    reserve = WATER_WEIGHT_KN_M3*p.waterplane_area_m2*centre_sinkage_limit if wet else 0.0
     recovery, trough_travel, loss = None, 0.0, 0.0
     if curve.events:
         event = curve.events[0]
