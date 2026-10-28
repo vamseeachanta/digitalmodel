@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the parametric ship-plate buckling sweep (digitalmodel.structural.buckling_parametric).
 # ABOUTME: Validates case counts, status/utilization consistency, JSON index round-trip, thickness monotonicity.
 """Tests for buckling_parametric."""
@@ -136,7 +139,8 @@ def test_index_round_trip(tiny_cfg, tmp_path):
     assert payload["index_status"][key] == r["status"]
 
 
-def test_default_sweep_case_count():
-    rows = run_sweep(DEFAULT_SHIP_PLATE_SWEEP)
-    assert len(rows) == DEFAULT_SHIP_PLATE_SWEEP.n_cases() == 972
-    assert {r["grade"] for r in rows} == {"Grade A", "AH36", "EH40"}
+def test_default_sweep_counts_inputs_but_rejects_biaxial_results():
+    assert DEFAULT_SHIP_PLATE_SWEEP.n_cases() == 972
+    assert set(DEFAULT_SHIP_PLATE_SWEEP.grades) == {"Grade A", "AH36", "EH40"}
+    with pytest.raises(ValueError, match="sigma_y"):
+        run_sweep(DEFAULT_SHIP_PLATE_SWEEP)

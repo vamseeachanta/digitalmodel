@@ -137,6 +137,11 @@ from digitalmodel.cathodic_protection import dnv_rp_b401
 
 For repo-wide current-state navigation, see [docs/maps/digitalmodel-operator-map.md](docs/maps/digitalmodel-operator-map.md). The canonical machine-readable routing registry is [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml).
 
+The [structural analysis module report](docs/reports/modules/structural_analysis/index.html)
+provides synthetic beam and ideal-column calculations, unit conventions and a
+public-method inventory. Design-code capacities remain `NOT_EVALUATED`; the
+report states the missing evidence and way forward.
+
 ## Development Roadmap
 
 See [ROADMAP.md](ROADMAP.md) for tiered development priorities driven by client project demand.

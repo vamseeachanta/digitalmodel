@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structural analysis module analysis</title><style>/* ===========================================================================
+   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
+   Ref: digitalmodel#1471 (epic) / #1472
+   ---------------------------------------------------------------------------
+   Do NOT hard-code these hex values in a page's own :root{}. Instead:
+       <link rel="stylesheet" href="../_assets/brand.css">
+   and consume the vars (var(--brand), var(--accent), ...). Change a brand
+   colour HERE, once, and every page follows. A CI guard (#1476) will fail
+   pages that redefine these tokens inline.
+
+   Canonical palette
+     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
+     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
+                                                          dark: #3fb6c9
+     status     go #12905a · caution #c07d12 · nogo #d8443f
+                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
+     container  --wrap 1240px  (console width; use a narrower width for prose)
+
+   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
+   PAGE, not here — keep this file to brand identity + shared primitives.
+   =========================================================================== */
+
+:root{
+  /* surfaces */
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  /* text */
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
+  --brand:#0b3d91; --accent:#0f8a7e;
+  /* status */
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  /* shape + layout */
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+/* explicit theme overrides win over the media default (toggle stamps data-theme) */
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+/* ---- back-compat aliases -------------------------------------------------
+   Legacy pages used different NAMES for the same brand roles. Aliasing them to
+   the canonical vars lets a migrated page drop its own :root and inherit brand
+   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
+   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
+   page should pin <html data-theme="light"> during migration unless it tokenises
+   every colour. */
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+/* ---- shared primitives -------------------------------------------------- */
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
+   so the brand mark always routes back to the capabilities index */
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+/* ---- accessibility baseline (#1475) --------------------------------------
+   Purely additive: every page that links brand.css gets a consistent, visible
+   keyboard-focus indicator (many pages strip the native ring via all:unset) and
+   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
+   page's own focus styles always win. No effect on the default (unfocused) render. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+body{margin:0;background:var(--bg,#f5f7fa);color:var(--ink,#142838);font-family:system-ui,sans-serif;line-height:1.6}
+main{max-width:1100px;margin:auto;padding:2rem}h1,h2,h3{line-height:1.25}h2{margin-top:2.5rem}
+table{width:100%;border-collapse:collapse;font-size:.9rem}td,th{padding:.6rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--edge)}
+code{overflow-wrap:anywhere}.table-wrap{overflow:auto}.equation,details{padding:1rem;background:var(--panel-2);margin:1rem 0}
+.status{border-left:4px solid var(--brand);padding-left:1rem}caption,figcaption{caption-side:bottom;text-align:left;padding:.6rem 0}
+@media print{main{padding:0}table{font-size:.75rem}h2{break-after:avoid}tr{break-inside:avoid}}
+</style></head><body class="hs-doc"><main>
+<header><p>Engineering mechanics · Synthetic worked basis · Revision A</p>
+<h1>Structural analysis module analysis</h1><p>Buckling, capacity and stress routines: units, worked mechanics and limits of design use.</p></header>
+<h2 id="s1">1. Executive Summary</h2>
+<p>The synthetic rectangular beam and ideal pin-ended column are calculated through the public module functions. The beam stress is compared with section equilibrium and integrated section properties; the column load is compared with the sine-mode eigenvalue [A–C]. The calculated values and units are presented in the Detailed Results table.</p>
+<p>The beam stress is 16.0 MPa at (+y, +z) and 4.0 MPa at (−y, −z). The separate ideal pin-ended critical load is 493480.2 N [A–C, E, F]. These values reproduce the independent mechanics expressions under the stated roundoff criterion [I]; design acceptance remains NOT_EVALUATED.</p>
+<p class="status">IDEAL_MECHANICS_CHECKED applies only to the two worked expressions and their stated cases. All source-unqualified code capacities are NOT_EVALUATED for design use. No standard buckling curve, reduction factor or combined-capacity rule is qualified by these examples [E–H].</p>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Independent synthetic beam and ideal-column calculations, units, method limits and reproducible report artifacts are added. Nonzero transverse plate stress is rejected because its effect was previously omitted from the returned utilization.</td></tr></tbody>
+<caption>Revision history for the issued synthetic module analysis.</caption></table>
+<h2 id="s2">2. Introduction</h2>
+<p>The review covers the public stress-state, stress-calculator, plate-buckling, column-buckling and member-capacity methods listed below [E–H]. Command-line wrappers, corrosion/metal-loss extensions, hull material tables and licensed solver workflows are outside the review. No solver is imported or executed by this builder.</p>
+<p>The result is a reproducible software mechanics example. Existing package statements of production readiness or code compliance do not establish the independent design qualification missing here.</p>
+<h2 id="s3">3. Design Data and Basis</h2>
+<p>All dimensional values and material fields below are SYNTHETIC demonstration inputs [A]. They do not represent a physical component or a certified material. Only the elastic modulus enters the column example; no material property enters the beam stress calculation. Yield strength, ultimate strength, Poisson ratio and density are unused constructor fields.</p>
+<div class="table-wrap"><table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source and qualification</th></tr></thead><tbody><tr><td>beam: width_m</td><td>0.2</td><td>m</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>beam: height_m</td><td>0.4</td><td>m</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>beam: axial_force_n</td><td>800000</td><td>N</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>beam: moment_y_nm</td><td>16000</td><td>N m</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>beam: moment_z_nm</td><td>8000</td><td>N m</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>beam: y_m</td><td>0.1</td><td>m</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>beam: z_m</td><td>0.2</td><td>m</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>column: youngs_modulus_mpa</td><td>200000</td><td>N/mm² (MPa)</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>column: i_mm4</td><td>1e+06</td><td>mm⁴</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>column: effective_length_mm</td><td>2000</td><td>mm</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>unused_material: yield_strength_mpa</td><td>250</td><td>MPa</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>unused_material: ultimate_strength_mpa</td><td>400</td><td>MPa</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>unused_material: poissons_ratio</td><td>0.3</td><td>1</td><td>[A] SYNTHETIC</td></tr>
+<tr><td>unused_material: density_kg_m3</td><td>7850</td><td>kg/m³</td><td>[A] SYNTHETIC</td></tr></tbody>
+<caption>Synthetic design data; unused material fields are identified explicitly [A].</caption></table></div>
+<p>The beam width lies along y and its height along z. Coordinates are centroidal principal axes. Positive axial force and the supplied positive moment contributions produce positive normal stress under the implemented algebraic convention. The opposite corner reverses both bending terms without reversing the axial term [B, E]. This is distinct from the compression-positive convention of the buckling and combined-loading APIs.</p>
+<p>The column is straight, prismatic, elastic and ideally pin ended, without initial eccentricity or imperfection. Effective length is prescribed rather than calculated from a frame. Its synthetic section is separate from the beam rectangle [A, C].</p>
+<h2 id="s4">4. Analysis Methodology</h2>
+<h3>Independent beam basis</h3>
+<p>For width b and height h, integration over −b/2 ≤ y ≤ b/2 and −h/2 ≤ z ≤ h/2 gives the area and second moments [B]:</p>
+<div class="equation">A = ∫∫ dA = bh; I_y = ∫∫ z² dA = bh³/12; I_z = ∫∫ y² dA = hb³/12 [B].</div>
+<p>The denominator follows from ∫z² dz = z³/3 evaluated at the symmetric bounds, with the remaining width integration. Normal-force and moment equilibrium then give the stress field in the module's signed convention [B, E]:</p>
+<div class="equation">σ(y,z) = N/A + M_y z/I_y + M_z y/I_z [B].</div>
+<p>SI geometry in metres with forces in newtons and moments in newton metres produces pascals, converted to MPa by division by 10⁶ [D]. An independent millimetre calculation uses N mm, mm² and mm⁴ and gives N/mm² = MPa. One metre equals 10³ millimetres; area and second moments therefore convert with the second and fourth powers, respectively [D]. Each term is isolated through a public beam call before the two corner calls [E, I].</p>
+<h3>Independent column basis</h3>
+<p>For a constant flexural rigidity EI, equilibrium gives the fourth-order displacement equation. A sine mode satisfies both zero displacement and zero bending moment at the pin ends [C]:</p>
+<div class="equation">EI v'''' + P v'' = 0; v = sin(πx/L); (EI π⁴/L⁴ − P π²/L²)v = 0; P = π² EI/L² [C].</div>
+<p>Substitution of the synthetic column inputs reduces EI/L² to 50000 N, hence P = 50000π² N. Doubling L multiplies its squared denominator by four and reduces P to one quarter [A, C]. The public column API uses elastic modulus in N/mm², second moment in mm⁴ and effective length in mm; it returns N [F]. This is an ideal elastic eigenvalue, not a design resistance.</p>
+<p>The independent assertions allow 32 binary64 machine epsilons in relative error [I]. This allowance bounds roundoff in the small number of products, divisions and π evaluations; it is not an allowance for model error, geometry uncertainty or design-code deviation. Relative error is used for these nonzero references. No numerical tolerance is established for design qualification.</p>
+<h3>Public-method inventory</h3><div class="table-wrap"><table><thead><tr><th>Method</th><th>Input → output units</th><th>Qualification in this report</th><th>Limits and evidence gap</th><th>Source</th></tr></thead><tbody><tr><td><code>StressState.von_mises</code></td><td>MPa → MPa</td><td>NOT_EVALUATED</td><td>Equivalent stress only; yield criterion and material basis require qualification.</td><td>src/digitalmodel/structural/structural_analysis/models.py</td></tr>
+<tr><td><code>StressState.principal_stresses</code></td><td>MPa → MPa</td><td>NOT_EVALUATED</td><td>Symmetric tensor eigenvalues; independent tensor cases remain outside this worked basis.</td><td>src/digitalmodel/structural/structural_analysis/models.py</td></tr>
+<tr><td><code>StressState.max_shear</code></td><td>MPa → MPa</td><td>NOT_EVALUATED</td><td>Half principal range; independent tensor cases remain outside this worked basis.</td><td>src/digitalmodel/structural/structural_analysis/models.py</td></tr>
+<tr><td><code>StressCalculator.beam_stress</code></td><td>N, N m, m², m⁴, m → MPa</td><td>IDEAL_MECHANICS_CHECKED</td><td>Linear centroidal principal-axis beam theory; prescribed moment signs and two corners only; no local stress or stability check.</td><td>src/digitalmodel/structural/structural_analysis/stress_calculator.py</td></tr>
+<tr><td><code>StressCalculator.shear_stress</code></td><td>N, m³, m⁴, m → MPa</td><td>NOT_EVALUATED</td><td>VQ/(It); first moment, shear path and applicable section require independent evidence.</td><td>src/digitalmodel/structural/structural_analysis/stress_calculator.py</td></tr>
+<tr><td><code>StressCalculator.torsional_stress</code></td><td>N m, m, m⁴ → MPa</td><td>NOT_EVALUATED</td><td>Tr/J requires circular elastic torsion; arbitrary noncircular and warping torsion are not established.</td><td>src/digitalmodel/structural/structural_analysis/stress_calculator.py</td></tr>
+<tr><td><code>StressCalculator.hoop_stress</code></td><td>MPa, m, m → MPa</td><td>NOT_EVALUATED</td><td>Thin-cylinder membrane expression; thinness, geometry and pressure basis require confirmation.</td><td>src/digitalmodel/structural/structural_analysis/stress_calculator.py</td></tr>
+<tr><td><code>StressCalculator.longitudinal_stress</code></td><td>MPa, m, m → MPa</td><td>NOT_EVALUATED</td><td>Closed-end thin-cylinder membrane expression; end restraint and wall assumptions require confirmation.</td><td>src/digitalmodel/structural/structural_analysis/stress_calculator.py</td></tr>
+<tr><td><code>PlateBucklingAnalyzer.elastic_buckling_stress</code></td><td>MPa, mm, dimensionless → MPa</td><td>NOT_EVALUATED</td><td>Only simply_supported is supported; aspect-ratio treatment is approximate, not a general finite-plate modal search.</td><td>src/digitalmodel/structural/structural_analysis/buckling.py</td></tr>
+<tr><td><code>PlateBucklingAnalyzer.reduced_slenderness</code></td><td>MPa, mm → 1</td><td>NOT_EVALUATED</td><td>Inherits plate elastic approximation and material yield input; code basis remains unqualified.</td><td>src/digitalmodel/structural/structural_analysis/buckling.py</td></tr>
+<tr><td><code>PlateBucklingAnalyzer.johnson_ostenfeld</code></td><td>MPa → MPa</td><td>NOT_EVALUATED</td><td>Inelastic interpolation, thresholds and applicability require a verified source and independent example.</td><td>src/digitalmodel/structural/structural_analysis/buckling.py</td></tr>
+<tr><td><code>PlateBucklingAnalyzer.check_plate_buckling</code></td><td>MPa, mm, dimensionless → MPa, 1</td><td>NOT_EVALUATED</td><td>Nonzero sigma_y is rejected; compression/shear interaction and shear correction require qualification; reversed compression signs are not screened.</td><td>src/digitalmodel/structural/structural_analysis/buckling.py</td></tr>
+<tr><td><code>ColumnBucklingAnalyzer.euler_buckling_load</code></td><td>MPa, mm⁴, mm → N</td><td>IDEAL_MECHANICS_CHECKED</td><td>Ideal straight elastic pin-ended column; prescribed effective length; imperfections, yielding and code curves are excluded.</td><td>src/digitalmodel/structural/structural_analysis/buckling.py</td></tr>
+<tr><td><code>ColumnBucklingAnalyzer.slenderness_ratio</code></td><td>mm, mm → 1</td><td>NOT_EVALUATED</td><td>Effective length and gyration radius must be positive and independently established; this ratio is not worked here.</td><td>src/digitalmodel/structural/structural_analysis/buckling.py</td></tr>
+<tr><td><code>ColumnBucklingAnalyzer.reduction_factor</code></td><td>1 → 1</td><td>NOT_EVALUATED</td><td>An unknown curve silently falls back to the default curve; imperfection factors and branch behavior need source qualification.</td><td>src/digitalmodel/structural/structural_analysis/buckling.py</td></tr>
+<tr><td><code>ColumnBucklingAnalyzer.check_column_buckling</code></td><td>N, mm², mm⁴, mm, MPa → MPa, 1</td><td>NOT_EVALUATED</td><td>Inherits reduction-factor assumptions; effective length, curve selection and material factors require design evidence.</td><td>src/digitalmodel/structural/structural_analysis/buckling.py</td></tr>
+<tr><td><code>MemberCapacityChecker.check_tension_member</code></td><td>N, mm², MPa, dimensionless → N, 1</td><td>NOT_EVALUATED</td><td>Gross-yield/net-section model; coefficients, factors, connection geometry and material strengths require source qualification.</td><td>src/digitalmodel/structural/structural_analysis/capacity.py</td></tr>
+<tr><td><code>MemberCapacityChecker.check_combined_loading</code></td><td>N, N mm, mm², mm³, MPa → N, 1</td><td>NOT_EVALUATED</td><td>Existing simplified linear interaction; signed moments can cancel, tension is omitted, and supplied critical loads are not independently qualified.</td><td>src/digitalmodel/structural/structural_analysis/capacity.py</td></tr></tbody>
+<caption>Reviewed public mechanics methods. Dimensionless quantities use unit 1. NOT_EVALUATED means no independent qualification is established by this worked basis [E–I].</caption></table></div>
+<h2 id="s5">5. Detailed Results</h2>
+<p>Every displayed value below is calculated from the committed synthetic inputs. Stress terms and column loads are returned by public functions; section properties follow the independent rectangle integrals [A–C, E, F]. Scientific notation is used for second moments; the length ratio is displayed as a percentage. Unrounded values are retained in the embedded payload and used in assertions [I].</p>
+<div class="table-wrap"><table><thead><tr><th>Quantity and governing case</th><th>Value</th><th>Unit</th><th>Source</th><th>Qualification</th></tr></thead><tbody><tr><td>Rectangle area</td><td data-value="beam.area_m2">0.08</td><td>m²</td><td>[A, B, E]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Second moment about y</td><td data-value="beam.i_y_m4">1.1e-03</td><td>m⁴</td><td>[A, B, E]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Second moment about z</td><td data-value="beam.i_z_m4">2.7e-04</td><td>m⁴</td><td>[A, B, E]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Axial stress term</td><td data-value="beam.axial_mpa">10.0</td><td>MPa</td><td>[A, B, E]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Bending stress term about y</td><td data-value="beam.bending_y_mpa">3.0</td><td>MPa</td><td>[A, B, E]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Bending stress term about z</td><td data-value="beam.bending_z_mpa">3.0</td><td>MPa</td><td>[A, B, E]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Stress at (+y, +z)</td><td data-value="beam.positive_corner_mpa">16.0</td><td>MPa</td><td>[A, B, E]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Stress at (−y, −z)</td><td data-value="beam.negative_corner_mpa">4.0</td><td>MPa</td><td>[A, B, E]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Ideal pin-ended critical load</td><td data-value="column.load_n">493480.2</td><td>N</td><td>[A, C, F]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Critical load at doubled length</td><td data-value="column.double_length_load_n">123370.1</td><td>N</td><td>[A, C, F]</td><td>IDEAL_MECHANICS_CHECKED</td></tr>
+<tr><td>Doubled-length load / original load</td><td data-value="column.length_load_ratio">25.0</td><td>%</td><td>[A, C, F]</td><td>IDEAL_MECHANICS_CHECKED</td></tr></tbody>
+<caption>Worked numbers from public calculations with independent equilibrium and eigenfunction checks [A–C, I].</caption></table></div>
+<p>The beam has a uniform axial term and equal bending contributions at the positive corner. The opposite corner retains positive stress because the axial term exceeds the sum of the reversed bending terms [B]. No allowable stress or design utilization is calculated. The column load is a bifurcation eigenvalue for the ideal case; it is not compared with a factored design load [C].</p>
+<h2 id="s6">6. Key Findings</h2>
+<p>The worked functions reproduce the independent mechanics values within the roundoff-only criterion for the synthetic cases [I]. This establishes unit conversion and sign behavior at the stated points, plus inverse-square effective-length scaling. It does not establish general member design conformity.</p>
+<p>Review found that transverse plate stress sigma_y was accepted but omitted from utilization. The method now raises ValueError for nonzero sigma_y, and the regression demonstrates rejection before any utilization is returned [F, I]. This rejection also propagates through panel, grillage and parametric-sweep callers that pass nonzero transverse stress. The former biaxial grillage and default-sweep tests are changed to require rejection because their returned results omitted transverse plate interaction. The default sweep contains such unsupported cases and now raises; a supported load set or a qualified biaxial model is required before that sweep can complete. Existing zero-transverse-stress behavior is retained.</p>
+<h2 id="s7">7. Limitations and Not Covered</h2>
+<p>All code-derived plate resistance, column reduction and member capacities remain NOT_EVALUATED. Source editions, clause applicability, factors, section class, imperfections, residual stress, effective lengths and independent published capacity examples are absent. No numerical value from a licensed publication is reproduced or inferred.</p>
+<p>The plate elastic aspect-ratio expression is approximate and does not search longitudinal mode numbers. The combined plate calculation supports no nonzero transverse stress. The column reduction routine accepts an unknown curve by silently selecting its default. The existing simplified linear combined-capacity formula can cancel signed moment contributions and omits axial tension from interaction [F, G]. These unresolved methods are inventoried, not qualified or silently corrected.</p>
+<p>Domain validation is incomplete: nonpositive geometry, nonfinite inputs and invalid material or factor values are not comprehensively rejected. Zero or negative denominators may raise arithmetic errors or produce meaningless software dispositions [E–H]. The worked inputs avoid these domains; design acceptance cannot rely on their current handling.</p>
+<h2 id="s8">8. Recommendations</h2>
+<p>The two worked cases may be used as reproducible software regression examples under the stated ideal assumptions. Before design use, the intended standard edition, clause titles, material certificates, section geometry, restraint/effective-length basis, load combinations and factor selection should be supplied and independently reviewed.</p>
+<p>Plate modal behavior and transverse interaction require a defined supported model before implementation. Unknown column curves and signed member interactions require explicit API contracts and independent failing examples before correction. Capacity comparisons should then use an independently published worked case with its governing criteria. The tracking issue remains open while these requested methods remain unqualified.</p>
+<h2 id="s9">9. References and Appendices</h2>
+<p>[A] The INPUTS mapping in the committed builder is the authoritative synthetic input record. Dataset identity: structural-analysis-synthetic; revision A; computational owner: digitalmodel. Readiness is limited to the ideal software examples; physical design readiness is unavailable. Source and artifact SHA-256 digests are retained in manifest.json. A changed input, implementation or criterion requires a rebuild and renewed review.</p>
+<p>[B] Independent rectangle and beam derivation in this report: direct integration of squared distances and axial/moment equilibrium. Geometry and force values are synthetic [A]; coefficients follow the shown integrals rather than a design standard.</p>
+<p>[C] Independent column derivation in this report: the homogeneous elastic beam-column differential equation and its pin-ended sine eigenfunction. The length-doubling comparison follows algebraically.</p>
+<p>[D] SI prefix definitions: mega denotes 10⁶ and milli denotes 10⁻³. A pascal is N/m²; consequently N/mm² is MPa. Percent denotes one hundredth. These are unit identities, not empirical or code factors.</p>
+<p>[E] stress_calculator.py: StressCalculator; [F] buckling.py: PlateBucklingAnalyzer and ColumnBucklingAnalyzer; [G] capacity.py: MemberCapacityChecker; [H] models.py: StressState and geometry/material dataclasses; [I] the two hand-value/report test files and the existing buckling/capacity and structural unit tests. The exact repository sources are pinned by digest below. Standard labels in source code are identifiers, not independently verified citations or qualification evidence.</p>
+<details><summary>Exact source-byte register</summary><ul><li><code>scripts/reports/build_structural_analysis_module_report.py</code>; SHA-256: 340399dbf42b89810092a60201b78b84edf97e5cb285667e318525ccbf50887c</li>
+<li><code>src/digitalmodel/structural/structural_analysis/__init__.py</code>; SHA-256: ef3283fb44c2309252a92df3d7c935804d38eb1d0134b1bf16e9382b14b209c5</li>
+<li><code>src/digitalmodel/structural/structural_analysis/models.py</code>; SHA-256: 64eea0ba11ce592b4212723e4ef7905f654ffa98966a3b2617ad2c0a3e495c2e</li>
+<li><code>src/digitalmodel/structural/structural_analysis/stress_calculator.py</code>; SHA-256: 643438f6746021ae5d222148fe6c09d5556d15f8360f2972a14e57aea098c94b</li>
+<li><code>src/digitalmodel/structural/structural_analysis/buckling.py</code>; SHA-256: a5d99f90e3ec541ed40526d7f3e09890df4ccf654150139490ab081203a2d51f</li>
+<li><code>src/digitalmodel/structural/structural_analysis/capacity.py</code>; SHA-256: 47f00ff3cb79744360ebe97528f51232fd84e4285b66b4d19ac4719aa4be2ec1</li>
+<li><code>src/digitalmodel/codes.py</code>; SHA-256: 339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54</li>
+<li><code>tests/structural/structural_analysis/test_buckling_capacity.py</code>; SHA-256: c118b3ed37c6bdf2fa8a5ca697cf49e16ffb14115dfd33f92345673dd76e2df2</li>
+<li><code>tests/structural/structural_analysis/test_structural_analysis_unit.py</code>; SHA-256: e1cf77f9358e1b20a59202646f2386198feaa6b63f9753f7e50c7ac75ee549c4</li>
+<li><code>tests/structural/structural_analysis/test_module_report_hand_values.py</code>; SHA-256: 9ac0c08754953619e2c38f62121f017381d7fe050ddf83e1e8c53341cd48c991</li>
+<li><code>tests/structural/structural_analysis/test_grillage_buckling.py</code>; SHA-256: dd3f052b58ca1e3caf92ad3e442a245fe611c742b52ea4793a1e41a5520cb32e</li>
+<li><code>src/digitalmodel/structural/buckling_parametric.py</code>; SHA-256: e340ab7bf1ae23f1dbd80b65f87a9477c17ffcef9bddfebf044227674a92e132</li>
+<li><code>tests/structural/test_buckling_parametric.py</code>; SHA-256: 5d6d005dd1ba857d1ffe50994a9b823a306ab9685142f0ee62fd57758229b344</li>
+<li><code>tests/reporting/test_structural_analysis_module_report.py</code>; SHA-256: 0498e6f9fa639f85286c0dc1d9fff958772230ac9cf0754c9e9b139a2ecf26dd</li>
+<li><code>docs/api/_assets/brand.css</code>; SHA-256: a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</li></ul></details>
+<p>Regenerate with <code>PYTHONPATH=src python scripts/reports/build_structural_analysis_module_report.py --scratch "$TMPDIR/structural-analysis"</code>. NumPy is required. Scratch must resolve outside the checkout; calculations are in memory and no intermediates are written. Use <code>--output-dir</code> for an independent delivery directory. The manifest hashes the three other deliverables and all listed sources; its own digest is intentionally excluded to avoid recursive hashing.</p>
+<details id="changes-panel"><summary>Engineering changes</summary><p>Independent synthetic beam and ideal-column calculations, units, method limits and reproducible report artifacts are added. Nonzero transverse plate stress is rejected because its effect was previously omitted from the returned utilization.</p></details>
+<h2 id="s10">10. Acronyms and Review Notes</h2>
+<p>SI: International System of Units. MPa: megapascal. API: application programming interface. E: elastic modulus; I: second moment of area; L: effective length; P: axial bifurcation load; N: applied axial force; M: bending moment. Unit 1 denotes a dimensionless value.</p>
+<p>Review status: independent design-code qualification is NOT_EVALUATED. Numerical assertions, deterministic rebuilds and digest checks establish only the explicitly tested software behavior. The way forward is the source and design-evidence assessment specified above.</p>
+</main><script id="calculation" type="application/json">{
+  "basis": "SYNTHETIC",
+  "beam": {
+    "area_m2": 0.08000000000000002,
+    "axial_mpa": 9.999999999999998,
+    "bending_y_mpa": 2.999999999999999,
+    "bending_z_mpa": 2.999999999999999,
+    "i_y_m4": 0.001066666666666667,
+    "i_z_m4": 0.00026666666666666673,
+    "negative_corner_mpa": 4.0,
+    "positive_corner_mpa": 15.999999999999996
+  },
+  "column": {
+    "double_length_load_n": 123370.05501361698,
+    "length_load_ratio": 0.25,
+    "load_n": 493480.2200544679
+  },
+  "criteria_revision": "A",
+  "inputs": {
+    "beam": {
+      "axial_force_n": 800000,
+      "height_m": 0.4,
+      "moment_y_nm": 16000,
+      "moment_z_nm": 8000,
+      "width_m": 0.2,
+      "y_m": 0.1,
+      "z_m": 0.2
+    },
+    "column": {
+      "effective_length_mm": 2000,
+      "i_mm4": 1000000,
+      "youngs_modulus_mpa": 200000
+    },
+    "unused_material": {
+      "density_kg_m3": 7850,
+      "poissons_ratio": 0.3,
+      "ultimate_strength_mpa": 400,
+      "yield_strength_mpa": 250
+    }
+  },
+  "methods": [
+    {
+      "limits": "Equivalent stress only; yield criterion and material basis require qualification.",
+      "method": "StressState.von_mises",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/models.py",
+      "units": "MPa → MPa"
+    },
+    {
+      "limits": "Symmetric tensor eigenvalues; independent tensor cases remain outside this worked basis.",
+      "method": "StressState.principal_stresses",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/models.py",
+      "units": "MPa → MPa"
+    },
+    {
+      "limits": "Half principal range; independent tensor cases remain outside this worked basis.",
+      "method": "StressState.max_shear",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/models.py",
+      "units": "MPa → MPa"
+    },
+    {
+      "limits": "Linear centroidal principal-axis beam theory; prescribed moment signs and two corners only; no local stress or stability check.",
+      "method": "StressCalculator.beam_stress",
+      "qualification": "IDEAL_MECHANICS_CHECKED",
+      "source": "src/digitalmodel/structural/structural_analysis/stress_calculator.py",
+      "units": "N, N m, m², m⁴, m → MPa"
+    },
+    {
+      "limits": "VQ/(It); first moment, shear path and applicable section require independent evidence.",
+      "method": "StressCalculator.shear_stress",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/stress_calculator.py",
+      "units": "N, m³, m⁴, m → MPa"
+    },
+    {
+      "limits": "Tr/J requires circular elastic torsion; arbitrary noncircular and warping torsion are not established.",
+      "method": "StressCalculator.torsional_stress",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/stress_calculator.py",
+      "units": "N m, m, m⁴ → MPa"
+    },
+    {
+      "limits": "Thin-cylinder membrane expression; thinness, geometry and pressure basis require confirmation.",
+      "method": "StressCalculator.hoop_stress",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/stress_calculator.py",
+      "units": "MPa, m, m → MPa"
+    },
+    {
+      "limits": "Closed-end thin-cylinder membrane expression; end restraint and wall assumptions require confirmation.",
+      "method": "StressCalculator.longitudinal_stress",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/stress_calculator.py",
+      "units": "MPa, m, m → MPa"
+    },
+    {
+      "limits": "Only simply_supported is supported; aspect-ratio treatment is approximate, not a general finite-plate modal search.",
+      "method": "PlateBucklingAnalyzer.elastic_buckling_stress",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/buckling.py",
+      "units": "MPa, mm, dimensionless → MPa"
+    },
+    {
+      "limits": "Inherits plate elastic approximation and material yield input; code basis remains unqualified.",
+      "method": "PlateBucklingAnalyzer.reduced_slenderness",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/buckling.py",
+      "units": "MPa, mm → 1"
+    },
+    {
+      "limits": "Inelastic interpolation, thresholds and applicability require a verified source and independent example.",
+      "method": "PlateBucklingAnalyzer.johnson_ostenfeld",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/buckling.py",
+      "units": "MPa → MPa"
+    },
+    {
+      "limits": "Nonzero sigma_y is rejected; compression/shear interaction and shear correction require qualification; reversed compression signs are not screened.",
+      "method": "PlateBucklingAnalyzer.check_plate_buckling",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/buckling.py",
+      "units": "MPa, mm, dimensionless → MPa, 1"
+    },
+    {
+      "limits": "Ideal straight elastic pin-ended column; prescribed effective length; imperfections, yielding and code curves are excluded.",
+      "method": "ColumnBucklingAnalyzer.euler_buckling_load",
+      "qualification": "IDEAL_MECHANICS_CHECKED",
+      "source": "src/digitalmodel/structural/structural_analysis/buckling.py",
+      "units": "MPa, mm⁴, mm → N"
+    },
+    {
+      "limits": "Effective length and gyration radius must be positive and independently established; this ratio is not worked here.",
+      "method": "ColumnBucklingAnalyzer.slenderness_ratio",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/buckling.py",
+      "units": "mm, mm → 1"
+    },
+    {
+      "limits": "An unknown curve silently falls back to the default curve; imperfection factors and branch behavior need source qualification.",
+      "method": "ColumnBucklingAnalyzer.reduction_factor",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/buckling.py",
+      "units": "1 → 1"
+    },
+    {
+      "limits": "Inherits reduction-factor assumptions; effective length, curve selection and material factors require design evidence.",
+      "method": "ColumnBucklingAnalyzer.check_column_buckling",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/buckling.py",
+      "units": "N, mm², mm⁴, mm, MPa → MPa, 1"
+    },
+    {
+      "limits": "Gross-yield/net-section model; coefficients, factors, connection geometry and material strengths require source qualification.",
+      "method": "MemberCapacityChecker.check_tension_member",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/capacity.py",
+      "units": "N, mm², MPa, dimensionless → N, 1"
+    },
+    {
+      "limits": "Existing simplified linear interaction; signed moments can cancel, tension is omitted, and supplied critical loads are not independently qualified.",
+      "method": "MemberCapacityChecker.check_combined_loading",
+      "qualification": "NOT_EVALUATED",
+      "source": "src/digitalmodel/structural/structural_analysis/capacity.py",
+      "units": "N, N mm, mm², mm³, MPa → N, 1"
+    }
+  ],
+  "units": {
+    "beam": {
+      "area_m2": "m²",
+      "axial_mpa": "MPa",
+      "bending_y_mpa": "MPa",
+      "bending_z_mpa": "MPa",
+      "i_y_m4": "m⁴",
+      "i_z_m4": "m⁴",
+      "negative_corner_mpa": "MPa",
+      "positive_corner_mpa": "MPa"
+    },
+    "column": {
+      "double_length_load_n": "N",
+      "length_load_ratio": "1",
+      "load_n": "N"
+    }
+  }
+}
+</script></body></html>

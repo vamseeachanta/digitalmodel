@@ -1,0 +1,30 @@
+{
+  "artifacts": {
+    "README.md": "d93ad109dac5de4c35d312e3781b852d06f6370f1430d016ce5e2e37bc7ffdf9",
+    "changes.json": "690844d9cdd57ced7ce390cafefb899602edbf025b3c889310562a69d7403b76",
+    "index.html": "033c83e2f059d59407379336a81f19ddc468dccbe9ec904691a184d86fdfe16f"
+  },
+  "basis": "SYNTHETIC",
+  "criteria_revision": "A",
+  "dataset_id": "structural-analysis-synthetic",
+  "digest_convention": "SHA-256 of exact UTF-8 LF bytes; manifest self-digest excluded.",
+  "owner_repo": "digitalmodel",
+  "schema_version": 1,
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "scripts/reports/build_structural_analysis_module_report.py": "340399dbf42b89810092a60201b78b84edf97e5cb285667e318525ccbf50887c",
+    "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
+    "src/digitalmodel/structural/buckling_parametric.py": "e340ab7bf1ae23f1dbd80b65f87a9477c17ffcef9bddfebf044227674a92e132",
+    "src/digitalmodel/structural/structural_analysis/__init__.py": "ef3283fb44c2309252a92df3d7c935804d38eb1d0134b1bf16e9382b14b209c5",
+    "src/digitalmodel/structural/structural_analysis/buckling.py": "a5d99f90e3ec541ed40526d7f3e09890df4ccf654150139490ab081203a2d51f",
+    "src/digitalmodel/structural/structural_analysis/capacity.py": "47f00ff3cb79744360ebe97528f51232fd84e4285b66b4d19ac4719aa4be2ec1",
+    "src/digitalmodel/structural/structural_analysis/models.py": "64eea0ba11ce592b4212723e4ef7905f654ffa98966a3b2617ad2c0a3e495c2e",
+    "src/digitalmodel/structural/structural_analysis/stress_calculator.py": "643438f6746021ae5d222148fe6c09d5556d15f8360f2972a14e57aea098c94b",
+    "tests/reporting/test_structural_analysis_module_report.py": "0498e6f9fa639f85286c0dc1d9fff958772230ac9cf0754c9e9b139a2ecf26dd",
+    "tests/structural/structural_analysis/test_buckling_capacity.py": "c118b3ed37c6bdf2fa8a5ca697cf49e16ffb14115dfd33f92345673dd76e2df2",
+    "tests/structural/structural_analysis/test_grillage_buckling.py": "dd3f052b58ca1e3caf92ad3e442a245fe611c742b52ea4793a1e41a5520cb32e",
+    "tests/structural/structural_analysis/test_module_report_hand_values.py": "9ac0c08754953619e2c38f62121f017381d7fe050ddf83e1e8c53341cd48c991",
+    "tests/structural/structural_analysis/test_structural_analysis_unit.py": "e1cf77f9358e1b20a59202646f2386198feaa6b63f9753f7e50c7ac75ee549c4",
+    "tests/structural/test_buckling_parametric.py": "5d6d005dd1ba857d1ffe50994a9b823a306ab9685142f0ee62fd57758229b344"
+  }
+}
