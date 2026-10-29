@@ -14,11 +14,10 @@ References:
 """
 
 import math
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
-import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -106,22 +105,52 @@ class ScatterDiagram(BaseModel):
 # ---------------------------------------------------------------------------
 
 class OperabilityInput(BaseModel):
-    """Input for operability calculation.
+    """Input for wave-only operability calculation.
 
-    Reference: DNV-OS-H101 Section 3.
+    Only Hs and Tp criteria can be evaluated from an Hs/Tp scatter diagram.
+    Non-None wind/current limits are rejected because their joint occurrence
+    data are unavailable; omitting them requests a wave-only assessment.
     """
     hs_limit: float = Field(2.5, gt=0.0, description="Operational Hs limit (m)")
     tp_limit: Optional[float] = Field(None, gt=0.0, description="Operational Tp limit (s)")
-    wind_limit_mps: Optional[float] = Field(None, gt=0.0, description="Wind speed limit (m/s)")
-    current_limit_mps: Optional[float] = Field(None, gt=0.0, description="Current speed limit (m/s)")
+    wind_limit_mps: Optional[float] = Field(
+        None, gt=0.0,
+        description="Wind speed limit (m/s); non-None rejected by wave-only model",
+    )
+    current_limit_mps: Optional[float] = Field(
+        None, gt=0.0,
+        description="Current speed limit (m/s); non-None rejected by wave-only model",
+    )
     scatter: ScatterDiagram = Field(default_factory=ScatterDiagram)
 
-    def calculate_operability(self) -> Dict[str, float]:
-        """Calculate overall operability percentage.
+    @model_validator(mode="after")
+    def _require_wave_only_limits(self) -> "OperabilityInput":
+        """Reject unsupported active criteria rather than silently ignore them."""
+        unsupported = [
+            name for name in ("wind_limit_mps", "current_limit_mps")
+            if getattr(self, name) is not None
+        ]
+        if unsupported:
+            raise ValueError(
+                "Cannot evaluate " + ", ".join(unsupported)
+                + " from an Hs/Tp scatter diagram. OperabilityInput supports "
+                "only hs_limit and tp_limit. Omit wind/current limits only for "
+                "a wave-only assessment; combined criteria require joint "
+                "wave, wind and current occurrence data."
+            )
+        return self
+
+    def calculate_operability(self) -> Dict[str, Optional[float]]:
+        """Calculate wave-only operability percentage.
+
+        Raises:
+            ValueError: A wind/current limit is active, including one added
+                through assignment or a trusted-data model copy.
 
         Returns:
-            Dict with operability metrics.
+            Dict with wave-only operability metrics.
         """
+        self._require_wave_only_limits()
         prob = self.scatter.total_probability_below(self.hs_limit, self.tp_limit)
 
         return {

@@ -218,6 +218,7 @@ def derive_double_body_case(
             safety_factor=config.cell_safety_factor,
             cap=config.max_global_cells,
             blocks=blocks,
+            surface_regions=config.surface_regions,
         ),
         turbulence=derive_inlet_turbulence(
             config.velocity,

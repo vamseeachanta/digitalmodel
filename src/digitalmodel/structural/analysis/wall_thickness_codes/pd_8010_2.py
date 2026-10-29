@@ -154,25 +154,43 @@ class Pd80102Strategy:
         p_el: float, p_p: float, f_0: float, D: float, t: float,
         tol: float = 1.0, max_iter: int = 200,
     ) -> float:
-        """Solve Timoshenko cubic for characteristic collapse pressure."""
+        """Return the physical cubic root within an absolute tolerance in Pa.
+
+        For positive characteristic pressures and nonnegative imperfection,
+        the admissible root is bounded by the lower characteristic pressure
+        (issue #1920). Iteration exhaustion raises instead of returning an
+        unconverged pressure.
+        """
+        if not math.isfinite(tol) or tol <= 0:
+            raise ValueError("tol must be finite and positive")
+
+        lo, hi = 0.0, min(p_el, p_p)
+        if f_0 == 0:
+            return hi
+
         coeff = p_el * p_p * f_0 * D / t
 
         def g(pc):
             return (pc - p_el) * (pc**2 - p_p**2) - pc * coeff
 
-        lo, hi = 0.0, max(p_el, p_p) * 1.5
-        if g(lo) * g(hi) > 0:
-            hi = max(p_el, p_p) * 3.0
-
+        # g(0) = p_el*p_p**2 > 0; g(hi) = -hi*coeff < 0.
+        # This isolates the smallest positive root for either pressure ordering.
         for _ in range(max_iter):
+            if hi - lo <= tol:
+                return (lo + hi) / 2
             mid = (lo + hi) / 2
-            if hi - lo < tol:
+            residual = g(mid)
+            if residual == 0:
                 return mid
-            if g(mid) > 0:
+            if residual > 0:
                 lo = mid
             else:
                 hi = mid
-        return (lo + hi) / 2
+
+        # The last permitted bisection may have achieved the requested width.
+        if hi - lo <= tol:
+            return (lo + hi) / 2
+        raise RuntimeError("Collapse pressure solver did not converge")
 
     def _check_propagation(self, geometry, material, loads):
         """PD 8010-2 propagation buckling.

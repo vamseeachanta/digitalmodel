@@ -252,5 +252,90 @@ def test_documented_example_matches_independent_hand_calculation():
     assert report["cards"] == [{
         "point_count": 5, "surface_stroke": 4, "surface_load_range": 20,
         "surface_to_declared_stroke_ratio": 1, "downhole_status": "COPIED",
+        "acquisition": {
+            "timestamp": "2020-01-01T00:00:00.1234567Z", "card_type": "Current",
+            "stroke_period": 6, "spm": 10, "stroke_length": 4,
+        },
     }]
+    assert report["solver_validation"] == "NOT_EVALUATED"
+
+
+@pytest.mark.parametrize("point_count", [132, 133, 134])
+@pytest.mark.parametrize("copied_downhole", [False, True])
+def test_complete_controller_schema_with_variable_sample_counts(
+    point_count, copied_downhole,
+):
+    """Hand: repeated [0,2,4,2] spans 4; [10,30,30,10] ranges 20.
+
+    Schema and sample counts: the pinned 2020 exports in scada-export.md,
+    source revision 237d867166688ab454e50efacabf959cbb7dc73b. All sample
+    values and metadata here are original synthetic inputs. Repeating the
+    four-point pattern and truncating to the requested length leaves extrema
+    0/4 and 10/30 in every case; a declared stroke of 4 gives 4/4 = 1.
+    Empty paired downhole cells are MISSING; equal arrays are COPIED.
+    """
+    position = [(0, 2, 4, 2)[index % 4] for index in range(point_count)]
+    load = [(10, 30, 30, 10)[index % 4] for index in range(point_count)]
+    downhole = ",".join(map(str, position)) if copied_downhole else ""
+    text = export_text(**{
+        "Surface Positions": ",".join(map(str, position)),
+        "Surface Loads": ",".join(map(str, load)),
+        "Downhole Positions": downhole,
+        "Downhole Loads": downhole,
+        "Hours Since Gauge Off": "0",
+        "Surface Max Load": "30",
+        "Surface Min Load": "10",
+        "PositionLimit": "4",
+    })
+    card = read_scada_export(io.StringIO(text))[0]
+    assert len(card.position) == point_count
+    assert card.position == tuple(position)
+    assert card.load == tuple(load)
+    assert (card.surface_stroke, card.load_range, card.stroke_ratio) == (4, 20, 1)
+    assert card.downhole_status == ("COPIED" if copied_downhole else "MISSING")
+    assert summarize_cards([card])["solver_validation"] == "NOT_EVALUATED"
+
+
+def test_acquisition_inventory_is_opt_in_and_preserves_order_and_precision():
+    """Metadata is copied from synthetic inputs, with no numeric inference.
+
+    Hand: the second row omits rate, period and stroke, so each stays null.
+    Its earlier time must not reorder the records; fractional timestamp digits
+    must survive even though Python datetime has lower precision.
+    """
+    first = read_one(**{"Card Time": "2020-01-02T00:00:00.1234567Z"})
+    second = read_one(**{
+        "Card Time": "2020-01-01T01:00:00+01:00", "Card Type": "Full",
+        "Stroke Period": "", "SPM": "", "Stroke Length": "",
+    })
+    cards = [first, second]
+    assert all("acquisition" not in row for row in summarize_cards(cards)["cards"])
+    report = summarize_cards(cards, include_acquisition=True)
+    assert [row["acquisition"] for row in report["cards"]] == [
+        {
+            "timestamp": "2020-01-02T00:00:00.1234567Z", "card_type": "Current",
+            "stroke_period": 6, "spm": 10, "stroke_length": 4,
+        },
+        {
+            "timestamp": "2020-01-01T01:00:00+01:00", "card_type": "Full",
+            "stroke_period": None, "spm": None, "stroke_length": None,
+        },
+    ]
+    assert "SYNTHETIC" not in json.dumps(report)
+    assert report["units"] == "UNDECLARED"
+    assert report["solver_validation"] == "NOT_EVALUATED"
+    assert summarize_cards([], include_acquisition=True)["cards"] == []
+
+
+def test_cli_acquisition_flag_applies_to_every_export(tmp_path, capsys):
+    """Two original input rows remain two records, in argument order."""
+    first = tmp_path / "first.csv"
+    second = tmp_path / "second.csv"
+    first.write_text(export_text(), newline="")
+    second.write_text(export_text(**{"Card Type": "Full"}), newline="")
+    assert main(["--include-acquisition", str(first), str(second)]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert [row["acquisition"]["card_type"] for row in report["cards"]] == [
+        "Current", "Full",
+    ]
     assert report["solver_validation"] == "NOT_EVALUATED"

@@ -255,7 +255,7 @@ class ConfigureApplicationInputs():
             AnalysisRootFolder = os.path.split(self.customYaml)[0]
         elif (self.CustomInputs is not None):
             custom_file_name = run_dict['RunName']
-            AnalysisRootFolder = os.path.join(os.getcwd(), 'tests\cfg',
+            AnalysisRootFolder = os.path.join(os.getcwd(), r'tests\cfg',
                                               self.basename)
         else:
             custom_file_name = os.path.split(

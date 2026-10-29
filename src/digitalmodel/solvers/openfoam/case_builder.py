@@ -13,6 +13,7 @@ from typing import List, Optional
 from loguru import logger
 
 from .initial_fields import (
+    validate_turbulence_wall_boundaries,
     write_alpha_water,
     write_pressure_field,
     write_turbulence_fields,
@@ -109,7 +110,14 @@ class OpenFOAMCaseBuilder:
 
         Returns:
             Path to the created case directory.
+
+        Raises:
+            ValueError: A live supported turbulence wall function targets a
+                non-wall generated patch. No case files are written on failure.
         """
+        validate_turbulence_wall_boundaries(
+            self._case.turbulence_model, self._case.boundary_conditions
+        )
         parent_dir = Path(parent_dir)
         case_dir = parent_dir / self._case.name
         logger.info(f"Building OpenFOAM case: {case_dir}")

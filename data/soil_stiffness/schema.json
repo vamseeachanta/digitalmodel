@@ -1,0 +1,319 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Soil stiffness catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "database",
+    "units",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "database": {
+      "const": "soil_stiffness"
+    },
+    "units": {
+      "const": {
+        "pipe_od_m": "m",
+        "embedment_m": "m",
+        "depth_top_m": "m",
+        "depth_bottom_m": "m",
+        "displacement_m": "m",
+        "resistance_n_per_m": "N/m",
+        "initial_secant_stiffness_n_per_m2": "N/m^2"
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "citation_id",
+          "soil_type",
+          "drainage",
+          "loading",
+          "direction",
+          "pipe_od_m",
+          "embedment_m",
+          "depth_top_m",
+          "depth_bottom_m",
+          "displacement_m",
+          "resistance_n_per_m",
+          "initial_secant_stiffness_n_per_m2",
+          "test_conditions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "status": {
+            "enum": [
+              "cited",
+              "synthetic"
+            ]
+          },
+          "citation_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "soil_type": {
+            "enum": [
+              "clay",
+              "sand",
+              "silt",
+              "mixed"
+            ]
+          },
+          "drainage": {
+            "enum": [
+              "drained",
+              "undrained",
+              "partial"
+            ]
+          },
+          "loading": {
+            "enum": [
+              "monotonic",
+              "cyclic_envelope"
+            ]
+          },
+          "direction": {
+            "enum": [
+              "axial",
+              "lateral",
+              "vertical"
+            ]
+          },
+          "pipe_od_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "embedment_m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "depth_top_m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "depth_bottom_m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "displacement_m": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "resistance_n_per_m": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "initial_secant_stiffness_n_per_m2": {
+            "$ref": "#/$defs/positive"
+          },
+          "test_conditions": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positive": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "publisher",
+        "url",
+        "catalogue_number",
+        "revision",
+        "date",
+        "page",
+        "table",
+        "source_class",
+        "reuse_terms"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://[^/\\s?#]+(?:[/?#]|$)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_number": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_class": {
+          "enum": [
+            "mill_catalogue",
+            "manufacturer_catalogue",
+            "public_paper",
+            "public_thesis",
+            "public_agency_report",
+            "own_design_basis",
+            "synthetic_fixture"
+          ]
+        },
+        "reuse_terms": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "catalogue_number": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "page": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "table": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "description": "A locator for the values in each referencing row; class declarations require independent source review."
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "citation_schema",
+        "citations"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "citation_schema": {
+          "const": "schema.json#/$defs/citation"
+        },
+        "citations": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/citation"
+          }
+        }
+      }
+    }
+  }
+}

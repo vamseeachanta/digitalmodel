@@ -26,7 +26,7 @@ permissions:
 jobs:
   atlas-drift:
     name: Atlas staleness check
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

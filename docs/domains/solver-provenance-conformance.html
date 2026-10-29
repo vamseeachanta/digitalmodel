@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solver builder provenance conformance</title>
+<style>
+body { max-width: 72rem; margin: 2rem auto; padding: 0 1rem;
+       font: 1rem/1.6 system-ui, sans-serif; color: #182531; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .6rem; border: 1px solid #bcc6cc; text-align: left;
+         vertical-align: top; }
+caption { caption-side: bottom; text-align: left; margin: .5rem 0 1rem; }
+code { overflow-wrap: anywhere; }
+a { color: #075c91; }
+</style>
+</head>
+<body>
+<h1>Solver builder provenance conformance</h1>
+<h2>Summary</h2>
+<p>The shared offline helper provides bounded traversal, strict bounded JSON
+loading and exact verification of caller-declared payload inventories.
+Synthetic adversarial tests establish refusal or explicit non-evaluation for
+the mutations below. Existing builders are inspected but are not migrated.
+No solver is invoked, no dataset is published, and no engineering result is
+qualified by this deliverable.</p>
+
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>Initial</td><td>2026-10-19</td><td>Shared offline conformance
+helpers and a bounded applicability inventory address reusable provenance
+defect classes.</td></tr></tbody>
+<caption>Revision history for the provenance conformance deliverable.</caption>
+</table>
+
+<h2>Inspected builders and binding helpers</h2>
+<p>Inspection covers the following named entrypoints and their relevant source
+functions. This is a bounded inventory, not an assertion of repository-wide
+coverage. Existing checks retain their program-specific criteria.</p>
+<table>
+<thead><tr><th>Source entrypoint</th><th>Observed behavior</th><th>Applicability and remaining gap</th></tr></thead>
+<tbody>
+<tr><td><a href="../../src/digitalmodel/hydrodynamics/diffraction/diagnostic_inputs.py"><code>diagnostic_inputs.build_bundle</code></a></td>
+<td>Supplied-byte pins, strict rights field sets, an expanded traversal budget,
+collision refusal and derived/intent/ledger digests are present.</td>
+<td>Typed tuple paths can preserve dotted keys without flattening collisions.
+YAML construction occurs before traversal. A shared JSON loader does not bound
+YAML parsing. Rights evidence remains caller-controlled.</td></tr>
+<tr><td><a href="../../src/digitalmodel/ansys/cylinder_preparation.py"><code>cylinder_preparation.prepare_inputs</code></a></td>
+<td>A frozen proposal is checked and written artifacts are read back and hashed.</td>
+<td>Sources, derivatives and ledgers can become explicit inventory roles.
+A source locator alone does not establish retained-source reproducibility.</td></tr>
+<tr><td><a href="../../src/digitalmodel/ansys/cylinder_runtime_bundle.py"><code>cylinder_runtime_bundle._runtime</code></a>
+and <a href="../../src/digitalmodel/ansys/cylinder_canary.py"><code>cylinder_canary.runtime_sources</code></a></td>
+<td>The source inventory is checked against supplied pins and committed bytes;
+loaded modules within the analysis package are checked against its source files.</td>
+<td>Package-parent modules, executable entrypoints, lazy imports, bytecode and
+native dependencies require their own observed inventory. Shared byte equality
+does not attest executed instructions or vendor authenticity.</td></tr>
+<tr><td><a href="../../src/digitalmodel/ansys/analysis_records.py"><code>analysis_records.parse_json</code></a></td>
+<td>Duplicate JSON names are refused and canonical evidence types are checked.</td>
+<td>Explicit byte, node and depth limits can be added by a future adapter.
+Its decimal-string contract differs from the general JSON helper.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/orcaflex/modular_generator/__init__.py"><code>ModularModelGenerator._load_and_validate_spec</code></a></td>
+<td>YAML is loaded and then validated against a typed schema. Generation uses
+staging and builder-specific validation.</td>
+<td>Input admission can apply expanded traversal limits; bounded YAML parsing,
+source rights and a complete provenance inventory need separate adapters.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/openfoam/case_builder.py"><code>OpenFOAMCaseBuilder.build</code></a></td>
+<td>A typed case is rendered into a case directory.</td>
+<td>An adapter will need an independently required set of rendered files,
+source records and transformations before inventory verification can apply.</td></tr>
+<tr><td><a href="../../src/digitalmodel/hydrodynamics/diffraction/vessel_deck_builder.py"><code>vessel_deck_builder.build_deck</code></a></td>
+<td>A mesh, specification, deck and descriptive manifest are written.</td>
+<td>Descriptive filenames do not bind bytes. A future adapter will supply exact
+payload pins, source IDs and complete references.</td></tr>
+</tbody>
+<caption>Applicability observations from source inspection; no builder-wide conformance verdict is issued.</caption>
+</table>
+
+<h2>Implemented slices and test criteria</h2>
+<table>
+<thead><tr><th>Slice</th><th>Contract</th><th>Independent test basis</th></tr></thead>
+<tbody>
+<tr><td>Bounded traversal</td><td>Paths are tuples of string keys and integer
+indices; empty containers are retained. Every occurrence consumes the supplied
+node budget. Root depth is zero. Ancestor cycles refuse. Iterative traversal
+does not depend on Python recursion.</td><td>Hand-enumerated paths and visit
+counts cover delimiter collisions, empty keys, list indices, aliases, cycles,
+exact boundaries and a deep synthetic chain.</td></tr>
+<tr><td>Strict bounded JSON</td><td>Required byte and container-depth limits are
+checked before decoding. Node and scalar-depth checks follow decoding.
+Duplicate names, non-finite values and invalid UTF-8 refuse.</td><td>RFC 8259
+examples of JSON syntax plus synthetic byte-length and node-count calculations;
+a decoder spy proves nesting refusal occurs before decoding.</td></tr>
+<tr><td>Payload inventory</td><td>Payload IDs, pin IDs and reference-map IDs must
+match exactly. Every pin matches its supplied bytes and every declared endpoint
+resolves. Duplicate edges refuse. Reference cycles are allowed, including a
+derived-case/check-receipt pair.</td><td>Four synthetic artifacts and five
+hand-enumerated edges; missing source, derivative, ledger, receipt, changed bytes,
+unresolved references and invalid inventories refuse.</td></tr>
+</tbody>
+<caption>Acceptance criteria are structural contracts, not numerical engineering tolerances.</caption>
+</table>
+
+<h2>Sources and numerical basis</h2>
+<p><a href="https://www.rfc-editor.org/rfc/rfc8259.txt">RFC 8259 (2017)</a>,
+sections 4, 6, 7, 8.1 and 9, supplies the JSON uniqueness, finite-number,
+string-escape, UTF-8 and implementation-limit basis. The public text was
+retrieved on 2026-10-19 with HTTP status 200. The implementation adopts refusal
+of duplicate names as a stricter interoperability policy.</p>
+<p>No engineering equation, standards-derived coefficient or numerical design
+acceptance limit is introduced. All resource budgets are required caller inputs.
+Synthetic fixture counts are derived in test docstrings; they are not operating
+defaults. SHA-256 representation width is obtained from the digest implementation.</p>
+
+<h2>Trust boundary and later work</h2>
+<p>Verification establishes equality to the supplied pins and resolution of the
+supplied references at the time of the call. A consistently replaced package or
+a consistently omitted artifact can pass if the caller also changes its pins
+and reference map. Independent required-artifact selection and authentic pins
+remain mandatory caller responsibilities. Opaque payloads are not inspected
+for hidden references. Returned leaf containers are not retained snapshots.</p>
+<p>The receipt explicitly marks <code>inventory_completeness</code> as
+<code>NOT_EVALUATED</code>; equality of supplied ID sets does not establish that
+every required source, derivative or emitted reference was supplied. JSON number
+spelling and arbitrary precision are not retained by decoding; raw source bytes
+must remain bound separately wherever lexical evidence is required.</p>
+<p>Rights terms, including revocation, expiry and exclusions, remain
+<code>NOT_EVALUATED</code>, even when the rights record digest matches.
+Retention/reproducibility and engineering qualification also remain
+<code>NOT_EVALUATED</code>. No unknown rights field is interpreted as permission.</p>
+<p>Later adapters will apply format-specific YAML parsing limits, closed rights
+schemas, independent required-payload sets, source retention and source-ID
+resolution, runtime parent/entrypoint inventories and post-call import evidence.
+Builders will be migrated individually with their existing physics and criteria
+preserved. This helper does not establish continuous process observation.</p>
+
+<h2>Review and verification evidence</h2>
+<p>The test-first run refused collection because the new helper did not exist.
+The focused test module then passed. Test docstrings expose expected counts and
+paths independently of the implementation. The final test count and direct
+file-check results are recorded in the pull request.</p>
+<p>The inline defect search examined alias deduplication, partial traversal
+results, JSON decoder exposure, consistent omission, rights escalation and
+receipt resolution. Regression tests preserve these distinctions. Independent
+provider review of the exact published revision remains pending; no independent
+review verdict is asserted here.</p>
+</body>
+</html>

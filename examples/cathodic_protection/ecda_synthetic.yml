@@ -1,0 +1,68 @@
+# Synthetic demonstration only; no measured pipeline data.
+# Every criterion is user to confirm against the governing code.
+basename: cathodic_protection
+inputs:
+  calculation_type: ECDA
+  ecda:
+    criteria:
+      provenance:
+        kind: demonstration
+        reference: Synthetic example configuration; no engineering threshold basis
+        confirmed: false
+      alignment_tolerance_m: 5
+      cis_potential: "off"
+      cis_protection_criterion_V: -0.85
+      cis_overprotection_limit_V: -1.2
+      dcvg_min_ir_percentage: 35
+      pcm:
+        provenance:
+          kind: demonstration
+          reference: Synthetic PCM example; no engineering threshold basis
+          confirmed: false
+        loss_unit: dB/m
+        loss_threshold: 0.1
+      acvg:
+        provenance:
+          kind: demonstration
+          reference: Synthetic ACVG example; no engineering threshold basis
+          confirmed: false
+        unit: relative
+        moderate_min: 20
+        severe_min: 40
+        very_severe_min: 60
+      acvg_min_severity: severe
+      high_priority_min_surveys: 2
+      require_cis_for_high: true
+    cis:
+      - distance_m: 10
+        on_potential_V: -0.8
+        off_potential_V: -0.75
+      - distance_m: 100
+        on_potential_V: -1.0
+        off_potential_V: -0.95
+      - distance_m: 200
+        on_potential_V: -0.8
+        off_potential_V: -0.75
+    dcvg:
+      - distance_m: 12
+        voltage_gradient_mV: 10
+        ir_drop_percentage: 50
+      - distance_m: 102
+        voltage_gradient_mV: 10
+        ir_drop_percentage: 50
+    pcm:
+      - distance_m: 7
+        signal_current_mA: 100
+      - distance_m: 17
+        signal_current_mA: 10
+    acvg:
+      - distance_m: 11
+        reading: 50
+        unit: relative
+        direction: upstream
+      - distance_m: 101
+        reading: 50
+        unit: relative
+      - distance_m: 300
+        reading: 50
+        unit: relative

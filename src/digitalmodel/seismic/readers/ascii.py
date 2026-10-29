@@ -15,13 +15,68 @@ G0_M_S2 = 9.80665
 
 @dataclass(frozen=True)
 class AccelerogramRecord:
-    """A single-component accelerogram with SI acceleration values."""
+    """A single-component accelerogram with immutable SI sample snapshots."""
 
     time_s: np.ndarray
     acceleration_m_s2: np.ndarray
     units: str
     source_path: Path
     source_digest: str
+
+    def __post_init__(self) -> None:
+        # NumPy ndarray.flags (stable reference, Notes): write protection needs
+        # immutable ultimate backing, rather than just setflags(write=False).
+        # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.flags.html
+        for name in ("time_s", "acceleration_m_s2"):
+            value = object.__getattribute__(self, name)
+            if isinstance(value, np.ndarray) and type(value) is not np.ndarray:
+                raise TypeError("accelerogram arrays cannot be ndarray subclasses")
+            value = np.asarray(value)
+            if value.dtype.hasobject:
+                raise TypeError("accelerogram arrays cannot contain object references")
+            snapshot = (value.tobytes(), value.dtype, value.shape)
+            object.__setattr__(self, name, snapshot)
+
+    def __getattribute__(self, name: str):
+        value = object.__getattribute__(self, name)
+        if name in ("time_s", "acceleration_m_s2"):
+            # NumPy ndarray reference, buffer parameter: a fresh header may share
+            # immutable bytes without exposing the retained header via .base.
+            # https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html
+            if not (
+                isinstance(value, tuple) and len(value) == 3
+                and isinstance(value[0], bytes)
+            ):
+                raise TypeError("accelerogram requires an immutable sample snapshot")
+            data, dtype, shape = value
+            return np.ndarray(shape, dtype=dtype, buffer=data)
+        return value
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if type(self) is not type(other):
+            return NotImplemented
+        return (
+            np.array_equal(self.time_s, other.time_s)
+            and np.array_equal(self.acceleration_m_s2, other.acceleration_m_s2)
+            and (self.units, self.source_path, self.source_digest)
+            == (other.units, other.source_path, other.source_digest)
+        )
+
+    def __reduce__(self):
+        # Python pickle reference, object.__reduce__: reconstruct through the
+        # constructor; copy/deepcopy also use this protocol.
+        # https://docs.python.org/3/library/pickle.html#object.__reduce__
+        return type(self), (
+            self.time_s, self.acceleration_m_s2, self.units,
+            self.source_path, self.source_digest,
+        )
+
+    def __setstate__(self, state: dict) -> None:
+        """Snapshot arrays when loading the former default dict-state pickle."""
+        self.__dict__.update(state)
+        self.__post_init__()
 
     @property
     def npts(self) -> int:

@@ -85,3 +85,28 @@ Validation basis: [JSON Schema 2020-12 Validation](https://json-schema.org/draft
 (2022), sections 6 and 7; finite JSON numbers follow
 [RFC 8259](https://www.rfc-editor.org/rfc/rfc8259#section-6) (2017), section 6.
 No engineering equations, coefficients or acceptance limits are introduced.
+
+## Synthetic elastic reference input contract
+
+[elastic_reference.schema.json](elastic_reference.schema.json) defines a separate
+strict input contract for authored synthetic analytical fixtures. The worked
+[elastic_reference_inputs.json](elastic_reference_inputs.json) contains explicit
+metric geometry, material constants, plate/web/flange loss controls and source
+provenance. All numeric inputs are author-selected examples; source relationships
+identify the equations, not manufacturer or material-property evidence. The
+input schema requires units, axes, condition, readiness, retrieval dates and
+reasoned unknown catalog identities. No extracted section properties are added.
+
+This reference route uses the existing independent square-plate kernel and the
+finite rectangular mode equation in MIT 2.080J (2013), Lecture 11, Eqs. 11.15–11.17,
+with Lecture 4, Eq. 4.60. Both official source pointers and retrieval dates are
+in the fixture. See the [worked example and qualification limits](../../docs/domains/plate-buckling/ship-structure-study.md).
+
+Validation rejects nonfinite values, booleans as numeric inputs, unknown keys,
+duplicate cases/source identities, broken material/source links, ambiguous JSON
+keys and incompatible units. Only bare simply-supported plates under fixed
+uniaxial stress receive elastic reference values. Panel, local-loss and other
+unqualified combinations keep null engineering minima. Saved HTML and JSON
+lookup retrieve exact combinations without calculation or interpolation.
+Existing research.schema.json remains the staging contract for manufacturer
+research; neither contract establishes stock availability or engineering rights.
