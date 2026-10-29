@@ -19,6 +19,7 @@ criteria and operating envelopes is NOT_EVALUATED.
 | Revision | Date | What changed and why |
 |---|---|---|
 | Initial | 2026-10-28 | Record public interfaces, independent speed arithmetic and qualification gaps so callers can distinguish code behavior from design evidence. |
+| QA command | 2026-10-28 | Declare the YAML dependency needed for test collection and distinguish recorded failures from environment-dependent missing imports. |
 
 ## 1. Purpose and scope
 
@@ -163,10 +164,12 @@ Use the existing AST checker directly:
 uv run --no-project python scripts/docs/check_agent_pack_functions.py --pack src/digitalmodel/tug/docs/agent-pack.md
 ```
 
-Use the named test roots with scratch supplied by the launch environment:
+Use the named test roots with scratch supplied by the launch environment.
+PyYAML is required by the imported naval-architecture helpers during collection;
+declare it explicitly so the command also collects tests in an isolated environment:
 
 ```bash
-PYTHONPATH=src uv run --no-project --with pytest python -m pytest tests/tug tests/docs/test_tug_agent_pack.py tests/docs/test_agent_pack_functions.py tests/test_main_module_routing.py -q -rA -p no:cacheprovider --basetemp="$TMPDIR/tug-pack-checks"
+PYTHONPATH=src uv run --no-project --with pytest --with pyyaml python -m pytest tests/tug tests/docs/test_tug_agent_pack.py tests/docs/test_agent_pack_functions.py tests/test_main_module_routing.py -q -rA -p no:cacheprovider --basetemp="$TMPDIR/tug-pack-checks"
 ```
 
 The package-specific checks run the unchanged checker on this real pack, verify
@@ -259,8 +262,9 @@ The following is executable test coverage, not measured engineering performance:
 | `test_tug_agent_pack.py` | Real inventory/registry consistency, synthetic drift rejection, exact E1 arithmetic and pack form | [tests/docs/test_tug_agent_pack.py:L43-L129] |
 
 At the code pin, the prescribed pytest-only environment collects the following
-baseline. Counts are observations from the named command in section 5, before
-the new test file is included; they are not constants used by calculations.
+baseline. Counts are observations from the original command in section 5,
+before PyYAML was declared explicitly and before the new test file was included;
+they are not constants used by calculations.
 
 | Test root | Collected | Passed | Failed | Skipped |
 |---|---|---|---|---|
@@ -272,15 +276,19 @@ Table: baseline execution observations at the code pin in the pytest-only enviro
 
 With the new test file included, the same named roots collect 148 items:
 143 pass, the same 5 routing cases fail, and 0 skip. The new file contributes
-4 passing checks. These are execution observations from section 5's command;
+4 passing checks. These are execution observations from the original command;
 they establish the scoped regressions only, not full-suite coverage.
 
 The routing failures are `test_known_console_script_resolves` (distribution
 entry-point metadata absent), and `test_known_subcommand_dispatches`,
 `test_existing_file_goes_to_engine`, `test_unknown_non_file_arg_keeps_engine_contract`
 and `test_no_args_goes_to_engine` (the run-contract import reaches an unavailable
-`pandas` dependency). The relevant source and tests match the code pin; no
-routing fix or dependency change is part of this pack.
+`pandas` dependency in that recorded environment). The first missing analysis
+dependency depends on the environment. A repeat on 2026-10-28 with PyYAML
+declared explicitly collected 148 items: 143 passed, the same 5 routing cases
+failed, and 0 skipped; the four routing imports reached missing `numpy`.
+The relevant source and tests match the code pin; no routing implementation or
+project dependency change is part of this pack.
 [tests/test_main_module_routing.py:L19-L59]
 [src/digitalmodel/__main__.py:L51-L64]
 [src/digitalmodel/__main__.py:L117-L117]
