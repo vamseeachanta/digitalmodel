@@ -19,7 +19,8 @@
 <p>Independent synthetic examples test annulus properties, linear wave dispersion,
 velocity transfer, spectral integration, Weibull current tails and integrity
 workflow dispatch. Every numerical oracle is reduced independently in the test
-docstring. Production calculations are unchanged. Strict expected failures retain
+docstring. Free-span spectral normalisation preserves the requested wave variance
+independently of the supplied frequency grid. Strict expected failures retain
 the unmet criteria described below. These examples establish arithmetic and
 adapter behaviour; they do not establish site-specific design qualification.</p>
 
@@ -27,7 +28,8 @@ adapter behaviour; they do not establish site-specific design qualification.</p>
 <table>
   <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
   <tbody><tr><td>1</td><td>2026-10-22</td><td>Independent examples and explicit limitations are added to expose calculation gaps.</td></tr>
-    <tr><td>2</td><td>2026-10-25</td><td>The spectral exponent coefficient and omitted tails are derived explicitly to trace the integration error budget.</td></tr></tbody>
+    <tr><td>2</td><td>2026-10-25</td><td>The spectral exponent coefficient and omitted tails are derived explicitly to trace the integration error budget.</td></tr>
+    <tr><td>3</td><td>2026-10-29</td><td>The free-span energy normalisation is corrected, independent scaled-sea-state regressions are added, and obsolete energy expected failures are removed.</td></tr></tbody>
   <caption>Table 1. Issue history of the test basis.</caption>
 </table>
 
@@ -116,6 +118,9 @@ below the absolute test tolerance of 10<sup>−4</sup> m², leaving room for qua
 The derivation applies only to gamma = 1. The expected variance remains independently
 established by H<sub>m0</sub> = 4 sqrt(m<sub>0</sub>); the cited wave-height
 section is not used as a source for the exponent coefficient or tail integral.</p>
+<p>The <a href="../installation/jonswap-normalisation.md">shared normalisation basis</a>
+also describes installation examples. The regressions reported here exercise
+the free-span spectrum and its independent wave-variance criterion.</p>
 <table>
   <thead><tr><th>Criterion</th><th>Observed limitation</th><th>Disposition</th></tr></thead>
   <tbody>
@@ -123,14 +128,14 @@ section is not used as a source for the exponent coefficient or tail integral.</
     <tr><td>The annulus tends to a solid disc as d tends to zero.</td><td>The section calculator refuses d = 0.</td><td>Strict expected failure with the exact solid-disc value retained.</td></tr>
     <tr><td>Pipe geometry has positive dimensions and inner diameter below outer diameter.</td><td>The validator checks thickness consistency alone.</td><td>Six strict expected failures; finite-value and inconsistent-thickness refusals pass.</td></tr>
     <tr><td>Iteration exhaustion is reported.</td><td>Dispersion returns its current iterate for zero or one allowed step.</td><td>Two strict expected failures; converged cases also check the equation residual.</td></tr>
-    <tr><td>Every spectrum integrates to the requested H<sub>m0</sub><sup>2</sup>/16.</td><td>For a target variance of 1.0 m², gamma 2 and 5 produce 1.6 and 3.5 m², respectively.</td><td>Two strict expected failures; gamma 1 passes.</td></tr>
+    <tr><td>Full-spectrum variance is the requested H<sub>m0</sub><sup>2</sup>/16.</td><td>Finite-grid tail loss remains explicit; normalisation is independent of the caller's bandwidth.</td><td>Gamma 1, 2 and 5 meet the independent 1.0 m² criterion within 10<sup>−4</sup> m². Scaled sea states at gamma 3.3 and 7 meet H<sub>m0</sub><sup>2</sup>/16 within 10<sup>−4</sup> relative error. The <a href="../installation/jonswap-normalisation.md">normalisation basis</a> gives the method and limits.</td></tr>
     <tr><td>A finite identifiable current distribution is required.</td><td>Constant speeds divide by zero; nonfinite pairs can be filtered or return NaN, and a NaN target returns NaN.</td><td>Five strict expected failures; finite hand examples and supported refusals pass.</td></tr>
     <tr><td>Automatic JONSWAP coefficients match a governing clause.</td><td>The licensed clause was not opened; no coefficients or boundary values are adopted from memory.</td><td>NOT_EVALUATED; monotonicity and scale invariance only.</td></tr>
     <tr><td>Legacy buckling runners have independent numeric acceptance.</td><td>The existing legacy pipeline tests mock engine results; the analytical buckling tests exercise a different calculator.</td><td>NOT_EVALUATED; adapter routing, mapping preservation and real missing-input refusals are tested.</td></tr>
   </tbody>
   <caption>Table 4. Unmet criteria remain visible; strict expected failures become failures if the associated defect is fixed without updating the test.</caption>
 </table>
-<p class="limit">Production corrections, the unopened standard clause and legacy
+<p class="limit">Remaining production corrections, the unopened standard clause and legacy
 buckling numeric oracles remain follow-up scope in
 <a href="https://github.com/vamseeachanta/digitalmodel/issues/3348">issue 3348</a>.
 No new issue is created. The free-span adapter reuses the existing reference

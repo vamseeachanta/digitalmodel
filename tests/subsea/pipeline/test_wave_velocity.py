@@ -23,6 +23,8 @@ from digitalmodel.subsea.pipeline.free_span.wave_velocity import (
     velocity_transfer,
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 G = 9.80665  # m/s²; NIST SP 811 (2008), Appendix B.8, standard free fall.
 
@@ -105,28 +107,7 @@ def test_rectangular_spectrum_exact_moments():
     assert m2 == pytest.approx(52.0 / 3.0, abs=3e-6)
 
 
-@pytest.mark.parametrize(
-    "gamma",
-    [
-        1.0,
-        pytest.param(
-            2.0,
-            marks=pytest.mark.xfail(
-                strict=True,
-                raises=AssertionError,
-                reason="Enhanced spectrum energy exceeds Hs squared / 16",
-            ),
-        ),
-        pytest.param(
-            5.0,
-            marks=pytest.mark.xfail(
-                strict=True,
-                raises=AssertionError,
-                reason="Enhanced spectrum energy exceeds Hs squared / 16",
-            ),
-        ),
-    ],
-)
+@pytest.mark.parametrize("gamma", [1.0, 2.0, 5.0])
 def test_jonswap_integral_preserves_specified_wave_height(gamma):
     """Synthetic Hs=4,Tp=8: m0=Hs²/16=16/16=1 m², for any gamma.
 
@@ -148,8 +129,21 @@ def test_jonswap_integral_preserves_specified_wave_height(gamma):
     """
     omega = np.linspace(0.01, 20.0, 50001) * (math.pi / 4.0)
     spectrum = jonswap_spectrum(omega, Hs=4.0, Tp=8.0, gamma=gamma)
-    integrate = getattr(np, "trapezoid", None) or np.trapz
-    assert integrate(spectrum, omega) == pytest.approx(1.0, abs=1e-4)
+    assert _trapezoid(spectrum, omega) == pytest.approx(1.0, abs=1e-4)
+
+
+@pytest.mark.parametrize("height,period,gamma", [(2.0, 6.0, 3.3), (6.0, 12.0, 7.0)])
+def test_jonswap_energy_for_scaled_sea_states(height, period, gamma):
+    """Independent H_m0 relation: m0=0.25 or 2.25 m² for Hs=2 or 6 m.
+
+    Synthetic periods change the frequency scale. The same dimensionless
+    bounds and grid as the unit-variance example leave less than 8e-6
+    relative unenhanced tail loss. Relative 1e-4 covers quadrature as well.
+    """
+    omega = np.linspace(0.01, 20.0, 50001) * (2.0 * math.pi / period)
+    spectrum = jonswap_spectrum(omega, Hs=height, Tp=period, gamma=gamma)
+    m0, _ = spectral_moments(omega, spectrum)
+    assert m0 == pytest.approx(height**2 / 16.0, rel=1e-4)
 
 
 def test_jonswap_gamma_scale_invariance_and_monotonicity():
