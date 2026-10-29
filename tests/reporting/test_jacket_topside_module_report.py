@@ -7,6 +7,7 @@ Floating-point tolerance follows the existing documented annulus example.
 """
 
 import hashlib
+import html
 import importlib.util
 import json
 import math
@@ -22,6 +23,10 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/reports/build_jacket_topside_module_report.py"
 REPORT = ROOT / "docs/reports/modules/jacket_topside"
 DELIVERABLES = {"index.html", "changes.json", "manifest.json", "README.md"}
+REBUILD = (
+    'PYTHONPATH=src python scripts/reports/build_jacket_topside_module_report.py '
+    '--scratch "$TMPDIR/calculation" --output-dir docs/reports/modules/jacket_topside'
+)
 
 
 def builder():
@@ -37,6 +42,55 @@ def payload(page):
     )
     assert match is not None
     return json.loads(match[1])
+
+
+@pytest.mark.parametrize("note", ["", '<marker>& "quoted" </pre><script>example</script>'])
+def test_disclosure_contains_visible_escaped_payload(tmp_path, monkeypatch, note):
+    build = builder()
+    original = build.calculate
+
+    def changed(scratch):
+        data = original(scratch)
+        data["assessments"]["display_note"] = note
+        return data
+
+    monkeypatch.setattr(build, "calculate", changed)
+    page = build.render(tmp_path / "scratch")
+    disclosure = re.search(
+        r'<details><summary>Unrounded calculation payload</summary>(.*?)</details>',
+        page, re.S,
+    )
+    assert disclosure is not None
+    visible = re.search(r'<pre>(.*?)</pre>', disclosure[1], re.S)
+    assert visible is not None, "Expanded calculation disclosure must show JSON"
+    assert json.loads(html.unescape(visible[1])) == payload(page)
+    if note:
+        assert "&lt;marker&gt;&amp;" in visible[1]
+        assert "<script>" not in visible[1]
+
+
+@pytest.mark.parametrize("group,key,value,expected", [
+    ("section", "wall_thickness", 0.5, "0.500"),
+    ("joint", "chord_wt", 0.5, "0.500"),
+    ("joint", "brace_wts", [0.25], "[0.250]"),
+    ("section", "wall_thickness", 0.0254, "0.0254"),
+])
+def test_thickness_display_preserves_input_precision(
+    tmp_path, monkeypatch, group, key, value, expected,
+):
+    build = builder()
+    original = build.calculate
+
+    def changed(scratch):
+        data = original(scratch)
+        # Display-only mutation; no new geometry or capacity claim is made.
+        data["inputs"][group][key]["value"] = value
+        return data
+
+    monkeypatch.setattr(build, "calculate", changed)
+    page = build.render(tmp_path / "scratch")
+    assert f'<td>{group}/{key}</td><td>{expected}</td><td>in</td>' in page
+    assert payload(page)["inputs"][group][key]["value"] == pytest.approx(value)
 
 
 def test_annulus_payload_matches_independent_integrals(tmp_path):
@@ -159,7 +213,8 @@ def run_cli(directory):
     subprocess.run(
         [sys.executable, str(SCRIPT), "--scratch", str(directory / "scratch"),
          "--output-dir", str(output)], cwd=directory.parent,
-        env=environment, check=True, capture_output=True, text=True, timeout=30,
+        env=environment, check=True, capture_output=True, text=True,
+        encoding="utf-8", timeout=30,
     )
     return output
 
@@ -171,7 +226,9 @@ def test_rebuild_is_deterministic(tmp_path):
     assert {p.name for p in second.iterdir()} == DELIVERABLES
     for name in DELIVERABLES:
         assert (first / name).read_bytes() == (second / name).read_bytes()
-        assert (first / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (first / name).read_bytes() == (REPORT / name).read_bytes(), (
+            f"Retained delivery differs; rebuild with: {REBUILD}"
+        )
 
 
 def test_cli_manifest_matches_written_files(tmp_path):
@@ -183,12 +240,18 @@ def test_cli_manifest_matches_written_files(tmp_path):
     assert set(manifest["artifacts"]) == DELIVERABLES - {"manifest.json"}
     assert set(manifest["sources"]) == set(builder().SOURCES)
     for name, digest in manifest["artifacts"].items():
-        assert digest == hashlib.sha256((output / name).read_bytes()).hexdigest()
+        assert digest == hashlib.sha256((output / name).read_bytes()).hexdigest(), (
+            f"Artifact digest differs; rebuild with: {REBUILD}"
+        )
     for name, digest in manifest["sources"].items():
-        assert digest == hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
-    assert json.loads((output / "changes.json").read_text()) == builder().CHANGES
-    data = payload((output / "index.html").read_text())
-    assert json.loads((tmp_path / "cli/scratch/calculation.json").read_text()) == data
+        assert digest == hashlib.sha256((ROOT / name).read_bytes()).hexdigest(), (
+            f"Source digest differs; rebuild with: {REBUILD}"
+        )
+    assert json.loads((output / "changes.json").read_text(encoding="utf-8")) == builder().CHANGES
+    data = payload((output / "index.html").read_text(encoding="utf-8"))
+    assert json.loads(
+        (tmp_path / "cli/scratch/calculation.json").read_text(encoding="utf-8")
+    ) == data
 
 
 def test_scratch_inside_checkout_is_rejected():

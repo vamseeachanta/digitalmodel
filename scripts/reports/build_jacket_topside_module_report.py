@@ -20,6 +20,11 @@ CHANGES = [{
     "date": "2026-10-28",
     "change": "Initial module review and independent geometry calculation; "
               "capacity qualification gaps are retained to bound engineering use.",
+}, {
+    "revision": "B",
+    "date": "2026-10-28",
+    "change": "Expose escaped calculation JSON and format wall thicknesses "
+              "to three decimals while retaining finer input precision.",
 }]
 SOURCE_ITEMS = [
     ("src/digitalmodel/structural/jacket_topside/docs/worked-tubular-section-geometry.md",
@@ -225,13 +230,18 @@ def display(value):
     return html.escape(str(value))
 
 
-def input_display(value):
-    """Keep assumed dimensions exact when a one-decimal display would change them."""
-    # The quarter-inch brace wall is a synthetic input [9], not a result.
-    if value == 0.25 and not isinstance(value, (bool, list)):
-        return "1/4"
+def input_display(value, *, thickness=False):
+    """Preserve input precision and show thicknesses to at least three decimals."""
     if isinstance(value, list):
-        return "[" + ", ".join(input_display(item) for item in value) + "]"
+        return "[" + ", ".join(
+            input_display(item, thickness=thickness) for item in value
+        ) + "]"
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if thickness:
+            formatted = f"{value:.3f}"
+            if float(formatted) == value:
+                return formatted
+        return str(value)
     return display(value)
 
 
@@ -247,7 +257,8 @@ def render(scratch):
     """Render the established ten-section report around the computed payload."""
     data = calculate(scratch)
     inputs = "".join(
-        f'<tr><td>{group}/{key}</td><td>{input_display(row["value"])}</td>'
+        f'<tr><td>{group}/{key}</td><td>'
+        f'{input_display(row["value"], thickness=key in {"wall_thickness", "chord_wt", "brace_wts"})}</td>'
         f'<td>{row["unit"]}</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr>'
         for group, block in data["inputs"].items() for key, row in block.items()
     )
@@ -322,7 +333,7 @@ Member loads are stresses in ksi; joint loads are actions in kip and kip-in. Rat
 The brace angle is measured from the chord axis. Side and gap inputs are unused for this single-brace case [3, 4, 9, 10].</p>
 <div class="scroll"><table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis</th></tr></thead>
 <tbody>{inputs}</tbody></table></div>
-<p>The quarter-inch brace wall is displayed as an exact fraction. These assumptions represent a concentric,
+<p>Wall thicknesses are displayed to three decimals, retaining any finer input precision. These assumptions represent a concentric,
 uniform annulus and one perpendicular brace. No unit conversion, physical constant, environmental action,
 connection weld detail or load combination is inferred. Pi and square root have their mathematical meanings [1].</p>
 <h2 id="s4">4. Analysis Methodology</h2>
@@ -403,7 +414,8 @@ for the builder. Intermediate calculation.json stays in scratch. The delivery co
 README.md and manifest.json. The manifest binds source bytes and the other artifacts; it excludes its own hash
 to avoid circularity [11, 12]. Tests compare complete payloads and independently rebuilt delivery bytes.</p>
 <details><summary>Unrounded calculation payload</summary>
-<p>Machine-readable values, units, source numbers and qualification status are embedded below.</p></details>
+<p>Unrounded values, units, source numbers and qualification status are shown below.</p>
+<pre>{html.escape(json_text(data))}</pre></details>
 <script id="calculation" type="application/json">{payload}</script>
 <h2 id="s10">10. Conclusions</h2>
 <p>Geometry and zero-demand arithmetic are reproducible within the stated synthetic case.

@@ -21,9 +21,9 @@ Nonzero member capacity, joint capacity and damage acceptance remain NOT_EVALUAT
 No design compliance is certified [1–4, 9].</p>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>A</td><td>2026-10-28</td><td>Initial module review and independent geometry calculation; capacity qualification gaps are retained to bound engineering use.</td></tr></tbody></table>
+<tbody><tr><td>A</td><td>2026-10-28</td><td>Initial module review and independent geometry calculation; capacity qualification gaps are retained to bound engineering use.</td></tr><tr><td>B</td><td>2026-10-28</td><td>Expose escaped calculation JSON and format wall thicknesses to three decimals while retaining finer input precision.</td></tr></tbody></table>
 <details id="changes-panel"><summary>Change panel</summary>
-<p>Initial module review and independent geometry calculation; capacity qualification gaps are retained to bound engineering use.</p><a href="changes.json">Machine-readable changes</a></details>
+<p>Expose escaped calculation JSON and format wall thicknesses to three decimals while retaining finer input precision.</p><a href="changes.json">Machine-readable changes</a></details>
 <h2 id="s2">2. Introduction</h2>
 <p>The module exposes tubular section properties, member stress checks, joint ratios and classification,
 and a simplified punching shear check [3, 4, 15]. A workflow adapts these outputs to JSON and CSV [5].
@@ -38,8 +38,8 @@ Positive material strength and modulus avoid zero-capacity degeneracy; effective
 Member loads are stresses in ksi; joint loads are actions in kip and kip-in. Ratios use unit 1.
 The brace angle is measured from the chord axis. Side and gap inputs are unused for this single-brace case [3, 4, 9, 10].</p>
 <div class="scroll"><table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis</th></tr></thead>
-<tbody><tr><td>joint/brace_angles</td><td>[90.0]</td><td>deg</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/brace_index</td><td>0.0</td><td>index</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/brace_ods</td><td>[6.0]</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/brace_wts</td><td>[1/4]</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/braces_on_same_side</td><td>true</td><td>boolean</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/chord_fy</td><td>40.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/chord_od</td><td>12.0</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/chord_utilization</td><td>0.0</td><td>1</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/chord_wt</td><td>0.5</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/gap</td><td>0.0</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint_loads/axial_load</td><td>0.0</td><td>kip</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint_loads/ipb_moment</td><td>0.0</td><td>kip-in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint_loads/opb_moment</td><td>0.0</td><td>kip-in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>member_loads/Cm</td><td>1.0</td><td>1</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>member_loads/fa</td><td>0.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>member_loads/fb</td><td>0.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>member_loads/is_tension</td><td>[false, true]</td><td>boolean</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/effective_length</td><td>120.0</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/elastic_modulus</td><td>28000.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/outer_diameter</td><td>12.0</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/wall_thickness</td><td>0.5</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/yield_strength</td><td>40.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr></tbody></table></div>
-<p>The quarter-inch brace wall is displayed as an exact fraction. These assumptions represent a concentric,
+<tbody><tr><td>joint/brace_angles</td><td>[90.0]</td><td>deg</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/brace_index</td><td>0</td><td>index</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/brace_ods</td><td>[6.0]</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/brace_wts</td><td>[0.250]</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/braces_on_same_side</td><td>true</td><td>boolean</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/chord_fy</td><td>40.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/chord_od</td><td>12.0</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/chord_utilization</td><td>0.0</td><td>1</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/chord_wt</td><td>0.500</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint/gap</td><td>0.0</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint_loads/axial_load</td><td>0.0</td><td>kip</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint_loads/ipb_moment</td><td>0.0</td><td>kip-in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>joint_loads/opb_moment</td><td>0.0</td><td>kip-in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>member_loads/Cm</td><td>1.0</td><td>1</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>member_loads/fa</td><td>0.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>member_loads/fb</td><td>0.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>member_loads/is_tension</td><td>[false, true]</td><td>boolean</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/effective_length</td><td>120.0</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/elastic_modulus</td><td>28000.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/outer_diameter</td><td>12.0</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/wall_thickness</td><td>0.500</td><td>in</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr><tr><td>section/yield_strength</td><td>40.0</td><td>ksi</td><td>Synthetic assumption [1, 9, 10, 12]</td></tr></tbody></table></div>
+<p>Wall thicknesses are displayed to three decimals, retaining any finer input precision. These assumptions represent a concentric,
 uniform annulus and one perpendicular brace. No unit conversion, physical constant, environmental action,
 connection weld detail or load combination is inferred. Pi and square root have their mathematical meanings [1].</p>
 <h2 id="s4">4. Analysis Methodology</h2>
@@ -112,7 +112,7 @@ bow, pressure and combined-damage limits before considering acceptance [5–7]. 
 is not independent standards evidence. Standard designation recorded by the implementation: API RP 2A-WSD,
 21st Edition, member axial/bending checks and tubular joints. No licensed text or numeric coefficient is copied;
 standard-capacity source qualification is unresolved [3, 4].</p>
-<ol><li><code>src/digitalmodel/structural/jacket_topside/docs/worked-tubular-section-geometry.md</code>: Independent radial integrals, property definitions, synthetic dimensions and rounding policy.<br>SHA-256: 92e85d118cf959df6e3b882d8c9b81b569c3514df1816b05a11a24e9cbfa7e0d</li><li><code>tests/structural/jacket_topside/test_documented_tubular_section_geometry.py</code>: Execution of the documented example and dimensional scaling check.<br>SHA-256: 782c4baf809819605452294b788bf540d7b9ae3b82bac54c6521c1442709e1ce</li><li><code>src/digitalmodel/structural/jacket_topside/member_checks.py</code>: Public section properties and member checks; implementation evidence only for allowables.<br>SHA-256: ee0bd62aa56e896285098bfdf0efd0bad083bd71786438aa6e072baced44bfa8</li><li><code>src/digitalmodel/structural/jacket_topside/joint_checks.py</code>: Public joint ratios, simplified classification and punching shear check.<br>SHA-256: d534b80abd9c1c3ee2b0d5ea6c7d584d3874f59943fef3cb94ce6ebf6fb5b197</li><li><code>src/digitalmodel/structural/jacket_topside/workflow.py</code>: JacketChecksWorkflow.router and result/file adaptation; implementation review only.<br>SHA-256: a7aafc305d95277314929c48d2b0b54a33e876df18e214cc4763be64867e9212</li><li><code>src/digitalmodel/structural/jacket_topside/dented_axial_screen.py</code>: Dimensionless dent-screen applicability and result contract; cited study not reopened here.<br>SHA-256: fa3a5d7dad4be98d8c7a43a86ba85b808baaf8b4bb8d8dc7ac394ea654a64c3e</li><li><code>src/digitalmodel/structural/jacket_topside/damaged_member_screen.py</code>: Damaged-member diagnostics, campaign escalation and command entry point.<br>SHA-256: 9bce351e86d888a24c7d1da47191e59cae23b2472a96350c5d5d00ddd9254680</li><li><code>tests/structural/jacket_topside/test_jacket_topside.py</code>: Existing member/joint implementation assertions; capacity coefficients are not independent evidence.<br>SHA-256: 45fea1b1fa607dbb2cd710e426e37fa22c40c83c71083d8bbb7dff059052256a</li><li><code>tests/structural/jacket_topside/test_module_report_hand_values.py</code>: Independent annulus expressions, synthetic joint divisions and zero-demand limits.<br>SHA-256: 500e2eb8e11337dd9ca08e805e6064074a3964e48d82445960faf9e627ee0dc8</li><li><code>tests/structural/jacket_topside/test_tension_scaling.py</code>: Existing synthetic material/length assumptions and stress scaling; no allowable qualification.<br>SHA-256: 5a11581ddca6e7b0ce1aca8df5f93bb1ec43ea02629568521785cc725efd6c97</li><li><code>tests/reporting/test_jacket_topside_module_report.py</code>: Complete payload, unit, qualification boundary, rebuild and digest checks.<br>SHA-256: 69b2a948e952c231b70ea604efdcd49c230eeefe5899a43ea2e28a250fbe3d6c</li><li><code>scripts/reports/build_jacket_topside_module_report.py</code>: Committed synthetic inputs, public-function evaluation and deterministic rendering.<br>SHA-256: ec69386301b3541765936727f1a813c16781866c36703c4454cca74265088b30</li><li><code>tests/structural/jacket_topside/test_dented_axial_screen.py</code>: Existing study-equation and applicability tests; reviewed as implementation evidence.<br>SHA-256: 4de5b956a5607567adb85f0578e7ea03356b82232ab8cdcc95c8d6c38ade89fa</li><li><code>tests/structural/jacket_topside/test_damaged_member_screen.py</code>: Existing corrosion arithmetic, escalation, strict JSON and campaign tests.<br>SHA-256: f3a2d070b48712bc6ef0a4e990c590512f5aabef862103270ea05ccaf0fd03bc</li><li><code>src/digitalmodel/structural/jacket_topside/__init__.py</code>: Public exports of member and joint data structures and functions.<br>SHA-256: 872c99a915acd8606670939735a9f3ae192c2616b7b5f8c646e2a0577cc7b1d5</li></ol>
+<ol><li><code>src/digitalmodel/structural/jacket_topside/docs/worked-tubular-section-geometry.md</code>: Independent radial integrals, property definitions, synthetic dimensions and rounding policy.<br>SHA-256: 92e85d118cf959df6e3b882d8c9b81b569c3514df1816b05a11a24e9cbfa7e0d</li><li><code>tests/structural/jacket_topside/test_documented_tubular_section_geometry.py</code>: Execution of the documented example and dimensional scaling check.<br>SHA-256: 782c4baf809819605452294b788bf540d7b9ae3b82bac54c6521c1442709e1ce</li><li><code>src/digitalmodel/structural/jacket_topside/member_checks.py</code>: Public section properties and member checks; implementation evidence only for allowables.<br>SHA-256: ee0bd62aa56e896285098bfdf0efd0bad083bd71786438aa6e072baced44bfa8</li><li><code>src/digitalmodel/structural/jacket_topside/joint_checks.py</code>: Public joint ratios, simplified classification and punching shear check.<br>SHA-256: d534b80abd9c1c3ee2b0d5ea6c7d584d3874f59943fef3cb94ce6ebf6fb5b197</li><li><code>src/digitalmodel/structural/jacket_topside/workflow.py</code>: JacketChecksWorkflow.router and result/file adaptation; implementation review only.<br>SHA-256: a7aafc305d95277314929c48d2b0b54a33e876df18e214cc4763be64867e9212</li><li><code>src/digitalmodel/structural/jacket_topside/dented_axial_screen.py</code>: Dimensionless dent-screen applicability and result contract; cited study not reopened here.<br>SHA-256: fa3a5d7dad4be98d8c7a43a86ba85b808baaf8b4bb8d8dc7ac394ea654a64c3e</li><li><code>src/digitalmodel/structural/jacket_topside/damaged_member_screen.py</code>: Damaged-member diagnostics, campaign escalation and command entry point.<br>SHA-256: 9bce351e86d888a24c7d1da47191e59cae23b2472a96350c5d5d00ddd9254680</li><li><code>tests/structural/jacket_topside/test_jacket_topside.py</code>: Existing member/joint implementation assertions; capacity coefficients are not independent evidence.<br>SHA-256: 45fea1b1fa607dbb2cd710e426e37fa22c40c83c71083d8bbb7dff059052256a</li><li><code>tests/structural/jacket_topside/test_module_report_hand_values.py</code>: Independent annulus expressions, synthetic joint divisions and zero-demand limits.<br>SHA-256: 500e2eb8e11337dd9ca08e805e6064074a3964e48d82445960faf9e627ee0dc8</li><li><code>tests/structural/jacket_topside/test_tension_scaling.py</code>: Existing synthetic material/length assumptions and stress scaling; no allowable qualification.<br>SHA-256: 5a11581ddca6e7b0ce1aca8df5f93bb1ec43ea02629568521785cc725efd6c97</li><li><code>tests/reporting/test_jacket_topside_module_report.py</code>: Complete payload, unit, qualification boundary, rebuild and digest checks.<br>SHA-256: 8dd231afc01efd8972f48d3cf7af89964a3c3aea9ba8fdb7e6dc9354e3c40efb</li><li><code>scripts/reports/build_jacket_topside_module_report.py</code>: Committed synthetic inputs, public-function evaluation and deterministic rendering.<br>SHA-256: fbf0a883a64965d9ea33d183f8afaef04f55cf71ce363fa1176fcdc4a102dd61</li><li><code>tests/structural/jacket_topside/test_dented_axial_screen.py</code>: Existing study-equation and applicability tests; reviewed as implementation evidence.<br>SHA-256: 4de5b956a5607567adb85f0578e7ea03356b82232ab8cdcc95c8d6c38ade89fa</li><li><code>tests/structural/jacket_topside/test_damaged_member_screen.py</code>: Existing corrosion arithmetic, escalation, strict JSON and campaign tests.<br>SHA-256: f3a2d070b48712bc6ef0a4e990c590512f5aabef862103270ea05ccaf0fd03bc</li><li><code>src/digitalmodel/structural/jacket_topside/__init__.py</code>: Public exports of member and joint data structures and functions.<br>SHA-256: 872c99a915acd8606670939735a9f3ae192c2616b7b5f8c646e2a0577cc7b1d5</li></ol>
 <p>Rebuild from the repository root with source imports enabled:</p>
 <pre>PYTHONPATH=src python scripts/reports/build_jacket_topside_module_report.py --scratch "$TMPDIR/calculation" --output-dir docs/reports/modules/jacket_topside</pre>
 <p>Scratch must be supplied outside the checkout. Only the Python standard library and the module are needed
@@ -120,7 +120,309 @@ for the builder. Intermediate calculation.json stays in scratch. The delivery co
 README.md and manifest.json. The manifest binds source bytes and the other artifacts; it excludes its own hash
 to avoid circularity [11, 12]. Tests compare complete payloads and independently rebuilt delivery bytes.</p>
 <details><summary>Unrounded calculation payload</summary>
-<p>Machine-readable values, units, source numbers and qualification status are embedded below.</p></details>
+<p>Unrounded values, units, source numbers and qualification status are shown below.</p>
+<pre>{
+  &quot;annulus&quot;: {
+    &quot;cross_sectional_area&quot;: {
+      &quot;source&quot;: &quot;[1, 2, 3]&quot;,
+      &quot;unit&quot;: &quot;in^2&quot;,
+      &quot;value&quot;: 18.06415775814131
+    },
+    &quot;inner_diameter&quot;: {
+      &quot;source&quot;: &quot;[1, 2, 3]&quot;,
+      &quot;unit&quot;: &quot;in&quot;,
+      &quot;value&quot;: 11.0
+    },
+    &quot;moment_of_inertia&quot;: {
+      &quot;source&quot;: &quot;[1, 2, 3]&quot;,
+      &quot;unit&quot;: &quot;in^4&quot;,
+      &quot;value&quot;: 299.18761286921546
+    },
+    &quot;radius_of_gyration&quot;: {
+      &quot;source&quot;: &quot;[1, 2, 3]&quot;,
+      &quot;unit&quot;: &quot;in&quot;,
+      &quot;value&quot;: 4.0697051490249265
+    },
+    &quot;section_modulus&quot;: {
+      &quot;source&quot;: &quot;[1, 2, 3]&quot;,
+      &quot;unit&quot;: &quot;in^3&quot;,
+      &quot;value&quot;: 49.864602144869245
+    }
+  },
+  &quot;assessments&quot;: {
+    &quot;damaged_member_acceptance&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;joint_nonzero_capacity&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;member_nonzero_capacity&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;standards_compliance&quot;: &quot;NOT_EVALUATED&quot;
+  },
+  &quot;inputs&quot;: {
+    &quot;joint&quot;: {
+      &quot;brace_angles&quot;: {
+        &quot;unit&quot;: &quot;deg&quot;,
+        &quot;value&quot;: [
+          90.0
+        ]
+      },
+      &quot;brace_index&quot;: {
+        &quot;unit&quot;: &quot;index&quot;,
+        &quot;value&quot;: 0
+      },
+      &quot;brace_ods&quot;: {
+        &quot;unit&quot;: &quot;in&quot;,
+        &quot;value&quot;: [
+          6.0
+        ]
+      },
+      &quot;brace_wts&quot;: {
+        &quot;unit&quot;: &quot;in&quot;,
+        &quot;value&quot;: [
+          0.25
+        ]
+      },
+      &quot;braces_on_same_side&quot;: {
+        &quot;unit&quot;: &quot;boolean&quot;,
+        &quot;value&quot;: true
+      },
+      &quot;chord_fy&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 40.0
+      },
+      &quot;chord_od&quot;: {
+        &quot;unit&quot;: &quot;in&quot;,
+        &quot;value&quot;: 12.0
+      },
+      &quot;chord_utilization&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;chord_wt&quot;: {
+        &quot;unit&quot;: &quot;in&quot;,
+        &quot;value&quot;: 0.5
+      },
+      &quot;gap&quot;: {
+        &quot;unit&quot;: &quot;in&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;joint_loads&quot;: {
+      &quot;axial_load&quot;: {
+        &quot;unit&quot;: &quot;kip&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;ipb_moment&quot;: {
+        &quot;unit&quot;: &quot;kip-in&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;opb_moment&quot;: {
+        &quot;unit&quot;: &quot;kip-in&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;member_loads&quot;: {
+      &quot;Cm&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 1.0
+      },
+      &quot;fa&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;fb&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;is_tension&quot;: {
+        &quot;unit&quot;: &quot;boolean&quot;,
+        &quot;value&quot;: [
+          false,
+          true
+        ]
+      }
+    },
+    &quot;section&quot;: {
+      &quot;effective_length&quot;: {
+        &quot;unit&quot;: &quot;in&quot;,
+        &quot;value&quot;: 120.0
+      },
+      &quot;elastic_modulus&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 28000.0
+      },
+      &quot;outer_diameter&quot;: {
+        &quot;unit&quot;: &quot;in&quot;,
+        &quot;value&quot;: 12.0
+      },
+      &quot;wall_thickness&quot;: {
+        &quot;unit&quot;: &quot;in&quot;,
+        &quot;value&quot;: 0.5
+      },
+      &quot;yield_strength&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 40.0
+      }
+    }
+  },
+  &quot;joint_geometry&quot;: {
+    &quot;beta&quot;: {
+      &quot;source&quot;: &quot;[4, 9]&quot;,
+      &quot;unit&quot;: &quot;1&quot;,
+      &quot;value&quot;: [
+        0.5
+      ]
+    },
+    &quot;brace_count&quot;: {
+      &quot;source&quot;: &quot;[4, 9]&quot;,
+      &quot;unit&quot;: &quot;1&quot;,
+      &quot;value&quot;: 1
+    },
+    &quot;classification&quot;: {
+      &quot;source&quot;: &quot;[4, 9]&quot;,
+      &quot;unit&quot;: &quot;label&quot;,
+      &quot;value&quot;: &quot;T/Y&quot;
+    },
+    &quot;gamma&quot;: {
+      &quot;source&quot;: &quot;[4, 9]&quot;,
+      &quot;unit&quot;: &quot;1&quot;,
+      &quot;value&quot;: 12.0
+    },
+    &quot;tau&quot;: {
+      &quot;source&quot;: &quot;[4, 9]&quot;,
+      &quot;unit&quot;: &quot;1&quot;,
+      &quot;value&quot;: [
+        0.5
+      ]
+    }
+  },
+  &quot;zero_demand&quot;: {
+    &quot;compression/axial_compression&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;compression/bending&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;compression/combined&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;compression/governing&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;joint/punching_shear&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;tension/axial_tension&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;tension/bending&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;tension/combined&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    },
+    &quot;tension/governing&quot;: {
+      &quot;applied_demand&quot;: {
+        &quot;unit&quot;: &quot;ksi&quot;,
+        &quot;value&quot;: 0.0
+      },
+      &quot;capacity_status&quot;: &quot;NOT_EVALUATED&quot;,
+      &quot;finite_positive_capacity&quot;: true,
+      &quot;source&quot;: &quot;[3, 4, 9]&quot;,
+      &quot;status&quot;: &quot;ZERO_DEMAND_ARITHMETIC_ONLY&quot;,
+      &quot;utilisation&quot;: {
+        &quot;unit&quot;: &quot;1&quot;,
+        &quot;value&quot;: 0.0
+      }
+    }
+  }
+}
+</pre></details>
 <script id="calculation" type="application/json">{
   "annulus": {
     "cross_sectional_area": {

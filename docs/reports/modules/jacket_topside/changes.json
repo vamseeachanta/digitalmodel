@@ -3,5 +3,10 @@
     "change": "Initial module review and independent geometry calculation; capacity qualification gaps are retained to bound engineering use.",
     "date": "2026-10-28",
     "revision": "A"
+  },
+  {
+    "change": "Expose escaped calculation JSON and format wall thicknesses to three decimals while retaining finer input precision.",
+    "date": "2026-10-28",
+    "revision": "B"
   }
 ]

@@ -12,6 +12,7 @@ No design compliance is certified.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | A | 2026-10-28 | Initial module review and independent geometry calculation; capacity qualification gaps are retained to bound engineering use. |
+| B | 2026-10-28 | Expose escaped calculation JSON and format wall thicknesses to three decimals while retaining finer input precision. |
 
 ## Rebuild
 
