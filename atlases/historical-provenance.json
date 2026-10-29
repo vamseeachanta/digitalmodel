@@ -2871,6 +2871,80 @@
         "atlases/riser_fatigue/b53753cd275a/surrogate.json": "a9430f17fdb6b7800e26d4c1330e2f1661aff5776c24a48f0e68d17350ad0da5",
         "atlases/riser_fatigue/b53753cd275a/validation.json": "e0a754380884e80020b1cccef58a051516e85462e515261db960a25a5730b351"
       }
+    },
+    {
+      "manifest": "atlases/anchor_capacity/7da77f2436f0/manifest.yaml",
+      "workflow_id": "anchor-capacity",
+      "recorded_code_version": "6ff58772d",
+      "source_publication": "first-matching-artifact-publication",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "7da77f2436f0356cad612a8b7c2751e9178675c139f3b44448bdc55b8064c58c",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "linear",
+          "response": "capacity_kN",
+          "axes": [
+            {
+              "name": "diameter_m",
+              "scale": "linear",
+              "grid": [
+                2.0,
+                3.5,
+                5.0,
+                6.5,
+                8.0
+              ]
+            },
+            {
+              "name": "length_m",
+              "scale": "linear",
+              "grid": [
+                10,
+                15,
+                20,
+                25,
+                30
+              ]
+            },
+            {
+              "name": "su_kpa",
+              "scale": "linear",
+              "grid": [
+                20,
+                40,
+                60,
+                80,
+                100
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-RP-E303",
+            "edition": "2005"
+          }
+        ],
+        "input": "examples/workflows/anchor-capacity/input.yml",
+        "response_sources": [
+          "src/digitalmodel/geotechnical/anchors.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "4dcaf1f00813cb8567341d0ae07fc4d7c9ea8101e5d0f543570b9bd6848b3680",
+        "src/digitalmodel/parametric/refresh.py": "24f4aeb7888fe4d994151f38412574e14eb72a0a8d828c84a711ccd403c731fb",
+        "src/digitalmodel/parametric/generate.py": "7d957b173df23131682559714a2ab12b0f6670b97ef11cbbaebcaa2c8e1f2e24",
+        "examples/workflows/anchor-capacity/input.yml": "3b395a57b22dfe2ee3d6413aa17c8f9a4ed7f5f5b44d81b8444fa6b612447af0",
+        "src/digitalmodel/geotechnical/anchors.py": "7ab62218affc7c24dc623f1959143c9670bd12b83fdc83cba2e9745be2258075"
+      },
+      "artifacts": {
+        "atlases/anchor_capacity/7da77f2436f0/manifest.yaml": "7203a10b3467c7c0efbdb5bf8a930f72b2e9b33b8c32b159e7cfe7bd8767994b",
+        "atlases/anchor_capacity/7da77f2436f0/grid.parquet": "9fab5a58e3510be686db14ae8e9d5e00deef5f1089f0af4aa6152310c9f0415e",
+        "atlases/anchor_capacity/7da77f2436f0/surrogate.json": "29674391121fd036b48485f2617fa6fcfc55e941048a0d6efb1880af4498b484",
+        "atlases/anchor_capacity/7da77f2436f0/validation.json": "7075ae5f67b930bb9d3809d285b87216d2b554e2ecadc7969d6b1c344a93a03e"
+      }
     }
   ]
 }
