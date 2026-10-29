@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """#1283: drilling-riser operability EXACT node-cache atlas + screening consumer.
 
 Offline — the committed atlas is built from the open analytical operating envelope
@@ -7,6 +10,7 @@ escalation, the all-NaN-node guard, and the screening consumer.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from unittest import mock
 
@@ -94,6 +98,17 @@ def test_all_nan_node_is_guarded():
 
 
 # -- deterministic rebuild -----------------------------------------------------
+
+
+@pytest.mark.parametrize("relative_path", [
+    "docs/api/drilling/results.json",
+    "docs/api/drilling/operability-monitor.results.json",
+])
+def test_published_consumers_bind_current_basis(relative_path):
+    data = json.loads((oa.REPO_ROOT / relative_path).read_text(encoding="utf-8"))
+    fingerprint = oa.content_fingerprint()
+    assert data["atlas_id"] == fingerprint[:12]
+    assert data["content_fingerprint"] == fingerprint
 
 
 def test_rebuild_is_byte_identical(tmp_path):
