@@ -37,6 +37,7 @@ def test_integrates_full_engineering_sections_and_one_dashboard(tmp_path):
         assert label in text
     assert text.count('id="envelope"') == 1 and text.count('id="payload"') == 1
     assert 'Table A-001.' in text
+    assert 'Maintainer-relative / report-relative locator' in text
     assert 'Figure 5-${' in text
     assert '<iframe' not in text and 'Pamphlet' not in text
     assert 'forecastperformance notcalculated' not in text

@@ -227,6 +227,10 @@ def operation_envelope(
     ``rao_set`` supplies per-DOF RAO magnitude (m/m for translations, deg/m for
     rotations). The envelope at each Tp is the worst case over ``headings``
     (default: all RAO headings) and the operation's criteria DOFs.
+
+    Numerical evaluation does not qualify the screening inputs. The citation
+    sidecar records the limits used and explicit standards evidence gaps;
+    alpha selection dependencies remain unknown (see envelope-basis.md).
     """
     op = resolve_operation(operation)
     validate_operation(op)
@@ -245,12 +249,41 @@ def operation_envelope(
               for tp in tps]
     return EnvelopeResult(
         vessel=rao_set.vessel_name, operation=op.key, alpha=op.alpha, points=points,
-        alpha_source={'status': 'unverified_screening', 'table_reference': None,
-                      'basis': op.basis, 'value': op.alpha},
-        citation_sidecar={'source_sibling': 'generic', 'limits_status': 'unverified_screening',
-                         'reference': 'docs/envelope-basis.md',
-                         'equations': ['B1', 'B2', 'B3', 'B4', 'B5'],
-                         'catalogue_table': 'B6', 'standard_clause': None},
+        alpha_source={
+            'status': 'unverified_screening', 'table_reference': None,
+            'basis': op.basis, 'value': op.alpha,
+            # Issue #2769 acceptance and audit #2747, section 12: these are
+            # alpha selection dependencies, not Tp or the spectral Hs_ref.
+            'dependencies': {
+                'planned_operation_period_h': None,
+                'design_hs_m': None,
+                'forecast_level': None,
+            },
+        },
+        citation_sidecar={
+            'source_sibling': 'generic', 'limits_status': 'unverified_screening',
+            'reference': 'docs/envelope-basis.md',
+            'equations': ['B1', 'B2', 'B3', 'B4', 'B5'],
+            'catalogue_table': 'B6' if op == OPERATIONS.get(op.key) else None,
+            'standard_clause': None,
+            'motion_limits': [
+                {'dof': limit.dof, 'max_significant': limit.max_significant,
+                 'unit': limit.unit}
+                for limit in op.limits
+            ],
+            # No designation, edition, clause or table has been verified.
+            # A caller's basis string is descriptive, not qualification evidence.
+            'qualification': {
+                'status': 'NOT_EVALUATED',
+                'reason': 'Standard evidence and alpha selection inputs are unavailable.',
+                'standard_designation': None,
+                'standard_edition': None,
+                'motion_limit_clause': None,
+                'alpha_clause': None,
+                'alpha_table': None,
+                'evidence_reference': None,
+            },
+        },
     )
 
 
@@ -306,35 +339,47 @@ def envelope_for_operations(
 
 
 def plot_envelopes(results: dict[str, EnvelopeResult], out_path) -> Optional[object]:
-    """Plot Hs limit vs Tp, one curve per operation. Returns the path, or None
-    if matplotlib is unavailable (plotting is a convenience, not a contract)."""
+    """Plot Hs limit vs Tp, returning the output path.
+
+    Validate result points before importing plotting dependencies. Return None
+    only when the optional top-level matplotlib package is absent. Transitive
+    import, backend initialization and rendering errors propagate unchanged.
+    Close the plot's figure even when rendering or saving fails.
+
+    Issue #2768: this qualifies plotting availability, without changing result
+    validation, heading conventions or out-of-band response sensitivity.
+    """
     for result in results.values():
         result.require_valid_points()
     try:
         import matplotlib
+    except ModuleNotFoundError as exc:
+        if exc.name == "matplotlib":
+            return None
+        raise
 
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-    except Exception:  # noqa: BLE001 - optional dep
-        return None
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
     from pathlib import Path
 
     out_path = Path(out_path)
     fig, ax = plt.subplots(figsize=(7.5, 4.8))
-    vessel = ""
-    for op_key, env in results.items():
-        vessel = env.vessel
-        label = OPERATIONS[op_key].label if op_key in OPERATIONS else op_key
-        tps = [p.tp_s for p in env.points]
-        hs = [p.hs_limit_m if p.evaluated else np.nan for p in env.points]
-        ax.plot(tps, hs, marker="o", markersize=3, label=label)
-    ax.set_xlabel("Peak period Tp (s)")
-    ax.set_ylabel("Forecast Hs limit (m)")
-    ax.set_title(f"{vessel} — operability envelope by operation")
-    ax.grid(True, alpha=0.3)
-    ax.legend(fontsize="small")
-    fig.savefig(out_path, dpi=110, bbox_inches="tight")
-    plt.close(fig)
+    try:
+        vessel = ""
+        for op_key, env in results.items():
+            vessel = env.vessel
+            label = OPERATIONS[op_key].label if op_key in OPERATIONS else op_key
+            tps = [p.tp_s for p in env.points]
+            hs = [p.hs_limit_m if p.evaluated else np.nan for p in env.points]
+            ax.plot(tps, hs, marker="o", markersize=3, label=label)
+        ax.set_xlabel("Peak period Tp (s)")
+        ax.set_ylabel("Forecast Hs limit (m)")
+        ax.set_title(f"{vessel} — operability envelope by operation")
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize="small")
+        fig.savefig(out_path, dpi=110, bbox_inches="tight")
+    finally:
+        plt.close(fig)
     return out_path
 
 

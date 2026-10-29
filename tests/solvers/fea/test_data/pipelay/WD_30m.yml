@@ -81,7 +81,7 @@ Groups:
     Collapsed:
       - Variable data
   Structure:
-    Bigfoot1: Model
+    SubprojA: Model
     Pipeline: Model
     Tensioner: Model
 LineTypes:
@@ -14957,7 +14957,7 @@ Vessels:
       - 0
       - 0
     Length: ~
-    Name: Bigfoot1
+    Name: SubprojA
     Orientation:
       - 0
       - 0
@@ -15041,7 +15041,7 @@ Vessels:
     VesselType: Vessel Type1
 Winches:
   - Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - - Bigfoot1
+      - - SubprojA
         - -20
         - 0
         - 9.25

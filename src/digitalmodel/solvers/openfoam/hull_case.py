@@ -29,6 +29,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import math
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -72,6 +73,7 @@ from .hull_free_surface import (
     free_surface_divisions,
     free_surface_resolution,
 )
+from .hull_wave_extent import WaveExtent, derive_wave_extent, write_wave_surfaces
 from .hull_case_dicts import (
     case_provenance,
     hull_case_tokens,
@@ -83,6 +85,7 @@ from .hull_case_regions import (
 )
 from .hull_field_patches import add_appendage_patchfields
 from .hull_manifest import HullManifest, load_hull_manifest
+from .wall_treatment import YPlusEvidence, assess_wall_treatment
 
 __all__ = [
     "GRAVITY",
@@ -165,12 +168,23 @@ class HullCaseConfig:
     free_surface_cells_per_wavelength: Optional[float] = (
         DEFAULT_FREE_SURFACE_CELLS_PER_WAVELENGTH
     )
+    #: Required wake length aft of the actual stern, in deep-water wavelengths.
+    #: No universal minimum is assumed. None records extent as NOT_EVALUATED.
+    #: Geometry follows Ship wakes: Kelvin or Mach angle? (2013), pp. 1–2.
+    free_surface_wake_wavelengths: Optional[float] = None
     # Innermost refinement box margins around the hull bounding box. Geometry
     # scaled; a coarse member of a convergence triplet needs them widened so
     # snappy's transition never reaches the box face (see hull_domain._inner_box).
     inner_margin_x_lpp: float = INNER_MARGIN_X_LPP
     inner_margin_y_beam: float = INNER_MARGIN_Y_BEAM
     inner_margin_z_lpp: float = INNER_MARGIN_Z_LPP
+
+    #: Evidence must cover all wall faces sharing the hull treatment, including
+    #: appendages. A prior solve may inform a rebuild; it does not certify the
+    #: rebuilt mesh. Predictions are assessed separately and never select nutk.
+    nut_wall_function: str = "auto"
+    achieved_y_plus: Optional[YPlusEvidence] = None
+    predicted_y_plus: Optional[YPlusEvidence] = None
 
     def __post_init__(self) -> None:
         if self.velocity <= 0:
@@ -180,6 +194,17 @@ class HullCaseConfig:
         if self.end_time < 1:
             raise ValueError(f"end_time must be >= 1, got {self.end_time}")
         assert_regions_agree(self.manifest, self.appendages)
+        for message in self.wall_treatment["warnings"]:
+            warnings.warn(message, UserWarning, stacklevel=2)
+
+    @property
+    def wall_treatment(self) -> Dict[str, Any]:
+        """One policy supplies both the field token and the evidence record."""
+        return assess_wall_treatment(
+            requested=self.nut_wall_function,
+            achieved=self.achieved_y_plus,
+            predicted=self.predicted_y_plus,
+        )
 
     @property
     def nu(self) -> float:
@@ -241,6 +266,7 @@ class HullCaseDerivation:
     decomposition: Sequence[int]
     first_cell_height: float
     free_surface: FreeSurfaceResolution
+    wave_extent: WaveExtent
 
 
 def _derive_geometry(
@@ -321,6 +347,9 @@ def derive_hull_case(config: HullCaseConfig) -> HullCaseDerivation:
     """Run every derivation. Raises before anything is written."""
     manifest = config.manifest
     domain, boxes, divisions, free_surface = _derive_geometry(config)
+    wave_extent = derive_wave_extent(
+        manifest, domain, boxes, config.velocity, config.free_surface_wake_wavelengths
+    )
 
     return HullCaseDerivation(
         config=config,
@@ -328,13 +357,15 @@ def derive_hull_case(config: HullCaseConfig) -> HullCaseDerivation:
         boxes=boxes,
         divisions=divisions,
         free_surface=free_surface,
+        wave_extent=wave_extent,
         budget=derive_cell_budget(
             domain,
-            boxes,
+            wave_extent.budget_boxes(boxes),
             divisions,
             ranks=config.ranks,
             safety_factor=config.cell_safety_factor,
             cap=config.max_global_cells,
+            surface_regions=config.surface_regions,
         ),
         turbulence=derive_inlet_turbulence(
             config.velocity,
@@ -387,6 +418,7 @@ def build_hull_case(
     # exist for the runner's own structural check to pass.
     (case / "0").mkdir(exist_ok=True)
     copy_region_surfaces(regions, case / "constant" / "triSurface")
+    write_wave_surfaces(case, derivation.wave_extent, derivation.boxes)
     add_appendage_patchfields(case, regions)  # else setFields aborts post-mesh
 
     (case / "case_provenance.json").write_text(

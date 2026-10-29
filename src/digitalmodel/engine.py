@@ -319,6 +319,10 @@ def engine(
     elif basename == "fatigue_analysis":
         fatigue_analysis = FatigueAnalysis()
         cfg_base = fatigue_analysis.router(cfg_base)
+    elif basename == "mooring_chain_degradation":
+        from digitalmodel.asset_integrity.mooring_chain_degradation import router
+
+        cfg_base = router(cfg_base)
     elif basename == "mooring_fatigue":
         from digitalmodel.mooring_fatigue.workflow import router as mooring_fatigue
 
@@ -510,6 +514,10 @@ def engine(
         )
 
         cfg_base = passing_ship_forces(cfg_base)
+    elif basename == "hull_wastage_screen":
+        from digitalmodel.hull_wastage_screen.workflow import router as hull_wastage_screen
+
+        cfg_base = hull_wastage_screen(cfg_base)
     elif basename == "hull_girder_screening":
         from digitalmodel.hull_girder_screening.workflow import (
             router as hull_girder_screening,

@@ -4,6 +4,7 @@
 """Tests for fatigue_postprocessor — FatiguePostprocessor methods."""
 
 import math
+from itertools import permutations
 
 import pytest
 import pandas as pd
@@ -421,3 +422,212 @@ def test_below_threshold_life_and_damage_match_hand_calculation():
     assert _fp().calculate_fatigue_damage(config).total_damage == pytest.approx(
         1000 / expected_cycles
     )
+
+
+def _synthetic_sn_curve(**metadata):
+    """Construct an analytical fixture; these are not design-code values.
+
+    Choose N1 = 10**6/S**2 and N2 = 10**7/S**3. They meet at
+    S = 10 MPa, N = 10**4 cycles. Set the unused threshold to that stress.
+    All coefficients and the threshold are synthetic inputs by construction.
+    """
+    return SNcurve(
+        name="synthetic",
+        log_a1=6,
+        m1=2,
+        log_a2=7,
+        m2=3,
+        N_transition=10_000,
+        threshold_mpa=10,
+        **metadata,
+    )
+
+
+def _synthetic_single_slope_config(load_cases):
+    """Choose synthetic inputs only; no design-code values are used.
+
+    Define N = 10**8/S**2 (S in MPa) on both segments, with transition
+    10**6 cycles and unused threshold 1 MPa. All probes below use the
+    first segment: even the smallest uncorrected range, 25 MPa, gives
+    N = 10**8/25**2 = 160000 < 10**6 cycles.
+
+    Choose SCF=2, reference thickness 10 mm, actual thickness 40 mm,
+    exponent 1/2, and DFF=3. The thickness multiplier is (40/10)**(1/2)=2,
+    so corrected S=4*S_input and allowable damage=1/3.
+    """
+    return FatigueConfig(
+        sn_curve=SNcurve(
+            name="synthetic-single-slope",
+            log_a1=8,
+            m1=2,
+            log_a2=8,
+            m2=2,
+            N_transition=1_000_000,
+            threshold_mpa=1,
+            environment="custom",
+        ),
+        load_cases=load_cases,
+        scf=2,
+        thickness_correction=True,
+        reference_thickness_mm=10,
+        actual_thickness_mm=40,
+        thickness_exponent=1 / 2,
+        design_fatigue_factor=3,
+    )
+
+
+def test_custom_curve_combined_factors_hand_calculation():
+    """Independent arithmetic using the synthetic power law above.
+
+    Input ranges 25, 50 MPa become 25*2*2=100, 50*2*2=200 MPa.
+    N=10**8/S**2 gives 10000, 2500 cycles respectively. Choose applied
+    counts 1000, 500: Miner terms are 1000/10000=1/10, 500/2500=1/5.
+    Sum=3/10; utilization=(3/10)/(1/3)=9/10; annual life=10/3 years.
+    All expected values are hand results, independent of curve lookup.
+    """
+    config = _synthetic_single_slope_config([
+        FatigueLoadCase(load_case_id="lower", stress_range_mpa=25, num_cycles=1000),
+        FatigueLoadCase(load_case_id="higher", stress_range_mpa=50, num_cycles=500),
+    ])
+    processor = _fp()
+    for case, expected_range, expected_cycles in zip(
+        config.load_cases, (100, 200), (10_000, 2500)
+    ):
+        corrected = processor.calculate_thickness_correction(
+            case.stress_range_mpa * config.scf,
+            config.actual_thickness_mm,
+            config.reference_thickness_mm,
+            config.thickness_exponent,
+        )
+        assert corrected == pytest.approx(expected_range)
+        assert processor.calculate_cycles_to_failure(
+            corrected, config.sn_curve
+        ) == pytest.approx(expected_cycles)
+
+    result = processor.calculate_fatigue_damage(config)
+    assert result.damage_per_case == pytest.approx({"lower": 1 / 10, "higher": 1 / 5})
+    assert result.total_damage == pytest.approx(3 / 10)
+    assert result.allowable_damage == pytest.approx(1 / 3)
+    assert result.utilization == pytest.approx(9 / 10)
+    assert result.fatigue_life_years == pytest.approx(10 / 3)
+    assert result.critical_load_case == "higher"
+
+
+def test_custom_curve_damage_order_invariance():
+    """Hand calculation for distinct cases on the same synthetic branch.
+
+    Add range 100 MPa, count 250 to the preceding example: corrected
+    S=100*2*2=400 MPa, N=10**8/400**2=625, damage=250/625=2/5.
+    Thus D=1/10+1/5+2/5=7/10 and utilization=3*7/10=21/10,
+    independently of order. Doubling each applied count doubles every
+    term: D=7/5 and utilization=21/5. The largest term stays unique.
+    """
+    cases = [
+        FatigueLoadCase(load_case_id="lower", stress_range_mpa=25, num_cycles=1000),
+        FatigueLoadCase(load_case_id="middle", stress_range_mpa=50, num_cycles=500),
+        FatigueLoadCase(load_case_id="higher", stress_range_mpa=100, num_cycles=250),
+    ]
+    expected_damage = {"lower": 1 / 10, "middle": 1 / 5, "higher": 2 / 5}
+    processor = _fp()
+    separate_damage = 0
+    for case in cases:
+        result = processor.calculate_fatigue_damage(
+            _synthetic_single_slope_config([case])
+        )
+        assert result.total_damage == pytest.approx(expected_damage[case.load_case_id])
+        separate_damage += result.total_damage
+
+    for ordering in permutations(cases):
+        result = processor.calculate_fatigue_damage(
+            _synthetic_single_slope_config(list(ordering))
+        )
+        assert result.damage_per_case == pytest.approx(expected_damage)
+        assert result.total_damage == pytest.approx(7 / 10)
+        assert result.total_damage == pytest.approx(separate_damage)
+        assert result.allowable_damage == pytest.approx(1 / 3)
+        assert result.utilization == pytest.approx(21 / 10)
+        assert result.critical_load_case == "higher"
+
+    doubled_cases = [
+        FatigueLoadCase(
+            load_case_id=case.load_case_id,
+            stress_range_mpa=case.stress_range_mpa,
+            num_cycles=2 * case.num_cycles,
+        )
+        for case in cases
+    ]
+    doubled = processor.calculate_fatigue_damage(
+        _synthetic_single_slope_config(doubled_cases)
+    )
+    assert doubled.damage_per_case == pytest.approx(
+        {"lower": 1 / 5, "middle": 2 / 5, "higher": 4 / 5}
+    )
+    assert doubled.total_damage == pytest.approx(7 / 5)
+    assert doubled.utilization == pytest.approx(21 / 5)
+
+
+@pytest.mark.parametrize("stress, expected", [(100, 100), (10, 10_000), (1, 10_000_000)])
+def test_synthetic_curve_segments_and_transition(stress, expected):
+    """Hand substitution into the fixture: N(100)=100, N(10)=10000,
+    N(1)=10000000. The last point is below the synthetic threshold.
+    The equal-transition case uses the first segment.
+    """
+    assert _fp().calculate_cycles_to_failure(stress, _synthetic_sn_curve()) == (
+        pytest.approx(expected)
+    )
+
+
+@pytest.mark.parametrize("environment", ["air", "seawater_cp", "custom"])
+def test_environment_metadata_does_not_select_another_curve(environment):
+    """At synthetic S=100, N=10**6/100**2=100 for every metadata label."""
+    sn = _synthetic_sn_curve(environment=environment)
+    assert _fp().calculate_cycles_to_failure(100, sn) == pytest.approx(100)
+
+
+def test_threshold_metadata_does_not_change_positive_range_life():
+    """Hand substitution: S=1 gives N2=10**7, even with threshold=100.
+
+    The changed threshold is a synthetic input, not an acceptance limit.
+    """
+    sn = _synthetic_sn_curve()
+    sn.threshold_mpa = 100
+    assert _fp().calculate_cycles_to_failure(1, sn) == pytest.approx(10_000_000)
+
+
+def test_worked_example_executes_and_matches_independent_hand_calculation(capsys):
+    """Execute the published example, keeping its answer independently pinned.
+
+    Analytical inputs: N1=10**6/S**2, N2=10**7/S**3, transition=10000.
+    Ranges 100, 10, 1 give N=100, 10000, 10000000 respectively.
+    Annual cycles 10, 2000, 3000000 give damage 1/10, 1/5, 3/10.
+    Thus total=3/5, life=5/3 years, allowable=1/2 (chosen DFF=2),
+    utilization=6/5, and the third case controls. No standard limit is used.
+    """
+    import re
+    from pathlib import Path
+
+    guide = Path(__file__).resolve().parents[2] / "docs/domains/ansys/fatigue-postprocessor.md"
+    blocks = re.findall(r"```python\n(.*?)```", guide.read_text(), re.DOTALL)
+    assert len(blocks) == 1
+    namespace = {"__name__": "__example__"}
+    exec(compile(blocks[0], guide.name, "exec"), namespace)
+    result = namespace["result"]
+    assert result.damage_per_case == pytest.approx(
+        {"high": 1 / 10, "knee": 1 / 5, "low": 3 / 10}
+    )
+    assert result.total_damage == pytest.approx(3 / 5)
+    assert result.fatigue_life_years == pytest.approx(5 / 3)
+    assert result.allowable_damage == pytest.approx(1 / 2)
+    assert result.utilization == pytest.approx(6 / 5)
+    assert result.critical_load_case == "low"
+    assert namespace["summary"].loc[0, "status"] == "FAIL"
+    assert capsys.readouterr().out.splitlines() == [
+        "damage=0.6; life=1.7 years; utilization=1.2; status=FAIL"
+    ]
+
+
+def test_module_documents_curve_selection_boundary_and_worked_example():
+    from digitalmodel.ansys import fatigue_postprocessor as module
+
+    assert "environment is metadata" in module.__doc__
+    assert "fatigue-postprocessor.md" in module.__doc__

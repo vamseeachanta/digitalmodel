@@ -141,6 +141,9 @@ class MooringDesigner:
 
         Returns:
             Maximum line tension (kN)
+
+        Raises:
+            ValueError: If the main segment is buoyant.
         """
         # Calculate fairlead position with vessel offset
         fairlead = np.array(line.fairlead_location)
@@ -164,6 +167,11 @@ class MooringDesigner:
 
         # Use main segment for catenary (simplified - should iterate all segments)
         main_segment = line.segments[0]
+
+        # Reject unsupported buoyancy before the fallback can mask the error
+        # and turn an invalid touchdown model into a passing design.
+        if main_segment.weight_water < 0:
+            raise ValueError("Touchdown catenary requires positive submerged weight")
 
         # Estimate horizontal tension needed
         # Start with pretension

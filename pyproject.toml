@@ -105,6 +105,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+slope = [
+    # Benchmarked API: xslope v1.0.3, README limit-equilibrium example.
+    "xslope==1.0.3",
+]
+slope-seepage = [
+    "xslope==1.0.3",
+    # xslope v1.0.3 declares Gmsh in its optional fem extra; seepage only.
+    # Minimum from the adoption requirements and the slope screening guide.
+    "gmsh>=4.15",
+]
 metocean = [
     # API tested against the published metocean-stats 1.2.0 distribution.
     "metocean-stats==1.2.0",
@@ -172,8 +182,11 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    # Exercise the frequency adapter against the reviewed optional backend.
+    "wavespectra==4.9.0",
     # Exercise the optional adapter against the same published backend release.
     "metocean-stats==1.2.0",
+    "moorpy==1.3.0",
     "ezdxf>=1.3,<2",
     # Run curvature screening regressions in CI (Python 3.10-3.12).
     "hullprod>=1.0.1,<2",
@@ -259,6 +272,7 @@ markitdown = ["markitdown>=0.0.1,<0.1.0"]
 
 [project.scripts]
 digital_model = "digitalmodel.__main__:main"
+modular-generator = "digitalmodel.solvers.orcaflex.modular_generator.cli:main"
 run-to-sim = "digitalmodel.solvers.orcaflex.run_to_sim_cli:main"
 orcaflex-universal = "digitalmodel.solvers.orcaflex.universal_cli:main"
 orcaflex-sim = "digitalmodel.solvers.orcaflex.universal_cli:main"
@@ -270,6 +284,7 @@ structural-analysis = "digitalmodel.structural.structural_analysis.cli:main"
 wall-thickness = "digitalmodel.structural.analysis.cli:main"
 mooring-analysis = "digitalmodel.subsea.mooring_analysis.cli:main"
 viv-analysis = "digitalmodel.subsea.viv_analysis.cli:main"
+shear7-mode-finder = "digitalmodel.subsea.viv_tools.shear7_mode_finder:main"
 catenary-riser = "digitalmodel.subsea.catenary_riser.cli:main"
 signal-analysis = "digitalmodel.signal_processing.signal_analysis.cli:main"
 hydrodynamics = "digitalmodel.hydrodynamics.cli:main"
@@ -288,6 +303,7 @@ exclude = ["tests*", "docs*"]
 [tool.setuptools.package-data]
 digitalmodel = [
     "py.typed",
+    "riser_study/*.schema.json",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
     "hydrodynamics/aqwa/docs/damping-basis.md",
@@ -297,6 +313,7 @@ digitalmodel = [
     "foam_system/data/*.yml",
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
+    "subsea/riser_study/*.schema.json",
     "naval_architecture/data/*.yml",
     "field_development/data/*.yml",
     "solvers/openfoam/data/*.yml",

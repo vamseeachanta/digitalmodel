@@ -1,6 +1,16 @@
 schema_version: 1
 repository: digitalmodel
 revision: 270c8759c374b67a7f032953e7fcdb14e0224461
+# Pack references are maintained separately from the historical method snapshot.
+agent_packs:
+  subsea/capping_stack:
+    agent_pack: src/digitalmodel/subsea/capping_stack/docs/agent-pack.md
+    qa_family: EC
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
+  subsea/hipps:
+    agent_pack: src/digitalmodel/subsea/hipps/docs/agent-pack.md
+    qa_family: EC
+    code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
 searched:
   tracked_files: 17815
   text_files_searched: 15629
@@ -5237,7 +5247,7 @@ families:
     signals: *a509c5dfbb2
     relation: independent
     module: scripts
-    file_sha256: 26d2feef6eea371f7b9c698b335feffb058e47a92d42d704465b2e832987b9fc
+    file_sha256: 9b7faf2ec52146bededa16d5ae58d3851391d3337b68f47479d01413ee4806cd
     body_sha256: 7189a055e2e1560419691ee5b136b3ae0e6e217513e9edd2c97f86100ba66476
   - path: scripts/consolidate_panels.py
     symbol: _build_manual_entries
@@ -26464,6 +26474,757 @@ families:
     unresolved_definitions: 56
   coverage: partial
   coverage_reason: Unresolved name matches are recorded individually in rejected_candidates; classification requires inspection.
+- id: second-order-slow-drift-response
+  title: Second-order mean and slowly varying drift
+  search_signals:
+  - search: algorithm
+    pattern: compute_mean_drift_force|newman_approximation|full_qtf_slowly_varying|get_mean_drift
+  - search: vocabulary
+    pattern: mean.drift|slowly.varying|quadratic.transfer|QTF
+  - search: constants_or_keys
+    pattern: real_part|imag_part|sv_spectrum
+  inventory_scope:
+    revision: 6bce35df678258e116260895c4d230d9fabf661d
+    source_paths:
+    - src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
+    - src/digitalmodel/orcawave/drift_forces.py
+    method_note: docs/registry/implementation-map-families.md
+    basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
+  coverage: partial
+  limitations:
+  - Force spectra and mean loads are catalogued; coupled response and finite-duration extremes are NOT_EVALUATED.
+    Related issue 2617 is recorded separately; inventory membership does not resolve it.
+  implementations:
+  - path: src/digitalmodel/orcawave/drift_forces.py
+    symbol: compute_mean_drift_force
+    line: 108
+    kind: function
+    what: Integrates diagonal drift coefficients against a wave spectrum.
+    relation: independent
+    module: orcawave/drift_forces.py
+    file_sha256: 78811f9b3aee810b6c560a5a1a40c8d1f47f06da3858cf62bb541e75a58be90c
+    body_sha256: d15def5d4cd236285867b8230c8707516de5ef226b71080120c0c1acfbfd66cb
+  - path: src/digitalmodel/orcawave/drift_forces.py
+    symbol: newman_approximation
+    line: 215
+    kind: function
+    what: Constructs the diagonal-coefficient approximation and positive difference-frequency force spectrum.
+    relation: independent
+    module: orcawave/drift_forces.py
+    file_sha256: 78811f9b3aee810b6c560a5a1a40c8d1f47f06da3858cf62bb541e75a58be90c
+    body_sha256: 27c087837b1e4f1899d22846e01c53c8c5a9cf4f874728b6855012073f37ffc1
+  - path: src/digitalmodel/orcawave/drift_forces.py
+    symbol: full_qtf_slowly_varying
+    line: 289
+    kind: function
+    what: Accumulates positive-lag complex-QTF contributions to fluctuation variance.
+    relation: independent
+    module: orcawave/drift_forces.py
+    file_sha256: 78811f9b3aee810b6c560a5a1a40c8d1f47f06da3858cf62bb541e75a58be90c
+    body_sha256: 47bd19bb19eeb82dc95fc8a3015fd9286166e3f427d74e8b3838dd1ae2d0dc1c
+  - path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
+    symbol: QTFComponent.get_mean_drift
+    line: 67
+    kind: function
+    what: Extracts stored diagonal amplitudes for difference-frequency QTFs; rejects sum-frequency use.
+    relation: data_model
+    module: hydrodynamics/bemrosetta/models/qtf_data.py
+    file_sha256: 54a6351cca45e849fb287c95217313d5e12fde665b6886e9eec1326f313e54b2
+    body_sha256: 88957a03c98ff5a5570b9907aece152f7b91e89dc95fac68e284e85425e54942
+  - path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
+    symbol: QTFData.get_mean_drift_forces
+    line: 139
+    kind: function
+    what: Collects mean-drift diagonals by degree of freedom and heading.
+    relation: data_model
+    module: hydrodynamics/bemrosetta/models/qtf_data.py
+    file_sha256: 54a6351cca45e849fb287c95217313d5e12fde665b6886e9eec1326f313e54b2
+    body_sha256: 14839de9f9f8f1c48a3d7934d58fd9dc890014ee5bd555489c6963868f83db4a
+  identical_groups: []
+  search_audit:
+  - search: algorithm
+    matching_files: 2
+  - search: vocabulary
+    matching_files: 2
+  - search: constants_or_keys
+    matching_files: 1
+  reconciliation:
+    matched_definitions: 10
+    unresolved_definitions: 5
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
+    completeness.
+- id: extreme-statistics
+  title: Extreme statistics and return levels
+  search_signals:
+  - search: algorithm
+    pattern: fit_weibull|fit_gumbel|gumbel_fit|gumbel_quantile|return_level|long_term_extreme|rayleigh_(?:exceedance|quantile)|short_term_statistics|extrapolate_current
+  - search: vocabulary
+    pattern: Weibull|Gumbel|Rayleigh|return.level|annual.maxima
+  - search: constants_or_keys
+    pattern: samples_per_year|return_periods|location|scale|shape
+  inventory_scope:
+    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    source_paths:
+    - src/digitalmodel/drilling_riser/postprocess/extremes.py
+    - src/digitalmodel/hydrodynamics/river_currents/extremes.py
+    - src/digitalmodel/orcaflex/postprocessor.py
+    - src/digitalmodel/orcawave/motion_statistics.py
+    - src/digitalmodel/subsea/pipeline/free_span/weibull_current.py
+    method_note: docs/registry/implementation-map-families.md
+    basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
+  coverage: partial
+  limitations:
+  - Block-maxima fits, probability-plot fits and response tails have different sampling assumptions. Distribution
+    selection, uncertainty qualification and design acceptance are NOT_EVALUATED; issue 2618 is retained for independent
+    assessment.
+  implementations:
+  - path: src/digitalmodel/orcaflex/postprocessor.py
+    symbol: fit_gumbel
+    line: 177
+    kind: function
+    what: Fits a maximum-type Gumbel distribution by maximum likelihood and returns quantiles.
+    relation: independent
+    module: orcaflex/postprocessor.py
+    file_sha256: 2d8f7ce7a5148f258ed665192aed546bd134667ccbe3fd4c25d0ccc8500f237a
+    body_sha256: fdc5c90c838f8dd198842bcaab43fc6b9d0695153db56eb7b7a986edc75c1f0e
+  - path: src/digitalmodel/orcaflex/postprocessor.py
+    symbol: fit_weibull
+    line: 223
+    kind: function
+    what: Estimates Weibull shape, location and scale with degeneracy checks; distinct from zero-location fits.
+    relation: independent
+    module: orcaflex/postprocessor.py
+    file_sha256: 2d8f7ce7a5148f258ed665192aed546bd134667ccbe3fd4c25d0ccc8500f237a
+    body_sha256: 6e113509970cf47d2989543a0c88be11a50d8f546feb0c377f3697239b4d9477
+  - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
+    symbol: fit_weibull
+    line: 92
+    kind: function
+    what: Fits a zero-location Weibull by transformed-rank regression.
+    relation: independent
+    module: hydrodynamics/river_currents/extremes.py
+    file_sha256: 77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40
+    body_sha256: b2c5e0c12cb0bc885eb2d2123b9c7cb0a115cdf426ae7ef3a604a8d13531b200
+  - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
+    symbol: fit_gumbel
+    line: 100
+    kind: function
+    what: Fits annual maxima by a Gumbel probability plot.
+    relation: independent
+    module: hydrodynamics/river_currents/extremes.py
+    file_sha256: 77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40
+    body_sha256: 47a38685de85c3bb4fdd72b2ee31296eca7f7bb85d8b714a43cd9e4e06346748
+  - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
+    symbol: WeibullFit.return_level
+    line: 67
+    kind: function
+    what: Converts an annual exceedance probability using the supplied independent sample rate.
+    relation: independent
+    module: hydrodynamics/river_currents/extremes.py
+    file_sha256: 77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40
+    body_sha256: 354846d0aceaa25a4b3cfb3ba7df029908b93763055fad11fef2481ff891fdf5
+  - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
+    symbol: GumbelFit.return_level
+    line: 87
+    kind: function
+    what: Inverts a maximum-type Gumbel CDF for an annual return period.
+    relation: independent
+    module: hydrodynamics/river_currents/extremes.py
+    file_sha256: 77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40
+    body_sha256: 09a2c406aafcd68cba46c213e01cc93e8419e74d2d32560a4b5d838e4edb5dc1
+  - path: src/digitalmodel/drilling_riser/postprocess/extremes.py
+    symbol: gumbel_quantile
+    line: 49
+    kind: function
+    what: Evaluates a Gumbel quantile from explicit location, scale and probability.
+    relation: independent
+    module: drilling_riser/postprocess/extremes.py
+    file_sha256: efba24665e376003bbc7679cd315c12f3a6db83f1319972f23bd88cf008df729
+    body_sha256: 244c18e288260c976030a989bcfea9e3f724ff002319267d4af1b1c0694767fa
+  - path: src/digitalmodel/drilling_riser/postprocess/extremes.py
+    symbol: gumbel_fit
+    line: 97
+    kind: function
+    what: Fits maxima or sign-transformed minima and estimates confidence bounds.
+    relation: independent
+    module: drilling_riser/postprocess/extremes.py
+    file_sha256: efba24665e376003bbc7679cd315c12f3a6db83f1319972f23bd88cf008df729
+    body_sha256: d4b494fc48f1a8844c5d89a577422b4cc586922c52f6002ca7cd8875ca19ef9e
+  - path: src/digitalmodel/orcawave/motion_statistics.py
+    symbol: short_term_statistics
+    line: 171
+    kind: function
+    what: Derives narrow-band response statistics and duration-dependent peak estimate.
+    relation: independent
+    module: orcawave/motion_statistics.py
+    file_sha256: 50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d
+    body_sha256: 9e2c6e018edd9a3599493101c86817a244dd658faa46d03d79d9f73bd39b0658
+  - path: src/digitalmodel/orcawave/motion_statistics.py
+    symbol: rayleigh_exceedance
+    line: 225
+    kind: function
+    what: Evaluates a narrow-band Rayleigh amplitude tail.
+    relation: independent
+    module: orcawave/motion_statistics.py
+    file_sha256: 50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d
+    body_sha256: 9f8f3b26e71dfeb7c1f4202653de51614ad73c6d81c45b23bf48908396287805
+  - path: src/digitalmodel/orcawave/motion_statistics.py
+    symbol: rayleigh_quantile
+    line: 256
+    kind: function
+    what: Inverts the Rayleigh amplitude tail probability.
+    relation: independent
+    module: orcawave/motion_statistics.py
+    file_sha256: 50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d
+    body_sha256: 1aba482aa9fbd88da59e19d8b1526a5b748ebb61cce01d542f6cabccbe1054f9
+  - path: src/digitalmodel/orcawave/motion_statistics.py
+    symbol: long_term_extreme
+    line: 282
+    kind: function
+    what: Combines weighted sea-state response exceedances to estimate a long-term extreme.
+    relation: independent
+    module: orcawave/motion_statistics.py
+    file_sha256: 50007a7f8bbc8469bc86a2777a561178fd6a021b1b9cd91f66b27ac56588275d
+    body_sha256: 05a2b46dab5d8cc5663cb35ec243a8ff67faa8bcb4559163da61c28ef6f44073
+  - path: src/digitalmodel/subsea/pipeline/free_span/weibull_current.py
+    symbol: fit_weibull_current
+    line: 51
+    kind: function
+    what: Fits a two-parameter current-speed Weibull from exceedance ordinates.
+    relation: independent
+    module: subsea/pipeline/free_span/weibull_current.py
+    file_sha256: cefe4243f898afcdd3a1b7bf5f23af01c2130aaca48d91dfb333ee1a7aac8e64
+    body_sha256: 153f5fc3d33bae997f646e30ecb708be81b3e6d32414728d4759e37f12d81e01
+  - path: src/digitalmodel/subsea/pipeline/free_span/weibull_current.py
+    symbol: extrapolate_current
+    line: 130
+    kind: function
+    what: Extrapolates current speed from reference return-period values.
+    relation: independent
+    module: subsea/pipeline/free_span/weibull_current.py
+    file_sha256: cefe4243f898afcdd3a1b7bf5f23af01c2130aaca48d91dfb333ee1a7aac8e64
+    body_sha256: c1462200f474d4dd78cdfedb64117246710ecf5001ba0daf1311fffa5ad1ec15
+  identical_groups: []
+  search_audit:
+  - search: algorithm
+    matching_files: 5
+  - search: vocabulary
+    matching_files: 5
+  - search: constants_or_keys
+    matching_files: 5
+  reconciliation:
+    matched_definitions: 18
+    unresolved_definitions: 4
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
+    completeness.
+- id: design-waves
+  title: Design-wave inputs and regular-wave representations
+  search_signals:
+  - search: algorithm
+    pattern: RegularWaveBC|_wave_surface|_build_wave_trains|dispersion_wavenumber
+  - search: vocabulary
+    pattern: design.wave|regular.wave|Stokes|Dean.stream|Airy
+  - search: constants_or_keys
+    pattern: WaveHeight|WavePeriod|wave_height|wave_period|phase
+  inventory_scope:
+    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    source_paths:
+    - src/digitalmodel/hydrodynamics/planing_hull/solver.py
+    - src/digitalmodel/solvers/openfoam/validation/wave_tank.py
+    - src/digitalmodel/solvers/openfoam/wave_models.py
+    - src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py
+    method_note: docs/registry/implementation-map-families.md
+    basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
+  coverage: partial
+  limitations:
+  - This family covers prescribed regular-wave representations and input builders. A conditioned design-wave or
+    NewWave constructor, crest selection, return-period derivation and breaking limits are NOT_EVALUATED. Selecting
+    a theory in an input file does not implement or validate that theory.
+  implementations:
+  - path: src/digitalmodel/solvers/openfoam/wave_models.py
+    symbol: RegularWaveBC
+    line: 47
+    kind: class
+    what: Stores a prescribed regular wave with linear-dispersion derived properties.
+    relation: data_model
+    module: solvers/openfoam/wave_models.py
+    file_sha256: ec88f360f80849c9a2f2ccaccf2481b7879e6259fcf8a12d48093c7dc7ebeaa3
+    body_sha256: ad2ba4e2644bca20d515775ace1d470e4e4b979060131e7b858528c13e7c09b8
+  - path: src/digitalmodel/solvers/openfoam/wave_models.py
+    symbol: RegularWaveBC.to_dict
+    line: 95
+    kind: function
+    what: Serializes prescribed wave parameters and theory choice without running a solver.
+    relation: delegate
+    module: solvers/openfoam/wave_models.py
+    file_sha256: ec88f360f80849c9a2f2ccaccf2481b7879e6259fcf8a12d48093c7dc7ebeaa3
+    body_sha256: 7a083dd4ebf3ce7a900ddc8ff8a8cd5712a9be222e714ca185c8d4c7f105f126
+  - path: src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py
+    symbol: EnvironmentBuilder._build_wave_trains
+    line: 251
+    kind: function
+    what: Builds deterministic or spectral wave-train inputs using the respective height and period keys.
+    relation: delegate
+    module: solvers/orcaflex/modular_generator/builders/environment_builder.py
+    file_sha256: d89c8b3a88ede433c9056f5a7f83cfeda0650cdf6a9fd1b172db8fa1f76f3634
+    body_sha256: 82e2c2a9874824341fe571ad569a0c1ded8b6d51c91807bfe2324894bc1149c7
+  - path: src/digitalmodel/hydrodynamics/planing_hull/solver.py
+    symbol: PlaningMotionSolver._wave_surface
+    line: 209
+    kind: function
+    what: Evaluates first- and second-harmonic regular-wave surface elevation in an encounter frame.
+    relation: independent
+    module: hydrodynamics/planing_hull/solver.py
+    file_sha256: e2cb01cfe0d21b175b9911875737331622955f7e172e87c4d204884ad79f7124
+    body_sha256: 1eec33fc086f5a884656ce5315a6b8a180089e10733a7e4332dfe8c777c39c55
+  - path: src/digitalmodel/solvers/openfoam/validation/wave_tank.py
+    symbol: dispersion_wavenumber
+    line: 65
+    kind: function
+    what: Solves finite-depth linear dispersion for prescribed wave-tank period and depth.
+    relation: independent
+    module: solvers/openfoam/validation/wave_tank.py
+    file_sha256: 8a8b989ce376b0c1162e4e2756ace9ccca771c9a3adb61a8ac795fae0652d299
+    body_sha256: 8f3ebdd455a7d77c972a0674ec488d7a2a577559b1e418634378db1389e65b7c
+  identical_groups: []
+  search_audit:
+  - search: algorithm
+    matching_files: 4
+  - search: vocabulary
+    matching_files: 4
+  - search: constants_or_keys
+    matching_files: 4
+  reconciliation:
+    matched_definitions: 6
+    unresolved_definitions: 2
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
+    completeness.
+- id: sloshing
+  title: Tank sloshing periods and resonance screening
+  search_signals:
+  - search: algorithm
+    pattern: rectangular_tank_periods|cylindrical_tank_periods|api650_convective_period|oval_tank_periods|horizontal_cylinder_periods|resonance_check|screen_tank
+  - search: vocabulary
+    pattern: sloshing|convective.period|antisymmetric.mode
+  - search: constants_or_keys
+    pattern: fill_depth|fill_fraction|excitation_periods|resonance_tolerance
+  inventory_scope:
+    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    source_paths:
+    - src/digitalmodel/hydrodynamics/sloshing.py
+    method_note: docs/registry/implementation-map-families.md
+    basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
+  coverage: partial
+  limitations:
+  - Analytical and equivalent-geometry screens are catalogued. Empirical constants, resonance tolerances, nonlinear
+    impact loads and CFD qualification are NOT_EVALUATED. Referenced standards are source claims in existing code,
+    not independently verified compliance.
+  implementations:
+  - path: src/digitalmodel/hydrodynamics/sloshing.py
+    symbol: rectangular_tank_periods
+    line: 100
+    kind: function
+    what: Evaluates antisymmetric linear modal periods for a rectangular tank.
+    relation: independent
+    module: hydrodynamics/sloshing.py
+    file_sha256: 71f7ee2cf575a214fd5623ab57ed57edf78ead27c3ca41ef0e14f2e595bc2748
+    body_sha256: 742b71d11a1b352ba075d707e88ba8618475c49981fa7c5f86f463e27d9c5d66
+  - path: src/digitalmodel/hydrodynamics/sloshing.py
+    symbol: cylindrical_tank_periods
+    line: 121
+    kind: function
+    what: Evaluates lateral cylindrical-tank modal periods using stored derivative roots.
+    relation: independent
+    module: hydrodynamics/sloshing.py
+    file_sha256: 71f7ee2cf575a214fd5623ab57ed57edf78ead27c3ca41ef0e14f2e595bc2748
+    body_sha256: 9acd3932d69600072b502f0d7038d3a7b1217e0572b45bccbd7b7972af2f7e4e
+  - path: src/digitalmodel/hydrodynamics/sloshing.py
+    symbol: api650_convective_period
+    line: 142
+    kind: function
+    what: Evaluates the existing simplified cylindrical convective-period expression.
+    relation: independent
+    module: hydrodynamics/sloshing.py
+    file_sha256: 71f7ee2cf575a214fd5623ab57ed57edf78ead27c3ca41ef0e14f2e595bc2748
+    body_sha256: 1ae9c3db46f1bd89c202cbb283d4950401dd000ae8817c2204e2daca1118391b
+  - path: src/digitalmodel/hydrodynamics/sloshing.py
+    symbol: oval_tank_periods
+    line: 175
+    kind: function
+    what: Estimates oval-tank periods using equivalent free-surface geometry.
+    relation: independent
+    module: hydrodynamics/sloshing.py
+    file_sha256: 71f7ee2cf575a214fd5623ab57ed57edf78ead27c3ca41ef0e14f2e595bc2748
+    body_sha256: a6505dcfc18ef3aeb70d248ece05d057c4f63aed9ffac5366c605daf702252a4
+  - path: src/digitalmodel/hydrodynamics/sloshing.py
+    symbol: horizontal_cylinder_periods
+    line: 207
+    kind: function
+    what: Adapts oval geometry to a horizontal circular cylinder.
+    relation: delegate
+    module: hydrodynamics/sloshing.py
+    file_sha256: 71f7ee2cf575a214fd5623ab57ed57edf78ead27c3ca41ef0e14f2e595bc2748
+    body_sha256: 822a8af083bac4c4aa504a7ac74e2c5f540bee7e59afa223fcd3fd2a1c7cd6ed
+  - path: src/digitalmodel/hydrodynamics/sloshing.py
+    symbol: resonance_check
+    line: 220
+    kind: function
+    what: Compares natural and excitation periods using a supplied relative tolerance.
+    relation: independent
+    module: hydrodynamics/sloshing.py
+    file_sha256: 71f7ee2cf575a214fd5623ab57ed57edf78ead27c3ca41ef0e14f2e595bc2748
+    body_sha256: 2bd6dbeed612b18764bcd329cb280a6dc844fd97006f45881705a1743bff9f01
+  - path: src/digitalmodel/hydrodynamics/sloshing.py
+    symbol: screen_tank
+    line: 241
+    kind: function
+    what: Combines selected analytical periods and resonance flags.
+    relation: delegate
+    module: hydrodynamics/sloshing.py
+    file_sha256: 71f7ee2cf575a214fd5623ab57ed57edf78ead27c3ca41ef0e14f2e595bc2748
+    body_sha256: ea5075d6df05a30d915c8a2bf6f932e45f3e2bcb7dcb18eb551967d61254c360
+  - path: src/digitalmodel/hydrodynamics/sloshing.py
+    symbol: router
+    line: 277
+    kind: function
+    what: Routes configuration to analytical sloshing geometry and screening helpers.
+    relation: delegate
+    module: hydrodynamics/sloshing.py
+    file_sha256: 71f7ee2cf575a214fd5623ab57ed57edf78ead27c3ca41ef0e14f2e595bc2748
+    body_sha256: 77dc54119964cc72b13806bd8a3858b86c9627bddaa262c08391cc48739b34a5
+  identical_groups: []
+  search_audit:
+  - search: algorithm
+    matching_files: 1
+  - search: vocabulary
+    matching_files: 1
+  - search: constants_or_keys
+    matching_files: 1
+  reconciliation:
+    matched_definitions: 8
+    unresolved_definitions: 1
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
+    completeness.
+- id: geotechnics
+  title: Geotechnical foundation and soil-response methods
+  search_signals:
+  - search: algorithm
+    pattern: skin_friction|end_bearing|axial_capacity|alpha_method_capacity|anchor_capacity|bearing_capacity|cyclic_stress_ratio|cyclic_resistance_ratio|assess_liquefaction|analyze_profile
+  - search: vocabulary
+    pattern: pile|anchor|mudmat|liquefaction|slope.stability
+  - search: constants_or_keys
+    pattern: su_kpa|phi_deg|effective_stress|n1_60cs
+  inventory_scope:
+    revision: 6bce35df678258e116260895c4d230d9fabf661d
+    source_paths:
+    - src/digitalmodel/geotechnical/anchors.py
+    - src/digitalmodel/geotechnical/cfg_workflows.py
+    - src/digitalmodel/geotechnical/liquefaction.py
+    - src/digitalmodel/geotechnical/mudmat.py
+    - src/digitalmodel/geotechnical/pile_capacity.py
+    - src/digitalmodel/geotechnical/piles.py
+    - src/digitalmodel/geotechnical/slope_stability.py
+    - src/digitalmodel/geotechnical/workflow.py
+    method_note: docs/registry/implementation-map-families.md
+    basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
+  coverage: partial
+  limitations:
+  - Reviewed foundation, liquefaction and workflow entry points are included; soil data quality, empirical factors
+    and standard compliance are NOT_EVALUATED. Slope analysis is an external numerical delegate and was not executed.
+    Scour has its own family.
+  implementations:
+  - path: src/digitalmodel/geotechnical/piles.py
+    symbol: skin_friction_clay
+    line: 107
+    kind: function
+    what: Calculates clay shaft resistance from adhesion and undrained strength.
+    relation: independent
+    module: geotechnical/piles.py
+    file_sha256: b90b89cfe326b120b62d9058128c574ca00dafab795649177464ad055b17844c
+    body_sha256: 6ce51920d1458294ddd819bc261821259639ab6f35faaa178c69e1d8b7d87541
+  - path: src/digitalmodel/geotechnical/piles.py
+    symbol: skin_friction_sand
+    line: 148
+    kind: function
+    what: Calculates sand shaft resistance from effective stress and interface friction.
+    relation: independent
+    module: geotechnical/piles.py
+    file_sha256: b90b89cfe326b120b62d9058128c574ca00dafab795649177464ad055b17844c
+    body_sha256: 223771ab323b0aa2cd9084c3fe8262c29768fd10b87e20a7117e4c979556253f
+  - path: src/digitalmodel/geotechnical/piles.py
+    symbol: end_bearing_clay
+    line: 175
+    kind: function
+    what: Calculates pile-tip bearing in clay.
+    relation: independent
+    module: geotechnical/piles.py
+    file_sha256: b90b89cfe326b120b62d9058128c574ca00dafab795649177464ad055b17844c
+    body_sha256: 53bd595f47190582458765d681c5595342aba7deea908e39d534cc75eb9c6b91
+  - path: src/digitalmodel/geotechnical/piles.py
+    symbol: end_bearing_sand
+    line: 195
+    kind: function
+    what: Calculates pile-tip bearing in sand.
+    relation: independent
+    module: geotechnical/piles.py
+    file_sha256: b90b89cfe326b120b62d9058128c574ca00dafab795649177464ad055b17844c
+    body_sha256: 3373bf64aac6239be90ca813563f1c4a917b609554fd70c26ea8390f06d2308e
+  - path: src/digitalmodel/geotechnical/piles.py
+    symbol: axial_capacity
+    line: 215
+    kind: function
+    what: Combines shaft and tip resistance with supplied factors.
+    relation: independent
+    module: geotechnical/piles.py
+    file_sha256: b90b89cfe326b120b62d9058128c574ca00dafab795649177464ad055b17844c
+    body_sha256: 09ff2c675e1cefe2e8fd3751ead027c1d25dd919eb423421a5035129981109af
+  - path: src/digitalmodel/geotechnical/pile_capacity.py
+    symbol: alpha_method_capacity
+    line: 36
+    kind: function
+    what: Routes a single-layer clay pile calculation to shared pile kernels.
+    relation: delegate
+    module: geotechnical/pile_capacity.py
+    file_sha256: ac5c6bdd979d21f56b8e2ff2dce05b566ed6c133ab61d4883b3634cd44d4d05a
+    body_sha256: cc81fc41ceed59a474dab383515c099806ec1bafb898a6af31b7d64b19b368b4
+  - path: src/digitalmodel/geotechnical/pile_capacity.py
+    symbol: alpha_method_capacity_multilayer
+    line: 84
+    kind: function
+    what: Accumulates layer shaft contributions and tip bearing.
+    relation: delegate
+    module: geotechnical/pile_capacity.py
+    file_sha256: ac5c6bdd979d21f56b8e2ff2dce05b566ed6c133ab61d4883b3634cd44d4d05a
+    body_sha256: 8259d5c4c84e7e2873c1908990bae8e5d39f3e156efc382e9006313e92dd57a2
+  - path: src/digitalmodel/geotechnical/anchors.py
+    symbol: drag_anchor_capacity
+    line: 110
+    kind: function
+    what: Applies existing empirical anchor-efficiency tables.
+    relation: independent
+    module: geotechnical/anchors.py
+    file_sha256: 81a46b8935d52bf19bcf53f3090e2366e7454a05f04b28aa11e626e90d115da8
+    body_sha256: db1d1f9434c7128f12f40351d01b13f13a9ecedb361c18759f984efe7062a044
+  - path: src/digitalmodel/geotechnical/anchors.py
+    symbol: suction_anchor_capacity
+    line: 158
+    kind: function
+    what: Combines caisson shaft and reverse tip bearing resistance.
+    relation: independent
+    module: geotechnical/anchors.py
+    file_sha256: 81a46b8935d52bf19bcf53f3090e2366e7454a05f04b28aa11e626e90d115da8
+    body_sha256: 1d47ff7e9bd3e78f29fd555954b7254d956930b21cd5cf4e4c7a0fcc66fe2dc6
+  - path: src/digitalmodel/geotechnical/mudmat.py
+    symbol: bearing_capacity_factors
+    line: 54
+    kind: function
+    what: Evaluates the existing bearing-capacity factor expressions.
+    relation: independent
+    module: geotechnical/mudmat.py
+    file_sha256: 64fd03a98f357201aceed160216fb748028d7c8f351fa68210866f5ea328e066
+    body_sha256: 034619582152238800cd9638a1033eea72dd015afb723f0ab4b84e49bc691fb2
+  - path: src/digitalmodel/geotechnical/mudmat.py
+    symbol: mudmat_bearing_capacity
+    line: 96
+    kind: function
+    what: Evaluates effective-area bearing and base-sliding capacity.
+    relation: independent
+    module: geotechnical/mudmat.py
+    file_sha256: 64fd03a98f357201aceed160216fb748028d7c8f351fa68210866f5ea328e066
+    body_sha256: 63027b680a14cc40cce5fbff767efee38dc4bfd1a4f558e9d461583d3b07803f
+  - path: src/digitalmodel/geotechnical/liquefaction.py
+    symbol: stress_reduction_factor
+    line: 58
+    kind: function
+    what: Evaluates the existing depth-dependent stress-reduction approximation.
+    relation: independent
+    module: geotechnical/liquefaction.py
+    file_sha256: f0e62f98ef021cb16202b68bb71fa96d524be9840da4ee009d95dff1078a728b
+    body_sha256: 4dfe4f3cbc206540e9225aab2a6f7f01bd69751febba422f88a822e174e8392d
+  - path: src/digitalmodel/geotechnical/liquefaction.py
+    symbol: magnitude_scaling_factor
+    line: 71
+    kind: function
+    what: Evaluates the existing earthquake magnitude adjustment.
+    relation: independent
+    module: geotechnical/liquefaction.py
+    file_sha256: f0e62f98ef021cb16202b68bb71fa96d524be9840da4ee009d95dff1078a728b
+    body_sha256: eb76f827d4d3bb716e526f1b59ec2b330e4afd159057918b673a5caca3154926
+  - path: src/digitalmodel/geotechnical/liquefaction.py
+    symbol: cyclic_stress_ratio
+    line: 78
+    kind: function
+    what: Calculates earthquake-induced cyclic stress ratio.
+    relation: independent
+    module: geotechnical/liquefaction.py
+    file_sha256: f0e62f98ef021cb16202b68bb71fa96d524be9840da4ee009d95dff1078a728b
+    body_sha256: 96c32f314542f66d4b970bd4267cf617dc548991c3347e5477e68669178942a9
+  - path: src/digitalmodel/geotechnical/liquefaction.py
+    symbol: cyclic_resistance_ratio_75
+    line: 87
+    kind: function
+    what: Evaluates the stored penetration-resistance correlation.
+    relation: independent
+    module: geotechnical/liquefaction.py
+    file_sha256: f0e62f98ef021cb16202b68bb71fa96d524be9840da4ee009d95dff1078a728b
+    body_sha256: 0a72cd807e6d2fc7cd22b745e1ab6aa1f5ada18463247746a33a3cb52379239e
+  - path: src/digitalmodel/geotechnical/liquefaction.py
+    symbol: assess_liquefaction
+    line: 101
+    kind: function
+    what: Screens soil layers using cyclic resistance and demand.
+    relation: independent
+    module: geotechnical/liquefaction.py
+    file_sha256: f0e62f98ef021cb16202b68bb71fa96d524be9840da4ee009d95dff1078a728b
+    body_sha256: 242015203dca77ee3c2f3e6b577e14ac60194e6022d8108f01083d3fccd369c9
+  - path: src/digitalmodel/geotechnical/cfg_workflows.py
+    symbol: AnchorCapacityWorkflow.router
+    line: 48
+    kind: function
+    what: Routes anchor-capacity configuration to pure calculators.
+    relation: delegate
+    module: geotechnical/cfg_workflows.py
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    body_sha256: fd547dfdd35ea83dc0cd63c31fd2cf30597f013560b12df870f90125b04a7491
+  - path: src/digitalmodel/geotechnical/cfg_workflows.py
+    symbol: PileCapacityWorkflow.router
+    line: 118
+    kind: function
+    what: Routes pile-capacity configuration to pure calculators.
+    relation: delegate
+    module: geotechnical/cfg_workflows.py
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    body_sha256: 9ea41476ef44087442622c7825e7ca4ce0a9c3f9b7f2868289ccc6629f69524c
+  - path: src/digitalmodel/geotechnical/cfg_workflows.py
+    symbol: MudmatBearingCapacityWorkflow.router
+    line: 215
+    kind: function
+    what: Routes foundation-capacity configuration to the mudmat calculator.
+    relation: delegate
+    module: geotechnical/cfg_workflows.py
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    body_sha256: ceec59779c91728094d0a45a767e3e78e6eee0be00865b22f0c44b468deac608
+  - path: src/digitalmodel/geotechnical/cfg_workflows.py
+    symbol: LiquefactionWorkflow.router
+    line: 294
+    kind: function
+    what: Routes soil-layer configuration to liquefaction screening.
+    relation: delegate
+    module: geotechnical/cfg_workflows.py
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    body_sha256: 60079031f10d394116eebaa26f5953b8312483132bab33b6cca6e6fd64ea43b8
+  - path: src/digitalmodel/geotechnical/workflow.py
+    symbol: GeotechnicalWorkflow.router
+    line: 52
+    kind: function
+    what: Dispatches the general geotechnical configuration route.
+    relation: delegate
+    module: geotechnical/workflow.py
+    file_sha256: 9f71099979b90a56c669928c70ad12fd63809889f3be8de40679301022d81882
+    body_sha256: 4fc2bf956b6dc6df23d612e6e14a16b634c82809356cf70ae4d4a5d15449b8dd
+  - path: src/digitalmodel/geotechnical/slope_stability.py
+    symbol: analyze_profile
+    line: 256
+    kind: function
+    what: Builds and analyzes a slope profile through the external numerical backend.
+    relation: delegate
+    module: geotechnical/slope_stability.py
+    file_sha256: 3ea3221b26e2f6705f3b5b38fe069e6351c643787f19c778df31f23406cc4a24
+    body_sha256: 5fb418176c03b4e0ed0efce8b5770ef482c6198b7a343ea4cb40bcd3d47a8dea
+  identical_groups: []
+  search_audit:
+  - search: algorithm
+    matching_files: 8
+  - search: vocabulary
+    matching_files: 7
+  - search: constants_or_keys
+    matching_files: 8
+  reconciliation:
+    matched_definitions: 27
+    unresolved_definitions: 12
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
+    completeness.
+- id: scour
+  title: Sediment-motion thresholds, scour and protection screening
+  search_signals:
+  - search: algorithm
+    pattern: critical_sediment_motion|pipeline_scour_depth|monopile_scour_depth|rock_armour_thickness|ScourWorkflow
+  - search: vocabulary
+    pattern: scour|incipient.motion|rock.armour
+  - search: constants_or_keys
+    pattern: shields_parameter|scour_depth_m|critical_shear|burial_depth_m
+  inventory_scope:
+    revision: 6bce35df678258e116260895c4d230d9fabf661d
+    source_paths:
+    - src/digitalmodel/geotechnical/cfg_workflows.py
+    - src/digitalmodel/geotechnical/scour.py
+    method_note: docs/registry/implementation-map-families.md
+    basis: Supplemental curated source inspection; the earlier repository-wide snapshot is retained.
+  coverage: partial
+  limitations:
+  - The incipient-motion threshold is not a scour-depth predictor. Legacy scour curves and protection coefficients
+    are NOT_EVALUATED; their source attribution and suitability require separate qualification. The configuration
+    route does not establish design acceptance.
+  implementations:
+  - path: src/digitalmodel/geotechnical/scour.py
+    symbol: critical_sediment_motion
+    line: 83
+    kind: function
+    what: Converts explicit noncohesive thresholds into shear and friction-velocity thresholds; does not predict
+      scour.
+    relation: independent
+    module: geotechnical/scour.py
+    file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
+    body_sha256: 23615bab66828529b10f25e57b748aaebd525392b2a8071f91601b51dcb10470
+  - path: src/digitalmodel/geotechnical/scour.py
+    symbol: pipeline_scour_depth
+    line: 218
+    kind: function
+    what: Evaluates the existing pipeline equilibrium-scour screen with burial adjustment.
+    relation: independent
+    module: geotechnical/scour.py
+    file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
+    body_sha256: 9428fbcc7de4c1df9c59ebf9065ddd06ae2cf79c091c7d4b4786338765c80aa2
+  - path: src/digitalmodel/geotechnical/scour.py
+    symbol: monopile_scour_depth
+    line: 282
+    kind: function
+    what: Evaluates the existing monopile equilibrium-scour screen.
+    relation: independent
+    module: geotechnical/scour.py
+    file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
+    body_sha256: f6664d99cbb93559738abcfafd0a61f26ee7991b0aaf38882c460a32586621ae
+  - path: src/digitalmodel/geotechnical/scour.py
+    symbol: rock_armour_thickness
+    line: 318
+    kind: function
+    what: Evaluates the existing simplified rock-armour thickness screen.
+    relation: independent
+    module: geotechnical/scour.py
+    file_sha256: 74caee6b60e625127a22c4d915d632b5df4c7b0163c32d72c1b62daaf1f449c7
+    body_sha256: 2fdd2faace4d0846a10a42bbc7f8a8f42b8d50c6557d387bbdf530fb570d5fc4
+  - path: src/digitalmodel/geotechnical/cfg_workflows.py
+    symbol: ScourWorkflow.router
+    line: 179
+    kind: function
+    what: Routes configuration to pipeline and monopile scour calculators and records results.
+    relation: delegate
+    module: geotechnical/cfg_workflows.py
+    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    body_sha256: 327c48b3d1dca144be65f4fb3ee8b343e68f5cd3ff31d4133a1f56924ef345f3
+  identical_groups: []
+  search_audit:
+  - search: algorithm
+    matching_files: 2
+  - search: vocabulary
+    matching_files: 2
+  - search: constants_or_keys
+    matching_files: 1
+  reconciliation:
+    matched_definitions: 7
+    unresolved_definitions: 3
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
+    completeness.
 byte_identical_groups:
 - id: file-001
   sha256: 62095d6e678265a526f70da009a8909b60d9e8fed8d790d3e091f7b5f32656f3
@@ -27034,6 +27795,24 @@ other_defects:
   evidence: 'src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py:L51-L116'
   what: Requested lids are validated and attached explicitly; invalid geometry, empty lids and unattached lids raise errors. The former return-without-lid fallback was removed.
   status: resolved
+- issue: 2617
+  family: second-order-slow-drift-response
+  path: src/digitalmodel/orcawave/drift_forces.py
+  symbol: full_qtf_slowly_varying
+  line: 191
+  evidence: src/digitalmodel/orcawave/drift_forces.py:L191-L239
+  what: Current source uses positive frequency lags and excludes the constant diagonal. Independent variance acceptance
+    for issue 2617 is NOT_EVALUATED by this inventory change.
+  status: not_checked
+- issue: 2618
+  family: extreme-statistics
+  path: src/digitalmodel/orcaflex/postprocessor.py
+  symbol: fit_weibull
+  line: 223
+  evidence: src/digitalmodel/orcaflex/postprocessor.py:L223-L287
+  what: Current source estimates shape, location and scale; the issue describes an earlier fixed-location implementation.
+    Statistical qualification and issue resolution are NOT_EVALUATED by this inventory change.
+  status: not_checked
 seed_verification:
 - {path: examples/asset_integrity/, exists: 'yes', family: none, symbol: null, status: different, evidence: The tracked location does not contain a verified implementation of a mapped family.}
 - {path: *a604b130d0d, exists: 'yes', family: *a4a6997f7bf, symbol: null, status: confirmed, evidence: 'scripts/generate_all_specs.py:L39-L39'}
@@ -53633,4 +54412,229 @@ rejected_candidates:
   - linear-wave-kinematics
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
+- path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
+  symbol: QTFType
+  line: 15
+  families:
+  - second-order-slow-drift-response
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
+  symbol: QTFComponent
+  line: 23
+  families:
+  - second-order-slow-drift-response
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
+  symbol: QTFComponent.complex_qtf
+  line: 62
+  families:
+  - second-order-slow-drift-response
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/hydrodynamics/bemrosetta/models/qtf_data.py
+  symbol: QTFData
+  line: 81
+  families:
+  - second-order-slow-drift-response
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/orcawave/drift_forces.py
+  symbol: QTFMatrix
+  line: 43
+  families:
+  - second-order-slow-drift-response
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/drilling_riser/postprocess/extremes.py
+  symbol: GumbelFit
+  line: 29
+  families:
+  - extreme-statistics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
+  symbol: WeibullFit
+  line: 56
+  families:
+  - extreme-statistics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
+  symbol: GumbelFit
+  line: 74
+  families:
+  - extreme-statistics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/subsea/pipeline/free_span/weibull_current.py
+  symbol: WeibullFitResult
+  line: 30
+  families:
+  - extreme-statistics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/solvers/openfoam/wave_models.py
+  symbol: RegularWaveBC.phase_speed
+  line: 90
+  families:
+  - design-waves
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/solvers/openfoam/wave_models.py
+  symbol: IrregularWaveBC
+  line: 114
+  families:
+  - design-waves
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/hydrodynamics/sloshing.py
+  symbol: SloshingResult
+  line: 66
+  families:
+  - sloshing
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/anchors.py
+  symbol: DragAnchorResult
+  line: 42
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/anchors.py
+  symbol: SuctionAnchorResult
+  line: 54
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/cfg_workflows.py
+  symbol: AnchorCapacityWorkflow
+  line: 45
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/cfg_workflows.py
+  symbol: PileCapacityWorkflow
+  line: 115
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/cfg_workflows.py
+  symbol: MudmatBearingCapacityWorkflow
+  line: 212
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/cfg_workflows.py
+  symbol: LiquefactionWorkflow
+  line: 291
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/liquefaction.py
+  symbol: LiquefactionResult
+  line: 45
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/pile_capacity.py
+  symbol: PileCapacityResult
+  line: 24
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/piles.py
+  symbol: validate_pile_inputs
+  line: 28
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/workflow.py
+  symbol: GeotechnicalWorkflow._run_pile_axial_capacity
+  line: 63
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/workflow.py
+  symbol: GeotechnicalWorkflow._run_drag_anchor
+  line: 117
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/workflow.py
+  symbol: GeotechnicalWorkflow._run_suction_anchor
+  line: 155
+  families:
+  - geotechnics
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/cfg_workflows.py
+  symbol: ScourWorkflow
+  line: 176
+  families:
+  - scour
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/scour.py
+  symbol: PipelineScourResult
+  line: 27
+  families:
+  - scour
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
+- path: src/digitalmodel/geotechnical/scour.py
+  symbol: MonopileScourResult
+  line: 38
+  families:
+  - scour
+  disposition: needs_review
+  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
+    implementation counts pending inspection.
 notes: ['Built by search with git ls-files, grep and ast; no solver was executed.', 'Function and class body digests use ast.dump without location attributes after removal of docstrings; names, defaults and decorators remain part of the digest.', 'A family can include examples, test helpers, model-section builders and explicit delegates; these relations are not independent numerical validation.', 'not_checked is an unresolved defect assessment, including delegates and non-AQWA readers; issue state does not establish whether a code path is affected.', Python table modules without a defining class are script entries; table contents and licensed strength values are not reproduced., Python module table entries use a null symbol with table_name because their defining assignment is not a function or class., Fresh main-signal search hits in prose and single-case input data are not implementations; rejected_candidates records the named or executable candidates retained after syntax inspection.]
+
+# Documentation bindings; calculation inventory above remains the pinned snapshot.
+agent_packs:
+  nde:
+    agent_pack: src/digitalmodel/nde/docs/agent-pack.md
+    qa_family: EC
+  production_engineering:
+    agent_pack: src/digitalmodel/production_engineering/docs/agent-pack.md
+    qa_family: EC

@@ -6,6 +6,10 @@ database includes the `riser_lift_screen` reference with `riser_type: lift`.
 Its dimensional fields remain empty: this class identifies an analysis method,
 not a measured or qualified configuration.
 
+The [lift-riser analysis guide](lift-riser-analysis.md) extends this method with
+an explicit dry/contents/buoyancy inventory, a sourced SI design-basis template,
+operating and survival snapshots, bounded flow screens and a worked example.
+
 The scope is deliberately narrow: fully immersed, straight vertical sections,
 fixed top displacement, circular nonoverlapping tubes, explicit lower effective
 force and optional lower inertial mass. Every dimensional input is supplied by
@@ -13,7 +17,7 @@ the caller. There are no material, gravity, damping or acceptance-factor default
 
 ## Public references
 
-All references were retrieved on 2026-10-17. Only equations, physical principles
+References R1 through R4 were retrieved on 2026-10-17. Only equations, physical principles
 and modelling distinctions are used; no source text, figures or tables are copied.
 
 | ID | Public primary reference | Locator and use |
@@ -22,6 +26,7 @@ and modelling distinctions are used; no source text, figures or tables are copie
 | R2 | [The Axial Resonance on 4,000m-class Riser System For Deep Sea Mining, conference proceedings 39, 2024](https://www.jstage.jst.go.jp/article/conf/39/0/39_459/_pdf/-char/ja) | Section 2.2, printed pp. 461–462: auxiliary-line mass is retained while unlatched axial connections exclude auxiliary EA; fixed upper and free lower boundary. Sections 3.1–3.2 identify the need to examine axial response and compression. |
 | R3 | [Free longitudinal vibrations of functionally graded tapered axial bars by pseudospectral method, 2018](https://www.extrica.com/article/19373) | Section 3, equation (5) and boundary condition (6b): longitudinal rod equation and fixed-free boundary. The finite-element discretization below is an independent derivation, not this paper's numerical method. |
 | R4 | [University Physics Volume 1, OpenStax, 2016](https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy) | Section 14.4, “Buoyant Force” and the displayed principle: displaced-fluid weight determines buoyancy. No textbook examples or numerical data are adopted. |
+| R5 | [University Physics Volume 1, OpenStax, 2016](https://openstax.org/books/university-physics-volume-1/pages/15-1-simple-harmonic-motion) | Section 15.1, equation (15.1): cyclic frequency is the reciprocal of period. Checked 2026-10-21. |
 
 The TU Delft PDF was downloaded directly and its equation checked in extracted
 text. R2 is an architectural and boundary-condition reference; its published
@@ -148,6 +153,66 @@ load path. Such probes do not represent physical source data.
 
 ## Verification and remaining scope
 
+### Weight inventory and wave-period screen
+
+`string_weight_inventory(sections, gravity_m_s2=...)` exposes the components of
+the existing static balance. Dry weight includes tube walls and attached hardware;
+contents weight includes the full contents inventory regardless of dynamic
+coupling. Axial added mass is excluded from static weight. All outputs are in N.
+Buoyancy is upward-positive; submerged weight is downward-positive and can be
+negative. The separate lower assembly is excluded: its effective force is added
+through `free_hanging_screen(..., lower_end_force_n=...)`.
+
+| ID | Implemented equation | Public basis and interpretation |
+| --- | --- | --- |
+| D8 | `Wdry = g*sum(L*(sum(rho_wall*Aw)+m_additional))`; `Wcontents = g*sum(L*sum(rho_contents*Ai))`; `Wfilled = Wdry+Wcontents`; `B = g*sum(L*rho_external*Ad_total)`; `Wsub = Wfilled-B` | D1/D2 and R4 displaced-fluid weight. `Ttop = Wsub+lower_end_force_n`. No empirical coefficient is introduced. |
+| D9 | `T1 = 1/f1`; `within = Tmin <= T1 <= Tmax` | R5 equation (15.1). Bounds are supplied by the caller; equality is included by definition of a closed interval, not by an engineering acceptance limit. |
+
+Table: Added screening equations; forces in N, frequency in Hz and periods in s.
+
+`wave_period_screen(first_axial_frequency_hz=..., wave_period_min_s=...,
+wave_period_max_s=...)` returns the fundamental period and inclusive interval
+membership. Supply `axial_modes(...).frequencies_hz[0]`, including the explicitly
+specified lower inertial mass. Frequency is cyclic Hz, not angular rad/s.
+An out-of-range period does not establish separation against a design criterion
+or establish operability.
+An in-range period does not predict resonant amplitude. Higher modes, damping,
+excitation spectra and surface-motion transfer require further assessment.
+The bounds may be equal for a single specified period; reversed bounds are
+rejected. Nonpositive/nonfinite inputs and reciprocal overflow are rejected.
+
+The new manufactured tests use the S1 tube with an attached mass per length of
+`pi kg/m`, additional displaced area `pi m2`, and inertial added mass `100 kg/m`.
+For length `10 m` and gravity `10 m/s2`, independent arithmetic gives dry weight
+`700*pi N`, contents weight `50*pi N`, buoyancy `200*pi N` and submerged weight
+`550*pi N`. The wave comparison uses `0.2 Hz`, hence `1/0.2 = 5 s`, with bounds
+on either side, at each endpoint and at a single-point interval. These quantities
+are verification inputs, not sourced material properties or design defaults.
+
+The auxiliary-tube case halves the S1 outer diameter and wall thickness, retains
+the same material and contents properties, and sets zero contents coupling and
+no axial load transfer. With the same attachments, length and gravity, the
+combined dry weight is `850*pi N`, contents weight `62.5*pi N`, filled weight
+`912.5*pi N`, buoyancy `225*pi N` and submerged weight `687.5*pi N`.
+The filled inventory is also checked against the sum of both tubes' complete
+mass per length plus attached mass; the auxiliary contributes no axial stiffness.
+
+### Design-basis interface
+
+Field mapping will be documented in the separate design-basis change when its
+interface is established. This calculation module retains its existing SI
+interface; it neither imports nor duplicates the draft model. Callers validate
+the basis first and retain its evidence when extracting numeric values.
+
+Layer lengths, local solids volume fraction, particle and carrier densities,
+gravity, attachment displacement, axial added mass, contents coupling and lower
+assembly properties require separate evidence. No value is inferred from water
+depth, pump duty, allowable stress or a missing basis field. Existing
+`SlurryLayer.liquid_density_kg_m3`, `solids_density_kg_m3` and
+`solids_volume_fraction` match the flow-screening vocabulary.
+This change completes item 1 of issue 3192: weight inventory and the
+axial/wave-period screen. It does not qualify a design.
+
 Verification covers R1 phase limits and profile coordinates, hand-integrated
 effective tension and D3, D5 mesh convergence, D6 lower mass, D7 nonuniform sections, auxiliary connection
 participation, contents-inertia distinction, added-mass scaling, compression at
@@ -159,5 +224,6 @@ existing dimensional rows are not reinterpreted.
 The component-taxonomy and bundle-schema extension in the separate data
 repository remains tracked by [worldenergydata issue 1138](https://github.com/vamseeachanta/worldenergydata/issues/1138).
 The narrower reading here confines the change to digitalmodel's calculation
-interface and reference catalog. Flow assurance, generic campaigns, surface
-motion, VIV and metocean acquisition require separate work and evidence.
+interface and reference catalog. The companion lift-riser analysis guide adds
+bounded flow calculations; calibrated flow assurance, generic campaigns, surface
+motion, VIV and metocean acquisition require further work and evidence.

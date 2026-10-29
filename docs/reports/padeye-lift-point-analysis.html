@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Padeye and lift point analysis</title>
+<style>
+body{font:17px/1.6 system-ui,sans-serif;color:#173245;background:#edf2f5;margin:0}
+main{max-width:1040px;margin:auto;background:white;padding:44px}
+h1{font-size:34px;line-height:1.2}h2{margin-top:36px;border-bottom:2px solid #ccdce5}
+a{color:#075783}nav{display:flex;flex-wrap:wrap;gap:18px}
+.status{padding:18px;border-left:5px solid #bd7800;background:#fff5df}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:9px;text-align:left;border-bottom:1px solid #d6e0e7}
+th{background:#edf3f6}caption{caption-side:bottom;text-align:left;padding:8px 0}
+code{overflow-wrap:anywhere}small{color:#526572}
+@media(max-width:650px){main{padding:20px}table{font-size:12px}th,td{padding:5px}}
+</style>
+</head>
+<body><main>
+<header><small>Technical analysis · Revision 0 · Synthetic single-plate illustration</small>
+<h1>Padeye and lift point analysis</h1></header>
+<nav aria-label="Report sections"><a href="#summary">Summary</a>
+<a href="#inputs">Inputs</a><a href="#method">Method</a>
+<a href="#results">Results</a><a href="#limits">Limits and way forward</a></nav>
+<section id="summary"><h2>Summary</h2>
+<p class="status">Nominal screening: <strong>FAIL</strong>.
+Combined disposition: <strong>FAIL</strong>.
+ABS compliance and lifting qualification: <strong>NOT_EVALUATED</strong>.</p>
+<p>This calculation compares nominal single-plate and direct-shear weld demands
+with explicit supplied allowables. A passing comparison establishes only that
+these assumed demands do not exceed those allowables. The direct-shear calculation requires an effective throat of at least 9.0 mm using the supplied illustrative allowable and total effective length. This minimum is rounded upward for display. Reassess a candidate at or above this value, then establish the applicable weld limits, load path and rule requirements before selecting a weld.</p></section>
+<section id="revision"><h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-22</td><td>Initial calculation format with explicit
+inputs and qualification gaps, to make the screening basis reviewable.</td></tr></tbody></table></section>
+<section id="inputs"><h2>Inputs and data basis</h2>
+<p>Load and resistance basis: Synthetic illustration; assumed, based on previous experience; values are illustrative inputs, not ABS or lifting-standard limits.
+The worked example uses synthetic dimensions and illustrative allowables;
+no grade properties or rule coefficients are inferred.</p>
+<table><thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+<tbody><tr><td>Main plate thickness (mm)</td><td>20.0</td></tr>
+<tr><td>Pin diameter (mm)</td><td>40.0</td></tr>
+<tr><td>Hole diameter (mm)</td><td>50.0</td></tr>
+<tr><td>Plate width across hole (mm)</td><td>150.0</td></tr>
+<tr><td>Hole centre to loaded free edge (mm)</td><td>75.0</td></tr>
+<tr><td>Static sling tension, angle already included (kN)</td><td>100.0</td></tr>
+<tr><td>Dynamic amplification (dimensionless)</td><td>1.5</td></tr>
+<tr><td>Skew factor (dimensionless)</td><td>1.2</td></tr>
+<tr><td>Design sling load (kN)</td><td>180.0</td></tr>
+<tr><td>Total effective weld length (mm)</td><td>200.0</td></tr>
+<tr><td>Effective weld throat (mm)</td><td>8.0</td></tr></tbody>
+<caption>Dimensions are in mm; stress units are N/mm², equivalent to MPa.
+Weld length is already the sum of effective segments, with no implicit doubling.</caption></table></section>
+<section id="method"><h2>Method and assumptions</h2>
+<p>Let P = static sling tension × dynamic amplification × skew factor.
+These factors are required load-case inputs, without automatic rule minima.
+The sling tension already includes its angle and load share.
+For plate thickness t, pin diameter d, hole diameter D, width W and
+hole-centre distance e to the loaded free edge:</p>
+<ul><li>Projected bearing area A_b = d t; nominal bearing stress = P / A_b.</li>
+<li>Net section A_n = (W − D) t; nominal tensile stress = P / A_n.</li>
+<li>Two clear shear planes A_s = 2 (e − D/2) t; nominal tear-out stress = P / A_s.</li>
+<li>Effective weld area A_w = L a; direct shear = P / A_w.</li>
+<li>Required effective throat a_required = P / (L τ_allow).</li>
+<li>Utilization = demand / supplied allowable; nominal PASS requires utilization ≤ 1.</li></ul>
+<p>Normal stress uses MIT, <cite>Stress-Strain Curves</cite> (2001), equation (1).
+Direct shear uses MIT, <cite>Shear and Torsion</cite> (2000), page 2.
+The stated areas follow the assumed geometry and equilibrium; these sources
+provide nominal stress definitions, not ABS lug resistance equations.
+A centred, in-plane axial load and a concentric direct-shear weld group are required.</p></section>
+<section id="results"><h2>Results</h2>
+<table><thead><tr><th>Check</th><th>Demand (MPa)</th><th>Allowable (MPa)</th>
+<th>Utilization</th><th>Status</th></tr></thead><tbody><tr><td>pin_bearing</td><td>225.0</td><td>300.0</td><td>0.8</td><td>PASS</td></tr>
+<tr><td>net_tension</td><td>90.0</td><td>120.0</td><td>0.8</td><td>PASS</td></tr>
+<tr><td>shear_tearout</td><td>90.0</td><td>100.0</td><td>0.9</td><td>PASS</td></tr>
+<tr><td>weld_direct_shear</td><td>112.5</td><td>100.0</td><td>1.1</td><td>FAIL</td></tr></tbody>
+<caption>Displayed values have one decimal place. Status uses unrounded values.
+Missing criteria are reported as not available, never as zero resistance or a pass.</caption></table>
+<p>The direct-shear calculation requires an effective throat of at least 9.0 mm using the supplied illustrative allowable and total effective length. This minimum is rounded upward for display. Reassess a candidate at or above this value, then establish the applicable weld limits, load path and rule requirements before selecting a weld.</p><h3>Equation and allowable traceability</h3><ul><li><strong>pin_bearing</strong>: MIT, Stress-Strain Curves (2001), equation (1): sigma=P/A. Allowable basis: Synthetic illustration; assumed, based on previous experience; values are illustrative inputs, not ABS or lifting-standard limits. Comparison uses the supplied allowable; rule applicability is unresolved.</li>
+<li><strong>net_tension</strong>: MIT, Stress-Strain Curves (2001), equation (1): sigma=P/A. Allowable basis: Synthetic illustration; assumed, based on previous experience; values are illustrative inputs, not ABS or lifting-standard limits. Comparison uses the supplied allowable; rule applicability is unresolved.</li>
+<li><strong>shear_tearout</strong>: MIT, Shear and Torsion (2000), page 2: direct shear tau=P/A. Allowable basis: Synthetic illustration; assumed, based on previous experience; values are illustrative inputs, not ABS or lifting-standard limits. Comparison uses the supplied allowable; rule applicability is unresolved.</li>
+<li><strong>weld_direct_shear</strong>: MIT, Shear and Torsion (2000), page 2: direct shear tau=P/A. Allowable basis: Synthetic illustration; assumed, based on previous experience; values are illustrative inputs, not ABS or lifting-standard limits. Comparison uses the supplied allowable; rule applicability is unresolved.</li></ul></section>
+<section id="limits"><h2>Limits and way forward</h2><ul><li><strong>abs_compliance: NOT_EVALUATED</strong>. ABS lifting-appliance rules: applicable edition and clause evidence required. Accessible ABS equation and allowable evidence is unavailable. Supply the applicable edition, clauses and applicability assessment.</li>
+<li><strong>lifting_qualification: NOT_EVALUATED</strong>. NASA-STD-8719.9C (2024), section 13.3.2.4. Analysis alone does not establish lifting qualification. This clause conditions substitution of analysis for testing of permanently attached interfaces on documented rationale and approval by the designated authority; its applicability and approval are not established here.</li></ul>
+<p>Establish the applicable ABS edition, equation clauses, resistance limits and
+lifting-standard applicability. Review actual weld orientation and load transfer;
+where moments or normal throat stresses occur, use a full weld-group analysis.
+Then check pin bending and shear, contact and hoop stresses, interaction,
+cheek-plate load sharing, supporting structure, fatigue, fabrication, inspection
+and testing as applicable. None is established by these nominal comparisons.</p>
+<p>The effective throat requirement is not a fillet-leg size, a fabrication
+minimum or a complete weld design. Geometry may later be supplied by a drawing
+reader; this calculation does not infer dimensions from drawings or a solver.</p></section>
+<section id="references"><h2>Sources and reproducibility</h2>
+<ul><li><a href="https://web.mit.edu/course/3/3.11/www/modules/ss.pdf">MIT,
+Stress-Strain Curves (2001)</a>, equation (1).</li>
+<li><a href="https://web.mit.edu/course/3/3.11/www/modules/torsion.pdf">MIT,
+Shear and Torsion (2000)</a>, page 2, direct shear.</li>
+<li><a href="https://standards.nasa.gov/standard/NASA/NASA-STD-87199">NASA-STD-8719.9C,
+Lifting Standard (2024)</a>, section 13.3.2.4; qualification context only.</li>
+<li><a href="https://ww2.eagle.org/en/rules-and-resources/rules-and-guides.html">ABS,
+public rules index</a>; equation evidence unavailable. No ABS coefficient is applied.</li></ul>
+<p>The executable synthetic example and independent test hand calculations accompany
+the lifting-lug package. The example regenerates this page without a licensed solver.</p>
+</section></main></body></html>

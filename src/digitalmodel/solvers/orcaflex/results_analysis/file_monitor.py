@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 File System Monitor
 
@@ -188,127 +191,136 @@ class FileMonitor:
         }
         
         # Thread pool for I/O operations
-        self.executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="FileMonitor")
+        self.executor = None
         
         # Lock for thread safety
         self._lock = threading.Lock()
         
         # Event processing task
         self._event_processor_task = None
+        self._polling_task = None
+        self._rescan_tasks = set()
+        self._loop = None
+        self._lifecycle_lock = asyncio.Lock()
         
         self.logger.info(f"Initialized file monitor for {watch_directory}")
         self.logger.info(f"Watch patterns: {self.config.watch_patterns}")
         self.logger.info(f"Ignore patterns: {self.config.ignore_patterns}")
     
     async def start(self) -> bool:
-        """
-        Start file monitoring.
-        
-        Returns:
-            True if started successfully, False otherwise
-        """
-        if self.is_running:
-            self.logger.warning("File monitor is already running")
-            return True
-        
-        if not self.watch_directory.exists():
-            self.logger.error(f"Watch directory does not exist: {self.watch_directory}")
-            return False
-        
-        self.logger.info(f"Starting file monitor for {self.watch_directory}")
-        
-        try:
-            # Start event processor
-            self._event_processor_task = asyncio.create_task(self._process_events())
-            
-            # Initialize file tracking with existing files
-            await self._initialize_existing_files()
-            
-            # Start watchdog observer if available
-            if WATCHDOG_AVAILABLE:
-                self.observer = Observer()
-                event_handler = OrcaFlexFileHandler(self)
-                self.observer.schedule(
-                    event_handler, 
-                    str(self.watch_directory), 
-                    recursive=True
-                )
-                self.observer.start()
-                self.logger.info("Started watchdog file system observer")
-            else:
-                # Start polling mode
-                asyncio.create_task(self._polling_monitor())
-                self.logger.info("Started polling mode (watchdog not available)")
-            
-            self.is_running = True
-            self.stats['start_time'] = datetime.now()
-            
-            return True
-            
-        except Exception as e:
-            self.logger.error(f"Failed to start file monitor: {e}")
-            await self.stop()
-            return False
-    
-    async def stop(self):
-        """Stop file monitoring"""
-        if not self.is_running:
-            return
-        
-        self.logger.info("Stopping file monitor")
-        self.is_running = False
-        
-        # Stop watchdog observer
-        if self.observer:
-            self.observer.stop()
-            self.observer.join(timeout=5)
-            self.observer = None
-        
-        # Cancel event processor
-        if self._event_processor_task and not self._event_processor_task.done():
-            self._event_processor_task.cancel()
+        """Start monitoring, serializing initialization with start and stop."""
+        async with self._lifecycle_lock:
+            if self.is_running:
+                self.logger.warning("File monitor is already running")
+                return True
+
+            if not self.watch_directory.exists():
+                self.logger.error(f"Watch directory does not exist: {self.watch_directory}")
+                return False
+
+            self.logger.info(f"Starting file monitor for {self.watch_directory}")
             try:
-                await self._event_processor_task
+                self._loop = asyncio.get_running_loop()
+                # A fresh queue also invalidates deliveries from a previous run.
+                self.event_queue = asyncio.Queue()
+                # Preserve the existing two-worker scan/checksum I/O limit.
+                self.executor = ThreadPoolExecutor(
+                    max_workers=2, thread_name_prefix="FileMonitor"
+                )
+                self.is_running = True
+                self._event_processor_task = self._loop.create_task(self._process_events())
+
+                await self._initialize_existing_files()
+
+                if WATCHDOG_AVAILABLE:
+                    self.observer = Observer()
+                    self.observer.schedule(
+                        OrcaFlexFileHandler(self), str(self.watch_directory), recursive=True
+                    )
+                    self.observer.start()
+                    self.logger.info("Started watchdog file system observer")
+                else:
+                    self._polling_task = self._loop.create_task(self._polling_monitor())
+                    self.logger.info("Started polling mode (watchdog not available)")
+
+                self.stats['start_time'] = datetime.now()
+                return True
             except asyncio.CancelledError:
-                pass
-        
-        # Shutdown thread pool
-        self.executor.shutdown(wait=True)
-        
+                await self._stop_monitoring()
+                raise
+            except Exception as e:
+                self.logger.error(f"Failed to start file monitor: {e}")
+                await self._stop_monitoring()
+                return False
+
+    async def stop(self):
+        """Stop monitoring and await all owned tasks and I/O workers."""
+        async with self._lifecycle_lock:
+            await self._stop_monitoring()
+
+    async def _stop_monitoring(self):
+        """Release resources even when startup did not finish."""
+        self.is_running = False
+        self._loop = None
+        observer, self.observer = self.observer, None
+        try:
+            if observer is not None:
+                observer.stop()
+                # Scheduling or starting an observer may fail before it has a thread.
+                if observer.ident is not None:
+                    observer.join()
+        finally:
+            tasks = set(self._rescan_tasks)
+            tasks.update(task for task in (
+                self._event_processor_task, self._polling_task
+            ) if task is not None)
+            # A callback may stop its own consumer; it exits after returning.
+            tasks.discard(asyncio.current_task())
+            for task in tasks:
+                task.cancel()
+            try:
+                if tasks:
+                    await asyncio.gather(*tasks, return_exceptions=True)
+            finally:
+                self._event_processor_task = None
+                self._polling_task = None
+                self._rescan_tasks.clear()
+                if self.executor is not None:
+                    self.executor.shutdown(wait=True)
+                    self.executor = None
         self.logger.info("File monitor stopped")
-    
+
     def _handle_file_event(self, event_type: EventType, file_path: Path):
-        """Handle file system events (called from watchdog)"""
+        """Dispatch observer-thread work onto the loop captured by start."""
+        loop, queue = self._loop, self.event_queue
+        if not self.is_running or loop is None:
+            return
         if not self._should_monitor_file(file_path):
             return
-        
+
+        file_event = FileEvent(
+            event_type=event_type,
+            file_path=file_path,
+            timestamp=datetime.now()
+        )
         try:
-            # Create file event
-            file_event = FileEvent(
-                event_type=event_type,
-                file_path=file_path,
-                timestamp=datetime.now()
-            )
-            
-            # Add to queue for async processing
-            if not self.event_queue.full():
-                asyncio.create_task(self._queue_event(file_event))
-            else:
-                self.logger.warning("Event queue full, dropping event")
-                
-        except Exception as e:
-            self.logger.error(f"Error handling file event: {e}")
-    
-    async def _queue_event(self, event: FileEvent):
-        """Queue event for processing"""
+            # No coroutine is created in the observer thread, even during shutdown.
+            loop.call_soon_threadsafe(self._enqueue_event, file_event, loop, queue)
+        except RuntimeError:
+            self.logger.debug("Ignoring file event after the monitoring loop closed")
+
+    def _enqueue_event(self, event: FileEvent, loop, queue):
+        """Enqueue on the owning loop, rejecting stale scheduled deliveries."""
+        if not self.is_running or self._loop is not loop or self.event_queue is not queue:
+            return
         try:
-            await self.event_queue.put(event)
-        except Exception as e:
-            self.logger.error(f"Error queuing event: {e}")
-    
+            queue.put_nowait(event)
+        except asyncio.QueueFull:
+            self.logger.warning("Event queue full, dropping event")
+
     async def _process_events(self):
         """Process events from the queue"""
-        while self.is_running:
+        while self.is_running and self._event_processor_task is asyncio.current_task():
             try:
                 # Wait for events with timeout
                 event = await asyncio.wait_for(
@@ -515,6 +527,7 @@ class FileMonitor:
             
         except Exception as e:
             self.logger.error(f"Error initializing existing files: {e}")
+            raise
     
     async def _polling_monitor(self):
         """Fallback polling monitor when watchdog is unavailable"""
@@ -612,14 +625,35 @@ class FileMonitor:
                 return list(self.monitored_files.values())
     
     def force_rescan(self):
-        """Force a rescan of the directory"""
-        if self.is_running:
-            asyncio.create_task(self._initialize_existing_files())
-    
+        """Schedule an owned rescan on the monitoring loop."""
+        loop, queue = self._loop, self.event_queue
+        if self.is_running and loop is not None:
+            try:
+                loop.call_soon_threadsafe(self._start_rescan, loop, queue)
+            except RuntimeError:
+                self.logger.debug("Ignoring rescan after the monitoring loop closed")
+
+    def _start_rescan(self, loop, queue):
+        """Track rescans so stop can cancel and await them."""
+        if not self.is_running or self._loop is not loop or self.event_queue is not queue:
+            return
+        task = loop.create_task(self._initialize_existing_files())
+        self._rescan_tasks.add(task)
+        task.add_done_callback(self._rescan_finished)
+
+    def _rescan_finished(self, task):
+        self._rescan_tasks.discard(task)
+        if not task.cancelled():
+            # Initialization logs failures; retrieve them to avoid orphaned errors.
+            task.exception()
+
     def __del__(self):
-        """Cleanup on deletion"""
-        if self.is_running:
-            asyncio.create_task(self.stop())
+        """Best-effort synchronous cleanup; callers must await stop for completion."""
+        # Finalization may run without a live event loop. Never create a coroutine.
+        if self.observer is not None:
+            self.observer.stop()
+        if self.executor is not None:
+            self.executor.shutdown(wait=False)
 
 
 # Factory function for easy setup

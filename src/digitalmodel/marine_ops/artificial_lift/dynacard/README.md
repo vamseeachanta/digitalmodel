@@ -59,6 +59,85 @@ power = calculate_power_consumption(ctx)
 buckling = calculate_rod_buckling(ctx)
 ```
 
+## Reproduce the canonical generator comparison
+
+The corrected generator shapes and retrained classifier are retained. The
+comparison used to check their geometry is available as
+`benchmark.shape_comparison.prepare` and `loop_distance`. The reference is the
+[CC0 diagnosis plate, version 1 (2020)](https://doi.org/10.17632/hnfwm9mjs6.1).
+Only the load-card block is compared; the companion power trace is excluded.
+
+Each coordinate axis is scaled using `(q - min(q)) / (max(q) - min(q))`.
+A constant axis maps to zero. The polygon is closed, cumulative Euclidean
+arc length is calculated, and linear interpolation produces equally spaced
+samples. The distance is the smallest mean Euclidean separation across all
+cyclic sample shifts and both traversal orders. The default sampling resolution
+comes from the method in
+[the generator-shape issue](https://github.com/vamseeachanta/digitalmodel/issues/1875);
+it is a numerical resolution, not a physical coefficient.
+
+### Worked calculation
+
+For a unit square with vertices `(0,0), (1,0), (1,1), (0,1)`, the perimeter is
+four. Eight samples therefore advance by half an edge. The expected samples,
+calculated directly from the edges, are
+`(0,0), (0.5,0), (1,0), (1,0.5), (1,1), (0.5,1), (0,1), (0,0.5)`.
+Changing units to `x'=2x+7, y'=3y-4`, reversing traversal, or rotating the
+vertex list leaves the normalised square unchanged up to sample order, giving
+zero distance. These algebraic results are independent controls in
+`test_shape_comparison.py`.
+
+Run the following from the repository root to compare a generated gas card
+with the retained plate, using seed zero as a reproducible example input:
+
+```python
+import json
+from pathlib import Path
+
+import numpy as np
+
+from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.shape_comparison import (
+    loop_distance,
+    prepare,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
+    generate_gas_interference_card,
+)
+
+fixture = Path("tests/marine_ops/artificial_lift/dynacard/testdata/plate_reference_cards.json")
+cards = json.loads(fixture.read_text())["cards"]
+references = {
+    name: prepare(entry["position"], entry["load"])
+    for name, entry in cards.items()
+}
+generated = generate_gas_interference_card(seed=0)
+own_distance = loop_distance(
+    references["gas_interference"], prepare(generated.position, generated.load)
+)
+loops = list(references.values())
+separation = [
+    loop_distance(a, b)
+    for i, a in enumerate(loops)
+    for b in loops[i + 1:]
+]
+print(f"Gas shape distance: {100 * own_distance:.1f}%")
+print(f"Inter-class median: {100 * np.median(separation):.1f}%")
+```
+
+With `PYTHONPATH=src`, the answer is `Gas shape distance: 4.9%` and
+`Inter-class median: 11.7%`, expressed as fractions of unit-axis length.
+The unrounded gas distance is below the unrounded inter-class median.
+This is a single-seed illustration; the shape regression checks multiple seeds,
+nearest-exemplar identity, corner features and rod-part loop geometry.
+
+Per-axis normalisation discards stroke, absolute load and aspect ratio.
+Discrete phase alignment has finite sampling error for arbitrary starting
+positions between samples. One reference per condition cannot establish
+field diagnostic accuracy, and the geometric distance does not establish
+the stochastic sand-abrasion signature; the existing texture test covers that
+feature. Synthetic cross-validation remains synthetic separability.
+No solver is required for this comparison.
+
 ## Architecture
 
 The analysis pipeline follows a four-stage workflow orchestrated by `DynacardWorkflow`:

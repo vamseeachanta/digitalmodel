@@ -43,8 +43,8 @@ The durations above are source settings, not proposed decay-analysis windows.
 - [DNV-OS-C301 / DNV-RP-0286 (line 39)](../../../../../src/digitalmodel/floating_wind/floaters.py#L39): Named as floating-wind stability/design practice; the code does not supply a six-axis free-decay protocol or operating/parked matrix.
 - [DNV-RP-A203 (line 24)](../../../../../src/digitalmodel/floating_wind/qualification.py#L24): Named for technology qualification, not environmental case definitions.
 - [DNV-RP-A203 (line 30)](../../../../../src/digitalmodel/floating_wind/collaboration.py#L30): Named for technology qualification / TRL, not load cases.
-- [DNV-RP-0360 (line 58)](../../../../../src/digitalmodel/orcaflex/mooring_design_fowt.py#L58): Named for the cable minimum-bend-radius check; no turbine operating/parked matrix is defined.
-- [DNV-OS-E301 / API RP 2SK (line 65)](../../../../../src/digitalmodel/orcaflex/mooring_design_fowt.py#L65): Named as mooring references, without a case definition for this worked example.
+- [DNV-RP-0360 (line 61)](../../../../../src/digitalmodel/orcaflex/mooring_design_fowt.py#L61): Named for the cable minimum-bend-radius check; no turbine operating/parked matrix is defined.
+- [DNV-OS-E301 / API RP 2SK (line 79)](../../../../../src/digitalmodel/orcaflex/mooring_design_fowt.py#L79): Named as mooring references, without a case definition for this worked example.
 - [Existing workflow scope (line 3)](../../../../../examples/workflows/fowt-mooring/input.yml#L3): A watch-circle/cable feasibility screen; its example values are not inputs for these turbine models.
 - [Existing solver-tier scope (line 10)](../../../../../src/digitalmodel/floating_wind/solver_tier.py#L10): A diffraction and motion/mooring preparation pipeline; it does not define this turbine case set.
 

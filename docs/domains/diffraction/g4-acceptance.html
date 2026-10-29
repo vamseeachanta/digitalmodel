@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Diffraction G4 acceptance evidence</title>
+  <style>
+    body { max-width: 56rem; margin: 2rem auto; padding: 0 1rem;
+      font: 1rem/1.6 system-ui, sans-serif; color: #182431; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: .5rem; border: 1px solid #ccd3db; text-align: left; }
+    caption { caption-side: bottom; text-align: left; }
+    code, pre { background: #f0f3f6; overflow: auto; }
+    pre { padding: 1rem; }
+  </style>
+</head>
+<body>
+<h1>Diffraction G4 acceptance evidence</h1>
+<p>The G4 evidence record separates mesh screening from acceptance. All
+documented sub-checks remain visible when evidence is missing. Only the
+free-flotation mass residual is evaluated against a supplied criterion;
+no overall G4 PASS is available.</p>
+
+<h2>Revision history</h2>
+<table>
+  <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+  <tbody><tr><td>1</td><td>2026-10-19</td><td>A separate evidence API is documented
+  because a mesh verdict does not establish G4 acceptance.</td></tr></tbody>
+  <caption>Table 1. Document revision history.</caption>
+</table>
+
+<h2>API and disposition</h2>
+<p><code>g4_acceptance.assess_g4</code> returns a fresh JSON-ready dictionary.
+The optional <code>mesh_screen_status</code> is retained as context, with no
+effect on G4 status. The function does not change the packaging gate, the
+geometry checker or the legacy displaced-mass screen.</p>
+<table>
+  <thead><tr><th>Evidence condition</th><th>G4 disposition</th></tr></thead>
+  <tbody>
+    <tr><td>No mass evidence, including a mesh PASS</td><td>NOT_RUN</td></tr>
+    <tr><td>Supplied mass arithmetic passes its supplied limit</td>
+      <td>G4.1a arithmetic PASS; overall NOT_RUN</td></tr>
+    <tr><td>Supplied mass arithmetic exceeds its supplied limit</td>
+      <td>G4.1a FAIL; overall FAIL even when other checks are NOT_RUN</td></tr>
+    <tr><td>Malformed, non-finite or unsourced mass inputs</td>
+      <td>Input rejected; no acceptance record is returned</td></tr>
+  </tbody>
+  <caption>Table 2. Disposition is bound to the supplied arithmetic criterion.</caption>
+</table>
+<p>The record inventories each sub-check in the
+<a href="../../../src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md#5-qa-gates">
+diffraction knowledge pack, revision 4, section 5</a>
+(AQG r0 section 8, G4.1a–G4.8e). Unsupported checks retain NOT_RUN,
+NOT_ASSESSED applicability, missing criterion and measurement fields, and a
+description of the required evidence. Absence never implies NOT_APPLICABLE.</p>
+
+<h2>Free-flotation mass arithmetic</h2>
+<p>For input mass <var>M</var> in kg, independently calculated displaced volume
+<var>V</var> in m³ and declared water density <var>rho</var> in kg/m³:</p>
+<pre>relative residual = abs(M - rho V) / M
+arithmetic PASS when relative residual &lt;= relative_tolerance</pre>
+<p>The formula is transcribed from the knowledge pack revision 4, section 5,
+G4.1a. Common gravity cancels only for free flotation. This check does not
+evaluate restrained preload, environment agreement between programs or any
+other G4 sub-check. The primary AQG document is not bundled; no numerical AQG
+acceptance limit is encoded.</p>
+<p><code>FreeFlotationMassEvidence</code> requires the three physical inputs,
+<code>relative_tolerance</code>, and <code>criterion_source</code>,
+<code>mass_source</code>, <code>displacement_source</code> and
+<code>density_source</code>. Supplying this evidence declares free-flotation
+applicability and a common case/environment. No tolerance or density default
+is supplied. The result retains the inputs, references, derived displaced mass,
+dimensionless residual and criterion. References are declarations; their
+contents, digests and AQG qualification are not authenticated.</p>
+
+<h2>Independent arithmetic examples</h2>
+<p>The synthetic test mass of 1000 kg, volume of 0.9 m³ and density of
+1000 kg/m³ give a displaced mass of 900 kg and residual
+abs(1000 − 900) / 1000 = 0.1. A supplied synthetic limit of 0.1 therefore passes
+inclusively. The legacy denominator would give 100 / 900, which exceeds that
+limit. Volume of 0.8 m³ gives residual 0.2 and fails that limit. These are
+independent hand calculations in the test docstrings, not qualified engineering
+inputs or published acceptance limits.</p>
+
+<h2>Remaining evidence</h2>
+<p>Native hydrostatics comparisons, centres and stability, panel resolution and
+resource limits, waterline/draft, outward orientation, symmetry, native paired
+irregular-frequency removal and interior-lid evidence, required views and
+response checks remain unevaluated. Existing callers do not invoke this API.
+Integration and qualification of those checks remain later slices of the
+tracked G4 acceptance issue. No solver is loaded by this module.</p>
+</body>
+</html>

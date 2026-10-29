@@ -18,6 +18,9 @@ effort, a PDF derivative. Domains never write HTML.
 
 `render_html(spec)` returns the HTML string without touching disk.
 
+See [design-data table layout](design-data-layout.md) for the shared width
+policy, synthetic review example and the limits of stylesheet-only checks.
+
 ## The spec (`digitalmodel.reporting.spec`)
 
 - `DocumentMeta(number, revision, title, project, client, date=None, prepared_by, checked_by, approved_by, revision_history)` — `number` must match `JOB-DOCTYPE-SEQ-REV` (`DOC_NUMBER_RE`, shared with `report_pack`) and end in `-<revision>`; the revision history defaults to one "Issued" row built from the meta.

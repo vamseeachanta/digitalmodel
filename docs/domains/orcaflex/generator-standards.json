@@ -1,0 +1,309 @@
+{
+  "standards": {
+    "DNV-ST-F101": {
+      "title": "Submarine pipeline systems",
+      "catalogue_edition": "2021-08, amended 2021-12",
+      "repository_edition": null,
+      "governing_edition": null,
+      "clause": null,
+      "clause_title": null,
+      "status": "NOT_EVALUATED",
+      "sources": [
+        "dnv-f101-product",
+        "materials-strength-basis",
+        "materials-unit-view"
+      ],
+      "limitation": "The generator selects no governing edition or clause. Emitted DNV field names are not evidence of a completed code check.",
+      "edition_difference": "The issuer catalogue edition and API material-strength edition have different roles. No conversion to a DNV design strength or equivalence between editions is demonstrated.",
+      "publisher": "DNV"
+    },
+    "DNV-OS-E302": {
+      "title": null,
+      "catalogue_edition": null,
+      "repository_edition": null,
+      "governing_edition": null,
+      "clause": null,
+      "clause_title": null,
+      "status": "NOT_EVALUATED",
+      "sources": [
+        "dnv-e302-unavailable",
+        "dnv-e302-accessories-unavailable"
+      ],
+      "limitation": "The router attributes the breaking-load relation and grade coefficients to this designation without title, edition, clause title or applicability bounds. None is verified here.",
+      "edition_difference": "No edition or successor is inferred from the designation. Coefficients and grade availability across editions remain unresolved.",
+      "publisher": "DNV"
+    },
+    "API RP 2SK": {
+      "title": "Design and Analysis of Stationkeeping Systems for Floating Offshore Structures",
+      "catalogue_edition": "4th edition, February 2024",
+      "repository_edition": null,
+      "governing_edition": null,
+      "clause": null,
+      "clause_title": null,
+      "status": "NOT_EVALUATED",
+      "sources": [
+        "api-publications-catalogue"
+      ],
+      "limitation": "The ChainGrade docstring uses the shorthand API 2SK. No clause linking its enum members to this publication is established.",
+      "edition_difference": "The catalogue edition is not automatically selected by the schema. No grade or design-rule equivalence to any earlier edition is demonstrated.",
+      "publisher": "American Petroleum Institute"
+    },
+    "API Spec 5L": {
+      "title": null,
+      "catalogue_edition": null,
+      "repository_edition": "46th edition",
+      "governing_edition": null,
+      "clause": null,
+      "clause_title": null,
+      "status": "NOT_EVALUATED",
+      "sources": [
+        "materials-strength-basis",
+        "materials-unit-view",
+        "api-5l-unavailable"
+      ],
+      "limitation": "The Pipeline material string does not select a product level, edition or standard. The materials registry provides clause/table numbers but not verified clause titles or a full publication title.",
+      "edition_difference": "Repository metadata distinguishes product levels and canonical SI strengths from legacy snapshots. A free-text grade does not select or establish equivalence between them.",
+      "publisher": "American Petroleum Institute"
+    }
+  },
+  "uses": [
+    {
+      "id": "pipe-material",
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py",
+      "symbol": "MATERIAL_PROPERTIES",
+      "standards": [
+        "DNV-ST-F101",
+        "API Spec 5L"
+      ],
+      "parameters": [
+        "MaterialDensity",
+        "E",
+        "PoissonRatio",
+        "DNVSTF101Fy"
+      ],
+      "basis": "repository defaults; not qualified standard values",
+      "status": "NOT_EVALUATED",
+      "limitation": "Yield is imported from the canonical materials unit view. Density, modulus and Poisson ratio are modelling defaults; no normative clause is established for this group. Unknown grades fall back to a default grade. Separately, LineTypeBuilder.build uses material_props.get(\"DNVSTF101Fy\", 450e3) when the yield key is absent; this uncited strength fallback is in kN/m2 and has no qualified standard basis."
+    },
+    {
+      "id": "pipe-code-inputs",
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py",
+      "symbol": "LineTypeBuilder._build_line_type_entry",
+      "standards": [
+        "DNV-ST-F101"
+      ],
+      "parameters": [
+        "DNVSTF101Pmin",
+        "DNVSTF101T2",
+        "DNVSTF101Fy",
+        "DNVSTF101Fu",
+        "DNVSTF101E",
+        "DNVSTF101AlphaH",
+        "DNVSTF101O0",
+        "DNVSTF101SimplifiedStrainLimit",
+        "DNVSTF101GammaSCLB",
+        "DNVSTF101GammaSCDC",
+        "DNVSTF101GammaM",
+        "DNVSTF101AlphaFab",
+        "DNVSTF101AlphaGW",
+        "DNVSTF101AlphaPm",
+        "DNVSTF101AlphaEpsilonC",
+        "DNVSTF101AlphaMat",
+        "DNVSTF101TCRA",
+        "DNVSTF101FyCRA",
+        "DNVSTF101FuCRA"
+      ],
+      "basis": "unresolved code-check input defaults",
+      "status": "NOT_EVALUATED",
+      "limitation": "All emitted DNV fields are listed, including the simplified strain limit and zero/null entries. Their units, solver sentinel semantics, edition applicability and clause basis require qualification; generation is not an acceptance verdict."
+    },
+    {
+      "id": "chain-defaults",
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/routers/mooring_router.py",
+      "symbol": "CHAIN_DATABASE",
+      "standards": [
+        "DNV-OS-E302"
+      ],
+      "parameters": [
+        "mbl_coeff",
+        "mass_coeff",
+        "ea_coeff",
+        "cd",
+        "ca"
+      ],
+      "basis": "repository defaults; not qualified standard values",
+      "status": "NOT_EVALUATED",
+      "limitation": "Only breaking load has a standard attribution in the code. Mass, stiffness and hydrodynamic coefficients are not established as standard-derived; the nearby library references are not independent source qualification."
+    },
+    {
+      "id": "chain-breaking-load",
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/routers/mooring_router.py",
+      "symbol": "MooringRouter._chain_linetype",
+      "standards": [
+        "DNV-OS-E302"
+      ],
+      "parameters": [
+        "diameter",
+        "mbl_coeff",
+        "breaking_load",
+        "AllowableTension"
+      ],
+      "basis": "unresolved standard attribution",
+      "status": "NOT_EVALUATED",
+      "limitation": "The relation is evaluated in the router unless breaking_load is supplied. The result is assigned directly to AllowableTension, without a cited design factor or an edition-qualified acceptance check. No formula coefficient is qualified here."
+    },
+    {
+      "id": "chain-grade-label",
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/schema/mooring.py",
+      "symbol": "ChainGrade",
+      "standards": [
+        "DNV-OS-E302",
+        "API RP 2SK"
+      ],
+      "parameters": [
+        "R3",
+        "R3S",
+        "R4",
+        "R4S",
+        "R5"
+      ],
+      "basis": "grade labels only",
+      "status": "NOT_EVALUATED",
+      "limitation": "Enum membership is not grade certification or proof that the same grades exist in both referenced publications or all editions."
+    },
+    {
+      "id": "pipeline-grade-label",
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/schema/pipeline.py",
+      "symbol": "Pipeline",
+      "standards": [
+        "API Spec 5L"
+      ],
+      "parameters": [
+        "material"
+      ],
+      "basis": "free-text grade label only",
+      "status": "NOT_EVALUATED",
+      "limitation": "The schema accepts a material string and does not validate API product qualification. The builder fallback and materials registry determine the generated strength."
+    }
+  ],
+  "sources": {
+    "dnv-f101-product": {
+      "url": "https://www.dnv.com/energy/standards-guidelines/dnv-st-f101-submarine-pipeline-systems/",
+      "checked_on": "2026-10-19",
+      "http_status": 200,
+      "result": "product metadata",
+      "supports": "Number, title and catalogue edition in the product heading.",
+      "limitation": "No clause text or governing model edition is established by the product page."
+    },
+    "api-publications-catalogue": {
+      "url": "https://www.api.org/-/media/Files/Publications/2025-Catalog/02_Exploration-and-Production_2025.pdf",
+      "checked_on": "2026-10-19",
+      "http_status": 200,
+      "result": "publications catalogue",
+      "supports": "Printed page 6, RP 2SK entry: \"Design and Analysis of Stationkeeping Systems for Floating Offshore Structures\"; \"4th Edition | February 2024\".",
+      "limitation": "The catalogue is dated 2025; it is not evidence of a governing edition or a chain-grade clause."
+    },
+    "dnv-e302-unavailable": {
+      "url": "https://www.dnv.com/energy/standards-guidelines/dnv-os-e302-offshore-mooring-chain/",
+      "checked_on": "2026-10-19",
+      "http_status": 404,
+      "result": "unavailable",
+      "supports": "Records an unsuccessful issuer-page lookup only.",
+      "limitation": "Title, edition, clause and any successor designation remain unverified."
+    },
+    "api-5l-unavailable": {
+      "url": "https://www.api.org/products-and-services/standards/important-standards-announcements/5l",
+      "checked_on": "2026-10-19",
+      "http_status": 200,
+      "result": "error page",
+      "supports": "Records an unsuccessful issuer-page lookup only.",
+      "limitation": "HTTP success returned a page headed 404 Page Not Found; no bibliographic claim is supported."
+    },
+    "materials-strength-basis": {
+      "path": "src/digitalmodel/materials/grades.py",
+      "symbol": "_api5l",
+      "supports": "Repository strength metadata names API 5L, 46th edition, 9.3.1/Table 6 and 9.3.2/Table 7, SI.",
+      "limitation": "Repository transcription only; full publication title, clause titles and licensed source were not checked."
+    },
+    "materials-unit-view": {
+      "path": "src/digitalmodel/materials/grades.py",
+      "symbol": "smys_kn_m2",
+      "supports": "The builder imports this canonical strength unit view.",
+      "limitation": "A unit conversion does not qualify a DNV design strength or the selected product level."
+    },
+    "citation-schema": {
+      "path": "src/digitalmodel/citations/schema.py",
+      "symbol": "Citation",
+      "supports": "Citation requires code_id, publisher, revision, section and wiki_path.",
+      "limitation": "Construction checks structure; it does not establish engineering applicability."
+    },
+    "citation-validator": {
+      "path": "src/digitalmodel/citations/schema.py",
+      "symbol": "validate_citation",
+      "supports": "Live validation checks wiki existence and code_id, publisher and revision agreement.",
+      "limitation": "The validator explicitly does not validate the section locator."
+    },
+    "dnv-e302-accessories-unavailable": {
+      "url": "https://www.dnv.com/energy/standards-guidelines/dnv-os-e302-offshore-mooring-chain-and-accessories/",
+      "checked_on": "2026-10-19",
+      "http_status": 404,
+      "result": "unavailable",
+      "supports": "Records an unsuccessful issuer-page lookup only.",
+      "limitation": "Title, edition, clause and any successor designation remain unverified."
+    }
+  },
+  "boundaries": [
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/routers/mooring_router.py",
+      "symbol": "MooringRouter.route",
+      "output": "GenericModel-compatible dictionaries; no per-quantity citation metadata",
+      "citation_sidecar": "absent",
+      "status": "NOT_EVALUATED",
+      "required_before_qualification": [
+        "Select governing publication, edition, product or analysis category and applicable clause title.",
+        "Qualify each derived quantity and default against authorized source evidence; record unresolved values explicitly.",
+        "Bind a Citation to each derived quantity and preserve it through routing and serialization in a separate evidence artifact.",
+        "Validate live citation metadata at the consumer boundary and establish clause applicability separately; an unresolved citation must not imply acceptance."
+      ]
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/__init__.py",
+      "symbol": "ModularModelGenerator._generate",
+      "output": "Include YAML, parameters and master file; no Citation evidence artifact",
+      "citation_sidecar": "absent",
+      "status": "NOT_EVALUATED",
+      "required_before_qualification": [
+        "Select governing publication, edition, product or analysis category and applicable clause title.",
+        "Qualify each derived quantity and default against authorized source evidence; record unresolved values explicitly.",
+        "Bind a Citation to each derived quantity and preserve it through routing and serialization in a separate evidence artifact.",
+        "Validate live citation metadata at the consumer boundary and establish clause applicability separately; an unresolved citation must not imply acceptance."
+      ]
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/__init__.py",
+      "symbol": "ModularModelGenerator._generate_with_overrides",
+      "output": "Include YAML and GenerationResult; custom templates can replace standard builder data",
+      "citation_sidecar": "absent",
+      "status": "NOT_EVALUATED",
+      "required_before_qualification": [
+        "Select governing publication, edition, product or analysis category and applicable clause title.",
+        "Qualify each derived quantity and default against authorized source evidence; record unresolved values explicitly.",
+        "Bind a Citation to each derived quantity and preserve it through routing and serialization in a separate evidence artifact.",
+        "Validate live citation metadata at the consumer boundary and establish clause applicability separately; an unresolved citation must not imply acceptance."
+      ]
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/writers/basefile.py",
+      "symbol": "write_variation_model",
+      "output": "Variation YAML referencing a base model; base-model provenance is not established",
+      "citation_sidecar": "absent",
+      "status": "NOT_EVALUATED",
+      "required_before_qualification": [
+        "Select governing publication, edition, product or analysis category and applicable clause title.",
+        "Qualify each derived quantity and default against authorized source evidence; record unresolved values explicitly.",
+        "Bind a Citation to each derived quantity and preserve it through routing and serialization in a separate evidence artifact.",
+        "Validate live citation metadata at the consumer boundary and establish clause applicability separately; an unresolved citation must not imply acceptance."
+      ]
+    }
+  ]
+}

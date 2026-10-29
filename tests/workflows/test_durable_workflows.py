@@ -58,7 +58,14 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
     if workflow.get("runtime", "offline") != "offline":
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
 
+    output_root = REPO_ROOT
     input_path = REPO_ROOT / workflow["input"]
+    if workflow["id"] == "hull-wastage-screen":
+        # Each run retains its outputs, so execute the example in a fresh tree.
+        output_root = tmp_path
+        input_path = output_root / workflow["input"]
+        input_path.parent.mkdir(parents=True)
+        input_path.write_bytes((REPO_ROOT / workflow["input"]).read_bytes())
     if workflow["id"] == "fowt-mooring":
         (tmp_path / "wikis").mkdir()
         monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
@@ -89,7 +96,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
     assert cfg["basename"] == workflow["basename"]
 
     for output in workflow["outputs"]:
-        assert (REPO_ROOT / output).exists()
+        assert (output_root / output).exists()
 
     if workflow["id"] == "catenary":
         assert cfg["S"] == pytest.approx(173.2050808)
@@ -1026,7 +1033,11 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         translational = props["translational"]
         assert translational["ca"]["x"] == pytest.approx(0.703132)
         assert translational["area_drag"]["x"] == pytest.approx(0.427716)
-        assert props["I"]["Ix"] == pytest.approx(19.471869)
+        # Uniform centred box: integral (y^2+z^2) dm = m*(w^2+h^2)/12.
+        # The fixture gives 169*(0.654^2+0.654^2)/12 kg.m^2 through CoM.
+        inputs = cfg["inputs"]
+        expected_ix = inputs["m_air"] * (inputs["w"] ** 2 + inputs["h"] ** 2) / 12
+        assert props["I"]["Ix"] == pytest.approx(expected_ix)
 
         model_path = (
             REPO_ROOT / "examples/workflows/orcaflex-6dbuoy-dnvrph103/results/"
@@ -1046,8 +1057,8 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         summary = result["summary"]
         assert summary["overall_status"] == "PASS"
         assert summary["n_results"] == 8
-        assert summary["min_safety_factor"] == pytest.approx(2.08)
-        assert summary["max_utilization"] == pytest.approx(0.48)
+        assert summary["min_safety_factor"] == pytest.approx(3.73)
+        assert summary["max_utilization"] == pytest.approx(0.268)
         assert result["environmental_loads"]["total_force"] == pytest.approx(2280.94225)
 
         summary_path = Path(cfg["outputs"]["summary_json"])
@@ -1246,9 +1257,12 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert cfg["pile_capacity"]["design"]["status"] == "PASS"
     elif workflow["id"] == "scour-assessment":
         result = cfg["scour"]["results"]
-        assert result["pipeline"]["scour_depth_m"] == pytest.approx(0.225)
-        assert result["monopile"]["scour_depth_m"] == pytest.approx(7.8)
-        assert result["rock_armour"]["thickness_m"] == pytest.approx(0.6)
+        assert result["pipeline"]["scour_depth_m"] is None
+        assert result["monopile"]["scour_depth_m"] is None
+        # Independent hand basis: 31.08*sqrt(.04)*64**(1/6)*.001**(1/3).
+        assert result["monopile"]["critical_velocity_ms"] == pytest.approx(1.2432)
+        assert result["rock_armour"]["thickness_m"] == pytest.approx(1.2)
+        assert result["rock_armour"]["stability_status"] == "FAIL"
     elif workflow["id"] == "mudmat-bearing-capacity":
         block = cfg["mudmat_bearing_capacity"]
         result = block["result"]
@@ -1735,6 +1749,21 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert len(result["scans"]) == len(result["placements"]) == 4
         assert result["rollup"]["n_joints"] == 26
         assert len(result["provenance"]["sources"]) == 6
+    elif workflow["id"] == "hull-wastage-screen":
+        result = cfg["hull_wastage_screen"]["result"]
+        assert result["elements"][0]["renewal_mm"] == pytest.approx(8.0)
+        assert result["elements"][0]["status"] == "MONITOR"
+        assert result["status"] == "NOT_EVALUATED"
+        outputs = [output_root / output for output in workflow["outputs"]]
+        numeric, report = outputs
+        assert json.loads(numeric.read_text(encoding="utf-8")) == result
+        html = report.read_text(encoding="utf-8")
+        assert "Hull-structure wastage analysis" in html
+        assert "MONITOR" in html and "NOT_EVALUATED" in html
+        retained = {path: path.read_bytes() for path in outputs}
+        with pytest.raises(FileExistsError, match="retain previous analysis"):
+            engine(inputfile=str(input_path))
+        assert {path: path.read_bytes() for path in outputs} == retained
     elif workflow["id"] == "pipeline-corroded-defect-screen":
         result = cfg["pipeline_defect_screen"]
         assert len(result["methods"]) == 6
