@@ -143,14 +143,14 @@ def check_api_rp_2rd(
         else:
             util = 0.0
 
-        util = round(util, 4)
+        passed = util <= 1.0
         results.append(APIRP2RDResult(
             arc_length=float(arc_lengths[i]),
             tension_kN=float(T),
             bending_moment_kNm=float(M),
             pressure_diff_MPa=float(pressures_MPa[i]),
-            utilisation=util,
-            **{"pass": util <= 1.0},
+            utilisation=round(util, 4),
+            **{"pass": passed},
         ))
 
     return results
@@ -256,13 +256,13 @@ def check_dnv_os_f201(
         else:
             util = 0.0
 
-        util = round(util, 4)
+        passed = util <= 1.0
         results.append(DNVOSF201Result(
             arc_length=float(arc_lengths[i]),
             tension_kN=float(T),
             bending_moment_kNm=float(M),
-            utilisation=util,
-            **{"pass": util <= 1.0},
+            utilisation=round(util, 4),
+            **{"pass": passed},
         ))
 
     return results
