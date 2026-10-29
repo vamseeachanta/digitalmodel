@@ -59,13 +59,15 @@ SYMBOLS = set.union(*MEMBERS.values())
 
 @pytest.fixture(scope="module")
 def document():
-    return yaml.safe_load((ROOT / "docs/registry/implementation-map.yaml").read_text())
+    return yaml.safe_load(
+        (ROOT / "docs/registry/implementation-map.yaml").read_text(encoding="utf-8")
+    )
 
 
 @lru_cache(maxsize=None)
 def source_index(path):
     """Resolve lexical names by a separate AST walk, without source imports."""
-    tree = ast.parse((ROOT / path).read_text())
+    tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
     nodes = {}
 
     def walk(parent, prefix=""):
@@ -159,6 +161,10 @@ def test_pipelay_symbols_resolve_without_import(document):
         assert row["file_sha256"] == hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
         body = copy.deepcopy(nodes[symbol])
         for node in ast.walk(body):
+            # Python 3.12 adds this field; empty parameters have no 3.11 AST form.
+            if getattr(node, "type_params", None) == []:
+                node._fields = tuple(field for field in node._fields
+                                     if field != "type_params")
             statements = getattr(node, "body", None)
             if (isinstance(statements, list) and statements
                     and isinstance(statements[0], ast.Expr)
