@@ -75,6 +75,12 @@ def _check(receipt, name: str) -> None:
                        for e in receipt["results"])):
         raise ValueError(f"{name} is not a benchmark receipt (needs pack_version, "
                          f"machine_label and results[] with case and variant)")
+    seen = {}
+    for entry in receipt["results"]:
+        key = (str(entry["case"]), entry["variant"])
+        if key in seen and seen[key] != entry:
+            raise ValueError(f"{name} has conflicting duplicate case/variant identity: {key}")
+        seen[key] = entry
 
 
 def _when(text) -> _dt.datetime:
