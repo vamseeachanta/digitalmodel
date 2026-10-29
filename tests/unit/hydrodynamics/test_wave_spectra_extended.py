@@ -13,6 +13,10 @@ WRK-149 — wave_spectra.py coverage extension (target: 90%+).
 from __future__ import annotations
 
 import math
+import os
+import subprocess
+import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -258,6 +262,33 @@ class TestISSCExtended:
 
 
 class TestSpectralMoment:
+    @pytest.mark.parametrize(
+        "order, expected",
+        [(0, 6.0), (1, 15.0)],
+        ids=["constant-integrand", "affine-integrand"],
+    )
+    def test_moment_without_legacy_numpy_in_fresh_process(
+        self, order, expected, tmp_path
+    ):
+        """Hand integrals for S=2 on [1, 4]: [2w]=6; [w**2]=15.
+
+        Powers w**0 and w**1 give constant and affine integrands, so
+        trapezoidal integration is exact even on the uneven fixture grid.
+        """
+        fixture = Path(__file__).resolve().with_name("_wave_spectra_numpy_fixture.py")
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(Path(__file__).resolve().parents[3] / "src")
+        result = subprocess.run(
+            [sys.executable, str(fixture), str(order)],
+            cwd=tmp_path,
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=30,  # Bound a small import-and-integration smoke test.
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert float(result.stdout) == pytest.approx(expected)
+
     def test_m0_positive_for_real_spectrum(self):
         ws = _ws()
         omega, S = ws.jonswap(hs=3.0, tp=10.0)

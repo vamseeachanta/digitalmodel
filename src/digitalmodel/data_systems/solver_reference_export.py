@@ -23,6 +23,15 @@ cell means the key was absent, whereas JSON null means an explicit null. Parse
 cells with json.loads to reconstruct the same records as to_json(). Nonfinite
 numbers must be supplied as explicit source text (RFC 8259, section 6, 2017);
 that text is retained and classified invalid, without inventing a numeric zero.
+
+from_json() and from_csv() accept source rows or previously exported rows.
+Readers reject duplicate keys/columns and inconsistent export annotations before
+returning an exporter. Readback establishes structural fidelity only: source
+claims, execution metadata and export annotations never authenticate a fresh run.
+Floating-point tokens use Python float precision with ordinary rounding. A
+nonzero token that rounds to zero causes the entire input to be rejected; supply
+it as source text to retain it unchanged (classified invalid in the value field).
+Already-decoded caller values have no source token to check for precision loss.
 """
 
 from __future__ import annotations
@@ -44,6 +53,42 @@ _VALUE_STATES = frozenset(
     }
 )
 _RESERVED = frozenset({"export_value_state", "export_evaluation"})
+
+
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Reject duplicate JSON members before a parser can discard evidence."""
+    # RFC 8259 (2017), section 4: duplicate member names are not interoperable.
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate JSON member in source evidence")
+        result[key] = value
+    return result
+
+
+def _nonfinite_constant(token: str) -> None:
+    """Reject nonfinite JSON extensions without echoing source evidence."""
+    # RFC 8259 (2017), section 6 excludes NaN and Infinity numeric tokens.
+    raise ValueError("Source evidence must be JSON-compatible and finite")
+
+
+def _source_float(token: str) -> float:
+    """Reject nonzero source tokens that cannot survive as a nonzero float."""
+    value = float(token)
+    significand = token.lower().split("e", 1)[0]
+    if value == 0.0 and any(digit in "123456789" for digit in significand):
+        raise ValueError("Source numeric evidence would underflow to zero")
+    return value
+
+
+def _read_json(text: str) -> Any:
+    """Decode JSON without silently dropping members or accepting extensions."""
+    return json.loads(
+        text,
+        object_pairs_hook=_unique_object,
+        parse_constant=_nonfinite_constant,
+        parse_float=_source_float,
+    )
 
 
 def _snapshot(row: Mapping[str, Any]) -> dict[str, Any]:
@@ -125,6 +170,86 @@ class SolverReferenceExporter:
             ):
                 raise ValueError("supported_units requires collections of unit strings")
         self._rows = [_prepare(row, supported_units) for row in rows]
+
+    @classmethod
+    def _from_records(
+        cls,
+        records: list[Any],
+        supported_units: Mapping[str, Collection[str]],
+    ) -> SolverReferenceExporter:
+        """Recompute annotations and reject incomplete or contradictory readback."""
+        sources, annotations = [], []
+        for record in records:
+            source = _snapshot(record)
+            supplied = {key: source.pop(key) for key in _RESERVED if key in source}
+            if supplied and supplied.keys() != _RESERVED:
+                raise ValueError("Incomplete export annotations")
+            sources.append(source)
+            annotations.append(supplied)
+        exporter = cls(sources, supported_units=supported_units)
+        for supplied, actual in zip(annotations, exporter._rows):
+            if supplied and supplied != {key: actual[key] for key in _RESERVED}:
+                raise ValueError("Inconsistent export annotations")
+        return exporter
+
+    @classmethod
+    def from_json(
+        cls,
+        text: str,
+        *,
+        supported_units: Mapping[str, Collection[str]],
+    ) -> SolverReferenceExporter:
+        """Read a JSON array of source or exported rows using the same contract.
+
+        Duplicate members, unsupported units and inconsistent annotations raise
+        ValueError. Consistent annotations are recomputed, not trusted as proof
+        of execution, applicability or qualification.
+        """
+        if not isinstance(text, str):
+            raise ValueError("JSON input must be text")
+        records = _read_json(text)
+        if not isinstance(records, list):
+            raise ValueError("JSON input must be an array of reference rows")
+        return cls._from_records(records, supported_units)
+
+    @classmethod
+    def from_csv(
+        cls,
+        text: str,
+        *,
+        supported_units: Mapping[str, Collection[str]],
+    ) -> SolverReferenceExporter:
+        """Read the JSON-cell CSV contract without coercing missing evidence.
+
+        Empty cells denote absent keys; JSON null denotes explicit null. Header
+        names must be unique and every record must have the header's width.
+        Plain numeric-table CSV requires an explicit adapter before this reader.
+        """
+        if not isinstance(text, str):
+            raise ValueError("CSV input must be text")
+        if not text:
+            return cls([], supported_units=supported_units)
+        reader = csv.reader(io.StringIO(text, newline=""), strict=True)
+        records = []
+        try:
+            fields = next(reader)
+            if len(fields) != len(set(fields)):
+                raise ValueError("Duplicate CSV column in source evidence")
+            if not {"condition_id", "quantity", "source_unit"}.issubset(fields):
+                raise ValueError("CSV header is missing required reference fields")
+            for cells in reader:
+                if len(cells) != len(fields):
+                    raise ValueError("CSV row width differs from header")
+                records.append(
+                    {
+                        key: _read_json(cell)
+                        for key, cell in zip(fields, cells)
+                        if cell != ""
+                    }
+                )
+        except csv.Error as error:
+            raise ValueError("Malformed solver-reference CSV") from error
+        return cls._from_records(records, supported_units)
 
     def to_json(self) -> str:
         """Return strict JSON with all source fields and explicit export states."""

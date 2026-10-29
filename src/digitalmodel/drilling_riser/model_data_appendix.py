@@ -220,6 +220,81 @@ def _tables(sections, transitions, loading, digest):
     }
 
 
+def _validated_basis(design_basis):
+    if not isinstance(design_basis, Mapping):
+        raise ValueError("design basis must be a component/property mapping")
+    basis = {}
+    for component_id, properties in design_basis.items():
+        _text(component_id, "basis component_id")
+        if not isinstance(properties, Mapping):
+            raise ValueError("basis properties must be a mapping")
+        basis[component_id] = {}
+        for name, entry in properties.items():
+            if name not in PROPERTY_UNITS:
+                raise ValueError("unknown basis property identity")
+            if (not isinstance(entry, Mapping)
+                    or set(entry) != {"value", "units", "source"}):
+                raise ValueError("basis entry requires value, units and source")
+            if entry["units"] != PROPERTY_UNITS[name]:
+                raise ValueError(f"basis units differ for {name}; no conversion is applied")
+            _text(entry["source"], f"basis {name} source")
+            value = entry["value"]
+            if value is not None:
+                _number(value, f"basis {name}", signed=name == "wet_mass_kg_m")
+            basis[component_id][name] = dict(entry)
+    return basis
+
+
+def _reconciliation_table(sections, design_basis, digest):
+    basis = _validated_basis(design_basis)
+    model = {section["component_id"]: section for section in sections}
+    identities = list(model) + sorted(basis.keys() - model.keys())
+    rows = []
+    for component_id in identities:
+        section = model.get(component_id)
+        properties = basis.get(component_id, {})
+        for name, units in PROPERTY_UNITS.items():
+            # Model components expose all snapshot properties, including unknowns;
+            # basis-only components expose only the explicitly supplied identities.
+            if section is None and name not in properties:
+                continue
+            entry = properties.get(name)
+            model_value = section["properties"][name] if section else None
+            basis_value = entry["value"] if entry else None
+            missing = []
+            if section is None:
+                missing.append("model_component")
+            elif model_value is None:
+                missing.append("model_value")
+            if component_id not in basis:
+                missing.append("basis_component")
+            elif entry is None:
+                missing.append("basis_property")
+            elif basis_value is None:
+                missing.append("basis_value")
+            # C.6 subtraction convention: model minus basis; absolute difference
+            # is its magnitude. No division, tolerance or design limit is used.
+            difference = None if missing else model_value - basis_value
+            if difference is not None:
+                _number(difference, "reconciliation difference", signed=True)
+            rows.append({
+                "component_id": component_id, "property_id": name,
+                "model_value": model_value, "basis_value": basis_value,
+                "units": units,
+                "model_source": section["sources"].get(name) if section else None,
+                "basis_source": entry["source"] if entry else None,
+                "signed_difference": difference,
+                "absolute_difference": abs(difference) if difference is not None else None,
+                "status": "NOT_EVALUATED" if missing else "CALCULATED",
+                "missing_evidence": missing,
+            })
+    return {
+        "caption": f"Model-to-basis reconciliation; model SHA-256 {digest}",
+        "difference_convention": "model minus basis",
+        "rows": rows,
+    }
+
+
 def build_appendix(
     model_bytes: bytes,
     components: Sequence[ComponentSnapshot],
@@ -227,13 +302,23 @@ def build_appendix(
     water_density_kg_m3: float,
     water_density_source: str,
     screening_limits: Mapping[str, float] | None = None,
+    design_basis: Mapping[str, Mapping[str, Mapping[str, float | str | None]]] | None = None,
 ) -> dict:
-    """Return native C.1-C.3 tables suitable for strict JSON serialization.
+    """Return C.1-C.3 and optional C.6 tables for strict JSON serialization.
 
     Screening limits apply to max(lower/upper, upper/lower), flagging strict
     exceedance only. Both properties must be positive for a ratio. No limit
     means no screening verdict. Missing properties mean NOT_EVALUATED.
     Continuity uses exact snapshot elevations; no hidden tolerance is applied.
+
+    Optional design_basis maps component_id to property_id to an entry containing
+    value (finite SI number or None), units and source (non-empty label). Units
+    must exactly match PROPERTY_UNITS; no relabelling or conversion is performed.
+    C.6 joins exact identities only, retaining unmatched evidence with None
+    differences and NOT_EVALUATED status. Signed difference is model minus basis;
+    absolute difference is its magnitude, including when the basis is zero.
+    Passing None omits C.6; an empty mapping reports missing basis evidence.
+    This comparison does not establish extraction authenticity or acceptability.
     """
     limits = dict(screening_limits or {})
     _validate_inputs(model_bytes, water_density_kg_m3, water_density_source, limits)
@@ -243,19 +328,23 @@ def build_appendix(
     merged = [{**section, **section["properties"], **loads}
               for section, loads in zip(sections, loading)]
     transitions = [_transition(a, b, limits) for a, b in zip(merged, merged[1:])]
+    tables = _tables(sections, transitions, loading, digest)
+    if design_basis is not None:
+        tables["C.6"] = _reconciliation_table(sections, design_basis, digest)
     return {
         "model_sha256": digest, "model_extraction_status": "NOT_EVALUATED",
         "screening_is_code_criterion": False,
         "water_density_kg_m3": water_density_kg_m3,
         "water_density_source": water_density_source,
         "equation_sources": [MORISON_SOURCE],
-        "tables": _tables(sections, transitions, loading, digest),
+        "tables": tables,
         "not_evaluated": [
             "Solved-model extraction and snapshot authenticity",
             "Axial loading, non-circular or partially submerged components",
             "Lumped bodies (C.3) and special components (C.4)",
             "Node-level discretisation (C.5)",
-            "Shared model-to-basis reconciliation (C.6)",
+            *(["Shared model-to-basis reconciliation (C.6)"]
+              if design_basis is None else []),
             "Elevation step-profile figure",
         ],
     }

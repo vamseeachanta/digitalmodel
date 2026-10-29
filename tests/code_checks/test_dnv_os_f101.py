@@ -10,6 +10,7 @@ force in N (= MPa * mm^2), moment in N.mm (= MPa * mm^3).
 """
 
 import math
+import sys
 
 import pytest
 
@@ -154,6 +155,126 @@ def test_local_buckling_safety_factors_applied():
 def test_local_buckling_invalid_capacity():
     with pytest.raises(ValueError):
         local_buckling_lcc(0.0, 0.0, 0.0, 0.0, -1.0, 1.0, 1.0)
+
+
+@pytest.fixture
+def lcc_synthetic_inputs():
+    """Independent dimensionless probe: M/Mp=1/4, S=0, net/P=1/2, factors=1."""
+    return {
+        "design_moment": 1.0,
+        "design_effective_tension": 0.0,
+        "pressure_internal": 1.0,
+        "pressure_external": 0.0,
+        "moment_capacity": 4.0,
+        "axial_capacity": 1.0,
+        "pressure_capacity": 2.0,
+        "gamma_m": 1.0,
+        "gamma_sc": 1.0,
+    }
+
+
+@pytest.mark.parametrize("factor", ["gamma_m", "gamma_sc"])
+@pytest.mark.parametrize("invalid", [0.0, -1.0, math.nan, math.inf, -math.inf])
+def test_lcc_rejects_invalid_factors(lcc_synthetic_inputs, factor, invalid):
+    # Synthetic overload: M/Mp=1 and net/P=1 give UF=1^2+1^2=2 with unit factors.
+    # A zero factor instead erases both demands and produces a false pass.
+    lcc_synthetic_inputs.update(design_moment=4.0, pressure_internal=2.0)
+    lcc_synthetic_inputs[factor] = invalid
+    with pytest.raises(ValueError):
+        local_buckling_lcc(**lcc_synthetic_inputs)
+
+
+@pytest.mark.parametrize(
+    "capacity", ["moment_capacity", "axial_capacity", "pressure_capacity", "all"]
+)
+@pytest.mark.parametrize("invalid", [0.0, -1.0, math.nan, math.inf, -math.inf])
+def test_lcc_rejects_invalid_capacities(lcc_synthetic_inputs, capacity, invalid):
+    # Synthetic overload: M/Mp=1 and net/P=1 give UF=1^2+1^2=2, not a pass.
+    # All-infinite capacities erase these demand ratios and produce a false pass.
+    lcc_synthetic_inputs.update(design_moment=4.0, pressure_internal=2.0)
+    for name in ("moment_capacity", "axial_capacity", "pressure_capacity"):
+        if capacity in (name, "all"):
+            lcc_synthetic_inputs[name] = invalid
+    with pytest.raises(ValueError):
+        local_buckling_lcc(**lcc_synthetic_inputs)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "design_moment",
+        "design_effective_tension",
+        "pressure_internal",
+        "pressure_external",
+    ],
+)
+@pytest.mark.parametrize("invalid", [math.nan, math.inf, -math.inf])
+def test_lcc_rejects_nonfinite_inputs(lcc_synthetic_inputs, name, invalid):
+    lcc_synthetic_inputs[name] = invalid
+    with pytest.raises(ValueError):
+        local_buckling_lcc(**lcc_synthetic_inputs)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"gamma_m": sys.float_info.max, "gamma_sc": 2.0},
+        {"gamma_m": sys.float_info.max, "design_moment": 2.0},
+        {"design_effective_tension": sys.float_info.max},
+        {"design_moment": sys.float_info.max},
+        {"pressure_internal": sys.float_info.max},
+        {
+            "pressure_internal": sys.float_info.max,
+            "pressure_external": -sys.float_info.max,
+        },
+        {"design_moment": sys.float_info.max, "moment_capacity": sys.float_info.min},
+        {
+            "design_moment": math.sqrt(sys.float_info.max) * 4.0,
+            "pressure_internal": math.sqrt(sys.float_info.max) * 2.0,
+        },
+    ],
+    ids=[
+        "factors",
+        "product",
+        "tension-square",
+        "group-square",
+        "pressure-square",
+        "net-pressure",
+        "division",
+        "sum",
+    ],
+)
+def test_lcc_rejects_nonfinite_derived_utilisation(lcc_synthetic_inputs, changes):
+    # Python runtime float limits provide finite stress probes, not design data.
+    # The last case squares sqrt(max) twice: each term is finite, their sum is not.
+    lcc_synthetic_inputs.update(changes)
+    with pytest.raises(ValueError):
+        local_buckling_lcc(**lcc_synthetic_inputs)
+
+
+def test_lcc_synthetic_arithmetic_control(lcc_synthetic_inputs):
+    # Independent hand calculation for explicitly synthetic, dimensionless data:
+    # gamma_m=gamma_sc=1; UF=(1/4 + 0^2)^2 + (1/2)^2 = 1/16 + 1/4 = 5/16.
+    # These stress-probe factors are not engineering recommendations.
+    result = local_buckling_lcc(**lcc_synthetic_inputs)
+    assert result.utilisation == 5 / 16
+    assert result.passes is True
+
+
+@pytest.mark.parametrize("moment", [-1.0, 1.0])
+@pytest.mark.parametrize("tension", [-1.0, 1.0])
+@pytest.mark.parametrize("pressure", [-1.0, 1.0])
+def test_lcc_preserves_signed_loads(lcc_synthetic_inputs, moment, tension, pressure):
+    # Synthetic hand calculation: (|+/-1|/4 + (+/-1/2)^2)^2 + (+/-1/2)^2 = 1/2.
+    lcc_synthetic_inputs.update(
+        design_moment=moment,
+        design_effective_tension=tension,
+        pressure_internal=pressure,
+        axial_capacity=2.0,
+    )
+    result = local_buckling_lcc(**lcc_synthetic_inputs)
+    assert result.utilisation == 1 / 2
+    assert result.passes is True
 
 
 # --- external-pressure collapse --------------------------------------------

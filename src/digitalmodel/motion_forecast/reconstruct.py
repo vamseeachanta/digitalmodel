@@ -80,6 +80,9 @@ def reconstruct_motion(
     ----------
     forecast:
         Phased incident-wave forecast (with ``phase_reference_location``).
+        ``origin_time`` must be finite and ``horizon`` finite and positive,
+        with a finite sum. No result can be issued for unknown predictable-zone
+        bounds.
     rao:
         Object exposing ``H(dof, omega, heading) -> complex`` (see
         :mod:`.rao_adapter`).
@@ -87,9 +90,12 @@ def reconstruct_motion(
         (x, y) of the asset (m); the wave phase is propagated here from the
         forecast reference location.
     dt:
-        Time step (s) for the default grid.
+        Finite positive time step (s) for the default grid. Unused when
+        ``t_grid`` is supplied.
     t_grid:
-        Explicit times (s). **Fail-closed**: any time outside
+        Nonempty finite one-dimensional sequence of explicit times (s).
+        Single-time evaluation and nonuniform sampling are supported.
+        **Fail-closed**: any time outside
         ``[origin_time, origin_time + horizon]`` raises — no extrapolation
         beyond the predictable zone.
 
@@ -102,12 +108,27 @@ def reconstruct_motion(
     if not forecast.components:
         raise ValueError("forecast has no wave components")
     t0 = forecast.origin_time
-    t1 = forecast.origin_time + forecast.horizon
+    if not np.isfinite(t0):
+        raise ValueError("origin_time must be finite for the predictable zone")
+    if not np.isfinite(forecast.horizon) or forecast.horizon <= 0:
+        raise ValueError("horizon must be finite and positive for the predictable zone")
+    t1 = t0 + forecast.horizon
+    if not np.isfinite(t1):
+        raise ValueError("origin_time + horizon must be finite for the predictable zone")
     if t_grid is None:
+        if not np.isfinite(dt) or dt <= 0:
+            raise ValueError("dt must be finite and positive for the default grid")
         n = max(2, int(round(forecast.horizon / dt)) + 1)
         t = np.linspace(t0, t1, n)
     else:
-        t = np.asarray(t_grid, dtype=float)
+        try:
+            t = np.asarray(t_grid, dtype=float)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("t_grid must be a finite one-dimensional time sequence") from exc
+        if t.ndim != 1 or t.size == 0:
+            raise ValueError("t_grid must be a nonempty one-dimensional time sequence")
+        if not np.all(np.isfinite(t)):
+            raise ValueError("t_grid must contain only finite times")
         eps = 1e-9
         if t.min() < t0 - eps or t.max() > t1 + eps:
             raise ValueError(

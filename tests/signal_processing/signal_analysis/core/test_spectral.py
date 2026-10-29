@@ -286,6 +286,69 @@ class TestPeriodogramMethod:
 class TestWindowAveragedFFT:
     """Tests for the window_averaged_fft method."""
 
+    @pytest.mark.parametrize(
+        "overlap, amplitudes, expected_magnitude, expected_power",
+        [
+            (0.0, (3, 3), 3, 144),
+            (0.5, (3, 3), 3, 144),
+            (0.0, (1, 7), 5, 400),
+        ],
+        ids=["nonoverlap", "half-overlap", "unequal-amplitudes"],
+    )
+    def test_window_average_boxcar_known_bin_values(
+        self, overlap, amplitudes, expected_magnitude, expected_power
+    ):
+        """Derive interior-bin values from a finite geometric sum.
+
+        Independent hand calculation: for r=exp(2*pi*i*m/N),
+        sum(r**n, n=0..N-1)=(1-r**N)/(1-r)=0 unless m is a
+        multiple of N, when the sum is N. Expanding
+        x[n]=A*sin(2*pi*k*n/N) into exponentials therefore gives
+        X[k]=N*A/(2*i) for an interior bin k. Thus magnitude
+        2*abs(X[k])/N=A and positive-bin power 2*abs(X[k])**2/N
+        =N*A*A/2; every other interior bin is zero.
+
+        Synthetic controls N=fs=32 and k=4 give four complete cycles
+        per block and a 4 Hz tone. Half overlap starts at sample 16,
+        two full cycles later, so the equal-amplitude record yields
+        three identical windows; non-overlap yields two. With A=3,
+        magnitude=3 and power=32*9/2=144. Unequal non-overlapping
+        blocks A=1,7 have mean(A**2)=(1+49)/2=25, so averaging
+        squared FFT coefficients gives magnitude=sqrt(25)=5 and
+        power=32*25/2=400, rather than the mean amplitude 4.
+
+        Only interior bins are compared, avoiding DC/Nyquist scaling.
+        Absolute tolerance 1e-10, with zero relative tolerance, allows
+        trigonometric and FFT roundoff for these small synthetic blocks.
+        """
+        window_size = 32
+        samples = np.arange(window_size)
+        unit_block = np.sin(2 * np.pi * 4 * samples / window_size)
+        signal = np.concatenate([amplitude * unit_block for amplitude in amplitudes])
+        analyzer = SpectralAnalyzer(sampling_rate=32)
+
+        spectrum = analyzer.window_averaged_fft(
+            signal,
+            window_size=window_size,
+            overlap=overlap,
+            window_function="boxcar",
+        )
+
+        interior = spectrum.iloc[1:]
+        expected_magnitudes = np.zeros(window_size // 2 - 1)
+        expected_powers = np.zeros(window_size // 2 - 1)
+        expected_magnitudes[4 - 1] = expected_magnitude
+        expected_powers[4 - 1] = expected_power
+        np.testing.assert_allclose(
+            interior["frequency"], np.arange(1, window_size // 2), rtol=0, atol=1e-10
+        )
+        np.testing.assert_allclose(
+            interior["magnitude"], expected_magnitudes, rtol=0, atol=1e-10
+        )
+        np.testing.assert_allclose(
+            interior["power"], expected_powers, rtol=0, atol=1e-10
+        )
+
     def test_returns_dataframe(self):
         sa = SpectralAnalyzer(sampling_rate=1000.0)
         sig, _ = _sine_signal(50, 1000, 2.0)
@@ -567,6 +630,40 @@ class TestComputePSD:
 
 class TestInverseTransform:
     """Tests for inverse_transform method."""
+
+    @pytest.mark.parametrize("n_samples", [15, 16], ids=["odd", "even"])
+    def test_inverse_fft_reconstructs_known_samples(self, n_samples):
+        """Reconstruct every sample of an independently specified waveform.
+
+        Synthetic choices N=15,16 cover odd and even lengths at fs=N Hz.
+        The input and expected samples are specified directly by
+        x[n]=2*sin(2*pi*2*n/N)+3*cos(2*pi*3*n/N), n=0..N-1.
+        Both tones complete integer cycles at interior bins, so each
+        has zero mean and the even case has no Nyquist component.
+
+        Independent hand calculation: the finite geometric sum of
+        exp(2*pi*i*m*n/N) vanishes for nonzero m modulo N. Expanding
+        the sine and cosine gives X[2]=-i*N, X[3]=3*N/2 and conjugate
+        negative-frequency coefficients, with all other bins zero.
+        Substitution into x[n]=sum(X[k]*exp(2*pi*i*k*n/N))/N yields
+        exactly the sample formula above for either parity. No FFT
+        or spectral helper supplies the expected values.
+
+        Zero relative tolerance and absolute tolerance 1e-12 permit
+        floating-point trigonometry and transform roundoff for these
+        short, noise-free records, while detecting scaling or phase errors.
+        """
+        samples = np.arange(n_samples)
+        expected = (
+            2 * np.sin(2 * np.pi * 2 * samples / n_samples)
+            + 3 * np.cos(2 * np.pi * 3 * samples / n_samples)
+        )
+        analyzer = SpectralAnalyzer(sampling_rate=n_samples)
+        spectrum = analyzer.compute_spectrum(expected.copy(), detrend="none")
+
+        reconstructed = analyzer.inverse_transform(spectrum)
+
+        np.testing.assert_allclose(reconstructed, expected, rtol=0, atol=1e-12)
 
     def test_missing_fft_complex_raises(self):
         sa = SpectralAnalyzer()

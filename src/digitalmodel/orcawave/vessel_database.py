@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """
 ABOUTME: Common vessel database for OrcaWave preliminary studies.
 Provides typical vessel parameters (dimensions, displacement, GM) and
@@ -21,6 +23,9 @@ class VesselParameters(BaseModel):
     model_config = ConfigDict(allow_inf_nan=False)
     """Physical parameters for a vessel."""
 
+    synthetic: bool = Field(
+        default=True, description="Assumed screening inputs, not measured data"
+    )
     name: str = Field(..., description="Vessel identifier")
     vessel_type: str = Field(
         ...,

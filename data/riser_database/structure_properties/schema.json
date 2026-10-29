@@ -1,0 +1,283 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Structure properties catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "database",
+    "units",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "database": {
+      "const": "structure_properties"
+    },
+    "units": {
+      "const": {
+        "area_m2": "m^2",
+        "iy_m4": "m^4",
+        "iz_m4": "m^4",
+        "torsion_constant_m4": "m^4",
+        "elastic_modulus_pa": "Pa",
+        "density_kg_per_m3": "kg/m^3",
+        "dry_mass_kg_per_m": "kg/m"
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "citation_id",
+          "section_type",
+          "section_label",
+          "area_m2",
+          "iy_m4",
+          "iz_m4",
+          "torsion_constant_m4",
+          "elastic_modulus_pa",
+          "density_kg_per_m3",
+          "dry_mass_kg_per_m"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "status": {
+            "enum": [
+              "cited",
+              "synthetic"
+            ]
+          },
+          "citation_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "section_type": {
+            "enum": [
+              "circular_tube",
+              "rectangular_hollow",
+              "i_section",
+              "custom"
+            ]
+          },
+          "section_label": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "area_m2": {
+            "$ref": "#/$defs/positive"
+          },
+          "iy_m4": {
+            "$ref": "#/$defs/positive"
+          },
+          "iz_m4": {
+            "$ref": "#/$defs/positive"
+          },
+          "torsion_constant_m4": {
+            "$ref": "#/$defs/positive"
+          },
+          "elastic_modulus_pa": {
+            "$ref": "#/$defs/positive"
+          },
+          "density_kg_per_m3": {
+            "$ref": "#/$defs/positive"
+          },
+          "dry_mass_kg_per_m": {
+            "$ref": "#/$defs/positive"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positive": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "publisher",
+        "url",
+        "catalogue_number",
+        "revision",
+        "date",
+        "page",
+        "table",
+        "source_class",
+        "reuse_terms"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://[^/\\s?#]+(?:[/?#]|$)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_number": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_class": {
+          "enum": [
+            "mill_catalogue",
+            "manufacturer_catalogue",
+            "public_paper",
+            "public_thesis",
+            "public_agency_report",
+            "own_design_basis",
+            "synthetic_fixture"
+          ]
+        },
+        "reuse_terms": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "catalogue_number": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "page": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "table": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "description": "A locator for the values in each referencing row; class declarations require independent source review."
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "citation_schema",
+        "citations"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "citation_schema": {
+          "const": "schema.json#/$defs/citation"
+        },
+        "citations": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/citation"
+          }
+        }
+      }
+    }
+  }
+}

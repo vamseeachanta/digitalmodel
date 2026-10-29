@@ -47,7 +47,7 @@ Ranked by curated-CAD density × reuse potential.
 | 7 | **E1** | `epc-partner/‹field›` | Deepwater field development (EPC support) | EPC contractor / deepwater dev (de-id) | OrcaFlex-dominant (`general/engg`, modular YAML) | 317 (archive only) | ⚠️ `.preexisting` only — **kept as canonical** (no live twin) |
 | 8 | **V** | `rock-oil-field/s7/{…}` | **VIV / riser-fatigue** (Shear7) | Multiple operators (de-id, 4+ fields) | Analysis-dense (Shear7), little native CAD | 424 (archive only) | ⚠️ `.preexisting` only — **kept** (no live twin) |
 | 9 | **D1** | `eng-partner/models/‹field›`, `62092_sesa` | Deepwater riser/field analysis | Partner engineering firm (de-id) | OrcaFlex + Abaqus models | 18 live (+502 archived) | ✅ live (`eng-partner`); 🗄️ dedup `.preexisting` |
-| 10 | — | `client_projects/energy_*` | Mixed: pipeline-installation, intervention riser, VIV | Several consulting clients | OrcaFlex + some SolidWorks (`ecs/quotes`) | 815 live (+4,522 archived) | ✅ live; 🗄️ dedup `.preexisting` |
+| 10 | — | `client_projects/energy_*` | Mixed: pipeline-installation, intervention riser, VIV | Several consulting clients | OrcaFlex + some SolidWorks (`riser-sys-a/quotes`) | 815 live (+4,522 archived) | ✅ live; 🗄️ dedup `.preexisting` |
 
 ---
 
