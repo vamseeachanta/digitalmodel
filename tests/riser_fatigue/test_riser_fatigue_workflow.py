@@ -10,16 +10,20 @@ import math
 from pathlib import Path
 
 import pytest
+import yaml
 
-from digitalmodel.engine import engine
 from digitalmodel.riser_fatigue.workflow import router
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE_INPUT = REPO_ROOT / "examples" / "workflows" / "riser-fatigue" / "input.yml"
 
 
-def test_riser_fatigue_example_runs_offline():
-    cfg = engine(inputfile=str(EXAMPLE_INPUT))
+def test_riser_fatigue_example_runs_offline(tmp_path):
+    from digitalmodel.engine import engine
+
+    example = tmp_path / "input.yml"
+    example.write_text(EXAMPLE_INPUT.read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
+    cfg = engine(inputfile=str(example))
 
     assert isinstance(cfg, dict)
     assert cfg["basename"] == "riser_fatigue"
@@ -45,27 +49,32 @@ def test_riser_fatigue_example_runs_offline():
     assert result["screening_status"] == expected_status
 
     # Outputs are written next to the example.
-    results_dir = EXAMPLE_INPUT.parent / "results"
+    results_dir = tmp_path / "results"
     assert (results_dir / "input_riser_fatigue.csv").exists()
     assert (results_dir / "input_riser_fatigue_summary.csv").exists()
 
 
-def test_riser_fatigue_router_sums_wave_and_viv():
+def test_riser_fatigue_router_sums_wave_and_viv(tmp_path):
     """A single VIV-only and a single wave-only segment isolate each path."""
     cfg = {
         "basename": "riser_fatigue",
-        "_config_dir_path": str(Path(__file__).parent),
+        "_config_dir_path": str(tmp_path),
         "riser_fatigue": {
             "design_life_years": 25.0,
             "dff": 3.0,
-            "sn_curve": {"curve": "F1", "environment": "seawater_cp"},
+            "sn_curve": {"curve": "F1", "environment": "seawater_cp",
+                         "basis": "Synthetic F1 detail with specified protection"},
             "output_dir": "_riser_fatigue_unit_results",
             "segments": [
                 {
                     "id": "wave-only",
                     "outer_diameter_mm": 273.1,
                     "wall_thickness_mm": 22.2,
+                    "viv_exclusion": {"reason": "Isolated wave contribution test",
+                                      "evidence": "Synthetic wave-only fixture"},
                     "wave": {
+                        "scf_basis": "Synthetic hot-spot stress includes concentration",
+                        "histogram_basis": {"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
                         "scf": 1.0,
                         "histogram_period_years": 1.0,
                         "stress_ranges_MPa": [10.0, 20.0],
@@ -76,6 +85,8 @@ def test_riser_fatigue_router_sums_wave_and_viv():
                     "id": "viv-only",
                     "outer_diameter_mm": 273.1,
                     "wall_thickness_mm": 22.2,
+                    "wave_exclusion": {"reason": "Isolated VIV contribution test",
+                                       "evidence": "Synthetic VIV-only fixture"},
                     "viv_cases": [
                         {
                             "stress_range_MPa": 15.0,
@@ -101,8 +112,15 @@ def test_riser_fatigue_router_sums_wave_and_viv():
             seg["wave_damage"] + seg["viv_damage"]
         )
 
-    # Clean up the unit-test output directory.
-    out_dir = Path(__file__).parent / "_riser_fatigue_unit_results"
-    for child in out_dir.glob("*"):
-        child.unlink()
-    out_dir.rmdir()
+
+
+def test_example_through_analytical_router(tmp_path):
+    """Exercise the example without importing solver integrations."""
+    cfg = yaml.safe_load(EXAMPLE_INPUT.read_text(encoding="utf-8"))
+    cfg["_config_dir_path"] = str(tmp_path)
+    result = router(cfg)["riser_fatigue"]
+    assert len(result["segments"]) == 2
+    assert result["governing_wave_damage"] > 0
+    assert result["governing_viv_damage"] > 0
+    assert result["screening_status"] == "pass"
+    assert (tmp_path / "results" / "riser_fatigue_riser_fatigue.csv").is_file()

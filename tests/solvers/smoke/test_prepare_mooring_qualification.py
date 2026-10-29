@@ -1,5 +1,6 @@
 """Offline qualification packaging preserves inputs and reports reference differences."""
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -65,9 +66,17 @@ def test_complete_bundle_and_reference_differences(packaging, tmp_path):
     manifest_path = packaging.prepare_bundle(tmp_path / "output")
     data = verify_manifest(manifest_path)
     root = data["_root"]
+    assert not (root / "failed-generation").exists()
     assert (root / "source/spec.yml").read_bytes() == original
     assert packaging.SOURCE.read_bytes() == original
     actual = {p.relative_to(root).as_posix() for p in (root / "bundle").rglob("*") if p.is_file()}
+    control = tmp_path / "control"
+    packaging.ModularModelGenerator(packaging.SOURCE).generate(control)
+    assert {p.relative_to(control).as_posix(): p.read_bytes()
+            for p in control.rglob("*") if p.is_file()} == {
+        p.relative_to(root / "bundle").as_posix(): p.read_bytes()
+        for p in (root / "bundle").rglob("*") if p.is_file()
+    }
     listed = {item["path"] for item in data["files"]}
     assert actual | {"source/spec.yml"} == listed
     assert [x["path"] for x in data["files"]] == sorted(listed)
@@ -95,18 +104,69 @@ def test_existing_file_is_rejected(packaging, tmp_path):
     assert output.read_text() == "preserve"
 
 
-def test_failed_generation_removes_only_owned_output(packaging, tmp_path, monkeypatch):
-    def fail(*args):
-        raise ValueError("injected generation failure")
+@pytest.mark.parametrize("error_type", [ValueError, KeyboardInterrupt])
+def test_failed_generation_retains_inputs_and_partial_output(
+        packaging, tmp_path, monkeypatch, error_type):
+    """Expected bytes are supplied by the fixture; no native construction occurs."""
+    original = error_type("injected generation failure")
 
-    monkeypatch.setattr(packaging.ModularModelGenerator, "generate", fail)
+    def fail(self, bundle, *, allow_validation_errors):
+        assert allow_validation_errors is False
+        (bundle / "partial.yml").write_bytes(b"partial: evidence\n")
+        raise original
+
+    monkeypatch.setattr(packaging.ModularModelGenerator, "_generate", fail)
     neighbor = tmp_path / "neighbor"
     neighbor.write_text("preserve")
     output = tmp_path / "output"
-    with pytest.raises(ValueError, match="injected"):
+    with pytest.raises(error_type, match="injected") as caught:
         packaging.prepare_bundle(output)
-    assert not output.exists()
+    assert caught.value is original
+    assert (output / "source/spec.yml").read_bytes() == packaging.SOURCE.read_bytes()
+    assert not (output / "bundle").exists()
+    assert (output / "failed-generation/partial.yml").read_bytes() == b"partial: evidence\n"
+    failure = json.loads((output / "failure.json").read_bytes())
+    assert failure == {"status": "failed", "phase": "generation",
+                       "source_sha256": hashlib.sha256(packaging.SOURCE.read_bytes()).hexdigest()}
     assert neighbor.read_text() == "preserve"
+
+
+def test_failed_validation_retains_complete_staging(packaging, tmp_path, monkeypatch):
+    original = ValueError("injected validation failure")
+
+    def fail(*args, **kwargs):
+        raise original
+
+    monkeypatch.setattr(packaging.ModularModelGenerator, "_run_post_validation", fail)
+    output = tmp_path / "output"
+    with pytest.raises(ValueError) as caught:
+        packaging.prepare_bundle(output)
+    assert caught.value is original
+    assert not (output / "bundle").exists()
+    assert (output / "failed-generation/master.yml").is_file()
+    assert list((output / "failed-generation/includes").glob("*.yml"))
+    assert json.loads((output / "failure.json").read_bytes())["phase"] == "generation"
+
+
+def test_failed_staging_retention_preserves_original_error(packaging, tmp_path, monkeypatch):
+    original = RuntimeError("injected generation failure")
+    output = tmp_path / "output"
+
+    def fail(self, bundle, **kwargs):
+        diagnostic = output / "failed-generation"
+        diagnostic.mkdir()
+        (diagnostic / "keep.txt").write_bytes(b"existing evidence")
+        (bundle / "partial.yml").write_bytes(b"partial evidence")
+        raise original
+
+    monkeypatch.setattr(packaging.ModularModelGenerator, "_generate", fail)
+    with pytest.raises(RuntimeError) as caught:
+        packaging.prepare_bundle(output)
+    assert caught.value is original
+    assert (output / "failed-generation/keep.txt").read_bytes() == b"existing evidence"
+    assert not (output / "failed-generation/partial.yml").exists()
+    assert any("staging could not be retained" in note for note in original.__notes__)
+    assert (output / "failure.json").is_file()
 
 
 def test_reference_diff_preserves_nested_missing_and_typed_values(packaging):
@@ -248,3 +308,63 @@ def test_generated_sections_refuse_ambiguous_includes(packaging, tmp_path, maste
     bundle = _bundle(tmp_path, master, includes)
     with pytest.raises(ValueError):
         packaging._generated_sections(bundle)
+
+
+@pytest.mark.parametrize("symbol,phase", [
+    ("verify_manifest", "manifest_verification"),
+    ("_reference_report", "reference_comparison"),
+])
+def test_failed_post_generation_retains_manifest_and_original_error(
+        packaging, tmp_path, monkeypatch, symbol, phase):
+    """Successful offline generation is retained when a later evidence step fails."""
+    original = RuntimeError("injected evidence failure")
+
+    def fail(*args):
+        raise original
+
+    monkeypatch.setattr(packaging, symbol, fail)
+    output = tmp_path / "output"
+    with pytest.raises(RuntimeError) as caught:
+        packaging.prepare_bundle(output)
+    assert caught.value is original
+    assert (output / "manifest.json").is_file()
+    assert (output / "bundle/master.yml").is_file()
+    record = json.loads((output / "failure.json").read_bytes())
+    assert record["status"] == "failed"
+    assert record["phase"] == phase
+    assert record["source_sha256"] == hashlib.sha256(
+        (output / "source/spec.yml").read_bytes()).hexdigest()
+
+
+def test_failed_metadata_creation_preserves_existing_evidence(packaging, tmp_path, monkeypatch):
+    """A pre-existing failure record is retained byte for byte on name collision."""
+    original = RuntimeError("injected generation failure")
+
+    def fail(self, bundle, **kwargs):
+        (bundle.parent / "failure.json").write_bytes(b"existing evidence")
+        raise original
+
+    monkeypatch.setattr(packaging.ModularModelGenerator, "generate", fail)
+    output = tmp_path / "output"
+    with pytest.raises(RuntimeError) as caught:
+        packaging.prepare_bundle(output)
+    assert caught.value is original
+    assert (output / "failure.json").read_bytes() == b"existing evidence"
+    assert any("metadata" in note for note in original.__notes__)
+
+
+def test_source_copy_failure_records_unknown_digest(packaging, tmp_path, monkeypatch):
+    """Failed copy cannot establish a digest; JSON null records that absence."""
+    original = OSError("injected copy failure")
+
+    def fail(*args):
+        raise original
+
+    monkeypatch.setattr(packaging.shutil, "copyfile", fail)
+    output = tmp_path / "output"
+    with pytest.raises(OSError) as caught:
+        packaging.prepare_bundle(output)
+    assert caught.value is original
+    assert json.loads((output / "failure.json").read_bytes()) == {
+        "status": "failed", "phase": "source_copy", "source_sha256": None,
+    }

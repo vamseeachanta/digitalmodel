@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """OrcaFlex model generation for legacy catenary riser analysis."""
 
 import pkgutil
@@ -1220,6 +1223,13 @@ def WriteOrcaflexModel(Files, cfg):
 
 
 def build_model(FEAType, cfg):
+    flags = cfg["default"]["Analysis"]
+    if FEAType not in ("Extreme", "Fatigue"):
+        raise ValueError("export requires Extreme or Fatigue analysis")
+    if not flags.get(FEAType) or not (flags.get("SCR") or flags.get("SLWR")):
+        raise ValueError("export requires an enabled analysis and riser type")
+    if not cfg.get("EnvironmentLoad", {}).get(FEAType):
+        raise ValueError("export requires at least one load case")
     if cfg["default"]["Analysis"]["SLWR"]:
         for LoadingIndex in range(0, len(cfg["EnvironmentLoad"][FEAType])):
             cfg["Analysis"]["fe_filename"] = (
@@ -1231,7 +1241,7 @@ def build_model(FEAType, cfg):
                 ]["Name"]
                 + ".yml"
             )
-            if cfg["default"]["Analysis"][FEAType] == True:
+            if cfg["default"]["Analysis"][FEAType]:
                 FEAmodel1, FEAmodel2 = orcaflexModel(cfg, FEAType, LoadingIndex)
                 if FEAType == "Extreme":
                     WriteOrcaflexModel(
@@ -1267,7 +1277,7 @@ def build_model(FEAType, cfg):
                 ]["Name"]
                 + "_FE.yml"
             )
-            if cfg["default"]["Analysis"][FEAType] == True:
+            if cfg["default"]["Analysis"][FEAType]:
                 FEAmodel1, FEAmodel2 = orcaflexModel(cfg, FEAType, LoadingIndex)
                 if FEAType == "Extreme":
                     extreme_data = pkgutil.get_data(

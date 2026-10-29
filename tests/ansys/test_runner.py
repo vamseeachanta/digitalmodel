@@ -57,7 +57,7 @@ def test_successful_solve_marks_completed(tmp_path: Path, monkeypatch):
         (Path(kwargs["cwd"]) / "model.out").write_text("completed")
         return _completed(0)
 
-    monkeypatch.setattr("digitalmodel.ansys.runner.subprocess.run", simulate)
+    monkeypatch.setattr("digitalmodel.ansys.runner._run_solver_process", simulate)
     result = run_ansys(_script(tmp_path), output_dir=tmp_path / "out")
     assert result.status == ANSYSRunStatus.COMPLETED
     assert result.return_code == 0
@@ -68,7 +68,7 @@ def test_nonzero_exit_marks_failed(tmp_path: Path, monkeypatch):
         ANSYSRunner, "_detect_executable", lambda self: Path("/fake/mapdl")
     )
     monkeypatch.setattr(
-        "digitalmodel.ansys.runner.subprocess.run",
+        "digitalmodel.ansys.runner._run_solver_process",
         lambda *a, **k: _completed(8),
     )
     result = run_ansys(_script(tmp_path), output_dir=tmp_path / "out")
@@ -86,7 +86,7 @@ def test_solver_error_in_log_marks_failed(tmp_path: Path, monkeypatch):
         (out_dir / "model.out").write_text("... *** ERROR *** element distorted ...")
         return _completed(0)
 
-    monkeypatch.setattr("digitalmodel.ansys.runner.subprocess.run", simulate)
+    monkeypatch.setattr("digitalmodel.ansys.runner._run_solver_process", simulate)
     result = run_ansys(_script(tmp_path), output_dir=out_dir)
     assert result.status == ANSYSRunStatus.FAILED
     assert "*** ERROR ***" in result.error_message
@@ -100,7 +100,7 @@ def test_invocation_exception_fails_closed(tmp_path: Path, monkeypatch):
     def boom(*a, **k):
         raise OSError("exec format error")
 
-    monkeypatch.setattr("digitalmodel.ansys.runner.subprocess.run", boom)
+    monkeypatch.setattr("digitalmodel.ansys.runner._run_solver_process", boom)
     result = run_ansys(_script(tmp_path), output_dir=tmp_path / "out")
     assert result.status == ANSYSRunStatus.FAILED
     assert "MAPDL invocation failed" in result.error_message

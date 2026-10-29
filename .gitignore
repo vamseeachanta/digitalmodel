@@ -137,7 +137,7 @@ rao_diverse_results.txt
 
 .venv/
 venv/
-ENV/
+/ENV/
 /env/
 # Nested environments are ignored by specific environment paths, not by env/.
 **/env/pyvenv.cfg
@@ -615,6 +615,13 @@ docs/reports/modules/gis/*
 !/docs/reports/
 !/docs/reports/modules/
 /docs/reports/modules/*
+
+# Retain the normalized-section example source; generated output stays ignored.
+!/docs/reports/modules/passing_ship/
+/docs/reports/modules/passing_ship/*
+!/docs/reports/modules/passing_ship/build_worked_example.py
+!/docs/reports/modules/passing_ship/README.md
+
 !/docs/reports/modules/vesselseakeeping/
 !/docs/reports/modules/vesselseakeeping/index.html
 !/docs/reports/modules/vesselseakeeping/changes.json
@@ -622,3 +629,10 @@ docs/reports/modules/gis/*
 /docs/reports/modules/pipe_capacity/*
 !/docs/reports/modules/pipe_capacity/build_worked_example.py
 !/docs/reports/modules/pipe_capacity/README.md
+
+# Retain module reports after the shared directory rule.
+!/docs/reports/modules/vesselseakeeping/manifest.json
+!/docs/reports/modules/riserfatigue/
+!/docs/reports/modules/riserfatigue/generate_report.py
+!/docs/reports/modules/riserfatigue/report.html
+!/docs/reports/modules/riserfatigue/changes.json

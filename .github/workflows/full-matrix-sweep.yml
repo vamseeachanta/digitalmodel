@@ -34,7 +34,7 @@ concurrency:
 jobs:
   full-matrix:
     name: Build full shard matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       total: ${{ steps.matrix.outputs.total }}
@@ -106,7 +106,7 @@ jobs:
 
       - name: Install Gmsh runtime libraries
         if: matrix.domain == 'solver-smoke'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+        run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
 
       - name: Create reports directory
         run: mkdir -p reports
@@ -185,7 +185,7 @@ jobs:
       actions: read
       issues: write
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Summarize shard results
         continue-on-error: true

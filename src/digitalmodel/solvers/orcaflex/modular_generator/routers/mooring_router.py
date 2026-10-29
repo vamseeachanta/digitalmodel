@@ -18,6 +18,9 @@ from ..schema.mooring import (
 )
 from .base_router import BaseRouter
 
+# Citation limitations: docs/domains/orcaflex/generator-standards.md
+# Inventory entries: chain-defaults and chain-breaking-load (NOT_EVALUATED).
+# Legacy attribution below is unqualified: no edition or clause is selected.
 # Studless chain properties per DNV-OS-E302 (breaking load formula).
 # Key: ChainGrade, Value: dict with MBL coefficient and weight coefficient.
 # MBL (kN) = mbl_coeff * d^2 * (44 - 0.08*d)   where d = diameter in mm

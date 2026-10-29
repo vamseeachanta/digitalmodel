@@ -50,7 +50,7 @@ permissions:
 
 jobs:
   focused-tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","x64"]') }}
     timeout-minutes: 20
     defaults:
       run:
@@ -164,7 +164,7 @@ jobs:
         run: uv python install 3.11
 
       - name: Install Gmsh runtime libraries
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+        run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
 
       - name: Sync locked environment
         run: uv sync --frozen --extra cfd --extra test

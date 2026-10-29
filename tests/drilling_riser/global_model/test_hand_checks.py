@@ -4,6 +4,7 @@ tension chain and tensioned-beam natural periods (synthetic data only)."""
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import pytest
 
@@ -100,6 +101,32 @@ def test_beam_period_order_is_documented():
     doc = " ".join(tensioned_beam_periods.__doc__.split())
     assert "decreasing periods" in doc
     assert "increasing natural frequency" in doc
+
+
+def test_tensioned_beam_mode_order_documentation_example(capsys):
+    """Execute the published example and retain its closed-form mode identities."""
+    example_path = (
+        Path(__file__).resolve().parents[3]
+        / "docs/examples/tensioned-beam-mode-order.md"
+    )
+    code = example_path.read_text(encoding="utf-8").split("```python\n", 1)[1].split("\n```", 1)[0]
+    namespace = {}
+    exec(compile(code, str(example_path), "exec"), namespace)
+
+    modes = namespace["modes"]
+    assert [mode["number"] for mode in modes] == [1, 2, 3, 4, 5]
+    assert modes[0]["label"] == "fundamental"
+    periods = [mode["period_s"] for mode in modes]
+    frequencies = [mode["frequency_hz"] for mode in modes]
+    assert all(first > second for first, second in zip(periods, periods[1:]))
+    assert all(first < second for first, second in zip(frequencies, frequencies[1:]))
+    # Independent string solution: T_n = 2*300/(n*sqrt(2e6/800)) = 12/n s.
+    # Same fixture and mesh tolerance as test_tensioned_string_limit_matches_closed_form.
+    expected_periods = (12.0, 6.0, 4.0, 3.0, 2.4)
+    for mode, expected_period in zip(modes, expected_periods, strict=True):
+        assert mode["period_s"] == pytest.approx(expected_period, rel=5e-3)
+        assert mode["frequency_hz"] == pytest.approx(1.0 / mode["period_s"])
+    assert "1 (fundamental):" in capsys.readouterr().out
 
 
 def test_stiff_end_springs_approach_clamped_beam():

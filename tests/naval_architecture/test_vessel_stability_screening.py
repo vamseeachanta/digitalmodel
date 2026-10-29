@@ -163,6 +163,60 @@ def test_citation_label_includes_note():
 # -- hydrostatic table -----------------------------------------------------------
 
 
+@pytest.mark.parametrize("field_name", ("draft_m", "displacement_t", "km_m"))
+@pytest.mark.parametrize("value", (math.nan, math.inf, -math.inf))
+def test_hydrorow_rejects_nonfinite_required_properties(field_name, value):
+    """Use a synthetic control row (1 m draft, 10 t displacement, 3 m KM)."""
+    values = {"draft_m": 1.0, "displacement_t": 10.0, "km_m": 3.0}
+    values[field_name] = value
+    with pytest.raises(ValueError, match=rf"{field_name} must be finite"):
+        HydroRow(**values)
+
+
+@pytest.mark.parametrize("field_name", ("draft_m", "displacement_t", "km_m"))
+@pytest.mark.parametrize("value", (0.0, -1.0))
+def test_hydrorow_rejects_nonpositive_required_properties(field_name, value):
+    """Synthetic row: 1 m, 10 t, 3 m; zero and minus one probe positivity."""
+    values = {"draft_m": 1.0, "displacement_t": 10.0, "km_m": 3.0}
+    values[field_name] = value
+    with pytest.raises(ValueError, match=rf"{field_name} must be > 0"):
+        HydroRow(**values)
+
+
+@pytest.mark.parametrize(
+    ("displacement_t", "expected_draft_m", "expected_km_m"),
+    ((10.0, 1.0, 3.0), (15.0, 1.5, 4.0), (20.0, 2.0, 5.0)),
+)
+def test_hydrostatic_lookup_preserves_finite_controls(
+    displacement_t, expected_draft_m, expected_km_m
+):
+    """Independent synthetic linear interpolation, not physical hydrostatics.
+
+    Chosen rows (draft m, displacement t, KM m): (1, 10, 3), (2, 20, 5).
+    Hand calculation at 15 t: fraction = (15 - 10)/(20 - 10) = 1/2;
+    draft = 1 + (2 - 1)/2 = 1.5 m; KM = 3 + (5 - 3)/2 = 4 m.
+    Exact nodes retain their supplied values; optional properties are absent.
+    """
+    table = HydrostaticTable(rows=(
+        HydroRow(draft_m=1.0, displacement_t=10.0, km_m=3.0),
+        HydroRow(draft_m=2.0, displacement_t=20.0, km_m=5.0),
+    ))
+    for props in (
+        table.at_displacement(displacement_t),
+        table.at_draft(expected_draft_m),
+    ):
+        assert all(math.isfinite(value) for value in (
+            props.draft_m, props.displacement_t, props.km_m
+        ))
+        assert (props.draft_m, props.displacement_t, props.km_m) == (
+            expected_draft_m, displacement_t, expected_km_m
+        )
+        assert props.lcb_m is None
+        assert props.lcf_m is None
+        assert props.mct_t_m_per_cm is None
+        assert props.tpc_t_per_cm is None
+
+
 def test_table_exact_node_lookup():
     props = _hydro_table().at_displacement(8200.0)
     assert props.draft_m == pytest.approx(4.0)

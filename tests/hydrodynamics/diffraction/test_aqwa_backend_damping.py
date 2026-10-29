@@ -1,11 +1,11 @@
-"""Tests for AQWA backend Deck 7 FIDP/FISK card generation.
+"""Tests for AQWA backend Deck 7 FIDP/SSTF card generation.
 
 Validates that the AQWABackend.build_deck7() method correctly emits
 Frequency Independent DamPing (FIDP) and Frequency Independent
-StiFFness/sKiffness (FISK) cards from DiffractionSpec external_damping
+Additional Structural Stiffness (SSTF) cards from DiffractionSpec external_damping
 and external_stiffness matrices.
 
-Each FIDP/FISK card row follows the AQWA fixed-column format:
+Each FIDP/SSTF card row follows the AQWA fixed-column format:
     <6 spaces><keyword><5 spaces><row_idx (5-wide)><6 x 10-char values>
 """
 
@@ -90,6 +90,10 @@ def _make_spec(
         ),
         external_damping=external_damping,
         external_stiffness=external_stiffness,
+        external_damping_units="SI" if external_damping is not None else None,
+        external_stiffness_units="SI" if external_stiffness is not None else None,
+        external_damping_reference_point="centre_of_mass" if external_damping is not None else None,
+        external_stiffness_reference_point="centre_of_mass" if external_stiffness is not None else None,
     )
     return DiffractionSpec(
         metadata=MetadataSpec(project="test_damping"),
@@ -129,7 +133,7 @@ class TestDeck7NoDamping:
         assert "WFS1" in card_text
         assert "END" in card_text
         assert "FIDP" not in card_text
-        assert "FISK" not in card_text
+        assert "SSTF" not in card_text
 
     def test_deck7_zero_damping_no_fidp(self):
         """All-zero external_damping matrix produces no FIDP cards."""
@@ -228,44 +232,44 @@ class TestDeck7FullDampingMatrix:
 
 
 class TestDeck7Stiffness:
-    """Deck 7 FISK card generation from external_stiffness."""
+    """Deck 7 SSTF card generation from external_stiffness."""
 
-    def test_deck7_no_stiffness_no_fisk(self):
-        """No external_stiffness produces no FISK cards."""
+    def test_deck7_no_stiffness_no_sstf(self):
+        """No external_stiffness produces no SSTF cards."""
         spec = _make_spec(external_stiffness=None)
         backend = AQWABackend()
         cards = backend.build_deck7(spec)
 
-        fisk_lines = _extract_keyword_lines(cards, "FISK")
-        assert len(fisk_lines) == 0
+        sstf_lines = _extract_keyword_lines(cards, "SSTF")
+        assert len(sstf_lines) == 0
 
-    def test_deck7_zero_stiffness_no_fisk(self):
-        """All-zero external_stiffness produces no FISK cards."""
+    def test_deck7_zero_stiffness_no_sstf(self):
+        """All-zero external_stiffness produces no SSTF cards."""
         spec = _make_spec(external_stiffness=_zero_matrix())
         backend = AQWABackend()
         cards = backend.build_deck7(spec)
 
-        fisk_lines = _extract_keyword_lines(cards, "FISK")
-        assert len(fisk_lines) == 0
+        sstf_lines = _extract_keyword_lines(cards, "SSTF")
+        assert len(sstf_lines) == 0
 
-    def test_deck7_stiffness_emits_fisk(self):
-        """Non-zero external_stiffness produces exactly 6 FISK rows."""
+    def test_deck7_stiffness_emits_sstf(self):
+        """Non-zero external_stiffness produces exactly 6 SSTF rows."""
         spec = _make_spec(external_stiffness=_stiffness_matrix())
         backend = AQWABackend()
         cards = backend.build_deck7(spec)
 
-        fisk_lines = _extract_keyword_lines(cards, "FISK")
-        assert len(fisk_lines) == 6
+        sstf_lines = _extract_keyword_lines(cards, "SSTF")
+        assert len(sstf_lines) == 6
 
     def test_deck7_stiffness_values_correct(self):
-        """FISK row 3 contains the heave stiffness 2e6."""
+        """SSTF row 3 contains the heave stiffness 2e6."""
         matrix = _stiffness_matrix()
         spec = _make_spec(external_stiffness=matrix)
         backend = AQWABackend()
         cards = backend.build_deck7(spec)
 
-        fisk_lines = _extract_keyword_lines(cards, "FISK")
-        row3 = fisk_lines[2]
+        sstf_lines = _extract_keyword_lines(cards, "SSTF")
+        row3 = sstf_lines[2]
         # Heave stiffness = 2e6 at position [2][2]
         values = re.findall(r'[+-]?\d+\.\d+e[+-]\d+', row3)
         parsed_heave = float(values[2])
@@ -278,7 +282,7 @@ class TestDeck7DampingAndStiffness:
     """Deck 7 with both external_damping and external_stiffness."""
 
     def test_deck7_both_present(self):
-        """Both FIDP and FISK cards emitted when both are defined."""
+        """Both FIDP and SSTF cards emitted when both are defined."""
         spec = _make_spec(
             external_damping=_roll_damping_matrix(36010.0),
             external_stiffness=_stiffness_matrix(),
@@ -287,12 +291,12 @@ class TestDeck7DampingAndStiffness:
         cards = backend.build_deck7(spec)
 
         fidp_lines = _extract_keyword_lines(cards, "FIDP")
-        fisk_lines = _extract_keyword_lines(cards, "FISK")
+        sstf_lines = _extract_keyword_lines(cards, "SSTF")
         assert len(fidp_lines) == 6
-        assert len(fisk_lines) == 6
+        assert len(sstf_lines) == 6
 
-    def test_deck7_fidp_before_fisk(self):
-        """FIDP cards appear before FISK cards in the card list."""
+    def test_deck7_fidp_before_sstf(self):
+        """FIDP cards appear before SSTF cards in the card list."""
         spec = _make_spec(
             external_damping=_roll_damping_matrix(36010.0),
             external_stiffness=_stiffness_matrix(),
@@ -302,13 +306,13 @@ class TestDeck7DampingAndStiffness:
 
         card_text = "\n".join(cards)
         first_fidp = card_text.index("FIDP")
-        first_fisk = card_text.index("FISK")
-        assert first_fidp < first_fisk, (
-            "FIDP cards must appear before FISK cards"
+        first_sstf = card_text.index("SSTF")
+        assert first_fidp < first_sstf, (
+            "FIDP cards must appear before SSTF cards"
         )
 
     def test_deck7_wfs1_and_end_present(self):
-        """WFS1 banner and END card bracket the FIDP/FISK content."""
+        """WFS1 banner and END card bracket the FIDP/SSTF content."""
         spec = _make_spec(
             external_damping=_roll_damping_matrix(),
             external_stiffness=_stiffness_matrix(),

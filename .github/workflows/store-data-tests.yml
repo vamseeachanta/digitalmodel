@@ -19,13 +19,13 @@ permissions:
 
 jobs:
   content-store:
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install test dependencies
-        run: python -m pip install pytest pytest-asyncio
+        run: python -m pip install pytest pytest-asyncio pyyaml
       - name: Test retrieval and manifest
         run: python -m pytest tests/data

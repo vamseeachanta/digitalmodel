@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Generate self-contained HTML benchmark report for passing ship Wang (1975) calculator."""
 
 import json
@@ -228,6 +231,13 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 
     Returns:
         HTML string of the report.
+
+    Regeneration notes:
+        The generation timestamp and Git revision identify each build. Embedded
+        plot arrays retain solver precision, so floating-point differences
+        between platforms can also change the serialized HTML bytes. These
+        metadata and serialization differences are expected; regenerated arrays
+        require numerical comparison before a change is treated as cosmetic.
     """
     calc = _build_calculator()
     xn, surge, sway, yaw = _run_sweep(calc)
@@ -350,7 +360,7 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 <h3>A. Wang (1975) Reference</h3><ul>
 <li><strong>Paper:</strong> Wang, S. (1975). "Dynamic effects of ship passage on moored vessels." <em>J. Waterways, Harbors &amp; Coastal Engineering</em>, ASCE.</li>
 <li><strong>MathCAD:</strong> "Calculation of forces and moments from Wang.pdf"</li>
-<li><strong>VBA:</strong> modPassingShip.bas (Nick Barczak, July 2016)</li></ul>
+<li><strong>VBA:</strong> modPassingShip.bas (the original spreadsheet author, July 2016)</li></ul>
 <h3>B. Formulation Summary</h3>
 <table><thead><tr><th>Function</th><th>Expression</th></tr></thead><tbody>
 <tr><td>Sectional area</td><td>S(x) = A<sub>max</sub> &middot; (1 &minus; 4x&sup2;/L&sup2;)</td></tr>

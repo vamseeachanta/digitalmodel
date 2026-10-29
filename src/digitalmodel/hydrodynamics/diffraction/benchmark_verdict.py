@@ -1,4 +1,10 @@
-"""Derive fail-closed benchmark statuses from comparison evidence."""
+"""Compatibility status projection for callers with pre-collected evidence.
+
+The production acceptance gate is MultiSolverComparator.generate_report.
+This helper cannot replace that gate: scalar correlations do not bind arrays,
+frequency alignment, configured error budgets or completeness. The shared
+REFUSAL_QUALITIES vocabulary prevents diagnostic refusals being relabelled.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +18,8 @@ import numpy as np
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     HydrodynamicMatrix,
 )
+
+from digitalmodel.hydrodynamics.diffraction.benchmark_evidence import REFUSAL_QUALITIES
 
 PASS_CONSENSUS_LEVELS = frozenset({"FULL", "MAJORITY", "SPLIT"})
 
@@ -97,7 +105,7 @@ def _evidence_refusal(
     correlations: tuple[Optional[float], ...],
     qualities: tuple[str, ...],
 ) -> Optional[BenchmarkVerdict]:
-    refused = {"INSUFFICIENT_DATA", "INSUFFICIENT_SAMPLING"}
+    refused = REFUSAL_QUALITIES
     refused_quality = next((item for item in qualities if item in refused), None)
     if refused_quality is not None:
         return BenchmarkVerdict(

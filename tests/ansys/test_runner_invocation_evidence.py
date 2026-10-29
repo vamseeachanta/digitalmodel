@@ -21,7 +21,7 @@ def test_relative_paths_resolve_before_solver_changes_directory(tmp_path, monkey
         target.write_text('completed')
         return SimpleNamespace(returncode=0, stdout='', stderr='')
 
-    monkeypatch.setattr('digitalmodel.ansys.runner.subprocess.run', simulate)
+    monkeypatch.setattr('digitalmodel.ansys.runner._run_solver_process', simulate)
     result = run_ansys('model.inp')
     assert result.status == ANSYSRunStatus.COMPLETED
     assert result.log_file == tmp_path / 'output/model.out'
@@ -39,7 +39,7 @@ def test_timeout_preserves_partial_evidence(tmp_path, monkeypatch, streams):
         (output / 'digest.csv').write_text('partial,value')
         raise subprocess.TimeoutExpired(argv, 1, output=streams[0], stderr=streams[1])
 
-    monkeypatch.setattr('digitalmodel.ansys.runner.subprocess.run', simulate)
+    monkeypatch.setattr('digitalmodel.ansys.runner._run_solver_process', simulate)
     result = run_ansys(script, output_dir=output)
     assert result.status == ANSYSRunStatus.FAILED
     assert 'timeout' in result.error_message.lower()

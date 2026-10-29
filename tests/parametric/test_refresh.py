@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Atlas refresh / staleness contract (#799, epic #794)."""
 
 from __future__ import annotations
@@ -27,9 +30,85 @@ def test_parametric_workflow_ids_discovered():
 
 
 def test_committed_atlases_are_current():
-    for wid in ("mooring-fatigue", "api-rp-2rd-riser", "rao-tabulation"):
+    for wid in ("mooring-fatigue", "api-rp-2rd-riser", "rao-tabulation",
+                "synthetic-rope-mooring-fatigue"):
         status = refresh.refresh_status(wid)
         assert status["stale"] is False, f"{wid} unexpectedly stale: {status}"
+
+
+def test_committed_pile_atlas_uses_current_geometry_basis():
+    """Geometry validation changes require a freshly qualified pile atlas."""
+    from digitalmodel.parametric.atlas import Atlas
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "pile_capacity")
+    assert atlas.provenance["content_fingerprint"] == refresh.content_fingerprint(
+        "pile-capacity"
+    )
+    assert _staleness(atlas) is None
+    assert atlas.validation["passes"] is True
+    assert atlas.validation["n_holdout"] > 0
+    assert atlas.max_rel_error <= atlas.validation["threshold"]
+
+
+def test_committed_pile_atlas_matches_fresh_build(tmp_path, monkeypatch):
+    """Allow hook formatting without changing the generated atlas content."""
+    import yaml
+
+    from digitalmodel.parametric.atlas import Atlas
+
+    committed = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "pile_capacity")
+    # Reproduce the recorded revision; freshness is checked against live sources.
+    monkeypatch.setattr(build, "_git_sha", lambda _: committed.provenance["code_version"])
+    fresh = build_atlas_from_registry("pile-capacity", atlas_root=tmp_path)
+    assert fresh.atlas_id == committed.atlas_id
+    relative = f"pile_capacity/{committed.atlas_id}"
+    actual = refresh.DEFAULT_ATLAS_ROOT / relative
+    expected = tmp_path / relative
+    for name in ("surrogate.json", "validation.json"):
+        assert json.loads((actual / name).read_text()) == json.loads(
+            (expected / name).read_text()
+        )
+    assert yaml.safe_load((actual / "manifest.yaml").read_text()) == yaml.safe_load(
+        (expected / "manifest.yaml").read_text()
+    )
+    pd.testing.assert_frame_equal(committed.grid, fresh.grid)
+
+
+def test_committed_pile_atlas_has_complete_provenance():
+    """The current pile atlas must retain its source and artifact evidence."""
+    from digitalmodel.parametric import historical_provenance as history
+    from digitalmodel.parametric.atlas import Atlas
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "pile_capacity")
+    manifest = f"atlases/pile_capacity/{atlas.atlas_id}/manifest.yaml"
+    inventory = json.loads(
+        (refresh.DEFAULT_ATLAS_ROOT / "historical-provenance.json").read_text()
+    )
+    records = [row for row in inventory["atlases"] if row["manifest"] == manifest]
+    assert len(records) == 1
+    record = records[0]
+    assert record["content_fingerprint"] == atlas.provenance["content_fingerprint"]
+    assert record["status"] == "VERIFIED"
+    history.verify_artifacts(record, refresh.REPO_ROOT)
+
+
+def test_committed_synthetic_rope_query_returns_screening_estimate(tmp_path):
+    """The shipped in-range query must use a current atlas without escalation."""
+    import yaml
+
+    row = refresh._row("synthetic-rope-atlas-query")
+    cfg = yaml.safe_load((refresh.REPO_ROOT / row["input"]).read_text())
+    cfg["parametric_query"]["output_dir"] = str(tmp_path)
+    result = router(cfg)["parametric_query"]["result"]
+    assert result["in_range"] is True
+    assert result.get("stale", False) is False
+    assert result["response"] == "fatigue_life_years"
+    assert result["value"] > 0.0
+    assert result["screening_status"] in {"pass", "fail"}
+    lo, hi = result["confidence"]["band"]
+    assert lo <= result["value"] <= hi
+    assert "screening estimate" in result["disclaimer"].lower()
+    assert result["provenance"]["atlas_id"]
 
 
 def test_fresh_build_is_not_stale(tmp_path):
