@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
 import pytest
 
 from digitalmodel.field_development.layout_model import build_layout_model
@@ -140,6 +141,139 @@ class TestCatenaryRiser:
         assert all(p[0] == 200.0 for p in curve)
         assert conn.path_xyz_m[-1].tolist() == [200.0, 400.0, 0.0]
         assert conn.route_length_m >= conn.plan_length_m
+
+
+class TestCatenaryTransforms:
+    """Independent hand calculation for rigid transforms of a synthetic route.
+
+    Use the existing synthetic case: 300 m plan length, 100 m rise and
+    30 degrees from vertical. For z(q)=a*(cosh(q/a)-1), the top slope is
+    cot(30 degrees)=sqrt(3), so cosh(X/a)=2, a=100 m,
+    X=100*asinh(sqrt(3)) and S=100*sqrt(3). Touchdown station is 300-X.
+    A 3-4-5 triangle gives the unit direction (3/5, 4/5), with both plan
+    coordinates varying. The chosen translation (200, 150, 40) m moves the
+    surface and assets together and keeps them within the synthetic grid.
+
+    Sampling uses 0.5 m spacing, chosen to bound chord error below the
+    existing hand check's 0.001 m tolerance; coordinate comparisons allow
+    only 1e-10 m for floating-point arithmetic on this metre-scale case.
+    """
+
+    @staticmethod
+    def config(shift=(0.0, 0.0, 0.0), span=300.0, shape="catenary", spacing=0.5):
+        config = TestCatenaryRiser.config(shape=shape, spacing=spacing, span=span)
+        dx, dy, dz = shift
+        config["assets"][0].update(x_m=dx, y_m=dy)
+        config["assets"][1].update(
+            x_m=dx + span * 3.0 / 5.0,
+            y_m=dy + span * 4.0 / 5.0,
+            z_m=dz,
+        )
+        surface = config["surface"]
+        for axis, offset in (("x", dx), ("y", dy)):
+            surface[f"{axis}_min_m"] += offset
+            surface[f"{axis}_max_m"] += offset
+        surface["base_elevation_m"] += dz
+        return config
+
+    @staticmethod
+    def assert_hand_coordinates(conn, shift=(0.0, 0.0, 0.0)):
+        # Hand calculation above; no solver result supplies expected values.
+        a = 100.0
+        span = a * math.asinh(math.sqrt(3.0))
+        arc = a * math.sqrt(3.0)
+        touchdown = 300.0 - span
+        spacing = 0.5
+        bed_segments = math.ceil(touchdown / spacing)
+        curve_segments = math.ceil(arc / spacing)
+
+        def point(station, rise):
+            dx, dy, dz = shift
+            return (dx + station * 3.0 / 5.0,
+                    dy + station * 4.0 / 5.0, dz - a + rise)
+
+        # Uniform stations on each piece, including touchdown exactly once.
+        expected = [point(touchdown * i / bed_segments, 0.0)
+                    for i in range(bed_segments + 1)]
+        for i in range(1, curve_segments + 1):
+            q = span * i / curve_segments
+            expected.append(point(touchdown + q, a * (math.cosh(q / a) - 1.0)))
+        np.testing.assert_allclose(conn.path_xyz_m, expected, rtol=0.0, atol=1e-10)
+        np.testing.assert_allclose(
+            conn.path_xyz_m[[0, bed_segments, -1]],
+            [point(0.0, 0.0), point(touchdown, 0.0), point(300.0, a)],
+            rtol=0.0, atol=1e-10,
+        )
+
+        # For f(q)=a*(cosh(q/a)-1), |f''| <= M=cosh(X/a)/a.
+        # g(v)=sqrt(1+v*v) has g''<=1. On a chord of plan width h,
+        # the Jensen gap is <= Var(f')/2 <= M*M*h*h/24 (the variance
+        # bound follows by integrating |f'(u)-f'(v)|<=M*|u-v| twice).
+        # Multiplying by h and summing gives arc-chord <= X*M*M*h*h/24.
+        h = span / curve_segments
+        bound = span * (math.cosh(span / a) / a) ** 2 * h ** 2 / 24.0
+        assert bound < 0.001
+        expected_length = math.fsum(math.dist(p, q)
+                                    for p, q in zip(expected[:-1], expected[1:]))
+        assert conn.route_length_m == pytest.approx(expected_length, rel=0.0, abs=1e-10)
+        assert 0.0 < touchdown + arc - conn.route_length_m <= bound
+        assert conn.plan_length_m == pytest.approx(300.0, rel=0.0, abs=1e-10)
+        assert conn.elevation_change_m == pytest.approx(a, rel=0.0, abs=1e-10)
+        assert conn.route_length_m > math.hypot(300.0, a)
+
+    def test_catenary_routing_rotated_hand_coordinates(self):
+        rotated = build_layout_model(self.config()).connections[0]
+        self.assert_hand_coordinates(rotated)
+        axis_aligned = build_layout_model(
+            TestCatenaryRiser.config(spacing=0.5)
+        ).connections[0]
+        assert rotated.route_length_m == pytest.approx(
+            axis_aligned.route_length_m, rel=0.0, abs=1e-10
+        )
+        # A single 300 m plan chord makes straight mode the direct endpoint
+        # line. The existing fine-spacing golden retains its opposite sign.
+        straight = build_layout_model(
+            self.config(shape="straight", spacing=300.0)
+        ).connections[0]
+        assert len(straight.path_xyz_m) == 2
+        assert straight.route_length_m == pytest.approx(math.hypot(300.0, 100.0))
+        assert rotated.route_length_m > straight.route_length_m
+
+    def test_catenary_routing_translated_datum(self):
+        shift = (200.0, 150.0, 40.0)
+        original = build_layout_model(self.config()).connections[0]
+        translated = build_layout_model(self.config(shift=shift)).connections[0]
+        self.assert_hand_coordinates(translated, shift)
+        np.testing.assert_allclose(
+            translated.path_xyz_m, original.path_xyz_m + shift,
+            rtol=0.0, atol=1e-10,
+        )
+        assert translated.route_length_m == pytest.approx(
+            original.route_length_m, rel=0.0, abs=1e-10
+        )
+
+    def test_rotated_short_leg_retains_straight_fallback(self):
+        # A 100 m approach cannot contain X=100*asinh(sqrt(3)) m of rise.
+        span = 100.0
+        assert span < 100.0 * math.asinh(math.sqrt(3.0))
+        curved = build_layout_model(self.config(span=span)).connections[0]
+        straight = build_layout_model(
+            self.config(span=span, shape="straight")
+        ).connections[0]
+        assert curved.path_xyz_m.tobytes() == straight.path_xyz_m.tobytes()
+        assert curved.route_length_m == straight.route_length_m
+        # Independent drape: 0.5 m plan chords at z=-100 until the last
+        # sample, which rises to z=0. Its length is 99.5+hypot(0.5,100).
+        spacing = 0.5
+        segments = math.ceil(span / spacing)
+        expected = [(span * i / segments * 3.0 / 5.0,
+                     span * i / segments * 4.0 / 5.0,
+                     0.0 if i == segments else -100.0)
+                    for i in range(segments + 1)]
+        np.testing.assert_allclose(curved.path_xyz_m, expected, rtol=0.0, atol=1e-10)
+        assert curved.route_length_m == pytest.approx(
+            span - spacing + math.hypot(spacing, 100.0), rel=0.0, abs=1e-10
+        )
 
 
 class TestRiserShapeValidation:

@@ -1,0 +1,1467 @@
+{
+  "schema_version": 1,
+  "basis": "Repository evidence reconciled with base revision 6581c271d0346288d6d34173495c22d2121c2781; documentation inventory, not an engineering dataset catalog.",
+  "wrapper_status": "absent",
+  "wrapper_pages": [],
+  "capabilities": [
+    {
+      "node": "c0",
+      "id": "ffs-showcase",
+      "target": "docs/api/ffs/ffs-showcase.html",
+      "exists": true,
+      "page_node": "p25",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c1",
+      "id": "ffs-field-dashboard",
+      "target": "docs/api/ffs/ffs-field-dashboard.html",
+      "exists": true,
+      "page_node": "p24",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c2",
+      "id": "riser-joint-acceptance",
+      "target": "docs/api/ffs/riser-joint-acceptance-explorer.html",
+      "exists": true,
+      "page_node": "p26",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c3",
+      "id": "buckling-plate",
+      "target": "docs/api/buckling/ship-plate-buckling.html",
+      "exists": true,
+      "page_node": "p2",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c4",
+      "id": "buckling-panel",
+      "target": "docs/api/buckling/ship-panel-buckling.html",
+      "exists": true,
+      "page_node": "p1",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c5",
+      "id": "rao-comparison",
+      "target": "docs/api/hydro/rao-comparison/index.html",
+      "exists": true,
+      "page_node": "p29",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c6",
+      "id": "unitbox-report",
+      "target": "docs/api/hydro/unit-box-benchmark/benchmark_report.html",
+      "exists": true,
+      "page_node": "p36",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c7",
+      "id": "unitbox-amplitude",
+      "target": "docs/api/hydro/unit-box-benchmark/benchmark_amplitude.html",
+      "exists": true,
+      "page_node": "p32",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c8",
+      "id": "unitbox-phase",
+      "target": "docs/api/hydro/unit-box-benchmark/benchmark_phase.html",
+      "exists": true,
+      "page_node": "p35",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c9",
+      "id": "unitbox-combined",
+      "target": "docs/api/hydro/unit-box-benchmark/benchmark_combined.html",
+      "exists": true,
+      "page_node": "p33",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c10",
+      "id": "unitbox-heatmap",
+      "target": "docs/api/hydro/unit-box-benchmark/benchmark_heatmap.html",
+      "exists": true,
+      "page_node": "p34",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c11",
+      "id": "ocimf",
+      "target": "docs/api/hydro/ocimf-coefficient-explorer.html",
+      "exists": true,
+      "page_node": "p27",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c12",
+      "id": "passing-ship",
+      "target": "docs/api/hydro/passing-ship-benchmark.html",
+      "exists": true,
+      "page_node": "p28",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c13",
+      "id": "drilling-riser-operability",
+      "target": "docs/api/drilling/drilling-riser-operability-explorer.html",
+      "exists": true,
+      "page_node": "p21",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c14",
+      "id": "drilling-riser-operability-monitor",
+      "target": "docs/api/drilling/operability-monitor.html",
+      "exists": true,
+      "page_node": "p22",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c15",
+      "id": "riser-validation",
+      "target": "docs/api/orcaflex/riser-validation-report.html",
+      "exists": true,
+      "page_node": "p39",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c16",
+      "id": "riser-mesh",
+      "target": "docs/api/orcaflex/riser-mesh-sensitivity.html",
+      "exists": true,
+      "page_node": "p38",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c17",
+      "id": "subsea-xsection",
+      "target": "docs/api/subsea/offshore-cross-section-report.html",
+      "exists": true,
+      "page_node": "p51",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c18",
+      "id": "installation-hlv-a",
+      "target": "src/digitalmodel/installation/installation_pamphlet",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c19",
+      "id": "rudder-explorer",
+      "target": "docs/api/hydro/rudder-maneuvering-explorer.html",
+      "exists": true,
+      "page_node": "p30",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c20",
+      "id": "rudder-database",
+      "target": "src/digitalmodel/naval_architecture/data/rudder_database.yml",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c21",
+      "id": "diffraction-deck-prep",
+      "target": "examples/workflows/aqwa-diffraction-deck-prep",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c22",
+      "id": "vessel-suitability",
+      "target": "data/vessels",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c23",
+      "id": "container-utilization",
+      "target": "examples/structural/offshore_container_utilization",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c24",
+      "id": "wind-sizing",
+      "target": "examples/workflows/floating-wind-sizing",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c25",
+      "id": "wind-economics",
+      "target": "examples/workflows/floating-wind-economics",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c26",
+      "id": "mooring-resilience",
+      "target": "examples/marine_ops/mooring_resilience",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c27",
+      "id": "short-horizon-motion-forecast",
+      "target": "docs/api/hydro/short-horizon-motion-forecast.html",
+      "exists": true,
+      "page_node": "p31",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c28",
+      "id": "dynacard-troubleshooting",
+      "target": "docs/api/artificial-lift/dynacard-troubleshooting.html",
+      "exists": true,
+      "page_node": "p0",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c29",
+      "id": "casing-design",
+      "target": "docs/api/well/casing-design-explorer.html",
+      "exists": true,
+      "page_node": "p52",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c30",
+      "id": "dynacard-field-health",
+      "target": "examples/workflows/artificial-lift-field-health",
+      "exists": true,
+      "page_node": null,
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c31",
+      "id": "galvanic-explorer",
+      "target": "docs/api/corrosion/galvanic-compatibility-explorer.html",
+      "exists": true,
+      "page_node": "p20",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c32",
+      "id": "scale-si-explorer",
+      "target": "docs/api/production/scale-si-explorer.html",
+      "exists": true,
+      "page_node": "p40",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c33",
+      "id": "wall-thickness-explorer",
+      "target": "docs/api/structural/wall-thickness-explorer.html",
+      "exists": true,
+      "page_node": "p50",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c34",
+      "id": "sloshing-explorer",
+      "target": "docs/api/structural/sloshing-explorer.html",
+      "exists": true,
+      "page_node": "p47",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c35",
+      "id": "cathodic-protection-explorer",
+      "target": "docs/api/structural/cathodic-protection-explorer.html",
+      "exists": true,
+      "page_node": "p42",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    },
+    {
+      "node": "c36",
+      "id": "wall-thickness-load-explorer",
+      "target": "docs/api/structural/wall-thickness-3d-explorer.html",
+      "exists": true,
+      "page_node": "p49",
+      "evidence": "scripts/capabilities/build_onepagers.py"
+    }
+  ],
+  "pages": [
+    {
+      "node": "p0",
+      "path": "docs/api/artificial-lift/dynacard-troubleshooting.html",
+      "group": "artificial-lift",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_dynacard_troubleshooting.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/marine_ops/artificial_lift/dynacard/calculations.py",
+        "src/digitalmodel/marine_ops/artificial_lift/dynacard/card_generators.py",
+        "src/digitalmodel/marine_ops/artificial_lift/dynacard/diagnostics.py",
+        "src/digitalmodel/marine_ops/artificial_lift/dynacard/example_cards.py",
+        "src/digitalmodel/marine_ops/artificial_lift/dynacard/models.py",
+        "src/digitalmodel/marine_ops/artificial_lift/dynacard/poc_settings.py",
+        "src/digitalmodel/marine_ops/artificial_lift/dynacard/troubleshooting.py",
+        "src/digitalmodel/marine_ops/artificial_lift/field_health.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/artificial-lift/dynacard-troubleshooting.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_dynacard_troubleshooting.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p1",
+      "path": "docs/api/buckling/ship-panel-buckling.html",
+      "group": "buckling",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "hand-maintained interactive report; no scripts producer found",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p2",
+      "path": "docs/api/buckling/ship-plate-buckling.html",
+      "group": "buckling",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "hand-maintained interactive report; no scripts producer found",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p3",
+      "path": "docs/api/cfd/cfd-runtime-estimator.html",
+      "group": "cfd",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_cfd_runtime_estimator.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p4",
+      "path": "docs/api/cfd/cylinder-re100-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "upgrade_reports.py requires a caller-supplied solved cylinder run",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p5",
+      "path": "docs/api/cfd/dam-break-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "build_dam_break.py requires a caller-supplied solved OpenFOAM case",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p53",
+      "path": "docs/api/cfd/dual-tank-sloshing-cfd-study.html",
+      "group": "cfd",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_dual_tank_sloshing_study.py",
+      "prerequisites": [],
+      "inputs": [
+        "docs/api/cfd/data/dual_tank_cfd_evidence.json",
+        "tests/hydrodynamics/test_utube_tank.py"
+      ],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ],
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py"
+    },
+    {
+      "node": "p6",
+      "path": "docs/api/cfd/flat-plate-blasius-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "upgrade_reports.py requires a caller-supplied solved flat-plate run",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p7",
+      "path": "docs/api/cfd/floating-body-decay-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "build_floating_body.py requires caller-supplied solved case and results",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p8",
+      "path": "docs/api/cfd/index.html",
+      "group": "cfd",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "hand-maintained CFD verification index",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p9",
+      "path": "docs/api/cfd/kcs-calm-water-resistance-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "emitted from a solved case by scripts/cfd/generate-kcs-verification.py; the solve output is not in the repo, so CI cannot regenerate it",
+      "execution": "external OpenFOAM results; no licensed solve established",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p10",
+      "path": "docs/api/cfd/kleefsman-impact-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "build_kleefsman.py requires caller-supplied solved case and experiment data",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p11",
+      "path": "docs/api/cfd/maccamy-fuchs-cylinder-verification.html",
+      "group": "cfd",
+      "provenance": "registered generator",
+      "producer": "docs/api/cfd/report_build/build_maccamy_fuchs.py",
+      "prerequisites": [],
+      "inputs": [
+        "docs/api/cfd/cases/maccamy_fuchs/mf_results.json"
+      ],
+      "calculations": [
+        "src/digitalmodel/solvers/openfoam/validation/maccamy_fuchs.py",
+        "src/digitalmodel/solvers/openfoam/validation/wave_tank.py"
+      ],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p12",
+      "path": "docs/api/cfd/naca0012-airfoil-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "upgrade_reports.py requires a caller-supplied solved airfoil run",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p13",
+      "path": "docs/api/cfd/sloshing-cfd-study.html",
+      "group": "cfd",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_sloshing_cfd_showcase.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p14",
+      "path": "docs/api/cfd/tank-sloshing-verification.html",
+      "group": "cfd",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "committed verification report; no scripts producer found",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p15",
+      "path": "docs/api/cfd/turbulent-flat-plate-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "upgrade_reports.py requires a caller-supplied solved turbulent-plate run",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p16",
+      "path": "docs/api/cfd/wave-excited-body-decay-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "build_decay_report.py requires a caller-supplied decay-results snapshot",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p17",
+      "path": "docs/api/cfd/wave-excited-body-rao-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "build_wave_excited_body_rao.py requires a caller-supplied sweep snapshot",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p18",
+      "path": "docs/api/cfd/wave-excited-body-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "build_wave_excited_body.py requires caller-supplied solved case and results",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p19",
+      "path": "docs/api/cfd/wave-tank-verification.html",
+      "group": "cfd",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "build_wave_tank.py requires caller-supplied solved case and results",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p20",
+      "path": "docs/api/corrosion/galvanic-compatibility-explorer.html",
+      "group": "corrosion",
+      "provenance": "registered generator",
+      "producer": "scripts/corrosion/build_galvanic_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/corrosion/galvanic_screening.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/corrosion/galvanic-compatibility-explorer.json",
+          "state": "committed",
+          "writer": "scripts/corrosion/build_galvanic_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p21",
+      "path": "docs/api/drilling/drilling-riser-operability-explorer.html",
+      "group": "drilling",
+      "provenance": "registered generator",
+      "producer": "scripts/drilling_riser/build_operability_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/drilling_riser/__init__.py",
+        "src/digitalmodel/drilling_riser/operability_screening.py",
+        "src/digitalmodel/parametric/atlas.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/drilling/results.json",
+          "state": "committed",
+          "writer": "scripts/drilling_riser/build_operability_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "analytical screening; no licensed solve",
+      "execution_evidence": "scripts/drilling_riser/build_operability_explorer.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p22",
+      "path": "docs/api/drilling/operability-monitor.html",
+      "group": "drilling",
+      "provenance": "registered generator",
+      "producer": "scripts/drilling_riser/build_operability_monitor.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/decision_spine.py",
+        "src/digitalmodel/drilling_riser/__init__.py",
+        "src/digitalmodel/drilling_riser/drift_off.py",
+        "src/digitalmodel/drilling_riser/envelope.py",
+        "src/digitalmodel/drilling_riser/operability_screening.py",
+        "src/digitalmodel/drilling_riser/response_correction.py",
+        "src/digitalmodel/drilling_riser/telemetry_inputs.py",
+        "src/digitalmodel/drilling_riser/twin_loop.py",
+        "src/digitalmodel/parametric/atlas.py",
+        "src/digitalmodel/subsea/mooring_analysis/models.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/drilling/operability-monitor.results.json",
+          "state": "committed",
+          "writer": "scripts/drilling_riser/build_operability_monitor.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "analytical screening; no licensed solve",
+      "execution_evidence": "scripts/drilling_riser/build_operability_monitor.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p23",
+      "path": "docs/api/ffs/build-wave-2026-07.html",
+      "group": "ffs",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "hand-maintained build-wave status page",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p24",
+      "path": "docs/api/ffs/ffs-field-dashboard.html",
+      "group": "ffs",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "hand-maintained field dashboard; no scripts producer found",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p25",
+      "path": "docs/api/ffs/ffs-showcase.html",
+      "group": "ffs",
+      "provenance": "registered generator",
+      "producer": "examples/demos/asset_integrity/ffs_showcase.py",
+      "prerequisites": [],
+      "inputs": [
+        "examples/demos/asset_integrity/ffs_showcase.py"
+      ],
+      "calculations": [
+        "src/digitalmodel/asset_integrity/assessment/__init__.py",
+        "src/digitalmodel/asset_integrity/corroded_pipe.py",
+        "src/digitalmodel/asset_integrity/dnv_rp_f101.py",
+        "src/digitalmodel/structural/structural_analysis/models.py",
+        "src/digitalmodel/structural/structural_analysis/plate_metal_loss_ffs.py"
+      ],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p54",
+      "path": "docs/api/ffs/pipeline-ffs-assessment.html",
+      "group": "ffs",
+      "provenance": "registered generator",
+      "producer": "scripts/reporting/build_pipeline_ffs_report.py",
+      "prerequisites": [],
+      "inputs": [
+        "examples/workflows/ffs-metal-loss/input.yml",
+        "examples/workflows/pipeline-corroded-defect-screen/synthetic.yml",
+        "examples/workflows/pipeline-ffs-assessment/assumptions.yml",
+        "examples/workflows/pipeline-ffs-assessment/input.yml",
+        "pyproject.toml"
+      ],
+      "calculations": [
+        "src/digitalmodel/asset_integrity/applicability.py",
+        "src/digitalmodel/asset_integrity/assessment/__init__.py",
+        "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py",
+        "src/digitalmodel/asset_integrity/assessment/ffs_decision.py",
+        "src/digitalmodel/asset_integrity/assessment/level2_engine.py",
+        "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py",
+        "src/digitalmodel/asset_integrity/corroded_pipe.py",
+        "src/digitalmodel/asset_integrity/pipeline_defect_screen.py",
+        "src/digitalmodel/reporting/engine.py",
+        "src/digitalmodel/reporting/provenance.py",
+        "src/digitalmodel/reporting/spec.py",
+        "src/digitalmodel/units.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/ffs/pipeline-ffs-assessment.manifest.json",
+          "state": "committed",
+          "writer": "scripts/reporting/build_pipeline_ffs_report.py"
+        },
+        {
+          "path": "docs/reports/pipeline-ffs-assessment.html",
+          "state": "committed",
+          "writer": "scripts/reporting/build_pipeline_ffs_report.py"
+        },
+        {
+          "path": "docs/reports/pipeline-ffs-assessment.manifest.json",
+          "state": "committed",
+          "writer": "scripts/reporting/build_pipeline_ffs_report.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ],
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py"
+    },
+    {
+      "node": "p26",
+      "path": "docs/api/ffs/riser-joint-acceptance-explorer.html",
+      "group": "ffs",
+      "provenance": "registered generator",
+      "producer": "scripts/ffs/build_riser_joint_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/asset_integrity/riser_joint_ffs.py"
+      ],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p27",
+      "path": "docs/api/hydro/ocimf-coefficient-explorer.html",
+      "group": "hydro",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "producer needs a caller-supplied workbook and emits random Plotly div ids",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p28",
+      "path": "docs/api/hydro/passing-ship-benchmark.html",
+      "group": "hydro",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "producer targets another docs path and embeds datetime.now()",
+      "execution": "external inputs or nondeterministic rendering; solve NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p29",
+      "path": "docs/api/hydro/rao-comparison/index.html",
+      "group": "hydro",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "producer targets another docs path and embeds datetime.now()",
+      "execution": "AQWA / OrcaWave licensed solves; committed comparison only",
+      "execution_evidence": "docs/api/hydro/rao-comparison/index.html",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p30",
+      "path": "docs/api/hydro/rudder-maneuvering-explorer.html",
+      "group": "hydro",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "hand-maintained explorer; no scripts producer found",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p31",
+      "path": "docs/api/hydro/short-horizon-motion-forecast.html",
+      "group": "hydro",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "hand-maintained explorer; no scripts producer found",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p32",
+      "path": "docs/api/hydro/unit-box-benchmark/benchmark_amplitude.html",
+      "group": "hydro",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "no active producer targets this committed copy; Plotly div id is random",
+      "execution": "AQWA / OrcaWave licensed solves; committed comparison only",
+      "execution_evidence": "docs/api/hydro/unit-box-benchmark/benchmark_amplitude.html",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p33",
+      "path": "docs/api/hydro/unit-box-benchmark/benchmark_combined.html",
+      "group": "hydro",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "no active producer targets this committed copy; Plotly div id is random",
+      "execution": "AQWA / OrcaWave licensed solves; committed comparison only",
+      "execution_evidence": "docs/api/hydro/unit-box-benchmark/benchmark_combined.html",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p34",
+      "path": "docs/api/hydro/unit-box-benchmark/benchmark_heatmap.html",
+      "group": "hydro",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "no active producer targets this committed copy; Plotly div id is random",
+      "execution": "AQWA / OrcaWave licensed solves; committed comparison only",
+      "execution_evidence": "docs/api/hydro/unit-box-benchmark/benchmark_heatmap.html",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p35",
+      "path": "docs/api/hydro/unit-box-benchmark/benchmark_phase.html",
+      "group": "hydro",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "no active producer targets this committed copy; Plotly div id is random",
+      "execution": "AQWA / OrcaWave licensed solves; committed comparison only",
+      "execution_evidence": "docs/api/hydro/unit-box-benchmark/benchmark_phase.html",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p36",
+      "path": "docs/api/hydro/unit-box-benchmark/benchmark_report.html",
+      "group": "hydro",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "no active producer targets this committed copy; output embeds a timestamp",
+      "execution": "AQWA / OrcaWave licensed solves; committed comparison only",
+      "execution_evidence": "docs/api/hydro/unit-box-benchmark/benchmark_report.html",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p37",
+      "path": "docs/api/installation/installation-heading-explorer.html",
+      "group": "installation",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_installation_heading_explorer.py",
+      "prerequisites": [],
+      "inputs": [
+        "scripts/capabilities/installation_heading/limits.json",
+        "scripts/capabilities/installation_heading/page.html.template",
+        "scripts/capabilities/installation_heading/revisions.json"
+      ],
+      "calculations": [],
+      "artifacts": [
+        {
+          "path": "docs/api/installation/installation-heading-explorer.manifest.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_installation_heading_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p38",
+      "path": "docs/api/orcaflex/riser-mesh-sensitivity.html",
+      "group": "orcaflex",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "licensed OrcFxAPI benchmark output embeds a timestamp",
+      "execution": "OrcaFlex licensed Windows solve; report rendering separate",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p39",
+      "path": "docs/api/orcaflex/riser-validation-report.html",
+      "group": "orcaflex",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "licensed OrcFxAPI benchmark output embeds a timestamp",
+      "execution": "OrcaFlex licensed Windows solve; report rendering separate",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p40",
+      "path": "docs/api/production/scale-si-explorer.html",
+      "group": "production",
+      "provenance": "registered generator",
+      "producer": "scripts/production_chemistry/build_scale_si_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/production_chemistry/scale_si.py"
+      ],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p41",
+      "path": "docs/api/structural/anchor-holding-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_anchor_holding_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/geotechnical/anchors.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/anchor-holding-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_anchor_holding_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p42",
+      "path": "docs/api/structural/cathodic-protection-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_cathodic_protection_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/cathodic_protection/marine_structure_cp.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/cathodic-protection-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_cathodic_protection_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p43",
+      "path": "docs/api/structural/field-economics-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_field_economics_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/field_development/economics.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/field-economics-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_field_economics_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p44",
+      "path": "docs/api/structural/ipr-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_ipr_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/production_engineering/ipr_models.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/ipr-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_ipr_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p45",
+      "path": "docs/api/structural/pore-pressure-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_pore_pressure_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/well/drilling/pore_pressure.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/pore-pressure-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_pore_pressure_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p46",
+      "path": "docs/api/structural/ship-resistance-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_ship_resistance_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/naval_architecture/__init__.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/ship-resistance-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_ship_resistance_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p47",
+      "path": "docs/api/structural/sloshing-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_sloshing_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/sloshing-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_sloshing_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p48",
+      "path": "docs/api/structural/viv-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_viv_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/subsea/viv_analysis/screening.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/viv-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_viv_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p49",
+      "path": "docs/api/structural/wall-thickness-3d-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_wall_thickness_3d_page.py",
+      "prerequisites": [
+        "scripts/capabilities/build_wall_thickness_3d.py"
+      ],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/wall-thickness-3d.json",
+          "state": "generated prerequisite",
+          "writer": "scripts/capabilities/build_wall_thickness_3d.py"
+        },
+        {
+          "path": "docs/api/structural/wall-thickness-3d-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_wall_thickness_3d_page.py",
+          "consumed_by_page": true
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p50",
+      "path": "docs/api/structural/wall-thickness-explorer.html",
+      "group": "structural",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_wall_thickness_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/structural/analysis/wall_thickness.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/structural/wall-thickness-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_wall_thickness_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
+      "node": "p51",
+      "path": "docs/api/subsea/offshore-cross-section-report.html",
+      "group": "subsea",
+      "provenance": "inline, no generator",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "hand-maintained report; no scripts producer found",
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ]
+    },
+    {
+      "node": "p52",
+      "path": "docs/api/well/casing-design-explorer.html",
+      "group": "well",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_casing_design_explorer.py",
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [
+        "src/digitalmodel/well/tubulars/casing.py",
+        "src/digitalmodel/well/tubulars/casing_design.py"
+      ],
+      "artifacts": [
+        {
+          "path": "docs/api/well/casing-design-explorer.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_casing_design_explorer.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    }
+  ],
+  "publication": {
+    "pages": {
+      "evidence": ".github/workflows/pages.yml",
+      "root_evidence": "mkdocs.yml",
+      "status": "configured: MkDocs docs/api root to site artifact",
+      "remote_status": "NOT_EVALUATED"
+    },
+    "hugging_face": {
+      "evidence": "scripts/hf/build_capability_datasets.py",
+      "status": "dataset preparation implemented for ten tables in seven dataset groups; remote publication not evaluated",
+      "remote_status": "NOT_EVALUATED"
+    },
+    "website": {
+      "evidence": "docs/api/capabilities/index.html",
+      "status": "canonical redirect configured; downstream dataset hydration outside this checkout",
+      "remote_status": "NOT_EVALUATED"
+    }
+  }
+}

@@ -155,6 +155,10 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
     Coordinates are metres, weights kN/m³, strengths kPa, angles degrees,
     conductivity m/s and the pseudo-static horizontal coefficient dimensionless.
     Each layer starts at its top boundary; the first starts at ground level.
+    Positive undrained strength gradients (kPa/m) require an explicit
+    reference_elevation_m in the same elevation system as the geometry.
+    Validation neither computes a factor of safety nor infers soil properties.
+    See docs/examples/slope-profile-preflight.md for executable synthetic inputs.
     """
     data = deepcopy(profile)
     allowed = {"units", "ground_surface_m", "bottom_elevation_m", "layers",

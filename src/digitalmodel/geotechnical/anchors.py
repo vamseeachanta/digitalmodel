@@ -5,6 +5,9 @@
 Implements:
 - drag_anchor_capacity: empirical holding capacity for drag anchors
 - suction_anchor_capacity: skin friction + reverse end bearing for suction caissons
+- check_anchor_fos: capacity-to-demand comparison with a caller-selected criterion
+
+Ratio checks do not verify standard acceptance factors.
 """
 from dataclasses import dataclass
 import math
@@ -56,6 +59,52 @@ class SuctionAnchorResult:
     skin_friction_kn: float
     reverse_end_bearing_kn: float
     standard: str = "DNV-RP-E303"
+
+
+@dataclass(frozen=True)
+class FoSResult:
+    """Capacity-to-demand ratio and outcome for an unverified caller criterion."""
+
+    actual_fos: float
+    required_fos: float
+    passes: bool
+
+
+def check_anchor_fos(
+    capacity_kn: float,
+    demand_kn: float,
+    required_fos: float,
+) -> FoSResult:
+    """Compare capacity / demand with an explicit caller-selected ratio.
+
+    Args:
+        capacity_kn: Finite, nonnegative holding capacity (kN).
+        demand_kn: Finite, positive load demand (kN).
+        required_fos: Finite, positive dimensionless criterion. The caller
+            selects this value; it is not a verified standard acceptance factor.
+
+    Returns:
+        FoSResult carrying the actual and required ratios and whether the actual
+        ratio is greater than or equal to the required ratio. Equality passes;
+        zero capacity fails every valid positive criterion.
+
+    Raises:
+        ValueError: If an input is nonfinite or outside its stated domain.
+    """
+    # Zero is the mathematical bound for nonnegative/positive quantities.
+    if not math.isfinite(capacity_kn) or capacity_kn < 0:
+        raise ValueError("capacity_kn must be finite and nonnegative")
+    if not math.isfinite(demand_kn) or demand_kn <= 0:
+        raise ValueError("demand_kn must be finite and positive")
+    if not math.isfinite(required_fos) or required_fos <= 0:
+        raise ValueError("required_fos must be finite and positive")
+
+    actual_fos = capacity_kn / demand_kn
+    return FoSResult(
+        actual_fos=actual_fos,
+        required_fos=required_fos,
+        passes=actual_fos >= required_fos,
+    )
 
 
 def drag_anchor_capacity(

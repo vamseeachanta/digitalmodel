@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .block_mesh import boundary_patch_types
-from .models import TurbulenceModel, TurbulenceType
+from .models import BoundaryCondition, TurbulenceModel, TurbulenceType
 
 
 # ---------------------------------------------------------------------------
@@ -152,6 +152,51 @@ def write_pressure_field(
     (zero_dir / field_name).write_text(content)
 
 
+def validate_turbulence_wall_boundaries(
+    turbulence_model: TurbulenceModel,
+    boundary_conditions: list[BoundaryCondition] | None = None,
+) -> None:
+    """Reject supported wall functions on generated non-wall mesh patches.
+
+    OpenFOAM v2312 (2023), kqRWallFunction, epsilonWallFunction and
+    nutkWallFunction Usage sections require mesh type wall. The omegaWallFunction
+    API describes wall treatment; apply the same wall-only contract to it.
+    Sources: docs/domains/openfoam/closed_wall_boundaries.md.
+    Only effective overrides of fields actually emitted by this model count.
+    This is a topology check, not a wall-law or dimensional validation.
+    """
+    turbulence = turbulence_model.turbulence_type
+    if turbulence == TurbulenceType.LAMINAR:
+        return
+    active_fields = {"k", "nut"}
+    if turbulence == TurbulenceType.K_OMEGA_SST:
+        active_fields.add("omega")
+    elif turbulence == TurbulenceType.K_EPSILON:
+        active_fields.add("epsilon")
+    patch_types = boundary_patch_types(boundary_conditions)
+    effective = {
+        (bc.patch_name, bc.field): bc.to_foam_dict()[bc.patch_name]["type"]
+        for bc in (boundary_conditions or []) if bc.field in active_fields
+    }
+    wall_functions = {
+        "kqRWallFunction", "omegaWallFunction",
+        "epsilonWallFunction", "nutkWallFunction",
+    }
+    for (patch, field), kind in effective.items():
+        # Other mesh providers may own additional patch names. This check is
+        # restricted to the patches in the generated block mesh.
+        if (
+            patch in patch_types and kind in wall_functions
+            and patch_types[patch] != "wall"
+        ):
+            raise ValueError(
+                f"Patch '{patch}', field '{field}': {kind} requires mesh type "
+                f"wall; effective mesh type is {patch_types[patch]}. "
+                "Close the patch with a noSlip U boundary or supply a "
+                "boundary condition compatible with the open patch."
+            )
+
+
 def write_turbulence_fields(
     zero_dir: Path, turbulence_model: TurbulenceModel, boundary_conditions=None
 ) -> None:
@@ -161,7 +206,11 @@ def write_turbulence_fields(
     to the transported turbulence quantities. Mesh wall patches, including
     explicit no-slip closures, receive the same wall defaults as bottom.
     Explicit field boundary conditions override those defaults.
+
+    Incompatible supported wall functions raise ValueError before any field
+    is written. Only generated patches and fields emitted by this model count.
     """
+    validate_turbulence_wall_boundaries(turbulence_model, boundary_conditions)
     tm = turbulence_model
     if tm.turbulence_type == TurbulenceType.LAMINAR:
         return

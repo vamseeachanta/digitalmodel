@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Build a self-contained report by executing the documented public example.
 
 Run with source imports available and --scratch pointing outside the checkout.
@@ -20,13 +23,16 @@ DESTINATION = ROOT / "docs/reports/modules/vesselseakeeping"
 CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
             "The spectral operability method, illustrative calculation and limits of use are presented for initial assessment."},
            {"revision": "B", "date": "2026-10-24", "change":
-            "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."}]
+            "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."},
+           {"revision": "C", "date": "2026-10-26", "change":
+            "Provenance now records the dedicated rebuild test and independent calculation fixture instead of unrelated workflow assertions; a manifest binds the delivered files to their exact bytes."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
            "src/digitalmodel/hydrodynamics/wave_spectra.py",
            "tests/hydrodynamics/test_seakeeping.py",
-           "tests/workflows/test_durable_workflows.py"]
+           "tests/reporting/test_vessel_seakeeping_module_report.py",
+           "tests/reporting/fixtures/vessel_seakeeping_hand_calculation.json"]
 
 
 def calculate(scratch):
@@ -96,7 +102,7 @@ def render(scratch):
         f'<tr><td>{html.escape(item["revision"])}</td><td>{html.escape(item["date"])}</td>'
         f'<td>{html.escape(item["change"])}</td></tr>' for item in CHANGES[1:]
     )
-    return f'''<!DOCTYPE html>
+    page = f'''<!DOCTYPE html>
 <html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vessel seakeeping module analysis</title><style>{brand}\n{layout}</style></head>
@@ -167,7 +173,7 @@ def render(scratch):
 <li>Spectral engine; response transfer, integration, amplitude convention and weighted operability.</li>
 <li>Wave spectrum implementation; selected spectrum shape, uniform grid and discrete energy normalization.</li>
 <li>Existing spectral unit tests; analytical and behavioral verification cases.</li>
-<li>Existing durable workflow test, significant-amplitude comparison; common-library wiring evidence.</li></ol>
+<li>Dedicated report rebuild and numerical comparison tests; independent hand-calculation fixture.</li></ol>
 <ol>{provenance}</ol>
 <p>Layout exemplar: docs/api/cfd/turbulent-flat-plate-verification.html. Canonical palette: docs/api/_assets/brand.css. The existing layout and palette are inlined; the document body carries the house-style class.</p>
 <p>The callable entry point is <code>digitalmodel.vessel_seakeeping.workflow.router(cfg)</code>. It mutates and returns the configuration and writes detailed and summary comma-separated value files to the configured output directory. The input keys appear in the data register; the returned component summaries and sea-state rows are reproduced above [C]. Rebuild with source imports enabled using <code>python scripts/reports/build_vessel_seakeeping_module_report.py --scratch ../report-calculation</code>; NumPy, SciPy and PyYAML are required. The scratch directory must be outside the checkout.</p>
@@ -180,6 +186,7 @@ def render(scratch):
 </main><script id="calculation" type="application/json">{payload}</script>
 <script id="changes" type="application/json">{changes}</script><script>{JAVASCRIPT}</script></body></html>
 '''
+    return '\n'.join(line.rstrip() for line in page.splitlines()) + '\n'
 
 
 JAVASCRIPT = r'''
@@ -248,8 +255,25 @@ def main():
     args = parser.parse_args()
     page = render(args.scratch)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "index.html").write_text(page)
-    (args.output_dir / "changes.json").write_text(json.dumps(CHANGES, indent=2) + "\n")
+    outputs = {
+        "index.html": page,
+        "changes.json": json.dumps(CHANGES, indent=2) + "\n",
+    }
+    for name, text in outputs.items():
+        (args.output_dir / name).write_text(text, encoding="utf-8", newline="\n")
+    manifest = {
+        "schema_version": 1,
+        "digest_convention": "SHA-256 over exact committed UTF-8 bytes with LF line endings.",
+        "generator": Path(__file__).relative_to(ROOT).as_posix(),
+        "generator_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "sources": {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+                    for path in SOURCES},
+        "artifacts": {name: hashlib.sha256((args.output_dir / name).read_bytes()).hexdigest()
+                      for name in outputs},
+    }
+    (args.output_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n",
+    )
 
 
 if __name__ == "__main__":

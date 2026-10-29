@@ -28,7 +28,7 @@ Using traditional pip installation:
 #### 3. Python Execution Scripts (50+ files)
 Running Python without proper environment management:
 - `RunAll.bat` - `CALL python script.py` (uses system Python)
-- `pipe_py_ecs.bat` - Multiple Python executions without isolated environment
+- `pipe_py_riser-sys-a.bat` - Multiple Python executions without isolated environment
 - Analysis scripts across test and documentation directories
 
 ## Problem Statement

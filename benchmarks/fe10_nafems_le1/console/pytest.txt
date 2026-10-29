@@ -1,0 +1,45 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+[path removed]
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+collected 22 items
+
+tests/solvers/mystran/test_fe10_benchmark.py ......................      [100%]
+
+==================================== PASSES ====================================
+____________ test_retained_native_centroids_reproduce_csv[le1_8x24] ____________
+----------------------------- Captured stdout call -----------------------------
+recovered.csv: 192 global mid-surface centroid rows
+___________ test_retained_native_centroids_reproduce_csv[le1_16x48] ____________
+----------------------------- Captured stdout call -----------------------------
+recovered.csv: 768 global mid-surface centroid rows
+___________ test_retained_native_centroids_reproduce_csv[le1_32x96] ____________
+----------------------------- Captured stdout call -----------------------------
+recovered.csv: 3072 global mid-surface centroid rows
+_____________ test_retained_native_centroids_reproduce_csv[patch] ______________
+----------------------------- Captured stdout call -----------------------------
+recovered.csv: 5 global mid-surface centroid rows
+=========================== short test summary info ============================
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_8x24]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_16x48]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_32x96]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[patch]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_8x24-192]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_16x48-768]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_32x96-3072]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[patch-5]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_perturbed_csv_fails[le1_32x96]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_perturbed_csv_fails[patch]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_comparator_selftest
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_artifacts_match_manifest
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_decks_retain_received_digests
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_unequal_fibres_are_averaged_then_tensor_rotated
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 nan 20 3\n]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 10 20 3\n1 CENTER -50 10 20 3\n50 10 20 3\n]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_sanitizer_preserves_numeric_results
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_native_centroids_reproduce_csv[le1_8x24]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_native_centroids_reproduce_csv[le1_16x48]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_native_centroids_reproduce_csv[le1_32x96]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_native_centroids_reproduce_csv[patch]
+============================== 22 passed in 0.89s ==============================

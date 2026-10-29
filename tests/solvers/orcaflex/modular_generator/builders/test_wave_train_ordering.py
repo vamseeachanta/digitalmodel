@@ -186,3 +186,104 @@ def test_generated_yaml_omits_automatic_gamma_and_retains_selector_order(tmp_pat
     keys = list(train)
     assert keys.index("WaveType") < keys.index("WaveJONSWAPParameters")
     assert keys.index("WaveJONSWAPParameters") < keys.index("WaveTz")
+
+
+# Issue #2513: each declared mode supplies its own active-key and precedence
+# oracle. Values use the independent identity calculation at module scope.
+@pytest.fixture(params=[
+    pytest.param((
+        {
+            "Name": "raw wave", "WaveType": "JONSWAP",
+            "WaveJONSWAPParameters": "Automatic", "WaveGamma": _GAMMA,
+            "WaveHs": _HEIGHT, "WaveTz": _PERIOD,
+            "WaveOrigin": [_HEIGHT, _PERIOD],
+        },
+        {"Name", "WaveType", "WaveJONSWAPParameters", "WaveHs", "WaveTz", "WaveOrigin"},
+        ("Name", "WaveType", "WaveJONSWAPParameters"),
+    ), id="jonswap-automatic"),
+    pytest.param((
+        {
+            "Name": "raw wave", "WaveType": "JONSWAP",
+            "WaveJONSWAPParameters": "Partially specified", "WaveGamma": _GAMMA,
+            "WaveHs": _HEIGHT, "WaveTp": _PERIOD,
+            "WaveOrigin": [_HEIGHT, _PERIOD],
+        },
+        {"Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma", "WaveHs",
+         "WaveTp", "WaveOrigin"},
+        ("Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma"),
+    ), id="jonswap-partially-specified"),
+    pytest.param((
+        {
+            "Name": "raw wave", "WaveType": "JONSWAP",
+            "WaveJONSWAPParameters": "Fully specified", "WaveGamma": _GAMMA,
+            "WaveHs": _HEIGHT, "WaveTp": _PERIOD,
+            "WaveOrigin": [_HEIGHT, _PERIOD],
+        },
+        {"Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma", "WaveHs",
+         "WaveTp", "WaveOrigin"},
+        ("Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma"),
+    ), id="jonswap-fully-specified"),
+    pytest.param((
+        {
+            "Name": "raw wave", "WaveType": "Airy",
+            "WaveHeight": _HEIGHT, "WavePeriod": _PERIOD,
+            "WaveOrigin": [_HEIGHT, _PERIOD],
+        },
+        {"Name", "WaveType", "WaveHeight", "WavePeriod", "WaveOrigin"},
+        ("Name", "WaveType"),
+    ), id="airy"),
+    pytest.param((
+        {
+            "Name": "raw wave", "WaveType": "Dean stream",
+            "WaveHeight": _HEIGHT, "WavePeriod": _PERIOD,
+            "WaveOrigin": [_HEIGHT, _PERIOD],
+        },
+        {"Name", "WaveType", "WaveHeight", "WavePeriod", "WaveOrigin"},
+        ("Name", "WaveType"),
+    ), id="dean-stream"),
+])
+def raw_wave_ordering_case(request):
+    """Declare modes, active values and precedence without consulting the helper.
+
+    Automatic gamma is inactive, as documented in the public help cited above.
+    Fully specified data checks the helper's value-retention contract only;
+    native acceptance of these spectral inputs is outside this test.
+    """
+    return deepcopy(request.param)
+
+
+def test_wave_train_ordering_is_idempotent(raw_wave_ordering_case):
+    """Every raw-key permutation reaches a fixed point with active values intact."""
+    declared, active_keys, selectors = raw_wave_ordering_case
+    for items in permutations(declared.items()):
+        raw = deepcopy(dict(items))
+        first = EnvironmentBuilder._order_wave_train(raw)
+        second = EnvironmentBuilder._order_wave_train(first)
+
+        assert list(first.items()) == list(second.items())
+        assert set(first) == active_keys
+        assert list(first)[:len(selectors)] == list(selectors)
+        assert [key for key in first if key not in selectors] == [
+            key for key in raw if key in active_keys and key not in selectors
+        ]
+        for key in active_keys:
+            assert first[key] == declared[key]
+
+
+def test_wave_train_ordering_does_not_mutate_raw_mapping(raw_wave_ordering_case):
+    """Both passes preserve the raw values, nested origin and insertion order."""
+    declared, active_keys, _ = raw_wave_ordering_case
+    for items in permutations(declared.items()):
+        raw = deepcopy(dict(items))
+        before = deepcopy(list(raw.items()))
+        first = EnvironmentBuilder._order_wave_train(raw)
+        assert list(raw.items()) == before
+        first_before = deepcopy(list(first.items()))
+        second = EnvironmentBuilder._order_wave_train(first)
+
+        assert first is not raw
+        assert second is not first
+        assert second is not raw
+        assert list(raw.items()) == before
+        assert list(first.items()) == first_before == list(second.items())
+        assert set(second) == active_keys

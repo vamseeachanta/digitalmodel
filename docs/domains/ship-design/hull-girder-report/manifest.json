@@ -21,8 +21,8 @@
       "sha256": "6e6526f0880a7abf97e5717984f60dcebde70c7e9ab3ea37ac02da9317e5d04b"
     },
     "src/digitalmodel/naval_architecture/hull_girder_strength.py": {
-      "bytes": 14327,
-      "sha256": "4ea47451d661e48f90d9a7d853714de176e051e0e01f8635ba96499f3986793e"
+      "bytes": 15589,
+      "sha256": "a91b9702a35eace0f760fcbfeb23708137021ddc7fdf82d5ab171dd2c99a943a"
     },
     "tests/naval_architecture/test_hull_girder_screening.py": {
       "bytes": 18481,

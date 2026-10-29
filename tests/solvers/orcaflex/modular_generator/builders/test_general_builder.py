@@ -106,6 +106,61 @@ class TestStageDurations:
 # Time step
 # ---------------------------------------------------------------------------
 
+def test_general_builder_outputs_do_not_alias_simulation_stages():
+    """Changing emitted stages must preserve the declared simulation values."""
+    # Synthetic basis (seconds): stages 3 + 7 + 11 = 21; time step 0.125.
+    spec = _make_spec(simulation={"stages": [3, 7, 11], "time_step": 0.125})
+    builder = GeneralBuilder(spec, BuilderContext())
+    general = builder.build()["General"]
+
+    assert general["StageDuration"] == [3, 7, 11]
+    assert sum(general["StageDuration"]) == 21
+    assert general["StageDuration"] is not spec.simulation.stages
+    assert general["ImplicitConstantTimeStep"] == 0.125
+    assert general["TargetLogSampleInterval"] == 0.125
+
+    # Synthetic replacement duration (seconds), distinct from every input.
+    general["StageDuration"][:] = [99]
+
+    assert spec.simulation.stages == [3, 7, 11]
+    assert sum(spec.simulation.stages) == 21
+    assert spec.simulation.time_step == 0.125
+
+
+def test_general_builder_repeated_build_is_independent():
+    """Repeated builds and distinct builders must return independent values."""
+    # Synthetic basis (seconds): stages 2 + 5 + 13 = 20; time step 0.0625.
+    spec = _make_spec(simulation={"stages": [2, 5, 13], "time_step": 0.0625})
+    builder = GeneralBuilder(spec, BuilderContext())
+    other_builder = GeneralBuilder(spec, BuilderContext())
+    first = builder.build()["General"]
+    other = other_builder.build()["General"]
+
+    assert first is not other
+    assert first["StageDuration"] is not other["StageDuration"]
+    first["StageDuration"].clear()
+    # Synthetic replacement time step (seconds), distinct from the input.
+    first["ImplicitConstantTimeStep"] = 0.5
+    first["TargetLogSampleInterval"] = 0.5
+
+    rebuilt = builder.build()["General"]
+    other_rebuilt = other_builder.build()["General"]
+    assert rebuilt is not first
+    assert other_rebuilt is not other
+    assert rebuilt["StageDuration"] is not other_rebuilt["StageDuration"]
+    for general in (other, rebuilt, other_rebuilt):
+        assert general["StageDuration"] is not first["StageDuration"]
+        assert general["StageDuration"] is not spec.simulation.stages
+        assert general["StageDuration"] == [2, 5, 13]
+        assert sum(general["StageDuration"]) == 20
+        assert general["ImplicitConstantTimeStep"] == 0.0625
+        assert general["TargetLogSampleInterval"] == 0.0625
+
+    assert spec.simulation.stages == [2, 5, 13]
+    assert sum(spec.simulation.stages) == 20
+    assert spec.simulation.time_step == 0.0625
+
+
 class TestTimeStep:
     def test_default_time_step(self):
         gen = _build(_make_spec())

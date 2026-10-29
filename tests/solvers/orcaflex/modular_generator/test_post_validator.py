@@ -382,6 +382,102 @@ class TestDuplicateNames:
 class TestConnectionTargets:
     """Tests for broad connection target validation."""
 
+    @pytest.mark.parametrize(
+        "validation_order",
+        [
+            ("declared.yml", "independent.yml"),
+            ("independent.yml", "declared.yml"),
+        ],
+    )
+    def test_connection_registry_is_isolated_between_validations(
+        self, validator: PostGenerationValidator, validation_order: tuple[str, str]
+    ):
+        """Issue #717: constraint targets resolve only in the current document."""
+        documents = {
+            "declared.yml": {
+                "Constraints": [
+                    {"Name": "ConstraintTarget", "InFrameConnection": "Fixed"},
+                ],
+                "Links": [
+                    {"Name": "Connector", "Connection": ["ConstraintTarget"]},
+                ],
+            },
+            "independent.yml": {
+                "Links": [
+                    {"Name": "Connector", "Connection": ["ConstraintTarget"]},
+                ],
+            },
+        }
+        # Independent oracle: literal names declared in the synthetic documents.
+        declared_names = {
+            "declared.yml": {"ConstraintTarget", "Connector"},
+            "independent.yml": {"Connector"},
+        }
+        builtin_control = {
+            "builtins.yml": {
+                "Links": [
+                    {
+                        "Name": f"BuiltinConnector_{target}",
+                        "Connection": [target, "Fixed"],
+                    }
+                    for target in ("Fixed", "Anchored", "Free", "(none)", "None")
+                ],
+            },
+        }
+
+        for file_name in validation_order:
+            expected = [
+                ValidationWarning(
+                    level="error",
+                    category="reference",
+                    message=f"Link 'Connector' references '{target}' which is not defined",
+                    file=file_name,
+                    object_name="Connector",
+                )
+                for target in sorted({"ConstraintTarget"} - declared_names[file_name])
+            ]
+            assert validator.validate_data({file_name: documents[file_name]}) == expected
+        assert validator.validate_data(builtin_control) == []
+
+    @pytest.mark.parametrize(
+        "connection_key", ["InFrameConnection", "OutFrameConnection", "Connection"]
+    )
+    def test_unknown_target_is_not_admitted_by_previous_document(
+        self, validator: PostGenerationValidator, connection_key: str
+    ):
+        """Issue #717: prior declarations cannot suppress reference errors."""
+        declared_document = {
+            "declared.yml": {
+                "Constraints": [{"Name": "ConstraintTarget"}],
+            },
+        }
+        independent_document = {
+            "independent.yml": {
+                "Constraints": [
+                    {"Name": "DependentConstraint", connection_key: "ConstraintTarget"},
+                ],
+            },
+        }
+        # Only DependentConstraint is declared in the independent document.
+        declared_names = {"DependentConstraint"}
+        expected = [
+            ValidationWarning(
+                level="error",
+                category="reference",
+                message=(
+                    f"Constraint 'DependentConstraint' {connection_key} "
+                    f"references '{target}' which is not defined"
+                ),
+                file="independent.yml",
+                object_name="DependentConstraint",
+            )
+            for target in sorted({"ConstraintTarget"} - declared_names)
+        ]
+
+        assert validator.validate_data(independent_document) == expected
+        assert validator.validate_data(declared_document) == []
+        assert validator.validate_data(independent_document) == expected
+
     def test_link_invalid_connection(self, validator: PostGenerationValidator):
         files = {
             "10_links.yml": {

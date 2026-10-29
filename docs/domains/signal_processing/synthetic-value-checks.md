@@ -5,16 +5,46 @@
 A synthetic single tone checks Fourier amplitude, frequency resolution and
 spectral energy against hand calculations. Additional tests check digital
 filter gain, command output contracts, compatibility adapters and error
-recovery. Production code is unchanged. Strict expected failures retain the
-correct averaging and command-output expectations where the current code
-does not satisfy them. These checks establish numerical behaviour for the
-chosen inputs; they do not qualify field measurements or fatigue designs.
+recovery. Inverse FFT reconstruction retains the input length and the
+even-length Nyquist coefficient in spectrum attributes. Strict expected
+failures retain the correct averaging and command-output expectations where
+the current code does not satisfy them. These checks establish numerical
+behaviour for the chosen inputs; they do not qualify field measurements or
+fatigue designs.
 
 ## Revision history
 
 | Revision | Date | What changed and why |
 |---|---|---|
 | 0 | 2026-10-22 | Added synthetic hand calculations and executable checks to expose numerical and interface gaps. |
+| 1 | 2026-10-26 | Documented the inverse FFT plan and attribute-retention limit alongside its analytic checks. |
+
+## Plan-lite: inverse FFT reconstruction
+
+**Objective:** Recover the original odd or even sample count and coefficients
+without changing displayed spectral bins or normalization.
+
+**Bounded steps:** The transform will retain the original sample count and
+omitted even-length Nyquist coefficient in DataFrame attributes. Filtering
+will apply the same frequency cutoff mask to that coefficient. The inverse
+transform will use the retained sample count and preserve the existing
+convention for spectra without attributes.
+
+**Test plan:** The checks will run `test_spectral.py`,
+`test_inverse_fft_values.py` and `test_spectral_filter_values.py` under
+`tests/signal_processing/signal_analysis/`
+(the first two are in `core/`), followed by the complete
+`tests/signal_processing` directory and the repository file checks. They will
+compare reconstructed samples with finite-sum hand answers for odd and even
+lengths, DC, endpoint inputs, copied spectra and all four frequency-filter
+types. Broader-suite failures will be reported separately from the focused
+inverse FFT results.
+
+**Metadata-retention limitation:** Exact reconstruction requires the retained
+DataFrame attributes and complex coefficients. Serialization that drops the
+attributes falls back to the legacy convention that the final supplied bin is
+Nyquist. Window-averaged power spectra lack complex coefficients and remain
+unsuitable for inverse reconstruction.
 
 ## Inputs, method and answer
 

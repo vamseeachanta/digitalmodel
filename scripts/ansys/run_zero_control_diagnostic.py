@@ -103,6 +103,7 @@ def diagnostic_exit_code(result):
         and outcome.get('attempted') == ['ocv-zero-t60-n16']
         and len(outcome.get('records', [])) == 1
         and outcome.get('reason') == 'diagnostic scope exhausted: durable claim consumed'
+        and 'outcome_record_error' not in outcome
         and result.get('reservation_released') is True
         and result.get('no_owned_processes_established') is True)
     return 0 if valid_capture else 2
