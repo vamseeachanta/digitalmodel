@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Allowable Hs tables checked against constant-gain and point-transfer cases."""
@@ -7,6 +10,7 @@ from dataclasses import replace
 import numpy as np
 import pandas as pd
 import pytest
+from scipy.integrate import trapezoid
 
 from digitalmodel.marine_ops.batch_envelope import (
     BatchOperation,
@@ -79,10 +83,15 @@ def test_matches_existing_envelope_and_alpha():
     assert set(frame.qualification_status) == {"NOT_EVALUATED"}
 
 
+@pytest.mark.parametrize("legacy_numpy_api", [True, False], ids=["legacy-present", "legacy-removed"])
 @pytest.mark.parametrize("response,unit,order", [
     ("velocity", "m/s", 1), ("acceleration", "m/s^2", 2),
 ])
-def test_derivative_response_matches_independent_quadrature(response, unit, order):
+def test_derivative_response_matches_independent_quadrature(
+    response, unit, order, legacy_numpy_api, monkeypatch,
+):
+    if not legacy_numpy_api:
+        monkeypatch.delattr(np, "trapz", raising=False)
     rao = _rao_set(heave=1.0)
     op = BatchOperation("lowering", (
         ResponseCriterion(response, "heave", 0.5, unit, response=response),
@@ -94,8 +103,7 @@ def test_derivative_response_matches_independent_quadrature(response, unit, orde
     wp = 2 * np.pi / 8
     x = np.linspace(0.01, 8, 100001)
     shape = 5 * x**-5 * np.exp(-1.25 / x**4)
-    trap = getattr(np, "trapezoid", None) or np.trapz
-    moment = trap((wp * x)**(2 * order) * shape, x) / trap(shape, x) / 16
+    moment = trapezoid((wp * x)**(2 * order) * shape, x) / trapezoid(shape, x) / 16
     assert frame.hs_limit_m.iloc[0] == pytest.approx(0.5 / (2 * np.sqrt(moment)), rel=1e-4)
     assert frame.governing_criterion.iloc[0] == response
 
