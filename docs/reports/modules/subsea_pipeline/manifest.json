@@ -3,7 +3,7 @@
   "artifacts": {
     "README.md": "2949b9394dc196a1b592d0ed03f66cc20176dbc97fc4181b2a68549752618c4a",
     "changes.json": "43dd2e93dd57a6be5a3528c7e83e762a53b08b11f4e43244584eb3593d6f0c56",
-    "index.html": "a3d4fbfb3620be2847dd04267b9d2375f904ba2f1b677a404b9804b1ccb72d63"
+    "index.html": "cd757f872983e0ef7b18d841c6b3a76d116a7d54a042b9b0e7555e99a4780a3b"
   },
   "self_digest": "Excluded to avoid a self-referential digest; compare manifest.json bytes externally.",
   "sources": {
@@ -40,7 +40,7 @@
     "src/digitalmodel/subsea/pipeline/thermal_expansion.py": "3628ac26e1485bce830405b72559e02f533e6a9d7a9dfeba00e0c3ad2bba6f2d",
     "src/digitalmodel/subsea/pipeline/upheaval_buckling.py": "9e2df5782dc9547c6c5ba72c23d953d8a5bbe188b08071ada314baf74d19623c",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90",
-    "tests/reporting/test_subsea_pipeline_module_report.py": "922c0c55e5d046e9717c9732faa23770507a3a75616acd222eefcb2d36f1a553",
+    "tests/reporting/test_subsea_pipeline_module_report.py": "59a52b928839435754ccb352304645408b6acdadc760d4fe53e7de497187bfd6",
     "tests/subsea/pipeline/test_free_span_f105.py": "42cb47b877e88d3a18815171e540833009a255fe655a475f2f21f275fa004c9b",
     "tests/subsea/pipeline/test_module_report_hand_values.py": "38c97f7e8efbf74c0b53d390cfd0b993d328c51c8bd43d54af20e52effcbb441",
     "tests/subsea/pipeline/test_pipe_geometry_finite_inputs.py": "054192fc6252921b906007b48b698549bd4c71c8acd569749105b189d5bf8bc5",

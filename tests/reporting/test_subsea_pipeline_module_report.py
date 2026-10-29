@@ -28,6 +28,25 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/reports/build_subsea_pipeline_module_report.py"
 REPORT = ROOT / "docs/reports/modules/subsea_pipeline"
 DELIVERABLES = {"index.html", "changes.json", "manifest.json", "README.md"}
+REBUILD = (
+    "PYTHONPATH=src python scripts/reports/build_subsea_pipeline_module_report.py "
+    '--scratch "$REPORT_SCRATCH"'
+)
+
+
+@pytest.fixture(params=["utf-8", "cp1252"], autouse=True)
+def simulated_text_locale(request, monkeypatch):
+    """Exercise report reads with UTF-8 and a legacy locale default."""
+    original = Path.read_text
+
+    def read_text(path, encoding=None, errors=None):
+        return original(
+            path,
+            encoding=request.param if encoding is None else encoding,
+            errors=errors,
+        )
+
+    monkeypatch.setattr(Path, "read_text", read_text)
 
 
 def builder():
@@ -125,7 +144,7 @@ def test_pressure_factor_payload_matches_supplied_arithmetic():
 
 def _assert_manifest(directory):
     """Verify exact source and written-artifact bytes with an external digest."""
-    manifest = json.loads((directory / "manifest.json").read_text())
+    manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["algorithm"] == "sha256"
     assert set(manifest["artifacts"]) == DELIVERABLES - {"manifest.json"}
     assert (
@@ -133,7 +152,9 @@ def _assert_manifest(directory):
         == "Excluded to avoid a self-referential digest; compare manifest.json bytes externally."
     )
     for name, digest in manifest["artifacts"].items():
-        assert digest == hashlib.sha256((directory / name).read_bytes()).hexdigest()
+        assert digest == hashlib.sha256((directory / name).read_bytes()).hexdigest(), (
+            f"Rebuild with {REBUILD}"
+        )
     sources = set(manifest["sources"])
     pipeline_sources = {
         path.relative_to(ROOT).as_posix()
@@ -148,7 +169,9 @@ def _assert_manifest(directory):
     } <= sources
     for name, digest in manifest["sources"].items():
         assert not Path(name).is_absolute()
-        assert digest == hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        assert digest == hashlib.sha256((ROOT / name).read_bytes()).hexdigest(), (
+            f"Rebuild with {REBUILD}"
+        )
     return manifest
 
 
@@ -161,10 +184,16 @@ def test_rebuild_is_deterministic(tmp_path):
     assert {path.name for path in first.iterdir()} == DELIVERABLES
     assert {path.name for path in second.iterdir()} == DELIVERABLES
     for name in DELIVERABLES:
-        assert (first / name).read_bytes() == (second / name).read_bytes()
-        assert (first / name).read_bytes() == (REPORT / name).read_bytes()
-    assert _assert_manifest(first) == _assert_manifest(second)
-    report = (first / "index.html").read_text()
+        assert (first / name).read_bytes() == (second / name).read_bytes(), (
+            f"Rebuild with {REBUILD}"
+        )
+        assert (first / name).read_bytes() == (REPORT / name).read_bytes(), (
+            f"Rebuild with {REBUILD}"
+        )
+    assert _assert_manifest(first) == _assert_manifest(second), (
+        f"Rebuild with {REBUILD}"
+    )
+    report = (first / "index.html").read_text(encoding="utf-8")
     assert re.findall(r'<h2 id="s\d+">(.*?)</h2>', report) == [
         "1. Executive Summary",
         "2. Introduction",
@@ -190,7 +219,7 @@ def test_rebuild_is_deterministic(tmp_path):
         )[1]
     )
     assert payload == build.build_payload()
-    changes = json.loads((first / "changes.json").read_text())
+    changes = json.loads((first / "changes.json").read_text(encoding="utf-8"))
     assert len(changes) == 1
     assert set(changes[0]) == {"revision", "date", "change"}
     for value in changes[0].values():
@@ -224,7 +253,9 @@ def test_cli_manifest_matches_written_files(tmp_path):
     _assert_manifest(destination)
     assert {path.name for path in destination.iterdir()} == DELIVERABLES
     for name in DELIVERABLES:
-        assert (destination / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (destination / name).read_bytes() == (REPORT / name).read_bytes(), (
+            f"Rebuild with {REBUILD}"
+        )
 
 
 def test_inventory_covers_public_methods_without_transferring_qualification():
@@ -233,7 +264,7 @@ def test_inventory_covers_public_methods_without_transferring_qualification():
     expected = set()
     for source in (ROOT / "src/digitalmodel/subsea/pipeline").rglob("*.py"):
         path = source.relative_to(ROOT).as_posix()
-        for node in ast.parse(source.read_text()).body:
+        for node in ast.parse(source.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
                 expected.add((path, node.name, node.lineno))
             if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
