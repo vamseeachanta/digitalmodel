@@ -30,10 +30,8 @@ from typing import Any, Dict, List, Tuple
 
 from digitalmodel.marine_ops.installation.jumper_lift import (
     BarePipeProperties,
-    PipeSectionLengths,
     compute_bare_pipe,
     compute_buoyancy,
-    compute_pipe_geometry,
     compute_strake,
 )
 from digitalmodel.marine_ops.installation.jumper_installation import (
@@ -212,6 +210,8 @@ def build_modular_spec(spec_path: str) -> Dict[str, Any]:
     Returns a dict accepted by ``ProjectInputSpec(**data)`` (generic track)
     containing the full 27-section jumper line, the four jumper line types,
     and the environment/simulation data carried over from the domain spec.
+    Explicit ``simulation`` fields override the legacy conversion defaults;
+    validation remains the responsibility of ``ProjectInputSpec``.
     """
     spec = stage_1_load_spec(spec_path)
     config = parse_jumper_config(spec)
@@ -349,5 +349,7 @@ def build_modular_spec(spec_path: str) -> Dict[str, Any]:
         "simulation": {
             "time_step": 0.1,
             "stages": [10.0, 60.0],
+            # Field contract: modular_generator/schema/simulation.py, Simulation.
+            **spec.get("simulation", {}),
         },
     }

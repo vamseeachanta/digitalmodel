@@ -443,16 +443,46 @@ def _verify_retention(record: dict, root: Path, retained_ref: str,
                             + retention_hint)
 
 
+def _regeneration_revision(record: dict, root: Path) -> str:
+    """Find the first reachable publication matching every recorded byte.
+
+    Regenerations cannot pin their own commit ID inside that commit. Bind the
+    artifact and source digests instead, and resolve only committed candidates
+    in HEAD ancestry. Existing full-revision historical records remain pinned.
+    """
+    if "source_revision" in record:
+        raise EvidenceError("Ambiguous source publication")
+    if record["source_publication"] != "first-matching-artifact-publication":
+        raise EvidenceError("Unsupported source publication selection")
+    manifest = _relative(record["manifest"])
+    paths = [manifest, *(_relative(name) for name in record["sources"])]
+    candidates = _git(root, "log", "--reverse", "--format=%H", "HEAD", "--", *paths)
+    for revision in candidates.decode("ascii").splitlines():
+        try:
+            verify_artifacts(record, root, revision=revision)
+            verify_sources(record, git_reader(root, revision))
+        except EvidenceError:
+            continue
+        return revision
+    raise EvidenceError("No committed publication matches regeneration evidence")
+
+
 def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/main",
                pr_head: str | None = None) -> dict:
     """Verify committed evidence and report checkout artifact drift separately.
 
     Changed, committed entries may use pull-request ancestry under merge-only policy.
-    Default-branch checks always require ancestry in the retained default ref.
+    Default-branch checks require pinned sources in the retained default ref.
+    Regeneration records resolve the first digest-matched committed publication.
     """
-    read = git_reader(root, record["source_revision"])
+    regeneration = "source_publication" in record
     revision = _git(root, "rev-parse", "HEAD").decode("ascii").strip()
-    _verify_retention(record, root, retained_ref, revision, pr_head)
+    if regeneration:
+        source_revision = _regeneration_revision(record, root)
+    else:
+        source_revision = record["source_revision"]
+        _verify_retention(record, root, retained_ref, revision, pr_head)
+    read = git_reader(root, source_revision)
     verify_artifacts(record, root, revision=revision)
     try:
         fingerprint = verify_sources(record, read)
@@ -465,6 +495,8 @@ def verify_git(record: dict, root: Path = ROOT, *, retained_ref: str = "origin/m
             raise EvidenceError("Recorded status contradicts reconstructed evidence")
         result = {"status": "VERIFIED", "fingerprint": fingerprint}
     result["working_tree_drift"] = _working_tree_drift(record, root, revision)
+    if regeneration:
+        result["source_revision"] = source_revision
     return result
 
 

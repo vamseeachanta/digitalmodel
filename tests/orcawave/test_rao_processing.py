@@ -1,5 +1,8 @@
 """Tests for orcawave.rao_processing module."""
 
+import math
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -54,6 +57,58 @@ class TestAmplitudePhaseConversion:
         z = amplitude_phase_to_complex(np.array([1.0]), np.array([90.0]))
         np.testing.assert_allclose(z[0].real, 0.0, atol=1e-10)
         np.testing.assert_allclose(z[0].imag, 1.0, atol=1e-10)
+
+    # Hand calculations and the floating-point budget are documented in
+    # docs/examples/rao-complex-conventions.md, "Synthetic calculation basis".
+    @pytest.mark.parametrize(
+        "phase_deg, real, imag",
+        [
+            pytest.param(0.0, 2.0, 0.0, id="positive-real-axis"),
+            pytest.param(90.0, 0.0, 2.0, id="positive-imaginary-axis"),
+            pytest.param(180.0, -2.0, 0.0, id="negative-real-axis"),
+            pytest.param(270.0, 0.0, -2.0, id="negative-imaginary-axis"),
+            pytest.param(30.0, math.sqrt(3.0), 1.0, id="quadrant-one"),
+            pytest.param(120.0, -1.0, math.sqrt(3.0), id="quadrant-two"),
+            pytest.param(-135.0, -math.sqrt(2.0), -math.sqrt(2.0), id="quadrant-three"),
+            pytest.param(390.0, math.sqrt(3.0), 1.0, id="positive-wrapped-phase"),
+            pytest.param(-240.0, -1.0, math.sqrt(3.0), id="negative-wrapped-phase"),
+        ],
+    )
+    def test_synthetic_conventions(self, phase_deg, real, imag):
+        amplitude = np.array([2.0])
+        z = amplitude_phase_to_complex(amplitude, np.array([phase_deg]))
+        # Evaluate scalar trigonometry independently of the NumPy API under test.
+        theta = math.radians(phase_deg)
+        np.testing.assert_allclose(z.real, 2.0 * math.cos(theta), rtol=0, atol=1e-12)
+        np.testing.assert_allclose(z.imag, 2.0 * math.sin(theta), rtol=0, atol=1e-12)
+        # Exact axes and special-angle triangle values also anchor the sign.
+        expected = np.array([complex(real, imag)])
+        np.testing.assert_allclose(z, expected, rtol=0, atol=1e-12)
+
+        # Start the inverse check from hand-calculated rectangular components.
+        amp_out, phase_out = complex_to_amplitude_phase(expected)
+        np.testing.assert_allclose(amp_out, math.hypot(real, imag), rtol=0, atol=1e-12)
+        # Compare angles modulo a full turn: either branch-cut endpoint is valid.
+        delta = np.deg2rad(phase_out - math.degrees(math.atan2(imag, real)))
+        np.testing.assert_allclose(np.cos(delta), 1.0, rtol=0, atol=1e-12)
+        np.testing.assert_allclose(np.sin(delta), 0.0, rtol=0, atol=1e-12)
+        assert np.all((-180.0 <= phase_out) & (phase_out <= 180.0))
+
+        # Preserve the response, rather than requiring the original wrapped angle.
+        roundtrip = amplitude_phase_to_complex(*complex_to_amplitude_phase(z))
+        np.testing.assert_allclose(roundtrip, expected, rtol=0, atol=1e-12)
+        for turn in (-360.0, 360.0):
+            wrapped = amplitude_phase_to_complex(amp_out, phase_out + turn)
+            np.testing.assert_allclose(wrapped, expected, rtol=0, atol=1e-12)
+
+
+def test_complex_convention_note_snippet():
+    """Execute the published Python block so the runnable example stays checked."""
+    note = Path(__file__).resolve().parents[2] / "docs/examples/rao-complex-conventions.md"
+    blocks = note.read_text(encoding="utf-8").split("```python\n")[1:]
+    assert len(blocks) == 1
+    snippet = blocks[0].split("```", 1)[0]
+    exec(compile(snippet, str(note), "exec"), {})
 
 
 class TestReadWriteCSV:

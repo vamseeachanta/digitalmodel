@@ -654,3 +654,26 @@ def test_local_policy_rejects_untrusted_origin_urls(policy_request, monkeypatch,
     with pytest.raises(history.EvidenceError, match="integration policy"):
         history._integration_policy(root, "origin/main")
     assert requests == []
+
+
+@pytest.mark.parametrize("ci_merge", [False, True])
+def test_regeneration_selection_survives_retention_integration(repository, monkeypatch, ci_merge):
+    case = repository("retained")
+    if ci_merge:
+        local_ci_merge(case, monkeypatch, event=True)
+    row = copy.deepcopy(case["row"])
+    source = row.pop("source_revision")
+    row["source_publication"] = "first-matching-artifact-publication"
+    result = history.verify_git(row, case["root"])
+    assert result["status"] == "VERIFIED"
+    assert result["fingerprint"] == row["content_fingerprint"]
+    assert result["source_revision"] == source
+    assert result["working_tree_drift"] == []
+
+
+def test_regeneration_selection_cannot_bypass_pinned_retention(repository):
+    case = repository("unchanged")
+    row = copy.deepcopy(case["row"])
+    row["source_publication"] = "first-matching-artifact-publication"
+    with pytest.raises(history.EvidenceError, match="Ambiguous source publication"):
+        history.verify_git(row, case["root"])

@@ -1,0 +1,9 @@
+# Row citation contract: schema.json defines every required citation field.
+# Required: title, publisher, url, catalogue_number, revision, date,
+# page, table, source_class and reuse_terms.
+# Each data row references a key below through citation_id.
+# Different value locators require separate citation entries.
+# Quote ISO dates; retain public reuse terms and the exact page or table.
+schema_version: 1
+citation_schema: "schema.json#/$defs/citation"
+citations: {}

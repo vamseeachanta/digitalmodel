@@ -37,14 +37,21 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("scripts/enforcement/", ("workflows",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),
+    ("scripts/risers/analytical_riser_regression.py", ("subsea",)),
+    ("docs/audits/analytical-riser-regression.json", ("subsea",)),
+    ("docs/audits/analytical-riser-regression.html", ("subsea",)),
     ("docs/bha_database.md", ("subsea",)),
+    ("scripts/corrosion/", ("specialized",)),
+    ("docs/reports/modules/corrosion/", ("specialized",)),
     # Domain records bind retained inputs and outputs checked by contracts tests.
     ("docs/domains/", ("contracts",)),
     ("docs/registry/", ("contracts", "workflows", "subsea", "asset-integrity")),
     ("docs/maps/", ("contracts",)),
+    ("docs/development/example-test-policy.md", ("workflows",)),
     ("config/repo_structure.yml", ("contracts",)),
     ("scripts/maintenance/verify_repo_structure.py", ("contracts",)),
     ("src/digitalmodel/cathodic_protection/", ("cathodic-protection",)),
@@ -77,6 +84,11 @@ PACKAGE_DATA_DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("naval_architecture/", ("naval-architecture",)),
 )
 NO_DOMAIN_PATHS = (
+    # Issue #1992, option 2: example demonstrations are explicitly non-gating.
+    # Their tests remain collectable; external intake resources and stale golden
+    # results must be repaired before assigning a gating shard. Policy and the
+    # worked routing example: docs/development/example-test-policy.md.
+    "examples/",
     # These paths are covered by CI harness tests or repo-wide
     # quality gates instead of the domain matrix.
     ".github/workflows/quality-gates.yml",
@@ -107,7 +119,7 @@ def normalize_root(root: str) -> str:
 def parse_domains(domains_file: Path) -> list[Domain]:
     """Read shard roots from the ownership table."""
     domains: list[Domain] = []
-    for raw_line in domains_file.read_text().splitlines():
+    for raw_line in domains_file.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line.startswith("|") or "`tests/" not in line:
             continue

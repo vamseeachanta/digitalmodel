@@ -303,7 +303,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;FLIPEM and KILLSVP utility commands;;;;;;;;;;;;;;;;;;;;;;
 ; FLIPEM.LSP
 ;
-; Flips the ECS of all arcs with negative WCS normals.
+; Flips the entity coordinate system of all arcs with negative WCS normals.
 ;
 (defun C:FLIPEM ( / ss n)
  (init_bonus_error (list (list "cmdecho" 0 "highlight" 0) 

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: GEBCO global bathymetry client for water depth data
 # ABOUTME: Streaming, location-based queries for seabed elevation/depth
 
@@ -20,6 +23,7 @@ Critical: WMS tile streaming with location-based queries - NO file storage!
 """
 
 import logging
+from math import isfinite
 from typing import Dict, Any, Iterator
 from datetime import datetime
 from ...common.base_client import BaseAPIClient
@@ -68,6 +72,9 @@ class GEBCOClient(BaseAPIClient):
             Water depth in meters (positive value)
             Returns 0 for land areas
 
+        Raises:
+            ValueError: No finite elevation can be parsed from the response.
+
         Note: GEBCO provides elevation (negative = below sea level)
               This method returns positive depth values for convenience
         """
@@ -86,6 +93,9 @@ class GEBCOClient(BaseAPIClient):
 
         Returns:
             Elevation in meters (negative = below sea level)
+
+        Raises:
+            ValueError: Elevation is missing, malformed or nonfinite.
         """
         # GEBCO WMS GetFeatureInfo request
         params = {
@@ -111,12 +121,13 @@ class GEBCOClient(BaseAPIClient):
             if 'Elevation' in line or 'elevation' in line:
                 try:
                     elevation = float(line.split(':')[-1].strip().split()[0])
-                    return elevation
                 except (ValueError, IndexError):
                     continue
+                if not isfinite(elevation):
+                    raise ValueError(f"GEBCO elevation is not finite at ({lat}, {lon})")
+                return elevation
 
-        logger.warning(f"Could not parse GEBCO elevation at ({lat}, {lon})")
-        return 0.0
+        raise ValueError(f"Could not parse GEBCO elevation at ({lat}, {lon})")
 
     def query_by_date(self, start_date: datetime, end_date: datetime,
                       location: Dict[str, float],
@@ -133,6 +144,9 @@ class GEBCOClient(BaseAPIClient):
 
         Yields:
             Single bathymetry record
+
+        Raises:
+            ValueError: No finite elevation can be parsed from the response.
         """
         depth = self.get_depth(location['lat'], location['lon'])
 

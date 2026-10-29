@@ -1853,7 +1853,7 @@
     ;; if it's an arc
     (setq pt (dl_mas nil T nil nil strtpt)) 
   )
-  ;; pt is a point in the current UCS, not ECS
+  ;; pt is a point in the current UCS, not entity coordinate system
   (if pt
     (progn
       (setq ang (- (angle cpt pt) ange))

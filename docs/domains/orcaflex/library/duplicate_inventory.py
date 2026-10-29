@@ -1,7 +1,10 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Inventory comment-normalized duplicates without loading a solver or YAML.
 
 Run from a checkout with --output-dir pointing to scratch storage. Outputs are
-an unbounded CSV reference table and a compact JSON count summary, not models.
+a proposal CSV, a separate reference CSV and a compact JSON count summary.
 """
 
 import argparse
@@ -120,7 +123,7 @@ def reference_hits(root: Path, tracked: list[str], sets: list) -> tuple[int, dic
 
 
 def write_table(output: Path, sets: list, references: dict) -> dict:
-    """Write one row per copy with its proposal and candidate textual references."""
+    """Write proposals with a basename join key into the separate reference table."""
     counts: dict[str, dict[str, int]] = defaultdict(
         lambda: {"sets": 0, "files": 0, "redundant": 0}
     )
@@ -132,7 +135,8 @@ def write_table(output: Path, sets: list, references: dict) -> dict:
                 "family",
                 "path",
                 "proposed_canonical",
-                "references_by_basename_ambiguous",
+                "reference_basename",
+                "reference_count",
             ]
         )
         for digest, paths in sets:
@@ -142,11 +146,33 @@ def write_table(output: Path, sets: list, references: dict) -> dict:
             counts[group]["files"] += len(paths)
             counts[group]["redundant"] += len(paths) - 1
             for path in paths:
-                refs = "; ".join(sorted(references[Path(path).name])) or "none found"
+                basename = Path(path).name
+                reference_count = len(references.get(basename, ()))
                 writer.writerow(
-                    [digest, group, path, str(path == proposed).lower(), refs]
+                    [
+                        digest,
+                        group,
+                        path,
+                        str(path == proposed).lower(),
+                        basename,
+                        reference_count,
+                    ]
                 )
     return dict(counts)
+
+
+def write_reference_table(output: Path, references: dict) -> None:
+    """Store each ambiguous basename/location pair once, in deterministic order.
+
+    A join is a discovery candidate only; a basename does not resolve a caller
+    to any particular copy. Missing basenames have no reference rows.
+    """
+    with output.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream, lineterminator="\n")
+        writer.writerow(["basename", "location"])
+        for basename, locations in sorted(references.items()):
+            for location in sorted(locations):
+                writer.writerow([basename, location])
 
 
 def main() -> None:
@@ -161,14 +187,18 @@ def main() -> None:
     if output == root or root in output.parents:
         parser.error("output directory must be outside the checkout")
     output.mkdir(parents=True, exist_ok=True)
-    scanned, sets = duplicate_sets(root, tracked_paths(root))
+    tracked = tracked_paths(root)
+    scanned, sets = duplicate_sets(root, tracked)
     print(
         f"Hashed {scanned} candidate YAML files; {len(sets)} duplicate sets", flush=True
     )
-    documents, references = reference_hits(root, tracked_paths(root), sets)
+    documents, references = reference_hits(root, tracked, sets)
     table = output / "duplicate_sets.csv"
     counts = write_table(table, sets, references)
+    reference_table = output / "duplicate_references.csv"
+    write_reference_table(reference_table, references)
     result = {
+        "schema_version": "2",
         "scanned": scanned,
         "sets": len(sets),
         "files": sum(len(paths) for _, paths in sets),
@@ -176,6 +206,8 @@ def main() -> None:
         "families": counts,
         "documents": documents,
         "table_bytes": table.stat().st_size,
+        "reference_rows": sum(len(locations) for locations in references.values()),
+        "reference_table_bytes": reference_table.stat().st_size,
     }
     text = json.dumps(result, indent=2) + "\n"
     (output / "duplicate_counts.json").write_text(text, encoding="utf-8", newline="")

@@ -31,8 +31,11 @@ def calculate_section_properties(outer_diameter: float, inner_diameter: float) -
         - I: Second moment of area
 
     Raises:
-        ValueError: If diameters are invalid
+        ValueError: If diameters are nonfinite or invalid
     """
+    if not all(math.isfinite(value) for value in (outer_diameter, inner_diameter)):
+        raise ValueError("Diameters must be finite values")
+
     if outer_diameter <= 0 or inner_diameter <= 0:
         raise ValueError("Diameters must be positive values")
 
@@ -75,8 +78,11 @@ def calculate_wall_thickness(outer_diameter: float, inner_diameter: float) -> fl
         Wall thickness
 
     Raises:
-        ValueError: If diameters are invalid
+        ValueError: If diameters are nonfinite or invalid
     """
+    if not all(math.isfinite(value) for value in (outer_diameter, inner_diameter)):
+        raise ValueError("Diameters must be finite values")
+
     if outer_diameter <= 0 or inner_diameter <= 0:
         raise ValueError("Diameters must be positive values")
 
@@ -103,8 +109,11 @@ def calculate_diameter_from_thickness(
         The calculated diameter
 
     Raises:
-        ValueError: If inputs are invalid
+        ValueError: If dimensions are nonfinite or inputs are invalid
     """
+    if not all(math.isfinite(value) for value in (known_diameter, wall_thickness)):
+        raise ValueError("Diameter and wall thickness must be finite values")
+
     if known_diameter <= 0 or wall_thickness <= 0:
         raise ValueError("Diameter and wall thickness must be positive values")
 
@@ -136,8 +145,16 @@ def calculate_geometric_properties(
         Dictionary containing all geometric and section properties
 
     Raises:
-        ValueError: If insufficient parameters provided or values are invalid
+        ValueError: If insufficient parameters provided or values are nonfinite or invalid
     """
+    # Check every supplied dimension, including an otherwise unused third input.
+    if not all(
+        math.isfinite(value)
+        for value in (outer_diameter, inner_diameter, wall_thickness)
+        if value is not None
+    ):
+        raise ValueError("Pipe dimensions must be finite values")
+
     # Determine missing parameter
     if outer_diameter is not None and inner_diameter is not None:
         # Both diameters provided
@@ -187,7 +204,13 @@ def validate_pipe_geometry(
         tolerance: Tolerance for validation check
 
     Returns:
-        True if geometry is valid, False otherwise
+        True if geometry is consistent, False for nonfinite or inconsistent geometry
     """
+    if not all(
+        math.isfinite(value)
+        for value in (outer_diameter, inner_diameter, wall_thickness)
+    ):
+        return False
+
     expected_wall_thickness = (outer_diameter - inner_diameter) / 2
     return abs(wall_thickness - expected_wall_thickness) <= tolerance

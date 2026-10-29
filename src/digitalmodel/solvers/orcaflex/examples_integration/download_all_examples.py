@@ -9,7 +9,10 @@ It can be run multiple times - it will skip already downloaded files.
 import sys
 import logging
 from pathlib import Path
-from enhanced_downloader import EnhancedOrcaflexDownloader
+if __package__:
+    from .enhanced_downloader import EnhancedOrcaflexDownloader
+else:
+    from enhanced_downloader import EnhancedOrcaflexDownloader
 
 # Configure logging
 logging.basicConfig(

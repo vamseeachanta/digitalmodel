@@ -1,5 +1,28 @@
 schema_version: 1
 validation_status: NOT_VALIDATED
+quantile_method:
+  title: Sample Quantiles in Statistical Packages
+  year: 1996
+  citation: The American Statistician, volume 50, number 4, pages 361-365;
+    equation (1) on page 361 and Definition 7 on page 363
+  doi: 10.1080/00031305.1996.10473566
+  checked_public_copy:
+    http_status: 200
+    retrieved_utc: '2026-10-19T10:14:53Z'
+    response_sha256: c3ae245d4fff12466d3c849503d3f0ec7ffaec90c0c2adce07cd3c163ffcb6b6
+    inspected_pages: [361, 363]
+  corroborating_reference:
+    title: R stats quantile documentation, Types and References sections
+    url: https://stat.ethz.ch/R-manual/R-devel/library/stats/html/quantile.html
+    http_status: 200
+    retrieved_utc: '2026-10-19T10:17:24Z'
+    response_sha256: b968d6b8b19b7e5d4258dc488a73a897ab04b4166ccd09ca0e85d447b37f530c
+  equation: Linear interpolation at zero-based h=(n-1)*p over sorted resolved draws
+  unresolved_fraction: Unresolved count divided by total draw count
+  unresolved_fraction_limit: Required study-specific input for partially unresolved
+    collapse bands; no engineering acceptance value assumed
+  limitation: Conditional resolved-draw quantiles do not qualify the unresolved
+    population or establish a feasible operating window.
 scope: Two published vertical Mohr-Coulomb scalar comparisons; no general-path qualification.
 textbook:
   title: Introduction to Energy Geomechanics

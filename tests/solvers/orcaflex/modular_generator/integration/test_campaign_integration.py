@@ -45,16 +45,41 @@ def test_campaign_fixture_is_in_checkout(spec_name):
     assert spec_path.is_file()
 
 
-@pytest.mark.parametrize("spec_name", ["FLOATING_SPEC", "SLAY_SPEC"])
+@pytest.mark.parametrize(
+    "spec_name, fixture_relative_path, compatibility_class, compatibility_method",
+    [
+        (
+            "FLOATING_SPEC",
+            "docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml",
+            "TestBackwardCompatSingleRunFloating",
+            "test_backward_compat_single_run_floating",
+        ),
+        (
+            "SLAY_SPEC",
+            "docs/domains/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml",
+            "TestBackwardCompatSingleRunSlay",
+            "test_backward_compat_single_run_slay",
+        ),
+    ],
+    ids=["floating", "slay"],
+)
+@pytest.mark.parametrize("fixture_present", [True, False], ids=["present", "absent"])
 def test_campaign_fixture_paths_follow_relocated_checkout(
-    spec_name, tmp_path, monkeypatch
+    spec_name,
+    fixture_relative_path,
+    compatibility_class,
+    compatibility_method,
+    fixture_present,
+    tmp_path,
+    monkeypatch,
 ):
     """Resolve from the test location after copying to a synthetic checkout.
 
-    Expected paths are the synthetic root plus each tracked fixture's relative
-    path. Empty fixture placeholders suffice: this test exercises only path
-    declarations and skip conditions, without running the generated models.
-    Changing the working directory also rules out resolution from the caller.
+    Source: the tracked fixture locations and acceptance criteria in issue #2517.
+    Hand derivation: expected = synthetic checkout / literal relative fixture
+    path; skip = not fixture_present. Neither expectation uses the constants
+    under test. Empty placeholders exercise paths and collection-time skip
+    predicates without loading models. An unrelated cwd rules out caller roots.
     """
     source_file = Path(__file__).resolve()
     repo_root = next(
@@ -65,9 +90,10 @@ def test_campaign_fixture_paths_follow_relocated_checkout(
     checkout = tmp_path / "checkout"
     relocated_module = checkout / source_file.relative_to(repo_root)
     relocated_module.parent.mkdir(parents=True)
-    relocated_module.write_text(source_file.read_text())
-    for name in ("FLOATING_SPEC", "SLAY_SPEC"):
-        fixture = checkout / globals()[name].relative_to(repo_root)
+    relocated_module.write_text(source_file.read_text(encoding="utf-8"), encoding="utf-8")
+    expected = checkout / fixture_relative_path
+    if fixture_present:
+        fixture = expected
         fixture.parent.mkdir(parents=True, exist_ok=True)
         fixture.touch()
     elsewhere = tmp_path / "elsewhere"
@@ -76,9 +102,15 @@ def test_campaign_fixture_paths_follow_relocated_checkout(
 
     namespace = runpy.run_path(str(relocated_module))
 
-    expected = checkout / globals()[spec_name].relative_to(repo_root)
     assert namespace[spec_name] == expected
-    assert namespace[spec_name].is_file()
+    assert namespace[spec_name].is_file() is fixture_present
+    compatibility_test = getattr(namespace[compatibility_class], compatibility_method)
+    skip_conditions = [
+        mark.args[0]
+        for mark in compatibility_test.pytestmark
+        if mark.name == "skipif"
+    ]
+    assert skip_conditions == [not fixture_present]
 
 
 # ------------------------------------------------------------------
@@ -110,7 +142,7 @@ def _write_floating_campaign(path: Path) -> Path:
                 "current": {
                     "speed": 1.0,
                     "direction": 270,
-                    "profile": [[0, 0.46], [6, 0.39], [15, 0.33]],
+                    "profile": [[0, 0.46], [6, 0.39], [8, 0.38]],
                 },
                 "wind": {"speed": 5, "direction": 270},
             },
@@ -237,7 +269,7 @@ def _write_slay_campaign(path: Path) -> Path:
             },
             "equipment": {
                 "vessel": {
-                    "name": "Eclipse",
+                    "name": "VesselA",
                     "properties": {
                         "loa": 130,
                         "beam": 28,
@@ -372,7 +404,7 @@ class TestFloatingCampaignCurrentProfileScaled:
                     "current": {
                         "speed": 1.0,
                         "direction": 270,
-                        "profile": [[0, 0.46], [6, 0.39], [15, 0.33]],
+                        "profile": [[0, 0.46], [6, 0.39], [8, 0.38]],
                     },
                     "wind": {"speed": 5, "direction": 270},
                 },
@@ -437,9 +469,9 @@ class TestFloatingCampaignCurrentProfileScaled:
         assert result.run_count == 2
 
         # Verify scaling via the campaign spec directly for precision.
-        # Base depth is 8m, profile depths are [0, 6, 15].
+        # Base depth is 8m, profile depths are [0, 6, 8].
         # For water_depth=15: scale = 15/8 = 1.875
-        #   new profile depths = [0, 11.25, 28.125]
+        #   new profile depths = [0, 11.25, 15].
         # For water_depth=8: scale = 1.0 (unchanged)
         for name, spec in gen.spec.generate_run_specs():
             wd = spec.environment.water.depth
@@ -453,18 +485,18 @@ class TestFloatingCampaignCurrentProfileScaled:
                 # Unchanged: scale=1.0
                 assert profile[0][0] == pytest.approx(0.0)
                 assert profile[1][0] == pytest.approx(6.0)
-                assert profile[2][0] == pytest.approx(15.0)
+                assert profile[2][0] == pytest.approx(8.0)
             elif wd == 15.0:
                 # Scaled: scale=15/8=1.875
                 scale = 15.0 / 8.0
                 assert profile[0][0] == pytest.approx(0.0 * scale)
                 assert profile[1][0] == pytest.approx(6.0 * scale)
-                assert profile[2][0] == pytest.approx(15.0 * scale)
+                assert profile[2][0] == pytest.approx(8.0 * scale)
 
                 # Speed factors remain unchanged
                 assert profile[0][1] == pytest.approx(0.46)
                 assert profile[1][1] == pytest.approx(0.39)
-                assert profile[2][1] == pytest.approx(0.33)
+                assert profile[2][1] == pytest.approx(0.38)
 
 
 class TestSlayCampaignGeneratesCorrectly:

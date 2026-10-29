@@ -18,6 +18,7 @@ qualification of the engineering methods or proof of a historical execution.
 | 4 | 2026-10-25 | Resolve CI heads from event evidence or validated local merges, isolate Git object reads, and describe merge-only integration and recovery. |
 | 5 | 2026-10-25 | Reject branch-only source retention unless live destination settings establish merge-only integration, preventing acceptance before a squash or rebase can orphan the source. |
 | 6 | 2026-10-25 | Bind CI ancestry and inventory comparisons to destination base evidence so a contributor fork's default ref cannot bypass integration policy. |
+| 3 | 2026-10-25 | Bind regenerated source and artifact bytes before publication, resolving the first matching committed publication without replacing historical entries. |
 
 ## Inventory and interpretation
 
@@ -228,6 +229,31 @@ is insufficient. The verifier
 does not fetch, modify Git metadata or silently use current source files.
 Keep the index in retained history alongside the atlas artifacts. Its digests
 are trusted reviewable metadata, not signatures or an independent trust service.
+
+## Reviewed regeneration records
+
+A new computed atlas may be inventoried in the same change as its sources.
+Its index entry uses `source_publication: first-matching-artifact-publication`
+instead of `source_revision`, with the usual complete source map, basis,
+fingerprint and four artifact digests. Build the source map with
+`source_record(workflow_id, archive_reader(source_root))`, verify it with
+`verify_sources`, and record the exact generated artifact digests. Add a new
+entry; preserve every historical entry and artifact.
+
+The trusted record remains subject to review. Verification searches commits
+in `HEAD` ancestry that changed the manifest or its sources, oldest first, and accepts only
+a commit whose source bytes reconstruct the fingerprint and whose artifact
+bytes match every digest. Both selection fields together are rejected. Old
+records continue to require their pinned revision in `origin/main` ancestry.
+Regeneration records use the reviewed branch's retained `HEAD` ancestry so they
+can be checked before merge. The result reports the resolved full source
+revision; the manifest's original `code_version` is preserved.
+
+Before the sources and artifacts are committed, verification fails with
+`No committed publication matches regeneration evidence`. This is an expected
+pre-publication rejection, not permission to bypass verification. Re-run at the
+published head. As with historical records, digest reconstruction establishes
+source identity, not proof of numerical execution or engineering qualification.
 
 For a source archive, retain every file named in an entry's `sources` map at its
 repository-relative path, preserving exact bytes and line endings. The archive
