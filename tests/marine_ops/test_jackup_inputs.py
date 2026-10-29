@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Frozen-input integrity and explicit missing-source failures."""
@@ -247,10 +250,50 @@ def test_unparseable_gebco_response_is_rejected_by_client_adapter():
             return SimpleNamespace(text='GetFeatureInfo results:\n\n  Search returned no results.\n')
 
     with NoResult() as depth:
-        with pytest.raises(ValueError, match='positive.*depth'):
+        with pytest.raises(ValueError, match='Could not parse GEBCO elevation'):
             query_public_inputs(object(), object(), depth,
                                 datetime(2024, 1, 1), datetime(2025, 1, 1),
                                 {'lat': 27.9, 'lon': -95.4}, '42019')
+
+
+@pytest.mark.parametrize('text', [
+    'Elevation: nan', 'Elevation: inf', 'Elevation: -inf',
+    'Elevation: unavailable', 'Elevation:', 'Search returned no results.',
+])
+def test_gebco_rejects_invalid_elevation_with_correct_wms_request(text):
+    from types import SimpleNamespace
+    from digitalmodel.data_systems.data_procurement.metocean.api_clients import GEBCOClient
+
+    class CapturedResponse(GEBCOClient):
+        def get(self, endpoint, **kwargs):
+            assert self.base_url == 'https://wms.gebco.net'
+            assert endpoint == 'mapserv'
+            assert kwargs['params'] == {
+                'service': 'WMS', 'version': '1.3.0', 'request': 'GetFeatureInfo',
+                'layers': 'GEBCO_LATEST_2', 'query_layers': 'GEBCO_LATEST_2',
+                'info_format': 'text/plain', 'i': 50, 'j': 50,
+                'width': 101, 'height': 101, 'crs': 'EPSG:4326',
+                'bbox': '9.9,19.9,10.1,20.1', 'styles': '', 'format': 'image/png',
+            }
+            return SimpleNamespace(text=text)
+
+    with CapturedResponse() as client:
+        with pytest.raises(ValueError, match='GEBCO elevation'):
+            client.get_depth(10.0, 20.0)
+
+
+@pytest.mark.parametrize('elevation, depth', [(-12.5, 12.5), (0.0, 0), (3.5, 0)])
+def test_gebco_preserves_finite_seabed_and_land_elevations(elevation, depth):
+    from types import SimpleNamespace
+    from digitalmodel.data_systems.data_procurement.metocean.api_clients import GEBCOClient
+
+    class FiniteResponse(GEBCOClient):
+        def get(self, endpoint, **kwargs):
+            return SimpleNamespace(text=f'Elevation: {elevation} m')
+
+    with FiniteResponse() as client:
+        assert client.get_elevation(10.0, 20.0) == elevation
+        assert client.get_depth(10.0, 20.0) == depth
 
 
 def test_source_retrieval_receipt_rejects_changed_bytes(tmp_path):

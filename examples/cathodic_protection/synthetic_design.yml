@@ -1,0 +1,28 @@
+# Synthetic single-zone cathodic protection input; no material is implied.
+# All numeric design inputs are arbitrary choices for hand arithmetic,
+# not standard-derived values or catalogue data.
+# Units are mandatory; "1" means dimensionless. No unit conversion is made.
+# Coating fraction means mean fraction of area demanding current over life.
+# Hand calculation: 120 m2 * 0.05 A/m2 * 0.2 = 1.2 A.
+# Time: 10 years * 365 days/year * 24 hours/day = 87,600 hours.
+# The non-leap year convention matches the existing shared kernel.
+# Charge: 1.2 A * 87,600 hours = 105,120 Ah.
+# Net mass: 105,120 Ah / (1,500 Ah/kg * 0.8) = 87.6 kg.
+# Runnable through design_from_yaml; see design_spec.py for the Python command.
+area_m2: 120.0
+current_density_A_m2: 0.05
+coating_fraction: 0.2
+design_life_years: 10.0
+electrochemical_capacity_Ah_kg: 1500.0
+utilisation: 0.8
+basis_description: >-
+  Synthetic mean demand over the design life; all inputs are assumed
+  for arithmetic demonstration only. No environmental or material basis
+  is claimed. Preliminary screening requires further engineering checks.
+units:
+  area_m2: m2
+  current_density_A_m2: A/m2
+  coating_fraction: "1"
+  design_life_years: year
+  electrochemical_capacity_Ah_kg: Ah/kg
+  utilisation: "1"

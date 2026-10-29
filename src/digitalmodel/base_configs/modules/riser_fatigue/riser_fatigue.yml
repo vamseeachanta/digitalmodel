@@ -1,11 +1,11 @@
 basename: riser_fatigue
 
 riser_fatigue:
-  design_life_years: 25.0
-  dff: 10.0
-  sn_curve:
-    curve: F1
-    environment: seawater_cp
+  # Case inputs remain unset; packaged settings must not supply a verdict basis.
+  design_life_years: null
+  # Remove this key to request cited resolution, or supply an explicit case DFF.
+  dff: null
+  sn_curve: null
   output_dir: results
   segments: []
 

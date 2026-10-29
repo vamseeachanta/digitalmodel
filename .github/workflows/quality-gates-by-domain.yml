@@ -33,7 +33,7 @@ permissions:
 jobs:
   detect-domains:
     name: Detect touched test domains
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       has-domains: ${{ steps.detect.outputs.has_domains }}
@@ -190,7 +190,7 @@ jobs:
   ci-harness-tests:
     name: CI harness and compliance tests
     needs: detect-domains
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -286,6 +286,7 @@ jobs:
             tests/scripts/test_ci_baseline.py \
             tests/scripts/test_run_shard.py \
             tests/contracts/test_flaky_register_schema.py \
+            tests/contracts/test_vba_credit.py \
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
@@ -392,7 +393,7 @@ jobs:
 
       - name: Install Gmsh runtime libraries
         if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+        run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
 
       - name: Create reports directory
         run: mkdir -p reports
@@ -477,7 +478,7 @@ jobs:
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Report scope of this result
         # States what this check actually covered, so a green aggregate cannot be

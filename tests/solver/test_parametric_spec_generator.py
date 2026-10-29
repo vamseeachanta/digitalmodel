@@ -7,7 +7,11 @@ Issue: #1596
 """
 from __future__ import annotations
 
-import math
+import copy
+import itertools
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -251,3 +255,339 @@ class TestSpecSchemaCompliance:
         for i, spec in enumerate(specs):
             tags = spec.metadata.tags
             assert any("sweep" in t.lower() or "parametric" in t.lower() for t in tags)
+
+
+def test_max_specs_rejects_before_expansion(base_spec_data, tmp_path, monkeypatch):
+    """A hand-counted product must be bounded before any expansion or output."""
+    PSG, FS, HS, HPS = _get_generator()
+    # Synthetic axes: two frequency bands times three heading sets = six specs.
+    headings = [[0.0], [90.0], [180.0]]
+    steps = 2
+    expected_count = steps * len(headings)
+    gen = PSG(base_spec_data, [FS(0.5, 1.5, steps)], [HS(headings)],
+              max_specs=expected_count - 1)
+    output = tmp_path / "rejected"
+    with monkeypatch.context() as patch:
+        def unexpected(*args, **kwargs):
+            pytest.fail("Oversized product reached materialization")
+
+        patch.setattr(gen, "_expand", unexpected)
+        patch.setattr(FS, "generate_ranges", unexpected)
+        with pytest.raises(ValueError, match="max_specs"):
+            gen.generate_to_yaml(output)
+    assert not output.exists()
+    # Existing output must also remain byte-for-byte unchanged on rejection.
+    output.mkdir()
+    sentinel = output / "keep.yml"
+    sentinel.write_text("unchanged\n", encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="max_specs"):
+        gen.generate_to_yaml(output)
+    assert list(output.iterdir()) == [sentinel]
+    assert sentinel.read_text(encoding="utf-8") == "unchanged\n"
+    boundary = PSG(base_spec_data, [FS(0.5, 1.5, steps)], [HS(headings)],
+                   max_specs=expected_count)
+    assert len(boundary.generate_to_yaml(tmp_path / "boundary")) == expected_count
+
+
+def test_combined_sweeps_have_cartesian_membership(base_spec_data, tmp_path):
+    """Independent synthetic frequency, heading and mass axes form a product."""
+    PSG, FS, HS, HPS = _get_generator()
+    base_spec_data["metadata"] = {"description": "Synthetic / base"}
+    original = copy.deepcopy(base_spec_data)
+    # Hand calculation using the existing band rule: spacing=1, half-band=.4;
+    # five equally spaced samples around .5 and 1.5, with no lower clipping.
+    frequencies = [(0.1, 0.3, 0.5, 0.7, 0.9), (1.1, 1.3, 1.5, 1.7, 1.9)]
+    headings = [[0.0], [90.0], [180.0]]
+    masses = [800.0, 1200.0]  # Synthetic fixture masses; no solver result basis.
+    expected_count = len(frequencies) * len(headings) * len(masses)
+    expected = set(itertools.product(frequencies, map(tuple, headings), masses))
+    gen = PSG(base_spec_data, [FS(0.5, 1.5, len(frequencies))], [HS(headings)],
+              [HPS("vessel.inertia.mass", masses)], max_specs=expected_count)
+    specs = gen.generate()
+    actual = [(tuple(s.frequencies.values), tuple(s.wave_headings.values),
+               s.vessel.inertia.mass) for s in specs]
+    assert len(actual) == expected_count
+    assert len(set(actual)) == expected_count
+    assert set(actual) == expected
+    paths = gen.generate_to_yaml(tmp_path / "first")
+    repeated = gen.generate_to_yaml(tmp_path / "second")
+    expected_names = [
+        f"spec_synthetic-base_f0-{f}_h0-{h}_p0-{p}.yml"
+        for p in range(len(masses)) for h in range(len(headings))
+        for f in range(len(frequencies))
+    ]
+    assert [p.name for p in paths] == expected_names
+    assert [p.name for p in repeated] == expected_names
+    assert len(set(expected_names)) == expected_count
+    for spec, path, repeat in zip(specs, paths, repeated):
+        assert DiffractionSpec.from_yaml(path).model_dump() == spec.model_dump()
+        assert path.read_bytes() == repeat.read_bytes()
+    specs[0].frequencies.values.append(2.0)
+    specs[0].wave_headings.values.append(45.0)
+    specs[0].metadata.tags.append("changed")
+    assert specs[1].frequencies.values == list(frequencies[1])
+    assert specs[1].wave_headings.values == headings[0]
+    assert "changed" not in specs[1].metadata.tags
+    assert base_spec_data == original
+    assert gen.generate()[0].frequencies.values == list(frequencies[0])
+
+
+@pytest.mark.parametrize("limit", [0, -1, True, False, 1.5, "6", None])
+def test_invalid_max_specs(base_spec_data, limit):
+    """Only positive integer limits are meaningful (issue #1711)."""
+    PSG, *_ = _get_generator()
+    with pytest.raises(ValueError, match="max_specs"):
+        PSG(base_spec_data, max_specs=limit)
+
+
+def test_default_max_specs(base_spec_data, tmp_path, monkeypatch):
+    """Issue #1711 sets the default bound at one thousand specs."""
+    PSG, FS, HS, HPS = _get_generator()
+    default_bound = 1000  # Issue #1711, max_specs acceptance requirement.
+    gen = PSG(base_spec_data, heading_sweeps=[HS([[0.0]] * (default_bound + 1))])
+    monkeypatch.setattr(gen, "_build_variants", lambda: pytest.fail("Expanded"))
+    with pytest.raises(ValueError, match="max_specs"):
+        gen.generate_to_yaml(tmp_path / "oversized")
+    assert not (tmp_path / "oversized").exists()
+    assert len(PSG(base_spec_data, max_specs=1).generate()) == 1  # Empty product.
+    assert len(PSG(base_spec_data, heading_sweeps=[HS([[0.0]] * default_bound)]).generate()) == default_bound
+
+
+def test_empty_axis_does_not_materialize_prior_axes(base_spec_data, monkeypatch):
+    """A zero-size product must not allocate a large intermediate product."""
+    PSG, FS, HS, HPS = _get_generator()
+    # Synthetic product: two frequency bands times zero heading sets = zero.
+    gen = PSG(base_spec_data, [FS(0.5, 1.5, 2)], [HS([])], max_specs=1)
+    monkeypatch.setattr(FS, "generate_ranges", lambda self: pytest.fail("Allocated"))
+    assert gen.generate() == []
+
+
+def test_duplicate_coordinates_have_unique_names(base_spec_data, tmp_path):
+    """Two equal heading values still occupy two distinct sweep coordinates."""
+    PSG, FS, HS, HPS = _get_generator()
+    gen = PSG(base_spec_data, heading_sweeps=[HS([[0.0], [0.0]])])
+    paths = gen.generate_to_yaml(tmp_path)
+    assert [p.name for p in paths] == ["spec_base_h0-0.yml", "spec_base_h0-1.yml"]
+
+
+def test_invalid_spec_creates_no_output(base_spec_data, tmp_path):
+    """Schema validation completes before an output directory is created."""
+    PSG, FS, HS, HPS = _get_generator()
+    gen = PSG(base_spec_data, hull_sweeps=[HPS("vessel.inertia.mass", [-1.0])])
+    output = tmp_path / "invalid"
+    with pytest.raises(ValueError):
+        gen.generate_to_yaml(output)
+    assert not output.exists()
+
+
+def _run_cli(*args):
+    """Use the same interpreter and source checkout for a module subprocess."""
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join(
+        [str(Path(__file__).resolve().parents[2] / "src"), env.get("PYTHONPATH", "")]
+    )
+    return subprocess.run(
+        [sys.executable, "-m", "digitalmodel.solvers.parametric_spec_generator", *args],
+        capture_output=True, text=True, encoding="utf-8", env=env, check=False,
+    )
+
+
+def test_module_cli_help():
+    result = _run_cli("--help")
+    assert result.returncode == 0, result.stderr
+    for option in ("--base", "--freq-sweep", "--heading-sweep", "--output-dir", "--max-specs"):
+        assert option in result.stdout
+
+
+def test_module_cli_combined_sweep(base_spec_data, tmp_path):
+    """Two bands times two headings produce four independently checked files."""
+    base_spec_data["metadata"] = {"description": "Synthetic base"}
+    base = tmp_path / "base.yml"
+    base.write_text(yaml.safe_dump(base_spec_data), encoding="utf-8", newline="\n")
+    output = tmp_path / "output"
+    result = _run_cli("--base", str(base), "--freq-sweep", "0.5:1.5:2",
+                      "--heading-sweep", "0:90:2", "--output-dir", str(output))
+    assert result.returncode == 0, result.stderr
+    # Same hand-calculated bands as the Cartesian API test; singleton headings.
+    frequencies = [(0.1, 0.3, 0.5, 0.7, 0.9), (1.1, 1.3, 1.5, 1.7, 1.9)]
+    headings = [0.0, 90.0]
+    expected_count = len(frequencies) * len(headings)
+    expected_names = {f"spec_synthetic-base_f0-{f}_h0-{h}.yml"
+                      for h in range(len(headings)) for f in range(len(frequencies))}
+    paths = sorted(output.glob("*.yml"))
+    assert len(paths) == expected_count
+    assert {p.name for p in paths} == expected_names
+    restored = [DiffractionSpec.from_yaml(p) for p in paths]
+    assert {(tuple(s.frequencies.values), s.wave_headings.values[0]) for s in restored} == set(
+        itertools.product(frequencies, headings)
+    )
+    for spec, path in zip(restored, paths):
+        assert yaml.safe_load(path.read_text(encoding="utf-8")) == spec.model_dump(mode="json", exclude_none=True)
+
+
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_frequency_sweep_replaces_period_units(base_spec_data, tmp_path, interface):
+    """Swept rad/s values must not be interpreted as periods from the base."""
+    base_spec_data["frequencies"] = {"input_type": "period", "values": [4.0, 8.0]}
+    if interface == "api":
+        PSG, FS, *_ = _get_generator()
+        specs = PSG(base_spec_data, frequency_sweeps=[FS(0.5, 1.5, 2)]).generate()
+    else:
+        base = tmp_path / "base.yml"
+        base.write_text(yaml.safe_dump(base_spec_data), encoding="utf-8", newline="\n")
+        output = tmp_path / "output"
+        result = _run_cli("--base", str(base), "--freq-sweep", "0.5:1.5:2",
+                          "--output-dir", str(output))
+        assert result.returncode == 0, result.stderr
+        specs = [DiffractionSpec.from_yaml(p) for p in sorted(output.glob("*.yml"))]
+    assert len(specs) == 2
+    # Inherited sampling: spacing 1.0, half-band 0.4, sample spacing 0.2.
+    expected = [(0.1, 0.3, 0.5, 0.7, 0.9), (1.1, 1.3, 1.5, 1.7, 1.9)]
+    for spec, values in zip(specs, expected):
+        assert spec.frequencies.to_frequencies_rad_s() == pytest.approx(values)
+    assert base_spec_data["frequencies"]["input_type"] == "period"
+
+
+@pytest.mark.parametrize("axis", ["frequency", "heading"])
+def test_api_sweep_populates_missing_axis(base_spec_data, axis):
+    """Axis normalization must retain the API's ability to supply missing values."""
+    PSG, FS, HS, _ = _get_generator()
+    section = "frequencies" if axis == "frequency" else "wave_headings"
+    del base_spec_data[section]
+    kwargs = ({"frequency_sweeps": [FS(0.5, 1.5, 2)]} if axis == "frequency"
+              else {"heading_sweeps": [HS([[0.0], [90.0]])]})
+    specs = PSG(base_spec_data, **kwargs).generate()
+    assert len(specs) == 2
+    if axis == "frequency":
+        assert [spec.frequencies.to_frequencies_rad_s()[2] for spec in specs] == pytest.approx([0.5, 1.5])
+    else:
+        assert [spec.wave_headings.to_heading_list() for spec in specs] == [[0.0], [90.0]]
+    assert section not in base_spec_data
+
+
+@pytest.mark.parametrize("interface", ["api", "cli"])
+@pytest.mark.parametrize("axis", ["frequency", "heading"])
+def test_sweeps_replace_ranges(base_spec_data, tmp_path, interface, axis):
+    """An explicit swept axis replaces its range without changing the other axis."""
+    base_spec_data["frequencies"] = {
+        "input_type": "period", "range": {"start": 4.0, "end": 8.0, "count": 3},
+    }
+    base_spec_data["wave_headings"] = {"range": {"start": 0.0, "end": 180.0, "increment": 90.0}}
+    if interface == "api":
+        PSG, FS, HS, _ = _get_generator()
+        kwargs = ({"frequency_sweeps": [FS(0.5, 1.5, 2)]} if axis == "frequency"
+                  else {"heading_sweeps": [HS([[0.0], [90.0]])]})
+        specs = PSG(base_spec_data, **kwargs).generate()
+    else:
+        base = tmp_path / "base.yml"
+        base.write_text(yaml.safe_dump(base_spec_data), encoding="utf-8", newline="\n")
+        output = tmp_path / "output"
+        option, value = (("--freq-sweep", "0.5:1.5:2") if axis == "frequency"
+                         else ("--heading-sweep", "0:90:2"))
+        result = _run_cli("--base", str(base), option, value, "--output-dir", str(output))
+        assert result.returncode == 0, result.stderr
+        specs = [DiffractionSpec.from_yaml(p) for p in sorted(output.glob("*.yml"))]
+    assert len(specs) == 2
+    for index, spec in enumerate(specs):
+        if axis == "frequency":
+            assert spec.frequencies.range is None
+            assert spec.frequencies.to_frequencies_rad_s()[2] == pytest.approx([0.5, 1.5][index])
+            assert spec.wave_headings.to_heading_list() == [0.0, 90.0, 180.0]
+        else:
+            assert spec.wave_headings.range is None
+            assert spec.wave_headings.to_heading_list() == [[0.0], [90.0]][index]
+            assert spec.frequencies.input_type == "period"
+            assert spec.frequencies.values is None
+            assert spec.frequencies.range.start == 4.0
+            assert spec.frequencies.range.end == 8.0
+            assert spec.frequencies.range.count == 3
+
+
+@pytest.mark.parametrize("multibody", [False, True])
+@pytest.mark.parametrize("absolute", [False, True])
+def test_module_cli_preserves_mesh_referents(base_spec_data, tmp_path, multibody, absolute):
+    """Relocation must retain hull, lid, free-surface and both control-surface meshes."""
+    source = tmp_path / "source"
+    source.mkdir()
+    meshes = source / "meshes"
+    meshes.mkdir()
+    expected = {}
+    for name in ("hull", "lid", "surface", "vessel-control", "body-control"):
+        mesh = meshes / f"{name}.gdf"
+        mesh.write_text("synthetic mesh\n", encoding="utf-8", newline="\n")
+        expected[name] = mesh.resolve()
+    references = {name: path.as_posix() if absolute else path.relative_to(source).as_posix()
+                  for name, path in expected.items()}
+    vessel = base_spec_data["vessel"]
+    vessel["geometry"]["mesh_file"] = references["hull"]
+    vessel["control_surface"] = {"mesh_file": references["vessel-control"]}
+    if multibody:
+        base_spec_data["bodies"] = [{"vessel": base_spec_data.pop("vessel"),
+                                    "control_surface": {"mesh_file": references["body-control"]}}]
+    base_spec_data["damping_lid"] = {"mesh_file": references["lid"], "damping_factor": 0.1}
+    base_spec_data["free_surface_zone"] = {"mesh_file": references["surface"]}
+    base = source / "base.yml"
+    original = yaml.safe_dump(base_spec_data)
+    base.write_text(original, encoding="utf-8", newline="\n")
+    output = tmp_path / "generated" / "nested"
+    result = _run_cli("--base", str(base), "--heading-sweep", "0:90:2",
+                      "--output-dir", str(output))
+    assert result.returncode == 0, result.stderr
+    paths = sorted(output.glob("*.yml"))
+    assert len(paths) == 2
+    for path in paths:
+        spec = DiffractionSpec.from_yaml(path)
+        body = spec.get_bodies()[0]
+        actual = {"hull": body.vessel.geometry.mesh_file,
+                  "lid": spec.damping_lid.mesh_file,
+                  "surface": spec.free_surface_zone.mesh_file,
+                  "vessel-control": body.vessel.control_surface.mesh_file}
+        if multibody:
+            actual["body-control"] = body.control_surface.mesh_file
+        for name, reference in actual.items():
+            assert not Path(reference).is_absolute()
+            assert "\\" not in reference
+            resolved = (path.parent / reference).resolve()
+            assert resolved == expected[name]
+            assert resolved.read_text(encoding="utf-8") == "synthetic mesh\n"
+    assert base.read_text(encoding="utf-8") == original
+
+
+def test_module_cli_reads_utf8_without_locale_support(base_spec_data, tmp_path, monkeypatch):
+    """A valid UTF-8 base must load even when the default text encoding is ASCII."""
+    base_spec_data["metadata"] = {"description": "Synthetic caf\u00e9"}
+    base = tmp_path / "base.yml"
+    base.write_text(yaml.safe_dump(base_spec_data, allow_unicode=True),
+                    encoding="utf-8", newline="\n")
+    monkeypatch.setenv("PYTHONUTF8", "0")
+    monkeypatch.setenv("PYTHONCOERCECLOCALE", "0")
+    monkeypatch.setenv("LC_ALL", "C")
+    output = tmp_path / "output"
+    result = _run_cli("--base", str(base), "--output-dir", str(output))
+    assert result.returncode == 0, result.stderr
+    paths = list(output.glob("*.yml"))
+    assert len(paths) == 1
+    assert DiffractionSpec.from_yaml(paths[0]).metadata.description == "Synthetic caf\u00e9"
+    assert b"\r" not in paths[0].read_bytes()
+
+
+@pytest.mark.parametrize("option,value", [
+    ("--freq-sweep", "bad"), ("--freq-sweep", "1:2:0"),
+    ("--freq-sweep", "2:1:2"), ("--freq-sweep", "0:1:2"),
+    ("--freq-sweep", "nan:1:2"), ("--freq-sweep", "1:inf:2"),
+    ("--freq-sweep", "1:2:1.5"), ("--heading-sweep", "90:0:2"),
+    ("--heading-sweep", "0:nan:2"), ("--heading-sweep", "0:90:0"),
+    ("--heading-sweep", "0:90:1001"),  # Issue #1711 default bound.
+    ("--max-specs", "0"), ("--max-specs", "3"),
+])
+def test_module_cli_rejects_before_output(base_spec_data, tmp_path, option, value):
+    """Malformed ranges and oversized products cannot leave partial files."""
+    base = tmp_path / "base.yml"
+    base.write_text(yaml.safe_dump(base_spec_data), encoding="utf-8", newline="\n")
+    output = tmp_path / "rejected"
+    result = _run_cli("--base", str(base), "--freq-sweep", "0.5:1.5:2",
+                      "--heading-sweep", "0:90:2", "--output-dir", str(output),
+                      option, value)
+    assert result.returncode != 0
+    assert "error:" in result.stderr
+    assert not output.exists()

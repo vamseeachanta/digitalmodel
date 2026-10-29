@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import logging
-
 import pytest
+from pydantic import ValidationError
 
 from digitalmodel.solvers.orcaflex.modular_generator.schema.environment import (
     Waves,
@@ -278,15 +277,14 @@ class TestCurrentProfileDepthValidation:
         spec = self._make_spec(100, [[0, 1.0], [100, 0.5]])
         assert spec.environment.current.profile[-1][0] == 100
 
-    def test_profile_exceeds_depth_warns(self, caplog):
-        """Profile deeper than water depth emits a warning (not an error)."""
-        with caplog.at_level(logging.WARNING):
-            spec = self._make_spec(50, [[0, 1.0], [80, 0.5]])
-        assert spec is not None
-        assert "Current profile extends to" in caplog.text
+    def test_profile_exceeds_depth_is_rejected(self):
+        """Profile deeper than water depth raises a validation error."""
+        # Hand check of the existing example: 80 m > 50 m.
+        with pytest.raises(ValidationError, match="Current profile depth.*water depth"):
+            self._make_spec(50, [[0, 1.0], [80, 0.5]])
 
-    def test_profile_within_tolerance(self):
-        """Profile depth within 1% tolerance of water depth should pass."""
-        # 100.5 is within 1% of 100 (tolerance is 101)
-        spec = self._make_spec(100, [[0, 1.0], [100.5, 0.5]])
-        assert spec is not None
+    def test_profile_within_former_tolerance_is_rejected(self):
+        """Every positive excess fails, including the former allowance."""
+        # Hand check of the existing example: 100.5 m - 100 m = 0.5 m > 0.
+        with pytest.raises(ValidationError, match="Current profile depth.*water depth"):
+            self._make_spec(100, [[0, 1.0], [100.5, 0.5]])

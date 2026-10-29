@@ -47,6 +47,7 @@ orientation repair) are reused from ``kcs_geometry`` rather than reimplemented.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import math
@@ -738,6 +739,9 @@ class HullManifest:
     #: The placement, so a later ingest of another layer can be placed on the
     #: same frame instead of inferring its own.
     transform: Optional[Dict[str, object]] = None
+    #: Evidence from the reader, absent for direct triangle ingestion.
+    tessellation: Optional[Dict[str, object]] = None
+    appendage_tessellation: Dict[str, Dict[str, object]] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, object]:
         contract: Dict[str, object] = {
@@ -759,7 +763,7 @@ class HullManifest:
         }
         if self.regions is not None:
             contract["regions"] = self.regions
-        contract["provenance"] = {
+        provenance: Dict[str, object] = {
             "transform": self.transform,
             "units_source": self.units_source,
             "units_note": self.units_note,
@@ -787,6 +791,13 @@ class HullManifest:
             "source_layers": list(self.source_layers),
             "notes": list(self.notes),
         }
+        if self.tessellation is not None:
+            provenance["tessellation"] = copy.deepcopy(self.tessellation)
+        if self.appendage_tessellation:
+            provenance["appendage_tessellation"] = copy.deepcopy(
+                self.appendage_tessellation
+            )
+        contract["provenance"] = provenance
         return contract
 
     def write(self, path: Path | str) -> Path:
@@ -818,7 +829,14 @@ def _sha256_of_triangles(tris: Sequence[Tri]) -> str:
 
 @dataclass
 class Rhino3dmGeometry:
-    """Raw tessellated geometry recovered from a ``.3dm``, in file units."""
+    """Raw triangles and the route actually executed, in file units.
+
+    ``source`` distinguishes cached Brep meshes, standalone mesh objects, their
+    mixture, and an OpenCASCADE rebuild. Only the last route applies
+    ``linear_deflection``. Face coverage counts selected Brep/Extrusion faces,
+    including faces without a cache; a cached face is counted as meshed only
+    when extraction contributes triangles. Standalone meshes add no Brep faces.
+    """
 
     triangles: List[Tri]
     declared_units: Optional[str]
@@ -827,10 +845,31 @@ class Rhino3dmGeometry:
     objects_meshed: int = 0
     objects_without_mesh: int = 0
     layers_available: List[str] = field(default_factory=list)
+    source: str = "unknown"
+    cached_mesh_faces: int = 0
+    brep_faces: int = 0
+    linear_deflection: Optional[float] = None
+    fidelity: Optional[Dict[str, object]] = None
+
+    def to_provenance(self) -> Dict[str, object]:
+        """Describe observed execution; unused deflection is deliberately absent."""
+        record: Dict[str, object] = {
+            "source": self.source,
+            "cached_mesh_face_coverage": {
+                "meshed": self.cached_mesh_faces, "total": self.brep_faces,
+            },
+        }
+        if self.source == "occ-rebuild":
+            # BrepTessellation.linear_deflection is the effective value in file
+            # units, including the kernel wrapper's derived default.
+            record["linear_deflection"] = self.linear_deflection
+            if self.fidelity is not None:
+                record["fidelity"] = copy.deepcopy(self.fidelity)
+        return record
 
 
-def _meshes_of(geometry, rhino3dm) -> List[object]:
-    """Every cached render mesh reachable from one object.
+def _meshes_and_face_count(geometry, rhino3dm) -> Tuple[List[object], int]:
+    """Every available mesh and the number of Brep faces examined.
 
     ``GetMesh`` lives on ``BrepFace``, not on ``Brep`` -- a Brep is asked face
     by face. Missing that is why a first pass at this reader concluded, wrongly,
@@ -838,7 +877,7 @@ def _meshes_of(geometry, rhino3dm) -> List[object]:
     """
     kind = type(geometry).__name__
     if kind == "Mesh":
-        return [geometry]
+        return [geometry], 0
 
     brep = None
     if kind == "Brep":
@@ -849,13 +888,13 @@ def _meshes_of(geometry, rhino3dm) -> List[object]:
         except Exception:  # pragma: no cover - defensive against kernel quirks
             brep = None
     if brep is None:
-        return []
+        return [], 0
 
     out: List[object] = []
     try:
         faces = brep.Faces
     except Exception:  # pragma: no cover
-        return []
+        return [], 0
     for face in faces:
         try:
             mesh = face.GetMesh(rhino3dm.MeshType.Any)
@@ -863,7 +902,7 @@ def _meshes_of(geometry, rhino3dm) -> List[object]:
             mesh = None
         if mesh is not None and len(mesh.Faces) > 0:
             out.append(mesh)
-    return out
+    return out, len(faces)
 
 
 def _triangles_of_mesh(mesh) -> List[Tri]:
@@ -900,8 +939,11 @@ def read_3dm_triangles(
 ) -> Rhino3dmGeometry:
     """Recover tessellated geometry and the declared unit system from a ``.3dm``.
 
-    Only cached render meshes are used -- see the module docstring for why
-    evaluating trimmed NURBS here would be worse than failing.
+    Cached render meshes and standalone mesh objects take precedence. The
+    returned ``source`` flag and :meth:`Rhino3dmGeometry.to_provenance` report
+    whether the fallback actually ran. A supplied ``linear_deflection`` has
+    no effect unless ``source == "occ-rebuild"``; enabling fallback does not
+    force a rebuild. See ``brep_tessellate.tessellate_3dm`` for a forced rebuild.
 
     ``tessellate_breps`` opts in to the CAD-kernel fallback in
     ``brep_tessellate``, which rebuilds the trimmed NURBS Breps in OpenCASCADE
@@ -941,6 +983,8 @@ def read_3dm_triangles(
     triangles: List[Tri] = []
     per_layer: Dict[str, int] = {}
     total = meshed = unmeshed = 0
+    cached_faces = brep_faces = 0
+    used_cached_mesh = used_mesh_object = False
 
     for obj in model.Objects:
         try:
@@ -951,9 +995,18 @@ def read_3dm_triangles(
             continue
         total += 1
         got: List[Tri] = []
-        for mesh in _meshes_of(obj.Geometry, rhino3dm):
-            got.extend(_triangles_of_mesh(mesh))
+        meshes, face_count = _meshes_and_face_count(obj.Geometry, rhino3dm)
+        brep_faces += face_count
+        for mesh in meshes:
+            extracted = _triangles_of_mesh(mesh)
+            if face_count and extracted:
+                cached_faces += 1
+            got.extend(extracted)
         if got:
+            if type(obj.Geometry).__name__ == "Mesh":
+                used_mesh_object = True
+            else:
+                used_cached_mesh = True
             meshed += 1
             triangles.extend(got)
             per_layer[name] = per_layer.get(name, 0) + len(got)
@@ -961,7 +1014,7 @@ def read_3dm_triangles(
             unmeshed += 1
 
     if not triangles and tessellate_breps:
-        return _tessellate_breps_of(
+        geometry = _tessellate_breps_of(
             source,
             layers=layers,
             declared=declared,
@@ -970,6 +1023,9 @@ def read_3dm_triangles(
             layers_available=[layer.Name for layer in model.Layers],
             linear_deflection=linear_deflection,
         )
+        geometry.cached_mesh_faces = cached_faces
+        geometry.brep_faces = brep_faces
+        return geometry
 
     if not triangles:
         raise NoMeshGeometryError(
@@ -988,6 +1044,14 @@ def read_3dm_triangles(
         objects_meshed=meshed,
         objects_without_mesh=unmeshed,
         layers_available=[layer.Name for layer in model.Layers],
+        source="+".join(
+            name for name, used in (
+                ("cached-render-mesh", used_cached_mesh),
+                ("mesh-object", used_mesh_object),
+            ) if used
+        ),
+        cached_mesh_faces=cached_faces,
+        brep_faces=brep_faces,
     )
 
 
@@ -1008,7 +1072,7 @@ def _tessellate_breps_of(
     asks for this, and so the kernel's several-hundred-megabyte import cost is
     not paid by the render-mesh path.
 
-    The fidelity report is copied into the geometry's notes rather than
+    The fidelity summary is copied into the geometry's provenance rather than
     discarded: a Brep tessellation that quietly ignored its trims is the single
     failure this whole route has to be defended against, and the evidence for
     "it did not" belongs in the manifest the caller keeps.
@@ -1043,6 +1107,21 @@ def _tessellate_breps_of(
         objects_meshed=result.faces_converted,
         objects_without_mesh=objects_without_mesh,
         layers_available=layers_available or result.layers_available,
+        source="occ-rebuild",
+        linear_deflection=result.linear_deflection,
+        fidelity={
+            "within_reference_box": fidelity.within_reference_box,
+            "max_overshoot": fidelity.max_overshoot,
+            "max_trim_deviation": fidelity.max_trim_deviation,
+            "reference_bbox": (
+                [list(point) for point in fidelity.reference_bbox]
+                if fidelity.reference_bbox is not None else None
+            ),
+            "trim_bbox": (
+                [list(point) for point in fidelity.trim_bbox]
+                if fidelity.trim_bbox is not None else None
+            ),
+        } if fidelity is not None else None,
     )
 
 
@@ -1070,6 +1149,8 @@ def ingest_triangles(
     notes: Optional[Sequence[str]] = None,
     appendages: Optional[Mapping[str, Sequence[Tri]]] = None,
     subdivision_depth: Optional[int] = None,
+    tessellation: Optional[Mapping[str, object]] = None,
+    appendage_tessellation: Optional[Mapping[str, Mapping[str, object]]] = None,
 ) -> HullManifest:
     """Normalise a triangle soup into an OpenFOAM-ready STL plus its manifest.
 
@@ -1372,6 +1453,8 @@ def ingest_triangles(
         notes=note_list,
         regions=regions_block,
         transform=transform.to_dict(),
+        tessellation=copy.deepcopy(tessellation),
+        appendage_tessellation=copy.deepcopy(appendage_tessellation or {}),
     )
     manifest.write(out / f"{stl_name}_manifest.json")
     return manifest
@@ -1406,7 +1489,9 @@ def ingest_3dm(
 
     ``tessellate_breps`` opts in to the CAD-kernel fallback for files that
     carry no cached render meshes. See :func:`read_3dm_triangles` for why it is
-    never automatic.
+    never automatic. The actual route and cached face coverage are recorded in
+    ``provenance.tessellation``. ``linear_deflection`` is recorded there only
+    when the kernel executed, using its effective value in file units.
 
     ``cap_open_boundaries`` opts in to closing a hull surface that stops at
     deck level. See :func:`ingest_triangles` and ``hull_cap``.
@@ -1419,7 +1504,7 @@ def ingest_3dm(
     together would try to sew two bodies that merely intersect into one, and
     would either fail or produce a shell that is not either of them.
     """
-    appendage_triangles = _read_appendage_layers(
+    appendage_triangles, appendage_tessellation = _read_appendage_layers(
         path,
         layers=layers,
         appendage_layers=appendage_layers,
@@ -1433,17 +1518,25 @@ def ingest_3dm(
         linear_deflection=linear_deflection,
     )
     used = sorted(geometry.layer_triangles)
-    notes = [
-        f"read {len(geometry.triangles)} triangles from "
-        f"{geometry.objects_meshed}/{geometry.objects_total} objects; "
-        f"{geometry.objects_without_mesh} carried no cached render mesh",
-    ]
-    if tessellate_breps:
+    notes = [f"read {len(geometry.triangles)} triangles via {geometry.source}"]
+    if geometry.source == "occ-rebuild":
         notes.append(
             "trimmed NURBS Breps were rebuilt in the OpenCASCADE kernel "
             "(brep_tessellate); triangles are an approximation of the NURBS "
             "surface, not the modeller's own tessellation"
         )
+    else:
+        notes.append(
+            f"cached render meshes on {geometry.cached_mesh_faces}/"
+            f"{geometry.brep_faces} selected Brep faces; "
+            f"{geometry.objects_meshed}/{geometry.objects_total} objects "
+            "provided triangles"
+        )
+        if tessellate_breps:
+            notes.append(
+                "CAD fallback was enabled but unused; linear_deflection was "
+                "not applied. Varying it does not test tessellation convergence."
+            )
     if geometry.declared_units is None:
         notes.append("the file did not declare a usable unit system")
     return ingest_triangles(
@@ -1464,6 +1557,8 @@ def ingest_3dm(
         notes=notes,
         appendages=appendage_triangles,
         subdivision_depth=subdivision_depth,
+        tessellation=geometry.to_provenance(),
+        appendage_tessellation=appendage_tessellation,
     )
 
 
@@ -1474,7 +1569,7 @@ def _read_appendage_layers(
     appendage_layers: Optional[Mapping[str, Sequence[str]]],
     tessellate_breps: bool,
     linear_deflection: Optional[float],
-) -> Optional[Dict[str, List[Tri]]]:
+) -> Tuple[Optional[Dict[str, List[Tri]]], Dict[str, Dict[str, object]]]:
     """One read per appendage region, with the hull/appendage overlap refused.
 
     A layer named in both places would be meshed twice, once as part of the
@@ -1484,9 +1579,10 @@ def _read_appendage_layers(
     right about the area while being wrong about the model. Better to stop.
     """
     if not appendage_layers:
-        return None
+        return None, {}
     hull_layers = _normalise_layer_filter(layers) or set()
     out: Dict[str, List[Tri]] = {}
+    records: Dict[str, Dict[str, object]] = {}
     for region in sorted(appendage_layers):
         wanted = _normalise_layer_filter(appendage_layers[region])
         if not wanted:
@@ -1507,4 +1603,5 @@ def _read_appendage_layers(
             linear_deflection=linear_deflection,
         )
         out[region] = geometry.triangles
-    return out
+        records[region] = geometry.to_provenance()
+    return out, records
