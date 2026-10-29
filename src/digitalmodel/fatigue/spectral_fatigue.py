@@ -43,7 +43,12 @@ _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 # ---------------------------------------------------------------------------
 
 class SpectralMoments(BaseModel):
-    """Spectral moments of a stress PSD.
+    """Hz moments of a one-sided stress PSD: m_k = integral(f**k S(f) df).
+
+    Frequency f is in Hz and S(f) in MPa²/Hz; m_k has units MPa² Hz**k.
+    Direct constructors must use this convention. Convert angular moments
+    explicitly with m_k = m_k_angular / (2*pi)**k before construction.
+    See docs/domains/fatigue/spectral-frequency-units.md for the derivation.
 
     Attributes
     ----------
@@ -64,13 +69,13 @@ class SpectralMoments(BaseModel):
 
     @property
     def nu_p(self) -> float:
-        """Expected number of peaks per second (peak rate)."""
-        return math.sqrt(self.m4 / self.m2) / (2.0 * math.pi)
+        """Expected peaks per second: sqrt(m4/m2) for Hz moments."""
+        return math.sqrt(self.m4 / self.m2)
 
     @property
     def nu_0(self) -> float:
-        """Expected zero-upcrossing rate per second."""
-        return math.sqrt(self.m2 / self.m0) / (2.0 * math.pi)
+        """Expected zero upcrossings per second: sqrt(m2/m0) for Hz moments."""
+        return math.sqrt(self.m2 / self.m0)
 
     @property
     def bandwidth_parameter(self) -> float:
@@ -119,7 +124,10 @@ def compute_spectral_moments(
     frequency: Union[np.ndarray, list],
     psd: Union[np.ndarray, list],
 ) -> SpectralMoments:
-    """Compute spectral moments m0, m1, m2, m4 from a one-sided PSD.
+    """Compute Hz moments m_k = integral(f**k S(f) df), k = 0, 1, 2, 4.
+
+    The one-sided PSD includes the full variance at nonnegative frequencies.
+    No angular-frequency conversion is applied.
 
     Parameters
     ----------
@@ -159,7 +167,7 @@ def narrow_band_damage(
 
     Assumes all cycles are Rayleigh-distributed::
 
-        D = ν₀ · T · (2√2 · √m₀)^m · Γ(1 + m/2) / A
+        damage_rate = ν₀ · (2√2 · √m₀)^m · Γ(1 + m/2) / A
 
     where A = 10^(log_a), m = SN slope.
 
@@ -171,7 +179,9 @@ def narrow_band_damage(
     sn_intercept : float
         log10 of S-N intercept *a*.
     duration : float
-        Duration in seconds (default 1.0).
+        Retained for API compatibility (default 1.0 seconds); returned
+        damage fields are rates independent of this argument. Multiply
+        damage_rate by exposure in seconds to obtain accumulated damage.
 
     Returns
     -------

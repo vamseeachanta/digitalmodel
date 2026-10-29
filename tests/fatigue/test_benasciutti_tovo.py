@@ -21,11 +21,12 @@ from digitalmodel.fatigue.spectral_fatigue import (
 # Table 1: rectangular PSD with upper/lower frequency ratio c=5.
 # Integrating a unit-area rectangle on [1,5] gives Mj=(5**(j+1)-1)/(4*(j+1)).
 # Rescale frequency by sqrt(3/31): m0=m2=1, m1=3*sqrt(3/31),
-# m4=(781/5)*(3/31)**2. Units here are angular frequency and unit stress.
+# m4=(781/5)*(3/31)**2 in angular frequency and unit stress. Convert each
+# angular moment to Hz by dividing by (2*pi)**j; preserve the benchmark rates.
 def rectangular_moments():
     return SpectralMoments(
-        m0=1.0, m1=3 * math.sqrt(3 / 31), m2=1.0,
-        m4=(781 / 5) * (3 / 31) ** 2,
+        m0=1.0, m1=3 * math.sqrt(3 / 31) / math.tau, m2=1.0 / math.tau**2,
+        m4=(781 / 5) * (3 / 31) ** 2 / math.tau**4,
     )
 
 
@@ -50,7 +51,8 @@ def test_published_broadband_benchmark(slope, published_ratio, independent_dirli
     D_DK=2**b/(2*pi*alpha2) * [d1*Q**b*Gamma(1+b)
     + 2**(b/2)*Gamma(1+b/2)*(d2*abs(R)**b+d3)].
     Substitution gives the three independent_dirlik constants above, for
-    m0=m2=A=1. No production Dirlik calculation supplies the denominator.
+    m0=m2_angular=A=1. Constructors convert angular moments to Hz.
+    No production Dirlik calculation supplies the denominator.
     The table prints three decimals: half a last-place unit is 0.0005.
     """
     result = benasciutti_tovo_damage(rectangular_moments(), slope, 0.0)
@@ -91,9 +93,9 @@ def test_hand_calculated_correction_and_equivalent_range():
     (1, 1), (0.03, 3), (2.3, 7.1), (0.01, 14.9), (0.01, 0.3),
 ])
 def test_exact_narrowband_limit(slope, variance, angular_frequency):
-    """A spectral line has m_j=variance*omega**j; Eq. (11) gives lambda=1."""
+    """Convert omega to Hz: m_j=variance*(omega/(2*pi))**j; lambda=1."""
     moments = SpectralMoments(**{
-        f"m{j}": variance * angular_frequency**j for j in (0, 1, 2, 4)
+        f"m{j}": variance * (angular_frequency / math.tau)**j for j in (0, 1, 2, 4)
     })
     actual = benasciutti_tovo_damage(moments, slope, 0)
     expected = narrow_band_damage(moments, slope, 0)
@@ -204,7 +206,7 @@ def test_independent_narrowband_anchor():
     Gamma(5/2)=3*sqrt(pi)/4, hence D_NB=6*sqrt(2/pi).
     Relative tolerance 1e-12 checks twelve decimal digits of arithmetic.
     """
-    moments = SpectralMoments(m0=1, m1=1, m2=1, m4=1)
+    moments = SpectralMoments(m0=1, m1=1 / math.tau, m2=1 / math.tau**2, m4=1 / math.tau**4)
     assert narrow_band_damage(moments, 3, 0).damage_rate == pytest.approx(
         6 * math.sqrt(2 / math.pi), rel=1e-12,
     )

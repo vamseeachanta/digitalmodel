@@ -21,9 +21,10 @@ def calculate():
     # moment, A=1, b=3. These inputs do not specify a material S-N curve.
     # Integrating a unit-area rectangle on [1,5] gives
     # Mj=(5**(j+1)-1)/(4*(j+1)); rescale frequency by sqrt(3/31).
+    # Convert angular moments to the API's Hz moments: divide Mj by (2*pi)**j.
     moments = SpectralMoments(
-        m0=1, m1=3 * math.sqrt(3 / 31), m2=1,
-        m4=(781 / 5) * (3 / 31) ** 2,
+        m0=1, m1=3 * math.sqrt(3 / 31) / math.tau, m2=1 / math.tau**2,
+        m4=(781 / 5) * (3 / 31) ** 2 / math.tau**4,
     )
     return (
         narrow_band_damage(moments, sn_slope=3, sn_intercept=0),

@@ -61,7 +61,14 @@ TransferFunction = Union[np.ndarray, Callable[[np.ndarray], np.ndarray]]
 
 @dataclass
 class SpectralMoments:
-    """Spectral moments of a PSD"""
+    """Angular moments m_k = integral((2*pi*f)**k S(f) df).
+
+    Input PSDs are one-sided and per Hz, with frequency f in Hz. These
+    moments have units stress² (rad/s)**k; rate helpers divide their ratios
+    by 2*pi to return cycles/s. This differs from the Hz moment model in
+    digitalmodel.fatigue.spectral_fatigue; do not interchange the objects.
+    See docs/domains/fatigue/spectral-frequency-units.md.
+    """
     m0: float  # 0th moment (variance)
     m1: float  # 1st moment
     m2: float  # 2nd moment
@@ -104,21 +111,22 @@ class FrequencyDomainBase(ABC):
                                    psd: PSDArray,
                                    max_moment: int = 4) -> SpectralMoments:
         """
-        Calculate spectral moments from PSD
+        Calculate angular moments from a one-sided PSD sampled in Hz.
 
         Parameters
         ----------
         frequency : np.ndarray
             Frequency array (Hz)
         psd : np.ndarray
-            Power spectral density
+            One-sided stress power spectral density (stress²/Hz)
         max_moment : int, default=4
             Maximum moment to calculate
 
         Returns
         -------
         SpectralMoments
-            Calculated spectral moments
+            Angular moments m_k = integral((2*pi*f)**k S(f) df).
+            The integration measure remains df because S is per Hz.
         """
         # Ensure positive frequency
         freq = np.asarray(frequency)
@@ -166,13 +174,13 @@ class FrequencyDomainBase(ABC):
         )
 
     def _calculate_zero_crossing_rate(self, moments: SpectralMoments) -> float:
-        """Calculate expected zero crossing rate"""
+        """Return upcrossings per second from angular moments, sqrt(m2/m0)/(2*pi)."""
         if moments.m0 <= 0 or moments.m2 <= 0:
             return 0.0
         return (1 / (2 * np.pi)) * np.sqrt(moments.m2 / moments.m0)
 
     def _calculate_peak_rate(self, moments: SpectralMoments) -> float:
-        """Calculate expected peak rate"""
+        """Return peaks per second from angular moments, sqrt(m4/m2)/(2*pi)."""
         if moments.m0 <= 0 or moments.m4 <= 0:
             return 0.0
         return (1 / (2 * np.pi)) * np.sqrt(moments.m4 / moments.m2)

@@ -389,7 +389,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         }
         by_loc = {row["location_id"]: row for _, row in location_summary.iterrows()}
         assert bool(by_loc["riser-splash-zone"]["passes"]) is False
-        assert bool(by_loc["riser-keel-joint"]["passes"]) is True
+        assert bool(by_loc["riser-keel-joint"]["passes"]) is False
         # life = 1 / accumulated annual damage; governing = smallest margin
         for _, row in location_summary.iterrows():
             assert row["fatigue_life_years"] == pytest.approx(
@@ -427,7 +427,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         }
         by_loc = {row["location_id"]: row for _, row in location_summary.iterrows()}
         assert bool(by_loc["riser-splash-zone"]["passes"]) is False
-        assert bool(by_loc["riser-keel-joint"]["passes"]) is True
+        assert bool(by_loc["riser-keel-joint"]["passes"]) is False
         for _, row in location_summary.iterrows():
             assert row["fatigue_life_years"] == pytest.approx(
                 1.0 / row["annual_damage"]
