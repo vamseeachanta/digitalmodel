@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riser BOM trade-study costing</title>
+<style>
+body {font: 17px/1.6 system-ui, sans-serif; max-width: 70em; margin: 2em auto; padding: 0 1em; color: #182b3a;}
+h1, h2 {line-height: 1.2; color: #143f60;}
+table {border-collapse: collapse; width: 100%; margin-top: 1em;}
+th, td {border: 1px solid #b9c8d2; padding: .5em; text-align: left;}
+pre {background: #eef3f6; padding: 1em; overflow: auto;}
+caption {caption-side: bottom; text-align: left; padding: .5em 0;}
+</style>
+</head>
+<body>
+<h1>Riser BOM trade-study costing</h1>
+<p>The <code>digitalmodel.riser_bom</code> package converts explicit installed quantities
+into a five-category cost breakdown with a separate citation sidecar. The method is
+public; real cost tables and results derived from them remain private. The worked
+example uses invented quantities and prime-number rates in fictional TEST currency.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-19</td><td>Define the public costing contract and synthetic example for configuration trade studies.</td></tr>
+<caption>Table 1. Document revision.</caption>
+</table>
+<h2>Input schema and method</h2>
+<p><code>Configuration</code> requires <code>riser_length_m</code>,
+<code>joint_length_m</code>, <code>coated_length_m</code>, <code>buoyancy_module_count</code>,
+<code>ancillary_count</code>, <code>installation_days</code> and a <code>Citation</code>
+identifying the complete quantity schedule. Lengths and duration accept decimal strings;
+counts shall be nonnegative integers. Installed and joint lengths shall be positive.
+Coating length shall not exceed installed length. Missing scope shall not be replaced
+by a zero: a supplied zero states that no quantity is included for that category.</p>
+<table>
+<tr><th>Component</th><th>Quantity</th><th>Rate denominator</th></tr>
+<tr><td>riser_joints</td><td>ceil(installed length / joint length)</td><td>joint</td></tr>
+<tr><td>coating</td><td>supplied coated length (m)</td><td>m</td></tr>
+<tr><td>buoyancy_modules</td><td>supplied discrete module count</td><td>module</td></tr>
+<tr><td>ancillaries</td><td>supplied aggregate item count</td><td>item</td></tr>
+<tr><td>installation_spread</td><td>supplied installation duration (day)</td><td>day</td></tr>
+<caption>Table 2. Public component taxonomy and quantity units.</caption>
+</table>
+<p>Line cost = quantity × unit rate. Total cost = sum of the five line costs.
+The unit-rate method follows <a href="https://openstax.org/books/prealgebra-2e/pages/5-6-ratios-and-rate">OpenStax,
+Prealgebra 2e (2020), section 5.6, Unit Rate and Unit Price</a>.
+Addition is direct arithmetic. Upward joint rounding is a declared procurement convention:
+the least whole number of joints covering the installed length is purchased. Coating is
+charged on the supplied installed coating scope, not on any surplus joint length.
+Decimal arithmetic retains input digits; no monetary rounding or currency exchange is applied.</p>
+<h2>External cost-basis contract</h2>
+<p><code>load_cost_basis(configured_path)</code> requires an explicit external JSON file.
+There is no default rate table, environment search or fallback. The resolved path shall
+be outside the current public repository, including when accessed through a symlink.
+The loader rejects unknown or duplicate fields, duplicate or missing components, unsupported
+schema versions, wrong units, negative rates and non-finite numbers.</p>
+<p>The top-level fields are <code>schema_version</code> (integer 1), <code>currency</code>
+(a nonempty label), <code>revision</code> (a nonempty version), <code>data_kind</code>
+(<code>synthetic</code> or <code>private</code>) and <code>rates</code> (a list).
+Each rate requires <code>component</code>, <code>unit</code>, <code>value</code> and
+<code>citation</code>. Each component appears exactly once, with no implicit factors.
+The rates share the basis currency. See
+<a href="../../../examples/riser_bom/synthetic_cost_basis.json">the synthetic JSON fixture</a>
+for the complete structure.</p>
+<p>Each citation uses the existing <code>Citation</code> schema: code identifier,
+publisher, revision, section, wiki path and source sibling, with optional note and
+source project. <code>cost_bom</code> resolves all quantity and rate citations at every
+calculation, including zero-quantity items. Missing pages or mismatched code identifier,
+publisher or revision raise an error. <code>citation_root</code> explicitly configures
+the citation store; omission uses the existing citation resolver. Synthetic tests provide
+a miniature citation store and need no private data. Citation section contents and the
+commercial validity or freshness of a supplied rate remain external review responsibilities.</p>
+<p>Real rates, real price curves and scaled or indexed versions of them shall remain external.
+The primary result contains quantities and rates: a result derived from a private basis
+remains private, even if only totals or ratios are retained. <code>data_kind</code> is
+preserved in the result; it is metadata, not a publication access control.
+The engine does not load or reuse a project-level cost model.</p>
+<h2>Worked example: inputs, method and answer</h2>
+<p>All numbers in this example are invented in
+<a href="../../../examples/riser_bom/wikis/engineering/concepts/synthetic-bom.md">Synthetic BOM arithmetic,
+revision 1</a>. They are neither quotations nor estimates of market prices.</p>
+<p>The <a href="../../../examples/riser_bom/manifest.json">synthetic dataset manifest</a>
+records ownership, revision, intended use and SHA-256 digests of the public fixture
+and its quantity schedule. These digests establish reproducibility, not commercial validity.</p>
+<table>
+<tr><th>Component</th><th>Quantity</th><th>Unit rate (TEST/unit)</th><th>Cost (TEST)</th></tr>
+<tr><td>Joints, covering 25 m with 10 m joints</td><td>3 joints</td><td>2</td><td>6.0</td></tr>
+<tr><td>Coating</td><td>25 m</td><td>3</td><td>75.0</td></tr>
+<tr><td>Buoyancy</td><td>4 modules</td><td>5</td><td>20.0</td></tr>
+<tr><td>Ancillaries</td><td>2 items</td><td>7</td><td>14.0</td></tr>
+<tr><td>Installation</td><td>1.5 days</td><td>11</td><td>16.5</td></tr>
+<caption>Table 3. Independent calculation: 6 + 75 + 20 + 14 + 16.5 = 131.5 TEST.</caption>
+</table>
+<p>Changing from 4 to 6 modules increases the total by (6 − 4) × 5 = 10.0 TEST,
+with all other quantities held fixed. This demonstrates the cost axis only.</p>
+<pre>PYTHONPATH=src python examples/riser_bom/worked_example.py &lt;external-directory&gt;</pre>
+<p>The example creates a new <code>basis.json</code> in the supplied external directory
+and prints a JSON breakdown, total and citations. Existing output files are never overwritten.
+The answer is <code>131.5</code> TEST; the public test checks this independent hand sum.</p>
+<h2>Configuration integration and limits</h2>
+<p><code>configuration_from_lazy_wave(result, ...)</code> consumes the analytical
+<code>LazyWaveResults.total_arc_length</code> interface and adds the supplied grounded length
+before costing. No solver is imported or executed by the adapter. Joint length, coating scope,
+discrete module count, ancillary count and installation duration remain required inputs.
+The unified design-input schema does not establish all these procurement quantities, so
+no automatic sizing factors or conversions from distributed buoyancy are assumed.</p>
+<p>The public result includes currency, basis revision, data kind, breakdown, total,
+citation sidecar and limitations. Fatigue, structural adequacy, escalation, tax, contingency
+and currency conversion are <strong>NOT_EVALUATED</strong>. This is a trade-study support
+method, not an issued commercial estimate. Different currencies or revisions shall not be
+compared without a separately established basis. The future ranked-configuration interface
+can call this costing API after the installed quantity schedule is established.</p>
+</body>
+</html>

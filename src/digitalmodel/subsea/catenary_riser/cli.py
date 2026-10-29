@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: Command-line interface for catenary riser analysis providing simple catenary,
 lazy wave analysis, and effective weight calculations.
@@ -6,7 +9,6 @@ lazy wave analysis, and effective weight calculations.
 
 import click
 import json
-import sys
 
 from . import (
     __version__,
@@ -64,7 +66,7 @@ def simple_catenary(diameter, thickness, length, water_depth, offset, material,
 
         # Analyze
         analyzer = SimpleCatenaryAnalyzer()
-        if top_tension:
+        if top_tension is not None:
             result = analyzer.analyze_riser(riser, top_tension=top_tension)
         else:
             result = analyzer.analyze_riser(riser, water_depth=water_depth,
@@ -109,9 +111,8 @@ def simple_catenary(diameter, thickness, length, water_depth, offset, material,
                 json.dump(output_data, f, indent=2)
             click.echo(f"\nResults saved to: {output}")
 
-    except Exception as e:
-        click.echo(f"Error: {e}", err=True)
-        sys.exit(1)
+    except (ValueError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 @cli.command('weight')
@@ -120,7 +121,7 @@ def simple_catenary(diameter, thickness, length, water_depth, offset, material,
 @click.option('--material', type=str, default='x65', help='Material (x65, x70)')
 @click.option('--internal-fluid', type=str, default='oil', help='Internal fluid')
 @click.option('--coating-thickness', type=float, help='Coating thickness (m)')
-@click.option('--coating-density', type=float, default=700, help='Coating density (kg/m³)')
+@click.option('--coating-density', type=float, help='Coating density (kg/m³); required with coating')
 @click.option('--output', '-o', type=click.Path(), help='Output JSON file')
 def effective_weight(diameter, thickness, material, internal_fluid,
                     coating_thickness, coating_density, output):
@@ -152,23 +153,20 @@ def effective_weight(diameter, thickness, material, internal_fluid,
         click.echo(f"Coating Weight:       {result.coating_weight:.2f} N/m")
         click.echo(f"Contents Weight:      {result.contents_weight:.2f} N/m")
         click.echo(f"Buoyancy:             {result.buoyancy:.2f} N/m")
-        click.echo(f"---")
+        click.echo("---")
         click.echo(f"Total Dry Weight:     {result.total_dry_weight:.2f} N/m")
         click.echo(f"Effective Weight:     {result.effective_weight:.2f} N/m")
 
         if result.effective_weight < 0:
             click.echo("\n⚠️  WARNING: Negative effective weight - riser will float!")
-        elif result.effective_weight < 50:
-            click.echo("\n⚠️  WARNING: Very low effective weight - may need additional ballast")
 
         if output:
             with open(output, 'w') as f:
                 json.dump(result.to_dict(), f, indent=2)
             click.echo(f"\nResults saved to: {output}")
 
-    except Exception as e:
-        click.echo(f"Error: {e}", err=True)
-        sys.exit(1)
+    except (ValueError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 @cli.command('lazy-wave')
@@ -252,9 +250,8 @@ def lazy_wave_analysis(diameter, thickness, length, water_depth, offset, materia
                 json.dump(output_data, f, indent=2)
             click.echo(f"\nResults saved to: {output}")
 
-    except Exception as e:
-        click.echo(f"Error: {e}", err=True)
-        sys.exit(1)
+    except (ValueError, OSError) as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 def main():

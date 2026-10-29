@@ -80,11 +80,12 @@ class CardGeometryCalculator(BaseCalculator[CardGeometryAnalysis]):
         # Calculate area using shoelace formula
         self.result.area = self._calculate_polygon_area(polygon)
 
-        # Path length in plotted card space. DEPRECATED: mixes inches and
-        # pounds under one sqrt, so it is not a physical length. Retained only
-        # because external consumers still read it; see the dimensionally
-        # meaningful replacements set immediately below.
-        self.result.perimeter = self._calculate_polygon_perimeter(polygon)
+        # No physical perimeter exists for mixed axes. Preserve the old
+        # arbitrary classifier feature privately to avoid a silent model change.
+        self.result.perimeter = None
+        self.result.legacy_perimeter_feature = (
+            self._calculate_legacy_perimeter_feature(polygon)
+        )
 
         # Dimensionally meaningful replacements for `perimeter`
         self.result.position_path_length = float(
@@ -131,22 +132,12 @@ class CardGeometryCalculator(BaseCalculator[CardGeometryAnalysis]):
 
         return abs(area * 0.5)
 
-    def _calculate_polygon_perimeter(self, polygon: np.ndarray) -> float:
-        """
-        Calculate polygon perimeter (sum of edge lengths).
+    def _calculate_legacy_perimeter_feature(self, polygon: np.ndarray) -> float:
+        """Frozen mixed-axis classifier feature, with no physical unit.
 
-        .. deprecated::
-            The card polygon has inches on one axis and pounds on the other, so
-            ``sqrt(dx^2 + dy^2)`` adds inches to pounds and the result is NOT a
-            physical length. Use ``position_path_length`` / ``load_path_length``
-            (each dimensionally consistent) or ``normalized_perimeter``
-            (dimensionless) instead.
-
-        Args:
-            polygon: Nx2 array of (x, y) coordinates
-
-        Returns:
-            Total edge-length sum in mixed (in, lb) card space
+        The existing model consumes the sum of Euclidean edge norms over raw
+        position/load coordinates. Preserve it until retraining (issue #1864),
+        but never publish it as an engineering perimeter.
         """
         n = len(polygon)
         if n < 2:
@@ -205,6 +196,8 @@ class CardGeometryCalculator(BaseCalculator[CardGeometryAnalysis]):
         """
         Calculate the area-weighted polygon centroid (centre of area).
 
+        Source: Calculating the area and centroid of a polygon (1988),
+        https://paulbourke.net/geometry/polygonmesh/
         Uses the standard shoelace centroid formula::
 
             A  = 1/2 * sum( x_i*y_j - x_j*y_i )
@@ -423,33 +416,11 @@ def calculate_card_area(
 def calculate_card_perimeter(
     position: List[float],
     load: List[float],
-) -> float:
+) -> None:
+    """Return None: a physical perimeter cannot combine inches and pounds.
+
+    This compatibility entry point no longer returns a mixed-unit number.
+    Use calculate_card_geometry for position_path_length (inches),
+    load_path_length (pounds), or normalized_perimeter (dimensionless).
     """
-    Calculate card perimeter directly from position and load arrays.
-
-    .. deprecated::
-        Position is in inches and load in pounds, so ``sqrt(dx^2 + dy^2)`` adds
-        inches to pounds: the result is NOT a physical length and must not be
-        interpreted as one. Use ``CardGeometryAnalysis.position_path_length`` /
-        ``load_path_length`` (dimensionally consistent) or
-        ``normalized_perimeter`` (dimensionless) instead.
-
-    Args:
-        position: Position array (inches)
-        load: Load array (lbs)
-
-    Returns:
-        Sum of edge lengths in mixed (in, lb) card space
-    """
-    if len(position) != len(load) or len(position) < 2:
-        return 0.0
-
-    polygon = np.column_stack([position, load])
-    shifted = np.roll(polygon, -1, axis=0)
-
-    distances = np.sqrt(
-        (shifted[:, 0] - polygon[:, 0]) ** 2
-        + (shifted[:, 1] - polygon[:, 1]) ** 2
-    )
-
-    return float(np.sum(distances))
+    return None

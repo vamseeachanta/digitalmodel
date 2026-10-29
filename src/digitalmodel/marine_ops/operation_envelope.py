@@ -353,35 +353,47 @@ def envelope_for_operations(
 
 
 def plot_envelopes(results: dict[str, EnvelopeResult], out_path) -> Optional[object]:
-    """Plot Hs limit vs Tp, one curve per operation. Returns the path, or None
-    if matplotlib is unavailable (plotting is a convenience, not a contract)."""
+    """Plot Hs limit vs Tp, returning the output path.
+
+    Validate result points before importing plotting dependencies. Return None
+    only when the optional top-level matplotlib package is absent. Transitive
+    import, backend initialization and rendering errors propagate unchanged.
+    Close the plot's figure even when rendering or saving fails.
+
+    Issue #2768: this qualifies plotting availability, without changing result
+    validation, heading conventions or out-of-band response sensitivity.
+    """
     for result in results.values():
         result.require_valid_points()
     try:
         import matplotlib
+    except ModuleNotFoundError as exc:
+        if exc.name == "matplotlib":
+            return None
+        raise
 
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
-    except Exception:  # noqa: BLE001 - optional dep
-        return None
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
     from pathlib import Path
 
     out_path = Path(out_path)
     fig, ax = plt.subplots(figsize=(7.5, 4.8))
-    vessel = ""
-    for op_key, env in results.items():
-        vessel = env.vessel
-        label = OPERATIONS[op_key].label if op_key in OPERATIONS else op_key
-        tps = [p.tp_s for p in env.points]
-        hs = [p.hs_limit_m if p.evaluated else np.nan for p in env.points]
-        ax.plot(tps, hs, marker="o", markersize=3, label=label)
-    ax.set_xlabel("Peak period Tp (s)")
-    ax.set_ylabel("Forecast Hs limit (m)")
-    ax.set_title(f"{vessel} — operability envelope by operation")
-    ax.grid(True, alpha=0.3)
-    ax.legend(fontsize="small")
-    fig.savefig(out_path, dpi=110, bbox_inches="tight")
-    plt.close(fig)
+    try:
+        vessel = ""
+        for op_key, env in results.items():
+            vessel = env.vessel
+            label = OPERATIONS[op_key].label if op_key in OPERATIONS else op_key
+            tps = [p.tp_s for p in env.points]
+            hs = [p.hs_limit_m if p.evaluated else np.nan for p in env.points]
+            ax.plot(tps, hs, marker="o", markersize=3, label=label)
+        ax.set_xlabel("Peak period Tp (s)")
+        ax.set_ylabel("Forecast Hs limit (m)")
+        ax.set_title(f"{vessel} — operability envelope by operation")
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize="small")
+        fig.savefig(out_path, dpi=110, bbox_inches="tight")
+    finally:
+        plt.close(fig)
     return out_path
 
 

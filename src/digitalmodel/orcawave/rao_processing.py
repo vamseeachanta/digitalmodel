@@ -69,6 +69,12 @@ def amplitude_phase_to_complex(
 ) -> np.ndarray:
     """Convert amplitude/phase representation to complex (real + j*imag).
 
+    Uses ``z = A * (cos(theta) + j*sin(theta))`` after converting degrees
+    to radians. Positive phase rotates toward the positive imaginary axis;
+    this mathematical convention does not select a solver's lead/lag or
+    time-harmonic convention. See ``docs/examples/rao-complex-conventions.md``
+    for executable synthetic checks and their calculation basis.
+
     Args:
         amplitude: RAO amplitudes, any shape.
         phase_deg: Phase angles in degrees, same shape as *amplitude*.
@@ -84,6 +90,11 @@ def complex_to_amplitude_phase(
     z: np.ndarray,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Convert complex representation to amplitude and phase (degrees).
+
+    Amplitude is the complex modulus; phase is the principal argument from
+    ``numpy.angle``, converted to degrees. Equivalent full-turn phase values
+    need not round-trip numerically; the complex response is preserved.
+    At zero amplitude phase has no physical meaning.
 
     Args:
         z: Complex-valued RAO array.

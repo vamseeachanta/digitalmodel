@@ -10,6 +10,7 @@ a flat surface) — never a snapshot of the code's own output.
 from __future__ import annotations
 
 import json
+import math
 import sys
 import types
 from pathlib import Path
@@ -18,7 +19,7 @@ import pytest
 import yaml
 
 from digitalmodel.field_development import api
-from digitalmodel.field_development.screening import size_cable
+from digitalmodel.field_development.screening import load_screening_defaults, size_cable
 
 DATA_DIR = (
     Path(__file__).resolve().parents[2]
@@ -74,7 +75,9 @@ ANCHOR_FLUID = {"density_kg_per_m3": 850.0, "viscosity_pa_s": 2.0e-3}
 
 def _write_anchor_config(tmp_path: Path) -> Path:
     path = tmp_path / "flat_anchor_field.yml"
-    path.write_text(yaml.safe_dump(FLAT_ANCHOR_CONFIG), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(FLAT_ANCHOR_CONFIG), encoding="utf-8", newline="\n"
+    )
     return path
 
 
@@ -345,6 +348,270 @@ class TestScreenCables:
                     }
                 ],
             )
+
+
+# Synthetic electrical basis, independent of any external network data:
+# two sources at 0.3 and 0.6 MW, 10 kV line-to-line, pf = 0.8.
+# Each plan leg is 300 m; explicit endpoint elevations differ by 400 m.
+# With sample spacing > leg length the true route is sqrt(300^2+400^2)
+# = 500 m. SI prefixes give MW -> kW and kV -> V by a factor of 1000.
+# Balanced three-phase hand calculation: I = P/(sqrt(3)*V*pf).
+# Caller resistance R' = 0.001 ohm/m and X' = 0 give
+# dU = sqrt(3)*I*500*0.001*0.8: 15, 45, 45 V for the chain.
+def _electrical_config():
+    return {
+        "field": {"name": "Synthetic radial array"},
+        "surface": dict(FLAT_ANCHOR_CONFIG["surface"]),
+        "routing": {"sample_spacing_m": 1000.0},
+        "assets": [
+            {"id": "A", "kind": "wind_turbine", "x_m": 0.0, "y_m": 0.0,
+             "z_m": 0.0, "rated_power_mw": 0.3},
+            {"id": "B", "kind": "wind_turbine", "x_m": 300.0, "y_m": 0.0,
+             "z_m": 400.0, "rated_power_mw": 0.6},
+            {"id": "S", "kind": "offshore_substation", "x_m": 600.0,
+             "y_m": 0.0, "z_m": 0.0},
+            {"id": "H", "kind": "host", "x_m": 900.0, "y_m": 0.0,
+             "z_m": 400.0},
+        ],
+        "connections": [
+            {"id": name, "kind": kind, "from": start, "to": end,
+             "voltage_kv": 10.0, "conductor_size_mm2": 25.0,
+             "power_factor": 0.8, "resistance_ohm_per_m": 0.001}
+            for name, kind, start, end in (
+                ("AB", "array_cable", "A", "B"),
+                ("BS", "array_cable", "B", "S"),
+                ("SH", "export_cable", "S", "H"),
+            )
+        ],
+    }
+
+
+def _electrical_defaults():
+    defaults = load_screening_defaults()
+    # Synthetic thermal basis: (90 - 30)/(0.001*3.5) gives
+    # ampacity sqrt(17142.857...) = 130.9 A, above the 65.0 A chain load.
+    # Reuse the bundled thermal inputs; zero reactance isolates caller R'.
+    defaults["cable_screening"]["reactance_ohm_per_m"] = 0.0
+    return defaults
+
+
+def _screen_electrical(tmp_path, config=None, **kwargs):
+    path = tmp_path / "electrical.yml"
+    path.write_text(
+        yaml.safe_dump(config or _electrical_config()), encoding="utf-8", newline="\n"
+    )
+    return api.screen(path, screening_defaults=_electrical_defaults(), **kwargs)
+
+
+def test_screen_derives_routed_electrical_cables(tmp_path):
+    result = _screen_electrical(tmp_path)
+    assert result["passes"] is True
+    assert result["flowlines"] == []
+    assert result["skipped_connections"] == []
+    assert [c["connection"] for c in result["cables"]] == ["AB", "BS", "SH"]
+    for cable, power, drop in zip(
+        result["cables"], (300.0, 900.0, 900.0), (15.0, 45.0, 45.0)
+    ):
+        assert cable["load_kw"] == pytest.approx(power)
+        assert cable["line_voltage_v"] == 10000.0
+        assert cable["length_m"] == pytest.approx(500.0)
+        assert cable["current_a"] == pytest.approx(
+            power * 1000 / (math.sqrt(3) * 10000 * 0.8)
+        )
+        assert cable["conductor_size_mm2"] == 25.0
+        assert cable["selected"]["size_mm2"] == 25.0
+        assert cable["selected"]["voltage_drop_v"] == pytest.approx(drop)
+        assert cable["selected"]["voltage_drop_pct"] == pytest.approx(drop / 100)
+        assert "Balanced three-phase" in " ".join(cable["assumptions"])
+        assert "full rated output" in " ".join(cable["assumptions"])
+    json.dumps(result, allow_nan=False)
+
+
+def test_upstream_power_not_double_counted(tmp_path):
+    config = _electrical_config()
+    # A reaches S twice, directly and via B. The export carries distinct
+    # sources A+B = 0.9 MW, never A+A+B = 1.2 MW. This is a connectivity
+    # screen with no parallel-branch load sharing calculation.
+    config["connections"].insert(1, dict(config["connections"][0], id="AS", to="S"))
+    result = _screen_electrical(tmp_path, config)
+    export = next(c for c in result["cables"] if c["connection"] == "SH")
+    assert export["upstream_source_ids"] == ["A", "B"]
+    assert export["load_kw"] == pytest.approx(900.0)
+    assert export["current_a"] == pytest.approx(900000 / (math.sqrt(3) * 10000 * 0.8))
+
+
+def test_explicit_cable_override_wins(tmp_path):
+    config = _electrical_config()
+    # Deliberately distinct explicit basis: 120 kW, 2 kV, pf 0.5,
+    # length 40 m. I = 120000/(sqrt(3)*2000*0.5) = 69.3 A.
+    # Explicit connection-linked declarations replace derivation exactly once.
+    config["cables"] = [{"id": "override", "connection": "BS", "load_kw": 120.0,
+                         "line_voltage_v": 2000.0, "power_factor": 0.5,
+                         "length_m": 40.0}]
+    result = _screen_electrical(tmp_path, config)
+    assert len(result["cables"]) == 3
+    cable = next(c for c in result["cables"] if c["connection"] == "BS")
+    assert cable["id"] == "override"
+    assert cable["load_kw"] == 120.0
+    assert cable["line_voltage_v"] == 2000.0
+    assert cable["length_m"] == 40.0
+    assert cable["current_a"] == pytest.approx(120000 / (math.sqrt(3) * 2000 * 0.5))
+    assert cable["conductor_size_mm2"] == 25.0
+    assert cable["selected"]["size_mm2"] == 25.0
+    # Repeated evaluations retain the same explicit precedence.
+    assert result == _screen_electrical(tmp_path, config)
+
+
+@pytest.mark.parametrize("section,index,key,reason", [
+    ("assets", 0, "rated_power_mw", "rated_power_mw"),
+    ("connections", 0, "voltage_kv", "voltage_kv"),
+    ("connections", 0, "conductor_size_mm2", "conductor_size_mm2"),
+])
+def test_missing_electrical_basis_rejected(tmp_path, section, index, key, reason):
+    config = _electrical_config()
+    del config[section][index][key]
+    with pytest.raises(ValueError, match=reason):
+        _screen_electrical(tmp_path, config)
+
+
+@pytest.mark.parametrize("key,value,reason", [
+    ("conductor_size_mm2", 17.0, "unsupported conductor"),
+    ("power_factor", 0.0, "power_factor"),
+    ("power_factor", 1.1, "power_factor"),
+    ("voltage_kv", float("nan"), "voltage"),
+    ("resistance_ohm_per_m", -0.001, "resistance"),
+])
+def test_invalid_electrical_basis_rejected(tmp_path, key, value, reason):
+    config = _electrical_config()
+    config["connections"][0][key] = value
+    with pytest.raises(ValueError, match=reason):
+        _screen_electrical(tmp_path, config)
+
+
+def test_electrical_cycle_rejected_even_with_explicit_override(tmp_path):
+    config = _electrical_config()
+    config["connections"].append(
+        {**config["connections"][0], "id": "BA", "from": "B", "to": "A"}
+    )
+    config["cables"] = [{"connection": "AB", "load_kw": 300.0,
+                         "line_voltage_v": 10000.0, "power_factor": 0.8}]
+    with pytest.raises(ValueError, match="cycle"):
+        _screen_electrical(tmp_path, config)
+
+
+def test_supplied_conductor_failure_cannot_select_larger_size(tmp_path):
+    config = _electrical_config()
+    # At R' = 0.01 ohm/m the caller's 25 mm2 conductor has only
+    # sqrt(60/(0.01*3.5)) = 41.4 A ampacity, below 65.0 A for BS/SH.
+    config["connections"][1]["resistance_ohm_per_m"] = 0.01
+    result = _screen_electrical(tmp_path, config)
+    assert result["passes"] is False
+    cable = next(c for c in result["cables"] if c["connection"] == "BS")
+    assert cable["selected"] is None
+    assert cable["candidates"][0]["size_mm2"] == 25.0
+    assert cable["candidates"][0]["ampacity_ok"] is False
+
+
+def test_duplicate_explicit_electrical_override_rejected(tmp_path):
+    config = _electrical_config()
+    cable = {"connection": "AB", "load_kw": 300.0,
+             "line_voltage_v": 10000.0, "power_factor": 0.8}
+    config["cables"] = [dict(cable, id="first"), dict(cable, id="second")]
+    with pytest.raises(ValueError, match="duplicate"):
+        _screen_electrical(tmp_path, config)
+
+
+def test_unrated_upstream_turbine_cannot_hide_behind_known_source(tmp_path):
+    config = _electrical_config()
+    del config["assets"][1]["rated_power_mw"]
+    with pytest.raises(ValueError, match="rated_power_mw for B"):
+        _screen_electrical(tmp_path, config)
+
+
+def test_unity_power_factor_and_material_resistance_fallback(tmp_path):
+    config = _electrical_config()
+    for conn in config["connections"]:
+        del conn["power_factor"]
+        del conn["resistance_ohm_per_m"]
+    result = _screen_electrical(tmp_path, config)
+    cable = result["cables"][0]
+    assert cable["power_factor"] == 1.0
+    # Independent Ohm-law calculation using caller-visible material constants
+    # from data/screening_defaults.yml: R' = rho20*(1+alpha*(T-20))/A.
+    # Square millimetres -> square metres by 1e-6; 20 C is the reference
+    # temperature in the existing conductor-resistance correlation.
+    defaults = _electrical_defaults()
+    material = defaults["conductors"]["materials"]["copper"]
+    temp = defaults["cable_screening"]["max_conductor_temp_c"]
+    resistance = (
+        material["resistivity_20c_ohm_m"]
+        * (1 + material["temp_coefficient_per_k"] * (temp - 20))
+        / (25 * 1e-6)
+    )
+    current = 300000 / (math.sqrt(3) * 10000)
+    assert cable["candidates"][0]["resistance_ohm_per_m"] == pytest.approx(resistance)
+    assert cable["current_a"] == pytest.approx(current)
+    assert cable["candidates"][0]["voltage_drop_v"] == pytest.approx(
+        math.sqrt(3) * current * 500 * resistance
+    )
+
+
+@pytest.mark.parametrize(
+    "resistance,drop_limit,ampacity_ok,drop_ok,ampacity,drop_pct",
+    [
+        (0.01, 5.0, False, True, 41.403934, 4.5),
+        (0.001, 0.1, True, False, 130.930734, 0.45),
+        (0.01, 1.0, False, False, 41.403934, 4.5),
+        (0.001, 5.0, True, True, 130.930734, 0.45),
+    ],
+    ids=["ampacity-fails", "voltage-drop-fails", "both-fail", "both-pass"],
+)
+def test_electrical_report_includes_assumptions_and_failing_conductor(
+    tmp_path, resistance, drop_limit, ampacity_ok, drop_ok, ampacity, drop_pct
+):
+    config = _electrical_config()
+    config["connections"][1]["resistance_ohm_per_m"] = resistance
+    defaults = _electrical_defaults()
+    defaults["cable_screening"]["voltage_drop_limit_pct"] = drop_limit
+    config_path = tmp_path / "electrical.yml"
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8", newline="\n")
+    report_path = tmp_path / "screen.md"
+    result = api.screen(
+        config_path, screening_defaults=defaults, report_path=report_path
+    )
+    text = report_path.read_text(encoding="utf-8")
+    passes = ampacity_ok and drop_ok
+    assert result["passes"] is passes
+    assert "Balanced three-phase" in text
+    assert "full rated output" in text
+    assert "unity assumed" in text
+    cable = next(c for c in result["cables"] if c["connection"] == "BS")
+    assert (cable["selected"] is not None) is passes
+    assert cable["candidates"][0]["size_mm2"] == 25.0
+    row = next(line for line in text.splitlines() if line.startswith("| BS |"))
+    cells = [cell.strip() for cell in row.strip("|").split("|")]
+    # Independent synthetic hand checks: I = 900000/(sqrt(3)*10000*0.8)
+    # = 64.951905 A; ampacity = sqrt((90-30)/(R'*3.5)) gives the literals
+    # above; dU = sqrt(3)*I*500*R'*0.8 gives 450 or 45 V, hence 4.5 or
+    # 0.45 percent at 10000 V. These reuse the existing screening equations
+    # (IEC 60287-1-1:2023, clause 4.2.1, AC cables; IEC 60364-5-52:2009,
+    # Annex G, Voltage drop in consumers' installations); no coefficient is new.
+    assert float(cells[5].split()[0]) == 25.0
+    if not passes:
+        assert "assessed; not selected" in cells[5]
+    assert float(cells[3]) == pytest.approx(64.951905, abs=0.0005)
+    assert float(cells[6]) == pytest.approx(ampacity, abs=0.0005)
+    reported_drop, reported_limit = map(float, cells[7].split("/"))
+    assert reported_drop == pytest.approx(drop_pct, abs=0.0005)
+    assert reported_limit == pytest.approx(drop_limit, abs=0.0005)
+    assert f"ampacity {'PASS' if ampacity_ok else 'FAIL'}" in cells[8]
+    assert f"voltage drop {'PASS' if drop_ok else 'FAIL'}" in cells[8]
+    assert cells[8].startswith("PASS" if passes else "FAIL")
+    assert f"**Overall: {'PASS' if passes else 'FAIL'}**" in text
+    assert "Ampacity >= I [A]" in text
+    assert "dU / limit [%]" in text
+    assert "IEC 60287-1-1" in text
+    assert "IEC 60364-5-52:2009, Annex G" in text
 
 
 # --- screen: iteration cheapness ----------------------------------------------

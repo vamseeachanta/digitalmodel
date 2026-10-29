@@ -128,6 +128,44 @@ def test_git_rejects_unretained_revision(retained_record):
         history.verify_git(retained_record, ROOT, retained_ref="missing-retention-ref")
 
 
+@pytest.fixture
+def regeneration_record(retained_record):
+    import yaml
+
+    row = retained_record
+    read = history.git_reader(ROOT, row.pop("source_revision"))
+    row["artifacts"] = {name: history.sha256(read(name)) for name in row["artifacts"]}
+    row["recorded_code_version"] = yaml.safe_load(read(row["manifest"]))["provenance"]["code_version"]
+    row["source_publication"] = "first-matching-artifact-publication"
+    return row
+
+
+def test_regeneration_resolves_matching_committed_publication(regeneration_record):
+    row = regeneration_record
+    revision = history._regeneration_revision(row, ROOT)
+    assert len(revision) == 40
+    history.verify_artifacts(row, ROOT, revision=revision)
+    assert history.verify_sources(row, history.git_reader(ROOT, revision)) == row["content_fingerprint"]
+
+
+@pytest.mark.parametrize("field", ["sources", "artifacts", "content_fingerprint"])
+def test_regeneration_rejects_unpublished_or_changed_evidence(regeneration_record, field):
+    row = regeneration_record
+    if field == "content_fingerprint":
+        row[field] = "0" * 64
+    else:
+        row[field][next(iter(row[field]))] = "0" * 64
+    with pytest.raises(history.EvidenceError, match="No committed publication matches"):
+        history.verify_git(row, ROOT)
+
+
+def test_regeneration_selection_cannot_replace_pinned_revision(retained_record):
+    row = retained_record
+    row["source_publication"] = "first-matching-artifact-publication"
+    with pytest.raises(history.EvidenceError, match="Ambiguous source publication"):
+        history.verify_git(row, ROOT)
+
+
 @pytest.mark.parametrize("path", ["../escape", "/absolute", "a/../b", "a\\b"])
 def test_archive_paths_are_relative_and_unredirected(path, tmp_path):
     with pytest.raises(history.EvidenceError):

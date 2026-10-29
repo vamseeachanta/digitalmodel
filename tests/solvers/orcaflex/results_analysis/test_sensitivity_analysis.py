@@ -25,6 +25,8 @@ Tests cover:
 """
 
 import math
+import json
+from dataclasses import asdict
 
 import numpy as np
 import pandas as pd
@@ -36,6 +38,7 @@ from digitalmodel.solvers.orcaflex.results_analysis.sensitivity_analysis import 
     SensitivityMethod,
     SensitivityResult,
 )
+from digitalmodel.solvers.orcaflex.results_analysis import sensitivity_analysis
 
 
 # ===========================================================================
@@ -1126,3 +1129,293 @@ class TestPerformParameterSensitivityAnalysis:
         assert set(result["parameters_analyzed"]) == {
             "wave_height", "wave_period", "current_speed"
         }
+
+
+@pytest.fixture
+def linear_pairs():
+    """Hand calculation: x=1..5, y=3x+2; slope=3 and Pearson r=+1.
+
+    Centered x is [-2,-1,0,1,2], centered y is three times that vector,
+    so sum(dx*dy)/sum(dx**2)=30/10=3 and r=30/sqrt(10*90)=1.
+    The constant fixture value 7 is arbitrary and does not affect degeneracy.
+    """
+    return np.arange(1.0, 6.0), np.arange(1.0, 6.0) * 3.0 + 2.0
+
+
+@pytest.fixture(params=["constant_parameter", "constant_response", "both_constant"])
+def degenerate_pairs(request, linear_pairs):
+    x, y = linear_pairs
+    if request.param in ("constant_parameter", "both_constant"):
+        x = np.full_like(x, 7.0)
+    if request.param in ("constant_response", "both_constant"):
+        y = np.full_like(y, 7.0)
+    return x, y, request.param
+
+
+def forbid_constant_statistics(monkeypatch):
+    def unexpected_call(*args, **kwargs):
+        pytest.fail("SciPy must not receive constant arrays")
+
+    for name in ("linregress", "pearsonr", "spearmanr"):
+        monkeypatch.setattr(sensitivity_analysis.stats, name, unexpected_call)
+
+
+def strict_json(value):
+    """Serialize dataclass results through the standard dataclass adapter."""
+    return json.loads(json.dumps(value, default=asdict, allow_nan=False))
+
+
+@pytest.mark.parametrize("public", [False, True])
+def test_correlation_degeneracy(service, monkeypatch, degenerate_pairs, public):
+    x, y, reason = degenerate_pairs
+    forbid_constant_statistics(monkeypatch)
+    if public:
+        result = service.perform_parameter_sensitivity_analysis(
+            {str(i): {"parameter": float(value)} for i, value in enumerate(x)},
+            {str(i): pd.DataFrame({"response": [value]}) for i, value in enumerate(y)},
+            {"parameter": ParameterRange("parameter", x.min(), x.max(), x.mean())},
+            ["response"],
+        )
+        assert result["method"] == "correlation"
+        assert result["n_cases"] == len(x)
+        assert result["parameters_analyzed"] == ["parameter"]
+        assert result["response_metrics"] == ["response"]
+        assert result["summary"]["most_sensitive_parameters"] == {}
+        assert result["summary"]["average_sensitivities"] == {}
+        assert result["recommendations"] == []
+        item = result["sensitivity_results"]["response"][0]
+        strict_json(result)
+    else:
+        item, = service._correlation_sensitivity(
+            pd.DataFrame({"parameter": x, "response": y}), ["parameter"], "response"
+        )
+    assert item.status == "undefined"
+    assert item.undefined_reason == reason
+    assert item.sensitivity_index is None
+    assert item.p_value is None
+    assert item.confidence_interval is None
+    assert item.ranking is None
+    assert item.effect_size == "undefined"
+    assert item.additional_metrics["correlation_coefficient"] is None
+    assert item.additional_metrics["sample_size"] == len(x)
+    assert strict_json(item)["p_value"] is None
+
+
+def test_constant_environment_parameter_is_undefined(service, monkeypatch, linear_pairs):
+    x, y = linear_pairs
+    forbid_constant_statistics(monkeypatch)
+    monkeypatch.setattr(service, "_estimate_response_change", lambda *args: 7.0)
+    result = service.perform_environmental_load_case_analysis(
+        {"parameter": float(x.mean())}, pd.DataFrame({"response": y}),
+        {"parameter": [float(x.mean())] * len(x)}, ["response"],
+    )
+    metric = result["load_case_analysis"]["response"]
+    item = metric["parameter_effects"]["parameter"]
+    assert item["status"] == "undefined"
+    assert item["undefined_reason"] == "both_constant"
+    for key in ("sensitivity_coefficient", "correlation", "p_value", "std_error"):
+        assert item[key] is None
+    assert len(item["effects"]) == len(x)
+    assert metric["most_sensitive_parameter"] is None
+    assert metric["sensitivity_ranking"] == []
+    assert result["summary"]["most_sensitive_overall"] is None
+    strict_json(result)
+
+
+def test_environmental_regression_degeneracy(service, monkeypatch, degenerate_pairs):
+    x, y, reason = degenerate_pairs
+    forbid_constant_statistics(monkeypatch)
+    # Return the prescribed response for each sweep point, independently of x.
+    responses = iter(y)
+    monkeypatch.setattr(
+        service, "_estimate_response_change", lambda p, change, m, base: next(responses) - base
+    )
+    result = service.perform_environmental_load_case_analysis(
+        {"parameter": float(x.mean())}, pd.DataFrame({"response": y}),
+        {"parameter": x.tolist()}, ["response"],
+    )
+    item = result["load_case_analysis"]["response"]["parameter_effects"]["parameter"]
+    assert item["status"] == "undefined"
+    assert item["undefined_reason"] == reason
+    assert item["sensitivity_coefficient"] is None
+    assert item["p_value"] is None
+    strict_json(result)
+
+
+@pytest.mark.parametrize("zero_parameter", [False, True])
+def test_environmental_zero_baseline_is_undefined(service, monkeypatch, linear_pairs, zero_parameter):
+    x, _ = linear_pairs
+    forbid_constant_statistics(monkeypatch)
+    # Zero is the exact singular denominator for percentage normalization.
+    result = service.perform_environmental_load_case_analysis(
+        {"parameter": 0.0 if zero_parameter else float(x.mean())},
+        pd.DataFrame({"response": np.zeros_like(x)}),
+        {"parameter": x.tolist()}, ["response"],
+    )
+    item = result["load_case_analysis"]["response"]["parameter_effects"]["parameter"]
+    assert item["status"] == "undefined"
+    assert item["sensitivity_coefficient"] is None
+    strict_json(result)
+
+
+def monte_carlo_pairs(service, monkeypatch, x, y):
+    monkeypatch.setattr(service, "_generate_parameter_samples", lambda *args: [
+        {"parameter": float(value), "sample": i} for i, value in enumerate(x)
+    ])
+    # Keep deterministic pairing in this fixture despite asynchronous evaluation.
+    monkeypatch.setattr(sensitivity_analysis, "as_completed", lambda futures: iter(futures))
+    return service.perform_monte_carlo_sensitivity(
+        {"parameter": ParameterRange("parameter", x.min(), x.max(), x.mean())},
+        lambda params: {"response": float(y[params["sample"]])},
+        ["response"], n_samples=len(x),
+    )
+
+
+def test_monte_carlo_correlation_degeneracy(service, monkeypatch, degenerate_pairs):
+    x, y, reason = degenerate_pairs
+    forbid_constant_statistics(monkeypatch)
+    result = monte_carlo_pairs(service, monkeypatch, x, y)
+    metric = result["monte_carlo_results"]["response"]
+    item = metric["parameter_sensitivities"]["parameter"]
+    assert item["status"] == "undefined"
+    assert item["undefined_reason"] == reason
+    for key in ("correlation", "p_value", "spearman_correlation", "spearman_p_value",
+                "sobol_index", "confidence_interval"):
+        assert item[key] is None
+    assert item["effect_size"] == "undefined"
+    assert metric["most_sensitive_parameter"] is None
+    assert metric["sensitivity_ranking"] == []
+    assert result["global_sensitivity_ranking"] == []
+    assert result["simulation_info"]["n_successful_evaluations"] == len(x)
+    strict_json(result)
+
+
+@pytest.mark.parametrize("single_sample", [False, True])
+def test_monte_carlo_zero_response_is_serializable(service, monkeypatch, linear_pairs, single_sample):
+    x, _ = linear_pairs
+    if single_sample:
+        x = x[:1]
+    forbid_constant_statistics(monkeypatch)
+    result = monte_carlo_pairs(service, monkeypatch, x, np.zeros_like(x))
+    assert result["monte_carlo_results"]["response"]["response_statistics"][
+        "coefficient_of_variation"
+    ] is None
+    strict_json(result)
+
+
+def test_linear_controls_preserve_slope_and_correlation(service, monkeypatch, linear_pairs):
+    x, y = linear_pairs
+    # With base x=mean(x)=3 and base y=mean(y)=11, normalized slope is 9/11.
+    monkeypatch.setattr(
+        service, "_estimate_response_change",
+        lambda p, change, m, base: 3.0 * (x.mean() * (1 + change / 100)) + 2.0 - base,
+    )
+    result = service.perform_environmental_load_case_analysis(
+        {"parameter": float(x.mean())}, pd.DataFrame({"response": y}),
+        {"parameter": x.tolist()}, ["response"],
+    )
+    metric = result["load_case_analysis"]["response"]
+    item = metric["parameter_effects"]["parameter"]
+    assert item["status"] == "ok"
+    assert item["sensitivity_coefficient"] == pytest.approx(9.0 / 11.0)
+    assert item["sensitivity_coefficient"] * y.mean() / x.mean() == pytest.approx(3.0)
+    assert item["correlation"] == pytest.approx(1.0)
+    assert metric["most_sensitive_parameter"] == "parameter"
+    strict_json(result)
+    correlated, = service._correlation_sensitivity(
+        pd.DataFrame({"parameter": x, "response": y}), ["parameter"], "response"
+    )
+    assert correlated.status == "ok"
+    assert correlated.sensitivity_index == pytest.approx(1.0)
+    assert correlated.additional_metrics["correlation_coefficient"] == pytest.approx(1.0)
+    assert correlated.p_value is not None
+    assert correlated.ranking == 1
+    strict_json(correlated)
+    mc = monte_carlo_pairs(service, monkeypatch, x, y)
+    mc_item = mc["monte_carlo_results"]["response"]["parameter_sensitivities"]["parameter"]
+    assert mc_item["status"] == "ok"
+    assert mc_item["correlation"] == pytest.approx(1.0)
+    assert mc_item["spearman_correlation"] == pytest.approx(1.0)
+    assert mc_item["p_value"] is not None
+    strict_json(mc)
+
+
+def test_mixed_correlation_results_rank_only_defined_statistics(service, linear_pairs):
+    x, y = linear_pairs
+    results = service._correlation_sensitivity(
+        pd.DataFrame({"constant": np.full_like(x, 7.0), "linear": x, "response": y}),
+        ["constant", "linear"], "response",
+    )
+    assert [item.parameter for item in results] == ["linear", "constant"]
+    assert results[0].ranking == 1
+    assert results[1].ranking is None
+    summary = service._generate_sensitivity_summary({"response": results})
+    assert summary["most_sensitive_parameters"] == {"response": "linear"}
+    assert summary["least_sensitive_parameters"] == {"response": "linear"}
+    assert summary["average_sensitivities"]["response"] == pytest.approx(1.0)
+    assert all("constant" not in text for text in service._generate_sensitivity_recommendations(
+        {"response": results}, {}
+    ))
+
+
+def test_mixed_load_case_results_rank_only_defined_statistics(service, linear_pairs):
+    x, y = linear_pairs
+    # The existing estimator varies the response for a varying parameter only.
+    result = service.perform_environmental_load_case_analysis(
+        {"constant": float(x.mean()), "linear": float(x.mean())},
+        pd.DataFrame({"response": y}),
+        {"constant": [float(x.mean())] * len(x), "linear": x.tolist()}, ["response"],
+    )
+    metric = result["load_case_analysis"]["response"]
+    assert metric["most_sensitive_parameter"] == "linear"
+    assert [name for name, _ in metric["sensitivity_ranking"]] == ["linear"]
+    assert result["summary"]["most_sensitive_overall"] == "linear"
+    assert [name for name, _ in result["summary"]["parameter_rankings"]] == ["linear"]
+    strict_json(result)
+
+
+def test_mixed_monte_carlo_results_rank_only_defined_statistics(service, monkeypatch, linear_pairs):
+    x, y = linear_pairs
+    monkeypatch.setattr(service, "_generate_parameter_samples", lambda *args: [
+        {"constant": 7.0, "linear": float(value)} for value in x
+    ])
+    monkeypatch.setattr(sensitivity_analysis, "as_completed", lambda futures: iter(futures))
+    result = service.perform_monte_carlo_sensitivity(
+        {
+            "constant": ParameterRange("constant", 7.0, 7.0, 7.0),
+            "linear": ParameterRange("linear", x.min(), x.max(), x.mean()),
+        },
+        lambda params: {"response": 3.0 * params["linear"] + 2.0},
+        ["response"], n_samples=len(x),
+    )
+    metric = result["monte_carlo_results"]["response"]
+    assert metric["parameter_sensitivities"]["constant"]["status"] == "undefined"
+    assert metric["parameter_sensitivities"]["linear"]["correlation"] == pytest.approx(1.0)
+    assert metric["most_sensitive_parameter"] == "linear"
+    assert [name for name, _ in metric["sensitivity_ranking"]] == ["linear"]
+    assert [name for name, _ in result["global_sensitivity_ranking"]] == ["linear"]
+    strict_json(result)
+
+
+@pytest.mark.parametrize("correlation", [-1.0, 1.0])
+def test_perfect_correlation_interval(service, correlation):
+    # Fisher's inverse transform tends to r at either exact boundary.
+    # Five pairs match linear_pairs; 0.95 is the service's default confidence.
+    assert service._calculate_correlation_confidence_interval(
+        correlation, 5, 0.95
+    ) == (correlation, correlation)
+
+
+def test_three_pairs_have_no_fisher_interval(service):
+    # Fisher's standard error is 1/sqrt(n-3), undefined for three pairs.
+    # Formula: SciPy PearsonRResult.confidence_interval, method description:
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats._result_classes.PearsonRResult.confidence_interval.html
+    # Returning None follows R cor.test's four-pair minimum (Details):
+    # https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.test.html
+    item, = service._correlation_sensitivity(
+        pd.DataFrame({"parameter": [1.0, 2.0, 3.0], "response": [1.0, 3.0, 2.0]}),
+        ["parameter"], "response",
+    )
+    assert item.confidence_interval is None
+    assert item.sensitivity_index == pytest.approx(0.5)  # dot=1, squared norms=2 each.
+    strict_json(item)
