@@ -19,17 +19,31 @@ by the launch environment.
 ```bash
 export REPORT_SCRATCH="$TMPDIR/flexible-report/build-a-scratch"
 export REPORT_OUTPUT="$TMPDIR/flexible-report/build-a-output"
-PYTHONPATH=src uv run --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"
+PYTHONPATH=src uv run --python 3.11 --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"
 ```
 
 Repeat with distinct directories to compare `index.html`, `changes.json` and
-`source_register.json`. Builds are byte-identical: no volatile metadata is
-removed. The calculation JSON intermediate stays in scratch. Delivery copies
+`source_register.json`. Builds from identical source bytes with the same Python
+runtime are byte-identical: no volatile metadata is removed. The committed
+goldens match Python 3.11. A local Python 3.12 rebuild changes the wall-area
+relative difference from `0.0e+00` to `1.5e-16`, within the `1e-12` arithmetic
+criterion, but fails the byte comparison. Cross-version byte identity has not
+been established.
+
+Rebuilding the committed goldens also requires LF source and golden bytes.
+The pinned paths currently have no explicit LF checkout attributes. Automatic
+CRLF conversion therefore changes raw-byte source digests and the generated
+HTML even when calculation values remain unchanged. The rebuild test retains
+exact byte comparisons; newline normalization is not a substitute for source
+byte preservation. Explicit checkout attributes and a checkout-conversion
+regression remain required before cross-checkout reproducibility is claimed.
+
+The calculation JSON intermediate stays in scratch. Delivery copies
 only these three generated files into this folder after comparison; the local
 builder and README remain authored sources.
 
 ```bash
-PYTHONPATH=src uv run --no-project --with pytest python -m pytest tests/subsea/flexible_pipes tests/reporting/test_flexible_pipes_module_report.py -q -rA -p no:cacheprovider --basetemp="$TMPDIR/flexible-report/pytest"
+PYTHONPATH=src uv run --python 3.11 --no-project --with pytest python -m pytest tests/subsea/flexible_pipes tests/reporting/test_flexible_pipes_module_report.py -q -rA -p no:cacheprovider --basetemp="$TMPDIR/flexible-report/pytest"
 ```
 
 The oracle derives areas from inner and outer radii and mass from density times
