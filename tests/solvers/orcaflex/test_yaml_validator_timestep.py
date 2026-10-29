@@ -19,7 +19,7 @@ SECTIONS = [
 
 def check(tmp_path, content):
     path = tmp_path / "model.yml"
-    path.write_text(textwrap.dedent(content), encoding="utf-8", newline="\n")
+    path.write_text(textwrap.dedent(content), encoding="utf-8")
     return validate_orcaflex_yaml(path)
 
 
