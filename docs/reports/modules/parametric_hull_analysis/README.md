@@ -8,6 +8,19 @@ parameter, not a physical recommendation. The report maps existing routes and
 records static correctness findings; empirical correction, bank, meshing and BEM
 qualification remain `NOT_EVALUATED` under [the parent issue](https://github.com/vamseeachanta/digitalmodel/issues/3327).
 
+## Plan-lite
+
+- Scope: map the existing module routes and deliver the synthetic deep-water
+  encounter-frequency case, its independent phase derivation and source record.
+- Docstring correction: align heading labels with the existing direction tests
+  (zero is following seas; pi is head seas), preserving numerical behavior.
+- Validation: run the forward-speed, shallow-water and report tests; check the
+  rational arithmetic, displayed values and units, source digests, unchanged
+  inputs, byte-for-byte CLI rebuilds, local links and repository checks.
+- Exclusions: no meshing, BEM or solver campaign, empirical correction or bank
+  qualification, finite-depth qualification, or standards conformity. Wider
+  heading conventions and the recorded behavioral findings remain follow-up.
+
 From the repository root, with `UV_CACHE_DIR`, `PRE_COMMIT_HOME` and `TMPDIR`
 exported to the supplied external cache/scratch locations:
 
