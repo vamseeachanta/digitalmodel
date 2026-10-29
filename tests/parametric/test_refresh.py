@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -31,7 +34,7 @@ def test_parametric_workflow_ids_discovered():
 
 def test_committed_atlases_are_current():
     for wid in ("mooring-fatigue", "api-rp-2rd-riser", "rao-tabulation",
-                "synthetic-rope-mooring-fatigue"):
+                "synthetic-rope-mooring-fatigue", "free-span-f105"):
         status = refresh.refresh_status(wid)
         assert status["stale"] is False, f"{wid} unexpectedly stale: {status}"
 
@@ -58,6 +61,49 @@ def test_committed_synthetic_rope_query_returns_screening_estimate(tmp_path):
 def test_fresh_build_is_not_stale(tmp_path):
     atlas = build_atlas_from_registry("rao-tabulation", atlas_root=tmp_path)
     assert _staleness(atlas) is None
+
+
+def test_committed_free_span_atlas_matches_rebuild(tmp_path):
+    """Check native data and parsed artifacts, allowing hook-only whitespace."""
+    from digitalmodel.parametric.atlas import Atlas
+    import yaml
+
+    rebuilt = build_atlas_from_registry("free-span-f105", atlas_root=tmp_path)
+    committed = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "free_span")
+    assert committed.atlas_id == rebuilt.atlas_id
+    pd.testing.assert_frame_equal(committed.grid, rebuilt.grid)
+    relative = "free_span/" + rebuilt.atlas_id
+    for name in ("surrogate.json", "validation.json"):
+        actual = (refresh.DEFAULT_ATLAS_ROOT / relative / name).read_text()
+        expected = (tmp_path / relative / name).read_text()
+        assert json.loads(actual) == json.loads(expected)
+    actual = yaml.safe_load(
+        (refresh.DEFAULT_ATLAS_ROOT / relative / "manifest.yaml").read_text())
+    expected = yaml.safe_load((tmp_path / relative / "manifest.yaml").read_text())
+    # Unrelated commits do not change the dependency fingerprint or atlas id.
+    actual["provenance"].pop("code_version")
+    expected["provenance"].pop("code_version")
+    assert actual == expected
+    assert (refresh.DEFAULT_ATLAS_ROOT / "free_span/default.txt").read_text().strip() == (
+        tmp_path / "free_span/default.txt").read_text().strip()
+
+
+def test_committed_free_span_has_verified_provenance():
+    """Retain the current atlas's source basis and all four artifact digests."""
+    from digitalmodel.parametric import historical_provenance as history
+    from digitalmodel.parametric.atlas import Atlas
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "free_span")
+    manifest = f"atlases/free_span/{atlas.atlas_id}/manifest.yaml"
+    inventory = json.loads(
+        (refresh.DEFAULT_ATLAS_ROOT / "historical-provenance.json").read_text())
+    record = next((row for row in inventory["atlases"]
+                   if row["manifest"] == manifest), None)
+    assert record is not None, f"Missing source and artifact evidence: {manifest}"
+    assert record["status"] == "VERIFIED"
+    assert history.verify_sources(record, history.archive_reader(refresh.REPO_ROOT)) == (
+        atlas.provenance["content_fingerprint"])
+    history.verify_artifacts(record, refresh.REPO_ROOT)
 
 
 def test_tampered_basis_is_stale_and_escalates(tmp_path):
