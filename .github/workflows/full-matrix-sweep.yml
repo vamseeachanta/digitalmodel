@@ -368,7 +368,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv venv
-          echo "$PWD/.venv/bin" >> $GITHUB_PATH
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
           UV_NO_SOURCES=true uv pip install -e .
           uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
 
