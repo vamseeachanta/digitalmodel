@@ -20,9 +20,12 @@ quadrature, conversion and ratios; it is independent of production results.
 
 import math
 from fractions import Fraction
+from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
+import yaml
 
 from digitalmodel.fatigue.spectral_fatigue import (
     SpectralMoments,
@@ -181,3 +184,76 @@ def test_dimensionless_corrections_preserve_frequency_scaling(method):
     assert b.damage_rate / narrow_band_damage(second, 2, 0).damage_rate == pytest.approx(
         a.damage_rate / narrow_band_damage(first, 2, 0).damage_rate, rel=ROUNDOFF,
     )
+
+
+def test_committed_spectral_atlas_matches_recomputed_hz_damage(tmp_path):
+    """A refreshed fingerprint alone must not preserve the superseded grid."""
+    from digitalmodel.parametric.atlas import Atlas
+    from digitalmodel.parametric.build import build_atlas_from_registry
+
+    root = Path(__file__).resolve().parents[2]
+    stored = Atlas.load(root / "atlases", "spectral_fatigue")
+    rebuilt = build_atlas_from_registry("spectral-fatigue", atlas_root=tmp_path)
+    rebuild = "python scripts/parametric/build_atlas.py spectral-fatigue"
+    pd.testing.assert_frame_equal(
+        stored.grid, rebuilt.grid, check_exact=False, rtol=1e-10, atol=0.0,
+        obj=f"spectral atlas grid; rebuild with {rebuild}",
+    )
+    assert stored.atlas_id == rebuilt.atlas_id, f"Rebuild with {rebuild}"
+    assert stored.provenance["content_fingerprint"] == rebuilt.provenance[
+        "content_fingerprint"
+    ], f"Rebuild with {rebuild}"
+    assert stored.surrogate_spec() == rebuilt.surrogate_spec()
+    assert stored.validation["passes"] is True
+    assert stored.max_rel_error <= stored.validation["threshold"]
+    for key in ("threshold", "max_rel_error", "n_holdout"):
+        assert stored.validation[key] == pytest.approx(rebuilt.validation[key], rel=1e-10)
+    assert len(stored.validation["worst_samples"]) == len(rebuilt.validation["worst_samples"])
+    for actual, expected in zip(
+        stored.validation["worst_samples"], rebuilt.validation["worst_samples"]
+    ):
+        assert actual["point"] == expected["point"]
+        for key in ("predicted", "actual", "rel_error"):
+            assert actual[key] == pytest.approx(expected[key], rel=1e-10, abs=1e-14)
+
+
+def test_shipped_spectral_atlas_query_uses_current_hz_damage(tmp_path):
+    """The shipped in-range query must return a current screening estimate."""
+    from digitalmodel.parametric.query import router
+
+    root = Path(__file__).resolve().parents[2]
+    source = root / "examples/workflows/spectral-fatigue-atlas-query/input.yml"
+    cfg = yaml.safe_load(source.read_text(encoding="utf-8"))
+    cfg["_config_file_path"] = source.as_posix()
+    cfg["parametric_query"]["output_dir"] = tmp_path.as_posix()
+    result = router(cfg)["parametric_query"]["result"]
+    assert result["in_range"] is True
+    assert result.get("stale", False) is False
+    assert result["response"] == "fatigue_life_years"
+    assert result["annual_damage"] > 0.0
+    assert result["value"] == pytest.approx(1 / result["annual_damage"])
+    lo, hi = result["confidence"]["band"]
+    assert lo <= result["value"] <= hi
+    assert result["screening_status"] in {"pass", "fail"}
+    assert "screening estimate" in result["disclaimer"].lower()
+    saved = yaml.safe_load((tmp_path / "input_result.yml").read_text(encoding="utf-8"))
+    assert saved == result
+
+
+def test_current_spectral_atlas_has_retained_provenance():
+    """A regenerated atlas must retain its source basis and artifact digests."""
+    import json
+
+    from digitalmodel.parametric import historical_provenance as history
+    from digitalmodel.parametric.atlas import Atlas
+
+    root = Path(__file__).resolve().parents[2]
+    atlas = Atlas.load(root / "atlases", "spectral_fatigue")
+    manifest = f"atlases/spectral_fatigue/{atlas.atlas_id}/manifest.yaml"
+    inventory = json.loads((root / "atlases/historical-provenance.json").read_text(encoding="utf-8"))
+    records = [row for row in inventory["atlases"] if row["manifest"] == manifest]
+    assert len(records) == 1
+    record = records[0]
+    history.verify_artifacts(record, root)
+    fingerprint = history.verify_sources(record, history.archive_reader(root))
+    assert fingerprint == atlas.provenance["content_fingerprint"]

@@ -113,8 +113,14 @@ rate formulas. The findings are:
   spectra to Hz. Its response feeds `atlases/spectral_fatigue`,
   `parametric/query.py::_handle_annual_damage` and the spectral atlas-query
   workflow. `parametric/refresh.py::SOURCE_FILES` fingerprints the changed
-  spectral module, so existing atlas bases become stale. Atlas generation,
-  surrogates, validation records and report outputs are not regenerated here.
+  spectral module, so existing atlas bases become stale. The spectral atlas
+  grid, surrogate, validation and provenance are regenerated with
+  `python scripts/parametric/build_atlas.py spectral-fatigue`, and the default
+  pointer selects the corrected Hz basis. Regression tests compare the stored
+  grid and holdout results against a fresh build with numerical tolerances,
+  verify the retained source and artifact digests, and exercise the shipped
+  query with output readback. Earlier atlas versions remain available by ID;
+  their results and separate report outputs require recalculation before reuse.
 - The independent `structural/spectral_fatigue.py` helper and structural
   `frequency_domain.py` consumers (`analysis.py`, `scatter_fatigue.py`) retain
   their existing contracts; agreement of their damage estimators is not claimed.
@@ -129,8 +135,10 @@ narrow-band estimator also uses a representative range rather than the Rayleigh
 range integral tested here, so only its frequency convention is cross-checked.
 
 External direct constructors cannot be inventoried from this repository.
-Historical results, workflow statuses and atlas predictions need recalculation
-and independent review before reuse. No stored engineering results or S-N tables
-are changed, no design factors are selected and no solver is run. The lesson
+Historical results, workflow statuses and superseded atlas predictions need
+recalculation and independent review before reuse. The regenerated spectral
+atlas remains a screening model; its interpolation check does not qualify the
+Dirlik estimator or its fixed stress gain for a design application. S-N tables
+are unchanged, no design factors are selected and no solver is run. The lesson
 from this change is to pair dimensionless correction tests with independent
 absolute-rate anchors at every frequency-unit boundary.
