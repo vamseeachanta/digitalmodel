@@ -340,13 +340,25 @@ def test_yaml_has_no_aliases_and_serialization_preserves_native_references(tmp_p
     from digitalmodel.solvers.orcaflex.yaml_utils import orcaflex_load
 
     result = api().generate(CAMPAIGN / "manifest.json", tmp_path / "roundtrip")
+    input_count = line_type_count = 0
     for row in result["cases"]:
         for item in row["inputs"]:
             path = tmp_path / "roundtrip" / item["path"]
             assert not any(isinstance(event, yaml.AliasEvent) for event in yaml.parse(path.read_text(encoding="utf-8")))
             loaded, _ = orcaflex_load(path)
+            input_count += 1
+            assert all(line["IncludeTorsion"] == "No" for line in loaded["Lines"])
+            for line_type in loaded["LineTypes"]:
+                line_type_count += 1
+                assert "Cd" not in line_type and "Ca" not in line_type, item["path"]
+                drag = {"x": line_type["Cdn"], "y": line_type["Cdn"], "z": line_type["Cdz"]}
+                added_mass = {"x": line_type["Can"], "y": line_type["Can"], "z": line_type["Caz"]}
+                assert drag == {"x": 1.2, "y": 1.2, "z": 0}, item["path"]
+                assert added_mass == {"x": 1, "y": 1, "z": 0}, item["path"]
             assert loaded["Lines"][0]["EndAConnection"] == loaded["Vessels"][0]["Name"]
             assert loaded["Vessels"][0]["VesselType"] == loaded["VesselTypes"][0]["Name"]
+    assert input_count == 288
+    assert line_type_count == 432
 
 
 def test_generation_reads_one_frozen_manifest_snapshot(tmp_path, monkeypatch):

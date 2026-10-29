@@ -1600,6 +1600,21 @@
   ],
   "native_handoff": "examples/riser-campaign/README.md#solver-free-mesh-audit-and-native-handoff",
   "native_qualification": "NOT_RUN",
+  "original_comparison_axis_correction": {
+    "all_other_model_fields": "IDENTICAL",
+    "frozen_input_byte_matches": 144,
+    "geometry_byte_matches": 48,
+    "historical_audit": "Existing runtime, index and preservation records describe the earlier frozen-tranche audit; original comparison inputs now differ only in coefficient fields.",
+    "inputs": 288,
+    "line_type_records": 432,
+    "named_fields": {
+      "Can": 1,
+      "Caz": 0,
+      "Cdn": 1.2,
+      "Cdz": 0
+    },
+    "reference_revision": "ae78e1780d1eb4de5eca3c13b238ad427260b0cd"
+  },
   "preservation": {
     "frozen_physical_model_matches": 144,
     "geometry_and_section_byte_matches": 12,
@@ -1666,9 +1681,9 @@
       "sha256": "10336b03de629cff47d879016bc90ccfae0a6a317c2641b7ff641eee317e8ae7"
     },
     {
-      "bytes": 23799,
+      "bytes": 23811,
       "path": "scripts/riser_campaign/generate_inputs.py",
-      "sha256": "bed70aecb175b53da5868dfa4590c8431602f8b8657262b53c8825ba84454bf6"
+      "sha256": "e26784f41b02e743e3dcc4e0b00d3c081a28aeee63c8f0f32a8a39fbdfaca766"
     },
     {
       "bytes": 9908,

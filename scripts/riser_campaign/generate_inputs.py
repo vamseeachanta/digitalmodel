@@ -99,8 +99,8 @@ def _line_types(case: dict[str, Any], manifest: dict[str, Any]) -> list[dict[str
             "axial_stiffness": pipe["youngs_modulus_pa"] * area / 1000,
             "bending_stiffness": pipe["youngs_modulus_pa"] * inertia / 1000,
             "properties": {"StressOD": outer, "StressID": inner, "PoissonRatio": pipe["poisson_ratio"],
-                           "Cd": [settings["drag_coefficient"], 0],
-                           "Ca": [settings["added_mass_coefficient"], 0],
+                           "Cdn": settings["drag_coefficient"], "Cdz": 0,
+                           "Can": settings["added_mass_coefficient"], "Caz": 0,
                            "SeabedLateralFrictionCoefficient": 0, "SeabedAxialFrictionCoefficient": 0}}
     result = [bare]
     if case["buoyancy"]:
