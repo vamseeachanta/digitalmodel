@@ -90,8 +90,8 @@ arithmetic threshold of 300.0 N/mm² [S1, S2]. This comparison qualifies the dem
 arithmetic only. Physical installation acceptance is NOT_EVALUATED.</p>
 <h3>Revision history</h3>
 <div class="table-wrap"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>A</td><td>2026-10-28</td><td>Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.</td></tr></tbody></table></div><p>Table R. Issue history; earlier rows will be retained on reissue.</p>
-<details id="changes-panel"><summary>Engineering changes</summary><p>Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.</p></details>
+<tbody><tr><td>A</td><td>2026-10-28</td><td>Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.</td></tr><tr><td>B</td><td>2026-10-28</td><td>Input provenance is corrected to locally selected illustrative arithmetic controls because no external input specification is identified; maintainer acceptance of this basis remains pending and the inputs and calculated results are unchanged.</td></tr></tbody></table></div><p>Table R. Issue history; earlier rows will be retained on reissue.</p>
+<details id="changes-panel"><summary>Engineering changes</summary><p>Input provenance is corrected to locally selected illustrative arithmetic controls because no external input specification is identified; maintainer acceptance of this basis remains pending and the inputs and calculated results are unchanged.</p></details>
 <h2 id="s2">2. Introduction</h2>
 <p>The pipelay public stress and integrity helpers are reviewed for dimensional consistency.
 Independent hand calculations check the worked stress and route-equilibrium results [S1, S4].
@@ -101,6 +101,8 @@ The examples are separate controls, not an integrated installation design. No li
 certificate, surveyed route, coating measurement or standard acceptance factor is supplied.
 The geometry is in mm for stress and the route weight is in N/m for the separate equilibrium example.
 No implicit conversion is applied. Strength and allowable fraction are supplied controls.</p>
+<p>The locally selected illustrative arithmetic controls are pending maintainer acceptance
+of that demonstration basis. They are not qualified design inputs [S1].</p>
 <div class="table-wrap"><table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
 <tbody><tr><td>stress.outer_diameter</td><td>200.0</td><td>mm</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.bend_radius</td><td>100000.0</td><td>mm</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.youngs_modulus</td><td>200000.0</td><td>N/mm²</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.axial_force</td><td>20000.0</td><td>N</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.steel_area</td><td>1000.0</td><td>mm²</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.smys</td><td>400.0</td><td>N/mm²</td><td>S1; supplied synthetic control</td></tr><tr><td>stress.allowable_fraction</td><td>3/4</td><td>1</td><td>S1; supplied synthetic control</td></tr><tr><td>route.bottom_tension</td><td>100000.0</td><td>N</td><td>S1; supplied synthetic control</td></tr><tr><td>route.lateral_friction</td><td>1/2</td><td>1</td><td>S1; supplied synthetic control</td></tr><tr><td>route.submerged_weight_per_length</td><td>1000.0</td><td>N/m</td><td>S1; supplied synthetic control</td></tr></tbody></table></div><p>Table D. Complete synthetic design data with units and sources.</p>
 <h2 id="s4">4. Analysis Methodology</h2>
@@ -149,8 +151,10 @@ coating-section evidence and strain limits before using a coating acceptance fla
 check the buoyancy and catenary methods with qualified boundary conditions. These missing inputs
 are required evidence, rather than zeroes or inferred criteria [S2–S5].</p>
 <h2 id="s9">9. References and Appendices</h2>
-<ol><li id="S1">S1 — Committed synthetic inputs in the standalone report builder; authority:
-the pipelay report worked-example specification. Inputs are arithmetic controls, not field data.</li>
+<ol><li id="S1">S1 — Locally selected illustrative arithmetic controls in
+<code>INPUTS</code> in <code>scripts/reports/build_installation_pipelay_module_report.py</code>, pinned by the source digest below.
+The basis is pending maintainer acceptance. These are not qualified design inputs;
+no external input specification is identified.</li>
 <li id="S2">S2 — Public stress module: geometric elasticity, axial stress and supplied-strength comparison.</li>
 <li id="S3">S3 — Public integrity module: geometric strain, force equilibrium and inventoried helpers.</li>
 <li id="S4">S4 — Independent hand-value test and dedicated report tests, listed below.
@@ -160,7 +164,7 @@ remains an explicit expected failure. Existing tests alone are not independent p
 <p>The exact source editions are bound by the following SHA-256 digests. The manifest hashes
 all source dependencies and the other delivered artifacts; its own bytes are checked by deterministic
 rebuild. The canonical report palette is inlined from the existing brand stylesheet. No licensed
-numerical content is copied; no standard-compliance conclusion is made.</p><ol><li><code>scripts/reports/build_installation_pipelay_module_report.py</code>; SHA-256 <code>140de6486ba052e61c8b318df12ddda65606a3f21b18cde1685c834b04d595af</code></li><li><code>src/digitalmodel/installation/pipelay/stress.py</code>; SHA-256 <code>5fe942bc4dd276ffdb83dd56934e94e2f05fbfbd9243d19f030f0eae3bc81146</code></li><li><code>src/digitalmodel/installation/pipelay/integrity.py</code>; SHA-256 <code>b6807e5fee6ecb4a84a116d905d2e5dc3ee4927ba6bb294025b5cdcea892a107</code></li><li><code>tests/installation/test_pipelay_report_hand_values.py</code>; SHA-256 <code>3238e5f17a7963f9885df4bcae8cd7c0ecb8533352e2e9f0ac3bf3a70ef6c007</code></li><li><code>tests/installation/test_pipelay_stress.py</code>; SHA-256 <code>5a1a62d4d6cc56b62bfbab32f4dae15f4b958f94439930226edde77e332a4530</code></li><li><code>tests/installation/test_pipelay_stress_finite_inputs.py</code>; SHA-256 <code>685cd0d384152a8225f069015fd8ef1e9e666caaba6f6d48970f24c98b238d99</code></li><li><code>tests/installation/test_pipelay_integrity.py</code>; SHA-256 <code>072c1ffe1d99afc3ad49ff59f2011bf1ff7f6f8b3f499d748cd986a06cac1564</code></li><li><code>tests/reporting/test_installation_pipelay_module_report.py</code>; SHA-256 <code>2660baf5d6030099762ef121a4492602ae8d0b4ab7c43798e0038b85fbd424d7</code></li><li><code>docs/api/_assets/brand.css</code>; SHA-256 <code>a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</code></li></ol>
+numerical content is copied; no standard-compliance conclusion is made.</p><ol><li><code>scripts/reports/build_installation_pipelay_module_report.py</code>; SHA-256 <code>b5b1e70634c117bd251f441afdc6c62a71027a0fdc1490aceef2f269c4f821eb</code></li><li><code>src/digitalmodel/installation/pipelay/stress.py</code>; SHA-256 <code>5fe942bc4dd276ffdb83dd56934e94e2f05fbfbd9243d19f030f0eae3bc81146</code></li><li><code>src/digitalmodel/installation/pipelay/integrity.py</code>; SHA-256 <code>b6807e5fee6ecb4a84a116d905d2e5dc3ee4927ba6bb294025b5cdcea892a107</code></li><li><code>tests/installation/test_pipelay_report_hand_values.py</code>; SHA-256 <code>5687df6c12d71ec4513390639c41c2f3fd5b0897ccb37b22380659fcd27f8f34</code></li><li><code>tests/installation/test_pipelay_stress.py</code>; SHA-256 <code>5a1a62d4d6cc56b62bfbab32f4dae15f4b958f94439930226edde77e332a4530</code></li><li><code>tests/installation/test_pipelay_stress_finite_inputs.py</code>; SHA-256 <code>685cd0d384152a8225f069015fd8ef1e9e666caaba6f6d48970f24c98b238d99</code></li><li><code>tests/installation/test_pipelay_integrity.py</code>; SHA-256 <code>072c1ffe1d99afc3ad49ff59f2011bf1ff7f6f8b3f499d748cd986a06cac1564</code></li><li><code>tests/reporting/test_installation_pipelay_module_report.py</code>; SHA-256 <code>81b999778d7ea071f5086257d8e7a74f010d3d6b5fda625f3251ae141ba3d727</code></li><li><code>docs/api/_assets/brand.css</code>; SHA-256 <code>a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</code></li></ol>
 <p>Rebuild: <code>PYTHONPATH=src uv run --no-project python scripts/reports/build_installation_pipelay_module_report.py --scratch "$TMPDIR/pipelay-report"</code>.
 The scratch location must be supplied outside the checkout. The builder accepts
 <code>--output-dir</code>; published files are index.html, changes.json, manifest.json and README.md.
@@ -366,6 +370,11 @@ N: newton. mm: millimetre. m: metre. NOT_EVALUATED: the required qualification e
     "change": "Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.",
     "date": "2026-10-28",
     "revision": "A"
+  },
+  {
+    "change": "Input provenance is corrected to locally selected illustrative arithmetic controls because no external input specification is identified; maintainer acceptance of this basis remains pending and the inputs and calculated results are unchanged.",
+    "date": "2026-10-28",
+    "revision": "B"
   }
 ]
 </script><script>

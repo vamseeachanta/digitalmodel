@@ -3,9 +3,9 @@
 
 """Build the pipelay arithmetic report using only pure public calculations.
 
-Synthetic input authority: the pipelay report worked-example specification.
+Input basis: locally selected illustrative arithmetic controls.
 Independent derivations: tests/installation/test_pipelay_report_hand_values.py.
-No supplied value is a standard allowable or a physical design input.
+Maintainer acceptance of this basis is pending. These are not qualified design inputs.
 """
 
 import argparse
@@ -33,8 +33,8 @@ SOURCES = [
     "tests/reporting/test_installation_pipelay_module_report.py",
     "docs/api/_assets/brand.css",
 ]
-# Every engineering input comes from the synthetic worked-example specification;
-# the independent test derives its reference values without importing this data.
+# Inputs are selected locally to give simple, independently derived hand values;
+# no external specification or qualified design basis supplies these controls.
 INPUTS = {
     "stress": {"outer_diameter": 200, "bend_radius": 100000,
                "youngs_modulus": 200000, "axial_force": 20000,
@@ -54,6 +54,12 @@ CHANGES = [{
     "change": "Initial synthetic stress and route-equilibrium analysis, public-method "
               "inventory and explicit qualification gaps are provided to make the "
               "arithmetic reproducible without implying design compliance.",
+}, {
+    "revision": "B", "date": "2026-10-28",
+    "change": "Input provenance is corrected to locally selected illustrative arithmetic "
+              "controls because no external input specification is identified; "
+              "maintainer acceptance of this basis remains pending and the "
+              "inputs and calculated results are unchanged.",
 }]
 
 
@@ -104,7 +110,7 @@ def method_inventory() -> list[dict[str, str]]:
 
 
 def external_scratch(scratch: Path) -> Path:
-    """Resolve symlinks and reject checkout staging before any writes."""
+    """Resolve symlinks and directory junctions before rejecting checkout staging."""
     path = Path(scratch).resolve()
     if path == ROOT or ROOT in path.parents:
         raise ValueError("Calculation scratch must be outside the checkout")
@@ -213,6 +219,8 @@ The examples are separate controls, not an integrated installation design. No li
 certificate, surveyed route, coating measurement or standard acceptance factor is supplied.
 The geometry is in mm for stress and the route weight is in N/m for the separate equilibrium example.
 No implicit conversion is applied. Strength and allowable fraction are supplied controls.</p>
+<p>The locally selected illustrative arithmetic controls are pending maintainer acceptance
+of that demonstration basis. They are not qualified design inputs [S1].</p>
 <div class="table-wrap"><table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead>
 <tbody>{input_rows}</tbody></table></div><p>Table D. Complete synthetic design data with units and sources.</p>
 <h2 id="s4">4. Analysis Methodology</h2>
@@ -261,8 +269,10 @@ coating-section evidence and strain limits before using a coating acceptance fla
 check the buoyancy and catenary methods with qualified boundary conditions. These missing inputs
 are required evidence, rather than zeroes or inferred criteria [S2–S5].</p>
 <h2 id="s9">9. References and Appendices</h2>
-<ol><li id="S1">S1 — Committed synthetic inputs in the standalone report builder; authority:
-the pipelay report worked-example specification. Inputs are arithmetic controls, not field data.</li>
+<ol><li id="S1">S1 — Locally selected illustrative arithmetic controls in
+<code>INPUTS</code> in <code>{SCRIPT}</code>, pinned by the source digest below.
+The basis is pending maintainer acceptance. These are not qualified design inputs;
+no external input specification is identified.</li>
 <li id="S2">S2 — Public stress module: geometric elasticity, axial stress and supplied-strength comparison.</li>
 <li id="S3">S3 — Public integrity module: geometric strain, force equilibrium and inventoried helpers.</li>
 <li id="S4">S4 — Independent hand-value test and dedicated report tests, listed below.
@@ -312,6 +322,10 @@ the pipelay stress and integrity modules, with independent synthetic stress and
 route-equilibrium arithmetic. Supplied strength and fraction are arithmetic
 controls, not standard criteria. Engineering qualification is NOT_EVALUATED.
 
+The locally selected illustrative arithmetic controls are pending maintainer acceptance
+of the demonstration basis. They are not qualified design inputs; no external input
+specification is identified.
+
 The committed inputs are in [{SCRIPT}](../../../../{SCRIPT}); the independent
 derivations are in the hand-value test. No solver or extra runtime package is required.
 
@@ -340,7 +354,8 @@ def build(output_dir: Path, scratch: Path) -> dict[str, Any]:
     artifacts = {"index.html": page, "changes.json": json_text(CHANGES), "README.md": README}
     manifest = {
         "schema": "installation-pipelay-report/1",
-        "input_basis": "Committed synthetic arithmetic controls; not design criteria",
+        "input_basis": "Locally selected illustrative arithmetic controls; not qualified design inputs",
+        "input_basis_review": "PENDING_MAINTAINER_ACCEPTANCE",
         "qualification": "ARITHMETIC_ONLY",
         "sources": {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
                     for path in SOURCES},

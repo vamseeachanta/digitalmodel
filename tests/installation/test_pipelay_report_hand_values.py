@@ -1,10 +1,11 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Independent arithmetic controls specified in the pipelay report issue.
+"""Independent hand calculations for locally selected illustrative controls.
 
-Source: the pipelay module-report worked-example specification and the independent
-derivations below. All inputs are synthetic, not standard criteria.
+The inputs are locally selected, not supplied by the issue or an external
+specification. The derivations below provide the numeric oracle; maintainer
+acceptance of the illustrative basis is pending. Inputs are not qualified design inputs.
 The relative tolerance is 32 binary64 epsilons: these positive, small calculations
 require fewer than ten elementary operations without cancellation. No absolute
 tolerance is needed for the nonzero reference values.
@@ -24,7 +25,7 @@ ROUND_OFF = 32 * sys.float_info.epsilon
 def test_combined_stress_matches_dimensional_hand_values():
     """Derive every field independently in N, mm and N/mm².
 
-    From the synthetic issue example: epsilon = (200 mm / 2) / 100000 mm
+    For the locally selected controls: epsilon = (200 mm / 2) / 100000 mm
     = 1/1000; sigma_b = 200000 N/mm² * 1/1000 = 200 N/mm².
     sigma_a = 20000 N / 1000 mm² = 20 N/mm²; total = 220 N/mm².
     Supplied strength 400 N/mm² times supplied fraction 3/4 gives 300 N/mm².
@@ -55,8 +56,8 @@ def test_combined_stress_matches_dimensional_hand_values():
 def test_route_radius_matches_force_equilibrium():
     """F/R = mu*w: 100000 N / ((1/2)*1000 N/m) = 200 m.
 
-    Source: the separate synthetic force-equilibrium example in the issue
-    specification. N/(N/m) reduces to m; the stress example's mm are not reused.
+    The separate force-equilibrium inputs are locally selected controls.
+    N/(N/m) reduces to m; the stress example's mm are not reused.
     The same roundoff bound applies to the two products/divisions here.
     """
     assert integrity.minimum_route_radius(100000, 1 / 2, 1000) == pytest.approx(

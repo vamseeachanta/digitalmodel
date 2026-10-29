@@ -3,8 +3,8 @@
 
 """Bind the complete pipelay report to hand arithmetic and committed bytes.
 
-Numeric oracle source: independent derivations of the synthetic worked-example
-specification for the pipelay module report, documented below. Tolerance is
+Numeric oracle source: independent hand derivations for locally selected illustrative
+controls, documented below; no external input specification is identified. Tolerance is
 32 binary64 epsilons for fewer than ten positive elementary operations.
 """
 
@@ -24,6 +24,11 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/reports/build_installation_pipelay_module_report.py"
 REPORT = ROOT / "docs/reports/modules/installation_pipelay"
 DELIVERABLES = {"index.html", "changes.json", "manifest.json", "README.md"}
+REBUILD = (
+    'PYTHONPATH=src uv run --no-project python '
+    'scripts/reports/build_installation_pipelay_module_report.py '
+    '--scratch "$TMPDIR/pipelay-report"'
+)
 SECTIONS = [
     "Executive Summary", "Introduction", "Design Data and Basis",
     "Analysis Methodology", "Detailed Results", "Key Findings",
@@ -125,8 +130,27 @@ def test_rebuild_is_deterministic(tmp_path):
         build.build(output, tmp_path / (output.name + "-scratch"))
         assert {path.name for path in output.iterdir()} == DELIVERABLES
     for name in DELIVERABLES:
-        assert (outputs[0] / name).read_bytes() == (outputs[1] / name).read_bytes()
-        assert (outputs[0] / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (outputs[0] / name).read_bytes() == (outputs[1] / name).read_bytes(), REBUILD
+        assert (outputs[0] / name).read_bytes() == (REPORT / name).read_bytes(), REBUILD
+
+
+def test_input_basis_is_local_and_pending_acceptance(tmp_path):
+    """Reject invented input authority or an implied accepted design basis."""
+    build = builder()
+    output = tmp_path / "report"
+    manifest = build.build(output, tmp_path / "scratch")
+    page = (output / "index.html").read_text(encoding="utf-8")
+    reference = re.search(r'<li id="S1">(.*?)</li>', page, re.S)[1]
+    for text in (reference, (output / "README.md").read_text(encoding="utf-8")):
+        text = " ".join(text.lower().split())
+        assert "locally selected illustrative arithmetic controls" in text
+        assert "pending maintainer acceptance" in text
+        assert "not qualified design inputs" in text
+        assert "worked-example specification" not in text
+    assert manifest["input_basis"] == (
+        "Locally selected illustrative arithmetic controls; not qualified design inputs"
+    )
+    assert manifest["input_basis_review"] == "PENDING_MAINTAINER_ACCEPTANCE"
 
 
 def test_cli_writes_matching_manifest(tmp_path):
@@ -136,7 +160,7 @@ def test_cli_writes_matching_manifest(tmp_path):
     subprocess.run(
         [sys.executable, str(SCRIPT), "--output-dir", str(output),
          "--scratch", str(tmp_path / "scratch")], cwd=ROOT, env=env,
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True, text=True, encoding="utf-8",
     )
     manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
     expected_sources = {
@@ -152,11 +176,11 @@ def test_cli_writes_matching_manifest(tmp_path):
     }
     assert set(manifest["sources"]) == expected_sources
     for path, digest in manifest["sources"].items():
-        assert digest == hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
+        assert digest == hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), REBUILD
     assert set(manifest["artifacts"]) == DELIVERABLES - {"manifest.json"}
     for path, digest in manifest["artifacts"].items():
-        assert digest == hashlib.sha256((output / path).read_bytes()).hexdigest()
-    assert (output / "manifest.json").read_bytes() == (REPORT / "manifest.json").read_bytes()
+        assert digest == hashlib.sha256((output / path).read_bytes()).hexdigest(), REBUILD
+    assert (output / "manifest.json").read_bytes() == (REPORT / "manifest.json").read_bytes(), REBUILD
     assert json.loads((output / "changes.json").read_text(encoding="utf-8")) == builder().CHANGES
 
 

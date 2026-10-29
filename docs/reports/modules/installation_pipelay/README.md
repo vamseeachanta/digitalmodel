@@ -5,6 +5,10 @@ the pipelay stress and integrity modules, with independent synthetic stress and
 route-equilibrium arithmetic. Supplied strength and fraction are arithmetic
 controls, not standard criteria. Engineering qualification is NOT_EVALUATED.
 
+The locally selected illustrative arithmetic controls are pending maintainer acceptance
+of the demonstration basis. They are not qualified design inputs; no external input
+specification is identified.
+
 The committed inputs are in [scripts/reports/build_installation_pipelay_module_report.py](../../../../scripts/reports/build_installation_pipelay_module_report.py); the independent
 derivations are in the hand-value test. No solver or extra runtime package is required.
 
