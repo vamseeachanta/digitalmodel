@@ -1,6 +1,6 @@
 # Quality Gates by Domain
 #
-# This workflow is the FAST, touched-domain-gated lane: pull requests dispatch
+# This workflow is the fast touched-domain gate: pull requests dispatch
 # only the shards their diff touches. That scoping is deliberate, but it
 # means a green result here says "the shards we ran passed", not "all shards
 # passed" (issue #1863). Two things keep that honest:
@@ -10,7 +10,7 @@
 #      aggregate" job summaries.
 #   2. `.github/workflows/full-matrix-sweep.yml` ("Main full run") runs EVERY
 #      shard once a day on `main`, under its own distinct check names. Our own
-#      cron dispatches it (owner ruling, 28 Oct 2026); there is no push or
+#      cron dispatches it (maintainer ruling, 28 Oct 2026); there is no push or
 #      GitHub schedule trigger for full runs. Tests already failing on main are
 #      quarantined in tests/quarantine.txt, so a pass here means pass.
 name: Quality Gates by Domain

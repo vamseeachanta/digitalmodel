@@ -1,4 +1,4 @@
-# Quality Gates -- the fast pull-request lint gate (owner ruling, 28 Oct 2026).
+# Quality Gates -- the fast pull-request lint gate (maintainer ruling, 28 Oct 2026).
 #
 # Required check "Run Quality Gates" = lint only: engineering-register check on
 # changed prose plus ruff on changed Python files, failing only on findings the

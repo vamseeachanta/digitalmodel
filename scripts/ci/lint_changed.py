@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Fail a pull request only for lint findings it adds to the files it changes.
 
 The repository carries a large historical ruff backlog, so linting every changed
@@ -32,8 +35,8 @@ def git(*args: str) -> str:
 
 
 def changed_python_files(base: str) -> list[str]:
-    output = git("diff", "--name-only", "--diff-filter=ACMR", base, "HEAD", "--", "*.py")
-    return [line for line in output.splitlines() if line.strip()]
+    output = git("diff", "--name-only", "-z", "--diff-filter=ACMR", base, "HEAD", "--", "*.py")
+    return [path for path in output.split("\0") if path]
 
 
 def findings(path: str, source: str) -> Counter[tuple[str, str]]:

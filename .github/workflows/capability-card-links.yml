@@ -2,7 +2,7 @@ name: Capability card links
 
 # Network check of the public capability page. Runs inside the daily
 # "Main full run" (full-matrix-sweep.yml, dispatched by our own cron) and on
-# demand; no GitHub schedule trigger (owner ruling, 28 Oct 2026).
+# demand; no GitHub schedule trigger (maintainer ruling, 28 Oct 2026).
 on:
   workflow_dispatch:
   workflow_call:

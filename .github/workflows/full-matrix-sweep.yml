@@ -1,4 +1,4 @@
-# Main full run (issue #1863; owner ruling 28 Oct 2026)
+# Main full run (issue #1863; maintainer ruling 28 Oct 2026)
 #
 # `Quality Gates by Domain` dispatches only the shards a change touches, so an
 # untouched-but-broken shard reports nothing rather than red. This workflow is
@@ -341,7 +341,7 @@ jobs:
 
           echo "All domain shards passed the full sweep."
 
-  # --- Checks that left the pull-request path (owner ruling, 28 Oct 2026) ---
+  # --- Checks that left the pull-request path (maintainer ruling, 28 Oct 2026) ---
 
   quality-gates-report:
     name: Quality gates CLI (Python ${{ matrix.python-version }})

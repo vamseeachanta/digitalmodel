@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Dispatch the daily "Main full run" (.github/workflows/full-matrix-sweep.yml) on main.
 #
-# Owner ruling, 28 Oct 2026: the full suite runs once a day on main, triggered by
+# Maintainer ruling, 28 Oct 2026: the full suite runs once a day on main, triggered by
 # our own cron through `gh workflow run`, not by a GitHub `schedule:` trigger.
 # Pull requests run only the fast gate (lint + touched-module tests).
 #
@@ -12,7 +12,12 @@
 # never stacked behind another.
 set -euo pipefail
 
-repo="${MAIN_FULL_RUN_REPO:-vamseeachanta/digitalmodel}"
+if [ -n "${MAIN_FULL_RUN_REPO:-}" ]; then
+  repo="$MAIN_FULL_RUN_REPO"
+else
+  repo="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." &&
+    gh repo view --json nameWithOwner --jq .nameWithOwner)"
+fi
 workflow="full-matrix-sweep.yml"
 stamp="$(date -u +%Y-%m-%dT%H:%MZ)"
 

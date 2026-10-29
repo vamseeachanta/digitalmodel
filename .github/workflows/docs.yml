@@ -3,7 +3,7 @@ name: Build API Docs
 # Docs routing, generated-HTML freshness and the strict MkDocs build are
 # generated-artifact currency checks: they run in the daily "Main full run"
 # (full-matrix-sweep.yml, dispatched by our own cron) and on demand, not on
-# pull requests or pushes (owner ruling, 28 Oct 2026). Pages deploys separately.
+# pull requests or pushes (maintainer ruling, 28 Oct 2026). Pages deploys separately.
 on:
   workflow_dispatch:
   workflow_call:

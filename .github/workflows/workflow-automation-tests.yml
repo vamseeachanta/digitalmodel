@@ -3,7 +3,7 @@ name: Workflow Automation Tests
 # Daily dependency-drift coverage (issue #1958) now comes from the daily
 # "Main full run" (full-matrix-sweep.yml), which calls this workflow; our own
 # cron dispatches it, so there is no GitHub schedule or push trigger here
-# (owner ruling, 28 Oct 2026).
+# (maintainer ruling, 28 Oct 2026).
 on:
   pull_request:
     paths:
