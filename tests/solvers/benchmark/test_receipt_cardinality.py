@@ -140,28 +140,86 @@ def test_scalar_and_singleton_list_are_distinct_shapes():
 
 
 @pytest.mark.parametrize("via_file", [False, True])
-def test_report_rejects_conflicting_intra_receipt_duplicates(tmp_path, via_file):
+@pytest.mark.parametrize("mutation", ["order", "length", "keys"])
+def test_report_rejects_conflicting_intra_receipt_duplicates(tmp_path, via_file, mutation):
     receipt = _receipt()
     repeated = deepcopy(receipt["results"][0])
-    repeated["fingerprint"]["samples"].reverse()
+    if mutation == "order":
+        repeated["fingerprint"]["samples"].reverse()
+    elif mutation == "length":
+        repeated["fingerprint"]["samples"].pop()
+    else:
+        repeated["fingerprint"].pop("sum")
     receipt["results"].append(repeated)
     untouched = deepcopy(receipt)
     with pytest.raises(ValueError, match="conflicting duplicate"):
         if via_file:
             path = tmp_path / "synthetic.json"
-            path.write_text(json.dumps(receipt), encoding="utf-8")
+            path.write_text(json.dumps(receipt), encoding="utf-8", newline="\n")
             report.load_receipts([path])
         else:
             report.build_report([receipt])
     assert receipt == untouched
 
 
-def test_report_allows_identical_intra_receipt_entries():
+@pytest.mark.parametrize("via_file", [False, True])
+@pytest.mark.parametrize("reorder_keys", [False, True])
+@pytest.mark.parametrize("float_numbers", [False, True])
+def test_report_allows_identical_intra_receipt_entries(
+    tmp_path, via_file, reorder_keys, float_numbers,
+):
     receipt = _receipt()
-    receipt["results"].append(deepcopy(receipt["results"][0]))
-    model = report.build_report([deepcopy(receipt)])
+    receipt["results"][0]["metadata"] = {"flags": [True, False, {"value": 1.0}]}
+    repeated = deepcopy(receipt["results"][0])
+    if float_numbers:
+        repeated["fingerprint"] = {"samples": [2.0, 3.0], "sum": 5.0}
+    if reorder_keys:
+        repeated = dict(reversed(list(repeated.items())))
+        repeated["fingerprint"] = dict(reversed(list(repeated["fingerprint"].items())))
+    receipt["results"].append(repeated)
+    reference = _receipt("fixture-right")
+    receipts = deepcopy([receipt, reference])
+    if via_file:
+        path = tmp_path / "synthetic.json"
+        path.write_text(json.dumps(receipt), encoding="utf-8", newline="\n")
+        receipts = report.load_receipts([path]) + [reference]
+    model = report.build_report(receipts)
     assert {(c["case"], v["variant"]) for c in model["packs"][0]["cases"]
             for v in c["variants"]} == EXPECTED_KEYS
+    assert model["packs"][0]["summary"][report.AGREE] == 2
+
+
+@pytest.mark.parametrize("via_file", [False, True])
+@pytest.mark.parametrize("boolean_first", [False, True])
+@pytest.mark.parametrize("field", ["samples", "sum", "metadata"])
+@pytest.mark.parametrize("boolean, number", [(True, 1), (False, 0), (True, 1.0)])
+def test_report_rejects_boolean_numeric_duplicates_in_both_orders(
+    tmp_path, via_file, boolean_first, field, boolean, number,
+):
+    receipt = _receipt()
+    numerical = receipt["results"][0]
+    boolean_entry = deepcopy(numerical)
+    if field == "samples":
+        # Synthetic hand sums: 1 + 3 = 4; 0 + 3 = 3.
+        numerical["fingerprint"] = {"samples": [number, 3], "sum": number + 3}
+        boolean_entry["fingerprint"] = {"samples": [boolean, 3], "sum": number + 3}
+    elif field == "sum":
+        numerical["fingerprint"]["sum"] = number
+        boolean_entry["fingerprint"]["sum"] = boolean
+    else:
+        numerical["metadata"] = {"flags": [{"value": number}]}
+        boolean_entry["metadata"] = {"flags": [{"value": boolean}]}
+    entries = [boolean_entry, numerical] if boolean_first else [numerical, boolean_entry]
+    receipt["results"] = entries + receipt["results"][1:]
+    reference = _receipt("fixture-right")
+    reference["results"][0] = deepcopy(numerical)
+    with pytest.raises(ValueError, match="conflicting duplicate"):
+        if via_file:
+            path = tmp_path / "synthetic.json"
+            path.write_text(json.dumps(receipt), encoding="utf-8", newline="\n")
+            report.load_receipts([path])
+        else:
+            report.build_report([reference, receipt])
 
 
 def test_report_keeps_newest_distinct_receipt_policy():

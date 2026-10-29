@@ -14,6 +14,7 @@ represent no solver result. Other reports remain uninspected.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | Initial | 2026-10-28 | Recorded the bounded inspection and synthetic regressions to distinguish complete evidence from truncated or overwritten entries. |
+| Correction | 2026-10-28 | Distinguished booleans from numbers in nested duplicate entries so receipt eligibility cannot depend on entry order. |
 
 The date records this inspection, not the date of any numerical result.
 
@@ -25,7 +26,7 @@ The date records this inspection, not the date of any numerical result.
 | [compare.py](../../../src/digitalmodel/solvers/benchmark/compare.py), `compare` | Indexing the new receipt by identity silently overwrote duplicates. Iteration visited baseline entries only, ignoring extra new entries. An empty baseline reached vacuous `all(rows)` success. | Empty baselines and duplicate identities on either side raise `ValueError`, including equal duplicates. Surplus new identities raise a membership error. Missing new identities retain `MISSING` rows and make overall `ok` false. Membership is relative to the supplied baseline. |
 | [compare.py](../../../src/digitalmodel/solvers/benchmark/compare.py), `fingerprint_status` | Completion, input digest, tolerance and version rules determined row status; a version change could excuse a numerical mismatch containing nonfinite values. | Nonfinite fingerprints on either side produce `FAILED` before the version rule. Existing timing semantics, baseline-eligibility flags, tolerance selection and finite `VERSION_CHANGED` classification are retained. That classification is reported separately from numerical agreement. |
 | [compare.py](../../../src/digitalmodel/solvers/benchmark/compare.py), `differing_keys` | The union of fingerprint keys delegated each value comparison to `_matches`. | Missing keys, shortened or reordered lists, shape differences and nonfinite values are identified through the same matching predicate. No input is rewritten. |
-| [report.py](../../../src/digitalmodel/solvers/benchmark/report.py), `load_receipts`, `_check`, `build_report` | Receipt shape was checked, but contradictory entries with the same identity could enter candidate selection. | Both file ingestion and direct dictionary ingestion reject conflicting duplicate identities within one receipt. Equality covers the whole entry, including fingerprint and timing metadata. Exact duplicate entries remain permitted. Validation uses the same string case identity as report grouping. |
+| [report.py](../../../src/digitalmodel/solvers/benchmark/report.py), `load_receipts`, `_entries_equal`, `_check`, `build_report` | Receipt shape was checked, but contradictory entries with the same identity could enter candidate selection. | Both file ingestion and direct dictionary ingestion reject conflicting duplicate identities within one receipt. Equality covers the whole entry, including fingerprint and timing metadata, and distinguishes booleans from numbers at every dictionary/list depth. Dictionary key order is immaterial; list lengths and order must agree. Exact duplicate entries remain permitted. Validation uses the same string case identity as report grouping. |
 | [report.py](../../../src/digitalmodel/solvers/benchmark/report.py), `_pack`, `_row`, `_agreement` | The newest receipt per label and case/variant was selected by `started_utc`, with supplied order breaking ties. Only baseline-eligible, comparable rows entered agreement. | Selection across distinct receipts is unchanged. A newer conflicting fingerprint is valid receipt history; it is distinct from contradictory entries in a single receipt. Finite eligibility follows `fingerprint_status`. |
 | [report.py](../../../src/digitalmodel/solvers/benchmark/report.py), `render_html`, `_summary` | Agreement counts and per-case statements were derived from the report model. | HTML text readback confirms that missing, extra and empty result sets leave combinations marked as one-label coverage, rather than complete agreement. Valid overlapping combinations can still agree; the report does not claim a complete campaign. |
 
@@ -97,6 +98,31 @@ No baseline test failures remained after supplying the import dependencies.
 
 Hook framework execution is reserved for the publishing runner. Direct
 file-level checks are recorded in the change description.
+
+## Duplicate type correction
+
+Ordinary dictionary equality treats boolean `true` as numerical `1` and
+boolean `false` as numerical `0`. Those pairs are now distinct throughout
+nested duplicate entries, including scalar fingerprints, sample lists and
+metadata. This prevents candidate selection from accepting an ambiguous receipt
+whose eligibility changes when the duplicate entries are reordered. Equality
+between equivalent integer and floating-point values is retained.
+
+At correction baseline `f266cffa`, the three targeted test files collected and
+passed `117` tests, with no failures or skips. Before the correction, all `36`
+new boolean/numerical conflict regressions failed because no exception was
+raised. Both entry orders and both ingestion APIs were exercised. After the
+correction, the same three files collected and passed `164` tests, with no
+failures or skips: runner `54`, report `21`, receipt cardinality `89`.
+The run used the reproduction command above with `PYTHONUTF8` unset.
+
+Positive controls retain equal duplicates through both APIs, including nested
+booleans, equivalent integer/floating-point values and reordered dictionary keys,
+and confirm agreement with an
+independent reference receipt. Additional negative controls reject changed
+dictionary keys and list lengths. Text writes in the corrected source and test
+file specify UTF-8 and LF. Native solver accuracy, convergence and external
+completeness remain **NOT_EVALUATED**.
 
 ## Follow-up
 

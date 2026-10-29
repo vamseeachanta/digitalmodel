@@ -68,6 +68,21 @@ def load_receipts(paths) -> list[dict]:
     return receipts
 
 
+def _entries_equal(left, right) -> bool:
+    """Compare nested values without equating booleans and numbers."""
+    if isinstance(left, bool) or isinstance(right, bool):
+        return type(left) is type(right) and left == right
+    if isinstance(left, dict) and isinstance(right, dict):
+        return left.keys() == right.keys() and all(
+            _entries_equal(left[key], right[key]) for key in left
+        )
+    if isinstance(left, list) and isinstance(right, list):
+        return len(left) == len(right) and all(
+            _entries_equal(a, b) for a, b in zip(left, right)
+        )
+    return left == right
+
+
 def _check(receipt, name: str) -> None:
     if (not isinstance(receipt, dict) or not isinstance(receipt.get("results"), list)
             or not receipt.get("machine_label") or "pack_version" not in receipt
@@ -78,7 +93,7 @@ def _check(receipt, name: str) -> None:
     seen = {}
     for entry in receipt["results"]:
         key = (str(entry["case"]), entry["variant"])
-        if key in seen and seen[key] != entry:
+        if key in seen and not _entries_equal(seen[key], entry):
             raise ValueError(f"{name} has conflicting duplicate case/variant identity: {key}")
         seen[key] = entry
 
@@ -668,5 +683,5 @@ def write_report(paths, out) -> dict:
     model = build_report(load_receipts(paths))
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(render_html(model), encoding="utf-8")
+    out.write_text(render_html(model), encoding="utf-8", newline="\n")
     return model
