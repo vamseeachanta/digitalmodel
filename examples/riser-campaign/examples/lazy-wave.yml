@@ -76,12 +76,10 @@ LineTypes:
   StressOD: 0.2731
   StressID: 0.2223
   PoissonRatio: 0.3
-  Cd:
-  - 1.2
-  - 0
-  Ca:
-  - 1
-  - 0
+  Cdn: 1.2
+  Cdz: 0
+  Can: 1
+  Caz: 0
   SeabedLateralFrictionCoefficient: 0
   SeabedAxialFrictionCoefficient: 0
   OD: 0.2731
@@ -94,12 +92,10 @@ LineTypes:
   StressOD: 0.2731
   StressID: 0.2223
   PoissonRatio: 0.3
-  Cd:
-  - 1.2
-  - 0
-  Ca:
-  - 1
-  - 0
+  Cdn: 1.2
+  Cdz: 0
+  Can: 1
+  Caz: 0
   SeabedLateralFrictionCoefficient: 0
   SeabedAxialFrictionCoefficient: 0
   OD: 0.7672259054541891

@@ -10,6 +10,7 @@ import json
 import math
 import platform
 from pathlib import Path
+from stat import FILE_ATTRIBUTE_REPARSE_POINT
 from typing import Any
 
 import yaml
@@ -99,8 +100,8 @@ def _line_types(case: dict[str, Any], manifest: dict[str, Any]) -> list[dict[str
             "axial_stiffness": pipe["youngs_modulus_pa"] * area / 1000,
             "bending_stiffness": pipe["youngs_modulus_pa"] * inertia / 1000,
             "properties": {"StressOD": outer, "StressID": inner, "PoissonRatio": pipe["poisson_ratio"],
-                           "Cd": [settings["drag_coefficient"], 0],
-                           "Ca": [settings["added_mass_coefficient"], 0],
+                           "Cdn": settings["drag_coefficient"], "Cdz": 0,
+                           "Can": settings["added_mass_coefficient"], "Caz": 0,
                            "SeabedLateralFrictionCoefficient": 0, "SeabedAxialFrictionCoefficient": 0}}
     result = [bare]
     if case["buoyancy"]:
@@ -246,10 +247,21 @@ def _json_bytes(data: dict[str, Any]) -> bytes:
     return (json.dumps(data, indent=2, sort_keys=True, allow_nan=False) + "\n").encode("utf-8")
 
 
+def _is_link(path: Path) -> bool:
+    """Reject junctions and other reparse points, including on Python 3.11."""
+    if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
+        return True
+    try:
+        attributes = getattr(path.lstat(), "st_file_attributes", 0)
+    except FileNotFoundError:
+        return False
+    return bool(attributes & FILE_ATTRIBUTE_REPARSE_POINT)
+
+
 def _write(root: Path, relative: str, payload: bytes) -> dict[str, Any]:
     path = root / relative
-    if any(parent.is_symlink() for parent in [path, *path.parents]):
-        raise ValueError("output symlink is not permitted")
+    if any(_is_link(parent) for parent in [path, *path.parents]):
+        raise ValueError("output symlink or junction is not permitted")
     digest = hashlib.sha256(payload).hexdigest()
     if path.exists():
         if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
@@ -284,8 +296,8 @@ def generate(manifest_path: Path | str, output_dir: Path | str) -> dict[str, Any
         frozen_payloads = source_payloads()
     validate_manifest(data, json.loads(schema_payload, object_pairs_hook=unique_object), basis_payload, frozen_payloads)
     output = Path(output_dir).absolute()
-    if any(parent.is_symlink() for parent in [output, *output.parents]):
-        raise ValueError("output symlink is not permitted")
+    if any(_is_link(parent) for parent in [output, *output.parents]):
+        raise ValueError("output symlink or junction is not permitted")
     index = {"version": 1, "criteria_version": data["criteria_version"], "basis": "ASSUMED",
              "intended_use": data["intended_use"], "licensed_run_status": "NOT_RUN",
              "manifest_sha256": hashlib.sha256(manifest_payload).hexdigest(),

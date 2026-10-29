@@ -14,6 +14,7 @@ import subprocess
 import sys
 
 import pytest
+import yaml
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -226,6 +227,115 @@ def test_generation_rejects_symlink_output(tmp_path):
     with pytest.raises(ValueError, match="symlink"):
         api().generate(CAMPAIGN / "manifest.json", link)
     assert not list(destination.iterdir())
+
+
+def test_original_inputs_use_named_normal_and_zero_axial_coefficients(tmp_path):
+    output = tmp_path / "axes"
+    index = api().generate(CAMPAIGN / "manifest.json", output)
+    inputs = [entry for case in index["cases"] for entry in case["inputs"]]
+    assert len(inputs) == 288
+    line_type_count = 0
+    for entry in inputs:
+        model = yaml.safe_load((output / entry["path"]).read_text(encoding="utf-8"))
+        assert all(line["IncludeTorsion"] == "No" for line in model["Lines"])
+        for line_type in model["LineTypes"]:
+            assert "Cd" not in line_type and "Ca" not in line_type, entry["path"]
+            # Normal acts on both transverse axes; axial coefficients remain zero.
+            assert {key: line_type[key] for key in ("Cdn", "Cdz", "Can", "Caz")} == {
+                "Cdn": 1.2, "Cdz": 0, "Can": 1.0, "Caz": 0,
+            }, entry["path"]
+            line_type_count += 1
+    assert line_type_count == 432
+
+
+def test_review_packet_records_original_axis_correction():
+    packet = json.loads((ROOT / "docs/verification/riser-mesh-review.json").read_text(encoding="utf-8"))
+    correction = packet["original_coefficient_axis_correction"]
+    assert correction["inputs"] == packet["preservation"]["original_physical_model_matches"] == 288
+    assert correction["named_fields"] == {"Cdn": 1.2, "Cdz": 0, "Can": 1.0, "Caz": 0}
+    assert correction["geometry_bytes"] == correction["all_other_model_fields"] == "IDENTICAL"
+    assert correction["include_torsion"] == "No"
+    assert "original_input_byte_matches" not in packet["preservation"]
+    assert "tests/riser_campaign/test_campaign.py" in {entry["path"] for entry in packet["source_files"]}
+
+
+@pytest.mark.parametrize("writer", [False, True])
+@pytest.mark.parametrize("junction_kind", ["native_api", "reparse_attribute"])
+def test_output_rejects_directory_junction_ancestors(tmp_path, monkeypatch, writer, junction_kind):
+    destination = tmp_path / "junction"
+    destination.mkdir()
+    if junction_kind == "native_api":
+        monkeypatch.setattr(Path, "is_junction", lambda path: path == destination, raising=False)
+    else:
+        from stat import FILE_ATTRIBUTE_REPARSE_POINT
+        from types import SimpleNamespace
+
+        original_lstat = Path.lstat
+
+        def reparse_stat(path, *args, **kwargs):
+            status = original_lstat(path, *args, **kwargs)
+            if path == destination:
+                return SimpleNamespace(st_mode=status.st_mode,
+                                       st_file_attributes=FILE_ATTRIBUTE_REPARSE_POINT)
+            return status
+
+        monkeypatch.setattr(Path, "lstat", reparse_stat)
+    with pytest.raises(ValueError, match="symlink|junction"):
+        if writer:
+            api()._write(destination, "nested/input.yml", b"input\n")
+        else:
+            api().generate(CAMPAIGN / "manifest.json", destination / "nested")
+    assert not list(destination.iterdir())
+
+
+def _comparison_fixture(tmp_path, mutation):
+    old = {"Lines": [{"IncludeTorsion": "No", "LineType, Length, TargetSegmentLength": [["pipe", 10, 1]]}],
+           "LineTypes": [{"Name": "pipe", "Cd": [1.2, 0], "Ca": [1.0, 0], "MassPerUnitLength": 1}]}
+    new = copy.deepcopy(old)
+    del new["LineTypes"][0]["Cd"], new["LineTypes"][0]["Ca"]
+    new["LineTypes"][0].update(Cdn=1.2, Cdz=0, Can=1.0, Caz=0)
+    if mutation == "axial_drag":
+        new["LineTypes"][0]["Cdz"] = 0.008
+    elif mutation == "mass":
+        new["LineTypes"][0]["MassPerUnitLength"] = 2
+    elif mutation == "mesh":
+        new["Lines"][0]["LineType, Length, TargetSegmentLength"][0][2] = 0.5
+    elif mutation == "old_drag":
+        old["LineTypes"][0]["Cd"] = [1.3, 0]
+    elif mutation == "torsion":
+        new["Lines"][0]["IncludeTorsion"] = "Yes"
+    roots = [tmp_path / "reference", tmp_path / "candidate"]
+    cases = []
+    for root, model in zip(roots, (old, new)):
+        geometry_bytes = b"changed\n" if mutation == "geometry" and root == roots[1] else b"geometry\n"
+        entry = api()._write(root, "model.yml", api()._native_bytes(model, ""))
+        cases.append([{"case_id": "case", "configuration": "SCR", "inputs": [entry],
+                       "geometry": api()._write(root, "geometry.json", geometry_bytes)}])
+    if mutation == "metadata":
+        cases[1][0]["inputs"][0]["offset_id"] = "changed"
+    elif mutation == "missing_input":
+        cases[1][0]["inputs"].clear()
+    elif mutation == "missing_case":
+        cases[1].clear()
+    return roots, cases
+
+
+@pytest.mark.parametrize("mutation", [
+    "none", "axial_drag", "mass", "mesh", "metadata", "missing_input", "missing_case",
+    "old_drag", "torsion", "geometry",
+])
+def test_original_axis_audit_allows_only_coefficient_replacement(tmp_path, mutation):
+    from scripts.riser_campaign.audit_mesh import _compare_original_inputs
+
+    roots, cases = _comparison_fixture(tmp_path, mutation)
+    if mutation == "none":
+        assert _compare_original_inputs(*roots, *cases, True) == 1
+        assert _compare_original_inputs(roots[0], roots[0], cases[0], cases[0]) == 1
+        with pytest.raises(ValueError):
+            _compare_original_inputs(*roots, *cases)
+    else:
+        with pytest.raises(ValueError):
+            _compare_original_inputs(*roots, *cases, True)
 
 
 def test_cli_prints_every_case_without_importing_solver_bindings(tmp_path):

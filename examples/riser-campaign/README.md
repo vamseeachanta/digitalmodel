@@ -35,6 +35,7 @@ its native input templates remain unreleased pending readback and motion clearan
 | 4 | 2026-10-28 | Grade frozen mesh transitions with explicit segment counts and retain a solver-free audit for native readback. |
 | 5 | 2026-10-28 | Retain exact reviewed numerical geometry for portable input bytes and bind the producing runtime. |
 | 6 | 2026-10-28 | Name normal and axial hydrodynamic coefficients explicitly and refresh source bindings after regeneration; preserve the counted mesh and physical basis. |
+| 7 | 2026-10-28 | Apply named coefficients to the original comparison inputs with zero axial coefficients, regenerate worked examples and bind the proving regressions. |
 
 ## Matrix and existing code
 
@@ -164,9 +165,10 @@ both directions checked at every join. Display bounds round upward to one
 decimal place; acceptance uses unrounded values and the unchanged 2.0 limit.
 Geometry and section-property bytes and every model field outside the permitted
 correction are compared with output generated from the reviewed reference source.
-The original 288 comparison inputs and the frozen scope, criteria, load ledger,
-manifest and basis retain their reference bytes. The two committed worked
-examples belong to the original comparison and do not require regeneration.
+The frozen scope, criteria, load ledger, manifest and basis retain their
+reference bytes. The original 288 comparison inputs replace only the positional
+coefficient fields; geometry and all other model fields retain their reference
+values. Both committed comparison examples and their hashes are regenerated.
 
 The frozen handoff uses [reviewed numerical geometry](reviewed-geometry.json)
 whose source revision and runtime are recorded with the exact input digests.
@@ -190,11 +192,19 @@ the [riser schema default](../../src/digitalmodel/solvers/orcaflex/modular_gener
 Equal normal coefficients require no separate material-axis orientation; enabling
 torsion would introduce a different stiffness and orientation model. Native
 readback must still confirm x/y/z drag of 1.2/1.2/0.008 and added mass of 1.0/1.0/0.
-All 144 frozen input digests therefore change, including both pipe and buoyed
-line types, while counted sections and every other input field remain identical.
+That frozen correction changed all 144 input digests, including both pipe and
+buoyed line types, while counted sections and every other input field remained identical.
 The audit's explicit coefficient mode accepts only the known old lists and the
 four named replacements, checks unchanged counted sections and then compares
 the complete remaining model. The default mesh-only audit remains available.
+
+The original comparison matrix uses `Cdn: 1.2`, `Cdz: 0`, `Can: 1.0` and
+`Caz: 0`, with torsion disabled. Its zero axial basis is retained independently
+of the frozen tranche. The audit's `--original-coefficient-axes` option permits
+only this replacement in all 288 original inputs and checks unchanged case
+coverage, input metadata, geometry bytes, meshes and remaining model fields.
+Parsed-axis regressions cover all 432 original line-type records. The current
+repair preserves all 144 frozen input bytes relative to the preceding revision.
 
 The catenary dependency's inextensible straight-line rejection is retained.
 At chord length an inextensible weighted line has no finite sagging-catenary
@@ -245,7 +255,7 @@ revision and a candidate output from the current generator, then run:
 ```bash
 PYTHONPATH=src:. uv run python -m scripts.riser_campaign.audit_mesh \
   --reference-dir <reference-output> --candidate-dir <candidate-output> \
-  --reference-revision <reviewed-revision> --coefficient-axes \
+  --reference-revision <reviewed-revision> --coefficient-axes --original-coefficient-axes \
   --output <new-audit-file>
 ```
 

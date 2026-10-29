@@ -22,7 +22,7 @@ COUNT_TABLE = "LineType, Length, NumberOfSegments"
 TARGET_TABLE = "LineType, Length, TargetSegmentLength"
 
 
-def _correct_coefficient_axes(model: dict[str, Any]) -> None:
+def _correct_coefficient_axes(model: dict[str, Any], axial_drag: float = 0.008) -> None:
     """Normalize only the known positional defect for a strict comparison.
 
     LineTypeBuilder.DEFAULT_HYDRO_COEFFS names n as normal and z as axial.
@@ -33,9 +33,9 @@ def _correct_coefficient_axes(model: dict[str, Any]) -> None:
         line["IncludeTorsion"] != "No" for line in model["Lines"]
     ):
         raise ValueError("coefficient correction requires torsion disabled")
-    expected = {"Cdn": 1.2, "Cdz": 0.008, "Can": 1.0, "Caz": 0}
+    expected = {"Cdn": 1.2, "Cdz": axial_drag, "Can": 1.0, "Caz": 0}
     for line_type in model["LineTypes"]:
-        if (line_type.get("Cd") != [1.2, 0.008] or line_type.get("Ca") != [1.0, 0]
+        if (line_type.get("Cd") != [1.2, axial_drag] or line_type.get("Ca") != [1.0, 0]
                 or expected.keys() & line_type.keys()):
             raise ValueError("reference coefficients differ from the known positional defect")
         del line_type["Cd"], line_type["Ca"]
@@ -69,6 +69,35 @@ def _material_spans(sections: list[list[Any]]) -> list[list[Any]]:
     return spans
 
 
+def _compare_original_inputs(reference: Path, candidate: Path, before: list[dict[str, Any]],
+                             after: list[dict[str, Any]], coefficient_axes: bool = False) -> int:
+    """Allow only the original matrix's named-axis replacement, when requested."""
+    if len(before) != len(after) or (not coefficient_axes and before != after):
+        raise ValueError("original comparison index changed")
+    count = 0
+    for old_case, new_case in zip(before, after):
+        if ({key: value for key, value in old_case.items() if key != "inputs"}
+                != {key: value for key, value in new_case.items() if key != "inputs"}
+                or len(old_case["inputs"]) != len(new_case["inputs"])):
+            raise ValueError("original comparison case or coverage changed")
+        if _verified(reference, old_case["geometry"]) != _verified(candidate, new_case["geometry"]):
+            raise ValueError("original comparison geometry changed")
+        for old_input, new_input in zip(old_case["inputs"], new_case["inputs"]):
+            if ({key: value for key, value in old_input.items() if key not in ("sha256", "bytes")}
+                    != {key: value for key, value in new_input.items() if key not in ("sha256", "bytes")}):
+                raise ValueError("original comparison input metadata changed")
+            old_bytes, new_bytes = _verified(reference, old_input), _verified(candidate, new_input)
+            if coefficient_axes:
+                old_model = yaml.safe_load(old_bytes)
+                _correct_coefficient_axes(old_model, axial_drag=0)
+                if old_model != yaml.safe_load(new_bytes):
+                    raise ValueError("original model field outside the coefficient correction changed")
+            elif old_bytes != new_bytes:
+                raise ValueError("original comparison bytes changed")
+            count += 1
+    return count
+
+
 def mesh_statistics(sections: list[list[Any]]) -> dict[str, Any]:
     """Check actual section boundary elements with an unrounded 2.0 limit."""
     if not sections:
@@ -88,7 +117,7 @@ def mesh_statistics(sections: list[list[Any]]) -> dict[str, Any]:
 
 
 def audit(reference: Path, candidate: Path, reference_revision: str,
-          coefficient_axes: bool = False) -> dict[str, Any]:
+          coefficient_axes: bool = False, original_coefficient_axes: bool = False) -> dict[str, Any]:
     """Verify source ancestry, serialized meshes and physical preservation."""
     repo = CAMPAIGN.parents[1]
     old = json.loads((reference / "index.json").read_bytes())
@@ -121,14 +150,8 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
         for a, b in zip(left, right):
             if _verified(reference, a) != _verified(candidate, b):
                 raise ValueError(f"frozen snapshot bytes changed: {key}")
-    if old["cases"] != new["cases"]:
-        raise ValueError("original comparison index changed")
-    original_inputs = 0
-    for case in new["cases"]:
-        for entry in [case["geometry"], *case["inputs"]]:
-            if _verified(reference, entry) != _verified(candidate, entry):
-                raise ValueError("original comparison bytes changed")
-        original_inputs += len(case["inputs"])
+    original_inputs = _compare_original_inputs(
+        reference, candidate, old["cases"], new["cases"], original_coefficient_axes)
     if [case["case_id"] for case in before["cases"]] != [case["case_id"] for case in after["cases"]]:
         raise ValueError("frozen case order changed")
     inputs, audits = [], []
@@ -177,6 +200,8 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
     if coefficient_axes:
         source_paths += ["src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py",
                          "src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py"]
+    if original_coefficient_axes:
+        source_paths += ["tests/riser_campaign/test_campaign.py"]
     for entry in after["code_sources"]:
         if _verified(candidate, entry) != (repo / entry["path"].removeprefix("source/")).read_bytes():
             raise ValueError("candidate source snapshot differs from the working source")
@@ -190,7 +215,8 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
             "case_order": [case["case_id"] for case in after["cases"]],
             "counts": {"written": after["written_counts"], "planned": after["phase_a_required"],
                        "pending": after["pending_governing_qa"]},
-            "preservation": {"original_input_byte_matches": original_inputs,
+            "preservation": {("original_physical_model_matches" if original_coefficient_axes
+                              else "original_input_byte_matches"): original_inputs,
                              "frozen_physical_model_matches": len(inputs),
                              "geometry_and_section_byte_matches": len(audits),
                              "scope_criteria_load_ledger_and_manifest": "BYTE_IDENTICAL"},
@@ -208,6 +234,13 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
             "all_other_model_fields": "IDENTICAL",
             "convention": "LineTypeBuilder.DEFAULT_HYDRO_COEFFS: n normal (x/y), z axial; RiserLine.include_torsion defaults to false",
         }
+    if original_coefficient_axes:
+        packet["original_coefficient_axis_correction"] = {
+            "removed_fields": {"Cd": [1.2, 0], "Ca": [1.0, 0]},
+            "named_fields": {"Cdn": 1.2, "Cdz": 0, "Can": 1.0, "Caz": 0},
+            "include_torsion": "No", "geometry_bytes": "IDENTICAL",
+            "all_other_model_fields": "IDENTICAL", "inputs": original_inputs,
+        }
     return packet
 
 
@@ -219,9 +252,12 @@ def main() -> None:
     parser.add_argument("--reference-revision", required=True)
     parser.add_argument("--coefficient-axes", action="store_true",
                         help="Compare counted meshes and allow only the known named-axis coefficient correction")
+    parser.add_argument("--original-coefficient-axes", action="store_true",
+                        help="Allow only the original comparison's named-axis replacement with zero axial coefficients")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    packet = audit(args.reference_dir, args.candidate_dir, args.reference_revision, args.coefficient_axes)
+    packet = audit(args.reference_dir, args.candidate_dir, args.reference_revision,
+                   args.coefficient_axes, args.original_coefficient_axes)
     _write(args.output.parent, args.output.name, _json_bytes(packet))
     print("Solver-free audit passed: 12 configurations, 144 counted inputs; native qualification NOT_RUN")
 

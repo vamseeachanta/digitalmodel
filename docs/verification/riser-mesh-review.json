@@ -1,23 +1,23 @@
 {
   "adjacent_element_ratio_limit": 2.0,
   "audit_runtime": {
-    "architecture": "aarch64",
+    "architecture": "x86_64",
     "implementation": "CPython",
     "libraries": {
       "PyYAML": "6.0.3",
       "jsonschema": "4.26.0",
-      "numpy": "2.5.4",
+      "numpy": "1.26.4",
       "pydantic": "2.14.1",
       "pydantic_core": "2.50.1",
-      "scipy": "1.18.1"
+      "scipy": "1.17.1"
     },
-    "python": "3.12.15",
+    "python": "3.11.14",
     "system": "Linux"
   },
   "candidate_index": {
     "bytes": 214384,
     "path": "index.json",
-    "sha256": "6c4f3f6292e6ff2652b4e1c5d687f397f64bc1a32476b3d798332f4c524ff756"
+    "sha256": "9db7f8a21524bfaf0d3c4b0e4bbb751ff1828e15bcc0c70d2c9a749889603a02"
   },
   "case_order": [
     "R08-W1-SCR",
@@ -1600,37 +1600,59 @@
   ],
   "native_handoff": "examples/riser-campaign/README.md#solver-free-mesh-audit-and-native-handoff",
   "native_qualification": "NOT_RUN",
+  "original_coefficient_axis_correction": {
+    "all_other_model_fields": "IDENTICAL",
+    "geometry_bytes": "IDENTICAL",
+    "include_torsion": "No",
+    "inputs": 288,
+    "named_fields": {
+      "Can": 1.0,
+      "Caz": 0,
+      "Cdn": 1.2,
+      "Cdz": 0
+    },
+    "removed_fields": {
+      "Ca": [
+        1.0,
+        0
+      ],
+      "Cd": [
+        1.2,
+        0
+      ]
+    }
+  },
   "preservation": {
     "frozen_physical_model_matches": 144,
     "geometry_and_section_byte_matches": 12,
-    "original_input_byte_matches": 288,
+    "original_physical_model_matches": 288,
     "scope_criteria_load_ledger_and_manifest": "BYTE_IDENTICAL"
   },
   "producing_runtime": {
     "record": {
       "bytes": 281,
       "path": "runtime.json",
-      "sha256": "a88f3519ca489d37dbffc73550f0e914065d340722501f504199b0a7220fc255"
+      "sha256": "dc558a6d29030f8da351afdd4cefdb5f25e3d93d207a81fcd9c5f5b46b52cbb3"
     },
     "versions": {
-      "architecture": "aarch64",
+      "architecture": "x86_64",
       "implementation": "CPython",
       "libraries": {
         "PyYAML": "6.0.3",
         "jsonschema": "4.26.0",
-        "numpy": "2.5.4",
+        "numpy": "1.26.4",
         "pydantic": "2.14.1",
         "pydantic_core": "2.50.1",
-        "scipy": "1.18.1"
+        "scipy": "1.17.1"
       },
-      "python": "3.12.15",
+      "python": "3.11.14",
       "system": "Linux"
     }
   },
   "reference_index": {
     "bytes": 214384,
     "path": "index.json",
-    "sha256": "5b0abb785158e2367e7841efd6c50ae8096e0ce961bb3aca413e3396b5b40bab"
+    "sha256": "f42909fdaf70e140f041a68000147ff418f46d9daa346ab5066b26b5ed2eaf40"
   },
   "reference_revision": "328c3e81665d90b22511a1d0aae3fa7d73103f0d",
   "review_status": "INDEPENDENT_REVIEW_REQUIRED; any later byte change invalidates the packet",
@@ -1646,9 +1668,9 @@
       "sha256": "262fed28756484e928a2580e40f86bc1bde41fc0f2c14870584440a562717009"
     },
     {
-      "bytes": 24286,
+      "bytes": 25117,
       "path": "examples/riser-campaign/README.md",
-      "sha256": "60452538f24605568f40307da8db9cacc2d660861fd9391b4edf1ca07c0cd931"
+      "sha256": "32486308d845ec7fd7d222f7592e80d759f65c5c100c093354c6e858db26dd03"
     },
     {
       "bytes": 780016,
@@ -1656,9 +1678,9 @@
       "sha256": "0ad653e242f5c3b2d6147edacd79228d874024ef99829f269de7face969c988f"
     },
     {
-      "bytes": 12627,
+      "bytes": 15171,
       "path": "scripts/riser_campaign/audit_mesh.py",
-      "sha256": "4fccbd1d403a9f106b90616afa7b5887ce96e0d7bb67994d96d2dca0e5af9e1d"
+      "sha256": "99eb1cc138b4c8bb95febf1e6cb22e214397167d121e8f88d5a05fdb93b939b6"
     },
     {
       "bytes": 22189,
@@ -1666,9 +1688,9 @@
       "sha256": "10336b03de629cff47d879016bc90ccfae0a6a317c2641b7ff641eee317e8ae7"
     },
     {
-      "bytes": 23799,
+      "bytes": 24272,
       "path": "scripts/riser_campaign/generate_inputs.py",
-      "sha256": "bed70aecb175b53da5868dfa4590c8431602f8b8657262b53c8825ba84454bf6"
+      "sha256": "f34973e1a50c97eaba0a1e7d9e6c516a14ef53e83a5429fada10390af7678de8"
     },
     {
       "bytes": 9908,
@@ -1729,6 +1751,11 @@
       "bytes": 3708,
       "path": "src/digitalmodel/solvers/orcaflex/yaml_utils.py",
       "sha256": "b0e676a83e9237e5d0f359a8c37fc58b1d3331b54f0eaeb1a0e6e2b7d0176210"
+    },
+    {
+      "bytes": 22145,
+      "path": "tests/riser_campaign/test_campaign.py",
+      "sha256": "df78873d479a6a07a38571b5d0f4564a6af3a3a81a58976fa4368bc623e340d5"
     },
     {
       "bytes": 2999,

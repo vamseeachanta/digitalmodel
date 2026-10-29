@@ -7,14 +7,14 @@
       "configuration": "SCR",
       "path": "scr.yml",
       "generated_path": "fpso-small-500-scr/nominal--mild.yml",
-      "sha256": "7e58e47f9d508356486e8b139565166677d498667acb9d5b2090ea87f3f3c900",
+      "sha256": "d8605d53e9b6109c59ad0ac91de7b3f78773b8adc87462e0accb7d5105e7f8ef",
       "bytes": 5384
     },
     {
       "configuration": "lazy-wave",
       "path": "lazy-wave.yml",
       "generated_path": "fpso-small-500-lazy-wave/nominal--mild.yml",
-      "sha256": "0c88d38c1599ec8f4d186a2113ac90b496c1f0a32a679e8ebfd4f0f4dbbe1f5a",
+      "sha256": "6475a5b41d0c8614626d0f0ba1332edc326fd2a48373db00a3e63cd361ad508f",
       "bytes": 5815
     }
   ]
