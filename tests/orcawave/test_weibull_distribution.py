@@ -61,6 +61,19 @@ def test_support_and_endpoint_limits(shape, at_boundary):
     assert law.pdf(-math.inf) == law.cdf(-math.inf) == 0
 
 
+@pytest.mark.parametrize("shape", [0.5, 1, 2])
+@pytest.mark.parametrize("location", [-3, 3])
+def test_shifted_quantile_endpoints_in_mixed_arrays(shape, location):
+    """Source W: Q(0)=gamma, Q(1)=+infinity for either sign of gamma."""
+    law = WeibullDistribution(shape, 2, location)
+    probabilities = [[0, 0.5], [1, 0]]
+    expected = [
+        [location, location + 2 * math.log(2) ** (1 / shape)],
+        [math.inf, location],
+    ]
+    np.testing.assert_allclose(law.quantile(probabilities), expected)
+
+
 def test_vectorization_and_extreme_cycles():
     """For k=1, lambda=1, gamma=0, Q_N=ln(N), even beyond 1/eps."""
     law = WeibullDistribution(1, 1)
@@ -251,6 +264,16 @@ def test_scaled_quantile_operands_preserve_exact_cancellation(api):
     """
     law = WeibullDistribution(1, 5e307, -1e308)
     argument = -math.expm1(-2) if api == "quantile" else math.exp(2)
+    assert getattr(law, api)(argument) == 0
+
+
+@pytest.mark.parametrize("api", ["quantile", "return_level"])
+@pytest.mark.parametrize("shape, multiplier", [(0.5, 9), (1 / 3, 27)])
+@pytest.mark.parametrize("scale", [1, math.ldexp(1, 1000)])
+def test_quantile_power_keeps_hand_calculated_zero(api, shape, multiplier, scale):
+    """Source W: t=3 gives t^2=9 and t^3=27, exactly cancelling gamma."""
+    law = WeibullDistribution(shape, scale, -multiplier * scale)
+    argument = -math.expm1(-3) if api == "quantile" else math.exp(3)
     assert getattr(law, api)(argument) == 0
 
 

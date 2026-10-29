@@ -110,11 +110,13 @@ class WeibullDistribution:
         """Cumulative probability; zero below the support (Source W)."""
         return _scalar_or_array(-np.expm1(np.asarray(self.logsf(x))))
 
-    def _shifted_exponential(self, log_power: ArrayLike) -> Response:
+    def _shifted_power(self, hazard: ArrayLike) -> Response:
         """Combine Source W's positive quantile term and signed location."""
-        power = np.asarray(log_power, dtype=float)
-        with np.errstate(over="ignore", invalid="ignore"):
-            multiplier = np.exp(power)
+        base = np.asarray(hazard, dtype=float)
+        with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
+            power = np.log(base) / self.shape
+            # Avoid a log/exp round trip before cancelling the signed location.
+            multiplier = np.power(base, 1 / self.shape)
             reference = max(self.scale, abs(self.location))
             ratio = self.scale / reference
             # Source W, divided by a common finite reference before adding.
@@ -144,6 +146,8 @@ class WeibullDistribution:
                 log_result, sign = logsumexp(logs, b=weights, axis=0, return_sign=True)
                 result = sign * np.exp(log_result)
             result = np.where(representable, direct, result)
+        # Q(1)=+infinity regardless of location or signed logsumexp behavior.
+        result = np.where(np.isposinf(power), np.inf, result)
         return _scalar_or_array(np.where(np.isneginf(power), self.location, result))
 
     def quantile(self, probability: ArrayLike) -> Response:
@@ -152,7 +156,7 @@ class WeibullDistribution:
         if np.any(~np.isfinite(p)) or np.any((p < 0) | (p > 1)):
             raise ValueError("Cumulative probability must be finite in [0, 1]")
         with np.errstate(divide="ignore", over="ignore"):
-            return self._shifted_exponential(np.log(-np.log1p(-p)) / self.shape)
+            return self._shifted_power(-np.log1p(-p))
 
     def return_level(self, cycles: float) -> float:
         """Q(1-1/N)=gamma+lambda*(ln N)^(1/k), N >= 1 (Source W).
@@ -166,9 +170,7 @@ class WeibullDistribution:
         if cycles == 1:
             return self.location
         with np.errstate(over="ignore"):
-            return float(
-                self._shifted_exponential(math.log(math.log(cycles)) / self.shape)
-            )
+            return float(self._shifted_power(math.log(cycles)))
 
     def moment(self, order: int) -> float:
         """Raw integer moment via binomial expansion (Source W).
