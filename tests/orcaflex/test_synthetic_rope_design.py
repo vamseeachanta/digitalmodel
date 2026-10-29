@@ -174,6 +174,34 @@ def test_load_history_csv_drives_mean_load_stiffness_selection():
     assert stiffness.citation.section.startswith("§5.4")
 
 
+@pytest.mark.parametrize("trailing_blank_lines", [0, 2], ids=["plain", "blank-lines"])
+@pytest.mark.parametrize("line_ending", [b"\n", b"\r\n"], ids=["lf", "crlf"])
+def test_load_history_csv_aggregates_independent_rows(
+    tmp_path, line_ending, trailing_blank_lines
+):
+    """Check hand-authored parser data, independent of material design values."""
+    fixture = _fixture_path().with_name("synthetic_rope_aggregation.csv")
+    path = tmp_path / fixture.name
+    path.write_bytes(
+        fixture.read_bytes().replace(b"\n", line_ending)
+        + line_ending * trailing_blank_lines
+    )
+
+    history = LoadHistory.from_csv(path)
+
+    # Independent hand calculation for the eight synthetic rows in the fixture:
+    # mean = 312 / 8 = 39; maximum range = 48 (neither first nor last row).
+    # TRUE, YeS, y and 1 count; false, NO, n and 0 do not, after trimming.
+    expected_mean = (8 + 14 + 26 + 38 + 44 + 50 + 62 + 70) / 8
+    expected_range = max(12, 48, 7, 32, 19, 25, 16, 41)
+    expected_events = 1 + 0 + 1 + 0 + 1 + 0 + 1 + 0
+    assert history.model_dump() == {
+        "mean_load_pct_mbl": expected_mean,
+        "dynamic_tension_range_pct_mbl": expected_range,
+        "low_tension_events": expected_events,
+    }
+
+
 def test_dynamic_tension_range_moves_stiffness_toward_storm_value():
     mild = LoadHistory(
         mean_load_pct_mbl=20.0,

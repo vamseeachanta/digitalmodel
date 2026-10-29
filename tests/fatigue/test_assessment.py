@@ -63,6 +63,17 @@ def test_constant_history_has_zero_damage_and_unknown_finite_life():
     json.dumps(result.model_dump(), allow_nan=False)
 
 
+def test_calm_history_preserves_storm_case_damage():
+    storm = dict(name="storm", kind="history", stress_history_mpa=[0, 100, 0])
+    calm = dict(name="calm", kind="history", stress_history_mpa=[10, 10])
+    storm_only = assess_fatigue(AssessmentInput.model_validate(
+        histogram_input(load_cases=[storm])))
+    combined = assess_fatigue(AssessmentInput.model_validate(
+        histogram_input(load_cases=[storm, calm])))
+    assert combined.block_damage == pytest.approx(storm_only.block_damage)
+    assert combined.cases[1].block_damage == 0.0
+
+
 @pytest.mark.parametrize("changes", [
     {"block_years": 0}, {"design_years": -1}, {"design_fatigue_factor": 0.5},
     {"design_years": float("inf")}, {"environment": "unknown"},

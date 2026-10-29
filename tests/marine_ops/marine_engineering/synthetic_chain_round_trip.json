@@ -1,0 +1,119 @@
+{
+  "basis": "Independently authored synthetic rows, not engineering data. Every property is an arbitrary test literal in the stated units; no production formula supplies an expected value. Query outcomes are hand-evaluated by grade, link type, inclusive MBL threshold, then minimum diameter.",
+  "units": {
+    "diameter": "mm",
+    "mbl": "kN",
+    "stiffness": "kN",
+    "weight_air": "kg/m",
+    "weight_water": "kg/m",
+    "bend_radius": "m"
+  },
+  "rows": [
+    {
+      "diameter": 20,
+      "grade": "R4",
+      "link_type": "Stud Link",
+      "mbl": 100,
+      "stiffness": 1000,
+      "weight_air": 10,
+      "weight_water": 8,
+      "bend_radius": 1,
+      "fatigue_category": "synthetic-only",
+      "certification": "none-synthetic",
+      "manufacturer": "synthetic",
+      "part_number": "small-stud",
+      "notes": "Authored lower-bound row; not for engineering use."
+    },
+    {
+      "diameter": 30,
+      "grade": "R4",
+      "link_type": "Stud Link",
+      "mbl": 150,
+      "stiffness": 2000,
+      "weight_air": 20,
+      "weight_water": 16,
+      "bend_radius": 2,
+      "fatigue_category": "synthetic-only",
+      "certification": "none-synthetic",
+      "manufacturer": "synthetic",
+      "part_number": "medium-stud",
+      "notes": "Authored inclusive-threshold row; not for engineering use."
+    },
+    {
+      "diameter": 40,
+      "grade": "R4",
+      "link_type": "Stud Link",
+      "mbl": 200,
+      "stiffness": 3000,
+      "weight_air": 30,
+      "weight_water": 24,
+      "bend_radius": 3,
+      "fatigue_category": "synthetic-only",
+      "certification": "none-synthetic",
+      "manufacturer": "synthetic",
+      "part_number": "large-stud",
+      "notes": "Authored upper-bound row; not for engineering use."
+    },
+    {
+      "diameter": 20,
+      "grade": "R3",
+      "link_type": "Stud Link",
+      "mbl": 300,
+      "stiffness": 4000,
+      "weight_air": 40,
+      "weight_water": 32,
+      "bend_radius": 4,
+      "fatigue_category": "synthetic-only",
+      "certification": "none-synthetic",
+      "manufacturer": "synthetic",
+      "part_number": "other-grade",
+      "notes": "Deliberately stronger grade distractor; not for engineering use."
+    },
+    {
+      "diameter": 20,
+      "grade": "R4",
+      "link_type": "Studless",
+      "mbl": 400,
+      "stiffness": 5000,
+      "weight_air": 50,
+      "weight_water": 40,
+      "bend_radius": 5,
+      "fatigue_category": "synthetic-only",
+      "certification": "none-synthetic",
+      "manufacturer": "synthetic",
+      "part_number": "other-link",
+      "notes": "Deliberately stronger link distractor; not for engineering use."
+    }
+  ],
+  "selection_cases": [
+    {
+      "required_mbl": 100,
+      "safety_factor": 1,
+      "target_mbl": 100,
+      "eligible": ["small-stud", "medium-stud", "large-stud"],
+      "selected": "small-stud",
+      "calculation": "100 kN times 1 = 100 kN; all stud R4 rows qualify."
+    },
+    {
+      "required_mbl": 100,
+      "safety_factor": 1.5,
+      "target_mbl": 150,
+      "eligible": ["medium-stud", "large-stud"],
+      "selected": "medium-stud",
+      "calculation": "100 kN times 1.5 = 150 kN; the 150 kN boundary is included."
+    },
+    {
+      "required_mbl": 150,
+      "safety_factor": 1.5,
+      "target_mbl": 225,
+      "eligible": [],
+      "selected": null,
+      "calculation": "150 kN times 1.5 = 225 kN; no stud R4 row qualifies, despite the stronger distractors."
+    }
+  ],
+  "missing_specifications": [
+    {"diameter": 25, "grade": "R4", "link_type": "Stud Link"},
+    {"diameter": 20, "grade": "R5", "link_type": "Stud Link"},
+    {"diameter": 20, "grade": "R3", "link_type": "Studless"}
+  ]
+}

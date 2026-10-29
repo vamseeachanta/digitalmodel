@@ -11,11 +11,80 @@ from digitalmodel.orcaflex.postprocessor import (
     RangeGraphData,
     TimeSeriesStats,
     compute_time_series_stats,
+    encounter_probability,
+    return_period_for_probability,
     fit_gumbel,
     fit_weibull,
     generate_range_graph,
     process_multi_seed,
 )
+
+
+class TestEncounterProbability:
+    """Independent-year encounter probabilities and their inverse."""
+
+    # USACE EM 1110-2-1415, Hydrologic Frequency Analysis, 5 March 1993,
+    # paragraph 3-5, "Risk": complement of zero exceedances in N years.
+    # Independent hand calculations, without calling the production helpers:
+    # 1 - (99/100)^25 = 0.22218 (rounded); 1 - (9999/10000)^25 = 0.002497
+    # (rounded). The literals below retain their stated absolute tolerances.
+    # T=1 gives certainty; 1 - (1/2)^2 = 3/4; N=1 gives 1/100.
+    # For T=1e20: 25/T - 300/T^2 + ... = 2.5e-19 - 3e-38 + ... .
+    @pytest.mark.parametrize("period, life, expected, tolerance", [
+        (100, 25, 0.222, 0.0005),
+        (10000, 25, 0.0025, 0.00005),
+        (1, 1, 1.0, 1e-15),
+        (2, 2, 0.75, 1e-15),
+        (100, 1, 0.01, 1e-15),
+        (1e20, 25, 2.5e-19, 1e-30),
+    ])
+    def test_hand_values(self, period, life, expected, tolerance):
+        assert encounter_probability(period, life) == pytest.approx(
+            expected, abs=tolerance
+        )
+
+    # Algebraic inverse of the same cited model: T = 1/[1 - (1-p)^(1/N)].
+    # p=3/4, N=2: T=1/[1-sqrt(1/4)]=2; p=1/100, N=1: T=100.
+    # p=1 makes (1-p)^(1/N)=0, hence T=1 for either positive life.
+    # p=2.5e-19, N=25: 1-(1-p)^(1/25) = p/25 + 12*p^2/625 + ...;
+    # T is approximately 1e20, within the relative tolerance of 1e-12.
+    @pytest.mark.parametrize("probability, life, expected", [
+        (0.75, 2, 2.0),
+        (0.01, 1, 100.0),
+        (1.0, 1, 1.0),
+        (1.0, 25, 1.0),
+        (2.5e-19, 25, 1e20),
+    ])
+    def test_inverse_hand_values(self, probability, life, expected):
+        assert return_period_for_probability(probability, life) == pytest.approx(
+            expected, rel=1e-12
+        )
+
+    @pytest.mark.parametrize("life", [1e10, 1e100])
+    def test_inverse_beyond_float_range(self, life):
+        assert return_period_for_probability(1e-300, life) == math.inf
+
+    @pytest.mark.parametrize("period, life", [(100, 25), (10000, 25), (2, 0.5)])
+    def test_round_trip(self, period, life):
+        probability = encounter_probability(period, life)
+        assert return_period_for_probability(probability, life) == pytest.approx(period)
+
+    @pytest.mark.parametrize("period", [0, -1, 0.5, math.inf, -math.inf, math.nan])
+    def test_invalid_return_period(self, period):
+        with pytest.raises(ValueError, match="return_period"):
+            encounter_probability(period, 25)
+
+    @pytest.mark.parametrize("life", [0, -1, math.inf, -math.inf, math.nan])
+    def test_invalid_design_life(self, life):
+        with pytest.raises(ValueError, match="design_life"):
+            encounter_probability(100, life)
+        with pytest.raises(ValueError, match="design_life"):
+            return_period_for_probability(0.2, life)
+
+    @pytest.mark.parametrize("probability", [0, -0.1, 1.1, math.inf, -math.inf, math.nan])
+    def test_invalid_probability(self, probability):
+        with pytest.raises(ValueError, match="probability"):
+            return_period_for_probability(probability, 25)
 
 
 class TestTimeSeriesStats:

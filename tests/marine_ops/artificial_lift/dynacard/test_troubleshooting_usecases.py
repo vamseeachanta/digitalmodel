@@ -63,3 +63,22 @@ def test_html_page_embeds_all_cases():
     html = (_FROZEN.parent / "dynacard-troubleshooting.html").read_text(encoding="utf-8")
     for case in _frozen_cases():
         assert case["mode"] in html
+
+
+def test_html_page_embeds_current_library_and_provenance():
+    """Published cards must retain the current arrays and provenance metadata."""
+    from digitalmodel.marine_ops.artificial_lift.dynacard.example_cards import (
+        load_example_cards,
+    )
+
+    html = (_FROZEN.parent / "dynacard-troubleshooting.html").read_text(encoding="utf-8")
+    marker = '<script id="library-data" type="application/json">'
+    _before, found, contents = html.partition(marker)
+    assert found, "Published page has no embedded example-card library"
+    published = json.loads(contents.split("</script>", 1)[0])
+    current = load_example_cards()
+    assert len(published["cards"]) == len(current)
+    for actual, card in zip(published["cards"], current):
+        expected = card.model_dump()
+        expected["meta"] = {k: v for k, v in card.meta.items() if v is not None}
+        assert actual == expected, f"Published library card drifted: {card.id}"

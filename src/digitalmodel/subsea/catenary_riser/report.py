@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Riser report-template generator (deliverable of record).
 # ABOUTME: Renders a branded riser-analysis report (HTML + markdown) from a
 # ABOUTME: structured riser results object/dict. No live analysis / solver.
@@ -46,6 +49,7 @@ from __future__ import annotations
 
 import html as _html
 import math
+import re
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -59,10 +63,10 @@ from digitalmodel._output_paths import validate_output_paths
 # Provenance / labelling
 # ---------------------------------------------------------------------------
 
-#: Maps the screening (atlas) vs certified (custom) flag to a display label.
+# A rendering mode is not a certification record.
 PROVENANCE_LABELS = {
     "atlas": "SCREENING (atlas)",
-    "custom": "CERTIFIED (custom)",
+    "custom": "CUSTOM (not certified)",
 }
 
 
@@ -160,14 +164,39 @@ class Provenance:
     workflow: str = "riser-analysis"
     workflow_version: str = "0.0.0"
     standard_revision: str = ""
-    #: "atlas" == screening (pre-computed atlas), "custom" == certified run.
+    #: "atlas" == screening; "custom" describes supplied calculation data only.
     mode: str = "atlas"
     run_id: str = ""
     generated_utc: str = ""
 
     @property
     def mode_label(self) -> str:
-        return PROVENANCE_LABELS.get(self.mode, self.mode.upper())
+        return PROVENANCE_LABELS.get(self.mode, "UNKNOWN MODE (not certified)")
+
+    @property
+    def missing_fields(self) -> list[str]:
+        """Minimum calculation identity, cited edition and UTC time contract.
+
+        Supplied provenance is not independently authenticated by this renderer.
+        Render time cannot replace a missing calculation timestamp.
+        """
+        missing = []
+        for name in ("standard_revision", "run_id", "generated_utc"):
+            value = getattr(self, name)
+            if not isinstance(value, str) or not value.strip():
+                missing.append(name)
+        if "standard_revision" not in missing and not re.search(r"\b(?:19|20)\d{2}\b", self.standard_revision):
+            missing.append("standard_revision (edition required)")
+        if "generated_utc" not in missing:
+            try:
+                stamp = datetime.fromisoformat(self.generated_utc.replace("Z", "+00:00"))
+                if stamp.tzinfo is None or stamp.utcoffset().total_seconds() != 0:
+                    raise ValueError("UTC timestamp required")
+            except (ValueError, TypeError):
+                missing.append("generated_utc")
+        if self.mode not in PROVENANCE_LABELS:
+            missing.append("mode")
+        return missing
 
 
 @dataclass
@@ -196,8 +225,23 @@ class RiserReportData:
     conclusions: list[str] = field(default_factory=list)
 
     provenance: Provenance = field(default_factory=Provenance)
+    revision_history: list[dict[str, str]] = field(default_factory=list)
 
     # ---- derived roll-ups ------------------------------------------------
+
+    @property
+    def evidence_issues(self) -> list[str]:
+        """Missing groups and provenance prevent complete-evidence claims."""
+        return self.provenance.missing_fields + [
+            name for name in ("strength_results", "fatigue_results", "code_checks", "revision_history")
+            if not getattr(self, name)
+        ]
+
+    @property
+    def evidence_label(self) -> str:
+        if self.evidence_issues:
+            return "PARTIAL EVIDENCE — NOT CERTIFIED"
+        return "SUPPLIED EVIDENCE — NOT CERTIFIED"
 
     @property
     def max_strength_utilisation(self) -> Optional[float]:
@@ -223,6 +267,8 @@ class RiserReportData:
         )
         if any(s == "FAIL" for s in statuses):
             return "FAIL"
+        if self.evidence_issues:
+            return "N/A"
         if any(s == "N/A" for s in statuses):
             return "N/A"
         if any(s == "MARGINAL" for s in statuses):
@@ -350,6 +396,10 @@ def sample_riser_report_data() -> RiserReportData:
             run_id="screen-0001",
             generated_utc="",  # filled at render time if blank
         ),
+        revision_history=[{
+            "revision": "DRAFT", "date": "2026-10-22",
+            "change": "Initial illustrative summary; calculation evidence is not certified.",
+        }],
     )
 
 
@@ -375,6 +425,8 @@ def _try_import_builder():
                 return GTMReportBuilder
             except Exception:
                 return None
+            finally:
+                sys.path.remove(str(cand))
     return None
 
 
@@ -497,6 +549,7 @@ def _provenance_html(p: Provenance) -> str:
 # Section order constant -- the standard riser report outline.
 SECTION_ORDER = [
     "Executive Summary",
+    "Revision history",
     "Inputs & Assumptions",
     "Method & Standards",
     "Strength / Utilisation Summary",
@@ -522,6 +575,8 @@ def _build_sections(d: RiserReportData) -> list[tuple[str, str]]:
             if d.min_fatigue_life_years is not None else "—"
         ),
         "Classification": d.provenance.mode_label,
+        "Evidence": d.evidence_label,
+        "Evidence gaps": ", ".join(d.evidence_issues) or "None identified by the data contract",
     })
     exec_html = (
         overview
@@ -541,6 +596,14 @@ def _build_sections(d: RiserReportData) -> list[tuple[str, str]]:
 
     return [
         ("Executive Summary", exec_html),
+        ("Revision history", (
+            "<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th>"
+            "</tr></thead><tbody>" + "".join(
+                "<tr>" + "".join(f"<td>{_esc(r.get(k, '—'))}</td>"
+                                 for k in ("revision", "date", "change")) + "</tr>"
+                for r in d.revision_history
+            ) + "</tbody></table>"
+        ) if d.revision_history else "<p>No revision history supplied.</p>"),
         ("Inputs & Assumptions", inputs_html),
         ("Method & Standards", method_html),
         ("Strength / Utilisation Summary", _strength_table_html(d.strength_results)),
@@ -613,11 +676,10 @@ def render_html(data: Union[RiserReportData, dict[str, Any]]) -> str:
     """Render the riser report as a complete HTML string (no file write)."""
     d = _coerce(data)
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    if not d.provenance.generated_utc:
-        d.provenance.generated_utc = timestamp
     sections = _build_sections(d)
 
     Builder = _try_import_builder()
+    reason = "builder-unavailable"
     if Builder is not None:
         try:
             report = Builder(
@@ -633,19 +695,21 @@ def render_html(data: Union[RiserReportData, dict[str, Any]]) -> str:
             # reusing its internal assembly via a throwaway path.
             import tempfile
             with tempfile.TemporaryDirectory() as td:
-                return report.build(Path(td) / "riser_report.html")
+                output = report.build(Path(td) / "riser_report.html")
+                if not isinstance(output, str) or not output.strip():
+                    raise TypeError("builder must return nonempty HTML text")
+                return output + "\n<!-- riser-renderer: builder -->"
         except Exception:
             # Any incompatibility -> deterministic fallback renderer.
-            pass
-    return _render_fallback_html(d, sections, timestamp)
+            reason = "builder-incompatible"
+    marker = f"\n<!-- riser-renderer: fallback; reason: {reason} -->"
+    return _render_fallback_html(d, sections, timestamp) + marker
 
 
 def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
     """Render the riser report as markdown (deliverable twin)."""
     d = _coerce(data)
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    if not d.provenance.generated_utc:
-        d.provenance.generated_utc = timestamp
 
     lines: list[str] = []
     lines.append(f"# {d.riser_name} — Riser Analysis Report")
@@ -664,10 +728,20 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
     if d.min_fatigue_life_years is not None:
         lines.append(f"- **Min fatigue life:** {d.min_fatigue_life_years:.1f} yr")
     lines.append(f"- **Classification:** {d.provenance.mode_label}")
+    lines.append(f"- **Evidence:** {d.evidence_label}")
+    lines.append(f"- **Evidence gaps:** {', '.join(d.evidence_issues) or 'None identified by the data contract'}")
     lines.append("")
     if d.executive_summary:
         lines.append(d.executive_summary)
         lines.append("")
+
+    lines.extend(["## Revision history", "", "| Revision | Date | Change and reason |",
+                  "| --- | --- | --- |"])
+    for revision in d.revision_history:
+        lines.append(f"| {revision.get('revision', '—')} | {revision.get('date', '—')} | {revision.get('change', '—')} |")
+    if not d.revision_history:
+        lines.append("| — | — | No revision history supplied. |")
+    lines.append("")
 
     lines.append("## Inputs & Assumptions")
     lines.append("")

@@ -1,0 +1,269 @@
+{
+  "D1": {
+    "base_downstream": {
+      "curve_type": "DEFINITE_TIME",
+      "instantaneous_pickup_A": null,
+      "pickup_current_A": 100.0,
+      "relay_id": "downstream",
+      "relay_type": "OVERCURRENT_51",
+      "time_dial_setting": 0.5
+    },
+    "base_upstream": {
+      "curve_type": "DEFINITE_TIME",
+      "instantaneous_pickup_A": null,
+      "pickup_current_A": 100.0,
+      "relay_id": "upstream",
+      "relay_type": "OVERCURRENT_51",
+      "time_dial_setting": 2.0
+    },
+    "fault_current_A": 500.0,
+    "nan_minimum": {
+      "minimum_operate_current_A": "NaN",
+      "relay_id": "nan-minimum",
+      "restraint_current_A": 100.0,
+      "slope_percent": 20.0
+    },
+    "nan_pickup": "Replace base upstream pickup_current_A with NaN",
+    "negative_margin": {
+      "downstream": "base_upstream",
+      "min_margin_s": -2.0,
+      "result": {
+        "downstream_time_s": 2.0,
+        "margin_s": -1.5,
+        "pass": true,
+        "upstream_time_s": 0.5
+      },
+      "upstream": "base_downstream"
+    },
+    "negative_restraint": {
+      "minimum_operate_current_A": 10.0,
+      "relay_id": "negative-restraint",
+      "restraint_current_A": -1.0,
+      "slope_percent": 20.0
+    },
+    "negative_time": {
+      "curve_type": "DEFINITE_TIME",
+      "pickup_current_A": 100.0,
+      "time_dial_setting": -0.5
+    },
+    "observations": {
+      "nan_differential_minimum_accepted": true,
+      "nan_overcurrent_pickup_accepted": true,
+      "negative_direct_definite_time_returned": true,
+      "negative_requested_margin_passes": true,
+      "negative_restraint_accepted": true
+    }
+  },
+  "D2": {
+    "audited_functions": [
+      "coordination_check",
+      "time_current_intersection"
+    ],
+    "changed_instantaneous_pickup_A": 200.0,
+    "coordination_unchanged": true,
+    "differential_operating_methods": [],
+    "ignored_setting_reads": []
+  },
+  "D3": {
+    "coincident_curves": {
+      "current_range_A": [
+        150.0,
+        5000.0
+      ],
+      "max_iterations": 100,
+      "observation_reproduced": true,
+      "relay1": {
+        "curve_type": "VERY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "very",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "relay2": {
+        "curve_type": "VERY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "coincident",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "result_current_A_time_s_display": [
+        2575.0,
+        0.5
+      ],
+      "tolerance_A": "1e-3"
+    },
+    "empty_effective_interval": {
+      "current_range_A": [
+        0.0,
+        101.0
+      ],
+      "max_iterations": 100,
+      "observation_reproduced": true,
+      "relay1": {
+        "curve_type": "MODERATELY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "moderately",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "relay2": {
+        "curve_type": "VERY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "very",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "result_current_A_time_s_display": null,
+      "tolerance_A": "1e-3"
+    },
+    "exact_lower_endpoint_root": {
+      "current_range_A": [
+        150.0,
+        5000.0
+      ],
+      "max_iterations": 100,
+      "observation_reproduced": true,
+      "relay1": {
+        "curve_type": "VERY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "very",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "relay2": {
+        "curve_type": "DEFINITE_TIME",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "endpoint",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": "inverse_time_curve(150.0, 100.0, 1.0, CurveType.VERY_INVERSE)"
+      },
+      "result_current_A_time_s_display": [
+        5000.0,
+        0.5
+      ],
+      "tolerance_A": "1e-3"
+    },
+    "lower_bound_clipping": {
+      "current_range_A": [
+        0.0,
+        5000.0
+      ],
+      "max_iterations": 100,
+      "observation_reproduced": true,
+      "relay1": {
+        "curve_type": "MODERATELY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "moderately",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "relay2": {
+        "curve_type": "VERY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "very",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "result_current_A_time_s_display": [
+        366.0,
+        2.1
+      ],
+      "tolerance_A": "1e-3"
+    },
+    "no_sign_change": {
+      "current_range_A": [
+        150.0,
+        5000.0
+      ],
+      "max_iterations": 100,
+      "observation_reproduced": true,
+      "relay1": {
+        "curve_type": "VERY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "very",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "relay2": {
+        "curve_type": "VERY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "slower",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 2.0
+      },
+      "result_current_A_time_s_display": null,
+      "tolerance_A": "1e-3"
+    },
+    "zero_iterations": {
+      "current_range_A": [
+        150.0,
+        5000.0
+      ],
+      "max_iterations": 0,
+      "observation_reproduced": true,
+      "relay1": {
+        "curve_type": "MODERATELY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "moderately",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "relay2": {
+        "curve_type": "VERY_INVERSE",
+        "instantaneous_pickup_A": null,
+        "pickup_current_A": 100.0,
+        "relay_id": "very",
+        "relay_type": "OVERCURRENT_51",
+        "time_dial_setting": 1.0
+      },
+      "result_current_A_time_s_display": null,
+      "tolerance_A": "1e-3"
+    }
+  },
+  "H1": {
+    "absolute_tolerance_s": "1e-12",
+    "downstream": {
+      "curve_type": "DEFINITE_TIME",
+      "instantaneous_pickup_A": null,
+      "pickup_current_A": 100.0,
+      "relay_id": "downstream",
+      "relay_type": "OVERCURRENT_51",
+      "time_dial_setting": 0.5
+    },
+    "fault_current_A": 500.0,
+    "hand_expected_margin_s": 1.5,
+    "min_margin_s": 0.3,
+    "result": {
+      "downstream_time_s": 0.5,
+      "margin_s": 1.5,
+      "pass": true,
+      "upstream_time_s": 2.0
+    },
+    "upstream": {
+      "curve_type": "DEFINITE_TIME",
+      "instantaneous_pickup_A": null,
+      "pickup_current_A": 100.0,
+      "relay_id": "upstream",
+      "relay_type": "OVERCURRENT_51",
+      "time_dial_setting": 2.0
+    }
+  },
+  "display": "Results rounded to one decimal place; assertions use unrounded values.",
+  "qualification": "Diagnostic reproductions only; no independent numerical qualification.",
+  "script_path": "scripts/validation/protection_relay_probe.py",
+  "script_sha256": "b7eba38ace65a798cdc13da90e9511f201adf853546857dd3f00ab977e7a2be8",
+  "source_path": "src/digitalmodel/power/protection/relay_coordination.py",
+  "source_revision": "2aa19e88306d9b4294e49a2b7849b07ae036b205",
+  "source_sha256": "b8df96cb8c7aba8040a1ce4902e57aaa6aee9957e874fc6256c74798cc0f9b57"
+}

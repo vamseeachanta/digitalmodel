@@ -1,0 +1,14 @@
+{
+  "anode_counts": {
+    "final": 556,
+    "initial": 575,
+    "installed": 569,
+    "mass": 547,
+    "recommended": 575
+  },
+  "current_A": {
+    "final": 1892.0520000000001,
+    "initial": 2688.2849999999994,
+    "mean": 1452.45
+  }
+}

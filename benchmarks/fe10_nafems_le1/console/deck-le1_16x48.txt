@@ -1,0 +1,15 @@
+ASCII; SOL 101, CEND, BEGIN BULK, ENDDATA PASS  1814 lines
+case control                         PASS  []
+unique ids                           PASS  833 GRID, 768 CQUAD4; duplicates none
+references resolve                   PASS  0 elements with a bad reference
+G0.5 material and thickness          PASS  MAT1 (210000.0, 0.3); PSHELL t 100.0 mm (units N, mm, MPa)
+element signed area > 0 (normal +z)  PASS  0 elements with area <= 0; total area 5.44773e+06 mm^2
+FE2 aspect <= 5, angles 45-135 deg   PASS  largest aspect 2.39; interior angles 80.6 to 101.2 deg
+edges shared by > 2 elements: 0      PASS  0
+3456 constrained at every grid       PASS
+area against exact quarter annulus   PASS  mesh 5447727.3, exact 5448699.8 mm^2, difference -0.02 %
+edge grids on their ellipses         PASS  49 grids on the inner ellipse, 49 on the outer; every free-edge grid on an ellipse or a symmetry line
+symmetry: u_y = 0 on y = 0, u_x = 0 on x = 0 PASS  17 grids on y = 0, 17 on x = 0
+point D grid at (2000, 0)            PASS  grid [1]
+load resultant = p t (BO, AO)        PASS  sum Fx 2.75e+06 N (expected 2.75e+06), sum Fy 3.25e+06 N (expected 3.25e+06); 49 loaded grids, all on the outer ellipse
+RESULT PASS: 14 checks, 0 fail

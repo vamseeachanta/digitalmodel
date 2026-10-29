@@ -5,6 +5,7 @@ spread mooring configurations, line properties, and design results.
 """
 
 from dataclasses import dataclass, field
+from math import isfinite
 from typing import List, Dict, Optional, Tuple
 from enum import Enum
 
@@ -80,6 +81,29 @@ class MooringLine:
     def min_mbl(self) -> float:
         """Minimum breaking load of weakest segment (kN)."""
         return min(seg.mbl for seg in self.segments)
+
+    @property
+    def axial_stiffness(self) -> float:
+        """Return small-strain axial stiffness of serial segments in kN/m.
+
+        Uniaxial linear elasticity gives each extension as F * L_i / EA_i.
+        Summing extensions under the same force gives K = 1 / sum(L_i / EA_i),
+        with segment lengths in meters and EA in kN. This is material axial
+        stiffness; geometric catenary stiffness and nonlinear response are
+        outside this property.
+
+        Raises:
+            ValueError: If no segments exist, or any length or EA is nonfinite
+                or nonpositive.
+        """
+        if not self.segments:
+            raise ValueError("Axial stiffness requires at least one segment")
+        for segment in self.segments:
+            for name in ("length", "ea"):
+                value = getattr(segment, name)
+                if not isfinite(value) or value <= 0.0:
+                    raise ValueError(f"Segment {name} must be finite and positive")
+        return 1.0 / sum(segment.length / segment.ea for segment in self.segments)
 
 
 @dataclass

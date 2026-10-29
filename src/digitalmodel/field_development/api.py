@@ -14,8 +14,8 @@ The four calls
 - :func:`layout` — build the generalized layout model (#1509) and return its
   summary dict (assets, connections, true 3D lengths, ``is_subsea``).
 - :func:`screen` — layout + flowline diameter sweeps (#1511) for every
-  hydraulic connection, cable sizing screens when the config declares
-  ``cables``, and an optional one-page markdown report.
+  hydraulic connection, routed electrical cable assessments, explicit cable
+  sizing screens, and an optional one-page markdown report.
 - :func:`visualize` — 2D layout plot + 3D scene JSON (#1510), delegating to
   :func:`~digitalmodel.field_development.visualization.render_layout_visualization`.
 - :func:`analogs` — thin adapter to the ``worldenergydata`` analog finder
@@ -58,18 +58,27 @@ connections. Connections whose rate cannot be resolved are reported under
 from __future__ import annotations
 
 import importlib
+import math
 from pathlib import Path
 from typing import Any, Optional
 
 import yaml
 
 from .layout_model import (
+    ELECTRICAL_CONNECTION_KINDS,
     FieldLayoutModel,
     RoutedConnection,
     build_layout_model,
     layout_summary,
 )
-from .screening import flowline_diameter_sweep, screening_report, size_cable
+from .screening import (
+    cable_ampacity_screening,
+    flowline_diameter_sweep,
+    load_screening_defaults,
+    screening_report,
+    size_cable,
+    voltage_drop_three_phase_v,
+)
 
 #: Connection kinds screened hydraulically by :func:`screen` (umbilicals
 #: carry controls/chemicals, not the production bore, so they are excluded).
@@ -239,33 +248,178 @@ def _connection_rate(
     return _asset_throughput(model, conn.from_id, kinds, visiting | {conn.from_id})
 
 
+def _positive_cable_input(value: Any, name: str, cable_id: str) -> float:
+    """Reject absent, nonfinite or nonpositive electrical screening inputs."""
+    try:
+        number = float(value)
+    except (ValueError, TypeError):
+        raise ValueError(f"cable {cable_id!r} needs finite positive {name}") from None
+    if not math.isfinite(number) or number <= 0:
+        raise ValueError(f"cable {cable_id!r} needs finite positive {name}")
+    return number
+
+
+def _electrical_upstream(model: FieldLayoutModel) -> dict[str, set[str]]:
+    """Distinct upstream assets, including self; reject any electrical cycle.
+
+    Connectivity only: no impedance-based power sharing or network solution.
+    A source reaching a collector along two paths contributes once there.
+    """
+    incoming: dict[str, list[str]] = {a.asset_id: [] for a in model.assets}
+    for conn in model.connections:
+        if conn.kind in ELECTRICAL_CONNECTION_KINDS:
+            incoming[conn.to_id].append(conn.from_id)
+    upstream: dict[str, set[str]] = {}
+
+    def visit(asset_id: str, visiting: set[str]) -> set[str]:
+        if asset_id in visiting:
+            raise ValueError(f"electrical cycle at asset {asset_id!r}; unevaluated")
+        if asset_id not in upstream:
+            nodes = {asset_id}
+            for source_id in incoming[asset_id]:
+                nodes.update(visit(source_id, visiting | {asset_id}))
+            upstream[asset_id] = nodes
+        return upstream[asset_id]
+
+    for conn in model.connections:
+        if conn.kind in ELECTRICAL_CONNECTION_KINDS:
+            visit(conn.from_id, set())
+    return upstream
+
+
+def _assess_routed_cable(
+    spec: dict[str, Any], conn: RoutedConnection, defaults: Optional[dict[str, Any]]
+) -> dict[str, Any]:
+    """Assess the supplied conductor using existing sizing/ampacity physics.
+
+    ``resistance_ohm_per_m`` optionally supplies per-phase series resistance
+    at the screening temperature; otherwise use the bundled material data.
+    The existing candidate catalog defines supported cross-sections. Never
+    replace a failing supplied conductor with a larger passing candidate.
+    """
+    cable_id = str(spec.get("id", conn.connection_id))
+    basis = {**conn.properties, "conductor_size_mm2": conn.conductor_size_mm2, **spec}
+    size = _positive_cable_input(
+        basis.get("conductor_size_mm2"), "conductor_size_mm2", cable_id
+    )
+    # Unity is the dimensionless no-reactive-power assumption, not a rating.
+    power_factor = _positive_cable_input(
+        basis.get("power_factor", 1.0), "power_factor", cable_id
+    )
+    if power_factor > 1:
+        raise ValueError(f"cable {cable_id!r} power_factor must be <= 1")
+    result = size_cable(
+        load_kw=_positive_cable_input(basis.get("load_kw"), "load_kw", cable_id),
+        line_voltage_v=_positive_cable_input(
+            basis.get("line_voltage_v"), "line_voltage_v", cable_id
+        ),
+        length_m=_positive_cable_input(basis.get("length_m"), "length_m", cable_id),
+        power_factor=power_factor,
+        defaults=defaults,
+    )
+    candidate = next(
+        (row for row in result["candidates"] if row["size_mm2"] == size), None
+    )
+    if candidate is None:
+        raise ValueError(
+            f"cable {cable_id!r} unsupported conductor_size_mm2 {size}; unevaluated"
+        )
+    if "resistance_ohm_per_m" in basis:
+        resistance = _positive_cable_input(
+            basis["resistance_ohm_per_m"], "resistance_ohm_per_m", cable_id
+        )
+        cfg = (defaults or load_screening_defaults())["cable_screening"]
+        ampacity = cable_ampacity_screening(
+            resistance,
+            result["max_conductor_temp_c"],
+            result["ambient_temp_c"],
+            result["thermal_resistance_k_m_per_w"],
+        )
+        drop = voltage_drop_three_phase_v(
+            result["current_a"],
+            result["length_m"],
+            resistance,
+            float(cfg["reactance_ohm_per_m"]),
+            power_factor,
+        )
+        # Percent is defined as a fraction multiplied by 100.
+        drop_pct = 100.0 * drop / result["line_voltage_v"]
+        candidate.update(
+            resistance_ohm_per_m=resistance,
+            ampacity_a=ampacity,
+            ampacity_ok=ampacity >= result["current_a"],
+            voltage_drop_v=drop,
+            voltage_drop_pct=drop_pct,
+            voltage_drop_ok=drop_pct <= result["voltage_drop_limit_pct"],
+        )
+        candidate["passes"] = bool(
+            candidate["ampacity_ok"] and candidate["voltage_drop_ok"]
+        )
+    result.update(
+        id=cable_id,
+        connection=conn.connection_id,
+        kind=conn.kind,
+        conductor_size_mm2=size,
+        candidates=[candidate],
+        selected=candidate if candidate["passes"] else None,
+        passes=candidate["passes"],
+        assumptions=[
+            "Balanced three-phase steady state; voltage is line-to-line.",
+            "Connectivity screen only; no diversity, losses, or "
+            "parallel-path load sharing.",
+            f"Power factor {power_factor:g}; unity assumed when unspecified.",
+            "Supplied conductor assessed with conductor-loss-only ampacity; "
+            "caller resistance, when supplied, is at screening temperature.",
+        ],
+    )
+    return result
+
+
 def _screen_cables(
     config: dict[str, Any],
     connections: dict[str, RoutedConnection],
     defaults: Optional[dict[str, Any]],
+    model: FieldLayoutModel,
 ) -> list[dict[str, Any]]:
-    """Run :func:`~digitalmodel.field_development.screening.size_cable` for
-    every spec in the config's ``cables`` section.
+    """Screen explicit declarations, then every unoverridden electrical run.
 
-    Each spec needs ``load_kw``, ``line_voltage_v``, ``power_factor`` and a
-    length: either ``length_m`` or ``connection: <id>`` (the routed
-    connection's true 3D length — e.g. size a power core along an umbilical).
+    Explicit ``connection`` references take precedence over derived loads,
+    voltage and length. Derived loads sum distinct upstream rated sources;
+    electrical leaves and turbines require finite positive rated_power_mw.
+    Derived runs require voltage_kv and a supported conductor_size_mm2.
+    Power factor defaults to unity, overridable on the connection. Explicit
+    standalone/nonelectrical specs retain the existing sizing contract.
     """
     results: list[dict[str, Any]] = []
+    upstream = _electrical_upstream(model)  # validate cycles even with overrides
+    overridden: set[str] = set()
     for spec in config.get("cables") or []:
+        ref = str(spec["connection"]) if "connection" in spec else None
+        if ref is not None and ref not in connections:
+            raise ValueError(
+                f"cable {spec.get('id')!r} references unknown connection {ref!r}"
+            )
         if "length_m" in spec:
             length_m = float(spec["length_m"])
         elif "connection" in spec:
-            ref = str(spec["connection"])
-            if ref not in connections:
-                raise ValueError(
-                    f"cable {spec.get('id')!r} references unknown connection {ref!r}"
-                )
-            length_m = connections[ref].route_length_m
+            length_m = connections[str(spec["connection"])].route_length_m
         else:
             raise ValueError(
                 f"cable {spec.get('id')!r} needs 'length_m' or 'connection'"
             )
+        if ref is not None and connections[ref].kind in ELECTRICAL_CONNECTION_KINDS:
+            if ref in overridden:
+                raise ValueError(f"duplicate explicit cable override for {ref!r}")
+            overridden.add(ref)
+            result = _assess_routed_cable(
+                {**spec, "length_m": length_m}, connections[ref], defaults
+            )
+            result["assumptions"].append(
+                "Load and voltage from explicit cable declaration; length from "
+                "explicit length_m or referenced route."
+            )
+            results.append(result)
+            continue
         result = size_cable(
             load_kw=float(spec["load_kw"]),
             line_voltage_v=float(spec["line_voltage_v"]),
@@ -274,6 +428,48 @@ def _screen_cables(
             defaults=defaults,
         )
         result["id"] = str(spec.get("id", spec.get("connection", "-")))
+        results.append(result)
+    incoming_ids = {
+        c.to_id for c in model.connections if c.kind in ELECTRICAL_CONNECTION_KINDS
+    }
+    for conn in model.connections:
+        if (
+            conn.kind not in ELECTRICAL_CONNECTION_KINDS
+            or conn.connection_id in overridden
+        ):
+            continue
+        sources = []
+        power_mw = 0.0
+        for asset_id in sorted(upstream[conn.from_id]):
+            asset = model.asset(asset_id)
+            if (
+                asset.rated_power_mw is None
+                and asset_id in incoming_ids
+                and asset.kind != "wind_turbine"
+            ):
+                continue  # collector, not a generating source
+            power_mw += _positive_cable_input(
+                asset.rated_power_mw,
+                f"rated_power_mw for {asset_id}",
+                conn.connection_id,
+            )
+            sources.append(asset_id)
+        # SI prefixes: mega/kilo = 1000 for MW -> kW; kilo = 1000 for kV -> V.
+        voltage = _positive_cable_input(
+            conn.voltage_kv, "voltage_kv", conn.connection_id
+        )
+        result = _assess_routed_cable(
+            {
+                "id": conn.connection_id,
+                "load_kw": power_mw * 1000.0,
+                "line_voltage_v": voltage * 1000.0,
+                "length_m": conn.route_length_m,
+            },
+            conn,
+            defaults,
+        )
+        result["upstream_source_ids"] = sources
+        result["assumptions"].append("Distinct upstream sources at full rated output.")
         results.append(result)
     return results
 
@@ -295,13 +491,17 @@ def screen(
     ``connection_kinds`` runs the #1511 flowline diameter sweep (smallest
     standard pipe size meeting arrival pressure + the API RP 14E erosional
     limit) over the connection's TRUE 3D route length and endpoint elevation
-    change. When the config declares a ``cables`` section, each entry gets
-    the #1511 cable sizing screen (see :func:`_screen_cables` for the spec).
+    change. All array/export connections receive a cable assessment from
+    distinct upstream rated power, voltage_kv and true 3D length. Supplied
+    conductor sizes are retained; missing/unsupported basis and cycles raise
+    ValueError. Explicit ``cables`` entries linked by ``connection`` override
+    derivation. See :func:`_screen_cables` for inputs and precedence.
 
     Screening inputs resolve keyword-first, config-second: ``fluid`` falls
     back to the config's ``fluid`` section; the two pressures fall back to
     ``screening.inlet_pressure_kpa`` / ``screening.target_arrival_pressure_kpa``.
-    A missing input raises ValueError (no invented numbers).
+    Hydraulic inputs are required only when hydraulic connections exist.
+    A missing required input raises ValueError (no invented numbers).
     ``screening_defaults`` overrides the bundled correlation constants
     (``data/screening_defaults.yml``); ``report_path`` additionally writes
     the deterministic one-page markdown report. ``**overrides`` are
@@ -328,7 +528,8 @@ def screen(
         )
         if value is None
     ]
-    if missing:
+    needs_hydraulics = any(c.kind in connection_kinds for c in model.connections)
+    if missing and needs_hydraulics:
         raise ValueError(
             f"screen() inputs missing (pass as keywords or config sections): {missing}"
         )
@@ -376,7 +577,7 @@ def screen(
         flowlines.append(sweep)
 
     connection_map = {c.connection_id: c for c in model.connections}
-    cables = _screen_cables(config, connection_map, screening_defaults)
+    cables = _screen_cables(config, connection_map, screening_defaults, model)
 
     screened = [*flowlines, *cables]
     result: dict[str, Any] = {
@@ -390,13 +591,28 @@ def screen(
     }
     if report_path is not None:
         assumptions = [
-            f"Fluid: density {float(fluid['density_kg_per_m3']):.1f} kg/m3, "
-            f"viscosity {float(fluid['viscosity_pa_s']):.6f} Pa-s.",
-            f"Inlet pressure {float(inlet_pressure_kpa):.1f} kPa; target "
-            f"arrival {float(target_arrival_pressure_kpa):.1f} kPa.",
             "Line lengths/elevations from the routed layout model "
             "(true 3D route lengths).",
         ]
+        if needs_hydraulics:
+            assumptions.extend(
+                [
+                    f"Fluid: density {float(fluid['density_kg_per_m3']):.1f} kg/m3, "
+                    f"viscosity {float(fluid['viscosity_pa_s']):.6f} Pa-s.",
+                    f"Inlet pressure {float(inlet_pressure_kpa):.1f} kPa; target "
+                    f"arrival {float(target_arrival_pressure_kpa):.1f} kPa.",
+                ]
+            )
+        if any(c.kind in ELECTRICAL_CONNECTION_KINDS for c in model.connections):
+            assumptions.extend(
+                [
+                    "Balanced three-phase; derived loads use full rated output of "
+                    "distinct upstream sources, explicit cables use declared loads. "
+                    "No diversity, losses or parallel-path load sharing.",
+                    "Cable power factor supplied per connection or explicit cable; "
+                    "unity assumed when unspecified.",
+                ]
+            )
         result["report_path"] = screening_report(
             {
                 "field": model.name,

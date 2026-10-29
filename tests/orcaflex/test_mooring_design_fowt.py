@@ -15,8 +15,10 @@ Hand-verified governing geometry (compliant case, see issue-576.md):
     margin = 107.092 - 50 (MBR) = +57.092 m  => PASS.
 """
 
+import json
 import math
 import warnings
+from pathlib import Path
 
 import pytest
 
@@ -70,6 +72,50 @@ class TestArcRadiusFromChord:
     def test_invalid_arc_length(self):
         with pytest.raises(ValueError):
             _arc_radius_from_chord(0.0, 100.0)
+
+
+class TestIndependentCircularArcGeometry:
+    """Recover chosen radii from forward circle geometry, without a solver oracle."""
+
+    GEOMETRY = json.loads(
+        Path(__file__).with_name("fowt_circular_arc_geometry.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    @pytest.mark.parametrize("case", GEOMETRY["cases"], ids=lambda case: case["id"])
+    def test_recovers_synthetic_radius(self, case):
+        # Derivation and rounding allowances are recorded beside the cases.
+        radius = case["radius_m"]
+        angle = math.radians(case["angle_degrees"])
+        arc_length = radius * angle
+        chord = math.hypot(
+            radius * math.cos(angle) - radius, radius * math.sin(angle)
+        )
+
+        recovered = _arc_radius_from_chord(arc_length, chord)
+
+        assert math.isfinite(recovered)
+        assert recovered == pytest.approx(
+            radius, rel=case["relative_tolerance"], abs=0.0
+        )
+
+    def test_closed_circle_radius(self):
+        # Hand construction: one full turn has L = 2*pi*R and coincident endpoints.
+        radius = 125.0  # Same arbitrary synthetic scale as the angle cases.
+        arc_length = math.tau * radius
+
+        assert _arc_radius_from_chord(arc_length, 0.0) == pytest.approx(
+            radius, rel=1e-12, abs=0.0
+        )
+
+    @pytest.mark.parametrize(
+        "arc_length", [-1.0, -250.0], ids=["negative-unit", "negative-span"]
+    )
+    def test_negative_arc_length_is_rejected(self, arc_length):
+        # Synthetic negative unit/span lengths extend the existing zero-length case.
+        with pytest.raises(ValueError, match="arc_length must be positive"):
+            _arc_radius_from_chord(arc_length, 0.0)
 
 
 class TestWatchCircleCompliant:

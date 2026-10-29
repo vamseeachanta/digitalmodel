@@ -1,0 +1,120 @@
+{
+  "prerequisite": {
+    "status": "PASS",
+    "source": "Synthetic hand calculation: resistance-campaign.md, Worked example (2026)"
+  },
+  "reference": {
+    "condition": {
+      "body_condition": "free_to_heave_and_pitch",
+      "appendages": "rudder",
+      "wetted_surface_m2": 2,
+      "lpp_m": 2,
+      "density_kg_m3": 2,
+      "viscosity_m2_s": 2
+    },
+    "source": "Synthetic hand calculation: resistance-campaign.md, Worked example (2026)",
+    "qualified": true,
+    "points": [
+      {
+        "froude": 0.1,
+        "ct": 1,
+        "reynolds": 1
+      },
+      {
+        "froude": 0.2,
+        "ct": 2,
+        "reynolds": 2
+      }
+    ]
+  },
+  "computed": {
+    "condition": {
+      "body_condition": "free_to_heave_and_pitch",
+      "appendages": "rudder",
+      "wetted_surface_m2": 2,
+      "lpp_m": 2,
+      "density_kg_m3": 2,
+      "viscosity_m2_s": 2
+    },
+    "source": "Synthetic hand calculation: resistance-campaign.md, Worked example (2026)",
+    "points": [
+      {
+        "froude": 0.1,
+        "ct": 1.01,
+        "reynolds": 1,
+        "settled": true
+      },
+      {
+        "froude": 0.2,
+        "ct": 2.02,
+        "reynolds": 2,
+        "settled": true
+      }
+    ]
+  },
+  "limits": {
+    "source": "Synthetic hand calculation: resistance-campaign.md, Worked example (2026)",
+    "ct_fraction": 0.05,
+    "increment_fraction": 0.01,
+    "gci_medium_pct": 5
+  },
+  "grids": [
+    {
+      "condition": {
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder",
+        "wetted_surface_m2": 2,
+        "lpp_m": 2,
+        "density_kg_m3": 2,
+        "viscosity_m2_s": 2
+      },
+      "mesh_family": "synthetic-uniform-refinement",
+      "source": "Synthetic hand calculation: resistance-campaign.md, Worked example (2026)",
+      "h_m": 1,
+      "point": {
+        "froude": 0.1,
+        "reynolds": 1,
+        "ct": 1.01,
+        "settled": true
+      }
+    },
+    {
+      "condition": {
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder",
+        "wetted_surface_m2": 2,
+        "lpp_m": 2,
+        "density_kg_m3": 2,
+        "viscosity_m2_s": 2
+      },
+      "mesh_family": "synthetic-uniform-refinement",
+      "source": "Synthetic hand calculation: resistance-campaign.md, Worked example (2026)",
+      "h_m": 2,
+      "point": {
+        "froude": 0.1,
+        "reynolds": 1,
+        "ct": 1.04,
+        "settled": true
+      }
+    },
+    {
+      "condition": {
+        "body_condition": "free_to_heave_and_pitch",
+        "appendages": "rudder",
+        "wetted_surface_m2": 2,
+        "lpp_m": 2,
+        "density_kg_m3": 2,
+        "viscosity_m2_s": 2
+      },
+      "mesh_family": "synthetic-uniform-refinement",
+      "source": "Synthetic hand calculation: resistance-campaign.md, Worked example (2026)",
+      "h_m": 4,
+      "point": {
+        "froude": 0.1,
+        "reynolds": 1,
+        "ct": 1.16,
+        "settled": true
+      }
+    }
+  ]
+}

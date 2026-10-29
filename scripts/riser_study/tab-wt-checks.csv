@@ -1,0 +1,325 @@
+case_id,size_nps_in,outside_diameter_mm,wall_option,wall_mm,checked_wall_mm,check,check_id,condition,utilisation,governing,code_label,internal_pressure_pa,external_pressure_pa,commit
+R08-W1-SCR,8,219.1,W1,21.2,15.55,burst,API_RP2RD_burst_pressure_only,pressure_only,0.44211599776044375,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.4477789686792902,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.3333051578005044,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.38040463473904945,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.3375743935334048,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,burst,API_RP1111_burst_pressure_only,pressure_only,0.40936666459300347,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.3086158868523189,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.3170038622825412,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.9981844950493673,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,burst,API_STD2RD_burst_pressure_only,pressure_only,0.3684299981337031,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.27775429816708697,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.4226718163767217,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.3434216738412527,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.3311475876660287,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.2589008671289778,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,collapse,F101_collapse_empty_1500m,empty_1500m,0.3267138176714538,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.9336310888877734,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.2496476027137265,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SCR,8,219.1,W1,21.2,15.55,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.49123999751160413,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,burst,API_RP2RD_burst_pressure_only,pressure_only,0.44211599776044375,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.4477789686792902,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.3333051578005044,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.38040463473904945,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.3375743935334048,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,burst,API_RP1111_burst_pressure_only,pressure_only,0.40936666459300347,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.3086158868523189,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.3170038622825412,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.9981844950493673,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,burst,API_STD2RD_burst_pressure_only,pressure_only,0.3684299981337031,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.27775429816708697,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.4226718163767217,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.3434216738412527,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.3311475876660287,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.2589008671289778,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,collapse,F101_collapse_empty_1500m,empty_1500m,0.3267138176714538,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.9336310888877734,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.2496476027137265,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W1-SLWR,8,219.1,W1,21.2,15.55,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.49123999751160413,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,burst,API_RP2RD_burst_pressure_only,pressure_only,0.345532291455935,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.34233720571116333,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.2604920326617378,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.29123401438657665,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.2580833015510298,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,burst,API_RP1111_burst_pressure_only,pressure_only,0.3199373069036435,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.2411963265386461,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.24269501198881385,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.5806962961946915,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,burst,API_STD2RD_burst_pressure_only,pressure_only,0.28794357621327915,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.21707669388478146,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.3235933493184185,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.26873151034761117,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.25927023264152205,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.2025929821949371,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,collapse,F101_collapse_empty_1500m,empty_1500m,0.2557988361380036,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.5310201092380173,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.19546025532054986,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SCR,8,219.1,W2,25.7,19.4875,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.3839247682843722,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,burst,API_RP2RD_burst_pressure_only,pressure_only,0.345532291455935,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.34233720571116333,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.2604920326617378,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.29123401438657665,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.2580833015510298,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,burst,API_RP1111_burst_pressure_only,pressure_only,0.3199373069036435,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.2411963265386461,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.24269501198881385,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.5806962961946915,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,burst,API_STD2RD_burst_pressure_only,pressure_only,0.28794357621327915,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.21707669388478146,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.3235933493184185,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.26873151034761117,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.25927023264152205,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.2025929821949371,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,collapse,F101_collapse_empty_1500m,empty_1500m,0.2557988361380036,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.5310201092380173,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.19546025532054986,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R08-W2-SLWR,8,219.1,W2,25.7,19.4875,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.3839247682843722,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,burst,API_RP2RD_burst_pressure_only,pressure_only,0.44168495080953113,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.44730813287514326,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.3329801974445772,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.3799698843417967,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.33721943690936435,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,burst,API_RP1111_burst_pressure_only,pressure_only,0.4089675470458621,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.3083149976338677,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.3166415702848306,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.996024419293576,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,burst,API_STD2RD_burst_pressure_only,pressure_only,0.3680707923412759,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.27748349787048093,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.4221887603797741,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.34308815510825297,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.3308135915300441,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.2586494319524743,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,collapse,F101_collapse_empty_1500m,empty_1500m,0.3263842934449778,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.9315266193622358,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.249395807629692,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SCR,10,273.1,W1,25.6,19.4,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.49076105645503454,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,burst,API_RP2RD_burst_pressure_only,pressure_only,0.44168495080953113,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.44730813287514326,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.3329801974445772,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.3799698843417967,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.33721943690936435,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,burst,API_RP1111_burst_pressure_only,pressure_only,0.4089675470458621,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.3083149976338677,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.3166415702848306,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.996024419293576,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,burst,API_STD2RD_burst_pressure_only,pressure_only,0.3680707923412759,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.27748349787048093,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.4221887603797741,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.34308815510825297,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.3308135915300441,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.2586494319524743,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,collapse,F101_collapse_empty_1500m,empty_1500m,0.3263842934449778,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.9315266193622358,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.249395807629692,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W1-SLWR,10,273.1,W1,25.6,19.4,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.49076105645503454,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,burst,API_RP2RD_burst_pressure_only,pressure_only,0.34538218696829537,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.3421734491693339,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.2603788709571337,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.2911060167188408,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.25795984775091446,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,burst,API_RP1111_burst_pressure_only,pressure_only,0.31979832126694013,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.2410915471825312,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.2425883472657006,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.580148376503664,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,burst,API_STD2RD_burst_pressure_only,pressure_only,0.2878184891402461,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.21698239246427806,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.3234511296876008,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.26861551263913125,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.25916217951195986,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.20250553312110747,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,collapse,F101_collapse_empty_1500m,empty_1500m,0.25569222974319505,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.5304981951172167,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.19537879555528015,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SCR,10,273.1,W2,31.2,24.3,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.3837579855203282,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,burst,API_RP2RD_burst_pressure_only,pressure_only,0.34538218696829537,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.3421734491693339,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.2603788709571337,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.2911060167188408,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.25795984775091446,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,burst,API_RP1111_burst_pressure_only,pressure_only,0.31979832126694013,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.2410915471825312,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.2425883472657006,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.580148376503664,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,burst,API_STD2RD_burst_pressure_only,pressure_only,0.2878184891402461,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.21698239246427806,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.3234511296876008,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.26861551263913125,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.25916217951195986,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.20250553312110747,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,collapse,F101_collapse_empty_1500m,empty_1500m,0.25569222974319505,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.5304981951172167,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.19537879555528015,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R10-W2-SLWR,10,273.1,W2,31.2,24.3,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.3837579855203282,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,burst,API_RP2RD_burst_pressure_only,pressure_only,0.4421239420153314,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.4477876462650796,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.3333111468647824,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.38041265093777576,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.3375809354457434,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,burst,API_RP1111_burst_pressure_only,pressure_only,0.40937402038456605,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.30862143228220595,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.3170105424481464,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.998224331240952,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,burst,API_STD2RD_burst_pressure_only,pressure_only,0.3684366183461094,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.27775928905398534,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.4226807232641953,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.3434278206495296,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.3311537464754164,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.258905501123027,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,collapse,F101_collapse_empty_1500m,empty_1500m,0.32671989401989276,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.9336699013706204,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.2496522457552478,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SCR,12,323.9,W1,29.7,22.9875,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.4912488244614793,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,burst,API_RP2RD_burst_pressure_only,pressure_only,0.4421239420153314,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.4477876462650796,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.3333111468647824,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.38041265093777576,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.3375809354457434,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,burst,API_RP1111_burst_pressure_only,pressure_only,0.40937402038456605,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.30862143228220595,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.3170105424481464,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.998224331240952,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,burst,API_STD2RD_burst_pressure_only,pressure_only,0.3684366183461094,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.27775928905398534,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.4226807232641953,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.3434278206495296,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.3311537464754164,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.258905501123027,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,collapse,F101_collapse_empty_1500m,empty_1500m,0.32671989401989276,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.9336699013706204,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.2496522457552478,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W1-SLWR,12,323.9,W1,29.7,22.9875,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.4912488244614793,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,burst,API_RP2RD_burst_pressure_only,pressure_only,0.3461463026608703,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.3430070661709079,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.2609549272472966,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.29175786983789825,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.2585883001201168,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,burst,API_RP1111_burst_pressure_only,pressure_only,0.3205058357971021,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.24162493263638574,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.24313155819824853,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.5829407518285699,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,burst,API_STD2RD_burst_pressure_only,pressure_only,0.28845525221739193,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.21746243937274715,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.32417541093099805,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.2692060091216062,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.2597123215184256,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.2029507002814657,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,collapse,F101_collapse_empty_1500m,empty_1500m,0.25623500584028425,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.5331582516589839,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.19579354003231014,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SCR,12,323.9,W2,36.3,28.7625,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.3846070029565226,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,burst,API_RP2RD_burst_pressure_only,pressure_only,0.3461463026608703,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,collapse,API_RP2RD_collapse_pressure_only,pressure_only,0.0,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,hoop,API_RP2RD_hoop_pressure_only,pressure_only,0.3430070661709079,false,API RP 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,burst,API_RP2RD_burst_empty_1500m,empty_1500m,-0.2609549272472966,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,collapse,API_RP2RD_collapse_empty_1500m,empty_1500m,0.29175786983789825,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,hoop,API_RP2RD_hoop_empty_1500m,empty_1500m,0.2585883001201168,false,API RP 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,burst,API_RP1111_burst_pressure_only,pressure_only,0.3205058357971021,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,collapse,API_RP1111_collapse_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,propagation,API_RP1111_propagation_pressure_only,pressure_only,0.0,false,"API-RP-1111, 4th Edition (2015)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,burst,API_RP1111_burst_empty_1500m,empty_1500m,-0.24162493263638574,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,collapse,API_RP1111_collapse_empty_1500m,empty_1500m,0.24313155819824853,false,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,propagation,API_RP1111_propagation_empty_1500m,empty_1500m,0.5829407518285699,true,"API-RP-1111, 4th Edition (2015)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,burst,API_STD2RD_burst_pressure_only,pressure_only,0.28845525221739193,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,collapse,API_STD2RD_collapse_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,combined,API_STD2RD_combined_pressure_only,pressure_only,0.0,false,API STD 2RD (2013),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,burst,API_STD2RD_burst_empty_1500m,empty_1500m,-0.21746243937274715,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,collapse,API_STD2RD_collapse_empty_1500m,empty_1500m,0.32417541093099805,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,combined,API_STD2RD_combined_empty_1500m,empty_1500m,0.0,false,API STD 2RD (2013),0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,pressure_containment,F101_pressure_containment_pressure_only,pressure_only,0.2692060091216062,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,collapse,F101_collapse_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,propagation_buckling,F101_propagation_buckling_pressure_only,pressure_only,0.0,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,combined_loading,F101_combined_loading_pressure_only,pressure_only,0.2597123215184256,false,"DNV-ST-F101, DNV-ST-F101 (2021)",20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,pressure_containment,F101_pressure_containment_empty_1500m,empty_1500m,-0.2029507002814657,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,collapse,F101_collapse_empty_1500m,empty_1500m,0.25623500584028425,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,propagation_buckling,F101_propagation_buckling_empty_1500m,empty_1500m,0.5331582516589839,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,combined_loading,F101_combined_loading_empty_1500m,empty_1500m,0.19579354003231014,false,"DNV-ST-F101, DNV-ST-F101 (2021)",0.0,15077724.375,3e6db58adf07aef1e7b9516833c4dd8f171030f1
+R12-W2-SLWR,12,323.9,W2,36.3,28.7625,riser_pressure_guard,riser_pressure_guard_pressure_only,pressure_only,0.3846070029565226,false,Study guard: 0.60 Pb (API RP 2RD capacity),20000000.0,0.0,3e6db58adf07aef1e7b9516833c4dd8f171030f1

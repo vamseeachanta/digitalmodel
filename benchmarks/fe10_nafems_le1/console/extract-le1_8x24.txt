@@ -1,0 +1,3 @@
+COMMAND: python -I tools/extract_stresses.py --deck inputs/le1_8x24.bdf --f06 <native-output> --output results-le1_8x24.csv
+results-le1_8x24.csv: 192 global mid-surface centroid rows
+exit 0

@@ -11,10 +11,18 @@ The model topology is fixed:
 * ``stack``: sections from the lower flex-joint pivot down to the wellhead datum,
   where the stack is fixed.
 
-Each :class:`LineSection` gives the structural mass per metre *excluding* the fluid in
-its main bore; that fluid is the line contents (``Contents``) over ``bore_id_m``. The
-displaced volume per metre sets buoyancy and added mass (OrcaFlex uses the equivalent
-diameter), independently of the drag diameter.
+For ``inner_barrel`` and ``riser``, :class:`LineSection.mass_per_m_kg` excludes
+main-bore fluid; ``Contents`` adds that fluid over ``bore_id_m``. For the drilling
+``stack``, mass per metre includes all fluid assigned to the stack. No separate
+bore contents mass or pressure is applied there, even for a positive bore. This
+is the existing text-generator convention, also used by the hand references.
+Changing ``Contents`` therefore does not change the drilling stack's own weight;
+update its specified mass if its included fluid inventory changes.
+
+Open-water specifications use a different convention: their continuous stack bore
+carries separate ``Contents`` and its mass per metre excludes that fluid.
+The displaced volume per metre sets buoyancy and added mass (OrcaFlex uses the
+equivalent diameter), independently of the drag diameter.
 """
 
 from __future__ import annotations
@@ -39,14 +47,20 @@ def tube_section(*, od_m: float, wall_m: float, youngs_modulus_pa: float) -> dic
 
 
 class LineSection(BaseModel):
-    """One homogeneous section of a line (becomes one OrcaFlex line type)."""
+    """One homogeneous section of a line (becomes one OrcaFlex line type).
+
+    Main-bore fluid is separate except for drilling-stack sections, whose
+    specified mass includes their fluid inventory; see the module conventions.
+    """
 
     name: str = Field(..., min_length=1)
     length_m: float = Field(..., gt=0)
     segment_length_m: float = Field(..., gt=0)
-    mass_per_m_kg: float = Field(..., ge=0, description="structural mass, excluding main-bore contents")
+    mass_per_m_kg: float = Field(..., ge=0, description="mass per metre; excludes separate main-bore contents, "
+                                                      "but includes fluid for drilling-stack sections")
     displaced_volume_per_m_m3: float = Field(..., ge=0)
-    bore_id_m: float = Field(0.0, ge=0, description="main bore carrying the line contents; 0 = none")
+    bore_id_m: float = Field(0.0, ge=0, description="main-bore diameter; zero means none; drilling-stack "
+                                                "contents remain included in specified mass")
     ei_nm2: float = Field(..., gt=0)
     ea_n: float = Field(..., gt=0)
     gj_nm2: float | None = Field(None, gt=0)

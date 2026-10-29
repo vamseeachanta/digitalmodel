@@ -20,6 +20,11 @@ padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(16,40,80,.04);
 min-width:0}.controls{display:grid;grid-template-columns:auto minmax(170px,240px) auto
 minmax(220px,1fr) auto;align-items:center;gap:10px 14px;margin-bottom:12px}
 .controls label{font-weight:700;color:var(--navy);font-size:13.5px}
+.point-controls{grid-template-columns:auto minmax(100px,1fr) auto minmax(100px,1fr)}
+.readout{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+.readout caption{text-align:left;font-weight:700;color:var(--navy)}
+.readout th,.readout td{text-align:left;border-bottom:1px solid var(--line);padding:6px 0}
+.readout td{overflow-wrap:anywhere}.readout th{width:50%}
 select{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--line);
 border-radius:8px;background:var(--panel);color:var(--ink);width:100%;min-width:0}
 input[type=range]{width:100%;min-width:0;accent-color:var(--teal)}
@@ -54,6 +59,11 @@ shows the governing check. The double line marks utilisation&nbsp;=&nbsp;1.0.</p
  <input id="wall" type="range" min="0" max="0" step="1">
  <output class="wval" id="wall-value" for="wall"></output>
 </div>
+<div class="controls point-controls">
+ <label for="view">View</label><select id="view">
+  <option value="auto">Automatic 3D / 2D</option><option value="2d">2D heatmap</option>
+ </select>
+</div>
 <p class="mode" id="mode" role="status" aria-live="polite">Loading study data.</p>
 <div class="plot-shell">
  <canvas id="fallback" role="img" aria-label="Governing-check heatmap with utilisation acceptance boundary"></canvas>
@@ -61,6 +71,23 @@ shows the governing check. The double line marks utilisation&nbsp;=&nbsp;1.0.</p
 </div>
 <p class="axis-note">Plane: effective tension (MN) &times; bending moment (kN&middot;m).
 Height in 3D: utilisation. Drag to orbit; scroll or pinch to zoom.</p>
+<div class="controls point-controls">
+ <label for="tension">Tension sample</label>
+ <input id="tension" type="range" min="0" max="0" step="1" value="0" aria-describedby="point-tension">
+ <label for="moment">Moment sample</label>
+ <input id="moment" type="range" min="0" max="0" step="1" value="0" aria-describedby="point-moment">
+</div>
+<table class="readout" aria-live="polite" aria-atomic="true">
+ <caption id="point-caption">Selected sampled point</caption>
+ <tbody>
+  <tr><th scope="row">Effective tension (kN)</th><td id="point-tension"></td></tr>
+  <tr><th scope="row">Bending moment (kN&middot;m)</th><td id="point-moment"></td></tr>
+  <tr><th scope="row">Utilisation</th><td id="point-utilisation"></td></tr>
+  <tr><th scope="row">Governing check</th><td id="point-governing"></td></tr>
+ </tbody>
+</table>
+<p class="mode">Use the sample sliders or arrow keys to read grid values in either view.
+The readout shows a sampled point; cell colours show the majority check at their corners.</p>
 <div class="summary" id="summary"></div><div class="legend" id="legend"></div>
 <noscript><p class="mode">JavaScript is disabled. Use the worked example below.</p></noscript>
 </section>
@@ -92,6 +119,7 @@ const COLORS=["#0072b2","#d55e00","#009e73","#cc79a7","#e69f00","#56b4e9","#6f4e
 const STYLES=getComputedStyle(document.documentElement);
 const INK=STYLES.getPropertyValue("--ink").trim(),SOFT=STYLES.getPropertyValue("--soft").trim();
 const code=document.getElementById("code"),wall=document.getElementById("wall");
+const view=document.getElementById("view"),tension=document.getElementById("tension"),moment=document.getElementById("moment");
 const canvas=document.getElementById("fallback"),plot=document.getElementById("plot");
 let plotMode="canvas",allow3d,pendingPlot,plotting=false,renderToken=0;
 const label=s=>s.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
@@ -106,9 +134,10 @@ function majority(values){const count={};values.forEach(v=>count[v]=(count[v]||0
  return +Object.keys(count).sort((a,b)=>count[b]-count[a])[0];}
 function cellCategories(gm){return gm.slice(0,-1).map((row,j)=>row.slice(0,-1).map((_,i)=>
  majority([gm[j][i],gm[j][i+1],gm[j+1][i],gm[j+1][i+1]])));}
+// The inherited utilisation criterion is 1.0; see the worked example and API STD 2RD (2013), Method 1.
 function segments(um){const out=[],nu=M.t.length,nb=M.b.length,level=1;
  const point=(a,b)=>{const f=(level-a.u)/(b.u-a.u);return{x:a.x+f*(b.x-a.x),y:a.y+f*(b.y-a.y)};};
- for(let i=0;i<nu-1;i++)for(let j=0;j<nb-1;j++){const id=(x,y)=>({x,y,u:um[y][x]});
+ for(let i=0;i<nu-1;i++)for(let j=0;j<nb-1;j++){const id=(x,y)=>({x:M.t[x],y:M.b[y],u:um[y][x]});
   for(const tri of [[id(i,j),id(i+1,j),id(i+1,j+1)],[id(i,j),id(i+1,j+1),id(i,j+1)]]){
    const hits=[];for(const [a,b] of [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]]){
     if(a.u===level&&b.u===level)out.push([a,b]);else if(a.u===level)hits.push(a);
@@ -124,24 +153,37 @@ function updateText(um,gm){const flat=um.flat(),active=new Set(gm.flat());
  <i class="swatch" style="background:${COLORS[i%COLORS.length]}"></i>${esc(label(g))}</span>`).join("")+
  '<span class="legend-item"><i class="boundary"></i>Utilisation = 1.0</span>';
  canvas.setAttribute("aria-label",`${code.value}, ${M.w[+wall.value].toFixed(1)} mm: governing-check heatmap and utilisation 1.0 boundary`);}
+function updatePoint(um,gm){const i=+tension.value,j=+moment.value;
+ document.getElementById("point-caption").textContent=`${code.value}, ${M.w[+wall.value].toFixed(1)} mm — sampled point`;
+ document.getElementById("point-tension").textContent=(M.t[i]/1e3).toFixed(1);
+ document.getElementById("point-moment").textContent=(M.b[j]/1e3).toFixed(1);
+ document.getElementById("point-utilisation").textContent=(100*um[j][i]).toFixed(1)+"%";
+ document.getElementById("point-governing").textContent=label(DATA.g[gm[j][i]]);
+ tension.setAttribute("aria-valuetext",(M.t[i]/1e3).toFixed(1)+" kN");
+ moment.setAttribute("aria-valuetext",(M.b[j]/1e3).toFixed(1)+" kN m");}
 function nativePlot(um,gm){const box=canvas.parentElement.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
  canvas.width=Math.max(1,Math.round(box.width*dpr));canvas.height=Math.max(1,Math.round(box.height*dpr));
- const c=canvas.getContext("2d"),w=canvas.width,h=canvas.height,L=58*dpr,R=12*dpr,T=18*dpr,B=50*dpr;
+ const c=canvas.getContext("2d"),w=canvas.width,h=canvas.height,L=72*dpr,R=12*dpr,T=18*dpr,B=50*dpr;
  c.fillStyle=SOFT;c.fillRect(0,0,w,h);const pw=w-L-R,ph=h-T-B,nu=M.t.length,nb=M.b.length,cells=cellCategories(gm);
+ const px=v=>L+(v-M.t[0])*pw/(M.t[nu-1]-M.t[0]),py=v=>T+ph-(v-M.b[0])*ph/(M.b[nb-1]-M.b[0]);
  for(let i=0;i<nu-1;i++)for(let j=0;j<nb-1;j++){c.fillStyle=COLORS[cells[j][i]%COLORS.length];
-  c.fillRect(L+i*pw/(nu-1),T+(nb-2-j)*ph/(nb-1),pw/(nu-1)+1,ph/(nb-1)+1);}
+  c.fillRect(px(M.t[i]),py(M.b[j+1]),px(M.t[i+1])-px(M.t[i])+1,py(M.b[j])-py(M.b[j+1])+1);}
  const segs=segments(um);for(const [colour,width] of [[INK,5],["#fff",2]]){c.strokeStyle=colour;
-  c.lineWidth=width*dpr;c.beginPath();for(const [a,b] of segs){c.moveTo(L+a.x*pw/(nu-1),T+(nb-1-a.y)*ph/(nb-1));
-   c.lineTo(L+b.x*pw/(nu-1),T+(nb-1-b.y)*ph/(nb-1));}c.stroke();}
+  c.lineWidth=width*dpr;c.beginPath();for(const [a,b] of segs){c.moveTo(px(a.x),py(a.y));
+   c.lineTo(px(b.x),py(b.y));}c.stroke();}
  c.fillStyle=INK;c.font=`${11*dpr}px sans-serif`;c.textAlign="center";
  c.fillText("Effective tension (MN)",L+pw/2,h-10*dpr);c.save();c.translate(14*dpr,T+ph/2);
  c.rotate(-Math.PI/2);c.fillText("Bending moment (kN·m)",0,0);c.restore();
- c.textAlign="left";c.fillText("0",L,h-31*dpr);c.textAlign="right";
- c.fillText((M.t[M.t.length-1]/1e6).toFixed(2),L+pw,h-31*dpr);}
+ c.textAlign="left";c.fillText((M.t[0]/1e6).toFixed(2),L,h-31*dpr);c.textAlign="right";
+ c.fillText((M.t[nu-1]/1e6).toFixed(2),L+pw,h-31*dpr);
+ c.fillText((M.b[0]/1e3).toFixed(1),L-6*dpr,T+ph);
+ c.fillText((M.b[nb-1]/1e3).toFixed(1),L-6*dpr,T+8*dpr);
+ c.beginPath();c.arc(px(M.t[+tension.value]),py(M.b[+moment.value]),4*dpr,0,2*Math.PI);
+ c.fillStyle="#fff";c.fill();c.strokeStyle=INK;c.lineWidth=2*dpr;c.stroke();}
 function discreteScale(){const n=DATA.g.length,scale=[];for(let i=0;i<n;i++){
  scale.push([i/n,COLORS[i%COLORS.length]],[(i+1)/n-1e-7,COLORS[i%COLORS.length]]);}return scale;}
 function traces2d(um,gm){const cells=cellCategories(gm),text=cells.map(row=>row.map(i=>label(DATA.g[i])));
- const x=M.t.slice(0,-1).map((v,i)=>(v+M.t[i+1])/2e6),y=M.b.slice(0,-1).map((v,i)=>(v+M.b[i+1])/2e3);
+ const x=M.t.map(v=>v/1e6),y=M.b.map(v=>v/1e3);
  const util=cells.map((row,j)=>row.map((_,i)=>(um[j][i]+um[j][i+1]+um[j+1][i]+um[j+1][i+1])/4));
  return[{type:"heatmap",x,y,z:cells.map(r=>r.map(v=>v+.5)),customdata:util,text,
   zmin:0,zmax:DATA.g.length,colorscale:discreteScale(),showscale:false,zsmooth:false,
@@ -159,8 +201,7 @@ function traces3d(um,gm){const x=[],y=[],z=[],nu=M.t.length,nb=M.b.length;
   color:COLORS[i%COLORS.length],flatshading:true,opacity:.96,showlegend:false,
   hovertemplate:"T %{x:.2f} MN<br>M %{y:.1f} kN·m<br>u %{z:.3f}<br>"+label(DATA.g[i])+"<extra></extra>"}));
  const line={x:[],y:[],z:[]};for(const [a,b] of segments(um)){for(const p of [a,b]){
-  line.x.push((M.t[0]+p.x*(M.t[M.t.length-1]-M.t[0])/(nu-1))/1e6);
-  line.y.push((M.b[0]+p.y*(M.b[M.b.length-1]-M.b[0])/(nb-1))/1e3);line.z.push(1);}line.x.push(null);line.y.push(null);line.z.push(null);}
+  line.x.push(p.x/1e6);line.y.push(p.y/1e3);line.z.push(1);}line.x.push(null);line.y.push(null);line.z.push(null);}
  const planeX=[M.t[0]/1e6,M.t[M.t.length-1]/1e6,M.t[M.t.length-1]/1e6,M.t[0]/1e6];
  const planeY=[M.b[0]/1e3,M.b[0]/1e3,M.b[M.b.length-1]/1e3,M.b[M.b.length-1]/1e3];
  traces.push({type:"mesh3d",x:planeX,y:planeY,z:[1,1,1,1],i:[0,0],j:[1,2],k:[2,3],
@@ -182,20 +223,23 @@ async function plotlyPlot(job){const {id,mode,um,gm}=job;
   if(mode==="3d")plot.querySelectorAll("canvas").forEach(item=>{if(!item.dataset.wtFallback){
    item.dataset.wtFallback="1";item.addEventListener("webglcontextlost",event=>{
     event.preventDefault();allow3d=false;plot.style.visibility="hidden";canvas.style.display="block";render();},{once:true});}});
-  document.getElementById("mode").textContent=mode==="3d"?"3D WebGL surface.":"2D fallback — WebGL is unavailable.";
+  document.getElementById("mode").textContent=mode==="3d"?"3D WebGL surface.":
+   view.value==="2d"?"2D heatmap selected.":"2D fallback — WebGL is unavailable.";
  }catch(error){if(id!==renderToken)return;if(mode==="3d"){allow3d=false;await plotlyPlot({...job,mode:"2d"});}else{
   plot.style.visibility="hidden";canvas.style.display="block";plotMode="canvas";
   document.getElementById("mode").textContent="2D canvas fallback — interactive library unavailable.";}}}
 function queuePlot(mode,um,gm){pendingPlot={id:++renderToken,mode,um,gm};if(!plotting)drainPlots();}
 async function drainPlots(){plotting=true;while(pendingPlot){const job=pendingPlot;pendingPlot=null;
  await plotlyPlot(job);}plotting=false;}
-function render(){const [um,gm]=matrices();nativePlot(um,gm);updateText(um,gm);
+function render(){const [um,gm]=matrices();nativePlot(um,gm);updateText(um,gm);updatePoint(um,gm);
+ canvas.style.display="block";plot.style.visibility="hidden";
  document.getElementById("mode").textContent="2D canvas fallback — interactive library unavailable.";
  plotMode="canvas";if(window.Plotly){plot.style.display="block";plot.style.visibility="hidden";canvas.style.display="block";
-  queuePlot(allow3d?"3d":"2d",um,gm);}}
+  queuePlot(allow3d&&view.value!=="2d"?"3d":"2d",um,gm);}}
 M.c.forEach(c=>code.add(new Option(c,c)));code.value=M.c.includes("DNV-ST-F101")?"DNV-ST-F101":M.c[0];
 allow3d=webgl();wall.max=M.w.length-1;let initial=M.w.indexOf(20);
 wall.value=initial<0?Math.floor(M.w.length/2):initial;
+tension.max=M.t.length-1;moment.max=M.b.length-1;
 const S=M.s;document.getElementById("spec").innerHTML=[["OD",S.od+" mm"],["Grade",S.grade],
  ["SMYS",S.smys+" MPa"],["pᵢ / pₑ",S.pi+" / "+S.pe+" MPa"],["Safety class",S.sc]]
  .map(([k,v])=>`<span><b>${esc(k)}</b> ${esc(v)}</span>`).join("");
@@ -203,6 +247,9 @@ document.getElementById("sampling").innerHTML=`Display snapshot: every ${M.x[0]}
  ${M.x[1]}rd load value (${M.w.length} × ${M.t.length} × ${M.b.length} × ${M.c.length} =
  ${M.p.toLocaleString()} points; ${(M.z/1000).toFixed(1)} kB JSON, ${(100*M.p/M.r).toFixed(1)}% of source rows).`;
 [code,wall].forEach(control=>control.addEventListener("input",render));
+[tension,moment].forEach(control=>control.addEventListener("input",()=>{
+ const [um,gm]=matrices();updatePoint(um,gm);if(plotMode==="canvas")nativePlot(um,gm);}));
+view.addEventListener("change",render);
 window.addEventListener("resize",()=>{if(plotMode==="canvas")render();});
 window.addEventListener("plotly-ready",render);render();
 }

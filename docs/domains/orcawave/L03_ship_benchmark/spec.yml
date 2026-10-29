@@ -25,11 +25,16 @@ vessel:
       Ixy: 0.0
       Ixz: 0.0
       Iyz: 0.0
+  # Native source uses kN.m.s/rad at body origin; canonical uses N.m.s/rad.
+  # Source: source_data/orcawave/orcawave_001_ship_raos_rev2.yml,
+  # BodyExternalDampingMatrix and BodyExternalDampingMatrixOriginType.
+  external_damping_units: SI
+  external_damping_reference_point: body_origin
   external_damping:
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    - [0.0, 0.0, 0.0, 36010.0, 0.0, 0.0]  # Roll damping (passed through without conversion)
+    - [0.0, 0.0, 0.0, 36010000.0, 0.0, 0.0]  # Native 36010.0 kN.m.s/rad
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     - [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 

@@ -13,6 +13,8 @@ Import from `digitalmodel.naval_architecture.tank_gauging`.
 | `CalibrationTable(points, reading_kind, reference_height_m)` | `(depth_m, volume_m3)` pairs; `sounding` or `ullage`; height in m | Immutable calibration |
 | `volume_at(depth_m)` | Declared reading kind, m | Volume, m³ |
 | `depth_at_volume(volume_m3)` | Volume, m³ | Declared reading kind, m |
+| `corrected_depth_at(gauge_depth_m, *, trim_deg, list_deg)` | Raw declared reading, m; qualified attitude, degrees | Corrected declared reading, m |
+| `volume_at_gauge(gauge_depth_m, *, trim_deg, list_deg)` | Raw declared reading, m; qualified attitude, degrees | Corrected volume, m³ |
 | `sounding_to_ullage`, `ullage_to_sounding` | Depth and common reference height, m | Complementary depth, m |
 | `centre_sounding` | Gauge sounding and height, m; signed offsets, m; independent surface slopes, degrees | Centre sounding, m |
 | `density_at_temperature` | Reference density, kg/m³; reference and measured temperature, °C; volumetric expansion coefficient, 1/°C | Density, kg/m³ |
@@ -24,7 +26,7 @@ Table 1. Public functions use SI mass units throughout; the free-surface moment 
 
 ## Calibration input
 
-CSV has exactly `depth_m,volume_m3` columns. Supply `reading_kind` and
+CSV requires `depth_m,volume_m3` columns. Supply `reading_kind` and
 `reference_height_m` to `CalibrationTable.from_csv`. YAML is read by
 `CalibrationTable.from_yaml` and has exactly this structure:
 
@@ -45,6 +47,49 @@ depths, repeated volumes, duplicate YAML keys, nonfinite numbers and unsupported
 `ValueError`. Source-file access errors retain their native exception.
 Calibration importers must reject duplicate mapping keys before schema
 validation; silent replacement can change a reading convention or volume.
+
+### Fixed-attitude correction columns
+
+CSV and YAML rows may also contain `trim_correction_m` and/or
+`list_correction_m`. Each included column must contain a finite signed value
+in every row. When either is supplied, `correction_attitude_deg` is required:
+a pair `[trim, list]` in YAML or a keyword pair passed to `from_csv`.
+These are the angles for which the supplied corrections are qualified.
+An attitude without any correction column is refused.
+
+```yaml
+reading_kind: sounding
+reference_height_m: 3
+correction_attitude_deg: [1, 0]
+rows:
+  - {depth_m: 0, volume_m3: 0, trim_correction_m: -0.1}
+  - {depth_m: 3, volume_m3: 120, trim_correction_m: -0.1}
+```
+
+This synthetic case defines a constant additive offset; it is not a
+recommended correction at one degree. Query it with
+`table.volume_at_gauge(1.5, trim_deg=1, list_deg=0)`: corrected sounding is
+`1.5 - 0.1 = 1.4 m`, so the box volume is `40 * 1.4 = 56 m³`.
+The input row convention is
+`d_reference = d_gauge + c_trim(d_gauge) + c_list(d_gauge)`.
+Each column is interpolated at the raw gauge reading using the same
+two-point line as volume. A missing component contributes zero. For an
+ullage table, corrections are added to ullage; an equivalent sounding
+correction therefore has the opposite sign.
+
+The supplied trim/list must match the stored pair exactly; no angle
+tolerance, interpolation between attitudes or geometric correction is
+inferred. Angles describe independent planar slopes as below. The caller
+qualifies the additive decomposition, datum and unclipped geometry.
+`corrected_depth_at` checks the raw reading against row bounds and the
+corrected reading against the reference height. `volume_at_gauge` also
+requires the corrected reading to lie inside the reference calibration
+rows. Neither method extrapolates. Apply table corrections once; do not
+combine them with `centre_sounding` for the same attitude.
+
+`volume_at` and `depth_at_volume` retain their reference-table meaning and
+do not apply corrections. Inverting a corrected table is not supported:
+depth-dependent corrections need not preserve a unique inverse.
 
 ## Method and sources
 
@@ -83,13 +128,14 @@ surface. The rectangular expression assumes the whole rectangular surface
 is exposed and a small-angle stability analysis. Baffles, subdivisions,
 large angles, dynamic sloshing and overall stability criteria are not evaluated.
 
-Attitude-indexed calibration/correction columns are deferred and are refused
-explicitly. No correction is silently ignored or applied twice. Temperature
+Interpolation between attitude cases and inversion of corrected calibration
+are deferred. No correction is inferred from a slope or offset by the table
+methods. Temperature
 correction is a caller-qualified linear approximation, without tank thermal
 expansion, phase change or custody-transfer procedures.
 
 The hand calculation and three-significant-figure results are in
 [the box-tank analysis](../../../../../docs/domains/naval-architecture/tank-gauging-box-example.html).
 Tests are `tests/naval_architecture/test_tank_calibration.py`,
-`test_tank_contents.py` and `test_tank_free_surface.py`.
+`test_tank_contents.py`, `test_tank_free_surface.py` and `test_tank_corrections.py`.
 The existing naval-architecture quality gate recursively runs that folder.

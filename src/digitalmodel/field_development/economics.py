@@ -37,8 +37,10 @@ Usage
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum
+from math import isfinite
 from typing import Callable, Optional
 
 import numpy as np
@@ -992,3 +994,84 @@ def carbon_sensitivity(
     rate = discount_rate if discount_rate is not None else inp.discount_rate
     prices = carbon_prices or [0, 25, 50, 75, 100, 150, 200]
     return carbon_npv_curve(schedule, rate, prices)
+
+
+@dataclass
+class DeclineSensitivityResult:
+    """Decline rates (per year), NPVs (USD MM), and an optional zero crossing."""
+
+    decline_rates: list[float]
+    npv_values: list[float]
+    base_npv: float
+    breakeven_decline_rate: Optional[float]
+
+
+def decline_sensitivity(
+    inp: EconomicsInput,
+    decline_type: DeclineType = DeclineType.EXPONENTIAL,
+    decline_rates: Optional[list[float]] = None,
+    discount_rate: Optional[float] = None,
+) -> DeclineSensitivityResult:
+    """Sweep decline rates through :func:`evaluate_economics` on independent copies.
+
+    The default grid is [0.05, 0.10, 0.15, 0.20, 0.25, 0.30] per year,
+    specified in issue #1777 (Requested Change). Rates must be finite and
+    nonnegative; zero uses each curve's constant-production limit. Supported
+    models are exponential, hyperbolic and harmonic; the existing linear
+    model does not depend on decline rate. Hyperbolic shape uses inp.b_factor.
+
+    Rates are returned sorted ascending, retaining duplicates. An explicitly
+    empty grid returns empty sweep arrays and no crossing. The base NPV always
+    evaluates the original scenario, including its original discount rate;
+    an optional discount override applies only to sweep points. Both discount
+    rates must be finite and in [0, 1], as required by EconomicsInput.
+
+    The first zero in ascending rate order is returned: an exact zero at a
+    grid point, or a linear interpolation across the first sign-changing
+    bracket. No crossing yields None; no extrapolation is performed. All
+    NPVs use the evaluator's USD MM units and existing fiscal/adapter rules.
+    """
+    try:
+        model = DeclineType(decline_type)
+    except (ValueError, TypeError) as exc:
+        raise ValueError("decline_type must be exponential, hyperbolic or harmonic") from exc
+    if model == DeclineType.LINEAR:
+        raise ValueError("decline_type must be exponential, hyperbolic or harmonic")
+
+    rates = list(decline_rates) if decline_rates is not None else [
+        0.05, 0.10, 0.15, 0.20, 0.25, 0.30,  # issue #1777 default grid
+    ]
+    if any(not isfinite(rate) or rate < 0 for rate in rates):
+        raise ValueError("decline_rates must contain finite nonnegative rates")
+    rates.sort()
+
+    rate = inp.discount_rate if discount_rate is None else discount_rate
+    for value in (inp.discount_rate, rate):
+        if not isfinite(value) or not 0 <= value <= 1:
+            raise ValueError("discount_rate must be finite and in [0, 1]")
+    if model == DeclineType.HYPERBOLIC and not 0 < inp.b_factor <= 1:
+        raise ValueError("b_factor must be in (0, 1] for hyperbolic decline")
+
+    base_npv = evaluate_economics(deepcopy(inp)).metrics.npv_usd_mm
+    npvs: list[float] = []
+    for decline_rate in rates:
+        case = deepcopy(inp)
+        # Assign on a copy to support the zero-rate limit without changing
+        # EconomicsInput's strictly positive constructor rule for these models.
+        case.decline_type = model
+        case.decline_rate = decline_rate
+        case.discount_rate = rate
+        npvs.append(evaluate_economics(case).metrics.npv_usd_mm)
+
+    breakeven: Optional[float] = None
+    for i, npv in enumerate(npvs):
+        if npv == 0:
+            breakeven = rates[i]
+            break
+        if i and ((npvs[i - 1] < 0 < npv) or (npv < 0 < npvs[i - 1])):
+            # Straight-line root: D_left - NPV_left * delta_D / delta_NPV.
+            fraction = -npvs[i - 1] / (npv - npvs[i - 1])
+            breakeven = rates[i - 1] + fraction * (rates[i] - rates[i - 1])
+            break
+
+    return DeclineSensitivityResult(rates, npvs, base_npv, breakeven)

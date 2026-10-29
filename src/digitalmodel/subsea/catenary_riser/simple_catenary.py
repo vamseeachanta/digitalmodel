@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: Simple catenary riser analysis using analytical catenary equations
 for static configuration, tensions, and angles per DNV-OS-F201.
@@ -7,10 +10,12 @@ for static configuration, tensions, and angles per DNV-OS-F201.
 import numpy as np
 from typing import Optional, Tuple, Dict
 import logging
+from dataclasses import replace
 
 from .models import (
     RiserConfiguration,
     CatenaryRiserResult,
+    _range,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,13 +35,15 @@ class SimpleCatenaryAnalyzer:
     Standards: DNV-OS-F201, API RP 1111
     """
 
-    def __init__(self, gravity: float = 9.81):
+    def __init__(self, gravity: float | None = None):
         """
         Initialize catenary analyzer.
 
         Args:
             gravity: Gravitational acceleration (m/s²)
         """
+        if gravity is not None:
+            _range("gravity", gravity, positive=True)
         self.g = gravity
 
     def analyze_riser(
@@ -46,6 +53,7 @@ class SimpleCatenaryAnalyzer:
         top_tension: Optional[float] = None,
         water_depth: Optional[float] = None,
         horizontal_offset: Optional[float] = None,
+        *, boundary_condition: str = "horizontal_tangent_vertex",
     ) -> CatenaryRiserResult:
         """
         Analyze simple catenary riser configuration.
@@ -65,14 +73,24 @@ class SimpleCatenaryAnalyzer:
         Returns:
             CatenaryRiserResult with geometry and forces
         """
+        if boundary_condition != "horizontal_tangent_vertex":
+            raise NotImplementedError("only horizontal_tangent_vertex boundary conditions are supported")
+        if horizontal_tension is not None and top_tension is not None:
+            raise ValueError("provide only one of horizontal_tension and top_tension")
+        if self.g is not None:
+            riser = replace(riser, gravity=self.g)
         # Use riser properties if not provided
         if water_depth is None:
             water_depth = riser.water_depth
         if horizontal_offset is None:
             horizontal_offset = riser.horizontal_offset
 
-        if water_depth is None or horizontal_offset is None:
-            raise ValueError("Must provide water_depth and horizontal_offset")
+        if water_depth is None:
+            raise ValueError("Must provide water_depth")
+        if horizontal_tension is None and top_tension is None and horizontal_offset is None:
+            raise ValueError("Must provide horizontal_offset for geometry solving")
+        if horizontal_offset is not None:
+            _range("horizontal_offset", horizontal_offset, positive=True)
 
         # Effective weight
         w = riser.effective_weight_per_length
@@ -102,7 +120,7 @@ class SimpleCatenaryAnalyzer:
             H, converged = self._solve_H_from_geometry(water_depth, horizontal_offset, riser.length, w)
             result = self._solve_catenary_from_H(riser, H, water_depth, w)
 
-        if (horizontal_tension is not None or top_tension is not None) and not np.isclose(
+        if horizontal_offset is not None and (horizontal_tension is not None or top_tension is not None) and not np.isclose(
             result.horizontal_offset, horizontal_offset, rtol=1e-6, atol=1e-6
         ):
             logger.warning(
@@ -131,7 +149,8 @@ class SimpleCatenaryAnalyzer:
         a = H / w
         # E1: eliminate the hyperbolic parameter using cosh² - sinh² = 1.
         s = np.sqrt(z * (z + 2 * a))
-        x = a * np.arccosh(1 + z / a)
+        # E1, acosh(1+u)=2*asinh(sqrt(u/2)): retain tiny z/a.
+        x = 2 * a * np.arcsinh(np.sqrt(z / a / 2))
         # E2: T = w*(a+z), monotonic in H.
         T_top = H + w * z
         T_td = H  # At touchdown, vertical component = 0
@@ -185,12 +204,12 @@ class SimpleCatenaryAnalyzer:
             raise ValueError("geometry requires finite positive offset and length > depth")
         # E1 gives the maximum a that fits the available suspended length.
         low, high = 0.0, (L * L - z * z) / (2 * z)
-        if x > high * np.arccosh(1 + z / high):
+        if x > 2 * high * np.arcsinh(np.sqrt(z / high / 2)):
             raise ValueError("requested suspended span exceeds available riser length")
         a = high
         for _ in range(max_iter):
             a = (low + high) / 2
-            residual = a * np.arccosh(1 + z / a) - x
+            residual = 2 * a * np.arcsinh(np.sqrt(z / a / 2)) - x
             if abs(residual) <= tol * x:
                 return a * w, True
             if residual < 0:

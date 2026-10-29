@@ -38,6 +38,8 @@ from .economics import (
     evaluate_economics,
     build_economics_schedule,
     carbon_sensitivity,
+    DeclineSensitivityResult,
+    decline_sensitivity,
 )
 from .benchmarks import (
     SubseaProject,
@@ -164,6 +166,8 @@ __all__ = [
     "evaluate_economics",
     "build_economics_schedule",
     "carbon_sensitivity",
+    "DeclineSensitivityResult",
+    "decline_sensitivity",
     # Workflow orchestrator (#1858/#1848)
     "FieldDevelopmentSpec",
     "FieldDevelopmentResult",
