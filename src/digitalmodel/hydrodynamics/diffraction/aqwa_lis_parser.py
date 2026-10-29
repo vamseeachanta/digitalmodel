@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 AQWA .LIS File Parser
 
@@ -37,7 +40,7 @@ class AQWALISParser:
         """
         self.lis_file = Path(lis_file_path)
         if not self.lis_file.exists():
-            raise FileNotFoundError(f"LIS file not found: {lis_file_path}")
+            raise FileNotFoundError(f"LIS file not found: {self.lis_file.as_posix()}")
 
         # Read entire file content
         with open(self.lis_file, 'r', encoding='utf-8', errors='ignore') as f:
@@ -138,7 +141,7 @@ class AQWALISParser:
     )
 
     def _table_span(self, marker: str, pos: Optional[int] = None) -> str:
-        """The listing text from one table's header to the next boundary."""
+        """Return a table span, retaining matching coefficient page titles."""
         if pos is None:
             pos = self.find_section(marker)
         if pos is None:
@@ -148,13 +151,28 @@ class AQWALISParser:
         head = rest.find("\n")
         if head < 0:
             return rest
-        tail = rest[head:]
-        cut = len(tail)
-        for end in self._TABLE_END_MARKERS:
-            found = tail.find(end)
-            if 0 <= found < cut:
-                cut = found
-        return rest[:head + cut]
+        coefficient_table = marker in (
+            "ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY",
+            "DAMPING-VARIATION WITH WAVE PERIOD/FREQUENCY",
+        )
+        offset = head
+        page_boundary = None
+        for line in rest[head:].splitlines(keepends=True):
+            stripped = line.strip()
+            if coefficient_table and stripped.removeprefix("1").lstrip() == marker:
+                page_boundary = None
+            elif page_boundary is not None:
+                # A banner is a page header only if the next nonblank,
+                # non-page-number line repeats this coefficient table's title.
+                if stripped and not stripped.isdigit():
+                    break
+            elif any(end in line for end in self._TABLE_END_MARKERS):
+                if coefficient_table and "H Y D R O D Y N A M I C" in line:
+                    page_boundary = offset
+                else:
+                    return rest[:offset]
+            offset += len(line)
+        return rest if page_boundary is None else rest[:page_boundary]
 
     def parse_added_mass_table(self) -> Dict[float, np.ndarray]:
         """

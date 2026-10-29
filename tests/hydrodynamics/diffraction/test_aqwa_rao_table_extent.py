@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Ordinal parser probes for issue #2107; no physical accuracy is implied.
@@ -12,6 +15,7 @@ printed frequency keys before any parser call. The old extent limits were
 
 from decimal import Decimal
 from math import pi
+from pathlib import PureWindowsPath
 
 import pytest
 
@@ -53,10 +57,11 @@ def _displacement(headings=HEADINGS, *, pages=False, omit=None):
     return "\n".join(lines)
 
 
-def _coefficients(marker, *, omit=None, extra=False, pages=False):
+def _coefficients(marker, *, omit=None, extra=False, pages=False,
+                  page_banner=False, print_control=False, scale=1):
     lines = [marker, "  PERIOD FREQUENCY COEFFICIENTS"]
     # Twelve entries correspond to the parser's documented matrix layout.
-    values = " ".join(f"{k + 1:.4E}" for k in range(2 * len(DOFS)))
+    values = " ".join(f"{scale * (k + 1):.4E}" for k in range(2 * len(DOFS)))
     frequencies = list(FREQUENCIES)
     if extra:
         frequencies.append(FREQUENCIES[-1] + Decimal("0.001"))
@@ -64,7 +69,10 @@ def _coefficients(marker, *, omit=None, extra=False, pages=False):
         if j == omit:
             continue
         if pages and j == len(FREQUENCIES) // 2:
-            lines.extend(["\n" * (2 * len(DOFS) + 1), "1",
+            lines.extend(["\n" * (2 * len(DOFS) + 1), "1"])
+            if page_banner:
+                lines.append("H Y D R O D Y N A M I C")
+            lines.extend([("1" if print_control else "") + marker,
                           "  PERIOD FREQUENCY COEFFICIENTS"])
         lines.append(f"  {2 * pi / float(frequency):12.6f} {frequency:.3f} {values}")
     return "\n".join(lines)
@@ -72,7 +80,7 @@ def _coefficients(marker, *, omit=None, extra=False, pages=False):
 
 def _parser(tmp_path, text):
     path = tmp_path / "ordinal.LIS"
-    path.write_text(text, encoding="ascii")
+    path.write_text(text, encoding="utf-8", newline="\n")
     return AQWALISParser(path)
 
 
@@ -209,6 +217,66 @@ def test_parse_all_retains_blank_and_page_headers_in_frequency_table(tmp_path):
     result = parser.parse_all()
     assert result["frequencies"] == [float(f) for f in FREQUENCIES]
     _assert_all_records(result["raos"], expected)
+
+
+@pytest.mark.parametrize("page_banner", [False, True])
+@pytest.mark.parametrize("print_control", [False, True])
+def test_coefficient_title_continuations_retain_full_grid(
+    tmp_path, page_banner, print_control,
+):
+    expected = _expected()
+    frequencies = [float(f) for f in FREQUENCIES]
+    parser = _parser(tmp_path, "\n".join([
+        _coefficients(MASS_MARKER, pages=True, page_banner=page_banner,
+                      print_control=print_control),
+        _coefficients(DAMPING_MARKER, pages=True, page_banner=page_banner,
+                      print_control=print_control, scale=100),
+        _displacement(),
+    ]))
+    actual_frequencies, periods = parser.extract_frequencies_and_periods()
+    assert actual_frequencies == frequencies
+    assert len(actual_frequencies) == len(periods) == 256
+    added = parser.parse_added_mass_table()
+    damping = parser.parse_damping_table()
+    assert set(added) == set(damping) == set(frequencies)
+    assert len(added) == len(damping) == 256
+    # Hand calculation: coefficient k is scale*(k+1); the six diagonal
+    # entries are 1..6 for added mass and 100*(1..6) for damping. Reading
+    # through a different table would overwrite the shared frequency keys.
+    for frequency in frequencies:
+        assert added[frequency].diagonal() == pytest.approx((1, 2, 3, 4, 5, 6))
+        assert damping[frequency].diagonal() == pytest.approx(
+            (100, 200, 300, 400, 500, 600),
+        )
+    result = parser.parse_all()
+    assert result["frequencies"] == frequencies
+    _assert_all_records(result["raos"], expected)
+
+
+@pytest.mark.parametrize("marker", [MASS_MARKER, DAMPING_MARKER])
+def test_coefficient_page_banner_requires_matching_continuation(tmp_path, marker):
+    # A banner followed by a data-like row, rather than this table's title,
+    # ends the table. The different scale exposes any overwritten row.
+    text = _coefficients(marker) + "\nH Y D R O D Y N A M I C\n\n1\n"
+    text += _coefficients(marker, scale=100).splitlines()[-1]
+    parser = _parser(tmp_path, text)
+    actual = (parser.parse_added_mass_table() if marker == MASS_MARKER
+              else parser.parse_damping_table())
+    assert len(actual) == 256
+    assert actual[0.355][0, 0] == 1
+
+
+def test_missing_listing_diagnostic_uses_forward_slashes(monkeypatch):
+    class MissingWindowsPath(PureWindowsPath):
+        def exists(self):
+            return False
+
+    monkeypatch.setattr(
+        "digitalmodel.hydrodynamics.diffraction.aqwa_lis_parser.Path",
+        MissingWindowsPath,
+    )
+    with pytest.raises(FileNotFoundError, match="missing/ordinal[.]LIS"):
+        AQWALISParser(MissingWindowsPath("missing") / "ordinal.LIS")
 
 
 def test_print_control_and_preceding_acceleration_text_do_not_hide_displacement(tmp_path):
