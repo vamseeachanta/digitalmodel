@@ -16,6 +16,19 @@ The relative tolerance 1e-12 allows floating-point trigonometry and summation
 roundoff; it is not an engineering uncertainty allowance. No absolute
 fallback tolerance is used. These checks cover intact, equally spaced lines
 with positive vertical separation and constant line-force magnitude only.
+
+Plan-lite
+---------
+Scope: tests/drilling_riser/global_model/test_tensioner_stiffness_values.py.
+Oracle: the independent force derivative above supplies literal stiffnesses;
+no beam assembly or solver result supplies an expected value.
+Run from the repository root with the dependencies isolated from the project:
+
+    test_file=tests/drilling_riser/global_model/test_tensioner_stiffness_values.py
+    PYTHONPATH=src uv run --no-project --with pytest --with pytest-asyncio \
+        --with pydantic --with numpy --with scipy --with pyyaml \
+        python -m pytest "$test_file" -q -rA -p no:cacheprovider \
+        --basetemp="$TMPDIR/tensioner-stiffness"
 """
 
 import pytest
