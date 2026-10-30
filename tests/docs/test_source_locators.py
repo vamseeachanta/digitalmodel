@@ -218,8 +218,51 @@ def test_unresolved_prose_accepts_existing_source(document, check, suffix):
 
 
 @pytest.mark.parametrize(
+    ("opening", "closing", "line_number"),
+    [
+        ("_", "_", 1),
+        ("__", "__", 1),
+        ("`_", "_`", 1),
+        ("`__", "__`", 1),
+        ("```markdown\n_", "_\n```", 2),
+        ("prefix", "", 1),
+        ("/", "", 1),
+        ("`prefix", "`", 1),
+        ("*", "*", 1),
+        ("**", "**", 1),
+    ],
+)
+@pytest.mark.parametrize(
+    ("locator", "reason"),
+    [
+        ("[src/absent.py:L1-L2]", "missing Python source"),
+        ("[src/example/__init__.py:L1-L2]", None),
+        # The literal two-line source fixture has no third physical line.
+        ("[src/example/__init__.py:L1-L3]", "line bounds outside source"),
+    ],
+)
+def test_adjacent_text_and_emphasis_preserve_locator_validation(
+    document, check, opening, closing, line_number, locator, reason,
+):
+    root, _, markdown = document
+    markdown.write_text(
+        opening + locator + closing + "\n", encoding="utf-8", newline="\n",
+    )
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    expected = [] if reason is None else [f"pack.md:{line_number}: {locator}: {reason}"]
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        expected, int(reason is not None), "".join(error + "\n" for error in expected), "",
+    )
+
+
+@pytest.mark.parametrize(
     "text",
     [
+        "_[src/absent.py:L1-L2](reference.md)_",
+        "__[src/absent.py:L1-L2](reference.md)__",
         "[Evidence [src/absent.py:L1-L2]](reference.md)",
         "[Evidence]([src/absent.py:L1-L2])",
         "![Evidence [src/absent.py:L1-L2]](reference.md)",

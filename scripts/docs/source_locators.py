@@ -21,7 +21,7 @@ from pathlib import Path
 # scripts/docs is two directory levels below the repository root.
 ROOT = Path(__file__).resolve().parents[2]
 LOCATOR = re.compile(
-    r"(?<![\w/])\["
+    r"\["
     r"(?P<source>(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\.py)"
     r":L(?P<first>[0-9]+)-L(?P<last>[0-9]+)\]"
 )
