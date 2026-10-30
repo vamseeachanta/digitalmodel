@@ -31,7 +31,7 @@
       "report_id": "pipeline-assessment"
     },
     {
-      "action": "Review 35 additional tracked HTML pages in the declared roots; these include supporting pages and are not counts of missing reports.",
+      "action": "Review 36 additional tracked HTML pages in the declared roots; these include supporting pages and are not counts of missing reports.",
       "kind": "coverage",
       "priority": 3,
       "report_id": null
@@ -44,14 +44,14 @@
       "RETAINED": 1,
       "UNKNOWN": 1
     },
-    "discovered_report_count": 40,
+    "discovered_report_count": 41,
     "discovered_roots": [
       "docs/benchmarks",
       "docs/domains/openfoam",
       "docs/reports",
       "docs/subsea/cross_sections"
     ],
-    "discovery_sha256": "f8940bc595dcb86f9a5978bfae3d63db5085e95821c6939c3bd3b9a2f9b77795",
+    "discovery_sha256": "33a9c52c1bc50950a4a706b9b3a145b5bedeea0c4967ed7573f48ea6bd2f0781",
     "source_digests": {
       "config/cfd/calm_water_study.json": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
       "data/cfd/calm_water_study/manifest.json": "c359820b5abc9577bc8e98d1198119ceae3c93d129665897c9d31cea0130c474",
@@ -80,7 +80,7 @@
       "tests/solvers/openfoam/test_calm_water_study_criteria.py": "1be7f089828f666c4063815c7d382b653c3b1f02dbf8fc1ec9cc7215104f8eee",
       "tests/subsea/cross_sections/test_reporting.py": "e480bc4445513991e907a8a896d7d20bcc5519b90694c52a316d0225cd3c2d92"
     },
-    "unreviewed_report_count": 35
+    "unreviewed_report_count": 36
   },
   "observations": {
     "observed_at": "2026-10-28T12:41:31.731725+00:00",
@@ -282,6 +282,11 @@
         "change": "Review retained comparison serialization, sample counts, refusal metadata and assessment source pins; refresh discovery without changing qualification.",
         "date": "2026-10-28",
         "revision": "1"
+      },
+      {
+        "change": "Refresh discovery after adding the tracked HTML page docs/reports/modules/capping_stack/index.html; preserve the reviewed subset and qualification limits.",
+        "date": "2026-10-30",
+        "revision": "2"
       }
     ],
     "scope_roots": [

@@ -9,6 +9,8 @@ loads below are selected test inputs, not recommended engineering values.
 The explicit absolute tolerances only bound floating-point roundoff.
 """
 
+from itertools import permutations
+
 import numpy as np
 import pytest
 
@@ -20,6 +22,7 @@ from digitalmodel.hydrodynamics.passing_ship.input_schemas import (
     MooringLineSpec,
     ResponseSettings,
 )
+from digitalmodel.hydrodynamics.passing_ship import mooring_response as response_module
 from digitalmodel.hydrodynamics.passing_ship.mooring_response import solve_response
 
 
@@ -276,3 +279,100 @@ def test_additional_response_limits(vessel, settings, defect, match):
         settings.max_translation_m = float("inf")
     with pytest.raises(ValueError, match=match):
         solve_response(vessel, loads, settings)
+
+
+@pytest.fixture
+def coupled_contact_case(vessel):
+    """Synthetic geometry with a hand-worked third-contact-only equilibrium."""
+    contacts = [
+        FenderSpec(fender_id="contact-1", x=-3, y=9, normal_x=1, normal_y=17,
+                   gap_m=0, stiffness_n_m=40000),
+        FenderSpec(fender_id="contact-2", x=4, y=-6, normal_x=3, normal_y=8,
+                   gap_m=0.2, stiffness_n_m=400000),
+        FenderSpec(fender_id="contact-3", x=-10, y=-4, normal_x=1, normal_y=-26,
+                   gap_m=0, stiffness_n_m=40000),
+    ]
+    vessel.fenders = contacts
+    load = [1600 + 6560 / 677, -1080 - 170560 / 677, -464 + 1731840 / 677]
+    return vessel, load
+
+
+@pytest.mark.parametrize("order", list(permutations(range(3))))
+def test_coupled_fenders_do_not_cycle(coupled_contact_case, settings, order):
+    """OpenStax (2016), sections 12.1 and 15.1: sum forces and moments.
+
+    At q=(0.8,-0.27,-0.029), only contact 3 closes:
+    b3=(1,-26,264)/sqrt(677), b3.q=0.164/sqrt(677) m.
+    R3=40000*0.164/sqrt(677)=6560/sqrt(677) N. Thus the load is
+    (1600,-1080,-464)+(6560/677)*(1,-26,264) in N and N m.
+    Bow+ tension=10000+1000*(-0.27+2*(-0.029))=9672 N;
+    surge tensions=10000+/-1000*0.8=10800 and 9200 N.
+    """
+    vessel, load = coupled_contact_case
+    vessel.fenders = [vessel.fenders[i] for i in order]
+    result = solve_response(vessel, history([load, [0, 0, 0], load]), settings)
+    np.testing.assert_allclose(result.motions, [[0.8, -0.27, -0.029], [0, 0, 0],
+                                               [0.8, -0.27, -0.029]], atol=1e-10)
+    np.testing.assert_allclose(result.fender_loads_n["contact-1"], 0, atol=1e-7)
+    np.testing.assert_allclose(result.fender_loads_n["contact-2"], 0, atol=1e-7)
+    np.testing.assert_allclose(result.fender_loads_n["contact-3"],
+                               [6560 / np.sqrt(677), 0, 6560 / np.sqrt(677)], atol=1e-7)
+    assert result.line_tensions_n["bow+"][0] == pytest.approx(9672)
+    assert result.line_tensions_n["x+"][0] == pytest.approx(10800)
+    assert result.line_tensions_n["x-"][0] == pytest.approx(9200)
+    np.testing.assert_allclose(result.residuals, 0, atol=1e-7)
+
+
+@pytest.mark.parametrize("gap", [0.1, 0.125])
+def test_contact_balance_with_loose_residual_tolerance(vessel, settings, gap):
+    """Fy=500 N gives y=0.125 m; the 0.125 m gap has zero reaction.
+
+    For gap=0.1 m, 4000*y+4000*(y-0.1)=500 gives y=0.1125 m,
+    R=50 N. A loose supplied tolerance must not omit this contact load.
+    """
+    settings.force_tolerance_n = 1000
+    vessel.fenders = [FenderSpec(
+        fender_id="contact", x=0, y=0, normal_x=0, normal_y=1,
+        gap_m=gap, stiffness_n_m=4000,
+    )]
+    result = solve_response(vessel, history([[0, 500, 0]]), settings)
+    expected_y, expected_reaction = (0.1125, 50) if gap == 0.1 else (0.125, 0)
+    assert result.motions[0, 1] == pytest.approx(expected_y, abs=1e-12)
+    assert result.fender_loads_n["contact"][0] == pytest.approx(expected_reaction)
+    np.testing.assert_allclose(result.residuals, 0, atol=1e-9)
+
+
+@pytest.mark.parametrize(
+    "budget,message", [("_CONTACT_ITERATIONS", "iteration limit"),
+                       ("_CONTACT_BACKTRACKS", "line search")],
+)
+def test_contact_budget_exhaustion_refuses_partial_result(
+    coupled_contact_case, settings, monkeypatch, budget, message,
+):
+    vessel, load = coupled_contact_case
+    monkeypatch.setattr(response_module, budget, 0)
+    with pytest.raises(ValueError, match=message):
+        solve_response(vessel, history([load]), settings)
+
+
+@pytest.mark.parametrize("order", list(permutations(range(3))))
+def test_decimal_grazing_contact_is_balanced(vessel, settings, order):
+    """Fy=1120 N and Mz=-1440 N m give y=0.28 m and yaw=-0.09 rad.
+
+    The off-centre contact closure is 0.28+2*(-0.09)-0.1=0 m by hand.
+    The decimal gap can nevertheless change sign at floating-point roundoff.
+    """
+    contacts = [
+        FenderSpec(fender_id="touching", x=2, y=0, normal_x=0, normal_y=1,
+                   gap_m=0.1, stiffness_n_m=40000),
+        FenderSpec(fender_id="open-x", x=0, y=0, normal_x=1, normal_y=0,
+                   gap_m=2, stiffness_n_m=4000),
+        FenderSpec(fender_id="open-y", x=0, y=0, normal_x=0, normal_y=-1,
+                   gap_m=2, stiffness_n_m=4000),
+    ]
+    vessel.fenders = [contacts[i] for i in order]
+    result = solve_response(vessel, history([[0, 1120, -1440]]), settings)
+    np.testing.assert_allclose(result.motions, [[0, 0.28, -0.09]], atol=1e-12)
+    for reaction in result.fender_loads_n.values():
+        np.testing.assert_allclose(reaction, 0, atol=1e-9)
+    np.testing.assert_allclose(result.residuals, 0, atol=1e-9)

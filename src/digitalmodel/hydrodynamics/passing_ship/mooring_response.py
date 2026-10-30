@@ -9,6 +9,8 @@ b=[nx, ny, x*ny-y*nx]; extension=b.q and T=T0+k*b.q. Thus K=sum(k*b*b.T).
 These are Hooke's law and force/moment balance (OpenStax, University Physics
 Volume 1, 2016, sections 15.1 and 12.1). Fenders use compression-only linear
 springs, R=k*max(b.q-gap,0), with user-supplied stiffness and gap.
+Contact equilibrium is safeguarded by an Armijo line search (Nocedal and
+Wright, Numerical Optimization, 2nd edition, 2006, section 3.1).
 
 Only taut lines, fixed horizontal directions and small motions are supported.
 Stiffness is an effective horizontal tangent input, not inferred from line type,
@@ -31,6 +33,8 @@ from .input_schemas import MooredVesselSpec, ResponseSettings
 
 # docs/UNITS.md, "Rule 1", defines the exact legacy kN-to-N boundary.
 _KN_TO_N = 1000.0
+_CONTACT_ITERATIONS = 100
+_CONTACT_BACKTRACKS = 60
 
 
 @dataclass
@@ -49,6 +53,65 @@ class MooringResponse:
 def _arm(nx: float, ny: float, x: float, y: float) -> list[float]:
     """Rigid-body linear displacement and moment arm (OpenStax 2016, 12.1)."""
     return [nx, ny, x * ny - y * nx]
+
+
+def _contact_at_roundoff(matrix, rhs, fb, fk, gaps, q, closure, mismatch):
+    """Allow only geometric and equilibrium errors at machine roundoff."""
+    eps = np.finfo(float).eps
+    gap_scale = np.abs(fb) @ np.abs(q) + gaps
+    if np.any(np.abs(closure[mismatch]) > 8 * eps * gap_scale[mismatch]):
+        return False
+    reaction = fk * np.maximum(closure, 0)
+    residual = matrix @ q + fb.T @ reaction - rhs
+    scale = np.abs(matrix) @ np.abs(q) + np.abs(fb).T @ reaction + np.abs(rhs)
+    return (np.isfinite(residual).all() and np.isfinite(scale).all()
+            and np.all(np.abs(residual) <= 32 * eps * scale))
+
+
+def _solve_contact(matrix, rhs, fb, fk, gaps):
+    """Solve the strictly convex spring potential, accepting consistent contact.
+
+    Nocedal and Wright (2006), 2nd edition, section 3.1: Armijo decrease
+    safeguards Newton steps. The numerical choices c1=0.0001 and halving
+    are algorithm controls, not physical criteria. User residual tolerances
+    do not truncate the equilibrium solve.
+    """
+    q = np.linalg.solve(matrix, rhs)
+    for _ in range(_CONTACT_ITERATIONS):
+        closure = fb @ q - gaps
+        compression = np.maximum(closure, 0)
+        active = closure > 0
+        contact = fb[active]
+        tangent = matrix + contact.T @ (fk[active, None] * contact)
+        candidate = np.linalg.solve(tangent, rhs + contact.T @ (fk[active] * gaps[active]))
+        candidate_closure = fb @ candidate - gaps
+        if not np.isfinite(candidate).all() or not np.isfinite(candidate_closure).all():
+            raise ValueError("fender contact solution must be finite")
+        mismatch = (candidate_closure > 0) != active
+        if not np.any(mismatch) or _contact_at_roundoff(
+            matrix, rhs, fb, fk, gaps, candidate, candidate_closure, mismatch,
+        ):
+            return candidate
+        gradient = matrix @ q - rhs + fb.T @ (fk * compression)
+        direction = candidate - q
+        slope = gradient @ direction
+        if not np.isfinite(slope) or slope >= 0:
+            raise ValueError("fender contact direction is not descending")
+        step = 1.0
+        for _ in range(_CONTACT_BACKTRACKS):
+            delta = step * direction
+            trial_compression = np.maximum(closure + fb @ delta, 0)
+            # Difference of potentials avoids subtracting large total energies.
+            change = ((matrix @ q - rhs) @ delta + 0.5 * delta @ matrix @ delta
+                      + 0.5 * (fk * (trial_compression - compression))
+                      @ (trial_compression + compression))
+            if np.isfinite(change) and change <= 0.0001 * step * slope:
+                q = q + delta
+                break
+            step *= 0.5
+        else:
+            raise ValueError("fender contact line search did not converge")
+    raise ValueError("fender contact iteration limit reached")
 
 
 def solve_response(
@@ -120,24 +183,10 @@ def solve_response(
     reference_load = b.T @ t0
     motions, tensions, reactions, residuals = [], [], [], []
     for load in loads:
-        active = np.zeros(len(fk), dtype=bool)
-        visited = set()
-        while True:
-            key = tuple(active)
-            if key in visited:
-                raise ValueError("fender contact iteration did not converge")
-            visited.add(key)
-            contact = fb[active]
-            tangent = matrix + contact.T @ (fk[active, None] * contact)
-            rhs = load - reference_load + contact.T @ (fk[active] * gaps[active])
-            try:
-                q = np.linalg.solve(tangent, rhs)
-            except np.linalg.LinAlgError as exc:
-                raise ValueError("mooring lines must restrain all motions") from exc
-            updated = fb @ q > gaps
-            if np.array_equal(active, updated):
-                break
-            active = updated
+        try:
+            q = _solve_contact(matrix, load - reference_load, fb, fk, gaps)
+        except np.linalg.LinAlgError as exc:
+            raise ValueError("mooring lines must restrain all motions") from exc
         tension = t0 + k * (b @ q)
         reaction = fk * np.maximum(fb @ q - gaps, 0)
         if np.any(tension < 0):
