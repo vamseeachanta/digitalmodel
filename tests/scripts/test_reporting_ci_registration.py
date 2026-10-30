@@ -7,13 +7,14 @@ No engineering constants or numerical acceptance limits are introduced.
 """
 
 import importlib.util
-import shlex
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 import yaml
+
+from tests.scripts._pytest_selection import pytest_selects_target
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORTING_ROOT = "tests/reporting/"
@@ -25,18 +26,55 @@ REQUIRED_MODULES = {
 }
 
 
-def test_reporting_gate_is_enabled_and_collects_the_folder():
+def assert_reporting_gate_coverage(gate, pytestconfig):
+    assert gate["enabled"] is True
+    assert gate["domain"] == DOMAIN
+    assert REPORTING_ROOT in gate["test_roots"]
+    assert pytest_selects_target(
+        pytestconfig, gate["command"], REPORTING_ROOT,
+        (path.relative_to(ROOT).as_posix() for path in (ROOT / REPORTING_ROOT).rglob("test_*.py")),
+        require_explicit_target=True,
+    )
+    assert gate["failure_action"] == "block"
+
+
+def test_reporting_gate_is_enabled_and_collects_the_folder(pytestconfig):
     gates = yaml.safe_load(
         (ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
     )["gates"]
     gate = gates[f"tests-{DOMAIN}"]
-    assert gate["enabled"] is True
-    assert gate["domain"] == DOMAIN
-    assert REPORTING_ROOT in gate["test_roots"]
-    command = shlex.split(gate["command"])
-    pytest_args = command[command.index("pytest") + 1:]
-    assert REPORTING_ROOT in pytest_args
-    assert gate["failure_action"] == "block"
+    assert_reporting_gate_coverage(gate, pytestconfig)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("enabled", False), ("failure_action", "warn"),
+    ("failure_action", "report"), ("failure_action", None),
+])
+def test_reporting_guard_rejects_nonblocking_metadata(field, value, pytestconfig):
+    gate = {
+        "enabled": True, "domain": DOMAIN, "failure_action": "block",
+        "test_roots": [REPORTING_ROOT],
+        "command": f"python -m pytest {REPORTING_ROOT}",
+    }
+    gate[field] = value
+    with pytest.raises(AssertionError):
+        assert_reporting_gate_coverage(gate, pytestconfig)
+
+
+@pytest.mark.parametrize("args", [
+    "tests/unrelated/ --ignore tests/reporting/",
+    "tests/unrelated/ --rootdir tests/reporting/",
+    "tests/unrelated/ --confcutdir tests/reporting/",
+    "tests/reporting/ --ignore=tests/reporting/test_calc_report.py",
+    "tests/reporting/ --deselect=tests/reporting/test_engine_golden.py::test_required",
+])
+def test_reporting_guard_rejects_incomplete_commands(args, pytestconfig):
+    gate = {
+        "enabled": True, "domain": DOMAIN, "failure_action": "block",
+        "test_roots": [REPORTING_ROOT], "command": f"python -m pytest {args}",
+    }
+    with pytest.raises(AssertionError):
+        assert_reporting_gate_coverage(gate, pytestconfig)
 
 
 @pytest.mark.parametrize("changed_path", [
@@ -60,7 +98,7 @@ def test_reporting_changes_select_the_collecting_domain(changed_path, monkeypatc
     assert DOMAIN in {domain.name for domain in selected}
 
 
-def test_registration_guard_runs_in_the_independent_hosted_harness():
+def test_registration_guard_runs_in_the_independent_hosted_harness(pytestconfig):
     workflow = yaml.safe_load(
         (ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(
             encoding="utf-8"
@@ -70,7 +108,10 @@ def test_registration_guard_runs_in_the_independent_hosted_harness():
     assert "if" not in harness
     step = next(step for step in harness["steps"] if step["name"] == "Run harness tests")
     assert "if" not in step
-    assert "tests/scripts/test_reporting_ci_registration.py" in shlex.split(step["run"])
+    path = "tests/scripts/test_reporting_ci_registration.py"
+    assert pytest_selects_target(
+        pytestconfig, step["run"], path, [path], require_explicit_target=True,
+    )
 
 
 @pytest.mark.parametrize("ignored_module", [None, *sorted(REQUIRED_MODULES)])
