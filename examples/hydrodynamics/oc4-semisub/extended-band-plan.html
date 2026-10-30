@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Extended-band diffraction preparation</title>
+<body><h1>Extended-band diffraction preparation</h1>
+<p>The preparation will provide reproducible public-derived inputs and offline gates for
+0.05–3.50 rad/s at 1500 m. Native acceptance will remain open until the probes pass.</p>
+<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>A</td><td>2026-10-26</td><td>The high-band mesh, interior surface and complex export will be checked before native calculation.</td></tr></table>
+<p>Table 1. Proposed preparation revision.</p>
+<h2>Resource intelligence and proposed implementation</h2>
+<p>The existing public geometry and its dimension provenance in README.md will remain the
+physical basis. The supplied historical builder and expected records are outside this
+checkout; new v2 records will not replace them. The existing 21-test suite will be retained.
+The execution will use one computation at a time and no licensed API.</p>
+<ol><li>Dispersion and DF3 tests will precede the exact-depth implementation. The relation
+omega² = g k tanh(k h), lambda = 2 pi/k, and span = lambda/6 will set the limit.
+Six panels per wavelength is ASSUMED from the supplied study criterion, not a standard.
+Inputs will be g=9.80665 m/s², h=1500 m and omega=3.50 rad/s; the span will be
+0.8383265196279277 m. Acceptance will use unrounded values.</li>
+<li>The unchanged solid definition will supply a coarse/fine hull and matching planar
+interior cap. Mesher targets will differ; a conforming midpoint refinement and exported-byte
+readback will enforce the span. Manifests will bind geometry, generator, inputs and outputs.
+Payloads exceeding the publication size limit will stay outside Git.</li>
+<li>Lid checks will require upward, nondegenerate SWL panels, the exact opposite hull
+waterline boundary, all interior edges paired, coverage equal to the hull waterplane,
+and all panel centroids inside the waterline. Hull panels will remain below SWL.</li>
+<li>A versioned builder will bind mass, hashes, 350 exact frequencies, nine headings,
+1500 m depth and interior-panel generation. DF0 will reject any mismatch. Native-generated
+interior panels will require independent readback against the reference lid.</li>
+<li>An adapter-only export will retain real and imaginary motion and both load formulations,
+axes, units, origins and phase conventions. Every exported quantity and its metadata will
+be compared after a native save/reload; fake-adapter tests will require reload failure to block export.</li></ol>
+<h2>Plan defect review</h2>
+<p>A mesher edge setting will not establish maximum vertex span; the post-check will use
+serialized coordinates. A lid bounding box will not establish interior coverage; boundary
+and oriented area checks will be required, including brace waterlines. A magnitude comparison
+will not establish phase equality; reload checks will include both load methods. A successful
+offline gate will not clear historical DF5.2 or DF5.3 failures. A time scaling will be labelled
+ESTIMATED and will not establish native capacity or a release time. Independent provider review
+will remain a required external gate; no additional assistant will be called by this preparation.</p>
+<h2>Native smoke and probes to be run later</h2>
+<p>All numerical comparison limits below will be ASSUMED study acceptance criteria. The
+maintainer will confirm them before execution. No native run will be launched by this preparation.</p>
+<table><tr><th>Probe</th><th>Criterion</th></tr>
+<tr><td>DF0 and DF3 before every run</td><td>Exact hashes, depth, mass, axes, headings and frequency subset will match the v2 record; every hull and reference-lid span will be at most lambda/6. Native lid presence, extent and span will be read back before release.</td></tr>
+<tr><td>0.35 rad/s smoke, coarse then fine</td><td>Load/calculation messages will be dispositioned; all complex coefficients will be finite and reload exactly. Volume will agree with independent mesh volume within 0.5%; COB x/y within 0.276 m and z within 0.20 m; C33 within 1%; total C44/C55 positive and within max(2%, 0.5% rho g Iwp), including the weight term.</td></tr>
+<tr><td>1.88, 1.983, 2.08 and 3.50 rad/s</td><td>The five-frequency probe set will include the smoke. Lid-on results will have no unresolved native warnings or discontinuous spikes. Lid-off diagnostic results, if calculated separately, will never become release inputs. Local half-step sampling will bound peak changes by 5%.</td></tr>
+<tr><td>Coarse against fine, DF7</td><td>Complex motion and both excitation formulations will differ by at most 5% of each fine component's maximum magnitude over the comparison band; phase difference will be at most 5 degrees where the fine amplitude exceeds 1% of that maximum. Near-zero components will use the same absolute floor. At least the smoke and all four probes will be compared.</td></tr>
+<tr><td>Frequency refinement</td><td>The 0.01 rad/s response grid will be compared with 0.005 rad/s in each resonance and sampled fatigue-energy band. Peaks and integrated response variance will change by at most 2%; the exact off-grid peak frequencies will remain present. Supplied spectrum retained fractions 99.3140%, 99.5749%, 99.7119% will be recorded without renormalisation; these fractions will not establish RAO convergence.</td></tr>
+<tr><td>DF5, DF8 and DF9</td><td>The historical DF5.2 and DF5.3 FAILs will remain FAIL until new native evidence satisfies their original criteria. Those criteria are not supplied here, so acceptance will remain OPEN. Response, dynamics and fatigue release will require all original gates and current-head independent review.</td></tr></table>
+<p>Table 2. Proposed native probe sequence and acceptance criteria.</p>
+<h2>Retention and limitations</h2>
+<p>Each generated case will retain GDF bytes, SHA-256 manifests, input and expected v2 records,
+compact offline measurements and logs. A completed case will be reused only after every digest
+and generation-input identity matches. Native inputs, complex arrays and reload records will
+be retained by their existing result owner. Public geometry source identity will remain
+nrel-iea-reference-turbines; no private or vendor payload will be copied. The supplied platform
+mass basis will be unchanged; system mass suitability will require separate confirmation.</p>
+<p>The native version panel limit, lid generation details, solve time and memory will be
+unmeasured. Dense-memory N² and direct-solve N³ scaling from the supplied same-hull benchmark
+will provide conditional estimates only. A one-frequency pilot will establish the next allocation.</p>
+<h2>Conditional resource allocation basis</h2>
+<p>The estimate will use the supplied same-hull 14,064-panel, no-lid benchmark:
+3044.0 s for 32 frequencies and a 35.6 GB peak working set. The calculation will use
+the supplied unrounded inputs (3043.96 s and 35.608 GB). The serial pilot comparator
+will use 284.9 s per frequency. These supplied observations will not establish performance
+for the new meshes. Reference-lid panels will be included in the effective count; the
+native automatic lid count will remain unmeasured.</p>
+<table><tr><th>Mesh</th><th>Hull panels</th><th>Lid panels</th><th>Effective ratio</th><th>Memory (GB)</th><th>350-frequency sweep (h)</th><th>Serial-pilot comparator (h)</th></tr>
+<tr><td>Coarse</td><td>74191</td><td>3259</td><td>5.5</td><td>1079.9</td><td>1544.5</td><td>4625.1</td></tr>
+<tr><td>Fine</td><td>113471</td><td>5899</td><td>8.5</td><td>2565.2</td><td>5654.8</td><td>16933.3</td></tr></table>
+<p>Table 3. ESTIMATED resource requirements under dense-memory N² and direct-solve N³ assumptions.</p>
+<p>The calculation will use r=(hull panels+reference-lid panels)/14064,
+M=35.608 r² GB and T=(3043.96/32) n r³ seconds. The 350-frequency pair will imply
+7199.3 h (300.0 days) serially under that assumption; the five smoke/probe frequencies
+on both meshes will add 102.8 h. Frequency refinement will require a separate budget.
+The serial-pilot comparator will use T=284.85 n r³ seconds. Fixed overhead, memory
+sharing, frequency dependence, hardware differences and native-version limits will
+remain unresolved. These estimates will not provide a release commitment. Allocation
+will depend on measured native panel counts, a memory-capacity check and the pilot.</p>
+</body></html>
