@@ -22,6 +22,32 @@ LOCATOR = re.compile(
     r":L(?P<first>[0-9]+)-L(?P<last>[0-9]+)\]"
     r"(?!\(|:|\s*\[)"
 )
+REFERENCE_DEFINITION = re.compile(
+    r"^ {0,3}(?P<label>\[[^\[\]\n]+\]):[ \t]*(?:\n[ \t]*)?"
+    r"(?:<[^<>\n]*>|[^\s<>]+)"
+    r"(?:[ \t]+(?:\"[^\"\n]*\"|'[^'\n]*'|\([^()\n]*\)))?[ \t]*$",
+    re.MULTILINE,
+)
+CODE_SPAN = re.compile(r"(?<![\\`])(?:\\\\)*(`+)(?!`)(.*?)(?<!`)\1(?!`)", re.DOTALL)
+
+
+def reference_prose(lines: list[str]) -> str:
+    """Mask code without changing offsets or physical document lines."""
+    masked = []
+    fence = ""
+    for line in lines:
+        delimiter = re.match(r" {0,3}(`{3,}|~{3,})(.*)", line)
+        if fence:
+            masked.append(re.sub(r"[^\n]", " ", line))
+            if (delimiter and delimiter[1][0] == fence[0]
+                    and len(delimiter[1]) >= len(fence) and not delimiter[2].strip()):
+                fence = ""
+        elif delimiter and not (delimiter[1][0] == "`" and "`" in delimiter[2]):
+            fence = delimiter[1]
+            masked.append(re.sub(r"[^\n]", " ", line))
+        else:
+            masked.append(line)
+    return CODE_SPAN.sub(lambda match: re.sub(r"[^\n]", " ", match[0]), "".join(masked))
 
 
 def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
@@ -48,10 +74,16 @@ def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
     except (OSError, UnicodeError):
         return [f"{label}: cannot read Markdown file"]
 
+    prose = reference_prose(lines)
+    definitions = {match["label"].casefold() for match in REFERENCE_DEFINITION.finditer(prose)}
+    prose_lines = prose.split("\n")
     errors = []
     # Markdown diagnostics and inclusive source bounds use one-based numbering.
     for number, line in enumerate(lines, start=1):
         for match in LOCATOR.finditer(line):
+            if (match[0].casefold() in definitions
+                    and prose_lines[number - 1][match.start():match.end()] == match[0]):
+                continue
             source = (root / match["source"]).resolve()
             first, last = int(match["first"]), int(match["last"])
             reason = None

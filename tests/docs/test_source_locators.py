@@ -203,6 +203,108 @@ def test_reference_link_spacing_remains_excluded(document, check, spacing):
     assert check(markdown, root) == []
 
 
+@pytest.mark.parametrize("definition_first", [False, True])
+@pytest.mark.parametrize(
+    "definition",
+    [
+        "[src/absent.py:L1-L2]: https://example.org/source\n",
+        '   [SRC/ABSENT.PY:l1-l2]: reference.md "Source"\n',
+        "[src/absent.py:L1-L2]: <reference.md>\n",
+        "[src/absent.py:L1-L2]:\n  reference.md\n",
+    ],
+)
+def test_defined_shortcut_reference_is_excluded(
+    document, check, definition, definition_first,
+):
+    root, _, markdown = document
+    shortcut = "[src/absent.py:L1-L2]\n"
+    text = definition + "\n" + shortcut if definition_first else shortcut + "\n" + definition
+    markdown.write_text(text, encoding="utf-8", newline="\n")
+    assert check(markdown, root) == []
+
+
+@pytest.mark.parametrize("delimiter", ["`", "``"])
+def test_defined_shortcut_inside_inline_code_is_checked(document, check, delimiter):
+    root, _, markdown = document
+    markdown.write_text(
+        f"{delimiter}[src/absent.py:L1-L2]{delimiter}\n\n"
+        "[src/absent.py:L1-L2]: reference.md\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == [
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    ]
+
+
+@pytest.mark.parametrize("backslashes", [1, 2, 3, 4])
+def test_escaped_backtick_is_not_an_inline_code_delimiter(document, check, backslashes):
+    root, _, markdown = document
+    prefix = "\\" * backslashes
+    markdown.write_text(
+        prefix + "`[src/absent.py:L1-L2]`\n\n"
+        "[src/absent.py:L1-L2]: reference.md\n",
+        encoding="utf-8", newline="\n",
+    )
+    # Pairs escape each other; an odd remaining backslash escapes the backtick.
+    expected = [] if backslashes % 2 else [
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    ]
+    assert check(markdown, root) == expected
+
+
+@pytest.mark.parametrize(
+    ("code", "line"),
+    [
+        ("`[src/absent.py:L1-L2]: reference.md`\n", 3),
+        ("``[src/absent.py:L1-L2]: reference.md``\n", 3),
+        ("`code\n[src/absent.py:L1-L2]: reference.md\n`\n", 5),
+        ("```markdown\n[src/absent.py:L1-L2]: reference.md\n```\n", 5),
+        ("~~~markdown\n[src/absent.py:L1-L2]: reference.md\n~~~\n", 5),
+        ("    [src/absent.py:L1-L2]: reference.md\n", 3),
+    ],
+)
+def test_definition_in_code_cannot_define_shortcut(document, check, code, line):
+    root, _, markdown = document
+    markdown.write_text(
+        code + "\n[src/absent.py:L1-L2]\n", encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == [
+        f"pack.md:{line}: [src/absent.py:L1-L2]: missing Python source"
+    ]
+
+
+@pytest.mark.parametrize("destination", ["", "reference.md trailing prose", "<unclosed"])
+def test_invalid_definition_cannot_define_shortcut(document, check, destination):
+    root, _, markdown = document
+    markdown.write_text(
+        f"[src/absent.py:L1-L2]\n\n[src/absent.py:L1-L2]: {destination}\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == [
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    ]
+
+
+def test_cli_accepts_defined_shortcut_and_rejects_inline_locator(document):
+    root, _, markdown = document
+    command = [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)]
+    definition = "\n\n[src/absent.py:L1-L2]: reference.md\n"
+    markdown.write_text(
+        "[src/absent.py:L1-L2]" + definition, encoding="utf-8", newline="\n",
+    )
+    linked = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+    assert linked.returncode == 0, linked.stdout + linked.stderr
+    assert linked.stdout == ""
+    markdown.write_text(
+        "`[src/absent.py:L1-L2]`" + definition, encoding="utf-8", newline="\n",
+    )
+    literal = subprocess.run(command, capture_output=True, text=True, encoding="utf-8")
+    assert literal.returncode == 1
+    assert literal.stdout == (
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source\n"
+    )
+
+
 @pytest.mark.parametrize("spacing", [" ", "\t", "   "])
 def test_bare_locator_before_parenthetical_prose_is_checked(document, check, spacing):
     root, _, markdown = document
