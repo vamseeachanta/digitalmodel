@@ -16,6 +16,7 @@ licence release and solver reuse remain `NOT_EVALUATED` for every entry.
 | --- | --- | --- |
 | Initial | 2026-10-19 | Record selected cleanup boundaries and source fingerprints so later reuse reviews cannot silently inherit stale findings. |
 | Update | 2026-10-25 | Record completed source review and distinguish cancelled hosted tests from observed test failures. |
+| Refresh | 2026-10-28 | Re-read five changed wrapper sources and refresh their fingerprints; retain every source classification and unestablished runtime result. |
 
 ## Scope and method
 
@@ -106,6 +107,15 @@ Exit success means the listed source review is current. A changed source returns
 a nonzero status; invalid inventory/root input returns a distinct error status.
 Neither success nor failure authorizes execution. Recheck actual owned-process
 absence, resource ownership and the applicable operational interlock separately.
+
+The 2026-10-28 source refresh is pinned to retained source revision
+`09089a121a16069c4b657d1a320a630a23ab1dd5`. Five changed files cover the
+Windows and POSIX cylinder routes, the diffraction batch wrapper, the worker
+pool and the direct-child finite-element wrapper. Launch, settlement, pool
+shutdown and direct-child waits are re-read before fingerprints are refreshed.
+The bounded set remains 10 routes and 16 unique source dependencies. Source
+classifications are retained; runtime cleanup and solver reuse remain
+`NOT_EVALUATED`. No wrapper is imported or executed for this source review.
 
 ## Verification
 

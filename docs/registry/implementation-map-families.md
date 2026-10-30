@@ -11,11 +11,12 @@ Membership establishes neither numerical correctness nor design suitability.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-23 | Six source inventories and lookup examples were added so reviews can cite existing methods and their limits. |
+| 2 | 2026-10-28 | Refresh source evidence and bounded search metadata against retained sources; preserve curated membership and qualification limits. |
 
 ## Scope and method
 
-The earlier repository-wide snapshot retains its revision, searches, groups and
-classifications. Each new family's `inventory_scope` records the revision and
+The current regenerated inventory refreshes source coordinates, digests,
+searches and groups while retaining curated classifications. Each new family's `inventory_scope` records the revision and
 exact `source_paths` inspected for this supplement. Source inspection follows
 the issue's domain terms; the listed files define the coverage boundary.
 
@@ -35,9 +36,9 @@ families remain `partial`, including when every matching name is accounted for.
 Dynamic dispatch and semantic completeness are not established by name searches.
 
 The generator preserves these search boundaries on regeneration and refreshes
-their revisions along with source coordinates. The initial supplemental entries
-are not added retroactively to the earlier snapshot's identical-body groups.
-A full regeneration can rebuild groups across all families.
+their revisions along with source coordinates. The current full regeneration rebuilds identical-file and identical-body groups
+across all nineteen families. The initial snapshot remains recorded in revision
+history; regeneration does not revalidate engineering classifications.
 
 ## Families and limits
 
@@ -50,7 +51,7 @@ A full regeneration can rebuild groups across all families.
 | `geotechnics` | 22 | Piles, anchors, mudmat bearing, liquefaction and configuration routes; a slope-analysis delegate is identified. Soil parameters, empirical factors and compliance are NOT_EVALUATED. |
 | `scour` | 5 | Sediment-motion threshold conversion, pipeline and monopile screens, armour thickness and a configuration delegate. Legacy curve attribution and design suitability are NOT_EVALUATED. |
 
-The inventory adds 59 members; 27 additional matching names require classification
+The inventory adds 59 members; 29 additional matching names require classification
 within the bounded source lists. These counts follow explicit member and
 candidate rows, without extrapolating to other repository folders.
 
