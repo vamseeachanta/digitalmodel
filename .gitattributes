@@ -114,3 +114,9 @@ docs/api/installation/installation-forecast.manifest.json text eol=lf
 
 # Preserve manifest-bound riser database fingerprints across checkout settings.
 data/riser_database/** text eol=lf
+
+# Preserve digest-bound screening inputs under Windows text checkout settings.
+examples/data/jackup_screening/inputs.json text eol=lf
+examples/data/jackup_screening/environment.json text eol=lf
+examples/data/jackup_screening/ndbc_annual_maxima.txt text eol=lf
+examples/data/jackup_screening/manifest.json text eol=lf
