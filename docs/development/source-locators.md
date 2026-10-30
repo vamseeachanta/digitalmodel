@@ -11,6 +11,7 @@ formatting. Apply the convention in paragraphs and table cells alike.
 | Initial | 2026-10-28 | Define literal source locators and a separate check to preserve formatter output without changing inventory semantics. |
 | Update | 2026-10-29 | Check locators before colon prose and provision the pinned formatter for contracts tests in both CI workflows. |
 | Update | 2026-10-30 | Use parsed Markdown blocks and container definitions to distinguish reference links from literal source locators. |
+| Correction | 2026-10-30 | Exclude complete resolved link spans, check unresolved reference prose and document the parser timeout to prevent silent omissions and false source errors. |
 
 ## Convention
 
@@ -49,6 +50,11 @@ including blockquotes and lists. Missing or failing parser tools produce a
 diagnostic and a failing status. The contracts workflows already provision this
 package.
 
+The parser subprocess has a 30-second timeout per document. This operational
+ceiling prevents a stalled parser from blocking sequential document checks
+indefinitely; it has no measured performance-benchmark basis. A timeout produces
+the same parser diagnostic and failing status as other parser failures.
+
 The check recognizes explicit bracketed Python locators with decimal line
 numbers, such as the example above, anywhere in supplied Markdown. This includes
 paragraphs outside section two, table cells, bare locators and code examples.
@@ -63,6 +69,11 @@ as well. The check validates source presence and line bounds; it does not check
 the meaning of the cited text, enforce the inline-code convention or repair
 documents. It does not discover documents recursively or claim that unrecognized
 text is a valid citation.
+
+Link exclusions cover complete parsed labels, destinations, titles and reference
+definitions. Reference links require a matching parsed definition. An adjacent
+colon or an undefined reference suffix in prose does not exclude a locator.
+Parsed code spans within link labels retain literal source validation.
 
 This helper is independent of the section-two public-symbol inventory and the
 bounded knowledge-pack acceptance audit. Existing packs, inventory semantics,

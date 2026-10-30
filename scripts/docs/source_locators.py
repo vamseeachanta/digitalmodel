@@ -25,7 +25,9 @@ LOCATOR = re.compile(
     r"(?P<source>(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\.py)"
     r":L(?P<first>[0-9]+)-L(?P<last>[0-9]+)\]"
 )
-LINK_SUFFIX = re.compile(r"\(|:|\s*\[")
+# A per-document operational ceiling prevents a stalled parser from blocking
+# the sequential check indefinitely; this is not a measured performance target.
+PARSER_TIMEOUT_SECONDS = 30
 MARKDOWN_CONTEXT = r"""
 const fs = require('node:fs');
 const prettier = require('node:module').createRequire(process.argv[1])('prettier');
@@ -35,37 +37,55 @@ const text = fs.readFileSync(0, 'utf8');
     const input = text.replace(/^[ \t]+$/gm, blank => blank.replace(/\t/g, ' '));
     const {ast} = await prettier.__debug.parse(input, {parser: 'markdown'});
     const code = [];
-    const definitions = [];
+    const links = [];
+    const references = [];
+    const definitions = new Set();
     function visit(node) {
         if (node.type === 'inlineCode' || node.type === 'code') {
-            code.push([node.position.start.offset, node.position.end.offset]);
+            code.push(node);
         }
-        if (node.type === 'definition') definitions.push('[' + node.identifier + ']');
+        if (['link', 'image', 'definition'].includes(node.type)) links.push(node);
+        if (['linkReference', 'imageReference'].includes(node.type)) references.push(node);
+        if (node.type === 'definition') definitions.add(node.identifier);
         for (const child of node.children || []) visit(child);
     }
-    visit(ast);
-    let prose = text;
-    for (const [start, end] of code.sort((a, b) => b[0] - a[0])) {
-        const mask = text.slice(start, end).replace(/[^\n]/gu, ' ');
-        prose = prose.slice(0, start) + mask + prose.slice(end);
+    function mask(nodes) {
+        let coveredEnd = -1;
+        // Keep outer spans only, so nested links cannot move Unicode offsets twice.
+        const spans = nodes.map(node => [node.position.start.offset, node.position.end.offset])
+            .sort((a, b) => a[0] - b[0] || b[1] - a[1])
+            .filter(([start, end]) => {
+                if (start < coveredEnd) return false;
+                coveredEnd = end;
+                return true;
+            });
+        let masked = text;
+        for (const [start, end] of spans.reverse()) {
+            const blank = text.slice(start, end).replace(/[^\n]/gu, ' ');
+            masked = masked.slice(0, start) + blank + masked.slice(end);
+        }
+        return masked;
     }
-    process.stdout.write(JSON.stringify({prose, definitions}));
+    visit(ast);
+    links.push(...references.filter(node => definitions.has(node.identifier)));
+    process.stdout.write(JSON.stringify({prose: mask(code), excluded: mask(links)}));
 })().catch(() => process.exit(1));
 """
 
 
-def reference_prose(lines: list[str]) -> tuple[str, set[str]]:
-    """Use the formatter AST to mask code and collect container definitions."""
+def reference_prose(lines: list[str]) -> tuple[str, str]:
+    """Use the formatter AST to mask code and complete resolved link spans."""
     executable = shutil.which(os.environ.get("SOURCE_LOCATORS_PRETTIER", "prettier"))
     if executable is None:
         raise FileNotFoundError("Markdown formatter unavailable")
     result = subprocess.run(
         ["node", "-e", MARKDOWN_CONTEXT, str(Path(executable).resolve())],
         input="".join(lines),
-        capture_output=True, text=True, encoding="utf-8", check=True, timeout=30,
+        capture_output=True, text=True, encoding="utf-8", check=True,
+        timeout=PARSER_TIMEOUT_SECONDS,
     )
     context = json.loads(result.stdout)
-    return context["prose"], {label.casefold() for label in context["definitions"]}
+    return context["prose"], context["excluded"]
 
 
 def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
@@ -93,19 +113,19 @@ def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
         return [f"{label}: cannot read Markdown file"]
 
     try:
-        prose, definitions = reference_prose(lines)
+        prose, excluded = reference_prose(lines)
     except (OSError, subprocess.SubprocessError, ValueError):
         return [f"{label}: cannot parse Markdown; pinned formatter and Node.js required"]
     prose_lines = prose.split("\n")
+    excluded_lines = excluded.split("\n")
     errors = []
     # Markdown diagnostics and inclusive source bounds use one-based numbering.
     for number, line in enumerate(lines, start=1):
         for match in LOCATOR.finditer(line):
             is_prose = prose_lines[number - 1][match.start():match.end()] == match[0]
             if is_prose and (
-                line[max(0, match.start() - 1):match.start()] in {"!", "\\"}
-                or LINK_SUFFIX.match(line, match.end())
-                or match[0].casefold() in definitions
+                line[max(0, match.start() - 1):match.start()] == "\\"
+                or excluded_lines[number - 1][match.start():match.end()] != match[0]
             ):
                 continue
             source = (root / match["source"]).resolve()

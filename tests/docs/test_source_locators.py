@@ -158,7 +158,7 @@ def test_source_locator_check_does_not_import_source(document, check):
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_external_links_and_ordinary_prose_are_not_local_locators(document, check):
+def test_external_links_and_prose_preserve_unresolved_locators(document, check):
     root, _, markdown = document
     markdown.write_text(
         "[https://example.org/absent.py:L1-L2]\n"
@@ -169,7 +169,10 @@ def test_external_links_and_ordinary_prose_are_not_local_locators(document, chec
         "Discuss src/absent.py and inclusive L1-L2 in ordinary prose.\n",
         encoding="utf-8", newline="\n",
     )
-    assert check(markdown, root) == []
+    # The adjacent definition cannot interrupt the preceding paragraph.
+    assert check(markdown, root) == [
+        "pack.md:4: [src/absent.py:L1-L2]: missing Python source"
+    ]
 
 
 @pytest.mark.parametrize("spacing", [" ", "\t", "   "])
@@ -184,6 +187,84 @@ def test_bare_locator_before_colon_prose_is_checked(document, check, spacing):
     ]
 
 
+@pytest.mark.parametrize(
+    "text",
+    ["See [src/absent.py:L1-L2]: explanation",
+     "[src/absent.py:L1-L2][undefined]",
+     "[src/absent.py:L1-L2] [undefined]",
+     "![src/absent.py:L1-L2][undefined]"],
+)
+def test_unresolved_prose_with_link_suffix_is_checked(document, check, text):
+    root, _, markdown = document
+    markdown.write_text(text + "\n", encoding="utf-8", newline="\n")
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    expected = "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        [expected], 1, expected + "\n", "",
+    )
+
+
+@pytest.mark.parametrize("suffix", [": explanation", "[undefined]", " [undefined]"])
+def test_unresolved_prose_accepts_existing_source(document, check, suffix):
+    root, _, markdown = document
+    markdown.write_text(
+        f"See [src/example/__init__.py:L1-L2]{suffix}\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == []
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "[Evidence [src/absent.py:L1-L2]](reference.md)",
+        "[Evidence]([src/absent.py:L1-L2])",
+        "![Evidence [src/absent.py:L1-L2]](reference.md)",
+        "![Evidence]([src/absent.py:L1-L2])",
+        "[Evidence [src/absent.py:L1-L2]][reference]\n\n[reference]: reference.md",
+        '[Evidence][reference]\n\n[reference]: reference.md "[src/absent.py:L1-L2]"',
+        '[Evidence](reference.md "[src/absent.py:L1-L2]")',
+        "[Evidence\n[src/absent.py:L1-L2]](reference.md)",
+        "![Evidence `[src/absent.py:L1-L2]`](reference.md)",
+    ],
+)
+def test_complete_parsed_link_spans_are_excluded(document, check, text):
+    root, _, markdown = document
+    markdown.write_text(text + "\n", encoding="utf-8", newline="\n")
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        [], 0, "", "",
+    )
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["[Evidence `[src/absent.py:L1-L2]`](reference.md)",
+     "[Evidence `[src/absent.py:L1-L2]`][reference]\n\n[reference]: reference.md",
+     "\U0001f4d6 [\U0001f4d6 [src/absent.py:L1-L2]](reference.md) "
+     "[src/absent.py:L1-L2]",
+     "[![\U0001f4d6 [src/absent.py:L1-L2]](image.png)](reference.md) "
+     "[src/absent.py:L1-L2]"],
+)
+def test_link_exclusions_preserve_code_and_adjacent_locators(document, check, text):
+    root, _, markdown = document
+    markdown.write_text(text + "\n", encoding="utf-8", newline="\n")
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    expected = "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        [expected], 1, expected + "\n", "",
+    )
+
+
 @pytest.mark.parametrize("indent", ["", " ", "   "])
 def test_adjacent_colon_reference_definitions_are_excluded(document, check, indent):
     root, _, markdown = document
@@ -195,13 +276,18 @@ def test_adjacent_colon_reference_definitions_are_excluded(document, check, inde
 
 
 @pytest.mark.parametrize("spacing", ["", " ", "\t", "   "])
-def test_reference_link_spacing_remains_excluded(document, check, spacing):
+@pytest.mark.parametrize("blank", ["", "\n"])
+def test_reference_links_require_parsed_definitions(document, check, spacing, blank):
     root, _, markdown = document
     markdown.write_text(
-        f"[src/absent.py:L1-L2]{spacing}[reference]\n[reference]: reference.md\n",
+        f"[src/absent.py:L1-L2]{spacing}[reference]\n{blank}[reference]: reference.md\n",
         encoding="utf-8", newline="\n",
     )
-    assert check(markdown, root) == []
+    # Spaced labels are separate shortcuts; definitions need a block boundary.
+    expected = [] if blank and not spacing else [
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    ]
+    assert check(markdown, root) == expected
 
 
 @pytest.mark.parametrize("definition_first", [False, True])
@@ -454,7 +540,8 @@ def test_invalid_definition_cannot_define_shortcut(document, check, destination)
         encoding="utf-8", newline="\n",
     )
     assert check(markdown, root) == [
-        "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source",
+        "pack.md:3: [src/absent.py:L1-L2]: missing Python source",
     ]
 
 
