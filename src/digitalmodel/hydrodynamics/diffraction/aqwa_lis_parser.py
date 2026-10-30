@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 AQWA .LIS File Parser
 
@@ -37,7 +40,7 @@ class AQWALISParser:
         """
         self.lis_file = Path(lis_file_path)
         if not self.lis_file.exists():
-            raise FileNotFoundError(f"LIS file not found: {lis_file_path}")
+            raise FileNotFoundError(f"LIS file not found: {self.lis_file.as_posix()}")
 
         # Read entire file content
         with open(self.lis_file, 'r', encoding='utf-8', errors='ignore') as f:
@@ -86,22 +89,10 @@ class AQWALISParser:
 
         periods = []
         frequencies = []
-        seen_any = False
-        blanks_since_last_row = 0
-
-        for line in self.content[pos:].splitlines():
+        for line in self._table_span(section_marker).splitlines():
             match = row.match(line)
             if match is None:
-                if seen_any:
-                    blanks_since_last_row += 1
-                    # A handful of non-matching lines inside a table is normal
-                    # (blank separators, repeated headers). A long run of them
-                    # means the table has ended.
-                    if blanks_since_last_row > 12:
-                        break
                 continue
-            blanks_since_last_row = 0
-            seen_any = True
 
             period = float(match.group(1))
             freq = float(match.group(2))
@@ -129,34 +120,9 @@ class AQWALISParser:
         Returns:
             List of headings in degrees
         """
-        # Find RAO section
-        section_marker = "R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY"
-        pos = self.find_section(section_marker)
-
-        if pos is None:
-            raise ValueError("Could not find RAO section")
-
-        # Extract RAO table
-        table_text = self.content[pos:pos + 10000]
-
-        # Find all direction values
-        # Format: "  62.83   0.100   -180.00    1.5204  -90.03..."
-        pattern = r'\s+[\d.]+\s+[\d.]+\s+([-\d.]+)\s+[\d.]+\s+'
-
-        headings = []
-
-        for match in re.finditer(pattern, table_text):
-            heading = float(match.group(1))
-
-            # Only add unique headings
-            if heading not in headings and -180 <= heading <= 180:
-                headings.append(heading)
-
-        # Sort headings
-        headings.sort()
-
-        if not headings:
-            raise ValueError("No valid heading data found in RAO table")
+        # Use the same displacement rows and numeric interpretation as parse_all.
+        # A heading may first occur on any page or in a later displacement table.
+        headings = sorted({heading for _, heading in self.parse_rao_table()})
 
         logger.info(f"Extracted {len(headings)} headings from {headings[0]:.1f}° to {headings[-1]:.1f}°")
 
@@ -168,14 +134,16 @@ class AQWALISParser:
     #: matrices and the converter padded the difference with zeros.
     _TABLE_END_MARKERS = (
         "-VARIATION WITH WAVE PERIOD/FREQUENCY",
+        "-VARIATION WITH WAVE DIRECTION",
         "H Y D R O D Y N A M I C",
         "S T A B I L I T Y",
         "M O O R I N G",
     )
 
-    def _table_span(self, marker: str) -> str:
-        """The listing text from one table's header to the next boundary."""
-        pos = self.find_section(marker)
+    def _table_span(self, marker: str, pos: Optional[int] = None) -> str:
+        """Return a table span, retaining matching coefficient page titles."""
+        if pos is None:
+            pos = self.find_section(marker)
         if pos is None:
             return ""
         rest = self.content[pos:]
@@ -183,13 +151,28 @@ class AQWALISParser:
         head = rest.find("\n")
         if head < 0:
             return rest
-        tail = rest[head:]
-        cut = len(tail)
-        for end in self._TABLE_END_MARKERS:
-            found = tail.find(end)
-            if 0 <= found < cut:
-                cut = found
-        return rest[:head + cut]
+        coefficient_table = marker in (
+            "ADDED MASS-VARIATION WITH WAVE PERIOD/FREQUENCY",
+            "DAMPING-VARIATION WITH WAVE PERIOD/FREQUENCY",
+        )
+        offset = head
+        page_boundary = None
+        for line in rest[head:].splitlines(keepends=True):
+            stripped = line.strip()
+            if coefficient_table and stripped.removeprefix("1").lstrip() == marker:
+                page_boundary = None
+            elif page_boundary is not None:
+                # A banner is a page header only if the next nonblank,
+                # non-page-number line repeats this coefficient table's title.
+                if stripped and not stripped.isdigit():
+                    break
+            elif any(end in line for end in self._TABLE_END_MARKERS):
+                if coefficient_table and "H Y D R O D Y N A M I C" in line:
+                    page_boundary = offset
+                else:
+                    return rest[:offset]
+            offset += len(line)
+        return rest if page_boundary is None else rest[:page_boundary]
 
     def parse_added_mass_table(self) -> Dict[float, np.ndarray]:
         """
@@ -327,57 +310,23 @@ class AQWALISParser:
         # - "VEL R.A.O.S-VARIATION..." (velocity)
         # - "ACC R.A.O.S-VARIATION..." (acceleration)
 
-        # We must match EXACTLY "R.A.O.S-VARIATION", not "VEL R.A.O.S" or "ACC R.A.O.S"
-        # Check the character BEFORE the marker to ensure it's whitespace/newline
+        # Classify the title on its own line, including the optional print-page
+        # control digit. Text on a preceding page must not classify this table.
         section_marker = "R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY"
-
-        # Find all occurrences of DISPLACEMENT RAO sections only
-        positions = []
-        search_pos = 0
-        while True:
-            pos = self.content.find(section_marker, search_pos)
-            if pos == -1:
-                break
-
-            # Check character before marker (should be whitespace, not "VEL " or "ACC ")
-            if pos > 0:
-                before_text = self.content[max(0, pos-20):pos]  # Check more context
-                # Skip if preceded by "VEL" or "ACC"
-                if "VEL" in before_text or "ACC" in before_text:
-                    logger.debug(f"Skipping non-displacement RAO section (before_text: '{before_text[-10:]}')")
-                    search_pos = pos + len(section_marker)
-                    continue
-
-            positions.append(pos)
-            search_pos = pos + len(section_marker)
+        # The print control digit follows the listing format; it is not a
+        # table-length or frequency limit (see the extent probes for #2107).
+        title = re.compile(r'^[^\S\n]*1?[^\S\n]*' + re.escape(section_marker), re.MULTILINE)
+        positions = [match.start() for match in title.finditer(self.content)]
 
         if not positions:
             raise ValueError("Could not find any displacement RAO tables")
 
         logger.info(f"Found {len(positions)} displacement RAO table sections in .LIS file")
 
-        # Collect all table text from all sections
-        # For each displacement RAO section, read until the next major section marker
-        # (which could be VEL, ACC, or another displacement section)
-        all_table_text = []
-        for i, pos in enumerate(positions):
-            # Find the next section marker (any type: displacement, VEL, or ACC)
-            next_marker = self.content.find("R.A.O.S-VARIATION WITH WAVE PERIOD/FREQUENCY", pos + len(section_marker))
-
-            if next_marker != -1:
-                # Read until next RAO section (any type)
-                end_pos = next_marker
-            else:
-                # Last section - but still limit reading to avoid garbage
-                # Look for major section break (multiple newlines)
-                next_break = self.content.find("\n\n\n", pos + 1000)
-                end_pos = next_break if next_break != -1 else pos + 50000  # Max 50k chars
-
-            section_text = self.content[pos:end_pos]
-            all_table_text.append(section_text)
-
-        # Combine all sections
-        table_text = "\n".join(all_table_text)
+        # Structural boundaries include coefficient tables and major sections,
+        # as well as all RAO types. Blank lines and page headers are retained.
+        # Repeated displacement titles continue the current heading below.
+        table_text = "\n".join(self._table_span(section_marker, pos) for pos in positions)
 
         # Pattern for RAO data rows
         # AQWA format: Direction is only listed once per heading group!
@@ -527,6 +476,13 @@ class AQWALISParser:
             # Derive headings from actual RAO data keys (more reliable than extract_headings)
             headings = sorted(set(h for f, h in raos.keys()))
 
+            frequency_keys = set(frequencies)
+            self._require_grid("added mass table", frequency_keys, set(added_mass))
+            self._require_grid("damping table", frequency_keys, set(damping))
+            expected_raos = {(frequency, heading)
+                             for frequency in frequencies for heading in headings}
+            self._require_grid("displacement RAO grid", expected_raos, set(raos))
+
             result = {
                 'frequencies': frequencies,
                 'periods': periods,
@@ -548,6 +504,18 @@ class AQWALISParser:
         except Exception as e:
             logger.error(f"Failed to parse AQWA .LIS file: {str(e)}")
             raise
+
+    @staticmethod
+    def _require_grid(table: str, expected: set, actual: set) -> None:
+        """Reject partial or surplus membership before a result reaches a caller."""
+        missing = sorted(expected - actual)
+        surplus = sorted(actual - expected)
+        if missing or surplus:
+            raise ValueError(
+                f"{table} membership mismatch against frequency/observed-heading grid: "
+                f"missing {missing}; surplus {surplus}. "
+                "Check listing table rows and section boundaries."
+            )
 
 
 # Standalone functions for convenience
