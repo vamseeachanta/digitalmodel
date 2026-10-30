@@ -10,6 +10,7 @@ formatting. Apply the convention in paragraphs and table cells alike.
 |---|---|---|
 | Initial | 2026-10-28 | Define literal source locators and a separate check to preserve formatter output without changing inventory semantics. |
 | Update | 2026-10-29 | Check locators before colon prose and provision the pinned formatter for contracts tests in both CI workflows. |
+| Update | 2026-10-30 | Use parsed Markdown blocks and container definitions to distinguish reference links from literal source locators. |
 
 ## Convention
 
@@ -39,6 +40,14 @@ More than one document may be supplied. `--root` selects a different repository
 root; relative document and source paths resolve against that root. A successful
 check returns zero; any document or locator error returns one, with the document
 path, Markdown line, literal locator and reason where available.
+
+The check requires Node.js and the Prettier package pinned in
+`.pre-commit-config.yaml`. Set `SOURCE_LOCATORS_PRETTIER` to that package's
+executable, or put it on `PATH`, as described below. Its Markdown parser identifies
+code spans within their blocks and reference definitions within containers,
+including blockquotes and lists. Missing or failing parser tools produce a
+diagnostic and a failing status. The contracts workflows already provision this
+package.
 
 The check recognizes explicit bracketed Python locators with decimal line
 numbers, such as the example above, anywhere in supplied Markdown. This includes

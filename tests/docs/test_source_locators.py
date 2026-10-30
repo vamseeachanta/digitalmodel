@@ -92,12 +92,13 @@ def test_initializer_locator_survives_configured_formatter(document):
     assert package["name"] == "prettier"
     assert package["version"] == pin[1]
     version = subprocess.run(
-        [executable, "--version"], capture_output=True, text=True, check=True,
+        [executable, "--version"], capture_output=True, text=True, encoding="utf-8",
+        check=True,
     ).stdout.strip()
     print(f"Formatter package {pin[1]}; CLI reports {version}")
     subprocess.run(
         [executable, "--write", str(markdown)], cwd=markdown.parent,
-        capture_output=True, text=True, check=True,
+        capture_output=True, text=True, encoding="utf-8", check=True,
     )
     formatted = markdown.read_bytes()
     assert b"Initializer: `" + LOCATOR + b"`." in formatted
@@ -151,7 +152,7 @@ def test_source_locator_check_does_not_import_source(document, check):
     assert check(markdown, root) == []
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
-        capture_output=True, text=True, check=False,
+        capture_output=True, text=True, encoding="utf-8", check=False,
     )
     # CLI convention: zero means all supplied documents passed.
     assert result.returncode == 0, result.stdout + result.stderr
@@ -295,6 +296,116 @@ def test_unmatched_backticks_in_separate_paragraphs_preserve_reference(
     # The definition occupies physical line three; neither backtick has a mate
     # in its paragraph, so the shortcut on physical line five is a link.
     assert (errors, result.returncode, result.stdout, result.stderr) == ([], 0, "", "")
+
+
+@pytest.mark.parametrize(
+    "boundary",
+    ["# Heading", "## Heading", "Heading\n---", "***", "- item", "+ item",
+     "* item", "1. item", "1) item", "> quote"],
+)
+def test_unmatched_backticks_cannot_cross_markdown_blocks(document, check, boundary):
+    root, _, markdown = document
+    markdown.write_text(
+        f"`Unmatched\n{boundary}\n[src/absent.py:L1-L2]`\n\n"
+        "[src/absent.py:L1-L2]: reference.md\n",
+        encoding="utf-8", newline="\n",
+    )
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    # The heading, break or container ends the opening backtick's paragraph.
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        [], 0, "", "",
+    )
+
+
+@pytest.mark.parametrize(
+    ("opening", "continuation", "blank"),
+    [("> ", "> ", ">"), ("> > ", "> > ", "> >"),
+     ("- ", "  ", ""), ("1. ", "   ", ""), ("> - ", ">   ", ">")],
+)
+def test_reference_definitions_in_containers_define_shortcuts(
+    document, check, opening, continuation, blank,
+):
+    root, _, markdown = document
+    markdown.write_text(
+        f"{opening}[src/absent.py:L1-L2]\n{blank}\n"
+        f"{continuation}[src/absent.py:L1-L2]: reference.md\n",
+        encoding="utf-8", newline="\n",
+    )
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        [], 0, "", "",
+    )
+
+
+@pytest.mark.parametrize(
+    ("opening", "continuation"), [("", ""), ("> ", "> "), ("- ", "  ")],
+)
+def test_multiline_code_within_one_block_still_checks_literal_locators(
+    document, check, opening, continuation,
+):
+    root, _, markdown = document
+    markdown.write_text(
+        f"{opening}`code\n{continuation}[src/absent.py:L1-L2]\n{continuation}`\n\n"
+        "[src/absent.py:L1-L2]: reference.md\n",
+        encoding="utf-8", newline="\n",
+    )
+    # The missing source is literal code on physical line two, despite its definition.
+    expected = "pack.md:2: [src/absent.py:L1-L2]: missing Python source"
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        [expected], 1, expected + "\n", "",
+    )
+
+
+@pytest.mark.parametrize(
+    "code",
+    ["> ```markdown\n> [src/absent.py:L1-L2]: reference.md\n> ```\n",
+     ">     [src/absent.py:L1-L2]: reference.md\n",
+     "- ```markdown\n  [src/absent.py:L1-L2]: reference.md\n  ```\n"],
+)
+def test_code_in_containers_cannot_define_shortcut(document, check, code):
+    root, _, markdown = document
+    markdown.write_text(
+        code + "\n[src/absent.py:L1-L2]\n", encoding="utf-8", newline="\n",
+    )
+    errors = check(markdown, root)
+    # Both the code example and the unresolved prose shortcut must be checked.
+    assert len(errors) == 2
+    assert all(error.endswith("missing Python source") for error in errors)
+
+
+def test_unicode_before_code_preserves_locator_offsets(document, check):
+    root, _, markdown = document
+    markdown.write_text(
+        "\U0001f4d6 `\U0001f4d6 [src/absent.py:L1-L2]` [src/absent.py:L1-L2]\n\n"
+        "> [src/absent.py:L1-L2]: reference.md\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == [
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    ]
+
+
+def test_missing_markdown_parser_fails_closed(document, check, monkeypatch):
+    root, _, markdown = document
+    monkeypatch.setenv("SOURCE_LOCATORS_PRETTIER", "missing-markdown-formatter")
+    expected = "pack.md: cannot parse Markdown; pinned formatter and Node.js required"
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        [expected], 1, expected + "\n", "",
+    )
 
 
 @pytest.mark.parametrize("backslashes", [1, 2, 3, 4])
@@ -460,9 +571,14 @@ def test_cli_checks_only_supplied_markdown_and_reports_failure(document):
     other = root / "other.md"
     other.write_text("[src/absent.py:L1-L2]\n", encoding="utf-8", newline="\n")
     command = [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)]
-    good = subprocess.run(command, capture_output=True, text=True, check=False)
+    good = subprocess.run(
+        command, capture_output=True, text=True, encoding="utf-8", check=False,
+    )
     assert good.returncode == 0, good.stdout + good.stderr
-    bad = subprocess.run(command + [str(other)], capture_output=True, text=True, check=False)
+    bad = subprocess.run(
+        command + [str(other)], capture_output=True, text=True, encoding="utf-8",
+        check=False,
+    )
     # CLI convention: one means at least one supplied document failed.
     assert bad.returncode == 1
     assert "other.md:1: [src/absent.py:L1-L2]: missing Python source" in bad.stdout

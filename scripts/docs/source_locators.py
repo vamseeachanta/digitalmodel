@@ -11,7 +11,11 @@ outside this grammar. Source text is read without importing or executing it.
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 # scripts/docs is two directory levels below the repository root.
@@ -22,38 +26,46 @@ LOCATOR = re.compile(
     r":L(?P<first>[0-9]+)-L(?P<last>[0-9]+)\]"
 )
 LINK_SUFFIX = re.compile(r"\(|:|\s*\[")
-REFERENCE_DEFINITION = re.compile(
-    r"^ {0,3}(?P<label>\[[^\[\]\n]+\]):[ \t]*(?:\n[ \t]*)?"
-    r"(?:<[^<>\n]*>|[^\s<>]+)"
-    r"(?:[ \t]+(?:\"[^\"\n]*\"|'[^'\n]*'|\([^()\n]*\)))?[ \t]*$",
-    re.MULTILINE,
-)
-CODE_SPAN = re.compile(r"(?<![\\`])(?:\\\\)*(`+)(?!`)(.*?)(?<!`)\1(?!`)", re.DOTALL)
+MARKDOWN_CONTEXT = r"""
+const fs = require('node:fs');
+const prettier = require('node:module').createRequire(process.argv[1])('prettier');
+const text = fs.readFileSync(0, 'utf8');
+(async () => {
+    // Normalize blank-line tabs without moving the parser's character offsets.
+    const input = text.replace(/^[ \t]+$/gm, blank => blank.replace(/\t/g, ' '));
+    const {ast} = await prettier.__debug.parse(input, {parser: 'markdown'});
+    const code = [];
+    const definitions = [];
+    function visit(node) {
+        if (node.type === 'inlineCode' || node.type === 'code') {
+            code.push([node.position.start.offset, node.position.end.offset]);
+        }
+        if (node.type === 'definition') definitions.push('[' + node.identifier + ']');
+        for (const child of node.children || []) visit(child);
+    }
+    visit(ast);
+    let prose = text;
+    for (const [start, end] of code.sort((a, b) => b[0] - a[0])) {
+        const mask = text.slice(start, end).replace(/[^\n]/gu, ' ');
+        prose = prose.slice(0, start) + mask + prose.slice(end);
+    }
+    process.stdout.write(JSON.stringify({prose, definitions}));
+})().catch(() => process.exit(1));
+"""
 
 
-def reference_prose(lines: list[str]) -> str:
-    """Mask code without changing offsets or physical document lines."""
-    masked = []
-    fence = ""
-    for line in lines:
-        delimiter = re.match(r" {0,3}(`{3,}|~{3,})(.*)", line)
-        if fence:
-            masked.append(re.sub(r"[^\n]", " ", line))
-            if (delimiter and delimiter[1][0] == fence[0]
-                    and len(delimiter[1]) >= len(fence) and not delimiter[2].strip()):
-                fence = ""
-        elif delimiter and not (delimiter[1][0] == "`" and "`" in delimiter[2]):
-            fence = delimiter[1]
-            masked.append(re.sub(r"[^\n]", " ", line))
-        elif re.match(r"(?: {4}|\t)", line):
-            masked.append(re.sub(r"[^\n]", " ", line))
-        else:
-            masked.append(line)
-    # Inline code may span physical lines, but never a blank paragraph boundary.
-    return "".join(
-        CODE_SPAN.sub(lambda match: re.sub(r"[^\n]", " ", match[0]), paragraph)
-        for paragraph in re.split(r"(\n[ \t]*\n)", "".join(masked))
+def reference_prose(lines: list[str]) -> tuple[str, set[str]]:
+    """Use the formatter AST to mask code and collect container definitions."""
+    executable = shutil.which(os.environ.get("SOURCE_LOCATORS_PRETTIER", "prettier"))
+    if executable is None:
+        raise FileNotFoundError("Markdown formatter unavailable")
+    result = subprocess.run(
+        ["node", "-e", MARKDOWN_CONTEXT, str(Path(executable).resolve())],
+        input="".join(lines),
+        capture_output=True, text=True, encoding="utf-8", check=True, timeout=30,
     )
+    context = json.loads(result.stdout)
+    return context["prose"], {label.casefold() for label in context["definitions"]}
 
 
 def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
@@ -80,8 +92,10 @@ def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
     except (OSError, UnicodeError):
         return [f"{label}: cannot read Markdown file"]
 
-    prose = reference_prose(lines)
-    definitions = {match["label"].casefold() for match in REFERENCE_DEFINITION.finditer(prose)}
+    try:
+        prose, definitions = reference_prose(lines)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return [f"{label}: cannot parse Markdown; pinned formatter and Node.js required"]
     prose_lines = prose.split("\n")
     errors = []
     # Markdown diagnostics and inclusive source bounds use one-based numbering.
