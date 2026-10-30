@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 # tests/docs is two directory levels below the repository root.
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,6 +41,38 @@ def document(tmp_path):
 @pytest.fixture
 def check():
     return runpy.run_path(str(SCRIPT))["check_markdown"]
+
+
+@pytest.mark.parametrize(
+    ("workflow_name", "job_name"),
+    [
+        ("quality-gates-by-domain.yml", "domain-tests"),
+        ("full-matrix-sweep.yml", "sweep-tests"),
+    ],
+)
+def test_contracts_workflows_provision_configured_formatter(workflow_name, job_name):
+    workflow = yaml.safe_load(
+        (ROOT / ".github/workflows" / workflow_name).read_text(encoding="utf-8")
+    )
+    steps = workflow["jobs"][job_name]["steps"]
+    setup = next((step for step in steps if step.get("uses") == "actions/setup-node@v4"), None)
+    assert setup is not None, "Contracts tests require a provisioned Node runtime"
+    assert setup["if"] == "matrix.domain == 'contracts'"
+    assert setup["with"]["node-version"] == "22"
+    provision = next(
+        (step for step in steps if step["name"] == "Provision source locator formatter"), None,
+    )
+    assert provision is not None, "Contracts tests require the pinned formatter"
+    assert provision["if"] == "matrix.domain == 'contracts'"
+    config = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    pin = re.search(r"mirrors-prettier\s+rev: v([^\s]+)", config)
+    assert pin is not None, "Configured Markdown formatter pin not found"
+    assert f'"prettier@{pin[1]}"' in provision["run"]
+    assert "npm install" in provision["run"]
+    assert "SOURCE_LOCATORS_PRETTIER=" in provision["run"]
+    assert '>> "$GITHUB_ENV"' in provision["run"]
+    gate = next(step for step in steps if step["name"] == "Run domain gate")
+    assert steps.index(setup) < steps.index(provision) < steps.index(gate)
 
 
 def test_initializer_locator_survives_configured_formatter(document):
@@ -133,6 +166,38 @@ def test_external_links_and_ordinary_prose_are_not_local_locators(document, chec
         "[src/absent.py:L1-L2][external]\n"
         "[external]: https://example.org/source\n"
         "Discuss src/absent.py and inclusive L1-L2 in ordinary prose.\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == []
+
+
+@pytest.mark.parametrize("spacing", [" ", "\t", "   "])
+def test_bare_locator_before_colon_prose_is_checked(document, check, spacing):
+    root, _, markdown = document
+    markdown.write_text(
+        f"[src/absent.py:L1-L2]{spacing}: explanation\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == [
+        "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    ]
+
+
+@pytest.mark.parametrize("indent", ["", " ", "   "])
+def test_adjacent_colon_reference_definitions_are_excluded(document, check, indent):
+    root, _, markdown = document
+    markdown.write_text(
+        f"{indent}[src/absent.py:L1-L2]: reference.md\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == []
+
+
+@pytest.mark.parametrize("spacing", ["", " ", "\t", "   "])
+def test_reference_link_spacing_remains_excluded(document, check, spacing):
+    root, _, markdown = document
+    markdown.write_text(
+        f"[src/absent.py:L1-L2]{spacing}[reference]\n[reference]: reference.md\n",
         encoding="utf-8", newline="\n",
     )
     assert check(markdown, root) == []

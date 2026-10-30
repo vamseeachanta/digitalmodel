@@ -9,6 +9,7 @@ formatting. Apply the convention in paragraphs and table cells alike.
 | Revision | Date | Change and reason |
 |---|---|---|
 | Initial | 2026-10-28 | Define literal source locators and a separate check to preserve formatter output without changing inventory semantics. |
+| Update | 2026-10-29 | Check locators before colon prose and provision the pinned formatter for contracts tests in both CI workflows. |
 
 ## Convention
 
@@ -75,6 +76,10 @@ It formats only the temporary fixture and does not obtain packages itself. An
 unavailable or mismatched formatter fails the acceptance check; another formatter
 is not substituted.
 
+The contracts steps in both the domain and full-matrix CI workflows install the
+pinned package and export `SOURCE_LOCATORS_PRETTIER` before running the tests.
+Regression checks keep those installations aligned with the hook pin.
+
 ```sh
-uv run --no-project --with pytest python -m pytest tests/docs/test_agent_pack_functions.py tests/reporting/test_knowledge_pack_acceptance.py tests/docs/test_source_locators.py -q -rA -p no:cacheprovider
+uv run --no-project --with pytest --with pyyaml python -m pytest tests/docs/test_agent_pack_functions.py tests/reporting/test_knowledge_pack_acceptance.py tests/docs/test_source_locators.py -q -rA -p no:cacheprovider
 ```
