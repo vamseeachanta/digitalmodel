@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "basis": "Repository evidence reconciled with base revision 6581c271d0346288d6d34173495c22d2121c2781; documentation inventory, not an engineering dataset catalog.",
+  "basis": "Repository evidence reconciled with retained source revision 09089a121a16069c4b657d1a320a630a23ab1dd5; documentation inventory, not an engineering dataset catalog.",
   "wrapper_status": "absent",
   "wrapper_pages": [],
   "capabilities": [
@@ -1444,6 +1444,72 @@
       "evidence": [
         "scripts/check_generated_html.py"
       ]
+    },
+    {
+      "node": "p55",
+      "path": "docs/api/cfd/generic-hull-roll-screening.html",
+      "group": "cfd",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_generic_hull_screening.py",
+      "prerequisites": [],
+      "inputs": [
+        "src/digitalmodel/hydrodynamics/utube_tank.py"
+      ],
+      "calculations": [],
+      "artifacts": [
+        {
+          "path": "docs/api/cfd/data/generic_hull_roll_screening.json",
+          "state": "committed",
+          "writer": "scripts/capabilities/build_generic_hull_screening.py"
+        }
+      ],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ],
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py"
+    },
+    {
+      "node": "p56",
+      "path": "docs/api/hydro/self-elevating-monitoring.html",
+      "group": "hydro",
+      "provenance": "registered generator",
+      "producer": "scripts/capabilities/build_self_elevating_monitoring.py",
+      "prerequisites": [],
+      "inputs": [
+        "pyproject.toml",
+        "scripts/capabilities/build_self_elevating_monitoring.py",
+        "scripts/capabilities/self_elevating_monitoring.html.template",
+        "src/digitalmodel/marine_ops/self_elevating_monitoring.py"
+      ],
+      "calculations": [
+        "src/digitalmodel/marine_ops/self_elevating_monitoring.py"
+      ],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ],
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py"
+    },
+    {
+      "node": "p57",
+      "path": "docs/api/installation/installation-forecast.html",
+      "group": "installation",
+      "provenance": "external input or non-reproducible copy",
+      "producer": null,
+      "prerequisites": [],
+      "inputs": [],
+      "calculations": [],
+      "artifacts": [],
+      "limitation": "builder requires reviewed inputs held outside the repository",
+      "evidence": [
+        "scripts/generated_html_ownership.py"
+      ],
+      "execution": "committed page only; calculation execution NOT_EVALUATED",
+      "execution_evidence": "scripts/generated_html_ownership.py"
     }
   ],
   "publication": {
