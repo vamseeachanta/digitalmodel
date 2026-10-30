@@ -434,6 +434,40 @@ class TestSpanAllowableLength:
 # ---------------------------------------------------------------------------
 
 class TestFreespanVIVFatigue:
+    def test_workflow_serializes_reference_result(self, ref_input):
+        """Dispatch oracle: TestSpanNaturalFrequency.test_fn_IL_pinned_pinned_range.
+
+        That existing independent reference is 0.42 Hz within 15 percent.
+        The same reference fixture is reused; no additional material or
+        design coefficient is introduced. This checks serialization/routing,
+        rather than repeating the existing span physics tests.
+        """
+        from dataclasses import asdict
+        from digitalmodel.subsea.pipeline.integrity_workflows import run_free_span
+
+        pipe_span = asdict(ref_input)
+        pipe_span["bc"] = ref_input.bc.value
+        pipe_span["environment"] = ref_input.environment.value
+        cfg = {"free_span": {"pipe_span": pipe_span}}
+        returned = run_free_span(cfg)
+        assert returned is cfg
+        assert set(returned) == {"free_span"}
+        result = returned["free_span"]["result"]
+        assert set(result) == {
+            "fn_IL_hz", "fn_CF_hz", "Ks", "Ur_IL", "Ur_CF", "Ur_onset_IL",
+            "Ur_onset_CF", "il_viv_onset", "cf_viv_onset", "il_A_over_D",
+            "cf_A_over_D", "il_stress_mpa", "cf_stress_mpa", "damage_per_year",
+            "fatigue_life_years", "allowable_span_m", "span_length_m", "span_utilization",
+        }
+        assert result["fn_IL_hz"] == pytest.approx(0.42, rel=0.15)
+
+    @pytest.mark.parametrize("cfg,missing", [({}, "free_span"), ({"free_span": {}}, "pipe_span")])
+    def test_workflow_refuses_missing_input(self, cfg, missing):
+        from digitalmodel.subsea.pipeline.integrity_workflows import run_free_span
+
+        with pytest.raises(KeyError, match=missing):
+            run_free_span(cfg)
+
     def test_assess_returns_result(self, ref_input):
         facade = FreespanVIVFatigue(ref_input, submerged_weight_N_m=850.0)
         result = facade.assess()
