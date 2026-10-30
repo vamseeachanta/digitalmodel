@@ -18,6 +18,7 @@ and improve the penetration method before using it for a particular installation
 | 4 | 2026-10-27 | Separate arithmetic equality from hold criteria to accept complete decimal-time windows and reject equality at the strict settlement-rate limit. |
 | 5 | 2026-10-27 | Confirm layered resistance warnings, include preload air-gap mitigation and map implemented checks to clause references with uncovered requirements OPEN. |
 | 6 | 2026-10-27 | Add a synthetic weak-pocket sweep, penetration changes and an assumed-rate drop indication to expose sensitivity to unsurveyed local strength loss. |
+| 7 | 2026-10-28 | Remove numerical standard acceptance factors and use neutral research source identifiers while retaining citations for public release. |
 
 ## Run the example
 
@@ -45,15 +46,15 @@ not engineering applicability or publication rights.
 | Input | Basis | Use and limitation |
 | --- | --- | --- |
 | Generic particulars | Synthetic inputs assumed, based on previous experience | Hull length 72.0 m, breadth 66.0 m, depth 8.0 m and leg length 150.0 m are illustrative context only, unused in load transfer. No recovered specifications, sample medians or collection statistics are claimed. |
-| Layered soil | [Hossain et al. (2019), Table 1, Site 3 and equation 1](https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf) | Selected numerical facts for a published anonymized Gulf profile: sand to 4.9 m, clay below it. Strength is defined at the interface and increases below it. It is not colocated with the buoy. |
+| Layered soil | [Research source R2019: Measured and Calculated Spudcan Penetration Profiles for Case Histories in Sand-over-Clay (2019), Table 1, Site 3 and equation 1](https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf) | Selected numerical facts for a published anonymized Gulf profile: sand to 4.9 m, clay below it. Strength is defined at the interface and increases below it. It is not colocated with the buoy. |
 | Observations | [NOAA NDBC station 42019, 2024 archive](https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2024.txt.gz) | Replayed through the existing NOAA client parser. 52,698 timestamped records; 16,693 usable wave-height and 50,597 usable wind-speed values. Sample maxima are 6.8 m and 24.3 m/s. Missing values are counted, not replaced with zero. |
 | ERA5 | Existing ERA5 client interface and [public API access instructions](https://cds.climate.copernicus.eu/how-to-api) | Authenticated retrieval remains unavailable. A separate, labelled illustrative scenario reuses the original NDBC sample maxima of 6.8 m and 24.3 m/s; these are not ERA5 estimates. Interpreting that wind at 10 m is an assumption, without a sensor-height adjustment. |
 | Bathymetry | Existing GEBCO client and [current public service description](https://www.gebco.net/data-products/gebco-web-services/web-map-service) | Correct the obsolete endpoint, select a queryable layer and use latitude–longitude axis order for WMS 1.3.0 EPSG:4326. The current query at the rounded buoy coordinates returns no numerical result. A separately labelled 60.0 m shelf-depth sensitivity is used; no measured depth is inferred. |
-| Settlement context | [Li et al. (2018)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6218051/) | Public collection identifies a post-preload settlement study. No settlement equation, numerical input or copied source content is used here. Settlement is not equated with punch-through. |
+| Settlement context | [Research source R2018: Causes of post-installation penetration of jack-up spudcan foundations in clays (2018)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6218051/) | Public collection identifies a post-preload settlement study. No settlement equation, numerical input or copied source content is used here. Settlement is not equated with punch-through. |
 | Shelf-strength context | [BSEE research report 552](https://www.bsee.gov/sites/bsee.gov/files/research-reports/552ab.pdf) | Collection notes identify public strength curves and proprietary extensions. Neither is digitized or used here. The selected layered profile comes from the cited research case instead. |
 
 Only synthetic particulars, selected cited facts and original calculations are included;
-source tables, text, documents and figures are excluded. The Hossain accepted
+source tables, text, documents and figures are excluded. The R2019 accepted
 manuscript is identified as CC BY-NC-ND in the supplied source register. Numerical
 facts are cited; no adapted source figure is supplied. NOAA observation facts are
 United States government data. The supplied specification and design collections
@@ -61,7 +62,7 @@ have no retrievable anonymous provenance/reuse record suitable for this example.
 Their aggregate tables and collection hashes are therefore excluded; synthetic
 particulars replace those unsupported source claims. ERA5 and GEBCO reuse
 qualification remains open because neither supplies an observed calculation input here.
-Li and BSEE are bibliographic context from the supplied register, not claims that
+R2018 and BSEE are bibliographic context from the supplied register, not claims that
 their full documents were re-fetched or numerically qualified in this work.
 
 ## Illustrative assumptions
@@ -116,7 +117,7 @@ remains a sample maximum and is not relabelled as a return level.
 
 For each parameter independently, fit the Gumbel maximum distribution by
 the [NIST/SEMATECH e-Handbook method of moments](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm).
-With annual maxima x, sample standard deviation s using n−1, and Euler's
+With annual maxima x, sample standard deviation s using n−1, and the harmonic-limit
 constant γE, use β = s√6/π and μ = mean(x) − γEβ. Invert the published maximum
 CDF at annual non-exceedance probability 1−1/T:
 xT = μ − β ln[−ln(1−1/T)]. Reject fewer than three blocks or zero variation.
@@ -150,7 +151,7 @@ authenticated ERA5 retrieval remains unqualified.
 ## Geotechnical methods
 
 [spudcan.py](../../../src/digitalmodel/geotechnical/spudcan.py) implements
-[Hu et al. (2015), equations 4–12](https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf)
+[Research source R2015: Spudcan penetration analyses for three case histories in sand overlying clay (2015), equations 4–12](https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf)
 for peak pressure using an implicit, stress-dependent sand strength. Bisection
 stays inside the stated dilatancy interval. Equations 13–14 provide the underlying
 clay branch, including a sand-plug contribution. Conical-base calculations require
@@ -158,7 +159,7 @@ sand thickness divided by equivalent diameter between 0.16 and 1.0, and a base
 angle greater than 7.0 degrees. Inputs outside these bounds are rejected.
 
 Clay strength is evaluated as interface strength plus gradient times depth below
-the interface, following equation 1's definition in Hossain. The collection warns
+the interface, following equation 1's definition in R2019. The collection warns
 that depth origins must be reconciled rather than inferred from column labels.
 This interface interpretation reproduces the selected published peak comparison;
 it does not independently qualify the original boring interpretation.
@@ -203,7 +204,7 @@ and converts pressure to force with πB²/4. Independent closed forms check
 surface, quarter-diameter and one-diameter embedment. The implementation restricts
 d/B to at most 1.0 and friction to between 0.0 and 50.0 degrees exclusive.
 This is an explicit uniform-soil limiting case, **not** an infinite-thickness
-extrapolation of Hu's bounded H/D calibration. It does not add a conical-base
+extrapolation of R2015's bounded H/D calibration. It does not add a conical-base
 correction. The 1961 paper reports measured capacities exceeding the theoretical
 factors; arithmetic agreement does not validate those measurements or sand
 penetration generally.
@@ -398,14 +399,14 @@ provided in the checklist remain OPEN rather than being inferred.
 
 | Clause references | Demonstrated check and boundary | Uncovered checklist items |
 | --- | --- | --- |
-| G 5.3.1-5.3.3; RP 3.1.2, 8.3.1.1-8.3.1.4 | Raw per-leg reaction versus supplied preload; four-stage history, full-load duration and trailing settlement window with explicit illustrative controls. | **OPEN:** factored Vd versus 0.90 P; horizontal-demand applicability limits; unspecified standard preload hold rules and a qualified installation procedure. |
+| G 5.3.1-5.3.3; RP 3.1.2, 8.3.1.1-8.3.1.4 | Raw per-leg reaction versus supplied preload; four-stage history, full-load duration and trailing settlement window with explicit illustrative controls. | **OPEN:** standard factored vertical-demand/preload comparison; horizontal-demand applicability limits; unspecified standard preload hold rules and a qualified installation procedure. |
 | RP 6.2.1-6.2.3; C6.2.1-C6.2.3 | SI input contract, finite/domain checks, circular area reconciliation and kPa-times-area conversion to kN. | **OPEN:** independent unit/provenance qualification, partially engaged area and actual spudcan geometry. |
 | RP 6.2.1-6.2.3; C6.2.1-C6.2.3 | Common mudline datum; research depth refers to the lowest level of the widest cross-section, rather than the cone tip. | **OPEN:** actual tip-to-bearing-plane conversion and paired standard backflow corrections. |
 | RP 6.2.1-6.2.3; C6.2.1-C6.2.3 | Each branch retains its declared research factor family; the layered peak evaluates its stress-dependent sand angle once per trial pressure. | **OPEN:** standard sand-angle adjustment, standard factor families, exact standard table/figure identifiers and their user-supplied values. Research factors are not substituted for standard factors. |
 | RP 6.2.6.1-6.2.6.4, 8.3.5; C6.2.6.3, C8.3 | Descending branches warn independently of peak attainment. Peak depth, peak load, reduced interface load and static recovery depths are reported. No finite recovery is explicit. | **OPEN:** enumerating and flagging multiple roots, qualified lower support within the investigated extent, a supplied margin/plunge criterion and dynamic penetration. Selecting the shallowest root does not resolve alternative equilibria. |
 | RP 6.2.6.1-6.2.6.4; C6.2.6.3 | Only named research equations execute; unresolved OCR expressions have no executable route or expression-input interface. | **OPEN:** resolving and qualifying those expressions before any future implementation; they must remain blocked until resolved. |
 | RP 5.2-5.7, 7.1-7.3, 8.1.3-8.1.6, 8.5 | Common-origin force and biaxial moment equilibrium; example reactions derive from labelled synthetic inputs and illustrative environmental actions. | **OPEN:** qualified reaction provenance, complete concurrent load vectors and joint environmental cases, dynamics, second-order treatment, member capacity and holding-system scope. Synthetic reaction inputs must remain labelled synthetic. |
-| RP 8.2.1-8.2.3 | Signed contact reactions are reported for the supplied geometry. No soil moment credit is taken. | **OPEN:** testing every candidate overturning axis, displaced restoring geometry, the 0.95 resistance treatment and supporting evidence before any soil moment credit. Contact alone does not perform these checks. |
+| RP 8.2.1-8.2.3 | Signed contact reactions are reported for the supplied geometry. No soil moment credit is taken. | **OPEN:** testing every candidate overturning axis, displaced restoring geometry, factored restoring resistance and supporting evidence before any soil moment credit. Contact alone does not perform these checks. |
 | RP 6.3.3-6.3.5, 8.3.1.5-8.3.4 | Concurrent scalar horizontal force is compared with independently supplied sliding resistance; the static Hs/Tp grid reports failed checks and rejects re-entry. | **OPEN:** drained/undrained resistance factors, combined-load envelope intersections from the still-water point and qualified fixity/displacement assessment. The Hs/Tp grid is not a foundation interaction envelope. |
 
 Fixity or displacement demands require escalation to a qualified foundation and
@@ -435,7 +436,7 @@ illustrative numerical results, not site limits.
 | Existing operation envelope | Existing motion-envelope regression suite | Retains the existing floating-vessel calculation while adding a separate static entry point. |
 
 The Site 2 test preserves the disagreement rather than calibrating the method to
-an observation. Hossain's later paper evaluates subsequent formulations and also
+an observation. The later R2019 paper evaluates subsequent formulations and also
 records method limitations. Agreement at one case and arithmetic tests cannot
 qualify a penetration model across layered Gulf soils.
 
