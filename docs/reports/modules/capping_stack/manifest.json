@@ -1,0 +1,24 @@
+{
+  "artifacts": {
+    "README.md": "6ade18c2baf33956ffead7e0cbeeee5df090f7a99796788593254defe68344b6",
+    "changes.json": "10cb7cda2aa5a66d683132c45bcc143962808b57802b43d562659b7def252072",
+    "index.html": "efec15657e4ef0df2d6613339e0347b475ed97bdd1b93cc57e7c3aa497d504df",
+    "results.json": "f957c733d1790ff6ad2c7766918e90d4420e851e06d7ef8b234f6531eb177cbd"
+  },
+  "digest_convention": "SHA-256 over exact UTF-8 bytes with LF line endings; manifest excludes itself.",
+  "reviewed_source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "schema_version": 1,
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "docs/api/cfd/turbulent-flat-plate-verification.html": "bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25",
+    "scripts/reports/build_capping_stack_module_report.py": "63c606d4bc8c99295446902f1edf94dd1ed7c909077959fbc409b7ae5aa694a8",
+    "src/digitalmodel/subsea/capping_stack/__init__.py": "17370e478c915e5d6190f41e18b51aee32ae2dc2f6b1481ed546ef1cdf0f6d4f",
+    "src/digitalmodel/subsea/capping_stack/_root_finding.py": "a31d1423307f3361896bf2caec536c7a1cc1a13137b24fdda0933b0b0591d014",
+    "src/digitalmodel/subsea/capping_stack/containment_capacity.py": "a8724419e4f09d96006e49ec7c7e88dd7f543537124afaa3abe2253a4a8f7595",
+    "src/digitalmodel/subsea/capping_stack/containment_flow.py": "e9a6716217cc34db40146554633f5de897df28f57a4126e218018446e24961f5",
+    "src/digitalmodel/subsea/capping_stack/deployment.py": "6e0a9ba00e9eb4f544f70f19fbbfde592a2c7c9be0cf33411290a483141b7ba2",
+    "src/digitalmodel/subsea/capping_stack/docs/worked-static-containment.md": "27198faba896464be925a57219a5195cc380907901772bdc38d3c3827322b8e8",
+    "src/digitalmodel/subsea/capping_stack/interface_check.py": "d41ba007c669c5c505fc157fde1891455d0a40422445a8b70090ddbaf38efa11",
+    "tests/reporting/test_capping_stack_module_report.py": "10667568c85f23751efb9881cd52c57cf52d9e3ed45764ec46a298c88c8e8e5d"
+  }
+}
