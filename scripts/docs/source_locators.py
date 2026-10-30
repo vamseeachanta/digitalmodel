@@ -123,8 +123,10 @@ def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
     for number, line in enumerate(lines, start=1):
         for match in LOCATOR.finditer(line):
             is_prose = prose_lines[number - 1][match.start():match.end()] == match[0]
+            prefix = line[:match.start()]
+            backslashes = len(prefix) - len(prefix.rstrip("\\"))
             if is_prose and (
-                line[max(0, match.start() - 1):match.start()] == "\\"
+                backslashes % 2
                 or excluded_lines[number - 1][match.start():match.end()] != match[0]
             ):
                 continue

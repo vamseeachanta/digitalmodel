@@ -494,6 +494,52 @@ def test_missing_markdown_parser_fails_closed(document, check, monkeypatch):
     )
 
 
+@pytest.mark.parametrize("backslashes", [0, 1, 2, 3, 4])
+@pytest.mark.parametrize(
+    ("opening", "closing", "line_number", "is_code"),
+    [("", "", 1, False), ("`", "`", 1, True),
+     ("```markdown\n", "\n```", 2, True)],
+)
+def test_locator_escape_parity_matches_cli(
+    document, check, backslashes, opening, closing, line_number, is_code,
+):
+    root, _, markdown = document
+    markdown.write_text(
+        opening + "\\" * backslashes + "[src/absent.py:L1-L2]" + closing + "\n",
+        encoding="utf-8", newline="\n",
+    )
+    # Backslash pairs escape each other; an odd remainder escapes a prose
+    # bracket. Inside code, all backslashes and brackets remain literal.
+    expected = [] if not is_code and backslashes % 2 else [
+        f"pack.md:{line_number}: [src/absent.py:L1-L2]: missing Python source"
+    ]
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        expected, int(bool(expected)), "".join(error + "\n" for error in expected), "",
+    )
+
+
+@pytest.mark.parametrize("backslashes", [2, 4])
+def test_unescaped_locator_after_backslashes_accepts_existing_source(
+    document, check, backslashes,
+):
+    root, _, markdown = document
+    markdown.write_text(
+        "\\" * backslashes + "[src/example/__init__.py:L1-L2]\n",
+        encoding="utf-8", newline="\n",
+    )
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    assert (check(markdown, root), result.returncode, result.stdout, result.stderr) == (
+        [], 0, "", "",
+    )
+
+
 @pytest.mark.parametrize("backslashes", [1, 2, 3, 4])
 def test_escaped_backtick_is_not_an_inline_code_delimiter(document, check, backslashes):
     root, _, markdown = document
