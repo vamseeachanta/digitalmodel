@@ -1,0 +1,1103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Riser utilization campaign screening manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "data_provenance",
+    "version",
+    "criteria_version",
+    "intended_use",
+    "sources",
+    "settings",
+    "parameter_ranges",
+    "rao_sets",
+    "cases",
+    "matrix_axes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "criteria_version": {
+      "const": "geometry-v1"
+    },
+    "intended_use": {
+      "const": "SCREENING_INPUTS_ONLY"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/source"
+      },
+      "minItems": 1
+    },
+    "settings": {
+      "$ref": "#/$defs/settings"
+    },
+    "parameter_ranges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/range"
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "rao_sets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rao"
+      },
+      "minItems": 4
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/case"
+      },
+      "minItems": 1
+    },
+    "data_provenance": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "$ref": "#/$defs/provenance"
+      }
+    },
+    "matrix_axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "floater_type",
+        "size_class",
+        "water_depth_m",
+        "configuration"
+      ],
+      "properties": {
+        "floater_type": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "FPSO",
+              "semi-submersible",
+              "spar",
+              "TLP"
+            ]
+          }
+        },
+        "size_class": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "small",
+              "large"
+            ]
+          }
+        },
+        "water_depth_m": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              500,
+              1000,
+              1500
+            ]
+          }
+        },
+        "configuration": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "SCR",
+              "lazy-wave"
+            ]
+          }
+        }
+      }
+    },
+    "frozen_tranche": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "criteria_version",
+        "scope_sha256",
+        "criteria_sha256",
+        "rows"
+      ],
+      "properties": {
+        "criteria_version": {
+          "const": "I0339-2-v1"
+        },
+        "scope_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "criteria_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "nps_in",
+              "outside_diameter_mm",
+              "od_source",
+              "wall_thickness_mm",
+              "checked_wall_mm",
+              "wall_basis",
+              "design_pressure_MPa_g",
+              "material_grade",
+              "corrosion_allowance_mm",
+              "governing_check",
+              "configuration",
+              "floater",
+              "water_depth_m",
+              "static_span_offsets_m",
+              "dynamic_span_offsets_m",
+              "metocean_basis",
+              "contents",
+              "buoyancy_layout",
+              "hog_target_m_ASB",
+              "sag_target_m_ASB",
+              "fatigue_seas",
+              "fatigue_basis",
+              "fatigue_span_offset_m",
+              "fatigue_wave_toward_deg",
+              "fatigue_stationary_seconds",
+              "fatigue_runs",
+              "fatigue_seeds"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "nps_in": {
+                "type": "string",
+                "minLength": 1
+              },
+              "outside_diameter_mm": {
+                "type": "string",
+                "minLength": 1
+              },
+              "od_source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "wall_thickness_mm": {
+                "type": "string",
+                "minLength": 1
+              },
+              "checked_wall_mm": {
+                "type": "string",
+                "minLength": 1
+              },
+              "wall_basis": {
+                "type": "string",
+                "minLength": 1
+              },
+              "design_pressure_MPa_g": {
+                "type": "string",
+                "minLength": 1
+              },
+              "material_grade": {
+                "type": "string",
+                "minLength": 1
+              },
+              "corrosion_allowance_mm": {
+                "type": "string",
+                "minLength": 1
+              },
+              "governing_check": {
+                "type": "string",
+                "minLength": 1
+              },
+              "configuration": {
+                "type": "string",
+                "minLength": 1
+              },
+              "floater": {
+                "type": "string",
+                "minLength": 1
+              },
+              "water_depth_m": {
+                "type": "string",
+                "minLength": 1
+              },
+              "static_span_offsets_m": {
+                "type": "string",
+                "minLength": 1
+              },
+              "dynamic_span_offsets_m": {
+                "type": "string",
+                "minLength": 1
+              },
+              "metocean_basis": {
+                "type": "string",
+                "minLength": 1
+              },
+              "contents": {
+                "type": "string",
+                "minLength": 1
+              },
+              "buoyancy_layout": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hog_target_m_ASB": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sag_target_m_ASB": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fatigue_seas": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fatigue_basis": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fatigue_span_offset_m": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fatigue_wave_toward_deg": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fatigue_stationary_seconds": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fatigue_runs": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fatigue_seeds": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "document",
+        "section",
+        "url",
+        "retrieved_utc",
+        "http_status",
+        "sha256",
+        "use",
+        "licence_or_terms",
+        "date",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "document": {
+          "type": "string",
+          "minLength": 1
+        },
+        "section": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retrieved_utc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "http_status": {
+          "type": "integer",
+          "enum": [
+            0,
+            200
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "use": {
+          "type": "string",
+          "minLength": 1
+        },
+        "licence_or_terms": {
+          "type": "string",
+          "minLength": 1
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "gravity_m_s2",
+        "seawater_density_kg_m3",
+        "hangoff_angle_limit_deg",
+        "closure_tolerance_m",
+        "segment_length_m",
+        "seabed_stiffness_kn_m3",
+        "stage_duration_s",
+        "time_step_s",
+        "drag_coefficient",
+        "added_mass_coefficient"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "gravity_m_s2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "seawater_density_kg_m3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "hangoff_angle_limit_deg": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 90
+        },
+        "closure_tolerance_m": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1e-06
+        },
+        "segment_length_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "seabed_stiffness_kn_m3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "stage_duration_s": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "time_step_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "drag_coefficient": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "added_mass_coefficient": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "particulars": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "length_m",
+        "beam_m",
+        "draft_m",
+        "moulded_depth_m",
+        "column_diameter_m"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "length_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "beam_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "draft_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "moulded_depth_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "column_diameter_m": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "floater_type",
+        "derivation",
+        "bounds"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "floater_type": {
+          "enum": [
+            "FPSO",
+            "semi-submersible",
+            "spar",
+            "TLP"
+          ]
+        },
+        "derivation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bounds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "length_m",
+            "beam_m",
+            "draft_m",
+            "moulded_depth_m",
+            "column_diameter_m"
+          ],
+          "properties": {
+            "length_m": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "beam_m": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "draft_m": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "moulded_depth_m": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "column_diameter_m": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        }
+      }
+    },
+    "pipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "outer_diameter_m",
+        "wall_thickness_m",
+        "steel_density_kg_m3",
+        "contents_density_kg_m3",
+        "youngs_modulus_pa",
+        "poisson_ratio"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "outer_diameter_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "wall_thickness_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "steel_density_kg_m3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "contents_density_kg_m3": {
+          "type": "number",
+          "minimum": 0
+        },
+        "youngs_modulus_pa": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "poisson_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 0.5
+        }
+      }
+    },
+    "buoyancy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "buoyancy_factor",
+        "sag_fraction",
+        "hog_fraction",
+        "module_density_kg_m3"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "buoyancy_factor": {
+          "type": "number",
+          "exclusiveMinimum": 1
+        },
+        "sag_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "hog_fraction": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "module_density_kg_m3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "offset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "id",
+        "x_m"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "x_m": {
+          "type": "number"
+        }
+      }
+    },
+    "sea": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "id",
+        "wave_height_m",
+        "period_s",
+        "direction_deg"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "wave_height_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "period_s": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "direction_deg": {
+          "type": "number",
+          "minimum": 0,
+          "exclusiveMaximum": 360
+        }
+      }
+    },
+    "current": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "surface_speed_m_s",
+        "direction_deg",
+        "points"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "surface_speed_m_s": {
+          "type": "number",
+          "minimum": 0
+        },
+        "direction_deg": {
+          "const": 0
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "depth_fraction",
+              "factor"
+            ],
+            "properties": {
+              "depth_fraction": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "factor": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          },
+          "minItems": 2
+        }
+      }
+    },
+    "rao": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "id",
+        "floater_type",
+        "size_class",
+        "translation_unit",
+        "rotation_unit",
+        "phase_unit",
+        "phase_convention",
+        "axes",
+        "origin_m",
+        "heading_deg",
+        "rows",
+        "generation"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "floater_type": {
+          "enum": [
+            "FPSO",
+            "semi-submersible",
+            "spar",
+            "TLP"
+          ]
+        },
+        "size_class": {
+          "enum": [
+            "small",
+            "large"
+          ]
+        },
+        "translation_unit": {
+          "const": "m/m"
+        },
+        "rotation_unit": {
+          "const": "deg/m"
+        },
+        "phase_unit": {
+          "const": "deg"
+        },
+        "phase_convention": {
+          "const": "lags crest at reference origin"
+        },
+        "axes": {
+          "const": "surge forward; sway port; heave up; roll starboard down; pitch bow down; yaw bow port"
+        },
+        "origin_m": {
+          "const": [
+            0,
+            0,
+            0
+          ]
+        },
+        "heading_deg": {
+          "const": 0
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "period_s",
+              "amplitudes",
+              "phases_deg"
+            ],
+            "properties": {
+              "period_s": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "amplitudes": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "minItems": 6,
+                "maxItems": 6
+              },
+              "phases_deg": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "exclusiveMaximum": 360
+                },
+                "minItems": 6,
+                "maxItems": 6
+              }
+            }
+          },
+          "minItems": 3
+        },
+        "generation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tool",
+            "tool_version",
+            "base_amplitudes",
+            "period_factors",
+            "size_factor",
+            "formula"
+          ],
+          "properties": {
+            "tool": {
+              "const": "explicit arithmetic table"
+            },
+            "tool_version": {
+              "const": "synthetic-rao-v1"
+            },
+            "base_amplitudes": {
+              "type": "array",
+              "minItems": 6,
+              "maxItems": 6,
+              "items": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "period_factors": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "size_factor": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "formula": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "source_id",
+        "case_id",
+        "floater_type",
+        "size_class",
+        "principal_particulars",
+        "rao_set_id",
+        "water_depth_m",
+        "pipe",
+        "configuration",
+        "hangoff_angle_deg",
+        "grounded_length_m",
+        "buoyancy",
+        "offset_cases",
+        "sea_states",
+        "current_profile"
+      ],
+      "properties": {
+        "basis": {
+          "const": "ASSUMED"
+        },
+        "source_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "case_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "floater_type": {
+          "enum": [
+            "FPSO",
+            "semi-submersible",
+            "spar",
+            "TLP"
+          ]
+        },
+        "size_class": {
+          "enum": [
+            "small",
+            "large"
+          ]
+        },
+        "principal_particulars": {
+          "$ref": "#/$defs/particulars"
+        },
+        "rao_set_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "water_depth_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "pipe": {
+          "$ref": "#/$defs/pipe"
+        },
+        "configuration": {
+          "enum": [
+            "SCR",
+            "lazy-wave"
+          ]
+        },
+        "hangoff_angle_deg": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 45
+        },
+        "grounded_length_m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "buoyancy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/buoyancy"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offset_cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/offset"
+          },
+          "minItems": 3
+        },
+        "sea_states": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sea"
+          },
+          "minItems": 2
+        },
+        "current_profile": {
+          "$ref": "#/$defs/current"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_group",
+        "status",
+        "source_id",
+        "licence_or_terms",
+        "date",
+        "version",
+        "sha256",
+        "inputs"
+      ],
+      "properties": {
+        "input_group": {
+          "enum": [
+            "field-development rows",
+            "FPSO particulars",
+            "semi-submersible particulars",
+            "spar particulars",
+            "TLP particulars",
+            "floater RAOs",
+            "metocean",
+            "riser properties",
+            "geometry and numerical settings"
+          ]
+        },
+        "status": {
+          "enum": [
+            "ASSUMED",
+            "NOT_USED"
+          ]
+        },
+        "source_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "licence_or_terms": {
+          "type": "string",
+          "minLength": 1
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "inputs": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

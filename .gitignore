@@ -615,6 +615,7 @@ docs/reports/modules/gis/*
 !/docs/reports/
 !/docs/reports/modules/
 /docs/reports/modules/*
+!/docs/reports/modules/.gitignore
 
 # Retain the normalized-section example source; generated output stays ignored.
 !/docs/reports/modules/passing_ship/
