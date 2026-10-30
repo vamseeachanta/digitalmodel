@@ -17,11 +17,11 @@ from pathlib import Path
 # scripts/docs is two directory levels below the repository root.
 ROOT = Path(__file__).resolve().parents[2]
 LOCATOR = re.compile(
-    r"(?<![!\\\w/])\["
+    r"(?<![\w/])\["
     r"(?P<source>(?:[A-Za-z0-9_.-]+/)*[A-Za-z0-9_.-]+\.py)"
     r":L(?P<first>[0-9]+)-L(?P<last>[0-9]+)\]"
-    r"(?!\(|:|\s*\[)"
 )
+LINK_SUFFIX = re.compile(r"\(|:|\s*\[")
 REFERENCE_DEFINITION = re.compile(
     r"^ {0,3}(?P<label>\[[^\[\]\n]+\]):[ \t]*(?:\n[ \t]*)?"
     r"(?:<[^<>\n]*>|[^\s<>]+)"
@@ -45,9 +45,15 @@ def reference_prose(lines: list[str]) -> str:
         elif delimiter and not (delimiter[1][0] == "`" and "`" in delimiter[2]):
             fence = delimiter[1]
             masked.append(re.sub(r"[^\n]", " ", line))
+        elif re.match(r"(?: {4}|\t)", line):
+            masked.append(re.sub(r"[^\n]", " ", line))
         else:
             masked.append(line)
-    return CODE_SPAN.sub(lambda match: re.sub(r"[^\n]", " ", match[0]), "".join(masked))
+    # Inline code may span physical lines, but never a blank paragraph boundary.
+    return "".join(
+        CODE_SPAN.sub(lambda match: re.sub(r"[^\n]", " ", match[0]), paragraph)
+        for paragraph in re.split(r"(\n[ \t]*\n)", "".join(masked))
+    )
 
 
 def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
@@ -81,8 +87,12 @@ def check_markdown(markdown: Path, root: Path = ROOT) -> list[str]:
     # Markdown diagnostics and inclusive source bounds use one-based numbering.
     for number, line in enumerate(lines, start=1):
         for match in LOCATOR.finditer(line):
-            if (match[0].casefold() in definitions
-                    and prose_lines[number - 1][match.start():match.end()] == match[0]):
+            is_prose = prose_lines[number - 1][match.start():match.end()] == match[0]
+            if is_prose and (
+                line[max(0, match.start() - 1):match.start()] in {"!", "\\"}
+                or LINK_SUFFIX.match(line, match.end())
+                or match[0].casefold() in definitions
+            ):
                 continue
             source = (root / match["source"]).resolve()
             first, last = int(match["first"]), int(match["last"])

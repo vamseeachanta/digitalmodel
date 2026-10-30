@@ -236,6 +236,67 @@ def test_defined_shortcut_inside_inline_code_is_checked(document, check, delimit
     ]
 
 
+@pytest.mark.parametrize("delimiter", ["`", "``"])
+@pytest.mark.parametrize(
+    ("prefix", "suffix"),
+    [
+        ("", ": explanation"),
+        ("", "(reference.md)"),
+        ("", "[reference]"),
+        ("", " [reference]"),
+        ("!", "(reference.md)"),
+        ("\\", ": explanation"),
+    ],
+)
+def test_inline_literal_with_link_syntax_is_checked(
+    document, check, delimiter, prefix, suffix,
+):
+    root, _, markdown = document
+    markdown.write_text(
+        f"{delimiter}{prefix}[src/absent.py:L1-L2]{suffix}{delimiter}\n",
+        encoding="utf-8", newline="\n",
+    )
+    errors = check(markdown, root)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    expected = "pack.md:1: [src/absent.py:L1-L2]: missing Python source"
+    assert (errors, result.returncode, result.stdout) == ([expected], 1, expected + "\n")
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize("suffix", [": explanation", "(reference.md)", "[reference]"])
+def test_inline_literal_with_link_syntax_accepts_existing_source(document, check, suffix):
+    root, _, markdown = document
+    markdown.write_text(
+        f"`[src/example/__init__.py:L1-L2]{suffix}`\n",
+        encoding="utf-8", newline="\n",
+    )
+    assert check(markdown, root) == []
+
+
+@pytest.mark.parametrize("blank", ["", " ", "\t"])
+@pytest.mark.parametrize("newline", [b"\n", b"\r\n", b"\r"])
+def test_unmatched_backticks_in_separate_paragraphs_preserve_reference(
+    document, check, blank, newline,
+):
+    root, _, markdown = document
+    text = (
+        f"`Unmatched\n{blank}\n[src/absent.py:L1-L2]: reference.md\n"
+        f"{blank}\n[src/absent.py:L1-L2]`\n"
+    )
+    markdown.write_bytes(text.encode("utf-8").replace(b"\n", newline))
+    errors = check(markdown, root)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(root), str(markdown)],
+        capture_output=True, text=True, encoding="utf-8", check=False,
+    )
+    # The definition occupies physical line three; neither backtick has a mate
+    # in its paragraph, so the shortcut on physical line five is a link.
+    assert (errors, result.returncode, result.stdout, result.stderr) == ([], 0, "", "")
+
+
 @pytest.mark.parametrize("backslashes", [1, 2, 3, 4])
 def test_escaped_backtick_is_not_an_inline_code_delimiter(document, check, backslashes):
     root, _, markdown = document
@@ -253,22 +314,23 @@ def test_escaped_backtick_is_not_an_inline_code_delimiter(document, check, backs
 
 
 @pytest.mark.parametrize(
-    ("code", "line"),
+    ("code", "code_line", "line"),
     [
-        ("`[src/absent.py:L1-L2]: reference.md`\n", 3),
-        ("``[src/absent.py:L1-L2]: reference.md``\n", 3),
-        ("`code\n[src/absent.py:L1-L2]: reference.md\n`\n", 5),
-        ("```markdown\n[src/absent.py:L1-L2]: reference.md\n```\n", 5),
-        ("~~~markdown\n[src/absent.py:L1-L2]: reference.md\n~~~\n", 5),
-        ("    [src/absent.py:L1-L2]: reference.md\n", 3),
+        ("`[src/absent.py:L1-L2]: reference.md`\n", 1, 3),
+        ("``[src/absent.py:L1-L2]: reference.md``\n", 1, 3),
+        ("`code\n[src/absent.py:L1-L2]: reference.md\n`\n", 2, 5),
+        ("```markdown\n[src/absent.py:L1-L2]: reference.md\n```\n", 2, 5),
+        ("~~~markdown\n[src/absent.py:L1-L2]: reference.md\n~~~\n", 2, 5),
+        ("    [src/absent.py:L1-L2]: reference.md\n", 1, 3),
     ],
 )
-def test_definition_in_code_cannot_define_shortcut(document, check, code, line):
+def test_definition_in_code_cannot_define_shortcut(document, check, code, code_line, line):
     root, _, markdown = document
     markdown.write_text(
         code + "\n[src/absent.py:L1-L2]\n", encoding="utf-8", newline="\n",
     )
     assert check(markdown, root) == [
+        f"pack.md:{code_line}: [src/absent.py:L1-L2]: missing Python source",
         f"pack.md:{line}: [src/absent.py:L1-L2]: missing Python source"
     ]
 
