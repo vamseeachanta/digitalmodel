@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Squat and under-keel clearance screening</title>
+<style>
+body { max-width: 64rem; margin: 2rem auto; padding: 0 1rem; font: 17px/1.6 system-ui; color: #172b3a; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; border-bottom: 1px solid #bbc9d2; padding: .4rem; }
+caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+pre { overflow-x: auto; background: #eef3f6; padding: 1rem; }
+.limit { border-left: .3rem solid #a66100; padding-left: 1rem; }
+</style>
+</head>
+<body>
+<h1>Squat and under-keel clearance screening</h1>
+<p>This guide describes unrestricted-channel squat estimates, under-keel clearance
+budgets and evaluation of supplied speed grids.</p>
+<h2>Method and provenance</h2>
+<p>Bow and stern squat are evaluated using the
+Römisch (1989) method as reproduced in <a href="https://pianc-jp.org/news/images/On%20Course%20142.pdf">
+PIANC On Course 142 (2011)</a>, Appendix A4, printed page 22, equations (7)-(10).
+The original 1989 publication has not been directly verified.</p>
+<pre>r = speed relative to water / critical speed
+Cv = 8 r^2 [(r - 0.5)^4 + 0.0625]       (8)
+Cf,bow = (10 B Cb / Lpp)^2; Cf,stern = 1 (9)
+K = 0.155 sqrt(h/T)                     (10)
+Sb = Cv Cf,bow K T; Ss = Cv K T         (7)</pre>
+<p>Critical speed in m/s and lower and upper h/T applicability bounds are required
+cited inputs. Bounds are inclusive. The routine rejects h &le; T, V &ge; Vcr,
+negative speed, nonfinite values, invalid dimensions and out-of-envelope cases.
+The supplied interval does not establish hull/channel qualification.</p>
+<p>The existing depth classifier and citation getter retain the prior boundary
+convention. The deep-water turning guard is not applied to this shallow-water
+formula. Depth classification does not establish navigability.</p>
+<h2>Clearance and speed grid</h2>
+<p>Under-keel clearance is calculated using the geometric accounting identity,
+introducing no empirical factor:</p>
+<pre>static clearance = h - T
+residual clearance = h - T - max(Sb, Ss) - allowance
+margin = residual clearance - supplied minimum clearance</pre>
+<p>Depth includes the applicable water level; draft is static even-keel draft.
+Allowance is an explicit nonnegative aggregate deduction for effects not already
+accounted for. Zero must be explicit. The optional minimum is a CitedValue in metres.
+Equality meets that supplied minimum; no minimum gives NOT_EVALUATED.
+Negative residuals are retained. budget_exhausted includes allowances and is not
+a claim of bottom contact.</p>
+<p>A supplied speed grid is evaluated in order. Any invalid row fails the call.
+No row is silently dropped; no limiting speed is interpolated or approved.</p>
+<h2>Worked synthetic example</h2>
+<table>
+<tr><th>Input</th><th>Specified value</th><th>Basis</th></tr>
+<tr><td>Lpp / B / T / h (m)</td><td>100 / 12.5 / 10 / 14.4</td><td>Synthetic arithmetic case</td></tr>
+<tr><td>Cb (dimensionless)</td><td>0.8</td><td>Synthetic input</td></tr>
+<tr><td>Speed / critical speed (m/s)</td><td>4 / 8</td><td>Synthetic inputs</td></tr>
+<tr><td>h/T interval (dimensionless)</td><td>[1.1, 2.0]</td><td>Synthetic, not a published validity range</td></tr>
+<tr><td>Allowance / minimum clearance (m)</td><td>0.5 / 3</td><td>Synthetic specified criteria</td></tr>
+<caption>Table 1. Arithmetic verification inputs; not engineering data.</caption>
+</table>
+<p>Hand calculation: r = 0.5; Cv = 8 &times; 0.25 &times; 0.0625 = 0.125;
+Cf,bow = 1; K = 0.155 &times; 1.2 = 0.186.
+Both end squats equal 0.125 &times; 0.186 &times; 10 = <strong>0.2325 m</strong>.
+Residual = 14.4 - 10 - 0.2325 - 0.5 = <strong>3.6675 m</strong>.
+Margin above the supplied 3 m minimum = <strong>0.6675 m</strong>.
+At 2 m/s, Cv = 17/512 and squat = 0.0617578125 m; at rest it is zero.</p>
+<h2>API and citation records</h2>
+<pre>from digitalmodel.hydrodynamics.parametric_hull_analysis.squat import (
+    clearance_budget, romisch_squat, squat_speed_sweep,
+)
+
+# Supply reviewed CitedValues and an explicit citation_root before this call.
+inputs = dict(
+    length_bp_m=100.0, beam_m=12.5, block_coefficient=0.8,
+    draft_m=10.0, water_depth_m=14.4,
+    critical_speed=critical_speed,
+    minimum_depth_ratio=minimum_depth_ratio,
+    maximum_depth_ratio=maximum_depth_ratio,
+    citation_root=citation_root,
+)
+result = romisch_squat(speed_ms=4.0, **inputs)
+budget = clearance_budget(result, allowance_m=0.5,
+                          minimum_clearance=minimum_clearance,
+                          citation_root=citation_root)
+grid = squat_speed_sweep([0.0, 2.0, 4.0], **inputs)</pre>
+<p>The result retains geometry, input provenance, coefficient CitedValue sidecars
+and the depth citation. Clearance evaluation rechecks inputs, result values and
+current citation metadata. Altered results are rejected.</p>
+<p>The citation root must contain
+<code>wikis/marine-engineering/wiki/standards/romisch-squat.md</code>, with
+YAML frontmatter <code>code_id: PIANC-ROMISCH-SQUAT</code>,
+<code>publisher: PIANC</code>, <code>revision: 2011</code>, and the existing
+<code>wikis/marine-engineering/wiki/standards/pianc-depth-bands.md</code>
+(code_id PIANC-DEPTH-BANDS, publisher ITTC, revision 2002).
+Input criteria require their own matching records. Missing or mismatched records
+fail closed. Live provisioning is left to the maintainer; test fixtures only
+exercise resolution, and do not establish a live engineering basis.</p>
+<p class="limit">Navigation status always remains NOT_EVALUATED.
+Metadata matching does not validate an input's technical basis or source section.
+Wave response, initial trim, heel, bathymetric uncertainty, channel qualification
+and allowance completeness are not evaluated. The hand calculation verifies
+arithmetic, not measured squat. Operational acceptance requires a reviewed
+hull/channel basis and all relevant clearance contributions.</p>
+<h2>Future work</h2>
+<p>Restricted-channel and canal critical-speed derivation, measured-data comparison,
+wave-response integration and external navigation criteria remain later work.
+No licensed solver or bathymetry service is used by this API.</p>
+</body>
+</html>
