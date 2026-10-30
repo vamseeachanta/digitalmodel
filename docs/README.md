@@ -4,6 +4,11 @@ This is the canonical documentation entry point for digitalmodel issue routing.
 Use it with the repo entry surfaces before changing source, tests, docs, or
 routing registries.
 
+The [planing hull module analysis](reports/modules/planing_hull/index.html)
+presents an independent hydrostatic worked example and the limits of motion
+qualification; its [local README](reports/modules/planing_hull/README.md) gives
+the rebuild command.
+
 ## Required Routing Surfaces
 
 | Surface | Role |
