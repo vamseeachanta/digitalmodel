@@ -1,0 +1,161 @@
+{
+  "sources": [
+    {
+      "id": "source-h1",
+      "title": "H1 synthetic boundary conditions and independent derivation",
+      "path": "docs/reports/modules/passing_ship/README.md",
+      "symbols": [],
+      "use": "Input basis and hand oracle H1"
+    },
+    {
+      "id": "source-formulations",
+      "title": "Offline section, kernel and force functions",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/formulations.py",
+      "symbols": [
+        "s1_function",
+        "s2_function",
+        "ds1_dx",
+        "ds2_dx",
+        "f_kernel",
+        "g_kernel",
+        "calculate_surge_force_infinite",
+        "calculate_sway_force_infinite",
+        "calculate_yaw_moment_infinite",
+        "finite_depth_correction",
+        "calculate_forces_with_depth"
+      ],
+      "use": "Only s1_function and ds1_dx evaluated by this report"
+    },
+    {
+      "id": "source-config",
+      "title": "Configuration models and YAML parsing",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/configuration.py",
+      "symbols": [
+        "VesselConfig",
+        "EnvironmentalConfig",
+        "CalculationConfig",
+        "PassingShipConfig",
+        "YAMLConfigParser",
+        "UnitConverter",
+        "ConfigurationMerger"
+      ],
+      "use": "Source inspection only"
+    },
+    {
+      "id": "source-calculator",
+      "title": "Calculator, batch scenarios and result cache",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/calculator.py",
+      "symbols": [
+        "PassingShipCalculator",
+        "ForceResults",
+        "ResultCache",
+        "from_config_file",
+        "from_imperial",
+        "calculate_forces",
+        "calculate_batch",
+        "parametric_study"
+      ],
+      "use": "Source inspection only"
+    },
+    {
+      "id": "source-cli",
+      "title": "Command-line single and batch processing",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/cli.py",
+      "symbols": [
+        "create_parser",
+        "process_single",
+        "process_batch",
+        "main"
+      ],
+      "use": "Source inspection only; not invoked"
+    },
+    {
+      "id": "source-workflow",
+      "title": "Configuration workflow and CSV output",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/workflow.py",
+      "symbols": [
+        "router"
+      ],
+      "use": "Source inspection only; not invoked"
+    },
+    {
+      "id": "source-benchmark",
+      "title": "Existing benchmark report generator",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/benchmark_report.py",
+      "symbols": [
+        "generate_benchmark_report"
+      ],
+      "use": "Source inspection only; no benchmark values adopted and no sweep run"
+    },
+    {
+      "id": "source-preparation",
+      "title": "Prepared cases and deferred benchmark comparison",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/preparation.py",
+      "symbols": [
+        "execute_cases",
+        "compare_benchmark",
+        "launch_solver"
+      ],
+      "use": "Source inspection only; no execution or launch"
+    },
+    {
+      "id": "source-schema",
+      "title": "Canonical analysis specification and force history",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py",
+      "symbols": [
+        "PassingShipSpec"
+      ],
+      "use": "Source inspection only"
+    },
+    {
+      "id": "source-history",
+      "title": "Force time history",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/force_time_history.py",
+      "symbols": [
+        "ForceTimeHistory",
+        "generate_time_history"
+      ],
+      "use": "Source inspection only"
+    },
+    {
+      "id": "source-conventions",
+      "title": "Package sign and unit conventions",
+      "path": "src/digitalmodel/hydrodynamics/passing_ship/CONVENTIONS.md",
+      "symbols": [],
+      "use": "Documentation discrepancy finding; not a qualification basis"
+    },
+    {
+      "id": "source-methodology",
+      "title": "Existing methodology description",
+      "path": "docs/domains/marine-engineering/python-code-passing-ship/methodology.md",
+      "symbols": [],
+      "use": "Documentation discrepancy finding; not a qualification basis"
+    },
+    {
+      "id": "source-status",
+      "title": "Recorded benchmark deferral",
+      "path": "docs/domains/passing_ship/preparation/benchmark_status.json",
+      "symbols": [],
+      "use": "Numeric reference and peak-window evidence remain incomplete"
+    },
+    {
+      "id": "source-test",
+      "title": "Independent report regression",
+      "path": "tests/hydrodynamics/passing_ship/test_module_report.py",
+      "symbols": [
+        "test_worked_values_match_independent_calculation",
+        "test_visible_values_follow_computed_results",
+        "test_report_rebuild_is_deterministic",
+        "test_scope_limits_and_report_pointers"
+      ],
+      "use": "Independent oracle, visible readback, mutation and reproduction checks"
+    },
+    {
+      "id": "source-style",
+      "title": "Repository report presentation pattern",
+      "path": "docs/reports/pipeline-ffs-assessment.html",
+      "symbols": [],
+      "use": "Inline report style only"
+    }
+  ]
+}
