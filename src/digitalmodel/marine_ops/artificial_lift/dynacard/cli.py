@@ -49,6 +49,11 @@ def cli(json_file: str, solver: str, output: str):
         click.echo("=" * 60)
         click.echo(f"  Well API14:              {context.api14}")
         click.echo(f"  Solver Method:           {results.solver_method}")
+        basis = results.downhole_load_basis
+        if basis is not None:
+            click.echo(f"  Downhole load basis:     {basis.method}")
+            click.echo(f"  Load qualification:      {basis.validation_status}")
+            click.echo(f"  Limitations:             {basis.limitations}")
         click.echo(f"  SPM:                     {context.spm:.1f}")
         click.echo(f"  Pump Depth:              {context.pump.depth:.1f} ft")
         click.echo("-" * 60)
