@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the shared FFS applicability layer (#1094): d/t flags on
 # ABOUTME: B31G/RSTRENG/DNV, ESCALATE routing in ffs_decision, report footer, goldens.
 """Applicability flags for the FFS strength methods (issue #1094).
@@ -61,9 +64,10 @@ def test_merge_combines_flags_and_notes_in_order():
     c = Applicability(False, ["C"], ["note c"])
     m = merge(a, b, c, None)
     assert m.ok is False
-    assert m.flags == ["A", "C"]
-    assert m.notes == ["note a", "note c"]
-    assert merge(b, None).ok is True
+    assert m.flags == ["A", "C", "APPLICABILITY_MISSING"]
+    assert m.notes[:2] == ["note a", "note c"]
+    assert "missing" in m.notes[2]
+    assert merge(b, None).ok is False  # A16: absent evidence is unknown.
 
 
 def test_from_details_bridges_legacy_dict_keys():
@@ -71,7 +75,7 @@ def test_from_details_bridges_legacy_dict_keys():
     a = from_details(legacy, flag="LEGACY")
     assert a.ok is False and a.flags == ["LEGACY"] and a.notes == ["too deep"]
     assert from_details({"within_applicability": True}, flag="LEGACY").ok is True
-    assert from_details({}, flag="LEGACY").ok is True
+    assert from_details({}, flag="LEGACY").ok is False  # A16
 
 
 # --- finding 2: B31G / Modified B31G / RSTRENG d/t > 0.80 -------------------
@@ -231,7 +235,7 @@ def test_level2_lml_flags_lambda_beyond_table_range():
     assert long_flaw["rt"] < 1.0
     assert long_flaw["lambda"] > _LAMBDA_UPPER
     assert long_flaw["applicability"].ok is False
-    assert long_flaw["applicability"].flags == [API579_FOLIAS_LAMBDA_FLAG]
+    assert long_flaw["applicability"].flags == [API579_FOLIAS_LAMBDA_FLAG, "LML_CIRCUMFERENTIAL_NOT_EVALUATED"]
     assert "lambda=" in long_flaw["applicability"].notes[0]
     # the frozen table value is still what is reported (finding 11)
     assert long_flaw["folias_factor"] == pytest.approx(
@@ -240,7 +244,7 @@ def test_level2_lml_flags_lambda_beyond_table_range():
 
     short_flaw = engine.evaluate(_lml_grid(6))
     assert short_flaw["lambda"] <= _LAMBDA_UPPER
-    assert short_flaw["applicability"].ok is True
+    assert short_flaw["applicability"].flags == ["LML_CIRCUMFERENTIAL_NOT_EVALUATED"]
 
 
 def test_level2_lml_no_lambda_flag_when_folias_does_not_participate():
@@ -336,13 +340,14 @@ def test_assess_component_escalates_on_flag_and_exposes_applicability():
     res = assess_component(_pipe(2650.0), _lml_grid(60), force_type="LML")
     assert res.t_min_in > res.t_measured_min_in
     assert res.applicability.ok is False
-    assert res.applicability.flags == [API579_FOLIAS_LAMBDA_FLAG]
-    assert res.verdict == "ESCALATE"
+    assert res.applicability.flags == [API579_FOLIAS_LAMBDA_FLAG, "LML_CIRCUMFERENTIAL_NOT_EVALUATED"]
+    assert res.verdict == "REPAIR"  # A15: retain the measured-wall failure.
     assert res.passes is False
     assert res.decision["applicability"] == res.applicability.to_dict()
     payload = res.to_dict()
-    assert payload["applicability"]["flags"] == [API579_FOLIAS_LAMBDA_FLAG]
-    assert set(payload) == _INDEXED_KEYS | {"applicability"}
+    assert payload["applicability"]["flags"] == res.applicability.flags
+    assert set(payload) == _INDEXED_KEYS | {"applicability", "repair_recommendation",
+                                           "governing_criterion", "measurement_actions"}
     # the same case without the flag would have been a numeric verdict
     numeric = FFSDecision.decide(
         level1_verdict=res.level1["verdict"],
@@ -360,9 +365,9 @@ def test_assess_component_escalates_on_flag_and_exposes_applicability():
 def test_assess_component_default_applicability_keeps_existing_surface():
     res = assess_component(_pipe(), pd.DataFrame([[0.48] * 6 for _ in range(6)]))
     assert res.applicability == Applicability()
-    assert res.verdict in ("ACCEPT", "MONITOR")
+    assert res.verdict == "ESCALATE"  # A11: unresolved local profile.
     # the indexed to_dict surface (#1066) is untouched when nothing is flagged
-    assert set(res.to_dict()) == _INDEXED_KEYS
+    assert set(res.to_dict()) == _INDEXED_KEYS | {"governing_criterion", "measurement_actions"}
 
 
 # --- report footer -------------------------------------------------------------
@@ -398,19 +403,16 @@ def test_report_has_no_flag_footer_when_clean():
 
 def test_report_t_am_is_area_average():
     # finding 8 applies to the report's displayed t_am too.
-    df = pd.DataFrame({"c0": [0.40, 0.50], "c1": [0.60, np.nan]})
-    html = FFSReport.generate_html(
-        grid_df=df,
-        decision=_decide(None),
-        component_id="P",
-        nominal_od_in=16.0,
-        nominal_wt_in=0.5,
-        t_min_in=0.3,
-        design_code="B31.8",
-        design_pressure_psi=1000.0,
-    )
-    assert "Area-Averaged Thickness (t_am)</td><td>0.5000 inch" in html
-    assert "0.5250 inch" not in html
+    # A03/A24: presentation cannot silently omit unmeasured cells.
+    grid = pd.DataFrame([[.4, .6], [.5, np.nan]])
+    args = dict(decision={"verdict": "ACCEPT", "rsf": 1.0}, component_id="component",
+                nominal_od_in=20, nominal_wt_in=.5, t_min_in=.2,
+                design_code="B31.8", design_pressure_psi=1000)
+    with pytest.raises(ValueError, match="complete coverage"):
+        FFSReport.generate_html(grid, **args)
+    complete = grid.fillna(.5)  # Explicit synthetic reading for the arithmetic control.
+    report = FFSReport.generate_html(complete, **args)
+    assert "0.5000 inch" in report
 
 
 # --- goldens unchanged (validation records 2026-06-27 / 2026-06-29) -----------

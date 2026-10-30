@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the canonical FFS coordinator (ffs_coordinator.py) — the
 # ABOUTME: end-to-end chain and unified FFSAssessmentResult data model.
 """Tests for digitalmodel.asset_integrity.assessment.ffs_coordinator."""
@@ -54,7 +57,7 @@ def test_assess_returns_unified_result():
     assert res.t_min_in > 0
     assert res.t_measured_min_in <= res.t_measured_avg_in
     assert 0.0 < res.rsf <= 1.0001
-    assert res.verdict in ("ACCEPT", "MONITOR", "RE_RATE", "REPAIR", "REPLACE")
+    assert res.verdict in ("ACCEPT", "MONITOR", "RE_RATE", "REPAIR", "REPLACE", "ESCALATE")
     assert res.sufficiency_status in ("SUFFICIENT", "TAKE_MORE", "ESCALATE")
     # all six stages echoed
     assert res.level1 and res.level2 and res.decision
@@ -63,7 +66,8 @@ def test_assess_returns_unified_result():
 
 def test_healthy_component_passes():
     res = assess_component(_pipe(), _healthy_grid())
-    assert res.passes is True
+    assert res.passes is False  # A11: the local profile is unresolved.
+    assert res.sufficiency_status == "TAKE_MORE"
     assert res.rsf >= res.rsf_a
 
 
@@ -114,7 +118,7 @@ def test_to_dict_is_json_friendly():
     d = res.to_dict()
     json.dumps(d)  # must not raise
     assert d["component_id"] == "LINE-001"
-    assert d["passes"] is True
+    assert d["passes"] is False  # A11
     assert isinstance(d["rsf"], float)
     assert "repair_recommendation" not in d
 

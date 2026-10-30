@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the asset-class-generalised FFS decision engine (#2205) —
 # ABOUTME: shared verdict vocabulary, per-class action map, unit-tagged inputs.
 """Asset-class FFS decision tests (issue #2205, owner decision D1 = A).
@@ -190,7 +193,8 @@ def test_remaining_life_helper_is_unit_aware():
     assert yrs == pytest.approx(20.0)
     yrs_in = remaining_life(Q_(0.400, "inch"), Q_(0.300, "inch"), Q_(0.010, "inch/yr"))
     assert yrs_in == pytest.approx(10.0)
-    assert remaining_life(Q_(0.4, "inch"), Q_(0.3, "inch"), Q_(0.0, "inch/yr")) == math.inf
+    assert remaining_life(Q_(0.4, "inch"), Q_(0.3, "inch"), Q_(0.0, "inch/yr"),
+                          zero_rate_basis="qualified synthetic zero rate") == math.inf
     assert remaining_life(Q_(0.2, "inch"), Q_(0.3, "inch"), Q_(0.01, "inch/yr")) == 0.0
     with pytest.raises(UnitTagError):
         remaining_life(0.4, 0.3, 0.01)

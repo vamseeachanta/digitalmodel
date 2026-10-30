@@ -53,6 +53,7 @@ CALCULATION_SOURCES = (
     "src/digitalmodel/asset_integrity/dnv_rp_f101.py",
     "src/digitalmodel/asset_integrity/circumferential_defect.py",
     "src/digitalmodel/asset_integrity/applicability.py",
+    "src/digitalmodel/asset_integrity/_validation.py",
     "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py",
     "src/digitalmodel/asset_integrity/assessment/ffs_decision.py",
     "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py",
@@ -201,7 +202,8 @@ def local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating):
         return {**evidence, "status": status, "wall_in": wall, "reason": reason}
 
     if domain is None:
-        return finish("INAPPLICABLE", None, "Current geometry has no lambda-range depletion interval")
+        return finish("INAPPLICABLE", None,
+                      "Reduced-wall projection requires an established circumferential criterion")
     low, high = [evaluate(wall) for wall in domain]
     evidence["initial_bracket"] = [low, high]
     evidence["final_bracket"] = [low, high]
@@ -274,19 +276,22 @@ def evaluate_section(data, component, cfg):
     if detailed.t_measured_min_in < detailed.t_min_in:
         life_search = local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating)
         life_limit = life_search["wall_in"]
+        if not local_loss["applicability"].ok:
+            life_limit = None
         if life_limit is None:
-            raise ValueError(f"Local-loss life is not established: {life_search['status']}")
-        life_basis = "fixed-geometry reduced local-loss rating; lambda-range applicability only"
-        if life_search["status"] in {"BOUNDED", "BOUNDARY"}:
-            life_basis += "; censored at the supported boundary"
+            life_basis = "Not evaluated: " + life_search.get("reason", life_search["status"])
+        else:
+            life_basis = "fixed-geometry reduced local-loss rating; lambda-range applicability only"
+            if life_search["status"] in {"BOUNDED", "BOUNDARY"}:
+                life_basis += "; censored at the supported boundary"
     life_rows = []
     for factor in cfg["sensitivity_multipliers"]:
         current_rate = rate * factor
-        life_rows.append([current_rate, remaining_life(
+        life_rows.append([current_rate, float("nan") if life_limit is None else remaining_life(
             Q_(detailed.t_measured_min_in, "inch"), Q_(life_limit, "inch"),
             Q_(current_rate, "inch/year"),
         )])
-    life = remaining_life(Q_(detailed.t_measured_min_in, "inch"),
+    life = float("nan") if life_limit is None else remaining_life(Q_(detailed.t_measured_min_in, "inch"),
                           Q_(life_limit, "inch"), Q_(rate, "inch/year"))
     interval = life * cfg["interval_life_fraction"]
     minimum = min(min(row["margin"] for row in strength["methods"]),
@@ -373,6 +378,8 @@ def public_assessment(result):
 
 
 def serialise(value):
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
     if isinstance(value, Applicability):
         return value.to_dict()
     if isinstance(value, dict):
@@ -424,12 +431,15 @@ def action_text(section):
                 f"axial membrane stress at or below {number(section['axial_limit_psi'])} psi. "
                 "Confirm the operating basis and reassess at the stated interval.")
     if status == "escalate":
-        return ("Complete the formal local-loss evaluation: the remaining strength factor is below "
-                "the allowable factor and above the replacement floor. Field data is adequate; "
-                "the referral is driven by strength, not a sampling gap. "
-                f"The current reduced local-loss rating is {number(section['local_loss_rating_psi'])} psi "
-                f"against {number(section['inputs']['design_pressure_psi'])} psi. "
-                "Confirm the applicability, material and load basis before adopting that rating. "
+        field = "Field data is adequate for the recorded screening referral. "
+        if section["sufficiency"]["status"] == "TAKE_MORE":
+            count = sum(action["count"] or 0 for action in section["sufficiency"]["actions"])
+            field = (f"Add readings to resolve at least {count} more degraded cells {location}. "
+                     "Clearance remains withheld while the local profile remains under-sampled. ")
+        return ("Complete the formal local-loss evaluation: required applicability "
+                "criteria are not established. " + field
+                + " ".join(section["applicability"]["notes"])
+                + " Confirm the applicability, material and load basis before adopting any rating. "
                 "Interim operation is a decision for the maintainer of the pipeline record.")
     return f"Maintain the stated loads and repeat inspection within {number(section['interval_yr'])} yr."
 
@@ -556,7 +566,8 @@ def design_blocks(result):
              "A boundary minimum requires extended coverage. General-loss averaging is not applied to either bounded local patch. "
              "The reported Level 2 remaining strength factor uses a simplified closed form evaluated at the point-minimum thickness; "
              "it does not establish a complete Part 5 Level 2 evaluation. "
-             "Section A life is projected to the wall at which its reduced local-loss rating reaches design pressure. "
+             "Section A remaining life and re-inspection interval are not evaluated because the "
+             "reduced-wall circumferential criterion is not established. "
              "The flaw length, background wall, bulging factor, material and loads are held fixed; lateral growth is not modelled. "
              "The pressure projection checks lambda-range applicability only. "
              "Remaining-thickness ratio and minimum-wall limits are not checked; full Part 5 applicability is not established. "
@@ -655,7 +666,7 @@ def section_material(result):
                              f"{ratio(s['local_loss_rating_psi'] / s['inputs']['design_pressure_psi'])}. "
                              "The lower pressure rating participates in the decision. "
                              + sampling_basis + f"The final decision is {s['decision']}{adequacy_note}. "
-                             + deferred_referral(s)))
+                             + action_text(s) + " " + deferred_referral(s)))
         recommendations.append(text(s["name"] + ": **" + s["decision"] + "**. " + action_text(s) + " " + deferred_referral(s) +
                                     "Source: the measurement-sufficiency criteria in Section 3.5 and the assessed thickness/strength results in Section 5."))
         detailed.extend(result_blocks(s, f"section-{index + 1}"))

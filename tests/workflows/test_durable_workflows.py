@@ -1681,15 +1681,17 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert result["value"] > 0.0  # fatigue life (years)
         assert result["screening_status"] in {"pass", "fail"}
     elif workflow["id"] == "ffs-metal-loss":
-        # workflow-API adoption row (workspace-hub#3285): the `ffs` route parks the
-        # #1066 indexed 16-key FFSAssessmentResult.to_dict() on cfg["ffs"].
+        # Insufficient measurements withhold clearance and retain field actions.
         result = cfg["ffs"]
         assert result["component_id"] == "LINE-001"
         assert result["assessment_type"] == "LML"  # 2-cell deep local thin spot
-        assert result["verdict"] == "ACCEPT"
+        assert result["verdict"] == "ESCALATE"
         # the measurement-sufficiency catch: an L1-ACCEPT that is under-measured
         assert result["sufficiency_status"] == "TAKE_MORE"
-        assert result["passes"] is True
+        assert result["passes"] is False
+        assert "measurement sufficiency" in result["governing_criterion"].lower()
+        assert result["measurement_actions"]
+        assert result["measurement_actions"][0]["count"] == 3
         assert result["t_nominal_in"] == pytest.approx(0.5)
         assert result["t_measured_min_in"] == pytest.approx(0.3)
         assert result["folias_factor"] >= 1.0
@@ -1698,6 +1700,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
             "t_min_in", "t_measured_min_in", "t_measured_avg_in", "fca_in", "rsf",
             "rsf_a", "folias_factor", "remaining_life_yr", "verdict",
             "rerated_pressure_psi", "sufficiency_status", "passes", "code_reference",
+            "governing_criterion", "measurement_actions",
         }
     elif workflow["id"] == "buckling-parametric":
         # workflow-API adoption row (workspace-hub#3285-OWNED): the

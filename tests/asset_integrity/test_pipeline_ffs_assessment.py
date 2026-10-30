@@ -6,6 +6,7 @@
 import hashlib
 import importlib.util
 import json
+import math
 import re
 import shutil
 from dataclasses import replace
@@ -209,10 +210,14 @@ def test_every_result_matches_existing_methods(result):
         assert section["sufficiency"]["status"] == sufficiency.status
         assert section["sufficiency"]["metrics"] == builder.serialise(sufficiency.metrics)
         for rate, life in section["life_sensitivity"]:
-            assert life == remaining_life(
-                Q_(existing.t_measured_min_in, "inch"), Q_(section["life_limit_wall_in"], "inch"),
-                Q_(rate, "inch/year"),
-            )
+            if section["life_limit_wall_in"] is None:
+                assert life is None  # A08: unsupported life is withheld.
+                assert section["life_basis"].startswith("Not evaluated")
+            else:
+                assert life == remaining_life(
+                    Q_(existing.t_measured_min_in, "inch"), Q_(section["life_limit_wall_in"], "inch"),
+                    Q_(rate, "inch/year"),
+                )
         assert section["decision"] == builder.map_decision(
             section["strength_decision"]["verdict"], sufficiency.status,
             section["remaining_life_yr"], section["interval_yr"],
@@ -272,38 +277,33 @@ def test_local_loss_and_reference_wall(result):
 
 @pytest.mark.parametrize("status", ["INAPPLICABLE", "NON_MONOTONIC"])
 def test_section_refuses_unestablished_local_loss_life(result, monkeypatch, status):
-    """The report cannot issue life or an interval without a wall limit."""
+    # A08: unknown life is reported explicitly; it cannot become an interval.
     section = result["sections"][0]
     calls = []
-
     def unestablished(*args):
         calls.append(args)
         return {"status": status, "wall_in": None}
-
     monkeypatch.setattr(builder, "local_loss_limit_wall", unestablished)
-    with pytest.raises(ValueError, match=f"Local-loss life is not established: {status}"):
-        builder.evaluate_section(section["inputs"], FFSComponent(**section["component"]),
-                                 builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml"))
+    actual = builder.evaluate_section(section["inputs"], FFSComponent(**section["component"]),
+                                      builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml"))
+    assert actual["life_limit_wall_in"] is None
+    assert math.isnan(actual["remaining_life_yr"]) and math.isnan(actual["interval_yr"])
+    assert actual["life_basis"] == "Not evaluated: " + status
     assert len(calls) == 1
 
 
 @pytest.mark.parametrize("status", ["BOUNDED", "BOUNDARY"])
 def test_section_labels_supported_boundary_life_as_censored(result, monkeypatch, status):
-    """A positive supported boundary gives a censored projection and interval."""
+    # A08: a boundary token cannot qualify an independently missing width check.
     section = result["sections"][0]
-    limit = section["life_limit_wall_in"]
-    search = {"status": status, "wall_in": limit}
+    search = {"status": status, "wall_in": section["coordinator"]["t_measured_min_in"]}
     monkeypatch.setattr(builder, "local_loss_limit_wall", lambda *args: search)
-    actual = builder.evaluate_section(
-        section["inputs"], FFSComponent(**section["component"]),
-        builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml"),
-    )
+    actual = builder.evaluate_section(section["inputs"], FFSComponent(**section["component"]),
+                                      builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml"))
     assert actual["life_search"] == search
-    assert actual["life_limit_wall_in"] == limit
-    assert actual["life_basis"].endswith("; censored at the supported boundary")
-    assert actual["remaining_life_yr"] == section["remaining_life_yr"]
-    assert actual["interval_yr"] == section["interval_yr"]
-    assert actual["life_sensitivity"] == section["life_sensitivity"]
+    assert actual["life_limit_wall_in"] is None
+    assert actual["life_basis"].startswith("Not evaluated")
+    assert math.isnan(actual["remaining_life_yr"]) and math.isnan(actual["interval_yr"])
 
 
 def test_tampered_source_digest_is_rejected(tmp_path):
@@ -324,8 +324,11 @@ def test_tampered_source_digest_is_rejected(tmp_path):
 def test_rate_sensitivity(result):
     for section in result["sections"]:
         half, base, double = [row[1] for row in section["life_sensitivity"]]
-        assert half == base * 2
-        assert double == base / 2
+        if section["life_limit_wall_in"] is None:
+            assert half is base is double is None  # A08
+        else:
+            assert half == base * 2
+            assert double == base / 2
 
 
 def test_pressure_rating():
@@ -375,9 +378,9 @@ def test_report_contract_and_determinism(tmp_path, result):
 
 def test_actual_sufficiency_is_not_tuned(result):
     assert [s["decision"] for s in result["sections"]] == [
-        "escalate", "take more measurements",
+        "escalate", "escalate",
     ]
-    assert result["sections"][0]["remaining_life_yr"] > 0
+    assert result["sections"][0]["remaining_life_yr"] is None  # A08
     assert result["sections"][1]["sufficiency"]["metrics"]["profile_cells"] == 2
 
 
@@ -402,8 +405,9 @@ def test_rendered_numbers_match_existing_engine_outputs(tmp_path, result):
                                pd.DataFrame(inputs["grid"], index=inputs["axial_positions_in"]),
                                force_type="LML")
         for rate, _ in section["life_sensitivity"]:
-            life = remaining_life(Q_(existing.t_measured_min_in, "inch"), Q_(section["life_limit_wall_in"], "inch"),
-                                  Q_(rate, "inch/year"))
+            life = None if section["life_limit_wall_in"] is None else remaining_life(
+                Q_(existing.t_measured_min_in, "inch"), Q_(section["life_limit_wall_in"], "inch"),
+                Q_(rate, "inch/year"))
             assert [builder.number(rate), builder.number(life)] in parsed.rows
         assert ["Minimum remaining wall (in)", builder.number(existing.t_measured_min_in, thickness=True),
                 "Synthetic grid"] in parsed.rows
@@ -452,7 +456,7 @@ def test_single_decision_in_all_decision_sections(tmp_path, result):
     for number in (1, 5, 6, 8):
         fragment = page.split(f'<section id="section-{number}">')[1].split('</section>')[0]
         assert "escalate" in fragment
-        assert "take more measurements" in fragment
+        assert "criteria are not established" in fragment  # A08
     assert "while the local profile remains under-sampled" in page
     assert "around axial position 4 in, column 2" not in page
     assert "around axial position 2 in, column 4" in page
@@ -470,22 +474,14 @@ def test_design_rate_is_read_from_configuration(result):
 
 
 def test_section_a_life_uses_reduced_rating(result):
-    from digitalmodel.asset_integrity.assessment.level2_engine import Level2Engine
-
+    # A08: a favourable axial estimate cannot establish a life limit without width.
     section = result["sections"][0]
-    assert section["remaining_life_yr"] > 0
-    data = section["inputs"]
-    frame = pd.DataFrame(data["grid"], index=data["axial_positions_in"])
-    row, col = section["sufficiency"]["metrics"]["min_location"]
-    frame.iloc[row, col] = section["life_limit_wall_in"]
-    local = Level2Engine("LML", data["nominal_od_in"], data["nominal_wt_in"],
-                         section["reference_wall_in"], section["component"]["rsf_a"]).evaluate(frame)
-    rating = reduced_mawp(Q_(section["uncorroded_rating_psi"], "psi"))(
-        local["rsf"], section["component"]["rsf_a"],
-    ).value.to("psi").magnitude
-    assert rating == pytest.approx(data["design_pressure_psi"])
-    assert local["flaw_length_in"] == section["level2"]["flaw_length_in"]
-    assert local["applicability"].ok
+    assert section["remaining_life_yr"] is None
+    assert section["interval_yr"] is None
+    assert section["life_limit_wall_in"] is None
+    assert section["life_search"]["status"] == "INAPPLICABLE"
+    assert "circumferential" in section["life_basis"]
+    assert not section["applicability"]["ok"]
 
 
 def test_sampling_criterion_and_interim_position(tmp_path, result):
@@ -612,16 +608,14 @@ def test_disclosure_negative_control(artifact, tmp_path):
 
 @pytest.mark.parametrize("section_number", [1, 6, 8])
 def test_section_b_deferred_strength_referral(tmp_path, section_number):
+    # A08/A15: retain both the unavailable criterion and required field actions.
     page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
     fragment = page.split(f'<section id="section-{section_number}">')[1].split('</section>')[0]
     section_b = fragment.split("Section B, 12.75 in line")[1]
-    sentence = (
-        "Its strength factor is also below the allowable factor, so after the added readings "
-        "a formal local-loss evaluation follows unless the repeat assessment changes that."
-    )
-    assert sentence in section_b
-    assert section_b.count(sentence) == 1
-    assert "take more measurements" in section_b
+    assert "criteria are not established" in section_b
+    assert "circumferential" in section_b.lower()
+    assert "more degraded cells" in section_b
+    assert "under-sampled" in section_b
 
 
 def test_methodology_sampling_before_strength_referral(tmp_path):
@@ -646,6 +640,7 @@ def test_revision_history_follows_summary(tmp_path, result):
         ["01", "2026-10-14", "Changed Section A remaining life from 0 to 11.5 yr and interval from 0 to 5.8 yr by projecting to design pressure on the reduced local-loss route; retired the point-minimum intervention rule because it is not a code criterion; it is now shown as a diagnostic only; added Part 2 for the reduced-rating basis; clarified sampling before strength-factor referral and Section B's deferred formal evaluation."],
         ["02", "2026-10-21", "Established the supported wall interval and a passing and failing pressure bracket before the life search; retained numerical evidence and identified boundary censoring and unreachable targets. Both synthetic section results are unchanged."],
         ["03", "2026-10-21", "Excluded zero-wall endpoints from numerical life and limited pressure-projection qualification to the checked shell-parameter range because the remaining-thickness limits are not checked. Both synthetic section results are unchanged."],
+        ["04", "2026-10-22", "Withheld reduced-wall clearance where the circumferential criterion is unavailable; marked the affected life and inspection interval not evaluated and preserved required measurement actions."],
     ]
     config = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")
     spec = builder.report_spec(ROOT, result)
@@ -772,5 +767,5 @@ def test_projection_discloses_lambda_only_qualification(tmp_path, result):
     assert "lambda-range applicability only" in criteria
     assert "Remaining-thickness ratio and minimum-wall limits are not checked" in criteria
     section = result["sections"][0]
-    assert "lambda-range applicability only" in section["life_basis"]
+    assert section["life_basis"].startswith("Not evaluated")  # A08
     assert section["life_search"]["qualification_scope"] == "lambda-range only"
