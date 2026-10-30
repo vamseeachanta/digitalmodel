@@ -1,0 +1,124 @@
+<!doctype html><html lang='en'><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Fixed-bottom wind turbine analysis</title><style>
+body{font:1rem system-ui;max-width:78rem;margin:auto;padding:2rem;color:#183347}
+table{border-collapse:collapse;width:100%;margin:1rem 0;display:block;overflow:auto}
+th,td{border:1px solid #bdcbd4;padding:.5rem;text-align:left;overflow-wrap:anywhere}
+th{background:#eaf1f5}p{line-height:1.6}.status{background:#fff0d5;padding:1rem}
+code{overflow-wrap:anywhere}@media print{body{padding:0}tr{break-inside:avoid}}
+</style><header><h1>Fixed-bottom wind turbine analysis</h1>
+<p class='status'>SYNTHETIC ARITHMETIC EXAMPLE</p></header><main><h2>Summary</h2>
+<p>The workflow inventories held inputs, prepares a soil/wind case matrix and reduces
+stored mudline loads and shape-labelled natural frequencies. Engineering acceptance:
+NOT_EVALUATED. No solver execution or turbine design qualification is established.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th scope='col'>Revision</th><th scope='col'>Date</th><th scope='col'>Change and reason</th></tr></thead><tbody><tr><td>Initial</td><td>2026-10-20</td><td>Offline method and input gaps recorded to prepare reproducible analysis.</td></tr><tr><td>1</td><td>2026-10-20</td><td>Preserved frequency and soil-factor precision, added JSON analysis output and corrected validation and inventory wording after review.</td></tr></tbody></table>
+<h2>Document control</h2><p>Unissued analysis. Prepared, checked and approved: pending.
+Document number and governing standard editions: not assigned.</p>
+<h2>Introduction and scope</h2><p>Steady and turbulent wind with irregular waves;
+tower/monopile mode identification and distributed soil-spring sensitivity.
+Only results and method may be shared; vendor model redistribution terms remain unchecked.</p>
+<h2>References and traceability</h2><p>Layout follows
+docs/domains/reporting/standard-report-pack.md; this standalone static report does not
+claim engine-generated provenance validation. The defining public reference is
+<a href='https://www.nlr.gov/docs/fy19osti/73492.pdf'>IEA Wind Task 37, Systems Engineering in Wind Energy —
+WP2.1 Reference Wind Turbines (May 2019), section 5, Offshore Wind Turbine</a>.
+Equivalence of the held model to that definition and design acceptance limits remain
+unestablished. Input values below are as-held model settings,
+not standards-derived design coefficients.</p>
+<h2>Design basis and input echo</h2>
+<table><thead><tr><th scope='col'>Quantity</th><th scope='col'>Value (source units)</th><th scope='col'>Source locator</th></tr></thead><tbody><tr><td>depth_m</td><td>30.0</td><td>docs/domains/orcaflex/examples/raw/K02/K02 10MW fixed-bottom OWT.yml:L120</td></tr><tr><td>hs_m</td><td>5.0</td><td>docs/domains/orcaflex/examples/raw/K02/K02 10MW fixed-bottom OWT.yml:L139</td></tr><tr><td>tz_s</td><td>6.5</td><td>docs/domains/orcaflex/examples/raw/K02/K02 10MW fixed-bottom OWT.yml:L140</td></tr><tr><td>steady_speed_m_s</td><td>11.4</td><td>docs/domains/orcaflex/library/templates/wind_turbine_fixed/spec.yml:L64</td></tr><tr><td>turbulent_speed_m_s</td><td>12.0</td><td>docs/domains/orcaflex/examples/raw/K02/90m_12mps_twr.inp:L40</td></tr></tbody></table>
+<p>Frequencies use four significant figures; soil factors retain their supplied values.
+Loads and relative changes use one decimal place. The companion JSON retains full
+analysis precision; source inputs retain full precision.
+Raw model: JONSWAP (L133–140); soil connections (L13052–13071); constraint coefficients
+(L13097–14147). The template and library copy are distinct representations.
+The template substitutes steady wind and specified torque for the external controller.
+The held turbulence input describes a smaller turbine and is not accepted as a
+regeneration recipe: reconcile rotor/grid coverage, reference height, duration and speed.</p>
+<h2>External-file inventory and data sources</h2>
+<table><thead><tr><th scope='col'>Repository-relative input</th><th scope='col'>Availability</th><th scope='col'>SHA-256 (exact bytes)</th></tr></thead><tbody><tr><td>docs/domains/orcaflex/examples/raw/K02/K02 10MW fixed-bottom OWT.yml</td><td>held</td><td>e1c5ce7821ed8dafc4c7af3055aa38f812b3a7174388ffd2b8abddfb4037ba84</td></tr><tr><td>docs/domains/orcaflex/library/model_library/k02_10mw_fixed_bottom_owt/spec.yml</td><td>held</td><td>fa814e8e7fb62ab959ccc9b6ef40421bcf56b0e46657327578b08c160c26c62c</td></tr><tr><td>docs/domains/orcaflex/library/templates/wind_turbine_fixed/spec.yml</td><td>held</td><td>107bec4b7b5e7aa6509647ebfa4574633e2967095fbf40c8ae34cae1de1b6d43</td></tr><tr><td>docs/domains/orcaflex/examples/raw/K02/BladedControllerWrapper.py</td><td>held</td><td>43891ae589b4c2bf2ce8dfed104b1fae05f84ff907d2f8c07e6d2ad3ca57db82</td></tr><tr><td>docs/domains/orcaflex/examples/raw/K02/libdiscon.dll</td><td>held</td><td>1f3c600d64751df76cc28d3dffb05f551e8d093a0479949f16c965825712ef30</td></tr><tr><td>docs/domains/orcaflex/examples/raw/K02/IEA-10.0-198-RWT_DISCON.IN</td><td>held</td><td>340d5798317cef16ab18d0495bcdb8bcd020fe1ec27c2e09a6428bf227fb56ab</td></tr><tr><td>docs/domains/orcaflex/examples/raw/K02/IEA-10.0-198-RWT_Cp_Ct_Cq.txt</td><td>held</td><td>ec71d0c76a75b6a5aee0b6adcc7be85d933452b0e23c61da4ebb729dec73347c</td></tr><tr><td>docs/domains/orcaflex/examples/raw/K02/90m_12mps_twr.inp</td><td>held</td><td>247110dd3d10b45c6f02bf89e743eac666b68c96a3614adbb8f341ec2ad9d6ce</td></tr><tr><td>docs/domains/orcaflex/examples/raw/K02/wind.bts</td><td>not held</td><td>NOT_EVALUATED</td></tr></tbody></table>
+<p>Availability and digests are recorded per file in the inventory.
+Held files are read or hashed only. No wrapper, controller or solver was imported or loaded.
+The initial route is the steady template; wind.bts regeneration remains unevaluated.</p>
+<h2>Methodology and assumptions</h2><p>For each approved soil factor a,
+K_case = a K_held for all selected translational and rotational soil coefficients;
+retain zero coefficients, damping and DOF definitions. The unchanged baseline has
+identity factor one. Soft/stiff levels require a cited input; none is supplied by default.
+This workflow writes no model and makes no stiffness-to-frequency approximation.</p>
+<p>Sample mean = sum(x)/N: <a href='https://www.itl.nist.gov/div898/handbook/eda/section3/eda351.htm'>NIST/SEMATECH e-Handbook
+(online edition read 2026-10-20), section 1.3.5.1, Measures of Location</a>.
+Minimum, maximum and absolute peak
+are selected from samples in the inclusive window. Means are sample means, not time-weighted.
+Relative change is defined as (variant − baseline)/baseline; zero load baselines give
+NOT_EVALUATED. Compare within a wind/control arrangement using reviewed shape labels,
+matching windows, force conventions and non-soil comparison-basis digests.
+No rank pairing or acceptance tolerance is used.</p>
+<h2>Case table</h2>
+<table><thead><tr><th scope='col'>Case</th><th scope='col'>Representation</th><th scope='col'>Soil factor</th><th scope='col'>Speed (m/s)</th><th scope='col'>Disposition</th></tr></thead><tbody><tr><td>steady_softened</td><td>template</td><td>0.5</td><td>11.4</td><td>native statics, modes and dynamics not supplied; design criteria and equivalence to the public turbine definition not established</td></tr><tr><td>steady_baseline</td><td>template</td><td>1</td><td>11.4</td><td>native statics, modes and dynamics not supplied; design criteria and equivalence to the public turbine definition not established</td></tr><tr><td>steady_stiffened</td><td>template</td><td>2</td><td>11.4</td><td>native statics, modes and dynamics not supplied; design criteria and equivalence to the public turbine definition not established</td></tr><tr><td>turbulent_softened</td><td>raw</td><td>0.5</td><td>12.0</td><td>native statics, modes and dynamics not supplied; design criteria and equivalence to the public turbine definition not established; wind.bts is not held; reconcile wind grid, height, duration and controller before use</td></tr><tr><td>turbulent_baseline</td><td>raw</td><td>1</td><td>12.0</td><td>native statics, modes and dynamics not supplied; design criteria and equivalence to the public turbine definition not established; wind.bts is not held; reconcile wind grid, height, duration and controller before use</td></tr><tr><td>turbulent_stiffened</td><td>raw</td><td>2</td><td>12.0</td><td>native statics, modes and dynamics not supplied; design criteria and equivalence to the public turbine definition not established; wind.bts is not held; reconcile wind grid, height, duration and controller before use</td></tr></tbody></table>
+<h2>Results</h2><p>Missing exports remain NOT_EVALUATED; no zeros stand in for missing
+results. Exports record one solver version, actual solved-input digest, global axes,
+mudline origin, sign convention and selected time window. Export metadata are declarations,
+not independent attestation of a completed native analysis.</p>
+<h3>steady_softened — SYNTHETIC</h3>
+<p>Solver version: synthetic-no-solver; input SHA-256:
+<code>0000000000000000000000000000000000000000000000000000000000000000</code>; window (s):
+0.0 to 2.0;
+load convention: Force and moment on upper structure from lower structure.</p>
+<p>Soil factor basis: Arbitrary synthetic arithmetic input; independent calculation in test_fixed_bottom_workflow.py docstring;
+comparison basis SHA-256: <code>0000000000000000000000000000000000000000000000000000000000000000</code>.</p>
+<table><thead><tr><th scope='col'>Shape-reviewed label</th><th scope='col'>Frequency (Hz)</th><th scope='col'>Shape evidence</th></tr></thead><tbody><tr><td>tower_fa</td><td>1.000</td><td>Synthetic label, no native mode shape</td></tr><tr><td>monopile_ss</td><td>2.000</td><td>Synthetic label, no native mode shape</td></tr></tbody></table>
+<table><thead><tr><th scope='col'>Channel</th><th scope='col'>Unit</th><th scope='col'>Sample mean</th><th scope='col'>Min</th><th scope='col'>Max</th><th scope='col'>Absolute peak</th></tr></thead><tbody><tr><td>fx</td><td>kN</td><td>1.0</td><td>-3.0</td><td>6.0</td><td>6.0</td></tr><tr><td>fy</td><td>kN</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>fz</td><td>kN</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>mx</td><td>kN.m</td><td>4.0</td><td>-12.0</td><td>24.0</td><td>24.0</td></tr><tr><td>my</td><td>kN.m</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>mz</td><td>kN.m</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr></tbody></table>
+<h3>steady_baseline — SYNTHETIC</h3>
+<p>Solver version: synthetic-no-solver; input SHA-256:
+<code>0000000000000000000000000000000000000000000000000000000000000000</code>; window (s):
+0.0 to 2.0;
+load convention: Force and moment on upper structure from lower structure.</p>
+<p>Soil factor basis: Arbitrary synthetic arithmetic input; independent calculation in test_fixed_bottom_workflow.py docstring;
+comparison basis SHA-256: <code>0000000000000000000000000000000000000000000000000000000000000000</code>.</p>
+<table><thead><tr><th scope='col'>Shape-reviewed label</th><th scope='col'>Frequency (Hz)</th><th scope='col'>Shape evidence</th></tr></thead><tbody><tr><td>tower_fa</td><td>2.000</td><td>Synthetic label, no native mode shape</td></tr><tr><td>monopile_ss</td><td>4.000</td><td>Synthetic label, no native mode shape</td></tr></tbody></table>
+<table><thead><tr><th scope='col'>Channel</th><th scope='col'>Unit</th><th scope='col'>Sample mean</th><th scope='col'>Min</th><th scope='col'>Max</th><th scope='col'>Absolute peak</th></tr></thead><tbody><tr><td>fx</td><td>kN</td><td>1.0</td><td>-3.0</td><td>6.0</td><td>6.0</td></tr><tr><td>fy</td><td>kN</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>fz</td><td>kN</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>mx</td><td>kN.m</td><td>4.0</td><td>-12.0</td><td>24.0</td><td>24.0</td></tr><tr><td>my</td><td>kN.m</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>mz</td><td>kN.m</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr></tbody></table>
+<h3>steady_stiffened — SYNTHETIC</h3>
+<p>Solver version: synthetic-no-solver; input SHA-256:
+<code>0000000000000000000000000000000000000000000000000000000000000000</code>; window (s):
+0.0 to 2.0;
+load convention: Force and moment on upper structure from lower structure.</p>
+<p>Soil factor basis: Arbitrary synthetic arithmetic input; independent calculation in test_fixed_bottom_workflow.py docstring;
+comparison basis SHA-256: <code>0000000000000000000000000000000000000000000000000000000000000000</code>.</p>
+<table><thead><tr><th scope='col'>Shape-reviewed label</th><th scope='col'>Frequency (Hz)</th><th scope='col'>Shape evidence</th></tr></thead><tbody><tr><td>tower_fa</td><td>3.000</td><td>Synthetic label, no native mode shape</td></tr><tr><td>monopile_ss</td><td>6.000</td><td>Synthetic label, no native mode shape</td></tr></tbody></table>
+<table><thead><tr><th scope='col'>Channel</th><th scope='col'>Unit</th><th scope='col'>Sample mean</th><th scope='col'>Min</th><th scope='col'>Max</th><th scope='col'>Absolute peak</th></tr></thead><tbody><tr><td>fx</td><td>kN</td><td>1.0</td><td>-3.0</td><td>6.0</td><td>6.0</td></tr><tr><td>fy</td><td>kN</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>fz</td><td>kN</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>mx</td><td>kN.m</td><td>4.0</td><td>-12.0</td><td>24.0</td><td>24.0</td></tr><tr><td>my</td><td>kN.m</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr><tr><td>mz</td><td>kN.m</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td></tr></tbody></table>
+<h3>turbulent_softened — NOT_EVALUATED</h3>
+<h3>turbulent_baseline — NOT_EVALUATED</h3>
+<h3>turbulent_stiffened — NOT_EVALUATED</h3>
+<h2>Soil sensitivity</h2>
+<h3>steady_softened — SYNTHETIC</h3>
+<table><thead><tr><th scope='col'>frequency_relative_change</th><th scope='col'>Change (%)</th></tr></thead><tbody><tr><td>tower_fa</td><td>-50.0%</td></tr><tr><td>monopile_ss</td><td>-50.0%</td></tr></tbody></table>
+<table><thead><tr><th scope='col'>load_peak_relative_change</th><th scope='col'>Change (%)</th></tr></thead><tbody><tr><td>fx</td><td>0.0%</td></tr><tr><td>fy</td><td>NOT_EVALUATED</td></tr><tr><td>fz</td><td>NOT_EVALUATED</td></tr><tr><td>mx</td><td>0.0%</td></tr><tr><td>my</td><td>NOT_EVALUATED</td></tr><tr><td>mz</td><td>NOT_EVALUATED</td></tr></tbody></table>
+<h3>steady_stiffened — SYNTHETIC</h3>
+<table><thead><tr><th scope='col'>frequency_relative_change</th><th scope='col'>Change (%)</th></tr></thead><tbody><tr><td>tower_fa</td><td>50.0%</td></tr><tr><td>monopile_ss</td><td>50.0%</td></tr></tbody></table>
+<table><thead><tr><th scope='col'>load_peak_relative_change</th><th scope='col'>Change (%)</th></tr></thead><tbody><tr><td>fx</td><td>0.0%</td></tr><tr><td>fy</td><td>NOT_EVALUATED</td></tr><tr><td>fz</td><td>NOT_EVALUATED</td></tr><tr><td>mx</td><td>0.0%</td></tr><tr><td>my</td><td>NOT_EVALUATED</td></tr><tr><td>mz</td><td>NOT_EVALUATED</td></tr></tbody></table>
+<h3>turbulent_softened — NOT_EVALUATED</h3>
+<p>Baseline or variant export missing</p>
+<h3>turbulent_stiffened — NOT_EVALUATED</h3>
+<p>Baseline or variant export missing</p>
+<h2>Worked sample calculation</h2><p>Explicitly synthetic arithmetic, not a turbine
+prediction: Fx samples −3.0, 0.0, 6.0 kN give (−3.0 + 0.0 + 6.0)/3.0 = 1.0 kN
+and absolute peak 6.0 kN. Tower frequencies 1.0, 2.0, 3.0 Hz for softened, baseline,
+stiffened soil give relative changes −50.0% and +50.0%. These arbitrary test inputs
+and their independent hand calculation are in test_fixed_bottom_workflow.py.</p>
+<h2>Conclusions and limitations</h2><p>Confirm equivalence to the defining reference, approve soil
+factors, wind/control reconciliation, seeds and sampling/convergence plan before native
+execution. Retain native static convergence, mode shapes and full time histories.
+Export loads at the mudline section; do not substitute tower-base loads or sum
+independent component peaks into a resultant. Confirm paired mode shapes at every soil
+level. No structural capacity, fatigue, frequency-separation or soil adequacy criterion
+has been evaluated. Steady versus turbulent differences are confounded by speed and
+control changes until reconciled.</p>
+<p>Stored exports only; native convergence and shape evidence require independent review.</p>
+<h2>Appendix A — Reproduction and qualifications</h2><p>Run the standalone script
+with --output pointing to a new report file. Add --exports only for validated JSON
+and --soft-factor/--stiff-factor only with a recorded input basis. The analyse() result
+is also written beside the report with the suffix .json, preserving numeric precision.
+The report path must differ from the JSON path. Both output files are
+created exclusively. Missing solver results prevent engineering qualification.</p>
+</main></html>
