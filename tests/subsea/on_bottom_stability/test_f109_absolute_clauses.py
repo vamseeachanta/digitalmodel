@@ -2,11 +2,35 @@
 # # Licensed under the MIT License. See LICENSE file for details.
 
 """Synthetic clause regressions; no licensed lookup data or design benchmark."""
+from copy import deepcopy
 import math
 
 import pytest
 
 from digitalmodel.subsea.on_bottom_stability import dnv_rp_f109 as f109
+
+
+@pytest.mark.parametrize("velocity", [1.5, -1.5])
+@pytest.mark.parametrize("factor", [1.1, None])
+def test_registered_workflow_rejects_unqualified_instantaneous_loads(velocity, factor):
+    """A signed sample and an optional factor cannot qualify peak demands."""
+    from digitalmodel.subsea.pipeline.integrity_workflows import run_on_bottom_stability
+
+    obs = {
+        "pipe": dict(od_steel_m=0.3239, wt_steel_m=0.0127,
+                     coating_thickness_m=0.08, rho_steel=7850,
+                     rho_coating=3040, rho_contents=0, rho_seawater=1025),
+        "metocean": dict(water_velocity_m_s=velocity, water_acceleration_m_s2=0),
+        "hydrodynamic": dict(cd=0.7, cm=3.29, cl=0.9),
+        "soil": dict(friction_coefficient=0.5),
+    }
+    if factor is not None:
+        obs["safety_factor"] = factor
+    cfg = {"on_bottom_stability": obs}
+    before = deepcopy(cfg)
+    with pytest.raises(ValueError, match="unqualified.*extreme-cycle peak"):
+        run_on_bottom_stability(cfg)
+    assert cfg == before
 
 
 @pytest.mark.parametrize("method", [f109.absolute_stability_check, f109.absolute_stability_margin])
@@ -139,9 +163,14 @@ def test_current_profile_and_diameter_mean():
     """Eqs. (3.2)-(3.3): compare mean with independent midpoint quadrature."""
     d, roughness, zref = 0.5, 0.01, 2
     n = 10000
-    mean = sum(f109.transverse_current_at_height(
-        1.5, (i + 0.5) * d / n, zref, roughness, math.pi / 3,
-    ) for i in range(n)) / n
+    # Integrate V*sin(theta)*ln(1+z/z0)/ln(1+zref/z0) directly;
+    # neither production helper contributes to the expected value.
+    mean = sum(
+        1.5 * math.sin(math.pi / 3)
+        * math.log(1 + (i + 0.5) * d / n / roughness)
+        / math.log(1 + zref / roughness)
+        for i in range(n)
+    ) / n
     actual = f109.diameter_mean_current(1.5, d, zref, roughness, math.pi / 3)
     assert actual == pytest.approx(mean, rel=1e-7)
     assert f109.diameter_mean_current(1.5, d, zref, roughness, 0) == 0

@@ -23,7 +23,7 @@ REGISTRY_PATH = REPO_ROOT / "docs" / "registry" / "workflows.yaml"
 
 
 def _load_registry():
-    with REGISTRY_PATH.open() as stream:
+    with REGISTRY_PATH.open(encoding="utf-8") as stream:
         registry = yaml.safe_load(stream)
     return registry["workflows"]
 
@@ -60,6 +60,10 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
 
     output_root = REPO_ROOT
     input_path = REPO_ROOT / workflow["input"]
+    if workflow["id"] == "on-bottom-stability-f109":
+        with pytest.raises(ValueError, match="unqualified.*extreme-cycle peak"):
+            engine(inputfile=str(input_path))
+        return
     if workflow["id"] == "hull-wastage-screen":
         # Each run retains its outputs, so execute the example in a fresh tree.
         output_root = tmp_path
@@ -84,6 +88,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         page.write_text(
             "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
             encoding="utf-8",
+            newline="\n",
         )
         cfg = engine(inputfile=str(input_path))
         citations = cfg["fowt_mooring"]["result"]["citations"]
@@ -127,7 +132,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
             summary_path = REPO_ROOT / summary_path
 
         cases = pd.read_csv(results_path)
-        summary_json = yaml.safe_load(summary_path.read_text())
+        summary_json = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
 
         assert summary["screening_status"] in {"pass", "fail"}
         assert summary["screening_status"] == "pass"
@@ -487,7 +492,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         case_0 = yaml.safe_load(
             (
                 REPO_ROOT / "examples/workflows/viv-parametric/results/case_0.yml"
-            ).read_text()
+            ).read_text(encoding="utf-8")
         )
 
         assert len(cases) == 6
@@ -670,13 +675,13 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
             (
                 REPO_ROOT
                 / "examples/workflows/stress-strain-parametric/results/case_0.yml"
-            ).read_text()
+            ).read_text(encoding="utf-8")
         )
         case_2 = yaml.safe_load(
             (
                 REPO_ROOT
                 / "examples/workflows/stress-strain-parametric/results/case_2.yml"
-            ).read_text()
+            ).read_text(encoding="utf-8")
         )
         low_yield = pd.read_csv(
             REPO_ROOT / "examples/workflows/stress-strain-parametric/results/"
@@ -732,9 +737,9 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         summary = cfg["riser_stackup_drawing"]
         assert summary["result"] == "pass"
         assert set(summary["checks"].values()) == {"pass"}
-        report = json.loads(Path(summary["reconcile_report"]).read_text("utf-8"))
+        report = json.loads(Path(summary["reconcile_report"]).read_text(encoding="utf-8"))
         assert report["result"] == "pass"
-        assert Path(summary["svg"]).read_text("utf-8").startswith("<svg ")
+        assert Path(summary["svg"]).read_text(encoding="utf-8").startswith("<svg ")
     elif workflow["id"] == "riser-stackup-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(
@@ -744,7 +749,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
             (
                 REPO_ROOT
                 / "examples/workflows/riser-stackup-parametric/results/case_0.yml"
-            ).read_text()
+            ).read_text(encoding="utf-8")
         )
 
         assert len(cases) == 10
@@ -803,18 +808,6 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
             pytest.approx(0.236)
         )
         assert result["usage_factor_ultimate_check"]["usage_equivalent"] < 1
-    elif workflow["id"] == "on-bottom-stability-f109":
-        result = cfg["on_bottom_stability"]["result"]
-        # Synthetic annuli: pi/4 * [(OD^2-ID^2)*7850 +
-        # (D^2-OD^2)*3040 - D^2*1025] * 9.81, with
-        # OD=0.3239, ID=OD-2*0.0127 and D=OD+2*0.08.
-        assert result["submerged_weight_N_m"] == pytest.approx(2134.225619)
-        assert result["horizontal_load_N_m"] == pytest.approx(715.325862)
-        assert result["lift_load_N_m"] == pytest.approx(502.197469)
-        # Both demands are factored: 1.1*(horizontal/0.5 + lift).
-        assert result["required_submerged_weight_N_m"] == pytest.approx(2126.134112)
-        assert result["lateral_utilization"] == pytest.approx(0.996209)
-        assert result["is_laterally_stable"] is True
     elif workflow["id"] == "on-bottom-stability-e305":
         result = cfg["on_bottom_stability_e305_result"]
         # Independent annulus weights and phase-zero Morison demands from the
@@ -872,7 +865,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert result["level_1_analysis"]["N"] == pytest.approx(184397.093676)
     elif workflow["id"] == "orcawave-input-prep":
         generated = Path(cfg["diffraction"]["outputs"]["orcawave"])
-        data = yaml.safe_load(generated.read_text())
+        data = yaml.safe_load(generated.read_text(encoding="utf-8"))
         body = data["Bodies"][0]
 
         assert generated.name == "RegistryShip.yml"
@@ -884,7 +877,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert body["BodyMeshFileName"] == "sample_box.gdf"
     elif workflow["id"] == "aqwa-diffraction-deck-prep":
         generated = Path(cfg["diffraction"]["outputs"]["aqwa"])
-        content = generated.read_text()
+        content = generated.read_text(encoding="utf-8")
 
         assert generated.name == "registry_ship_diffraction.dat"
         assert "JOB AQWA  LINE" in content
@@ -955,7 +948,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         html_report = Path(cfg["outputs"]["html_report"])
         if not html_report.is_absolute():
             html_report = REPO_ROOT / html_report
-        html = html_report.read_text()
+        html = html_report.read_text(encoding="utf-8")
         assert "screening_status" in html
         assert "POC setpoints" in html
         assert "Troubleshooting" in html
@@ -1047,7 +1040,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
             REPO_ROOT / "examples/workflows/orcaflex-6dbuoy-dnvrph103/results/"
             "dnvrph103_demo_6dbuoy_deep.yml"
         )
-        model = yaml.safe_load(model_path.read_text())
+        model = yaml.safe_load(model_path.read_text(encoding="utf-8"))
         buoy = model["6DBuoys"]["dnvrph103_demo_6dbuoy"]
         assert buoy["Mass"] == pytest.approx(0.169)
         assert buoy["Volume"] == pytest.approx(0.28)
@@ -1068,7 +1061,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         summary_path = Path(cfg["outputs"]["summary_json"])
         if not summary_path.is_absolute():
             summary_path = REPO_ROOT / summary_path
-        summary_json = yaml.safe_load(summary_path.read_text())
+        summary_json = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
         assert summary_json["summary"]["critical_line"]["line_id"] == "ML1"
     elif workflow["id"] == "fpso-mooring-full":
         result = cfg["fpso_mooring_full"]
@@ -1091,7 +1084,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
             summary_path = REPO_ROOT / summary_path
         if not tensions_path.is_absolute():
             tensions_path = REPO_ROOT / tensions_path
-        summary_json = yaml.safe_load(summary_path.read_text())
+        summary_json = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
         tensions = pd.read_csv(tensions_path)
         assert summary_json["summary"]["n_lines"] == 8
         assert len(tensions) == 8
@@ -1520,7 +1513,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         summary_path = Path(cfg["rigging"]["summary_json"])
         if not summary_path.is_absolute():
             summary_path = REPO_ROOT / summary_path
-        summary = yaml.safe_load(summary_path.read_text())
+        summary = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
         assert summary["groups"][0]["label"] == "uta1_clump_weight"
     elif workflow["id"] == "lifting-lug-design":
         block = cfg["lifting_lug"]
@@ -1711,7 +1704,7 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         results_json = Path(result["outputs"]["results_json"])
         if not results_json.is_absolute():
             results_json = REPO_ROOT / results_json
-        payload = json.loads(results_json.read_text())
+        payload = json.loads(results_json.read_text(encoding="utf-8"))
         assert payload["meta"]["n_cases"] == 8
         assert payload["meta"]["standard"] == "DNV-RP-C201"
         # timestamp=None => meta.generated_at omitted => byte-stable golden
@@ -1807,7 +1800,8 @@ def test_wellpath_minimum_curvature_textbook_case(tmp_path):
                     "config": {"overwrite": {"output": True}},
                 },
             }
-        )
+        ),
+        encoding="utf-8", newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -1843,7 +1837,8 @@ def test_wave_spectrum_pierson_moskowitz_engine_textbook_check(tmp_path):
                     "config": {"overwrite": {"output": True}},
                 },
             }
-        )
+        ),
+        encoding="utf-8", newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -1907,7 +1902,8 @@ def test_synthetic_rope_tn_curve_matches_dnv_os_e301_table_f3(tmp_path):
                     "config": {"overwrite": {"output": True}},
                 },
             }
-        )
+        ),
+        encoding="utf-8", newline="\n",
     )
 
     engine(inputfile=str(input_path))
@@ -1969,7 +1965,8 @@ def test_spectral_fatigue_workflow_matches_narrow_band_closed_form(tmp_path):
                     "config": {"overwrite": {"output": True}},
                 },
             }
-        )
+        ),
+        encoding="utf-8", newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -2031,7 +2028,8 @@ def test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening(tmp_path
                     "config": {"overwrite": {"output": True}},
                 },
             }
-        )
+        ),
+        encoding="utf-8", newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -2099,7 +2097,8 @@ def test_vessel_seakeeping_significant_amplitude_matches_library(tmp_path):
                     "config": {"overwrite": {"output": True}},
                 },
             }
-        )
+        ),
+        encoding="utf-8", newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -2445,7 +2444,7 @@ def riser_joint_report_run(tmp_path_factory):
 
     workflow = next(w for w in _load_registry() if w["id"] == "riser-joint-ffs")
     input_path = REPO_ROOT / workflow["input"]
-    cfg = yaml.safe_load(input_path.read_text())
+    cfg = yaml.safe_load(input_path.read_text(encoding="utf-8"))
     # Resolve committed fixture paths without requiring dependency embed support.
     cfg["Analysis"] = {
         "result_folder": str(tmp_path_factory.mktemp("riser-ffs")),
@@ -2480,4 +2479,4 @@ def test_riser_joint_ffs_grid(riser_joint_report_run, grid_name, min_mm, depth_f
     assert all(c["fit_joints"] + c["repair_joints"] == 26 for c in result["rollup"]["campaigns"])
     source = next(s for s in result["provenance"]["sources"] if s["path"].endswith(grid_name))
     assert source["sha256"] == hashlib.sha256((REPO_ROOT / source["path"]).read_bytes()).hexdigest()
-    assert source["sha256"] in Path(result["report_html"]).read_text()
+    assert source["sha256"] in Path(result["report_html"]).read_text(encoding="utf-8")
