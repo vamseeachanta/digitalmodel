@@ -111,3 +111,30 @@ def test_master_failure_count_includes_non_modular_sources():
     )
     assert "master-file form: 2" in page
     assert "all master.yml files" in page
+
+
+@pytest.mark.parametrize(
+    "reference",
+    [
+        r"templates\\geometry\\spec.yml",
+        r"templates\\\\geometry\\\\spec.yml",
+        r"templates\/geometry\/spec.yml",
+        "templates//geometry//spec.yml",
+        "templates/././geometry/./spec.yml",
+        r"templates\\/./geometry//spec.yml",
+    ],
+)
+def test_escaped_windows_source_path_is_a_reference(tmp_path, reference):
+    """Escaped, repeated and mixed separators retain path component identity."""
+    module = load_module()
+    owner = "docs/domains/orcaflex/library/templates/geometry"
+    model = tmp_path / owner / "spec.yml"
+    model.parent.mkdir(parents=True)
+    model.write_text("General: {}\n", encoding="utf-8")
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "reference.py").write_text(
+        f"model = '{reference}'", encoding="utf-8"
+    )
+    usage = module.find_usage(tmp_path, [(model.parent, [model])])
+    assert usage[owner] == ["tests/reference.py"]
