@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Physical-zero qualification plan</title>
+<h1>Physical-zero qualification plan</h1>
+<p>The change will provide a diagnostic assessment for rotational radiation-zero candidates under <a href="https://github.com/vamseeachanta/digitalmodel/issues/2112">issue 2112</a>. It will retain NOT_EVALUATED because existing run records will not establish independent geometry and extraction authority.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr><tr><td>1</td><td>2026-10-20</td><td>The plan will bound diagnostic work before any acceptance exemption.</td></tr></table>
+<p>Table 1. Revision history.</p>
+<h2>Scope and method</h2>
+<ol>
+<li>Slice 1 will assess exact-zero rotational rows and columns from existing matrix-set objects. Unknown sources, all-zero arrays, invalid axes and nonfinite coefficients will remain unqualified.</li>
+<li>Slice 2 will compare model, body, origin, axes, native-output and coefficient bindings supplied independently of the proposed declaration. Matching claims will establish consistency only.</li>
+<li>Slice 3 will expose serializable missing-evidence reasons and an executable synthetic example. Every result will remain NOT_EVALUATED; comparator correlations, refusals and coverage will remain unchanged.</li>
+</ol>
+<p>Implementation will add physical_zero.py, contract tests, an example and an HTML guide. Existing schemas, extractors, catalogues and comparator policies will remain unchanged.</p>
+<p>The source will be Orcina, OrcaWave online help, “First-order equations: The radiation potential” and “Results: Added mass and damping”, undated edition accessed 2026-10-20. The rotational boundary term will be interpreted as (x × n)<sub>j</sub>; the coefficient relation will be A<sub>ij</sub> − 𝑖 B<sub>ij</sub>/ω = ρ ∫ n<sub>vel,i</sub> φ<sub>j</sub> dS, where 𝑖 denotes the imaginary unit. The source will not be treated as independent validation of a particular geometry.</p>
+<p>No empirical coefficient or acceptance tolerance will be introduced. Exact zero will designate an observation only. Sampling adequacy and near-zero acceptance will remain the comparator's responsibility.</p>
+<h2>Adversarial plan assessment</h2>
+<p>The assessment will reject copied or stale bindings as authorization: hashes will identify bytes, not establish causality. It will never convert consistency into qualification. Tests will attempt mismatched model, body, origin, axes, native output and extracted arrays, incomplete declarations, placeholder sources, all-zero arrays and nonfinite data. Synthetic expected values will be derived explicitly in test docstrings.</p>
+<p>A separate provider review will remain pending for the draft change. No other assistant or licensed solver will be invoked.</p>
+<h2>Verification and remaining scope</h2>
+<p>New module and example tests, actual matrix-schema interoperability tests, Ruff on added Python files, structure checks, LFS attributes and outgoing-text checks will be run. A reviewed geometry authority, independently recorded run-to-extraction lineage and a physical-mode validation procedure will remain prerequisites for any future exemption in issue 2112.</p>
+</html>
