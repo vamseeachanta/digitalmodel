@@ -1,0 +1,17 @@
+** Synthetic connectivity fixture; illustrative N-mm-MPa units, not design data.
+** Elastic inputs are assumed test values, not measured or material-qualified.
+*NODE
+1, 0, 0, 0
+2, 1, 0, 0
+3, 0, 1, 0
+4, 0, 0, 1
+*ELEMENT, TYPE=C3D4, ELSET=BODY
+1, 1, 2, 3, 4
+*NSET, NSET=FIXED
+1, 2, 3
+*MATERIAL, NAME=STEEL
+*ELASTIC
+200000, 0.3
+*SOLID SECTION, ELSET=BODY, MATERIAL=STEEL
+*BOUNDARY
+FIXED, 1, 3

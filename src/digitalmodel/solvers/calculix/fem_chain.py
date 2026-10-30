@@ -14,6 +14,7 @@ import numpy as np
 
 from .inp_writer import ELEMENT_TYPE_MAP, INPWriter
 from .result_parser import CalculiXResultParser
+from .model_checker import validate_model
 
 
 def is_calculix_available() -> bool:
@@ -213,12 +214,13 @@ class FEMChain:
     # Solve
     # ------------------------------------------------------------------
 
-    def solve(self, n_threads: int = 1) -> dict:
-        """Run ccx solver. Returns dict with 'success' and 'message'."""
-        if not is_calculix_available():
-            raise RuntimeError("CalculiX (ccx) not found in PATH")
+    def solve(self, n_threads: int = 1, *, node_tolerance: float = 1e-6) -> dict:
+        """Check the current deck, then run ccx; errors block and warnings pass."""
         if self._inp_path is None:
             raise RuntimeError("No INP file — call setup_analysis first")
+        qa_gate = validate_model(self._inp_path, tolerance=node_tolerance)
+        if not is_calculix_available():
+            raise RuntimeError("CalculiX (ccx) not found in PATH")
 
         job = self._inp_path.stem
         env = {"OMP_NUM_THREADS": str(n_threads)}
@@ -236,6 +238,7 @@ class FEMChain:
             "success": result.returncode == 0,
             "message": result.stdout[-500:] if result.stdout else "",
             "stderr": result.stderr[-500:] if result.stderr else "",
+            "qa_gate": qa_gate.to_dict(),
         }
 
     # ------------------------------------------------------------------
