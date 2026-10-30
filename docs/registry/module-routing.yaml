@@ -847,6 +847,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
   - module: tug
     entry_point: src/digitalmodel/tug/
+    submodules:
+      tug:
+        agent_pack: src/digitalmodel/tug/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/tug/]
