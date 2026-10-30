@@ -1,0 +1,10 @@
+basename: alt_fuel_ship_sizing
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+alt_fuel_ship_sizing: {}
