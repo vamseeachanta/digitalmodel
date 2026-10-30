@@ -263,6 +263,52 @@ def test_allowable_curve_validation():
         AllowableCurve(x_m=(0.0, 1.0), positive=(1.0, -1.0), negative=(1.0, 1.0))
 
 
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf")])
+@pytest.mark.parametrize("index", range(3))
+def test_allowable_curve_rejects_nonfinite_knots(index, invalid):
+    """Synthetic three-knot curve: replace each endpoint and interior knot."""
+    knots = [0.0, 1.0, 2.0]
+    knots[index] = invalid
+    with pytest.raises(ValueError, match="x_m.*finite"):
+        AllowableCurve(
+            x_m=tuple(knots), positive=(2.0, 3.0, 4.0), negative=(4.0, 6.0, 8.0)
+        )
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf")])
+@pytest.mark.parametrize("index", range(3))
+@pytest.mark.parametrize("field", ["positive", "negative"])
+def test_allowable_curve_rejects_nonfinite_capacities(field, index, invalid):
+    """Synthetic capacities use the midpoint hand calculation below."""
+    capacities = {"positive": [2.0, 3.0, 4.0], "negative": [4.0, 6.0, 8.0]}
+    capacities[field][index] = invalid
+    with pytest.raises(ValueError, match=rf"{field}.*finite"):
+        AllowableCurve(
+            x_m=(0.0, 1.0, 2.0),
+            positive=tuple(capacities["positive"]),
+            negative=tuple(capacities["negative"]),
+        )
+
+
+def test_allowable_curve_linear_interpolation_hand_calc():
+    """Synthetic hand calculation, with x in m and capacities in t:
+
+    x=(0, 2), positive=(2, 4), negative=(4, 8). At x=1 m the fraction
+    (1-0)/(2-0)=1/2 gives 2+(4-2)/2=3 t and 4+(8-4)/2=6 t.
+    Unit signed demands select the respective branch; no expected value is
+    obtained from limit_for. The endpoints clamp outside the knot range.
+    """
+    curve = AllowableCurve(
+        x_m=(0.0, 2.0), positive=(2.0, 4.0), negative=(4.0, 8.0)
+    )
+    assert curve.limit_for(1.0, 1.0) == 3.0
+    assert curve.limit_for(1.0, -1.0) == 6.0
+    assert curve.limit_for(-1.0, 1.0) == 2.0
+    assert curve.limit_for(-1.0, -1.0) == 4.0
+    assert curve.limit_for(3.0, 1.0) == 4.0
+    assert curve.limit_for(3.0, -1.0) == 8.0
+
+
 # --------------------------------------------------------------------------- #
 # IACS UR S11 rule wave loads + total (sw + wave) utilisation
 # --------------------------------------------------------------------------- #
