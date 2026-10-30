@@ -49,7 +49,7 @@ def _solve(context, method):
 
 
 @pytest.mark.parametrize("method,flag", [
-    ("gibbs", "comparison only: load not propagated"),
+    ("gibbs", "comparison only: not field validated"),
     ("finite_difference", "comparison only: not validated"),
 ])
 def test_direct_comparison_solver_warns_and_serializes_flag(context, method, flag):
@@ -59,21 +59,13 @@ def test_direct_comparison_solver_warns_and_serializes_flag(context, method, fla
     assert results.solver_method == method
 
 
-@pytest.mark.parametrize("method", ["gibbs"])
-def test_direct_solver_rejects_excessive_downhole_stroke(context, method):
-    context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
-    with pytest.raises(PhysicsError, match="downhole stroke exceeds surface stroke"):
-        _solve(context, method)
-
-
-@pytest.mark.parametrize("method", ["gibbs"])
-def test_workflow_rejects_invalid_stroke_before_diagnosis(context, method):
-    workflow = DynacardWorkflow(context, solver_method=method)
+def test_workflow_rejects_nonfinite_card_before_diagnosis(context):
+    workflow = DynacardWorkflow(context, solver_method="gibbs")
     invalid = AnalysisResults(downhole_card=CardData(
-        position=[0.0, 400.0, 0.0], load=[1.0, 2.0, 3.0],
+        position=[0.0, 400.0, 0.0], load=[1.0, float("nan"), 3.0],
     ))
     workflow.solver = SimpleNamespace(solve=lambda: invalid, solve_wave_equation=lambda: invalid)
-    with pytest.raises(PhysicsError, match="downhole stroke exceeds surface stroke"):
+    with pytest.raises(PhysicsError, match="non-finite"):
         workflow.run_full_analysis()
 
 
@@ -153,7 +145,7 @@ def test_production_utility_keeps_default_solver(context):
     assert not any("comparison only" in flag for flag in result.solver_flags)
 
 
-@pytest.mark.parametrize("method", ["everitt_jennings", "finite_difference"])
+@pytest.mark.parametrize("method", ["everitt_jennings", "gibbs", "finite_difference"])
 def test_direct_solver_allows_downhole_overtravel(context, method):
     context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
     results = _solve(context, method)
@@ -161,7 +153,7 @@ def test_direct_solver_allows_downhole_overtravel(context, method):
     assert np.all(np.isfinite(results.downhole_card.load))
 
 
-@pytest.mark.parametrize("method", ["everitt_jennings", "finite_difference"])
+@pytest.mark.parametrize("method", ["everitt_jennings", "gibbs", "finite_difference"])
 def test_workflow_allows_overtravel_before_diagnosis(context, method):
     context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
     expected = _solve(context, method).downhole_card
