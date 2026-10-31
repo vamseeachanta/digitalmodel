@@ -1,4 +1,4 @@
-atlas_id: 2b46b78cc0c7
+atlas_id: 01dc0642642e
 basename: mooring_fatigue
 physics: log_log
 response: damage
@@ -47,12 +47,12 @@ validation:
   passes: true
 provenance:
   basename: mooring_fatigue
-  code_version: e094f9684
+  code_version: 1e877eb8b
   standards:
   - id: DNV-RP-C203
     edition: 2021-09
   response_kwargs:
     environment: seawater_cp
   workflow_id: mooring-fatigue
-  content_fingerprint: 2b46b78cc0c71d914a4750189230c8fe7dd87d3dbd8b7e3ca461af095e17c52f
+  content_fingerprint: 01dc0642642ed5fe67abaa333900d74d4169578218ea9538b3688701de643308
   input_template_sha256: e707539680f132ac6d050199900a952dde34cdc1e85fb8cb84e10961a85a0351
