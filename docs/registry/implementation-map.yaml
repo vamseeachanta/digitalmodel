@@ -1028,16 +1028,18 @@ families:
     body_sha256: a53053af133cf4711e5352aed717dbe373b65073956c754d66966f234cdcc423
   - path: &ad62d2dc32b src/digitalmodel/orcaflex/pipelay_analysis.py
     symbol: &aa219209f04 JLayConfig.calculate_sagbend
-    line: 222
+    line: 231
     kind: function
-    what: *a072da784e4
+    what: Computes analytical J-lay catenary geometry, bending strain and tension closure; screening-basis.md E2-E5 and V1.
     signals: *abfbf37eaef
     relation: independent
     module: &a595831fd2c orcaflex/pipelay_analysis.py
-    file_sha256: 49ddc013f96718a2c29efc2dd2d48137623df3b8ff22a65a0ab201e1141b70c5
+    file_sha256: d1bc9ee5126107649f970fa6aeb66062348cbf6c633af3da7d488f6aa338d7c3
     defects:
-    - {issue: 2050, affected: not_applicable, evidence: 'src/digitalmodel/orcaflex/pipelay_analysis.py:L222-L260'}
-    body_sha256: 957c314ffae7b67450852019c966c0810823e3f5ad0362698cc44369e2a21350
+    - issue: 2050
+      affected: not_applicable
+      evidence: src/digitalmodel/orcaflex/pipelay_analysis.py:L231-L271
+    body_sha256: b9507e2f62261de69a949dca3828f42b5df554bec87c78e8e887cf01a10bea3d
   - path: &af346a9131f src/digitalmodel/orcaflex/riser_config.py
     symbol: &ae2fcc2dd48 SCRDesignInput.calculate_geometry
     line: 170
@@ -2119,6 +2121,20 @@ families:
       affected: not_applicable
       evidence: src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py:L231-L296
     body_sha256: e6dcada9f8acc8342f930f376ac6c0b44fc6ce8d600ca548650d834d66438779
+  - path: src/digitalmodel/pipelay/workflow.py
+    symbol: run_jlay
+    line: 58
+    kind: function
+    what: Delegates sagbend geometry and optional operability; locally computes strain utilisation and screening status, not another catenary solution.
+    relation: delegate
+    module: pipelay/workflow.py
+    file_sha256: 7b56ae6d144f288cab0ac4cebaf98b294ff06d390c66d4fb21d5d1b2d7bcc756
+    body_sha256: de1f1ba2a238d0aa2d1d7db686ec8ff9ecef2d70471f913b1cb7543f9f3144de
+    delegates_to:
+    - path: src/digitalmodel/orcaflex/pipelay_analysis.py
+      symbol: JLayConfig.calculate_sagbend
+    - path: src/digitalmodel/pipelay/workflow.py
+      symbol: _operability
   identical_groups: [body-001, body-003, body-007, body-010, body-016, body-017, body-035, body-041, body-049, body-058]
   notes: Routes include inextensible geometry, elastic line terms, tabulated line response and solver delegates. Issue 2050 concerns a reference fixture, rather than an elastic-stretch formula; unresolved fixture dependencies remain not_checked.
   first_module: docs
@@ -3625,14 +3641,14 @@ families:
     body_sha256: 25bda3c893ae4ca8673561fb7ae1a63bb10fb3d959ec09507a3ffce53b49bee3
   - path: *ad62d2dc32b
     symbol: *aa219209f04
-    line: 222
+    line: 231
     kind: function
-    what: *a4cbd82cf2b
+    what: Computes analytical J-lay catenary geometry, bending strain and tension closure; screening-basis.md E2-E5 and V1.
     signals: *ac227a1b9d3
     relation: independent
     module: *a595831fd2c
-    file_sha256: 49ddc013f96718a2c29efc2dd2d48137623df3b8ff22a65a0ab201e1141b70c5
-    body_sha256: 957c314ffae7b67450852019c966c0810823e3f5ad0362698cc44369e2a21350
+    file_sha256: d1bc9ee5126107649f970fa6aeb66062348cbf6c633af3da7d488f6aa338d7c3
+    body_sha256: b9507e2f62261de69a949dca3828f42b5df554bec87c78e8e887cf01a10bea3d
   - path: *af346a9131f
     symbol: *ae2fcc2dd48
     line: 170
@@ -3695,14 +3711,19 @@ families:
     body_sha256: 1654565169ae3275ac50d253c5aba19c41bc6fe88e3a5482f14122c9847b6642
   - path: src/digitalmodel/pipelay/workflow.py
     symbol: run_jlay
-    line: 62
+    line: 58
     kind: function
-    what: *a4cbd82cf2b
+    what: Delegates sagbend geometry and optional operability; locally computes strain utilisation and screening status, not another catenary solution.
     signals: *ac227a1b9d3
-    relation: independent
+    relation: delegate
     module: pipelay/workflow.py
-    file_sha256: 9c18fa059bfbeab0506d2a35cc1a8aa16ab7d209004525f780b50ffbf45ac4f7
-    body_sha256: 4efd810fd6dad277562aa562f6f45e2f7b8a2c0d6a6197977d1f618fa886b6ec
+    file_sha256: 7b56ae6d144f288cab0ac4cebaf98b294ff06d390c66d4fb21d5d1b2d7bcc756
+    body_sha256: de1f1ba2a238d0aa2d1d7db686ec8ff9ecef2d70471f913b1cb7543f9f3144de
+    delegates_to:
+    - path: src/digitalmodel/orcaflex/pipelay_analysis.py
+      symbol: JLayConfig.calculate_sagbend
+    - path: src/digitalmodel/pipelay/workflow.py
+      symbol: _operability
   - path: *aa9e31d180b
     symbol: _lazy_row
     line: 92
@@ -27225,6 +27246,138 @@ families:
     unresolved_definitions: 3
   coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic
     completeness.
+- id: pipelay-bending-screening
+  title: Pipelay reeling, residual-curvature and stinger bending screening
+  search_signals:
+  - search: algorithm
+    pattern: ^(_reel_result|run_reel_lay|calculate_stinger_radius|router)$
+  inventory_scope:
+    revision: 09089a121a16069c4b657d1a320a630a23ab1dd5
+    source_paths:
+    - src/digitalmodel/pipelay/workflow.py
+    - src/digitalmodel/orcaflex/pipelay_analysis.py
+    method_note: src/digitalmodel/pipelay/docs/agent-pack.md
+    basis: Bounded source and call-site inspection; the earlier repository-wide snapshot is retained.
+  coverage: partial
+  limitations:
+  - Only the inspected workflow route and its bending calculations are classified. Straightener removal is assumed; cyclic plasticity, ovalisation and native solver qualification are not established.
+  - Inventory membership is neither numerical qualification nor an exhaustive repository audit.
+  implementations:
+  - path: src/digitalmodel/pipelay/workflow.py
+    symbol: _reel_result
+    line: 113
+    kind: function
+    what: Computes reeling strain, utilisation, assumed residual curvature, residual strain and small-slope out-of-straightness; screening-basis.md E5-E6.
+    relation: independent
+    module: pipelay/workflow.py
+    file_sha256: 7b56ae6d144f288cab0ac4cebaf98b294ff06d390c66d4fb21d5d1b2d7bcc756
+    body_sha256: 35f473bd5b3d8f906bbec8d12a311abbfe5eb19aac831e272b55a4e35414f9d2
+  - path: src/digitalmodel/pipelay/workflow.py
+    symbol: run_reel_lay
+    line: 93
+    kind: function
+    what: Validates reel inputs, delegates reeling and residual-curvature calculations, and optionally delegates operability.
+    relation: delegate
+    module: pipelay/workflow.py
+    file_sha256: 7b56ae6d144f288cab0ac4cebaf98b294ff06d390c66d4fb21d5d1b2d7bcc756
+    body_sha256: 7972cdab275e067c76cb828fdbe2a70f25743cc41a1b5db1f7b7510c9b500aa7
+    delegates_to:
+    - path: src/digitalmodel/pipelay/workflow.py
+      symbol: _reel_result
+    - path: src/digitalmodel/pipelay/workflow.py
+      symbol: _operability
+  - path: src/digitalmodel/orcaflex/pipelay_analysis.py
+    symbol: calculate_stinger_radius
+    line: 322
+    kind: function
+    what: Computes minimum stinger radius from diameter and supplied overbend strain; screening-basis.md E5 and V3.
+    relation: independent
+    module: orcaflex/pipelay_analysis.py
+    file_sha256: d1bc9ee5126107649f970fa6aeb66062348cbf6c633af3da7d488f6aa338d7c3
+    body_sha256: 18bc8c714d9a5a316a1aff674f3efe50eb0ca83ac884dbd96524bf5dcb4188cb
+  - path: src/digitalmodel/pipelay/workflow.py
+    symbol: router
+    line: 156
+    kind: function
+    what: Dispatches J-lay or reel screening and delegates the minimum stinger-radius calculation before writing evidence.
+    relation: delegate
+    module: pipelay/workflow.py
+    file_sha256: 7b56ae6d144f288cab0ac4cebaf98b294ff06d390c66d4fb21d5d1b2d7bcc756
+    body_sha256: 4497c56e1a9a672fcbfed25e70b35f3e844add26e6f4a8879954bc6ce6014d49
+    delegates_to:
+    - path: src/digitalmodel/pipelay/workflow.py
+      symbol: run_jlay
+    - path: src/digitalmodel/pipelay/workflow.py
+      symbol: run_reel_lay
+    - path: src/digitalmodel/orcaflex/pipelay_analysis.py
+      symbol: calculate_stinger_radius
+  identical_groups: []
+  search_audit:
+  - search: algorithm
+    matching_files: 0
+  reconciliation:
+    matched_definitions: 4
+    unresolved_definitions: 0
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic completeness.
+- id: lay-rate-operability
+  title: Lay-rate versus sea-state operability screening
+  search_signals:
+  - search: algorithm
+    pattern: ^(_operability|lay_rate_at_hs|generate_operability_table)$
+  inventory_scope:
+    revision: 09089a121a16069c4b657d1a320a630a23ab1dd5
+    source_paths:
+    - src/digitalmodel/pipelay/workflow.py
+    - src/digitalmodel/orcaflex/pipelay_analysis.py
+    method_note: src/digitalmodel/pipelay/docs/agent-pack.md
+    basis: Bounded source and call-site inspection; the earlier repository-wide snapshot is retained.
+  coverage: partial
+  limitations:
+  - Only the inspected pipelay lay-rate route is classified. Rate degradation and operating cutoffs are screening assumptions; weather persistence, coupled dynamics and native solver qualification are not established.
+  - Inventory membership is neither numerical qualification nor an exhaustive repository audit.
+  implementations:
+  - path: src/digitalmodel/pipelay/workflow.py
+    symbol: _operability
+    line: 45
+    kind: function
+    what: Delegates lay-rate table generation; locally selects the lay-only or lay-and-welding operating limit.
+    relation: delegate
+    module: pipelay/workflow.py
+    file_sha256: 7b56ae6d144f288cab0ac4cebaf98b294ff06d390c66d4fb21d5d1b2d7bcc756
+    body_sha256: 867ffb5c5ba434eeceb6fd128d1e3efb6cee228864660141da701715d0d5c058
+    delegates_to:
+    - path: src/digitalmodel/orcaflex/pipelay_analysis.py
+      symbol: LayOperability.generate_operability_table
+  - path: src/digitalmodel/orcaflex/pipelay_analysis.py
+    symbol: LayOperability.lay_rate_at_hs
+    line: 292
+    kind: function
+    what: Computes the assumed sea-state lay-rate degradation and operating cutoff; screening-basis.md E7.
+    relation: independent
+    module: orcaflex/pipelay_analysis.py
+    file_sha256: d1bc9ee5126107649f970fa6aeb66062348cbf6c633af3da7d488f6aa338d7c3
+    body_sha256: 587e3e192459c42ed78261e500dbd198e8044725cdb6cb110d90ae68182439ae
+  - path: src/digitalmodel/orcaflex/pipelay_analysis.py
+    symbol: LayOperability.generate_operability_table
+    line: 308
+    kind: function
+    what: Builds a sea-state grid and delegates each lay-rate calculation to lay_rate_at_hs.
+    relation: delegate
+    module: orcaflex/pipelay_analysis.py
+    file_sha256: d1bc9ee5126107649f970fa6aeb66062348cbf6c633af3da7d488f6aa338d7c3
+    body_sha256: 4f78e49ed648e8ee674b430a5603accabe0647545ab5ac66de9110a13a2a3ee9
+    delegates_to:
+    - path: src/digitalmodel/orcaflex/pipelay_analysis.py
+      symbol: LayOperability.lay_rate_at_hs
+  identical_groups: []
+  search_audit:
+  - search: algorithm
+    matching_files: 0
+  reconciliation:
+    matched_definitions: 3
+    unresolved_definitions: 0
+  coverage_reason: Only the listed source paths were inspected; name reconciliation does not establish semantic completeness.
+
 byte_identical_groups:
 - id: file-001
   sha256: 62095d6e678265a526f70da009a8909b60d9e8fed8d790d3e091f7b5f32656f3
@@ -54628,7 +54781,7 @@ rejected_candidates:
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
     implementation counts pending inspection.
-notes: ['Built by search with git ls-files, grep and ast; no solver was executed.', 'Function and class body digests use ast.dump without location attributes after removal of docstrings; names, defaults and decorators remain part of the digest.', 'A family can include examples, test helpers, model-section builders and explicit delegates; these relations are not independent numerical validation.', 'not_checked is an unresolved defect assessment, including delegates and non-AQWA readers; issue state does not establish whether a code path is affected.', Python table modules without a defining class are script entries; table contents and licensed strength values are not reproduced., Python module table entries use a null symbol with table_name because their defining assignment is not a function or class., Fresh main-signal search hits in prose and single-case input data are not implementations; rejected_candidates records the named or executable candidates retained after syntax inspection.]
+notes: ['Built by search with git ls-files, grep and ast; no solver was executed.', 'Function and class body digests use ast.dump without location attributes after removal of docstrings; names, defaults and decorators remain part of the digest.', 'A family can include examples, test helpers, model-section builders and explicit delegates; these relations are not independent numerical validation.', 'not_checked is an unresolved defect assessment, including delegates and non-AQWA readers; issue state does not establish whether a code path is affected.', Python table modules without a defining class are script entries; table contents and licensed strength values are not reproduced., Python module table entries use a null symbol with table_name because their defining assignment is not a function or class., Fresh main-signal search hits in prose and single-case input data are not implementations; rejected_candidates records the named or executable candidates retained after syntax inspection., 'Bounded pipelay source inspection at revision 09089a121a16069c4b657d1a320a630a23ab1dd5: catenary delegates and bending/lay-rate members carry current source evidence. Historical revision, searches, unrelated rows and groups are retained; inventory is partial and does not qualify numerical or native solver behaviour.']
 
 # Documentation bindings; calculation inventory above remains the pinned snapshot.
 agent_packs:

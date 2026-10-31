@@ -4,7 +4,7 @@
 |---|---|
 | Module / repository | `pipelay` / `digitalmodel` |
 | Package | `src/digitalmodel/pipelay` |
-| Pack revision | 1, 2026-10-18; audit [2745](https://github.com/vamseeachanta/digitalmodel/issues/2745) |
+| Pack revision | 2, 2026-10-28 |
 | Code scope | Source and tests in the same Git revision as this pack |
 | Status | DRAFT; independent clearance pending |
 
@@ -19,6 +19,13 @@ screening, writes strict JSON, and merges the output into the supplied configura
 The package also contains `validation.py`, which validates inputs and records defaults.
 No native model, dynamics, cyclic-plasticity or ovalisation solution is produced.
 Source: [workflow.py](../workflow.py), [validation.py](../validation.py).
+
+## Revision history
+
+| Revision | Date | Change and reason |
+|---|---|---|
+| 1 | 2026-10-18 | Analytical screening audit and historical map inventory were recorded. |
+| 2 | 2026-10-28 | The current map discussion distinguishes local calculations from delegates; the historical inventory is retained for traceability. |
 
 ## 2. Inputs and outputs
 
@@ -183,6 +190,52 @@ The live analytical dependencies are `JLayConfig`, `PipelayPipeProperties`,
 `LayOperability` and `calculate_stinger_radius` from
 `digitalmodel.orcaflex.pipelay_analysis`; the workflow tests also exercise
 `digitalmodel.engine`. No commercial solver is needed by these calculations.
+
+### Current bounded map reconciliation
+
+The canonical [implementation map](../../../../docs/registry/implementation-map.yaml)
+now distinguishes calculation bodies from delegates for the inspected call graph.
+The source basis is revision `09089a121a16069c4b657d1a320a630a23ab1dd5`.
+The historical inventory below remains a record of its named revision; its
+classifications, search counts and follow-up statements are superseded only for
+the symbols in this bounded reconciliation.
+
+| Source module | Explicit symbol set | Family membership | Role and direct calculation delegates |
+|---|---|---|---|
+| `orcaflex/pipelay_analysis.py` | `JLayConfig.calculate_sagbend` | `catenary-mooring-line-statics`; `effective-tension-riser-stack-up` | Independent analytical sagbend calculation |
+| `pipelay/workflow.py` | `run_jlay` | `catenary-mooring-line-statics`; `effective-tension-riser-stack-up` | Delegates to `JLayConfig.calculate_sagbend` and optional `_operability`; local strain utilisation and status do not add another catenary solution |
+| `pipelay/workflow.py` | `_reel_result` | `pipelay-bending-screening` | Independent reeling-strain and assumed residual-curvature calculation |
+| `pipelay/workflow.py` | `run_reel_lay` | `pipelay-bending-screening` | Delegates to `_reel_result` and optional `_operability` |
+| `orcaflex/pipelay_analysis.py` | `calculate_stinger_radius` | `pipelay-bending-screening` | Independent minimum-radius calculation |
+| `pipelay/workflow.py` | `router` | `pipelay-bending-screening` | Delegates to `run_jlay`, `run_reel_lay` and `calculate_stinger_radius`; writes the resulting evidence |
+| `orcaflex/pipelay_analysis.py` | `LayOperability.lay_rate_at_hs` | `lay-rate-operability` | Independent assumed rate degradation and cutoff calculation |
+| `orcaflex/pipelay_analysis.py` | `LayOperability.generate_operability_table` | `lay-rate-operability` | Delegates grid-point rates to `LayOperability.lay_rate_at_hs` |
+| `pipelay/workflow.py` | `_operability` | `lay-rate-operability` | Delegates to `LayOperability.generate_operability_table`; locally selects the operating limit |
+
+Table 5. Explicit current symbol set, hand-inspected in [workflow.py](../workflow.py)
+and [pipelay_analysis.py](../../orcaflex/pipelay_analysis.py). Optional operability
+calls are recorded even when a particular input omits them.
+
+Counting the distinct path/symbol pairs in Table 5 gives **9 unique callable
+members: 4 calculation bodies and 5 delegates**. Repeated catenary/tension
+membership gives 11 map rows across 4 represented families, not 11 independent
+calculations. Inside `pipelay/workflow.py` there are 5 unique members: one
+calculation body and four delegates. Local utilisation and operating-limit
+arithmetic are described within the delegate rows. The independent AST checks in
+`tests/docs/test_pipelay_implementation_classification.py` assert this explicit
+set and its direct call edges, including missing-member, nonexistent-symbol,
+wrong-role and wrong-target mutations.
+
+Catenary uses the existing family. No existing family describes reeling strain,
+residual curvature, stinger bending or assumed lay-rate degradation, so the two
+new families are bounded to the source files above. This is a **partial
+inventory**: pipe-property accessors, validation, output helpers, S-lay methods,
+other installation routes and the broader map audit remain outside this slice.
+A map row or passing inventory test is neither numerical qualification nor
+native solver qualification. No equation, default, numerical output or workflow
+wiring changes in this reconciliation. The historical package-aware
+classification follow-up is addressed for Table 5 only; broader qualification
+and map audit remain open.
 
 ### Historical implementation-map inventory
 

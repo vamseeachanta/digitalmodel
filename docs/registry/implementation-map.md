@@ -10,12 +10,13 @@ The map lists implementations of method families for module knowledge packs. Its
 | 2 | 2026-10-16 | Regeneration and drift diagnostics were added; missing methods, caller relationships and fixture status were corrected. |
 | 3 | 2026-10-16 | Source coordinates and counts were refreshed after source updates; the removed lid fallback, contradictory rejections and visible drift diagnostics were corrected. |
 | 4 | 2026-10-23 | Six supplemental engineering families were added with bounded source lists, member roles and explicit qualification limits. |
+| 5 | 2026-10-28 | Bounded pipelay calculation and delegation classifications were reconciled while retaining historical searches and unrelated rows. |
 
 Tracked files were enumerated with `git ls-files`. Independent searches used algorithm signals, vocabulary and characteristic constants or keys. Python bodies were checked with `ast`; non-Python tables were checked at their data lines. Binary files, files over one MiB, lock files and generated output folders were excluded as recorded in `searched`.
 
 | Family id | Title | Implementations | Modules |
 | --- | --- | ---: | --- |
-| `catenary-mooring-line-statics` | Catenary and mooring line statics | 140 | `docs`, `examples`, `field_development/layout_model.py`, `infrastructure/base_solvers`, `marine_ops/marine_analysis`, `marine_ops/marine_engineering`, `orcaflex/mooring_design.py`, `orcaflex/pipelay_analysis.py`, `orcaflex/riser_config.py`, `riser_configuration_screen/static.py`, `scripts`, `solvers/orcaflex`, `subsea/catenary_riser`, `subsea/mooring_analysis`, `tests` |
+| `catenary-mooring-line-statics` | Catenary and mooring line statics | 140 | `docs`, `examples`, `field_development/layout_model.py`, `infrastructure/base_solvers`, `marine_ops/marine_analysis`, `marine_ops/marine_engineering`, `orcaflex/mooring_design.py`, `orcaflex/pipelay_analysis.py`, `orcaflex/riser_config.py`, `pipelay/workflow.py`, `riser_configuration_screen/static.py`, `scripts`, `solvers/orcaflex`, `subsea/catenary_riser`, `subsea/mooring_analysis`, `tests` |
 | `effective-tension-riser-stack-up` | Effective tension and riser stack-up | 264 | `asset_integrity/custom`, `code_checks/dnv_os_f101.py`, `code_checks/workflow.py`, `docs`, `drilling_riser/assembly.py`, `drilling_riser/campaign.py`, `drilling_riser/envelope.py`, `drilling_riser/global_model`, `drilling_riser/postprocess`, `drilling_riser/schedule_assembly.py`, `drilling_riser/stackup.py`, `drilling_riser/telemetry_inputs.py`, `drilling_riser/tsj_workflow.py`, `drilling_riser/workflow.py`, `examples`, `infrastructure/base_solvers`, `marine_ops/marine_engineering`, `orcaflex/mooring_design.py`, `orcaflex/pipelay_analysis.py`, `orcaflex/riser_config.py`, `orcaflex/riser_input_schema.py`, `orcaflex/viv_screening.py`, `parametric/generate.py`, `pipelay/workflow.py`, `riser_configuration_screen/static.py`, `riser_configuration_screen/workflow.py`, `scripts`, `solvers/orcaflex`, `structural/analysis`, `structural/fatigue_apps`, `structural/parametric_coordinator.py`, `structural/pipe_capacity`, `subsea/catenary_riser`, `subsea/flexible_pipes`, `subsea/pipeline`, `subsea/riser`, `subsea/vertical_riser`, `subsea/viv_analysis`, `tests`, `viv_screening/inputs.py`, `workflows/workflow_automation` |
 | `orcaflex-text-model-writers` | OrcaFlex text-model writers | 440 | `asset_integrity/common`, `data_systems/data_procurement`, `docs`, `drilling_riser/campaign.py`, `drilling_riser/global_model`, `drilling_riser/postprocess`, `examples`, `floating_wind/solver_tier.py`, `hydrodynamics/bemrosetta`, `hydrodynamics/diffraction`, `hydrodynamics/hull_library`, `hydrodynamics/rao_analysis`, `infrastructure/base_solvers`, `infrastructure/utils`, `marine_ops/installation`, `marine_ops/marine_analysis`, `orcaflex/model_builder.py`, `orcaflex/reporting`, `orcawave/reporting`, `parametric/query.py`, `parametrics/pilots.py`, `scripts`, `solvers/benchmark`, `solvers/fea_model`, `solvers/orcaflex`, `solvers/orcawave`, `solvers/smoke`, `subsea/catenary_riser`, `subsea/mooring_analysis`, `subsea/vertical_riser`, `tests`, `viv_screening/workflow.py`, `web/digitaltwinfeed`, `workflows/automation`, `workflows/installation_added_mass_bracket.py`, `workflows/installation_added_mass_evidence.py`, `workflows/installation_added_mass_materialize.py`, `workflows/installation_hydrodynamic_sensitivity.py`, `workflows/installation_numerical_compare.py`, `workflows/installation_numerical_prepare.py`, `workflows/installation_seastates.py`, `workflows/installation_variant_study.py`, `workflows/mcp_server`, `workflows/orcaflex_reproduce.py`, `workflows/orcaflex_reproduce_results.py`, `workflows/parametric_run.py`, `workflows/skills`, `workflows/structure_hydrodynamic_candidate.py`, `workflows/structure_installation_prepare.py` |
 | `rao-readers-and-orcaflex-converters` | RAO readers and OrcaFlex converters | 295 | `data_systems/data_procurement`, `docs`, `drilling_riser/global_model`, `examples`, `hydrodynamics/aqwa`, `hydrodynamics/bemrosetta`, `hydrodynamics/diffraction`, `hydrodynamics/hull_library`, `hydrodynamics/interpolator.py`, `hydrodynamics/parametric_hull_analysis`, `hydrodynamics/rao_analysis`, `hydrodynamics/rao_tabulation`, `installation/installation_pamphlet`, `marine_ops/installation`, `marine_ops/marine_analysis`, `marine_ops/vessel_db`, `motion_forecast/rao_adapter.py`, `orcawave/reporting`, `parametric/generate.py`, `scripts`, `solvers/benchmark`, `solvers/orcaflex`, `solvers/orcawave`, `solvers/smoke`, `tests`, `workflows/mcp_server` |
@@ -41,6 +42,34 @@ Six [supplemental engineering families](implementation-map-families.md) add 59 m
 | `sloshing` | 8 | Analytical periods and resonance screening |
 | `geotechnics` | 22 | Foundations, soil-response screens and delegates |
 | `scour` | 5 | Thresholds, scour and protection screens, and configuration routing |
+
+The bounded pipelay reconciliation adds 8 membership rows and refreshes 3
+existing rows, bringing the canonical map to **21 families and 2412 entries**.
+The catenary summary above includes its added workflow delegate (139 existing
+rows plus one delegate). The earlier summary total of 2407 differs from the
+2404 rows actually present before this reconciliation; the current total is
+computed from canonical membership rows. Historical
+revision, search counts, unrelated rows and identical groups remain unchanged.
+The existing effective-tension row for `run_jlay` now records delegation and its
+local utilisation calculation; its family count remains 264. Source evidence
+for the inspected sagbend rows is current at revision
+`09089a121a16069c4b657d1a320a630a23ab1dd5`.
+
+| Bounded pipelay family id | Members | Scope |
+| --- | ---: | --- |
+| `pipelay-bending-screening` | 4 | Reeling strain, residual curvature and minimum stinger radius, with workflow delegates |
+| `lay-rate-operability` | 3 | Assumed lay-rate degradation and table/workflow delegates |
+
+The [pipelay pack](../../src/digitalmodel/pipelay/docs/agent-pack.md) lists the
+explicit source symbol set: 9 unique members, comprising 4 calculation bodies
+and 5 delegates. Repeated catenary/tension membership gives 11 rows across 4
+represented families. Counts are hand sums of that named set and are checked by
+independent AST inventory tests. The two new families have partial coverage;
+existing families are reused for catenary and tension. Map membership and these
+tests establish neither numerical qualification nor native solver qualification.
+The broader repository audit remains open. Derived YAML presentation was
+refreshed with the existing scoped reference and rendering helpers; the full
+repository regeneration was not used to replace historical searches.
 
 Byte-identical file groups:
 - `file-001`: `scripts/python/digitalmodel/legacy/analyze_marine_excel.py`, `src/digitalmodel/marine_ops/marine_analysis/analysis/excel_analyzer.py`.
