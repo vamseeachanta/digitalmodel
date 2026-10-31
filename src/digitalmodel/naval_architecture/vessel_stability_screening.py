@@ -222,6 +222,9 @@ class WeightItem:
     fsm_t_m: float = 0.0
 
     def __post_init__(self) -> None:
+        for name in ("weight_t", "vcg_m", "lcg_m", "fsm_t_m"):
+            if not math.isfinite(getattr(self, name)):
+                raise ValueError(f"weight item '{self.name}': {name} must be finite")
         if self.weight_t <= 0.0:
             raise ValueError(f"weight item '{self.name}': weight_t must be > 0")
         if self.fsm_t_m < 0.0:
@@ -342,6 +345,10 @@ class GZCurve:
             raise ValueError("GZ curve: heel_deg and gz_m lengths differ")
         if len(self.heel_deg) < 3:
             raise ValueError("GZ curve needs >= 3 points")
+        for name in ("heel_deg", "gz_m"):
+            for index, value in enumerate(getattr(self, name)):
+                if not math.isfinite(value):
+                    raise ValueError(f"GZ curve: {name}[{index}] must be finite")
         if any(b <= a for a, b in zip(self.heel_deg, self.heel_deg[1:])):
             raise ValueError("GZ curve heel angles must be strictly increasing")
         if self.heel_deg[0] != 0.0:
