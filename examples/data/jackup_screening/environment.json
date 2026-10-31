@@ -1,0 +1,413 @@
+{
+  "depth": {
+    "basis": "Positive shelf-depth sensitivity chosen to exercise load transfer; the GEBCO numerical query returned no results. No measured depth is inferred.",
+    "status": "illustrative assumption",
+    "unit": "m",
+    "value": 60.0
+  },
+  "era5": {
+    "access_evidence": {
+      "effective_url": "https://cds.climate.copernicus.eu/how-to-api",
+      "http_status": 200,
+      "retrieved_at": "2026-10-27T15:43:04Z",
+      "sha256": "7ea42a69b16f319caf5e45912740b805398571eb149d05c7d6be4302bba66ad5",
+      "source": "https://cds.climate.copernicus.eu/how-to-api"
+    },
+    "basis": "Original demonstrator NDBC 2024 sample maxima reused as a sensitivity scenario; these are not ERA5 estimates and have no assigned return period.",
+    "source": "https://cds.climate.copernicus.eu/how-to-api",
+    "status": "illustrative assumption",
+    "unavailable_reason": "Existing ERA5 client requires authenticated access; no authentication was used. Public API instructions confirm a personal access token is required.",
+    "wave_height_m": 6.83,
+    "wind_speed_10m_m_s": 24.3
+  },
+  "gebco": {
+    "access_evidence": {
+      "effective_url": "https://wms.gebco.net/mapserv?service=WMS&version=1.3.0&request=GetFeatureInfo&layers=GEBCO_LATEST_2&query_layers=GEBCO_LATEST_2&info_format=text/plain&i=50&j=50&width=101&height=101&crs=EPSG:4326&bbox=27.8,-95.5,28.0,-95.3&styles=&format=image/png",
+      "http_status": 200,
+      "retrieved_at": "2026-10-27T15:43:03Z",
+      "sha256": "84f0976ccfa74a64018fe75649749bb09ed0961fe75e76b36d441861f645d6da",
+      "source": "https://wms.gebco.net/mapserv?service=WMS&version=1.3.0&request=GetFeatureInfo&layers=GEBCO_LATEST_2&query_layers=GEBCO_LATEST_2&info_format=text/plain&i=50&j=50&width=101&height=101&crs=EPSG:4326&bbox=27.8,-95.5,28.0,-95.3&styles=&format=image/png"
+    },
+    "capabilities_evidence": {
+      "effective_url": "https://wms.gebco.net/mapserv?request=getcapabilities&service=wms&version=1.3.0",
+      "http_status": 200,
+      "retrieved_at": "2026-10-27T15:42:47Z",
+      "sha256": "74c2c3c9c4e07aadf170aa84d798e9b091ed3d9463184f0db2653fae247e477d",
+      "source": "https://wms.gebco.net/mapserv?request=getcapabilities&service=wms&version=1.3.0"
+    },
+    "reason": "Current GetFeatureInfo query returned no numerical result; no map colour is interpreted as elevation.",
+    "source": "https://wms.gebco.net/mapserv?service=WMS&version=1.3.0&request=GetFeatureInfo&layers=GEBCO_LATEST_2&query_layers=GEBCO_LATEST_2&info_format=text/plain&i=50&j=50&width=101&height=101&crs=EPSG:4326&bbox=27.8,-95.5,28.0,-95.3&styles=&format=image/png",
+    "status": "unavailable"
+  },
+  "limits": [
+    "Annual marginal Gumbel extrapolations are illustrative, without fit or stationarity qualification.",
+    "Combining marginal wind and wave levels does not establish a joint return period.",
+    "Within-day gaps and missing storm peaks may bias fitted extremes downward.",
+    "ERA5 scenario, depth, current and load geometry remain illustrative assumptions."
+  ],
+  "load_assumptions": {
+    "air_gap_m": {
+      "basis": "Illustrative wind application height above water.",
+      "status": "illustrative assumption",
+      "unit": "m",
+      "value": 10.0
+    },
+    "current_m_s": {
+      "basis": "Illustrative aligned current; no return period is assigned.",
+      "status": "illustrative assumption",
+      "unit": "m/s",
+      "value": 0.5
+    },
+    "submerged_area_m2": {
+      "basis": "Illustrative effective water drag area; no actual members are represented.",
+      "status": "illustrative assumption",
+      "unit": "m2",
+      "value": 300.0
+    },
+    "tp_s": {
+      "basis": "Illustrative period, independent of marginal wave and wind extremes.",
+      "status": "illustrative assumption",
+      "unit": "s",
+      "value": 12.0
+    },
+    "water_drag_coefficient": {
+      "basis": "Illustrative sensitivity coefficient.",
+      "status": "illustrative assumption",
+      "unit": "1",
+      "value": 0.9
+    },
+    "wind_area_m2": {
+      "basis": "Illustrative effective drag area; no actual structure is represented.",
+      "status": "illustrative assumption",
+      "unit": "m2",
+      "value": 1000.0
+    },
+    "wind_drag_coefficient": {
+      "basis": "Illustrative sensitivity coefficient.",
+      "status": "illustrative assumption",
+      "unit": "1",
+      "value": 1.2
+    }
+  },
+  "location": {
+    "lat": 27.9,
+    "lon": -95.4
+  },
+  "location_basis": "Rounded public station coordinates; not the soil profile location.",
+  "noaa": {
+    "coverage": [
+      {
+        "record_count": 8676,
+        "wave_valid_count": 8440,
+        "wave_valid_days": 364,
+        "wind_valid_count": 8675,
+        "wind_valid_days": 365,
+        "year": 2005
+      },
+      {
+        "record_count": 8291,
+        "wave_valid_count": 8204,
+        "wave_valid_days": 348,
+        "wind_valid_count": 8277,
+        "wind_valid_days": 348,
+        "year": 2006
+      },
+      {
+        "record_count": 8689,
+        "wave_valid_count": 8466,
+        "wave_valid_days": 364,
+        "wind_valid_count": 8675,
+        "wind_valid_days": 365,
+        "year": 2007
+      },
+      {
+        "record_count": 8776,
+        "wave_valid_count": 8619,
+        "wave_valid_days": 366,
+        "wind_valid_count": 8776,
+        "wind_valid_days": 366,
+        "year": 2008
+      },
+      {
+        "record_count": 7526,
+        "wave_valid_count": 7401,
+        "wave_valid_days": 314,
+        "wind_valid_count": 7526,
+        "wind_valid_days": 314,
+        "year": 2009
+      },
+      {
+        "record_count": 4315,
+        "wave_valid_count": 4201,
+        "wave_valid_days": 184,
+        "wind_valid_count": 4294,
+        "wind_valid_days": 183,
+        "year": 2010
+      },
+      {
+        "record_count": 3943,
+        "wave_valid_count": 3650,
+        "wave_valid_days": 195,
+        "wind_valid_count": 3943,
+        "wind_valid_days": 195,
+        "year": 2011
+      },
+      {
+        "record_count": 3693,
+        "wave_valid_count": 3407,
+        "wave_valid_days": 162,
+        "wind_valid_count": 3691,
+        "wind_valid_days": 162,
+        "year": 2012
+      },
+      {
+        "record_count": 8747,
+        "wave_valid_count": 8717,
+        "wave_valid_days": 365,
+        "wind_valid_count": 8747,
+        "wind_valid_days": 365,
+        "year": 2013
+      },
+      {
+        "record_count": 4928,
+        "wave_valid_count": 4860,
+        "wave_valid_days": 207,
+        "wind_valid_count": 4926,
+        "wind_valid_days": 207,
+        "year": 2014
+      },
+      {
+        "record_count": 7570,
+        "wave_valid_count": 7530,
+        "wave_valid_days": 325,
+        "wind_valid_count": 7570,
+        "wind_valid_days": 325,
+        "year": 2015
+      },
+      {
+        "record_count": 8611,
+        "wave_valid_count": 8611,
+        "wave_valid_days": 366,
+        "wind_valid_count": 8611,
+        "wind_valid_days": 366,
+        "year": 2016
+      },
+      {
+        "record_count": 8697,
+        "wave_valid_count": 8697,
+        "wave_valid_days": 365,
+        "wind_valid_count": 8696,
+        "wind_valid_days": 365,
+        "year": 2017
+      },
+      {
+        "record_count": 25169,
+        "wave_valid_count": 8652,
+        "wave_valid_days": 365,
+        "wind_valid_count": 25159,
+        "wind_valid_days": 365,
+        "year": 2018
+      },
+      {
+        "record_count": 34213,
+        "wave_valid_count": 5672,
+        "wave_valid_days": 242,
+        "wind_valid_count": 32035,
+        "wind_valid_days": 225,
+        "year": 2019
+      },
+      {
+        "record_count": 46506,
+        "wave_valid_count": 7625,
+        "wave_valid_days": 325,
+        "wind_valid_count": 46354,
+        "wind_valid_days": 326,
+        "year": 2020
+      },
+      {
+        "record_count": 51564,
+        "wave_valid_count": 8516,
+        "wave_valid_days": 360,
+        "wind_valid_count": 51528,
+        "wind_valid_days": 360,
+        "year": 2021
+      },
+      {
+        "record_count": 52523,
+        "wave_valid_count": 9899,
+        "wave_valid_days": 365,
+        "wind_valid_count": 52500,
+        "wind_valid_days": 365,
+        "year": 2022
+      },
+      {
+        "record_count": 44433,
+        "wave_valid_count": 14726,
+        "wave_valid_days": 312,
+        "wind_valid_count": 29438,
+        "wind_valid_days": 206,
+        "year": 2023
+      },
+      {
+        "record_count": 52698,
+        "wave_valid_count": 16693,
+        "wave_valid_days": 353,
+        "wind_valid_count": 50597,
+        "wind_valid_days": 358,
+        "year": 2024
+      }
+    ],
+    "extract_basis": "First row attaining each annual wave or wind maximum; deduplicated by timestamp. Counts refer to complete source archives.",
+    "minimum_valid_days": 330,
+    "reuse": "Selected United States government observation facts only; no original archive is copied.",
+    "selection_basis": "Illustrative threshold: both parameters observed on at least 330 distinct UTC days. Within-day gaps, station changes and storm censoring remain unqualified.",
+    "sources": [
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2005.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:56Z",
+        "sha256": "b6497089203cc138aff8127a3c9e6a093321009daefe5825a11982f43fa8e6a3",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2005.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2006.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:56Z",
+        "sha256": "426c69c7dfea9caa66a20a3589300bd964ef5490871540899a511a6aa6bd52aa",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2006.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2007.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:56Z",
+        "sha256": "b6ed6881578da344a38dca83ec7d18cfa6ec35fc1599879088c8c4a34168f2a4",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2007.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2008.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:57Z",
+        "sha256": "a164d87d5260185c7351c04a833d071328cb997c013ec23828b848eed19a6e4c",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2008.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2009.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:57Z",
+        "sha256": "5d4bcf109831843e2cc5ec0d39ceb520b35991a1811aaf83e2e1b172e4a6a5ef",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2009.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2010.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:57Z",
+        "sha256": "1ac1ed3e9031e5e8ae6abf2ae8a87edfa1a2c95d2357697046e2f34bfd600d1b",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2010.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2011.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:57Z",
+        "sha256": "e5480773c6bcafb97280dcd9b9aecabfb74d0a48b663c11050aba77cb1938142",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2011.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2012.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:58Z",
+        "sha256": "9951df41bd44779a2a70373de0e3b28f6f0383bae36e72fc7978d49ecc68c107",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2012.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2013.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:58Z",
+        "sha256": "769c02e18e97d34aad1b1190f0900ab136a761f9db2680bd0934ec3eb78d74f5",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2013.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2014.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:58Z",
+        "sha256": "956bb7aafbb4000afa2b3bdf0c1e0eb47ab4db192006db0eeb71ad64892f6ee2",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2014.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2015.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:59Z",
+        "sha256": "9c2fc49de2a259ed1f084e6e0cfe85917e7e2a0309268a35529285ee774c5f7d",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2015.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2016.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:59Z",
+        "sha256": "a8968ca624bd3bbb011e8dfcf3938d83ff5ee7628567541403e79112151c3943",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2016.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2017.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:59Z",
+        "sha256": "b09568eb1d85661bda7404704366274c9401e847d9b36721731ab84fdf81bae2",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2017.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2018.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:43:59Z",
+        "sha256": "8e27a19404713462baafd06f48cb04fd169ba1a9aa06c2b863585fceba86b361",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2018.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2019.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:44:00Z",
+        "sha256": "011a3d795203b5f31207e81d945c47efe7de62a5de4d8c4d3e829c943624ad64",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2019.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2020.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:44:00Z",
+        "sha256": "ad8fd53ce49a5561a1f6ea57839769d358a7efb85ec2d3a06db0a8e5d0a91abf",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2020.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2021.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:44:00Z",
+        "sha256": "d84bc8caa23a72c6ce9f1ece4fb993ea7641d2caed7d49998e9da7456e1c860d",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2021.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2022.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:44:01Z",
+        "sha256": "8d2749760fc4a0a108ef47b55098f7fe73e73969b788b501eb0fca84cebfd56c",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2022.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2023.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:44:01Z",
+        "sha256": "5b5a6fdc650537e10a852748bdccff521654d6fb64882852c7d0cdfeb600e905",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2023.txt.gz"
+      },
+      {
+        "effective_url": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2024.txt.gz",
+        "http_status": 200,
+        "retrieved_at": "2026-10-27T15:44:01Z",
+        "sha256": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3",
+        "source": "https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2024.txt.gz"
+      }
+    ],
+    "station": "42019",
+    "year_range": [
+      2005,
+      2024
+    ]
+  },
+  "qualification": "generic_screening_only"
+}
