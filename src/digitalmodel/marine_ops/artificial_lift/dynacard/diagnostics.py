@@ -160,7 +160,11 @@ class PumpDiagnostics:
         Returns:
             DiagnosticResult with classification, confidence, and differential.
         """
-        if results.downhole_card is None:
+        # The shipped model is trained on unsmoothed pump cards. Do not feed
+        # it a polynomial-filtered card that has lost diagnostic morphology.
+        # Older results and other solvers retain their explicit input path.
+        card = results.diagnostic_card or results.downhole_card
+        if card is None:
             return DiagnosticResult(
                 classification="NORMAL",
                 confidence=0.0,
@@ -170,7 +174,7 @@ class PumpDiagnostics:
         model = self._load_model()
         if model is not None:
             features = FeatureExtractor.extract_classifier_vector(
-                results.downhole_card
+                card
             )
             _check_feature_count(features, model)
             features_norm = FeatureExtractor.normalize(features, model["scaling"])
@@ -194,7 +198,7 @@ class PumpDiagnostics:
             )
 
         # Fallback
-        mode = self._classify_legacy(results.downhole_card)
+        mode = self._classify_legacy(card)
         return DiagnosticResult(
             classification=mode,
             confidence=1.0 if mode == "NORMAL" else 0.8,
