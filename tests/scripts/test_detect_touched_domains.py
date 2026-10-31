@@ -1,7 +1,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-import fnmatch
 import importlib.util
 import json
 import posixpath
@@ -14,6 +13,8 @@ from pathlib import Path
 
 import yaml
 import pytest
+
+from tests.scripts._pytest_selection import pytest_selects_target
 
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domains.py"
@@ -69,19 +70,26 @@ def assert_corrosion_gate_coverage(gate: dict, pytestconfig: pytest.Config) -> N
     assert gate["domain"] == "specialized"
     assert gate["failure_action"] == "block"
     assert root in {posixpath.normpath(item) for item in gate["test_roots"]}
-    command = shlex.split(gate["command"])
-    pytest_args = command[command.index("pytest") + 1:]
-    parsed = pytestconfig._parser.parse(pytest_args)
-    assert root in {posixpath.normpath(item) for item in parsed.file_or_dir}
-    test_paths = [root, *(path.as_posix() for path in Path(root).rglob("test_*.py"))]
-    exclusions = (parsed.ignore or []) + (parsed.ignore_glob or []) + (parsed.deselect or [])
-    for value in exclusions:
-        excluded = posixpath.normpath(value.split("::", 1)[0])
-        assert not (
-            excluded == root or excluded.startswith(root + "/")
-            or root.startswith(excluded + "/")
-            or any(fnmatch.fnmatchcase(path, excluded) for path in test_paths)
-        )
+    assert pytest_selects_target(
+        pytestconfig, gate["command"], root,
+        (path.as_posix() for path in Path(root).rglob("test_*.py")),
+        require_explicit_target=True,
+    )
+
+
+@pytest.mark.parametrize("field,value", [
+    ("enabled", False), ("failure_action", "warn"),
+    ("failure_action", "report"), ("failure_action", None),
+])
+def test_corrosion_guard_rejects_nonblocking_metadata(field, value, pytestconfig):
+    gate = {
+        "enabled": True, "domain": "specialized", "failure_action": "block",
+        "test_roots": ["tests/corrosion/"],
+        "command": "python -m pytest tests/corrosion/",
+    }
+    gate[field] = value
+    with pytest.raises(AssertionError):
+        assert_corrosion_gate_coverage(gate, pytestconfig)
 
 
 def test_corrosion_ci_coverage(pytestconfig: pytest.Config) -> None:
@@ -933,20 +941,15 @@ def test_package_document_without_pyyaml_selects_full_matrix(tmp_path: Path) -> 
     ]
 
 
-def registry_reader_shards(root: Path, detector) -> dict[str, set[str]]:
+def registry_reader_shards(root: Path, detector, pytestconfig) -> dict[str, set[str]]:
     """Resolve registry references that are covered by actual gate commands."""
     domains = detector.parse_domains(root / "tests/DOMAINS.md")
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
-    executed = {
-        token.split("::", 1)[0]
+    commands = [
+        gate["command"]
         for gate in gates.values()
-        for token in shlex.split(gate.get("command", ""))
-        if token.startswith("tests/")
-    }
-    executed = {
-        item.rstrip("/") + "/" if (root / item).is_dir() else item
-        for item in executed
-    }
+        if "pytest" in shlex.split(gate.get("command", ""))
+    ]
     references = re.compile(
         r"""docs/registry|module-routing|workflows\.yaml|['"]docs['"]\s*/\s*['"]registry['"]"""
     )
@@ -955,7 +958,8 @@ def registry_reader_shards(root: Path, detector) -> dict[str, set[str]]:
         relative = path.relative_to(root).as_posix()
         if not references.search(path.read_text(encoding="utf-8")):
             continue
-        if not any(detector.path_matches_root(relative, item) for item in executed):
+        if not any(pytest_selects_target(pytestconfig, command, relative, [relative])
+                   for command in commands):
             continue
         owners = {
             domain.name for domain in domains for test_root in domain.roots
@@ -972,10 +976,10 @@ def assert_registry_readers_routed(readers: dict[str, set[str]], routed: set[str
         assert owners <= routed, f"{reader}: missing {sorted(owners - routed)}"
 
 
-def test_registry_route_covers_gate_readers() -> None:
+def test_registry_route_covers_gate_readers(pytestconfig) -> None:
     """Check registry readers; roots run by no gate command are not asserted."""
     detector = load_detector_module()
-    readers = registry_reader_shards(SCRIPT.parents[2], detector)
+    readers = registry_reader_shards(SCRIPT.parents[2], detector, pytestconfig)
     assert readers
     routed = detector.mapped_domain_names("docs/registry/workflows.yaml")
     assert_registry_readers_routed(readers, routed)
@@ -989,7 +993,7 @@ def test_registry_route_covers_gate_readers() -> None:
     'ROOT / "module-routing.yaml"',
 ])
 def test_registry_reader_guard_detects_missing_shard(
-    tmp_path: Path, reference: str, gate_root: str,
+    tmp_path: Path, reference: str, gate_root: str, pytestconfig,
 ) -> None:
     """Calibrate each spelling against a reader outside the current route."""
     detector = load_detector_module()
@@ -1004,11 +1008,37 @@ def test_registry_reader_guard_detects_missing_shard(
     reader = tests / "structural/test_registry_reader.py"
     reader.parent.mkdir()
     reader.write_text(f"REGISTRY = {reference}\n")
-    readers = registry_reader_shards(tmp_path, detector)
+    readers = registry_reader_shards(tmp_path, detector, pytestconfig)
     assert readers == {"tests/structural/test_registry_reader.py": {"structural"}}
     routed = detector.mapped_domain_names("docs/registry/workflows.yaml")
     with pytest.raises(AssertionError, match="missing.*structural"):
         assert_registry_readers_routed(readers, routed)
+
+
+@pytest.mark.parametrize("args,selected", [
+    ("tests/structural/ --ignore tests/unrelated/", True),
+    ("tests/unrelated/ --ignore tests/structural/", False),
+    ("tests/unrelated/ --rootdir tests/structural/", False),
+    ("tests/structural/ --ignore-glob=*.py", False),
+    ("tests/structural/ --deselect=tests/structural/test_reader.py::test_required", False),
+])
+def test_registry_reader_execution_uses_positional_selection(
+    tmp_path, args, selected, pytestconfig,
+):
+    # Issue 3449: only a complete positional selection executes this reader.
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    write_domains(tests / "DOMAINS.md")
+    gate_dir = tmp_path / ".claude"
+    gate_dir.mkdir()
+    (gate_dir / "quality-gates.yaml").write_text(
+        f"gates:\n  tests-structural:\n    command: python -m pytest {args}\n"
+    )
+    reader = tests / "structural/test_reader.py"
+    reader.parent.mkdir()
+    reader.write_text('REGISTRY = "docs/registry/extra.yaml"\n')
+    readers = registry_reader_shards(tmp_path, load_detector_module(), pytestconfig)
+    assert readers == ({"tests/structural/test_reader.py": {"structural"}} if selected else {})
 
 
 # Record pins add contract coverage without replacing existing domain routes.
@@ -1474,7 +1504,7 @@ def test_record_reader_routes_union_base_and_head(tmp_path: Path) -> None:
     assert set(result.stdout.splitlines()) == {"contracts", "citations"}
 
 
-def test_bha_database_owned_and_executed_by_subsea():
+def test_bha_database_owned_and_executed_by_subsea(pytestconfig):
     """Ownership alone must not leave the acceptance suite unexecuted."""
     root = SCRIPT.parents[2]
     detector = load_detector_module()
@@ -1490,5 +1520,10 @@ def test_bha_database_owned_and_executed_by_subsea():
     subsea = next(domain for domain in domains if domain.name == "subsea")
     assert "tests/bha_database/" in subsea.roots
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
-    assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
+    target = "tests/bha_database/"
+    assert pytest_selects_target(
+        pytestconfig, gates["tests-subsea"]["command"], target,
+        (path.relative_to(root).as_posix() for path in (root / target).rglob("test_*.py")),
+        require_explicit_target=True,
+    )
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
