@@ -1,13 +1,16 @@
 """Reading a physical basis out of an AQWA deck.
 
-Checked against the two decks in the repository whose numbers are known: the
-shipped ship-RAO example, and the LNGC pair that differs only in additional
-roll damping.
+Checked against the shipped ship-RAO example deck and a small synthetic deck
+pair that differs only in additional roll and pitch damping. A project deck
+pair with the same property is kept out of this public repository; set
+DM_AQWA_DAMPING_DECK_DIR to the folder holding F_FST1_L00_DAMPAD.dat and
+F_FST1_L00_DAMPNO.dat to also run the check against it.
 """
 
 from __future__ import annotations
 
 import math
+import os
 from pathlib import Path
 
 import pytest
@@ -19,10 +22,10 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_deck_basis import (
 REPO = Path(__file__).resolve().parents[3]
 SHIP = (REPO / "docs" / "domains" / "aqwa" / "examples" / "03_dat"
         / "001_ship_raos" / "001_ship_raos.dat")
-DAMPAD = (REPO / "docs" / "domains" / "aqwa" / "scripts"
-          / "wlng_diffraction_analysis" / "raos" / "F_FST1_L00_DAMPAD.dat")
-DAMPNO = (REPO / "docs" / "domains" / "aqwa" / "scripts"
-          / "wlng_diffraction_analysis" / "raos" / "F_FST1_L00_DAMPNO.dat")
+# Private project data: absent unless DM_AQWA_DAMPING_DECK_DIR points at it.
+_DAMPING_DIR = os.environ.get("DM_AQWA_DAMPING_DECK_DIR", "")
+DAMPAD = (Path(_DAMPING_DIR) / "F_FST1_L00_DAMPAD.dat") if _DAMPING_DIR else None
+DAMPNO = (Path(_DAMPING_DIR) / "F_FST1_L00_DAMPNO.dat") if _DAMPING_DIR else None
 
 ship_only = pytest.mark.skipif(not SHIP.exists(), reason="ship deck absent")
 
@@ -121,8 +124,47 @@ def test_volume_as_mass_is_the_trap_this_guards():
     assert mass_tonnes / volume == pytest.approx(1.025, rel=1e-4)
 
 
-@pytest.mark.skipif(not (DAMPAD.exists() and DAMPNO.exists()),
-                    reason="LNGC damping pair absent")
+def _fidp_deck(tmp_path, name: str, roll: float, pitch: float):
+    """A one-structure deck whose only body data is a Deck 7 FIDP matrix.
+
+    Generic values, not taken from any project: the record layout is the
+    AQWA fixed-column one (keyword in columns 7-10, ten-column fields).
+    """
+    diag = {4: roll, 5: pitch}
+    cards = []
+    for mode in range(1, 7):
+        row = [0.0] * 6
+        if mode in diag:
+            row[mode - 1] = diag[mode]
+        cards.append("      FIDP" + f"{mode:10d}"
+                     + "".join(f"{v:10.3e}" for v in row))
+    text = "\n".join([
+        "          JOB AQWA  LINE",
+        "          FDR1",
+        *cards,
+        "          END",
+        "",
+    ])
+    deck = tmp_path / name
+    deck.write_text(text, encoding="ascii")
+    return deck
+
+
+def test_additional_damping_is_read_from_a_synthetic_pair(tmp_path):
+    """Same property as the project pair: FIDP differs on roll and pitch."""
+    added = read_aqwa_basis(_fidp_deck(tmp_path, "ad.dat", 2.0e9, -5.0e10))
+    none = read_aqwa_basis(_fidp_deck(tmp_path, "no.dat", 1.0e5, -1.0e6))
+    assert added.has_additional_damping
+    assert none.has_additional_damping
+    assert added.additional_damping[3][3] == pytest.approx(2.0e9)
+    assert added.additional_damping[4][4] == pytest.approx(-5.0e10)
+    assert added.additional_damping[0][0] == 0.0
+    assert added.additional_damping[3][3] > 100 * none.additional_damping[3][3]
+
+
+@pytest.mark.skipif(
+    not (DAMPAD and DAMPNO and DAMPAD.exists() and DAMPNO.exists()),
+    reason="private damping deck pair absent (set DM_AQWA_DAMPING_DECK_DIR)")
 def test_additional_damping_is_read_when_present():
     """The pair differs in FIDP on roll and pitch; both are read."""
     added = read_aqwa_basis(DAMPAD)

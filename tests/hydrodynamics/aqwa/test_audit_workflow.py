@@ -1,4 +1,5 @@
 """Exercise the real DAT validators and workflow with synthetic LIS payloads."""
+import os
 from pathlib import Path
 
 import numpy as np
@@ -94,12 +95,54 @@ def test_lis_pages_and_units():
     assert "(RAD/S)" in result["units_rows"][0]
 
 
-def test_multibody_lis_requires_and_honours_structure_selector():
+def _synthetic_two_body_lis(path: Path) -> Path:
+    """A minimal two-structure AQWA listing with displacement RAO pages.
+
+    Generic values, not taken from any project: 3 frequencies, headings -180
+    to 180 deg in 15 deg steps, and a different heave RAO per structure. Rows
+    follow the listing layout (period, frequency, direction, then amplitude and
+    phase for X, Y, Z, RX, RY, RZ; repeat headings omit period and frequency).
+    """
+    lines = []
+    for sid, heave_scale in ((1, 1.0), (2, 0.5)):
+        lines += [
+            "1",
+            "        H Y D R O D Y N A M I C   P A R A M E T E R S   F O R   "
+            f"S T R U C T U R E   {sid}",
+            "",
+            "                     R.A.O.S-VARIATION WITH WAVE DIRECTION",
+            "  PERIOD   FREQ   DIRECTION    X          Y          Z"
+            "          RX         RY         RZ",
+            "  (SECS)  (RAD/S)  (DEGREES)  AMP PHASE  ...  (DEG/M)",
+        ]
+        for k, freq in enumerate((0.2, 0.6, 1.0)):
+            period = 2.0 * np.pi / freq
+            for j, heading in enumerate(range(-180, 181, 15)):
+                heave = heave_scale * (1.0 - 0.3 * k) * (1.0 + 0.001 * j)
+                values = [0.5, 10.0, 0.4, 20.0, heave, 30.0,
+                          1.0, 40.0, 0.8, 50.0, 0.2, 60.0]
+                body = " ".join(f"{v:9.4f}" for v in values)
+                if j == 0:
+                    lines.append(f"{period:8.2f}{freq:8.3f}{heading:11.2f} {body}")
+                else:
+                    lines.append(f"{'':16s}{heading:11.2f} {body}")
+        lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8")
+    return path
+
+
+def _multibody_listings(tmp_path: Path) -> list[Path]:
+    fixtures = [_synthetic_two_body_lis(tmp_path / "two_body.LIS")]
+    # A project listing kept in the private data repository can be added.
+    private = os.environ.get("DM_AQWA_MULTIBODY_LIS", "")
+    if private and Path(private).is_file():
+        fixtures.append(Path(private))
+    return fixtures
+
+
+def test_multibody_lis_requires_and_honours_structure_selector(tmp_path):
     from digitalmodel.marine_ops.marine_analysis.aqwa_enhanced_parser import AQWAFileError
-    root = Path(__file__).resolve().parents[3]
-    fixtures = sorted((root / "docs/domains/orcaflex/aqwa/to_orcaflex").rglob("*.LIS"))
-    assert len(fixtures) == 2
-    for path in fixtures:
+    for path in _multibody_listings(tmp_path):
         parser = AQWAEnhancedParser()
         with pytest.raises(AQWAFileError, match="structure"):
             parser.parse_lis_file(str(path))

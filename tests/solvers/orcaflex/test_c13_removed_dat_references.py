@@ -18,18 +18,15 @@ CATALOG = ORCAFLEX / "library" / "templates" / "catalog.yaml"
 _FIELD = re.compile(r"^﻿?\s*(BaseFile|Model):\s*(.+?)\s*$", re.M)
 _SOURCE = re.compile(r"^\s*source:\s*(.+?)\s*$", re.M)
 
-_MULTIBODY = "aqwa/to_orcaflex/multibody_test1/orcaflex"
-#: Every model file that named a removed .dat (BaseFile or a script's Model).
+#: Every model file in this repository that named a removed .dat (BaseFile or
+#: a script's Model). Project-specific multibody models that were also
+#: consumers have since moved to the private data repository.
 CONSUMERS = [
-    f"{_MULTIBODY}/fsts_fst1_l015_fst2_l015.yml",
-    f"{_MULTIBODY}/fsts_fst1_l015_fst2_l015_mwl.yml",
-    f"{_MULTIBODY}/fsts_fst1_l095_fst2_l095.yml",
-    f"{_MULTIBODY}/fsts_fst1_l095_fst2_l095_hwl.yml",
-    f"{_MULTIBODY}/fsts_fst1_l095_fst2_l095_lwl.yml",
-    f"{_MULTIBODY}/fsts_fst1_l095_fst2_l095_mwl.yml",
     "examples/raw/C10/MultipleStatics.yml",
     "examples/modular/C10/MultipleStatics/includes/01_general.yml",
 ]
+#: Consumers whose BaseFile/Model is resolved relative to the file itself.
+TWIN_RELATIVE = CONSUMERS[:1]
 
 
 @pytest.mark.parametrize("rel", CONSUMERS)
@@ -39,7 +36,7 @@ def test_consumers_name_the_yml_twin(rel):
     assert values and all(v.lower().endswith(".yml") for v in values), values
 
 
-@pytest.mark.parametrize("rel", CONSUMERS[:7])
+@pytest.mark.parametrize("rel", TWIN_RELATIVE)
 def test_the_named_twin_exists(rel):
     path = ORCAFLEX / rel
     text = path.read_text(encoding="utf-8-sig")
