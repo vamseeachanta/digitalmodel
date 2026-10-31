@@ -14,6 +14,7 @@ import numpy as np
 
 from .inp_writer import ELEMENT_TYPE_MAP, INPWriter
 from .result_parser import CalculiXResultParser
+from .model_checker import validate_model
 
 
 def is_calculix_available() -> bool:
@@ -167,9 +168,10 @@ class FEMChain:
         boundary_conditions: list,
         *,
         shell_sections: list | None = None,
+        beam_sections: list | None = None,
         step: dict | None = None,
     ) -> Path:
-        """Write the INP file from current mesh and analysis parameters."""
+        """Write the INP file, passing section dictionaries to INPWriter."""
         if self._nodes is None:
             raise RuntimeError("No mesh data — call set_mesh or create_plate_with_hole first")
 
@@ -179,6 +181,8 @@ class FEMChain:
             writer.add_plasticity(material["name"], material["plastic_rows"])
         for section in shell_sections or []:
             writer.add_shell_section(**section)
+        for section in beam_sections or []:
+            writer.add_beam_section(**section)
 
         for name, ids in self._node_sets.items():
             writer.add_node_set(name, ids)
@@ -213,12 +217,13 @@ class FEMChain:
     # Solve
     # ------------------------------------------------------------------
 
-    def solve(self, n_threads: int = 1) -> dict:
-        """Run ccx solver. Returns dict with 'success' and 'message'."""
-        if not is_calculix_available():
-            raise RuntimeError("CalculiX (ccx) not found in PATH")
+    def solve(self, n_threads: int = 1, *, node_tolerance: float = 1e-6) -> dict:
+        """Check the current deck, then run ccx; errors block and warnings pass."""
         if self._inp_path is None:
             raise RuntimeError("No INP file — call setup_analysis first")
+        qa_gate = validate_model(self._inp_path, tolerance=node_tolerance)
+        if not is_calculix_available():
+            raise RuntimeError("CalculiX (ccx) not found in PATH")
 
         job = self._inp_path.stem
         env = {"OMP_NUM_THREADS": str(n_threads)}
@@ -236,6 +241,7 @@ class FEMChain:
             "success": result.returncode == 0,
             "message": result.stdout[-500:] if result.stdout else "",
             "stderr": result.stderr[-500:] if result.stderr else "",
+            "qa_gate": qa_gate.to_dict(),
         }
 
     # ------------------------------------------------------------------

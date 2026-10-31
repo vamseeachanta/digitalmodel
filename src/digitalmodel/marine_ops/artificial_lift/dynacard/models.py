@@ -4,7 +4,7 @@
 # ABOUTME: Pydantic data models for dynacard analysis.
 # ABOUTME: Includes surface card, rod string, pump, and analysis result structures.
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field
 import numpy as np
 from .constants import (
@@ -436,10 +436,31 @@ class DiagnosticResult(BaseModel):
     model_version: str = "1.0"
 
 
+class DownholeLoadBasis(BaseModel):
+    """Executed Gibbs approximation; arithmetic provenance is not validation.
+
+    The coefficients originate in constants.py's legacy calibration block.
+    No independent physical qualification of those coefficients is established.
+    """
+
+    method: Literal["affine_surface_load"] = "affine_surface_load"
+    validation_status: Literal["NOT_EVALUATED"] = "NOT_EVALUATED"
+    buoyant_rod_weight_lbf: float
+    attenuation_factor: float
+    limitations: str = (
+        "Comparison only: load is not propagated through the wave equation. "
+        "Legacy buoyancy, attenuation, damping and stroke factors are unqualified; "
+        "absolute load and load morphology are not validated. Derived fillage, "
+        "pressure, production, buckling and diagnoses inherit this limitation."
+    )
+
+
 class AnalysisResults(BaseModel):
     """Output results from the dynacard analysis."""
     ctx: Optional[DynacardAnalysisContext] = None
     downhole_card: Optional[CardData] = None
+    # None means provenance was not recorded, including older saved results.
+    downhole_load_basis: Optional[DownholeLoadBasis] = None
     peak_polished_rod_load: float = 0.0
     minimum_polished_rod_load: float = 0.0
 

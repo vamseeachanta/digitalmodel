@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dynacard load basis analysis</title>
+  <style>
+    body { max-width: 64rem; margin: 2rem auto; padding: 0 1rem;
+           font-family: system-ui, sans-serif; line-height: 1.6; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #aaa; padding: .5rem; text-align: left; }
+    code { overflow-wrap: anywhere; }
+    .limit { border-left: .3rem solid #a54d00; padding: 1rem; background: #fff4df; }
+  </style>
+</head>
+<body>
+  <h1>Dynacard load basis analysis</h1>
+  <h2>Summary</h2>
+  <p>The Gibbs comparison solver propagates position and applies an affine
+  transformation to surface load. The result records
+  <code>downhole_load_basis.method = affine_surface_load</code> and
+  <code>validation_status = NOT_EVALUATED</code>. These restrictions appear
+  in serialized results, CLI summaries and HTML diagnostic reports.</p>
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>1</td><td>2026-10-19</td><td>The retained approximation is
+    disclosed so that scaled surface loads cannot be mistaken for propagated
+    downhole loads.</td></tr></tbody>
+  </table>
+  <p>Table 1. Initial issue of the load basis analysis.</p>
+  <h2>Method and sources</h2>
+  <p>The implemented arithmetic is <code>F_d = (F_s - W_b) a</code>, with
+  <code>W_b = sum(L A rho / C) b</code>. Rod length L is in feet, area A
+  in square inches, density rho in pounds per cubic foot, and C converts
+  square inches to square feet. Load is in pounds-force. This equation describes
+  the existing code; it is not a qualified wave-equation load solution.</p>
+  <p>The source is the repository's
+  <a href="../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/physics.py">physics.py</a>
+  buoyant adjustment and
+  <a href="../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/constants.py">constants.py</a>
+  unit-conversion, material-property and legacy-calibration blocks (2026).
+  The legacy inputs are rho = 490.0, C = 144.0, b = 0.825 and a = 0.88.
+  Their presence in the repository establishes the executed arithmetic,
+  not independent calibration evidence. No new coefficient is introduced.</p>
+  <h2>Synthetic worked example</h2>
+  <p>The chosen rod length is 100.0 ft and its diameter is sqrt(4/pi) in,
+  giving an area of 1.0 square inch. The chosen pump diameter is 1.0 in,
+  depth is 100.0 ft and speed is 1.0 stroke/min. The chosen surface samples
+  are shown below. These are arithmetic inputs, not field measurements.</p>
+  <p>Independent substitution gives <code>W = 100 × 1 × 490 / 144</code>,
+  or 340.3 lbf, and <code>W_b = W × 0.825</code>, or 280.7 lbf.
+  Each answer is calculated using the unrounded intermediate values.</p>
+  <table>
+    <thead><tr><th>Surface position (in)</th><th>Surface load (lbf)</th>
+    <th>Approximate downhole load (lbf)</th></tr></thead>
+    <tbody>
+      <tr><td>0.0</td><td>1000.0</td><td>633.0</td></tr>
+      <tr><td>50.0</td><td>2000.0</td><td>1513.0</td></tr>
+      <tr><td>100.0</td><td>3000.0</td><td>2393.0</td></tr>
+      <tr><td>50.0</td><td>2000.0</td><td>1513.0</td></tr>
+    </tbody>
+  </table>
+  <p>Table 2. Hand-calculated retained load transformation, rounded for display.</p>
+  <p>Run <code>PYTHONPATH=src python examples/domains/artificial_lift/dynacard_load_basis.py</code>
+  to reproduce the inputs, basis and answers. The regression test contains the
+  independent substitution and compares unrounded results.</p>
+  <h2>Qualification and way forward</h2>
+  <p class="limit">NOT_EVALUATED: independent physical validation of the load
+  transformation, buoyancy, attenuation, damping and stroke calibration is not
+  established. Load morphology and absolute loads are unqualified; derived
+  fillage, pressure, production, buckling and diagnoses inherit this limitation.
+  Matching the arithmetic above does not establish physical accuracy.</p>
+  <p>Existing results without the new metadata deserialize with a null basis;
+  null means unknown provenance, not validated load. Other solvers do not
+  acquire a Gibbs load basis. A qualified load-propagation implementation will
+  require an independent reference and documented calibration conditions.</p>
+  <p>For the defects tracked in issue 1952,
+  fillage delegation, derived mode counting and fallback abstention were already
+  implemented. This change addresses the remaining approximation disclosure.</p>
+</body>
+</html>
