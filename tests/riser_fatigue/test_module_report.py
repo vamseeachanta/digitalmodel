@@ -405,3 +405,9 @@ def test_ci_subsea_command_collects_the_report_suite(monkeypatch, capsys):
         assert command[:len(original)] == original
         if name == "tests-subsea":
             assert "tests/riser_fatigue/" in command
+
+
+def test_report_sources_include_the_deterministic_power_module():
+    """PR 3803 review round 3: the report's allowable cycles come from
+    fatigue._deterministic, so its digest must be part of the page record."""
+    assert "src/digitalmodel/fatigue/_deterministic.py" in generator().SOURCE_PATHS

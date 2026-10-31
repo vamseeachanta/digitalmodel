@@ -57,6 +57,7 @@ SOURCE_PATHS = [
     "src/digitalmodel/riser_fatigue/touchdown.py",
     "src/digitalmodel/fatigue/sn_curves.py",
     "src/digitalmodel/fatigue/damage.py",
+    "src/digitalmodel/fatigue/_deterministic.py",
     "src/digitalmodel/fatigue/c203_sn_tables.py",
     "docs/api/_assets/brand.css",
     "docs/api/cfd/turbulent-flat-plate-verification.html",
@@ -566,9 +567,10 @@ Stress corrections, period scaling, calendar conversion and acceptance definitio
 <code>test_resolve_dff.py</code> and <code>test_riser_fatigue_workflow.py</code>.
 The single-bin hand expression and synthetic examples are not independent physical benchmarks.</li>
 <li id="ref4">Shared calculation engine and encoded table provenance:
-<code>src/digitalmodel/fatigue/damage.py</code>, <code>sn_curves.py</code>,
+<code>src/digitalmodel/fatigue/damage.py</code>, <code>_deterministic.py</code>, <code>sn_curves.py</code>,
 <code>c203_sn_tables.py</code> and <code>c203_editions.py</code>.
-The stress–life backend is pyLife; both branches are anchored at the knee.</li>
+The stress–life curves are pyLife curves; both branches are anchored at the knee.
+Their powers are evaluated in exact or decimal arithmetic and rounded once, so the results do not depend on the processor.</li>
 <li id="ref5">Fatigue-factor citation interface:
 <code>src/digitalmodel/riser_database/getters.py: get_riser_dff</code>.
 The default-factor getter names the design fatigue factors section; clause applicability is not qualified here.</li>
