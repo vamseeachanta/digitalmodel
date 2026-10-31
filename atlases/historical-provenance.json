@@ -2871,6 +2871,104 @@
         "atlases/riser_fatigue/b53753cd275a/surrogate.json": "a9430f17fdb6b7800e26d4c1330e2f1661aff5776c24a48f0e68d17350ad0da5",
         "atlases/riser_fatigue/b53753cd275a/validation.json": "e0a754380884e80020b1cccef58a051516e85462e515261db960a25a5730b351"
       }
+    },
+    {
+      "manifest": "atlases/code_check/c4501a13436a/manifest.yaml",
+      "workflow_id": "api-rp-2rd-riser",
+      "recorded_code_version": "97c6a0ea8",
+      "source_publication": "first-matching-artifact-publication",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "c4501a13436a26265ee44225e015e11f1640d5cfa86e9ae772efa33850c33bb4",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "utilization_threshold",
+          "response": "utilisation",
+          "axes": [
+            {
+              "name": "outer_diameter",
+              "scale": "linear",
+              "grid": [
+                0.2,
+                0.24,
+                0.28,
+                0.32,
+                0.36
+              ]
+            },
+            {
+              "name": "wall_thickness",
+              "scale": "linear",
+              "grid": [
+                0.015,
+                0.02,
+                0.025,
+                0.03,
+                0.035
+              ]
+            },
+            {
+              "name": "effective_tension_kN",
+              "scale": "linear",
+              "grid": [
+                0,
+                400,
+                800,
+                1200,
+                1600,
+                2000
+              ]
+            },
+            {
+              "name": "bending_moment_kNm",
+              "scale": "linear",
+              "grid": [
+                0,
+                80,
+                160,
+                240,
+                320,
+                400
+              ]
+            },
+            {
+              "name": "smys",
+              "values": [
+                359000000.0,
+                448000000.0,
+                552000000.0
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {
+          "design_factor": 0.67,
+          "smts_ratio": 1.185
+        },
+        "standards": [
+          {
+            "id": "API-RP-2RD",
+            "edition": "2013"
+          }
+        ],
+        "input": "examples/workflows/api-rp-2rd-riser/input.yml",
+        "response_sources": [
+          "src/digitalmodel/orcaflex/code_check_engine.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "4dcaf1f00813cb8567341d0ae07fc4d7c9ea8101e5d0f543570b9bd6848b3680",
+        "src/digitalmodel/parametric/refresh.py": "24f4aeb7888fe4d994151f38412574e14eb72a0a8d828c84a711ccd403c731fb",
+        "src/digitalmodel/parametric/generate.py": "7d957b173df23131682559714a2ab12b0f6670b97ef11cbbaebcaa2c8e1f2e24",
+        "examples/workflows/api-rp-2rd-riser/input.yml": "8bcbf9e1f6a8bb06c79791b3184a19936c43bafd739397a262edff5469b8da38",
+        "src/digitalmodel/orcaflex/code_check_engine.py": "f53886b77ea116f9d5ccd47f6335c22f2f1b92cad7c2ed46b4c915807da03d2d"
+      },
+      "artifacts": {
+        "atlases/code_check/c4501a13436a/validation.json": "9a6124bf9a309614bff37bfbeae817cb6c79caf1cd493e286ef4b70c188f8179",
+        "atlases/code_check/c4501a13436a/grid.parquet": "0d585026a0c9a8987e00945f6aaacea0aadc69f6d572a6b4d3e97402ccafb4c5",
+        "atlases/code_check/c4501a13436a/manifest.yaml": "d99aeb8b1c40e1a8932d0d7c14ed4c95a170fbaf209dec19fc4dd1a864fd18c3",
+        "atlases/code_check/c4501a13436a/surrogate.json": "9314470c4e8cf2319f8803315b3e7e1bac468f245b610d38a56e40c8fc0e47f0"
+      }
     }
   ]
 }

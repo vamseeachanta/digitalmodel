@@ -31,7 +31,9 @@ def router(cfg: dict) -> dict:
     csv_path = _results_csv_path(cfg, settings)
     _write_results_csv(csv_path, rows)
 
-    governing = max(rows, key=lambda row: float(row["utilisation"]))
+    governing = max(
+        rows, key=lambda row: (float(row["utilisation"]), not bool(row["pass"]))
+    )
     overall_pass = all(bool(row["pass"]) for row in rows)
     cfg["code_check"] = {
         "code": code.value,
@@ -283,8 +285,8 @@ def _write_results_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         for key in row:
             if key not in fieldnames:
                 fieldnames.append(key)
-    with path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=fieldnames)
+    with path.open("w", encoding="utf-8", newline="\n") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -292,6 +294,6 @@ def _write_results_csv(path: Path, rows: list[dict[str, Any]]) -> None:
 def _display_path(path: Path) -> str:
     resolved = path.resolve()
     try:
-        return str(resolved.relative_to(REPO_ROOT.resolve()))
+        return resolved.relative_to(REPO_ROOT.resolve()).as_posix()
     except ValueError:
-        return str(resolved)
+        return resolved.as_posix()

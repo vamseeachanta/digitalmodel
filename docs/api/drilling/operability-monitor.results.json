@@ -1,7 +1,7 @@
 {
   "response": "governing_utilisation",
-  "atlas_id": "bcc370f46b9c",
-  "content_fingerprint": "bcc370f46b9c290e34554f6ddf2b82c0e147f0da2e8f41ccfc6d2d401da9e79e",
+  "atlas_id": "59305247f2d9",
+  "content_fingerprint": "59305247f2d92622c7bdb6ea9bad0e8f95e57e8727d8efed97c0c2065b29fed2",
   "tier": "quasi_static_screening",
   "offset_pct": [
     0.0,
@@ -371,5 +371,5 @@
       "lead_time_s": 13.319
     }
   ],
-  "fingerprint": "f8189081b5cf4fd7"
+  "fingerprint": "b82eff3cbdfaaf61"
 }
