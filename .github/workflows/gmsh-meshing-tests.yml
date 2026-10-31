@@ -8,6 +8,15 @@ on:
       - "src/digitalmodel/solvers/openfoam/**"
       - "tests/solvers/gmsh_meshing/**"
       - "tests/solvers/openfoam/**"
+      - "examples/hydrodynamics/oc4-semisub/**"
+      - "tests/hydrodynamics/test_oc4_public_mesh.py"
+      - "tests/hydrodynamics/test_oc4_extended_band.py"
+      - "tests/hydrodynamics/test_oc4_complex_export.py"
+      - "tests/hydrodynamics/test_oc4_staged_band.py"
+      - "tests/hydrodynamics/test_oc4_tail_bound.py"
+      - "tests/hydrodynamics/test_oc4_damage_tail.py"
+      - "tests/hydrodynamics/test_oc4_retained_measurements.py"
+      - "tests/solvers/smoke/test_ci_registration.py"
       - "tests/scripts/test_cfd_python_install.py"
       - "tests/scripts/test_dispatch_cfd_run.py"
       - "tests/scripts/test_synthetic_tank_3d_smoke.py"
@@ -27,6 +36,15 @@ on:
       - "src/digitalmodel/solvers/openfoam/**"
       - "tests/solvers/gmsh_meshing/**"
       - "tests/solvers/openfoam/**"
+      - "examples/hydrodynamics/oc4-semisub/**"
+      - "tests/hydrodynamics/test_oc4_public_mesh.py"
+      - "tests/hydrodynamics/test_oc4_extended_band.py"
+      - "tests/hydrodynamics/test_oc4_complex_export.py"
+      - "tests/hydrodynamics/test_oc4_staged_band.py"
+      - "tests/hydrodynamics/test_oc4_tail_bound.py"
+      - "tests/hydrodynamics/test_oc4_damage_tail.py"
+      - "tests/hydrodynamics/test_oc4_retained_measurements.py"
+      - "tests/solvers/smoke/test_ci_registration.py"
       - "tests/scripts/test_cfd_python_install.py"
       - "tests/scripts/test_dispatch_cfd_run.py"
       - "tests/scripts/test_synthetic_tank_3d_smoke.py"
@@ -181,6 +199,14 @@ jobs:
       - name: Run bridge tests
         run: |
           uv run --frozen --extra cfd --extra test pytest -q \
+            tests/hydrodynamics/test_oc4_public_mesh.py \
+            tests/hydrodynamics/test_oc4_extended_band.py \
+            tests/hydrodynamics/test_oc4_complex_export.py \
+            tests/hydrodynamics/test_oc4_staged_band.py \
+            tests/hydrodynamics/test_oc4_tail_bound.py \
+            tests/hydrodynamics/test_oc4_damage_tail.py \
+            tests/hydrodynamics/test_oc4_retained_measurements.py \
+            tests/solvers/smoke/test_ci_registration.py \
             tests/solvers/gmsh_meshing/test_tank_fixture.py \
             tests/solvers/openfoam/test_poly_mesh_contract.py \
             tests/solvers/openfoam/test_gmsh_bridge.py \
