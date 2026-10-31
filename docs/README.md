@@ -71,6 +71,14 @@ the analytical knowledge pack. Assignments and clearance remain
 clearance. The index specifies evidence requirements and contains no executed
 review receipt.
 
+## Module analyses
+
+The [offshore-container module analysis](reports/modules/offshore_container/index.html)
+connects ideal section and sling geometry to independent hand calculations and
+explicit synthetic caller-factor arithmetic; physical qualification remains
+`NOT_EVALUATED`. Its [rebuild instructions](reports/modules/offshore_container/README.md)
+describe the deterministic report and evidence files.
+
 ## Repo-vs-Bulk-Artifact-Store
 
 The universal placement rule is repo-vs-bulk-artifact-store. Keep source, tests,

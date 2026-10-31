@@ -1,0 +1,21 @@
+{
+  "artifacts": {
+    "README.md": "0480ba4f39e60bac253757e8de35b59b9ceda8217ac62f800d9bc96e051d57e6",
+    "changes.json": "c628f5a0626e717c450db558992214c479bd696ed74f3fa534f21671b11ac080",
+    "index.html": "7ec1848d62e577e03e5fe1689c6f98226cb77b34f7149f601dcb8f5cd468e6f0",
+    "results.json": "d5d65854020b0d3d9e129fe7caea71da91f5528b7cafb461ebe7bd1b91284862"
+  },
+  "digest_convention": "SHA-256 over exact bytes; manifest self-binding excluded; full bytes checked by rebuild test.",
+  "reviewed_source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "schema_version": 1,
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "scripts/reports/build_offshore_container_module_report.py": "e0f2bdbb1570e99107780899cadfb9a95c8f629df13d5fc91713f2376ce092ca",
+    "src/digitalmodel/citations/registry.py": "f0aa345fa6d9eaad1b97b3f18ec7682796c60b98e318d19da0537ce354da51ac",
+    "src/digitalmodel/citations/schema.py": "5cb1da984b9e993579f4a2d1e77a053330461628f4953f90fe31d3c395e48e70",
+    "src/digitalmodel/structural/offshore_container/__init__.py": "8ea341c8d0e128e67ae6fb8ab8437274da8b2bbc3e868b38e21b419af245fd9c",
+    "src/digitalmodel/structural/offshore_container/dnv_2_7_1.py": "c056a3ad3b6ed4dc17948e7ae48b6a2bd72a4bf406d8e946127fb9cb6cbdb8f6",
+    "src/digitalmodel/structural/offshore_container/docs/worked-shs-sling-geometry.md": "1de8ab5d56cebd513a23f3fa95fddd3bc4145f28115fca3feeeffc77c8d5585b",
+    "tests/reporting/test_offshore_container_module_report.py": "f7e0ff3f62987d37825c24d2f35bd2168356558b737c59cf4c791ff7f554e22a"
+  }
+}

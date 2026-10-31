@@ -1,0 +1,87 @@
+{
+  "allowable_stress_Pa": 100000000.0,
+  "angle_rad": 0.7853981633974483,
+  "evidence_class": "Synthetic geometry and caller-factor arithmetic; physical suitability NOT_EVALUATED",
+  "inputs": {
+    "b_m": 0.2,
+    "b_mm": 200.0,
+    "factors": {
+      "default_sling_angle_to_vertical_deg": 12.0,
+      "padeye_load_factor": 1.2,
+      "single_padeye_load_factor": 1.7,
+      "structure_load_factor": 1.6,
+      "tare_fraction": 0.1,
+      "usage_factor": 0.5
+    },
+    "fy_Pa": 200000000.0,
+    "gravity_m_s2": 9.80665,
+    "length_m": 6.0,
+    "lift_height_m": 5.0,
+    "n_padeyes": 4,
+    "padeye_area_m2": 0.02,
+    "rating_kg": 1000.0,
+    "t_m": 0.05,
+    "t_mm": 50.0,
+    "width_m": 8.0
+  },
+  "open_findings": [
+    {
+      "finding": "The scalar axial and bending demands omit frame action, projection of horizontal pull onto individual rail axes, member buckling, combined stress, real-section effects, joints, welds, corrosion and other load cases.",
+      "status": "NOT_EVALUATED",
+      "topic": "Strength"
+    },
+    {
+      "finding": "Net-area axial stress omits pin bearing, tear-out, bending, welds, shackle fit, out-of-plane load and local geometry.",
+      "status": "NOT_EVALUATED",
+      "topic": "Padeye"
+    },
+    {
+      "finding": "Attachment count is silently clamped to the implemented range; equal sharing over n minus one attachments is a model assumption, not an equilibrium solution for actual rigging.",
+      "status": "NOT_EVALUATED",
+      "topic": "Sharing"
+    },
+    {
+      "finding": "Public methods do not reject invalid dimensions, nonpositive areas, material stresses or inappropriate factors. The worked inputs are positive with a nonzero hollow core; wider domain behaviour is not qualified.",
+      "status": "NOT_EVALUATED",
+      "topic": "Input domain"
+    },
+    {
+      "finding": "single_padeye_load_factor and default_sling_angle_to_vertical_deg do not affect utilization. A single attachment is mapped to the lower supported count; geometry always determines angle.",
+      "status": "NOT_EVALUATED",
+      "topic": "Unused fields"
+    },
+    {
+      "finding": "utilization does not call factor_citations. The citation registry has its own values, validates metadata rather than clause content and does not bind caller overrides. No licensed standard was accessed.",
+      "status": "NOT_EVALUATED",
+      "topic": "Factor provenance"
+    },
+    {
+      "finding": "No accepted design basis, independent design review, fabrication evidence, prototype test, operational qualification or certification is supplied.",
+      "status": "NOT_EVALUATED",
+      "topic": "Certification"
+    }
+  ],
+  "reviewed_source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "schema_version": 1,
+  "sections": {
+    "metres": {
+      "area_m2": 0.030000000000000006,
+      "inertia_m4": 0.00012500000000000003,
+      "modulus_m3": 0.0012500000000000002
+    },
+    "millimetres": {
+      "area_m2": 0.030000000000000006,
+      "inertia_m4": 0.00012500000000000003,
+      "modulus_m3": 0.0012500000000000002
+    }
+  },
+  "utilization": {
+    "FL_kN": 15.69064,
+    "floor": 0.04412992499999999,
+    "governing": 0.04412992499999999,
+    "pad_eye": 0.0027737394862892223,
+    "rsl_kN": 5.547478972578445,
+    "sling_angle_to_vertical_deg": 45.0,
+    "top_rail": 0.0013075533333333329
+  }
+}
