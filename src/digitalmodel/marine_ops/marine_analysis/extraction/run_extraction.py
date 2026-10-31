@@ -5,12 +5,6 @@ Wrapper script to run hydrodynamic coefficient extraction with proper encoding.
 import sys
 import os
 
-# Set UTF-8 encoding for stdout only when running as main, not during testing
-if sys.platform == 'win32' and 'pytest' not in sys.modules:
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
-
 # Add scripts to path
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -18,6 +12,11 @@ sys.path.insert(0, os.path.dirname(__file__))
 from .extract_hydro import HydrodynamicCoefficientExtractor
 
 if __name__ == '__main__':
+    if sys.platform == 'win32':
+        for stream in (sys.stdout, sys.stderr):
+            if hasattr(stream, 'reconfigure'):
+                stream.reconfigure(encoding='utf-8', errors='replace')
+
     print("=" * 80)
     print("HYDRODYNAMIC COEFFICIENT EXTRACTION & VISUALIZATION")
     print("=" * 80)

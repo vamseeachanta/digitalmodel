@@ -1,0 +1,10 @@
+{
+  "status": "Historical report revision; portable provenance coverage is retained in the current report tests.",
+  "changes": [
+    {
+      "revision": "D",
+      "date": "2026-10-27",
+      "change": "Provenance regression coverage now exercises POSIX and Windows paths; dependent evidence digests are refreshed without changing numerical inputs or results."
+    }
+  ]
+}
