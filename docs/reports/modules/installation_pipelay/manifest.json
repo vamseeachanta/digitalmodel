@@ -1,0 +1,22 @@
+{
+  "artifacts": {
+    "README.md": "d35c4e3c5946bf2d8f9133a6489836b565b2332ee1a2b30cdf911d701b3cd5a9",
+    "changes.json": "6faad2e3f710ca00e0bd5f431fc3b590004ec0d1ed9161b4110883b15b982956",
+    "index.html": "cad15d8c82c9137b7b10b7f689a7299edd33ac23c1e3145344945b82adc7bf8d"
+  },
+  "input_basis": "Locally selected illustrative arithmetic controls; not qualified design inputs",
+  "input_basis_review": "PENDING_MAINTAINER_ACCEPTANCE",
+  "qualification": "ARITHMETIC_ONLY",
+  "schema": "installation-pipelay-report/1",
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "scripts/reports/build_installation_pipelay_module_report.py": "b5b1e70634c117bd251f441afdc6c62a71027a0fdc1490aceef2f269c4f821eb",
+    "src/digitalmodel/installation/pipelay/integrity.py": "b6807e5fee6ecb4a84a116d905d2e5dc3ee4927ba6bb294025b5cdcea892a107",
+    "src/digitalmodel/installation/pipelay/stress.py": "5fe942bc4dd276ffdb83dd56934e94e2f05fbfbd9243d19f030f0eae3bc81146",
+    "tests/installation/test_pipelay_integrity.py": "072c1ffe1d99afc3ad49ff59f2011bf1ff7f6f8b3f499d748cd986a06cac1564",
+    "tests/installation/test_pipelay_report_hand_values.py": "5687df6c12d71ec4513390639c41c2f3fd5b0897ccb37b22380659fcd27f8f34",
+    "tests/installation/test_pipelay_stress.py": "5a1a62d4d6cc56b62bfbab32f4dae15f4b958f94439930226edde77e332a4530",
+    "tests/installation/test_pipelay_stress_finite_inputs.py": "685cd0d384152a8225f069015fd8ef1e9e666caaba6f6d48970f24c98b238d99",
+    "tests/reporting/test_installation_pipelay_module_report.py": "81b999778d7ea071f5086257d8e7a74f010d3d6b5fda625f3251ae141ba3d727"
+  }
+}

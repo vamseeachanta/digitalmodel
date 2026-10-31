@@ -1,0 +1,12 @@
+[
+  {
+    "change": "Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.",
+    "date": "2026-10-28",
+    "revision": "A"
+  },
+  {
+    "change": "Input provenance is corrected to locally selected illustrative arithmetic controls because no external input specification is identified; maintainer acceptance of this basis remains pending and the inputs and calculated results are unchanged.",
+    "date": "2026-10-28",
+    "revision": "B"
+  }
+]
