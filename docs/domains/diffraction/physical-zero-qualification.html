@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Physical-zero provenance diagnostics</title>
+<h1>Physical-zero provenance diagnostics</h1>
+<p>The diagnostic identifies exact-zero rotational radiation rows and columns and reports inconsistent provenance claims. Every assessment remains <code>NOT_EVALUATED</code>, with null correlation. Matching claims do not establish geometry, physical-mode applicability or model-to-extraction lineage. The comparator continues to refuse unexplained zero diagonals.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr><tr><td>1</td><td>2026-10-20</td><td>Zero-pattern and binding diagnostics are provided without a physical acceptance exemption.</td></tr></table>
+<p>Table 1. Revision history.</p>
+<h2>Method and source</h2>
+<p>Orcina's OrcaWave online help, undated edition accessed 2026-10-20, gives the rotational boundary forcing as (x × n)<sub>j</sub> in <a href="https://www.orcina.com/webhelp/OrcaWave/Content/html/Theory,First-orderequations.htm#TheRadiationPotential">First-order equations: The radiation potential</a>. Its <a href="https://www.orcina.com/webhelp/OrcaWave/Content/html/Results,Addedmassanddamping.htm">Results: Added mass and damping</a> gives the body-coordinate relation A<sub>ij</sub> − 𝑖 B<sub>ij</sub>/ω = ρ ∫ n<sub>vel,i</sub> φ<sub>j</sub> dS, where 𝑖 denotes the imaginary unit.</p>
+<p>For a sphere centred at the rotation origin, n is parallel to x and x × n is zero. A rotational null mode is therefore a physical possibility inferred from this formulation. This inference does not validate an actual mesh, frame, extracted array or solver. Mesh geometry, appendages, coordinate origin and the extraction path require separate evidence.</p>
+<p>An exact-zero observation is computed only when the complete row and column are zero at every supplied frequency. No tolerance or acceptance limit is inferred. Near-zero coefficients require a sourced case-specific criterion. Invalid or incomplete arrays, noncanonical units, unknown sources and entirely zero matrices carry explicit reasons and remain unqualified. Single-frequency observations do not establish sweep coverage.</p>
+<h2>Existing records and authority boundary</h2>
+<p><code>output_schemas.HydrodynamicMatrix</code> records source, frequency, units and kind. Matrix-set records add the frequency axis and a source-file reference. <code>aqwa_runner.AQWARunResult</code> and <code>orcawave_runner.RunResult</code> retain input/output references and extracted results, but these fields do not independently establish geometry ownership, body-coordinate identity or extraction lineage. A source label of <code>solver</code> is a claim, not authentication.</p>
+<p><code>ModelContext</code> carries a model-side digest, opaque body identifier and body frame supplied independently of <code>ExtractionClaim</code>. The body-frame axes are the body basis vectors expressed in a common reference frame; the origin is expressed in metres in that frame. Coordinate systems and body identifiers must have the same independently established authority. The frame container checks finite dimensions only; it does not validate orthogonality or geometric suitability.</p>
+<p>The assessment recomputes the model-input and native-output digests from caller-supplied bytes, compares model/body/origin/axes between the independent context and the extraction claim, and recomputes the coefficient digest. An extractor revision is required for complete diagnostic metadata. A matching record still carries <code>MODEL_GEOMETRY_UNVERIFIED</code>, <code>EXTRACTION_LINEAGE_UNESTABLISHED</code> and <code>PHYSICAL_MODE_UNESTABLISHED</code>. Copying a frame into a claim or hashing two unrelated files cannot remove these reasons.</p>
+<p>No certificate authority, source-catalogue entry, revocation lifecycle or comparator exemption is introduced. The assessment is advisory and is not consumed by verdict generation. <code>ABSENT_DIAGONAL</code>, null correlation and existing sampling/coverage checks remain authoritative for comparisons. A separately reviewed provenance authority and independently validated physical-mode procedure remain open in <a href="https://github.com/vamseeachanta/digitalmodel/issues/2112">issue 2112</a>.</p>
+<h2>Digest contract</h2>
+<p><code>coefficient_digest</code> uses SHA-256 over UTF-8 JSON with sorted object keys, compact separators, the standard JSON ASCII escaping and nonfinite values prohibited. Numeric coefficients and frequencies are normalized to floats. The payload keys are <code>frequencies_rad_s</code> and <code>matrices</code>; each matrix contains <code>frequency</code>, <code>matrix</code>, <code>matrix_type</code>, <code>units</code> and <code>source</code>. Digest equality establishes consistency of this extracted representation only. Model digests and native-output digests identify the separate raw byte strings supplied by the caller.</p>
+<h2>Worked example: synthetic yaw observation</h2>
+<p>Inputs are f = (1, 2, 3) rad/s and A(f) = diag(f, 2f, 3f, 4f, 5f, 0), with the schema's SI added-mass units. These are synthetic inputs, not engineering reference coefficients. The body frame uses a zero origin and identity axes. Literal synthetic model/output byte strings and an extraction revision are supplied. No native solver is used.</p>
+<p>Hand calculation: A<sub>66</sub> is zero at each frequency, and all off-diagonal entries in row and column 6 are zero. Other diagonal entries are nonzero. Thus a rotational zero is observed. The inputs do not authenticate geometry or causal extraction, so physical acceptance cannot be calculated.</p>
+<pre>python examples/hydrodynamics/physical_zero_diagnostic.py</pre>
+<p>The output includes a coefficient digest and the following answer:</p>
+<pre>{
+  "zero_mode_observed": true,
+  "reasons": [
+    "MODEL_GEOMETRY_UNVERIFIED",
+    "EXTRACTION_LINEAGE_UNESTABLISHED",
+    "PHYSICAL_MODE_UNESTABLISHED"
+  ],
+  "status": "NOT_EVALUATED",
+  "correlation": null
+}</pre>
+<p>The example loads the standalone diagnostic by file location to avoid importing optional solver adapters. Its matrix objects implement the attribute protocol of the existing matrix-set schemas. Applications that already use those schemas can pass <code>AddedMassSet</code> or <code>DampingSet</code> directly.</p>
+</html>
