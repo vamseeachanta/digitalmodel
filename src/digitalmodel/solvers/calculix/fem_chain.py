@@ -367,7 +367,8 @@ class FEMChain:
         self._nodes = node_coords.reshape(-1, 3)
 
         self._elements = {}
-        for etype in gmsh_module.model.mesh.getElementTypes():
+        # Volume elements only: gmsh boundary lines would export as B31 beams with no section.
+        for etype in gmsh_module.model.mesh.getElementTypes(dim=3):
             etags, enodes = gmsh_module.model.mesh.getElementsByType(etype)
             props = gmsh_module.model.mesh.getElementProperties(etype)
             name, dim, npn = props[0], props[1], props[3]
