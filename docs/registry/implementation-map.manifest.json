@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "generator": "scripts/generate_implementation_map.py",
+  "scope": "Source coordinates and digests for second-order slow drift, geotechnics and scour; other inventory metadata retained.",
+  "digest_convention": "SHA-256 over exact UTF-8 bytes with LF line endings.",
+  "artifacts": [
+    {
+      "path": "docs/registry/implementation-map.yaml",
+      "sha256": "dca8cef1b5bd980fb34988511b4c1811b5af4cc98c410ba45b0900ecd319099a"
+    }
+  ]
+}

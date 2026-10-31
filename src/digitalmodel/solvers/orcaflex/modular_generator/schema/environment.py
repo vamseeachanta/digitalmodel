@@ -97,7 +97,7 @@ class WaveTrain(BaseModel):
         description="Wave phase (deg); must be 0 — see class docstring",
     )
     gamma: float = Field(
-        default=3.3, gt=1, le=7, description="JONSWAP gamma (typically 1-7)"
+        default=3.3, ge=1, le=7, description="JONSWAP gamma (1 is the unenhanced spectrum)"
     )
 
     @field_validator("type")

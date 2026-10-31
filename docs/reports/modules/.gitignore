@@ -1,0 +1,6 @@
+# Preserve reproducible module reports after the shared root ignore rules.
+!vesselseakeeping/manifest.json
+!riserfatigue/
+!riserfatigue/generate_report.py
+!riserfatigue/report.html
+!riserfatigue/changes.json

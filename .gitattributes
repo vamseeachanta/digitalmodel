@@ -114,3 +114,21 @@ docs/api/installation/installation-forecast.manifest.json text eol=lf
 
 # Preserve manifest-bound riser database fingerprints across checkout settings.
 data/riser_database/** text eol=lf
+
+# Preserve raw-byte campaign inputs, worked examples and captured sources.
+examples/riser-campaign/** text eol=lf
+scripts/riser_campaign/generate_inputs.py text eol=lf
+scripts/riser_campaign/validate_manifest.py text eol=lf
+scripts/riser_campaign/frozen_scope.py text eol=lf
+src/digitalmodel/riser_configuration_screen/static.py text eol=lf
+src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py text eol=lf
+src/digitalmodel/marine_ops/marine_analysis/catenary/solver.py text eol=lf
+src/digitalmodel/solvers/orcaflex/modular_generator/builders/generic_builder.py text eol=lf
+src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py text eol=lf
+src/digitalmodel/solvers/orcaflex/modular_generator/schema/__init__.py text eol=lf
+src/digitalmodel/solvers/orcaflex/modular_generator/schema/environment.py text eol=lf
+src/digitalmodel/solvers/orcaflex/yaml_utils.py text eol=lf
+docs/domains/orcaflex/library/campaigns/generic-scr-slwr/basis.yml text eol=lf
+src/digitalmodel/materials/grades.py text eol=lf
+docs/verification/riser-mesh-review.json text eol=lf
+scripts/riser_campaign/audit_mesh.py text eol=lf
