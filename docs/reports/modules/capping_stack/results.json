@@ -1,0 +1,75 @@
+{
+  "containment": [
+    {
+      "column_density": 1000,
+      "direct_siwhp": 3000000.0,
+      "hydrostatic_head": 0.0,
+      "is_contained": true,
+      "rated_working_pressure": 4000000,
+      "siwhp": 3000000.0,
+      "utilisation": 0.75
+    },
+    {
+      "column_density": 1000,
+      "direct_siwhp": 4000000.0,
+      "hydrostatic_head": 0.0,
+      "is_contained": true,
+      "rated_working_pressure": 4000000,
+      "siwhp": 4000000.0,
+      "utilisation": 1.0
+    },
+    {
+      "column_density": 1000,
+      "direct_siwhp": 5000000.0,
+      "hydrostatic_head": 0.0,
+      "is_contained": false,
+      "rated_working_pressure": 4000000,
+      "siwhp": 5000000.0,
+      "utilisation": 1.25
+    }
+  ],
+  "inputs": {
+    "column_density_kg_m3": 1000,
+    "crane_swl_n": 19613.3,
+    "daf": 1,
+    "datum_separation_m": 0,
+    "displaced_volume_m3": 1,
+    "dry_volume_m3": 0,
+    "hs_limit_m": 1,
+    "hs_m": [
+      1,
+      3
+    ],
+    "mass_kg": 2000,
+    "pressure_reference": "common atmospheric gauge; synthetic scalar comparison",
+    "reservoir_pressures_pa": [
+      3000000,
+      4000000,
+      5000000
+    ],
+    "supplied_rating_pa": 4000000,
+    "water_density_kg_m3": 1000,
+    "water_depth_m": 0
+  },
+  "lift": {
+    "dry_force_n": 19613.3,
+    "scenarios": [
+      {
+        "feasible": true,
+        "governing_constraint": "none",
+        "hook_load": 9806.65,
+        "lift_utilisation": 0.5,
+        "submerged_weight": 9806.65
+      },
+      {
+        "feasible": false,
+        "governing_constraint": "sea_state",
+        "hook_load": 9806.65,
+        "lift_utilisation": 0.5,
+        "submerged_weight": 9806.65
+      }
+    ],
+    "wet_dry_ratio": 0.5,
+    "wet_force_n": 9806.65
+  }
+}

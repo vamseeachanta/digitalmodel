@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capping-stack scalar module analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+
+pre, code { overflow-wrap: anywhere; white-space: pre-wrap; }
+nav a { margin-right: 1em; } svg { max-width: 100%; }
+</style></head><body class="hs-doc"><main class="wrap">
+<header><h1>Capping-stack scalar module analysis</h1>
+<p>Static containment comparison and buoyancy balance; draft for technical review.</p></header>
+<nav aria-label="Report sections"><a href="#s1">Summary</a><a href="#s3">Inputs</a>
+<a href="#s5">Calculation</a><a href="#s7">Results</a><a href="#s8">Limits</a><a href="#s10">Evidence</a></nav>
+<h2 id="s1">1. Summary</h2>
+<p>The public capping-stack API reproduces the synthetic scalar pressure boundaries and submerged-weight ratio derived below [H, S]. The pressure comparison accepts equality and rejects exceedance. These are arithmetic checks against supplied limits; they establish no equipment or operating qualification.</p>
+<p>The calculated wet-to-dry force ratio is 50.0% [H, S]. Raising only the supplied sea state changes the returned governing constraint while hook load remains unchanged. The report inventories the wider package without evaluating its interface or inflow/transient methods.</p>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Initial scalar module report added to expose the input, method and answer chain and its limits.</td></tr></tbody></table>
+<h2 id="s2">2. Context and scope</h2>
+<p>The package provides static pressure comparison, nominal interface checks, scalar lift screens and constant-density inflow/transient helpers. Reviewed source revision: <code>09089a121a16069c4b657d1a320a630a23ab1dd5</code> [S]. The manifest binds the exact reviewed file bytes and report-generation evidence. A rebuild checks the current bytes; a matching replay alone is not independent numerical evidence.</p>
+<p>Scope is limited to scalar pressure containment with zero vertical separation and the submerged-weight ratio. The cases are synthetic fixtures, not a field example, pressure class, deployment recommendation or selected design basis. The existing <a href="../../../../src/digitalmodel/subsea/capping_stack/docs/worked-static-containment.md">public-source worked document</a> and its revision history are preserved; its nonzero-column example is separate evidence [W].</p>
+<h2 id="s3">3. Input basis</h2>
+<p>[H] defines all numerical inputs below as arbitrary arithmetic test values. They are assumptions for this calculation only. No physical calibration is inferred. [G] supplies standard gravity for the separate dimensional force check; gravity cancels from the ratio and the zero-height pressure check.</p>
+<table><thead><tr><th>Input</th><th>Unit</th><th>Basis</th></tr></thead><tbody>
+<tr><td>Column and water density</td><td>kg/m³</td><td>Explicit synthetic densities [H]; not a gas model or measured seawater property.</td></tr>
+<tr><td>Datum separation; water depth</td><td>m</td><td>Zero-height boundary [H]; no actual subsea location.</td></tr>
+<tr><td>Reservoir pressures; supplied rating</td><td>Pa</td><td>Scalar pressure inputs [H]; no equipment class selected.</td></tr>
+<tr><td>Mass; wet and dry displaced volume</td><td>kg; m³</td><td>Synthetic force balance [H]; explicit volume overrides the default.</td></tr>
+<tr><td>DAF; crane SWL; Hs and Hs limit</td><td>dimensionless; N; m</td><td>Unit multiplier; dry-force reference as comparison limit; arbitrary sea-state pair [H, G].</td></tr>
+</tbody></table>
+<p>Exact unrounded input values follow; suffixes specify SI units. Reservoir and comparison pressures share the atmospheric gauge reference stated in the payload. The upper datum maps to the mudline argument only as a scalar fixture; no external seawater pressure is subtracted.</p>
+<pre>{
+  &quot;column_density_kg_m3&quot;: 1000,
+  &quot;crane_swl_n&quot;: 19613.3,
+  &quot;daf&quot;: 1,
+  &quot;datum_separation_m&quot;: 0,
+  &quot;displaced_volume_m3&quot;: 1,
+  &quot;dry_volume_m3&quot;: 0,
+  &quot;hs_limit_m&quot;: 1,
+  &quot;hs_m&quot;: [
+    1,
+    3
+  ],
+  &quot;mass_kg&quot;: 2000,
+  &quot;pressure_reference&quot;: &quot;common atmospheric gauge; synthetic scalar comparison&quot;,
+  &quot;reservoir_pressures_pa&quot;: [
+    3000000,
+    4000000,
+    5000000
+  ],
+  &quot;supplied_rating_pa&quot;: 4000000,
+  &quot;water_density_kg_m3&quot;: 1000,
+  &quot;water_depth_m&quot;: 0
+}
+</pre>
+<h2 id="s4">4. Method and public function inventory</h2>
+<p>For z positive downward from the upper datum, a static fluid element gives A dp = ρ A g dz. Integration gives p_res − p_wh,raw = ∫ρg dz = ρgh for constant density. The implementation then uses p_screen = max(p_res − ρgh, 0), U = p_screen/R, and is_contained = (p_screen ≤ R) [H, S]. Pressure units are kg/(m s²), or Pa. The zero clamp is an implementation policy; it is not evidence of flow direction or absolute vacuum.</p>
+<p>Buoyancy force is the weight of displaced fluid. Net downward force W = (m − ρV)g, hook force F = DAF × W, lift utilisation = F/SWL, and the returned scalar flag requires both F/SWL ≤ unity and Hs ≤ Hs_limit [H, S]. DAF means supplied dynamic amplification factor, Hs means significant wave height and SWL means the supplied crane load limit.</p>
+<table><thead><tr><th>Public function / source</th><th>Inputs and units</th><th>Output and evaluated scope</th></tr></thead><tbody><tr><td><code>shut_in_wellhead_pressure</code><br>containment_capacity.py</td><td>Reservoir pressure [Pa], positive datum-to-mudline vertical separation [m], column density [kg/m³].</td><td>Clamped scalar shut-in pressure [Pa]. Evaluated here at zero separation only. [S]</td></tr><tr><td><code>check_containment</code><br>containment_capacity.py</td><td>Positive supplied rating [Pa] and the same pressure, depth and density inputs.</td><td>ContainmentResult: pressure, rating and hydrostatic head [Pa], utilisation [-], inclusive flag, density [kg/m³], notes. [S]</td></tr><tr><td><code>check_compatibility</code><br>interface_check.py</td><td>Stack and wellhead nominal bores [in], pressure-class enums, connector enums, bore tolerance [in].</td><td>InterfaceResult: compatible flag and reason strings. NOT_EVALUATED: nominal comparisons do not qualify seal or connector performance. [S]</td></tr><tr><td><code>submerged_weight</code><br>deployment.py</td><td>Mass [kg], displaced volume [m³], water density [kg/m³].</td><td>Net downward force [N]. Evaluated here with explicit displacement and density. [S]</td></tr><tr><td><code>feasibility</code><br>deployment.py</td><td>CappingStack (mass [kg], optional volume [m³]); DeploymentScenario (crane SWL [N], water depth [m], Hs [m], Hs limit [m], DAF [-]); water density [kg/m³].</td><td>DeploymentResult: feasible flag, submerged force and hook load [N], lift utilisation [-], governing constraint, notes. Only supplied scalar comparisons are exercised. [S]</td></tr><tr><td><code>linear_inflow</code><br>containment_flow.py</td><td>Absolute bottomhole and reservoir pressures [Pa], productivity [m³/(s Pa)].</td><td>Nonnegative local volumetric rate [m³/s]. NOT_EVALUATED. [S]</td></tr><tr><td><code>vogel_inflow</code><br>containment_flow.py</td><td>Absolute bottomhole and reservoir pressures [Pa], maximum local rate [m³/s].</td><td>Local volumetric rate [m³/s] from the existing empirical form. NOT_EVALUATED. [S]</td></tr><tr><td><code>gas_backpressure_inflow</code><br>containment_flow.py</td><td>Absolute bottomhole and reservoir pressures [Pa], coefficient [m³/(s Pa^(2n))], exponent n [-].</td><td>Local volumetric rate [m³/s] from the existing pressure-squared form. NOT_EVALUATED. [S]</td></tr><tr><td><code>solve_operating_point</code><br>containment_flow.py</td><td>Inflow and choke callbacks [m³/s]; absolute reservoir/outlet pressures [Pa]; density [kg/m³], depth/length/diameter [m], gravity [m/s²], friction factor and opening [-].</td><td>FlowOperatingPoint: local rate and intersection residuals [m³/s], wellhead/bottomhole pressures [Pa], opening [-]. NOT_EVALUATED. [S]</td></tr><tr><td><code>staged_shut_in</code><br>containment_flow.py</td><td>Steady well inputs, stage times [s], openings [-], supplied transient pressure allowances [Pa], rating [Pa].</td><td>StagedContainment: stage results, times [s], allowances and peak [Pa], peak time [s], terminal and bounded-peak containment results. NOT_EVALUATED; supplied allowances are not computed surge. [S]</td></tr><tr><td><code>transient_shut_in</code><br>containment_flow.py</td><td>Steady well inputs, closure times [s], openings [-], acoustic speed [m/s], cell count [-], duration [s], reverse productivity [m³/(s Pa)], rating [Pa].</td><td>TransientContainment: pressure [Pa] and local rate [m³/s] histories, times [s], peak [Pa], peak time [s], static terminal and computed-peak containment results. NOT_EVALUATED: elastic constant-density model only. [S]</td></tr></tbody></table>
+<p>Public types: ContainmentResult; PressureClass (including its pascals property), ConnectorClass, WellheadSpec, CappingStackSpec, InterfaceResult; CappingStack, DeploymentScenario, DeploymentResult; FlowOperatingPoint, StagedContainment, TransientContainment. The pressure property converts the enum using PSI_TO_PA. Exported GAS_COLUMN_DENSITY, OIL_COLUMN_DENSITY, BRINE_COLUMN_DENSITY and PSI_TO_PA are convenience inputs, not qualified data. The private root-finding helper is implementation support, not a public entry point [S].</p>
+<h2 id="s5">5. Worked calculation</h2>
+<p>[H] Independent hand derivation: with ρ = 1000 kg/m³ and h = 0 m, ∫ρg dz = 0 Pa for any finite constant g. For p_res = 3.0, 4.0 and 5.0 MPa, scalar wellhead pressures are respectively 3.0, 4.0 and 5.0 MPa. With supplied R = 4.0 MPa, U = 3/4, unity and 5/4; the exact inclusive flags are True, True and False. These pressures and the rating are arbitrary scalar inputs, not an equipment pressure class.</p>
+<p>[H] For mass 2000 kg, volume 1 m³ and water density 1000 kg/m³, W_wet/W_dry = (2000 − 1000 × 1)/2000 = one-half. The dry comparison uses the same mass and zero displaced volume. Standard gravity from [G] supplies dimensional forces; it is not needed for the one-half ratio. The supplied crane limit is the dry force, and DAF is unity, so lift utilisation is also one-half.</p>
+<figure><svg viewBox="0 0 720 200" role="img" aria-label="Calculated wet-to-dry force ratio">
+<rect x="180" y="35" width="200.0" height="35" fill="var(--brand)"/>
+<rect x="180" y="100" width="400" height="35" fill="var(--panel-2)" stroke="currentColor"/>
+<text x="15" y="60">Wet force</text><text x="15" y="125">Dry reference</text>
+<text x="180" y="175">Wet / dry = 50.0% [H, S]</text></svg><figcaption>Generated force-ratio diagram from public helper outputs; bar lengths are proportional forces, not physical dimensions [H, S].</figcaption></figure>
+<h2 id="s6">6. Checks</h2>
+<p>The dedicated regression test independently derives the preceding balances without importing implementation constants. Positive values use relative tolerance 1e-12 with no absolute tolerance, solely for binary floating-point roundoff; exact zero and inclusive decision flags are compared exactly. This is not an uncertainty allowance or a decision tolerance [T].</p>
+<p>Separate checks compare API replay, two clean external rebuilds and committed bytes. Manifest digests are checked by independent readback. Negative controls change a result magnitude or sign and coherently regenerate both HTML and hashes: internal agreement passes integrity checks but fails the hand oracle. Additional tampering without regeneration fails the manifest check [T]. These are regression and freshness checks, not physical validation.</p>
+<h2 id="s7">7. Results</h2>
+<table><thead><tr><th>p_res [MPa]</th><th>Head [MPa]</th><th>p_screen [MPa]</th><th>Supplied R [MPa]</th><th>Utilisation [%]</th><th>is_contained</th><th>Basis</th></tr></thead><tbody><tr><td>3.0</td><td>0.0</td><td>3.0</td><td>4.0</td><td>75.0%</td><td>True</td><td>[H, S]</td></tr><tr><td>4.0</td><td>0.0</td><td>4.0</td><td>4.0</td><td>100.0%</td><td>True</td><td>[H, S]</td></tr><tr><td>5.0</td><td>0.0</td><td>5.0</td><td>4.0</td><td>125.0%</td><td>False</td><td>[H, S]</td></tr></tbody></table>
+<p>Dry reference force: 19613.3 N; wet force: 9806.6 N; wet/dry ratio: 50.0% [H, G, S]. Forces use the standard-gravity convention. Display values are rounded; <a href="results.json">results.json</a> retains unrounded API outputs.</p>
+<table><thead><tr><th>Hs [m]</th><th>Supplied limit [m]</th><th>Hook load [N]</th><th>Lift utilisation [%]</th><th>feasible</th><th>Governing constraint</th><th>Basis</th></tr></thead><tbody><tr><td>1.0</td><td>1.0</td><td>9806.6</td><td>50.0%</td><td>True</td><td>none</td><td>[H, G, S]</td></tr><tr><td>3.0</td><td>1.0</td><td>9806.6</td><td>50.0%</td><td>False</td><td>sea_state</td><td>[H, G, S]</td></tr></tbody></table>
+<p>The feasible flag is the API field name for these two supplied comparisons. It does not establish deployment suitability. The higher sea state changes the governing status without a change to computed hook load because Hs is not used to derive DAF in this helper [S].</p>
+<h2 id="s8">8. Limits / NOT_EVALUATED</h2>
+<ul><li>Pressure reference and datum: static functions do not tag gauge versus absolute pressure or perform ambient-pressure conversion. Callers must provide a consistent reference for pressure and rating. Flow helpers require absolute pressures. Mixing these conventions is outside the evidence [S].</li>
+<li>Density: static containment defaults to GAS_COLUMN_DENSITY = 200 kg/m³; the oil and brine presets are 800 and 1030 kg/m³ respectively [S]. These convenience densities are assumed, based on previous experience. Constant density and gravity are assumed; this report supplies density explicitly and checks no nonzero hydrostatic gradient. The clamp does not resolve an overbalanced well or flow behaviour [S, W].</li>
+<li>Displacement and dynamics: omitted displacement is inferred as mass divided by STACK_BULK_DENSITY. The implemented bulk density is 4000 kg/m³, water density defaults to 1025 kg/m³ and DAF defaults to 2.0 [S]. These convenience assumptions are assumed, based on previous experience; they are not calibrated data. No default is qualified here; displacement, density and DAF are explicit in every displayed case. Water depth is stored but unused by feasibility; current, splash-zone loads, crane geometry and line dynamics are NOT_EVALUATED [S].</li>
+<li>Input domains: static pressure and lift helpers reject nonpositive rating or crane SWL, but do not comprehensively validate finite or physically meaningful density, depth, mass, volume and dynamic multiplier. Broader input validation and the treatment of buoyant upward force remain open findings, without an algorithm or acceptance-policy change [S].</li>
+<li>Nominal interface compatibility, connector/seal mechanics, interface standards, well-control operations, emergency-response decisions, deployment suitability and all standards qualification are NOT_EVALUATED. No licensed clause values or acceptance criteria are reproduced.</li>
+<li>Inflow curves, choke callbacks, local gas-volume conversion, elastic transients, multiphase/compositional behaviour, cavitation and physical calibration are NOT_EVALUATED. Existing transient helpers do not imply transient multiphase qualification [S].</li></ul>
+<h2 id="s9">9. Way forward</h2>
+<p>Maintain the report as bounded arithmetic evidence. Before engineering use, establish pressure reference, external pressure treatment, credible column density, datum and rating provenance. Supply measured mass/displacement, qualified crane and environmental criteria and a justified dynamic-load method. Resolve input-domain and acceptance-policy findings separately. Obtain independent review of methods, standards applicability and physical data before any operational conclusion. The wider qualification portions remain open.</p>
+<details id="changes-panel"><summary>Engineering changes</summary><p>Initial scalar module report added to expose the input, method and answer chain and its limits.</p></details>
+<h2 id="s10">10. References and evidence</h2>
+<ul><li>[H] Independent derivations in the worked calculation: static vertical force balance and displaced-fluid weight. Every synthetic input is defined in the input payload and independently pinned in the dedicated test. No measurement or published equipment example is asserted.</li>
+<li>[G] <a href="https://physics.nist.gov/cgi-bin/cuu/Value?gn">NIST: standard acceleration of gravity</a>, exact standard-gravity convention, g = 9.80665 m/s²; consulted 2026-10-28. This constant checks dimensional forces independently of the source constants.</li>
+<li>[S] Public package inventory at reviewed revision <code>09089a121a16069c4b657d1a320a630a23ab1dd5</code>; exact source hashes follow. Existing source docstrings are descriptions of code, not evidence of standards qualification.</li>
+<li>[W] <a href="../../../../src/digitalmodel/subsea/capping_stack/docs/worked-static-containment.md">Preserved static-containment worked document</a>: separate public-source example, hydrostatic derivation, conversions and documented limits. Its historical source-access statements are unchanged and are not new source-access claims.</li>
+<li>[T] <code>tests/reporting/test_capping_stack_module_report.py</code>: independent oracle, negative controls, replay, rebuild, manifest and link assertions. Test outcomes belong to the delivery record; executing the builder alone does not assert a passing test run.</li></ul>
+<p>Delivery files: <a href="results.json">unrounded results</a>, <a href="changes.json">change history</a>, <a href="manifest.json">byte manifest</a> and <a href="README.md">rebuild instructions</a>. The manifest excludes its own digest to avoid a circular binding. Its digest convention is SHA-256 over exact UTF-8 bytes with LF line endings. No runtime timestamps, absolute paths or environment identities enter the evidence.</p>
+<details><summary>Source file digests</summary><ul><li><code>src/digitalmodel/subsea/capping_stack/__init__.py</code>; SHA-256: <code>17370e478c915e5d6190f41e18b51aee32ae2dc2f6b1481ed546ef1cdf0f6d4f</code></li><li><code>src/digitalmodel/subsea/capping_stack/containment_capacity.py</code>; SHA-256: <code>a8724419e4f09d96006e49ec7c7e88dd7f543537124afaa3abe2253a4a8f7595</code></li><li><code>src/digitalmodel/subsea/capping_stack/interface_check.py</code>; SHA-256: <code>d41ba007c669c5c505fc157fde1891455d0a40422445a8b70090ddbaf38efa11</code></li><li><code>src/digitalmodel/subsea/capping_stack/deployment.py</code>; SHA-256: <code>6e0a9ba00e9eb4f544f70f19fbbfde592a2c7c9be0cf33411290a483141b7ba2</code></li><li><code>src/digitalmodel/subsea/capping_stack/containment_flow.py</code>; SHA-256: <code>e9a6716217cc34db40146554633f5de897df28f57a4126e218018446e24961f5</code></li><li><code>src/digitalmodel/subsea/capping_stack/_root_finding.py</code>; SHA-256: <code>a31d1423307f3361896bf2caec536c7a1cc1a13137b24fdda0933b0b0591d014</code></li><li><code>src/digitalmodel/subsea/capping_stack/docs/worked-static-containment.md</code>; SHA-256: <code>27198faba896464be925a57219a5195cc380907901772bdc38d3c3827322b8e8</code></li><li><code>scripts/reports/build_capping_stack_module_report.py</code>; SHA-256: <code>63c606d4bc8c99295446902f1edf94dd1ed7c909077959fbc409b7ae5aa694a8</code></li><li><code>tests/reporting/test_capping_stack_module_report.py</code>; SHA-256: <code>10667568c85f23751efb9881cd52c57cf52d9e3ed45764ec46a298c88c8e8e5d</code></li><li><code>docs/api/_assets/brand.css</code>; SHA-256: <code>a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</code></li><li><code>docs/api/cfd/turbulent-flat-plate-verification.html</code>; SHA-256: <code>bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25</code></li></ul></details>
+</main><script id="calculation" type="application/json">{"containment": [{"column_density": 1000, "direct_siwhp": 3000000.0, "hydrostatic_head": 0.0, "is_contained": true, "rated_working_pressure": 4000000, "siwhp": 3000000.0, "utilisation": 0.75}, {"column_density": 1000, "direct_siwhp": 4000000.0, "hydrostatic_head": 0.0, "is_contained": true, "rated_working_pressure": 4000000, "siwhp": 4000000.0, "utilisation": 1.0}, {"column_density": 1000, "direct_siwhp": 5000000.0, "hydrostatic_head": 0.0, "is_contained": false, "rated_working_pressure": 4000000, "siwhp": 5000000.0, "utilisation": 1.25}], "inputs": {"column_density_kg_m3": 1000, "crane_swl_n": 19613.3, "daf": 1, "datum_separation_m": 0, "displaced_volume_m3": 1, "dry_volume_m3": 0, "hs_limit_m": 1, "hs_m": [1, 3], "mass_kg": 2000, "pressure_reference": "common atmospheric gauge; synthetic scalar comparison", "reservoir_pressures_pa": [3000000, 4000000, 5000000], "supplied_rating_pa": 4000000, "water_density_kg_m3": 1000, "water_depth_m": 0}, "lift": {"dry_force_n": 19613.3, "scenarios": [{"feasible": true, "governing_constraint": "none", "hook_load": 9806.65, "lift_utilisation": 0.5, "submerged_weight": 9806.65}, {"feasible": false, "governing_constraint": "sea_state", "hook_load": 9806.65, "lift_utilisation": 0.5, "submerged_weight": 9806.65}], "wet_dry_ratio": 0.5, "wet_force_n": 9806.65}}</script>
+<script id="changes" type="application/json">[{"change": "Initial scalar module report added to expose the input, method and answer chain and its limits.", "date": "2026-10-28", "revision": "A"}]</script></body></html>
