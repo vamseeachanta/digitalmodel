@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passing-ship module analysis: synthetic section and qualification limits</title>
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+
+pre{white-space:pre-wrap;overflow-wrap:anywhere}code{overflow-wrap:anywhere}
+:focus-visible{outline:3px solid var(--report-accent);outline-offset:3px}
+</style></head>
+<body class="hs-doc"><header>
+<h1>Passing-ship module analysis: synthetic section and qualification limits</h1>
+<p>Draft for maintainer review</p><p>Revision 00 · 2026-10-28</p></header>
+<div class="layout"><nav aria-label="Contents"><ol><li><a href="#section-1">Executive Summary</a></li><li><a href="#section-2">Introduction</a></li><li><a href="#section-3">Data Basis</a></li><li><a href="#section-4">Theory and Equations</a></li><li><a href="#section-5">Worked Example</a></li><li><a href="#section-6">Validation Evidence</a></li><li><a href="#section-7">Limits of Use</a></li><li><a href="#section-8">Recommendations</a></li><li><a href="#section-9">References</a></li><li><a href="#section-10">Appendix</a></li></ol></nav><main>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The section-shape helpers are checked against an independent synthetic quadratic.
+The report provides a source-linked module map and reproducible section results.
+Physical-force qualification is NOT_EVALUATED; the parent issue remains open for broader numerical qualification.</p>
+<p>The solution for this bounded example is the normalized parabola H1 and its interior derivative.
+The way forward is to reconcile force conventions, obtain independent numeric references and establish an applicability envelope before using forces.</p>
+</section>
+<div id="revision-history"><h3>Revision history</h3><div class="table-wrap"><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>00</td><td>2026-10-28</td><td>First module report: bounded synthetic section evidence and explicit deferred qualification.</td></tr></tbody><caption>Revision history</caption></table></div></div>
+<section id="section-2"><h2>2. Introduction</h2>
+<p>The package exposes configuration, force calculation, batch processing, histories and plotting interfaces.
+This report calls only <code>s1_function</code> and <code>ds1_dx</code>, loaded directly from the shipped source.
+NumPy and SciPy are needed by that file; package initializers, benchmark generators and solver adapters are not imported by this builder.</p>
+<p>Normalized shape is dimensionless, while a dimensional sectional area requires an additional physical area scale.
+The synthetic section illustrates an algebraic property, without an engineering load campaign.</p>
+</section>
+<section id="section-3"><h2>3. Data Basis</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Input</th><th scope="col">Value</th><th scope="col">Unit</th><th scope="col">Basis</th></tr></thead><tbody><tr><td>Section length L</td><td><span data-value="length_m" data-unit="m" data-equation="H1">4.0</span></td><td>m</td><td><a href="#source-h1">H1 synthetic definition</a></td></tr><tr><td>Stations</td><td>See computed station column below</td><td>m</td><td><a href="#source-h1">H1 synthetic definition</a></td></tr><tr><td>Boundary values</td><td>Zero endpoints; unit midpoint</td><td>dimensionless</td><td><a href="#source-h1">H1 synthetic constraints</a></td></tr></tbody><caption>Table 1. Synthetic inputs; no measured geometry or force inputs.</caption></table></div>
+<p>Every numerical input is synthetic under H1. Stations are measured from the section midpoint.
+No area scale, density, speed, separation or depth is supplied. There are no external reference values or adopted standards tables.</p>
+</section>
+<section id="section-4"><h2>4. Theory and Equations</h2>
+<div id="H1"><h3>H1: independent hand derivation</h3>
+<p>Let S(x) = a*x^2 + b*x + c. The synthetic conditions S(-2 m) = S(2 m) = 0 and S(0) = 1 give
+c = 1, 4 m^2*a - 2 m*b + 1 = 0, and 4 m^2*a + 2 m*b + 1 = 0.
+Subtracting gives b = 0 m^-1; substitution gives a = -1/4 m^-2.</p>
+<p>Thus S = 1 - x^2/(4 m^2) and dS/dx = -x/(2 m^2).
+At x = (-2, -1, 0, 1, 2) m, direct substitution gives S = (0, 3/4, 1, 3/4, 0)
+and interior slopes (1/2, 0, -1/2) m^-1. The endpoint polynomial limits are (1, -1) m^-1.</p>
+<p>The shipped expressions S = 1 - (2*x/L)^2 and dS/dx = -8*x/L^2 reduce to H1 at the synthetic length.
+They return zero outside the section. Endpoint slopes are one-sided limits from the interior;
+the zero extension is not differentiable at the join at either endpoint.</p>
+<p>Roundoff budget: all selected values and intermediate operations are exactly representable binary integers,
+halves or quarters. Multiplication, squaring, division by powers of two and subtraction are exact here.
+The absolute comparison tolerance is zero in dimensionless shape and m^-1 slope; relative tolerance is zero.
+This budget applies only to these stations and operations, not to quadrature or a physical-force tolerance.</p></div>
+</section>
+<section id="section-5"><h2>5. Worked Example</h2>
+<p>Computed columns call the shipped helpers. H1 control columns evaluate the independent quadratic.
+Absolute differences use unrounded values. All table quantities bind to H1 and the calculation record.
+One decimal place is used for display; the exact rational controls and unrounded comparisons remain in the regression tests.
+For example, the control 3/4 displays as 0.8 dimensionless; display rounding is not a numerical-error allowance.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">x [m]</th><th scope="col">S computed [dimensionless]</th><th scope="col">S H1 [dimensionless]</th><th scope="col">Absolute difference [dimensionless]</th><th scope="col">Slope computed [m^-1]</th><th scope="col">Slope H1 [m^-1]</th><th scope="col">Absolute difference [m^-1]</th><th scope="col">Slope meaning</th></tr></thead><tbody><tr><td><span data-value="rows.0.x_m" data-unit="m" data-equation="H1">-2.0</span></td><td><span data-value="rows.0.shape" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.0.expected_shape" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.0.shape_error" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.0.slope_per_m" data-unit="m^-1" data-equation="H1">1.0</span></td><td><span data-value="rows.0.expected_slope_per_m" data-unit="m^-1" data-equation="H1">1.0</span></td><td><span data-value="rows.0.slope_error_per_m" data-unit="m^-1" data-equation="H1">0.0</span></td><td>one-sided from interior</td></tr><tr><td><span data-value="rows.1.x_m" data-unit="m" data-equation="H1">-1.0</span></td><td><span data-value="rows.1.shape" data-unit="dimensionless" data-equation="H1">0.8</span></td><td><span data-value="rows.1.expected_shape" data-unit="dimensionless" data-equation="H1">0.8</span></td><td><span data-value="rows.1.shape_error" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.1.slope_per_m" data-unit="m^-1" data-equation="H1">0.5</span></td><td><span data-value="rows.1.expected_slope_per_m" data-unit="m^-1" data-equation="H1">0.5</span></td><td><span data-value="rows.1.slope_error_per_m" data-unit="m^-1" data-equation="H1">0.0</span></td><td>interior derivative</td></tr><tr><td><span data-value="rows.2.x_m" data-unit="m" data-equation="H1">0.0</span></td><td><span data-value="rows.2.shape" data-unit="dimensionless" data-equation="H1">1.0</span></td><td><span data-value="rows.2.expected_shape" data-unit="dimensionless" data-equation="H1">1.0</span></td><td><span data-value="rows.2.shape_error" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.2.slope_per_m" data-unit="m^-1" data-equation="H1">0.0</span></td><td><span data-value="rows.2.expected_slope_per_m" data-unit="m^-1" data-equation="H1">0.0</span></td><td><span data-value="rows.2.slope_error_per_m" data-unit="m^-1" data-equation="H1">0.0</span></td><td>interior derivative</td></tr><tr><td><span data-value="rows.3.x_m" data-unit="m" data-equation="H1">1.0</span></td><td><span data-value="rows.3.shape" data-unit="dimensionless" data-equation="H1">0.8</span></td><td><span data-value="rows.3.expected_shape" data-unit="dimensionless" data-equation="H1">0.8</span></td><td><span data-value="rows.3.shape_error" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.3.slope_per_m" data-unit="m^-1" data-equation="H1">-0.5</span></td><td><span data-value="rows.3.expected_slope_per_m" data-unit="m^-1" data-equation="H1">-0.5</span></td><td><span data-value="rows.3.slope_error_per_m" data-unit="m^-1" data-equation="H1">0.0</span></td><td>interior derivative</td></tr><tr><td><span data-value="rows.4.x_m" data-unit="m" data-equation="H1">2.0</span></td><td><span data-value="rows.4.shape" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.4.expected_shape" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.4.shape_error" data-unit="dimensionless" data-equation="H1">0.0</span></td><td><span data-value="rows.4.slope_per_m" data-unit="m^-1" data-equation="H1">-1.0</span></td><td><span data-value="rows.4.expected_slope_per_m" data-unit="m^-1" data-equation="H1">-1.0</span></td><td><span data-value="rows.4.slope_error_per_m" data-unit="m^-1" data-equation="H1">0.0</span></td><td>one-sided from interior</td></tr></tbody><caption>Table 2. Computed values use section helpers; controls and units follow H1. Display rounded to one decimal place.</caption></table></div>
+</section>
+<section id="section-6"><h2>6. Validation Evidence</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method / source</th><th scope="col">Implementation</th><th scope="col">Independent evidence in this report</th><th scope="col">Qualification status</th></tr></thead><tbody><tr><td><a href="#source-formulations">s1_function; ds1_dx</a></td><td>Implemented</td><td>H1 at stated stations</td><td>INDEPENDENTLY_CHECKED: section only</td></tr><tr><td><a href="#source-formulations">s2_function; ds2_dx; f_kernel; g_kernel</a></td><td>Implemented</td><td>Not checked by H1</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#source-formulations">Surge, sway, yaw and depth wrappers</a></td><td>Implemented</td><td>No physical reference comparison here</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#source-config">Configuration, parser, conversion and merging</a></td><td>Implemented</td><td>Source inspection only</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#source-calculator">PassingShipCalculator; calculate_batch; parametric_study</a></td><td>Implemented</td><td>Source inspection only</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#source-cli">CLI single and batch entry points</a></td><td>Implemented</td><td>Source inspection only</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#source-workflow">router configuration workflow</a></td><td>Implemented</td><td>Source inspection only</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#source-schema">PassingShipSpec</a>; <a href="#source-history">generate_time_history</a></td><td>Implemented</td><td>Source inspection only</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#source-benchmark">generate_benchmark_report</a>; <a href="#source-preparation">compare_benchmark</a></td><td>Implemented</td><td>Source inspection only; no benchmark executed</td><td>NOT_EVALUATED</td></tr></tbody><caption>Table 3. Implementation is established by source inspection, independently checked scope by H1 only.</caption></table></div>
+<p>The independent regression checks every unrounded example quantity and its units. Parsed HTML readback compares
+each visible quantity with the hand oracle and a fresh helper call. A controlled helper mutation must change visible results
+and fail oracle comparison. Rebuilds in isolated directories compare all delivered bytes, including source and change records.</p>
+<p>Reproducibility is not physical validation. Existing section, kernel, force-property and depth tests are regression coverage;
+their passing status alone supplies no independent physical-force reference or separation/depth envelope.</p>
+<p>Validation commands and measured counts are recorded with the change review; this static report embeds no runtime test count or timestamp.</p>
+</section>
+<section id="section-7"><h2>7. Limits of Use</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Quantity or qualification</th><th scope="col">Status</th></tr></thead><tbody><tr><td>Physical forces</td><td>NOT_EVALUATED</td></tr><tr><td>Force coefficients</td><td>NOT_EVALUATED</td></tr><tr><td>Separation/depth validity</td><td>NOT_EVALUATED</td></tr><tr><td>Full force-calculator qualification</td><td>NOT_EVALUATED</td></tr></tbody><caption>Table 4. Deferred engineering evidence.</caption></table></div>
+<p>No force in N or moment in N m is computed. Force coefficients, calibration, force-sign qualification,
+finite-depth suitability, mooring response and solver qualification remain outside this example.</p>
+<p>Finding: the existing methodology describes positive lateral direction to port, while package conventions say starboard.
+The methodology also describes dimensional sectional areas, whereas these section helpers return normalized shape.
+The convention document's force-scaling narrative and the calculator's delegated force path require reconciliation.
+These are source-inspection findings, not a determination of correct physical signs or scaling.</p>
+<p>The existing benchmark deferral records an unavailable numeric reference. H1 does not resolve that gap,
+establish a peak-search window or justify applying another comparison's force tolerance.</p>
+</section>
+<section id="section-8"><h2>8. Recommendations</h2>
+<ol><li>Reconcile documented axes, section normalization, area scaling and the actual calculator path against an independently reviewed method basis.</li>
+<li>Obtain a public numeric force/coefficient reference with geometry, units, signs and uncertainty; establish the peak-search window and error budget before comparison.</li>
+<li>Check quadrature convergence and depth/separation applicability on that basis, then review histories and downstream response separately.</li>
+<li>Retain NOT_EVALUATED for the deferred categories until their evidence is available. Keep the parent issue open.</li></ol>
+</section>
+<section id="section-9"><h2>9. References</h2>
+<p>Sources are repository files inspected for this report; no external publication values or licensed material are reproduced.</p>
+<ol><li id="source-h1"><a href="../../../../docs/reports/modules/passing_ship/README.md">H1 synthetic boundary conditions and independent derivation</a>: Input basis and hand oracle H1. Input basis and hand oracle H1</li><li id="source-formulations"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/formulations.py">Offline section, kernel and force functions</a>: s1_function, s2_function, ds1_dx, ds2_dx, f_kernel, g_kernel, calculate_surge_force_infinite, calculate_sway_force_infinite, calculate_yaw_moment_infinite, finite_depth_correction, calculate_forces_with_depth. Only s1_function and ds1_dx evaluated by this report</li><li id="source-config"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/configuration.py">Configuration models and YAML parsing</a>: VesselConfig, EnvironmentalConfig, CalculationConfig, PassingShipConfig, YAMLConfigParser, UnitConverter, ConfigurationMerger. Source inspection only</li><li id="source-calculator"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/calculator.py">Calculator, batch scenarios and result cache</a>: PassingShipCalculator, ForceResults, ResultCache, from_config_file, from_imperial, calculate_forces, calculate_batch, parametric_study. Source inspection only</li><li id="source-cli"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/cli.py">Command-line single and batch processing</a>: create_parser, process_single, process_batch, main. Source inspection only; not invoked</li><li id="source-workflow"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/workflow.py">Configuration workflow and CSV output</a>: router. Source inspection only; not invoked</li><li id="source-benchmark"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/benchmark_report.py">Existing benchmark report generator</a>: generate_benchmark_report. Source inspection only; no benchmark values adopted and no sweep run</li><li id="source-preparation"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/preparation.py">Prepared cases and deferred benchmark comparison</a>: execute_cases, compare_benchmark, launch_solver. Source inspection only; no execution or launch</li><li id="source-schema"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py">Canonical analysis specification and force history</a>: PassingShipSpec. Source inspection only</li><li id="source-history"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/force_time_history.py">Force time history</a>: ForceTimeHistory, generate_time_history. Source inspection only</li><li id="source-conventions"><a href="../../../../src/digitalmodel/hydrodynamics/passing_ship/CONVENTIONS.md">Package sign and unit conventions</a>: Documentation discrepancy finding; not a qualification basis. Documentation discrepancy finding; not a qualification basis</li><li id="source-methodology"><a href="../../../../docs/domains/marine-engineering/python-code-passing-ship/methodology.md">Existing methodology description</a>: Documentation discrepancy finding; not a qualification basis. Documentation discrepancy finding; not a qualification basis</li><li id="source-status"><a href="../../../../docs/domains/passing_ship/preparation/benchmark_status.json">Recorded benchmark deferral</a>: Numeric reference and peak-window evidence remain incomplete. Numeric reference and peak-window evidence remain incomplete</li><li id="source-test"><a href="../../../../tests/hydrodynamics/passing_ship/test_module_report.py">Independent report regression</a>: test_worked_values_match_independent_calculation, test_visible_values_follow_computed_results, test_report_rebuild_is_deterministic, test_scope_limits_and_report_pointers. Independent oracle, visible readback, mutation and reproduction checks</li><li id="source-style"><a href="../../../../docs/reports/pipeline-ffs-assessment.html">Repository report presentation pattern</a>: Inline report style only. Inline report style only</li></ol>
+</section>
+<section id="section-10"><h2>10. Appendix</h2>
+<h3>Entry points inspected, not executed</h3>
+<p><code>YAMLConfigParser.parse_file/parse_string</code> builds validated configuration models.
+<code>VesselConfig</code> requires length, beam and draft in m and a dimensionless block coefficient;
+<code>EnvironmentalConfig</code> carries depth in m, density in kg/m^3 and current speed in m/s.
+An absent depth selects the infinite-depth path. <code>CalculationConfig</code> carries stagger and lateral separation in m,
+passing speed in m/s and numerical integration/cache settings. <code>PassingShipConfig</code> combines both geometries,
+environment, calculation settings and output-unit selection. Input-model checks do not establish a physical validity envelope.</p>
+<p>
+<code>PassingShipCalculator.from_config_file</code> constructs a calculator; <code>from_imperial</code> converts dimensional inputs.
+<code>calculate_forces(separation, stagger, velocity)</code> returns surge, sway and yaw, with optional caching.
+<code>calculate_batch(scenarios, parallel, n_workers)</code> consumes scenario dictionaries;
+<code>parametric_study</code> varies one parameter. These descriptions are source inspection only.</p>
+<p>The CLI <code>process_single</code> reads a configuration; <code>process_batch</code> discovers YAML files with a pattern,
+supports recursive discovery and a dry run, and optionally uses a thread pool. The workflow <code>router</code> writes scenario forces to CSV.
+<code>generate_benchmark_report</code> builds a separate sweep report with runtime metadata;
+<code>compare_benchmark</code> requires supplied numeric references and criteria and does not qualify peak sampling.
+None of these entry points is run for this report.</p>
+<h3>Symbols and rebuild</h3>
+<p>L: section length in m; x: midpoint-relative station in m; S: normalized dimensionless shape;
+dS/dx: slope in m^-1. Force interfaces use SI force N and moment N m; neither is a result here.</p>
+<p>With NumPy and SciPy available in the active environment, run from the repository root with a supplied writable scratch directory:</p>
+<pre>PYTHONPATH=src uv run --no-project --with pytest python docs/reports/modules/passing_ship/build_report.py --output-dir &quot;$TMPDIR/passing-ship-report&quot;</pre>
+<p>The builder writes only report.html, changes.json and sources.json in the explicit output directory.
+All content is embedded; file links are repository-relative source locators. There are no output-directory paths,
+runtime timestamps, external resources or import-time outputs. The standalone example CLI and output remain separate.</p>
+<details id="engineering-changes"><summary>Engineering changes</summary><ul><li>Added the module method map and synthetic section analysis to distinguish implementation from independent evidence.</li><li>Bound visible results to shipped section helpers and recorded physical-force qualification as NOT_EVALUATED.</li><li>Preserved the standalone example and added isolated deterministic rebuild and calculation-mutation checks.</li></ul></details>
+</section>
+</main></div>
+<script type="application/json" id="calculation-record">{
+  "length_m": 4.0,
+  "rows": [
+    {
+      "x_m": -2.0,
+      "shape": 0.0,
+      "slope_per_m": 1.0,
+      "expected_shape": 0.0,
+      "expected_slope_per_m": 1.0,
+      "shape_error": 0.0,
+      "slope_error_per_m": 0.0,
+      "meaning": "one-sided from interior"
+    },
+    {
+      "x_m": -1.0,
+      "shape": 0.75,
+      "slope_per_m": 0.5,
+      "expected_shape": 0.75,
+      "expected_slope_per_m": 0.5,
+      "shape_error": 0.0,
+      "slope_error_per_m": 0.0,
+      "meaning": "interior derivative"
+    },
+    {
+      "x_m": 0.0,
+      "shape": 1.0,
+      "slope_per_m": -0.0,
+      "expected_shape": 1.0,
+      "expected_slope_per_m": 0.0,
+      "shape_error": 0.0,
+      "slope_error_per_m": 0.0,
+      "meaning": "interior derivative"
+    },
+    {
+      "x_m": 1.0,
+      "shape": 0.75,
+      "slope_per_m": -0.5,
+      "expected_shape": 0.75,
+      "expected_slope_per_m": -0.5,
+      "shape_error": 0.0,
+      "slope_error_per_m": 0.0,
+      "meaning": "interior derivative"
+    },
+    {
+      "x_m": 2.0,
+      "shape": 0.0,
+      "slope_per_m": -1.0,
+      "expected_shape": 0.0,
+      "expected_slope_per_m": -1.0,
+      "shape_error": 0.0,
+      "slope_error_per_m": 0.0,
+      "meaning": "one-sided from interior"
+    }
+  ],
+  "units": {
+    "length_m": "m",
+    "x_m": "m",
+    "shape": "dimensionless",
+    "slope_per_m": "m^-1",
+    "expected_shape": "dimensionless",
+    "expected_slope_per_m": "m^-1",
+    "shape_error": "dimensionless",
+    "slope_error_per_m": "m^-1"
+  }
+}
+</script>
+</body></html>

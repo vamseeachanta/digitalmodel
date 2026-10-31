@@ -98,6 +98,7 @@ modules:
     key_tests: [tests/citations/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
   - module: corrosion
+    agent_pack: src/digitalmodel/corrosion/docs/agent-pack.md
     entry_point: src/digitalmodel/corrosion/
     maturity: development
     owner_wiki: docs/domains/README.md
@@ -399,6 +400,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#reservoir
   - module: residual
     entry_point: src/digitalmodel/residual/
+    submodules:
+      residual:
+        agent_pack: src/digitalmodel/residual/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/residual/]
@@ -847,6 +852,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
   - module: tug
     entry_point: src/digitalmodel/tug/
+    submodules:
+      tug:
+        agent_pack: src/digitalmodel/tug/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/tug/]
@@ -869,3 +878,15 @@ modules:
     owner_wiki: src/digitalmodel/riser_study/README.md
     key_tests: [tests/subsea/riser_study/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_study
+  - module: riser_bom
+    entry_point: src/digitalmodel/riser_bom/
+    maturity: development
+    owner_wiki: docs/domains/risers/bom-costing.html
+    key_tests: [tests/riser_bom/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_bom
+  - module: riser_results
+    entry_point: src/digitalmodel/riser_results/
+    maturity: development
+    owner_wiki: docs/domains/risers/results-exchange/README.md
+    key_tests: [tests/riser_results/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_results

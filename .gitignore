@@ -636,3 +636,13 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Reproducible scalar capping-stack report; retain only these deliverables.
+!/scripts/reports/build_capping_stack_module_report.py
+!/docs/reports/modules/capping_stack/
+/docs/reports/modules/capping_stack/*
+!/docs/reports/modules/capping_stack/index.html
+!/docs/reports/modules/capping_stack/changes.json
+!/docs/reports/modules/capping_stack/results.json
+!/docs/reports/modules/capping_stack/manifest.json
+!/docs/reports/modules/capping_stack/README.md

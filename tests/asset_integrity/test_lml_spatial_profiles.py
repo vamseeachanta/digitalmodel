@@ -5,6 +5,8 @@ edition-specific API 579 assessment. Source: NIST DLMF (2010), §3.5(i),
 Eq. 3.5.1, https://dlmf.nist.gov/3.5.E1 (applied to each linear segment).
 """
 
+import json
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -100,7 +102,63 @@ def test_zero_wall_is_retained():
     assert evaluate([0, 4], [0, 2]) == ([2], [2])
 
 
-@pytest.mark.parametrize("entrypoint", ["API579LML", "lml", "short_pitch"])
+def test_interval_records_retain_endpoints_and_integrated_area():
+    """Hand (NIST Eq. 3.5.1): row minima are [2,6,10] at [5,7,12].
+    Intervals (0,1), (0,2), (1,2) have lengths 2,7,5, areas 8,48,40
+    and means 4,48/7,8. Positions refer to the supplied grid, from zero.
+    """
+    grid = pd.DataFrame([[2, 8], [9, 6], [10, 12]], index=[5, 7, 12])
+    before = grid.copy(deep=True)
+    component = API579_components({})
+    intervals = component.LMLLevel2Intervals(grid)
+    expected = [
+        (0, 1, 5, 7, 2, 8, 4),
+        (0, 2, 5, 12, 7, 48, 48 / 7),
+        (1, 2, 7, 12, 5, 40, 8),
+    ]
+    for interval, values in zip(intervals, expected, strict=True):
+        assert interval == pytest.approx(
+            dict(
+                zip(
+                    [
+                        "start_position",
+                        "end_position",
+                        "start_coordinate",
+                        "end_coordinate",
+                        "length",
+                        "area",
+                        "mean_wall",
+                    ],
+                    values,
+                    strict=True,
+                )
+            )
+        )
+    assert json.loads(json.dumps(intervals, allow_nan=False)) == intervals
+    pd.testing.assert_frame_equal(grid, before)
+    assert component.LMLLevel2Evaluation(grid, {}) == (
+        [item[6] for item in expected],
+        [item[4] for item in expected],
+    )
+
+
+def test_refining_a_linear_segment_retains_whole_interval_geometry():
+    """Hand: t=x+2, x=0..4 has area 4*(2+6)/2=16 and mean 4.
+    Inserting x=1,t=3 gives areas 1*2.5 + 3*4.5 = 16.
+    This is a check of the stated interpolation assumption, not pressure.
+    """
+    component = API579_components({})
+    coarse = component.LMLLevel2Intervals(pd.DataFrame([2, 6], index=[0, 4]))
+    refined = component.LMLLevel2Intervals(pd.DataFrame([2, 3, 6], index=[0, 1, 4]))
+    for record in (coarse[0], refined[1]):
+        assert record["length"] == 4
+        assert record["area"] == 16
+        assert record["mean_wall"] == 4
+
+
+@pytest.mark.parametrize(
+    "entrypoint", ["API579LML", "lml", "short_pitch", "tie", "fca"]
+)
 def test_saved_level2_numbers_carry_unqualified_status(monkeypatch, entrypoint):
     """Exercise result assembly with pressure routines isolated: their dummy
     outputs are not engineering reference values. Geometry uses three measured
@@ -154,18 +212,25 @@ def test_saved_level2_numbers_carry_unqualified_status(monkeypatch, entrypoint):
             },
         }
     )
+    if entrypoint == "fca":
+        cfg.LML["LTA"][0]["FCA"] = [1]
     component = API579_components(cfg)
     monkeypatch.setattr(component, "getMAWP", lambda *args: 1)
-    monkeypatch.setattr(
-        component,
-        "LMLMAWPrEvaluation",
-        lambda *args, **kw: {
-            "MAWPr": 1,
-            "Mt": 1,
-            "MAWPrEvaluation": False,
-            "RSF": 1,
-        },
-    )
+    calls = []
+
+    def pressure_stub(data, cfg, Level):
+        # Synthetic outputs isolate selection: pressure, RSF and Mt minima
+        # deliberately occur at different intervals; no code values are used.
+        if Level == 1:
+            return {"MAWPr": 1, "Mt": 1, "MAWPrEvaluation": False, "RSF": 1}
+        calls.append(dict(data))
+        outputs = [(3, 0.1, 1), (2, 0.3, 3), (1, 0.2, 2)]
+        if entrypoint == "tie":
+            outputs = [(3, 0.1, 1), (1, 0.3, 3), (1, 0.2, 2)]
+        pressure, rsf, mt = outputs[len(calls) - 1]
+        return {"MAWPr": pressure, "Mt": mt, "MAWPrEvaluation": False, "RSF": rsf}
+
+    monkeypatch.setattr(component, "LMLMAWPrEvaluation", pressure_stub)
     if entrypoint == "short_pitch":
         # Real pressure evaluation; only the pipe-capacity dependency is isolated.
         monkeypatch.undo()
@@ -190,12 +255,52 @@ def test_saved_level2_numbers_carry_unqualified_status(monkeypatch, entrypoint):
         assert "Level 2 uses endpoint distance" in results[0]["Level 2 limitation"]
         return
     grid = pd.DataFrame([[4, 10], [4, 10], [8, 10]], index=[0, 2, 5], dtype=float)
-    if entrypoint == "lml":
+    if entrypoint in ("lml", "tie", "fca"):
         results = component.lml()["Result"]["LML"][0]
     else:
         results = component.API579LML(grid, cfg, 0)
     assert results[0]["Level 2 qualification"] == "NOT_EVALUATED"
     assert "edition-specific" in results[0]["Level 2 limitation"]
+    # Hand: the third interval runs from 2 to 5; its constant-linear mean
+    # is (4+8)/2=6 and its area is 3*6=18. The stub assigns pressure 1.
+    governing = results[0]["Level 2 governing interval"]
+    fca = cfg.LML["LTA"][0]["FCA"][0]
+    expected = {
+        "start_position": 1,
+        "end_position": 2,
+        "start_coordinate": 2,
+        "end_coordinate": 5,
+        "length": 3,
+        "area": 18,
+        "mean_wall": 6,
+        "FCA": fca,
+        "adjusted_mean_wall": 6 - fca,
+        "MAWPr": 1,
+        "RSF": 0.2,
+        "Mt": 2,
+    }
+    if entrypoint == "tie":
+        # Hand: the first tied minimum spans 0..5, with areas
+        # 2*4 + 3*6 = 26, hence mean 26/5 = 5.2.
+        expected.update(
+            start_position=0,
+            start_coordinate=0,
+            length=5,
+            area=26,
+            mean_wall=5.2,
+            adjusted_mean_wall=5.2,
+            RSF=0.3,
+            Mt=3,
+        )
+    assert governing == pytest.approx(expected)
+    # FCA changes the pressure input ratio, never the measured interval area.
+    assert [call["AARatio"] for call in calls] == pytest.approx(
+        [(4 - fca) / 10, (5.2 - fca) / 10, (6 - fca) / 10]
+    )
+    assert results[0]["RSF, L2"] == 0.1  # Legacy independent minima retained.
+    assert results[0]["Mt, L2"] == 1
+    assert results[0]["MAWPr, L2"] == governing["MAWPr"]
+    assert json.loads(json.dumps(governing, allow_nan=False)) == governing
 
 
 def test_switching_minimum_planes_forms_one_critical_profile():
@@ -217,9 +322,7 @@ def test_folias_boundaries_use_configured_table(flaw_parameter, level, rt):
     """
     cfg = {
         "API579Parameters": {
-            "FoliasFactor": {
-                "FlawParameter": [0, 30], "Mt": {"Cylindrical": [1, 4]}
-            }
+            "FoliasFactor": {"FlawParameter": [0, 30], "Mt": {"Cylindrical": [1, 4]}}
         }
     }
     result = API579_components({}).LMLMAWPrEvaluation(

@@ -47,6 +47,20 @@ DEFAULT_TP_RANGE_S = [round(4.0 + 0.5 * i, 1) for i in range(33)]  # 4.0 .. 20.0
 _HS_CAP_M = 20.0  # cap an "unlimited" DOF so a non-responding axis never governs
 
 
+def jackup_operating_envelope(periods_s, heights_m, evaluate):
+    """Evaluate illustrative static jack-up criteria on an explicit Hs/Tp grid.
+
+    The callback returns a jackup_screening.StaticScreen for each state. This
+    entry point uses force/moment equilibrium, contact, preload comparison and
+    supplied sliding resistance. It does not apply vessel RAOs or the motion
+    criteria below to an elevated unit. Results are sampled static bounds,
+    without forecast contingency or engineering qualification.
+    """
+    from .jackup_screening import static_operating_envelope
+
+    return static_operating_envelope(periods_s, heights_m, evaluate)
+
+
 @dataclass(frozen=True)
 class MotionLimit:
     """A significant single-amplitude motion limit for one DOF."""

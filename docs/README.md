@@ -4,6 +4,11 @@ This is the canonical documentation entry point for digitalmodel issue routing.
 Use it with the repo entry surfaces before changing source, tests, docs, or
 routing registries.
 
+The [planing hull module analysis](reports/modules/planing_hull/index.html)
+presents an independent hydrostatic worked example and the limits of motion
+qualification; its [local README](reports/modules/planing_hull/README.md) gives
+the rebuild command.
+
 ## Required Routing Surfaces
 
 | Surface | Role |
@@ -52,6 +57,7 @@ reviewed, and intended for repeat use:
 - [Common analysis workflow](standards/engineering-analysis-workflow.html)
 - [ANSYS analysis workflow](domains/ansys/analysis-workflow.html)
 - [AQWA analysis workflow](domains/aqwa/analysis-workflow.html)
+- [Welded-padeye parametric demand analysis](domains/lifting/welded-padeye.html) — offline demands, exact lookup and worked example; historical reproduction remains unverified
 - focused tests that validate these surfaces
 
 The criteria and workflow definitions are documentation surfaces; the module routing registry remains unchanged. The existing documentation-routing tests remain applicable to their original contracts and do not establish criteria adoption or automated workflow enforcement.
@@ -82,3 +88,8 @@ for that bulk store, not a path that should be hard-coded into portable repo log
 ## Operational runbooks
 
 - [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.
+
+## Subsea module reports
+
+- [Capping-stack scalar module analysis](reports/modules/capping_stack/index.html):
+  public API inventory, synthetic pressure boundaries, buoyancy ratio and limits.
