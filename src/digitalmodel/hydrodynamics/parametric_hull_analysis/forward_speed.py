@@ -109,8 +109,9 @@ def encounter_frequency(
         omega_e = omega - k * U * cos(beta)
 
     where k is the wave number from the dispersion relation and beta
-    is the wave heading relative to the vessel (0 = head seas, following
-    the DNV convention).
+    is the wave propagation heading relative to forward motion
+    (0 = following seas, pi = head seas), matching the existing
+    TestEncounterFrequency direction tests.
 
     Parameters
     ----------
@@ -132,8 +133,8 @@ def encounter_frequency(
 
     Notes
     -----
-    Head seas (beta=0): omega_e > omega (frequency increases)
-    Following seas (beta=pi): omega_e < omega (frequency decreases)
+    Head seas (beta=pi): omega_e > omega (frequency increases for U > 0)
+    Following seas (beta=0): omega_e < omega (signed frequency decreases for U > 0)
     """
     omega = np.atleast_1d(np.asarray(omega, dtype=float))
     heading_rad = np.atleast_1d(np.asarray(heading_rad, dtype=float))
