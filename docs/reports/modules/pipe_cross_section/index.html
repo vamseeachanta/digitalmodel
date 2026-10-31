@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pipe cross-section module analysis</title>
+<style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+.wrap{max-width:1120px;margin:auto;padding:2rem}header,section,.history{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);padding:1.4rem;margin-bottom:1rem}
+h1,h2,h3{color:var(--brand)}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:.6rem;border-bottom:1px solid var(--edge);vertical-align:top}th{background:var(--panel-2)}code{overflow-wrap:anywhere}a{color:var(--brand)}.eq,pre{padding:1rem;background:var(--panel-2);overflow:auto}svg{width:100%;max-width:780px}.material{fill:var(--muted);stroke:var(--brand);stroke-width:2}.bore{fill:var(--panel);stroke:var(--brand);stroke-width:2}svg text{fill:var(--ink);font-size:15px}.notice{border-left:4px solid var(--caution);padding-left:1rem}@media print{.wrap{padding:0}section{break-inside:avoid}}
+</style></head><body class="hs-doc"><main class="wrap">
+<header><h1>Pipe cross-section module analysis</h1><p>Concentric annular geometry, layer mass and sealed-bore displacement.</p>
+<p class="notice">Synthetic calculation evidence. Physical qualification and installation acceptance: NOT_EVALUATED.</p>
+<nav><a href="#s3">Input basis</a> · <a href="#s5">Worked calculation</a> · <a href="#s7">Results</a> · <a href="#s8">Limits</a> · <a href="results.json">Unrounded evidence</a> · <a href="manifest.json">Byte manifest</a></nav></header>
+<section><h2 id="s1">1. Summary</h2>
+<p>Normal public APIs evaluate the existing bare and coated synthetic example [E, C]. The submerged mass equivalents are
+<strong>15.0 kg/m</strong> and <strong>15.6 kg/m</strong>, respectively, rounded only for presentation.
+Independent polar integrals check the unrounded quantities [T]. These results describe fully immersed, uniform sections with a sealed dry bore and omitted closure/end masses; they do not select a design or establish stability.</p></section>
+<div class="history"><h3>Revision history</h3><div class="table-wrap"><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Added a reproducible module analysis and independent annular-integral checks to bound the synthetic example and its limits.</td></tr></tbody></table></div><p>Revision and date identify this document issue; <a href="changes.json">change history</a> carries the same row.</p></div>
+<section><h2 id="s2">2. Context and scope</h2>
+<p>The reviewed calculation source revision is <code>09089a121a16069c4b657d1a320a630a23ab1dd5</code>. Current source bytes are bound separately in the manifest. Review covers public constructors, properties, configuration, unit conversion, serialization, visualization and CLI interfaces. Numerical evidence covers only the stated scalar synthetic cases; no solver is used.</p>
+<p>The root package exports the model classes, enums, conversions, calculator, visualizer, export helpers and <code>cli_main</code> [M, C, V, L]. The inventory below includes public functions defined in their submodules as well. Private layer construction is reviewed through its public constructor [C].</p><div class="table-wrap"><table><thead><tr><th>Reviewed public symbols</th><th>Inputs</th><th>Outputs and limits</th></tr></thead><tbody><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L24">CoatingType</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L36">InternalContents</a></td><td>Enumeration members</td><td>Material and contents labels; classification only.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L46">inch_to_mm</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L51">mm_to_inch</a></td><td>Length in inches or mm</td><td>Converted length through Pint; exact international inch definition.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L57">PipeLayer</a></td><td>Name, inner/outer diameters (mm), explicit density (kg/m³), optional display color/type</td><td>A homogeneous annulus; geometry is supplied directly.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L77">PipeLayer.thickness_mm</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L82">PipeLayer.inner_radius_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L87">PipeLayer.outer_radius_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L92">PipeLayer.cross_sectional_area_m2</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L97">PipeLayer.weight_per_meter_kg</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L102">PipeLayer.weight_per_meter_kN</a></td><td>Layer dimensions and density</td><td>Radial thickness, SI radii, annular area, mass/length and converted force/length.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L106">PipeLayer.to_dict</a></td><td>Layer state</td><td>Rounded display dictionary; Area_m2_m means m², Weight_kg_m means kg/m.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L121">PipeCrossSectionConfig</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L151">PipeCrossSectionConfig.from_inches</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L169">PipeCrossSectionConfig.from_dict</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L185">PipeCrossSectionConfig.to_dict</a></td><td>Metric/imperial dimensions or dictionary; optional pipe_cross_section wrapper and legacy dimension keys</td><td>Configuration object or dictionary; imperial steel/concrete lengths convert, lpp thickness stays in mm.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L202">BuoyancyResult</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py#L221">BuoyancyResult.to_dict</a></td><td>Displacement, mass equivalents, converted forces and sign flag</td><td>Structured result and rounded dictionary; no independent acceptance decision.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L43">PipeCrossSection</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L88">PipeCrossSection.from_config</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L104">PipeCrossSection.from_dict</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L110">PipeCrossSection.from_inches</a></td><td>Steel dimensions, optional coating thicknesses and explicit densities; configuration/dictionary/imperial alternatives</td><td>Concentric steel, then optional lpp and concrete annuli, in that order.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L173">PipeCrossSection.steel_layer</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L178">PipeCrossSection.inner_diameter_mm</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L183">PipeCrossSection.outer_diameter_mm</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L188">PipeCrossSection.outer_diameter_inch</a></td><td>Constructed layer list</td><td>Steel annulus and bore/exterior dimensions; inches use Pint conversion.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L193">PipeCrossSection.total_weight_in_air_kg_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L198">PipeCrossSection.total_weight_in_air_kN_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L203">PipeCrossSection.displaced_volume_m3_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L209">PipeCrossSection.buoyancy_force_kg_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L214">PipeCrossSection.buoyancy_force_kN_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L219">PipeCrossSection.submerged_weight_kg_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L224">PipeCrossSection.submerged_weight_kN_m</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L229">PipeCrossSection.is_buoyant</a></td><td>Layer areas/densities and external water density</td><td>Layer mass sum, full exterior disk displacement, water mass, their difference, converted forces and sign flag.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L233">PipeCrossSection.get_buoyancy_result</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L244">PipeCrossSection.get_summary</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L261">PipeCrossSection.to_dict</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L280">PipeCrossSection.to_csv_data</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py#L302">PipeCrossSection.print_summary</a></td><td>Constructed pipe</td><td>Structured buoyancy, rounded summaries/dictionaries/CSV-ready rows or console text. Dry mass excludes bore contents.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L25">create_circle_points</a></td><td>Radius, center and sample count</td><td>Sampled circle coordinates for drawing; no new section-property calculation.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L35">PipeCrossSectionVisualizer</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L55">PipeCrossSectionVisualizer.create_cross_section_figure</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L151">PipeCrossSectionVisualizer.create_weight_distribution_figure</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L199">PipeCrossSectionVisualizer.create_plotly_figure</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L207">PipeCrossSectionVisualizer.get_plots_html</a></td><td>Pipe object</td><td>Optional Plotly figures/HTML. Rendering dependencies and legacy output claims are NOT_EVALUATED here.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L314">PipeCrossSectionVisualizer.generate_html_report</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L445">PipeCrossSectionVisualizer.export_static_image</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L534">PipeCrossSectionVisualizer.export_csv</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L549">generate_html_report</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L555">export_static_image</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py#L561">export_csv</a></td><td>Pipe and destination path</td><td>HTML, static image or CSV file; optional plotting dependencies. Report builder uses its own inline SVG instead.</td></tr><tr><td><a href="../../../../src/digitalmodel/structural/pipe_cross_section/cli.py#L41">parse_args</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/cli.py#L172">load_config_from_yaml</a><br><a href="../../../../src/digitalmodel/structural/pipe_cross_section/cli.py#L188">main</a></td><td>CLI arguments or YAML path</td><td>Parsed arguments, configuration dictionary, or exported files. Root cli_main aliases main; CLI execution is NOT_EVALUATED.</td></tr></tbody></table></div>
+<p>Enum coating labels include steel, polypropylene, polyethylene, epoxy, concrete, insulation and custom material. The standard constructor actually builds steel, optional <code>lpp_*</code>, then optional <code>concrete_*</code> layers. The example uses the lpp interface solely for a synthetic concentric coating; a label is no material qualification [M, C].</p></section>
+<section><h2 id="s3">3. Input basis</h2>
+<p>All calculation inputs below are explicit synthetic assumptions copied from [E], not physical material defaults. Zero coating or concrete thickness omits that annulus. Concrete density is inactive because no concrete annulus is constructed; its physical default remains NOT_EVALUATED.</p><div class="table-wrap"><table><thead><tr><th>Input</th><th>Bare</th><th>Coated</th><th>Unit</th><th>Basis</th></tr></thead><tbody><tr><td><code>steel_od_mm</code></td><td>200.25</td><td>200.25</td><td>mm</td><td>[E] synthetic assumption</td></tr><tr><td><code>steel_wt_mm</code></td><td>10.125</td><td>10.125</td><td>mm</td><td>[E] synthetic assumption</td></tr><tr><td><code>steel_density</code></td><td>7800.25</td><td>7800.25</td><td>kg/m³</td><td>[E] synthetic assumption</td></tr><tr><td><code>lpp_thickness_mm</code></td><td>0.0</td><td>5.25</td><td>mm</td><td>[E] synthetic assumption</td></tr><tr><td><code>lpp_density</code></td><td>1200.75</td><td>1200.75</td><td>kg/m³</td><td>[E] synthetic assumption</td></tr><tr><td><code>concrete_thickness_mm</code></td><td>0.0</td><td>0.0</td><td>mm</td><td>[E] synthetic assumption</td></tr><tr><td><code>seawater_density</code></td><td>1020.5</td><td>1020.5</td><td>kg/m³</td><td>[E] synthetic assumption</td></tr><tr><td><code>internal_contents</code></td><td>air</td><td>air</td><td>label</td><td>[E] synthetic assumption</td></tr><tr><td><code>internal_fluid_density</code></td><td>0.0</td><td>0.0</td><td>kg/m³</td><td>[E] synthetic assumption</td></tr></tbody></table></div>
+<figure><svg viewBox="0 0 640 280" role="img" aria-label="Bare and coated concentric pipe sections"><circle cx="160" cy="125" r="95.018" class="material"/><circle cx="160" cy="125" r="85.409" class="bore"/><text x="160" y="255" text-anchor="middle">bare: OD 200.25 mm [E, C]</text><circle cx="480" cy="125" r="100.000" class="material"/><circle cx="480" cy="125" r="95.018" class="material"/><circle cx="480" cy="125" r="85.409" class="bore"/><text x="480" y="255" text-anchor="middle">coated: OD 210.75 mm [E, C]</text></svg><figcaption>Builder-generated sections at a common drawing scale, using returned public diameters [E, C]. Pixel coordinates are layout quantities, not additional engineering inputs.</figcaption></figure>
+<p>Dimensions enter in millimetres, radial thickness differs from diameter increment, and milli denotes a thousandth [E]. The exact metre radii are bore 9/100, steel exterior 801/8000 and coated exterior 843/8000 [E]. The <code>from_inches</code> routes convert steel and concrete lengths through Pint; lpp thickness remains in millimetres [M, C, U].</p></section>
+<section><h2 id="s4">4. Method</h2>
+<p>For a homogeneous annulus, integrating the polar area element s ds dθ gives the following chain [E]. Factors of two follow from diameter being twice radius; the radial square follows from integration, not fitting.</p>
+<div class="eq">A(r,R) = ∫₀²π ∫ᵣᴿ s ds dθ = π(R² − r²); m′ = ρA; m′_air = ΣⱼρⱼAⱼ.<br>
+A_displaced = ∫₀²π ∫₀ᴿ s ds dθ = πR_outer²; m′_water = ρ_water A_displaced;<br>
+m′_sub = m′_air − m′_water.</div>
+<p>Area is in m²; volume per axial length is in m³/m and has the same numerical value. Density in kg/m³ times area gives kg/m. Subtracting displaced water mass is the mass-equivalent form of the buoyancy principle explained in [E]. A positive result means material mass exceeds displaced water mass under this basis, not that installation is acceptable.</p>
+<p>The full exterior disk includes the sealed void. Internal contents and internal fluid density are stored inputs but do not enter the current material layer sum or change displacement [C]. A flooded bore requires a separately reviewed mass/displacement convention. Flooding behavior is NOT_EVALUATED; changing a label does not model it.</p>
+<p>Legacy names containing <code>weight</code> or <code>force</code> with kg/m units mean mass per length or mass equivalent. Force per length is separately reported in kN/m using the existing implementation factor 9.81 m/s² and 1000 N/kN [M, C]. This audits that conversion only; local gravity selection is NOT_EVALUATED.</p></section>
+<section><h2 id="s5">5. Worked calculation</h2>
+<p>The material area and mass columns come directly from <code>PipeLayer</code> properties [M]. Public pipe properties supply the results in the next sections [C]. The independent exact areas are steel π × 123201/64000000, coating π × 8631/8000000, bare displacement π × 641601/64000000 and coated displacement π × 710649/64000000 m²; each follows from the rational radii and integrals in [E], not a calculator summary.</p><div class="table-wrap"><table><thead><tr><th>Case / layer</th><th>Inner diameter (mm)</th><th>Outer diameter (mm)</th><th>Radial thickness (mm)</th><th>Density (kg/m³)</th><th>Area (m²)</th><th>Mass/length (kg/m)</th><th>Basis</th></tr></thead><tbody><tr><td>bare / steel</td><td>180</td><td>200.25</td><td>10.125</td><td>7800.25</td><td>6.0476e-03</td><td>47.2</td><td>[E, M] A = π(R² − r²); m′ = ρA</td></tr><tr><td>coated / steel</td><td>180</td><td>200.25</td><td>10.125</td><td>7800.25</td><td>6.0476e-03</td><td>47.2</td><td>[E, M] A = π(R² − r²); m′ = ρA</td></tr><tr><td>coated / coating</td><td>200.25</td><td>210.75</td><td>5.25</td><td>1200.75</td><td>3.3894e-03</td><td>4.1</td><td>[E, M] A = π(R² − r²); m′ = ρA</td></tr></tbody></table></div>
+<p>For the bare case sum only steel mass; for the coated case sum steel and coating mass. Multiply the exterior disk area by the assumed water density, then subtract before rounding [E, C]. Coating changes both material mass and exterior displacement; neither change alone is the submerged answer.</p></section>
+<section><h2 id="s6">6. Checks</h2>
+<p>[T] derives areas from exact rational radii and synthetic densities independently of production summaries. Live area checks use relative tolerance 1e-12 and absolute floor 1e-15 m²; mass checks use relative tolerance 1e-12 and floor 1e-10 kg/m, matching the executable example [E]. These allowances cover binary roundoff in this short arithmetic chain and are far below presentation increments; they are not engineering acceptance tolerances. Force tolerance uses the mass floor multiplied by the implementation conversion [C, T].</p>
+<p>The executable document and a separate public-API replay check freshness. Two fresh external builds must match each other and all delivered bytes. The independent manifest readback binds the delivered files and source evidence. Negative controls change a result magnitude or sign; independent arithmetic must reject both even when HTML, JSON, builder and hashes agree with the changed value [T].</p>
+<p>Areas are displayed in scientific notation, masses to one decimal place and force equivalents to three decimal places. Inputs retain their stated precision. Unrounded JSON drives assertions; the rounded document table is never a numerical oracle [E, T]. The evidence is available in <a href="results.json">results.json</a> and <a href="manifest.json">manifest.json</a>.</p></section>
+<section><h2 id="s7">7. Results</h2><div class="table-wrap"><table><thead><tr><th>Quantity</th><th>Bare</th><th>Coated</th><th>Unit</th><th>Basis</th></tr></thead><tbody><tr><td>Bore diameter</td><td>180</td><td>180</td><td>mm</td><td>[E, C] steel OD − twice wall thickness</td></tr><tr><td>Exterior diameter</td><td>200.25</td><td>210.75</td><td>mm</td><td>[E, C] steel OD + twice coating thickness</td></tr><tr><td>Exterior diameter</td><td>7.8839</td><td>8.2972</td><td>inch</td><td>[C, U] exterior mm / 25.4</td></tr><tr><td>Displaced volume per length</td><td>3.1495e-02</td><td>3.4884e-02</td><td>m³/m (= m²)</td><td>[E, C] πR_outer²</td></tr><tr><td>Material mass per length</td><td>47.2</td><td>51.2</td><td>kg/m</td><td>[E, C] ΣρⱼAⱼ</td></tr><tr><td>Displaced water mass per length</td><td>32.1</td><td>35.6</td><td>kg/m</td><td>[E, C] ρ_water A_displaced</td></tr><tr><td>Submerged mass equivalent per length</td><td>15.0</td><td>15.6</td><td>kg/m</td><td>[E, C] material mass − displaced water mass</td></tr></tbody></table></div>
+<p>Units distinguish mass equivalents from forces. The sign indicator <code>is_buoyant</code> is an implementation comparison with zero [C]; its physical interpretation and any stability decision are NOT_EVALUATED.</p><div class="table-wrap"><table><thead><tr><th>Implementation force conversion</th><th>Bare (kN/m)</th><th>Coated (kN/m)</th><th>Basis</th></tr></thead><tbody><tr><td>Material gravitational force per length</td><td>0.463</td><td>0.503</td><td>[C, M] corresponding kg/m × 9.81 / 1000</td></tr><tr><td>Buoyant force per length</td><td>0.315</td><td>0.349</td><td>[C, M] corresponding kg/m × 9.81 / 1000</td></tr><tr><td>Submerged gravitational force equivalent per length</td><td>0.147</td><td>0.153</td><td>[C, M] corresponding kg/m × 9.81 / 1000</td></tr></tbody></table></div>
+<p>The force conversion uses the same live mass quantities, not the rounded kg/m entries. Existing <code>get_summary</code>, <code>to_dict</code>, <code>BuoyancyResult.to_dict</code> and CSV rows round derived quantities; they are display exports rather than unrounded numerical evidence [M, C, E]. JSON export through the CLI serializes <code>to_dict</code>. This report retains public scalar precision separately.</p></section>
+<section><h2 id="s8">8. Limits / NOT_EVALUATED</h2>
+<ul><li>Physical material densities/defaults, coating grades, porosity, absorption, dimensional tolerances, corrosion, eccentricity and noncircular sections: NOT_EVALUATED.</li>
+<li>Sealed dry bore only. Closure/end masses and end effects are omitted. Internal-fluid mass and open/flooded-bore behavior: NOT_EVALUATED. The interface accepts contents fields without adding their mass, and <code>PipeCrossSection.to_dict</code> omits <code>internal_fluid_density</code> from its configuration export. These are open method/export findings beyond the present basis [C, E].</li>
+<li>Internal/external pressure, stress capacity, stiffness or inertia qualification, buckling, code compliance, installation acceptance, seabed stability, hydrodynamics and operational limits: NOT_EVALUATED.</li>
+<li>Legacy summary wording may imply floating/sinking or standards compatibility. Such claims are not adopted here. Invalid-input policy and alternative coating construction beyond the supported constructor: NOT_EVALUATED [C, M].</li>
+<li>Optional Plotly/Matplotlib image and legacy HTML exports, CLI/YAML runtime behavior and physical gravity choice: reviewed interfaces only; execution/qualification NOT_EVALUATED. The delivered page requires no remote scripts or assets [V, L, B].</li></ul></section>
+<section><h2 id="s9">9. Way forward</h2>
+<p>Retain the synthetic cases as arithmetic regressions. Before physical use, obtain a traceable geometry/material/water basis, define bore sealing and flooding states with closure and contents masses, and have the governing mass/displacement convention reviewed. Establish acceptance criteria and validation evidence separately. Until then, unqualified parts of the wider module remain open; this example provides no release decision.</p></section>
+<section><h2 id="s10">10. References and evidence</h2><ul><li id="ref-E">[E] <a href="../../../../src/digitalmodel/structural/pipe_cross_section/docs/worked-layered-pipe-buoyancy.md">src/digitalmodel/structural/pipe_cross_section/docs/worked-layered-pipe-buoyancy.md</a>: Synthetic inputs, sealed-bore assumptions, exact polar integrals, executable example and numerical retention.</li><li id="ref-M">[M] <a href="../../../../src/digitalmodel/structural/pipe_cross_section/models.py">src/digitalmodel/structural/pipe_cross_section/models.py</a>: PipeLayer annular area, density multiplication, dimensional conversion and display rounding.</li><li id="ref-C">[C] <a href="../../../../src/digitalmodel/structural/pipe_cross_section/calculator.py">src/digitalmodel/structural/pipe_cross_section/calculator.py</a>: Layer construction, public geometry and mass properties, displacement and force-conversion convention.</li><li id="ref-U">[U] <a href="../../../../src/digitalmodel/units.py">src/digitalmodel/units.py</a>: Pint-backed unit conversion; international inch is exactly 25.4 mm.</li><li id="ref-V">[V] <a href="../../../../src/digitalmodel/structural/pipe_cross_section/visualization.py">src/digitalmodel/structural/pipe_cross_section/visualization.py</a>: Reviewed visualization/export interfaces; not used for the generated diagram.</li><li id="ref-L">[L] <a href="../../../../src/digitalmodel/structural/pipe_cross_section/cli.py">src/digitalmodel/structural/pipe_cross_section/cli.py</a>: Reviewed command-line and configuration interfaces.</li><li id="ref-T">[T] <a href="../../../../tests/reporting/test_pipe_cross_section_module_report.py">tests/reporting/test_pipe_cross_section_module_report.py</a>: Independent rational-radius oracle, executable replay, byte rebuilds and negative controls.</li><li id="ref-B">[B] <a href="../../../../scripts/reports/build_pipe_cross_section_module_report.py">scripts/reports/build_pipe_cross_section_module_report.py</a>: Deterministic builder, inline diagram and delivery manifest.</li></ul>
+<p>Bracketed identifiers identify local source or hand-derivation evidence for every numerical table and equation. Source code is evidence of implementation, not authority for a physical design basis. Revision letters, section numbers and the document date are editorial metadata. No licensed standard value is reproduced.</p>
+<p>The manifest records source and delivered-byte digests without environment identities or generation times; it omits its own digest to avoid self-reference. The results payload retains unrounded public outputs and the exact synthetic inputs.</p>
+<p><a href="README.md">Rebuild instructions</a> · <a href="changes.json">Revision data</a></p></section>
+<script id="calculation" type="application/json">{
+  "cases": {
+    "bare": {
+      "air_force_kN_m": 0.4627662321789099,
+      "buoyancy_force_kN_m": 0.315294900990186,
+      "displaced_area_m2": 0.031494515439622894,
+      "displaced_water_mass_kg_m": 32.140153006135165,
+      "inner_diameter_mm": 180.0,
+      "is_buoyant": false,
+      "layers": [
+        {
+          "area_m2": 0.0060476149455455696,
+          "density_kg_m3": 7800.25,
+          "inner_diameter_mm": 180.0,
+          "mass_kg_m": 47.17290847899183,
+          "outer_diameter_mm": 200.25,
+          "thickness_mm": 10.125
+        }
+      ],
+      "mass_in_air_kg_m": 47.17290847899183,
+      "outer_diameter_inch": 7.883858267716537,
+      "outer_diameter_mm": 200.25,
+      "submerged_force_kN_m": 0.14747133118872388,
+      "submerged_mass_kg_m": 15.032755472856664
+    },
+    "coated": {
+      "air_force_kN_m": 0.502691018917939,
+      "buoyancy_force_kN_m": 0.34922639786062465,
+      "displaced_area_m2": 0.03488390121376458,
+      "displaced_water_mass_kg_m": 35.59902118864675,
+      "inner_diameter_mm": 180.0,
+      "is_buoyant": false,
+      "layers": [
+        {
+          "area_m2": 0.0060476149455455696,
+          "density_kg_m3": 7800.25,
+          "inner_diameter_mm": 180.0,
+          "mass_kg_m": 47.17290847899183,
+          "outer_diameter_mm": 200.25,
+          "thickness_mm": 10.125
+        },
+        {
+          "area_m2": 0.0033893857741416826,
+          "density_kg_m3": 1200.75,
+          "inner_diameter_mm": 200.25,
+          "mass_kg_m": 4.069804968300625,
+          "outer_diameter_mm": 210.75,
+          "thickness_mm": 5.25
+        }
+      ],
+      "mass_in_air_kg_m": 51.24271344729245,
+      "outer_diameter_inch": 8.29724409448819,
+      "outer_diameter_mm": 210.75,
+      "submerged_force_kN_m": 0.15346462105731434,
+      "submerged_mass_kg_m": 15.6436922586457
+    }
+  },
+  "input_basis": "src/digitalmodel/structural/pipe_cross_section/docs/worked-layered-pipe-buoyancy.md",
+  "inputs": {
+    "bare": {
+      "concrete_thickness_mm": 0.0,
+      "internal_contents": "air",
+      "internal_fluid_density": 0.0,
+      "lpp_density": 1200.75,
+      "lpp_thickness_mm": 0.0,
+      "seawater_density": 1020.5,
+      "steel_density": 7800.25,
+      "steel_od_mm": 200.25,
+      "steel_wt_mm": 10.125
+    },
+    "coated": {
+      "concrete_thickness_mm": 0.0,
+      "internal_contents": "air",
+      "internal_fluid_density": 0.0,
+      "lpp_density": 1200.75,
+      "lpp_thickness_mm": 5.25,
+      "seawater_density": 1020.5,
+      "steel_density": 7800.25,
+      "steel_od_mm": 200.25,
+      "steel_wt_mm": 10.125
+    }
+  },
+  "source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5"
+}
+</script>
+</main></body></html>

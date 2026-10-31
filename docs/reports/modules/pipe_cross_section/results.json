@@ -1,0 +1,84 @@
+{
+  "cases": {
+    "bare": {
+      "air_force_kN_m": 0.4627662321789099,
+      "buoyancy_force_kN_m": 0.315294900990186,
+      "displaced_area_m2": 0.031494515439622894,
+      "displaced_water_mass_kg_m": 32.140153006135165,
+      "inner_diameter_mm": 180.0,
+      "is_buoyant": false,
+      "layers": [
+        {
+          "area_m2": 0.0060476149455455696,
+          "density_kg_m3": 7800.25,
+          "inner_diameter_mm": 180.0,
+          "mass_kg_m": 47.17290847899183,
+          "outer_diameter_mm": 200.25,
+          "thickness_mm": 10.125
+        }
+      ],
+      "mass_in_air_kg_m": 47.17290847899183,
+      "outer_diameter_inch": 7.883858267716537,
+      "outer_diameter_mm": 200.25,
+      "submerged_force_kN_m": 0.14747133118872388,
+      "submerged_mass_kg_m": 15.032755472856664
+    },
+    "coated": {
+      "air_force_kN_m": 0.502691018917939,
+      "buoyancy_force_kN_m": 0.34922639786062465,
+      "displaced_area_m2": 0.03488390121376458,
+      "displaced_water_mass_kg_m": 35.59902118864675,
+      "inner_diameter_mm": 180.0,
+      "is_buoyant": false,
+      "layers": [
+        {
+          "area_m2": 0.0060476149455455696,
+          "density_kg_m3": 7800.25,
+          "inner_diameter_mm": 180.0,
+          "mass_kg_m": 47.17290847899183,
+          "outer_diameter_mm": 200.25,
+          "thickness_mm": 10.125
+        },
+        {
+          "area_m2": 0.0033893857741416826,
+          "density_kg_m3": 1200.75,
+          "inner_diameter_mm": 200.25,
+          "mass_kg_m": 4.069804968300625,
+          "outer_diameter_mm": 210.75,
+          "thickness_mm": 5.25
+        }
+      ],
+      "mass_in_air_kg_m": 51.24271344729245,
+      "outer_diameter_inch": 8.29724409448819,
+      "outer_diameter_mm": 210.75,
+      "submerged_force_kN_m": 0.15346462105731434,
+      "submerged_mass_kg_m": 15.6436922586457
+    }
+  },
+  "input_basis": "src/digitalmodel/structural/pipe_cross_section/docs/worked-layered-pipe-buoyancy.md",
+  "inputs": {
+    "bare": {
+      "concrete_thickness_mm": 0.0,
+      "internal_contents": "air",
+      "internal_fluid_density": 0.0,
+      "lpp_density": 1200.75,
+      "lpp_thickness_mm": 0.0,
+      "seawater_density": 1020.5,
+      "steel_density": 7800.25,
+      "steel_od_mm": 200.25,
+      "steel_wt_mm": 10.125
+    },
+    "coated": {
+      "concrete_thickness_mm": 0.0,
+      "internal_contents": "air",
+      "internal_fluid_density": 0.0,
+      "lpp_density": 1200.75,
+      "lpp_thickness_mm": 5.25,
+      "seawater_density": 1020.5,
+      "steel_density": 7800.25,
+      "steel_od_mm": 200.25,
+      "steel_wt_mm": 10.125
+    }
+  },
+  "source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5"
+}

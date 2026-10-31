@@ -636,3 +636,13 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Reproducible pipe cross-section module analysis: exact deliverables only.
+!/scripts/reports/build_pipe_cross_section_module_report.py
+!/docs/reports/modules/pipe_cross_section/
+/docs/reports/modules/pipe_cross_section/*
+!/docs/reports/modules/pipe_cross_section/index.html
+!/docs/reports/modules/pipe_cross_section/changes.json
+!/docs/reports/modules/pipe_cross_section/results.json
+!/docs/reports/modules/pipe_cross_section/manifest.json
+!/docs/reports/modules/pipe_cross_section/README.md

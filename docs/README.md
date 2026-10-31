@@ -82,3 +82,9 @@ for that bulk store, not a path that should be hard-coded into portable repo log
 ## Operational runbooks
 
 - [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.
+
+## Pipe cross-section module analysis
+
+The [pipe cross-section report](reports/modules/pipe_cross_section/index.html)
+links the synthetic section geometry, layer mass and sealed-bore displacement
+to independent polar integrals, reproducible outputs and explicit limits.
