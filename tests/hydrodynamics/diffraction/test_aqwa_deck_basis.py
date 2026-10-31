@@ -1,13 +1,16 @@
 """Reading a physical basis out of an AQWA deck.
 
-Checked against the two decks in the repository whose numbers are known: the
-shipped ship-RAO example, and the LNGC pair that differs only in additional
-roll damping.
+Checked against the shipped ship-RAO example deck, and -- when a private data
+checkout is available -- a project deck pair that differs only in additional
+roll damping. That pair is project data kept out of this public repository;
+set DM_AQWA_DAMPING_DECK_DIR to the folder holding F_FST1_L00_DAMPAD.dat and
+F_FST1_L00_DAMPNO.dat to run that test, otherwise it is skipped.
 """
 
 from __future__ import annotations
 
 import math
+import os
 from pathlib import Path
 
 import pytest
@@ -19,10 +22,10 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_deck_basis import (
 REPO = Path(__file__).resolve().parents[3]
 SHIP = (REPO / "docs" / "domains" / "aqwa" / "examples" / "03_dat"
         / "001_ship_raos" / "001_ship_raos.dat")
-DAMPAD = (REPO / "docs" / "domains" / "aqwa" / "scripts"
-          / "wlng_diffraction_analysis" / "raos" / "F_FST1_L00_DAMPAD.dat")
-DAMPNO = (REPO / "docs" / "domains" / "aqwa" / "scripts"
-          / "wlng_diffraction_analysis" / "raos" / "F_FST1_L00_DAMPNO.dat")
+# Private project data: absent unless DM_AQWA_DAMPING_DECK_DIR points at it.
+_DAMPING_DIR = os.environ.get("DM_AQWA_DAMPING_DECK_DIR", "")
+DAMPAD = (Path(_DAMPING_DIR) / "F_FST1_L00_DAMPAD.dat") if _DAMPING_DIR else None
+DAMPNO = (Path(_DAMPING_DIR) / "F_FST1_L00_DAMPNO.dat") if _DAMPING_DIR else None
 
 ship_only = pytest.mark.skipif(not SHIP.exists(), reason="ship deck absent")
 
@@ -121,8 +124,9 @@ def test_volume_as_mass_is_the_trap_this_guards():
     assert mass_tonnes / volume == pytest.approx(1.025, rel=1e-4)
 
 
-@pytest.mark.skipif(not (DAMPAD.exists() and DAMPNO.exists()),
-                    reason="LNGC damping pair absent")
+@pytest.mark.skipif(
+    not (DAMPAD and DAMPNO and DAMPAD.exists() and DAMPNO.exists()),
+    reason="private damping deck pair absent (set DM_AQWA_DAMPING_DECK_DIR)")
 def test_additional_damping_is_read_when_present():
     """The pair differs in FIDP on roll and pitch; both are read."""
     added = read_aqwa_basis(DAMPAD)

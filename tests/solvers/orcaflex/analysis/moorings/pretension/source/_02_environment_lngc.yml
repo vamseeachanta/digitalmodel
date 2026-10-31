@@ -1,8 +1,0 @@
-﻿Environment:
-  - includefile: 02a_seawater_density.yml
-  - includefile: 02a_seabed_water_depth.yml
-  - includefile: 02b_seabed_stiffness.yml
-  - includefile: 02c_currents.yml
-  - includefile: 02d_waves.yml
-  - includefile: 02e_wind.yml
-  - includefile: 02e_ramp_settings.yml

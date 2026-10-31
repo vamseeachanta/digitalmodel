@@ -8,12 +8,15 @@ downstream converter padded the difference with zero matrices -- a hydrodynamic
 database reporting zero added mass and zero radiation damping above the twelfth
 frequency, returned as a complete result.
 
-Measured on a listing shipped in this repository: 43 frequencies against 10
-coefficient matrices.
+Measured on a multibody project listing: 43 frequencies against 10
+coefficient matrices. That listing is project data kept out of this public
+repository; set DM_AQWA_MULTIBODY_LIS to its path to run the tests that use it,
+otherwise they are skipped.
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -23,14 +26,15 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_lis_parser import (
 )
 
 REPO = Path(__file__).resolve().parents[3]
-MULTIBODY = (REPO / "docs" / "domains" / "orcaflex" / "aqwa" / "to_orcaflex"
-             / "multibody_test1" / "input"
-             / "AL_FST2F_FST1F_HWL_ANS2019R1.LIS")
+# Private project data: absent unless DM_AQWA_MULTIBODY_LIS points at it.
+_MULTIBODY_ENV = os.environ.get("DM_AQWA_MULTIBODY_LIS", "")
+MULTIBODY = Path(_MULTIBODY_ENV) if _MULTIBODY_ENV else None
 SHIP = (REPO / "docs" / "domains" / "aqwa" / "examples" / "03_dat"
         / "001_ship_raos" / "001_SHIP_RAOS.LIS")
 
 multibody_only = pytest.mark.skipif(
-    not MULTIBODY.exists(), reason="multibody listing absent")
+    not (MULTIBODY and MULTIBODY.is_file()),
+    reason="private multibody listing absent (set DM_AQWA_MULTIBODY_LIS)")
 ship_only = pytest.mark.skipif(not SHIP.exists(), reason="ship listing absent")
 
 
