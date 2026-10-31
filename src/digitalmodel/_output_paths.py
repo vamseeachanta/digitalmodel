@@ -1,6 +1,7 @@
 """Preflight destination checks for multi-artifact writers."""
 
 from itertools import combinations
+import os
 from pathlib import Path
 
 
@@ -24,3 +25,19 @@ def validate_output_paths(*paths: Path) -> None:
     for first, second in combinations(existing, 2):
         if first.samefile(second):
             raise ValueError("Output destinations must be distinct")
+
+
+def relative_artifact_path(artifact: Path, document: Path) -> str:
+    """Return a filesystem link relative to the document's actual directory.
+
+    Resolve both endpoints so a symlinked manifest or report still links to its
+    artifacts. Source: Python 3.11 pathlib Path.resolve (above) and os.path.relpath:
+    https://docs.python.org/3.11/library/os.path.html#os.path.relpath
+    URL consumers must percent-encode this filesystem path separately.
+    Different filesystem drives cannot be represented by a relative link and
+    raise ValueError before the calling writer emits its document.
+    """
+    relative = os.path.relpath(
+        Path(artifact).resolve(), Path(document).resolve().parent,
+    )
+    return Path(relative).as_posix()
