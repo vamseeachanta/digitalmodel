@@ -1,0 +1,560 @@
+{
+  "basis": "assumed, based on previous experience",
+  "cases": {
+    "layers.0.su_kpa.high": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 3.0,
+              "kind": "clay",
+              "su_kpa": 120,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 15.0,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 3.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 100.0,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 20934.316806460945,
+        "margin_kn": -9065.683193539055,
+        "preload_support_tip_m": 8.069524066351187,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 120,
+        "layers.1.su_kpa": 15.0,
+        "layers.2.su_kpa": 100.0,
+        "top_thickness_m": 3.0
+      }
+    },
+    "layers.0.su_kpa.low": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 3.0,
+              "kind": "clay",
+              "su_kpa": 60,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 15.0,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 3.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 100.0,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 15844.93670764548,
+        "margin_kn": -14155.06329235452,
+        "preload_support_tip_m": 8.069524066351187,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 60,
+        "layers.1.su_kpa": 15.0,
+        "layers.2.su_kpa": 100.0,
+        "top_thickness_m": 3.0
+      }
+    },
+    "layers.1.su_kpa.high": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 3.0,
+              "kind": "clay",
+              "su_kpa": 80.0,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 30,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 3.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 100.0,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 28296.953349413983,
+        "margin_kn": -1703.0466505860168,
+        "preload_support_tip_m": 6.688073578531603,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 80.0,
+        "layers.1.su_kpa": 30,
+        "layers.2.su_kpa": 100.0,
+        "top_thickness_m": 3.0
+      }
+    },
+    "layers.1.su_kpa.low": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 3.0,
+              "kind": "clay",
+              "su_kpa": 80.0,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 10,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 3.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 100.0,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 13956.211204307298,
+        "margin_kn": -16043.788795692702,
+        "preload_support_tip_m": 8.259911037904699,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 80.0,
+        "layers.1.su_kpa": 10,
+        "layers.2.su_kpa": 100.0,
+        "top_thickness_m": 3.0
+      }
+    },
+    "layers.2.su_kpa.high": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 3.0,
+              "kind": "clay",
+              "su_kpa": 80.0,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 15.0,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 3.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 120,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 17541.39674058397,
+        "margin_kn": -12458.603259416032,
+        "preload_support_tip_m": 8.069524066352464,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 80.0,
+        "layers.1.su_kpa": 15.0,
+        "layers.2.su_kpa": 120,
+        "top_thickness_m": 3.0
+      }
+    },
+    "layers.2.su_kpa.low": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 3.0,
+              "kind": "clay",
+              "su_kpa": 80.0,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 15.0,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 3.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 60,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 17541.39674058397,
+        "margin_kn": -12458.603259416032,
+        "preload_support_tip_m": 8.069524066354305,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 80.0,
+        "layers.1.su_kpa": 15.0,
+        "layers.2.su_kpa": 60,
+        "top_thickness_m": 3.0
+      }
+    },
+    "nominal": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 3.0,
+              "kind": "clay",
+              "su_kpa": 80.0,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 15.0,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 3.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 100.0,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 17541.39674058397,
+        "margin_kn": -12458.603259416032,
+        "preload_support_tip_m": 8.069524066351187,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 80.0,
+        "layers.1.su_kpa": 15.0,
+        "layers.2.su_kpa": 100.0,
+        "top_thickness_m": 3.0
+      }
+    },
+    "top_thickness_m.high": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 4.0,
+              "kind": "clay",
+              "su_kpa": 80.0,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 15.0,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 4.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 100.0,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 20447.998263685247,
+        "margin_kn": -9552.001736314753,
+        "preload_support_tip_m": 8.06645446533853,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 80.0,
+        "layers.1.su_kpa": 15.0,
+        "layers.2.su_kpa": 100.0,
+        "top_thickness_m": 4.0
+      }
+    },
+    "top_thickness_m.low": {
+      "input": {
+        "preload_kn": 30000.0,
+        "profile": {
+          "layers": [
+            {
+              "bottom_m": 2.0,
+              "kind": "clay",
+              "su_kpa": 80.0,
+              "submerged_weight_kn_m3": 7.0,
+              "top_m": 0.0
+            },
+            {
+              "bottom_m": 7.0,
+              "kind": "clay",
+              "su_kpa": 15.0,
+              "submerged_weight_kn_m3": 6.0,
+              "top_m": 2.0
+            },
+            {
+              "bottom_m": 24.0,
+              "kind": "clay",
+              "su_kpa": 100.0,
+              "submerged_weight_kn_m3": 8.0,
+              "top_m": 7.0
+            }
+          ],
+          "sand_method": "load_spread",
+          "spread_ratio": 3.0
+        },
+        "spudcan": {
+          "diameter_m": 12.0,
+          "tip_to_bearing_m": 1.5
+        },
+        "tip_interval_m": [
+          1.5,
+          24.0
+        ]
+      },
+      "result": {
+        "capacity_loss_count": 1,
+        "loss_threshold_kn": 15279.450029999318,
+        "margin_kn": -14720.549970000682,
+        "preload_support_tip_m": 8.072551479283508,
+        "punch_through": true,
+        "unsupported": false
+      },
+      "values": {
+        "layers.0.su_kpa": 80.0,
+        "layers.1.su_kpa": 15.0,
+        "layers.2.su_kpa": 100.0,
+        "top_thickness_m": 2.0
+      }
+    }
+  },
+  "limits": [
+    "All numerical scenario inputs and their ranges are assumptions, based on previous experience.",
+    "These scenarios are not a regional geotechnical investigation or a reconstruction of any event.",
+    "Each leg is evaluated independently under an assumed vertical preload reaction.",
+    "Circular clay factor 6.34 is retained; the weak-layer paper uses 6.05 for its surface reference.",
+    "Partial engagement, plug transport, remoulding, rate effects, buoyancy and dynamics are excluded.",
+    "Static resistance recovery does not predict a dynamic plunge or arrest depth.",
+    "A false punch-through flag does not establish installation acceptance.",
+    "Independent uniform distributions are assumptions, not measured population statistics.",
+    "The top interface moves on both adjacent layers; deeper boundaries remain fixed.",
+    "Uniform clay has no top-layer interface; investigation extent remains fixed.",
+    "Probability is per leg conditional on this model; no three-leg system probability is inferred."
+  ],
+  "name": "stiff_over_soft",
+  "parameters": {
+    "layers.0.su_kpa": {
+      "basis": "assumed, based on previous experience",
+      "distribution": "uniform",
+      "high": 120,
+      "low": 60
+    },
+    "layers.1.su_kpa": {
+      "basis": "assumed, based on previous experience",
+      "distribution": "uniform",
+      "high": 30,
+      "low": 10
+    },
+    "layers.2.su_kpa": {
+      "basis": "assumed, based on previous experience",
+      "distribution": "uniform",
+      "high": 120,
+      "low": 60
+    },
+    "top_thickness_m": {
+      "basis": "assumed, based on previous experience",
+      "distribution": "uniform",
+      "high": 4.0,
+      "low": 2.0
+    }
+  },
+  "schema_version": 1,
+  "sources": [
+    {
+      "equations": "1\u20133; 5 for the inherited circular clay reference",
+      "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+      "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+      "use": "Method equations and spread range only; no regional measurements adopted.",
+      "year": 2015
+    },
+    {
+      "equations": "2 and 6",
+      "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+      "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+      "use": "Clay mechanisms only; no regional measurements adopted.",
+      "year": 2015
+    }
+  ],
+  "standards": [
+    {
+      "clause": "TO CONFIRM",
+      "document": "SNAME T&RB 5-5A",
+      "edition": "Rev 3 (2008)"
+    },
+    {
+      "clause": "TO CONFIRM",
+      "document": "ISO 19905-1",
+      "edition": "2012"
+    }
+  ]
+}
