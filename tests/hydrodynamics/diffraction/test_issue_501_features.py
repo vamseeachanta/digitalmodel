@@ -27,6 +27,8 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 def _spec_dict(**solver_options) -> dict:
     base = yaml.safe_load((FIXTURES_DIR / "spec_ship_raos.yml").read_text())
+    geometry = base["vessel"]["geometry"]
+    geometry["mesh_file"] = str((FIXTURES_DIR / geometry["mesh_file"]).resolve())
     base.setdefault("solver_options", {})
     # The fixture sets legacy flat fields; clear them so each test controls
     # exactly which fields are "set".

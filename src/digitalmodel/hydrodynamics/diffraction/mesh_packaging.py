@@ -258,6 +258,8 @@ def package_spec_meshes(
     _check_supported_formats(spec, solver)
     ready = _SOLVER_READY_EXTENSIONS[solver]
 
+    if spec_dir is None:
+        spec_dir = spec._source_dir
     packaged_spec = spec.model_copy(deep=True)
     output_dir = Path(output_dir)
     # Rewritten basenames belong to the packaged directory, including when
