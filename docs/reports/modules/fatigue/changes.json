@@ -1,0 +1,10 @@
+{
+  "report": "fatigue-synthetic-arithmetic",
+  "revision": "00",
+  "date": "2026-10-28",
+  "changes": [
+    "Added an artificial power-law example to separate arithmetic checks from material qualification.",
+    "Mapped implemented methods, counting refusals and unevaluated engineering uses so that numerical scope is explicit.",
+    "Added deterministic source and change records, parsed numerical checks and module-local report pointers."
+  ]
+}
