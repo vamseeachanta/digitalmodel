@@ -974,27 +974,31 @@ families:
     - {issue: 2050, affected: not_applicable, evidence: 'src/digitalmodel/marine_ops/marine_analysis/visualization/integration_charts.py:L40-L1439'}
   - path: &a21014874bc src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py
     symbol: FPSOMooringFullWorkflow._baseline_span
-    line: 198
+    line: 205
     kind: function
     what: *a072da784e4
     signals: *a174aef9efa
     relation: independent
     module: &aede32f5f2c marine_ops/marine_engineering
-    file_sha256: cf003ae9211f091556a2c0f3d28b2ab744a6c7c26451d039827cf3630d6ad79f
+    file_sha256: 37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da
     defects:
-    - {issue: 2050, affected: not_applicable, evidence: 'src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L198-L226'}
+    - issue: 2050
+      affected: not_applicable
+      evidence: 'src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L205-L233'
     body_sha256: e5c6eaf0a363d0ca4445ecae53d48966e4eefa9823e306de4eba3906e1294ad6
   - path: *a21014874bc
     symbol: FPSOMooringFullWorkflow._line_tensions
-    line: 282
+    line: 289
     kind: function
     what: *a072da784e4
     signals: *abfbf37eaef
     relation: independent
     module: *aede32f5f2c
-    file_sha256: cf003ae9211f091556a2c0f3d28b2ab744a6c7c26451d039827cf3630d6ad79f
+    file_sha256: 37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da
     defects:
-    - {issue: 2050, affected: not_applicable, evidence: 'src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L282-L289'}
+    - issue: 2050
+      affected: not_applicable
+      evidence: 'src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L289-L296'
     body_sha256: b6c1b0886e3d85a07dbce2435248bf7bb78aeedb4ba42a0da69c438105774b3b
   - path: &a767fa2f875 src/digitalmodel/orcaflex/mooring_design.py
     symbol: solve_catenary
@@ -3573,45 +3577,45 @@ families:
     body_sha256: 0638d433cf31cd8db73cf838e3d5b2f442cecb4176be55529e22e4c7f00b85f8
   - path: src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_output.py
     symbol: _write_tensions_csv
-    line: 90
+    line: 95
     kind: function
     what: *a4cbd82cf2b
     signals: *ac227a1b9d3
     relation: independent
     module: *aede32f5f2c
-    file_sha256: 9a43dc0cfc4904d221440e13e9a35f8509a2bd100438fa2ab0b71cc2104807a7
+    file_sha256: 7b7b4b01572875d9db8c4f796100986d0d79539d06c7db627e9ef761975266ba
     body_sha256: 4f19c6d80be18cda84be9d53c761d098e7ff43c984d7f8df9e27748b42fb3261
   - path: *a21014874bc
     symbol: FPSOMooringFullWorkflow._line_state
-    line: 291
+    line: 298
     kind: function
     what: *a4cbd82cf2b
     signals: *ac227a1b9d3
     relation: independent
     module: *aede32f5f2c
-    file_sha256: cf003ae9211f091556a2c0f3d28b2ab744a6c7c26451d039827cf3630d6ad79f
+    file_sha256: 37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da
     delegates_to:
     - {path: *a21014874bc, symbol: &ab4ca9ff803 FPSOMooringFullWorkflow._solve_line}
     body_sha256: b58c7c89a6c030fb8bd6058a0e9ce8ac850ab50fed6cfc4bf807c53e5d6d7802
   - path: *a21014874bc
     symbol: *ab4ca9ff803
-    line: 323
+    line: 330
     kind: function
     what: *a4cbd82cf2b
     signals: *ac227a1b9d3
     relation: independent
     module: *aede32f5f2c
-    file_sha256: cf003ae9211f091556a2c0f3d28b2ab744a6c7c26451d039827cf3630d6ad79f
+    file_sha256: 37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da
     body_sha256: a1b81aad2564c7126621df3bcee4fcea6cfeb97c6fdacd00cf133cca5021f917
   - path: *a21014874bc
     symbol: FPSOMooringFullWorkflow._result
-    line: 369
+    line: 376
     kind: function
     what: *a4cbd82cf2b
     signals: *ac227a1b9d3
     relation: independent
     module: *aede32f5f2c
-    file_sha256: cf003ae9211f091556a2c0f3d28b2ab744a6c7c26451d039827cf3630d6ad79f
+    file_sha256: 37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da
     body_sha256: 49a7efc6c81611d26651289760e228b23150fac52ab9632a35eb0bc961c4655b
   - path: *a767fa2f875
     symbol: solve_catenary
@@ -14223,15 +14227,17 @@ families:
     body_sha256: c429b3a68d6cfb4a5074442dc162bf125bec90a7589c28173f92cfa3697e89a5
   - path: *a21014874bc
     symbol: FPSOMooringFullWorkflow._wave_spectrum
-    line: 54
+    line: 55
     kind: function
     what: *a28b9c3911c
     signals: *ad5eef87bc0
     relation: independent
     module: *aede32f5f2c
-    file_sha256: cf003ae9211f091556a2c0f3d28b2ab744a6c7c26451d039827cf3630d6ad79f
+    file_sha256: 37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da
     defects:
-    - {issue: 2543, affected: not_checked, evidence: 'src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L54-L75'}
+    - issue: 2543
+      affected: not_checked
+      evidence: 'src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L55-L76'
     body_sha256: 0aab3a01ea8db9f613aad9b96f8cf994cf4bf0489defbdb88fe3c0fc9f748e7c
   - path: &a0d74c03e28 src/digitalmodel/marine_ops/operation_envelope.py
     symbol: operation_envelope
@@ -16100,56 +16106,57 @@ families:
     body_sha256: 50de2e7bda830f8d6886153ec483b445e0a9ea1f51f4ddc6e344c1839d9a9514
   - path: &a15b46bcaab src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py
     symbol: *ac0bc803b8b
-    line: 320
+    line: 323
     kind: function
     what: *a7ae0a82610
     signals: *a786da6059f
     relation: copy
     module: *aede32f5f2c
-    file_sha256: 79edb470916a3ef432322add68c16cc5587706355729ff957c7f6338e344222d
+    file_sha256: 3bfd37eea33b8be9f21adb1046a57fe24f79941bccd8a10f3d0f476c6a11395c
     body_sha256: 1238b9742228bc16d212c067952a0e401ee15e6ac07c00c119eda1b64fefc3ec
   - path: *a15b46bcaab
     symbol: *a1308af30e7
-    line: 642
+    line: 645
     kind: function
     what: *a7ae0a82610
     signals: *ac7e985efc8
     relation: copy
     module: *aede32f5f2c
-    file_sha256: 79edb470916a3ef432322add68c16cc5587706355729ff957c7f6338e344222d
+    file_sha256: 3bfd37eea33b8be9f21adb1046a57fe24f79941bccd8a10f3d0f476c6a11395c
     body_sha256: 9956e8413b07feac7a72e2fe4e312299e417981ffc35dfaea3b214083f68b83d
   - path: *a15b46bcaab
     symbol: create_sample_database
-    line: 875
+    line: 878
     kind: function
     what: *a7ae0a82610
     signals: *a786da6059f
     relation: copy
     module: *aede32f5f2c
-    file_sha256: 79edb470916a3ef432322add68c16cc5587706355729ff957c7f6338e344222d
-    body_sha256: b526299f508f874a9e1f2df95e7fee7c9e61e73dbeff9e82064473a0f4ce0d9d
+    file_sha256: 3bfd37eea33b8be9f21adb1046a57fe24f79941bccd8a10f3d0f476c6a11395c
+    body_sha256: 7cfed66e9e3a88afed0b8449377a2417d8451a48d4445975e9f22e4a15f242f3
   - path: *a21014874bc
     symbol: FPSOMooringFullWorkflow._environmental_forces
-    line: 77
+    line: 78
     kind: function
     what: *a7ae0a82610
     signals: *a786da6059f
     relation: independent
     module: *aede32f5f2c
-    file_sha256: cf003ae9211f091556a2c0f3d28b2ab744a6c7c26451d039827cf3630d6ad79f
+    file_sha256: 37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da
     delegates_to:
-    - {path: *a21014874bc, symbol: &a1a0d36e977 FPSOMooringFullWorkflow._ocimf_database_path}
-    body_sha256: cacc6817daea7c913149aab90ec16709c53dd9d4431c4132f8e03091f9c73ee4
+    - path: *a21014874bc
+      symbol: FPSOMooringFullWorkflow._ocimf_database
+    body_sha256: 0a1beeef755d6188ff9f5f5184ed00b5d585fcba7bfa35d4b9d709069ac38531
   - path: *a21014874bc
-    symbol: *a1a0d36e977
-    line: 103
+    symbol: FPSOMooringFullWorkflow._ocimf_database
+    line: 104
     kind: function
     what: *a7ae0a82610
     signals: *ac7e985efc8
     relation: independent
     module: *aede32f5f2c
-    file_sha256: cf003ae9211f091556a2c0f3d28b2ab744a6c7c26451d039827cf3630d6ad79f
-    body_sha256: 705607344618caa0f58eb35bd957cdb80dd32c1c20d641eb53451522359f0e25
+    file_sha256: 37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da
+    body_sha256: 04c78d5c6a87b59b56ea40bb61cf00fe86df868f54154bcc27b4e15bdec158e8
   - path: &a41b4e1f283 src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py
     symbol: _resolve_arrow_direction_in_body_frame
     line: 39
@@ -16763,7 +16770,7 @@ families:
     module: subsea/on_bottom_stability
     file_sha256: 93c8a2b07b7ac5b11a3bc1f4eb6dc74ff741f0b962ad9c49769c512247d6db6c
     body_sha256: 4cf690781925c4d365ed0e915813233f3070179f56b1447628de30cbb3173230
-  identical_groups: [body-005, body-009, body-011, body-014, body-018, body-023, body-028, body-036, body-044, body-047, body-055, body-057]
+  identical_groups: [body-005, body-009, body-011, body-014, body-018, body-023, body-028, body-036, body-044, body-055, body-057]
   notes: Routes include coefficient interpolation, quadratic drag, height or depth profiles and combined-load callers.
   first_module: examples
   search_audit:
@@ -27279,7 +27286,7 @@ identical_body_groups:
     line: 306
   - path: *a15b46bcaab
     symbol: *ac0bc803b8b
-    line: 320
+    line: 323
 - id: body-006
   sha256: 12755dafb4a53ebc75e430829d5aa24c64a2869d20a0653f4391e0d0c28fb99c
   members:
@@ -27571,7 +27578,7 @@ identical_body_groups:
     line: 628
   - path: *a15b46bcaab
     symbol: *a1308af30e7
-    line: 642
+    line: 645
 - id: body-037
   sha256: 9f7c6e6ba871d90e3fcd6394e9c07e8c012ae87516b11d410e14b16e400000f1
   members:
@@ -27662,15 +27669,6 @@ identical_body_groups:
   - path: *ac09834e3bf
     symbol: *a4efbe00803
     line: 755
-- id: body-047
-  sha256: b526299f508f874a9e1f2df95e7fee7c9e61e73dbeff9e82064473a0f4ce0d9d
-  members:
-  - path: *a4ca6bcaabe
-    symbol: create_sample_database
-    line: 861
-  - path: *a15b46bcaab
-    symbol: create_sample_database
-    line: 875
 - id: body-048
   sha256: c15a13cf55def992b620e2bbe2f6c26a8ac445490474e61f15d4394471af47e6
   members:
@@ -30973,47 +30971,47 @@ rejected_candidates:
   families: [*a39dabc73ba]
 - path: *a15b46bcaab
   symbol: OCIMFCoefficients
-  line: 57
+  line: 58
   reason: *a0957e52299
   families: [*a39dabc73ba]
 - path: *a15b46bcaab
   symbol: *a04aa8b4416
-  line: 81
+  line: 82
   reason: *a0957e52299
   families: [*a39dabc73ba]
 - path: *a15b46bcaab
   symbol: *affeb84667d
-  line: 295
+  line: 298
   reason: *a0957e52299
   families: *a00f36e86af
 - path: *a15b46bcaab
   symbol: *a4c321b7122
-  line: 307
+  line: 310
   reason: *a0957e52299
   families: *a00f36e86af
 - path: *a15b46bcaab
   symbol: *a21a55d4f34
-  line: 373
+  line: 376
   reason: *a0957e52299
   families: *a00f36e86af
 - path: *a15b46bcaab
   symbol: *a92633e67e7
-  line: 458
+  line: 461
   reason: *a0957e52299
   families: *a00f36e86af
 - path: *a15b46bcaab
   symbol: *a0b3cfe65b0
-  line: 512
+  line: 515
   reason: *a0957e52299
   families: *a00f36e86af
 - path: *a15b46bcaab
   symbol: *aa6ac1b7975
-  line: 574
+  line: 577
   reason: *a0957e52299
   families: *a00f36e86af
 - path: *a15b46bcaab
   symbol: *a0b26fb4c09
-  line: 609
+  line: 612
   reason: *a0957e52299
   families: *a00f36e86af
 - path: &a4c76affd10 src/digitalmodel/marine_ops/marine_engineering/hydrodynamic_coefficients/aqwa_parser.py
@@ -43172,14 +43170,14 @@ rejected_candidates:
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: *affeb84667d
-  line: 295
+  line: 298
   families:
   - irregular-frequency-treatment
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: EnvironmentalForces.plot_validation_chart
-  line: 772
+  line: 775
   families:
   - irregular-frequency-treatment
   disposition: needs_review
@@ -46189,7 +46187,7 @@ rejected_candidates:
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: OCIMFDatabase
-  line: 272
+  line: 273
   families:
   - wind-and-current-force-routes
   disposition: needs_review
@@ -50249,7 +50247,7 @@ rejected_candidates:
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a21014874bc
   symbol: *ab4ca9ff803
-  line: 323
+  line: 330
   families:
   - external-solver-batch-run-stacks
   disposition: needs_review
@@ -52748,42 +52746,42 @@ rejected_candidates:
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: EnvironmentalForceResults
-  line: 138
+  line: 139
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: EnvironmentalForces
-  line: 560
+  line: 563
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: *aa6ac1b7975
-  line: 574
+  line: 577
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: *a0b26fb4c09
-  line: 609
+  line: 612
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: *a1308af30e7
-  line: 642
+  line: 645
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a15b46bcaab
   symbol: EnvironmentalForces.plot_force_diagram
-  line: 693
+  line: 696
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
@@ -52804,28 +52802,28 @@ rejected_candidates:
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a21014874bc
   symbol: FPSOMooringFullWorkflow._environmental_forces
-  line: 77
+  line: 78
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a21014874bc
   symbol: FPSOMooringFullWorkflow._wave_drift_force
-  line: 130
+  line: 137
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a21014874bc
   symbol: FPSOMooringFullWorkflow._force_output
-  line: 143
+  line: 150
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a21014874bc
   symbol: FPSOMooringFullWorkflow._restoring_force
-  line: 351
+  line: 358
   families:
   - dnv-rp-e305-on-bottom-stability
   disposition: needs_review

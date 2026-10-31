@@ -30,6 +30,7 @@ unphysical extrapolations outside the sample hull (cf. #556).
 
 from dataclasses import dataclass, field
 from typing import Tuple, Optional, Dict, List
+from typing import TextIO, Union
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -277,17 +278,19 @@ class OCIMFDatabase:
     at different headings and displacements.
     """
 
-    def __init__(self, csv_path: str):
+    def __init__(self, csv_path: Union[str, Path, TextIO]):
         """
-        Initialize OCIMF database from CSV file.
+        Initialize OCIMF database from a CSV path or caller-owned text stream.
 
         Args:
-            csv_path: Path to OCIMF coefficients CSV file
+            csv_path: Coefficient CSV path or readable text stream. Streams are
+                read at their current position and remain open after loading.
+                The csv_path attribute is None for stream-backed databases.
 
         CSV Format:
             vessel_type, displacement, heading, CXw, CYw, CMw, CXc, CYc, CMc, ...
         """
-        self.csv_path = Path(csv_path)
+        self.csv_path = None if hasattr(csv_path, 'read') else Path(csv_path)
         self.data = pd.read_csv(csv_path)
         self._validate_data()
         self._setup_interpolators()
@@ -872,16 +875,18 @@ class EnvironmentalForces:
             plt.show()
 
 
-def create_sample_database(output_path: str, num_vessels: int = 5,
-                          num_headings: int = 13, num_displacements: int = 3):
+def create_sample_database(output_path: Union[str, Path, TextIO], num_vessels: int = 5,
+                          num_headings: int = 13, num_displacements: int = 3,
+                          *, verbose: bool = True):
     """
     Create a sample OCIMF database for testing/demo purposes.
 
     Args:
-        output_path: Path to save CSV file
+        output_path: CSV destination path or caller-owned writable text stream
         num_vessels: Number of vessel types to generate
         num_headings: Number of heading angles (0-180)
         num_displacements: Number of displacement values per vessel
+        verbose: Print creation details; disable for compute-only streams
     """
     vessel_types = ['VLCC', 'Suezmax', 'Aframax', 'Panamax', 'Handymax'][:num_vessels]
     base_displacements = {
@@ -939,8 +944,9 @@ def create_sample_database(output_path: str, num_vessels: int = 5,
 
     df = pd.DataFrame(data)
     df.to_csv(output_path, index=False)
-    print(f"Created sample OCIMF database: {output_path}")
-    print(f"  Vessels: {num_vessels}")
-    print(f"  Total entries: {len(df)}")
+    if verbose:
+        print(f"Created sample OCIMF database: {output_path}")
+        print(f"  Vessels: {num_vessels}")
+        print(f"  Total entries: {len(df)}")
 
     return df
