@@ -13,6 +13,12 @@ code { background: #eef2f5; padding: .1rem .25rem; }
 <p><code>RaoRegistry</code> stores JSON datasets in per-hull directories and
 references in <code>registry.yaml</code>. This is separate from
 <code>RAODatabase</code> and its fixture population workflow.</p>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>Lookup filters</td><td>2026-10-19</td><td>Document exact condition
+and revision selection so retained datasets can be requested directly.</td></tr></tbody>
+</table>
 <h2>Registration and corrections</h2>
 <p>New filenames are <code>sha256_&lt;digest&gt;.json</code>. The standard-library
 SHA-256 digest covers canonical JSON: keys sorted, compact separators, default
@@ -29,8 +35,27 @@ never replace earlier content. Existing digest files are verified before reuse;
 corrupt history is not repaired by re-registration.</p>
 <p>New revisions appear first in lookup results; an identical repeat does not
 reorder them. The existing inclusive 0.5 m draft lookup tolerance remains only a
-search rule. It does not determine storage identity. Conditions and benchmark
-revisions can be selected from the returned reference metadata.</p>
+search rule. It does not determine storage identity.</p>
+<h2>Selecting loading conditions and benchmark revisions</h2>
+<p><code>get_raos</code> accepts keyword-only <code>loading_condition</code> and
+<code>benchmark_revision</code> filters. Each supplied label must match exactly,
+including case and whitespace. These filters intersect with solver and draft
+filters. Omitted filters or <code>None</code> leave that metadata unrestricted;
+an empty string selects only an explicitly empty label. To select unlabelled
+entries, inspect returned reference metadata for <code>None</code>.</p>
+<pre><code>refs = registry.get_raos(
+    hull_id,
+    loading_condition="condition-A",
+    benchmark_revision="revision-A",
+)
+data = registry.load_rao_data(refs[0]) if refs else None</code></pre>
+<p>Every matching retained revision is returned, newest registration first.
+Repeating older identical content does not move it to the front. A missing
+combination returns an empty list. Selection is based on index metadata and
+does not verify integrity: load the selected reference to check its digest.
+Matching legacy metadata still produces a legacy reference whose load fails
+explicitly. These selection semantics extend the distinct-condition retrieval
+acceptance in issue #2079; no engineering equation or tolerance is added.</p>
 <h2>Historical references</h2>
 <p>The <code>RaoReference</code> schema and existing relative-path anchor (the
 registry directory's grandparent) remain unchanged. New references use forward
@@ -56,7 +81,8 @@ not engineering qualification, coordinate conventions or source validity.</p>
 this now means the newest retained revision. Its existing exception handling
 returns unavailable data for integrity failures, including legacy references.
 Catalog linking continues to attach all matching references. Callers needing a
-specific condition must select that reference explicitly. Registration supports
+specific condition can use the lookup filters and load the selected reference.
+Registration supports
 single-writer use; concurrent index transactions and legacy data recovery are
 not provided.</p>
 <p>Implementation: <code>src/digitalmodel/hydrodynamics/hull_library/rao_registry.py</code>.
