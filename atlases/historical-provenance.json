@@ -2871,6 +2871,174 @@
         "atlases/riser_fatigue/b53753cd275a/surrogate.json": "a9430f17fdb6b7800e26d4c1330e2f1661aff5776c24a48f0e68d17350ad0da5",
         "atlases/riser_fatigue/b53753cd275a/validation.json": "e0a754380884e80020b1cccef58a051516e85462e515261db960a25a5730b351"
       }
+    },
+    {
+      "basis": {
+        "spec": {
+          "physics": "log_log",
+          "response": "annual_damage",
+          "axes": [
+            {
+              "name": "scf",
+              "scale": "linear",
+              "grid": [
+                1.0,
+                1.1,
+                1.2,
+                1.3,
+                1.4
+              ]
+            },
+            {
+              "name": "viv_stress_scale",
+              "scale": "linear",
+              "grid": [
+                0.8,
+                1.0,
+                1.2,
+                1.4,
+                1.6
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-RP-C203",
+            "edition": "2021-09"
+          }
+        ],
+        "input": "examples/workflows/riser-fatigue/input.yml",
+        "response_sources": [
+          "src/digitalmodel/riser_fatigue/workflow.py",
+          "src/digitalmodel/riser_fatigue/touchdown.py",
+          "src/digitalmodel/riser_fatigue/validation.py",
+          "src/digitalmodel/fatigue/sn_curves.py",
+          "src/digitalmodel/fatigue/c203_sn_tables.py",
+          "src/digitalmodel/fatigue/damage.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "4dcaf1f00813cb8567341d0ae07fc4d7c9ea8101e5d0f543570b9bd6848b3680",
+        "src/digitalmodel/parametric/refresh.py": "24f4aeb7888fe4d994151f38412574e14eb72a0a8d828c84a711ccd403c731fb",
+        "src/digitalmodel/parametric/generate.py": "7d957b173df23131682559714a2ab12b0f6670b97ef11cbbaebcaa2c8e1f2e24",
+        "examples/workflows/riser-fatigue/input.yml": "e91b3ae6c0f1aa92cf73f854a5de7c6e88569b147a8da4cf9f4f9778a37a525a",
+        "src/digitalmodel/riser_fatigue/workflow.py": "7371b85e60d9a1ebdfff1ca9587a8f54f86efddeaf0bad8b60989cf2e305f188",
+        "src/digitalmodel/riser_fatigue/touchdown.py": "d542e3694efe1b44f2825d050e0bc545fc799274cdddf13356a6c87c565cce74",
+        "src/digitalmodel/riser_fatigue/validation.py": "1694367ddd1ef8a8fe62d9a274a108c7f2ed68c846eacde707c5c1d93878f266",
+        "src/digitalmodel/fatigue/sn_curves.py": "d44cc670bbc4c3f6a3dce6d4b7804f6b3ebcc6951271398a8be6b0d7d4d70f11",
+        "src/digitalmodel/fatigue/c203_sn_tables.py": "6404edb5004a187d6c5bb4ede720c958ec4c74dcf5dd7a7d286ec1e6a83f23de",
+        "src/digitalmodel/fatigue/damage.py": "9106f6367ce67a363338167be930c1431b9580e993c007f5df6407e8228b4e92"
+      },
+      "manifest": "atlases/riser_fatigue/3c95da96243d/manifest.yaml",
+      "workflow_id": "riser-fatigue",
+      "recorded_code_version": "0664d39ac",
+      "source_publication": "first-matching-artifact-publication",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "3c95da96243d439e02600e316b73f018eb7d121cdcd8a029b9b44054baea878a",
+      "status": "VERIFIED",
+      "artifacts": {
+        "atlases/riser_fatigue/3c95da96243d/grid.parquet": "c96e6cc7c319e772f3625636a484f9eb092231d269affb6b26ac9319b1d28438",
+        "atlases/riser_fatigue/3c95da96243d/manifest.yaml": "d7324343800de53989b1baea998c895e0b838dfda89f1ecc42a3c1b5ce2e6267",
+        "atlases/riser_fatigue/3c95da96243d/surrogate.json": "de44c12be6afd5bc08e9c7b24ca5a19206ede76593cac824ea5a53ba0f0edd2a",
+        "atlases/riser_fatigue/3c95da96243d/validation.json": "16d68d0a5a50b7aede0a00a63148ecb34f646c40c91c12e8bfd8caefcbedb478"
+      }
+    },
+    {
+      "basis": {
+        "spec": {
+          "physics": "log_log",
+          "response": "damage",
+          "axes": [
+            {
+              "name": "stress_MPa",
+              "scale": "log",
+              "grid": [
+                11,
+                14,
+                18,
+                22,
+                27,
+                33,
+                40,
+                50,
+                62,
+                78,
+                98,
+                122,
+                150
+              ],
+              "derived": {
+                "fn": "stress_from_tension_area",
+                "inputs": [
+                  "tension_range_kN",
+                  "area_mm2"
+                ]
+              }
+            },
+            {
+              "name": "n_cycles",
+              "scale": "log",
+              "grid": [
+                10000,
+                100000,
+                1000000
+              ]
+            },
+            {
+              "name": "sn_curve",
+              "values": [
+                "B1",
+                "B2",
+                "C",
+                "C1",
+                "C2",
+                "D",
+                "E",
+                "F"
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {
+          "environment": "seawater_cp"
+        },
+        "standards": [
+          {
+            "id": "DNV-RP-C203",
+            "edition": "2021-09"
+          }
+        ],
+        "input": "examples/workflows/mooring-fatigue/input.yml",
+        "response_sources": [
+          "src/digitalmodel/fatigue/sn_curves.py",
+          "src/digitalmodel/fatigue/c203_sn_tables.py",
+          "src/digitalmodel/fatigue/damage.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "4dcaf1f00813cb8567341d0ae07fc4d7c9ea8101e5d0f543570b9bd6848b3680",
+        "src/digitalmodel/parametric/refresh.py": "24f4aeb7888fe4d994151f38412574e14eb72a0a8d828c84a711ccd403c731fb",
+        "src/digitalmodel/parametric/generate.py": "7d957b173df23131682559714a2ab12b0f6670b97ef11cbbaebcaa2c8e1f2e24",
+        "examples/workflows/mooring-fatigue/input.yml": "e707539680f132ac6d050199900a952dde34cdc1e85fb8cb84e10961a85a0351",
+        "src/digitalmodel/fatigue/sn_curves.py": "d44cc670bbc4c3f6a3dce6d4b7804f6b3ebcc6951271398a8be6b0d7d4d70f11",
+        "src/digitalmodel/fatigue/c203_sn_tables.py": "6404edb5004a187d6c5bb4ede720c958ec4c74dcf5dd7a7d286ec1e6a83f23de",
+        "src/digitalmodel/fatigue/damage.py": "9106f6367ce67a363338167be930c1431b9580e993c007f5df6407e8228b4e92"
+      },
+      "manifest": "atlases/mooring_fatigue/271ebe1d64e8/manifest.yaml",
+      "workflow_id": "mooring-fatigue",
+      "recorded_code_version": "0664d39ac",
+      "source_publication": "first-matching-artifact-publication",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "271ebe1d64e8457b084f8e49ffdb00dda40c93a2fdcee00d2d5dbc52f5203eef",
+      "status": "VERIFIED",
+      "artifacts": {
+        "atlases/mooring_fatigue/271ebe1d64e8/grid.parquet": "e08ddc040949e2849647e174052f62df06a355567836d38b792f39b2a3434077",
+        "atlases/mooring_fatigue/271ebe1d64e8/manifest.yaml": "f216059fcd26f141a683c5d6f5718f76a5f2ee8ef1749178ecf0ec2b134bacc9",
+        "atlases/mooring_fatigue/271ebe1d64e8/surrogate.json": "3216d0744dfa543dac51bd25b0012d2a52ead0b38d7fa21491167678a6822ecb",
+        "atlases/mooring_fatigue/271ebe1d64e8/validation.json": "54de02182b2d27bdd14dad3bfac93fcffe0f1ec16c7ddeaa23d60f28d3a3ca0a"
+      }
     }
   ]
 }
