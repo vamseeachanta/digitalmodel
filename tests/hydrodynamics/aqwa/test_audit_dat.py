@@ -104,5 +104,7 @@ def test_committed_deck6_examples_and_validators():
                 assert "LDRG" in str(exc) or "CoG" in str(exc)
             else:
                 accepted[label] += 1
-    assert count == 50
-    assert accepted == {"LDRG": 0, "CoG": 49}
+    # 22 committed example decks carry a deck 6; project-specific decks
+    # were moved to the private data repository.
+    assert count == 22
+    assert accepted == {"LDRG": 0, "CoG": 21}

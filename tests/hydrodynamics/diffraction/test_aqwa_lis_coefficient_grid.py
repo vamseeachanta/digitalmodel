@@ -9,9 +9,10 @@ database reporting zero added mass and zero radiation damping above the twelfth
 frequency, returned as a complete result.
 
 Measured on a multibody project listing: 43 frequencies against 10
-coefficient matrices. That listing is project data kept out of this public
-repository; set DM_AQWA_MULTIBODY_LIS to its path to run the tests that use it,
-otherwise they are skipped.
+coefficient matrices. A synthetic listing with the same 43-frequency grid
+reproduces the check publicly. The project listing is kept out of this public
+repository; set DM_AQWA_MULTIBODY_LIS to its path to also run the tests that
+use it, otherwise they are skipped.
 """
 
 from __future__ import annotations
@@ -68,6 +69,18 @@ def _synthetic(tmp_path, rows: int):
 
 
 class TestLongGrids:
+    def test_the_grids_agree_on_a_43_frequency_listing(self, tmp_path):
+        """The size of the case that exposed it: 43 frequencies, which the
+        old window cut to about ten coefficient matrices."""
+        p = _synthetic(tmp_path, 43)
+        parser = AQWALISParser(str(p))
+        freqs, _periods = parser.extract_frequencies_and_periods()
+        added = parser.parse_added_mass_table()
+        damping = parser.parse_damping_table()
+        assert len(freqs) == 43
+        assert len(added) == len(freqs)
+        assert len(damping) == len(freqs)
+
     @pytest.mark.parametrize("rows", [8, 13, 40, 60])
     def test_both_tables_return_every_row(self, tmp_path, rows):
         """Twelve rows is roughly what the old 2,000-character window held."""
