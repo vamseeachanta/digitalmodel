@@ -1,43 +1,12 @@
 name: Build API Docs
 
+# Docs routing, generated-HTML freshness and the strict MkDocs build are
+# generated-artifact currency checks: they run in the daily "Main full run"
+# (full-matrix-sweep.yml, dispatched by our own cron) and on demand, not on
+# pull requests or pushes (maintainer ruling, 28 Oct 2026). Pages deploys separately.
 on:
-  push:
-    branches: [main]
-    # The generated-HTML freshness check regenerates docs/api/** from the
-    # generators, so it has to fire when a generator or a generator input
-    # changes -- not only when a page does (#1888).
-    paths:
-      - 'src/**'
-      - 'scripts/**'
-      - 'docs/api/**'
-      - 'docs/standards/**'
-      - 'docs/domains/**'
-      - 'tests/repo_structure/**'
-      - 'config/markdown-link-check.json'
-      - 'assets/logo/**'
-      - 'atlases/**'
-      - 'data/**'
-      - 'tests/asset_integrity/test_data/**'
-      - 'tests/drilling_riser/fixtures/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
-  pull_request:
-    paths:
-      - 'src/**'
-      - 'scripts/**'
-      - 'docs/api/**'
-      - 'docs/standards/**'
-      - 'docs/domains/**'
-      - 'tests/repo_structure/**'
-      - 'config/markdown-link-check.json'
-      - 'assets/logo/**'
-      - 'atlases/**'
-      - 'data/**'
-      - 'tests/asset_integrity/test_data/**'
-      - 'tests/drilling_riser/fixtures/**'
-      - 'mkdocs.yml'
-      - '.github/workflows/docs.yml'
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   docs:

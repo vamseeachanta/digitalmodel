@@ -125,11 +125,19 @@ def test_health_workflow_names_and_soft_failure_are_preserved():
         'full-matrix': 'Build full shard matrix',
         'sweep-tests': 'sweep-tests-${{ matrix.domain }}',
         'sweep-result': 'Full matrix sweep result',
+        'quality-gates-report': 'Quality gates CLI (Python ${{ matrix.python-version }})',
+        'atlas-drift': 'Atlas drift',
+        'docs': 'Docs and generated HTML',
+        'repo-structure': 'Repository structure',
+        'meshing-bridge': 'Meshing bridge',
+        'workflow-automation': 'Workflow automation',
+        'content-store': 'Content store',
+        'capability-card-links': 'Capability card links',
     }
     steps = workflow['jobs']['sweep-result']['steps']
     assert [step['name'] for step in steps] == [
         'Summarize shard results', 'Checkout baseline tools', 'Download sweep results',
-        'Publish main baseline', 'Upload main baseline', 'Update main health',
+        'Set up Python', 'Publish main baseline', 'Upload main baseline', 'Update main health',
         'Enforce full sweep result',
     ]
     step = next(s for s in steps if s['name'] == 'Update main health')
@@ -460,8 +468,9 @@ def artifact(run_id=100, **updates):
 
 @pytest.mark.parametrize("updates,accepted", [
     ({"event": "pull_request", "head_repository": {"full_name": "fork/repository"}}, False),
-    ({"event": "pull_request"}, False), ({"event": "workflow_dispatch"}, False),
+    ({"event": "pull_request"}, False), ({"event": "workflow_dispatch"}, True),
     ({"event": "push"}, True), ({"event": "schedule"}, True),
+    ({"event": "workflow_dispatch", "head_branch": "topic"}, False),
     ({"head_branch": "develop"}, False), ({"path": "other.yml"}, False),
 ])
 def test_selection_requires_main_sweep_provenance(updates, accepted):
@@ -533,7 +542,7 @@ def mock_download(monkeypatch, runs, artifacts, verified=None):
     monkeypatch.setattr(ci.subprocess, "check_output", lambda *args, **kwargs: payload.getvalue())
 
 
-@pytest.mark.parametrize("event", ["push", "schedule"])
+@pytest.mark.parametrize("event", ["push", "schedule", "workflow_dispatch"])
 def test_reader_downloads_verified_own_main(tmp_path, monkeypatch, event):
     run = sweep(event=event)
     mock_download(monkeypatch, [run], [artifact()], verified=dict(run, extra="detail"))
@@ -840,7 +849,7 @@ def test_evidence_requires_failed_same_shard_job(monkeypatch, field, value):
     assert ci.verified_evidence(EVIDENCE_URL, "example", EVIDENCE_NODE) is False
 
 
-@pytest.mark.parametrize("event", ["push", "schedule"])
+@pytest.mark.parametrize("event", ["push", "schedule", "workflow_dispatch"])
 @pytest.mark.parametrize("url", [
     EVIDENCE_URL,
     "https://github.com/example/repository/actions/jobs/7",

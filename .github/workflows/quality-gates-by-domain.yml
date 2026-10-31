@@ -1,25 +1,24 @@
 # Quality Gates by Domain
 #
-# This workflow is the FAST, touched-domain-gated lane: pull requests and pushes
-# dispatch only the shards their diff touches. That scoping is deliberate, but it
+# This workflow is the fast touched-domain gate: pull requests dispatch
+# only the shards their diff touches. That scoping is deliberate, but it
 # means a green result here says "the shards we ran passed", not "all shards
 # passed" (issue #1863). Two things keep that honest:
 #
 #   1. Every run reports its own scope -- how many shards ran, how many did not,
 #      and which -- in the "Detect touched test domains" and "Domain test
 #      aggregate" job summaries.
-#   2. `.github/workflows/full-matrix-sweep.yml` runs EVERY shard on every push
-#      to `main` and nightly, under its own distinct check names. The nightly
-#      cron formerly lived here; it moved there so that a full-sweep failure is
-#      never posted under the same check names as the gated pull-request lane.
+#   2. `.github/workflows/full-matrix-sweep.yml` ("Main full run") runs EVERY
+#      shard once a day on `main`, under its own distinct check names. Our own
+#      cron dispatches it (maintainer ruling, 28 Oct 2026); there is no push or
+#      GitHub schedule trigger for full runs. Tests already failing on main are
+#      quarantined in tests/quarantine.txt, so a pass here means pass.
 name: Quality Gates by Domain
 
 "on":
   pull_request:
     # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
     types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main, develop]
   workflow_dispatch:
 
 concurrency:
@@ -299,7 +298,9 @@ jobs:
     name: tests-${{ matrix.domain }}
     needs: detect-domains
     if: needs.detect-domains.outputs.has-domains == 'true'
-    runs-on: ${{ matrix.runner }}
+    # Our self-hosted x64 runners (the same architecture the shards were proven
+    # on); fork pull requests stay on GitHub-hosted runners.
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux","X64"]') }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect-domains.outputs.matrix) }}
@@ -505,8 +506,8 @@ jobs:
             {
               echo "A pass here means **${SELECTED_COUNT:-?} of ${TOTAL_COUNT:-?} shards**"
               echo "passed. The other ${SKIPPED_COUNT:-?} were not executed by this run;"
-              echo "they run in full on every push to \`main\` and nightly via the"
-              echo "\`Full Matrix Sweep\` workflow."
+              echo "they run in full once a day on \`main\` via the"
+              echo "\`Main full run\` workflow."
               echo
               echo "Not run: \`${SKIPPED_DOMAINS}\`"
             } >> "$GITHUB_STEP_SUMMARY"

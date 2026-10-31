@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """
 Performance baseline validation tests.
 
@@ -125,9 +128,11 @@ class PerformanceBaselineManager:
 
 
 @pytest.fixture(scope="session")
-def baseline_manager():
+def baseline_manager(tmp_path_factory):
     """Session-scoped fixture providing performance baseline manager."""
-    return PerformanceBaselineManager()
+    manager = PerformanceBaselineManager()
+    manager.baseline_file = tmp_path_factory.mktemp("performance") / "baselines.json"
+    return manager
 
 
 class TestPerformanceBaselines:

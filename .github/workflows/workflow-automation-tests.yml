@@ -1,21 +1,10 @@
 name: Workflow Automation Tests
 
+# Daily dependency-drift coverage (issue #1958) now comes from the daily
+# "Main full run" (full-matrix-sweep.yml), which calls this workflow; our own
+# cron dispatches it, so there is no GitHub schedule or push trigger here
+# (maintainer ruling, 28 Oct 2026).
 on:
-  # Issue #1958: exercise dependency drift daily even without matching changes.
-  # UTC cron syntax: GitHub Actions workflow syntax, on.schedule (2026-10-19).
-  # The off-hour minute is an operational choice, not an acceptance limit.
-  schedule:
-    - cron: '43 6 * * *'
-  workflow_dispatch:
-  push:
-    paths:
-      - 'src/digitalmodel/workflows/workflow_automation/**'
-      - 'tests/workflows/workflow_automation/**'
-      - '.github/workflows/workflow-automation-tests.yml'
-      - 'pyproject.toml'
-      - '.coveragerc'
-      - 'uv.lock'
-      - 'pytest.ini'
   pull_request:
     paths:
       - 'src/digitalmodel/workflows/workflow_automation/**'
@@ -25,14 +14,19 @@ on:
       - '.coveragerc'
       - 'uv.lock'
       - 'pytest.ini'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    name: test (${{ matrix.python-version }})
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
         python-version: ['3.11', '3.12']
 
     steps:
@@ -63,7 +57,8 @@ jobs:
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: matrix.python-version == '3.11'
+      continue-on-error: true
       with:
         file: ./coverage.xml
         flags: workflow-automation

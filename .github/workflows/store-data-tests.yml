@@ -13,6 +13,7 @@ name: Content store tests
       - "pytest.ini"
       - "pyproject.toml"
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

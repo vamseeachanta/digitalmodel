@@ -869,3 +869,15 @@ modules:
     owner_wiki: src/digitalmodel/riser_study/README.md
     key_tests: [tests/subsea/riser_study/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_study
+  - module: riser_bom
+    entry_point: src/digitalmodel/riser_bom/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/riser_bom/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_bom
+  - module: riser_results
+    entry_point: src/digitalmodel/riser_results/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/riser_results/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_results

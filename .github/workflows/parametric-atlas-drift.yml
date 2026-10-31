@@ -8,13 +8,15 @@
 #
 # Licensed-solver libraries (#801) are reported but do NOT fail the build — CI
 # cannot run a licensed solve; that drift is an operator concern.
+#
+# Generated-artifact currency check: runs in the daily "Main full run"
+# (full-matrix-sweep.yml, dispatched by our own cron) and on demand -- not on
+# every pull request (maintainer ruling, 28 Oct 2026).
 name: Parametric atlas drift
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
-  push:
-    branches: [main, develop]
+  workflow_dispatch:
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}

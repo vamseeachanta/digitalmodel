@@ -1,10 +1,11 @@
 name: Repository Structure
 
+# Structure lint on every pull request; main is covered by the daily
+# "Main full run" (full-matrix-sweep.yml), which calls this workflow.
 on:
   pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
+  workflow_call:
 
 # Read-only checks can stop superseded runs within the same workflow/ref.
 # GitHub Actions workflow syntax, concurrency (unversioned):

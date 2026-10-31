@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 from __future__ import annotations
 
 import json
@@ -178,22 +181,48 @@ def test_verified_tombstone_is_retained_without_final_name_delete(tmp_path: Path
     assert (tombstone / "payload").read_text() == "retained"
 
 
-def test_lock_heartbeat_refreshes_and_process_start_prevents_pid_reuse(tmp_path: Path) -> None:
-    import time
+def test_lock_heartbeat_refreshes(tmp_path: Path, monkeypatch) -> None:
+    """Advance heartbeat ticks explicitly instead of waiting for a thread."""
+    layout = WorkLayout.create(tmp_path, "ns", "e" * 64)
+    lock = layout.run_dir / ".locks" / "run"
+    clock = iter([100.0, 101.0, 102.0])
+    monkeypatch.setattr(layout_module, "time", SimpleNamespace(time=lambda: next(clock)))
+    layout_module._acquire_lock(lock, layout.owner_token, stale_seconds=1)
+    first = json.loads((lock / "meta.json").read_text())
+    waits = []
 
+    def wait(interval):
+        waits.append(interval)
+        return len(waits) > 2
+
+    layout_module._heartbeat_lock(lock, layout.owner_token, SimpleNamespace(wait=wait), 1.0)
+    second = json.loads((lock / "meta.json").read_text())
+    assert first["heartbeat_epoch"] == 100.0
+    assert second == {**first, "heartbeat_epoch": 102.0}
+    assert waits == [1.0, 1.0, 1.0]
+
+
+def test_process_start_prevents_pid_reuse(tmp_path: Path, monkeypatch) -> None:
+    """Only an expired lock with a different process start can be reclaimed."""
+    monkeypatch.setattr(layout_module, "time", SimpleNamespace(time=lambda: 100.0))
     layout = WorkLayout.create(tmp_path, "ns", "e" * 64)
     lock = layout.run_dir / ".locks" / "run"
     with layout.lock("run", stale_seconds=1):
         first = json.loads((lock / "meta.json").read_text())
-        time.sleep(1.2)
-        second = json.loads((lock / "meta.json").read_text())
-        assert second["heartbeat_epoch"] > first["heartbeat_epoch"]
     lock.mkdir()
+    (lock / "meta.json").write_text(json.dumps({**first, "heartbeat_epoch": 0}))
+    with pytest.raises(RuntimeError, match="held"):
+        with layout.lock("run", stale_seconds=1):
+            pass
     (lock / "meta.json").write_text(json.dumps({
-        **second, "heartbeat_epoch": 0, "process_start": "reused-pid-start",
+        **first, "heartbeat_epoch": 0, "process_start": "reused-pid-start",
     }))
     with layout.lock("run", stale_seconds=1):
-        assert lock.is_dir()
+        reacquired = json.loads((lock / "meta.json").read_text())
+        assert reacquired["process_start"] == first["process_start"]
+        assert reacquired["pid"] == first["pid"]
+        assert reacquired["owner_token"] == first["owner_token"]
+        assert reacquired["heartbeat_epoch"] == 100.0
 
 
 @pytest.mark.parametrize("kind", ["directory", "file"])

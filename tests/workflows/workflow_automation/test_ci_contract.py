@@ -57,21 +57,20 @@ def test_install_selected_extras_include_test_plugins(workflow, plugin):
 def test_heartbeat_runs_daily_without_path_filters(workflow):
     """Issue #1958 requires daily execution even without matching changes.
 
-    Cron field order/ranges: GitHub Actions workflow syntax, `on.schedule`
-    https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#onschedule
-    (accessed 2026-10-19). The minute/hour are an operational choice; wildcard
-    day, month and weekday fields establish a daily UTC cadence.
+    Owner ruling, 28 Oct 2026: the daily run is the cron-dispatched "Main full
+    run" (full-matrix-sweep.yml), which calls this workflow without path
+    filters; GitHub `schedule:` triggers are not used.
     """
-    schedules = workflow["on"]["schedule"]
-    assert schedules
-    for schedule in schedules:
-        minute, hour, day, month, weekday = schedule["cron"].split()
-        assert 0 <= int(minute) <= 59
-        assert 0 <= int(hour) <= 23
-        assert (day, month, weekday) == ("*", "*", "*")
-        assert set(schedule) == {"cron"}
+    assert "workflow_call" in workflow["on"]
+    assert "schedule" not in workflow["on"]
+    sweep = yaml.load((REPO / ".github/workflows/full-matrix-sweep.yml").read_text(),
+                      Loader=yaml.BaseLoader)
+    callers = [job for job in sweep["jobs"].values()
+               if job.get("uses") == "./" + WORKFLOW_PATH]
+    assert len(callers) == 1
     # A path/event condition at job level could silently suppress the heartbeat.
     assert "if" not in workflow["jobs"]["test"]
+    assert "if" not in callers[0]
 
 
 def test_manual_dispatch_is_available(workflow):
@@ -92,7 +91,7 @@ def test_diagnostics_run_after_failures_unless_cancelled(workflow, name):
     assert step.get("if") == "${{ !cancelled() }}"
 
 
-@pytest.mark.parametrize("event", ["push", "pull_request"])
+@pytest.mark.parametrize("event", ["pull_request"])
 def test_dependency_and_workflow_changes_trigger_ci(workflow, event):
     """Each listed file can alter installation, collection or the job itself."""
     paths = workflow["on"][event]["paths"]

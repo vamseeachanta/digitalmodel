@@ -1,25 +1,6 @@
 name: Gmsh and OpenFOAM Bridge Tests
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - "src/digitalmodel/solvers/gmsh_meshing/**"
-      - "src/digitalmodel/solvers/openfoam/**"
-      - "tests/solvers/gmsh_meshing/**"
-      - "tests/solvers/openfoam/**"
-      - "tests/scripts/test_cfd_python_install.py"
-      - "tests/scripts/test_dispatch_cfd_run.py"
-      - "tests/scripts/test_synthetic_tank_3d_smoke.py"
-      - "scripts/cfd/run_synthetic_tank_3d_smoke.py"
-      - "scripts/setup/dispatch-cfd-run.py"
-      - "scripts/setup/provision-cfd-box.sh"
-      - "scripts/setup/verify-cfd-box.sh"
-      - "examples/cfd/synthetic_l_tank/input.yml"
-      - "docs/api/cfd/synthetic-l-tank-smoke.json"
-      - "pyproject.toml"
-      - "uv.lock"
-      - ".github/workflows/gmsh-meshing-tests.yml"
   pull_request:
     types: [opened, synchronize, reopened, edited]
     paths:
@@ -40,6 +21,7 @@ on:
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
   workflow_dispatch:
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
@@ -146,6 +128,14 @@ jobs:
             "993f1b5ddc90b56ecf531bedb1b84f5efe096700"
           test "$(git -C ../assetutilities rev-parse 'HEAD^{tree}')" = \
             "5f7434fcb3a348a7e04bf9de228e6ce2c49a87cb"
+
+      # Self-hosted runners carry no Go toolchain (main run failed with
+      # "go: command not found", 28 Oct 2026); install one for actionlint.
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache: false
 
       - name: Install pinned actionlint
         run: >-

@@ -16,11 +16,19 @@ import yaml
 
 
 WORKFLOWS = Path(__file__).resolve().parents[2] / ".github" / "workflows"
-GATES = (
+# Workflows that run on pull requests (the fast gate: lint + touched modules).
+PR_GATES = (
     "quality-gates-by-domain.yml",
     "quality-gates.yml",
-    "parametric-atlas-drift.yml",
     "gmsh-meshing-tests.yml",
+)
+# Every workflow that carries the guarded local-merge script.
+GATES = PR_GATES + ("parametric-atlas-drift.yml",)
+# Checks that left the pull-request path for the daily Main full run (28 Oct 2026).
+MAIN_FULL_RUN_ONLY = (
+    "parametric-atlas-drift.yml",
+    "docs.yml",
+    "capability-card-links.yml",
 )
 
 
@@ -29,7 +37,7 @@ def load_workflow(filename: str) -> dict:
     return yaml.safe_load((WORKFLOWS / filename).read_text(encoding="utf-8"))
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", PR_GATES)
 def test_pull_request_accepts_any_base(filename: str) -> None:
     """Branch filters must not exclude stacked pull requests."""
     workflow = load_workflow(filename)
@@ -38,10 +46,11 @@ def test_pull_request_accepts_any_base(filename: str) -> None:
     pull_request = triggers["pull_request"] or {}
     assert "branches" not in pull_request
     assert "branches-ignore" not in pull_request
-    assert triggers["push"]["branches"] == ["main", "develop"]
+    # main is covered once a day by the Main full run, not by push runs.
+    assert "push" not in triggers
 
 
-@pytest.mark.parametrize("filename", GATES)
+@pytest.mark.parametrize("filename", PR_GATES)
 def test_pull_request_activity_types(filename: str) -> None:
     """Retargets and ordinary edits start the same gates as code updates."""
     workflow = load_workflow(filename)
@@ -147,7 +156,8 @@ def test_meshing_path_filters_are_preserved() -> None:
     """Meshing checks retain their existing incremental path selection."""
     workflow = load_workflow("gmsh-meshing-tests.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
-    assert triggers["pull_request"]["paths"] == triggers["push"]["paths"]
+    assert "push" not in triggers
+    assert "workflow_call" in triggers
     assert "src/digitalmodel/solvers/gmsh_meshing/**" in triggers["pull_request"]["paths"]
     assert ".github/workflows/gmsh-meshing-tests.yml" in triggers["pull_request"]["paths"]
 
@@ -403,14 +413,52 @@ def test_trigger_tests_run_in_harness() -> None:
     assert "tests/workflows/test_ci_triggers.py" in commands
 
 
-def test_full_sweep_keeps_nightly_schedule() -> None:
-    """The full sweep runs nightly without changing pull request selection."""
+def test_main_full_run_is_dispatch_only() -> None:
+    """Our own cron dispatches the daily Main full run; GitHub never schedules it."""
     workflow = load_workflow("full-matrix-sweep.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
-    assert triggers["schedule"] == [{"cron": "17 7 * * *"}]
-    assert triggers["push"]["branches"] == ["main"]
-    assert "pull_request" not in triggers
-    assert "workflow_dispatch" in triggers
+    assert workflow["name"] == "Main full run"
+    assert triggers == {"workflow_dispatch": None}
+    calls = {job["uses"] for job in workflow["jobs"].values() if "uses" in job}
+    for filename in MAIN_FULL_RUN_ONLY + ("repo-structure.yml",):
+        assert f"./.github/workflows/{filename}" in calls
+
+
+def test_no_workflow_uses_github_schedule() -> None:
+    """Full runs are dispatched by our cron (owner ruling, 28 Oct 2026)."""
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        workflow = load_workflow(path.name)
+        triggers = workflow["on"] if "on" in workflow else workflow[True]
+        assert "schedule" not in (triggers or {}), path.name
+
+
+@pytest.mark.parametrize("filename", MAIN_FULL_RUN_ONLY)
+def test_currency_checks_left_the_pull_request_path(filename: str) -> None:
+    """Generated-artifact currency checks run in the Main full run only."""
+    workflow = load_workflow(filename)
+    triggers = workflow["on"] if "on" in workflow else workflow[True]
+    assert set(triggers) == {"workflow_dispatch", "workflow_call"}
+
+
+@pytest.mark.parametrize("filename,job_id", (
+    ("quality-gates-by-domain.yml", "domain-tests"),
+    ("full-matrix-sweep.yml", "sweep-tests"),
+))
+def test_domain_shards_run_on_self_hosted_x64(filename: str, job_id: str) -> None:
+    """Shards use our x64 runners; fork pull requests stay GitHub-hosted."""
+    runs_on = load_workflow(filename)["jobs"][job_id]["runs-on"]
+    assert "github.event.pull_request.head.repo.fork && 'ubuntu-latest'" in runs_on
+    assert '["self-hosted","Linux","X64"]' in runs_on
+
+
+def test_lint_gate_is_fast_and_diff_scoped() -> None:
+    """The required lint check lints changed files and installs no package."""
+    job = load_workflow("quality-gates.yml")["jobs"]["quality-gates"]
+    assert "strategy" not in job
+    commands = "\n".join(step.get("run", "") for step in job["steps"])
+    assert "scripts/ci/lint_changed.py" in commands
+    assert "pip install -e" not in commands
+    assert "quality_gates_cli" not in commands
 
 
 @pytest.mark.parametrize("filename,job_id", (
