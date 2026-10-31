@@ -36,6 +36,8 @@ class TestHydrodynamicForce:
         """No flow and no acceleration means no hydrodynamic force."""
         result = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=0.0, a_m_s2=0.0,
+            C_D=C_D_SMOOTH,
+            C_M=C_M_SMOOTH,
         )
         assert result == pytest.approx(0.0, abs=1e-6)
 
@@ -46,6 +48,8 @@ class TestHydrodynamicForce:
         """
         result = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=1.0, a_m_s2=0.0,
+            C_D=C_D_SMOOTH,
+            C_M=C_M_SMOOTH,
         )
         expected = 0.5 * 1025.0 * C_D_SMOOTH * 0.5 * 1.0 * 1.0
         assert expected == pytest.approx(230.625, abs=0.001)
@@ -58,6 +62,8 @@ class TestHydrodynamicForce:
         """
         result = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=0.0, a_m_s2=1.0,
+            C_D=C_D_SMOOTH,
+            C_M=C_M_SMOOTH,
         )
         expected = 1025.0 * C_M_SMOOTH * (math.pi / 4) * 0.5**2 * 1.0
         assert result == pytest.approx(expected, rel=1e-6)
@@ -67,9 +73,13 @@ class TestHydrodynamicForce:
         """Negative velocity reverses drag direction via |U|*U term."""
         result_pos = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=1.0, a_m_s2=0.0,
+            C_D=C_D_SMOOTH,
+            C_M=C_M_SMOOTH,
         )
         result_neg = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=-1.0, a_m_s2=0.0,
+            C_D=C_D_SMOOTH,
+            C_M=C_M_SMOOTH,
         )
         assert result_neg == pytest.approx(-result_pos, rel=1e-6)
 
@@ -80,6 +90,8 @@ class TestHydrodynamicForce:
         expected = drag + inertia
         result = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=1.0, a_m_s2=0.5,
+            C_D=C_D_SMOOTH,
+            C_M=C_M_SMOOTH,
         )
         assert result == pytest.approx(expected, rel=1e-6)
 
@@ -97,6 +109,7 @@ class TestLiftForce:
         """No flow means no lift."""
         result = lift_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=0.0,
+            C_L=C_L_SMOOTH,
         )
         assert result == pytest.approx(0.0, abs=1e-6)
 
@@ -104,6 +117,7 @@ class TestLiftForce:
         """F_L = 0.5 * 1025 * 0.9 * 0.5 * 1.0^2 = 230.625 N/m."""
         result = lift_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=1.0,
+            C_L=C_L_SMOOTH,
         )
         expected = 0.5 * 1025.0 * C_L_SMOOTH * 0.5 * 1.0**2
         assert expected == pytest.approx(230.625, abs=0.001)
@@ -113,6 +127,7 @@ class TestLiftForce:
         """Lift is always positive regardless of velocity sign (U^2 term)."""
         result = lift_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=-2.0,
+            C_L=C_L_SMOOTH,
         )
         assert result > 0.0
 
@@ -184,6 +199,7 @@ class TestAbsoluteStability:
             F_H_N_m=100.0,
             F_L_N_m=50.0,
             mu_soil=0.6,
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         assert isinstance(result, StabilityResult)
         # gamma_SC * (100 + 0.6*50) / (0.6*1000) = 1.1 * 130 / 600 = 0.2383
@@ -198,6 +214,7 @@ class TestAbsoluteStability:
             F_H_N_m=500.0,
             F_L_N_m=200.0,
             mu_soil=0.6,
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         # gamma_SC * (500 + 0.6*200) / (0.6*100) = 1.1 * 620 / 60 = 11.37
         assert result.utilisation > 1.0
@@ -210,6 +227,7 @@ class TestAbsoluteStability:
             F_H_N_m=100.0,
             F_L_N_m=50.0,
             mu_soil=0.6,
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         assert result.utilisation == float("inf")
         assert result.is_stable is False
@@ -221,6 +239,7 @@ class TestAbsoluteStability:
             F_H_N_m=100.0,
             F_L_N_m=50.0,
             mu_soil=0.6,
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         assert result.is_stable is False
 
@@ -228,6 +247,7 @@ class TestAbsoluteStability:
         """Custom safety class factor changes utilisation."""
         result_normal = absolute_stability_check(
             W_s_N_m=1000.0, F_H_N_m=100.0, F_L_N_m=50.0, mu_soil=0.6,
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         result_high = absolute_stability_check(
             W_s_N_m=1000.0, F_H_N_m=100.0, F_L_N_m=50.0, mu_soil=0.6,
@@ -253,6 +273,7 @@ class TestGeneralizedStability:
             F_L_N_m=100.0,
             mu_soil=0.6,
             F_R_N_m=300.0,
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         # gamma_SC * 200 / (0.6*(1000-100) + 300) = 1.1*200 / (540+300) = 220/840 = 0.2619
         expected_util = GAMMA_SC_NORMAL * 200.0 / (0.6 * (1000.0 - 100.0) + 300.0)
@@ -267,6 +288,7 @@ class TestGeneralizedStability:
             F_L_N_m=200.0,
             mu_soil=0.6,
             F_R_N_m=0.0,
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         # gamma_SC * 500 / (0.6*(500-200) + 0) = 1.1*500 / 180 = 3.056
         assert result.utilisation > 1.0
@@ -280,6 +302,7 @@ class TestGeneralizedStability:
             F_L_N_m=100.0,    # F_L == W_s
             mu_soil=0.6,
             F_R_N_m=0.0,      # No passive resistance
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         # denominator = 0.6*(100-100) + 0 = 0 -> infinite
         assert result.utilisation == float("inf")
@@ -293,5 +316,6 @@ class TestGeneralizedStability:
             F_L_N_m=200.0,    # F_L > W_s
             mu_soil=0.6,
             F_R_N_m=0.0,
+            gamma_SC=GAMMA_SC_NORMAL,
         )
         assert result.is_stable is False

@@ -1,5 +1,11 @@
 # On-bottom stability knowledge pack
 
+Current API amendment: the historical inventory below is pinned to its stated
+revision. Coefficients and safety factors are now required scalar inputs.
+Directional stability uses horizontal magnitude, and passive resistance cannot
+mask lost bed contact. Current independent evidence and unresolved standard
+claims are recorded in [validation-claims.md](validation-claims.md).
+
 | Header | Value |
 |---|---|
 | Module | subsea/on_bottom_stability |
