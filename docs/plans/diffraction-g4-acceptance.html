@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Diffraction G4 acceptance plan</title>
+<main><h1>Diffraction G4 acceptance plan</h1>
+<p>The implementation will separate packaging screens from an explicit G4 evidence record.
+The existing packaging, equilibrium and comparison APIs will retain their behavior.</p>
+<h2>Scope and source</h2>
+<p>The plan will address issue 2525 in three tested slices. The source will be the
+repository diffraction knowledge pack, revision 4, section 5, which transcribes
+AQG r0 section 8. The original AQG document and the licensed panel-size clause
+will remain unqualified; no licensed publication value will be introduced.</p>
+<h2>Slice 1</h2>
+<p>A small offline package, <code>src/digitalmodel/aqg/</code>, will record all
+26 required G4 rows, applicability, criteria, units, observations and artifact digests.
+Missing evidence will produce NOT_RUN; any failed applicable row will produce FAIL.
+A separate record-completeness status will require every required row to pass.
+Only restrained-preload and below-trigger native-setting rows will permit documented exclusions.
+The engineering status will remain NOT_RUN while the original criteria source is unqualified.
+No majority score will apply; callers will not override sourced criteria.</p>
+<h2>Slice 2</h2>
+<p>The package will evaluate mass balance using input mass as the denominator,
+abs(M − ρV)/M; panel aspect ratios with an explicit second-order waterline
+exception; wavelength resolution using caller-supplied shortest wavelength;
+and installed panel and memory limits. Criterion values will be cited to the
+knowledge-pack rows G4.1a and G4.4a–e. The source digest will be checked at calculation time.</p>
+<h2>Slice 3</h2>
+<p>Inclusive comparisons will use exact rational arithmetic on validated decimal representations.
+The package will require each body and its control-surface applicability.
+Missing body coverage or a required resolvable control surface will remain NOT_RUN.
+The package will accept an independently supplied first irregular frequency
+and require a lid at the source's trigger. At the first irregular frequency,
+removal evidence will be required for two distinct programs. Each proof will
+identify a reviewed enabled-setting line in the actual native input text.
+Each proof will exclude comments, pin the input digest and identify native-result
+readback linking that digest to the result. Missing linkage will remain NOT_RUN.
+The package will record the interpreter's role; it will not invent a universal
+native-input parser. Unknown treatment will remain NOT_RUN and disabled treatment will fail.</p>
+<h2>Tests and deliverables</h2>
+<p>Tests will precede implementation in <code>tests/unit/hydrodynamics/test_aqg_diffraction.py</code>. Hand calculations
+will distinguish input-mass normalization from displaced-mass normalization,
+exercise inclusive aspect/resolution boundaries and both frequency triggers,
+and test omitted rows, duplicate rows, invalid data, missing or disabled native
+settings, result/input linkage, unsupported exclusions, unqualified criteria,
+and content-digest readback. An import-boundary test will statically
+verify the offline dependency graph without attempting a licensed import.</p>
+<p>A runnable synthetic example will show inputs, method and the incomplete
+answer; an HTML guide will describe every row's evidence requirement.
+Ruff will check each changed Python file. No solver will be imported or executed.</p>
+<h2>Risks and later work</h2>
+<p>Original-source qualification, licensed native runs, automatic native syntax
+interpretation and report-pipeline integration will remain later work. Existing
+mesh status will not populate any acceptance row. Manual reviews will identify
+their evidence and criterion explicitly; a recorded review will not authenticate
+the reviewer's authority or establish source rights.</p>
+</main></html>
