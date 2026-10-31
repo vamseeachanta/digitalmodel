@@ -1,6 +1,6 @@
 {
   "basename": "riser_fatigue",
-  "atlas_id": "059200915128",
+  "atlas_id": "2629bee51367",
   "physics": "log_log",
   "response": "annual_damage",
   "axes": [

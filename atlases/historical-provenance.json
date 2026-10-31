@@ -2952,21 +2952,21 @@
         "examples/workflows/mooring-fatigue/input.yml": "e707539680f132ac6d050199900a952dde34cdc1e85fb8cb84e10961a85a0351",
         "src/digitalmodel/fatigue/sn_curves.py": "8d51e45bd7c93907dd2caeef5d53d872bb2a0e2df1ed8c46df125c4a3c161788",
         "src/digitalmodel/fatigue/c203_sn_tables.py": "6404edb5004a187d6c5bb4ede720c958ec4c74dcf5dd7a7d286ec1e6a83f23de",
-        "src/digitalmodel/fatigue/damage.py": "bd3ddb9e92825aa534d836c79eff41a2893c701bed97a0e3712f03fc82d3dd7e",
-        "src/digitalmodel/fatigue/_deterministic.py": "2891cb9b14dfb03e89f07a2e43b9c0dec845e6bcb222ee3cf584270467cb87cf"
+        "src/digitalmodel/fatigue/damage.py": "cd51bd042b572cdd1015523c32847ce6e2a3ea3753cf439feaacff6d3cb12cfd",
+        "src/digitalmodel/fatigue/_deterministic.py": "3b3bc244f4bbb4d5464361326ac2ea19a980d6902636e6bcdadd91a75c32d374"
       },
-      "manifest": "atlases/mooring_fatigue/8222525f9948/manifest.yaml",
+      "manifest": "atlases/mooring_fatigue/0692c1977b15/manifest.yaml",
       "workflow_id": "mooring-fatigue",
-      "recorded_code_version": "53d13d5fe",
+      "recorded_code_version": "27a3cdb16",
       "source_publication": "first-matching-artifact-publication",
       "algorithm": "legacy-raw-v1",
-      "content_fingerprint": "8222525f9948fa8e723fbebf2897f3be2157f61328d91eb7535906b4a15856f2",
+      "content_fingerprint": "0692c1977b1551d9d9375f626d45659bc409de1a7935f5454af9643424202ee7",
       "status": "VERIFIED",
       "artifacts": {
-        "atlases/mooring_fatigue/8222525f9948/grid.parquet": "e08ddc040949e2849647e174052f62df06a355567836d38b792f39b2a3434077",
-        "atlases/mooring_fatigue/8222525f9948/manifest.yaml": "9a449c3959f6da6c57403174607d43cb57bec83f63ee39e72c2566b269ef479d",
-        "atlases/mooring_fatigue/8222525f9948/surrogate.json": "9c28beace384fe9837112a3e7e1bf427ebf513cec455ecdcced124bb336117a9",
-        "atlases/mooring_fatigue/8222525f9948/validation.json": "567004971f65dcf11be5d900970c14e7cc15913fb18cc7e095f88f87eb1fa98c"
+        "atlases/mooring_fatigue/0692c1977b15/grid.parquet": "e08ddc040949e2849647e174052f62df06a355567836d38b792f39b2a3434077",
+        "atlases/mooring_fatigue/0692c1977b15/manifest.yaml": "5c764d89ad1051ca081fa0304a9cb7e3007e9721a4492d85d4e099bf939ed5e5",
+        "atlases/mooring_fatigue/0692c1977b15/surrogate.json": "e237e40759902b31a9d0d12c44a4fb2e7bed22330e89755326cdec303e68fe17",
+        "atlases/mooring_fatigue/0692c1977b15/validation.json": "567004971f65dcf11be5d900970c14e7cc15913fb18cc7e095f88f87eb1fa98c"
       }
     },
     {
@@ -3027,21 +3027,21 @@
         "src/digitalmodel/riser_fatigue/validation.py": "1694367ddd1ef8a8fe62d9a274a108c7f2ed68c846eacde707c5c1d93878f266",
         "src/digitalmodel/fatigue/sn_curves.py": "8d51e45bd7c93907dd2caeef5d53d872bb2a0e2df1ed8c46df125c4a3c161788",
         "src/digitalmodel/fatigue/c203_sn_tables.py": "6404edb5004a187d6c5bb4ede720c958ec4c74dcf5dd7a7d286ec1e6a83f23de",
-        "src/digitalmodel/fatigue/damage.py": "bd3ddb9e92825aa534d836c79eff41a2893c701bed97a0e3712f03fc82d3dd7e",
-        "src/digitalmodel/fatigue/_deterministic.py": "2891cb9b14dfb03e89f07a2e43b9c0dec845e6bcb222ee3cf584270467cb87cf"
+        "src/digitalmodel/fatigue/damage.py": "cd51bd042b572cdd1015523c32847ce6e2a3ea3753cf439feaacff6d3cb12cfd",
+        "src/digitalmodel/fatigue/_deterministic.py": "3b3bc244f4bbb4d5464361326ac2ea19a980d6902636e6bcdadd91a75c32d374"
       },
-      "manifest": "atlases/riser_fatigue/059200915128/manifest.yaml",
+      "manifest": "atlases/riser_fatigue/2629bee51367/manifest.yaml",
       "workflow_id": "riser-fatigue",
-      "recorded_code_version": "53d13d5fe",
+      "recorded_code_version": "27a3cdb16",
       "source_publication": "first-matching-artifact-publication",
       "algorithm": "legacy-raw-v1",
-      "content_fingerprint": "05920091512875498ef76183c65127408b62d53375d2b796633e991bcc5dbfbb",
+      "content_fingerprint": "2629bee5136783b6134ad776648cbc3d2198460f9683d2b9d2a5e1bdaaf65bc4",
       "status": "VERIFIED",
       "artifacts": {
-        "atlases/riser_fatigue/059200915128/grid.parquet": "c96e6cc7c319e772f3625636a484f9eb092231d269affb6b26ac9319b1d28438",
-        "atlases/riser_fatigue/059200915128/manifest.yaml": "bc0f164262b06b72e522478c144e22a028ecaed6486ff0dfab7002360d951fa1",
-        "atlases/riser_fatigue/059200915128/surrogate.json": "d68ac6d2d17a410cf75821395cda9f2086087ae13ba0c0b8c7512f0cd5cddd5e",
-        "atlases/riser_fatigue/059200915128/validation.json": "16d68d0a5a50b7aede0a00a63148ecb34f646c40c91c12e8bfd8caefcbedb478"
+        "atlases/riser_fatigue/2629bee51367/grid.parquet": "c96e6cc7c319e772f3625636a484f9eb092231d269affb6b26ac9319b1d28438",
+        "atlases/riser_fatigue/2629bee51367/manifest.yaml": "5daf40da48f021bda1b82450bc2a537a2224aeade94afcdda70171801bd9e952",
+        "atlases/riser_fatigue/2629bee51367/surrogate.json": "9a04d391040d904faa8f54a23d8dbc67c9aab4cf425195f110529f3f5fd714ba",
+        "atlases/riser_fatigue/2629bee51367/validation.json": "16d68d0a5a50b7aede0a00a63148ecb34f646c40c91c12e8bfd8caefcbedb478"
       }
     }
   ]

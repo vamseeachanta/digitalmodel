@@ -1,4 +1,4 @@
-atlas_id: 059200915128
+atlas_id: 2629bee51367
 basename: riser_fatigue
 physics: log_log
 response: annual_damage
@@ -26,11 +26,11 @@ validation:
   passes: true
 provenance:
   basename: riser_fatigue
-  code_version: 53d13d5fe
+  code_version: 27a3cdb16
   standards:
   - id: DNV-RP-C203
     edition: 2021-09
   response_kwargs: {}
   workflow_id: riser-fatigue
-  content_fingerprint: 05920091512875498ef76183c65127408b62d53375d2b796633e991bcc5dbfbb
+  content_fingerprint: 2629bee5136783b6134ad776648cbc3d2198460f9683d2b9d2a5e1bdaaf65bc4
   input_template_sha256: e91b3ae6c0f1aa92cf73f854a5de7c6e88569b147a8da4cf9f4f9778a37a525a
