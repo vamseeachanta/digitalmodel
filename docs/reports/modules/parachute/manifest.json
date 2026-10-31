@@ -1,0 +1,25 @@
+{
+  "artifacts": {
+    "README.md": "a889a30f546369f8ea6761b105898257f3b05a96b48844a955c0360a24dc8d69",
+    "changes.json": "4296ba325485cf8580687ee10210764f9ef51a61c3a1f8da7297d98592129a16",
+    "index.html": "2cc8d0a36ee55f3ac63ec9bb82d06d6d89ae5c24b3175cc25acff6af91e7b436",
+    "results.json": "1815f69510b18ecf37deba93f776a2fd85ab3b349861fca7cd43693e3784fcfd"
+  },
+  "digest_convention": "SHA-256 over exact UTF-8 delivered bytes with LF line endings; manifest excludes itself.",
+  "generator": "scripts/reports/build_parachute_module_report.py",
+  "generator_sha256": "53ee349ee4b45d26012808a9f1252b261ac920f63766861555eb36bcec5540d0",
+  "reviewed_source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "schema_version": 1,
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "docs/api/cfd/turbulent-flat-plate-verification.html": "bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25",
+    "src/digitalmodel/structural/parachute/docs/worked-synthetic-canopy-drag.md": "81e5cc90afa1a2c5bd0697c67bdc296cdb959fc04f318b463d386e394987826d",
+    "src/digitalmodel/structural/parachute/frame_geometry_3d.py": "f5a964d4e0af2f384cdc9cf680639178a86fe425c22ba9683709f0464a8c6ab9",
+    "src/digitalmodel/structural/parachute/frame_model.py": "2a161d4b9ee8651d0fdcbbd37dbdb41a152a114ee36330be1e75b668a7f2a7fd",
+    "src/digitalmodel/structural/parachute/frame_solver.py": "3752781cb66925f4403d06ea99bfda62264f1b4a997e0e9403457fd1e7158954",
+    "src/digitalmodel/structural/parachute/member_check.py": "020c6d3814b58dd279f926e2bd3ccfb158abcf9af45dad96a9a6f448f6728aa2",
+    "src/digitalmodel/structural/parachute/parachute_drag.py": "a3cb0b36a08f003fc333edd03a4e13d54e69f829173f9ef580dd8e2e29fb303d",
+    "tests/reporting/test_parachute_module_report.py": "34a7bcac1cb62a4a724ee4494ef99a2e95e506c281eb2ce50d04d475c1d20a21",
+    "tests/structural/parachute/test_frame_solver.py": "d02d2e38eb99d6361e2417122f21035ffb1b4bf7caa2552a714b0426fea398e0"
+  }
+}
