@@ -35,9 +35,13 @@ def _box_panels():
 
 
 def _spec(tmp_path, symmetry="xz", lid=True, panels=None):
-    panels = _box_panels() if panels is None else panels
+    if panels is None:
+        panels = _box_panels()
+        if symmetry == "xz":
+            panels = panels[np.all(panels[:, :, 1] >= 0, axis=1)]
+    flags = "0 1" if symmetry == "xz" else "0 0"  # WAMIT v7.4, section 6.1.
     mesh_file = tmp_path / "synthetic.gdf"
-    records = ["Synthetic symmetric box", "1.0 9.81", "0 0", str(len(panels))]
+    records = ["Synthetic symmetric box", "1.0 9.81", flags, str(len(panels))]
     records.extend(" ".join(map(str, vertex)) for panel in panels for vertex in panel)
     mesh_file.write_text("\n".join(records) + "\n", encoding="utf-8", newline="\n")
     return DiffractionSpec.model_validate({
@@ -104,7 +108,8 @@ def test_symx_card_layout_preserves_lid_and_none_output(tmp_path, lid):
     assert cards.index("     1SYMX") < next(i for i, line in enumerate(cards) if "SEAG" in line)
     assert sum("ILID AUTO" in line for line in cards) == int(lid)
     assert cards[-2:] == [" END", "          FINI"]
-    spec.vessel.geometry.symmetry = "none"
+    spec = _spec(tmp_path, symmetry="none", lid=lid)
+    backend = AQWABackend()
     none_cards = backend.build_deck2(spec)
     assert not any("SYMX" in line for line in none_cards)
     assert sum("ILID AUTO" in line for line in none_cards) == int(lid)
@@ -113,17 +118,16 @@ def test_symx_card_layout_preserves_lid_and_none_output(tmp_path, lid):
 
 def test_half_mesh_tolerance_snaps_plane_nodes_without_mutating_source(tmp_path):
     panels = _box_panels()
-    panels[:, :, 1][panels[:, :, 1] == 0] = -5e-9
+    panels = panels[np.all(panels[:, :, 1] >= 0, axis=1)]
+    panels[:, :, 1][panels[:, :, 1] == 0] = 5e-9
     spec = _spec(tmp_path, panels=panels)
     backend = AQWABackend()
     half_nodes = _nodes(backend.build_deck1(spec))
     assert all(vertex[1] >= 0 for vertex in half_nodes.values())
     assert any(vertex[1] == 0 for vertex in half_nodes.values())
     assert len(_elements(backend.build_deck2(spec))) == 6
-    spec.vessel.geometry.symmetry = "none"
-    full_nodes = _nodes(backend.build_deck1(spec))
-    assert any(vertex[1] == -5e-9 for vertex in full_nodes.values())
-    assert len(_elements(backend.build_deck2(spec))) == 12
+    source = backend._load_mesh(spec.vessel.geometry.mesh_file)
+    assert np.any(source.vertices[:, 1] == 5e-9)
 
 
 @pytest.mark.parametrize("deck", [1, 2])
@@ -131,15 +135,16 @@ def test_half_deck_reports_straddling_panels(tmp_path, deck):
     panels = _box_panels()
     panels[0, 0, 1] = 0.25
     spec = _spec(tmp_path, panels=panels)
-    with pytest.raises(ValueError, match=r"xz.*straddl.*1"):
+    with pytest.raises(ValueError, match="both sides"):
         getattr(AQWABackend(), f"build_deck{deck}")(spec)
 
 
 def test_plane_panels_are_rejected(tmp_path):
     panels = _box_panels()
+    panels = panels[np.all(panels[:, :, 1] >= 0, axis=1)]
     plane = np.array([[(0, 0, -1), (1, 0, -1), (1, 0, 0), (0, 0, 0)]])
     spec = _spec(tmp_path, panels=np.concatenate([panels, plane]))
-    with pytest.raises(ValueError, match=r"plane.*13"):
+    with pytest.raises(ValueError, match=r"plane.*7"):
         AQWABackend().build_deck2(spec)
 
 
@@ -148,7 +153,7 @@ def test_mirrored_triangles_allow_different_repeated_corners(tmp_path):
         [(0, 0, -1), (1, 0, -1), (0, 1, -1), (0, 1, -1)],
         [(0, 0, -1), (0, -1, -1), (1, 0, -1), (0, 0, -1)],
     ], dtype=float)
-    spec = _spec(tmp_path, panels=panels)
+    spec = _spec(tmp_path, panels=panels[:1])
     backend = AQWABackend()
     cards = backend.build_deck2(spec)
     assert sum("TPPL DIFF" in line for line in cards) == 1
@@ -156,20 +161,15 @@ def test_mirrored_triangles_allow_different_repeated_corners(tmp_path):
     assert all(node in nodes for panel in _elements(cards) for node in panel)
 
 
-@pytest.mark.parametrize("half_only", [False, True])
-def test_unmatched_mirror_panels_are_rejected(tmp_path, half_only):
-    panels = _box_panels()
-    if half_only:
-        panels = panels[np.all(panels[:, :, 1] >= 0, axis=1)]
-    else:
-        panels[0, 0, 0] -= 0.1
-    with pytest.raises(ValueError, match=r"unmatched.*[1-9]"):
-        AQWABackend().build_deck2(_spec(tmp_path, panels=panels))
+def test_full_coordinates_are_rejected_for_a_declared_cut(tmp_path):
+    with pytest.raises(ValueError, match="both sides"):
+        AQWABackend().build_deck2(_spec(tmp_path, panels=_box_panels()))
 
 
-@pytest.mark.parametrize("offset, accepted", [(-0.00032717, True), (-0.01, False)])
+@pytest.mark.parametrize("offset, accepted", [(0.00032717, True), (-0.01, False)])
 def test_body_relative_plane_tolerance(tmp_path, offset, accepted):
     panels = _box_panels()
+    panels = panels[np.all(panels[:, :, 1] >= 0, axis=1)]
     panels[:, :, 0] *= 45  # 4 m * 45 = 180 m body length.
     # Move one shared centreline node, consistently in every incident panel.
     moved = np.all(panels == [-90, 0, -1], axis=2)
@@ -179,7 +179,7 @@ def test_body_relative_plane_tolerance(tmp_path, offset, accepted):
         nodes = _nodes(AQWABackend().build_deck1(spec))
         assert (-90.0, 0.0, -1.0) in nodes.values()
     else:
-        with pytest.raises(ValueError, match="straddling"):
+        with pytest.raises(ValueError, match="both sides"):
             AQWABackend().build_deck1(spec)
 
 
@@ -199,11 +199,10 @@ def _hydrostatic_sums(vertices, panels):
 def test_half_volume_and_waterplane_recover_full_body(tmp_path):
     spec = _spec(tmp_path)
     backend = AQWABackend()
-    full = backend._load_mesh(spec.vessel.geometry.mesh_file)
+    stored = backend._load_mesh(spec.vessel.geometry.mesh_file)
     half = backend._load_body_mesh(spec.vessel.geometry)
-    full_sums = _hydrostatic_sums(full.vertices, full.panels)
-    assert full_sums == pytest.approx([8, 8])
-    assert 2 * _hydrostatic_sums(half.vertices, half.panels) == pytest.approx(full_sums)
+    assert _hydrostatic_sums(stored.vertices, stored.panels) == pytest.approx([4, 4])
+    assert 2 * _hydrostatic_sums(half.vertices, half.panels) == pytest.approx([8, 8])
 
 
 def test_committed_offset_box_requires_full_deck(tmp_path):
@@ -250,7 +249,8 @@ def test_symmetric_headings_end_at_180_but_none_still_expands(tmp_path, heading_
     backend = AQWABackend()
     headings = lambda: [float(line.split()[-1]) for line in backend.build_deck6(spec) if "DIRN" in line]
     assert headings() == [0, 45, 90, 135, 180]
-    spec.vessel.geometry.symmetry = "none"
+    spec = _spec(tmp_path, symmetry="none")
+    backend = AQWABackend()
     assert headings() == [-180, -135, -90, -45, 0, 45, 90, 135, 180]
 
 
@@ -292,6 +292,10 @@ def test_none_decks_match_base_bytes_and_half_builds_repeat(tmp_path, fixture):
     for resolved, digest in enumerate(_NONE_DIGESTS[fixture]):
         backend = AQWABackend()
         backend._spec_dir = fixtures if resolved else None
+        if not resolved:
+            with pytest.raises(ValueError, match="loaded and verified"):
+                backend._assemble_all_decks(spec)
+            continue
         first = ("\r\n".join(backend._assemble_all_decks(spec)) + "\r\n").encode()
         second = ("\r\n".join(backend._assemble_all_decks(spec)) + "\r\n").encode()
         assert first == second
@@ -366,7 +370,7 @@ def test_offset_box_specs_use_full_body_decks(spec_path):
     assert "SYMX" not in "\n".join(backend.build_deck2(spec))
 
 
-def test_orcawave_keeps_verified_symmetric_box_full(tmp_path):
+def test_orcawave_preserves_matching_half_mesh(tmp_path):
     import yaml
 
     from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
@@ -374,14 +378,14 @@ def test_orcawave_keeps_verified_symmetric_box_full(tmp_path):
     spec = _spec(tmp_path, lid=False)
     mesh = Path(spec.vessel.geometry.mesh_file)
     original = mesh.read_bytes()
-    # AQWA verifies the full mirrored box and writes only its six-panel half.
+    # Both backends retain the stored half and request its declared reflection.
     assert len(_elements(AQWABackend().build_deck2(spec))) == 6
     output = OrcaWaveBackend().generate_single(spec, tmp_path / "orcawave")
     body = yaml.safe_load(output.read_text(encoding="utf-8"))["Bodies"][0]
-    assert body["BodyMeshSymmetry"] == "None"
+    assert body["BodyMeshSymmetry"] == "xz plane"
     assert body["BodyMeshFileName"] == mesh.name
     assert mesh.read_bytes() == original
-    assert int(original.decode("utf-8").splitlines()[3]) == len(_box_panels())
+    assert int(original.decode("utf-8").splitlines()[3]) == len(_box_panels()) // 2
 
 
 @pytest.mark.parametrize("mesh_format", [None, "gdf"])
@@ -406,10 +410,12 @@ def test_orcawave_box_writes_concrete_mesh_format(tmp_path, mesh_format):
     ("auto", "obj", "Wavefront obj"), ("obj", "obj", "Wavefront obj"),
     ("aqwa_dat", "dat", "Aqwa dat"),
 ])
-def test_orcawave_mesh_formats_across_sections(mesh_format, extension, expected):
+def test_orcawave_mesh_formats_across_sections(tmp_path, mesh_format, extension, expected):
     from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_bodies_section
 
     spec = _format_spec(extension, mesh_format)
+    if extension.lower() == "gdf":
+        spec.vessel.geometry.mesh_file = _spec(tmp_path, symmetry="none").vessel.geometry.mesh_file
     assert _build_bodies_section(spec)["Bodies"][0]["BodyMeshFormat"] == expected
 
 
@@ -447,11 +453,14 @@ def test_orcawave_refuses_contradictory_extensions(extension, mesh_format):
 
 
 @pytest.mark.parametrize("mesh_format, extension", [("gdf", "gdf"), ("msh", "msh"), ("obj", "obj"), ("aqwa_dat", "dat")])
-def test_orcawave_mesh_format_round_trip(mesh_format, extension):
+def test_orcawave_mesh_format_round_trip(tmp_path, mesh_format, extension):
     from digitalmodel.hydrodynamics.diffraction.orcawave_backend import _build_bodies_section
     from digitalmodel.hydrodynamics.diffraction.reverse_parsers import OrcaWaveInputParser
 
-    native = _build_bodies_section(_format_spec(extension, mesh_format))["Bodies"][0]["BodyMeshFormat"]
+    spec = _format_spec(extension, mesh_format)
+    if extension == "gdf":
+        spec.vessel.geometry.mesh_file = _spec(tmp_path, symmetry="none").vessel.geometry.mesh_file
+    native = _build_bodies_section(spec)["Bodies"][0]["BodyMeshFormat"]
     assert OrcaWaveInputParser._reverse_mesh_format(native) == mesh_format
 
 

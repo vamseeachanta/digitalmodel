@@ -328,6 +328,7 @@ class TestOrcaWaveReverseParserHardening:
             "cog_z": -2.5,
         }
         free_spec = DiffractionSpec.model_validate(data)
+        free_spec._source_dir = original._source_dir
         yml_path = _generate_orcawave_yml(free_spec, tmp_path)
         parsed = OrcaWaveInputParser().parse(yml_path)
 
