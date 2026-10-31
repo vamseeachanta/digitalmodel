@@ -54,12 +54,21 @@ get_riser_scf().value                  # 1.0  — DNV-RP-C203 methodology (neutr
 get_tension_weight_factor().value      # 1.05 — API RP 16Q (1st Ed. 1993) §3.3, f_wt
 get_buoyancy_tension_factor().value    # 0.96 — API RP 16Q (1st Ed. 1993) §3.3, f_bt
 get_riser_dff(override=3.0)            # user override wins; note records both values
-riser_citations()                      # {dff, scf, f_wt, f_bt}; {} + RuntimeWarning standalone
+riser_citations()                      # {dff, scf, f_wt, f_bt, von_mises_df}; standalone may return {}
 ```
 
 Direct getter calls are **fail-closed** (`CitationResolutionError` carrying the
-`code_id`); only the consumer helper degrades in standalone/`pip install` mode
-(one-shot `RuntimeWarning`) — same contract as the mooring pilot. Values match
+`code_id`). The consumer helper returns an empty mapping with a one-shot
+`RuntimeWarning` only when discovery exhausts every wiki route with
+`resolver_unconfigured:`. With an explicit `repo_root` or a resolved wiki,
+missing pages, missing identity metadata and mismatched revisions raise
+`CitationResolutionError`. Invalid `LLM_WIKI_PATH` or
+`DIGITALMODEL_REPO_ROOT` configuration also raises.
+An earlier standalone warning does not suppress later configured-wiki errors.
+The boundary is covered by `tests/riser_database/test_citations.py`; expected
+errors follow `citations/schema.py` and `citations/resolver.py`, independently
+of any engineering value. Issue 2166 tracks this failure boundary.
+Values match
 the riser literals (`touchdown.py` `dff=10.0`, `scf=1.0`; `stackup.py`
 `F_WT_DEFAULT=1.05`, `F_BT_DEFAULT=0.96`) so the #1246 wiring has day-one
 parity. `riser_fatigue/workflow.py` resolves DFF through `resolve_dff()`:
