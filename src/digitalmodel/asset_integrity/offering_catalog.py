@@ -689,7 +689,7 @@ def render_markdown(cat: Catalog) -> str:
 # capability map (docs/capability-map/capabilities-added.yml, engines.ffs block)
 # ---------------------------------------------------------------------------
 
-_CAPMAP_FIELDS = ("status", "module", "workflow", "validation", "issue")
+_CAPMAP_FIELDS = ("status", "module", "workflow", "validation", "issue", "caveat")
 
 
 def capability_map_entries(cat: Catalog) -> dict[str, dict]:
@@ -710,7 +710,7 @@ def render_capability_map(cat: Catalog, current_text: str) -> str:
     lines = [
         f"{CAPMAP_MARKER} by `{RENDER_CMD}`",
         f"# --- from src/digitalmodel/asset_integrity/data/{FFS_CATALOG.name} (issue #2197). Do not edit by hand.",
-        "# Format: engines.<section id>.<engine key>: {status, module?, workflow?, validation?, issue?}",
+        "# Format: engines.<section id>.<engine key>: {status, module?, workflow?, validation?, issue?, caveat?}",
         "engines:",
         "  ffs:",
     ]
