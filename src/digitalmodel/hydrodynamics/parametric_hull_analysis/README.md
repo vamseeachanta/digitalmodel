@@ -71,3 +71,9 @@ References:
 3. International Maritime Organization (2002). MSC/Circ.1053, *Explanatory
    Notes to the Standards for Ship Manoeuvrability*, Annex 2.1.2.
    https://www.traficom.fi/files/media/regulation/22701-MSC_1-Circ_1053_-_tulkinta_ship_manoeuvrability.pdf.
+
+## Module analysis
+
+[Parametric hull module analysis](../../../../docs/reports/modules/parametric_hull_analysis/README.md)
+maps the existing routes and provides a reproducible synthetic encounter-frequency
+case with an independent phase derivation. Deferred methods remain `NOT_EVALUATED`.
