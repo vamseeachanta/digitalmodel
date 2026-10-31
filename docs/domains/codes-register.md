@@ -15,7 +15,7 @@ kept in sync with `codes.REGISTER` by
 | Standard | Edition | Module(s) | Tests |
 |---|---|---|---|
 | ASME B31G | 2012 | `asset_integrity/corroded_pipe.py` | `test_corroded_pipe`, `test_code_provenance` |
-| DNV-RP-F101 | 2021 | `asset_integrity/dnv_rp_f101.py` | `test_dnv_rp_f101` |
+| DNV-RP-F101 | January 2015 | `asset_integrity/dnv_rp_f101.py` | `test_dnv_rp_f101` |
 | API 579-1/ASME FFS-1 | 2021 | `asset_integrity/assessment/*`, `structural_analysis/plate_metal_loss_ffs.py` | `test_ffs_*`, `test_code_provenance` |
 | BS 7910 | 2019 | `asset_integrity/common/fad.py` | `test_ffs_assessment` |
 
@@ -39,7 +39,7 @@ kept in sync with `codes.REGISTER` by
 | PD 8010-2 | 2015 | `.../wall_thickness_codes/pd_8010_2.py` | `test_wall_thickness_codes` |
 | ISO 13623 | 2017 | `.../wall_thickness_codes/iso_13623.py` | `test_wall_thickness_codes` |
 | ASME B31.4 | 2019 | `.../wall_thickness_codes/asme_b31_4.py` | `test_wall_thickness_codes` |
-| ASME B31.8 | 2020 | `.../wall_thickness_codes/asme_b31_8.py` | `test_wall_thickness_codes` |
+| ASME B31.8 | 2022 | `.../wall_thickness_codes/asme_b31_8.py`, `asset_integrity/assessment/level1_screener.py` | `test_wall_thickness_codes`, `test_pipeline_ffs_assessment` |
 
 ### Riser label evidence and unresolved editions
 
