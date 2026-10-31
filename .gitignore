@@ -636,3 +636,13 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain only the subsea trees and connectors module analysis deliverables.
+!/scripts/reports/build_subsea_trees_connectors_module_report.py
+!/docs/reports/modules/subsea_trees_connectors/
+/docs/reports/modules/subsea_trees_connectors/*
+!/docs/reports/modules/subsea_trees_connectors/index.html
+!/docs/reports/modules/subsea_trees_connectors/changes.json
+!/docs/reports/modules/subsea_trees_connectors/results.json
+!/docs/reports/modules/subsea_trees_connectors/manifest.json
+!/docs/reports/modules/subsea_trees_connectors/README.md

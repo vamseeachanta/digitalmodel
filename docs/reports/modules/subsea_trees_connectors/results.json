@@ -1,0 +1,205 @@
+{
+  "input_basis": {
+    "connector.supplied_stress_limit_pa": {
+      "derivation": "700 MPa transverse plate yield at 50 mm thickness; not a connector design allowable.",
+      "sources": [
+        "S2"
+      ]
+    },
+    "connector.youngs_modulus_pa": {
+      "derivation": "Generic steel modulus 20.0 times 10^10 Pa; not a grade certificate.",
+      "sources": [
+        "S1"
+      ]
+    },
+    "handoff.production_rate_m3_s": {
+      "derivation": "Published flow 0.500 L/s converted to 0.0005 m3/s.",
+      "sources": [
+        "S3"
+      ]
+    },
+    "tree.coefficient_si": {
+      "derivation": "C = 25.5 times sqrt(1000), from the rounded published speed and density; not an erosional design coefficient.",
+      "sources": [
+        "S3",
+        "S4"
+      ]
+    },
+    "tree.density_kg_m3": {
+      "derivation": "Published example water density 1000 kg/m3.",
+      "sources": [
+        "S4"
+      ]
+    },
+    "tree.diameter_m": {
+      "derivation": "Published nozzle diameter 0.500 cm converted to 0.005 m.",
+      "sources": [
+        "S3"
+      ]
+    }
+  },
+  "inputs": {
+    "connector": {
+      "bend_radius_m": 100.0,
+      "outer_diameter_m": 0.2,
+      "supplied_stress_limit_pa": 700000000.0,
+      "wall_thickness_m": 0.05,
+      "youngs_modulus_pa": 200000000000.0
+    },
+    "handoff": {
+      "annulus_rate_m3_s": 0.0,
+      "production_rate_m3_s": 0.0005,
+      "supplied_drop_pa": 1000000.0,
+      "upstream_pressure_pa": 5000000.0
+    },
+    "tree": {
+      "coefficient_si": 806.3808033429367,
+      "density_kg_m3": 1000.0,
+      "diameter_m": 0.005
+    }
+  },
+  "inventory": [
+    {
+      "inputs": "Design pressure and rating (psi); class and well temperatures (°F)",
+      "interface": "select_rated_working_pressure; tree_rating_check; TreeRatingResult",
+      "limits": "INSPECTED ONLY. Embedded rating tables and qualification claims are not independently established; no tables are reproduced.",
+      "outputs": "Discrete rating; pressure/temperature flags, margin (psi), utilization and passed",
+      "source": "src/digitalmodel/subsea/trees/design_checks.py"
+    },
+    {
+      "inputs": "Bore diameter (m), density (kg/m³), supplied C ((m/s)√(kg/m³))",
+      "interface": "bore_capacity; BoreCapacity",
+      "limits": "EXECUTED. Conditional ceiling arithmetic; no erosion, multiphase or coefficient qualification.",
+      "outputs": "Velocity ceiling (m/s), rate ceiling (m³/s)",
+      "source": "src/digitalmodel/subsea/trees/flow_capacity.py"
+    },
+    {
+      "inputs": "Separate production/annulus rates (m³/s), capacities, upstream pressure and supplied loss (Pa)",
+      "interface": "flow_handoff; FlowHandoff",
+      "limits": "EXECUTED. Annulus capacity is absent only for zero annulus flow. Loss is supplied, not predicted.",
+      "outputs": "Unclipped separate rates (m³/s), downstream pressure (Pa), within_capacity flag",
+      "source": "src/digitalmodel/subsea/trees/flow_capacity.py"
+    },
+    {
+      "inputs": "Absolute pressure/drop (psi), rate (gpm (US)), effective Cv, specific gravity, travel, trim, rangeability, recovery/fluid factors",
+      "interface": "liquid_critical_drop; trim_cv; valve_pressure_drop; series_pressure_drop; liquid_choke_flow; ChokeFlow",
+      "limits": "INSPECTED ONLY. Liquid-only no-attached-fittings screen; factors require qualification. No gas, flashing, viscosity correction or installed-network solution.",
+      "outputs": "Critical drop, valve/series loss (psi), effective Cv, liquid rate (gpm (US)), capped drop (psi) and regime",
+      "source": "src/digitalmodel/subsea/trees/pressure_control.py"
+    },
+    {
+      "inputs": "Caller HTTPS source, key, topology/orientation, bores/envelope (m), rating (Pa), range (°C), masses (kg), valve count",
+      "interface": "TreeEntry; TreeCatalog.get; TreeCatalog.select",
+      "limits": "INSPECTED ONLY. No seeded equipment records; source URLs are validated syntactically, not independently qualified.",
+      "outputs": "Immutable caller entries; lookup by key; selection by orientation/minimum bore and pressure",
+      "source": "src/digitalmodel/subsea/trees/tree_catalog.py"
+    },
+    {
+      "inputs": "Outer diameter and wall thickness (m)",
+      "interface": "PipeSection.inner_diameter; PipeSection.area; PipeSection.bore_area; PipeSection.moment_of_inertia; PipeSection.section_modulus",
+      "limits": "EXECUTED. Homogeneous circular geometry; not flexible-layer properties.",
+      "outputs": "Inner diameter (m), annular/bore areas (m²), second moment (m⁴), elastic modulus of section (m³)",
+      "source": "src/digitalmodel/subsea/connectors/section_properties.py"
+    },
+    {
+      "inputs": "PipeSection, positive radius (m), elastic modulus and explicit stress limit (Pa)",
+      "interface": "bending_from_radius; BendingResult",
+      "limits": "EXECUTED. Linear elastic curvature model; default unbounded limit is not used. No contact, ovalization or flexible-layer response.",
+      "outputs": "Curvature (1/m), elastic stress (Pa), moment (N·m), utilization and passed",
+      "source": "src/digitalmodel/subsea/connectors/bending_analysis.py"
+    },
+    {
+      "inputs": "Section, material strength/modulus (Pa), pressure (Pa), axial/preload/seating forces (N), moment (N·m), seal diameter (m), usage factor and make-up type",
+      "interface": "end_cap_force; verify_connector; ConnectorType; ConnectorMaterial; ConnectorCheckResult.utilisation",
+      "limits": "INSPECTED ONLY. Thin-wall hoop approximation, signed bending treatment, default factors and seal policy need engineering review; no acceptance basis is selected here.",
+      "outputs": "Pressure thrust, separating/residual force (N), stress/allowable (Pa), body/seal utilization, governing check, notes and passed",
+      "source": "src/digitalmodel/subsea/connectors/connector_design.py"
+    },
+    {
+      "inputs": "Section, heated length (m), temperature change (K or °C difference), expansion coefficient (1/K), modulus (Pa), restraint fraction",
+      "interface": "thermal_expansion_load; ThermalResult",
+      "limits": "INSPECTED ONLY. Restrained-bar model; geometry stiffness and restraint fraction are supplied assumptions, not solved reactions.",
+      "outputs": "Thermal strain, free growth (m), fully restrained stress (Pa), fraction-scaled axial force (N)",
+      "source": "src/digitalmodel/subsea/connectors/thermal_expansion.py"
+    },
+    {
+      "inputs": "Rigid, flexible or vertical family enum",
+      "interface": "get_jumper_spec; JumperType; JumperSpec; JUMPER_CATALOG",
+      "limits": "INSPECTED ONLY. Routing metadata; not a sized or qualified product catalogue.",
+      "outputs": "Family description, governing-check tags and dynamic flag",
+      "source": "src/digitalmodel/subsea/connectors/jumper_catalog.py"
+    },
+    {
+      "inputs": "Eligible specification, homogeneous section, signed radius history (m), modulus (Pa), exposure (years), fatigue factor, SCF, curve/environment",
+      "interface": "assess_jumper_fatigue; JumperFatigueResult",
+      "limits": "NOT_EVALUATED. Normal package import reaches the fatigue dependency stack. No histories, qualified curve, environment or hot-spot basis are supplied.",
+      "outputs": "Converted stress history (MPa) and native fatigue assessment",
+      "source": "src/digitalmodel/subsea/connectors/fatigue.py"
+    },
+    {
+      "inputs": "Dynamic specification, section, name, dry mass/length (kg/m), effective axial stiffness (N), bending/torsional stiffness (N·m²)",
+      "interface": "build_jumper_line_type",
+      "limits": "INSPECTED ONLY. No solver is imported or invoked by this mapping. Full model, connections, hydrodynamics and dynamic response remain absent.",
+      "outputs": "Offline generic structural fragment (m, tonnes/m, kN, kN·m²)",
+      "source": "src/digitalmodel/subsea/connectors/orcaflex_export.py"
+    }
+  ],
+  "outputs": {
+    "bending": {
+      "curvature_per_m": 0.01,
+      "moment_nm": 147262.15563702158,
+      "stress_pa": 200000000.0,
+      "utilization": 0.2857142857142857,
+      "within_supplied_limit": true
+    },
+    "geometry": {
+      "area_m2": 0.023561944901923454,
+      "bore_area_m2": 0.007853981633974483,
+      "inner_diameter_m": 0.1,
+      "second_moment_m4": 7.363107781851079e-05,
+      "section_modulus_m3": 0.0007363107781851078
+    },
+    "handoff": {
+      "annulus_rate_m3_s": 0.0,
+      "downstream_pressure_pa": 4000000.0,
+      "production_rate_m3_s": 0.0005,
+      "within_supplied_ceiling": true
+    },
+    "tree": {
+      "rate_ceiling_m3_s": 0.0005006913291658733,
+      "velocity_ceiling_m_s": 25.5
+    }
+  },
+  "schema_version": "1",
+  "sources": {
+    "S1": {
+      "accessed_on": "2026-10-28",
+      "edition": "2016 online edition",
+      "locator": "Section 12.3, Table 12.1, steel row; Equation 12.33",
+      "title": "OpenStax University Physics Volume 1",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus"
+    },
+    "S2": {
+      "accessed_on": "2026-10-28",
+      "edition": "Online data accessed 2026-10-28",
+      "locator": "Mechanical Properties, thickness 4.0-53.0 mm, transverse test pieces",
+      "title": "SSAB Strenx 700 E/F product data",
+      "url": "https://www.ssab.com/en-ca/brands-and-products/strenx/product-offer/700/e-f"
+    },
+    "S3": {
+      "accessed_on": "2026-10-28",
+      "edition": "2016 online edition",
+      "locator": "Section 14.5, Example 14.5, nozzle diameter, flow rate and rounded outlet speed",
+      "title": "OpenStax University Physics Volume 1",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/14-5-fluid-dynamics"
+    },
+    "S4": {
+      "accessed_on": "2026-10-28",
+      "edition": "2016 online edition",
+      "locator": "Section 14.6, Example 14.6, water density",
+      "title": "OpenStax University Physics Volume 1",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/14-6-bernoullis-equation"
+    }
+  },
+  "status": "SYNTHETIC_STATIC_ONLY"
+}
