@@ -66,13 +66,81 @@ def _run_report(table_dir: Path, output_dir: Path) -> dict:
 # -- fixture -> sizing CSVs -----------------------------------------------------
 
 
-def test_sizing_fixture_regenerates_checked_in_csvs(tmp_path):
-    """The checked-in demo CSVs are exactly what the fixture produces."""
-    _run_sizing(tmp_path)
+def _assert_csv_matches(fresh: Path, checked_in: Path) -> None:
+    """Compare fixture bytes under the CRLF-to-LF contract in issue #1626."""
+    fresh_bytes = fresh.read_bytes().replace(b"\r\n", b"\n")
+    checked_in_bytes = checked_in.read_bytes().replace(b"\r\n", b"\n")
+    assert fresh_bytes == checked_in_bytes, (
+        f"{checked_in.name}: regenerate data/ from the fixture"
+    )
+
+
+@pytest.mark.parametrize("crlf_checkout", [False, True], ids=["checkout", "crlf"])
+def test_sizing_fixture_regenerates_checked_in_csvs(tmp_path, crlf_checkout):
+    """Demo CSVs match the fixture, including a simulated autocrlf checkout."""
+    generated_dir = tmp_path / "generated"
+    reference_dir = EXAMPLE_DIR / "data"
+    if crlf_checkout:
+        reference_dir = tmp_path / "checkout"
+        reference_dir.mkdir()
+        for name in SIZING_CSVS:
+            payload = (EXAMPLE_DIR / "data" / name).read_bytes()
+            (reference_dir / name).write_bytes(
+                payload.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+            )
+    _run_sizing(generated_dir)
     for name in SIZING_CSVS:
-        fresh = (tmp_path / name).read_bytes()
-        checked_in = (EXAMPLE_DIR / "data" / name).read_bytes()
-        assert fresh == checked_in, f"{name}: regenerate data/ from the fixture"
+        _assert_csv_matches(generated_dir / name, reference_dir / name)
+
+
+@pytest.mark.parametrize(
+    "fresh,checked_in",
+    [
+        (b"item,value\nsample,original\n", b"item,value\nsample,original\n"),
+        (b"item,value\nsample,original\n", b"item,value\r\nsample,original\r\n"),
+        (b"item,value\r\nsample,original\r\n", b"item,value\nsample,original\n"),
+        (b"item,value\nsample,original\n", b"item,value\r\nsample,original\n"),
+    ],
+    ids=["lf", "crlf-checkout", "crlf-generated", "mixed-checkout"],
+)
+def test_csv_comparison_ignores_crlf(tmp_path, fresh, checked_in):
+    """Issue #1626: replacing each CRLF pair with LF leaves identical bytes.
+
+    The synthetic input has a header and one record; the expected equality
+    follows by removing only the CR immediately before each LF by hand.
+    """
+    generated = tmp_path / "generated.csv"
+    reference = tmp_path / "reference.csv"
+    generated.write_bytes(fresh)
+    reference.write_bytes(checked_in)
+    _assert_csv_matches(generated, reference)
+
+
+@pytest.mark.parametrize(
+    "checked_in",
+    [
+        b"item,value\nsample,changed\n",
+        b"item;value\nsample,original\n",
+        b"item,value\nsample,original \n",
+        b"sample,original\nitem,value\n",
+        b"item,value\n",
+        b"item,value\nsample,original\r",
+        b"item,value\nsample,original",
+    ],
+    ids=["value", "delimiter", "space", "order", "row", "bare-cr", "final-lf"],
+)
+def test_csv_comparison_rejects_content_drift(tmp_path, checked_in):
+    """Each literal differs after CRLF replacement, so equality must fail.
+
+    Independent inspection identifies a changed value, delimiter, space,
+    row order, missing row, bare CR or missing final LF, respectively.
+    """
+    generated = tmp_path / "generated.csv"
+    reference = tmp_path / "reference.csv"
+    generated.write_bytes(b"item,value\nsample,original\n")
+    reference.write_bytes(checked_in)
+    with pytest.raises(AssertionError, match="reference.csv: regenerate data/"):
+        _assert_csv_matches(generated, reference)
 
 
 def test_sizing_fixture_hand_calc_and_library_citations(tmp_path):
