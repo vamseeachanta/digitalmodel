@@ -100,6 +100,9 @@ def build_payload(scratch_dir: Path) -> dict:
             sn_class=inputs["sn_curve"]["curve"],
             environment=inputs["sn_curve"]["environment"],
             scf=wave["scf"],
+            scf_basis=wave.get("scf_basis"),
+            sn_basis=inputs["sn_curve"]["basis"],
+            histogram_basis=wave["histogram_basis"],
             design_life_years=inputs["design_life_years"],
             dff=inputs["dff"],
             histogram_period_years=wave["histogram_period_years"],
@@ -191,13 +194,14 @@ def render(record: dict) -> str:
     required_life_key = f"result.segments.{governing_index}.required_life_years"
     input_rows, result_rows, wave_rows, viv_rows, bin_rows = [], [], [], [], []
     summary_fields = ["wave_damage", "viv_damage", "total_damage", "fatigue_life_years",
-                      "required_life_years", "dff_margin"]
+                      "required_life_years", "dff_margin", "histogram_basis_years"]
     for index, segment in enumerate(record["inputs"]["segments"]):
         prefix = f"inputs.segments.{index}"
         input_rows.append([
             labels[segment["id"]], metric(prefix + ".outer_diameter_mm"),
             metric(prefix + ".wall_thickness_mm", ".3f"), metric(prefix + ".wave.scf", ".2f"),
-            metric(prefix + ".wave.histogram_period_years"), cite(1),
+            metric(prefix + ".wave.histogram_period_years"),
+            metric(prefix + ".wave.histogram_basis.period_years"), cite(1),
         ])
         for bin_index, _ in enumerate(segment["wave"]["cycles"]):
             wave_rows.append([
@@ -235,12 +239,13 @@ def render(record: dict) -> str:
         ])
     section_table = table(
         ["Location", "Outer diameter (mm)", "Wall (mm)", "Stress concentration factor (dimensionless)",
-         "Histogram period (years)", "Source"], input_rows,
+         "Histogram period (years)", "Cycle-count basis period (years)", "Source"], input_rows,
         "Table A. Example section properties and wave correction inputs.")
     results_table = table(
         ["Location", "Wave damage (dimensionless)", "Vibration damage (dimensionless)",
          "Total damage (dimensionless)", "Unfactored life (years)", "Required life (years)",
-         "Fatigue-factor margin (dimensionless)", "Criterion", "Source"], result_rows,
+         "Fatigue-factor margin (dimensionless)", "Cycle-count basis period (years)",
+         "Criterion", "Source"], result_rows,
         "Table B. Combined screening results from the module; each damage covers the design life.")
     wave_table = table(["Location", "Stress range (MPa)", "Cycles per period", "Source"], wave_rows,
                        "Table C. Supplied wave histograms; no structural response is calculated.")
