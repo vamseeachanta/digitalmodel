@@ -5,6 +5,7 @@ Provides cumulative damage calculation, design-life checking,
 and DNV thickness correction for stress ranges.
 """
 
+import math
 from numbers import Real
 
 import numpy as np
@@ -36,7 +37,7 @@ def miner_damage(
     stress_ranges, applied_cycles = validate_histogram(
         result["stress_range"], result["cycles"]
     )
-    allowable = sn_curve.cycles(stress_ranges)
+    allowable = _allowable_cycles(sn_curve, stress_ranges)
     result["allowable_cycles"] = allowable
     allowable = np.asarray(allowable, dtype=float)
     endurance = np.zeros_like(stress_ranges, dtype=bool)
@@ -56,11 +57,60 @@ def miner_damage(
     damages = result["damage"].to_numpy()
     if not np.all(np.isfinite(damages)) or np.any(damages < 0):
         raise ValueError("Miner bin damage must be finite and non-negative")
-    total = float(damages.sum())
+    # math.fsum is exactly rounded, so the total is independent of bin order
+    # and of the SIMD width a NumPy reduction would use.
+    total = math.fsum(float(value) for value in damages)
     if not np.isfinite(total) or total < 0:
         raise ValueError("Miner total damage must be finite and non-negative")
     result.attrs["total_damage"] = total
     return result
+
+
+def _scalar_parameter(value):
+    """Return a scalar curve parameter as a float, or None if it is not scalar."""
+    if np.ndim(value) != 0:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_pylife_method(sn_curve, name):
+    """True when ``name`` is pyLife's own WoehlerCurve method, not an override."""
+    return getattr(getattr(sn_curve, name, None), "__func__", None) is getattr(WoehlerCurve, name)
+
+
+def _allowable_cycles(sn_curve, stress_ranges):
+    """Allowable cycles per bin, evaluated CPU-deterministically.
+
+    For a plain pyLife ``WoehlerCurve`` with scalar parameters, pyLife's Basquin
+    law ``N = ND * (S / SD) ** -k`` (``k = k_1`` at or above SD, ``k_2`` below
+    it; infinite ``k`` gives infinite N) is evaluated one bin at a time with
+    ``math.pow``. ``np.power`` dispatches to processor-specific vector kernels
+    whose last bits differ between CPUs. Any other curve object is evaluated
+    through its own ``cycles`` method, unchanged.
+    """
+    if (not isinstance(sn_curve, WoehlerCurve)
+            or not _is_pylife_method(sn_curve, "cycles")
+            or not _is_pylife_method(sn_curve, "basquin_cycles")):
+        return sn_curve.cycles(stress_ranges)
+    sd, nd, k_1, k_2 = (_scalar_parameter(value) for value in
+                        (sn_curve.SD, sn_curve.ND, sn_curve.k_1, sn_curve.k_2))
+    if None in (sd, nd, k_1, k_2):
+        return sn_curve.cycles(stress_ranges)
+    allowable = np.empty(len(stress_ranges), dtype=float)
+    for index, stress in enumerate(stress_ranges.tolist()):
+        k = k_2 if stress < sd else k_1
+        if not math.isfinite(k):
+            allowable[index] = math.inf
+            continue
+        try:
+            allowable[index] = nd * math.pow(stress / sd, -k)
+        except (OverflowError, ZeroDivisionError, ValueError):
+            # Zero stress or overflow: pyLife's np.power returns +inf here.
+            allowable[index] = math.inf
+    return allowable
 
 
 def validate_histogram(stress_ranges, cycles):
