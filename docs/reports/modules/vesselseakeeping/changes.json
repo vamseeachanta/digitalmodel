@@ -13,5 +13,10 @@
     "revision": "C",
     "date": "2026-10-26",
     "change": "Provenance now records the dedicated rebuild test and independent calculation fixture instead of unrelated workflow assertions; a manifest binds the delivered files to their exact bytes."
+  },
+  {
+    "revision": "D",
+    "date": "2026-10-31",
+    "change": "Sea-state result values in the calculation record are stored to 13 significant digits so the delivered bytes do not depend on last-bit floating-point differences between processors; displayed values are unchanged."
   }
 ]

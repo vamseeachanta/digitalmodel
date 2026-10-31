@@ -83,7 +83,7 @@ The production dataset (18,144 files) represents:
 - **Low-stress dominated locations** (< 47 MPa):
   - Old: Would report "infinite life"
   - New: Will report finite life (similar to test results)
-  - Impact: Major change but all should remain safe
+  - Impact: Major change; all locations are expected to remain above the required design fatigue life
 
 - **High-stress locations** (> 50 MPa):
   - Old: Finite life predictions
@@ -93,7 +93,7 @@ The production dataset (18,144 files) represents:
 - **Mixed-stress locations** (40-55 MPa):
   - Old: Some bins ignored (below 47 MPa)
   - New: All bins contribute
-  - Impact: 5-20% more conservative
+  - Impact: 5-20% higher calculated damage (shorter predicted fatigue life)
 
 ---
 

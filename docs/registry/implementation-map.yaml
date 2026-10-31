@@ -11,6 +11,12 @@ agent_packs:
     agent_pack: src/digitalmodel/subsea/hipps/docs/agent-pack.md
     qa_family: EC
     code_pin: 3554b14fde67f44b1c52b81b6c72106282eaff29
+  nde:
+    agent_pack: src/digitalmodel/nde/docs/agent-pack.md
+    qa_family: EC
+  production_engineering:
+    agent_pack: src/digitalmodel/production_engineering/docs/agent-pack.md
+    qa_family: EC
 searched:
   tracked_files: 17815
   text_files_searched: 15629
@@ -9192,16 +9198,6 @@ families:
     module: tests
     file_sha256: 1a0355cdff10d1991579cc16b3c8f4ceac8256eed1f925a02c0cdd9c7c96e5ad
     body_sha256: 67f3095b8d3836146383467d0dec2f8ac064547b11d79d6bbc7bc25c59e1048d
-  - path: &a6d713f0415 tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/run_models_to_sim.py
-    symbol: find_model_files
-    line: 198
-    kind: writer
-    what: *a7503bcdb06
-    signals: *a509c5dfbb2
-    relation: test_helper
-    module: tests
-    file_sha256: 66f0dd6d7fc31e9abf6ae51bf88bafc5af5dd5c198af87c46e7306b517059411
-    body_sha256: 9c64c5809072ab2466ed40034788bf232d1f3d1935b30c889ecc704c0c29ccf3
   - path: &a8ceaede164 tests/solvers/orcaflex/reporting/fixture_helpers.py
     symbol: _build_boundary_conditions
     line: 126
@@ -25687,26 +25683,6 @@ families:
     module: tests
     file_sha256: 914fd5dbbaf199358bb4ecb22a9b2ef141a3197f74122b1afc54c1e388e8bd86
     body_sha256: a3004204e5e508ea7e23bf5ba66019ca163d931bdbc188f45e60688c3226d4eb
-  - path: *a6d713f0415
-    symbol: run_single_model
-    line: 38
-    kind: function
-    what: *a7503bcdb06
-    signals: *a89bab1ad0e
-    relation: test_helper
-    module: tests
-    file_sha256: 66f0dd6d7fc31e9abf6ae51bf88bafc5af5dd5c198af87c46e7306b517059411
-    body_sha256: 7d0a0e18f610719801cac5957059608a384fd064b4c4e52819bc247cd9f661d4
-  - path: *a6d713f0415
-    symbol: main
-    line: 231
-    kind: function
-    what: *a7503bcdb06
-    signals: *a53b704c3ea
-    relation: test_helper
-    module: tests
-    file_sha256: 66f0dd6d7fc31e9abf6ae51bf88bafc5af5dd5c198af87c46e7306b517059411
-    body_sha256: 05722eab9995fefb40e59dea3dfaa1fc03f130a0062e04d1ad671ab44a39c43b
   - path: tests/solvers/orcaflex/run_tests.py
     symbol: run_tests
     line: 38
@@ -26587,21 +26563,21 @@ families:
   implementations:
   - path: src/digitalmodel/orcaflex/postprocessor.py
     symbol: fit_gumbel
-    line: 177
+    line: 243
     kind: function
     what: Fits a maximum-type Gumbel distribution by maximum likelihood and returns quantiles.
     relation: independent
     module: orcaflex/postprocessor.py
-    file_sha256: 2d8f7ce7a5148f258ed665192aed546bd134667ccbe3fd4c25d0ccc8500f237a
+    file_sha256: 9045028cd751ae8b88aa58dec23a5b646d2c34912feb1fd800719216f7c6b9b3
     body_sha256: fdc5c90c838f8dd198842bcaab43fc6b9d0695153db56eb7b7a986edc75c1f0e
   - path: src/digitalmodel/orcaflex/postprocessor.py
     symbol: fit_weibull
-    line: 223
+    line: 289
     kind: function
     what: Estimates Weibull shape, location and scale with degeneracy checks; distinct from zero-location fits.
     relation: independent
     module: orcaflex/postprocessor.py
-    file_sha256: 2d8f7ce7a5148f258ed665192aed546bd134667ccbe3fd4c25d0ccc8500f237a
+    file_sha256: 9045028cd751ae8b88aa58dec23a5b646d2c34912feb1fd800719216f7c6b9b3
     body_sha256: 6e113509970cf47d2989543a0c88be11a50d8f546feb0c377f3697239b4d9477
   - path: src/digitalmodel/hydrodynamics/river_currents/extremes.py
     symbol: fit_weibull
@@ -26786,13 +26762,13 @@ families:
     body_sha256: 1eec33fc086f5a884656ce5315a6b8a180089e10733a7e4332dfe8c777c39c55
   - path: src/digitalmodel/solvers/openfoam/validation/wave_tank.py
     symbol: dispersion_wavenumber
-    line: 65
+    line: 77
     kind: function
     what: Solves finite-depth linear dispersion for prescribed wave-tank period and depth.
     relation: independent
     module: solvers/openfoam/validation/wave_tank.py
-    file_sha256: 8a8b989ce376b0c1162e4e2756ace9ccca771c9a3adb61a8ac795fae0652d299
-    body_sha256: 8f3ebdd455a7d77c972a0674ec488d7a2a577559b1e418634378db1389e65b7c
+    file_sha256: 6be64cb0018691ecaf3e770e7754a1a0146f5b31e1d3ce187f95852d4db24f2a
+    body_sha256: 9c5b0201073b3b1dbbb0529737e2bd899c40a56209dda0e562676e664012c3c3
   identical_groups: []
   search_audit:
   - search: algorithm
@@ -27086,39 +27062,39 @@ families:
     body_sha256: 242015203dca77ee3c2f3e6b577e14ac60194e6022d8108f01083d3fccd369c9
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: AnchorCapacityWorkflow.router
-    line: 48
+    line: 49
     kind: function
     what: Routes anchor-capacity configuration to pure calculators.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    file_sha256: 98122004894151512b90ca9e9b3544e5ed32c0f47c36ffb42606eed537392d69
     body_sha256: fd547dfdd35ea83dc0cd63c31fd2cf30597f013560b12df870f90125b04a7491
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: PileCapacityWorkflow.router
-    line: 118
+    line: 119
     kind: function
     what: Routes pile-capacity configuration to pure calculators.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    file_sha256: 98122004894151512b90ca9e9b3544e5ed32c0f47c36ffb42606eed537392d69
     body_sha256: 9ea41476ef44087442622c7825e7ca4ce0a9c3f9b7f2868289ccc6629f69524c
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: MudmatBearingCapacityWorkflow.router
-    line: 215
+    line: 216
     kind: function
     what: Routes foundation-capacity configuration to the mudmat calculator.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
-    body_sha256: ceec59779c91728094d0a45a767e3e78e6eee0be00865b22f0c44b468deac608
+    file_sha256: 98122004894151512b90ca9e9b3544e5ed32c0f47c36ffb42606eed537392d69
+    body_sha256: fad72e3ee3ecdc33ad3fb553b4eb4dbd18aeeee22a157a05aaf341dfcb49a172
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: LiquefactionWorkflow.router
-    line: 294
+    line: 304
     kind: function
     what: Routes soil-layer configuration to liquefaction screening.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    file_sha256: 98122004894151512b90ca9e9b3544e5ed32c0f47c36ffb42606eed537392d69
     body_sha256: 60079031f10d394116eebaa26f5953b8312483132bab33b6cca6e6fd64ea43b8
   - path: src/digitalmodel/geotechnical/workflow.py
     symbol: GeotechnicalWorkflow.router
@@ -27212,12 +27188,12 @@ families:
     body_sha256: 2fdd2faace4d0846a10a42bbc7f8a8f42b8d50c6557d387bbdf530fb570d5fc4
   - path: src/digitalmodel/geotechnical/cfg_workflows.py
     symbol: ScourWorkflow.router
-    line: 179
+    line: 180
     kind: function
     what: Routes configuration to pipeline and monopile scour calculators and records results.
     relation: delegate
     module: geotechnical/cfg_workflows.py
-    file_sha256: f54803dc25564c3614880080660170439b67c3bfc738ebc8bb5cdee16629dfeb
+    file_sha256: 98122004894151512b90ca9e9b3544e5ed32c0f47c36ffb42606eed537392d69
     body_sha256: 327c48b3d1dca144be65f4fb3ee8b343e68f5cd3ff31d4133a1f56924ef345f3
   identical_groups: []
   search_audit:
@@ -46396,13 +46372,6 @@ rejected_candidates:
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *ad21dec18f1
-  symbol: RainflowCycle
-  line: 23
-  families:
-  - wind-and-current-force-routes
-  disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: *ad21dec18f1
   symbol: *a8b42a3c232
   line: 48
   families:
@@ -46755,13 +46724,6 @@ rejected_candidates:
 - path: *a34a2998b82
   symbol: SNCurve
   line: 42
-  families:
-  - *a71442a175b
-  disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: *ad21dec18f1
-  symbol: RainflowCycle
-  line: 23
   families:
   - *a71442a175b
   disposition: needs_review
@@ -54627,12 +54589,3 @@ rejected_candidates:
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from
     implementation counts pending inspection.
 notes: ['Built by search with git ls-files, grep and ast; no solver was executed.', 'Function and class body digests use ast.dump without location attributes after removal of docstrings; names, defaults and decorators remain part of the digest.', 'A family can include examples, test helpers, model-section builders and explicit delegates; these relations are not independent numerical validation.', 'not_checked is an unresolved defect assessment, including delegates and non-AQWA readers; issue state does not establish whether a code path is affected.', Python table modules without a defining class are script entries; table contents and licensed strength values are not reproduced., Python module table entries use a null symbol with table_name because their defining assignment is not a function or class., Fresh main-signal search hits in prose and single-case input data are not implementations; rejected_candidates records the named or executable candidates retained after syntax inspection.]
-
-# Documentation bindings; calculation inventory above remains the pinned snapshot.
-agent_packs:
-  nde:
-    agent_pack: src/digitalmodel/nde/docs/agent-pack.md
-    qa_family: EC
-  production_engineering:
-    agent_pack: src/digitalmodel/production_engineering/docs/agent-pack.md
-    qa_family: EC
