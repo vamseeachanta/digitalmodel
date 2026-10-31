@@ -1,0 +1,6 @@
+# Retain the bounded module report alongside the standalone example.
+!.gitignore
+!build_report.py
+!report.html
+!changes.json
+!sources.json
