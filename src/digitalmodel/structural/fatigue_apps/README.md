@@ -297,3 +297,11 @@ For issues or questions:
 - Create an issue in the repository
 - Refer to the specification documents in `specs/modules/fatigue-analysis/`
 - Check the task summary for current development status
+
+## Bounded module report
+
+The [fatigue applications report index](../../../../docs/reports/modules/fatigue_apps/README.md)
+links the module analysis, source record and rebuild command. The executed example
+checks only an explicitly supplied synthetic uniform-bar lookup through the offline
+stress converter. Real stress-transfer tables, stress-concentration factors,
+counting qualification, fatigue damage and service life remain `NOT_EVALUATED`.
