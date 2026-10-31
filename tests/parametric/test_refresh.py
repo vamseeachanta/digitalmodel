@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -34,6 +37,49 @@ def test_committed_atlases_are_current():
                 "synthetic-rope-mooring-fatigue"):
         status = refresh.refresh_status(wid)
         assert status["stale"] is False, f"{wid} unexpectedly stale: {status}"
+
+
+def test_committed_anchor_atlas_matches_scalar_basis():
+    """Scalar-domain changes require a fresh, validated native-capacity grid."""
+    from digitalmodel.geotechnical.anchors import suction_anchor_capacity
+    from digitalmodel.parametric.atlas import Atlas
+
+    status = refresh.refresh_status("anchor-capacity")
+    assert status["stale"] is False, status
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "anchor_capacity")
+    assert atlas.atlas_id == status["current"][:12]
+    assert _staleness(atlas) is None
+    assert atlas.validation["passes"] is True
+    threshold = refresh._row("anchor-capacity")["parametric"]["tolerance"]["threshold"]
+    assert atlas.validation["threshold"] == threshold
+    assert atlas.max_rel_error <= threshold
+
+    for row in atlas.grid.to_dict("records"):
+        point = {axis.name: row[axis.name] for axis in atlas.axes}
+        capacity = suction_anchor_capacity(**point).total_capacity_kn
+        assert row[atlas.response] == pytest.approx(capacity)
+    assert atlas.validation["n_holdout"] > 0
+    for sample in atlas.validation["worst_samples"]:
+        capacity = suction_anchor_capacity(**sample["point"]).total_capacity_kn
+        assert sample["actual"] == pytest.approx(capacity)
+        assert sample["in_range"] is True
+        assert sample["rel_error"] <= threshold
+
+
+def test_committed_anchor_atlas_has_reconstructable_provenance():
+    """The active regenerated atlas retains its source and artifact digests."""
+    from digitalmodel.parametric import historical_provenance as history
+    from digitalmodel.parametric.atlas import Atlas
+
+    atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "anchor_capacity")
+    manifest = f"atlases/anchor_capacity/{atlas.atlas_id}/manifest.yaml"
+    index = refresh.REPO_ROOT / "atlases/historical-provenance.json"
+    records = json.loads(index.read_text(encoding="utf-8"))["atlases"]
+    record = next((row for row in records if row["manifest"] == manifest), None)
+    assert record is not None, manifest
+    fingerprint = history.verify_sources(record, history.archive_reader(refresh.REPO_ROOT))
+    assert fingerprint == atlas.provenance["content_fingerprint"]
+    history.verify_artifacts(record, refresh.REPO_ROOT)
 
 
 def test_committed_synthetic_rope_query_returns_screening_estimate(tmp_path):
