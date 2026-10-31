@@ -636,3 +636,11 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain only the structural analysis report builder and named deliverables.
+!/scripts/reports/build_structural_analysis_module_report.py
+!/docs/reports/modules/structural_analysis/
+!/docs/reports/modules/structural_analysis/index.html
+!/docs/reports/modules/structural_analysis/changes.json
+!/docs/reports/modules/structural_analysis/manifest.json
+!/docs/reports/modules/structural_analysis/README.md

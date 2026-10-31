@@ -29,6 +29,12 @@ New and materially revised engineering analysis deliverables shall follow the [p
 | Infrastructure, configs, or workflow routing | `src/digitalmodel/infrastructure/`, `src/digitalmodel/workflows/`, or `src/digitalmodel/data_systems/` | matching tests plus integration tests | domain docs and this routing entry point |
 | Documentation/indexing maintenance | `docs/README.md`, `docs/domains/README.md`, operator map, and registry | `tests/docs/test_digitalmodel_routing_contract.py` | this file |
 
+## Module reports
+
+The [structural analysis module report](reports/modules/structural_analysis/index.html)
+contains synthetic beam and ideal-column calculations, unit conventions and
+method qualification limits; design-code capacities remain `NOT_EVALUATED`.
+
 ## Operational runbooks
 
 - [Codex exec standard input in automation](runbooks/codex-exec-stdin.md):

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Golden + property tests for the cross-stiffened grillage buckling
 # ABOUTME: solver (DNV-RP-C201 Sec. 7.3-7.4): orthotropic mode + governing pick.
 """Tests for ``grillage_buckling``.
@@ -177,14 +180,12 @@ def test_governing_mode_switches_with_layout():
     assert tight.governing_mode != wide.governing_mode
 
 
-def test_transverse_frame_can_govern_under_biaxial_load():
-    """Transverse compression sigma_y loads the transverse frame, which can then
-    become the governing mode."""
+def test_biaxial_grillage_rejects_unimplemented_plate_stress():
+    """A governing result requires the currently unimplemented biaxial plate check."""
     A = GrillageBucklingAnalyzer(STEEL_AH36)
     g = _canonical_grillage(s_T=1800, length_x=14400)
-    r = A.check_grillage(g, sigma_x=120.0, sigma_y=120.0)
-    assert r.governing_mode == "transverse_frame"
-    assert r.transverse_utilization > 0.0
+    with pytest.raises(ValueError, match="sigma_y"):
+        A.check_grillage(g, sigma_x=120.0, sigma_y=120.0)
 
 
 # ---------------------------------------------------------------------------
