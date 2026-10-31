@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Grid-only Part 6 philosophy screen and Part 5 equivalent-LTA estimate (inches)."""
 from dataclasses import replace
 
@@ -49,6 +52,10 @@ def _levels(char, od, wt, minimum, fca, rsfa, rt_min):
         note = "No pits identified: use the metal-loss workflow on measured wall."
         return ({"verdict": "not evaluated", "basis": note},
                 {"rsf": None, "verdict": "not evaluated", "assessment_basis": note})
+    if char.t_min_pit_in <= fca:
+        return ({"verdict": "FAIL_LEVEL_1", "basis": "FCA consumes the deepest ligament"},
+                {"rsf": None, "verdict": "not evaluated",
+                 "assessment_basis": "FCA consumes the deepest ligament; strength is not evaluated."})
     l1 = screen_pitting_level1(char, t_min_in=minimum, fca_in=fca, rt_min=rt_min)
     effective = replace(char, t_avg_pit_in=char.t_avg_pit_in - fca,
                         t_min_pit_in=char.t_min_pit_in - fca,
@@ -100,7 +107,8 @@ def _applicability(grid, char, minimum, fca, rt_min, l2):
 
 def _assess(block):
     grid, od, wt, minimum, fca, rsfa, rt_min, threshold = _read_input(block)
-    char = characterize_pit_field(grid, wt, pit_threshold_fraction=threshold)
+    char = characterize_pit_field(grid, wt, pit_threshold_fraction=threshold,
+                                  row_spacing_in=float(block["row_spacing_in"]))
     spacing = float(block["row_spacing_in"])
     char = replace(char, row_spacing_in=spacing,
                    pitted_region_length_in=char.pitted_region_row_count * spacing)
@@ -112,7 +120,7 @@ def _assess(block):
     margin = l2["rsf"] if l2["rsf"] is not None else float("nan")
     # Level 2 supersedes the Level 1 mean-wall screen on RSF; independent
     # ligament and method applicability gates still override the disposition.
-    passed = np.isfinite(margin) and margin >= rsfa
+    passed = bool(np.isfinite(margin) and margin >= rsfa)
     # Failed/unsupported screens have no established rerating or life basis:
     # a non-finite margin invokes the shared ESCALATE path before its bands.
     decision = decide(margin if passed else float("nan"), rsfa, float("nan"),

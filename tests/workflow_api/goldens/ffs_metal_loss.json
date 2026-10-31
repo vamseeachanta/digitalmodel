@@ -7,20 +7,29 @@
       "component_id": "LINE-001",
       "fca_in": 0.0,
       "folias_factor": 1.5812689937754407,
+      "governing_criterion": "Measurement sufficiency is TAKE_MORE: Local flaw is resolved by only 2 grid cells; the critical (river-bottom) thickness profile is under-sampled.",
       "level_reached": 1,
-      "passes": true,
+      "measurement_actions": [
+        {
+          "action": "densify_readings",
+          "count": 3,
+          "location": "across and immediately around the flaw",
+          "rationale": "under-resolved local thickness profile"
+        }
+      ],
+      "passes": false,
       "remaining_life_yr": 25.945512820512818,
       "rerated_pressure_psi": 1000.0,
       "rsf": 1.0,
       "rsf_a": 0.9,
       "sufficiency_status": "TAKE_MORE",
-      "t_measured_avg_in": 0.4894444444444444,
+      "t_measured_avg_in": 0.48944444444444446,
       "t_measured_min_in": 0.3,
       "t_min_in": 0.1702724358974359,
       "t_nominal_in": 0.5,
-      "verdict": "ACCEPT"
+      "verdict": "ESCALATE"
     }
   },
-  "result_hash": "6e4cd62678aedf127b27f7f561560609b702814c3b8a5a78747adb8e783da1cf",
+  "result_hash": "ec1d912c088f69c50dc1b77d206ee81cb36f776fa653ee36c61de0c57b5c3f8c",
   "standard_revisions": []
 }

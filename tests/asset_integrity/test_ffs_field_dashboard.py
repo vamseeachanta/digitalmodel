@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Light test for the FFS field dashboard data builder — verifies every
 # ABOUTME: scenario carries a valid verdict + sufficiency_status and the demo coverage.
 """Tests for :mod:`examples.demos.asset_integrity.ffs_field_dashboard`."""
@@ -14,7 +17,7 @@ _MODULE_PATH = (
     / "examples" / "demos" / "asset_integrity" / "ffs_field_dashboard.py"
 )
 
-VERDICTS = {"ACCEPT", "MONITOR", "RE_RATE", "REPAIR", "REPLACE"}
+VERDICTS = {"ACCEPT", "MONITOR", "RE_RATE", "REPAIR", "REPLACE", "ESCALATE"}
 SUFFICIENCY = {"SUFFICIENT", "TAKE_MORE", "ESCALATE"}
 
 
