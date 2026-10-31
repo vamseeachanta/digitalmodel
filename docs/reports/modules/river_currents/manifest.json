@@ -1,0 +1,29 @@
+{
+  "artifacts": {
+    "README.md": "30e2520fafb585465beb4093cba5b7521e11a0d0e48393577a1a19f866c90c19",
+    "changes.json": "9caf61a547bfb7facb59ae91d600d151b5f5dcf7c5eed008eab6d0917d2fde23",
+    "index.html": "70e3779843dcdaa48996360376cef7f824502e38eebc6bddc91943081c6015b1",
+    "results.json": "56423ed1ac4d879b5eedfe431736b105b5b7ecdb36c82a3eb381ab846a462741"
+  },
+  "digest_convention": "SHA-256 of exact UTF-8 bytes with LF endings; manifest excludes itself.",
+  "generator": "scripts/reports/build_river_currents_module_report.py",
+  "generator_sha256": "6a48b69849b53df449abd0ebe3af62660518665747bc82d4f0aebece4e99b03c",
+  "reviewed_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "docs/api/cfd/turbulent-flat-plate-verification.html": "bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25",
+    "examples/hydrodynamics/river_currents/basis.json": "7e1025b39db09f4976ec6841c2fd14f1811650f38d09bb9939a74b3d7809d7f1",
+    "src/digitalmodel/hydrodynamics/models.py": "7228067f1b9b89d89d999a7266da4bcb3df9889f33f86f47eeef3bb221ad8eae",
+    "src/digitalmodel/hydrodynamics/ocimf_loading.py": "318e84114cd8db6039fd033bc9ed75dc2eca5fa98c9dc7b972200f6ddf6ede1d",
+    "src/digitalmodel/hydrodynamics/river_currents/__init__.py": "6a0ec16833fe68c102eca4fed5c18fe54ab4d866de6d11ef5dd30d37174dfc2e",
+    "src/digitalmodel/hydrodynamics/river_currents/bank_effects.py": "0bd447a12f33805b70c148c1b4b1805dccd4cddb9048062b1896da82199daddb",
+    "src/digitalmodel/hydrodynamics/river_currents/examples.py": "c04a77f345e43476f47772c5ab61dd020ab77b24c73f400c4cb2bd9d2315c0a1",
+    "src/digitalmodel/hydrodynamics/river_currents/extremes.py": "77f07331c1542ea9551dd8e7a6e4f154c33b15fc4daf3b12ddc6f4d82e11bb40",
+    "src/digitalmodel/hydrodynamics/river_currents/profiles.py": "c3bd0e93ca400c81bff66270b58bbc0424fe9712aab9ad25950a21857b5e9272",
+    "src/digitalmodel/hydrodynamics/river_currents/vessel_forces.py": "6d71c40ee829a95ccb240eda241cac49bdf83a2dca8321a65d83e2427bc76e3a",
+    "tests/hydrodynamics/river_currents/test_bank_effects.py": "b5796de0da4487d41cbf805c2acdc6dd50b4c66fa009eea03493dc39d754e438",
+    "tests/hydrodynamics/river_currents/test_extensions.py": "9a8f81c7e8d7d4d390174b62f5c212729977743836d5ec6a1dc80db0583483af",
+    "tests/hydrodynamics/river_currents/test_profiles.py": "d562b1ebe6f724f079e7ac86c454da0e04e6db89811a092971d92fb3d2959a06",
+    "tests/reporting/test_river_currents_module_report.py": "aa4adafa54be1bb70eeb2f471ec1209da564aaabeaee627c37de5bbc908d7b16"
+  }
+}

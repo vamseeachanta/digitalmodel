@@ -37,6 +37,11 @@ New and materially revised engineering analysis deliverables shall follow the [p
 
 ## Curated Routing Surfaces
 
+The [river currents module analysis](reports/modules/river_currents/index.html)
+documents synthetic profile and channel-correction arithmetic, the public function
+review and unresolved physical limits; [rebuild instructions](reports/modules/river_currents/README.md)
+link the deterministic builder and independent calculation checks.
+
 For offline reference interchange, see the [solver-reference export contract](domains/data_systems/solver-reference-exports.md), including strict readers, state rules, an adapter audit and a worked example.
 
 Curated routing surfaces are authoritative for issue work because they are small,
