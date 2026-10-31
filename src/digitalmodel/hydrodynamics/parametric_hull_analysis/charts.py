@@ -37,6 +37,7 @@ def rao_comparison_grid(
 
     One subplot per DOF, all variations overlaid with legend.
     X-axis: wave period [s], Y-axis: RAO amplitude.
+    Entries without a response result or amplitude array are omitted.
 
     Parameters
     ----------
@@ -102,6 +103,10 @@ def parameter_sensitivity_plot(
     figsize: tuple[float, float] = (8, 5),
 ) -> Figure:
     """Single-parameter sensitivity: swept param vs peak RAO.
+
+    Points and their connecting line retain the input entry order, including
+    unsorted parameter values. Entries without the requested parameter, a
+    response result, an amplitude array, or the requested DOF are omitted.
 
     Parameters
     ----------
