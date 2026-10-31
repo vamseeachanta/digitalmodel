@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenFOAM artifact index portability</title>
+  <style>
+    body { font: 1rem/1.6 system-ui, sans-serif; max-width: 58rem; margin: 2rem auto; padding: 0 1rem; color: #18212b; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #bac5cf; padding: .5rem; text-align: left; }
+    caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+    pre { padding: 1rem; background: #eef2f5; overflow-x: auto; }
+    code { font-size: .9em; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>OpenFOAM artifact index portability</h1>
+  <h2>Summary</h2>
+  <p>The artifact index imports without optional Unix open flags. Portable digest,
+    framing and metadata helpers remain available on Windows. Filesystem snapshots
+    require no-follow, descriptor-relative operations; an unsupported platform
+    receives <code>ArtifactIndexError</code> before tree access. Missing protections
+    never select a path-based fallback or produce an empty valid index.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>Initial</td><td>2026-10-20</td><td>Document the collection repair,
+      capability gate and executable example so unsupported snapshots remain explicit.</td></tr></tbody>
+    <caption>Table 1. Document revisions.</caption>
+  </table>
+
+  <h2>Capability contract</h2>
+  <p><code>descriptor_walk_supported()</code> reports the conjunction of the
+    capabilities below. The checks follow the Python 3.11 Library Reference;
+    operating-system names alone do not establish API support.</p>
+  <table>
+    <thead><tr><th>Requirement</th><th>Purpose and source</th></tr></thead>
+    <tbody>
+      <tr><td><code>O_DIRECTORY</code> and <code>O_NOFOLLOW</code> exist</td>
+        <td>Retain directory-only and no-follow opens.
+          <a href="https://docs.python.org/3.11/library/os.html#os.O_DIRECTORY">os.open constants</a>.</td></tr>
+      <tr><td><code>os.open</code> and <code>os.stat</code> belong to <code>os.supports_dir_fd</code></td>
+        <td>Resolve entries relative to an opened parent.
+          <a href="https://docs.python.org/3.11/library/os.html#os.supports_dir_fd">Directory-descriptor support</a>.</td></tr>
+      <tr><td><code>os.listdir</code> belongs to <code>os.supports_fd</code></td>
+        <td>Enumerate the opened directory.
+          <a href="https://docs.python.org/3.11/library/os.html#os.supports_fd">File-descriptor support</a>.</td></tr>
+      <tr><td><code>os.stat</code> belongs to <code>os.supports_follow_symlinks</code></td>
+        <td>Inspect entries without following symlinks.
+          <a href="https://docs.python.org/3.11/library/os.html#os.supports_follow_symlinks">Symlink-control support</a>.</td></tr>
+    </tbody>
+    <caption>Table 2. Required filesystem capabilities.</caption>
+  </table>
+  <p>The gate covers <code>snapshot_tree</code>, <code>verify_unchanged</code>,
+    <code>select_roots</code> and <code>build_index</code>. On a supported platform,
+    descriptor identity checks, symlink rejection, content hashing and mutation
+    detection retain their existing behavior. Digest formats and artifact identities
+    are unchanged. No engineering equations, coefficients or limits are introduced.</p>
+
+  <h2>Worked example</h2>
+  <p><strong>Input:</strong> an existing empty temporary directory supplied as
+    <code>root: pathlib.Path</code>, and one file named <code>field</code> containing
+    the six ASCII bytes <code>sample</code>. The directory is supplied by the caller
+    so the example has no fixed storage location.</p>
+  <p><strong>Method:</strong> check descriptor capabilities, snapshot the directory,
+    and compare the record directly with the input byte count and its independent
+    <code>hashlib.sha256</code> digest. When a capability is missing, require the
+    documented exception instead of an artifact record.</p>
+  <pre id="worked-example"><code>from hashlib import sha256
+
+from digitalmodel.solvers.openfoam.artifact_index import (
+    ArtifactIndexError,
+    descriptor_walk_supported,
+    snapshot_tree,
+)
+
+payload = b"sample"
+(root / "field").write_bytes(payload)
+if descriptor_walk_supported():
+    records = snapshot_tree(root)
+    assert [(item.path, item.size_bytes, item.sha256) for item in records] == [
+        ("field", len(payload), sha256(payload).hexdigest())
+    ]
+    print("one file; six bytes; digest matches input")
+else:
+    try:
+        snapshot_tree(root)
+    except ArtifactIndexError as error:
+        assert "this platform is unsupported" in str(error)
+        print("snapshot unsupported; no index emitted")
+    else:
+        raise AssertionError("an unsupported snapshot produced a result")
+</code></pre>
+  <p><strong>Answer:</strong> supported execution reports
+    <code>one file; six bytes; digest matches input</code>. Unsupported execution
+    reports <code>snapshot unsupported; no index emitted</code>. Regression tests
+    execute this exact example in both capability conditions.</p>
+
+  <h2>Collection and verification</h2>
+  <p>The regression suite launches fresh Python processes with each optional flag
+    removed before importing the existing artifact tests. It also removes both
+    flags and descriptor capability sets together, then executes that module:
+    its nine portable tests run and its twelve descriptor-dependent tests skip
+    with an explicit capability reason. No module-wide skip is applied.</p>
+  <p>Separate tests remove each required capability and check that every public
+    tree operation refuses a nonexistent input with the unsupported-platform
+    error. On supported systems the existing tree tests continue to exercise real
+    files, symlinks, FIFOs and content changes. An additional Linux snapshot test
+    has no capability-based skip, so an incorrectly false capability result
+    cannot silently remove Linux coverage.</p>
+  <p>The configured solver-smoke gate already includes the containing test
+    directory, so no CI exclusion or gate change is required. New solver-smoke
+    regressions remain in that gate.</p>
+
+  <h2>Limits and next check</h2>
+  <p>The capability-removal tests run on Linux and reproduce the missing-API
+    contract; they do not establish native Windows execution or successful
+    collection of the entire solver-smoke shard. Native Windows collection remains
+    a follow-up under issue 2086. A Windows snapshot implementation would require
+    a separate design that preserves the descriptor walk's protection contract.
+    No licensed solver is required by this example or these regression tests.</p>
+</main>
+</body>
+</html>
