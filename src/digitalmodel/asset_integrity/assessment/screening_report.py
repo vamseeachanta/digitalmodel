@@ -18,7 +18,9 @@ def finite_number(block: dict, key: str, *, default=None, positive=True) -> floa
     return value
 
 
-def generate_screening_html(component_id, title, decision, sections, limitations):
+def generate_screening_html(
+    component_id, title, decision, sections, limitations, *, methodology=None
+):
     """Render calculated metrics without borrowing unrelated Part 4/5 criteria."""
     from .ffs_report import FFSReport
 
@@ -27,6 +29,7 @@ def generate_screening_html(component_id, title, decision, sections, limitations
     parts = [FFSReport._html_head(str(component_id), datetime.now(timezone.utc).date().isoformat()),
              f"<h2>{escape(title)}</h2>",
              f"<p>Screening verdict: <strong>{escape(decision['verdict'])}</strong></p>",
+             f"<p>Operating action: <strong>{escape(decision.get('action', decision['verdict']))}</strong></p>",
              f"<p>{escape(decision['governing_criterion'])}</p>",
              "<p>Published-case validation: not evaluated. Formula checks only.</p>"]
     for heading, metrics in sections.items():
@@ -37,7 +40,8 @@ def generate_screening_html(component_id, title, decision, sections, limitations
     items = ''.join(f"<li>{escape(item)}</li>" for item in limitations)
     parts.append(f"<h3>Method and applicability limits</h3><ul>{items}</ul>"
                  "<p>Engineering screening; competent review and applicable "
-                 "code qualification remain required.</p></body></html>")
+                 "code qualification remain required.</p>")
+    parts.append(FFSReport._html_foot(methodology=methodology))
     return '\n'.join(parts)
 
 

@@ -252,18 +252,33 @@ class Derating:
 
     value: "ureg.Quantity"
     note: str
+    quantity: str = "limit"
+    action: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.quantity, str) or not self.quantity.strip():
+            raise ValueError("derated quantity must be nonempty")
+        if self.quantity == "mawp":
+            _require(self.value, "[pressure]", "MAWP")
 
 
 DerateFn = Callable[[float, float], Optional[Derating]]
 
 
 def scaled_limit(limit: "ureg.Quantity", dimension: str, *, label: str = "limit_r",
-                 reference: str = "limit x M/M_a") -> DerateFn:
+                 reference: str = "limit x M/M_a", quantity: str = "limit",
+                 action: Optional[str] = None) -> DerateFn:
     """Build a de-rating callable: ``limit_r = limit * min(1, M / M_a)``.
 
     The limit must be a unit-tagged Quantity of ``dimension`` (e.g. ``[force]``
     for a mooring tension limit).  The callable returns ``None`` when the
     allowable is non-positive (no meaningful ratio).
+
+    ``quantity`` identifies the operating quantity, independently of units:
+    pressure and axial stress have the same dimensions. Only ``mawp`` opts
+    into the legacy pressure field. ``action`` overrides class wording when
+    a limit is reduced; callers should supply it for a specific stress/load.
+    This scaling rule alone does not qualify a strength assessment method.
     """
     limit = _require(limit, dimension, "limit")
 
@@ -272,7 +287,7 @@ def scaled_limit(limit: "ureg.Quantity", dimension: str, *, label: str = "limit_
             return None
         value = limit * min(1.0, max(0.0, margin) / allowable)
         note = f"{label}={value.magnitude:.0f} {value.units:~} ({reference})."
-        return Derating(value, note)
+        return Derating(value, note, quantity, action)
 
     return _derate
 
@@ -282,11 +297,14 @@ def reduced_mawp(design_pressure: "ureg.Quantity") -> DerateFn:
     fn = scaled_limit(
         design_pressure, "[pressure]", label="MAWP_r",
         reference="MAWP x RSF/RSFa, API 579-1 §2.4.2.2",
+        quantity="mawp", action="RE_RATE",
     )
 
     def _derate(margin: float, allowable: float) -> Optional[Derating]:
         d = fn(margin, allowable)
-        return None if d is None else Derating(d.value, "Re-rate to " + d.note)
+        return None if d is None else Derating(
+            d.value, "Re-rate to " + d.note, d.quantity, d.action
+        )
 
     return _derate
 
@@ -305,21 +323,26 @@ class Decision:
     governing_criterion: str
     derated: Optional["ureg.Quantity"] = None
     applicability: Applicability = field(default_factory=Applicability)
+    margin_label: str = "RSF"
+    derated_quantity: Optional[str] = None
 
     def to_dict(self) -> dict:
-        """Legacy-shaped, JSON-friendly payload (``verdict`` is the shared word).
+        """Quantity-aware payload (``verdict`` is the shared word).
 
         ``applicability`` echoes the ``{ok, flags, notes}`` validity record
         (all-clear when none was supplied, #1094).
+        RSF aliases are emitted only for RSF margins. MAWP is emitted only
+        for an explicitly identified MAWP rating (or a legacy null rating).
         """
         rerated_psi = None
         derated_mag = derated_units = None
         if self.derated is not None:
             derated_mag = float(self.derated.magnitude)
             derated_units = f"{self.derated.units:~}"
-            if self.derated.check("[pressure]"):
+            if self.derated_quantity == "mawp":
+                _require(self.derated, "[pressure]", "MAWP")
                 rerated_psi = float(self.derated.to("psi").magnitude)
-        return {
+        result = {
             "verdict": self.verdict.value,
             "action": self.action,
             "asset_class": self.asset_class,
@@ -327,13 +350,19 @@ class Decision:
             "governing_criterion": self.governing_criterion,
             "margin": self.margin,
             "margin_allowable": self.margin_allowable,
-            "rsf": self.margin,
-            "rsf_a": self.margin_allowable,
-            "rerated_mawp_psi": rerated_psi,
+            "margin_label": self.margin_label,
             "derated": derated_mag,
             "derated_units": derated_units,
+            "derated_quantity": self.derated_quantity,
             "applicability": self.applicability.to_dict(),
         }
+        if self.margin_label == "RSF":
+            result.update(rsf=self.margin, rsf_a=self.margin_allowable)
+        if self.derated_quantity == "mawp" or (
+            self.derated is None and self.margin_label == "RSF"
+        ):
+            result["rerated_mawp_psi"] = rerated_psi
+        return result
 
 
 def decide(
@@ -346,6 +375,7 @@ def decide(
     bands: Optional[DecisionBands] = None,
     screening_pass: Optional[bool] = None,
     applicability: Optional[Applicability] = None,
+    margin_label: Optional[str] = None,
 ) -> Decision:
     """Shared FFS decision tree for any asset class.
 
@@ -360,6 +390,10 @@ def decide(
             built with :func:`reduced_mawp` / :func:`scaled_limit`.  Evaluated
             on every verdict (reported alongside), quoted on DERATE.
         bands: Override the class's :class:`DecisionBands`.
+        margin_label: Explicit quantity wording, e.g. ``capacity/demand``.
+            Overrides require explicit ``bands`` so RSF severity bands are
+            never silently applied to a different margin. Omission retains
+            the existing class policy and legacy pressure contract.
         screening_pass: Whether the primary screening passed.  ``None``
             derives it as ``margin >= allowable and remaining_life > 0``; the
             legacy wrapper passes the Level 1/Level 2 outcome explicitly.
@@ -369,20 +403,36 @@ def decide(
             ``None`` means "no flags" so existing callers are unaffected.
     """
     policy = _policy(asset_class)
+    if margin_label is not None:
+        if not isinstance(margin_label, str) or not margin_label.strip():
+            raise ValueError("margin_label must be nonempty")
+        if bands is None:
+            raise ValueError("Explicit margin_label requires explicit bands")
     app = applicability if applicability is not None else Applicability()
     b = bands or policy.bands
     m = _dimensionless(margin, "margin")
     m_a = _dimensionless(margin_allowable, "margin_allowable")
     life = _years(remaining_life_yr)
-    lbl = policy.margin_label
+    lbl = policy.margin_label if margin_label is None else margin_label.strip()
 
     derating = derate(m, m_a) if derate is not None else None
-    note = derating.note if derating is not None else policy.no_derate_note
+    note = derating.note if derating is not None else (
+        policy.no_derate_note if margin_label is None else
+        "A reduced operating limit has not been evaluated; engineering review required."
+    )
 
     def _make(verdict: Verdict, criterion: str) -> Decision:
+        action = policy.actions[verdict]
+        if verdict is Verdict.DERATE:
+            if margin_label is not None and action == "RE_RATE":
+                action = "REDUCE LIMIT"
+            if derating is not None:
+                if derating.quantity != "mawp" and action == "RE_RATE":
+                    action = "REDUCE LIMIT"
+                action = derating.action or action
         return Decision(
             verdict=verdict,
-            action=policy.actions[verdict],
+            action=action,
             asset_class=policy.name,
             margin=m,
             margin_allowable=m_a,
@@ -390,6 +440,8 @@ def decide(
             governing_criterion=criterion,
             derated=derating.value if derating is not None else None,
             applicability=app,
+            margin_label=lbl,
+            derated_quantity=derating.quantity if derating is not None else None,
         )
 
     # Outside a method's calibrated range: no numeric verdict (#1094).
