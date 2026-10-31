@@ -400,3 +400,11 @@ def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     assert roots[0] != root
     assert not roots[0].exists()
     assert sorted(path.name for path in root.iterdir()) == ids
+
+
+def test_fatigue_atlases_track_the_deterministic_power_module():
+    """PR 3803 review round 3: allowable cycles and SD are computed through
+    fatigue._deterministic, so a change to it must mark both atlases stale."""
+    rel = "src/digitalmodel/fatigue/_deterministic.py"
+    for basename in ("mooring_fatigue", "riser_fatigue"):
+        assert rel in refresh.SOURCE_FILES[basename], basename

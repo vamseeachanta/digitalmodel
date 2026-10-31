@@ -78,12 +78,19 @@ _PYLIFE_STEPS = ("cycles", "basquin_cycles", "_make_k", "broadcast",
 
 
 def _scalar_parameter(value):
-    """Return a scalar curve parameter as a float, or None if it is not scalar."""
-    if np.ndim(value) != 0:
+    """Return a real-number curve parameter as a float, or None otherwise.
+
+    Only Python and NumPy integers and floats qualify. Booleans, strings,
+    arrays and other objects return None, so pyLife evaluates the curve and
+    keeps its own behaviour for them, including its ``TypeError``.
+    """
+    if isinstance(value, (bool, np.bool_)):
+        return None
+    if not isinstance(value, (int, float, np.integer, np.floating)):
         return None
     try:
         return float(value)
-    except (TypeError, ValueError):
+    except OverflowError:
         return None
 
 
@@ -122,18 +129,25 @@ def _allowable_cycles(sn_curve, stress_ranges):
     ``N = ND * (S / SD) ** -k`` with ``k = k_1`` at or above SD and ``k_2``
     below it (infinite ``k`` gives infinite N), are reproduced one bin at a
     time, with the power from ``deterministic_power``. ``np.power`` and libm
-    ``pow`` give CPU-dependent last bits. Any other curve object is evaluated
-    through its own ``cycles`` method, unchanged.
+    ``pow`` give CPU-dependent last bits. Any other curve object, and a
+    histogram in which some ``S / SD`` overflows, is evaluated through the
+    curve's own ``cycles`` method, unchanged.
     """
     parameters = _plain_basquin_parameters(sn_curve)
     if parameters is None:
         return sn_curve.cycles(stress_ranges)
     sd, nd, k_1, k_2 = parameters
-    allowable = np.empty(len(stress_ranges), dtype=float)
-    for index, stress in enumerate(stress_ranges.tolist()):
+    stresses = stress_ranges.tolist()
+    ratios = [stress / sd for stress in stresses]
+    if not all(math.isfinite(ratio) for ratio in ratios):
+        # pyLife defines the power of an infinite ratio (zero allowable
+        # cycles); the deterministic power takes finite bases only.
+        return sn_curve.cycles(stress_ranges)
+    allowable = np.empty(len(stresses), dtype=float)
+    for index, (stress, ratio) in enumerate(zip(stresses, ratios)):
         k = k_2 if stress < sd else k_1
         if math.isfinite(k):
-            allowable[index] = nd * deterministic_power(stress / sd, -k)
+            allowable[index] = nd * deterministic_power(ratio, -k)
         else:
             allowable[index] = math.inf
     return allowable

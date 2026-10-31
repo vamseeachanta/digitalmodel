@@ -199,3 +199,71 @@ def test_scattered_curve_off_median_uses_pylife():
     stress = np.array([200.0])
     result = miner_damage(_frame(stress, [1.0]), curve)
     assert result["allowable_cycles"].iloc[0] == curve.cycles(stress)[0]
+
+
+def _spy_on_pylife_cycles(monkeypatch):
+    # Class-level spy: the curve keeps no instance override, so the path
+    # selection is the one a plain curve gets.
+    calls = []
+    original = WoehlerCurve.cycles
+
+    def spy(self, *args, **kwargs):
+        calls.append(self)
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(WoehlerCurve, "cycles", spy)
+    return calls
+
+
+def _outcome(function):
+    try:
+        return "value", [float(v) for v in np.asarray(function(), dtype=float).ravel()]
+    except Exception as exc:  # noqa: BLE001 - the outcome is compared, not handled
+        return "error", type(exc)
+
+
+@pytest.mark.parametrize("name, value", [
+    ("SD", "50"), ("ND", "1e7"), ("k_1", "3"),
+    ("k_1", True), ("k_2", np.bool_(True)), ("ND", 10 ** 400),
+], ids=["str-SD", "str-ND", "str-k_1", "bool-k_1", "numpy-bool-k_2", "int-overflow-ND"])
+def test_non_numeric_curve_parameters_fall_back_to_pylife(monkeypatch, name, value):
+    # Round 3: float() accepted strings and booleans that pyLife itself treats
+    # differently; such curves must be evaluated by pyLife.
+    parameters = {"SD": 50.0, "ND": 1e7, "k_1": 3.0, "k_2": 5.0}
+    parameters[name] = value
+    curve = WoehlerCurve(pd.Series(parameters, dtype=object))
+    stress = np.array([100.0, 20.0])
+    calls = _spy_on_pylife_cycles(monkeypatch)
+    ours = _outcome(lambda: damage_module._allowable_cycles(curve, stress))
+    assert calls == [curve]
+    monkeypatch.undo()
+    assert ours == _outcome(lambda: curve.cycles(stress))
+
+
+def test_numpy_and_python_numbers_keep_the_deterministic_path(monkeypatch):
+    parameters = {"SD": np.float32(50.0), "ND": 10_000_000, "k_1": np.int64(3), "k_2": 5.0}
+    curve = WoehlerCurve(pd.Series(parameters, dtype=object))
+    calls = _spy_on_pylife_cycles(monkeypatch)
+    result = damage_module._allowable_cycles(curve, np.array([100.0]))
+    assert calls == []
+    assert result[0] == 1e7 * float(Fraction(2) ** -3)
+
+
+def test_stress_ratio_overflow_falls_back_to_pylife(monkeypatch):
+    # S / SD overflows to inf. pyLife's power of inf is defined: with k = 0 it
+    # gives ND, a finite allowable; the deterministic power rejected it.
+    curve = WoehlerCurve(pd.Series({"SD": 1e-300, "ND": 1e7, "k_1": 0.0, "k_2": 5.0}))
+    assert math.isinf(1e10 / 1e-300)
+    calls = _spy_on_pylife_cycles(monkeypatch)
+    with np.errstate(over="ignore"):
+        result = miner_damage(_frame([1e10, 0.0], [2.0, 1.0]), curve)
+    assert calls == [curve]
+    assert result["allowable_cycles"].iloc[0] == 1e7
+    assert result.attrs["total_damage"] == 2.0 / 1e7
+
+
+def test_stress_ratio_overflow_keeps_pylife_error():
+    # With k > 0 pyLife gives zero allowable cycles, which miner_damage rejects.
+    curve = WoehlerCurve(pd.Series({"SD": 1e-300, "ND": 1e7, "k_1": 3.0, "k_2": 5.0}))
+    with np.errstate(over="ignore"), pytest.raises(ValueError, match="allowable cycles"):
+        miner_damage(_frame([1e10], [1.0]), curve)
