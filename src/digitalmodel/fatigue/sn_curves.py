@@ -20,12 +20,11 @@ segments at the knee stress SD = 10^((log_a1 - log10(ND)) / k_1); the second
 segment then matches the tabulated log a2 within table rounding.
 """
 
-import math
-
 import pandas as pd
 from pylife.materiallaws.woehlercurve import WoehlerCurve
 
 from . import c203_sn_tables as _c203
+from ._deterministic import deterministic_log10, deterministic_power
 
 # ── DNV-RP-C203 Table 2-1: In-Air S-N Curves ──────────────────────
 # Each entry: k_1, log_a1 (for N <= ND), k_2, log_a2 (for N > ND), ND
@@ -54,8 +53,11 @@ _FREE_CORROSION_LOG_A = {name: fc.log_a for name, fc in _c203.FREE_CORROSION.ite
 
 
 def _compute_sd(log_a1: float, k_1: float, nd: float) -> float:
-    """Compute endurance stress SD at the knee point ND."""
-    return 10 ** ((log_a1 - math.log10(nd)) / k_1)
+    """Compute endurance stress SD at the knee point ND.
+
+    Evaluated without libm so SD has the same bits on every CPU.
+    """
+    return deterministic_power(10.0, (log_a1 - deterministic_log10(nd)) / k_1)
 
 
 def _build_curve_dict() -> dict:

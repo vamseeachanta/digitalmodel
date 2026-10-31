@@ -10,6 +10,7 @@ that embed unrounded damage differ between runners.
 
 import math
 import random
+from decimal import Context, Decimal
 from fractions import Fraction
 
 import numpy as np
@@ -21,17 +22,19 @@ from digitalmodel.fatigue import damage as damage_module
 from digitalmodel.fatigue.damage import miner_damage
 from digitalmodel.fatigue.sn_curves import get_sn_curve
 
+PINNED_HANGOFF_ALLOWABLE = "0x1.34a10b656d086p+34"  # 20711746965.703636
+
 
 def _exact_allowable(stress, curve):
-    """N = ND * (S / SD) ** -k for an integer k, from the float ratio pyLife
-    forms, in exact rational arithmetic with one final rounding."""
+    """pyLife's order, ND * ((S / SD) ** -k), for an integer k, with the power
+    in exact rational arithmetic rounded once."""
     sd, nd = float(curve.SD), float(curve.ND)
     k = float(curve.k_1) if stress >= sd else float(curve.k_2)
     if not math.isfinite(k):
         return math.inf
     assert k.is_integer()
     try:
-        return float(Fraction(nd) * Fraction(stress / sd) ** -int(k))
+        return nd * float(Fraction(stress / sd) ** -int(k))
     except (OverflowError, ZeroDivisionError):
         return math.inf
 
@@ -59,16 +62,21 @@ def test_total_damage_is_identical_for_every_bin_order():
 def test_integer_slope_allowable_uses_neither_numpy_nor_libm_power(monkeypatch, environment):
     # Perturb both power kernels by one ulp. Integer-slope curves (every DNV
     # curve in the library) must be evaluated exactly and stay unaffected.
-    curve = get_sn_curve("F1", environment)
+    reference = get_sn_curve("F1", environment)
     stress = [8.0, 9.0, 12.0, 30.0, 58.0, 59.0, 120.0]
     cycles = [4496958.0, 1.0e5, 2.0e4, 3.0e3, 1.0e3, 1.0e3, 10.0]
-    expected = [_exact_allowable(s, curve) for s in stress]
+    expected = [_exact_allowable(s, reference) for s in stress]
 
     real_np_power, real_math_pow = np.power, math.pow
+    real_log10 = math.log10
     monkeypatch.setattr(np, "power", lambda *a, **k: np.nextafter(real_np_power(*a, **k), np.inf))
     monkeypatch.setattr(math, "pow", lambda x, y: math.nextafter(real_math_pow(x, y), math.inf))
+    monkeypatch.setattr(math, "log10", lambda x: math.nextafter(real_log10(x), math.inf))
+    curve = get_sn_curve("F1", environment)  # SD is built under the perturbed kernels
     result = miner_damage(_frame(stress, cycles), curve)
     monkeypatch.undo()
+
+    assert float(curve.SD) == float(reference.SD)
 
     assert [v.hex() for v in result["allowable_cycles"]] == [v.hex() for v in expected]
     damage = [c / n for c, n in zip(cycles, expected)]
@@ -77,11 +85,26 @@ def test_integer_slope_allowable_uses_neither_numpy_nor_libm_power(monkeypatch, 
 
 
 def test_hangoff_viv_bin_pins_the_runner_independent_value():
-    # The bin whose last digits varied between CI runners.
+    # The bin whose last digits varied between CI runners, pinned to literal
+    # bits so a host that computes SD or the power differently fails here.
     curve = get_sn_curve("F1", "seawater_cp")
+    assert float(curve.SD).hex() == "0x1.d31d4ddf07ac2p+5"  # 58.389308683797495
     result = miner_damage(_frame([8.0], [4496958.0]), curve)
-    assert result["allowable_cycles"].iloc[0] == _exact_allowable(8.0, curve)
-    assert result.attrs["total_damage"] == 4496958.0 / _exact_allowable(8.0, curve)
+    allowable = result["allowable_cycles"].iloc[0]
+    assert allowable == _exact_allowable(8.0, curve)
+    assert allowable.hex() == PINNED_HANGOFF_ALLOWABLE
+    assert result.attrs["total_damage"] == 4496958.0 / allowable
+
+
+def test_thickness_correction_does_not_use_libm_power(monkeypatch):
+    real_math_pow = math.pow
+    monkeypatch.setattr(math, "pow", lambda x, y: math.nextafter(real_math_pow(x, y), math.inf))
+    corrected = damage_module.thickness_correction(np.array([10.0]), 30.0, 25.0, 0.25)
+    monkeypatch.undo()
+    # Independent reference: (30 / 25) ** 0.25 at 60 digits, rounded once.
+    factor = float(Context(prec=60).power(Decimal(30.0 / 25.0), Decimal(0.25)))
+    assert factor.hex() == "0x1.0bf047ce88932p+0"
+    assert corrected[0] == 10.0 * factor
 
 
 def test_exact_evaluation_stays_within_rounding_of_pylife():
@@ -101,6 +124,25 @@ def test_exact_path_keeps_zero_damage_bins(stress, cycles, allowable):
     result = miner_damage(_frame([stress], [cycles]), curve)
     assert result["allowable_cycles"].iloc[0] == allowable
     assert result.attrs["total_damage"] == 0.0
+
+
+@pytest.mark.parametrize("parameters, stress", [
+    ({"SD": 50.0, "ND": math.nan, "k_1": 3.0, "k_2": 5.0}, 0.0),
+    ({"SD": 0.0, "ND": 1e7, "k_1": 3.0, "k_2": 5.0}, 10.0),
+    ({"SD": 50.0, "ND": 1e7, "k_1": math.nan, "k_2": 5.0}, 100.0),
+])
+def test_invalid_curve_parameters_keep_pylife_validation(parameters, stress):
+    curve = WoehlerCurve(pd.Series(parameters))
+    with pytest.raises(ValueError):
+        miner_damage(_frame([stress], [1.0]), curve)
+
+
+def test_power_underflow_matches_pylife_order():
+    # pyLife's power underflows to zero before ND multiplies it; the bin is
+    # then rejected for zero allowable cycles.
+    curve = WoehlerCurve(pd.Series({"SD": 1.0, "ND": 1e7, "k_1": 5.0, "k_2": 5.0}))
+    with pytest.raises(ValueError, match="allowable cycles"):
+        miner_damage(_frame([1e65], [1e-310]), curve)
 
 
 def test_loaded_bin_with_overflowing_allowable_is_rejected():

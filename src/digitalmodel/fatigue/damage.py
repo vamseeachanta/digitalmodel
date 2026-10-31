@@ -6,12 +6,13 @@ and DNV thickness correction for stress ranges.
 """
 
 import math
-from fractions import Fraction
 from numbers import Real
 
 import numpy as np
 import pandas as pd
 from pylife.materiallaws.woehlercurve import WoehlerCurve
+
+from ._deterministic import deterministic_power
 
 
 def miner_damage(
@@ -74,8 +75,6 @@ def miner_damage(
 # the curve is not plain pyLife Basquin and is evaluated through pyLife itself.
 _PYLIFE_STEPS = ("cycles", "basquin_cycles", "_make_k", "broadcast",
                  "transform_to_failure_probability")
-# Integer slopes up to this magnitude are evaluated exactly.
-_MAX_EXACT_SLOPE = 64
 
 
 def _scalar_parameter(value):
@@ -92,9 +91,11 @@ def _plain_basquin_parameters(sn_curve):
     """(SD, ND, k_1, k_2) when pyLife's default ``cycles`` is plain Basquin.
 
     Requires an exact ``WoehlerCurve`` with no instance override of a pyLife
-    step, scalar parameters, and a curve on which every supported pyLife
-    version's default failure-probability handling is the identity: at the
-    median (0.5) or without scatter (TN = TS = 1). Returns None otherwise.
+    step, finite positive SD and ND, a finite k_1, a k_2 that is finite or
+    +inf, and a curve on which every supported pyLife version's default
+    failure-probability handling is the identity: at the median (0.5) or
+    without scatter (TN = TS = 1). Returns None otherwise, and pyLife's own
+    ``cycles`` then evaluates the curve, including its error behaviour.
     """
     if type(sn_curve) is not WoehlerCurve:
         return None
@@ -105,36 +106,24 @@ def _plain_basquin_parameters(sn_curve):
     if None in params:
         return None
     sd, nd, k_1, k_2, tn, ts, probability = params
+    if not all(math.isfinite(value) and value > 0 for value in (sd, nd)):
+        return None
+    if not math.isfinite(k_1) or not (math.isfinite(k_2) or k_2 == math.inf):
+        return None
     if probability != 0.5 and not (tn == 1.0 and ts == 1.0):
         return None
     return sd, nd, k_1, k_2
 
 
-def _basquin(nd, ratio, k):
-    """ND * ratio ** -k with a CPU-independent result.
-
-    An integer slope is evaluated in exact rational arithmetic and rounded once,
-    so neither NumPy's vector kernels nor the per-CPU libm ``pow`` is involved.
-    A non-integer slope uses ``math.pow``. Zero ratio or overflow gives +inf,
-    as pyLife's ``np.power`` does.
-    """
-    try:
-        if k.is_integer() and abs(k) <= _MAX_EXACT_SLOPE:
-            return float(Fraction(nd) * Fraction(ratio) ** -int(k))
-        return nd * math.pow(ratio, -k)
-    except (OverflowError, ZeroDivisionError, ValueError):
-        return math.inf
-
-
 def _allowable_cycles(sn_curve, stress_ranges):
     """Allowable cycles per bin, evaluated CPU-deterministically.
 
-    For a plain pyLife Basquin curve, pyLife's law ``N = ND * (S / SD) ** -k``
-    (``k = k_1`` at or above SD, ``k_2`` below it; infinite ``k`` gives infinite
-    N) is evaluated one bin at a time with ``_basquin``. ``np.power``
-    dispatches to processor-specific vector kernels whose last bits differ
-    between CPUs. Any other curve object is evaluated through its own
-    ``cycles`` method, unchanged.
+    For a plain pyLife Basquin curve, pyLife's law and operation order,
+    ``N = ND * (S / SD) ** -k`` with ``k = k_1`` at or above SD and ``k_2``
+    below it (infinite ``k`` gives infinite N), are reproduced one bin at a
+    time, with the power from ``deterministic_power``. ``np.power`` and libm
+    ``pow`` give CPU-dependent last bits. Any other curve object is evaluated
+    through its own ``cycles`` method, unchanged.
     """
     parameters = _plain_basquin_parameters(sn_curve)
     if parameters is None:
@@ -143,7 +132,10 @@ def _allowable_cycles(sn_curve, stress_ranges):
     allowable = np.empty(len(stress_ranges), dtype=float)
     for index, stress in enumerate(stress_ranges.tolist()):
         k = k_2 if stress < sd else k_1
-        allowable[index] = _basquin(nd, stress / sd, k) if math.isfinite(k) else math.inf
+        if math.isfinite(k):
+            allowable[index] = nd * deterministic_power(stress / sd, -k)
+        else:
+            allowable[index] = math.inf
     return allowable
 
 
@@ -257,7 +249,7 @@ def thickness_correction(
         raise ValueError("stress_range must be finite and non-negative")
     if t_actual <= t_ref:
         return stress_range.copy()
-    factor = (t_actual / t_ref) ** k
+    factor = deterministic_power(t_actual / t_ref, k)
     corrected = stress_range * factor
     if not np.all(np.isfinite(corrected)):
         raise ValueError("thickness-corrected stress must be finite")
