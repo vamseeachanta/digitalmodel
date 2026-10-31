@@ -1,5 +1,9 @@
 # OrcaFlex Model Library
 
+Browse the [model catalogue](../model_catalogue.html) for source-local metadata
+and YAML coordinate schematics. The [regeneration guide and worked example](../model_catalogue_guide.html)
+explain inputs, omission coverage and the limits of the sketches.
+
 Each subdirectory is one model: a `spec.yml` (the high-level, human-authored
 source of truth consumed by the modular generator) and, for models extracted
 from existing OrcaFlex files, `modular/` and `monolithic/` reference outputs.

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OrcaFlex model catalogue: regeneration and worked example</title>
+<style>
+body{font:16px system-ui;line-height:1.6;max-width:70ch;margin:2em auto;padding:0 1em;color:#172b3a}
+pre{padding:1em;background:#f5f9fb;overflow:auto}table{border-collapse:collapse;width:100%}
+th,td{padding:.5em;border:1px solid #ccd;text-align:left}caption{caption-side:bottom;text-align:left}
+</style>
+<h1>OrcaFlex model catalogue</h1>
+<p>The <a href="model_catalogue.html">generated catalogue</a> presents source-local
+metadata and coordinate schematics. It reads YAML without initializing a solver.
+Missing values remain “not stated”; the page establishes neither loadability nor
+engineering acceptance.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>A</td><td>2026-10-20</td><td>Document regeneration, omission coverage and a
+synthetic coordinate example so the catalogue can be reproduced and interpreted.</td></tr>
+<caption>Table 1: Guide revision history.</caption>
+</table>
+<h2>Regeneration</h2>
+<p>From the repository root (PyYAML is the only generator dependency):</p>
+<pre>uv run --no-project --with pyyaml python src/digitalmodel/solvers/orcaflex/model_catalogue.py \
+  --output docs/domains/orcaflex/library/model_catalogue.html</pre>
+<p>The inputs are <code>library/model_library/</code>, <code>templates/</code> and
+<code>library/templates/</code> beneath <code>docs/domains/orcaflex/</code>, plus the
+claim registry, pending inventory, tests and workflow references. Traversal and
+card ordering are sorted; no generation timestamp or absolute path is emitted.
+The dedicated freshness test compares two builds with the committed page.</p>
+<h2>Coverage and limitations</h2>
+<p>One card represents one YAML source variant. Includes and base files are counted
+without being opened to infer missing metadata. Unreadable YAML receives a failure
+card without echoing its contents. Model folders without YAML, including empty
+templates beneath populated categories, appear under “Files without cards”.
+Absent source roots are listed as “catalogue root not present”; they do not silently
+become empty inventories. The claim registry and inventory remain required inputs.</p>
+<p>Project-derived groups are excluded before card generation. Vendor-derived
+cards carry selected metadata and schematics only. Unknown provenance remains
+“not stated” and carries a redistribution caution. References are text matches,
+not evidence that a test has passed or a workflow has run.</p>
+<p>Free and Fixed connection coordinates are global. Anchored coordinates are
+relative to the seabed; parent-object connections use local axes or arc length.
+Only explicit global coordinates are drawn. Other objects remain unresolved;
+missing coordinates and water-surface elevations are not replaced with defaults.</p>
+<h2>Worked example: inputs, method and answer</h2>
+<p>All values below are selected synthetic inputs in a common file length unit.
+They are not measured data, design limits or coefficients from a publication.</p>
+<pre>Environment:
+  WaterDepth: 20
+  WaterSurfaceZ: 0
+Lines:
+  - EndAConnection: Fixed
+    EndAPosition: [2, 3, 4]
+    EndBConnection: Free
+    EndBPosition: [5, 7, 11]
+</pre>
+<p>Method: count the entry in <code>Lines</code>; project each explicit global point
+onto X/Y for plan and X/Z for elevation. SVG coordinates retain the input values;
+a group transformation reverses the display's vertical axis. The seabed reference
+is the stated surface elevation minus the stated water depth. These are coordinate
+projections, not a catenary or an equilibrium calculation.</p>
+<table>
+<tr><th>Field</th><th>Independent answer</th></tr>
+<tr><td>Objects</td><td>Lines: 1, by counting the single list entry</td></tr>
+<tr><td>Water depth</td><td>20.000, copied from the input</td></tr>
+<tr><td>Plan chord</td><td>(2, 3) to (5, 7), retaining X and Y</td></tr>
+<tr><td>Elevation chord</td><td>(2, 4) to (5, 11), retaining X and Z</td></tr>
+<tr><td>Seabed reference</td><td>0 − 20 = −20.000</td></tr>
+<tr><td>System type</td><td>not stated</td></tr>
+<tr><td>Provenance</td><td>not stated; not inferred from the coordinates</td></tr>
+<tr><td>Claim</td><td>no claim, unless separately recorded in the registry</td></tr>
+<caption>Table 2: Independent hand calculation for the synthetic input.</caption>
+</table>
+<p>Replacing either line-end connection with <code>Anchored</code> leaves that line
+unresolved because its Z coordinate is then a height above the local seabed.
+The catalogue does not infer the required bathymetry or call a solver.</p>
+<h2>Sources and checks</h2>
+<p>The connection-frame interpretation follows Orcina's public
+<a href="https://www.orcina.com/webhelp/OrcaFlex/Content/html/Objectconnections.htm">Object
+connections</a>, sections on connection coordinates and axes, and
+<a href="https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linedata,Endconnections.htm">Line
+data: End connections</a>, Position and Height above seabed (online help, consulted
+2026-10-20; no numbered edition stated). The selected numbers require no external
+engineering reference.</p>
+<p><code>tests/solvers/orcaflex/test_model_catalogue_coverage.py</code> exercises a
+synthetic chord, a specification without geometry and an include-only model in a
+partial tree, as well as nested empty templates and structural-directory handling.
+The existing catalogue tests cover source-local environment fields, provenance,
+claim boundaries, coordinate projection and committed-page freshness.</p>
+</html>

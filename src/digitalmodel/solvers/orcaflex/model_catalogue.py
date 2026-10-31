@@ -151,24 +151,67 @@ def source_groups(domain: Path) -> list[tuple[Path, list[Path]]]:
     groups: dict[Path, list[Path]] = {}
     for folder in ROOTS:
         root = domain / folder
-        for path in sorted(root.rglob("*")):
+        if root.is_symlink() or not root.is_dir():
+            groups[root] = []
+            continue
+        before = len(groups)
+        paths = [
+            path
+            for path in sorted(root.rglob("*"))
+            if not any(
+                part.startswith((".", "__")) for part in path.relative_to(root).parts
+            )
+        ]
+        children = [path for path in paths if path.parent == root and path.is_dir()]
+        categories = {
+            child
+            for child in children
+            if folder == "templates"
+            and child.name != "include_structure"
+            and not child.is_symlink()
+            and not any(
+                path.parent == child and path.suffix.lower() in (".yml", ".yaml")
+                and path.is_file()
+                for path in paths
+            )
+        }
+        for path in paths:
+            if path.is_symlink() and path.is_dir():
+                groups[path] = []
+                continue
             if path.is_file() and path.suffix.lower() in (".yml", ".yaml"):
                 relative = path.relative_to(root)
                 group = root / relative.parts[0] if len(relative.parts) > 1 else root
-                deep = folder == "templates" and len(relative.parts) > 2
-                if deep and relative.parts[0] != "include_structure":
+                if group in categories and len(relative.parts) > 2:
                     group /= relative.parts[1]
                 groups.setdefault(group, []).append(path)
-        for child in sorted(root.iterdir()):
+        children += [
+            path for path in paths
+            if path.parent in categories
+            and path.is_dir() and path.name not in STRUCTURAL_FOLDERS
+        ]
+        for child in sorted(children, reverse=True):
             populated = any(child == g or child in g.parents for g in groups)
             if child.is_dir() and not populated:
                 groups.setdefault(child, [])
+        if len(groups) == before:
+            groups[root] = []
     return sorted(groups.items())
 
 
 def catalogue_entries(root: Path, groups: list, omissions: list) -> Iterable:
     """Check group provenance before emitting any member's metadata."""
     for group, paths in groups:
+        if group.is_symlink():
+            omissions.append(
+                group.relative_to(root).as_posix() + ": symlinked folder not traversed"
+            )
+            continue
+        if not group.is_dir():
+            omissions.append(
+                group.relative_to(root).as_posix() + ": catalogue root not present"
+            )
+            continue
         readmes = [group / "README.md", group.parent / "README.md"]
         readme = "\n".join(read_text(p) for p in readmes if p.is_file())
         headers = [header(p) for p in paths]
@@ -195,13 +238,10 @@ def find_usage(root: Path, groups: list) -> dict[str, list[str]]:
             for p in paths
         }
     )
+    needles = {owner: "/".join(owner.split("/")[-2:]) for owner in owners}
     patterns = {
-        owner: re.compile(
-            r"(?<![\w.-])"
-            + re.escape("/".join(owner.split("/")[-2:]))
-            + r"(?![\w.-])"
-        )
-        for owner in owners
+        owner: re.compile(r"(?<![\w.-])" + re.escape(needle) + r"(?![\w.-])")
+        for owner, needle in needles.items()
     }
     usage: dict[str, list[str]] = {owner: [] for owner in owners}
     candidates = [root / "docs/registry/workflows.yaml"]
@@ -209,9 +249,10 @@ def find_usage(root: Path, groups: list) -> dict[str, list[str]]:
         candidates += sorted((root / folder).rglob("*"))
     for path in candidates:
         if path.is_file() and path.suffix in (".py", ".yaml", ".yml", ".md", ".json"):
-            text = read_text(path).replace("\\", "/")
+            text = re.sub(r"[\\/]+", "/", read_text(path))
+            text = re.sub(r"/(?:\./)+", "/", text)
             for owner, pattern in patterns.items():
-                if pattern.search(text):
+                if needles[owner] in text and pattern.search(text):
                     usage[owner].append(path.relative_to(root).as_posix())
     return usage
 
