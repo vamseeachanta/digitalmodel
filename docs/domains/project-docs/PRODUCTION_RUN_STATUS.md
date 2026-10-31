@@ -9,7 +9,7 @@
 ## Run Configuration
 
 ### Input Data
-- **Source Folder:** `D:/1522/ctr9/fatigue_wsp_method/07c_fatigue/output/rainflow_stress`
+- **Source Folder:** `<project_data>/ctr9/fatigue_wsp_method/07c_fatigue/output/rainflow_stress`
 - **Total Files:** 18,144 stress rainflow CSV files
 - **File Pattern:** `{config}_FC{fc_number:03d}_Strut{strut_number}_{location_id}_stress_rainflow.csv`
 
