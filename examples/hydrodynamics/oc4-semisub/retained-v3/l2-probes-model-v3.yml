@@ -1,0 +1,164 @@
+UnitsSystem: SI
+SolveType: Potential formulation only
+HasResonanceDampingLid: 'No'
+OutputPanelPressures: 'No'
+OutputBodyWireFrames: 'Yes'
+OutputIntermediateResults: 'No'
+ComputationStrategy: Optimised for run time
+LoadRAOCalculationMethod: Both
+PreferredLoadRAOCalculationMethod: Haskind
+QuadraticLoadControlSurface: 'No'
+QuadraticLoadMomentumConservation: 'No'
+LengthTolerance: 1.0e-07
+WaterlineZTolerance: 1.0e-06
+WaterlineGapTolerance: 1.0e-06
+DivideNonPlanarPanels: 'No'
+LinearSolverMethod: Direct LU
+ValidatePanelArrangement: 'Yes'
+BodyVolumeWarningLevel: 1.0e-12
+PanelAspectRatioWarningLevel: 25
+PanelsPerWavelengthWarningLevel: 6
+WaterDepth: 1500
+WaterDensity: 1.025
+WavesReferredToBy: frequency (rad/s)
+HasWaveSpectrumForDragLinearisation: 'No'
+MorisonFluidVelocity: Undisturbed incident wave
+PeriodOrFrequency:
+- 0.418879
+- 0.7671776931843207
+- 0.8456507815854086
+- 0.9534423834870389
+WaveHeading:
+- -180
+- -135
+- -90
+- -45
+- 0
+- 45
+- 90
+- 135
+- 180
+EnableMultibodyConstraints: 'No'
+Bodies:
+- BodyName: Public semisubmersible
+  BodyMeshPosition:
+  - 0
+  - 0
+  - 0
+  BodyMeshAttitude:
+  - 0
+  - 0
+  - 0
+  BodyIncludedInAnalysis: 'Yes'
+  BodyMeshFileName: l2-hull-v3.gdf
+  BodyMeshFormat: Wamit gdf
+  BodyMeshLengthUnits: m
+  BodyMeshSymmetry: None
+  BodyOriginType: Free surface
+  BodyAddInteriorSurfacePanels: 'No'
+  BodyHydrostaticIntegralMethod: Standard
+  BodyHydrostaticStiffnessMethod: Displacement
+  BodyInertiaSpecifiedBy: Matrix (for a general body)
+  BodyCentreOfMass:
+  - 0
+  - 0
+  - -13.46
+  BodyMass: 13473.0
+  BodyInertiaTensorRx, BodyInertiaTensorRy, BodyInertiaTensorRz:
+  - - 6827000.0
+    - 0.0
+    - 0.0
+  - - 0.0
+    - 6827000.0
+    - 0.0
+  - - 0.0
+    - 0.0
+    - 12260000.0
+  BodyInertiaTensorOriginType: Centre of mass
+  BodyConnectionParent: Free
+  BodyIncreaseRollDampingToTarget: 'No'
+  ? BodyExternalStiffnessMatrixx, BodyExternalStiffnessMatrixy, BodyExternalStiffnessMatrixz,
+    BodyExternalStiffnessMatrixRx, BodyExternalStiffnessMatrixRy, BodyExternalStiffnessMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalStiffnessMatrixOriginType: Body origin
+  ? BodyExternalDampingMatrixx, BodyExternalDampingMatrixy, BodyExternalDampingMatrixz,
+    BodyExternalDampingMatrixRx, BodyExternalDampingMatrixRy, BodyExternalDampingMatrixRz
+  : - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+    - - 0
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
+  BodyExternalDampingMatrixOriginType: Body origin
+  BodyFixedDOFx: 'No'
+  BodyFixedDOFy: 'No'
+  BodyFixedDOFz: 'No'
+  BodyFixedDOFRx: 'No'
+  BodyFixedDOFRy: 'No'
+  BodyFixedDOFRz: 'No'
+DetectAndSkipFieldPointsInsideBodies: 'Yes'

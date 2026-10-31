@@ -1,0 +1,10 @@
+{
+  "report": "passing-ship-section-analysis",
+  "revision": "00",
+  "date": "2026-10-28",
+  "changes": [
+    "Added the module method map and synthetic section analysis to distinguish implementation from independent evidence.",
+    "Bound visible results to shipped section helpers and recorded physical-force qualification as NOT_EVALUATED.",
+    "Preserved the standalone example and added isolated deterministic rebuild and calculation-mutation checks."
+  ]
+}

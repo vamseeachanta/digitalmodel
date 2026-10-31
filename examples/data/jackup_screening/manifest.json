@@ -1,0 +1,34 @@
+{
+  "algorithm": "sha256",
+  "external_source_digests": {
+    "hossain_2019_manuscript": "61748301f2250a23aca3df29b9e28127eda6ce703d4623603f89dcdab3dcd9e2",
+    "hu_2015_manuscript": "86170b237c324931503f328dcab68b1dd20b4cf4aaf44de3b02ca19b71d13bf3",
+    "ndbc_2005_archive": "b6497089203cc138aff8127a3c9e6a093321009daefe5825a11982f43fa8e6a3",
+    "ndbc_2006_archive": "426c69c7dfea9caa66a20a3589300bd964ef5490871540899a511a6aa6bd52aa",
+    "ndbc_2007_archive": "b6ed6881578da344a38dca83ec7d18cfa6ec35fc1599879088c8c4a34168f2a4",
+    "ndbc_2008_archive": "a164d87d5260185c7351c04a833d071328cb997c013ec23828b848eed19a6e4c",
+    "ndbc_2009_archive": "5d4bcf109831843e2cc5ec0d39ceb520b35991a1811aaf83e2e1b172e4a6a5ef",
+    "ndbc_2010_archive": "1ac1ed3e9031e5e8ae6abf2ae8a87edfa1a2c95d2357697046e2f34bfd600d1b",
+    "ndbc_2011_archive": "e5480773c6bcafb97280dcd9b9aecabfb74d0a48b663c11050aba77cb1938142",
+    "ndbc_2012_archive": "9951df41bd44779a2a70373de0e3b28f6f0383bae36e72fc7978d49ecc68c107",
+    "ndbc_2013_archive": "769c02e18e97d34aad1b1190f0900ab136a761f9db2680bd0934ec3eb78d74f5",
+    "ndbc_2014_archive": "956bb7aafbb4000afa2b3bdf0c1e0eb47ab4db192006db0eeb71ad64892f6ee2",
+    "ndbc_2015_archive": "9c2fc49de2a259ed1f084e6e0cfe85917e7e2a0309268a35529285ee774c5f7d",
+    "ndbc_2016_archive": "a8968ca624bd3bbb011e8dfcf3938d83ff5ee7628567541403e79112151c3943",
+    "ndbc_2017_archive": "b09568eb1d85661bda7404704366274c9401e847d9b36721731ab84fdf81bae2",
+    "ndbc_2018_archive": "8e27a19404713462baafd06f48cb04fd169ba1a9aa06c2b863585fceba86b361",
+    "ndbc_2019_archive": "011a3d795203b5f31207e81d945c47efe7de62a5de4d8c4d3e829c943624ad64",
+    "ndbc_2020_archive": "ad8fd53ce49a5561a1f6ea57839769d358a7efb85ec2d3a06db0a8e5d0a91abf",
+    "ndbc_2021_archive": "d84bc8caa23a72c6ce9f1ece4fb993ea7641d2caed7d49998e9da7456e1c860d",
+    "ndbc_2022_archive": "8d2749760fc4a0a108ef47b55098f7fe73e73969b788b501eb0fca84cebfd56c",
+    "ndbc_2023_archive": "5b5a6fdc650537e10a852748bdccff521654d6fb64882852c7d0cdfeb600e905",
+    "ndbc_2024_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3",
+    "ndbc_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3"
+  },
+  "files": {
+    "environment.json": "056fbb158d8cf1bfaa45cb5d520492df966d2f7bb6b94ae02136d09197307230",
+    "inputs.json": "597fc7b2a7b08567f91718a345d34036716f3c4a9b799e82d8dc41efea1186a3",
+    "ndbc_annual_maxima.txt": "a0bf574f03a949139039c5070bd79ae5cfcfde4a71884f733c68aa54f2ffbd78"
+  },
+  "source_copy_policy": "Originals remain external; digests refer to original bytes, not engineering qualification."
+}
