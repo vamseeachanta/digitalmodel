@@ -1,8 +1,12 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Illustrative spudcan screening using open research, with SI inputs.
 
-Hu et al. (2015), equations 4–14:
+Research source R2015, Spudcan penetration analyses for three case histories in
+sand overlying clay (2015), equations 4–14:
 https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf
 
 The original two-argument interface retains the analytical peak and underlying-
@@ -39,7 +43,7 @@ def finite(name: str, value: object, *, minimum: float = 0.0, strict: bool = Fal
 class SandOverClay:
     """Two layers; clay strength is defined at the sand–clay interface.
 
-    The Hu conical-footing calibration requires 0.16 <= H/D <= 1.0 and a base
+    The R2015 conical-footing calibration requires 0.16 <= H/D <= 1.0 and a base
     cone angle greater than 7 degrees. ID is a fraction. Q is the natural log
     of crushing strength expressed in kPa, not a dimensional crushing strength.
     The [20, 40] critical-state friction interval is an illustrative silica-sand
@@ -70,7 +74,7 @@ class SandOverClay:
             finite(item.name, getattr(self, item.name),
                    strict=item.name != 'clay_gradient_kpa_m')
         if not 0.16 <= self.sand_thickness_m / self.diameter_m <= 1.0:
-            raise ValueError('Hu conical-footing calibration requires 0.16 <= H/D <= 1.0')
+            raise ValueError('R2015 conical-footing calibration requires 0.16 <= H/D <= 1.0')
         if self.relative_density > 1.0:
             raise ValueError('relative density must be a fraction in (0, 1]')
         if not 7.0 < self.base_cone_angle_deg < 90.0:
@@ -83,7 +87,7 @@ class SandOverClay:
 
 
 def clay_resistance_kpa(su_kpa: float, gradient_kpa_m: float, diameter_m: float) -> float:
-    """Circular reference pressure, Hu 2015 equation 5 at zero sand thickness.
+    """Circular reference pressure, R2015 equation 5 at zero sand thickness.
 
     q = 6.34 su + 0.56 k D. This is a reference half-space solution, without
     embedment or remoulding corrections; it is not a full deep-clay installation
@@ -99,7 +103,7 @@ def clay_resistance_kpa(su_kpa: float, gradient_kpa_m: float, diameter_m: float)
 
 @dataclass(frozen=True)
 class UniformSand:
-    """Drained circular flat-base reference, separate from the Hu calibration.
+    """Drained circular flat-base reference, separate from the R2015 calibration.
 
     No clay interface, conical-base correction or stress-dependent dilatancy is
     implied. This is an explicit homogeneous-soil branch, not an extrapolation
@@ -147,7 +151,7 @@ def sand_resistance_kpa(diameter_m: float, depth_m: float, gamma_kn_m3: float,
 
 
 def _peak_for_pressure(profile: SandOverClay, pressure_kpa: float) -> float:
-    """Evaluate Hu equations 4–12 at a trial pressure for the implicit solve."""
+    """Evaluate R2015 equations 4–12 at a trial pressure for the implicit solve."""
     p = profile
     ir = p.relative_density * (p.log_crushing_strength_kpa - math.log(pressure_kpa)) - 1
     phi = math.radians(p.critical_state_friction_deg + 2.65 * ir)
@@ -166,7 +170,7 @@ def _peak_for_pressure(profile: SandOverClay, pressure_kpa: float) -> float:
 
 
 def hu_peak_resistance_kpa(profile: SandOverClay) -> float:
-    """Solve Hu 2015 equations 4–12, requiring the stated 0 < IR < 4 bounds.
+    """Solve R2015 equations 4–12, requiring the stated 0 < IR < 4 bounds.
 
     The IR endpoint margin 1e-5 avoids the singular zero-dilatancy boundary;
     1e-8 relative pressure (1e-8 kPa below 1 kPa) and 100 iterations are numerical
@@ -199,7 +203,7 @@ def hu_peak_resistance_kpa(profile: SandOverClay) -> float:
 
 
 def hu_clay_resistance_kpa(profile: SandOverClay, depth_m: float) -> float:
-    """Hu 2015 equations 13–14; depth and interface share a mudline datum.
+    """R2015 equations 13–14; depth and interface share a mudline datum.
 
     RP 6.2.1-6.2.3; C6.2.1-C6.2.3: depth is the bearing plane, not the tip;
     the sand-plug term is research-specific, not a standard backflow correction.
@@ -616,6 +620,16 @@ class _LayeredResistance:
         return result
 
 
+def _compare_loads(first: float, second: float) -> int:
+    """Order loads with relative round-off tolerance, without a unit-scale floor.
+
+    The 1e-12 relative tolerance is numerical, not an engineering loss limit.
+    """
+    if math.isclose(first, second, rel_tol=1e-12, abs_tol=0.0):
+        return 0
+    return -1 if first < second else 1
+
+
 def _support_depth(points: tuple[PenetrationPoint, ...], model: _LayeredResistance,
                    target: float) -> float | None:
     """First upward resistance crossing, excluding a peak followed by a loss.
@@ -624,25 +638,27 @@ def _support_depth(points: tuple[PenetrationPoint, ...], model: _LayeredResistan
     depth. A discontinuous upward transition crosses at its interface. None
     means no support within the evaluated interval; extrapolation is prohibited.
     """
-    if target < points[0].load_kn:
+    if _compare_loads(target, points[0].load_kn) < 0:
         return points[0].depth_m
 
     def descends_after(index: int) -> bool:
-        while index + 1 < len(points) and points[index + 1].load_kn == target:
+        while index + 1 < len(points) and _compare_loads(points[index + 1].load_kn, target) == 0:
             index += 1
-        return index + 1 < len(points) and points[index + 1].load_kn < target
+        return index + 1 < len(points) and _compare_loads(points[index + 1].load_kn, target) < 0
 
     offset = model.spudcan.tip_to_bearing_m
     for index, (a, b) in enumerate(zip(points, points[1:])):
-        if a.load_kn <= target <= b.load_kn:
-            endpoint = index if target == a.load_kn else index + 1
-            if target in (a.load_kn, b.load_kn) and descends_after(endpoint):
-                continue
-            if a.load_kn == target:
+        a_order, b_order = _compare_loads(a.load_kn, target), _compare_loads(b.load_kn, target)
+        if a_order <= 0 <= b_order:
+            if a_order == 0 and not descends_after(index):
                 return a.depth_m
+            if b_order == 0 and not descends_after(index + 1):
+                return b.depth_m
+            if a_order == 0 or b_order == 0:
+                continue
             return _bisect_depth(lambda z: model.point(z).load_kn - target,
                                  a.depth_m - offset, b.depth_m - offset) + offset
-    if len(points) == 1 and target == points[0].load_kn:
+    if len(points) == 1 and _compare_loads(target, points[0].load_kn) == 0:
         return points[0].depth_m
     return None
 
@@ -656,18 +672,19 @@ def _capacity_events(points: tuple[PenetrationPoint, ...], model: _LayeredResist
 
     index = 0
     while index < len(points) - 1:
-        if points[index + 1].load_kn >= points[index].load_kn:
+        if _compare_loads(points[index + 1].load_kn, points[index].load_kn) >= 0:
             index += 1
             continue
         peak_index = index
         trough_index = index + 1
         index += 1
-        while index + 1 < len(points) and points[index + 1].load_kn <= points[index].load_kn:
+        while index + 1 < len(points) and _compare_loads(points[index + 1].load_kn, points[index].load_kn) <= 0:
             index += 1
-            if points[index].load_kn < points[trough_index].load_kn:
+            if _compare_loads(points[index].load_kn, points[trough_index].load_kn) < 0:
                 trough_index = index
         peak, trough = points[peak_index], points[trough_index]
-        reached = None if preload_kn is None else preload_kn >= max(p.load_kn for p in points[:peak_index + 1])
+        reached = None if preload_kn is None else _compare_loads(
+            preload_kn, max(p.load_kn for p in points[:peak_index + 1])) >= 0
         drop = peak.load_kn - trough.load_kn
         events.append(CapacityDrop(peak, trough, drop, 100 * drop / peak.load_kn,
                                   recovery(trough_index, peak.load_kn), reached,
@@ -707,7 +724,7 @@ def penetration_curve(profile: SandOverClay | UniformSand | LayeredProfile,
 
     The original two-argument and depths_m keyword forms retain their original
     research branches, return type and BEARING-PLANE depth datum. They do not
-    accept new geometry or preload arguments. No existing Hu curve is changed.
+    accept new geometry or preload arguments. No existing R2015 curve is changed.
     SNAME T&RB 5-5A Rev 3 (2008), clause: TO CONFIRM;
     ISO 19905-1:2012, clause: TO CONFIRM. See the layered method note for sources.
     """
@@ -739,6 +756,7 @@ def penetration_curve(profile: SandOverClay | UniformSand | LayeredProfile,
     points = tuple(model.point(z) for z in sorted(bearing_depths))
     events = _capacity_events(points, model, preload_kn)
     maximum = max(points, key=lambda p: p.load_kn)
+    maximum = next(p for p in points if _compare_loads(p.load_kn, maximum.load_kn) == 0)
     peak = events[0].peak if events else maximum
     flag = None if preload_kn is None else any(event.preload_reaches_peak for event in events)
     support = None if preload_kn is None else _support_depth(points, model, preload_kn)

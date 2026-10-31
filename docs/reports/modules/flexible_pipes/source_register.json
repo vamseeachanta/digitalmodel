@@ -1,0 +1,73 @@
+{
+  "revision": "A",
+  "readiness": "synthetic arithmetic only",
+  "freshness": "Exact source SHA-256 equality on rebuild; no volatile metadata",
+  "units": [
+    "m",
+    "m^2",
+    "kg/m^3",
+    "kg/m"
+  ],
+  "sources": [
+    {
+      "id": "G",
+      "path": "examples/domains/subsea/flexible_pipe_geometry.md",
+      "use": "Synthetic inputs, circle geometry and independent hand calculation",
+      "sha256": "1310bc9f03c7cc40e329591bb4123b817c83d6d5e2d854c4354c65d51a85d06c"
+    },
+    {
+      "id": "E",
+      "path": "examples/domains/subsea/flexible_pipe_geometry.py",
+      "use": "Public build_section interface and explicit fluid densities",
+      "sha256": "d07d6b8fe6300b331565bbf86ee2764f14094a2a9e659cd98dad68ed01aaed54"
+    },
+    {
+      "id": "C",
+      "path": "src/digitalmodel/subsea/flexible_pipes/cross_section.py",
+      "use": "Geometry, full-wall mass and section interfaces",
+      "sha256": "5e63a6787ad294859a6a680184f11e90df45fc9cb18429449a37dbd4a2ac74ff"
+    },
+    {
+      "id": "D",
+      "path": "src/digitalmodel/subsea/flexible_pipes/design_checks_17J.py",
+      "use": "Interface map only; no standard design limits qualified",
+      "sha256": "a303b34ee8fe6643d2047365f91752d1b9945b8211a1fbbaaad849382cb32de3"
+    },
+    {
+      "id": "B",
+      "path": "src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py",
+      "use": "Interface map only; no sizing qualified",
+      "sha256": "2e9e297dad6c5e3a3bf6b7c4000d6116869cc61ffea004dc69d95d880836b975"
+    },
+    {
+      "id": "I",
+      "path": "src/digitalmodel/subsea/flexible_pipes/__init__.py",
+      "use": "Public exports and deferred methods",
+      "sha256": "624fc45609faef591f85dee6fe01147c6aa8ee76b043e5e5263b1f30cf2b39ec"
+    },
+    {
+      "id": "T",
+      "path": "tests/reporting/test_flexible_pipes_module_report.py",
+      "use": "Independent oracle, rebuild and stale-calculation tests",
+      "sha256": "454ccca8efd66a6c235fa79dcda89c35a7537113c89b67f2d2be10d007e492c5"
+    },
+    {
+      "id": "L",
+      "path": "docs/api/cfd/turbulent-flat-plate-verification.html",
+      "use": "Existing report layout only",
+      "sha256": "bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25"
+    },
+    {
+      "id": "P",
+      "path": "docs/api/_assets/brand.css",
+      "use": "Existing palette only",
+      "sha256": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a"
+    },
+    {
+      "id": "R",
+      "path": "docs/reports/modules/flexible_pipes/build_report.py",
+      "use": "Report generation and comparison criterion",
+      "sha256": "c77182372af2f115b2b0f09dda2261b0ecea484ccb3de1c44b2c13c1557a9cf2"
+    }
+  ]
+}

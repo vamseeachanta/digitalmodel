@@ -62,11 +62,11 @@ def screen_three_leg_unit(
     independently qualified by the caller; preload is a load-history comparator.
 
     G 5.3.1-5.3.3; RP 3.1.2, 8.3.1.1-8.3.1.4: the raw reaction/preload
-    comparison does not implement factored Vd <= 0.90 P or horizontal limits.
+    comparison does not implement standard factored preload or horizontal limits.
     RP 5.2-5.7, 7.1-7.3, 8.1.3-8.1.6, 8.5: concurrent input moments and
     force only; provenance, dynamics, second order and member/holding checks OPEN.
     RP 8.2.1-8.2.3: loss of contact only; axis checks, displaced restoring
-    geometry, 0.95 resistance and evidenced soil-moment credit remain OPEN.
+    geometry, factored restoring resistance and evidenced soil-moment credit OPEN.
     RP 6.3.3-6.3.5, 8.3.1.5-8.3.4: concurrent horizontal-demand comparison
     only; drained/undrained factors and combined-load interactions remain OPEN.
     """

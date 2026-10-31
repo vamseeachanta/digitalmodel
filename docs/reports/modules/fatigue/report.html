@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Structural fatigue module analysis: synthetic counted-cycle arithmetic</title>
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style>
+<style>code,pre{overflow-wrap:anywhere;white-space:pre-wrap}details{margin:20px 0;padding:12px;border:1px solid var(--line)}:focus-visible{outline:2px solid var(--report-accent)}</style>
+</head><body class="hs-doc" id="fatigue-synthetic-arithmetic" data-revision="00">
+<header><h1>Structural fatigue module analysis: synthetic counted-cycle arithmetic</h1>
+<p>Draft for maintainer review · Revision 00 · 2026-10-28</p></header>
+<div class="layout"><nav aria-label="Contents"><ol><li><a href="#section-1">Executive Summary</a></li><li><a href="#section-2">Introduction</a></li><li><a href="#section-3">Data Basis</a></li><li><a href="#section-4">Theory and Equations</a></li><li><a href="#section-5">Worked Example</a></li><li><a href="#section-6">Validation Evidence</a></li><li><a href="#section-7">Limits of Use</a></li><li><a href="#section-8">Recommendations</a></li><li><a href="#section-9">References</a></li><li><a href="#section-10">Appendix</a></li></ol></nav><main>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The structural fatigue package is mapped and an explicitly bounded arithmetic example is checked.
+The synthetic counted-cycle block gives total damage <span data-value="total_damage" data-unit="dimensionless" data-source="ref-damage">0.3 dimensionless</span> and
+<span data-value="cycles_processed" data-unit="cycles" data-source="ref-damage">1500.0 cycles</span> processed. These values agree with the independent rational derivation
+under the numerical comparison budget in <a href="#roundoff-budget">Section 6</a>.</p>
+<p>The synthetic curve has no material identity. Standard coefficients, signal counting, spectral methods
+and physical remaining life are not qualified by this example. Broader numerical qualification remains open.</p>
+</section>
+<div id="revision-history"><h3>Revision history</h3><div class="table-wrap"><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>00</td><td>2026-10-28</td><td>First issue: added a synthetic counted-cycle example and method limits to bound arithmetic evidence.</td></tr></tbody><caption>Revision history. Each issue retains its original change record.</caption></table></div></div>
+<section id="section-2"><h2>2. Introduction</h2>
+<p>The public interfaces provide S-N curves, cycle counting, damage accumulation and frequency-domain methods.
+The <a href="#ref-pack">module knowledge pack</a> records alternate implementations and unresolved evidence.
+An implemented method is an inventory finding, not a standards-compliance conclusion.</p>
+<p>The bounded path is explicit counted rows → artificial curve → per-level damage → total damage.
+Existing <a href="#ref-examples">standalone examples</a> retain their separate contracts and are unchanged.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Interface / method</th><th scope="col">Implementation state</th><th scope="col">Independent evidence in this report</th><th scope="col">Disposition</th></tr></thead><tbody><tr><td><a href="#ref-curve">PowerLawSNCurve.get_allowable_cycles</a></td><td>Implemented</td><td>Synthetic single slope at supplied ranges</td><td>INDEPENDENTLY_CHECKED for this example only</td></tr><tr><td><a href="#ref-damage">LinearDamageAccumulation.calculate_damage</a></td><td>Implemented</td><td>Explicit counted cycles; each increment, sum and processed count</td><td>INDEPENDENTLY_CHECKED for this example only</td></tr><tr><td><a href="#ref-curve">Standard curves and mean-stress interfaces</a></td><td>Implemented</td><td>No coefficient-table or material reference evaluation</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#ref-rainflow">RainflowCounter / rainflow_count</a></td><td>Implemented; diagnostic use</td><td>No counting benchmark performed here</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#ref-analysis">FatigueAnalysisEngine.analyze_time_series</a></td><td>Refuses damage calculation</td><td>Existing counting contract is preserved</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#ref-frequency">Frequency-domain damage methods</a></td><td>Implemented</td><td>No spectral benchmark performed here</td><td>NOT_EVALUATED</td></tr><tr><td><a href="#ref-damage">Physical remaining life</a></td><td>Derived cycle estimate is exposed</td><td>No material, duty duration or field evidence</td><td>NOT_EVALUATED</td></tr></tbody><caption>Table 3. Implementation inventory is separate from numerical qualification.</caption></table></div></section>
+<section id="section-3"><h2>3. Data Basis</h2>
+<p id="synthetic-basis">All numeric example inputs are synthetic arithmetic controls, supplied for this calculation.
+Ranges are stress ranges in MPa, not amplitudes; means are in MPa and counts are in cycles.
+No material identity, measured load record, standard table or service interval is assigned.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Quantity</th><th scope="col">Value (unit shown)</th><th scope="col">Synthetic basis</th></tr></thead><tbody><tr><td>Synthetic coefficient A</td><td><span data-value="basis.coefficient" data-unit="cycle*MPa^2" data-source="synthetic-basis">1000000.0 cycle*MPa^2</span></td><td>N*S^m=A</td></tr><tr><td>Synthetic exponent m</td><td><span data-value="basis.exponent" data-unit="dimensionless" data-source="synthetic-basis">2.0 dimensionless</span></td><td>Power-law definition</td></tr><tr><td>Synthetic fatigue limit</td><td><span data-value="basis.fatigue_limit" data-unit="MPa" data-source="synthetic-basis">0.0 MPa</span></td><td>No positive fatigue limit</td></tr><tr><td>Synthetic cutoff control</td><td><span data-value="basis.cutoff" data-unit="cycles" data-source="synthetic-basis">20000.0 cycles</span></td><td>Above both allowable lives</td></tr><tr><td>Synthetic level 1 range S</td><td><span data-value="levels.0.range" data-unit="MPa" data-source="synthetic-basis">10.0 MPa</span></td><td>Explicit counted input</td></tr><tr><td>Synthetic level 1 mean stress</td><td><span data-value="levels.0.mean" data-unit="MPa" data-source="synthetic-basis">0.0 MPa</span></td><td>Explicit counted input</td></tr><tr><td>Synthetic level 1 applied count n</td><td><span data-value="levels.0.count" data-unit="cycles" data-source="synthetic-basis">1000.0 cycles</span></td><td>Explicit counted input</td></tr><tr><td>Synthetic level 2 range S</td><td><span data-value="levels.1.range" data-unit="MPa" data-source="synthetic-basis">20.0 MPa</span></td><td>Explicit counted input</td></tr><tr><td>Synthetic level 2 mean stress</td><td><span data-value="levels.1.mean" data-unit="MPa" data-source="synthetic-basis">0.0 MPa</span></td><td>Explicit counted input</td></tr><tr><td>Synthetic level 2 applied count n</td><td><span data-value="levels.1.count" data-unit="cycles" data-source="synthetic-basis">500.0 cycles</span></td><td>Explicit counted input</td></tr></tbody><caption>Table 1. Artificial inputs; the coefficient has no material identity.</caption></table></div>
+<p>The configured cutoff is above both hand-derived allowable lives, so neither level is capped.
+The fatigue limit is zero and both ranges are positive. Mean-stress correction is disabled.
+The base constructor attaches generic properties even for material=None; those defaults are unused here
+and do not supply a material identity or an engineering input basis.
+<a href="#ref-curve">Curve input contract</a> and <a href="#ref-damage">counted-cycle contract</a> govern the calls.</p>
+</section>
+<section id="section-4"><h2>4. Theory and Equations</h2>
+<p>The artificial definition is N*S^m = A, with A and m supplied in Table 1.
+The independent derivation uses integer multiplication and exact rational division:
+N_i = A / S_i^m; d_i = n_i / N_i; D = Σ d_i; C = Σ n_i.
+N_i and n_i are cycles; S_i is MPa; d_i and D are dimensionless; C is processed cycles.</p>
+<p>The coefficient unit is cycle*MPa^2 for the specified exponent.
+Each allowable life is obtained by dividing the coefficient by the squared supplied range.
+Each contribution is obtained by dividing its applied count by that allowable life.
+The exact quotients and their rational sum are compared with module results in Table 2.
+<a href="#synthetic-basis">Synthetic input definition</a> supplies the arithmetic basis;
+<a href="#ref-curve">get_allowable_cycles</a> and <a href="#ref-damage">calculate_damage</a> supply the evaluated methods.</p>
+</section>
+<section id="section-5"><h2>5. Worked Example</h2>
+<p>Counted rows are passed directly to the accumulator. No time series is counted and no standard curve factory is called.
+The comparison column is computed from unrounded differences; values and percentages are displayed to one decimal place.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Quantity</th><th scope="col">Exact derivation, displayed (unit shown)</th><th scope="col">Module result (unit shown)</th><th scope="col">Absolute relative difference (%)</th></tr></thead><tbody><tr><td>total_damage</td><td><span data-oracle="total_damage" data-unit="dimensionless" data-source="synthetic-basis">0.3 dimensionless</span></td><td><span data-value="total_damage" data-unit="dimensionless" data-source="ref-damage">0.3 dimensionless</span></td><td><span data-difference="total_damage">0.0 %</span></td></tr><tr><td>cycles_processed</td><td><span data-oracle="cycles_processed" data-unit="cycles" data-source="synthetic-basis">1500.0 cycles</span></td><td><span data-value="cycles_processed" data-unit="cycles" data-source="ref-damage">1500.0 cycles</span></td><td><span data-difference="cycles_processed">0.0 %</span></td></tr><tr><td>levels.0.allowable</td><td><span data-oracle="levels.0.allowable" data-unit="cycles" data-source="synthetic-basis">10000.0 cycles</span></td><td><span data-value="levels.0.allowable" data-unit="cycles" data-source="ref-damage">10000.0 cycles</span></td><td><span data-difference="levels.0.allowable">0.0 %</span></td></tr><tr><td>levels.0.damage</td><td><span data-oracle="levels.0.damage" data-unit="dimensionless" data-source="synthetic-basis">0.1 dimensionless</span></td><td><span data-value="levels.0.damage" data-unit="dimensionless" data-source="ref-damage">0.1 dimensionless</span></td><td><span data-difference="levels.0.damage">0.0 %</span></td></tr><tr><td>levels.1.allowable</td><td><span data-oracle="levels.1.allowable" data-unit="cycles" data-source="synthetic-basis">2500.0 cycles</span></td><td><span data-value="levels.1.allowable" data-unit="cycles" data-source="ref-damage">2500.0 cycles</span></td><td><span data-difference="levels.1.allowable">0.0 %</span></td></tr><tr><td>levels.1.damage</td><td><span data-oracle="levels.1.damage" data-unit="dimensionless" data-source="synthetic-basis">0.2 dimensionless</span></td><td><span data-value="levels.1.damage" data-unit="dimensionless" data-source="ref-damage">0.2 dimensionless</span></td><td><span data-difference="levels.1.damage">0.0 %</span></td></tr></tbody><caption>Table 2. Rational hand calculation compared with unrounded module results before display rounding.</caption></table></div>
+<p>The result supports the supplied arithmetic block only. No physical design acceptance or remaining-life estimate is assigned.</p>
+</section>
+<section id="section-6"><h2>6. Validation Evidence</h2>
+<p>The <a href="#ref-report-tests">report tests</a> assert every unrounded example quantity and its unit against
+an independent hand calculation, then compare parsed visible quantities with that oracle and a fresh module call.
+Controlled changes to allowable lives, damage contributions, the total and the processed count exercise visible result bindings.</p>
+<p id="roundoff-budget">The numerical regression tolerance is relative 32 epsilon, with zero absolute tolerance;
+epsilon is the binary64 spacing above unity, expressed as 2^(-52).
+The positive-input path has fewer than eight rounding stages through reciprocal-square evaluation, multiplication,
+division, summation and oracle conversion. Four epsilon per stage allows for the power evaluation.
+This budget addresses roundoff for this example; it does not represent physical uncertainty.</p>
+<p>The <a href="#ref-sn-tests">existing S-N suite</a> and <a href="#ref-damage-tests">existing accumulation suite</a>
+provide regression coverage beyond this example; passing them does not independently qualify their standard data.
+Two isolated rebuilds and the delivered records are compared byte for byte.
+Reproducibility is not physical validation.</p>
+</section>
+<section id="section-7"><h2>7. Limits of Use</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Engineering use</th><th scope="col">Status</th><th scope="col">Evidence needed</th></tr></thead><tbody><tr><td>standard S-N coefficients</td><td>NOT_EVALUATED</td><td>A reviewed edition, curve identity, material basis and point checks</td></tr><tr><td>mean-stress corrections</td><td>NOT_EVALUATED</td><td>Material strengths, correction selection and independent numerical cases</td></tr><tr><td>rainflow-to-damage qualification</td><td>NOT_EVALUATED</td><td>Hand-counted distributions, declared residual policy and a qualified path</td></tr><tr><td>frequency-domain methods</td><td>NOT_EVALUATED</td><td>PSD units, spectral-moment checks and independent damage-rate benchmarks</td></tr><tr><td>physical remaining life</td><td>NOT_EVALUATED</td><td>Qualified material/load basis, service duration and acceptance criterion</td></tr></tbody><caption>Table 4. Unevaluated methods remain outside this arithmetic example.</caption></table></div>
+<p>The <a href="#ref-contract">counting registry</a> distinguishes paths and a declared retained residual convention.
+The <a href="#ref-analysis">time-series analysis entry point</a> refuses damage on its affected structural counting path;
+the structural counter remains available for diagnostic use. Other paths have distinct contract records.
+Their recorded status is not transferred to this example and no counting refusal is changed or bypassed.</p>
+<p>Review findings beyond scope: the single-slope cutoff caps finite life even with a zero fatigue limit;
+the synthetic cutoff deliberately avoids that branch. Nonpositive ranges or counts are skipped by accumulation;
+this positive-input example does not qualify malformed or non-finite input handling.
+The accumulator also exposes a repeated-block remaining-cycle estimate; no physical life follows without a qualified
+load basis and duration. These concerns are findings for broader qualification, not behavior changes.</p>
+<p>No full-module, standards-compliance or solver-qualification claim is made.</p>
+</section>
+<section id="section-8"><h2>8. Recommendations</h2>
+<h3>Way forward</h3>
+<ol><li>Review standard coefficient provenance and material selection separately, with independently derived curve points.</li>
+<li>Qualify a counting path against hand-counted range, mean and count distributions under its declared residual policy before damage integration.</li>
+<li>Check spectral moments and damage rates against independent benchmarks with explicit frequency and PSD units.</li>
+<li>Supply a service-duration basis, material evidence and governing acceptance criterion before reporting physical remaining life.</li></ol>
+<p>The parent module-report scope remains open for these numerical qualifications.</p>
+</section>
+<section id="section-9"><h2>9. References</h2>
+<p>Source locators below are repository-relative and are pinned by SHA-256 in the embedded source record and sources.json.
+The page requires no network access or surrounding directory layout. No standard coefficient tables are reproduced.</p>
+<ol><li id="ref-curve">Explicit power law and correction interfaces: <code>src/digitalmodel/structural/fatigue/sn_curves.py</code>; symbols <code>PowerLawSNCurve</code>, <code>get_allowable_cycles</code>, <code>MeanStressCorrection</code>.</li><li id="ref-damage">Counted-cycle accumulation and derived metrics: <code>src/digitalmodel/structural/fatigue/damage_accumulation.py</code>; symbols <code>LinearDamageAccumulation</code>, <code>calculate_damage</code>.</li><li id="ref-rainflow">Structural diagnostic counter: <code>src/digitalmodel/structural/fatigue/rainflow.py</code>; symbols <code>RainflowCounter</code>, <code>rainflow_count</code>.</li><li id="ref-analysis">Time-series damage refusal: <code>src/digitalmodel/structural/fatigue/analysis.py</code>; symbols <code>analyze_time_series</code>, <code>refuse_damage_calculation</code>.</li><li id="ref-contract">Counting path registry and retained residual contract: <code>src/digitalmodel/fatigue/counting_contract.py</code>; symbols <code>COUNTING_PATHS</code>, <code>ResidualPolicy</code>, <code>refuse_damage_calculation</code>.</li><li id="ref-frequency">Spectral methods and frequency convention: <code>src/digitalmodel/structural/fatigue/frequency_domain.py</code>; symbols <code>calculate_damage_rate</code>, <code>_calculate_spectral_moments</code>.</li><li id="ref-examples">Existing examples, preserved separately: <code>src/digitalmodel/structural/fatigue/worked_examples.py</code>; symbols <code>ExampleResult</code>, <code>LinearDamageAccumulation</code>.</li><li id="ref-pack">Module knowledge pack; inventory rather than qualification: <code>src/digitalmodel/structural/fatigue/docs/agent-pack.md</code>; symbols <code>Purpose and scope</code>.</li><li id="ref-sn-tests">Existing S-N regression suite: <code>tests/structural/fatigue/test_sn_curves.py</code>; symbols <code>PowerLawSNCurve</code>.</li><li id="ref-damage-tests">Existing damage regression suite: <code>tests/structural/fatigue/test_damage_accumulation.py</code>; symbols <code>LinearDamageAccumulation</code>.</li><li id="ref-report-tests">Independent oracle, parsed values, mutation and rebuild checks: <code>tests/structural/fatigue/test_module_report.py</code>; symbols <code>test_worked_values_match_independent_calculation</code>, <code>test_visible_values_follow_computed_results</code>.</li><li id="ref-builder">Calculation and rendering bindings: <code>docs/reports/modules/fatigue/build_report.py</code>; symbols <code>calculate</code>, <code>independent_values</code>.</li><li id="ref-layout">Local report layout exemplar: <code>docs/reports/pipeline-ffs-assessment.html</code>; symbols <code>&lt;style&gt;</code>.</li></ol>
+</section>
+<section id="section-10"><h2>10. Appendix</h2>
+<h3>Rebuild</h3><p>From the repository root, set FATIGUE_REPORT_PYTHON to a Python interpreter containing the repository dependencies.
+The supplied TMPDIR, UV_CACHE_DIR and PRE_COMMIT_HOME remain exported:</p>
+<pre>PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR=&quot;$TMPDIR/matplotlib&quot; PYTHONPATH=src uv run --no-project --python &quot;$FATIGUE_REPORT_PYTHON&quot; python docs/reports/modules/fatigue/build_report.py --output-dir &quot;$TMPDIR/fatigue-report&quot;</pre>
+<p>The explicit output directory receives report.html, changes.json and sources.json. Calculation and rendering use memory;
+no intermediate files are written. The fixed issue date is a revision record, not a runtime timestamp.</p>
+<details id="engineering-changes" open><summary>Change panel · Revision 00</summary><ul><li>Added an artificial power-law example to separate arithmetic checks from material qualification.</li><li>Mapped implemented methods, counting refusals and unevaluated engineering uses so that numerical scope is explicit.</li><li>Added deterministic source and change records, parsed numerical checks and module-local report pointers.</li></ul></details>
+</section>
+<script type="application/json" id="calculation-record">{
+  "basis": {
+    "coefficient": 1000000,
+    "exponent": 2,
+    "fatigue_limit": 0,
+    "cutoff": 20000
+  },
+  "levels": [
+    {
+      "range": 10.0,
+      "mean": 0.0,
+      "count": 1000.0,
+      "allowable": 10000.0,
+      "damage": 0.1
+    },
+    {
+      "range": 20.0,
+      "mean": 0.0,
+      "count": 500.0,
+      "allowable": 2500.0,
+      "damage": 0.2
+    }
+  ],
+  "total_damage": 0.3,
+  "cycles_processed": 1500.0,
+  "units": {
+    "basis.coefficient": "cycle*MPa^2",
+    "basis.exponent": "dimensionless",
+    "basis.fatigue_limit": "MPa",
+    "basis.cutoff": "cycles",
+    "total_damage": "dimensionless",
+    "cycles_processed": "cycles",
+    "levels.0.range": "MPa",
+    "levels.0.mean": "MPa",
+    "levels.0.count": "cycles",
+    "levels.0.allowable": "cycles",
+    "levels.0.damage": "dimensionless",
+    "levels.1.range": "MPa",
+    "levels.1.mean": "MPa",
+    "levels.1.count": "cycles",
+    "levels.1.allowable": "cycles",
+    "levels.1.damage": "dimensionless"
+  }
+}
+</script>
+<script type="application/json" id="source-record">{
+  "report": "fatigue-synthetic-arithmetic",
+  "revision": "00",
+  "basis": {
+    "id": "synthetic-basis",
+    "classification": "synthetic",
+    "description": "Artificial arithmetic example with no material identity or standard coefficient table.",
+    "equations": [
+      "N*S^2 = 1000000 cycle*MPa^2",
+      "N = A/S^m",
+      "d_i = n_i/N_i",
+      "D = sum(d_i)",
+      "C = sum(n_i)"
+    ],
+    "inputs": {
+      "A": "1000000 cycle*MPa^2",
+      "m": "2 dimensionless",
+      "ranges": "10,20 MPa",
+      "means": "0,0 MPa",
+      "counts": "1000,500 cycles",
+      "fatigue_limit": "0 MPa",
+      "cutoff": "20000 cycles"
+    },
+    "hand_derivation": {
+      "allowable": "1000000/100=10000; 1000000/400=2500 cycles",
+      "damage": "1000/10000=1/10; 500/2500=1/5; total=3/10 dimensionless",
+      "processed": "1000+500=1500 cycles"
+    }
+  },
+  "roundoff": {
+    "id": "roundoff-budget",
+    "relative_tolerance": "32 * 2**(-52)",
+    "absolute_tolerance": "0",
+    "derivation": "Fewer than eight rounding stages; four epsilon per stage allows for reciprocal-square evaluation. Binary64 epsilon is the spacing above unity. Numerical regression budget only; no material uncertainty is represented."
+  },
+  "readiness": "Synthetic arithmetic only; engineering qualification NOT_EVALUATED",
+  "files": [
+    {
+      "id": "ref-curve",
+      "title": "Explicit power law and correction interfaces",
+      "path": "src/digitalmodel/structural/fatigue/sn_curves.py",
+      "symbols": [
+        "PowerLawSNCurve",
+        "get_allowable_cycles",
+        "MeanStressCorrection"
+      ],
+      "sha256": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad"
+    },
+    {
+      "id": "ref-damage",
+      "title": "Counted-cycle accumulation and derived metrics",
+      "path": "src/digitalmodel/structural/fatigue/damage_accumulation.py",
+      "symbols": [
+        "LinearDamageAccumulation",
+        "calculate_damage"
+      ],
+      "sha256": "10cd7140036aa0a42511da1fa422ea171e862067ad7a8b3ac12f7bde5fcca568"
+    },
+    {
+      "id": "ref-rainflow",
+      "title": "Structural diagnostic counter",
+      "path": "src/digitalmodel/structural/fatigue/rainflow.py",
+      "symbols": [
+        "RainflowCounter",
+        "rainflow_count"
+      ],
+      "sha256": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b"
+    },
+    {
+      "id": "ref-analysis",
+      "title": "Time-series damage refusal",
+      "path": "src/digitalmodel/structural/fatigue/analysis.py",
+      "symbols": [
+        "analyze_time_series",
+        "refuse_damage_calculation"
+      ],
+      "sha256": "761d1c2efebb8dabaaece5354c59603fc99dc0ea6e2cd689ca0ec50e5366910f"
+    },
+    {
+      "id": "ref-contract",
+      "title": "Counting path registry and retained residual contract",
+      "path": "src/digitalmodel/fatigue/counting_contract.py",
+      "symbols": [
+        "COUNTING_PATHS",
+        "ResidualPolicy",
+        "refuse_damage_calculation"
+      ],
+      "sha256": "2d450f2e8e13564aee8e64ce5d92f8f83a5383b65136b3beec4e54ef4875dbbf"
+    },
+    {
+      "id": "ref-frequency",
+      "title": "Spectral methods and frequency convention",
+      "path": "src/digitalmodel/structural/fatigue/frequency_domain.py",
+      "symbols": [
+        "calculate_damage_rate",
+        "_calculate_spectral_moments"
+      ],
+      "sha256": "2acbe1aaa99f3178d57a5579502c9785329f8e2964d39fc9413a3cae58e86a93"
+    },
+    {
+      "id": "ref-examples",
+      "title": "Existing examples, preserved separately",
+      "path": "src/digitalmodel/structural/fatigue/worked_examples.py",
+      "symbols": [
+        "ExampleResult",
+        "LinearDamageAccumulation"
+      ],
+      "sha256": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a"
+    },
+    {
+      "id": "ref-pack",
+      "title": "Module knowledge pack; inventory rather than qualification",
+      "path": "src/digitalmodel/structural/fatigue/docs/agent-pack.md",
+      "symbols": [
+        "Purpose and scope"
+      ],
+      "sha256": "a13e49ac98112feead2ad6a242fde7b1cedc2128da362f94dfc5b1df2181bc0d"
+    },
+    {
+      "id": "ref-sn-tests",
+      "title": "Existing S-N regression suite",
+      "path": "tests/structural/fatigue/test_sn_curves.py",
+      "symbols": [
+        "PowerLawSNCurve"
+      ],
+      "sha256": "91e3d68972d4b6b7c7fc6c7d5d6106291969fea611c18c609422556d37606eac"
+    },
+    {
+      "id": "ref-damage-tests",
+      "title": "Existing damage regression suite",
+      "path": "tests/structural/fatigue/test_damage_accumulation.py",
+      "symbols": [
+        "LinearDamageAccumulation"
+      ],
+      "sha256": "b51cb391fbde2be027d86c3eda9a6abc44028e1d1320ad162044095d9cd246d9"
+    },
+    {
+      "id": "ref-report-tests",
+      "title": "Independent oracle, parsed values, mutation and rebuild checks",
+      "path": "tests/structural/fatigue/test_module_report.py",
+      "symbols": [
+        "test_worked_values_match_independent_calculation",
+        "test_visible_values_follow_computed_results"
+      ],
+      "sha256": "d9c5deb287e561825a9871d8f3dd37237f21b41c3521a064efac1c97106fbff8"
+    },
+    {
+      "id": "ref-builder",
+      "title": "Calculation and rendering bindings",
+      "path": "docs/reports/modules/fatigue/build_report.py",
+      "symbols": [
+        "calculate",
+        "independent_values"
+      ],
+      "sha256": "9b40caabb598bad1c0c878ac21115ee93d0a0463b324bea82e2c8a25b7a761db"
+    },
+    {
+      "id": "ref-layout",
+      "title": "Local report layout exemplar",
+      "path": "docs/reports/pipeline-ffs-assessment.html",
+      "symbols": [
+        "\u003cstyle\u003e"
+      ],
+      "sha256": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f"
+    }
+  ]
+}
+</script>
+<script type="application/json" id="change-record">{
+  "report": "fatigue-synthetic-arithmetic",
+  "revision": "00",
+  "date": "2026-10-28",
+  "changes": [
+    "Added an artificial power-law example to separate arithmetic checks from material qualification.",
+    "Mapped implemented methods, counting refusals and unevaluated engineering uses so that numerical scope is explicit.",
+    "Added deterministic source and change records, parsed numerical checks and module-local report pointers."
+  ]
+}
+</script>
+</main></div></body></html>

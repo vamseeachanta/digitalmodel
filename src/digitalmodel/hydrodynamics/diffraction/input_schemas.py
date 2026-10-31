@@ -135,13 +135,10 @@ class OutputComponent(str, Enum):
 class VesselGeometry(BaseModel):
     """Geometry and declared body symmetry.
 
-    Full-body meshes are required by the current forward backends. Legacy
-    validation specs also describe partial meshes; for non-none symmetry
-    declarations, OrcaWave refuses GDF symmetry flags rather than silently
-    emitting an incomplete body. A none declaration is not header-checked.
-    Full meshes emit BodyMeshSymmetry: None. AQWA verifies xz mirror panels
-    and extracts the nonnegative-y half for SYMX; panels must be split at
-    y = 0, with no panels lying wholly in that plane.
+    Symmetry describes the stored mesh sector: none requires a full body,
+    xz a y=0 half, yz an x=0 half, and xz+yz a quarter. GDF ISX/ISY
+    must agree with that declaration in both forward backends. Full meshes
+    must use none even when the physical body has mirror symmetry.
     """
 
     mesh_file: str = Field(
@@ -156,7 +153,15 @@ class VesselGeometry(BaseModel):
     )
     symmetry: SymmetryType = Field(
         SymmetryType.NONE,
-        description="Symmetry plane(s) of the full-body mesh; not a half-mesh flag",
+        description="Symmetry cuts of the stored mesh sector; GDF flags must agree",
+    )
+    buoyancy_relative_tolerance: Optional[float] = Field(
+        default=None, ge=0, allow_inf_nan=False,
+        description=(
+            "Required relative mass/displaced-water-mass tolerance for the DF2 "
+            "free-flotation screen; absent means NOT_EVALUATED. Supply a cited "
+            "criterion appropriate to the body; no default is inferred."
+        ),
     )
     reference_point: list[float] = Field(
         default=[0.0, 0.0, 0.0],

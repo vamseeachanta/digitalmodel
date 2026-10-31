@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flexible-pipe module analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}</style></head>
+<body class="hs-doc"><main class="wrap"><header><h1>Flexible-pipe module analysis</h1>
+<p>Synthetic full-wall geometry and mass. Engineering qualification remains NOT_EVALUATED.</p></header>
+<h2 id="s1">1. Summary</h2>
+<p>The public geometry example is evaluated through <code>build_section</code>. The numerical scope is contiguous full-wall geometry and mass per unit length.
+The radius-based comparison gives PASS against the arithmetic criterion in Section 6. This disposition applies only to the synthetic case; manufactured-pipe acceptance is not established [G, E, C].</p>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>A</td><td>2026-10-28</td><td>Synthetic full-wall geometry and mass are presented with an independent radius-based calculation, generated figures and explicit qualification limits.</td></tr></tbody><caption>Report issue history; earlier rows are retained on reissue.</caption></table>
+<h2 id="s2">2. Purpose and interface map</h2>
+<p>The existing methods are mapped below. Numerical evaluation is limited to the geometry example [E, I].</p>
+<table><thead><tr><th>Module</th><th>Interface and delegates</th><th>Evaluation boundary</th></tr></thead><tbody>
+<tr><td>cross_section</td><td>Layer / LayerType: mean_diameter, outer_diameter, annular_area, structural_area, mass_per_length, axial_stiffness, bending_stiffness.
+FlexiblePipeSection: bore_diameter, outer_diameter, dry_mass_per_length, displaced_mass_per_length, content_mass_per_length,
+submerged_weight_per_length, tensile_armour_area, axial_stiffness, bending_stiffness. Section totals delegate to layer methods.</td><td>Geometry and full-wall mass only [C]. Weight and stiffness remain NOT_EVALUATED.</td></tr>
+<tr><td>design_checks_17J</td><td>TensileArmour, LoadCase, FlexCheckResult; verify_flexible_pipe delegates to allowable_wire_stress,
+armour_tension_stress and armour_bending_stress; max_utilisation summarizes the result.</td><td>Interface map only [D]. Standard design limits and structural qualification are NOT_EVALUATED.</td></tr>
+<tr><td>bend_stiffener</td><td>BendStiffenerResult; screen_bend_stiffener delegates to developed_min_radius and required_effective_ei.</td>
+<td>Interface map only [B]. Bend-stiffener sizing is NOT_EVALUATED.</td></tr></tbody>
+<caption>Existing public interfaces and their calculation boundaries [C, D, B, I].</caption></table>
+<h2 id="s3">3. Inputs and units</h2>
+<p>The synthetic dimensions and densities are supplied by the adjacent example note. These chosen values are not material specifications.
+External and bore fluid densities are explicitly supplied; library defaults are not used [G, E].</p><table><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><th scope="row">layer_1.inner_diameter</th><td data-key="layer_1.inner_diameter" data-unit="m">0.100</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_1.thickness</th><td data-key="layer_1.thickness" data-unit="m">0.010</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_1.density</th><td data-key="layer_1.density" data-unit="kg/m^3">1000.0</td><td>kg/m^3</td><td>[G, C]</td></tr><tr><th scope="row">layer_2.inner_diameter</th><td data-key="layer_2.inner_diameter" data-unit="m">0.120</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_2.thickness</th><td data-key="layer_2.thickness" data-unit="m">0.020</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_2.density</th><td data-key="layer_2.density" data-unit="kg/m^3">2000.0</td><td>kg/m^3</td><td>[G, C]</td></tr><tr><th scope="row">layer_3.inner_diameter</th><td data-key="layer_3.inner_diameter" data-unit="m">0.160</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_3.thickness</th><td data-key="layer_3.thickness" data-unit="m">0.020</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_3.density</th><td data-key="layer_3.density" data-unit="kg/m^3">500.0</td><td>kg/m^3</td><td>[G, C]</td></tr><tr><th scope="row">external_density</th><td data-key="external_density" data-unit="kg/m^3">800.0</td><td>kg/m^3</td><td>[G, C]</td></tr><tr><th scope="row">bore_density</th><td data-key="bore_density" data-unit="kg/m^3">600.0</td><td>kg/m^3</td><td>[G, C]</td></tr></tbody><caption>Synthetic inputs; chosen for arithmetic only [G, E].</caption></table>
+<figure><svg viewBox="0 0 650 300" role="img" aria-label="Calculated concentric full-wall geometry"><circle cx="180" cy="150" r="120" data-key="layer_3.outer_radius" data-scale="1200" fill="var(--panel-2)" stroke="var(--brand)"><title>layer_3.outer_radius</title></circle><circle cx="180" cy="150" r="96" data-key="layer_2.outer_radius" data-scale="1200" fill="var(--panel-2)" stroke="var(--brand)"><title>layer_2.outer_radius</title></circle><circle cx="180" cy="150" r="72" data-key="layer_1.outer_radius" data-scale="1200" fill="var(--panel-2)" stroke="var(--brand)"><title>layer_1.outer_radius</title></circle><circle cx="180" cy="150" r="60" data-key="bore_diameter" data-scale="1200" fill="var(--panel)" stroke="var(--brand)"><title>bore_diameter</title></circle><circle cx="180" cy="150" r="120" data-key="outer_diameter" data-scale="1200" fill="none" stroke="var(--brand)"><title>outer_diameter</title></circle><text x="330" y="100">pressure_sheath</text><text x="330" y="130">anti_wear</text><text x="330" y="160">outer_sheath</text></svg><figcaption>Full-wall cross-section, drawn from the calculated radii in m; layers are listed from bore to exterior. Wound armour and voids are absent [G, C].</figcaption></figure>
+<h2 id="s4">4. Method and equation sources</h2>
+<p>Elementary circle geometry is used as the independent basis: r_inner = D_inner / 2; r_outer = r_inner + t;
+A_wall = π(r_outer² − r_inner²); m_layer = ρ A_wall. The diameter factor is definitional [G].</p>
+<p>The production mass expression uses mean diameter: m_layer = ρ π D_mean t. The comparator instead subtracts squared radii.
+Total dry mass is the sum of layer masses. Displaced mass is external density times the entire outer-envelope circle;
+content mass is bore density times the bore circle [G, C].</p>
+<p>No standard factors or empirical coefficients are adopted. The source register identifies repository methods and the synthetic basis;
+it does not establish compliance with an external standard.</p>
+<h2 id="s5">5. Worked values</h2>
+<p>All values below are generated from the returned public example section. Areas and masses retain the example's display precision;
+the embedded calculation retains unrounded values for the independent arithmetic comparison [G, E, C].</p><table><thead><tr><th>Quantity</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><th scope="row">layer_1.outer_diameter</th><td data-key="layer_1.outer_diameter" data-unit="m">0.120</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_1.inner_radius</th><td data-key="layer_1.inner_radius" data-unit="m">0.050</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_1.outer_radius</th><td data-key="layer_1.outer_radius" data-unit="m">0.060</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_1.annular_area</th><td data-key="layer_1.annular_area" data-unit="m^2">0.003455752</td><td>m^2</td><td>[G, C]</td></tr><tr><th scope="row">layer_1.dry_mass</th><td data-key="layer_1.dry_mass" data-unit="kg/m">3.455752</td><td>kg/m</td><td>[G, C]</td></tr><tr><th scope="row">layer_2.outer_diameter</th><td data-key="layer_2.outer_diameter" data-unit="m">0.160</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_2.inner_radius</th><td data-key="layer_2.inner_radius" data-unit="m">0.060</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_2.outer_radius</th><td data-key="layer_2.outer_radius" data-unit="m">0.080</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_2.annular_area</th><td data-key="layer_2.annular_area" data-unit="m^2">0.008796459</td><td>m^2</td><td>[G, C]</td></tr><tr><th scope="row">layer_2.dry_mass</th><td data-key="layer_2.dry_mass" data-unit="kg/m">17.592919</td><td>kg/m</td><td>[G, C]</td></tr><tr><th scope="row">layer_3.outer_diameter</th><td data-key="layer_3.outer_diameter" data-unit="m">0.200</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_3.inner_radius</th><td data-key="layer_3.inner_radius" data-unit="m">0.080</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_3.outer_radius</th><td data-key="layer_3.outer_radius" data-unit="m">0.100</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">layer_3.annular_area</th><td data-key="layer_3.annular_area" data-unit="m^2">0.011309734</td><td>m^2</td><td>[G, C]</td></tr><tr><th scope="row">layer_3.dry_mass</th><td data-key="layer_3.dry_mass" data-unit="kg/m">5.654867</td><td>kg/m</td><td>[G, C]</td></tr><tr><th scope="row">bore_diameter</th><td data-key="bore_diameter" data-unit="m">0.100</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">outer_diameter</th><td data-key="outer_diameter" data-unit="m">0.200</td><td>m</td><td>[G, C]</td></tr><tr><th scope="row">wall_area</th><td data-key="wall_area" data-unit="m^2">0.023561945</td><td>m^2</td><td>[G, C]</td></tr><tr><th scope="row">envelope_area</th><td data-key="envelope_area" data-unit="m^2">0.031415927</td><td>m^2</td><td>[G, C]</td></tr><tr><th scope="row">bore_area</th><td data-key="bore_area" data-unit="m^2">0.007853982</td><td>m^2</td><td>[G, C]</td></tr><tr><th scope="row">dry_mass</th><td data-key="dry_mass" data-unit="kg/m">26.703538</td><td>kg/m</td><td>[G, C]</td></tr><tr><th scope="row">displaced_mass</th><td data-key="displaced_mass" data-unit="kg/m">25.132741</td><td>kg/m</td><td>[G, C]</td></tr><tr><th scope="row">content_mass</th><td data-key="content_mass" data-unit="kg/m">4.712389</td><td>kg/m</td><td>[G, C]</td></tr></tbody><caption>Worked geometry and mass; display rounding does not express input accuracy [G, C].</caption></table>
+<h2 id="s6">6. Actual checks and criterion</h2>
+<p>Each calculated result is compared with a radius-based reference using |calculated − reference| / |reference| ≤ 1.0e-12.
+Every reference in this synthetic case is nonzero. This is a software arithmetic criterion, not an engineering release tolerance [G, R, T].
+Displayed relative differences use one decimal in scientific notation; decisions use unrounded values.</p>
+<table><thead><tr><th>Quantity</th><th>Relative difference (dimensionless)</th><th>Arithmetic disposition</th></tr></thead>
+<tbody><tr><td>layer_1.outer_diameter</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_1.inner_radius</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_1.outer_radius</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_1.annular_area</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_1.dry_mass</td><td>3.9e-16</td><td>PASS</td></tr><tr><td>layer_2.outer_diameter</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_2.inner_radius</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_2.outer_radius</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_2.annular_area</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_2.dry_mass</td><td>4.0e-16</td><td>PASS</td></tr><tr><td>layer_3.outer_diameter</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_3.inner_radius</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_3.outer_radius</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_3.annular_area</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>layer_3.dry_mass</td><td>6.3e-16</td><td>PASS</td></tr><tr><td>bore_diameter</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>outer_diameter</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>wall_area</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>envelope_area</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>bore_area</td><td>0.0e+00</td><td>PASS</td></tr><tr><td>dry_mass</td><td>5.3e-16</td><td>PASS</td></tr><tr><td>displaced_mass</td><td>1.4e-16</td><td>PASS</td></tr><tr><td>content_mass</td><td>0.0e+00</td><td>PASS</td></tr></tbody><caption>Checks executed during this build against radius-derived values [G, C, R].</caption></table>
+<p>The focused rebuild test independently specifies the synthetic inputs, derives every result from radii, checks units and rounding,
+compares separate builds, resolves local links, and perturbs a returned mass to expose stale rendering [T]. A clean rebuild establishes reproducibility only.</p>
+<h2 id="s7">7. Correctness findings and known limitations</h2>
+<p>No geometry or full-wall mass defect is established by this case. The following interface findings limit broader use and are separate from the arithmetic comparison.</p>
+<ul><li>Layer mass uses the full annular wall even when metallic_area is supplied; structural_area uses the metallic override. Wound-wire mass and void fractions therefore require another basis [C].</li>
+<li>Missing minimum bend radius gives zero curvature utilisation in verify_flexible_pipe, although the result docstring describes an infinite value when absent.
+An omitted check cannot establish bend-radius acceptance [D].</li>
+<li>Non-finite values are not explicitly rejected by the layer input comparisons. The present case supplies finite positive dimensions and densities [C, G].</li></ul>
+<p>The concentric full walls omit interlocked layers, wire helices, gaps, friction, ovalisation and manufacturing tolerances.
+Stiffness estimates and structural screening interfaces are not qualified by a mass calculation [C, D, B].</p>
+<h2 id="s8">8. NOT_EVALUATED and required basis</h2>
+<table><thead><tr><th>Method</th><th>Status</th><th>Needed reference basis</th></tr></thead><tbody>
+<tr><td>Standard design limits and armour capacity</td><td>NOT_EVALUATED</td><td>Applicable API 17J / ISO 13628-2 and API 17B editions, governing clause titles, load cases, material certificates and qualified manufacturer capacities [D].</td></tr>
+<tr><td>Armour homogenization, EA and EI</td><td>NOT_EVALUATED</td><td>Actual wire areas, lay angles, layer interaction, slip and test-backed stiffness curves [C].</td></tr>
+<tr><td>Fatigue</td><td>NOT_EVALUATED</td><td>Qualified stress histories, stress concentration factors, fatigue curves, environment and cycle-counting basis [I].</td></tr>
+<tr><td>Bend-stiffener sizing and MBR</td><td>NOT_EVALUATED</td><td>Qualified pipe MBR, load/rotation envelope, nonlinear polymer moment-curvature data, taper geometry and applicable API 17L1 / 17L2 basis [B].</td></tr>
+<tr><td>Real manufactured-pipe behaviour, collapse and pressure capacity</td><td>NOT_EVALUATED</td><td>Manufactured layer geometry, voids, tolerances, pressure/temperature/environment data and independent test evidence [C, I].</td></tr>
+<tr><td>Catenary integration and solver response</td><td>NOT_EVALUATED</td><td>Qualified system geometry, boundary conditions, load histories and independently checked native outputs [I].</td></tr>
+</tbody><caption>Deferred methods require a qualified reference basis before acceptance.</caption></table>
+<h2 id="s9">9. Source register and reproducibility</h2>
+<p>The authoritative input is the existing repository synthetic note, not measured data. Intended-use readiness is synthetic arithmetic only.
+Source SHA-256 digests identify the exact bytes consumed. No timestamps or scratch/output paths are embedded; no metadata is removed for the deterministic comparison.</p>
+<ul><li>[G] <code>examples/domains/subsea/flexible_pipe_geometry.md</code>: Synthetic inputs, circle geometry and independent hand calculation; SHA-256: <code>1310bc9f03c7cc40e329591bb4123b817c83d6d5e2d854c4354c65d51a85d06c</code></li><li>[E] <code>examples/domains/subsea/flexible_pipe_geometry.py</code>: Public build_section interface and explicit fluid densities; SHA-256: <code>d07d6b8fe6300b331565bbf86ee2764f14094a2a9e659cd98dad68ed01aaed54</code></li><li>[C] <code>src/digitalmodel/subsea/flexible_pipes/cross_section.py</code>: Geometry, full-wall mass and section interfaces; SHA-256: <code>5e63a6787ad294859a6a680184f11e90df45fc9cb18429449a37dbd4a2ac74ff</code></li><li>[D] <code>src/digitalmodel/subsea/flexible_pipes/design_checks_17J.py</code>: Interface map only; no standard design limits qualified; SHA-256: <code>a303b34ee8fe6643d2047365f91752d1b9945b8211a1fbbaaad849382cb32de3</code></li><li>[B] <code>src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py</code>: Interface map only; no sizing qualified; SHA-256: <code>2e9e297dad6c5e3a3bf6b7c4000d6116869cc61ffea004dc69d95d880836b975</code></li><li>[I] <code>src/digitalmodel/subsea/flexible_pipes/__init__.py</code>: Public exports and deferred methods; SHA-256: <code>624fc45609faef591f85dee6fe01147c6aa8ee76b043e5e5263b1f30cf2b39ec</code></li><li>[T] <code>tests/reporting/test_flexible_pipes_module_report.py</code>: Independent oracle, rebuild and stale-calculation tests; SHA-256: <code>454ccca8efd66a6c235fa79dcda89c35a7537113c89b67f2d2be10d007e492c5</code></li><li>[L] <code>docs/api/cfd/turbulent-flat-plate-verification.html</code>: Existing report layout only; SHA-256: <code>bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25</code></li><li>[P] <code>docs/api/_assets/brand.css</code>: Existing palette only; SHA-256: <code>a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</code></li><li>[R] <code>docs/reports/modules/flexible_pipes/build_report.py</code>: Report generation and comparison criterion; SHA-256: <code>c77182372af2f115b2b0f09dda2261b0ecea484ccb3de1c44b2c13c1557a9cf2</code></li></ul><p><a href="source_register.json">Machine-readable source register</a> · <a href="changes.json">Change record</a></p>
+<p>From the repository root, with externally supplied scratch and output directories:</p>
+<pre>PYTHONPATH=src uv run --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"</pre>
+<p>The output directory receives the report, source register and change record. Calculation intermediates remain in scratch.
+The local README documents rebuilding and delivery. Tests always use separate external directories.</p>
+<h2 id="s10">10. Way forward</h2>
+<p>The synthetic geometry and mass comparison can support software regression for this case. Before applying the methods to a manufactured pipe,
+obtain the reference basis listed in Section 8, independently verify the corresponding method and define acceptance criteria for the governing case.
+Structural and API qualification remain open under <a href="https://github.com/vamseeachanta/digitalmodel/issues/3343">issue 3343</a>.
+No structural acceptance follows from the arithmetic disposition or deterministic rebuild.</p>
+<script id="calculation" type="application/json">{"checks": [{"expected": 0.12000000000000001, "key": "layer_1.outer_diameter", "passes": true, "relative_error": 0.0}, {"expected": 0.05, "key": "layer_1.inner_radius", "passes": true, "relative_error": 0.0}, {"expected": 0.060000000000000005, "key": "layer_1.outer_radius", "passes": true, "relative_error": 0.0}, {"expected": 0.0034557519189487734, "key": "layer_1.annular_area", "passes": true, "relative_error": 0.0}, {"expected": 3.4557519189487733, "key": "layer_1.dry_mass", "passes": true, "relative_error": 3.855217795713353e-16}, {"expected": 0.16, "key": "layer_2.outer_diameter", "passes": true, "relative_error": 0.0}, {"expected": 0.06, "key": "layer_2.inner_radius", "passes": true, "relative_error": 0.0}, {"expected": 0.08, "key": "layer_2.outer_radius", "passes": true, "relative_error": 0.0}, {"expected": 0.008796459430051423, "key": "layer_2.annular_area", "passes": true, "relative_error": 0.0}, {"expected": 17.592918860102845, "key": "layer_2.dry_mass", "passes": true, "relative_error": 4.0387995955092266e-16}, {"expected": 0.2, "key": "layer_3.outer_diameter", "passes": true, "relative_error": 0.0}, {"expected": 0.08, "key": "layer_3.inner_radius", "passes": true, "relative_error": 0.0}, {"expected": 0.1, "key": "layer_3.outer_radius", "passes": true, "relative_error": 0.0}, {"expected": 0.01130973355292326, "key": "layer_3.annular_area", "passes": true, "relative_error": 0.0}, {"expected": 5.65486677646163, "key": "layer_3.dry_mass", "passes": true, "relative_error": 6.282577148569907e-16}, {"expected": 0.1, "key": "bore_diameter", "passes": true, "relative_error": 0.0}, {"expected": 0.2, "key": "outer_diameter", "passes": true, "relative_error": 0.0}, {"expected": 0.023561944901923454, "key": "wall_area", "passes": true, "relative_error": 0.0}, {"expected": 0.031415926535897934, "key": "envelope_area", "passes": true, "relative_error": 0.0}, {"expected": 0.007853981633974483, "key": "bore_area", "passes": true, "relative_error": 0.0}, {"expected": 26.70353755551325, "key": "dry_mass", "passes": true, "relative_error": 5.321712408200393e-16}, {"expected": 25.132741228718352, "key": "displaced_mass", "passes": true, "relative_error": 1.4135798584282292e-16}, {"expected": 4.712388980384691, "key": "content_mass", "passes": true, "relative_error": 0.0}], "input_keys": ["layer_1.inner_diameter", "layer_1.thickness", "layer_1.density", "layer_2.inner_diameter", "layer_2.thickness", "layer_2.density", "layer_3.inner_diameter", "layer_3.thickness", "layer_3.density", "external_density", "bore_density"], "layers": [{"index": 1, "type": "pressure_sheath"}, {"index": 2, "type": "anti_wear"}, {"index": 3, "type": "outer_sheath"}], "values": {"bore_area": {"decimals": 9, "source": "G", "unit": "m^2", "value": 0.007853981633974483}, "bore_density": {"decimals": 1, "source": "G", "unit": "kg/m^3", "value": 600.0}, "bore_diameter": {"decimals": 3, "source": "G", "unit": "m", "value": 0.1}, "content_mass": {"decimals": 6, "source": "G", "unit": "kg/m", "value": 4.712388980384691}, "displaced_mass": {"decimals": 6, "source": "G", "unit": "kg/m", "value": 25.13274122871835}, "dry_mass": {"decimals": 6, "source": "G", "unit": "kg/m", "value": 26.703537555513236}, "envelope_area": {"decimals": 9, "source": "G", "unit": "m^2", "value": 0.031415926535897934}, "external_density": {"decimals": 1, "source": "G", "unit": "kg/m^3", "value": 800.0}, "layer_1.annular_area": {"decimals": 9, "source": "G", "unit": "m^2", "value": 0.0034557519189487734}, "layer_1.density": {"decimals": 1, "source": "G", "unit": "kg/m^3", "value": 1000.0}, "layer_1.dry_mass": {"decimals": 6, "source": "G", "unit": "kg/m", "value": 3.455751918948772}, "layer_1.inner_diameter": {"decimals": 3, "source": "G", "unit": "m", "value": 0.1}, "layer_1.inner_radius": {"decimals": 3, "source": "G", "unit": "m", "value": 0.05}, "layer_1.outer_diameter": {"decimals": 3, "source": "G", "unit": "m", "value": 0.12000000000000001}, "layer_1.outer_radius": {"decimals": 3, "source": "G", "unit": "m", "value": 0.060000000000000005}, "layer_1.thickness": {"decimals": 3, "source": "G", "unit": "m", "value": 0.01}, "layer_2.annular_area": {"decimals": 9, "source": "G", "unit": "m^2", "value": 0.008796459430051423}, "layer_2.density": {"decimals": 1, "source": "G", "unit": "kg/m^3", "value": 2000.0}, "layer_2.dry_mass": {"decimals": 6, "source": "G", "unit": "kg/m", "value": 17.592918860102838}, "layer_2.inner_diameter": {"decimals": 3, "source": "G", "unit": "m", "value": 0.12}, "layer_2.inner_radius": {"decimals": 3, "source": "G", "unit": "m", "value": 0.06}, "layer_2.outer_diameter": {"decimals": 3, "source": "G", "unit": "m", "value": 0.16}, "layer_2.outer_radius": {"decimals": 3, "source": "G", "unit": "m", "value": 0.08}, "layer_2.thickness": {"decimals": 3, "source": "G", "unit": "m", "value": 0.02}, "layer_3.annular_area": {"decimals": 9, "source": "G", "unit": "m^2", "value": 0.01130973355292326}, "layer_3.density": {"decimals": 1, "source": "G", "unit": "kg/m^3", "value": 500.0}, "layer_3.dry_mass": {"decimals": 6, "source": "G", "unit": "kg/m", "value": 5.654866776461627}, "layer_3.inner_diameter": {"decimals": 3, "source": "G", "unit": "m", "value": 0.16}, "layer_3.inner_radius": {"decimals": 3, "source": "G", "unit": "m", "value": 0.08}, "layer_3.outer_diameter": {"decimals": 3, "source": "G", "unit": "m", "value": 0.2}, "layer_3.outer_radius": {"decimals": 3, "source": "G", "unit": "m", "value": 0.1}, "layer_3.thickness": {"decimals": 3, "source": "G", "unit": "m", "value": 0.02}, "outer_diameter": {"decimals": 3, "source": "G", "unit": "m", "value": 0.2}, "wall_area": {"decimals": 9, "source": "G", "unit": "m^2", "value": 0.023561944901923454}}}</script>
+</main></body></html>
