@@ -13,6 +13,9 @@
 /* title block */
 .titleblock{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:760px){.titleblock{grid-template-columns:1fr}}
+.titleblock .kv{min-width:0}
+.titleblock .kv,.revhist{overflow-x:visible}
+.kv>.tbl-wrap{margin-top:0;border:0;border-radius:0}
 .titleblock .kv table{min-width:0}
 .titleblock .kv td:first-child{width:38%;white-space:normal}
 .revhist{margin-top:18px}
@@ -20,6 +23,10 @@
 .revhist th,.revhist td{text-align:left;white-space:normal}
 
 /* tables */
+/* Issue 1625: constrain each table to its containing block (100%);
+   W3C CSS Overflow Level 3, 7 October 2025 draft, section 3.1 defines auto.
+   Keep table content reachable through local scrolling, without page clipping. */
+.tbl-wrap{overflow-x:auto;max-width:100%}
 .tbl{margin-top:22px}
 .tbl .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px}
 .tbl thead tr.units th{font-family:var(--mono);font-size:10.5px;text-transform:none;letter-spacing:0;color:var(--ink-muted);
