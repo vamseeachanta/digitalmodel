@@ -1,0 +1,182 @@
+[
+  {
+    "case_id": "steady_baseline",
+    "synthetic": true,
+    "solver_version": "synthetic-no-solver",
+    "input_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "representation": "template",
+    "soil_factor": 1,
+    "frame": "global",
+    "origin": "mudline",
+    "force_unit": "kN",
+    "moment_unit": "kN.m",
+    "load_convention": "Force and moment on upper structure from lower structure",
+    "window_s": [
+      0,
+      2
+    ],
+    "modes": [
+      {
+        "mode_key": "tower_fa",
+        "frequency_hz": 2,
+        "shape_evidence": "Synthetic label, no native mode shape"
+      },
+      {
+        "mode_key": "monopile_ss",
+        "frequency_hz": 4,
+        "shape_evidence": "Synthetic label, no native mode shape"
+      }
+    ],
+    "samples": [
+      {
+        "time_s": 0,
+        "fx": -3,
+        "fy": 0,
+        "fz": 0,
+        "mx": -12,
+        "my": 0,
+        "mz": 0
+      },
+      {
+        "time_s": 1,
+        "fx": 0,
+        "fy": 0,
+        "fz": 0,
+        "mx": 0,
+        "my": 0,
+        "mz": 0
+      },
+      {
+        "time_s": 2,
+        "fx": 6,
+        "fy": 0,
+        "fz": 0,
+        "mx": 24,
+        "my": 0,
+        "mz": 0
+      }
+    ],
+    "comparison_basis_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "soil_factor_source": "Arbitrary synthetic arithmetic input; independent calculation in test_fixed_bottom_workflow.py docstring"
+  },
+  {
+    "case_id": "steady_softened",
+    "synthetic": true,
+    "solver_version": "synthetic-no-solver",
+    "input_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "representation": "template",
+    "soil_factor": 0.5,
+    "frame": "global",
+    "origin": "mudline",
+    "force_unit": "kN",
+    "moment_unit": "kN.m",
+    "load_convention": "Force and moment on upper structure from lower structure",
+    "window_s": [
+      0,
+      2
+    ],
+    "modes": [
+      {
+        "mode_key": "tower_fa",
+        "frequency_hz": 1,
+        "shape_evidence": "Synthetic label, no native mode shape"
+      },
+      {
+        "mode_key": "monopile_ss",
+        "frequency_hz": 2,
+        "shape_evidence": "Synthetic label, no native mode shape"
+      }
+    ],
+    "samples": [
+      {
+        "time_s": 0,
+        "fx": -3,
+        "fy": 0,
+        "fz": 0,
+        "mx": -12,
+        "my": 0,
+        "mz": 0
+      },
+      {
+        "time_s": 1,
+        "fx": 0,
+        "fy": 0,
+        "fz": 0,
+        "mx": 0,
+        "my": 0,
+        "mz": 0
+      },
+      {
+        "time_s": 2,
+        "fx": 6,
+        "fy": 0,
+        "fz": 0,
+        "mx": 24,
+        "my": 0,
+        "mz": 0
+      }
+    ],
+    "comparison_basis_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "soil_factor_source": "Arbitrary synthetic arithmetic input; independent calculation in test_fixed_bottom_workflow.py docstring"
+  },
+  {
+    "case_id": "steady_stiffened",
+    "synthetic": true,
+    "solver_version": "synthetic-no-solver",
+    "input_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "representation": "template",
+    "soil_factor": 2,
+    "frame": "global",
+    "origin": "mudline",
+    "force_unit": "kN",
+    "moment_unit": "kN.m",
+    "load_convention": "Force and moment on upper structure from lower structure",
+    "window_s": [
+      0,
+      2
+    ],
+    "modes": [
+      {
+        "mode_key": "tower_fa",
+        "frequency_hz": 3,
+        "shape_evidence": "Synthetic label, no native mode shape"
+      },
+      {
+        "mode_key": "monopile_ss",
+        "frequency_hz": 6,
+        "shape_evidence": "Synthetic label, no native mode shape"
+      }
+    ],
+    "samples": [
+      {
+        "time_s": 0,
+        "fx": -3,
+        "fy": 0,
+        "fz": 0,
+        "mx": -12,
+        "my": 0,
+        "mz": 0
+      },
+      {
+        "time_s": 1,
+        "fx": 0,
+        "fy": 0,
+        "fz": 0,
+        "mx": 0,
+        "my": 0,
+        "mz": 0
+      },
+      {
+        "time_s": 2,
+        "fx": 6,
+        "fy": 0,
+        "fz": 0,
+        "mx": 24,
+        "my": 0,
+        "mz": 0
+      }
+    ],
+    "comparison_basis_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "soil_factor_source": "Arbitrary synthetic arithmetic input; independent calculation in test_fixed_bottom_workflow.py docstring"
+  }
+]

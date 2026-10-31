@@ -805,11 +805,15 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert result["usage_factor_ultimate_check"]["usage_equivalent"] < 1
     elif workflow["id"] == "on-bottom-stability-f109":
         result = cfg["on_bottom_stability"]["result"]
-        assert result["submerged_weight_N_m"] == pytest.approx(2133.496806)
+        # Synthetic annuli: pi/4 * [(OD^2-ID^2)*7850 +
+        # (D^2-OD^2)*3040 - D^2*1025] * 9.81, with
+        # OD=0.3239, ID=OD-2*0.0127 and D=OD+2*0.08.
+        assert result["submerged_weight_N_m"] == pytest.approx(2134.225619)
         assert result["horizontal_load_N_m"] == pytest.approx(715.325862)
         assert result["lift_load_N_m"] == pytest.approx(502.197469)
-        assert result["required_submerged_weight_N_m"] == pytest.approx(2075.914365)
-        assert result["lateral_utilization"] == pytest.approx(0.964701)
+        # Both demands are factored: 1.1*(horizontal/0.5 + lift).
+        assert result["required_submerged_weight_N_m"] == pytest.approx(2126.134112)
+        assert result["lateral_utilization"] == pytest.approx(0.996209)
         assert result["is_laterally_stable"] is True
     elif workflow["id"] == "on-bottom-stability-e305":
         result = cfg["on_bottom_stability_e305_result"]
