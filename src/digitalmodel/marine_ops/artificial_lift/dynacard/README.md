@@ -192,12 +192,13 @@ All calculators extend `BaseCalculator[T]` and follow the same pattern:
 
 ## Physics Solvers
 
-### Gibbs (default)
+### Gibbs (comparison only)
 
-Frequency-domain analytical method based on Gibbs 1963. Converts surface card
-data to downhole conditions using FFT/IFFT decomposition of the wave equation
-with empirical calibration factors. Faster and suitable for most production
-monitoring use cases.
+The coupled frequency-domain method propagates displacement and load through
+ordered rod sections, using each section's properties and damping rate. See
+[the equations, independent tests and worked example](gibbs-transfer.md).
+Field diagnostic validity remains NOT_EVALUATED; the workflow default is
+`everitt_jennings`.
 
 ```python
 workflow = DynacardWorkflow(ctx, solver_method="gibbs")

@@ -1,0 +1,21 @@
+{
+  "manifest_sha256": "eb884fb66d66262cbfef361ded31b4cdf47f4e9641c51fdd0650d747b9000eb1",
+  "schema_sha256": "48b1ee24dcc5131e4f7f20307cea7274bdfd2221ae936b1921b39147e547f036",
+  "basis_sha256": "7b3c6465bdcaafc995ba3659d16d98c43ffcec77079ed324650995c033ff8d77",
+  "files": [
+    {
+      "configuration": "SCR",
+      "path": "scr.yml",
+      "generated_path": "fpso-small-500-scr/nominal--mild.yml",
+      "sha256": "d8605d53e9b6109c59ad0ac91de7b3f78773b8adc87462e0accb7d5105e7f8ef",
+      "bytes": 5384
+    },
+    {
+      "configuration": "lazy-wave",
+      "path": "lazy-wave.yml",
+      "generated_path": "fpso-small-500-lazy-wave/nominal--mild.yml",
+      "sha256": "6475a5b41d0c8614626d0f0ba1332edc326fd2a48373db00a3e63cd361ad508f",
+      "bytes": 5815
+    }
+  ]
+}

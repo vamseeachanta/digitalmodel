@@ -36,7 +36,14 @@ class CardData(BaseModel):
 
 
 class RodSection(BaseModel):
-    """Properties for a single section of the sucker rod string."""
+    """Properties for a single section of the sucker rod string.
+
+    Wave speed is independently prescribed; consistency with modulus and mass
+    density is not enforced. The default bare-material density and wave speed
+    do not imply the same dynamic mass. Both solver adapters use supplied
+    weight_per_foot to derive coupling-inclusive density for static weight;
+    the coupled transfer still uses the prescribed speed for dynamic response.
+    """
     diameter: float  # inches
     length: float  # feet
     count: int = 1

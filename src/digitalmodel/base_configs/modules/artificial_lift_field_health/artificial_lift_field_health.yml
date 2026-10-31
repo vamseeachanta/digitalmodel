@@ -1,7 +1,7 @@
 basename: artificial_lift_field_health
 
 artificial_lift_field_health:
-  # Default solver. 'gibbs' does not transform load (#1857) and must not
+  # Default solver. 'gibbs' is not field validated (#1857) and must not
   # be used for diagnosis; synthetic cards are forward-modelled to the
   # surface before solving (#1862).
   solver_method: everitt_jennings
