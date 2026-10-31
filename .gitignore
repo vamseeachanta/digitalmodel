@@ -636,3 +636,11 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain only the jacket and topside module report deliverables.
+!/scripts/reports/build_jacket_topside_module_report.py
+!/docs/reports/modules/jacket_topside/
+!/docs/reports/modules/jacket_topside/index.html
+!/docs/reports/modules/jacket_topside/changes.json
+!/docs/reports/modules/jacket_topside/manifest.json
+!/docs/reports/modules/jacket_topside/README.md
