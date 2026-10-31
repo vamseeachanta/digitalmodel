@@ -1,0 +1,6 @@
+# Retain only the bounded module report deliverables beyond inherited rules.
+!.gitignore
+!build_report.py
+!report.html
+!changes.json
+!sources.json
