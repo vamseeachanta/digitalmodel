@@ -66,6 +66,7 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/fatigue/sn_curves.py",
         "src/digitalmodel/fatigue/c203_sn_tables.py",
         "src/digitalmodel/fatigue/damage.py",
+        "src/digitalmodel/fatigue/_deterministic.py",
     ],
     # response is a replicated T-N formula; track the workflow so divergence
     # from the source flags the atlas stale.
@@ -125,6 +126,7 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/fatigue/sn_curves.py",
         "src/digitalmodel/fatigue/c203_sn_tables.py",
         "src/digitalmodel/fatigue/damage.py",
+        "src/digitalmodel/fatigue/_deterministic.py",
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],
