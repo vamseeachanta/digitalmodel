@@ -35,7 +35,7 @@ def sample(tmp_path, monkeypatch):
     for name, text in contents.items():
         target = root / name
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(text, encoding='utf-8')
+        target.write_text(text, encoding='utf-8', newline='\n')
     monkeypatch.setattr(inv, 'tracked_files', lambda _: set(contents))
     monkeypatch.setattr(inv, 'checkout_revision', lambda _: 'a' * 40)
     row = {
@@ -95,7 +95,7 @@ def test_path_escape_rejected(sample, path):
 def test_symlink_escape_rejected(sample, tmp_path):
     root, observations = sample
     outside = tmp_path / 'outside.html'
-    outside.write_text('outside')
+    outside.write_text('outside', encoding='utf-8', newline='\n')
     (root / 'docs/reports/alpha.html').unlink()
     (root / 'docs/reports/alpha.html').symlink_to(outside)
     with pytest.raises(inv.InventoryError, match='path'):
@@ -113,7 +113,7 @@ def test_duplicate_ids_rejected(sample):
                                     '{"reports": [], "reports": []}'])
 def test_malformed_json_rejected(tmp_path, content):
     path = tmp_path / 'observations.json'
-    path.write_text(content)
+    path.write_text(content, encoding='utf-8', newline='\n')
     with pytest.raises(inv.InventoryError):
         inv.read_observations(path)
 
@@ -127,7 +127,8 @@ def test_mismatched_digest_rejected(sample):
 
 def test_source_change_rejected(sample):
     root, observations = sample
-    (root / 'data/alpha-result.json').write_text('{"qualification":"UNKNOWN"}')
+    (root / 'data/alpha-result.json').write_text(
+        '{"qualification":"UNKNOWN"}', encoding='utf-8', newline='\n')
     with pytest.raises(inv.InventoryError, match='stale'):
         inv.build_inventory(root, observations)
 
@@ -221,7 +222,7 @@ def test_untracked_private_and_audit_inputs_excluded(sample, monkeypatch):
     for path in paths:
         target = root / path
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text('excluded')
+        target.write_text('excluded', encoding='utf-8', newline='\n')
     tracked = set(observations['reports'][0]['source_digests']) | set(paths[1:])
     monkeypatch.setattr(inv, 'tracked_files', lambda _: tracked)
     observations['scope_roots'].append('docs/audits')
@@ -232,7 +233,8 @@ def test_untracked_private_and_audit_inputs_excluded(sample, monkeypatch):
 
 def test_changed_discovery_is_a_gap(sample, monkeypatch):
     root, observations = sample
-    (root / 'docs/reports/beta.html').write_text('unreviewed')
+    (root / 'docs/reports/beta.html').write_text(
+        'unreviewed', encoding='utf-8', newline='\n')
     paths = set(observations['reports'][0]['source_digests']) | {'docs/reports/beta.html'}
     monkeypatch.setattr(inv, 'tracked_files', lambda _: paths)
     result = inv.build_inventory(root, observations)
@@ -243,8 +245,15 @@ def test_changed_discovery_is_a_gap(sample, monkeypatch):
 def test_saved_inventory_rebuilds_and_counts_agree():
     saved = ROOT / 'docs/audits/capability-report-inventory.json'
     result = inv.build_inventory(ROOT, inv.read_observations(saved))
-    assert result == json.loads(saved.read_text())
-    assert inv.render_html(result) == saved.with_suffix('.html').read_text()
+    discovered = inv.discover_reports(
+        ROOT, result['observations']['scope_roots'], inv.tracked_files(ROOT))
+    assert 'docs/reports/modules/capping_stack/index.html' in discovered
+    rebuild = ('Run scripts/reporting/capability_report_inventory.py --root . '
+               '--observations docs/audits/capability-report-inventory.json '
+               '--out-dir docs/audits')
+    assert result == json.loads(saved.read_text(encoding='utf-8')), rebuild
+    assert inv.render_html(result) == saved.with_suffix('.html').read_text(
+        encoding='utf-8'), rebuild
     assert sum(result['generated']['counts'].values()) == len(result['reports'])
     cfd = next(r for r in result['reports'] if r['id'] == 'cfd-calm-water')
     assert cfd['evidence_status'] == 'INDICATIVE'
@@ -256,7 +265,7 @@ def test_calculation_module_cannot_be_an_independent_reference(sample, monkeypat
     root, observations = sample
     path = 'src/calculation.py'
     (root / 'src').mkdir()
-    (root / path).write_text('# synthetic calculation')
+    (root / path).write_text('# synthetic calculation', encoding='utf-8', newline='\n')
     tracked = set(observations['reports'][0]['source_digests']) | {path}
     monkeypatch.setattr(inv, 'tracked_files', lambda _: tracked)
     row = observations['reports'][0]
@@ -280,7 +289,7 @@ def test_evidence_must_be_tracked_and_public(sample, monkeypatch, path):
     root, observations = sample
     target = root / path
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text('unavailable')
+    target.write_text('unavailable', encoding='utf-8', newline='\n')
     row = observations['reports'][0]
     tracked = set(row['source_digests'])
     if 'untracked' not in path:
@@ -296,7 +305,7 @@ def test_cli_rejection_writes_no_outputs(sample, tmp_path):
     root, observations = sample
     observations['reports'][0]['source_digests']['scripts/alpha.py'] = '0' * 64
     source = tmp_path / 'review.json'
-    source.write_text(json.dumps(observations))
+    source.write_text(json.dumps(observations), encoding='utf-8', newline='\n')
     output = tmp_path / 'rejected-output'
     with pytest.raises(SystemExit) as exc:
         inv.main(['--root', str(root), '--observations', str(source), '--out-dir', str(output)])
@@ -308,7 +317,8 @@ def test_cli_discovery_never_guesses_qualification(sample, tmp_path):
     root, _ = sample
     output = tmp_path / 'discovery-output'
     assert inv.main(['--root', str(root), '--out-dir', str(output)]) == 0
-    saved = json.loads((output / 'capability-report-inventory.json').read_text())
+    saved = json.loads((output / 'capability-report-inventory.json').read_text(
+        encoding='utf-8'))
     assert saved['generated']['counts']['UNKNOWN'] == 1
     assert saved['reports'][0]['qualification'] == 'UNKNOWN'
     assert saved['reports'][0]['generator_path'] is None
@@ -337,8 +347,8 @@ def test_output_symlink_cannot_overwrite_other_files(sample, tmp_path):
     output = tmp_path / 'output'
     output.mkdir()
     protected = tmp_path / 'protected.json'
-    protected.write_text('preserve')
+    protected.write_text('preserve', encoding='utf-8', newline='\n')
     (output / 'capability-report-inventory.json').symlink_to(protected)
     with pytest.raises(inv.InventoryError, match='symlink'):
         inv.write_outputs(inv.build_inventory(root, observations), output)
-    assert protected.read_text() == 'preserve'
+    assert protected.read_text(encoding='utf-8') == 'preserve'
