@@ -198,7 +198,7 @@ class TestAnnularVelocityPublishedBenchmark:
         AV = 24.5 * 300 / (12.25^2 - 5^2) = 58.77 ft/min
 
     The example rounds the field-unit constant to 24.5; the module uses 24.51
-    (231 * 144 / (1728 * pi/4) / 12 = 24.51). The two differ by 0.04 %.
+    (231 in^3/gal / (12 in/ft * pi/4) = 24.51). The two differ by 0.04 %.
     """
 
     @staticmethod
@@ -218,12 +218,12 @@ class TestAnnularVelocityPublishedBenchmark:
         """Module constant 24.51: 7353 / 125.0625 = 58.795 ft/min."""
         expected = 24.51 * 300.0 / (12.25 ** 2 - 5.0 ** 2)
         assert self._benchmark().annular_velocity() == pytest.approx(expected, rel=1e-9)
-        assert self._benchmark().annular_velocity() == pytest.approx(58.795, abs=5e-4)
 
-    def test_published_constant_reproduces_published_value(self):
-        """The published constant 24.5 gives 58.77 ft/min to two decimals."""
+    def test_differs_from_published_only_by_constant_rounding(self):
+        """Module AV / published-constant AV equals 24.51 / 24.5; 24.5 reproduces 58.77."""
         published = 24.5 * 300.0 / (12.25 ** 2 - 5.0 ** 2)
         assert round(published, 2) == 58.77
+        assert self._benchmark().annular_velocity() / published == pytest.approx(24.51 / 24.5, rel=1e-9)
 
 
 # ---------------------------------------------------------------------------
