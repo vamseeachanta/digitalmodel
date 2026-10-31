@@ -6,6 +6,7 @@ and DNV thickness correction for stress ranges.
 """
 
 import math
+from fractions import Fraction
 from numbers import Real
 
 import numpy as np
@@ -59,11 +60,22 @@ def miner_damage(
         raise ValueError("Miner bin damage must be finite and non-negative")
     # math.fsum is exactly rounded, so the total is independent of bin order
     # and of the SIMD width a NumPy reduction would use.
-    total = math.fsum(float(value) for value in damages)
+    try:
+        total = math.fsum(float(value) for value in damages)
+    except OverflowError:
+        total = math.inf
     if not np.isfinite(total) or total < 0:
         raise ValueError("Miner total damage must be finite and non-negative")
     result.attrs["total_damage"] = total
     return result
+
+
+# pyLife steps that WoehlerCurve.cycles runs; an override of any of them means
+# the curve is not plain pyLife Basquin and is evaluated through pyLife itself.
+_PYLIFE_STEPS = ("cycles", "basquin_cycles", "_make_k", "broadcast",
+                 "transform_to_failure_probability")
+# Integer slopes up to this magnitude are evaluated exactly.
+_MAX_EXACT_SLOPE = 64
 
 
 def _scalar_parameter(value):
@@ -76,40 +88,62 @@ def _scalar_parameter(value):
         return None
 
 
-def _is_pylife_method(sn_curve, name):
-    """True when ``name`` is pyLife's own WoehlerCurve method, not an override."""
-    return getattr(getattr(sn_curve, name, None), "__func__", None) is getattr(WoehlerCurve, name)
+def _plain_basquin_parameters(sn_curve):
+    """(SD, ND, k_1, k_2) when pyLife's default ``cycles`` is plain Basquin.
+
+    Requires an exact ``WoehlerCurve`` with no instance override of a pyLife
+    step, scalar parameters, and a curve on which every supported pyLife
+    version's default failure-probability handling is the identity: at the
+    median (0.5) or without scatter (TN = TS = 1). Returns None otherwise.
+    """
+    if type(sn_curve) is not WoehlerCurve:
+        return None
+    if any(name in vars(sn_curve) for name in _PYLIFE_STEPS):
+        return None
+    params = [_scalar_parameter(getattr(sn_curve, name)) for name in
+              ("SD", "ND", "k_1", "k_2", "TN", "TS", "failure_probability")]
+    if None in params:
+        return None
+    sd, nd, k_1, k_2, tn, ts, probability = params
+    if probability != 0.5 and not (tn == 1.0 and ts == 1.0):
+        return None
+    return sd, nd, k_1, k_2
+
+
+def _basquin(nd, ratio, k):
+    """ND * ratio ** -k with a CPU-independent result.
+
+    An integer slope is evaluated in exact rational arithmetic and rounded once,
+    so neither NumPy's vector kernels nor the per-CPU libm ``pow`` is involved.
+    A non-integer slope uses ``math.pow``. Zero ratio or overflow gives +inf,
+    as pyLife's ``np.power`` does.
+    """
+    try:
+        if k.is_integer() and abs(k) <= _MAX_EXACT_SLOPE:
+            return float(Fraction(nd) * Fraction(ratio) ** -int(k))
+        return nd * math.pow(ratio, -k)
+    except (OverflowError, ZeroDivisionError, ValueError):
+        return math.inf
 
 
 def _allowable_cycles(sn_curve, stress_ranges):
     """Allowable cycles per bin, evaluated CPU-deterministically.
 
-    For a plain pyLife ``WoehlerCurve`` with scalar parameters, pyLife's Basquin
-    law ``N = ND * (S / SD) ** -k`` (``k = k_1`` at or above SD, ``k_2`` below
-    it; infinite ``k`` gives infinite N) is evaluated one bin at a time with
-    ``math.pow``. ``np.power`` dispatches to processor-specific vector kernels
-    whose last bits differ between CPUs. Any other curve object is evaluated
-    through its own ``cycles`` method, unchanged.
+    For a plain pyLife Basquin curve, pyLife's law ``N = ND * (S / SD) ** -k``
+    (``k = k_1`` at or above SD, ``k_2`` below it; infinite ``k`` gives infinite
+    N) is evaluated one bin at a time with ``_basquin``. ``np.power``
+    dispatches to processor-specific vector kernels whose last bits differ
+    between CPUs. Any other curve object is evaluated through its own
+    ``cycles`` method, unchanged.
     """
-    if (not isinstance(sn_curve, WoehlerCurve)
-            or not _is_pylife_method(sn_curve, "cycles")
-            or not _is_pylife_method(sn_curve, "basquin_cycles")):
+    parameters = _plain_basquin_parameters(sn_curve)
+    if parameters is None:
         return sn_curve.cycles(stress_ranges)
-    sd, nd, k_1, k_2 = (_scalar_parameter(value) for value in
-                        (sn_curve.SD, sn_curve.ND, sn_curve.k_1, sn_curve.k_2))
-    if None in (sd, nd, k_1, k_2):
-        return sn_curve.cycles(stress_ranges)
+    sd, nd, k_1, k_2 = parameters
     allowable = np.empty(len(stress_ranges), dtype=float)
     for index, stress in enumerate(stress_ranges.tolist()):
         k = k_2 if stress < sd else k_1
-        if not math.isfinite(k):
-            allowable[index] = math.inf
-            continue
-        try:
-            allowable[index] = nd * math.pow(stress / sd, -k)
-        except (OverflowError, ZeroDivisionError, ValueError):
-            # Zero stress or overflow: pyLife's np.power returns +inf here.
-            allowable[index] = math.inf
+        allowable[index] = _basquin(nd, stress / sd, k) if math.isfinite(k) else math.inf
     return allowable
 
 
