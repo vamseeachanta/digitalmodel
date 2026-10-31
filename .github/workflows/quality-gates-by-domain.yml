@@ -421,6 +421,26 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Install Chromium for capability layout tests
+        if: matrix.domain == 'capabilities'
+        env:
+          DOMAIN_GATE_COMMAND: ${{ steps.gate.outputs.command }}
+        run: |
+          python - <<'PY'
+          import os
+          import shlex
+          import subprocess
+
+          command = shlex.split(os.environ["DOMAIN_GATE_COMMAND"])
+          test_index = command.index("pytest")
+          if command[test_index - 2:test_index] != ["python", "-m"]:
+              raise ValueError("Expected a python -m pytest domain command")
+          subprocess.run(
+              command[:test_index] + ["playwright", "install", "--with-deps", "chromium"],
+              check=True,
+          )
+          PY
+
       - name: Select trusted register
         if: matrix.domain == 'orcaflex'
         env:
