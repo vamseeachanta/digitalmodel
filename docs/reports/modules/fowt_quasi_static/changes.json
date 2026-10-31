@@ -1,0 +1,12 @@
+[
+  {
+    "change": "Initial synthetic methods analysis; sampled natural roots are retained and arithmetic evidence is separated from engineering acceptance.",
+    "date": "2026-10-28",
+    "revision": "A"
+  },
+  {
+    "change": "Calculated report values are rounded to 12 decimal places before serialization to remove final-bit numerical differences within the test tolerances.",
+    "date": "2026-10-28",
+    "revision": "B"
+  }
+]
