@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Independent hand calculations for layered circular-footing mechanisms.
@@ -123,6 +126,69 @@ def test_equal_clay_strengths_have_no_artificial_drop():
     assert not curve.events
 
 
+@pytest.mark.parametrize('scale', [1e-6, 1.0, 1e6])
+@pytest.mark.parametrize('dense', [False, True])
+def test_constant_capacity_plateau_is_grid_invariant(scale, dense):
+    # D=6: switch z=10-6*(63.4-31.7)/30=3.66 m.
+    # Thereafter q=31.7+5*(10-z)+5*z=81.7 kPa; Q=735.3*pi kN.
+    # Scaling all strengths and weights preserves this constant branch.
+    profile = LayeredProfile((clay(0, 10, 10 * scale, 5 * scale),
+                              clay(10, 30, 5 * scale, 5 * scale)))
+    depths = [i / 10 for i in range(101)] if dense else [0, 10]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=10000 * scale)
+    assert point(curve, 10).pressure_kpa == pytest.approx(81.7 * scale)
+    assert curve.maximum.load_kn == pytest.approx(735.3 * math.pi * scale)
+    assert curve.events == ()
+    assert curve.peak.depth_m == pytest.approx(3.66)
+    assert curve.maximum.depth_m == pytest.approx(3.66)
+    assert curve.post_peak_drop_kn == 0
+    assert curve.punch_through_flag is False
+    assert curve.preload_support_depth_m is None
+
+
+@pytest.mark.parametrize('direction', [-math.inf, math.inf])
+@pytest.mark.parametrize('dense', [False, True])
+def test_preload_roundoff_does_not_turn_a_real_loss_into_support(direction, dense):
+    # D=6, gamma=0: q=63.4 kPa until z=3.66, then 31.7+5*(10-z).
+    # At z=10, q=31.7 kPa; loss=(63.4-31.7)*9*pi=285.3*pi kN.
+    # A preload one representable value from the peak remains at that peak.
+    profile = LayeredProfile((clay(0, 10, 10, 0), clay(10, 30, 5, 0)))
+    preload = math.nextafter(570.6 * math.pi, direction)
+    depths = [i / 10 for i in range(101)] if dense else [0, 10]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=preload)
+    assert len(curve.events) == 1
+    assert curve.events[0].drop_kn == pytest.approx(285.3 * math.pi)
+    assert curve.events[0].preload_reaches_peak is True
+    assert curve.punch_through_flag is True
+    assert curve.preload_support_depth_m is None
+    assert curve.events[0].preload_recovery_depth_m is None
+
+
+@pytest.mark.parametrize('dense', [False, True])
+def test_small_physical_loss_is_retained_above_roundoff(dense):
+    # q=31.7+5*(10-z)+(5-1e-7)*z=81.7-1e-7*z kPa after z=3.66.
+    # The real loss to z=10 is 6.34e-7 kPa, or 5.706e-6*pi kN.
+    profile = LayeredProfile((clay(0, 10, 10, 4.9999999),
+                              clay(10, 30, 5, 4.9999999)))
+    depths = [i / 10 for i in range(101)] if dense else [0, 10]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=10000)
+    assert len(curve.events) == 1
+    assert curve.events[0].peak.depth_m == pytest.approx(3.66)
+    assert curve.events[0].trough.depth_m == 10
+    assert curve.events[0].drop_kn == pytest.approx(5.706e-6 * math.pi, abs=1e-10)
+    assert curve.punch_through_flag is True
+
+
+@pytest.mark.parametrize('direction', [-math.inf, math.inf])
+def test_single_point_support_accepts_preload_roundoff(direction):
+    # q(10)=6.34*5+5*10=81.7 kPa; Q=735.3*pi kN for D=6.
+    profile = LayeredProfile((clay(0, 30, 5, 5),))
+    curve = penetration_curve(profile, Spudcan(6), [10],
+                              preload_kn=math.nextafter(math.nextafter(735.3 * math.pi, direction), direction))
+    assert curve.preload_support_depth_m == 10
+    assert curve.punch_through_flag is False
+
+
 @pytest.mark.parametrize('method', ['load_spread', 'punching_shear'])
 def test_grid_resolution_does_not_hide_sand_peak_or_recovery(method):
     # Independent stationary points for H=5, D=10, gamma_s=10, su=10:
@@ -212,17 +278,17 @@ def test_example_outputs_are_portable_offline_and_replayable(tmp_path):
         'uniform_soft': (230.1 * 36 * math.pi, False),
     }
     for source in inputs:
-        payload = json.loads(source.read_text())
+        payload = json.loads(source.read_text(encoding="utf-8"))
         assert payload['basis'] == 'assumed, based on previous experience'
         assert payload['parameter_ranges']
         profile, spudcan, depths, preload = module.from_input(payload)
         curve = penetration_curve(profile, spudcan, depths, preload_kn=preload)
         name = source.name.removesuffix('.input.json')
         assert (tmp_path / f'{name}.curve.csv').is_file()
-        figure = json.loads((tmp_path / f'{name}.figure.json').read_text())
+        figure = json.loads((tmp_path / f'{name}.figure.json').read_text(encoding="utf-8"))
         assert figure['layout']['xaxis']['title']['text'] == 'Tip penetration below mudline (m)'
         assert any(t['name'] == 'Preload reaction' for t in figure['data'])
-        summary = json.loads((tmp_path / f'{name}.summary.json').read_text())
+        summary = json.loads((tmp_path / f'{name}.summary.json').read_text(encoding="utf-8"))
         expected_peak, expected_flag = expected[name]
         assert curve.peak.load_kn == pytest.approx(expected_peak)
         assert summary['peak']['load_kn'] == pytest.approx(expected_peak)

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Illustrative spudcan screening using open research, with SI inputs.
@@ -616,6 +619,16 @@ class _LayeredResistance:
         return result
 
 
+def _compare_loads(first: float, second: float) -> int:
+    """Order loads with relative round-off tolerance, without a unit-scale floor.
+
+    The 1e-12 relative tolerance is numerical, not an engineering loss limit.
+    """
+    if math.isclose(first, second, rel_tol=1e-12, abs_tol=0.0):
+        return 0
+    return -1 if first < second else 1
+
+
 def _support_depth(points: tuple[PenetrationPoint, ...], model: _LayeredResistance,
                    target: float) -> float | None:
     """First upward resistance crossing, excluding a peak followed by a loss.
@@ -624,25 +637,27 @@ def _support_depth(points: tuple[PenetrationPoint, ...], model: _LayeredResistan
     depth. A discontinuous upward transition crosses at its interface. None
     means no support within the evaluated interval; extrapolation is prohibited.
     """
-    if target < points[0].load_kn:
+    if _compare_loads(target, points[0].load_kn) < 0:
         return points[0].depth_m
 
     def descends_after(index: int) -> bool:
-        while index + 1 < len(points) and points[index + 1].load_kn == target:
+        while index + 1 < len(points) and _compare_loads(points[index + 1].load_kn, target) == 0:
             index += 1
-        return index + 1 < len(points) and points[index + 1].load_kn < target
+        return index + 1 < len(points) and _compare_loads(points[index + 1].load_kn, target) < 0
 
     offset = model.spudcan.tip_to_bearing_m
     for index, (a, b) in enumerate(zip(points, points[1:])):
-        if a.load_kn <= target <= b.load_kn:
-            endpoint = index if target == a.load_kn else index + 1
-            if target in (a.load_kn, b.load_kn) and descends_after(endpoint):
-                continue
-            if a.load_kn == target:
+        a_order, b_order = _compare_loads(a.load_kn, target), _compare_loads(b.load_kn, target)
+        if a_order <= 0 <= b_order:
+            if a_order == 0 and not descends_after(index):
                 return a.depth_m
+            if b_order == 0 and not descends_after(index + 1):
+                return b.depth_m
+            if a_order == 0 or b_order == 0:
+                continue
             return _bisect_depth(lambda z: model.point(z).load_kn - target,
                                  a.depth_m - offset, b.depth_m - offset) + offset
-    if len(points) == 1 and target == points[0].load_kn:
+    if len(points) == 1 and _compare_loads(target, points[0].load_kn) == 0:
         return points[0].depth_m
     return None
 
@@ -656,18 +671,19 @@ def _capacity_events(points: tuple[PenetrationPoint, ...], model: _LayeredResist
 
     index = 0
     while index < len(points) - 1:
-        if points[index + 1].load_kn >= points[index].load_kn:
+        if _compare_loads(points[index + 1].load_kn, points[index].load_kn) >= 0:
             index += 1
             continue
         peak_index = index
         trough_index = index + 1
         index += 1
-        while index + 1 < len(points) and points[index + 1].load_kn <= points[index].load_kn:
+        while index + 1 < len(points) and _compare_loads(points[index + 1].load_kn, points[index].load_kn) <= 0:
             index += 1
-            if points[index].load_kn < points[trough_index].load_kn:
+            if _compare_loads(points[index].load_kn, points[trough_index].load_kn) < 0:
                 trough_index = index
         peak, trough = points[peak_index], points[trough_index]
-        reached = None if preload_kn is None else preload_kn >= max(p.load_kn for p in points[:peak_index + 1])
+        reached = None if preload_kn is None else _compare_loads(
+            preload_kn, max(p.load_kn for p in points[:peak_index + 1])) >= 0
         drop = peak.load_kn - trough.load_kn
         events.append(CapacityDrop(peak, trough, drop, 100 * drop / peak.load_kn,
                                   recovery(trough_index, peak.load_kn), reached,
@@ -739,6 +755,7 @@ def penetration_curve(profile: SandOverClay | UniformSand | LayeredProfile,
     points = tuple(model.point(z) for z in sorted(bearing_depths))
     events = _capacity_events(points, model, preload_kn)
     maximum = max(points, key=lambda p: p.load_kn)
+    maximum = next(p for p in points if _compare_loads(p.load_kn, maximum.load_kn) == 0)
     peak = events[0].peak if events else maximum
     flag = None if preload_kn is None else any(event.preload_reaches_peak for event in events)
     support = None if preload_kn is None else _support_depth(points, model, preload_kn)
