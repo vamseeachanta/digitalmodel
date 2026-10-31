@@ -191,6 +191,41 @@ class TestAnnularVelocity:
         assert wh_slim.annular_velocity() > wh_large.annular_velocity()
 
 
+class TestAnnularVelocityPublishedBenchmark:
+    """
+    Benchmark against a published worked example (drilling-engineering post, Oct 2026):
+        12.25 in hole, 5 in drill pipe OD, 300 gal/min
+        AV = 24.5 * 300 / (12.25^2 - 5^2) = 58.77 ft/min
+
+    The example rounds the field-unit constant to 24.5; the module uses 24.51
+    (231 in^3/gal / (12 in/ft * pi/4) = 24.51). The two differ by 0.04 %.
+    """
+
+    @staticmethod
+    def _benchmark() -> WellboreHydraulics:
+        # Mud and depth inputs do not enter AV; typical 12.25-in section values.
+        return WellboreHydraulics(
+            pipe_od=5.0, pipe_id=4.276, hole_diameter=12.25,
+            mud_weight=10.0, flow_rate=300.0, tvd=6000.0,
+            plastic_viscosity=15.0, yield_point=10.0,
+        )
+
+    def test_matches_published_value(self):
+        """58.77 ft/min as published; tolerance covers the 24.5 vs 24.51 constant."""
+        assert self._benchmark().annular_velocity() == pytest.approx(58.77, rel=1e-3)
+
+    def test_unrounded_module_value(self):
+        """Module constant 24.51: 7353 / 125.0625 = 58.795 ft/min."""
+        expected = 24.51 * 300.0 / (12.25 ** 2 - 5.0 ** 2)
+        assert self._benchmark().annular_velocity() == pytest.approx(expected, rel=1e-9)
+
+    def test_differs_from_published_only_by_constant_rounding(self):
+        """Module AV / published-constant AV equals 24.51 / 24.5; 24.5 reproduces 58.77."""
+        published = 24.5 * 300.0 / (12.25 ** 2 - 5.0 ** 2)
+        assert round(published, 2) == 58.77
+        assert self._benchmark().annular_velocity() / published == pytest.approx(24.51 / 24.5, rel=1e-9)
+
+
 # ---------------------------------------------------------------------------
 # pressure_drop_annulus()
 # ---------------------------------------------------------------------------
