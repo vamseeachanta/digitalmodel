@@ -90,7 +90,7 @@ def _scalar_parameter(value):
         return None
     try:
         return float(value)
-    except OverflowError:
+    except (TypeError, ValueError, OverflowError):
         return None
 
 

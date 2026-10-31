@@ -101,3 +101,17 @@ def test_log10_is_correctly_rounded():
     for _ in range(500):
         value = 10.0 ** rng.uniform(-30.0, 30.0)
         assert deterministic_log10(value) == float(reference.log10(Decimal(value)))
+
+
+@pytest.mark.parametrize("base, exponent, exact", [
+    # Round 4: the decimal approximation of these midpoints lies off the
+    # midpoint, so rounding it does not give ties-to-even.
+    (float(208065 ** 2) * 2.0 ** -400, 1.5, Fraction(208065 ** 3, 2 ** 600)),     # normal
+    (float(1549 ** 2) * 2.0 ** -430, 2.5, Fraction(1549 ** 5, 2 ** 1075)),        # subnormal
+], ids=["scaled-normal", "subnormal"])
+def test_scaled_and_subnormal_midpoints_round_half_to_even(base, exponent, exact):
+    assert Fraction(base) ** int(2 * exponent) == exact ** 2  # base ** exponent is exact
+    expected = float(exact)  # exact rational to float: ties to even
+    neighbours = (math.nextafter(expected, -math.inf), math.nextafter(expected, math.inf))
+    assert exact in {(Fraction(expected) + Fraction(n)) / 2 for n in neighbours}  # a midpoint
+    assert deterministic_power(base, exponent) == expected

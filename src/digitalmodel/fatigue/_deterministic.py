@@ -14,10 +14,14 @@ and 320 digits while the decimal value lies so close to a binary64 rounding
 boundary (a midpoint between adjacent floats) that the float it rounds to is
 not settled by the decimal precision; each attempt allows the decimal result
 an error of 10**5 units in its last digit. The settled result is the correctly
-rounded float. A value still unsettled at 320 digits, such as
-``deterministic_power(208065.0 ** 2, 1.5)`` whose exact value 208065**3 lies on
-a midpoint, is taken to lie on the boundary itself and is rounded half to even,
-which is the IEEE rule for an exact midpoint.
+rounded float. A value still unsettled at 320 digits lies within about 10**-314
+of its magnitude from the midpoint between two adjacent finite floats; it is
+taken to be that midpoint exactly, and the midpoint is rounded half to even,
+the IEEE rule. Exact midpoints occur: ``deterministic_power(208065.0 ** 2,
+1.5)`` is 208065**3, and scaling the base by 2**-400 (normal result) or using
+``deterministic_power(1549.0 ** 2 * 2.0 ** -430, 2.5)`` (subnormal result)
+gives others. The decimal approximation itself is not used for that rounding,
+because it can lie on either side of the midpoint.
 
 The decimal arithmetic runs in a private local context: the caller's decimal
 context, including a trapped ``FloatOperation``, has no effect on the result.
@@ -52,8 +56,14 @@ def _rounded_once(evaluate) -> float:
                 return float(value)
             guard = Decimal(1).scaleb(value.adjusted() - precision + 1 + _GUARD_DIGITS)
             wide = _context(precision + 2)
-            if float(wide.subtract(value, guard)) == float(wide.add(value, guard)):
+            low = float(wide.subtract(value, guard))
+            high = float(wide.add(value, guard))
+            if low == high:
                 return float(value)
+    if math.isfinite(low) and math.isfinite(high) and math.nextafter(low, math.inf) == high:
+        # Unsettled at the highest precision: the value is the midpoint of
+        # low and high. Fraction to float rounds that midpoint half to even.
+        return float((Fraction(low) + Fraction(high)) / 2)
     return float(value)
 
 

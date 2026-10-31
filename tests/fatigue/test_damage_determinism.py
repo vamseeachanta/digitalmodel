@@ -267,3 +267,21 @@ def test_stress_ratio_overflow_keeps_pylife_error():
     curve = WoehlerCurve(pd.Series({"SD": 1e-300, "ND": 1e7, "k_1": 3.0, "k_2": 5.0}))
     with np.errstate(over="ignore"), pytest.raises(ValueError, match="allowable cycles"):
         miner_damage(_frame([1e10], [1.0]), curve)
+
+
+class _UnconvertibleInt(int):
+    def __float__(self):
+        raise ValueError("no float form")
+
+
+def test_parameter_that_cannot_convert_to_float_falls_back_to_pylife(monkeypatch):
+    # Round 4: an int subclass whose float conversion fails is left to pyLife.
+    curve = WoehlerCurve(pd.Series({"SD": 50.0, "ND": 1e7, "k_1": 3.0, "k_2": 5.0,
+                                    "TN": _UnconvertibleInt(1), "TS": 1.0,
+                                    "failure_probability": 0.5}, dtype=object))
+    stress = np.array([100.0, 20.0])
+    calls = _spy_on_pylife_cycles(monkeypatch)
+    ours = _outcome(lambda: damage_module._allowable_cycles(curve, stress))
+    assert calls == [curve]
+    monkeypatch.undo()
+    assert ours == _outcome(lambda: curve.cycles(stress))
