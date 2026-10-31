@@ -69,6 +69,10 @@ class AbscissaConfig:
     coverage is a positive ratio bounded by the smaller source span.
     ``max_relative_gap`` must be a finite, strictly positive real: it bounds
     d(omega)/omega, and a non-finite threshold disables the gap comparison.
+    All numeric fields exclude booleans: truth values do not specify a count
+    or threshold, even though Python treats bool as a subclass of int.
+    See Python 3 Library Reference, Built-in Types, Boolean Type:
+    https://docs.python.org/3/library/stdtypes.html#boolean-type-bool
     """
 
     min_samples: int = MIN_SAMPLES
@@ -84,12 +88,14 @@ class AbscissaConfig:
         ):
             raise ValueError("min_samples must be an integer of at least 2, not a boolean")
         if self.min_coverage is not None and (
-            not isinstance(self.min_coverage, Real)
+            isinstance(self.min_coverage, bool)
+            or not isinstance(self.min_coverage, Real)
             or not 0.0 < self.min_coverage <= 1.0
         ):
             raise ValueError("min_coverage must be None or a finite real in (0, 1]")
         if (
-            not isinstance(self.max_relative_gap, Real)
+            isinstance(self.max_relative_gap, bool)
+            or not isinstance(self.max_relative_gap, Real)
             or not 0.0 < self.max_relative_gap < np.inf
         ):
             raise ValueError("max_relative_gap must be a finite, strictly positive real")
