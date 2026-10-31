@@ -1,0 +1,24 @@
+{
+  "artifacts": {
+    "README.md": "25f02a64eef7c8d0e9c3d8380821eeda10e894eea2d56627272d4bc0c2eecb2a",
+    "changes.json": "986beaa6e1e49e6fed91a9981abd39082dcbdd62c52a2f4e59a794805cc35a16",
+    "index.html": "a9813e1aacb1bd6db5c32745b2e0d4790492e655a2a5913e08a629797607b800",
+    "results.json": "3c5b12d723cc671a044a5b0aed793f63ce5a95665ae9cbd6a2626b6c22ecd724"
+  },
+  "digest_convention": "SHA-256 over exact UTF-8 artifact bytes with LF line endings; manifest excludes itself.",
+  "generator": "scripts/reports/build_hipps_module_report.py",
+  "generator_sha256": "c06acf16e0156d7c753221cc4ea8523b6e8fef7b5e3509ea30037b8c727fda03",
+  "reviewed_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "schema_version": 1,
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "docs/api/cfd/turbulent-flat-plate-verification.html": "bc8a4e0dbb12054424a29533beae7f3b5d66935fb98dff120e7ef83a06429e25",
+    "src/digitalmodel/subsea/hipps/__init__.py": "c7ac4c8f037c70ff3763ec9dd1ee0fdf071c909cf112ed2991b19c7b6784b5b9",
+    "src/digitalmodel/subsea/hipps/docs/agent-pack.md": "e36a028d6afe74fe073f5e9ab9af906fa79307d1c47f7e0868599a8ac6ae159f",
+    "src/digitalmodel/subsea/hipps/overpressure.py": "d692981dd0982e6ce02b4199be567a523f1f6450d3fa8dc3e84bbc887de39c72",
+    "src/digitalmodel/subsea/hipps/pressure_surge.py": "e5a9c708ff5dc5dff92ff5108c2ca65718b9ed6edcca38b959c0a682ff1cde6a",
+    "src/digitalmodel/subsea/hipps/sil_analysis.py": "a9f5317206f61b3eea8fc162d893c4c1666e8dbd87a9c9857ba81015b6dfa02c",
+    "src/digitalmodel/subsea/hipps/valve_sizing.py": "9ae6b984ae9b02c170022e46f2b2cb11eb74b07a6af39232b813fca82820ae84",
+    "tests/reporting/test_hipps_module_report.py": "a9a4318a6da53faab4900a29ad3ed575a6121ad1070298189e85f538fda59d67"
+  }
+}

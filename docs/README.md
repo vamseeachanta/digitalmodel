@@ -82,3 +82,9 @@ for that bulk store, not a path that should be hard-coded into portable repo log
 ## Operational runbooks
 
 - [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.
+
+## Subsea module analyses
+
+The [HIPPS module analysis](reports/modules/hipps/index.html) presents synthetic
+reliability integrals and valve closure kinematics with independent arithmetic
+checks, a public API inventory and explicit qualification limits.

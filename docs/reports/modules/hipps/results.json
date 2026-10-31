@@ -1,0 +1,294 @@
+{
+  "closure_samples": [
+    {
+      "elapsed_s": 0.0,
+      "equal_percentage": 1.0,
+      "linear": 1.0
+    },
+    {
+      "elapsed_s": 3.0,
+      "equal_percentage": 0.1,
+      "linear": 0.5
+    },
+    {
+      "elapsed_s": 6.0,
+      "equal_percentage": 0.0,
+      "linear": 0.0
+    }
+  ],
+  "input_basis": {
+    "beta": {
+      "basis": "Independent channels are stipulated; zero common-cause contribution is assumed only for this example.",
+      "unit": "dimensionless"
+    },
+    "halfway_s": {
+      "basis": "Synthetic sample instant at half of the stipulated seating time.",
+      "unit": "s"
+    },
+    "lambda_per_hour": {
+      "basis": "Synthetic constant dangerous-undetected rate in p(t)=lambda*t; assumed.",
+      "unit": "1/h"
+    },
+    "loaded_speed_m_s": {
+      "basis": "Synthetic constant loaded travel speed; assumed, not measured.",
+      "unit": "m/s"
+    },
+    "proof_interval_h": {
+      "basis": "Synthetic averaging interval; perfect reset and no repair within the interval are assumed.",
+      "unit": "h"
+    },
+    "rangeability": {
+      "basis": "Synthetic equal-percentage conductance ratio; assumed, not an installed-flow characteristic.",
+      "unit": "dimensionless"
+    },
+    "seating_s": {
+      "basis": "Synthetic seating instant, independently obtained by distance divided by speed.",
+      "unit": "s"
+    },
+    "stroke_m": {
+      "basis": "Synthetic uniform travel distance; assumed.",
+      "unit": "m"
+    }
+  },
+  "inputs": {
+    "beta": 0.0,
+    "halfway_s": 3.0,
+    "lambda_per_hour": 1e-05,
+    "loaded_speed_m_s": 0.02,
+    "proof_interval_h": 1000.0,
+    "rangeability": 100.0,
+    "seating_s": 6.0,
+    "stroke_m": 0.12
+  },
+  "inventory": [
+    {
+      "inputs": "No calculation inputs.",
+      "limits": "No licensed band table reproduced; architectural integrity not evaluated.",
+      "line": 48,
+      "name": "SIL",
+      "outputs": "Encoded classification enum.",
+      "signature": "record or enum",
+      "source": "src/digitalmodel/subsea/hipps/sil_analysis.py"
+    },
+    {
+      "inputs": "pfd_avg, sil, rrf; optional target_sil and meets_target default to None.",
+      "limits": "Record construction does not validate physical or functional-safety basis.",
+      "line": 68,
+      "name": "SILResult",
+      "outputs": "Frozen classification record; dimensionless quantities.",
+      "signature": "record or enum",
+      "source": "src/digitalmodel/subsea/hipps/sil_analysis.py"
+    },
+    {
+      "inputs": "pfd_avg: dimensionless; optional target_sil: enum or integer, defaults to None.",
+      "limits": "Inventory only. Encoded band is not an achieved system SIL; endpoint policy, below-floor cap and target coercion need review.",
+      "line": 147,
+      "name": "classify_sil",
+      "outputs": "SILResult: encoded band, reciprocal and optional band comparison.",
+      "signature": "(pfd_avg: 'float', target_sil: 'SIL | int | None' = None) -> 'SILResult'",
+      "source": "src/digitalmodel/subsea/hipps/sil_analysis.py"
+    },
+    {
+      "inputs": "lambda_du: dangerous-undetected failures/h; ti: h; positive comparison checks only.",
+      "limits": "Synthetic approximation demonstrated; rate/time finiteness and applicability validation incomplete.",
+      "line": 106,
+      "name": "pfd_avg_1oo1",
+      "outputs": "Dimensionless linear-model time average; lambda*ti/2.",
+      "signature": "(lambda_du: 'float', ti: 'float') -> 'float'",
+      "source": "src/digitalmodel/subsea/hipps/sil_analysis.py"
+    },
+    {
+      "inputs": "lambda_du: failures/h; ti: h; beta: dimensionless common-cause fraction, defaults to zero.",
+      "limits": "Independent case demonstrated; beta model, repair, proof coverage and dependence unqualified.",
+      "line": 123,
+      "name": "pfd_avg_1oo2",
+      "outputs": "Dimensionless ((1-beta)*lambda)^2*ti^2/3 + beta*lambda*ti/2.",
+      "signature": "(lambda_du: 'float', ti: 'float', beta: 'float' = 0.0) -> 'float'",
+      "source": "src/digitalmodel/subsea/hipps/sil_analysis.py"
+    },
+    {
+      "inputs": "pfd_avg: dimensionless, positive and at most unity.",
+      "limits": "Arithmetic reciprocal only; not demonstrated system risk reduction. Tiny inputs can overflow.",
+      "line": 93,
+      "name": "risk_reduction_factor",
+      "outputs": "Dimensionless reciprocal of the supplied average.",
+      "signature": "(pfd_avg: 'float') -> 'float'",
+      "source": "src/digitalmodel/subsea/hipps/sil_analysis.py"
+    },
+    {
+      "inputs": "t_response in caller time; p_at_close/margin in caller pressure; utilisation dimensionless; passed boolean.",
+      "limits": "Record construction does not validate the bounding-rise assumption.",
+      "line": 45,
+      "name": "OverpressureResult",
+      "outputs": "Frozen envelope record.",
+      "signature": "record or enum",
+      "source": "src/digitalmodel/subsea/hipps/overpressure.py"
+    },
+    {
+      "inputs": "p_initial/p_design: one consistent pressure unit; dpdt: pressure/time; t_close/t_detect/t_logic: matching time. Detection and logic delays default to zero.",
+      "limits": "Inventory only. Caller-qualified rise bound and nonzero physical delay basis absent; not a coupled transient. Finite-domain checks incomplete.",
+      "line": 70,
+      "name": "overpressure_envelope",
+      "outputs": "OverpressureResult: summed response time, p_initial+dpdt*time, design-minus-closure margin, pressure ratio and encoded comparison.",
+      "signature": "(p_initial: 'float', p_design: 'float', dpdt: 'float', t_close: 'float', t_detect: 'float' = 0.0, t_logic: 'float' = 0.0) -> 'OverpressureResult'",
+      "source": "src/digitalmodel/subsea/hipps/overpressure.py"
+    },
+    {
+      "inputs": "time_s, valve_pressure_pa, valve_flow_m3_s, peak_pressure_pa, dpdt_pa_s, time_step_s.",
+      "limits": "Record construction does not qualify transients or the sampled slope.",
+      "line": 37,
+      "name": "SurgeResult",
+      "outputs": "Frozen SI history record; peak covers all nodes, slope samples the valve only.",
+      "signature": "record or enum",
+      "source": "src/digitalmodel/subsea/hipps/pressure_surge.py"
+    },
+    {
+      "inputs": "density: kg/m\u00b3; bulk_modulus/elastic_modulus: Pa; diameter/wall_thickness: m; nonnegative restraint_factor; all supplied.",
+      "limits": "Inventory only. Support model, constant properties, thin-wall applicability and intermediate representability need qualification.",
+      "line": 49,
+      "name": "wave_speed",
+      "outputs": "m/s from combined fluid and thin-wall compliance.",
+      "signature": "(*, density: 'float', bulk_modulus: 'float', diameter: 'float', wall_thickness: 'float', elastic_modulus: 'float', restraint_factor: 'float') -> 'float'",
+      "source": "src/digitalmodel/subsea/hipps/pressure_surge.py"
+    },
+    {
+      "inputs": "density: kg/m\u00b3; acoustic_speed: m/s; velocity_change: nonnegative m/s reduction.",
+      "limits": "Inventory only. Ideal frictionless single-phase liquid relation; no multiphase or operational bound qualification.",
+      "line": 75,
+      "name": "joukowsky_rise",
+      "outputs": "Pa from density*acoustic_speed*velocity_change.",
+      "signature": "(density: 'float', acoustic_speed: 'float', velocity_change: 'float') -> 'float'",
+      "source": "src/digitalmodel/subsea/hipps/pressure_surge.py"
+    },
+    {
+      "inputs": "length/diameter: m; density: kg/m\u00b3; acoustic_speed: m/s; initial_flow: m\u00b3/s; reservoir/downstream absolute pressure: Pa; closure_time/duration: s; cells: integer. Default linear characteristic, rangeability None.",
+      "limits": "Inventory only. Single reach, fixed reservoir, frictionless single-phase constant properties; no cavitation or column separation. A sampled rise rate is not a qualified response-time bound.",
+      "line": 101,
+      "name": "simulate_surge",
+      "outputs": "SurgeResult: valve time/pressure/flow histories, all-node peak, sampled positive valve rise rate and grid time step. Final time rounds up to grid.",
+      "signature": "(*, length: 'float', diameter: 'float', density: 'float', acoustic_speed: 'float', initial_flow: 'float', reservoir_pressure: 'float', downstream_pressure: 'float', closure_time: 'float', duration: 'float', cells: 'int', characteristic: 'str' = 'linear', rangeability: 'float | None' = None) -> 'SurgeResult'",
+      "source": "src/digitalmodel/subsea/hipps/pressure_surge.py"
+    },
+    {
+      "inputs": "rate in caller N1/N6 units; effective_drop in caller pressure; choked boolean.",
+      "limits": "Record construction does not validate units; distinguish volume and mass rates.",
+      "line": 32,
+      "name": "ValveCapacity",
+      "outputs": "Frozen sizing record.",
+      "signature": "record or enum",
+      "source": "src/digitalmodel/subsea/hipps/valve_sizing.py"
+    },
+    {
+      "inputs": "coefficient: Cv/Kv; absolute upstream/downstream/vapor pressures; SG; N1 unit_constant; Fp piping_factor; FLP recovery_factor; FF critical_pressure_ratio. All factors are required caller inputs.",
+      "limits": "Inventory only. Consistent units, qualified properties, factors, cavitation and catalogue iteration not evaluated. Final rate representability incomplete.",
+      "line": 55,
+      "name": "liquid_capacity",
+      "outputs": "ValveCapacity: volumetric rate in N1 units, effective pressure drop and choking flag; min(actual drop, choking drop) is used.",
+      "signature": "(*, coefficient: 'float', p_upstream: 'float', p_downstream: 'float', specific_gravity: 'float', unit_constant: 'float', piping_factor: 'float', recovery_factor: 'float', critical_pressure_ratio: 'float', vapor_pressure: 'float') -> 'ValveCapacity'",
+      "source": "src/digitalmodel/subsea/hipps/valve_sizing.py"
+    },
+    {
+      "inputs": "Nonnegative rate in N1 units plus liquid_capacity inputs except coefficient.",
+      "limits": "Inventory only. Positive demand at zero capacity raises; no catalogue-dependent factor iteration.",
+      "line": 112,
+      "name": "required_liquid_coefficient",
+      "outputs": "Required Cv/Kv at fixed factors by dividing demand by unit-coefficient capacity.",
+      "signature": "(*, rate: 'float', **inputs: 'float') -> 'float'",
+      "source": "src/digitalmodel/subsea/hipps/valve_sizing.py"
+    },
+    {
+      "inputs": "coefficient: Cv/Kv; absolute pressures; inlet density; N6 unit_constant; Fp; caller-qualified choked_ratio.",
+      "limits": "Inventory only. Mass rate is not liquid or standard volume rate. Gas properties, factor qualification and final finite outputs not evaluated.",
+      "line": 134,
+      "name": "gas_mass_capacity",
+      "outputs": "ValveCapacity: mass rate in N6 units, effective pressure drop and choking flag; expansion and limiting pressure ratio included.",
+      "signature": "(*, coefficient: 'float', p_upstream: 'float', p_downstream: 'float', density: 'float', unit_constant: 'float', piping_factor: 'float', choked_ratio: 'float') -> 'ValveCapacity'",
+      "source": "src/digitalmodel/subsea/hipps/valve_sizing.py"
+    },
+    {
+      "inputs": "stroke_length: m or rad; actuator_speed: matching length or angle per second; finite positive inputs.",
+      "limits": "Synthetic kinematics demonstrated; loaded speed qualification and finite-output checks incomplete.",
+      "line": 169,
+      "name": "stroke_time",
+      "outputs": "Seconds, stroke_length/actuator_speed; excludes detection and logic delays.",
+      "signature": "(*, stroke_length: 'float', actuator_speed: 'float') -> 'float'",
+      "source": "src/digitalmodel/subsea/hipps/valve_sizing.py"
+    },
+    {
+      "inputs": "elapsed and closure_time: s, nonnegative; characteristic: linear or equal_percentage; rangeability required for equal_percentage, otherwise None.",
+      "limits": "Synthetic law demonstrated; equal-percentage seating discontinuity retained. Conductance is not installed flow, travel or measured dynamics.",
+      "line": 183,
+      "name": "closure_fraction",
+      "outputs": "Normalized conductance: linear remaining travel or rangeability^(-elapsed/closure_time); exact zero at seating. Zero closure time is a step.",
+      "signature": "(elapsed: 'float', closure_time: 'float', characteristic: 'str', *, rangeability: 'float | None' = None) -> 'float'",
+      "source": "src/digitalmodel/subsea/hipps/valve_sizing.py"
+    }
+  ],
+  "results": {
+    "closure_time": {
+      "api": "stroke_time",
+      "basis": "[H] Synthetic 0.12 m divided by 0.02 m/s.",
+      "label": "Uniform-speed closure time",
+      "method": "Travel divided by loaded speed.",
+      "unit": "s",
+      "value": 6.0
+    },
+    "equal_percentage_half": {
+      "api": "closure_fraction",
+      "basis": "[H] Stipulated normalized conductance law; seating is a separate boundary rule.",
+      "label": "Equal percentage half",
+      "method": "Remaining fraction R^(-t/T) before seating. At or after seating the API returns exact zero.",
+      "unit": "dimensionless",
+      "value": 0.1
+    },
+    "equal_percentage_seated": {
+      "api": "closure_fraction",
+      "basis": "[H] Stipulated normalized conductance law; seating is a separate boundary rule.",
+      "label": "Equal percentage seated",
+      "method": "Remaining fraction R^(-t/T) before seating. At or after seating the API returns exact zero.",
+      "unit": "dimensionless",
+      "value": 0.0
+    },
+    "independent_average": {
+      "api": "pfd_avg_1oo2",
+      "basis": "[H] Independent linear-model integral: lambda\u00b2*T\u00b2/3 = 1/30000.",
+      "label": "Independent dual-channel average",
+      "method": "Integral of (lambda*t)^2 over the interval, divided by interval length; beta is zero.",
+      "unit": "dimensionless",
+      "value": 3.333333333333334e-05
+    },
+    "linear_half": {
+      "api": "closure_fraction",
+      "basis": "[H] Stipulated normalized conductance law; seating is a separate boundary rule.",
+      "label": "Linear half",
+      "method": "Remaining fraction 1-t/T. At or after seating the API returns exact zero.",
+      "unit": "dimensionless",
+      "value": 0.5
+    },
+    "linear_seated": {
+      "api": "closure_fraction",
+      "basis": "[H] Stipulated normalized conductance law; seating is a separate boundary rule.",
+      "label": "Linear seated",
+      "method": "Remaining fraction 1-t/T. At or after seating the API returns exact zero.",
+      "unit": "dimensionless",
+      "value": 0.0
+    },
+    "reciprocal": {
+      "api": "risk_reduction_factor",
+      "basis": "[H] Reciprocal of 1/200; no system-level risk reduction established.",
+      "label": "Reciprocal of single-channel average",
+      "method": "Reciprocal of the single-channel time average.",
+      "unit": "dimensionless",
+      "value": 200.0
+    },
+    "single_average": {
+      "api": "pfd_avg_1oo1",
+      "basis": "[H] Linear-model integral: lambda*T/2 = 1/200.",
+      "label": "Single-channel average",
+      "method": "Integral of lambda*t over the interval, divided by interval length.",
+      "unit": "dimensionless",
+      "value": 0.005
+    }
+  },
+  "reviewed_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5"
+}
