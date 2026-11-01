@@ -636,3 +636,13 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain only the deterministic parachute module report deliverables.
+!/scripts/reports/build_parachute_module_report.py
+!/docs/reports/modules/parachute/
+/docs/reports/modules/parachute/*
+!/docs/reports/modules/parachute/index.html
+!/docs/reports/modules/parachute/changes.json
+!/docs/reports/modules/parachute/results.json
+!/docs/reports/modules/parachute/manifest.json
+!/docs/reports/modules/parachute/README.md

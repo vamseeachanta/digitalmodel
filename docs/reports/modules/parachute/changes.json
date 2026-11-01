@@ -1,0 +1,12 @@
+[
+  {
+    "change": "Initial method inventory and synthetic drag and cantilever calculations establish arithmetic evidence and explicit limits.",
+    "date": "2026-10-28",
+    "revision": "A"
+  },
+  {
+    "change": "Computed outputs use 13 significant digits to remove backend roundoff from delivered bytes; input precision and independent arithmetic checks are retained.",
+    "date": "2026-10-28",
+    "revision": "B"
+  }
+]
