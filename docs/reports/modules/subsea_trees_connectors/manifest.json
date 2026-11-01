@@ -1,0 +1,29 @@
+{
+  "case_status": "SYNTHETIC_STATIC_ONLY",
+  "files": {
+    "README.md": "38f69d74cc3da3cf1c5139c5d5bbd10d63a7fc7116707fcab02f74ac5324c6cb",
+    "changes.json": "973eeef152a0f32c8b8109ba6803ae40e39c357e36c932b229e130b80babb25f",
+    "index.html": "f4f73555ce267107f1c6f63b16f28cb6f80deb4fe563196655871436f68d0c85",
+    "results.json": "32a970fbf6e0649b749a894f6f1f102b79851318cc3a03206801b38d98df7ecc"
+  },
+  "reviewed_source_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "schema_version": "1",
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "scripts/reports/build_subsea_trees_connectors_module_report.py": "1b649af84ebb6343659f5014f14d31ca85075bcfd93aa9e417d3eab5961761d1",
+    "src/digitalmodel/subsea/connectors/__init__.py": "5c7fc41e48001d24d4468ed5d49f724ecd7c63b2db2f70e5223f9cc4c7f3f625",
+    "src/digitalmodel/subsea/connectors/bending_analysis.py": "8814a561382a6e318ca0ead0639a96a4e74cc41f06dc8349b726c7fbd650ac90",
+    "src/digitalmodel/subsea/connectors/connector_design.py": "c1671683f1d4571f7ca877d4ef5cdfa676264eb701b48d6e6f2a83e10be8bf62",
+    "src/digitalmodel/subsea/connectors/fatigue.py": "3cc3999a33b0aaea6f45973075300a113c14b7a6f284893c14d7604cf3053b63",
+    "src/digitalmodel/subsea/connectors/jumper_catalog.py": "912712b06fad43002e99c8ac237c952ff885ac230523bb5d27e1da7a24008603",
+    "src/digitalmodel/subsea/connectors/orcaflex_export.py": "65af18977c3c88fc8292f8415bd2e2e7b0c049768d6aff6d72e3561a27aec6fc",
+    "src/digitalmodel/subsea/connectors/section_properties.py": "e04f99e594394badffa26d46e913d7e4561116687c32e4e06c4fabe727e8dcbc",
+    "src/digitalmodel/subsea/connectors/thermal_expansion.py": "6ed64cde93f97d19c59380cc90be5005a246b1f50c7acfadfd9a17960489b062",
+    "src/digitalmodel/subsea/trees/__init__.py": "8db2e977c0c22e796926b4eccc80cf969a0d3150394f629c3712b174e3c69cf0",
+    "src/digitalmodel/subsea/trees/design_checks.py": "69d86afaa87ee32547a37047c9c737e9febe93c5c2d81f9d35022163dddaf5c5",
+    "src/digitalmodel/subsea/trees/flow_capacity.py": "c26e32deff965332db52dce6a5fe514a057344226326d599673961d6b29c09b7",
+    "src/digitalmodel/subsea/trees/pressure_control.py": "a7a4aa268db8d8ef375c7db75e6fb83c2c1fb414be8192cfb8ac7e9cfb0da41d",
+    "src/digitalmodel/subsea/trees/tree_catalog.py": "d780e986f28ef9f8c83d136240d074bbd4687c0b3df0e9e5d594e7634d3b9788",
+    "tests/reporting/test_subsea_trees_connectors_module_report.py": "e6ec4420ed998982476ff8805f32b0cadd00047e595be0772a4dd82014b8f913"
+  }
+}

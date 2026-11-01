@@ -1,5 +1,9 @@
 # digitalmodel Documentation
 
+The [subsea trees and connectors module analysis](reports/modules/subsea_trees_connectors/index.html)
+documents the public interfaces, a synthetic static calculation, independent
+arithmetic checks and the remaining engineering evidence gaps.
+
 This is the canonical documentation entry point for digitalmodel issue routing.
 Use it with the repo entry surfaces before changing source, tests, docs, or
 routing registries.
