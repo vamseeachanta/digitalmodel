@@ -5,7 +5,7 @@ This package contains calculation modules for pipe properties,
 stress analysis, and other engineering calculations.
 """
 
-from digitalmodel.calculations.pipe_properties import (
+from .pipe_properties import (
     calculate_section_properties,
     calculate_geometric_properties,
     calculate_wall_thickness,
@@ -13,7 +13,7 @@ from digitalmodel.calculations.pipe_properties import (
     validate_pipe_geometry
 )
 
-from digitalmodel.calculations.stress_calculations import (
+from .stress_calculations import (
     APISTD2RDCalculations,
     calculate_utilization,
     apply_temperature_derating

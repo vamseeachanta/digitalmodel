@@ -636,3 +636,9 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+!/scripts/reports/build_subsea_pipeline_module_report.py
+!/docs/reports/modules/subsea_pipeline/
+!/docs/reports/modules/subsea_pipeline/index.html
+!/docs/reports/modules/subsea_pipeline/changes.json
+!/docs/reports/modules/subsea_pipeline/manifest.json
+!/docs/reports/modules/subsea_pipeline/README.md

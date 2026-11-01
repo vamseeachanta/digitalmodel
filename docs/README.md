@@ -37,6 +37,10 @@ New and materially revised engineering analysis deliverables shall follow the [p
 
 ## Curated Routing Surfaces
 
+The [subsea pipeline module analysis](reports/modules/subsea_pipeline/README.md)
+provides synthetic geometry, free-growth and pressure-factor examples, with
+source locators and explicit qualification gaps for buckling, span and pressure methods.
+
 For offline reference interchange, see the [solver-reference export contract](domains/data_systems/solver-reference-exports.md), including strict readers, state rules, an adapter audit and a worked example.
 
 Curated routing surfaces are authoritative for issue work because they are small,

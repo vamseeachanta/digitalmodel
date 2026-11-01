@@ -1,0 +1,1835 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subsea pipeline module analysis</title>
+<style>
+body {font: 1rem/1.6 system-ui,sans-serif;color:#203444;background:#f2f5f7;margin:0}
+main {max-width:86rem;margin:auto;background:white;padding:2rem}
+h1,h2,h3 {color:#173f52} h2 {border-top:2px solid #d6e3e8;padding-top:1rem}
+table {border-collapse:collapse;width:100%;font-size:.9rem;display:block;overflow:auto}
+td,th {padding:.5rem .7rem;border:1px solid #d6e3e8;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+th {background:#e8f0f3} .caption {font-size:.85rem;color:#425c69;margin-top:.3rem}
+aside {border-left:4px solid #467b82;background:#edf5f5;padding:1rem}
+code {overflow-wrap:anywhere} a {color:#175f72} nav a {margin-right:1rem}
+@media print {main {padding:0} body {background:white} table {font-size:.75rem}}
+</style></head><body><main>
+<h1>Subsea pipeline module analysis</h1>
+<nav><a href="#s1">Summary</a><a href="#s4">Methods</a><a href="#s5">Worked results</a><a href="#s8">Way forward</a><a href="#s9">Sources</a></nav>
+<h2 id="s1">1. Executive Summary</h2>
+<p>The synthetic annulus, signed free thermal growth and caller-supplied pressure-factor products are checked against independent hand calculations. Geometry and growth are HAND_CALCULATION_CHECKED for these cases; pressure multiplication is ARITHMETIC_ONLY. Buckling, span acceptance and standard-derived pressure capacities remain NOT_EVALUATED. No engineering design is released by this report.</p>
+<h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Independent synthetic calculations and a public-method inventory are added to distinguish arithmetic checks from unresolved engineering qualification. Stale calculation-package imports are corrected so the public functions can be used.</td></tr></tbody></table><p class=caption>Revision history. Initial issue of this module analysis.</p>
+<aside id="change-panel"><strong>Change panel</strong><p>The public calculation-package imports are repaired. The report adds reproducible examples and a source-bound inventory. Engineering factors, capacity formulas and production inputs are unchanged.</p><a href="changes.json">Machine-readable revision history</a></aside>
+<h2 id="s2">2. Introduction</h2>
+<p>The scope is the public Python functions and methods declared in <code>src/digitalmodel/subsea/pipeline/</code>. Each is located by static source parsing; private helpers, generated dataclass methods and imported aliases are outside the declaration inventory. The executed examples use only geometry, unrestrained thermal expansion and factor multiplication. Other workflows are inspected without execution.</p>
+<p>The inputs are deliberately synthetic and separately defined for each calculation. The annulus is not a pressure-design example. No material grade, soil, loading spectrum or operating acceptance criterion is inferred from these arithmetic inputs.</p>
+<h2 id="s3">3. Design Data and Basis</h2>
+<table><thead><tr><th>Example</th><th>Input</th><th>Value</th><th>Unit</th><th>Source</th></tr></thead><tbody><tr><td>Annulus</td><td>outer_diameter</td><td>4</td><td>m</td><td>A</td></tr>
+<tr><td>Annulus</td><td>inner_diameter</td><td>2</td><td>m</td><td>A</td></tr>
+<tr><td>Annulus</td><td>wall_thickness</td><td>1</td><td>m</td><td>A</td></tr>
+<tr><td>Free growth</td><td>length</td><td>1000</td><td>m</td><td>B</td></tr>
+<tr><td>Free growth</td><td>alpha</td><td>1e-05</td><td>K^-1</td><td>B</td></tr>
+<tr><td>Free growth</td><td>temperature_change</td><td>+20</td><td>K</td><td>B</td></tr>
+<tr><td>Free growth</td><td>temperature_change</td><td>-20</td><td>K</td><td>B</td></tr>
+<tr><td>Factor arithmetic</td><td>base_capacity</td><td>100</td><td>MPa</td><td>C</td></tr>
+<tr><td>Factor arithmetic</td><td>design</td><td>0.8</td><td>1</td><td>C</td></tr>
+<tr><td>Factor arithmetic</td><td>incidentalPressure</td><td>0.9</td><td>1</td><td>C</td></tr>
+<tr><td>Factor arithmetic</td><td>hydroStaticTest</td><td>0.6</td><td>1</td><td>C</td></tr></tbody></table><p class=caption>Design data. Arbitrary synthetic inputs; no production or material property is supplied.</p>
+<p>Length, area and second moment use metres, square metres and fourth-power metres. Temperature differences use kelvin and the supplied coefficient uses reciprocal kelvin. Pressure-factor products retain the supplied MPa unit; the public function itself performs no unit conversion.</p>
+<h2 id="s4">4. Analysis Methodology</h2>
+<p><strong>A — independent annulus integration.</strong> In polar coordinates, dA = r dr dθ. Integration over radii from one to two metres and a complete revolution gives wall area 3π m². The bore and outside disks have areas π and 4π m². With y = r sin θ, integration of y² dA gives the centroidal second moment 15π/4 m⁴. Radial separation gives thickness one metre. These identities supply the independent test oracles.</p>
+<p><strong>B — independent strain integration.</strong> Uniform strain ε = α ΔT is integrated over the reference length: ΔL = ∫ ε dx. The supplied coefficient and heating/cooling changes give strains +1/5000 and −1/5000 and growth +1/5 m and −1/5 m. Reported strains are recovered from public-function growth divided by reference length.</p>
+<p><strong>C — independent supplied arithmetic.</strong> The arbitrary capacity is multiplied separately by each arbitrary caller factor. Exact rational multiplication supplies the independent expected pressures. A computed burst pressure is never used as an oracle. The input parameter name <code>burst_pressure</code> in the existing API does not qualify the synthetic capacity supplied here.</p>
+<p>The hand-value tests use relative tolerance 1e−12 for binary floating-point rounding only. That computational tolerance is not an engineering acceptance criterion. Source comments, tests of proportionality and implementation self-comparisons do not establish a standard equation or empirical factor.</p>
+<table><thead><tr><th>Route</th><th>Public symbol</th><th>Source locator</th><th>Evaluation</th><th>Basis / evidence needed</th></tr></thead><tbody><tr><td>workflow</td><td>slay_sagbend_bending_strain</td><td>src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:19</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>workflow</td><td>slay_overbend_bending_strain</td><td>src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:38</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>workflow</td><td>slay_allowable_bending_strain</td><td>src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:57</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>workflow</td><td>slay_bending_check</td><td>src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py:69</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.run</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:18</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_friction_force</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:25</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_mesh</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:43</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_internal_pressure</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:57</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_external_pressure</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:76</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.assign_mesh</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:88</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_differential_temp</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:96</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_circumferential_stress</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:111</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_longitudinal_stress_fully_restrained</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:127</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_longitudinal_force_fully_restrained</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:151</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>CommonBucklingCaculations.get_water_depth</td><td>src/digitalmodel/subsea/pipeline/buckling_common.py:165</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>geometry</td><td>calculate_section_properties</td><td>src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:18</td><td>HAND_CALCULATION_CHECKED</td><td>A: The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.</td></tr>
+<tr><td>geometry</td><td>calculate_wall_thickness</td><td>src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:69</td><td>HAND_CALCULATION_CHECKED</td><td>A: The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.</td></tr>
+<tr><td>geometry</td><td>calculate_diameter_from_thickness</td><td>src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:95</td><td>HAND_CALCULATION_CHECKED</td><td>A: The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.</td></tr>
+<tr><td>geometry</td><td>calculate_geometric_properties</td><td>src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:131</td><td>HAND_CALCULATION_CHECKED</td><td>A: The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.</td></tr>
+<tr><td>geometry</td><td>validate_pipe_geometry</td><td>src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py:191</td><td>HAND_CALCULATION_CHECKED</td><td>A: The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.</td></tr>
+<tr><td>pressure</td><td>APISTD2RDCalculations.calculate_burst_pressure</td><td>src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:28</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>APISTD2RDCalculations.calculate_design_pressures</td><td>src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:77</td><td>ARITHMETIC_ONLY</td><td>C: The supplied capacity and factors need their own equation, edition, applicability and independent worked-case evidence.</td></tr>
+<tr><td>pressure</td><td>APISTD2RDCalculations.calculate_collapse_pressure</td><td>src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:108</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>APISTD2RDCalculations.calculate_method1_limits</td><td>src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:163</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>APISTD2RDCalculations.generate_interaction_curves</td><td>src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:235</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>calculate_utilization</td><td>src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:296</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>apply_temperature_derating</td><td>src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py:339</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>span</td><td>FreespanVIVFatigue.assess</td><td>src/digitalmodel/subsea/pipeline/free_span/__init__.py:92</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>FreespanVIVFatigue.assess_multi_current</td><td>src/digitalmodel/subsea/pipeline/free_span/__init__.py:192</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>BilinearSNCurveParams.transition_stress</td><td>src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:67</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>BilinearSNCurve.A</td><td>src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:91</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>BilinearSNCurve.m</td><td>src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:96</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>BilinearSNCurve.fatigue_limit</td><td>src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:101</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>BilinearSNCurve.get_allowable_cycles</td><td>src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:104</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>BilinearSNCurve.get_stress_range</td><td>src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:117</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>get_sn_curve</td><td>src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py:170</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanAllowableLength.max_span_m</td><td>src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py:117</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanFatigueDamage.screening_cut_off_mpa</td><td>src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:67</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanFatigueDamage.allowable_cycles</td><td>src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:97</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanFatigueDamage.damage_per_year</td><td>src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:117</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanFatigueDamage.fatigue_life_years</td><td>src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py:128</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanNaturalFrequency.fn_IL</td><td>src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:133</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanNaturalFrequency.fn_CF</td><td>src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:137</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanNaturalFrequency.compute</td><td>src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py:144</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanOnsetScreening.stability_parameter</td><td>src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:55</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanOnsetScreening.il_onset_velocity</td><td>src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:73</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanOnsetScreening.cf_onset_velocity</td><td>src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:101</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanOnsetScreening.screening_flags</td><td>src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py:120</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanVIVAmplitude.il_amplitude_over_D</td><td>src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:73</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanVIVAmplitude.cf_amplitude_over_D</td><td>src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:101</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>SpanVIVAmplitude.stress_from_amplitude</td><td>src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py:139</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>jonswap_gamma</td><td>src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:73</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>jonswap_spectrum</td><td>src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:97</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>solve_dispersion</td><td>src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:155</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>velocity_transfer</td><td>src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:206</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>spectral_moments</td><td>src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:250</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>compute_wave_velocity</td><td>src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py:276</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>fit_weibull_current</td><td>src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:51</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>extrapolate_current</td><td>src/digitalmodel/subsea/pipeline/free_span/weibull_current.py:130</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>buckling</td><td>lateral_equilibrium</td><td>src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:95</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>critical_state</td><td>src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:172</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>equilibria_at_temperature</td><td>src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:239</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>effective_driving_force</td><td>src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:294</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>screen_modes</td><td>src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:319</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>governing_mode</td><td>src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py:348</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>PipeSection.from_dimensions</td><td>src/digitalmodel/subsea/pipeline/global_buckling/models.py:113</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>PipeSection.EA</td><td>src/digitalmodel/subsea/pipeline/global_buckling/models.py:140</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>PipeSection.EI</td><td>src/digitalmodel/subsea/pipeline/global_buckling/models.py:145</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>PipeSection.fully_restrained_thermal_force</td><td>src/digitalmodel/subsea/pipeline/global_buckling/models.py:149</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>SoilResistance.axial_resistance_N_m</td><td>src/digitalmodel/subsea/pipeline/global_buckling/models.py:173</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>SoilResistance.lateral_resistance_N_m</td><td>src/digitalmodel/subsea/pipeline/global_buckling/models.py:177</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>workflow</td><td>run_on_bottom_stability</td><td>src/digitalmodel/subsea/pipeline/integrity_workflows.py:7</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>workflow</td><td>run_free_span</td><td>src/digitalmodel/subsea/pipeline/integrity_workflows.py:74</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>workflow</td><td>run_lateral_buckling</td><td>src/digitalmodel/subsea/pipeline/integrity_workflows.py:99</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>workflow</td><td>run_upheaval_buckling</td><td>src/digitalmodel/subsea/pipeline/integrity_workflows.py:107</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.run</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:27</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.save_results</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:35</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.save_plots</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:44</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.get_friction_force</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:52</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.get_lateral_buckling</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:70</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.calculateLateralBuckling</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:94</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.get_anchor_length</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:196</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.get_longitudinal_strain_and_thermal_stress</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:270</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.get_longitudinal_force_and_stress</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:331</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.get_mesh</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:375</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.get_differential_temp</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:389</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.save_temperature_plot</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:403</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.save_buckling_force_plot_imp</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:422</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.save_buckling_force_plot_met</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:458</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.save_buckling_stress_plot_imp</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:498</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.save_buckling_stress_plot_met</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:552</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>LateralBuckling.save_buckling_strain_plot</td><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py:606</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.evaluate_pipe_system_properties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:11</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.pipe_properties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:20</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.pipe_section_properties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:42</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.get_fea_properties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:71</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.system_properties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:114</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.get_pipe_system_properties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:146</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.pipeProperties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:151</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.steelSectionProperties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:162</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.insulationSectionProperties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:170</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.buoyancySectionProperties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:181</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.sectionProperties</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:192</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.equivalentPipe</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:203</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>geometry</td><td>PipeSizing.buoyancyFactorAndDiameter</td><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py:289</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.</td></tr>
+<tr><td>workflow</td><td>Pipeline.router</td><td>src/digitalmodel/subsea/pipeline/pipeline.py:23</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>workflow</td><td>Pipeline.get_pipe_properties</td><td>src/digitalmodel/subsea/pipeline/pipeline.py:38</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>pressure</td><td>PipeGeometry.D_over_t</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:100</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_wall_thickness</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:160</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_burst_resistance</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:209</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_pressure_containment_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:248</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_system_pressure_test</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:296</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_maop</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:320</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_water_pressure</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:355</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_elastic_collapse_pressure</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:381</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_collapse_pressure</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:409</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_external_collapse_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:445</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_ovality_reduction_factor</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:494</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_combined_loading_external_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:512</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_combined_loading_internal_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:576</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_propagating_buckle_pressure</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:638</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_transition_water_depth</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:658</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_propagating_buckle_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py:685</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_collapse_pressure</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:45</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_external_collapse_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:130</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_propagating_buckle_pressure</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:191</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_propagating_buckle_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:211</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>dnv_combined_loading_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py:260</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_burst_pressure</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:54</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_internal_pressure_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:84</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>api_combined_loading_check</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:126</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>workflow</td><td>WallThicknessSizingWorkflow.run</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:279</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>workflow</td><td>run_sizing_from_yaml</td><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py:358</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>pressure</td><td>Pressureloss.run</td><td>src/digitalmodel/subsea/pipeline/pressure_loss.py:39</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>Pressureloss.get_pipe_data</td><td>src/digitalmodel/subsea/pipeline/pressure_loss.py:48</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>Pressureloss.get_fluid_properties</td><td>src/digitalmodel/subsea/pipeline/pressure_loss.py:88</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>pressure</td><td>Pressureloss.flow_parameters</td><td>src/digitalmodel/subsea/pipeline/pressure_loss.py:103</td><td>NOT_EVALUATED</td><td>Source inventory only: Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.</td></tr>
+<tr><td>workflow</td><td>normal_limit_state</td><td>src/digitalmodel/subsea/pipeline/reliability.py:26</td><td>NOT_EVALUATED</td><td>Source inventory only: End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.</td></tr>
+<tr><td>span</td><td>design_rectification</td><td>src/digitalmodel/subsea/pipeline/span_rectification.py:30</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>span</td><td>router</td><td>src/digitalmodel/subsea/pipeline/span_rectification.py:62</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.</td></tr>
+<tr><td>buckling</td><td>ThermalBuckling.run</td><td>src/digitalmodel/subsea/pipeline/thermal_buckling.py:17</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>thermal strain</td><td>free_thermal_expansion</td><td>src/digitalmodel/subsea/pipeline/thermal_expansion.py:20</td><td>HAND_CALCULATION_CHECKED</td><td>B: Uniform free growth only is checked; restraint, soil response, buckling and walking need independent evidence.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.run</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:25</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.get_friction_force</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:35</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.get_upheaval_buckling</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:52</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.get_level_1_analysis</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:107</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.get_buckle_result</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:151</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.get_soil_pipe_friction_model</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:189</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.get_uplift_resistance_model</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:217</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.get_trench_and_rock_burial_model</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:233</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.get_force_in_pipe_section</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:279</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.save_results</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:290</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.save_temperature_plot</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:304</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.save_buckling_force_plot_imp</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:323</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.save_buckling_force_plot_met</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:360</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.save_buckling_stress_plot_imp</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:401</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.save_buckling_stress_plot_met</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:456</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr>
+<tr><td>buckling</td><td>UpheavalBuckling.save_buckling_strain_plot</td><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py:511</td><td>NOT_EVALUATED</td><td>Source inventory only: Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.</td></tr></tbody></table><p class=caption>Method inventory. Locators identify implementation evidence, not standards qualification.</p>
+<h2 id="s5">5. Detailed Results</h2>
+<table><thead><tr><th>Dimension route</th><th>Returned field</th><th>Result</th><th>Unit</th><th>Basis</th></tr></thead><tbody><tr><td>od_id</td><td>outer_diameter</td><td>4.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_id</td><td>inner_diameter</td><td>2.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_id</td><td>wall_thickness</td><td>1.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_id</td><td>A</td><td>9.425</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_id</td><td>Ai</td><td>3.142</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_id</td><td>Ao</td><td>12.566</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_id</td><td>I</td><td>11.781</td><td>m^4</td><td>A</td></tr>
+<tr><td>od_t</td><td>outer_diameter</td><td>4.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_t</td><td>inner_diameter</td><td>2.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_t</td><td>wall_thickness</td><td>1.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_t</td><td>A</td><td>9.425</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_t</td><td>Ai</td><td>3.142</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_t</td><td>Ao</td><td>12.566</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_t</td><td>I</td><td>11.781</td><td>m^4</td><td>A</td></tr>
+<tr><td>id_t</td><td>outer_diameter</td><td>4.000</td><td>m</td><td>A</td></tr>
+<tr><td>id_t</td><td>inner_diameter</td><td>2.000</td><td>m</td><td>A</td></tr>
+<tr><td>id_t</td><td>wall_thickness</td><td>1.000</td><td>m</td><td>A</td></tr>
+<tr><td>id_t</td><td>A</td><td>9.425</td><td>m^2</td><td>A</td></tr>
+<tr><td>id_t</td><td>Ai</td><td>3.142</td><td>m^2</td><td>A</td></tr>
+<tr><td>id_t</td><td>Ao</td><td>12.566</td><td>m^2</td><td>A</td></tr>
+<tr><td>id_t</td><td>I</td><td>11.781</td><td>m^4</td><td>A</td></tr>
+<tr><td>od_id_t</td><td>outer_diameter</td><td>4.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_id_t</td><td>inner_diameter</td><td>2.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_id_t</td><td>wall_thickness</td><td>1.000</td><td>m</td><td>A</td></tr>
+<tr><td>od_id_t</td><td>A</td><td>9.425</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_id_t</td><td>Ai</td><td>3.142</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_id_t</td><td>Ao</td><td>12.566</td><td>m^2</td><td>A</td></tr>
+<tr><td>od_id_t</td><td>I</td><td>11.781</td><td>m^4</td><td>A</td></tr></tbody></table><p class=caption>Geometry results. Each available-dimension entry point is evaluated against the annulus integrals.</p>
+<p>The direct section, thickness, diameter-reconstruction and geometry-consistency entry points are also exercised. Their complete returned values are retained in the embedded calculation payload and asserted against basis A by the report tests.</p>
+<table><thead><tr><th>Temperature change [K]</th><th>Uniform strain [1]</th><th>Signed growth [m]</th><th>Basis</th></tr></thead><tbody><tr><td>+20</td><td>2.0e-04</td><td>+0.200</td><td>B</td></tr>
+<tr><td>-20</td><td>-2.0e-04</td><td>-0.200</td><td>B</td></tr></tbody></table><p class=caption>Free-growth results. Positive values denote heating; negative values denote cooling.</p>
+<table><thead><tr><th>Output</th><th>Supplied capacity [MPa]</th><th>Supplied factor [1]</th><th>Product [MPa]</th><th>Basis</th></tr></thead><tbody><tr><td>design</td><td>100.0</td><td>0.8</td><td>80.0</td><td>C</td></tr>
+<tr><td>accidental</td><td>100.0</td><td>0.9</td><td>90.0</td><td>C</td></tr>
+<tr><td>test</td><td>100.0</td><td>0.6</td><td>60.0</td><td>C</td></tr></tbody></table><p class=caption>Pressure-factor results. ARITHMETIC_ONLY; no design allowable is established.</p>
+<p>HAND_CALCULATION_CHECKED means agreement with the independent synthetic integral in the stated case. ARITHMETIC_ONLY means agreement with supplied multiplication. NOT_EVALUATED means the method is not qualified by this report; it does not mean a true zero or a passing design check.</p>
+<h2 id="s6">6. Key Findings</h2>
+<p>The available-dimension geometry routes recover the declared annulus. Heating and cooling retain their signed free-growth response. The factor API maps the supplied design, incidental and hydrostatic-test factors to their corresponding output products. Normal public imports now resolve the local calculation modules.</p>
+<p>The inventory does not transfer these results to engineering restraint, free-span or pressure-capacity methods. In particular, free thermal growth does not predict buckling or walking, and factor multiplication does not qualify its supplied capacity.</p>
+<h2 id="s7">7. Limitations and Not Covered</h2>
+<p>Buckling restraint, axial feed-in, imperfection response, soil friction, upheaval resistance and mode constants require separate independent cases. The legacy thermal-buckling route references helpers absent from its class; the legacy upheaval route contains an unfinished eigenvalue branch. Those workflows remain NOT_EVALUATED and are not executed or repaired here.</p>
+<p>Span frequency boundary, sag and seabed-proximity corrections, onset thresholds, VIV response, fatigue curves and allowable lengths need independent equation and factor evidence. Passing existing span regressions does not establish these sources. Collapse, burst, combined loading, derating and pressure-sizing routes require equation-specific and edition-specific evidence plus qualified material and corrosion inputs. No licensed solver is imported or run.</p>
+<p>Geometry validation is checked for the consistent example, not certified for every invalid input. Composite geometry, reliability, installation and workflow declarations are inventoried without qualification. This report supplies neither a production design nor approval for service.</p>
+<h2 id="s8">8. Recommendations</h2>
+<p>The way forward is to obtain edition-specific equations and applicability limits for each engineering method, then independently worked cases for restraint, lateral and upheaval response, span frequency and empirical corrections, and pressure capacities. Material properties, corrosion basis, soil inputs, boundary conditions and acceptance criteria shall be supplied before a design conclusion can be calculated.</p>
+<p>Each unqualified route shall retain NOT_EVALUATED until its own evidence is reviewed. The tracking issue remains open while the requested engineering methods are unqualified. The present arithmetic examples can be rebuilt with the command in the accompanying README.</p>
+<h2 id="s9">9. References and Appendices</h2>
+<p>Bases A, B and C are the independent calculations written in this report and in <code>tests/subsea/pipeline/test_module_report_hand_values.py</code> and <code>tests/reporting/test_subsea_pipeline_module_report.py</code>. The synthetic inputs are committed in the builder source. Implementation locators identify code, not external equation evidence. No standard-derived numeric capacity or allowable is reproduced as qualified evidence.</p>
+<table><thead><tr><th>Repository-relative source</th><th>SHA-256</th></tr></thead><tbody><tr><td>scripts/reports/build_subsea_pipeline_module_report.py</td><td>f28e093c6cc5a39ea7aba4e44b694d20bfbce7db51dcacb06d235ec1cbe096ba</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py</td><td>4209f291ba500b32cc8949f92fa690b80f153e5930406844b0dec93a152acd8f</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/buckling_common.py</td><td>120191ade4ea67fe159311bc5f118ceb080746539354a850916153aee50bd0c2</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/calculations/__init__.py</td><td>ef36230e64c1911f22fbcf8159b181988668fb9db91ccae3b462ecc55e91f912</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py</td><td>6388e61f662d7b87495ce773cf9553230d06fb66cfbdd92830b7a129a1751fdc</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py</td><td>3a086996cb8554ca5c8251ddc770e8ca6d917992765a6b7789a24e7806d3875e</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/__init__.py</td><td>9c4f80ce0f34e06c31d1e5289fd4f2cee145a57ed1e2af33885aad0cecfa40a1</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py</td><td>477a42ed5cbf689e0c758ed6e31c5e79551385cdb9e870b33aac3a0abf81f3a9</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/models.py</td><td>943d0268c69e10ae3ac3029436d05309d857fc42a0372b766d14e6064e6031fb</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py</td><td>5f5b58d8d61008f72e9945af9800148dfb308a06b8064544b95a75b5f54180af</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py</td><td>ae562d8fda22b4e53b218852dece0089e62fe9ee3931f5a6eec6c723f6aee426</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py</td><td>6f99f2df379ef043f88a34b7e551e4c23b7169851b618f7da4f833a0c2f4c26c</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py</td><td>377026738acc19b88b0f4ebf1b4a7007c3442a5b91b907d4fad251d49509069a</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py</td><td>b7638a660d5e7ef61f47c85ecb923358fdcd15fca7627715eadb158b30058e99</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py</td><td>c4ccf41d4b2b62b454cf563264317867deb3a910958e13d25197120ee0d488b3</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/free_span/weibull_current.py</td><td>cefe4243f898afcdd3a1b7bf5f23af01c2130aaca48d91dfb333ee1a7aac8e64</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/global_buckling/__init__.py</td><td>e0439508fed443cda06b768ca6292a0873ec80ea7bb14a02fe5ac0789e28b76b</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py</td><td>84f6ba422e22a2be0efdfee36dd200dce0a5afc54771a824f6e3dbb1accee41d</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/global_buckling/models.py</td><td>ff4b32e83d94cc6bdaa851414d17ed10bdbc04b98e2cc7bbdcc7f8ebf778d5d8</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/integrity_workflows.py</td><td>137fee91522990d11bbccbbb127f8d50b73e3fe1f92058040a76929907ab57dd</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/lateral_buckling.py</td><td>fe25d14449198108903d7fb95e490e24c0bf03f214fe3cf987ea5a7dd61dd54f</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/pipe_sizing.py</td><td>abda3a79113e4e344a30b77e1f125e57d24ccce681c4c1ca5df2282d0262691b</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/pipeline.py</td><td>6743944e76b61d8148630217ecb759c87294a23fe5166669c4eab6758987253a</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/pipeline_pressure.py</td><td>e332e5387333c52b2a85fa98e89156b98c1e3e7eeced880b3479b90e24f880ae</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py</td><td>cbb83d6a84b02245d53c451f0a54cf6fcf3bd271ab9694d2875ff06eb9ed35c0</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py</td><td>be8377ff615958834aff7b2da92757fa0f7e0375c5e11100deabff1caeab52e4</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/pressure_loss.py</td><td>b3a2cc31745f86ae90b3885b1cd1a94ccb2ba996f927068468277d89590c06f5</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/reliability.py</td><td>19821d9111b86574a2017780c5dd2ff3b2fe554cf6d4b45684dcf7ee190d4bbc</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/span_rectification.py</td><td>97801c385851eba1430d7ad0dc010ee0db8a62f4da471456d1af827be4c0ee02</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/thermal_buckling.py</td><td>ad67c4cd2a4bb90e822363c8b59bca2c7458f6846812615db5ae21d0000d0055</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/thermal_expansion.py</td><td>3628ac26e1485bce830405b72559e02f533e6a9d7a9dfeba00e0c3ad2bba6f2d</td></tr>
+<tr><td>src/digitalmodel/subsea/pipeline/upheaval_buckling.py</td><td>9e2df5782dc9547c6c5ba72c23d953d8a5bbe188b08071ada314baf74d19623c</td></tr>
+<tr><td>src/digitalmodel/units.py</td><td>3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90</td></tr>
+<tr><td>tests/reporting/test_subsea_pipeline_module_report.py</td><td>59a52b928839435754ccb352304645408b6acdadc760d4fe53e7de497187bfd6</td></tr>
+<tr><td>tests/subsea/pipeline/test_free_span_f105.py</td><td>42cb47b877e88d3a18815171e540833009a255fe655a475f2f21f275fa004c9b</td></tr>
+<tr><td>tests/subsea/pipeline/test_module_report_hand_values.py</td><td>38c97f7e8efbf74c0b53d390cfd0b993d328c51c8bd43d54af20e52effcbb441</td></tr>
+<tr><td>tests/subsea/pipeline/test_pipe_geometry_finite_inputs.py</td><td>054192fc6252921b906007b48b698549bd4c71c8acd569749105b189d5bf8bc5</td></tr>
+<tr><td>tests/subsea/pipeline/test_thermal_expansion.py</td><td>0b2a7755b10a929a93d95c9a609c8c94ba15b312fab044f795a54c1a94518f62</td></tr></tbody></table><p class=caption>Source digests. Exact reviewed calculation, inventory and regression-test bytes.</p>
+<p><a href="manifest.json">The digest manifest</a> binds source files and the other delivered artifacts. Its own digest is excluded to avoid self-reference; independent rebuilds compare the complete manifest bytes. Absolute paths, wall-clock build times and scratch locations are excluded from the output. Embedded JSON retains full calculation precision; visible result tables are rounded for reading.</p>
+<script id="calculation" type="application/json">{
+  "annulus": {
+    "basis": "A",
+    "consistent": true,
+    "derived_inner_diameter": 2.0,
+    "derived_outer_diameter": 4.0,
+    "evaluation": "HAND_CALCULATION_CHECKED",
+    "inputs": {
+      "inner_diameter": 2.0,
+      "outer_diameter": 4.0,
+      "wall_thickness": 1.0
+    },
+    "routes": {
+      "id_t": {
+        "A": 9.42477796076938,
+        "Ai": 3.141592653589793,
+        "Ao": 12.566370614359172,
+        "I": 11.780972450961723,
+        "inner_diameter": 2.0,
+        "outer_diameter": 4.0,
+        "wall_thickness": 1.0
+      },
+      "od_id": {
+        "A": 9.42477796076938,
+        "Ai": 3.141592653589793,
+        "Ao": 12.566370614359172,
+        "I": 11.780972450961723,
+        "inner_diameter": 2.0,
+        "outer_diameter": 4.0,
+        "wall_thickness": 1.0
+      },
+      "od_id_t": {
+        "A": 9.42477796076938,
+        "Ai": 3.141592653589793,
+        "Ao": 12.566370614359172,
+        "I": 11.780972450961723,
+        "inner_diameter": 2.0,
+        "outer_diameter": 4.0,
+        "wall_thickness": 1.0
+      },
+      "od_t": {
+        "A": 9.42477796076938,
+        "Ai": 3.141592653589793,
+        "Ao": 12.566370614359172,
+        "I": 11.780972450961723,
+        "inner_diameter": 2.0,
+        "outer_diameter": 4.0,
+        "wall_thickness": 1.0
+      }
+    },
+    "section": {
+      "A": 9.42477796076938,
+      "Ai": 3.141592653589793,
+      "Ao": 12.566370614359172,
+      "I": 11.780972450961723
+    },
+    "units": {
+      "A": "m^2",
+      "Ai": "m^2",
+      "Ao": "m^2",
+      "I": "m^4",
+      "inner_diameter": "m",
+      "outer_diameter": "m",
+      "wall_thickness": "m"
+    },
+    "wall_thickness": 1.0
+  },
+  "growth": {
+    "basis": "B",
+    "buckling_and_walking": "NOT_EVALUATED",
+    "cases": [
+      {
+        "growth": 0.2,
+        "strain": 0.0002,
+        "temperature_change": 20.0
+      },
+      {
+        "growth": -0.2,
+        "strain": -0.0002,
+        "temperature_change": -20.0
+      }
+    ],
+    "evaluation": "HAND_CALCULATION_CHECKED",
+    "inputs": {
+      "alpha": 1e-05,
+      "length": 1000.0
+    },
+    "units": {
+      "alpha": "K^-1",
+      "growth": "m",
+      "length": "m",
+      "strain": "1",
+      "temperature_change": "K"
+    }
+  },
+  "methods": [
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 19,
+      "path": "src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py",
+      "symbol": "slay_sagbend_bending_strain"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 38,
+      "path": "src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py",
+      "symbol": "slay_overbend_bending_strain"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 57,
+      "path": "src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py",
+      "symbol": "slay_allowable_bending_strain"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 69,
+      "path": "src/digitalmodel/subsea/pipeline/api_rp_1111_installation.py",
+      "symbol": "slay_bending_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 18,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.run"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 25,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_friction_force"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 43,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_mesh"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 57,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_internal_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 76,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_external_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 88,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.assign_mesh"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 96,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_differential_temp"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 111,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_circumferential_stress"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 127,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_longitudinal_stress_fully_restrained"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 151,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_longitudinal_force_fully_restrained"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 165,
+      "path": "src/digitalmodel/subsea/pipeline/buckling_common.py",
+      "symbol": "CommonBucklingCaculations.get_water_depth"
+    },
+    {
+      "basis": "A",
+      "category": "geometry",
+      "evaluation": "HAND_CALCULATION_CHECKED",
+      "evidence_needed": "The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.",
+      "line": 18,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py",
+      "symbol": "calculate_section_properties"
+    },
+    {
+      "basis": "A",
+      "category": "geometry",
+      "evaluation": "HAND_CALCULATION_CHECKED",
+      "evidence_needed": "The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.",
+      "line": 69,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py",
+      "symbol": "calculate_wall_thickness"
+    },
+    {
+      "basis": "A",
+      "category": "geometry",
+      "evaluation": "HAND_CALCULATION_CHECKED",
+      "evidence_needed": "The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.",
+      "line": 95,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py",
+      "symbol": "calculate_diameter_from_thickness"
+    },
+    {
+      "basis": "A",
+      "category": "geometry",
+      "evaluation": "HAND_CALCULATION_CHECKED",
+      "evidence_needed": "The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.",
+      "line": 131,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py",
+      "symbol": "calculate_geometric_properties"
+    },
+    {
+      "basis": "A",
+      "category": "geometry",
+      "evaluation": "HAND_CALCULATION_CHECKED",
+      "evidence_needed": "The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence.",
+      "line": 191,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py",
+      "symbol": "validate_pipe_geometry"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 28,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+      "symbol": "APISTD2RDCalculations.calculate_burst_pressure"
+    },
+    {
+      "basis": "C",
+      "category": "pressure",
+      "evaluation": "ARITHMETIC_ONLY",
+      "evidence_needed": "The supplied capacity and factors need their own equation, edition, applicability and independent worked-case evidence.",
+      "line": 77,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+      "symbol": "APISTD2RDCalculations.calculate_design_pressures"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 108,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+      "symbol": "APISTD2RDCalculations.calculate_collapse_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 163,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+      "symbol": "APISTD2RDCalculations.calculate_method1_limits"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 235,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+      "symbol": "APISTD2RDCalculations.generate_interaction_curves"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 296,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+      "symbol": "calculate_utilization"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 339,
+      "path": "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+      "symbol": "apply_temperature_derating"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 92,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/__init__.py",
+      "symbol": "FreespanVIVFatigue.assess"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 192,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/__init__.py",
+      "symbol": "FreespanVIVFatigue.assess_multi_current"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 67,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py",
+      "symbol": "BilinearSNCurveParams.transition_stress"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 91,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py",
+      "symbol": "BilinearSNCurve.A"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 96,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py",
+      "symbol": "BilinearSNCurve.m"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 101,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py",
+      "symbol": "BilinearSNCurve.fatigue_limit"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 104,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py",
+      "symbol": "BilinearSNCurve.get_allowable_cycles"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 117,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py",
+      "symbol": "BilinearSNCurve.get_stress_range"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 170,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py",
+      "symbol": "get_sn_curve"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 117,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py",
+      "symbol": "SpanAllowableLength.max_span_m"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 67,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
+      "symbol": "SpanFatigueDamage.screening_cut_off_mpa"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 97,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
+      "symbol": "SpanFatigueDamage.allowable_cycles"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 117,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
+      "symbol": "SpanFatigueDamage.damage_per_year"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 128,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py",
+      "symbol": "SpanFatigueDamage.fatigue_life_years"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 133,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py",
+      "symbol": "SpanNaturalFrequency.fn_IL"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 137,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py",
+      "symbol": "SpanNaturalFrequency.fn_CF"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 144,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py",
+      "symbol": "SpanNaturalFrequency.compute"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 55,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py",
+      "symbol": "SpanOnsetScreening.stability_parameter"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 73,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py",
+      "symbol": "SpanOnsetScreening.il_onset_velocity"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 101,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py",
+      "symbol": "SpanOnsetScreening.cf_onset_velocity"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 120,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py",
+      "symbol": "SpanOnsetScreening.screening_flags"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 73,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
+      "symbol": "SpanVIVAmplitude.il_amplitude_over_D"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 101,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
+      "symbol": "SpanVIVAmplitude.cf_amplitude_over_D"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 139,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
+      "symbol": "SpanVIVAmplitude.stress_from_amplitude"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 73,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py",
+      "symbol": "jonswap_gamma"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 97,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py",
+      "symbol": "jonswap_spectrum"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 155,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py",
+      "symbol": "solve_dispersion"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 206,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py",
+      "symbol": "velocity_transfer"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 250,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py",
+      "symbol": "spectral_moments"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 276,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/wave_velocity.py",
+      "symbol": "compute_wave_velocity"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 51,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/weibull_current.py",
+      "symbol": "fit_weibull_current"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 130,
+      "path": "src/digitalmodel/subsea/pipeline/free_span/weibull_current.py",
+      "symbol": "extrapolate_current"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 95,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py",
+      "symbol": "lateral_equilibrium"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 172,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py",
+      "symbol": "critical_state"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 239,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py",
+      "symbol": "equilibria_at_temperature"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 294,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py",
+      "symbol": "effective_driving_force"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 319,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py",
+      "symbol": "screen_modes"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 348,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/hobbs_lateral.py",
+      "symbol": "governing_mode"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 113,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/models.py",
+      "symbol": "PipeSection.from_dimensions"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 140,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/models.py",
+      "symbol": "PipeSection.EA"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 145,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/models.py",
+      "symbol": "PipeSection.EI"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 149,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/models.py",
+      "symbol": "PipeSection.fully_restrained_thermal_force"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 173,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/models.py",
+      "symbol": "SoilResistance.axial_resistance_N_m"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 177,
+      "path": "src/digitalmodel/subsea/pipeline/global_buckling/models.py",
+      "symbol": "SoilResistance.lateral_resistance_N_m"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 7,
+      "path": "src/digitalmodel/subsea/pipeline/integrity_workflows.py",
+      "symbol": "run_on_bottom_stability"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 74,
+      "path": "src/digitalmodel/subsea/pipeline/integrity_workflows.py",
+      "symbol": "run_free_span"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 99,
+      "path": "src/digitalmodel/subsea/pipeline/integrity_workflows.py",
+      "symbol": "run_lateral_buckling"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 107,
+      "path": "src/digitalmodel/subsea/pipeline/integrity_workflows.py",
+      "symbol": "run_upheaval_buckling"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 27,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.run"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 35,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.save_results"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 44,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.save_plots"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 52,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.get_friction_force"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 70,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.get_lateral_buckling"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 94,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.calculateLateralBuckling"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 196,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.get_anchor_length"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 270,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.get_longitudinal_strain_and_thermal_stress"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 331,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.get_longitudinal_force_and_stress"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 375,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.get_mesh"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 389,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.get_differential_temp"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 403,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.save_temperature_plot"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 422,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.save_buckling_force_plot_imp"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 458,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.save_buckling_force_plot_met"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 498,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.save_buckling_stress_plot_imp"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 552,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.save_buckling_stress_plot_met"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 606,
+      "path": "src/digitalmodel/subsea/pipeline/lateral_buckling.py",
+      "symbol": "LateralBuckling.save_buckling_strain_plot"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 11,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.evaluate_pipe_system_properties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 20,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.pipe_properties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 42,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.pipe_section_properties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 71,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.get_fea_properties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 114,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.system_properties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 146,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.get_pipe_system_properties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 151,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.pipeProperties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 162,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.steelSectionProperties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 170,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.insulationSectionProperties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 181,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.buoyancySectionProperties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 192,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.sectionProperties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 203,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.equivalentPipe"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "geometry",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
+      "line": 289,
+      "path": "src/digitalmodel/subsea/pipeline/pipe_sizing.py",
+      "symbol": "PipeSizing.buoyancyFactorAndDiameter"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 23,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline.py",
+      "symbol": "Pipeline.router"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 38,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline.py",
+      "symbol": "Pipeline.get_pipe_properties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 100,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "PipeGeometry.D_over_t"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 160,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "dnv_wall_thickness"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 209,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "dnv_burst_resistance"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 248,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "dnv_pressure_containment_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 296,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "dnv_system_pressure_test"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 320,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "dnv_maop"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 355,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_water_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 381,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_elastic_collapse_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 409,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_collapse_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 445,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_external_collapse_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 494,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_ovality_reduction_factor"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 512,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_combined_loading_external_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 576,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_combined_loading_internal_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 638,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_propagating_buckle_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 658,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_transition_water_depth"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 685,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure.py",
+      "symbol": "api_propagating_buckle_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 45,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py",
+      "symbol": "dnv_collapse_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 130,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py",
+      "symbol": "dnv_external_collapse_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 191,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py",
+      "symbol": "dnv_propagating_buckle_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 211,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py",
+      "symbol": "dnv_propagating_buckle_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 260,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_dnv.py",
+      "symbol": "dnv_combined_loading_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 54,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py",
+      "symbol": "api_burst_pressure"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 84,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py",
+      "symbol": "api_internal_pressure_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 126,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py",
+      "symbol": "api_combined_loading_check"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 279,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py",
+      "symbol": "WallThicknessSizingWorkflow.run"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 358,
+      "path": "src/digitalmodel/subsea/pipeline/pipeline_pressure_workflow.py",
+      "symbol": "run_sizing_from_yaml"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 39,
+      "path": "src/digitalmodel/subsea/pipeline/pressure_loss.py",
+      "symbol": "Pressureloss.run"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 48,
+      "path": "src/digitalmodel/subsea/pipeline/pressure_loss.py",
+      "symbol": "Pressureloss.get_pipe_data"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 88,
+      "path": "src/digitalmodel/subsea/pipeline/pressure_loss.py",
+      "symbol": "Pressureloss.get_fluid_properties"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "pressure",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Edition-specific equations, material and corrosion basis, units, capacity factors and independent worked cases are needed.",
+      "line": 103,
+      "path": "src/digitalmodel/subsea/pipeline/pressure_loss.py",
+      "symbol": "Pressureloss.flow_parameters"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "workflow",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "End-to-end input/output cases, dependency evidence and independently qualified delegated methods are needed.",
+      "line": 26,
+      "path": "src/digitalmodel/subsea/pipeline/reliability.py",
+      "symbol": "normal_limit_state"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 30,
+      "path": "src/digitalmodel/subsea/pipeline/span_rectification.py",
+      "symbol": "design_rectification"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "span",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
+      "line": 62,
+      "path": "src/digitalmodel/subsea/pipeline/span_rectification.py",
+      "symbol": "router"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 17,
+      "path": "src/digitalmodel/subsea/pipeline/thermal_buckling.py",
+      "symbol": "ThermalBuckling.run"
+    },
+    {
+      "basis": "B",
+      "category": "thermal strain",
+      "evaluation": "HAND_CALCULATION_CHECKED",
+      "evidence_needed": "Uniform free growth only is checked; restraint, soil response, buckling and walking need independent evidence.",
+      "line": 20,
+      "path": "src/digitalmodel/subsea/pipeline/thermal_expansion.py",
+      "symbol": "free_thermal_expansion"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 25,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.run"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 35,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.get_friction_force"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 52,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.get_upheaval_buckling"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 107,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.get_level_1_analysis"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 151,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.get_buckle_result"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 189,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.get_soil_pipe_friction_model"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 217,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.get_uplift_resistance_model"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 233,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.get_trench_and_rock_burial_model"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 279,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.get_force_in_pipe_section"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 290,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.save_results"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 304,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.save_temperature_plot"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 323,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.save_buckling_force_plot_imp"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 360,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.save_buckling_force_plot_met"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 401,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.save_buckling_stress_plot_imp"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 456,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.save_buckling_stress_plot_met"
+    },
+    {
+      "basis": "Source inventory only",
+      "category": "buckling",
+      "evaluation": "NOT_EVALUATED",
+      "evidence_needed": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
+      "line": 511,
+      "path": "src/digitalmodel/subsea/pipeline/upheaval_buckling.py",
+      "symbol": "UpheavalBuckling.save_buckling_strain_plot"
+    }
+  ],
+  "pressure_factors": {
+    "basis": "C",
+    "capacity_qualification": "NOT_EVALUATED",
+    "evaluation": "ARITHMETIC_ONLY",
+    "factor_qualification": "NOT_EVALUATED",
+    "inputs": {
+      "base_capacity": 100.0,
+      "factors": {
+        "design": 0.8,
+        "hydroStaticTest": 0.6,
+        "incidentalPressure": 0.9
+      }
+    },
+    "results": {
+      "accidental": 90.0,
+      "design": 80.0,
+      "test": 60.0
+    },
+    "units": {
+      "base_capacity": "MPa",
+      "factors": "1",
+      "results": "MPa"
+    }
+  }
+}
+</script>
+<h2 id="s10">10. Acronyms and Review Notes</h2>
+<p>OD: outside diameter; ID: inside diameter; VIV: vortex-induced vibration; MPa: megapascal; K: kelvin; SHA-256: artifact digest algorithm. The method inventory is a bounded source review and arithmetic assessment. Independent engineering qualification of the unevaluated methods remains pending.</p>
+</main></body></html>

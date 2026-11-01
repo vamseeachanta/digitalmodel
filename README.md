@@ -154,6 +154,7 @@ Current Tier 1 priorities:
 - [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml) -- Canonical machine-readable module routing registry
 - [CHANGELOG.md](CHANGELOG.md) -- Release history
 - [Demonstration pack retirement](docs/maintenance/demo-pack-retirement.md) -- Regression scope, report compatibility and a worked scan example
+- [Subsea pipeline module analysis](docs/reports/modules/subsea_pipeline/README.md) -- Synthetic hand calculations, method inventory and qualification limits
 
 ## CLI Tools
 
