@@ -27,9 +27,23 @@ some methods use:
     eps_bend = (OD / 2) / R
     eps_long <= (allowable_fraction * SMYS) / E
 
-All functions are unit-consistent: pass E, SMYS and the resulting stresses in
-the same unit system (e.g. MPa with N in newtons and A in m^2, or psi with N in
-lbf and A in in^2). No internal unit conversion is performed.
+All functions require consistent units. For N/mm^2 (MPa), supply force in N,
+area in mm^2, and both diameter and radius in mm. For N/m^2 (Pa), supply force
+in N, area in m^2, and both diameter and radius in m. E and SMYS use the same
+stress unit as the result. No internal unit conversion is performed.
+
+The following synthetic arithmetic controls are derived independently in
+tests/installation/test_pipelay_report_hand_values.py. They supply no standard
+allowables. The SI length relation m = 1000 mm gives m^2 = 1000000 mm^2:
+
+    >>> bending_stress_from_radius(200, 100000, 200000)  # N/mm^2
+    200.0
+    >>> axial_stress(20000, 1000)  # N/mm^2
+    20.0
+    >>> bending_stress_from_radius(0.2, 100, 200000000000)  # N/m^2
+    200000000.0
+    >>> axial_stress(20000, 0.001)  # N/m^2
+    20000000.0
 
 References
 ----------
