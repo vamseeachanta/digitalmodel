@@ -29,6 +29,10 @@ New and materially revised engineering analysis deliverables shall follow the [p
 | Infrastructure, configs, or workflow routing | `src/digitalmodel/infrastructure/`, `src/digitalmodel/workflows/`, or `src/digitalmodel/data_systems/` | matching tests plus integration tests | domain docs and this routing entry point |
 | Documentation/indexing maintenance | `docs/README.md`, `docs/domains/README.md`, operator map, and registry | `tests/docs/test_digitalmodel_routing_contract.py` | this file |
 
+## Structural module reports
+
+- [Jacket and topside module analysis](reports/modules/jacket_topside/README.md): independent annulus and joint geometry, zero-demand arithmetic and capacity qualification limits.
+
 ## Operational runbooks
 
 - [Codex exec standard input in automation](runbooks/codex-exec-stdin.md):

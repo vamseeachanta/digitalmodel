@@ -135,6 +135,8 @@ from digitalmodel.cathodic_protection import dnv_rp_b401
 | power | Generator controls, microgrid EMS, protection relays | IEEE 1547, NFPA 110, IEEE C37.112 | 210+ |
 | gis | CRS transforms, spatial queries, multi-format I/O | -- | -- |
 
+The [jacket and topside module analysis](docs/reports/modules/jacket_topside/README.md) documents independent geometry checks, zero-demand limits and unresolved capacity qualification.
+
 For repo-wide current-state navigation, see [docs/maps/digitalmodel-operator-map.md](docs/maps/digitalmodel-operator-map.md). The canonical machine-readable routing registry is [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml).
 
 ## Development Roadmap

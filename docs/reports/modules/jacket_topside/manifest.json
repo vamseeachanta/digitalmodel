@@ -1,0 +1,26 @@
+{
+  "algorithm": "sha256",
+  "artifacts": {
+    "README.md": "e613f9c405da814d9dff5661ba16b0fa1d007599a01e6c56357f37db50cfb7f3",
+    "changes.json": "70514bd48581cd218b0cfa9190a06dc861773b4ebd5d334eeaedf3e9a9c9eca7",
+    "index.html": "a90617f61408becdbd0d9367d687a2d82e07af11ae7b8991fe9fc549023d0d72"
+  },
+  "manifest_policy": "Artifact map excludes itself to avoid a circular digest; source paths are repository-relative; no headers were replaced.",
+  "sources": {
+    "scripts/reports/build_jacket_topside_module_report.py": "fbf0a883a64965d9ea33d183f8afaef04f55cf71ce363fa1176fcdc4a102dd61",
+    "src/digitalmodel/structural/jacket_topside/__init__.py": "872c99a915acd8606670939735a9f3ae192c2616b7b5f8c646e2a0577cc7b1d5",
+    "src/digitalmodel/structural/jacket_topside/damaged_member_screen.py": "9bce351e86d888a24c7d1da47191e59cae23b2472a96350c5d5d00ddd9254680",
+    "src/digitalmodel/structural/jacket_topside/dented_axial_screen.py": "fa3a5d7dad4be98d8c7a43a86ba85b808baaf8b4bb8d8dc7ac394ea654a64c3e",
+    "src/digitalmodel/structural/jacket_topside/docs/worked-tubular-section-geometry.md": "92e85d118cf959df6e3b882d8c9b81b569c3514df1816b05a11a24e9cbfa7e0d",
+    "src/digitalmodel/structural/jacket_topside/joint_checks.py": "d534b80abd9c1c3ee2b0d5ea6c7d584d3874f59943fef3cb94ce6ebf6fb5b197",
+    "src/digitalmodel/structural/jacket_topside/member_checks.py": "ee0bd62aa56e896285098bfdf0efd0bad083bd71786438aa6e072baced44bfa8",
+    "src/digitalmodel/structural/jacket_topside/workflow.py": "a7aafc305d95277314929c48d2b0b54a33e876df18e214cc4763be64867e9212",
+    "tests/reporting/test_jacket_topside_module_report.py": "8dd231afc01efd8972f48d3cf7af89964a3c3aea9ba8fdb7e6dc9354e3c40efb",
+    "tests/structural/jacket_topside/test_damaged_member_screen.py": "f3a2d070b48712bc6ef0a4e990c590512f5aabef862103270ea05ccaf0fd03bc",
+    "tests/structural/jacket_topside/test_dented_axial_screen.py": "4de5b956a5607567adb85f0578e7ea03356b82232ab8cdcc95c8d6c38ade89fa",
+    "tests/structural/jacket_topside/test_documented_tubular_section_geometry.py": "782c4baf809819605452294b788bf540d7b9ae3b82bac54c6521c1442709e1ce",
+    "tests/structural/jacket_topside/test_jacket_topside.py": "45fea1b1fa607dbb2cd710e426e37fa22c40c83c71083d8bbb7dff059052256a",
+    "tests/structural/jacket_topside/test_module_report_hand_values.py": "500e2eb8e11337dd9ca08e805e6064074a3964e48d82445960faf9e627ee0dc8",
+    "tests/structural/jacket_topside/test_tension_scaling.py": "5a11581ddca6e7b0ce1aca8df5f93bb1ec43ea02629568521785cc725efd6c97"
+  }
+}
