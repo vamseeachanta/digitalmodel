@@ -636,3 +636,11 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain the bounded offshore resilience module report.
+!/scripts/reports/build_offshore_resilience_module_report.py
+!/docs/reports/modules/offshore_resilience/
+!/docs/reports/modules/offshore_resilience/index.html
+!/docs/reports/modules/offshore_resilience/changes.json
+!/docs/reports/modules/offshore_resilience/manifest.json
+!/docs/reports/modules/offshore_resilience/README.md

@@ -31,6 +31,9 @@ New and materially revised engineering analysis deliverables shall follow the [p
 
 ## Operational runbooks
 
+- [Offshore resilience module analysis](reports/modules/offshore_resilience/index.html):
+  computed synthetic facility and checklist examples, public-method inventory and qualification limits.
+
 - [Codex exec standard input in automation](runbooks/codex-exec-stdin.md):
   disconnect inherited input when supplying only a prompt argument, or supply
   finite stdin context intentionally.

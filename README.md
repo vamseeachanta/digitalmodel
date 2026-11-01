@@ -1,5 +1,8 @@
 # digitalmodel
 
+[Offshore resilience module analysis](docs/reports/modules/offshore_resilience/index.html):
+computed synthetic facility and checklist examples with explicit qualification limits.
+
 > *Everyday complex engineering — made deterministically simple.*
 
 > digitalmodel is an engineering calculation library: physical-world analysis mapped clause by clause to

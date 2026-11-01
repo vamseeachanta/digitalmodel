@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "digest_convention": "SHA-256 of exact UTF-8/LF bytes; manifest excludes its own digest to avoid self-reference.",
+  "sources": {
+    "scripts/reports/build_offshore_resilience_module_report.py": "a53d53bdde7318af1225416f5719b6e8a3e9ad111eeb0e6a6e2944d4eab9c767",
+    "src/digitalmodel/structural/offshore_resilience/minimum_facility.py": "341a2b5a6a67f2831ff2b735d6efdf1733a0b97a9685f6c445f9a605f127f948",
+    "src/digitalmodel/structural/offshore_resilience/installation_checklist.py": "a0a6c1ea78c22fa21612e1d12406d997722387853d5628f9b2f8f3dbe1204456",
+    "src/digitalmodel/structural/offshore_resilience/lifecycle_planning.py": "fb68f09f4dcc1622f376d40c8a29ade8316e71826faefff241f102db3f3ed9cf",
+    "src/digitalmodel/structural/offshore_resilience/structural_health.py": "25a1a3d2f2ebe1e53a078c39159f179382a002a0ab7dd87452414d7ebff66c7a",
+    "tests/structural/offshore_resilience/test_module_report_hand_values.py": "05d4042bf4aed6bdf1a5a6c6f4587f058255183b682aaac84a65fcc95603c31f",
+    "tests/reporting/test_offshore_resilience_module_report.py": "629f5319f0647c52180b7f7a602feb3058feb11419337ce98b128cac637673c8"
+  },
+  "artifacts": {
+    "index.html": "78c430a9288c7f323e13d33bba372ee977195d35eade22a841b891171c86d6fc",
+    "changes.json": "aca93cea24d17c8e528db95219a35c78c1fa3085f7513e84e085a2c239030888",
+    "README.md": "245e18d91bfc2efe483f613cff0aaac9c146a33512fb18330ff233b02f745109"
+  }
+}
