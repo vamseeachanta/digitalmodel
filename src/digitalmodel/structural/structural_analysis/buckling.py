@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 Buckling Analysis
 
@@ -112,13 +115,19 @@ class PlateBucklingAnalyzer:
         Args:
             plate: Plate geometry
             sigma_x: Compressive stress in x (MPa, positive = compression)
-            sigma_y: Compressive stress in y (MPa)
+            sigma_y: Transverse stress (MPa); only zero is implemented
             tau: Shear stress (MPa)
             gamma_m: Material factor
 
         Returns:
             BucklingResult with utilization
+
+        Raises:
+            ValueError: If sigma_y is nonzero; biaxial compression is not implemented.
         """
+        if sigma_y != 0.0:
+            raise ValueError("Nonzero sigma_y is not implemented for plate buckling")
+
         # Calculate individual buckling stresses
         b = plate.width
         t = plate.thickness

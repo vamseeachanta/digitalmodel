@@ -1,0 +1,7 @@
+[
+  {
+    "change": "Independent synthetic beam and ideal-column calculations, units, method limits and reproducible report artifacts are added. Nonzero transverse plate stress is rejected because its effect was previously omitted from the returned utilization.",
+    "date": "2026-10-28",
+    "revision": "A"
+  }
+]
