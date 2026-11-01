@@ -32,12 +32,13 @@ from __future__ import annotations
 
 import json
 import math
+import mmap
 import re
+import struct
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterator, List, Sequence, Tuple
-
-import numpy as np
 
 __all__ = [
     "DEFAULT_FACE_AREA_FACTOR",
@@ -301,16 +302,26 @@ def _read_points(path: Path, wanted: set) -> Dict[int, Vec3]:
 # --------------------------------------------------------------------------- #
 #
 # The FoamFile header stays ASCII; after it, each list is `<N>\n(` followed by
-# N raw little-endian items and `)`. `arch "LSB;label=32;scalar=64"` in the
+# N raw items and `)`. `arch "LSB;label=32;scalar=64"` in the
 # header gives the widths. points is a vectorField (N x 3 scalars); faces is a
 # faceCompactList: an offsets list (N+1 labels) then one flat label list. Only
 # the patch's faces and the points they reference are materialised, as in the
 # ASCII path, so the gate stays cheap on a multi-million-cell hull mesh.
+# Layout source: OpenFOAM 10 (2022), ListCompactIO.C, convertToCompact and
+# stream operators; UListIO.C, binary stream output:
+# https://github.com/OpenFOAM/OpenFOAM-10/blob/master/src/OpenFOAM/db/IOobjects/CompactIOList/ListCompactIO.C
+# https://github.com/OpenFOAM/OpenFOAM-10/blob/master/src/OpenFOAM/containers/Lists/UList/UListIO.C
+# Encoding widths/byte order: Python 3.11 (2022) struct, "Byte Order, Size, and
+# Alignment" and "Format Characters". These are storage sizes, not criteria.
+# https://docs.python.org/3.11/library/struct.html
 
 _FORMAT_BINARY = re.compile(rb"format\s+binary\s*;")
-_ARCH = re.compile(rb'arch\s+"LSB;label=(\d+);scalar=(\d+)"')
+_ARCH = re.compile(rb'arch\s+"([^"\n]+)"\s*;')
 _CLASS = re.compile(rb"class\s+(\w+)\s*;")
-_LIST_START = re.compile(rb"\n(\d+)\s*\n\(")
+# FoamFile dividers and comments are text outside binary blocks. Anchor the
+# declaration to the current position so comment contents cannot become counts.
+_FOAM_SPACE = rb"(?:\s|//[^\n]*(?:\n|$)|/\*.*?\*/)*"
+_LIST_START = re.compile(_FOAM_SPACE + rb"(\d+)" + _FOAM_SPACE + rb"\(", re.S)
 
 
 def _is_binary(path: Path) -> bool:
@@ -320,64 +331,97 @@ def _is_binary(path: Path) -> bool:
         return bool(_FORMAT_BINARY.search(handle.read(2000)))
 
 
-def _binary_header(data: np.memmap, path: Path) -> Tuple[str, str, bytes, int]:
-    head = bytes(data[:2000])
-    arch = _ARCH.search(head)
-    label = "<i4" if arch is None or arch.group(1) == b"32" else "<i8"
-    scalar = "<f8" if arch is None or arch.group(2) == b"64" else "<f4"
-    cls = _CLASS.search(head)
-    cls_name = cls.group(1) if cls else b""
+@contextmanager
+def _mapped_binary(path: Path) -> Iterator[mmap.mmap]:
+    """Map read-only and close deterministically, including on invalid input."""
     try:
-        end = head.index(b"}", head.index(b"FoamFile"))
+        with path.open("rb") as handle:
+            if not path.stat().st_size:
+                raise HullFaceResolutionError(f"{path}: empty binary file")
+            with mmap.mmap(handle.fileno(), 0, access=mmap.ACCESS_READ) as data:
+                yield data
+    except OSError as exc:
+        raise HullFaceResolutionError(f"{path}: cannot read binary mesh: {exc}") from exc
+
+
+def _binary_header(data: mmap.mmap, path: Path) -> Tuple[struct.Struct, struct.Struct, bytes, int]:
+    head = data[:2000]
+    try:
+        end = head.index(b"}", head.index(b"FoamFile")) + 1
     except ValueError as exc:
         raise HullFaceResolutionError(f"{path}: no FoamFile header") from exc
-    return label, scalar, cls_name, end + 1
+    head = head[:end]
+    arch = _ARCH.search(head)
+    # No architecture declaration means the storage cannot be interpreted
+    # unambiguously; never assume the reader's native architecture.
+    encoding = re.fullmatch(rb"(LSB|MSB);label=(32|64);scalar=(32|64)",
+                            arch.group(1) if arch else b"")
+    if encoding is None:
+        raise HullFaceResolutionError(f"{path}: missing or unsupported binary arch")
+    endian = "<" if encoding.group(1) == b"LSB" else ">"
+    label = struct.Struct(endian + ("i" if encoding.group(2) == b"32" else "q"))
+    scalar = struct.Struct(endian + ("f" if encoding.group(3) == b"32" else "d"))
+    cls = _CLASS.search(head)
+    return label, scalar, cls.group(1) if cls else b"", end
 
 
-def _binary_list(data: np.memmap, pos: int, path: Path) -> Tuple[int, int]:
-    """(count, byte offset of the first raw item) for the list starting at/after pos."""
-    window = bytes(data[pos: pos + 400])
-    m = _LIST_START.search(window)
+def _binary_list(data: mmap.mmap, pos: int, path: Path, item_size: int) -> Tuple[int, int, int]:
+    """Return count, raw offset, and end after verifying the declared payload."""
+    m = _LIST_START.match(data, pos)
     if m is None:
         raise HullFaceResolutionError(f"{path}: no binary list header after byte {pos}")
-    return int(m.group(1)), pos + m.end()
+    count, start = int(m.group(1)), m.end()
+    end = start + count * item_size
+    if end >= len(data) or data[end:end + 1] != b")":
+        raise HullFaceResolutionError(f"{path}: truncated or invalid binary list")
+    return count, start, end + 1
 
 
 def _read_points_binary(path: Path, wanted: set) -> Dict[int, Vec3]:
-    data = np.memmap(path, dtype=np.uint8, mode="r")
-    _, scalar, _, end = _binary_header(data, path)
-    n, start = _binary_list(data, end, path)
-    if wanted and max(wanted) >= n:
-        raise HullFaceResolutionError(
-            f"{path}: the patch references point {max(wanted)} but the file holds {n}"
-        )
-    arr = np.frombuffer(data, dtype=scalar, count=3 * n, offset=start).reshape(n, 3)
-    return {i: (float(arr[i, 0]), float(arr[i, 1]), float(arr[i, 2])) for i in wanted}
+    with _mapped_binary(path) as data:
+        _, scalar, cls_name, end = _binary_header(data, path)
+        if cls_name != b"vectorField":
+            raise HullFaceResolutionError(f"{path}: expected binary vectorField")
+        # A point has three coordinates (OpenFOAM vectorField / vector type).
+        vector = struct.Struct(scalar.format[0] + 3 * scalar.format[1:])
+        n, start, _ = _binary_list(data, end, path, vector.size)
+        if wanted and (min(wanted) < 0 or max(wanted) >= n):
+            raise HullFaceResolutionError(f"{path}: patch point index outside [0, {n})")
+        points = {i: vector.unpack_from(data, start + i * vector.size) for i in wanted}
+        if any(not math.isfinite(v) for point in points.values() for v in point):
+            raise HullFaceResolutionError(f"{path}: non-finite patch point coordinate")
+        return points
 
 
 def _read_faces_binary(path: Path, start_face: int, count: int) -> List[List[int]]:
-    data = np.memmap(path, dtype=np.uint8, mode="r")
-    label, _, cls_name, end = _binary_header(data, path)
-    if cls_name != b"faceCompactList":
-        raise HullFaceResolutionError(
-            f"{path}: binary faces of class {cls_name.decode(errors='replace')!r}; "
-            f"this reader handles faceCompactList (what OpenFOAM writes in binary)"
-        )
-    lsize = np.dtype(label).itemsize
-    n_off, s1 = _binary_list(data, end, path)
-    offsets = np.frombuffer(data, dtype=label, count=n_off, offset=s1)
-    n_lab, s2 = _binary_list(data, s1 + n_off * lsize, path)
-    labels = np.frombuffer(data, dtype=label, count=n_lab, offset=s2)
-    n_faces = n_off - 1
-    if start_face + count > n_faces:
-        raise HullFaceResolutionError(
-            f"{path}: expected {count} faces from index {start_face}, but the file "
-            f"holds {n_faces}. The face list is shorter than the boundary claims."
-        )
-    return [
-        labels[int(offsets[i]): int(offsets[i + 1])].tolist()
-        for i in range(start_face, start_face + count)
-    ]
+    with _mapped_binary(path) as data:
+        label, _, cls_name, end = _binary_header(data, path)
+        if cls_name != b"faceCompactList":
+            raise HullFaceResolutionError(f"{path}: expected binary faceCompactList")
+        n_off, s1, end = _binary_list(data, end, path, label.size)
+        n_lab, s2, _ = _binary_list(data, end, path, label.size)
+        if start_face < 0 or start_face + count >= n_off:
+            raise HullFaceResolutionError(
+                f"{path}: face list is shorter than the boundary claims"
+            )
+
+        def offset(i: int) -> int:
+            return label.unpack_from(data, s1 + i * label.size)[0]
+
+        if offset(0) != 0 or offset(n_off - 1) != n_lab:
+            raise HullFaceResolutionError(f"{path}: invalid compact face offsets")
+        faces = []
+        for i in range(start_face, start_face + count):
+            first, last = offset(i), offset(i + 1)
+            # A polygon needs at least three vertices; offsets delimit labels.
+            if first < 0 or last > n_lab or last - first < 3:
+                raise HullFaceResolutionError(f"{path}: invalid compact face offsets")
+            face = [label.unpack_from(data, s2 + j * label.size)[0]
+                    for j in range(first, last)]
+            if min(face) < 0:
+                raise HullFaceResolutionError(f"{path}: negative patch point index")
+            faces.append(face)
+        return faces
 
 
 def _require_ascii(path: Path) -> None:

@@ -707,6 +707,10 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/parametrics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#parametrics
+    submodules:
+      parametrics:
+        agent_pack: src/digitalmodel/parametrics/docs/agent-pack.md
+        qa_family: EC
   - module: pipelay
     entry_point: src/digitalmodel/pipelay/
     maturity: development

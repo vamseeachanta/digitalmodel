@@ -2,11 +2,10 @@
 # # Licensed under the MIT License. See LICENSE file for details.
 
 import numpy as np
-from scipy.signal import savgol_filter
 from .calculations import calculate_pump_fillage
 from .exceptions import PhysicsError
 from .solver_guards import annotate_results, validate_stroke
-from .models import DynacardAnalysisContext, CardData, AnalysisResults
+from .models import DynacardAnalysisContext, CardData, AnalysisResults, DownholeLoadBasis
 from .constants import (
     FEET_TO_INCHES,
     STEEL_YOUNGS_MODULUS_PSI,
@@ -23,8 +22,10 @@ from .constants import (
 
 class DynacardPhysicsSolver:
     """
-    High-fidelity Gibbs Analytical solver for Sucker Rod Pumps.
-    Uses frequency-domain wave equation analysis for maximum accuracy and parity.
+    Legacy Gibbs comparison solver with propagated position and scaled load.
+
+    Load is an affine surface-load approximation, not a wave-equation solution.
+    Physical qualification of this hybrid card is not established.
     """
 
     def __init__(self, context: DynacardAnalysisContext):
@@ -40,7 +41,9 @@ class DynacardPhysicsSolver:
     def solve_wave_equation(self):
         """
         Implements the Gibbs analytical diagnostic method.
-        Solves for downhole position and load in the frequency domain.
+        Propagates position in the frequency domain and approximates load.
+        The returned load basis records the executed legacy transformation
+        and its unqualified status; it does not certify derived diagnostics.
         """
         # 1. Inputs and Constants from Legacy "Gold Standard"
         u_surf = np.array(self.ctx.surface_card.position)
@@ -112,6 +115,10 @@ class DynacardPhysicsSolver:
             position=dh_pos.tolist(),
             load=dh_load.tolist()
         )
+        self.results.downhole_load_basis = DownholeLoadBasis(
+            buoyant_rod_weight_lbf=buoyant_weight,
+            attenuation_factor=LOAD_ATTENUATION_FACTOR,
+        )
         self.results.peak_polished_rod_load = np.max(f_surf)
         self.results.minimum_polished_rod_load = np.min(f_surf)
         self.results.ctx = self.ctx
@@ -127,7 +134,8 @@ class DynacardPhysicsSolver:
         Returns:
             True if buckling is detected, False otherwise.
         """
-        if not self.results.downhole_card: return False
+        if not self.results.downhole_card:
+            return False
         loads = np.array(self.results.downhole_card.load)
         if np.min(loads) < BUCKLING_DETECTION_LOAD_THRESHOLD_LBS:
             self.results.buckling_detected = True
