@@ -83,3 +83,9 @@ for that bulk store, not a path that should be hard-coded into portable repo log
 ## Operational runbooks
 
 - [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.
+
+## Module methods reports
+
+- [Quasi-static floating wind module analysis](reports/modules/fowt_quasi_static/README.md):
+  public-function inventory, independent synthetic response calculations and
+  explicit limits for unevaluated mooring, hydrostatic and native BEM methods.

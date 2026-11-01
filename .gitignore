@@ -636,3 +636,11 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain the synthetic quasi-static floating wind module report only.
+!/scripts/reports/build_fowt_quasi_static_module_report.py
+!/docs/reports/modules/fowt_quasi_static/
+!/docs/reports/modules/fowt_quasi_static/index.html
+!/docs/reports/modules/fowt_quasi_static/changes.json
+!/docs/reports/modules/fowt_quasi_static/manifest.json
+!/docs/reports/modules/fowt_quasi_static/README.md

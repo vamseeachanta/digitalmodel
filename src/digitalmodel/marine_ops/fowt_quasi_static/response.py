@@ -77,6 +77,10 @@ def natural_periods(omega: np.ndarray, added: np.ndarray, mass: np.ndarray,
 
     Eigenbranches are ordered by eigenvalue. Dominant mass-weighted modal
     participation assigns the six roots to displacement/rotation labels.
+    Sampled roots, including endpoints, are retained within binary64 roundoff
+    (32 epsilon times the eigenvalue/frequency-squared scale). Intervals touching
+    a sampled root are excluded from bracketing to avoid duplicate candidates.
+    The lowest positive root of each branch is retained as before.
     """
     def modes(frequency: float) -> tuple:
         a = np.array([[np.interp(frequency, omega, added[:, i, j])
@@ -92,11 +96,19 @@ def natural_periods(omega: np.ndarray, added: np.ndarray, mass: np.ndarray,
         def characteristic(frequency: float) -> float:
             value: float = modes(frequency)[0][branch]-frequency**2
             return value
-        changes = [(left, right) for left, right in zip(omega[:-1], omega[1:])
-                   if characteristic(left)*characteristic(right) < 0]
-        if not changes:
+        residuals = np.array([characteristic(frequency) for frequency in omega])
+        scale = np.maximum(abs(residuals + omega**2), omega**2)
+        sampled = abs(residuals) <= 32*np.finfo(float).eps*scale
+        candidates = [float(frequency) for frequency in omega[sampled] if frequency > 0]
+        for index, (left, right) in enumerate(zip(omega[:-1], omega[1:])):
+            if (not sampled[index] and not sampled[index+1]
+                    and residuals[index]*residuals[index+1] < 0):
+                candidate = brentq(characteristic, left, right)
+                if candidate > 0:
+                    candidates.append(candidate)
+        if not candidates:
             raise ValueError("Natural-frequency root lies outside computed BEM range")
-        root = brentq(characteristic, *changes[0])
+        root = min(candidates)
         roots.append(root)
         _, vectors, effective = modes(root)
         weights = abs(vectors[:, branch])**2*abs(np.diag(effective))

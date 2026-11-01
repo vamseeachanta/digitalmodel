@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Quasi-static floating wind module analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+</style></head><body class="hs-doc"><main class="wrap"><header><h1>Quasi-static floating wind module analysis</h1><p>Synthetic arithmetic qualification · Revision A</p></header><section><h2 id="s1">1. Executive Summary</h2><p>The quasi-static floating-wind module links rigid-body properties, submerged geometry, mooring equilibrium, hydrodynamic coefficients and linear response. This analysis qualifies arithmetic for synthetic modal roots and a complex impedance only [S1, H1, H2, C1].</p>
+<p>Exact sampled roots and range endpoints are retained. Campaign convergence, mooring design acceptance and native BEM results are NOT_EVALUATED. No physical design input or operating limit is inferred.</p></section><section id="revision-history"><h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Initial synthetic methods analysis; sampled natural roots are retained and arithmetic evidence is separated from engineering acceptance.</td></tr><tr><td>B</td><td>2026-10-28</td><td>Calculated report values are rounded to 12 decimal places before serialization to remove final-bit numerical differences within the test tolerances.</td></tr></tbody></table></section><section><h2 id="s2">2. Introduction</h2><p>The bounded public-function review covers mooring, geometry, hydrostatics, response and workflow methods. Only response arithmetic is executed. The separate analysis-report workflow and its data are not regenerated. Native functions are inventoried by parsing source, without importing or executing a solver [C2].</p></section><section><h2 id="s3">3. Design Data and Basis</h2><p>All constants are committed synthetic eigenvalue controls [S1], not design inputs. Unit-normalized modal coordinates replace physical translation/rotation coordinates; response is in normalized displacement units. Identity matrices and zero coefficients are algebraic definitions. No environmental, hull or line properties are assumed.</p><table><thead><tr><th>Control</th><th>Inputs</th><th>Units</th><th>Source</th></tr></thead><tbody><tr><td>Natural control</td><td>M=I; A=0; K=diag(1,4,9,16,25,36)</td><td>normalized modal mass; stiffness in modal mass/s²</td><td>S1, H1</td></tr><tr><td>Natural grids</td><td>0.5 to 6.5 by 0.5; 0.5 to 6.5 by 1; 1 to 6 by 0.5</td><td>rad/s</td><td>S1</td></tr><tr><td>Response control</td><td>ω=1; M=2I; A=I; K=5I; B=I; extra damping=0</td><td>rad/s; normalized modal mass, mass/s², mass/s; dimensionless fraction</td><td>S1, H2</td></tr><tr><td>Excitation</td><td>F=(2,0,0,0,0,0), real</td><td>normalized generalized force</td><td>S1, H2</td></tr></tbody></table><details><summary>Complete committed synthetic inputs [S1]</summary><pre>{
+  &quot;natural&quot;: {
+    &quot;added_diagonal&quot;: [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    &quot;grids&quot;: {
+      &quot;between&quot;: [
+        0.5,
+        6.5,
+        1.0
+      ],
+      &quot;endpoints&quot;: [
+        1.0,
+        6.0,
+        0.5
+      ],
+      &quot;sampled&quot;: [
+        0.5,
+        6.5,
+        0.5
+      ]
+    },
+    &quot;mass_diagonal&quot;: [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    &quot;stiffness_diagonal&quot;: [
+      1.0,
+      4.0,
+      9.0,
+      16.0,
+      25.0,
+      36.0
+    ]
+  },
+  &quot;response&quot;: {
+    &quot;added_diagonal&quot;: [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    &quot;excitation_real&quot;: [
+      2.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    &quot;extra_damping_fraction&quot;: 0.0,
+    &quot;mass_diagonal&quot;: [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+    ],
+    &quot;omega&quot;: 1.0,
+    &quot;radiation_diagonal&quot;: [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    &quot;stiffness_diagonal&quot;: [
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0,
+      5.0
+    ]
+  },
+  &quot;source&quot;: &quot;S1: committed synthetic eigenvalue and impedance controls&quot;
+}
+</pre></details></section><section><h2 id="s4">4. Analysis Methodology</h2><p>Natural roots solve det[K−ω²(M+A(ω))]=0. The implementation linearly interpolates added mass, sorts eigenbranches, retains the lowest positive root on each branch, and assigns modes by dominant mass-weighted participation. Sampled residuals within 32 binary64 epsilons of the eigenvalue/frequency-squared scale are treated as roots; adjacent intervals are excluded to prevent duplicate candidates [C1].</p>
+<p>Modal crossings, multiple roots on a frequency-dependent branch and nearly degenerate mode labels remain unresolved. The search does not establish roots beyond the sampled band. Coupled-system coverage is retained in the existing analytical eigenvalue test [C3].</p>
+<p>The response convention is Z=K−ω²(M+A)−iω(B+Bextra), Zq=F. Extra damping is applied only to the implementation-selected components. This example sets it to zero and does not qualify that damping model [C1].</p>
+<p>The inventory status ARITHMETIC_QUALIFIED applies only to the controls shown here; every other method remains NOT_EVALUATED. Function arguments are listed in source order; defaults and return contracts remain in the source [C2].</p><table><thead><tr><th>Public function</th><th>Arguments</th><th>Purpose</th><th>Contract / review limit</th><th>Example status</th></tr></thead><tbody><tr><td>basis.parallel_axis</td><td>mass, center</td><td>Shift inertia by m[(r dot r)I-r outer r].</td><td>Rigid mass and inertia assembly. Supply attributed component masses, tensors and reference origins; tower density is piecewise linear.</td><td>NOT_EVALUATED</td></tr><tr><td>basis.aggregate</td><td>basis, reading</td><td>Combine component masses, centres and tensors at still water level.</td><td>Rigid mass and inertia assembly. Supply attributed component masses, tensors and reference origins; tower density is piecewise linear.</td><td>NOT_EVALUATED</td></tr><tr><td>geometry.hull_mesh</td><td>basis, step</td><td>Build an external submerged surface with reflection symmetry.</td><td>Submerged union geometry and volume. Supply consistent circle, pontoon and draft dimensions; intersection topology and panel refinement require separate assessment.</td><td>NOT_EVALUATED</td></tr><tr><td>geometry.analytical_volume</td><td>basis</td><td>Integrate exact circle/rectangle union sections independently of panels.</td><td>Submerged union geometry and volume. Supply consistent circle, pontoon and draft dimensions; intersection topology and panel refinement require separate assessment.</td><td>NOT_EVALUATED</td></tr><tr><td>hydrodynamics.low_frequency_solver</td><td></td><td>Configure the finite-depth low-frequency Green function.</td><td>Radiation, diffraction and hydrostatics. Supply physical geometry, density, gravity, depth, frequencies and headings; native BEM and mesh convergence remain unevaluated.</td><td>NOT_EVALUATED</td></tr><tr><td>hydrodynamics.cylinder_added_mass</td><td>segments</td><td>Calculate a separate cylinder heave added-mass control.</td><td>Radiation, diffraction and hydrostatics. Supply physical geometry, density, gravity, depth, frequencies and headings; native BEM and mesh convergence remain unevaluated.</td><td>NOT_EVALUATED</td></tr><tr><td>hydrodynamics.solve_hydrodynamics</td><td>basis, step, omega, headings, n_threads</td><td>Assemble native radiation/diffraction coefficients and hydrostatic restoring.</td><td>Radiation, diffraction and hydrostatics. Supply physical geometry, density, gravity, depth, frequencies and headings; native BEM and mesh convergence remain unevaluated.</td><td>NOT_EVALUATED</td></tr><tr><td>hydrodynamics.coefficient_arrays</td><td>dataset</td><td>Extract frequency, heading and mode tensors in explicit axis order.</td><td>Radiation, diffraction and hydrostatics. Supply physical geometry, density, gravity, depth, frequencies and headings; native BEM and mesh convergence remain unevaluated.</td><td>NOT_EVALUATED</td></tr><tr><td>mooring.grounded_horizontal_tension</td><td>distance, rise, length, weight</td><td>Invert the grounded inextensible catenary relation.</td><td>Quasi-static catenaries and mean equilibrium. Supply consistent submerged weight, elasticity and line geometry; equilibrium holds draft and attitude fixed and reports their residual reactions.</td><td>NOT_EVALUATED</td></tr><tr><td>mooring.mooring_system</td><td>basis, removed, length_change</td><td>Construct elastic lines and a horizontally free body.</td><td>Quasi-static catenaries and mean equilibrium. Supply consistent submerged weight, elasticity and line geometry; equilibrium holds draft and attitude fixed and reports their residual reactions.</td><td>NOT_EVALUATED</td></tr><tr><td>mooring.forces</td><td>system, position</td><td>Solve lines at prescribed position and return all restoring components.</td><td>Quasi-static catenaries and mean equilibrium. Supply consistent submerged weight, elasticity and line geometry; equilibrium holds draft and attitude fixed and reports their residual reactions.</td><td>NOT_EVALUATED</td></tr><tr><td>mooring.stiffness</td><td>system, position</td><td>Use centred position perturbations for a restoring tangent matrix.</td><td>Quasi-static catenaries and mean equilibrium. Supply consistent submerged weight, elasticity and line geometry; equilibrium holds draft and attitude fixed and reports their residual reactions.</td><td>NOT_EVALUATED</td></tr><tr><td>mooring.equilibrate</td><td>system, basis, heading</td><td>Balance horizontal mean thrust with fixed draft and attitude.</td><td>Quasi-static catenaries and mean equilibrium. Supply consistent submerged weight, elasticity and line geometry; equilibrium holds draft and attitude fixed and reports their residual reactions.</td><td>NOT_EVALUATED</td></tr><tr><td>mooring.line_results</td><td>system, position, basis, damaged</td><td>Return tensions, seabed contact, anchor angle and factored utilisation.</td><td>Quasi-static catenaries and mean equilibrium. Supply consistent submerged weight, elasticity and line geometry; equilibrium holds draft and attitude fixed and reports their residual reactions.</td><td>NOT_EVALUATED</td></tr><tr><td>report.number</td><td>value</td><td>Format report numbers with bounded significant figures.</td><td>Analysis presentation and case completeness. Supply complete validated campaign results; rendering cannot qualify an engineering model.</td><td>NOT_EVALUATED</td></tr><tr><td>report.delta</td><td>value, reference</td><td>Format relative differences with explicit zero-reference handling.</td><td>Analysis presentation and case completeness. Supply complete validated campaign results; rendering cannot qualify an engineering model.</td><td>NOT_EVALUATED</td></tr><tr><td>report.offset</td><td>value</td><td>Round offsets consistently and suppress numerical negative zero.</td><td>Analysis presentation and case completeness. Supply complete validated campaign results; rendering cannot qualify an engineering model.</td><td>NOT_EVALUATED</td></tr><tr><td>report.table</td><td>headers, rows, caption</td><td>Render labelled analysis tables.</td><td>Analysis presentation and case completeness. Supply complete validated campaign results; rendering cannot qualify an engineering model.</td><td>NOT_EVALUATED</td></tr><tr><td>report.section</td><td>index, title, body</td><td>Render a numbered report section.</td><td>Analysis presentation and case completeness. Supply complete validated campaign results; rendering cannot qualify an engineering model.</td><td>NOT_EVALUATED</td></tr><tr><td>report.validate_cases</td><td>cases</td><td>Require unique and complete load-case combinations.</td><td>Analysis presentation and case completeness. Supply complete validated campaign results; rendering cannot qualify an engineering model.</td><td>NOT_EVALUATED</td></tr><tr><td>report.build_report</td><td>root, results, output_dir</td><td>Render a separate analysis report from retained campaign results.</td><td>Analysis presentation and case completeness. Supply complete validated campaign results; rendering cannot qualify an engineering model.</td><td>NOT_EVALUATED</td></tr><tr><td>response.spectrum</td><td>omega, hs, tp, gamma</td><td>Normalize the positive-frequency wave spectrum to supplied height.</td><td>Coupled frequency response and spectral statistics. Use finite positive ordered frequencies and compatible six-mode matrices; sampled coverage, interpolation and damping must be qualified for physical use.</td><td>NOT_EVALUATED</td></tr><tr><td>response.wave_statistics</td><td>omega, rao, density, duration</td><td>Integrate response moments and narrow-band Rayleigh statistics.</td><td>Coupled frequency response and spectral statistics. Use finite positive ordered frequencies and compatible six-mode matrices; sampled coverage, interpolation and damping must be qualified for physical use.</td><td>NOT_EVALUATED</td></tr><tr><td>response.mass_matrix</td><td>basis, reading, symmetric</td><td>Assemble coupled still-water-origin mass with optional symmetry projection.</td><td>Coupled frequency response and spectral statistics. Use finite positive ordered frequencies and compatible six-mode matrices; sampled coverage, interpolation and damping must be qualified for physical use.</td><td>NOT_EVALUATED</td></tr><tr><td>response.natural_periods</td><td>omega, added, mass, stiffness</td><td>Find the lowest positive root per eigenbranch and assign by mass-weighted participation.</td><td>Coupled frequency response and spectral statistics. Use finite positive ordered frequencies and compatible six-mode matrices; sampled coverage, interpolation and damping must be qualified for physical use.</td><td>ARITHMETIC_QUALIFIED</td></tr><tr><td>response.response_operators</td><td>omega, added, radiation, excitation, mass, stiffness, damping</td><td>Solve the complex coupled impedance for each frequency and heading.</td><td>Coupled frequency response and spectral statistics. Use finite positive ordered frequencies and compatible six-mode matrices; sampled coverage, interpolation and damping must be qualified for physical use.</td><td>ARITHMETIC_QUALIFIED</td></tr><tr><td>workflow.load_basis</td><td>root, input_path</td><td>Load attributed basis and explicit analysis overrides within the source root.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.interpolate_hydrodynamics</td><td>data, omega</td><td>Interpolate real and imaginary coefficients without extrapolation.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.constraint_reaction</td><td>residual, mass, cg, volume, cob, rho, gravity</td><td>Balance constrained residual, gravitational and buoyancy loads.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.frequency_grid</td><td></td><td>Return the campaign frequency samples including low-frequency coverage.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.source_digest</td><td>path</td><td>Record raw-byte and parsed-syntax digests.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.executed_code_digests</td><td></td><td>Bind the local panel-calculation source dependencies.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.bem_inputs</td><td>basis, step</td><td>Record physical inputs, frequency settings and numerical package versions.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.verify_retained_panels</td><td>basis, scratch</td><td>Reject stale or incomplete input and output provenance.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.panel_runs</td><td>basis, scratch</td><td>Compute and retain the separate panel-refinement campaign.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.load_cases</td><td>basis, data, hydro, reading</td><td>Assemble heading, sea-state and line-state response cases.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.convergence</td><td>coarse, fine</td><td>Compare common-frequency coefficients at selected fine-grid peaks.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr><tr><td>workflow.summarise</td><td>root, scratch</td><td>Combine statics, response, sensitivity and campaign summaries.</td><td>Input loading, provenance and campaign assembly. Use attributed inputs and digest-bound retained coefficients; load-case coverage, interpolation and convergence criteria require separate qualification.</td><td>NOT_EVALUATED</td></tr></tbody></table></section><section><h2 id="s5">5. Detailed Results</h2><h3>Independent eigenvalue calculation [H1]</h3>
+<p>For j=1,…,6, det(K−ω²I)=∏(j²−ω²). The positive roots are ω=j rad/s and T=2π/j s. These follow by factoring the diagonal determinant independently of the numerical search. Both sampled endpoints and strictly bracketed roots are exercised [S1, C3].</p><table><thead><tr><th>Mode j</th><th>Sampled T (s)</th><th>Between-grid T (s)</th><th>Endpoint-grid T (s)</th><th>Source</th></tr></thead><tbody><tr><td>1</td><td>6.283</td><td>6.283</td><td>6.283</td><td>H1, S1, C1</td></tr><tr><td>2</td><td>3.142</td><td>3.142</td><td>3.142</td><td>H1, S1, C1</td></tr><tr><td>3</td><td>2.094</td><td>2.094</td><td>2.094</td><td>H1, S1, C1</td></tr><tr><td>4</td><td>1.571</td><td>1.571</td><td>1.571</td><td>H1, S1, C1</td></tr><tr><td>5</td><td>1.257</td><td>1.257</td><td>1.257</td><td>H1, S1, C1</td></tr><tr><td>6</td><td>1.047</td><td>1.047</td><td>1.047</td><td>H1, S1, C1</td></tr></tbody></table><h3>Independent complex calculation [H2]</h3>
+<p>At ω=1, Z=5−(2+1)−i=2−i. Multiplying 2/(2−i) by (2+i)/(2+i) gives q=(4+2i)/5. Its amplitude is √20/5 and phase is atan2(2,4) rad. Every unforced component is zero; phase at zero amplitude is undefined. The full complex vector is tested, rather than compared with another solver [C3].</p><table><thead><tr><th>Mode</th><th>Real q</th><th>Imaginary q</th><th>Amplitude</th><th>Phase (rad)</th><th>Source</th></tr></thead><tbody><tr><td>1</td><td>0.8</td><td>0.4</td><td>0.8944</td><td>0.4636</td><td>H2, S1, C1</td></tr><tr><td>2</td><td>0</td><td>0</td><td>0</td><td>undefined</td><td>H2, S1, C1</td></tr><tr><td>3</td><td>0</td><td>0</td><td>0</td><td>undefined</td><td>H2, S1, C1</td></tr><tr><td>4</td><td>0</td><td>0</td><td>0</td><td>undefined</td><td>H2, S1, C1</td></tr><tr><td>5</td><td>0</td><td>0</td><td>0</td><td>undefined</td><td>H2, S1, C1</td></tr><tr><td>6</td><td>0</td><td>0</td><td>0</td><td>undefined</td><td>H2, S1, C1</td></tr></tbody></table></section><section><h2 id="s6">6. Key Findings</h2><p>Strict sign-change bracketing missed exact sampled roots. Explicit sampled-root candidates correct that defect while retaining the modal assignment step [C1, C3]. The diagonal response control establishes complex sign, amplitude and phase for this impedance convention.</p>
+<p>Calculated report values are rounded to 12 decimal places before scratch output, HTML serialization and artifact hashing. Rounding contributes at most 5e-13 in the stated normalized units, below the 1e-12 absolute test tolerance. Undefined phase remains null. This precision applies to these bounded synthetic controls; it does not change solver arithmetic or establish reproducibility for arbitrary inputs [S1, H1, H2, C3].</p>
+<p>Period tests use relative tolerance 1e-11 and absolute tolerance 1e-12 s, allowing the bracket solver's default absolute frequency tolerance and binary64 rounding over this bounded range. The diagonal impedance has condition number one; relative and absolute response tolerances of 1e-12 are conservative relative to binary64 rounding for this small solve. These are software-test tolerances, not engineering acceptance criteria [H1, H2, C3].</p></section><section><h2 id="s7">7. Limitations and Not Covered</h2><ul><li>campaign_convergence: NOT_EVALUATED</li><li>mooring_design_acceptance: NOT_EVALUATED</li><li>native_bem: NOT_EVALUATED</li></ul>
+<p>No native BEM results, hull mesh, hydrostatic stiffness, mooring solution or campaign load cases are generated. The grounded catenary formula is inextensible; elastic seabed behaviour is delegated by the mooring workflow. Horizontal statics constrain draft and attitude. Finite-difference mooring tangents, geometry topology, spectral tails, symmetry projection, retained-coefficient digests and campaign convergence still require independent qualification [C2].</p>
+<p>Linear response excludes nonlinear line dynamics, second-order drift and coupled aerodynamic/control behaviour. A synthetic matrix cannot establish physical resonance accuracy, line strength, anchor capacity or stationkeeping acceptance. No conformity with a standard is claimed.</p></section><section><h2 id="s8">8. Recommendations</h2><p>Before physical use, establish attributed geometry, mass origins, line properties, environmental data and acceptance criteria. Independently check geometry volume and hydrostatic restoring, test catenary and elastic line demand, refine native panels and frequency coverage, and compare coupled response against an independent physical benchmark. Qualify constrained reactions and damaged-line cases. Leave the issue open while these methods remain unqualified [C2].</p></section><section><h2 id="s9">9. References and Appendices</h2><ul>
+<li>S1: synthetic input definitions in the report builder; all numerical controls are defined for arithmetic qualification.</li>
+<li>H1: independent diagonal determinant factorization in Detailed Results and the hand-value tests.</li>
+<li>H2: independent scalar complex division in Detailed Results and the hand-value tests.</li>
+<li>C1: response.py, natural_periods and response_operators; implementation contract, not an independent oracle.</li>
+<li>C2: public-function source inventory in Analysis Methodology; exact source bytes are bound by manifest.json.</li>
+<li>C3: test_module_report_hand_values.py, test_response.py and test_fowt_quasi_static_module_report.py; arithmetic, coupling and rebuild evidence.</li>
+<li>L1: existing report layout and canonical brand palette, inlined from the sources named in manifest.json.</li></ul>
+<p>No external numerical source or licensed publication is required for the algebraic controls. Manifest source digests bind inputs, implementation, tests and presentation assets. Artifact digests bind index.html, changes.json and README.md; manifest.json does not hash itself. Scratch paths, timestamps and runtime package versions are excluded from deterministic deliverables. Direct rebuild tests compare every deliverable byte and all displayed worked rows.</p></section><section><h2 id="s10">10. Acronyms and Symbols</h2><p>BEM: boundary element method. CG: centre of gravity. RAO: response amplitude operator. M: rigid mass. A: added mass. K: restoring stiffness. B: radiation damping. Z: complex impedance. F: generalized excitation. q: complex displacement. ω: angular frequency. T: natural period. I: identity matrix. i: imaginary unit. All example coordinates are normalized modal coordinates [S1].</p></section><details id="changes-panel"><summary>Change panel</summary><p>Revision A: initial synthetic analysis and sampled-root correction.</p><p>Revision B: bounded numerical serialization for reproducible report bytes.</p><button id="save-changes" type="button">Save change record</button></details>
+<script>document.getElementById('save-changes').addEventListener('click', async () => {
+const text = document.getElementById('change-data').textContent;
+if ('showSaveFilePicker' in window) {
+const handle = await window.showSaveFilePicker({suggestedName:'changes.json'});
+const stream = await handle.createWritable(); await stream.write(text); await stream.close();
+} else {
+const url = URL.createObjectURL(new Blob([text], {type:'application/json'}));
+const link = document.createElement('a'); link.href=url; link.download='changes.json'; link.click(); URL.revokeObjectURL(url);
+}});</script><script id="calculation" type="application/json">{"amplitude": [0.894427191, 0.0, 0.0, 0.0, 0.0, 0.0], "assessments": {"campaign_convergence": "NOT_EVALUATED", "mooring_design_acceptance": "NOT_EVALUATED", "native_bem": "NOT_EVALUATED"}, "inputs": {"natural": {"added_diagonal": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "grids": {"between": [0.5, 6.5, 1.0], "endpoints": [1.0, 6.0, 0.5], "sampled": [0.5, 6.5, 0.5]}, "mass_diagonal": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "stiffness_diagonal": [1.0, 4.0, 9.0, 16.0, 25.0, 36.0]}, "response": {"added_diagonal": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "excitation_real": [2.0, 0.0, 0.0, 0.0, 0.0, 0.0], "extra_damping_fraction": 0.0, "mass_diagonal": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0], "omega": 1.0, "radiation_diagonal": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0], "stiffness_diagonal": [5.0, 5.0, 5.0, 5.0, 5.0, 5.0]}, "source": "S1: committed synthetic eigenvalue and impedance controls"}, "periods": {"between": [6.28318530718, 3.14159265359, 2.094395102393, 1.570796326795, 1.256637061436, 1.047197551197], "endpoints": [6.28318530718, 3.14159265359, 2.094395102393, 1.570796326795, 1.256637061436, 1.047197551197], "sampled": [6.28318530718, 3.14159265359, 2.094395102393, 1.570796326795, 1.256637061436, 1.047197551197]}, "phase_rad": [0.463647609001, null, null, null, null, null], "response_imag": [0.4, 0.0, 0.0, 0.0, 0.0, 0.0], "response_real": [0.8, 0.0, 0.0, 0.0, 0.0, 0.0]}</script><script id="change-data" type="application/json">[{"change": "Initial synthetic methods analysis; sampled natural roots are retained and arithmetic evidence is separated from engineering acceptance.", "date": "2026-10-28", "revision": "A"}, {"change": "Calculated report values are rounded to 12 decimal places before serialization to remove final-bit numerical differences within the test tolerances.", "date": "2026-10-28", "revision": "B"}]</script></main></body></html>
