@@ -1,0 +1,26 @@
+{
+  "artifacts": {
+    "README.md": "23d7bbaae745f76ecae38536172c74cad8bbd230ecc490cd1d95e8c4f5552f4c",
+    "changes.json": "d6044b1579f36451649af4c15cad7cb64789612b9a90f4999ed30222a52e0a99",
+    "index.html": "8ff9b5f5f8f1a58adf123aff7f7cc1ce000b736f94b18225e75f3b1cc5c847ac"
+  },
+  "digest_convention": "SHA-256 over exact UTF-8/LF bytes; manifest self-digest is excluded to avoid self-reference. Rebuild checks include manifest bytes.",
+  "generator": "scripts/reports/build_capytaine_module_report.py",
+  "schema_version": 1,
+  "sources": {
+    "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
+    "scripts/reports/build_capytaine_module_report.py": "0a63e5b9a67d450f2ba56b723bf86c79daa6708cf3a4223bd0ffab9db93717a5",
+    "src/digitalmodel/hydrodynamics/capytaine/__init__.py": "03901c2bc43967bb4e974e1c81bb316d1e1a64d91039a6cd1c683464be146266",
+    "src/digitalmodel/hydrodynamics/capytaine/lid.py": "1f78851ce9724df8ca3b34a5ce2241e6ca449581644f8d40486fcc79c060bd26",
+    "src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py": "09b106066b5f87f2035a8e9691d0e22aa7d3f4456abada6a65d0c9760c223227",
+    "src/digitalmodel/hydrodynamics/capytaine/models.py": "2ac5433778132fd0075b499802d40186066d4cd1678f9e6432315a28451979ba",
+    "src/digitalmodel/hydrodynamics/capytaine/rao.py": "23c24b043b0b7c17d7939482efa4adbf0f6c02c36a392ed46408fc024a3b4990",
+    "src/digitalmodel/hydrodynamics/capytaine/results.py": "31f2c2c9ec70b9058da541b5432cd1e929aecf9944d49280f4aa416479b92547",
+    "src/digitalmodel/hydrodynamics/capytaine/solver.py": "3c155e1e165406287324dea9c2bfe6600e0562c23cf8e4b06d63b43fcc6bd0ab",
+    "tests/hydrodynamics/capytaine/test_module_report_hand_values.py": "55a87f2ceb443b1e1c631fa5138e51890f7c66a2b226015f96650a35d61eec2e",
+    "tests/hydrodynamics/capytaine/test_rao_manual_input_contract.py": "d954392d602595cc4d13fdf6363c7443d57d438a063ef35b489b0b3f953fb32f",
+    "tests/hydrodynamics/capytaine/test_rao_manual_sign.py": "75bc469f7cb132ae2105cb4a598293f9355f48312156cbc217a6de646a49d316",
+    "tests/hydrodynamics/capytaine/test_result_coordinates.py": "99245a15dae2aae0eaeb620873b6271203687e7e60f16fc7d8a434913c31fd65",
+    "tests/reporting/test_capytaine_module_report.py": "cb9d0a86f939ea921f6e66dcc7c6e865db67b09e42370c7e395a892311b08b5f"
+  }
+}

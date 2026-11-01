@@ -636,3 +636,11 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain only the Capytaine module builder and named report deliverables.
+!/scripts/reports/build_capytaine_module_report.py
+!/docs/reports/modules/capytaine/
+!/docs/reports/modules/capytaine/index.html
+!/docs/reports/modules/capytaine/changes.json
+!/docs/reports/modules/capytaine/manifest.json
+!/docs/reports/modules/capytaine/README.md

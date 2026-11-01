@@ -31,6 +31,8 @@ New and materially revised engineering analysis deliverables shall follow the [p
 
 ## Operational runbooks
 
+- [Capytaine module analysis](reports/modules/capytaine/index.html): independent synthetic harmonic-response controls, public method inventory and native evidence requirements.
+
 - [Codex exec standard input in automation](runbooks/codex-exec-stdin.md):
   disconnect inherited input when supplying only a prompt argument, or supply
   finite stdin context intentionally.
