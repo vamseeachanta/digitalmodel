@@ -104,6 +104,20 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Set up Node for source locator formatter
+        if: matrix.domain == 'contracts'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Provision source locator formatter
+        if: matrix.domain == 'contracts'
+        run: |
+          npm install --prefix "$RUNNER_TEMP/source-locators-formatter" \
+            --cache "$RUNNER_TEMP/source-locators-npm-cache" \
+            --no-save --no-package-lock --no-audit --no-fund "prettier@4.0.0-alpha.8"
+          echo "SOURCE_LOCATORS_PRETTIER=$RUNNER_TEMP/source-locators-formatter/node_modules/.bin/prettier" >> "$GITHUB_ENV"
+
       - name: Install Gmsh runtime libraries
         if: matrix.domain == 'solver-smoke'
         run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
