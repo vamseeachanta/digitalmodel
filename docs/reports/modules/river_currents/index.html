@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>River currents module analysis</title><style>
+
+:root{
+
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+
+  --brand:#0b3d91; --accent:#0f8a7e;
+
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+  --r:12px; --wrap:1240px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+    --brand:#84a9e8; --accent:#3fb6c9;
+    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+  }
+}
+
+
+:root[data-theme="light"]{
+  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
+  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
+  --brand:#0b3d91; --accent:#0f8a7e;
+  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
+  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
+}
+:root[data-theme="dark"]{
+  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
+  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
+  --brand:#84a9e8; --accent:#3fb6c9;
+  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
+  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
+}
+
+
+:root{
+  --navy:var(--brand);  --teal:var(--accent);
+  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
+  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
+}
+
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
+
+
+a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
+a.brandmark:hover .lbl{color:var(--ink)}
+a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.sr-only{
+  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+
+*{box-sizing:border-box} body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
+header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
+.kicker{text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;color:var(--accent);font-weight:700}
+h1{font-size:1.8rem;line-height:1.2;margin:.3em 0 .15em} h2{font-size:1.25rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.02rem;margin:1.4em 0 .4em;color:var(--accent)} .sub{color:var(--mut);font-size:.95rem}
+.badge{display:inline-block;background:var(--good);color:#fff;font-weight:700;font-size:.8rem;padding:5px 12px;border-radius:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:20px 0}
+.meta div{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.meta b{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)} .meta span{font-size:.95rem;font-weight:600}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9rem} th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--bg);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)} td.good{color:var(--good);font-weight:700} td.warn{color:var(--warn);font-weight:700}
+figure{margin:18px 0;text-align:center} figure img{max-width:100%;border:1px solid var(--line);border-radius:6px} figcaption{font-size:.84rem;color:var(--mut);margin-top:8px}
+.eq{background:var(--bg);border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;font-family:'Cambria Math',Georgia,serif;font-size:1.05rem;overflow-x:auto}
+.callout{background:#eef6fb;border:1px solid #cce3f0;border-radius:8px;padding:14px 18px;margin:16px 0} .callout.key{background:#eefaf2;border-color:#bfe6cd}
+code{background:var(--bg);padding:1px 6px;border-radius:4px;font-size:.88em} footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.82rem;color:var(--mut)}
+.refs li{font-size:.86rem;margin:.35em 0}
+table{display:block;overflow-x:auto}svg{max-width:520px;width:100%}td{vertical-align:top}
+</style></head><body class="hs-doc"><main class="wrap">
+<header><h1>River currents module analysis</h1><p>Synthetic profile and rectangular-channel correction arithmetic; physical acceptance NOT_EVALUATED.</p></header>
+<h2 id="s1">1. Summary</h2>
+<p>The public bed-referenced power profile returns a depth mean of 2.0 m/s
+and discharge per unit width of 16.0 m²/s for the stipulated inputs [H, P].
+The assumed lateral shape conserves its width mean; the confinement multiplier follows remaining-area continuity [H, B].
+Independent hand arithmetic checks these identities. Empirical bank retardation, fitted extremes,
+load coefficients and operating limits remain conditional or NOT_EVALUATED.</p>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Initial module analysis records the synthetic profile and channel-correction arithmetic, public function review and unresolved physical basis so that the evidence can be rebuilt and assessed.</td></tr></tbody></table>
+<h2 id="s2">2. Context and scope</h2>
+<p>The reviewed source revision is <code>09089a121a16069c4b657d1a320a630a23ab1dd5</code>. The manifest records exact source
+and generator digests. The review covers all public functions and fit methods in the package, including
+the example builder [P, B, E, L, X]. It checks the compact profile/correction arithmetic; it does not establish
+calibration, design acceptance or compliance. No calculation source correction was required for this case.</p>
+<p>The existing <a href="../../../../docs/domains/hydrodynamics/river_currents/river-current-analysis.html">towing and extreme-fit analysis</a>
+and <a href="../../../../examples/hydrodynamics/river_currents/basis.json">synthetic example basis</a> remain separate evidence [X].
+Their outputs are retained unchanged; this report does not rerun or qualify a campaign.</p>
+<h2 id="s3">3. Input basis</h2>
+<p>[H] is a stipulated mathematical example, with no site data. Heights are measured upward from the bed.
+The square-root exponent and retardation are explicit assumptions; no default river exponent is adopted.
+The rectangular obstruction is an area-continuity abstraction. Missing measured inputs are not replaced by zero.</p>
+<table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis</th></tr></thead><tbody><tr><td>depth_m</td><td>8.0</td><td>m</td><td>Stipulated rectangular channel [H].</td></tr>
+<tr><td>surface_speed_m_s</td><td>3.0</td><td>m/s</td><td>Stipulated surface speed [H].</td></tr>
+<tr><td>exponent_m</td><td>2.0</td><td>dimensionless</td><td>Stipulated square-root profile [H].</td></tr>
+<tr><td>retardation</td><td>0.4</td><td>dimensionless</td><td>Assumed lateral shape only [H].</td></tr>
+<tr><td>width_m</td><td>20.0</td><td>m</td><td>Stipulated rectangular channel [H].</td></tr>
+<tr><td>beam_m</td><td>4.0</td><td>m</td><td>Stipulated rectangular obstruction [H].</td></tr>
+<tr><td>draft_m</td><td>2.0</td><td>m</td><td>Stipulated rectangular obstruction [H].</td></tr></tbody></table>
+<p>Evaluation heights are bed, quarter depth and surface; lateral evaluation positions are the two banks and mid-width [H].
+The fixed centre and remaining-area multipliers illustrate composition only, without flow redistribution.</p>
+<h2 id="s4">4. Method and public function review</h2>
+<p>[P] gives u(z) = u_s (z/H)^(1/m), with height clipped to the wetted depth, and its depth integral.
+The logarithmic alternative uses shear speed, roughness and a caller-selectable wall constant; it clamps
+the invalid sub-roughness region to zero. Finite input validation is incomplete in the profile functions;
+callers need to reject non-finite values before physical use. This remains an open finding.</p>
+<p>[B] assumes f(x) = 1 − r + 6 r x(1 − x) on normalized width, and a separate linear bend bias
+1 + a(2x − 1). These are unit-mean shapes, without empirical calibration. Confinement is
+A/(A − beam × draft). Constant-speed bend water-level rise follows u²/g × ln((R + W/2)/(R − W/2));
+positive inner radius is required. This radial-balance model does not predict secondary circulation.</p>
+<p>[L] integrates signed relative speed times its absolute value over the occupied draft using midpoint
+quadrature, then scales existing approximate force and yaw coefficients. A full-width under-keel slot
+drag hypothesis is always applied. It ignores side bypass; joint use with a channel-area factor requires
+a separate physical basis. The towing comparison uses resultant force × reserve / efficiency and absolute
+yaw demand against supplied capacities. A positive boolean addresses only those steady comparisons.</p>
+<p>[E] uses least squares on transformed plotting ranks (rank − 0.5)/n. The zero-location Weibull
+annual return calculation uses F(level)^rate = 1 − 1/T; Gumbel requires annual maxima and uses
+F(level) = 1 − 1/T. Here rate is independent samples per year and T is return period in years.
+Distribution fitting, declustering, uncertainty, stationarity and physical upper/lower support require further evidence.
+Seasonal summaries retain input units and supplied labels without annualising.</p>
+<table><thead><tr><th>Public function or method</th><th>Inputs and units</th><th>Outputs and units</th><th>Review and limits</th></tr></thead><tbody><tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/profiles.py#L39">profiles.power_law_profile</a></td><td>Bed height z, depth H (m), surface speed (m/s), exponent m (dimensionless)</td><td>Scalar or array speed (m/s)</td><td>Bed-referenced law; clips height to the wetted depth. Synthetic oracle exercised.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/profiles.py#L84">profiles.power_law_depth_averaged</a></td><td>H (m), surface speed (m/s), exponent m</td><td>Depth mean (m/s)</td><td>Analytical power integral; agrees with the independent synthetic integral.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/profiles.py#L117">profiles.log_law_profile</a></td><td>z, roughness length (m), shear speed (m/s), dimensionless wall constant</td><td>Scalar or array speed (m/s)</td><td>Clamps below roughness to zero. Roughness and shear require a separate physical basis.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/profiles.py#L166">profiles.log_law_depth_averaged</a></td><td>H above roughness (m), shear speed (m/s), wall constant</td><td>Depth mean (m/s)</td><td>Integrates the positive log region and divides by the full depth.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/profiles.py#L214">profiles.river_velocity_profile</a></td><td>Point count, H (m), law selector and corresponding profile inputs</td><td>Bed heights (m), speeds (m/s)</td><td>Uniform sampling wrapper; the report supplies its exponent explicitly.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/bank_effects.py#L44">bank_effects.lateral_factor</a></td><td>Position and width (m), assumed retardation (dimensionless)</td><td>Dimensionless multiplier</td><td>Assumed symmetric quadratic has unit width mean; calibration NOT_EVALUATED.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/bank_effects.py#L62">bank_effects.blockage_factor</a></td><td>Width, depth, beam and draft (m)</td><td>Dimensionless section multiplier</td><td>Rectangular remaining-area continuity; no local flow solution.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/bank_effects.py#L74">bank_effects.bend_factor</a></td><td>Position and width (m), assumed outer bias (dimensionless)</td><td>Dimensionless multiplier</td><td>Assumed linear bias; right bank is outer bank. Independent of water-level rise.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/bank_effects.py#L86">bank_effects.bend_superelevation</a></td><td>Speed (m/s), width and centreline radius (m), gravity (m/s²)</td><td>Outer-minus-inner water level (m)</td><td>Constant-speed radial balance; positive inner radius required; stable logarithm. Existing independent tests retained.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/bank_effects.py#L108">bank_effects.corrected_profile</a></td><td>Scalar speed callback (m/s), fixed dimensionless factor</td><td>Corrected speed callback (m/s)</td><td>Finite nonnegative factor and finite callback result required; no coupled hydraulics.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/extremes.py#L92">extremes.fit_weibull</a></td><td>Positive, finite, nonconstant samples in consistent speed or discharge units</td><td>WeibullFit: dimensionless shape, dimensional scale</td><td>Transformed-rank least squares, zero location; neither maximum likelihood nor uncertainty estimation.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/extremes.py#L67">extremes.WeibullFit.return_level</a></td><td>Return period (years), independent sample rate (per year)</td><td>Return level in sample units</td><td>Uses annual nonexceedance with explicit sample rate. Stationarity and independence need evidence.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/extremes.py#L100">extremes.fit_gumbel</a></td><td>Finite nonnegative, nonconstant annual maxima in consistent units</td><td>GumbelFit: dimensional location and scale</td><td>Transformed-rank least squares for annual maxima; fit support is unbounded.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/extremes.py#L87">extremes.GumbelFit.return_level</a></td><td>Return period (years)</td><td>Annual-maximum level in sample units</td><td>One maximum per year is required; physical extremes NOT_EVALUATED.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/extremes.py#L108">extremes.seasonal_summary</a></td><td>Finite nonnegative values and matching season labels</td><td>Count, mean and maximum per season in input units</td><td>Groups caller labels; does not annualise, decluster or fit a trend.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/vessel_forces.py#L39">vessel_forces.shallow_drag_factor</a></td><td>Water depth and draft (m)</td><td>Dimensionless drag multiplier</td><td>Full-width under-keel slot hypothesis; ignores side bypass and diverges at grounding.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/vessel_forces.py#L47">vessel_forces.current_load</a></td><td>Geometry (m), bed-referenced signed speed callback (m/s), depth (m), direction (degrees), density (kg/m³), collinear motion (m/s), slice count</td><td>Signed surge/sway (N) and yaw (N·m)</td><td>Midpoint signed quadratic integration over occupied draft; always applies slot hypothesis and approximate upstream coefficients.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/vessel_forces.py#L85">vessel_forces.towing_assessment</a></td><td>Loads (N, N·m), nominal pull (N), efficiency and reserve, optional yaw capacity (N·m)</td><td>Required/available pull, absolute yaw demand and comparison booleans</td><td>Steady force and yaw comparisons only. Missing yaw capacity accepts only zero moment; no navigation clearance.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/examples.py#L29">examples.compute</a></td><td>Revisioned synthetic basis dictionary with SI keys</td><td>Bank/extreme and towing result dictionaries</td><td>Calls shipped public calculations; linked existing examples are not rerun by this builder.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/examples.py#L79">examples.profile_svg</a></td><td>Depth (m), surface speed (m/s)</td><td>Inline SVG</td><td>Uses the example&#x27;s default profile convention; this report generates its explicitly stipulated profile separately.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/examples.py#L103">examples.render</a></td><td>Basis dictionary and computed results</td><td>Self-contained analysis HTML</td><td>Includes revision history, assumptions and conditional towing narrative.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/examples.py#L186">examples.build</a></td><td>Explicit basis file and output directory</td><td>Analysis HTML, results JSON and byte-digest manifest</td><td>Deterministic rendering/build pattern reused; existing deliverables remain the reference for those examples.</td></tr>
+<tr><td><a href="../../../../src/digitalmodel/hydrodynamics/river_currents/examples.py#L204">examples.main</a></td><td>Required basis and output CLI arguments</td><td>Writes the existing example deliverables</td><td>Command wrapper; no additional method or qualification.</td></tr></tbody></table>
+<h2 id="s5">5. Worked calculation</h2>
+<p>[H] independently stipulates H = 8 m, u_s = 3 m/s and m = 2, so u = 3√(z/8).
+Substitution at z = 0, 2 and 8 m gives 0, 1.5 and 3 m/s. Direct depth integration gives
+q = (3/√8)(2/3)8^(3/2) = 16 m²/s; mean speed = q/H = 2 m/s.
+These are hand-derived expectations, compared with public API answers in the results table.</p>
+<p>For stipulated r = 0.4, ∫₀¹ f(x) dx = 1 − r + 6r(1/2 − 1/3) = 1;
+the bank factor is 0.6 and centre factor is 1.2. Simpson weights integrate this quadratic exactly [H].
+The rectangular continuity factor is (20 × 8)/(20 × 8 − 4 × 2) = 20/19 [H, B].
+The corrected quarter and surface speeds are respectively (3/2)(6/5)(20/19) = 36/19 m/s
+and 3(6/5)(20/19) = 72/19 m/s. These fractions are exact arithmetic, not calibrated predictions.</p>
+<figure><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 350" role="img" aria-label="Synthetic speed against height above bed">
+<path d="M70 40 V280 H445" fill="none" stroke="currentColor"/>
+<polyline points="70.0,280.0 130.1,272.8 155.0,265.6 174.1,258.4 190.2,251.2 204.4,244.1 217.2,236.9 229.0,229.7 240.0,222.5 250.3,215.3 260.1,208.1 269.3,200.9 278.2,193.8 286.7,186.6 294.9,179.4 302.8,172.2 310.4,165.0 317.8,157.8 325.0,150.6 332.0,143.4 338.8,136.2 345.4,129.1 351.9,121.9 358.2,114.7 364.4,107.5 370.5,100.3 376.5,93.1 382.3,85.9 388.0,78.8 393.7,71.6 399.2,64.4 404.6,57.2 410.0,50.0" fill="none" stroke="var(--brand)" stroke-width="3"/>
+<text x="65" y="305">0.0</text><text x="400" y="305">3.0</text>
+<text x="30" y="285">0.0</text><text x="30" y="55">8.0</text>
+<text x="160" y="335">Speed (m/s)</text><text x="80" y="25">Height above bed (m)</text>
+</svg><figcaption>Public API samples of the stipulated profile; height above bed and speed in SI units [H, P]. Plot sampling is a presentation choice, not a convergence study.</figcaption></figure>
+<h2 id="s6">6. Checks and evidence meaning</h2>
+<p>The <a href="../../../../tests/reporting/test_river_currents_module_report.py">report tests</a> compare normal public API outputs
+with the independent derivation [H]. Positive answers use relative tolerance 1e-12 and zero absolute tolerance;
+the bed-zero check is separate. This allowance covers binary64 roundoff in the short arithmetic chain,
+without adopting a hydraulic accuracy or operational limit.</p>
+<p>Numerical oracles, production replay and byte freshness are separate checks. Negative controls change
+the mean result magnitude or sign while the builder, embedded data and manifest still agree; the independent
+oracle must reject them. Another control alters delivered results without updating their digest.
+Two fresh external builds must match each other and the committed deliverables byte for byte.</p>
+<p>Existing baseline tests are linked as evidence of their stated assertions, rather than physical qualification:
+<a href="../../../../tests/hydrodynamics/river_currents/test_profiles.py">profiles</a>,
+<a href="../../../../tests/hydrodynamics/river_currents/test_bank_effects.py">radial balance</a> and
+<a href="../../../../tests/hydrodynamics/river_currents/test_extensions.py">extensions and existing examples</a>.
+Test execution counts and commands belong to the accompanying change record; this deterministic page contains no run timestamp.</p>
+<h2 id="s7">7. Results and traceable answers</h2>
+<p>Every answer below is returned by a public method or explicitly integrated from its returned values.
+Displays use one decimal place; the linked JSON retains unrounded values for assertions.
+The remaining-area factor is small enough that rounding hides detail; its exact hand basis is 20/19 [H].</p>
+<table><thead><tr><th>Answer</th><th>Value</th><th>Unit</th><th>API or composition</th><th>Basis</th></tr></thead><tbody><tr><td>bed_speed_m_s</td><td>0.0</td><td>m/s</td><td>power_law_profile</td><td>u at bed [H, P]</td></tr>
+<tr><td>quarter_speed_m_s</td><td>1.5</td><td>m/s</td><td>power_law_profile</td><td>u at quarter depth [H, P]</td></tr>
+<tr><td>surface_speed_m_s</td><td>3.0</td><td>m/s</td><td>power_law_profile</td><td>u at surface [H, P]</td></tr>
+<tr><td>mean_speed_m_s</td><td>2.0</td><td>m/s</td><td>power_law_depth_averaged</td><td>Depth integral divided by H [H, P]</td></tr>
+<tr><td>discharge_per_width_m2_s</td><td>16.0</td><td>m²/s</td><td>H × power_law_depth_averaged</td><td>Depth integral [H, P]</td></tr>
+<tr><td>left_bank_factor</td><td>0.6</td><td>dimensionless</td><td>lateral_factor</td><td>x = left bank [H, B]</td></tr>
+<tr><td>centre_factor</td><td>1.2</td><td>dimensionless</td><td>lateral_factor</td><td>x = mid-width [H, B]</td></tr>
+<tr><td>right_bank_factor</td><td>0.6</td><td>dimensionless</td><td>lateral_factor</td><td>x = right bank [H, B]</td></tr>
+<tr><td>lateral_mean_factor</td><td>1.0</td><td>dimensionless</td><td>Simpson integral of lateral_factor</td><td>Exact quadratic integral over normalized width [H, B]</td></tr>
+<tr><td>remaining_area_factor</td><td>1.1</td><td>dimensionless</td><td>blockage_factor</td><td>A/(A - beam × draft) [H, B]</td></tr>
+<tr><td>corrected_quarter_speed_m_s</td><td>1.9</td><td>m/s</td><td>corrected_profile</td><td>Fixed centre × confinement at quarter depth [H, B, P]</td></tr>
+<tr><td>corrected_surface_speed_m_s</td><td>3.8</td><td>m/s</td><td>corrected_profile</td><td>Fixed centre × confinement at surface [H, B, P]</td></tr></tbody></table>
+<p><a href="results.json">Full-precision calculation data</a> · <a href="manifest.json">Source and byte manifest</a> ·
+<a href="README.md">Rebuild instructions</a></p>
+<h2 id="s8">8. Limits and NOT_EVALUATED</h2>
+<ul><li>Empirical retardation, bend bias, roughness and exponent selection: NOT_EVALUATED; measurements and geometry are absent.</li>
+<li>Actual extreme levels: NOT_EVALUATED; no measured series, independence assessment, uncertainty interval or accepted return period is supplied.</li>
+<li>Force coefficients, under-keel slot calibration and combined correction policy: conditional assumptions in existing examples; NOT_EVALUATED for physical use.</li>
+<li>Operating limits, thrust at speed, tug resistance, navigation clearance, passing interaction, tidal reversal and unsteady flow: NOT_EVALUATED.</li>
+<li>Profile non-finite input rejection and consistent signed-flow semantics across the logarithmic and power laws remain open review findings; no general input-hardening claim is made.</li>
+<li>The public bibliographic attributions in the source docstrings have not been checked against original publications here. No licensed coefficient table, default exponent or external compliance claim is adopted.</li></ul>
+<h2 id="s9">9. Way forward</h2>
+<p>Retain the mathematical regression as software evidence. Before physical use, obtain surveyed geometry,
+bed-referenced measured profiles, a consistent signed-flow convention and calibrated bank/bend/load inputs.
+Assess the full-width slot and section-area hypotheses together before combining them. Qualify temporal sampling,
+declustering and uncertainty before fitting physical extremes. The maintainers need to resolve finite-input
+policy and establish a separate acceptance basis; this report does not select design or operating limits.</p>
+<h2 id="s10">10. References and evidence</h2>
+<ul><li>[H] Independent hand derivation in the worked calculation and the dedicated report test. All physical input values are stipulated synthetic assumptions.</li>
+<li>[P] <a href="../../../../src/digitalmodel/hydrodynamics/river_currents/profiles.py">Profile implementation</a>: bed law, analytical means and sampling. Mathematical coefficients follow the displayed assumed law.</li>
+<li>[B] <a href="../../../../src/digitalmodel/hydrodynamics/river_currents/bank_effects.py">Bank and bend implementation</a>: assumed shapes, constant-density continuity and radial-balance derivation. Docstring bibliographic links are unverified here.</li>
+<li>[E] <a href="../../../../src/digitalmodel/hydrodynamics/river_currents/extremes.py">Extreme-fit implementation</a>: probability transforms, plotting positions and return-level conventions; distribution names identify software models only.</li>
+<li>[L] <a href="../../../../src/digitalmodel/hydrodynamics/river_currents/vessel_forces.py">Steady load and towing implementation</a>, with
+<a href="../../../../src/digitalmodel/hydrodynamics/ocimf_loading.py">upstream approximate coefficient implementation</a>: no coefficient values are prescribed by this analysis.</li>
+<li>[X] <a href="../../../../src/digitalmodel/hydrodynamics/river_currents/examples.py">Existing deterministic example builder</a>: existing result engine and byte-digest rendering pattern;
+<a href="../../../../docs/domains/hydrodynamics/river_currents/river-current-analysis.results.json">existing example results</a> and
+<a href="../../../../docs/domains/hydrodynamics/river_currents/river-current-analysis.manifest.json">existing example manifest</a>.</li>
+<li>Source inventory and layout evidence are bound in manifest.json. The canonical palette and existing flat-plate report layout are inlined; all figures are generated by this builder.</li></ul>
+<details id="changes-panel"><summary>Change panel — revision A</summary><p>Initial module analysis records the synthetic profile and channel-correction arithmetic, public function review and unresolved physical basis so that the evidence can be rebuilt and assessed.</p><a href="changes.json">Machine-readable revision history</a></details>
+<script id="calculation" type="application/json">{
+  "inputs": {
+    "beam_m": {
+      "basis": "Stipulated rectangular obstruction [H].",
+      "unit": "m",
+      "value": 4.0
+    },
+    "depth_m": {
+      "basis": "Stipulated rectangular channel [H].",
+      "unit": "m",
+      "value": 8.0
+    },
+    "draft_m": {
+      "basis": "Stipulated rectangular obstruction [H].",
+      "unit": "m",
+      "value": 2.0
+    },
+    "exponent_m": {
+      "basis": "Stipulated square-root profile [H].",
+      "unit": "dimensionless",
+      "value": 2.0
+    },
+    "retardation": {
+      "basis": "Assumed lateral shape only [H].",
+      "unit": "dimensionless",
+      "value": 0.4
+    },
+    "surface_speed_m_s": {
+      "basis": "Stipulated surface speed [H].",
+      "unit": "m/s",
+      "value": 3.0
+    },
+    "width_m": {
+      "basis": "Stipulated rectangular channel [H].",
+      "unit": "m",
+      "value": 20.0
+    }
+  },
+  "profile": {
+    "basis": "Public river_velocity_profile with the stipulated inputs [H, P]; uniform plotting samples only.",
+    "height_m": [
+      0.0,
+      0.25,
+      0.5,
+      0.75,
+      1.0,
+      1.25,
+      1.5,
+      1.75,
+      2.0,
+      2.25,
+      2.5,
+      2.75,
+      3.0,
+      3.25,
+      3.5,
+      3.75,
+      4.0,
+      4.25,
+      4.5,
+      4.75,
+      5.0,
+      5.25,
+      5.5,
+      5.75,
+      6.0,
+      6.25,
+      6.5,
+      6.75,
+      7.0,
+      7.25,
+      7.5,
+      7.75,
+      8.0
+    ],
+    "speed_m_s": [
+      0.0,
+      0.5303300858899107,
+      0.75,
+      0.9185586535436917,
+      1.0606601717798214,
+      1.1858541225631423,
+      1.299038105676658,
+      1.403121520040228,
+      1.5,
+      1.590990257669732,
+      1.6770509831248424,
+      1.758905909933786,
+      1.8371173070873834,
+      1.9121323175972942,
+      1.984313483298443,
+      2.053959590644373,
+      2.121320343559643,
+      2.186606960566988,
+      2.25,
+      2.311655251113366,
+      2.3717082451262845,
+      2.4302777619029476,
+      2.48746859276655,
+      2.5433737436719754,
+      2.598076211353316,
+      2.6516504294495533,
+      2.7041634565979917,
+      2.7556759606310752,
+      2.806243040080456,
+      2.8559149146989657,
+      2.904737509655563,
+      2.9527529527544294,
+      3.0
+    ]
+  },
+  "results": {
+    "bed_speed_m_s": {
+      "basis": "u at bed [H, P]",
+      "method": "power_law_profile",
+      "unit": "m/s",
+      "value": 0.0
+    },
+    "centre_factor": {
+      "basis": "x = mid-width [H, B]",
+      "method": "lateral_factor",
+      "unit": "dimensionless",
+      "value": 1.2000000000000002
+    },
+    "corrected_quarter_speed_m_s": {
+      "basis": "Fixed centre \u00d7 confinement at quarter depth [H, B, P]",
+      "method": "corrected_profile",
+      "unit": "m/s",
+      "value": 1.8947368421052633
+    },
+    "corrected_surface_speed_m_s": {
+      "basis": "Fixed centre \u00d7 confinement at surface [H, B, P]",
+      "method": "corrected_profile",
+      "unit": "m/s",
+      "value": 3.7894736842105265
+    },
+    "discharge_per_width_m2_s": {
+      "basis": "Depth integral [H, P]",
+      "method": "H \u00d7 power_law_depth_averaged",
+      "unit": "m\u00b2/s",
+      "value": 16.0
+    },
+    "lateral_mean_factor": {
+      "basis": "Exact quadratic integral over normalized width [H, B]",
+      "method": "Simpson integral of lateral_factor",
+      "unit": "dimensionless",
+      "value": 1.0
+    },
+    "left_bank_factor": {
+      "basis": "x = left bank [H, B]",
+      "method": "lateral_factor",
+      "unit": "dimensionless",
+      "value": 0.6
+    },
+    "mean_speed_m_s": {
+      "basis": "Depth integral divided by H [H, P]",
+      "method": "power_law_depth_averaged",
+      "unit": "m/s",
+      "value": 2.0
+    },
+    "quarter_speed_m_s": {
+      "basis": "u at quarter depth [H, P]",
+      "method": "power_law_profile",
+      "unit": "m/s",
+      "value": 1.5
+    },
+    "remaining_area_factor": {
+      "basis": "A/(A - beam \u00d7 draft) [H, B]",
+      "method": "blockage_factor",
+      "unit": "dimensionless",
+      "value": 1.0526315789473684
+    },
+    "right_bank_factor": {
+      "basis": "x = right bank [H, B]",
+      "method": "lateral_factor",
+      "unit": "dimensionless",
+      "value": 0.6
+    },
+    "surface_speed_m_s": {
+      "basis": "u at surface [H, P]",
+      "method": "power_law_profile",
+      "unit": "m/s",
+      "value": 3.0
+    }
+  },
+  "reviewed_revision": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "status": "Synthetic arithmetic only; physical and operational qualification NOT_EVALUATED"
+}
+</script>
+</main></body></html>

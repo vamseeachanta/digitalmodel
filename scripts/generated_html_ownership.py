@@ -54,6 +54,10 @@ DISCOVERY_FALSE_POSITIVES = {
         "tests/reporting/test_report_evidence_audit.py checks output stability "
         "and stale-input handling without executing report builders"
     ),
+    "scripts/reports/build_river_currents_module_report.py": (
+        "renders the river currents analysis under docs/reports, not docs/api; "
+        "dedicated reporting tests verify byte reproduction and worked values"
+    ),
     "scripts/reports/build_vessel_seakeeping_module_report.py": (
         "renders the seakeeping analysis under docs/reports, not docs/api; "
         "dedicated reporting tests verify byte reproduction and worked values"

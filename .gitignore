@@ -636,3 +636,13 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain only the river-current report builder and its small deliverables.
+!/scripts/reports/build_river_currents_module_report.py
+!/docs/reports/modules/river_currents/
+/docs/reports/modules/river_currents/*
+!/docs/reports/modules/river_currents/index.html
+!/docs/reports/modules/river_currents/changes.json
+!/docs/reports/modules/river_currents/results.json
+!/docs/reports/modules/river_currents/manifest.json
+!/docs/reports/modules/river_currents/README.md
