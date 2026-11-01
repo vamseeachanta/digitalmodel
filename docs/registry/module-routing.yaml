@@ -98,6 +98,7 @@ modules:
     key_tests: [tests/citations/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
   - module: corrosion
+    agent_pack: src/digitalmodel/corrosion/docs/agent-pack.md
     entry_point: src/digitalmodel/corrosion/
     maturity: development
     owner_wiki: docs/domains/README.md
@@ -399,6 +400,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#reservoir
   - module: residual
     entry_point: src/digitalmodel/residual/
+    submodules:
+      residual:
+        agent_pack: src/digitalmodel/residual/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/residual/]
@@ -544,6 +549,9 @@ modules:
         qa_family: MR
       hipps:
         agent_pack: src/digitalmodel/subsea/hipps/docs/agent-pack.md
+        qa_family: EC
+      rov:
+        agent_pack: src/digitalmodel/subsea/rov/docs/agent-pack.md
         qa_family: EC
       on_bottom_stability:
         agent_pack: src/digitalmodel/subsea/on_bottom_stability/docs/agent-pack.md
@@ -851,6 +859,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
   - module: tug
     entry_point: src/digitalmodel/tug/
+    submodules:
+      tug:
+        agent_pack: src/digitalmodel/tug/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/tug/]

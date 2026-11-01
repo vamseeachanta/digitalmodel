@@ -137,6 +137,17 @@ def projects():
     return load_projects(FIXTURE_RECORDS)
 
 
+@pytest.fixture
+def tieback_without_depth():
+    """Synthetic example from #1778: a 5 km gas tieback without depth."""
+    return SubseaProject(
+        name="synthetic_tieback",
+        tieback_distance_km=5,
+        water_depth_m=None,
+        fluid_type="gas",
+    )
+
+
 # ---------------------------------------------------------------------------
 # layout_distribution
 # ---------------------------------------------------------------------------
@@ -220,6 +231,17 @@ class TestTiebackStatsSegmented:
         )
         assert total_counted == projects_in_depth_band
 
+    def test_tieback_without_depth_retains_fluid_statistics(
+        self, tieback_without_depth
+    ):
+        # Hand calculation for #1778: [5] has count 1, min/max 5, mean 5/1 = 5.
+        assert tieback_stats_segmented([tieback_without_depth]) == {
+            "by_depth_band": {},
+            "by_fluid_type": {
+                "gas": {"count": 1, "min": 5, "max": 5, "mean": 5},
+            },
+        }
+
     def test_empty_input(self):
         result = tieback_stats_segmented([])
         assert result["by_depth_band"] == {}
@@ -252,6 +274,28 @@ class TestEquipmentStatsByConcept:
         # It should still appear (0 is a valid count, not missing)
         if "Fixed Platform" in result:
             assert result["Fixed Platform"]["trees_per_project"]["count"] >= 1
+
+    def test_zero_equipment_differs_from_missing(self):
+        # Synthetic example for #1778: [0, 2, None] in one concept category.
+        records = [
+            SubseaProject(
+                name="synthetic_zero", concept_type="synthetic_concept", num_trees=0
+            ),
+            SubseaProject(
+                name="synthetic_present", concept_type="synthetic_concept", num_trees=2
+            ),
+            SubseaProject(
+                name="synthetic_missing", concept_type="synthetic_concept", num_trees=None
+            ),
+        ]
+        result = equipment_stats_by_concept(records)
+        # Hand calculation: two observations, min 0, max 2, mean (0+2)/2 = 1.
+        assert result["synthetic_concept"]["trees_per_project"] == {
+            "count": 2,
+            "min": 0,
+            "max": 2,
+            "mean": 1,
+        }
 
     def test_empty_input(self):
         result = equipment_stats_by_concept([])
@@ -299,6 +343,28 @@ class TestFlowlineTrendsByDepth:
             1 for p in projects if p.flowline_diameter_in is not None
         )
         assert total_diam_count == projects_with_diam
+
+    def test_depth_without_flowline_emits_no_band(self):
+        # Synthetic example for #1778: 500 m depth with no flowline fields.
+        sparse = SubseaProject(name="synthetic_sparse", water_depth_m=500)
+        # Independent example: 1200 m depth and one 8 in synthetic flowline.
+        populated = SubseaProject(
+            name="synthetic_flowline",
+            water_depth_m=1200,
+            flowline_diameter_in=8,
+            flowline_material="synthetic_material",
+        )
+        # Band hand checks: 300 <= 500 < 800 and 800 <= 1200 < 1500.
+        # [8] has count 1, min/max 8, mean 8/1 = 8; one material observation.
+        expected = {
+            "800-1500m": {
+                "diameter": {"count": 1, "min": 8, "max": 8, "mean": 8},
+                "materials": {"synthetic_material": 1},
+            },
+        }
+        assert flowline_trends_by_depth([sparse]) == {}
+        assert flowline_trends_by_depth([populated]) == expected
+        assert flowline_trends_by_depth([sparse, populated]) == expected
 
     def test_empty_input(self):
         result = flowline_trends_by_depth([])
