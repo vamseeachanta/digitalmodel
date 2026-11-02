@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
@@ -44,7 +45,7 @@ def test_committed_synthetic_rope_query_returns_screening_estimate(tmp_path):
     import yaml
 
     row = refresh._row("synthetic-rope-atlas-query")
-    cfg = yaml.safe_load((refresh.REPO_ROOT / row["input"]).read_text())
+    cfg = yaml.safe_load((refresh.REPO_ROOT / row["input"]).read_text(encoding="utf-8"))
     cfg["parametric_query"]["output_dir"] = str(tmp_path)
     result = router(cfg)["parametric_query"]["result"]
     assert result["in_range"] is True
@@ -74,36 +75,61 @@ def test_committed_free_span_atlas_matches_rebuild(tmp_path):
     pd.testing.assert_frame_equal(committed.grid, rebuilt.grid)
     relative = "free_span/" + rebuilt.atlas_id
     for name in ("surrogate.json", "validation.json"):
-        actual = (refresh.DEFAULT_ATLAS_ROOT / relative / name).read_text()
-        expected = (tmp_path / relative / name).read_text()
+        actual = (refresh.DEFAULT_ATLAS_ROOT / relative / name).read_text(
+            encoding="utf-8")
+        expected = (tmp_path / relative / name).read_text(encoding="utf-8")
         assert json.loads(actual) == json.loads(expected)
     actual = yaml.safe_load(
-        (refresh.DEFAULT_ATLAS_ROOT / relative / "manifest.yaml").read_text())
-    expected = yaml.safe_load((tmp_path / relative / "manifest.yaml").read_text())
+        (refresh.DEFAULT_ATLAS_ROOT / relative / "manifest.yaml").read_text(
+            encoding="utf-8"))
+    expected = yaml.safe_load(
+        (tmp_path / relative / "manifest.yaml").read_text(encoding="utf-8"))
     # Unrelated commits do not change the dependency fingerprint or atlas id.
     actual["provenance"].pop("code_version")
     expected["provenance"].pop("code_version")
     assert actual == expected
-    assert (refresh.DEFAULT_ATLAS_ROOT / "free_span/default.txt").read_text().strip() == (
-        tmp_path / "free_span/default.txt").read_text().strip()
+    assert (refresh.DEFAULT_ATLAS_ROOT / "free_span/default.txt").read_text(
+        encoding="utf-8").strip() == (
+        tmp_path / "free_span/default.txt").read_text(encoding="utf-8").strip()
 
 
-def test_committed_free_span_has_verified_provenance():
+@pytest.mark.parametrize(
+    "unrelated_source",
+    [None, "docs/registry/workflows.yaml", "src/digitalmodel/parametric/generate.py"],
+    ids=["unchanged", "unrelated-registry-edit", "unrelated-wrapper-edit"],
+)
+def test_committed_free_span_has_verified_provenance(monkeypatch, unrelated_source):
     """Retain the current atlas's source basis and all four artifact digests."""
     from digitalmodel.parametric import historical_provenance as history
     from digitalmodel.parametric.atlas import Atlas
 
+    if unrelated_source is not None:
+        source_path = refresh.REPO_ROOT / unrelated_source
+        original_read = Path.read_bytes
+        before = refresh.content_fingerprint("free-span-f105")
+
+        def changed_bytes(path):
+            raw = original_read(path)
+            return raw + b"\n# unrelated comment\n" if path == source_path else raw
+
+        monkeypatch.setattr(Path, "read_bytes", changed_bytes)
+        assert source_path.read_bytes() != original_read(source_path)
+        assert refresh.content_fingerprint("free-span-f105") == before
+
     atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "free_span")
     manifest = f"atlases/free_span/{atlas.atlas_id}/manifest.yaml"
     inventory = json.loads(
-        (refresh.DEFAULT_ATLAS_ROOT / "historical-provenance.json").read_text())
+        (refresh.DEFAULT_ATLAS_ROOT / "historical-provenance.json").read_text(
+            encoding="utf-8"))
     record = next((row for row in inventory["atlases"]
                    if row["manifest"] == manifest), None)
     assert record is not None, f"Missing source and artifact evidence: {manifest}"
     assert record["status"] == "VERIFIED"
-    assert history.verify_sources(record, history.archive_reader(refresh.REPO_ROOT)) == (
-        atlas.provenance["content_fingerprint"])
-    history.verify_artifacts(record, refresh.REPO_ROOT)
+    result = history.verify_git(record, refresh.REPO_ROOT)
+    rebuild = "uv run python scripts/parametric/build_atlas.py free-span-f105"
+    assert result["status"] == "VERIFIED"
+    assert result["fingerprint"] == atlas.provenance["content_fingerprint"], rebuild
+    assert result["working_tree_drift"] == [], rebuild
 
 
 def test_tampered_basis_is_stale_and_escalates(tmp_path):
@@ -241,15 +267,15 @@ def stub_refresh_builds(monkeypatch, tmp_path):
             destination = tmp_path / workflow_id
             destination.mkdir()
             (destination / "validation.json").write_text(
-                json.dumps(records[workflow_id]) + "\n", encoding="utf-8",
+                json.dumps(records[workflow_id]) + "\n", encoding="utf-8", newline="\n",
             )
             basename = f"atlas-{workflow_id}"
             staged = (atlas_root or tmp_path) / basename / "rebuilt"
             staged.mkdir(parents=True)
             (staged / "validation.json").write_text(
-                json.dumps(records[workflow_id]) + "\n", encoding="utf-8",
+                json.dumps(records[workflow_id]) + "\n", encoding="utf-8", newline="\n",
             )
-            (staged.parent / "default.txt").write_text("rebuilt")
+            (staged.parent / "default.txt").write_text("rebuilt", encoding="utf-8", newline="\n")
             return SimpleNamespace(validation=records[workflow_id],
                                    basename=basename, atlas_id="rebuilt")
 
@@ -278,7 +304,8 @@ def test_apply_failed_validation_returns_distinct_status(
     assert built == ids
     assert "all atlases current" not in output
     for workflow_id, record in zip(ids, records):
-        assert json.loads((tmp_path / workflow_id / "validation.json").read_text()) == record
+        assert json.loads(
+            (tmp_path / workflow_id / "validation.json").read_text(encoding="utf-8")) == record
         if not record["passes"]:
             assert f"WARNING: {workflow_id} regenerated but failed validation gate" in output
 
@@ -305,8 +332,9 @@ def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
     ids, built = stub_refresh_builds([{}])
     previous = tmp_path / f"atlas-{ids[0]}"
     previous.mkdir()
-    (previous / "default.txt").write_text("previous")
-    (previous / "validation.json").write_text('{"passes": true}\n')
+    (previous / "default.txt").write_text("previous", encoding="utf-8", newline="\n")
+    (previous / "validation.json").write_text(
+        '{"passes": true}\n', encoding="utf-8", newline="\n")
     before = _file_digests(previous)
     assert refresh.main(["--apply"]) == 2
     assert built == ids
@@ -316,7 +344,7 @@ def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
 
 
 def _file_digests(root):
-    return {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+    return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in root.rglob("*") if path.is_file()}
 
 
@@ -343,7 +371,8 @@ def disk_refresh_builds(monkeypatch, tmp_path):
                           pd.DataFrame({"value": [0.0]}), {"passes": True},
                           {"content_fingerprint": "previous"})
             atlas.save(root)
-            (root / wid / "old" / "notes.txt").write_text("retained\n")
+            (root / wid / "old" / "notes.txt").write_text(
+                "retained\n", encoding="utf-8", newline="\n")
             originals[wid] = _file_digests(root / wid)
 
         def stub_build(wid, atlas_root=None):
