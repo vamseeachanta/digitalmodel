@@ -154,6 +154,7 @@ Current Tier 1 priorities:
 - [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml) -- Canonical machine-readable module routing registry
 - [CHANGELOG.md](CHANGELOG.md) -- Release history
 - [Demonstration pack retirement](docs/maintenance/demo-pack-retirement.md) -- Regression scope, report compatibility and a worked scan example
+- [Planing hull module analysis](docs/reports/modules/planing_hull/README.md) -- Rebuildable below-chine hydrostatic example and deferred motion qualification
 
 ## CLI Tools
 
