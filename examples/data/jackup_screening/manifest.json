@@ -1,8 +1,6 @@
 {
   "algorithm": "sha256",
   "external_source_digests": {
-    "hossain_2019_manuscript": "61748301f2250a23aca3df29b9e28127eda6ce703d4623603f89dcdab3dcd9e2",
-    "hu_2015_manuscript": "86170b237c324931503f328dcab68b1dd20b4cf4aaf44de3b02ca19b71d13bf3",
     "ndbc_2005_archive": "b6497089203cc138aff8127a3c9e6a093321009daefe5825a11982f43fa8e6a3",
     "ndbc_2006_archive": "426c69c7dfea9caa66a20a3589300bd964ef5490871540899a511a6aa6bd52aa",
     "ndbc_2007_archive": "b6ed6881578da344a38dca83ec7d18cfa6ec35fc1599879088c8c4a34168f2a4",
@@ -23,7 +21,9 @@
     "ndbc_2022_archive": "8d2749760fc4a0a108ef47b55098f7fe73e73969b788b501eb0fca84cebfd56c",
     "ndbc_2023_archive": "5b5a6fdc650537e10a852748bdccff521654d6fb64882852c7d0cdfeb600e905",
     "ndbc_2024_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3",
-    "ndbc_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3"
+    "ndbc_archive": "281378af273c95e1f4a40acbc7c595b84158dba858ea310c32ebcd53de3121f3",
+    "research_r2015_manuscript": "86170b237c324931503f328dcab68b1dd20b4cf4aaf44de3b02ca19b71d13bf3",
+    "research_r2019_manuscript": "61748301f2250a23aca3df29b9e28127eda6ce703d4623603f89dcdab3dcd9e2"
   },
   "files": {
     "environment.json": "056fbb158d8cf1bfaa45cb5d520492df966d2f7bb6b94ae02136d09197307230",

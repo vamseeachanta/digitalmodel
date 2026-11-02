@@ -5,9 +5,11 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Frozen-input integrity and explicit missing-source failures."""
 
+import gzip
 import hashlib
 import json
 import math
+import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -82,9 +84,10 @@ def test_frozen_digest_is_verified_before_parsing(tmp_path):
     raw = json.dumps(value).encode()
     (tmp_path / 'inputs.json').write_bytes(raw)
     (tmp_path / 'manifest.json').write_text(json.dumps({
-        'files': {'inputs.json': hashlib.sha256(raw).hexdigest()}}))
+        'files': {'inputs.json': hashlib.sha256(raw).hexdigest()}}),
+        encoding='utf-8', newline='\n')
     assert frozen_inputs(tmp_path) == value
-    (tmp_path / 'inputs.json').write_text('{"test": 2}')
+    (tmp_path / 'inputs.json').write_text('{"test": 2}', encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match='digest'):
         frozen_inputs(tmp_path)
 
@@ -187,7 +190,7 @@ def test_environment_extract_integrity_and_replayed_extremes(tmp_path, corrupted
     assert result['era5']['basis']
     for name in ('manifest.json', 'environment.json', 'ndbc_annual_maxima.txt'):
         (tmp_path / name).write_bytes((root / name).read_bytes())
-    (tmp_path / corrupted_file).write_text('corrupted')
+    (tmp_path / corrupted_file).write_text('corrupted', encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match='digest'):
         frozen_environment(tmp_path)
 
@@ -307,7 +310,8 @@ def test_source_retrieval_receipt_rejects_changed_bytes(tmp_path):
     raw = b'1 2 3\n'
     (tmp_path / 'sample.txt').write_bytes(raw)
     (tmp_path / 'sample.txt.receipt.json').write_text(json.dumps({
-        'http_status': 200, 'sha256': hashlib.sha256(raw).hexdigest()}))
+        'http_status': 200, 'sha256': hashlib.sha256(raw).hexdigest()}),
+        encoding='utf-8', newline='\n')
     assert module.receipt(tmp_path, 'sample.txt')['http_status'] == 200
     (tmp_path / 'sample.txt').write_bytes(b'1 2 4\n')
     with pytest.raises(ValueError, match='source response digest mismatch'):
@@ -318,13 +322,16 @@ def test_frozen_bytes_survive_windows_text_checkout(tmp_path):
     """Exercise Git's Windows text filters without modifying its index/config."""
     root = Path(__file__).resolve().parents[2]
     relative = 'examples/data/jackup_screening/'
+    environment = {key: value for key, value in os.environ.items()
+                   if key not in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR')}
     for name in ('manifest.json', 'inputs.json', 'environment.json', 'ndbc_annual_maxima.txt'):
         path = relative + name
-        original = subprocess.check_output(['git', 'show', f'HEAD:{path}'], cwd=root)
+        original = subprocess.check_output(['git', 'show', f'HEAD:{path}'],
+                                           cwd=root, env=environment)
         checked_out = subprocess.check_output([
             'git', '-c', 'core.autocrlf=true', '-c', 'core.eol=crlf',
             'cat-file', '--filters', f'--path={path}', f'HEAD:{path}',
-        ], cwd=root)
+        ], cwd=root, env=environment)
         assert checked_out == original, f'checkout changed hash-bound bytes: {path}'
         (tmp_path / name).write_bytes(checked_out)
     assert frozen_inputs(tmp_path)['qualification'] == 'generic_screening_only'
@@ -353,7 +360,7 @@ def test_particulars_are_explicit_synthetic_inputs_without_collection_claims():
         if key != 'leg_count':
             assert value['status'] == 'illustrative assumption'
             assert 'assumed, based on previous experience' in value['basis'].lower()
-    manifest = json.loads((directory / 'manifest.json').read_text())
+    manifest = json.loads((directory / 'manifest.json').read_text(encoding='utf-8'))
     assert 'public_specification_collection' not in manifest['external_source_digests']
     assert 'public_design_collection' not in manifest['external_source_digests']
     spec = importlib.util.spec_from_file_location(
@@ -361,3 +368,76 @@ def test_particulars_are_explicit_synthetic_inputs_without_collection_claims():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     assert data['unit'] == module.synthetic_unit()
+
+
+def test_shipped_research_digest_keys_use_neutral_source_identifiers():
+    root = Path(__file__).resolve().parents[2]
+    manifest = json.loads((root / 'examples/data/jackup_screening/manifest.json')
+                          .read_text(encoding='utf-8'))
+    expected = {'research_r2015_manuscript', 'research_r2019_manuscript'}
+    assert expected <= manifest['external_source_digests'].keys()
+    assert all(key.startswith('ndbc_') or key in expected
+               for key in manifest['external_source_digests'])
+
+
+def test_input_generator_uses_neutral_research_files_and_digest_keys(tmp_path):
+    import importlib.util
+
+    root = Path(__file__).resolve().parents[2]
+    script = root / 'examples/domains/geotechnical/freeze_jackup_inputs.py'
+    spec = importlib.util.spec_from_file_location('freeze_neutral_inputs', script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    archive = tmp_path / 'observations.gz'
+    archive.write_bytes(gzip.compress(b'2024 01 01 00 00 MM 10 MM 2 MM MM MM MM\n'))
+    research = tmp_path / 'research'
+    research.mkdir()
+    expected = {'ndbc_archive': hashlib.sha256(archive.read_bytes()).hexdigest()}
+    for year in (2015, 2019):
+        raw = f'Synthetic research source {year}\n'.encode('utf-8')
+        (research / f'research_r{year}.pdf').write_bytes(raw)
+        expected[f'research_r{year}_manuscript'] = hashlib.sha256(raw).hexdigest()
+    output = tmp_path / 'output'
+    module.freeze(archive, research, output)
+    manifest = json.loads((output / 'manifest.json').read_text(encoding='utf-8'))
+    assert manifest['external_source_digests'] == expected
+    inputs = frozen_inputs(output)
+    shipped = frozen_inputs(root / 'examples/data/jackup_screening')
+    assert inputs['soil']['source'] == shipped['soil']['source']
+    assert inputs['method_assumptions']['source'] == shipped['method_assumptions']['source']
+    assert inputs['environment']['noaa']['summary']['wave_height']['maximum'] == 2
+    for name in ('inputs.json', 'manifest.json'):
+        assert b'\r' not in (output / name).read_bytes()
+
+
+@pytest.mark.parametrize('bindings', [
+    ('GIT_DIR',), ('GIT_WORK_TREE',), ('GIT_COMMON_DIR',),
+    ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR'),
+])
+def test_windows_checkout_ignores_foreign_git_bindings(tmp_path, monkeypatch, bindings):
+    root = Path(__file__).resolve().parents[2]
+    environment = {key: value for key, value in os.environ.items()
+                   if key not in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR')}
+    foreign = tmp_path / 'foreign'
+    subprocess.run(['git', 'init', '--quiet', foreign], env=environment,
+                   check=True, capture_output=True)
+    (foreign / '.gitattributes').write_text('* text\n', encoding='utf-8', newline='\n')
+    metadata = {}
+    for name in ('HEAD', 'index', 'config'):
+        raw = subprocess.check_output(['git', 'rev-parse', '--git-path', name],
+                                      cwd=root, env=environment)
+        path = Path(raw.decode('utf-8').strip())
+        metadata[name] = path if path.is_absolute() else root / path
+    data = root / 'examples/data/jackup_screening'
+    protected = list(metadata.values()) + list(data.iterdir()) + [root / '.gitattributes',
+                                                               foreign / '.gitattributes']
+    protected += [path for path in (foreign / '.git').rglob('*') if path.is_file()]
+    before = [hashlib.sha256(path.read_bytes()).hexdigest() for path in protected]
+    for key in bindings:
+        monkeypatch.setenv(key, str(foreign if key == 'GIT_WORK_TREE' else foreign / '.git'))
+    checkout = tmp_path / 'checkout'
+    checkout.mkdir()
+    try:
+        test_frozen_bytes_survive_windows_text_checkout(checkout)
+    finally:
+        assert [hashlib.sha256(path.read_bytes()).hexdigest() for path in protected] == before
