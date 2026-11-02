@@ -303,6 +303,7 @@ exclude = ["tests*", "docs*"]
 [tool.setuptools.package-data]
 digitalmodel = [
     "py.typed",
+    "process_piping/basis/wikis/*.md",
     "riser_study/*.schema.json",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",

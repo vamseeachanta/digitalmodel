@@ -64,13 +64,15 @@ from digitalmodel.common.hydraulics import swamee_jain_friction_factor
 matplotlib.use("Agg")  # non-interactive backend for file output
 import matplotlib.pyplot as plt  # noqa: E402
 
+from digitalmodel.infrastructure.utils.pipe_friction import (  # noqa: E402
+    LAMINAR_REYNOLDS_LIMIT as LAMINAR_REYNOLDS_LIMIT,
+    swamee_jain_friction_factor,
+)
 from .schematics.renderer import render_figure  # noqa: E402
 
 # --- physical constants ------------------------------------------------------
 GRAVITY_M_PER_S2 = 9.80665
 SECONDS_PER_DAY = 86_400.0
-# Below this Reynolds number the laminar friction factor f = 64/Re applies.
-LAMINAR_REYNOLDS_LIMIT = 2_300.0
 
 _REQUIRED_SECTIONS = ("field", "terrain", "host", "wells", "flowlines", "fluid", "plot")
 

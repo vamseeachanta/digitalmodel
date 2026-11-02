@@ -372,6 +372,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/process_diagrams/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#process_diagrams
+  - module: process_piping
+    entry_point: src/digitalmodel/process_piping/
+    maturity: beta
+    owner_wiki: docs/domains/process-piping/index.html
+    key_tests: [tests/process_piping/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#process_piping
   - module: production_chemistry
     entry_point: src/digitalmodel/production_chemistry/
     maturity: development
