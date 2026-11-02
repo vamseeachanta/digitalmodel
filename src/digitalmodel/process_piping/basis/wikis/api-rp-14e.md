@@ -5,8 +5,8 @@ revision: "1991"
 ---
 Public reference record, verified 2026-11-02. No standard text or tables.
 
-API RP 14E fifth edition (1991), 2.5(a), eq. (2.8), empirical mixture
-velocity screening. C uses ft/s and lb/ft³ units; the API converts to SI.
+API RP 14E fifth edition (1991), 2.5(a), eq. (2.14), empirical mixture
+velocity screening. C uses ft/s and lb/ft³ units; this package converts to SI.
 C and its selection basis are required inputs; sand erosion, corrosion,
 slip, slugging and two-phase pressure drop are not evaluated.
 Primary public research: Sani et al., Wear 426-427 (2019), 620-636:

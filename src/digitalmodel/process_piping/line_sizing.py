@@ -165,7 +165,7 @@ def evaluate_line(
     Constant viscosity, temperature and Z are assumed. Inlet or calculated
     outlet isothermal choking is rejected. No acoustic-noise prediction.
 
-    Two-phase: API RP 14E 1991 2.5(a) eq.(2.8), Ve=C/sqrt(rho_m) in
+    Two-phase: API RP 14E 1991 2.5(a) eq.(2.14), Ve=C/sqrt(rho_m) in
     ft/s and lb/ft³. The SI conversion is Ve=.3048*C/sqrt(rho/16.01846337396).
     Public research source: Sani et al. (2019), Wear 426-427, 620-636,
     DOI:10.1016/j.wear.2019.01.119. Continuous clean service commonly uses

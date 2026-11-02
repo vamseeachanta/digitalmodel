@@ -36,7 +36,7 @@ _RECORDS = {
         "2017",
         "Chapter 22, Table 22, selected water-service upper bounds",
     ),
-    "erosion": ("api-rp-14e", "API", "1991", "Fifth edition, 2.5(a), eq. (2.8)"),
+    "erosion": ("api-rp-14e", "API", "1991", "Fifth edition, 2.5(a), eq. (2.14)"),
 }
 
 

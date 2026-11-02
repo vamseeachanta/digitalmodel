@@ -25,6 +25,8 @@ class BoltUp:
     """Explicit Pa, m, m², N inputs; facing is rf_spiral_wound or rtj.
 
     bolt_area_m2 is the tensile-stress area of ONE fastener, not shank area.
+    PCC-1 target prestress values quoted on root area must be converted by
+    Ar/Ats before use here.
     gasket_contact_area_m2 excludes guide/centering rings for spiral wound;
     for RTJ it is a qualified effective contact area, NOT full ring footprint.
     effective_gasket_width_m and reaction diameter follow Appendix 2, 2-5;

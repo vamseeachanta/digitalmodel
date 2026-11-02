@@ -26,14 +26,15 @@ def water():
 
 def test_public_water_example(water):
     # Catalog inches: ID=(4.5-2*.237)*.0254=.1022604 m.
-    # A=.0082127 m², v=1.691 m/s; Re=172318; f~.01888 (Swamee–Jain).
-    # Darcy dp=f*(100/.1022604)*998.2*v²/2 ~26340 Pa = .2634 bar/100m.
+    # A=.0082130 m², v=1.69107 m/s; Re=998.2*1.69107*.1022604/.001002=172,274;
+    # f=.018890 (Swamee–Jain, e/D=4.40e-4).
+    # Darcy dp=f*(100/.1022604)*998.2*v²/2=26,366 Pa = .26366 bar/100m.
     result = evaluate_line(water, nps=4, schedule="40", velocity_limit_m_s=2)
     assert result.inner_diameter_m == pytest.approx(0.1022604)
     assert result.velocity_m_s == pytest.approx(1.691, abs=0.002)
-    assert result.reynolds == pytest.approx(172318, rel=0.003)
-    assert result.friction_factor == pytest.approx(0.01888, abs=0.0001)
-    assert result.pressure_drop_pa / 1e5 == pytest.approx(0.2634, abs=0.003)
+    assert result.reynolds == pytest.approx(172274, rel=1e-4)
+    assert result.friction_factor == pytest.approx(0.018890, rel=1e-4)
+    assert result.pressure_drop_pa / 1e5 == pytest.approx(0.26366, rel=1e-4)
     assert result.within_velocity_limit
 
 
@@ -206,7 +207,7 @@ def test_wall_filter_and_transition(water):
         water, schedules=("40", "80"), velocity_limit_m_s=2, minimum_wall_m=0.008
     )
     assert selected.wall_thickness_m >= 0.008
-    re3000 = replace(water, flow_m3_s=water.flow_m3_s * 3000 / 172318)
+    re3000 = replace(water, flow_m3_s=water.flow_m3_s * 3000 / 172274)
     assert (
         evaluate_line(re3000, nps=4, schedule="40", velocity_limit_m_s=2).regime
         == "transitional"

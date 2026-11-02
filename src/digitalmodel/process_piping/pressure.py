@@ -49,7 +49,8 @@ def pressure_thickness(design: PressureDesign) -> ThicknessResult:
 
     ASME B31.3-2024 304.1.2(a) eq. (3a), 304.1.1. The 304.1.2(b)
     special-consideration boundary is P/(SE)>0.385 or t>=D/6.
-    This function rejects special-consideration cases and ordered wall >=D/6.
+    This function rejects special-consideration cases and, as a conservative
+    project rule, an ordered wall >=D/6 (the code limit applies to t).
     Positive internal gauge pressure only; no branches, bending, external
     pressure, sustained loads, cyclic service or high-pressure Chapter IX.
     """
@@ -87,7 +88,9 @@ def pressure_thickness(design: PressureDesign) -> ThicknessResult:
     finished = t + design.corrosion_allowance_m + design.mechanical_allowance_m
     nominal = finished / (1 - design.mill_tolerance_fraction)
     if nominal >= d / 6:
-        raise ValueError("B31.3 304.1.2 thin-wall scope exceeded")
+        raise ValueError(
+            "ordered wall >= D/6: outside this screen (project rule; "
+            "B31.3 304.1.2 applies D/6 to t)")
     return ThicknessResult(t, finished, nominal, refs)
 
 
@@ -118,8 +121,9 @@ def hydrotest_pressure(
 
     Required pressure=max(1.5P,1.5P*St/S) when Td>Tt, otherwise 1.5P.
     For dissimilar materials supply the governing minimum St/S ratio via
-    the corresponding S and St. The historic 6.5 ratio cap is NOT applied
-    to the 2024 basis. 345.2.1(a) permits reduction to avoid test yielding.
+    the corresponding S and St. The 6.5 ratio cap of B31.3-2012 345.4.2 is
+    NOT applied; its removal in the 2024 edition is ASSUMED, to be confirmed
+    against B31.3-2024 345.4.2 (without the cap the target is not lower). 345.2.1(a) permits reduction to avoid test yielding.
 
     An elastic cylinder screen bounds hoop stress by the inner-surface
     Lame value P*(ro²+ri²)/(ro²-ri²), and longitudinal stress by

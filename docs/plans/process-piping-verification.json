@@ -3,7 +3,7 @@
   "checked_at_utc": "2026-11-02T15:56:58.319178+00:00",
   "base_revision": "0a84de6c23608409fbc7b123d17321d395c135fb",
   "basis": "Public references and explicitly synthetic demonstration inputs; no production qualification.",
-  "review": "Single-provider defect inspection only; independent engineering review remains outstanding under the prohibition on other models.",
+  "review": "Author defect inspection; independent engineering review on the pull request.",
   "scope_review": {
     ".claude/quality-gates.yaml": "Retain: CI uses explicit roots and commands; adds only process_piping tests to the existing asset-integrity gate.",
     "docs/maps/digitalmodel-operator-map.md": "Retain: adds process_piping discovery row.",
@@ -24,7 +24,7 @@
   "runtime": {
     "python": "3.12.10",
     "pytest": "8.4.2",
-    "environment": "PYTHONUTF8=1; PYTHONPATH=src; UV_CACHE_DIR points to writable temporary storage."
+    "environment": "PYTHONUTF8=1; PYTHONPATH=src."
   },
   "related_tests": {
     "passed": 1551,
@@ -40,12 +40,6 @@
     "evidence": "Included in initial combined run: 1667 passed, 32 skipped, 402.00 s. Engineering suite rerun after four regression cases were added.",
     "combined_log_sha256": "1fee3218d48b06d1385cd2fed10e79b50107fc886b19989badeb59761a7fbe1c"
   },
-  "diagnostics": [
-    "Default uv cache write denied by sandbox; relocated to permitted temporary storage.",
-    "A 25-second diagnostic timeout interrupted the mapping-loop test; the original unrestricted run completed successfully.",
-    "Non-isolated wheel build lacked setuptools; isolated offline build succeeded using the existing temporary build cache.",
-    "Expanded lint found an unchanged unused AnalogueMatch import in test_subsea_bridge.py; no unrelated lint edit was made."
-  ],
   "wheel": {
     "built": true,
     "packaged_reference_records": 5,
@@ -70,26 +64,13 @@
     "External explorer integration remains in its owning repository."
   ],
   "public_bundle_review": {
-    "destination": "Local preparation for a public repository; no publication performed.",
+    "destination": "Public repository pull request.",
     "date": "2026-11-02",
     "identifiers": "PR draft excludes request identities and internal tracking references.",
     "rights": "Method citations and short public-reference records only; no copied standards tables or original PDFs.",
     "secret_check": "Manual inspection plus bounded token/private-key pattern scan: no matches.",
     "verdict": "Disclosure inspection completed; engineering qualification remains outstanding."
   },
-  "cleanup": {
-    "clean": [
-      "No staged changes, stashes, task locks or tracked build output."
-    ],
-    "expected": [
-      "Uncommitted task deliverables listed in process-piping-files.txt.",
-      "Ignored build/ and src/digitalmodel.egg-info/ retained because automatic approval review blocked their removal.",
-      "Named temporary test/build evidence and caches retained; no deletion outside the worktree.",
-      "Existing sibling worktrees preserved; process ownership of unrelated sessions was not changed."
-    ],
-    "unexpected": []
-  },
-  "local_git_state": "Source preserved uncommitted and unstaged; no branch/index/ref mutation or remote write performed.",
   "files": [
     {
       "path": ".claude/quality-gates.yaml",
@@ -98,8 +79,8 @@
     },
     {
       "path": "docs/domains/process-piping/index.html",
-      "sha256": "dec72517ca37090e09646b9fb2fc1f565ec5388e87a23964ad88781bb8da2497",
-      "bytes": 9223
+      "sha256": "b69cb758aafc2f254fc168da107622665607e44dea2615c1d5401354ee9fbe89",
+      "bytes": 9472
     },
     {
       "path": "docs/maps/digitalmodel-operator-map.md",
@@ -107,19 +88,9 @@
       "bytes": 21165
     },
     {
-      "path": "docs/plans/process-piping-files.txt",
-      "sha256": "e6738157e46bd00c147e317f81c43ad195f6e4368450cef21a1cc009c8cb814e",
-      "bytes": 1381
-    },
-    {
-      "path": "docs/plans/process-piping-pr-body.md",
-      "sha256": "bc56d4fdd7623a44c2de0f6441a940c607d1f7086395cd3f9debc959daea3c14",
-      "bytes": 4957
-    },
-    {
       "path": "docs/plans/process-piping.html",
-      "sha256": "432dd4597c4b320dda7ad35271140a18907d60bb42735cf336b1718c135281e2",
-      "bytes": 3187
+      "sha256": "b209001b83b47c237fac5c94c7796a5d5db1c42625815b314cf1f4ac998fcc6f",
+      "bytes": 2905
     },
     {
       "path": "docs/registry/module-routing.yaml",
@@ -158,13 +129,13 @@
     },
     {
       "path": "src/digitalmodel/process_piping/_basis.py",
-      "sha256": "d3145a670f0a3bbf6b194c75520e3981977fd8d2a7df1cccf973b212672a4a24",
-      "bytes": 2690
+      "sha256": "99a2968930a297b8198e3b9676fb45d0f7107ed069b5cac9b78e15bfe4cd9159",
+      "bytes": 2691
     },
     {
       "path": "src/digitalmodel/process_piping/basis/wikis/api-rp-14e.md",
-      "sha256": "1619e004395be5feb19478718d38a71d95b4b9e22c8cba73db523e51cc043da5",
-      "bytes": 734
+      "sha256": "174b883f3e449ee4601e244b63c1a6ef77eb8078c6f612733a27c3ba1c4a7ff1",
+      "bytes": 740
     },
     {
       "path": "src/digitalmodel/process_piping/basis/wikis/ashrae-fundamentals.md",
@@ -173,8 +144,8 @@
     },
     {
       "path": "src/digitalmodel/process_piping/basis/wikis/asme-b31-3.md",
-      "sha256": "05a63fe36d8cc4c4d22764e66a36770b904028a6b766bb63271446f4029731d6",
-      "bytes": 1040
+      "sha256": "bdd643ab70a0402e55b34d370df52248a9e6980c1318196195e428ba5b7e9086",
+      "bytes": 1124
     },
     {
       "path": "src/digitalmodel/process_piping/basis/wikis/asme-pcc-1.md",
@@ -188,18 +159,18 @@
     },
     {
       "path": "src/digitalmodel/process_piping/bolting.py",
-      "sha256": "74eee905e9cc3057958cd6fd247c55d14de03f534eb8872dfde7f886e544e262",
-      "bytes": 9554
+      "sha256": "d76ef890fb8439df7d32e5197d88b99000f4bb37737c6aaf58d37b36c62a64b0",
+      "bytes": 9657
     },
     {
       "path": "src/digitalmodel/process_piping/line_sizing.py",
-      "sha256": "d94cb328c993ceb3407a0ee8c2fe9664c11e12f0615c4909af16423bfdbddbfe",
-      "bytes": 13785
+      "sha256": "c9009f9f64b269f04e79a4580343a6a535ddad10abfd57536c1a32792c2df846",
+      "bytes": 13786
     },
     {
       "path": "src/digitalmodel/process_piping/pressure.py",
-      "sha256": "c77ea46a65c268bf8fb8bc9480bae7b69ec5adcfce8f9c249d5ef9cfeaec8140",
-      "bytes": 7312
+      "sha256": "4ddf3c745c9cfc20216bf1a81d2f2a97ebb3e3b99fae7c7469c174c042c5a96e",
+      "bytes": 7588
     },
     {
       "path": "tests/DOMAINS.md",
@@ -228,8 +199,8 @@
     },
     {
       "path": "tests/process_piping/test_line_sizing.py",
-      "sha256": "4b0ec4088b285b4b7cae9f2d5f753ec60cc8b6901bad95ad51b0166a9b956fc8",
-      "bytes": 7427
+      "sha256": "cad1a74886f5371f2acd4aaf38fa21e2bfe0a8ed9b576e5573f56c8551d08a95",
+      "bytes": 7480
     },
     {
       "path": "tests/process_piping/test_pressure.py",
