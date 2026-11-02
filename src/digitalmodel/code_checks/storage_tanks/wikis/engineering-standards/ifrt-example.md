@@ -33,6 +33,7 @@ differential with 0.1 kPa connected loss. Assumed tank limits are +2 kPag and
 
 These vent factors, thermal duties, tank limits and curve points are round
 illustrative inputs for arithmetic verification, not certified device curves;
+the transfer factors are not taken from API 2000, and
 the governing API 2000 edition's factors must be confirmed by the caller. API 2000 edition qualification, tank-specific thermal
 duty derivation, open-vent circulation and all emergency cases remain unresolved.
 The vent illustration does not establish a protective arrangement for this tank.
