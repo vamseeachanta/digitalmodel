@@ -256,6 +256,21 @@ def test_surface_crack_report_has_scoped_ownership(monkeypatch) -> None:
     ]
 
 
+def test_parachute_report_has_scoped_ownership(monkeypatch) -> None:
+    """Keep the report discoverable and require its non-API classification."""
+    script = "scripts/reports/build_parachute_module_report.py"
+    reason = checker.DISCOVERY_FALSE_POSITIVES.get(script, "")
+    assert "docs/reports/modules/parachute" in reason
+    assert "tests/reporting/test_parachute_module_report.py" in reason
+    assert script in checker.discover_candidate_generators(checker.REPO)
+    assert checker.validate_registry(checker.REPO) == []
+
+    monkeypatch.delitem(checker.DISCOVERY_FALSE_POSITIVES, script)
+    assert checker.validate_registry(checker.REPO) == [
+        f"unregistered candidate generator(s): {script}"
+    ]
+
+
 def test_page_census_rejects_unclassified_html(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setattr(checker, "build_output_pages", lambda repo: set())
     pages = (
