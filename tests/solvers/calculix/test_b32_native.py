@@ -9,7 +9,9 @@ Native comparison assumptions and tolerances are declared before the solve.
 """
 
 import runpy
+import subprocess
 from pathlib import Path
+from unittest.mock import Mock
 
 import numpy as np
 import pytest
@@ -82,6 +84,84 @@ def test_b32_saved_example_deck(tmp_path):
     assert reference["root_fy"] == -1.
 
 
+def _mock_solver(example, monkeypatch, *, stdout="This is Version 2.23\n",
+                 returncode=0, error=None):
+    """Simulate only the version probe; no native result is fabricated."""
+    probe = example["require_supported_calculix"]
+    monkeypatch.setitem(probe.__globals__, "is_calculix_available", lambda: True)
+    run = Mock(return_value=subprocess.CompletedProcess(
+        ["ccx", "-v"], returncode, stdout=stdout, stderr=""), side_effect=error)
+    monkeypatch.setattr(subprocess, "run", run)
+    return run
+
+
+def test_b32_supported_release(monkeypatch):
+    """Only the release qualified for this case may run native acceptance."""
+    example = _example()
+    run = _mock_solver(example, monkeypatch,
+                       stdout="\nThis is Version 2.23\n\n")
+    assert example["require_supported_calculix"]() == "2.23"
+    run.assert_called_once_with(
+        ["ccx", "-v"], capture_output=True, text=True, timeout=10,
+    )
+
+
+@pytest.mark.parametrize("banner", [
+    "This is Version 2.21\n", "This is Version 2.22\n",
+    "This is Version 2.24\n", "This is Version 2.230\n",
+    "This is Version 2.23.1\n", "unrecognized output\n", "",
+])
+def test_b32_rejects_unqualified_release(monkeypatch, banner):
+    """Old, future and unidentified releases provide no acceptance evidence."""
+    example = _example()
+    _mock_solver(example, monkeypatch, stdout=banner)
+    with pytest.raises(RuntimeError, match="requires CalculiX 2.23"):
+        example["require_supported_calculix"]()
+
+
+@pytest.mark.parametrize("error", [
+    OSError("probe unavailable"), subprocess.TimeoutExpired(["ccx", "-v"], 10),
+])
+def test_b32_version_probe_error(monkeypatch, error):
+    """A failed or stalled probe cannot admit a solve."""
+    example = _example()
+    _mock_solver(example, monkeypatch, error=error)
+    with pytest.raises(RuntimeError, match="Cannot determine CalculiX release"):
+        example["require_supported_calculix"]()
+
+
+def test_b32_version_probe_nonzero(monkeypatch):
+    """Even a qualified banner is insufficient when the probe fails."""
+    example = _example()
+    _mock_solver(example, monkeypatch, returncode=1)
+    with pytest.raises(RuntimeError, match="Cannot determine CalculiX release"):
+        example["require_supported_calculix"]()
+
+
+def test_b32_version_probe_missing_solver(monkeypatch):
+    """Missing ccx is reported before attempting its version command."""
+    example = _example()
+    run = _mock_solver(example, monkeypatch)
+    monkeypatch.setitem(example["require_supported_calculix"].__globals__,
+                        "is_calculix_available", lambda: False)
+    with pytest.raises(RuntimeError, match="requires installed CalculiX 2.23"):
+        example["require_supported_calculix"]()
+    run.assert_not_called()
+
+
+def test_b32_saved_example_rejects_release_before_build(monkeypatch, tmp_path):
+    """The command must reject an incompatible solver before deck creation."""
+    example = _example()
+    _mock_solver(example, monkeypatch, stdout="This is Version 2.21\n")
+    build = Mock(side_effect=AssertionError("Unexpected deck creation"))
+    monkeypatch.setitem(example["main"].__globals__, "build_cantilever", build)
+    monkeypatch.setattr("sys.argv", ["b32_cantilever.py", "--solve",
+                                   "--work-dir", str(tmp_path)])
+    with pytest.raises(RuntimeError, match="requires CalculiX 2.23"):
+        example["main"]()
+    build.assert_not_called()
+
+
 @pytest.mark.skipif(not is_calculix_available(), reason="Requires open-source ccx")
 def test_b32_native_cantilever(tmp_path):
     """Compare native fields against hand integration of E*I*v''=P*(L-x).
@@ -93,9 +173,11 @@ def test_b32_native_cantilever(tmp_path):
     Predeclared tolerances: 1 percent displacement discretization error and
     1e-5 N absolute force residual (text output precision). These are test
     tolerances, not design acceptance criteria. Native acceptance requires
-    this test to pass without a skip; serialization alone is insufficient.
+    this test to pass without a skip on CalculiX 2.23; serialization alone
+    is insufficient. An installed, unqualified release fails before solving.
     """
     example = _example()
+    example["require_supported_calculix"]()
     chain = example["build_cantilever"](tmp_path)
     status = chain.solve(n_threads=1)
     assert status["success"], status

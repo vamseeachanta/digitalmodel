@@ -17,6 +17,7 @@ https://gmsh.info/doc/texinfo/gmsh.html#Node-ordering.
 
 import argparse
 import json
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -35,6 +36,31 @@ FORCE = 1.
 ELEMENTS = 20
 DEFLECTION_RTOL = .01  # Test-only 1 percent discretization allowance.
 FORCE_ATOL = 1e-5  # N; allowance for native text output rounding.
+SUPPORTED_CCX_VERSION = "2.23"  # Native qualification is specific to this case.
+
+
+def require_supported_calculix():
+    """Require the qualified release before native test or example execution.
+
+    CalculiX 2.21 fails this case's force balance; 2.22 and later releases
+    other than 2.23 have not been qualified. The official 2.23 executable's
+    -v option prints the banner checked here (ccx_2.23.c).
+    """
+    if not is_calculix_available():
+        raise RuntimeError("Native acceptance requires installed CalculiX 2.23 (ccx)")
+    try:
+        result = subprocess.run(
+            ["ccx", "-v"], capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError("Cannot determine CalculiX release") from exc
+    if result.returncode != 0:
+        raise RuntimeError("Cannot determine CalculiX release")
+    banner = f"This is Version {SUPPORTED_CCX_VERSION}"
+    if not any(line.strip() == banner for line in result.stdout.splitlines()):
+        raise RuntimeError("B32 native acceptance requires CalculiX 2.23; "
+                           "other releases are unqualified for this case")
+    return SUPPORTED_CCX_VERSION
 
 
 def analytical_reference():
@@ -81,9 +107,10 @@ def main():
     args = parser.parse_args()
     available = is_calculix_available()
     print(f"ccx available: {available}")
+    print(f"Qualified release for this case: CalculiX {SUPPORTED_CCX_VERSION}")
     print("Predeclared tolerances: deflection 1 percent; force residual 1e-5 N")
-    if args.solve and not available:
-        parser.error("Native acceptance requires installed open-source ccx")
+    if args.solve:
+        require_supported_calculix()
     chain = build_cantilever(args.work_dir)
     if not args.solve:
         print("Deck written; native response has not been checked")

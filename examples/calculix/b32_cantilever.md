@@ -1,7 +1,8 @@
 # B32 rectangular cantilever
 
 The saved example builds a synthetic quadratic cantilever through `FEMChain`
-and `INPWriter`. Native acceptance requires an installed open-source `ccx`;
+and `INPWriter`. This case supports native acceptance on CalculiX **2.23**
+only. Native acceptance requires an installed open-source `ccx` of that release;
 writing the deck alone establishes no displacement or reaction result.
 
 ## Revision history
@@ -10,6 +11,7 @@ writing the deck alone establishes no displacement or reaction result.
 | --- | --- | --- |
 | 1 | 2026-10-27 | Add a reproducible quadratic beam case to extend type-mapping coverage. |
 | 2 | 2026-10-27 | Qualify native support forces by solver release after an equilibrium failure. |
+| 3 | 2026-11-02 | Require the qualified release before native execution to reject incompatible force recovery. |
 
 ## Assumptions and independent reference
 
@@ -33,15 +35,29 @@ tolerances are specific to this test and are not design criteria.
 From the repository root, with the test dependencies available, write outputs
 to an external scratch directory selected by the caller:
 
+For native execution, provide a CalculiX 2.23 `ccx` executable and its runtime
+libraries through the environment. Confirm that `ccx -v` reports
+`This is Version 2.23`. The example and native test both probe that same
+executable before solving. A different or unidentified release, a failed probe
+or a probe exceeding ten seconds raises an error; it does not skip force checks.
+The release requirement is limited to this B32 case and does not change the
+general `FEMChain` interface or claim qualification of other analyses.
+
 ```sh
+ccx -v
 PYTHONPATH=src uv run python examples/calculix/b32_cantilever.py --work-dir "$TMPDIR/b32-deck"
 PYTHONPATH=src uv run python examples/calculix/b32_cantilever.py --work-dir "$TMPDIR/b32-native" --solve
 PYTHONPATH=src uv run python -m pytest tests/solvers/calculix/test_fem_chain.py tests/solvers/calculix/test_b32_native.py -q -rA -p no:cacheprovider --basetemp="$TMPDIR/b32-tests"
 ```
 
-The example reports solver availability before building or solving. `--solve`
-refuses to proceed without `ccx`. The native pytest case skips when `ccx` is
-absent; acceptance requires that case to pass without a skip.
+The example reports solver availability and the required release before building
+or solving. Deck generation alone works without `ccx`. `--solve` refuses to
+build a deck or solve without the qualified release. The native pytest case
+retains its existing skip when `ccx` is absent; that skip does not establish
+acceptance. Acceptance requires both an unskipped native test pass and a
+successful saved-example `--solve` using CalculiX 2.23, with all displacement
+and force checks retained at the declared tolerances. Release-probe regression
+tests simulate version output only and provide no native acceptance evidence.
 
 ## Connectivity and readback
 
@@ -83,10 +99,16 @@ readback and rounded upward to `0.4%`, below the predeclared `1%` limit.
 All three DAT root force components satisfy the
 unchanged `1e-5 N` residual limit against `(0, -1, 0) N`.
 
-These results qualify this case on 2.23 only. CalculiX 2.21 does not satisfy
-its native acceptance criteria; 2.22 native behavior has not been validated.
-The test retains the failure on an incompatible solver rather than skipping
-the reaction assertions or relaxing their tolerances.
+These earlier results qualify this case on 2.23 only. CalculiX 2.21 does not
+satisfy its native acceptance criteria; 2.22 native behavior has not been
+validated. The shared release guard now rejects every release other than 2.23
+before native execution. Its expected version banner follows the `-v` handler
+in `ccx_2.23.c` from the official source linked above. No parser multiplier,
+reaction assertion change or tolerance relaxation is applied.
+
+The release-guard revision was checked without a native solver on 2026-11-02;
+it does not independently reproduce the earlier 2.23 native results. An unskipped
+native test and saved-example solve remain required before native acceptance.
 
 ## Limits and remaining work
 
