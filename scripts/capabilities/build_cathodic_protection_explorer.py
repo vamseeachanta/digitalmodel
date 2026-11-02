@@ -184,6 +184,13 @@ not mocked.</p>
   <p class="foot">Anode: 200 kg net Al-Zn-In, 2000 A&middot;h/kg, utilization 0.90. Standard: DNV-RP-B401.</p>
 </div>
 
+<div class="panel">
+  <h3>Aboveground tank-bottom CP</h3>
+  <p><a href="../../domains/cathodic_protection/api_651_tank_bottom.html">API 651 context ribbon-grid screening and reference-electrode conversion</a>:
+  40 m worked example, metallic voltage drops, foundation warnings and measured centre/edge checks.
+  Ratings and limits require project inputs; ribbon length does not establish polarization.</p>
+</div>
+
 <p class="foot">Built by <code>scripts/capabilities/build_cathodic_protection_explorer.py</code> from
 <code>src/digitalmodel/cathodic_protection/</code>. Regenerate to refresh.
 &mdash; <a href="https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/cathodic_protection">engine source &rarr;</a></p>
