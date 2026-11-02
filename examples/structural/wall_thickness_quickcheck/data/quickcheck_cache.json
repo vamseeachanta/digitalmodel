@@ -128,6 +128,7 @@
           "checks": {
             "burst": 1.182421,
             "collapse": 5.603551,
+            "combined_loading": 0.856046,
             "propagation": 21.990455
           },
           "code_label": "API-RP-1111"
@@ -155,6 +156,7 @@
           "checks": {
             "burst": 0.890041,
             "collapse": 2.525713,
+            "combined_loading": 0.64437,
             "propagation": 11.294234
           },
           "code_label": "API-RP-1111"
@@ -182,6 +184,7 @@
           "checks": {
             "burst": 0.780399,
             "collapse": 1.779745,
+            "combined_loading": 0.564992,
             "propagation": 8.310271
           },
           "code_label": "API-RP-1111"
@@ -209,6 +212,7 @@
           "checks": {
             "burst": 0.742207,
             "collapse": 1.564471,
+            "combined_loading": 0.537341,
             "propagation": 7.3942
           },
           "code_label": "API-RP-1111"
@@ -234,6 +238,7 @@
           "checks": {
             "burst": 0.719035,
             "collapse": 1.444315,
+            "combined_loading": 0.520566,
             "propagation": 6.8686
           },
           "code_label": "API-RP-1111"
@@ -261,6 +266,7 @@
           "checks": {
             "burst": 0.705738,
             "collapse": 1.378809,
+            "combined_loading": 0.510938,
             "propagation": 6.577136
           },
           "code_label": "API-RP-1111"
@@ -286,6 +292,7 @@
           "checks": {
             "burst": 0.672584,
             "collapse": 1.226082,
+            "combined_loading": 0.486936,
             "propagation": 5.882321
           },
           "code_label": "API-RP-1111"
@@ -311,6 +318,7 @@
           "checks": {
             "burst": 0.642313,
             "collapse": 1.099349,
+            "combined_loading": 0.465021,
             "propagation": 5.287086
           },
           "code_label": "API-RP-1111"
@@ -336,6 +344,7 @@
           "checks": {
             "burst": 0.614565,
             "collapse": 0.993327,
+            "combined_loading": 0.444931,
             "propagation": 4.773712
           },
           "code_label": "API-RP-1111"
@@ -361,6 +370,7 @@
           "checks": {
             "burst": 0.589036,
             "collapse": 0.903954,
+            "combined_loading": 0.426449,
             "propagation": 4.328198
           },
           "code_label": "API-RP-1111"
@@ -386,6 +396,7 @@
           "checks": {
             "burst": 0.579388,
             "collapse": 0.872134,
+            "combined_loading": 0.419464,
             "propagation": 4.166412
           },
           "code_label": "API-RP-1111"
@@ -413,6 +424,7 @@
           "checks": {
             "burst": 0.565472,
             "collapse": 0.82807,
+            "combined_loading": 0.409389,
             "propagation": 3.939373
           },
           "code_label": "API-RP-1111"
@@ -438,6 +450,7 @@
           "checks": {
             "burst": 0.543653,
             "collapse": 0.763195,
+            "combined_loading": 0.393593,
             "propagation": 3.59824
           },
           "code_label": "API-RP-1111"
@@ -463,6 +476,7 @@
           "checks": {
             "burst": 0.523392,
             "collapse": 0.707365,
+            "combined_loading": 0.378924,
             "propagation": 3.297493
           },
           "code_label": "API-RP-1111"
@@ -488,6 +502,7 @@
           "checks": {
             "burst": 0.512854,
             "collapse": 0.679933,
+            "combined_loading": 0.371295,
             "propagation": 3.147085
           },
           "code_label": "API-RP-1111"
@@ -515,6 +530,7 @@
           "checks": {
             "burst": 0.504529,
             "collapse": 0.659014,
+            "combined_loading": 0.365268,
             "propagation": 3.031154
           },
           "code_label": "API-RP-1111"
@@ -540,6 +556,7 @@
           "checks": {
             "burst": 0.486923,
             "collapse": 0.616883,
+            "combined_loading": 0.352521,
             "propagation": 2.794294
           },
           "code_label": "API-RP-1111"
@@ -565,6 +582,7 @@
           "checks": {
             "burst": 0.470453,
             "collapse": 0.579955,
+            "combined_loading": 0.340598,
             "propagation": 2.582826
           },
           "code_label": "API-RP-1111"
@@ -590,6 +608,7 @@
           "checks": {
             "burst": 0.455012,
             "collapse": 0.547402,
+            "combined_loading": 0.329419,
             "propagation": 2.393333
           },
           "code_label": "API-RP-1111"
@@ -615,6 +634,7 @@
           "checks": {
             "burst": 0.440508,
             "collapse": 0.518547,
+            "combined_loading": 0.318918,
             "propagation": 2.22295
           },
           "code_label": "API-RP-1111"
@@ -640,6 +660,7 @@
           "checks": {
             "burst": 0.426856,
             "collapse": 0.492835,
+            "combined_loading": 0.309034,
             "propagation": 2.069254
           },
           "code_label": "API-RP-1111"
@@ -665,6 +686,7 @@
           "checks": {
             "burst": 0.414611,
             "collapse": 0.4709,
+            "combined_loading": 0.300169,
             "propagation": 1.936823
           },
           "code_label": "API-RP-1111"
@@ -692,6 +714,7 @@
           "checks": {
             "burst": 0.413985,
             "collapse": 0.469806,
+            "combined_loading": 0.299716,
             "propagation": 1.930189
           },
           "code_label": "API-RP-1111"
@@ -717,6 +740,7 @@
           "checks": {
             "burst": 0.401828,
             "collapse": 0.449078,
+            "combined_loading": 0.290915,
             "propagation": 1.804003
           },
           "code_label": "API-RP-1111"
@@ -742,6 +766,7 @@
           "checks": {
             "burst": 0.390329,
             "collapse": 0.430335,
+            "combined_loading": 0.28259,
             "propagation": 1.689192
           },
           "code_label": "API-RP-1111"
@@ -767,6 +792,7 @@
           "checks": {
             "burst": 0.379435,
             "collapse": 0.413309,
+            "combined_loading": 0.274703,
             "propagation": 1.584465
           },
           "code_label": "API-RP-1111"
@@ -792,6 +818,7 @@
           "checks": {
             "burst": 0.3691,
             "collapse": 0.397778,
+            "combined_loading": 0.26722,
             "propagation": 1.488703
           },
           "code_label": "API-RP-1111"
@@ -817,6 +844,7 @@
           "checks": {
             "burst": 0.359281,
             "collapse": 0.383553,
+            "combined_loading": 0.260112,
             "propagation": 1.400939
           },
           "code_label": "API-RP-1111"
@@ -842,6 +870,7 @@
           "checks": {
             "burst": 0.349941,
             "collapse": 0.370473,
+            "combined_loading": 0.25335,
             "propagation": 1.320328
           },
           "code_label": "API-RP-1111"
@@ -867,6 +896,7 @@
           "checks": {
             "burst": 0.341046,
             "collapse": 0.358403,
+            "combined_loading": 0.24691,
             "propagation": 1.246134
           },
           "code_label": "API-RP-1111"
@@ -892,6 +922,7 @@
           "checks": {
             "burst": 0.333595,
             "collapse": 0.348567,
+            "combined_loading": 0.241516,
             "propagation": 1.185902
           },
           "code_label": "API-RP-1111"
@@ -919,6 +950,7 @@
           "checks": {
             "burst": 0.332565,
             "collapse": 0.347226,
+            "combined_loading": 0.24077,
             "propagation": 1.177711
           },
           "code_label": "API-RP-1111"
@@ -944,6 +976,7 @@
           "checks": {
             "burst": 0.323894,
             "collapse": 0.336843,
+            "combined_loading": 0.234492,
             "propagation": 1.114491
           },
           "code_label": "API-RP-1111"
@@ -969,6 +1002,7 @@
           "checks": {
             "burst": 0.316144,
             "collapse": 0.327168,
+            "combined_loading": 0.228882,
             "propagation": 1.055974
           },
           "code_label": "API-RP-1111"
@@ -994,6 +1028,7 @@
           "checks": {
             "burst": 0.308731,
             "collapse": 0.318127,
+            "combined_loading": 0.223514,
             "propagation": 1.001715
           },
           "code_label": "API-RP-1111"
@@ -1019,6 +1054,7 @@
           "checks": {
             "burst": 0.301632,
             "collapse": 0.309655,
+            "combined_loading": 0.218375,
             "propagation": 0.951324
           },
           "code_label": "API-RP-1111"
@@ -1044,6 +1080,7 @@
           "checks": {
             "burst": 0.294828,
             "collapse": 0.301697,
+            "combined_loading": 0.213449,
             "propagation": 0.904449
           },
           "code_label": "API-RP-1111"
@@ -1069,6 +1106,7 @@
           "checks": {
             "burst": 0.288302,
             "collapse": 0.294203,
+            "combined_loading": 0.208724,
             "propagation": 0.860781
           },
           "code_label": "API-RP-1111"
@@ -1094,6 +1132,7 @@
           "checks": {
             "burst": 0.282035,
             "collapse": 0.287131,
+            "combined_loading": 0.204187,
             "propagation": 0.82004
           },
           "code_label": "API-RP-1111"
@@ -1119,6 +1158,7 @@
           "checks": {
             "burst": 0.2772,
             "collapse": 0.281751,
+            "combined_loading": 0.200686,
             "propagation": 0.789387
           },
           "code_label": "API-RP-1111"
@@ -1146,6 +1186,7 @@
           "checks": {
             "burst": 0.276014,
             "collapse": 0.280443,
+            "combined_loading": 0.199828,
             "propagation": 0.781978
           },
           "code_label": "API-RP-1111"
@@ -1171,6 +1212,7 @@
           "checks": {
             "burst": 0.270224,
             "collapse": 0.274105,
+            "combined_loading": 0.195636,
             "propagation": 0.746372
           },
           "code_label": "API-RP-1111"
@@ -1196,6 +1238,7 @@
           "checks": {
             "burst": 0.264652,
             "collapse": 0.268089,
+            "combined_loading": 0.191602,
             "propagation": 0.713019
           },
           "code_label": "API-RP-1111"
@@ -1221,6 +1264,7 @@
           "checks": {
             "burst": 0.259286,
             "collapse": 0.262369,
+            "combined_loading": 0.187717,
             "propagation": 0.681739
           },
           "code_label": "API-RP-1111"
@@ -1246,6 +1290,7 @@
           "checks": {
             "burst": 0.254114,
             "collapse": 0.25692,
+            "combined_loading": 0.183973,
             "propagation": 0.652368
           },
           "code_label": "API-RP-1111"
@@ -1271,6 +1316,7 @@
           "checks": {
             "burst": 0.249126,
             "collapse": 0.251722,
+            "combined_loading": 0.180362,
             "propagation": 0.624758
           },
           "code_label": "API-RP-1111"
@@ -1296,6 +1342,7 @@
           "checks": {
             "burst": 0.244313,
             "collapse": 0.246756,
+            "combined_loading": 0.176877,
             "propagation": 0.598775
           },
           "code_label": "API-RP-1111"
@@ -1321,6 +1368,7 @@
           "checks": {
             "burst": 0.243605,
             "collapse": 0.24603,
+            "combined_loading": 0.176365,
             "propagation": 0.59501
           },
           "code_label": "API-RP-1111"
@@ -1348,6 +1396,7 @@
           "checks": {
             "burst": 0.239665,
             "collapse": 0.242006,
+            "combined_loading": 0.173512,
             "propagation": 0.574296
           },
           "code_label": "API-RP-1111"
@@ -1373,6 +1422,7 @@
           "checks": {
             "burst": 0.235174,
             "collapse": 0.237456,
+            "combined_loading": 0.170261,
             "propagation": 0.551212
           },
           "code_label": "API-RP-1111"
@@ -1398,6 +1448,7 @@
           "checks": {
             "burst": 0.230832,
             "collapse": 0.233093,
+            "combined_loading": 0.167118,
             "propagation": 0.52942
           },
           "code_label": "API-RP-1111"
@@ -1423,6 +1474,7 @@
           "checks": {
             "burst": 0.226632,
             "collapse": 0.228904,
+            "combined_loading": 0.164077,
             "propagation": 0.508829
           },
           "code_label": "API-RP-1111"
@@ -1448,6 +1500,7 @@
           "checks": {
             "burst": 0.222567,
             "collapse": 0.224879,
+            "combined_loading": 0.161134,
             "propagation": 0.489354
           },
           "code_label": "API-RP-1111"
@@ -1473,6 +1526,7 @@
           "checks": {
             "burst": 0.218631,
             "collapse": 0.221006,
+            "combined_loading": 0.158284,
             "propagation": 0.470919
           },
           "code_label": "API-RP-1111"
@@ -1498,6 +1552,7 @@
           "checks": {
             "burst": 0.214817,
             "collapse": 0.217277,
+            "combined_loading": 0.155523,
             "propagation": 0.453452
           },
           "code_label": "API-RP-1111"
@@ -1523,6 +1578,7 @@
           "checks": {
             "burst": 0.21112,
             "collapse": 0.213682,
+            "combined_loading": 0.152846,
             "propagation": 0.436889
           },
           "code_label": "API-RP-1111"
@@ -1548,6 +1604,7 @@
           "checks": {
             "burst": 0.207534,
             "collapse": 0.210215,
+            "combined_loading": 0.15025,
             "propagation": 0.42117
           },
           "code_label": "API-RP-1111"
@@ -1573,6 +1630,7 @@
           "checks": {
             "burst": 0.205261,
             "collapse": 0.208025,
+            "combined_loading": 0.148605,
             "propagation": 0.41138
           },
           "code_label": "API-RP-1111"
@@ -1600,6 +1658,7 @@
           "checks": {
             "burst": 0.204055,
             "collapse": 0.206867,
+            "combined_loading": 0.147731,
             "propagation": 0.406241
           },
           "code_label": "API-RP-1111"
@@ -1625,6 +1684,7 @@
           "checks": {
             "burst": 0.200678,
             "collapse": 0.203632,
+            "combined_loading": 0.145286,
             "propagation": 0.39205
           },
           "code_label": "API-RP-1111"
@@ -1650,6 +1710,7 @@
           "checks": {
             "burst": 0.197398,
             "collapse": 0.200505,
+            "combined_loading": 0.142912,
             "propagation": 0.378552
           },
           "code_label": "API-RP-1111"
@@ -1675,6 +1736,7 @@
           "checks": {
             "burst": 0.194211,
             "collapse": 0.197479,
+            "combined_loading": 0.140605,
             "propagation": 0.365702
           },
           "code_label": "API-RP-1111"
