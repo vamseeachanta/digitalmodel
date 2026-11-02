@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Read structural INP topology and references without loading a solver."""
@@ -148,7 +151,7 @@ class Deck:
     findings: list[Finding] = field(default_factory=list)
     nodes: dict[int, tuple[float, ...]] = field(default_factory=dict)
     elements: dict[int, tuple[str, tuple[int, ...]]] = field(default_factory=dict)
-    sets: dict[str, dict[str, list[str]]] = field(default_factory=lambda: {"nset": {}, "elset": {}})
+    sets: dict[str, dict[str, set[str]]] = field(default_factory=lambda: {"nset": {}, "elset": {}})
     definitions: dict[str, set[str]] = field(default_factory=lambda: {
         "material": set(), "surface": set(), "amplitude": set(), "interaction": set(),
     })
@@ -161,7 +164,7 @@ class Deck:
         self.findings.append(Finding("error", code, tuple(entities), message, hint, line))
 
     def parse(self) -> None:
-        """Collect definitions before resolving forward and nested references."""
+        """Collect definitions, then validate set members against the full mesh."""
         for block in self.blocks:
             try:
                 self._definition(block)
@@ -189,7 +192,7 @@ class Deck:
                     raise ValueError("Invalid node")
                 self.nodes[nid] = tuple(number(v) for v in row[1:]) + (0.0,) * (4 - len(row))
                 if "NSET" in p:
-                    self.sets["nset"].setdefault(p["NSET"].upper(), []).append(str(nid))
+                    self.sets["nset"].setdefault(p["NSET"].upper(), set()).add(str(nid))
         elif k == "ELEMENT":
             kind = p["TYPE"].upper()
             width = ELEMENT_NODES.get(kind)
@@ -200,7 +203,13 @@ class Deck:
                 return
             pending = []
             for row in block.rows:
-                pending.extend(value for value in row if value)
+                # CalculiX 2.22 User's Manual, 7.49 (*ELEMENT): retain the
+                # element/node positions; only the final comma may continue
+                # a record. An empty ID must never shift later connectivity.
+                values = row[:-1] if row[-1] == "" else row
+                if any(not value for value in values):
+                    raise ValueError("Missing element or node identifier")
+                pending.extend(values)
                 if len(pending) < width + 1 and row[-1] == "":
                     continue
                 if len(pending) != width + 1:
@@ -210,13 +219,15 @@ class Deck:
                     raise ValueError("Duplicate element")
                 self.elements[eid] = (kind, tuple(nodes))
                 if "ELSET" in p:
-                    self.sets["elset"].setdefault(p["ELSET"].upper(), []).append(str(eid))
+                    self.sets["elset"].setdefault(p["ELSET"].upper(), set()).add(str(eid))
                 pending = []
             if pending:
                 raise ValueError("Incomplete element")
         elif k in {"NSET", "ELSET"}:
             kind = k.lower()
-            members = self.sets[kind].setdefault(p[k].upper(), [])
+            target = p[k].upper()
+            previously_defined = target in self.sets[kind]
+            members = self.sets[kind].setdefault(target, set())
             for row in block.rows:
                 values = [v for v in row if v]
                 if "GENERATE" in p:
@@ -230,9 +241,23 @@ class Deck:
                     # a CalculiX limit. Missing generated IDs remain findings.
                     if stop - start > 10_000_000:
                         raise ValueError("Set generation exceeds supported size")
-                    members.extend(str(v) for v in range(start, stop + 1, stride))
+                    members.update(str(v) for v in range(start, stop + 1, stride))
                 else:
-                    members.extend(v.upper() for v in values)
+                    # CalculiX 2.22 User's Manual, 7.53 (*ELSET) and 7.100
+                    # (*NSET): referenced sets must already be defined. Copy
+                    # their current membership; later additions stay local.
+                    for value in values:
+                        name = value.upper()
+                        if name.isascii() and name.isdigit():
+                            members.add(name)
+                        else:
+                            self.used.add((kind, name))
+                            if name not in self.sets[kind] or (name == target and not previously_defined):
+                                self.missing(kind, name, (f"{kind}:{target}",), block.line)
+                            else:
+                                # Union distinct IDs so repeated references
+                                # cannot multiply storage at each alias level.
+                                members.update(self.sets[kind][name])
         elif k in DEFINITIONS:
             kind, param = DEFINITIONS[k]
             name = p[param].upper()
@@ -248,7 +273,7 @@ class Deck:
 
     def resolve_set(self, kind: str, name: str,
                     active: tuple[str, ...] = ()) -> set[int]:
-        """Resolve set unions and GENERATE records independent of definition order."""
+        """Validate expanded set members against the final mesh definitions."""
         name = name.upper()
         key = (kind, name)
         if key in self.resolved:
@@ -264,8 +289,8 @@ class Deck:
             return set()
         ids: set[int] = set()
         universe = self.nodes if kind == "nset" else self.elements
-        for item in self.sets[kind][name]:
-            if item.isdigit():
+        for item in sorted(self.sets[kind][name], key=lambda value: (int(value), value)):
+            if item.isascii() and item.isdigit():
                 value = int(item)
                 if value not in universe:
                     self.missing("node" if kind == "nset" else "element", item, (f"{kind}:{name}",))
@@ -280,7 +305,7 @@ class Deck:
     def target(self, kind: str, value: str, line: int = 0) -> set[int]:
         """Resolve a direct mesh ID or a named set and retain usage."""
         value = value.upper()
-        if value.isdigit():
+        if value.isascii() and value.isdigit():
             universe = self.nodes if kind == "nset" else self.elements
             if int(value) in universe:
                 return {int(value)}

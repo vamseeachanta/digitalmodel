@@ -1,10 +1,16 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Synthetic input decks exercise the pre-run gate without a solver."""
 
 import json
 import math
+import os
 from pathlib import Path
+import subprocess
+import sys
 from types import SimpleNamespace
 
 import numpy as np
@@ -160,9 +166,181 @@ def test_case_comments_generated_nested_sets_and_d_exponents(deck):
     assert validate_model(deck(text=base)).status == "PASS"
 
 
-def test_element_connectivity_continuation(deck):
-    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8").replace("1, 1, 2, 3, 4", "1, 1, 2,\n3, 4")
-    assert validate_model(deck(text=base)).status == "PASS"
+@pytest.mark.parametrize("nested", [False, True])
+def test_reopened_node_set_does_not_expand_earlier_support(deck, nested):
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    sets = "*NSET,NSET=FIXED\n1\n*NSET,NSET=SUPPORT\nFIXED\n"
+    if nested:
+        sets += "*NSET,NSET=ALIAS\nSUPPORT\n"
+    sets += "*NSET,NSET=FIXED\n5\n"
+    target = "ALIAS" if nested else "SUPPORT"
+    text = base.replace("*BOUNDARY\n1, 1, 3", sets + f"*BOUNDARY\n{target},1,3")
+    report = check_deck(deck(text=text))
+    assert report.status == "FAIL"
+    findings = [f.entity_ids for f in report.findings if f.code == "unconstrained_part"]
+    assert findings == [("step:0", "element:2")]
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_reopened_element_set_does_not_expand_earlier_section(deck, nested):
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    sets = "*ELSET,ELSET=SELECTED\n1\n*ELSET,ELSET=ASSIGNED\nSELECTED\n"
+    if nested:
+        sets += "*ELSET,ELSET=ALIAS\nASSIGNED\n"
+    sets += "*ELSET,ELSET=SELECTED\n2\n"
+    target = "ALIAS" if nested else "ASSIGNED"
+    text = base.replace("*MATERIAL", sets + "*MATERIAL")
+    text = text.replace("*SOLID SECTION, ELSET=BODY", f"*SOLID SECTION, ELSET={target}")
+    text = text.replace("*SOLID SECTION, ELSET=OTHER, MATERIAL=STEEL\n", "")
+    report = check_deck(deck("*BOUNDARY\n5,1,3\n", text=text))
+    assert report.status == "FAIL"
+    findings = [f.entity_ids for f in report.findings if f.code == "missing_section"]
+    assert findings == [("element:2",)]
+
+
+@pytest.mark.parametrize("kind", ["NSET", "ELSET"])
+@pytest.mark.parametrize("source", ["explicit", "generated", "inline"])
+def test_set_union_copies_expanded_members_at_declaration(deck, kind, source):
+    mesh = "*NODE\n1,0,0,0\n2,1,0,0\n3,2,0,0\n*ELEMENT,TYPE=MASS\n1,1\n2,2\n3,3\n"
+    if source == "inline":
+        first = ("*NODE,NSET=SOURCE\n4,3,0,0\n" if kind == "NSET" else
+                 "*ELEMENT,TYPE=MASS,ELSET=SOURCE\n4,3\n")
+        expected = {4}
+    elif source == "generated":
+        first = f"*{kind},{kind}=SOURCE,GENERATE\n1,2,1\n"
+        expected = {1, 2}
+    else:
+        first = f"*{kind},{kind}=SOURCE\n1\n"
+        expected = {1}
+    text = mesh + first + f"*{kind},{kind}=COPY\nsource\n*{kind},{kind}=NESTED\nCOPY\n"
+    text += f"*{kind},{kind}=SOURCE\n3\n"
+    parsed = Deck(read_blocks(deck(text=text)))
+    parsed.parse()
+    assert not parsed.findings
+    assert parsed.resolve_set(kind.lower(), "COPY") == expected
+    assert parsed.resolve_set(kind.lower(), "NESTED") == expected
+    assert parsed.resolve_set(kind.lower(), "SOURCE") == expected | {3}
+    assert (kind.lower(), "SOURCE") in parsed.used
+
+
+@pytest.mark.parametrize("kind", ["NSET", "ELSET"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_forward_set_reference_cannot_acquire_later_members(deck, capsys, kind, interface):
+    path = deck(f"*{kind},{kind}=COPY\nLATER\n*{kind},{kind}=LATER\n1\n")
+    if interface == "cli":
+        assert main([path.as_posix(), "--json"]) == 1
+        assert json.loads(capsys.readouterr().out)["status"] == "FAIL"
+    report = check_deck(path)
+    assert report.status == "FAIL"
+    assert any(f.code == "missing_reference" and f"{kind.lower()}:LATER" in f.entity_ids
+               for f in report.findings)
+
+
+@pytest.mark.parametrize("kind", ["NSET", "ELSET"])
+def test_repeated_set_references_do_not_multiply_members(deck, kind):
+    text = f"*{kind},{kind}=S0\n1\n"
+    for index in range(1, 41):
+        text += f"*{kind},{kind}=S{index}\nS{index - 1},S{index - 1},S{index - 1}\n"
+    parsed = Deck([])
+    # Stop before the next expansion if duplicates appear, so the regression
+    # demonstrates unbounded growth without exhausting the test process.
+    for block in read_blocks(deck(text=text)):
+        parsed._definition(block)
+        assert len(parsed.sets[kind.lower()][block.params[kind]]) == 1
+    parsed.nodes[1] = (0.0, 0.0, 0.0)
+    parsed.elements[1] = ("MASS", (1,))
+    assert parsed.resolve_set(kind.lower(), "S40") == {1}
+
+
+@pytest.mark.parametrize("kind", ["NSET", "ELSET"])
+def test_first_set_declaration_cannot_reference_itself(deck, kind):
+    report = check_deck(deck(f"*{kind},{kind}=SELF\nSELF\n"))
+    assert report.status == "FAIL"
+    assert any(f.code == "missing_reference" and f"{kind.lower()}:SELF" in f.entity_ids
+               for f in report.findings)
+
+
+@pytest.mark.parametrize("kind", ["NSET", "ELSET"])
+def test_reopened_self_union_and_forward_mesh_ids_remain_supported(deck, kind):
+    text = (f"*{kind},{kind}=SOURCE\n1\n*{kind},{kind}=COPY\nSOURCE\n"
+            f"*{kind},{kind}=SOURCE\nSOURCE,2\n"
+            "*NODE\n1,0,0,0\n2,1,0,0\n*ELEMENT,TYPE=MASS\n1,1\n2,2\n")
+    parsed = Deck(read_blocks(deck(text=text)))
+    parsed.parse()
+    assert not parsed.findings
+    assert parsed.resolve_set(kind.lower(), "SOURCE") == {1, 2}
+    assert parsed.resolve_set(kind.lower(), "COPY") == {1}
+
+
+@pytest.mark.parametrize("kind,entity", [("NSET", "node"), ("ELSET", "element")])
+def test_missing_set_members_have_stable_cli_order_across_processes(deck, kind, entity):
+    path = deck(f"*{kind},{kind}=MISSING\n12,8,9\n")
+    for seed in ("1", "2"):
+        result = subprocess.run(
+            [sys.executable, "-m", "digitalmodel.solvers.calculix.cli", path.as_posix(), "--json"],
+            env={**os.environ, "PYTHONHASHSEED": seed},
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        assert result.returncode == 1
+        report = json.loads(result.stdout)
+        missing = [f["entity_ids"][0] for f in report["findings"] if f["code"] == "missing_reference"]
+        assert missing == [f"{entity}:8", f"{entity}:9", f"{entity}:12"]
+
+
+@pytest.mark.parametrize("extra", [
+    "*NSET,NSET=INVALID\n²\n", "*ELSET,ELSET=INVALID\n²\n",
+    "*BOUNDARY\n²,1,3\n", "*DLOAD\n²,P1,1\n",
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_nondecimal_digit_ids_return_structured_failure(deck, capsys, extra, interface):
+    path = deck(extra)
+    if interface == "api":
+        report = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "FAIL"
+    assert any(f["severity"] == "error" for f in report["findings"])
+
+
+@pytest.mark.parametrize("record", [
+    "1,1,2,\n3,4", "1,1,2,3,4,", "1,1,2,\n3,4,",
+    "1,1,\n** continuation comment\n2,3,\n4",
+])
+def test_element_connectivity_continuation(deck, record):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    path = deck(text=base.replace("1, 1, 2, 3, 4", record))
+    assert validate_model(path).status == "PASS"
+    parsed = Deck(read_blocks(path))
+    parsed.parse()
+    assert parsed.elements == {1: ("C3D4", (1, 2, 3, 4))}
+
+
+@pytest.mark.parametrize("interface", ["api", "cli"])
+@pytest.mark.parametrize("record", [
+    ",1,1,2,3,4", "1,,1,2,3,4", "1,1,,2,3,4", "1,1,2,,3,4",
+    "1,1,2,3,,4", "1,1,2,3,4,,", "1,1, ,2,3,4",
+    "1,1,2,,\n3,4", "1,1,2,\n,3,4", "1,1,2,\n3,,4",
+    "1,1,2,\n3,4,,", "1,1,2,3,",
+])
+def test_missing_connectivity_ids_return_structured_failure(deck, capsys, record, interface):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    path = deck(text=base.replace("1, 1, 2, 3, 4", record))
+    if interface == "api":
+        report = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "FAIL"
+    assert any(f["code"] == "parse_error" and f["severity"] == "error"
+               and "keyword:ELEMENT" in f["entity_ids"]
+               for f in report["findings"])
+
+
+def test_incomplete_connectivity_at_end_of_file_returns_parse_error(deck):
+    report = check_deck(deck(text="*NODE\n1,0,0,0\n*ELEMENT,TYPE=C3D4\n1,1,2,3, \n"))
+    assert report.status == "FAIL"
+    assert "parse_error" in codes(report)
 
 
 @pytest.mark.parametrize("text", [
