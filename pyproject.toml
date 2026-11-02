@@ -325,6 +325,8 @@ digitalmodel = [
     "reporting/assets/*.j2",
     "reporting/assets/*.css",
     "asset_integrity/data/*.yml",
+    "well/barriers/basis/wikis/well_integrity/*.md",
+    "well/barriers/docs/*.html",
     # Frozen OpenFOAM case templates ported verbatim from the shipped
     # tutorials. These have no file extension by OpenFOAM convention
     # (system/controlDict, 0.orig/U, ...), so they are listed by directory.
