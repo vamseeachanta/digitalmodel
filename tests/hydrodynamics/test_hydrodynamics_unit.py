@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 
 from digitalmodel.hydrodynamics.models import (
+    DEFAULT_FREQUENCY_POINTS,
     WaveParameters,
     WaveSpectrumType,
     VesselProperties,
@@ -150,8 +151,8 @@ class TestWaveSpectra:
         generator = WaveSpectra()
         omega, S = generator.jonswap(hs=3.5, tp=10.0, gamma=3.3)
 
-        assert len(omega) == 100
-        assert len(S) == 100
+        assert len(omega) == DEFAULT_FREQUENCY_POINTS
+        assert len(S) == DEFAULT_FREQUENCY_POINTS
         assert np.all(S >= 0)
         assert np.max(S) > 0
 
@@ -165,7 +166,7 @@ class TestWaveSpectra:
         generator = WaveSpectra()
         omega, S = generator.pierson_moskowitz(hs=3.0, tp=8.0)
 
-        assert len(omega) == 100
+        assert len(omega) == DEFAULT_FREQUENCY_POINTS
         assert np.all(S >= 0)
 
     def test_bretschneider_spectrum(self):
@@ -173,7 +174,7 @@ class TestWaveSpectra:
         generator = WaveSpectra()
         omega, S = generator.bretschneider(hs=2.5, tp=7.0)
 
-        assert len(omega) == 100
+        assert len(omega) == DEFAULT_FREQUENCY_POINTS
         assert np.all(S >= 0)
 
     def test_spectral_moments(self):

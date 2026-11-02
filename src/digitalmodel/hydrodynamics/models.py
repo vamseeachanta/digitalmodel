@@ -10,6 +10,40 @@ from typing import Optional, List, Dict, Tuple
 from enum import Enum
 
 
+# Numerical choices derived from the Pierson-Moskowitz tail integral, not design limits.
+# Source: docs/domains/hydrodynamics/wave-spectra.md, "Grid error budget".
+DEFAULT_TAIL_MULTIPLIER = 20.0
+DEFAULT_FREQUENCY_POINTS = 1000
+
+
+def wave_frequency_grid(
+    tp: float,
+    freq_min: float,
+    freq_max: Optional[float],
+    n_points: int,
+) -> np.ndarray:
+    """Return a uniform angular-frequency grid with an optional peak-scaled end.
+
+    Explicit bounds and point counts retain their original linear spacing.
+    The default end bounds the omitted Pierson-Moskowitz second moment;
+    see the grid error budget in docs/domains/hydrodynamics/wave-spectra.md.
+    """
+    if not np.isfinite(tp) or tp <= 0:
+        raise ValueError("Peak period must be finite and positive")
+    upper = DEFAULT_TAIL_MULTIPLIER * (2 * np.pi / tp) if freq_max is None else freq_max
+    if not np.isfinite(freq_min) or freq_min <= 0:
+        raise ValueError("freq_min must be finite and positive")
+    if not np.isfinite(upper) or upper <= freq_min:
+        raise ValueError("freq_max must be finite and greater than freq_min")
+    if (
+        isinstance(n_points, (bool, np.bool_))
+        or not isinstance(n_points, (int, np.integer))
+        or n_points < 2
+    ):
+        raise ValueError("n_points must be an integer of at least two")
+    return np.linspace(freq_min, upper, n_points)
+
+
 class WaveSpectrumType(Enum):
     """Wave spectrum types for offshore analysis"""
     JONSWAP = "jonswap"
@@ -162,8 +196,8 @@ class WaveParameters:
 
     # Frequency range for spectrum generation
     freq_min: float = 0.02  # rad/s
-    freq_max: float = 2.0   # rad/s
-    n_frequencies: int = 100
+    freq_max: Optional[float] = None  # rad/s; None resolves from peak period
+    n_frequencies: int = DEFAULT_FREQUENCY_POINTS
 
     # Ochi-Hubble bimodal parameters
     hs_swell: Optional[float] = None
@@ -171,14 +205,18 @@ class WaveParameters:
 
     def __post_init__(self):
         """Validate wave parameters"""
-        if self.significant_height <= 0:
+        if not np.isfinite(self.significant_height) or self.significant_height <= 0:
             raise ValueError("Significant height must be positive")
-        if self.peak_period <= 0:
+        if not np.isfinite(self.peak_period) or self.peak_period <= 0:
             raise ValueError("Peak period must be positive")
-        if self.gamma <= 0:
+        if not np.isfinite(self.gamma) or self.gamma <= 0:
             raise ValueError("Gamma must be positive")
-        if self.freq_min >= self.freq_max:
-            raise ValueError("freq_min must be less than freq_max")
+        # Resolve once so serialized bounds and frequency_array describe the
+        # same grid that generate_spectrum uses.
+        grid = wave_frequency_grid(
+            self.peak_period, self.freq_min, self.freq_max, self.n_frequencies
+        )
+        self.freq_max = float(grid[-1])
 
     @property
     def peak_frequency(self) -> float:
@@ -193,7 +231,9 @@ class WaveParameters:
 
     def frequency_array(self) -> np.ndarray:
         """Generate frequency array for spectrum"""
-        return np.linspace(self.freq_min, self.freq_max, self.n_frequencies)
+        return wave_frequency_grid(
+            self.peak_period, self.freq_min, self.freq_max, self.n_frequencies
+        )
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
