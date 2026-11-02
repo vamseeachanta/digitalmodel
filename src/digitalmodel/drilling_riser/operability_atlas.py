@@ -151,19 +151,26 @@ def governing_utilisation(point: dict[str, Any], *, cfg: dict[str, Any]) -> floa
 
 def content_fingerprint(cfg_path: Path = CONFIG_PATH, repo_root: Path = REPO_ROOT) -> str:
     """Hash of everything the atlas depends on: config YAML + response source +
-    standard editions. A change to any flips the fingerprint (a determinism test
-    asserts the committed atlas matches)."""
-    cfg = load_config(cfg_path)
+    standard editions. Decode declared text as UTF-8 and replace CRLF with LF;
+    preserve lone CR, whitespace and all other text without reserializing YAML.
+    Missing, unreadable or invalid UTF-8 text raises rather than verifying an
+    unknown source basis. A determinism test asserts the committed atlas matches.
+    """
+    def canonical_text(path: Path) -> str:
+        return Path(path).read_bytes().decode("utf-8").replace("\r\n", "\n")
+
+    config_yaml = canonical_text(cfg_path)
+    cfg = yaml.safe_load(config_yaml)
     basis = {
-        "config_yaml": Path(cfg_path).read_bytes().decode(),
+        "config_yaml": config_yaml,
         "standards": cfg["provenance"]["standards"],
         "source_sha256": {
-            rel: hashlib.sha256((repo_root / rel).read_bytes()).hexdigest()
+            rel: hashlib.sha256(canonical_text(repo_root / rel).encode("utf-8")).hexdigest()
             for rel in SOURCE_FILES
         },
         "spec": {"basename": BASENAME, "response": RESPONSE, "physics": PHYSICS},
     }
-    return hashlib.sha256(json.dumps(basis, sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json.dumps(basis, sort_keys=True).encode("utf-8")).hexdigest()
 
 
 def _axes(cfg: dict[str, Any]) -> list[Axis]:
