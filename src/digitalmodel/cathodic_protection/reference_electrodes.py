@@ -1,18 +1,18 @@
 """Shared structure-to-electrolyte potential conversion, in volts at 25 deg C.
 
 E_target = E_source + E_ref,source(SHE) - E_ref,target(SHE), from the
-definition E_measured = E_structure - E_reference (ASTM G215-17, section 6).
+definition E_measured = E_structure - E_reference. ASTM G215-17, Standard
+Guide for Electrode Potential Measurement (2017), is cited for this sign
+convention only; no offset from that standard is reproduced.
 No temperature, junction-potential or IR-drop correction is inferred.
 
 Selected offsets, not a reproduction of a source table:
 * CSE +0.316, Ag/AgCl/seawater nominal +0.250, Ag/AgCl/saturated KCl
   +0.197: CEOCOR Commission 2, Rev 11 (November 2018), section 3.4,
   Table 1, p12. Seawater chloride activity is not fixed by this nominal value.
-* SHE 0 by definition and SCE (saturated KCl) +0.241:
-  ASTM G215-17, Table 1 and section 7.1.1, public distributor preview.
-* Zinc is a pseudo-reference with environment-dependent corrosion potential:
-  ASTM G215-17 section 6.2.3. Its calibrated SHE offset is REQUIRED; neither
-  the Zn2+/Zn standard reduction potential nor -0.800 is a universal offset.
+* SHE is zero by definition. SCE (saturated KCl) and zinc offsets require
+  finite caller-supplied calibration values vs SHE. No nominal SCE or
+  universal zinc offset is embedded.
 
 Each lookup carries a validated public-source citation sidecar. These public
 references do not claim qualification through the separate wiki resolver.
@@ -61,7 +61,7 @@ class ElectrodeReference(BaseModel):
 
 
 def electrode_reference(electrode: ReferenceElectrode | str) -> ElectrodeReference:
-    """Return the selected cited offset; zinc requires a supplied calibration.
+    """Return the selected offset; SCE and zinc require supplied calibration.
 
     Sources and locators are listed in this module's docstring. The nominal
     seawater value is approximate; calibration is needed for field accuracy.
@@ -72,7 +72,7 @@ def electrode_reference(electrode: ReferenceElectrode | str) -> ElectrodeReferen
         ReferenceElectrode.CSE: (0.316, "saturated CuSO4"),
         ReferenceElectrode.AG_AGCL_SEAWATER: (0.250, "seawater; nominal chloride activity"),
         ReferenceElectrode.AG_AGCL_SATURATED_KCL: (0.197, "saturated KCl"),
-        ReferenceElectrode.SCE: (0.241, "saturated KCl calomel"),
+        ReferenceElectrode.SCE: (None, "saturated KCl calomel; calibrated offset required"),
         ReferenceElectrode.ZINC: (None, "pseudo-reference; calibrated offset required"),
     }
     ceocor = key in (
@@ -83,12 +83,11 @@ def electrode_reference(electrode: ReferenceElectrode | str) -> ElectrodeReferen
         code_id="ceocor-reference-electrodes" if ceocor else "astm-g215",
         publisher="CEOCOR" if ceocor else "ASTM International",
         revision="2018-11 Rev 11" if ceocor else "2017",
-        section=("section 3.4, Table 1, p12" if ceocor else
-                 "section 6.2.3" if key == ReferenceElectrode.ZINC else
-                 "Table 1; section 7.1.1"),
+        section=("section 3.4, Table 1, p12" if ceocor else "sign convention only"),
         url=CEOCOR_URL if ceocor else ASTM_PREVIEW_URL,
         retrieved="2026-11-02",
-        note=offsets[key][1],
+        note=(offsets[key][1] if ceocor else
+              offsets[key][1] + "; no numerical offset sourced from ASTM"),
     )
     return ElectrodeReference(
         electrode=key, potential_she_V=offsets[key][0],
@@ -103,13 +102,14 @@ def convert_potential(
     *,
     temperature_c: float = 25.0,
     zinc_potential_she_V: float | None = None,
+    sce_potential_she_V: float | None = None,
 ) -> float:
     """Convert V using E_target = E_source + offset_source - offset_target.
 
-    Basis: ASTM G215-17 section 6, CEOCOR Rev 11 Table 1 (see module sources).
-    Only the tabulated 25 deg C condition is supported. Zinc conversions
-    require a finite, site-calibrated zinc potential vs SHE in volts.
-    Example: convert_potential(-0.850, "CSE", "SCE") returns -0.775 V.
+    Basis: CEOCOR Rev 11 Table 1 and the sign convention above.
+    Only the 25 deg C condition is supported. SCE and zinc conversions
+    require their respective finite, site-calibrated potentials vs SHE in volts.
+    Example: convert_potential(-0.850, "CSE", "SHE") returns -0.534 V.
     """
     if not math.isfinite(potential_V):
         raise ValueError("potential_V must be finite and in volts")
@@ -117,14 +117,17 @@ def convert_potential(
         raise ValueError("tabulated offsets support only 25 deg C")
     if zinc_potential_she_V is not None and not math.isfinite(zinc_potential_she_V):
         raise ValueError("zinc calibration must be finite")
+    if sce_potential_she_V is not None and not math.isfinite(sce_potential_she_V):
+        raise ValueError("SCE calibration must be finite")
     references = (electrode_reference(source), electrode_reference(target))
     offsets = []
     for reference in references:
         value = reference.potential_she_V
         if value is None:
-            if zinc_potential_she_V is None:
-                raise ValueError("zinc requires a site-calibrated potential vs SHE")
-            value = zinc_potential_she_V
+            value = (sce_potential_she_V if reference.electrode == ReferenceElectrode.SCE
+                     else zinc_potential_she_V)
+            if value is None:
+                raise ValueError(f"{reference.electrode.value} requires a site-calibrated potential vs SHE")
         offsets.append(value)
     if references[0].electrode == references[1].electrode:
         return potential_V

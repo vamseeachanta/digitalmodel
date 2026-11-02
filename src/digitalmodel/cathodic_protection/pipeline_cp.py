@@ -11,6 +11,11 @@ References
 - ISO 15589-1 (2015) "Petroleum, Petrochemical and Natural Gas Industries —
   Cathodic Protection of Pipeline Systems — Part 1: On-land Pipelines"
 - NACE SP0502 "Pipeline External Corrosion Direct Assessment Methodology"
+
+Only cp_reporting.compliance_check_potential preserves free-text electrode
+labels with an explicit criterion. Other potential checks require a known
+ReferenceElectrode value. SCE conversions require sce_potential_she_V from
+calibration at 25 deg C.
 """
 
 from __future__ import annotations
@@ -426,6 +431,7 @@ def check_potential_criteria(
     *,
     reference_electrode: ReferenceElectrode | str = "CSE",
     zinc_potential_she_V: float | None = None,
+    sce_potential_she_V: float | None = None,
 ) -> CriteriaResult:
     """Check if measured potential meets protection criteria per NACE SP0169 §6.2.
 
@@ -451,7 +457,8 @@ def check_potential_criteria(
     else:
         criterion = PROTECTION_POTENTIAL_CSE
 
-    options = {"zinc_potential_she_V": zinc_potential_she_V}
+    options = {"zinc_potential_she_V": zinc_potential_she_V,
+               "sce_potential_she_V": sce_potential_she_V}
     criterion = convert_potential(criterion, "CSE", reference_electrode, **options)
     overprotection_limit = convert_potential(
         OVERPROTECTION_THRESHOLD_V, "CSE", reference_electrode, **options,

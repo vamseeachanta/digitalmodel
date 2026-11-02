@@ -14,6 +14,11 @@ References
 - NACE TM0497 "Measurement Techniques Related to Criteria for Cathodic
   Protection"
 - NACE SP0502 "Pipeline External Corrosion Direct Assessment Methodology"
+
+Only cp_reporting.compliance_check_potential preserves free-text electrode
+labels with an explicit criterion. Other potential checks require a known
+ReferenceElectrode value. SCE conversions require sce_potential_she_V from
+calibration at 25 deg C.
 """
 
 from __future__ import annotations
@@ -272,6 +277,7 @@ def analyze_cis_survey(
     *,
     reference_electrode: ReferenceElectrode | str = "CSE",
     zinc_potential_she_V: float | None = None,
+    sce_potential_she_V: float | None = None,
 ) -> CISAnalysisResult:
     """Analyze close-interval survey data for protection compliance.
 
@@ -286,7 +292,8 @@ def analyze_cis_survey(
         Use OFF (instant-off) potentials if available (default True).
     protection_criterion_V : float
         Explicit criterion in the survey electrode [V]. If omitted, the
-        existing CSE default is converted using the cited shared utility.
+        native -0.800 V criterion is used for seawater; other electrodes
+        use the CSE default converted with the cited shared utility.
     overprotection_limit_V : float
         Explicit limit in the survey electrode [V]; omitted CSE default is converted.
     reference_electrode : ReferenceElectrode or str
@@ -299,12 +306,16 @@ def analyze_cis_survey(
         Survey analysis statistics and deficiency locations.
     """
     reference_electrode = ReferenceElectrode(reference_electrode)
-    options = {"zinc_potential_she_V": zinc_potential_she_V}
-    protection_criterion_V = convert_potential(
-        PROTECTION_POTENTIAL_CSE if protection_criterion_V is None else protection_criterion_V,
-        "CSE" if protection_criterion_V is None else reference_electrode,
-        reference_electrode, **options,
-    )
+    options = {"zinc_potential_she_V": zinc_potential_she_V,
+               "sce_potential_she_V": sce_potential_she_V}
+    if protection_criterion_V is None and reference_electrode == ReferenceElectrode.AG_AGCL_SEAWATER:
+        protection_criterion_V = PROTECTION_POTENTIAL_AGAGCL
+    else:
+        protection_criterion_V = convert_potential(
+            PROTECTION_POTENTIAL_CSE if protection_criterion_V is None else protection_criterion_V,
+            "CSE" if protection_criterion_V is None else reference_electrode,
+            reference_electrode, **options,
+        )
     overprotection_limit_V = convert_potential(
         OVERPROTECTION_LIMIT_CSE if overprotection_limit_V is None else overprotection_limit_V,
         "CSE" if overprotection_limit_V is None else reference_electrode,

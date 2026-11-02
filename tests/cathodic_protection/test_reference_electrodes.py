@@ -15,7 +15,7 @@ from digitalmodel.cathodic_protection.cp_reporting import (
 
 @pytest.mark.parametrize("target,expected", [
     ("SHE", -0.534), ("CSE", -0.850), ("Ag/AgCl/seawater", -0.784),
-    ("Ag/AgCl/saturated KCl", -0.731), ("SCE", -0.775),
+    ("Ag/AgCl/saturated KCl", -0.731),
 ])
 def test_hand_calculated_offsets(target, expected):
     # E_target = -0.850 + 0.316 - E_ref,target(SHE), all at 25 deg C.
@@ -25,8 +25,8 @@ def test_hand_calculated_offsets(target, expected):
 
 @pytest.mark.parametrize("source,target", list(itertools.product(list(ReferenceElectrode), repeat=2)))
 def test_all_round_trips(source, target):
-    # Zinc has no universal stable field offset; a calibration is supplied explicitly.
-    options = {"zinc_potential_she_V": -0.800}
+    # Synthetic calibrations exercise both directions without a tabulated SCE value.
+    options = {"zinc_potential_she_V": -0.800, "sce_potential_she_V": 0.200}
     converted = convert_potential(-0.9, source, target, **options)
     assert convert_potential(converted, target, source, **options) == pytest.approx(-0.9)
 
@@ -55,10 +55,10 @@ def test_survey_and_report_convert_criteria_not_just_labels():
     result = analyze_cis_survey(points, reference_electrode="Ag/AgCl/seawater")
     assert result.protected_points == 1
     assert result.reference_electrode == "Ag/AgCl/seawater"
-    assert result.protection_criterion_V == pytest.approx(-0.784)
+    assert result.protection_criterion_V == pytest.approx(-0.800)
     report = compliance_check_potential(-0.834, reference_electrode="Ag/AgCl/seawater")
     assert report.status == ComplianceStatus.COMPLIANT
-    assert report.criterion_value == pytest.approx(-0.784)
+    assert report.criterion_value == pytest.approx(-0.800)
     assert report.unit == "V vs Ag/AgCl/seawater"
     # Explicit native criteria retain their native scale, preserving existing API usage.
     native = compliance_check_potential(
@@ -68,9 +68,9 @@ def test_survey_and_report_convert_criteria_not_just_labels():
 
 
 def test_empty_survey_still_reports_converted_criterion():
-    result = analyze_cis_survey([], reference_electrode="SCE")
+    result = analyze_cis_survey([], reference_electrode="SCE", sce_potential_she_V=0.200)
     assert result.total_points == 0
-    assert result.protection_criterion_V == pytest.approx(-0.775)
+    assert result.protection_criterion_V == pytest.approx(-0.734)
 
 
 def test_monitoring_uses_condition_specific_offsets():
@@ -90,12 +90,12 @@ def test_other_potential_checks_preserve_measurement_basis():
     from digitalmodel.cathodic_protection.api_rp_1632 import check_protection_potential
     from digitalmodel.cathodic_protection.pipeline_cp import check_potential_criteria
 
-    buried_tank = check_protection_potential(-0.80, reference_electrode="SCE")
+    buried_tank = check_protection_potential(-0.80, reference_electrode="SCE", sce_potential_she_V=0.200)
     assert buried_tank["pass"]
-    assert buried_tank["criterion"] == pytest.approx(-0.775)
-    pipeline = check_potential_criteria(-0.80, reference_electrode="SCE")
+    assert buried_tank["criterion"] == pytest.approx(-0.734)
+    pipeline = check_potential_criteria(-0.80, reference_electrode="SCE", sce_potential_she_V=0.200)
     assert pipeline.is_protected
-    assert pipeline.criterion_V == pytest.approx(-0.775)
+    assert pipeline.criterion_V == pytest.approx(-0.734)
     assert pipeline.reference_electrode == "SCE"
 
 
@@ -118,3 +118,52 @@ def test_invalid_survey_and_report_values():
         with pytest.raises(ValueError):
             analyze_cis_survey([CISSurveyPoint(distance_m=0, on_potential_V=value)])
 
+
+
+@pytest.mark.parametrize("reading,protected", [(-0.800, 1), (-0.790, 0)])
+def test_seawater_survey_uses_native_default(reading, protected):
+    points = [CISSurveyPoint(distance_m=0, on_potential_V=reading)]
+    result = analyze_cis_survey(points, reference_electrode="Ag/AgCl/seawater")
+    assert result.protection_criterion_V == -0.800
+    assert result.protected_points == protected
+    assert result.underprotected_points == 1 - protected
+    # A caller can still choose a different explicit criterion in this electrode.
+    explicit = analyze_cis_survey(
+        points, reference_electrode="Ag/AgCl/seawater", protection_criterion_V=-0.780,
+    )
+    assert explicit.protected_points == 1
+    assert explicit.protection_criterion_V == -0.780
+
+
+@pytest.mark.parametrize("source,target", [("CSE", "SCE"), ("SCE", "CSE"), ("SCE", "SCE")])
+def test_sce_requires_its_own_calibration(source, target):
+    assert electrode_reference("SCE").potential_she_V is None
+    with pytest.raises(ValueError, match="SCE.*calibrat"):
+        convert_potential(-0.850, source, target, zinc_potential_she_V=-0.800)
+
+
+@pytest.mark.parametrize("calibration", [0.200, 0.300])
+def test_sce_conversion_uses_supplied_calibration(calibration):
+    converted = convert_potential(-0.850, "CSE", "SCE", sce_potential_she_V=calibration)
+    assert converted == pytest.approx(-0.850 + 0.316 - calibration)
+    assert convert_potential(converted, "SCE", "CSE", sce_potential_she_V=calibration) == pytest.approx(-0.850)
+
+
+@pytest.mark.parametrize("calibration", [float("nan"), float("inf"), -float("inf")])
+def test_sce_rejects_nonfinite_calibration(calibration):
+    with pytest.raises(ValueError, match="SCE.*finite"):
+        convert_potential(-0.850, "CSE", "SCE", sce_potential_she_V=calibration)
+
+
+def test_sce_calibration_does_not_supply_zinc_offset():
+    with pytest.raises(ValueError, match="zinc.*calibrat"):
+        convert_potential(-0.850, "SCE", "zinc", sce_potential_she_V=0.200)
+
+
+def test_offshore_check_accepts_sce_calibration():
+    from digitalmodel.cathodic_protection.iso_15589_2 import check_protection_potential
+
+    result = check_protection_potential(-0.850, reference_electrode="SCE", sce_potential_she_V=0.200)
+    assert result["pass"]
+    assert result["criterion_min"] == pytest.approx(-0.750)
+    assert result["criterion_max"] == pytest.approx(-1.050)

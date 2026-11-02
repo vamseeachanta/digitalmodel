@@ -7,6 +7,11 @@ anode resistance, and mass requirement. The formulas are evaluated by
 :mod:`digitalmodel.cathodic_protection._kernels`, so the demand, mass and
 resistance agree with the DNV-RP-B401 module for the same inputs
 (issue #2211).
+
+Only cp_reporting.compliance_check_potential preserves free-text electrode
+labels with an explicit criterion. Other potential checks require a known
+ReferenceElectrode value. SCE conversions require sce_potential_she_V from
+calibration at 25 deg C.
 """
 
 from __future__ import annotations
@@ -212,6 +217,7 @@ def check_protection_potential(
     measured_V_AgAgCl: float, *,
     reference_electrode: ReferenceElectrode | str = "Ag/AgCl/seawater",
     zinc_potential_she_V: float | None = None,
+    sce_potential_she_V: float | None = None,
 ) -> dict:
     """Evaluate measured potential against ISO 15589-2 §5.2 criteria.
 
@@ -231,7 +237,8 @@ def check_protection_potential(
         {"pass": bool, "potential": float, "criterion_min": float,
          "criterion_max": float}
     """
-    options = {"zinc_potential_she_V": zinc_potential_she_V}
+    options = {"zinc_potential_she_V": zinc_potential_she_V,
+               "sce_potential_she_V": sce_potential_she_V}
     criterion_min = convert_potential(
         PROTECTION_POTENTIAL_MIN, "Ag/AgCl/seawater", reference_electrode, **options,
     )

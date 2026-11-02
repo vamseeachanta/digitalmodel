@@ -127,7 +127,7 @@ def test_remaining_life_summary_design_limiting():
 
 def test_explicit_criterion_keeps_free_text_electrode_label():
     """With an explicit criterion no conversion is made, so a free-text label
-    (as used by examples/demos/demo_pipeline_cp.py) is accepted unchanged."""
+    is accepted unchanged."""
     result = compliance_check_potential(
         measured_potential_V=-0.920,
         criterion_V=-0.850,
@@ -139,8 +139,25 @@ def test_explicit_criterion_keeps_free_text_electrode_label():
 
 
 def test_default_criterion_is_rounded_after_conversion():
-    """-0.850 V CSE in SCE: CSE 0.316 V SHE, SCE 0.241 V SHE gives -0.775 V."""
+    """The converted criterion is rounded with a synthetic SCE calibration."""
     result = compliance_check_potential(
-        measured_potential_V=-0.800, reference_electrode="SCE",
+        measured_potential_V=-0.800, reference_electrode="SCE", sce_potential_she_V=0.200,
     )
-    assert result.criterion_value == -0.775
+    assert result.criterion_value == -0.734
+
+
+def test_seawater_default_does_not_accept_underprotected_reading():
+    result = compliance_check_potential(-0.790, reference_electrode="Ag/AgCl/seawater")
+    assert result.criterion_value == -0.800
+    assert result.status == ComplianceStatus.MARGINAL
+    strict = compliance_check_potential(
+        -0.790, reference_electrode="Ag/AgCl/seawater", tolerance_V=0,
+    )
+    assert strict.status == ComplianceStatus.NON_COMPLIANT
+    boundary = compliance_check_potential(-0.800, reference_electrode="Ag/AgCl/seawater")
+    assert boundary.status == ComplianceStatus.COMPLIANT
+    explicit = compliance_check_potential(
+        -0.790, reference_electrode="Ag/AgCl/seawater", criterion_V=-0.780,
+    )
+    assert explicit.criterion_value == -0.780
+    assert explicit.status == ComplianceStatus.COMPLIANT

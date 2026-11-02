@@ -333,7 +333,7 @@ def main():
     pot_check = compliance_check_potential(
         measured_potential_V=-0.920,
         criterion_V=-0.850,
-        reference_electrode="Ag/AgCl",
+        reference_electrode="CSE",
     )
 
     # Current demand check

@@ -346,7 +346,7 @@ def set_alarm_thresholds(
     -----
     Existing CSE and seawater criteria are retained in their native basis.
     Other supported electrodes use reference_electrodes.convert_potential
-    (CEOCOR Rev 11 Table 1; ASTM G215-17 Table 1). Zinc requires calibration;
+    (CEOCOR Rev 11 Table 1). Zinc requires calibration;
     MMO has no universal offset. Conversion supports the tabulated 25 deg C.
     """
     if reference_electrode == ReferenceElectrodeType.MMO:

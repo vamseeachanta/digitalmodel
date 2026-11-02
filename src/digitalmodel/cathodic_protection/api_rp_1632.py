@@ -4,6 +4,11 @@ and Piping Systems (3rd Edition, 1996).
 Implements galvanic anode CP design for underground steel structures
 including protection criteria, Dwight resistance, current demand,
 anode sizing, and life calculations.
+
+Only cp_reporting.compliance_check_potential preserves free-text electrode
+labels with an explicit criterion. Other potential checks require a known
+ReferenceElectrode value. SCE conversions require sce_potential_she_V from
+calibration at 25 deg C.
 """
 
 from __future__ import annotations
@@ -204,6 +209,7 @@ def check_protection_potential(
     measured_potential_V_CSE: float, *,
     reference_electrode: ReferenceElectrode | str = "CSE",
     zinc_potential_she_V: float | None = None,
+    sce_potential_she_V: float | None = None,
 ) -> dict:
     """Evaluate measured potential against API RP 1632 §4.2 criteria.
 
@@ -224,6 +230,7 @@ def check_protection_potential(
     criterion = convert_potential(
         PROTECTION_POTENTIAL_CSE, "CSE", reference_electrode,
         zinc_potential_she_V=zinc_potential_she_V,
+        sce_potential_she_V=sce_potential_she_V,
     )
     if not math.isfinite(measured_potential_V_CSE):
         raise ValueError("measured potential must be finite volts")

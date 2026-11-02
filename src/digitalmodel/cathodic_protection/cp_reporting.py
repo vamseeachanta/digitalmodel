@@ -9,6 +9,11 @@ References
 - NACE SP0169 (2013) — Reporting requirements for CP systems
 - DNV-RP-B401 (2017) §12 — Documentation requirements
 - API RP 1632 (1996) — Record keeping and reporting
+
+Only cp_reporting.compliance_check_potential preserves free-text electrode
+labels with an explicit criterion. Other potential checks require a known
+ReferenceElectrode value. SCE conversions require sce_potential_she_V from
+calibration at 25 deg C.
 """
 
 from __future__ import annotations
@@ -124,6 +129,7 @@ def compliance_check_potential(
     tolerance_V: float = 0.020,
     *,
     zinc_potential_she_V: float | None = None,
+    sce_potential_she_V: float | None = None,
 ) -> ComplianceCheck:
     """Check measured protection potential against criterion.
 
@@ -133,7 +139,8 @@ def compliance_check_potential(
         Measured structure-to-electrolyte potential [V].
     criterion_V : float
         Explicit criterion in the measurement electrode [V]. If omitted,
-        -0.850 V vs CSE is converted using the cited shared utility.
+        seawater uses its native -0.800 V criterion; other electrodes use
+        -0.850 V vs CSE converted using the cited shared utility.
     reference_electrode : str
         Electrode used for the measurement (25 deg C; electrolyte explicit).
         Must be a known electrode when ``criterion_V`` is omitted; with an
@@ -150,9 +157,14 @@ def compliance_check_potential(
     if criterion_V is None:
         electrode = ReferenceElectrode(reference_electrode)
         reference_electrode = electrode.value
-        criterion_V = round(convert_potential(
-            -0.850, "CSE", electrode, zinc_potential_she_V=zinc_potential_she_V,
-        ), 6)
+        if electrode == ReferenceElectrode.AG_AGCL_SEAWATER:
+            criterion_V = -0.800
+        else:
+            criterion_V = round(convert_potential(
+                -0.850, "CSE", electrode,
+                zinc_potential_she_V=zinc_potential_she_V,
+                sce_potential_she_V=sce_potential_she_V,
+            ), 6)
     else:
         try:
             reference_electrode = ReferenceElectrode(reference_electrode).value
