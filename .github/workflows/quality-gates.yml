@@ -123,6 +123,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
+        id: install_dependencies
         run: |
           uv venv
           echo "$PWD/.venv/bin" >> $GITHUB_PATH
@@ -133,10 +134,13 @@ jobs:
         # Full runs cover prose from every commit since the previous batch.
         run: python scripts/enforcement/check-engineering-register.py docs/ src/
 
+      # Preserve quality evidence after prose failure without running after failed setup.
       - name: Create reports directory
+        if: ${{ !cancelled() && steps.install_dependencies.outcome == 'success' }}
         run: mkdir -p reports
 
       - name: Run Quality Gates
+        if: ${{ !cancelled() && steps.install_dependencies.outcome == 'success' }}
         run: |
           python -m digitalmodel.workflows.automation.quality_gates_cli check --json
         continue-on-error: false

@@ -448,6 +448,109 @@ def test_full_register_rejects_earlier_violation_with_clean_latest_commit(
     assert f"{document}:1: [R1-subject]" in result.stdout
 
 
+@pytest.mark.parametrize("prose_fails,quality_fails", (
+    (False, False), (True, False), (False, True), (True, True),
+))
+def test_full_quality_reports_survive_prose_failure(
+    tmp_path: Path, prose_fails: bool, quality_fails: bool,
+) -> None:
+    """Execute shipped steps with real prose checking and an isolated CLI double."""
+    workflow = load_workflow("quality-gates.yml")
+    steps = workflow["jobs"]["quality-gates"]["steps"]
+    first = next(i for i, step in enumerate(steps)
+                 if step.get("name") == "Check engineering register changes")
+    checker = Path("scripts/enforcement/check-engineering-register.py")
+    (tmp_path / checker.parent).mkdir(parents=True)
+    shutil.copyfile(WORKFLOWS.parents[1] / checker, tmp_path / checker)
+    for root in ("docs", "src"):
+        (tmp_path / root).mkdir()
+    (tmp_path / "docs/sample.md").write_text(
+        "We verified the analysis.\n" if prose_fails
+        else "The analysis meets the criterion.\n", encoding="utf-8",
+    )
+    # The CLI double checks that report preparation ran and writes an artifact.
+    package = tmp_path / "digitalmodel/workflows/automation"
+    package.mkdir(parents=True)
+    (tmp_path / "digitalmodel/__init__.py").write_text("", encoding="utf-8")
+    (package / "quality_gates_cli.py").write_text(
+        "import json, os\nfrom pathlib import Path\n"
+        "assert Path('reports').is_dir()\n"
+        "Path('reports/quality_gates_results.json').write_text(\n"
+        "    json.dumps({'overall_status': os.environ['QUALITY_STATUS']}))\n"
+        "raise SystemExit(int(os.environ['QUALITY_EXIT']))\n", encoding="utf-8",
+    )
+    failed = False
+    outcomes = {}
+    uploaded = {}
+    for step in steps[first:]:
+        condition = step.get("if", "success()")
+        expression = condition.removeprefix("${{").removesuffix("}}").strip()
+        context = {
+            "success()": not failed, "failure()": failed, "always()": True,
+            "!cancelled()": True, "steps.install_dependencies.outcome": "success",
+            "github.event_name": "workflow_dispatch",
+        }
+        if not evaluate_expression(expression, context):
+            outcomes[step["name"]] = "skipped"
+            continue
+        if "run" in step:
+            result = subprocess.run(
+                ["bash", "-e", "-c", step["run"]], cwd=tmp_path,
+                env=dict(os.environ, QUALITY_EXIT=str(int(quality_fails)),
+                         QUALITY_STATUS="failure" if quality_fails else "pass"),
+                capture_output=True, text=True, timeout=30, check=False,
+            )
+            outcomes[step["name"]] = "failure" if result.returncode else "success"
+            if result.returncode and not step.get("continue-on-error", False):
+                failed = True
+        elif step.get("uses", "").startswith("actions/upload-artifact@"):
+            uploaded[step["name"]] = {
+                str(path.relative_to(tmp_path)): path.read_bytes()
+                for pattern in step["with"]["path"].splitlines()
+                for path in tmp_path.glob(pattern) if path.is_file()
+            }
+    assert outcomes["Check engineering register changes"] == (
+        "failure" if prose_fails else "success"
+    )
+    assert outcomes["Create reports directory"] == "success"
+    assert outcomes["Run Quality Gates"] == ("failure" if quality_fails else "success")
+    report = uploaded["Upload quality gate results"]["reports/quality_gates_results.json"]
+    assert json.loads(report)["overall_status"] == ("failure" if quality_fails else "pass")
+    assert failed == (prose_fails or quality_fails)
+    aggregate = workflow["jobs"]["quality-gates-aggregate"]
+    assert aggregate["if"] == "always()"
+    result = subprocess.run(
+        ["bash", "-e", "-c", aggregate["steps"][0]["run"]], cwd=tmp_path,
+        env=dict(os.environ, QUALITY_GATES_RESULT="failure" if failed else "success"),
+        capture_output=True, text=True, timeout=30, check=False,
+    )
+    assert (result.returncode != 0) == failed
+
+
+@pytest.mark.parametrize("dependency_outcome,cancelled,expected", (
+    ("success", False, True), ("failure", False, False),
+    ("skipped", False, False), ("success", True, False),
+))
+def test_quality_continuation_requires_dependencies_and_no_cancellation(
+    dependency_outcome: str, cancelled: bool, expected: bool,
+) -> None:
+    """Continuation must respect failed setup and explicit cancellation."""
+    steps = load_workflow("quality-gates.yml")["jobs"]["quality-gates"]["steps"]
+    install = next(step for step in steps if step.get("name") == "Install dependencies")
+    assert install["id"] == "install_dependencies"
+    for name in ("Create reports directory", "Run Quality Gates"):
+        step = next(step for step in steps if step.get("name") == name)
+        condition = step["if"].removeprefix("${{").removesuffix("}}").strip()
+        assert "!cancelled()" in condition
+        assert bool(evaluate_expression(condition, {
+            "!cancelled()": not cancelled,
+            "steps.install_dependencies.outcome": dependency_outcome,
+        })) is expected
+    register = next(step for step in steps
+                    if step.get("name") == "Check engineering register changes")
+    assert register.get("continue-on-error", False) is False
+
+
 def test_trigger_tests_run_in_harness() -> None:
     """The harness executes trigger regressions on every pull request."""
     workflow = load_workflow("quality-gates-by-domain.yml")
