@@ -9,6 +9,7 @@ History samples are scalar stresses; curve inputs are counted stress RANGES
 in the same declared unit. No amplitude conversion, mean-stress, thickness or
 environmental correction is applied. CurveBasis records the caller's chosen
 basis, not its qualification.
+Complex scalar values are rejected even when stored in object arrays.
 
 Counting and damage use the existing rainflow_count and miner_damage primitives.
 Residual pairs retain their half-cycle weights exactly once. Exact ranges are
@@ -109,6 +110,15 @@ def _duration(value: float, field: str) -> float:
     return value
 
 
+def _contains_complex(values: object) -> bool:
+    """Inspect object-array scalars before float conversion can lose information."""
+    array = np.asarray(values)
+    return np.iscomplexobj(array) or (
+        array.dtype == object
+        and any(np.iscomplexobj(value) for value in array.flat)
+    )
+
+
 def _samples(history: StressHistory, basis: CurveBasis) -> np.ndarray:
     """Validate each history before invoking any curve or counting operation."""
     if not isinstance(history, StressHistory):
@@ -121,7 +131,7 @@ def _samples(history: StressHistory, basis: CurveBasis) -> np.ndarray:
     if np.ma.is_masked(history.samples):
         raise ValueError("history must not contain masked stress samples")
     try:
-        if np.iscomplexobj(history.samples):
+        if _contains_complex(history.samples):
             raise ValueError("history must contain real stress samples")
         signal = np.asarray(history.samples, dtype=float)
     except (TypeError, ValueError, OverflowError) as exc:
@@ -143,7 +153,7 @@ class _CheckedCurve:
     def cycles(self, ranges: np.ndarray) -> np.ndarray:
         """Return validated counts for the primitive's exact range vector."""
         allowable = self.curve.cycles(ranges)
-        if np.iscomplexobj(allowable) or np.ma.is_masked(allowable):
+        if np.ma.is_masked(allowable) or _contains_complex(allowable):
             raise ValueError("allowable_cycles must contain real, unmasked counts")
         allowable = np.asarray(allowable, dtype=float)
         if (

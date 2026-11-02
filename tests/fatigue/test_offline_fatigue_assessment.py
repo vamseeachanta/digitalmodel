@@ -129,6 +129,21 @@ def test_invalid_history(samples, basis):
         assess({"detail": StressHistory(samples, "MPa")}, basis)
 
 
+@pytest.mark.parametrize("scalar_type", [np.complex64, np.complex128, np.clongdouble])
+@pytest.mark.parametrize("imaginary", [0.0, 1.0])
+def test_object_complex_history_samples_are_rejected(scalar_type, imaginary, basis):
+    samples = np.array([0, scalar_type(complex(2, imaginary))], dtype=object)
+    with pytest.raises(ValueError, match="history"):
+        assess({"detail": StressHistory(samples, "MPa")}, basis)
+
+
+def test_real_object_history_samples_are_accepted(basis):
+    history = StressHistory(np.array([0, 2], dtype=object), "MPa")
+    report = assess({"detail": history}, basis)
+    # One range-2 half-cycle: 0.5 * 2**2 / 1000 = 0.002.
+    assert report.locations["detail"].exposure_damage == pytest.approx(0.002)
+
+
 @pytest.mark.parametrize("samples, mask", [
     ([0, 2], [False, True]),
     ([0, 2, 0], [False, True, False]),
@@ -226,6 +241,38 @@ def test_complex_curve_endurance_is_rejected(history, basis, allowable):
             {"detail": history}, ComplexCurve(), 10,
             exposure_duration=2, time_unit="year", curve_basis=basis,
         )
+
+
+@pytest.mark.parametrize("scalar_type", [np.complex64, np.complex128, np.clongdouble])
+@pytest.mark.parametrize("imaginary", [0.0, 1.0])
+def test_object_complex_curve_endurance_is_rejected(
+    history, basis, scalar_type, imaginary,
+):
+    class ObjectCurve:
+        def cycles(self, ranges):
+            return np.full(
+                ranges.shape, scalar_type(complex(1000, imaginary)), dtype=object,
+            )
+
+    with pytest.raises(ValueError, match="allowable_cycles"):
+        fatigue_assessment(
+            {"detail": history}, ObjectCurve(), 10,
+            exposure_duration=2, time_unit="year", curve_basis=basis,
+        )
+
+
+@pytest.mark.parametrize("allowable, damage", [(1000.0, 0.003), (np.inf, 0.0)])
+def test_real_object_curve_endurance_is_accepted(history, basis, allowable, damage):
+    class ObjectCurve:
+        def cycles(self, ranges):
+            return np.full(ranges.shape, allowable, dtype=object)
+
+    report = fatigue_assessment(
+        {"detail": history}, ObjectCurve(), 10,
+        exposure_duration=2, time_unit="year", curve_basis=basis,
+    )
+    # Three counted cycles / 1000 = 0.003; infinite endurance gives zero damage.
+    assert report.locations["detail"].exposure_damage == pytest.approx(damage)
 
 
 @pytest.mark.parametrize("allowable", [1000.0, np.inf])
