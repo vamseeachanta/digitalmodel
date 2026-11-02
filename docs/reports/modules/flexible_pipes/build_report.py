@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import re
 import runpy
+import sys
 
 ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = "examples/domains/subsea/flexible_pipe_geometry.py"
@@ -20,6 +21,9 @@ RELATIVE_TOLERANCE = 1e-12
 CHANGES = [{
     "revision": "A", "date": "2026-10-28",
     "change": "Synthetic full-wall geometry and mass are presented with an independent radius-based calculation, generated figures and explicit qualification limits.",
+}, {
+    "revision": "B", "date": "2026-11-02",
+    "change": "CPython 3.11 and 3.12 rebuilds are bound to runtime-qualified goldens and explicit interpreter commands; numerical criteria and qualification limits are retained.",
 }]
 SOURCE_PATHS = {
     "G": (NOTE, "Synthetic inputs, circle geometry and independent hand calculation"),
@@ -33,6 +37,14 @@ SOURCE_PATHS = {
     "P": ("docs/api/_assets/brand.css", "Existing palette only"),
     "R": ("docs/reports/modules/flexible_pipes/build_report.py", "Report generation and comparison criterion"),
 }
+
+
+def report_python():
+    """Require a qualified interpreter before any report artifacts are written."""
+    version = f"{sys.version_info[0]}.{sys.version_info[1]}"
+    if sys.implementation.name != "cpython" or version not in ("3.11", "3.12"):
+        raise RuntimeError("Report generation requires CPython 3.11 or 3.12; select one with uv --python")
+    return version
 
 
 def refresh_checks(data):
@@ -118,6 +130,7 @@ def source_register():
     """Bind the public synthetic basis, implementation and renderer to bytes."""
     return {
         "revision": CHANGES[-1]["revision"],
+        "runtime": f"CPython {report_python()}",
         "readiness": "synthetic arithmetic only",
         "freshness": "Exact source SHA-256 equality on rebuild; no volatile metadata",
         "units": ["m", "m^2", "kg/m^3", "kg/m"],
@@ -163,6 +176,7 @@ def geometry_figure(data):
 
 def render(scratch):
     """Generate the self-contained report without importing solver or fatigue code."""
+    report_python()
     data = refresh_checks(calculate(scratch))
     inputs = value_table(data, data["input_keys"], "Synthetic inputs; chosen for arithmetic only [G, E].")
     outputs = value_table(data, [key for key in data["values"] if key not in data["input_keys"]],
@@ -243,9 +257,11 @@ Stiffness estimates and structural screening interfaces are not qualified by a m
 <h2 id="s9">9. Source register and reproducibility</h2>
 <p>The authoritative input is the existing repository synthetic note, not measured data. Intended-use readiness is synthetic arithmetic only.
 Source SHA-256 digests identify the exact bytes consumed. No timestamps or scratch/output paths are embedded; no metadata is removed for the deterministic comparison.</p>
+<p>This build uses CPython {report_python()}. CPython 3.11 and 3.12 have separate exact goldens because floating-point summation can differ.
+Both runtimes retain the independent arithmetic criterion and exact same-runtime rebuild comparisons. Other report runtimes are not qualified.</p>
 <ul>{sources}</ul><p><a href="source_register.json">Machine-readable source register</a> · <a href="changes.json">Change record</a></p>
 <p>From the repository root, with externally supplied scratch and output directories:</p>
-<pre>PYTHONPATH=src uv run --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"</pre>
+<pre>PYTHONPATH=src uv run --python {report_python()} --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"</pre>
 <p>The output directory receives the report, source register and change record. Calculation intermediates remain in scratch.
 The local README documents rebuilding and delivery. Tests always use separate external directories.</p>
 <h2 id="s10">10. Way forward</h2>

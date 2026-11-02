@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+from types import SimpleNamespace
 from urllib.parse import urlsplit
 
 import pytest
@@ -166,9 +167,40 @@ def run_builder(scratch, output):
                    capture_output=True, text=True)
 
 
+def test_report_runtime_contract(tmp_path):
+    """Bind provenance and rebuild instructions to the running interpreter."""
+    build = builder()
+    version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    assert build.report_python() == version
+    page = build.render(tmp_path / "runtime")
+    assert f"uv run --python {version} --no-project" in page
+    assert build.source_register()["runtime"] == f"CPython {version}"
+
+
+@pytest.mark.parametrize("implementation, version", [
+    ("cpython", (3, 10)), ("cpython", (3, 13)), ("pypy", (3, 11)),
+])
+def test_unqualified_runtime_cannot_generate_artifacts(tmp_path, monkeypatch,
+                                                      implementation, version):
+    """Reject runtimes without goldens before creating scratch or delivery."""
+    build = builder()
+    monkeypatch.setattr(build, "sys", SimpleNamespace(
+        implementation=SimpleNamespace(name=implementation), version_info=version,
+    ))
+    monkeypatch.setattr(sys, "argv", [
+        str(SCRIPT), "--scratch", str(tmp_path / "scratch"),
+        "--output", str(tmp_path / "output"),
+    ])
+    with pytest.raises(RuntimeError, match="requires CPython 3.11 or 3.12"):
+        build.main()
+    assert not list(tmp_path.iterdir())
+
+
 def test_rebuild_is_deterministic(tmp_path):
-    """Catch timestamps, path leakage, stale delivery, and broken local links."""
+    """Compare exact builds and the qualified golden for this interpreter."""
     builder()
+    version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    golden = REPORT if version == "3.11" else REPORT / f"cpython-{version}"
     outputs = [tmp_path / "first", tmp_path / "second"]
     for index, output in enumerate(outputs):
         run_builder(tmp_path / f"scratch-{index}", output)
@@ -178,7 +210,7 @@ def test_rebuild_is_deterministic(tmp_path):
     for name in names:
         # No metadata is volatile; no content is stripped before comparison.
         assert (outputs[0] / name).read_bytes() == (outputs[1] / name).read_bytes()
-        assert (outputs[0] / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (outputs[0] / name).read_bytes() == (golden / name).read_bytes()
     page = (outputs[0] / "index.html").read_text()
     assert all(line == line.rstrip() for line in page.splitlines())
     parsed = ReportParser(page)

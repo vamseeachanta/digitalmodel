@@ -636,3 +636,12 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain only the additional runtime-qualified flexible-pipe goldens.
+!/docs/reports/modules/flexible_pipes/
+/docs/reports/modules/flexible_pipes/*
+!/docs/reports/modules/flexible_pipes/cpython-3.12/
+/docs/reports/modules/flexible_pipes/cpython-3.12/*
+!/docs/reports/modules/flexible_pipes/cpython-3.12/index.html
+!/docs/reports/modules/flexible_pipes/cpython-3.12/changes.json
+!/docs/reports/modules/flexible_pipes/cpython-3.12/source_register.json

@@ -1,0 +1,12 @@
+[
+  {
+    "revision": "A",
+    "date": "2026-10-28",
+    "change": "Synthetic full-wall geometry and mass are presented with an independent radius-based calculation, generated figures and explicit qualification limits."
+  },
+  {
+    "revision": "B",
+    "date": "2026-11-02",
+    "change": "CPython 3.11 and 3.12 rebuilds are bound to runtime-qualified goldens and explicit interpreter commands; numerical criteria and qualification limits are retained."
+  }
+]
