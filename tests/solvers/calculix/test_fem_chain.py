@@ -758,3 +758,23 @@ class TestFEMChain:
         assert "*HEADING" in content
         assert "*NODE" in content
         assert "TYPE=C3D4" in content
+
+
+@pytest.mark.skipif(not GMSH_AVAILABLE, reason="Requires gmsh")
+def test_plate_with_hole_exports_only_volume_elements(tmp_path):
+    """Regression #1675: gmsh boundary curves must not become unsectioned B31 beams."""
+    chain = FEMChain(work_dir=tmp_path)
+    chain.create_plate_with_hole(
+        plate_w=200.0, plate_h=200.0, hole_r=10.0,
+        thickness=1.0, element_size=20.0,
+    )
+    assert chain._elements
+    assert {data["dimension"] for data in chain._elements.values()} == {3}
+    inp_path = chain.setup_analysis(
+        material={"name": "STEEL", "E": 210000.0, "nu": 0.3},
+        loads=[{"type": "cload", "node_set": "LOAD", "dof": 1, "magnitude": 100.0}],
+        boundary_conditions=[{"node_set": "FIX", "dof_start": 1, "dof_end": 3}],
+    )
+    content = inp_path.read_text()
+    assert "TYPE=C3D4" in content
+    assert "TYPE=B31" not in content
