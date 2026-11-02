@@ -23,12 +23,16 @@ PYTHONPATH=src uv run --python 3.11 --no-project python docs/reports/modules/fle
 ```
 
 Repeat with distinct directories to compare `index.html`, `changes.json` and
-`source_register.json`. Builds from identical source bytes with the same Python
-runtime are byte-identical: no volatile metadata is removed. The committed
-goldens match Python 3.11. A local Python 3.12 rebuild changes the wall-area
-relative difference from `0.0e+00` to `1.5e-16`, within the `1e-12` arithmetic
-criterion, but fails the byte comparison. Cross-version byte identity has not
-been established.
+`source_register.json`. Published artifacts and committed goldens use CPython
+3.11. The generation command rejects other implementations or minor versions
+before creating scratch or output artifacts. The declared interpreter is part
+of the reproducibility contract: CPython 3.12 changes floating-point summation
+and can change the unrounded payload within the arithmetic criterion.
+
+Numerical oracle and exact repeated-render checks run on every supported test
+interpreter. The CLI test compares all three committed goldens byte for byte
+on CPython 3.11 and verifies rejection without output on other interpreters.
+Cross-version byte identity is not claimed.
 
 Rebuilding the committed goldens also requires LF source and golden bytes.
 The pinned paths currently have no explicit LF checkout attributes. Automatic

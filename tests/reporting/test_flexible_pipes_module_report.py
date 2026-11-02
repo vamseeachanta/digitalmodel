@@ -10,6 +10,7 @@ import importlib.util
 import json
 import math
 import os
+import platform
 from pathlib import Path
 import re
 import subprocess
@@ -155,20 +156,29 @@ def test_report_values_have_independent_oracle(tmp_path):
         assert float(circle["r"]) / float(circle["data-scale"]) == pytest.approx(radius, rel=RELATIVE_TOLERANCE)
 
 
-def run_builder(scratch, output):
+def run_builder(scratch, output, *, check=True):
     env = os.environ.copy()
     env["PYTHONPATH"] = str(ROOT / "src")
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
         env.pop(key, None)
-    subprocess.run([sys.executable, str(SCRIPT), "--scratch", str(scratch),
-                    "--output", str(output)], cwd=ROOT, env=env, check=True,
+    return subprocess.run([sys.executable, str(SCRIPT), "--scratch", str(scratch),
+                    "--output", str(output)], cwd=ROOT, env=env, check=check,
                    capture_output=True, text=True)
 
 
-def test_rebuild_is_deterministic(tmp_path):
-    """Catch timestamps, path leakage, stale delivery, and broken local links."""
+def test_golden_delivery_requires_declared_runtime(tmp_path):
+    """Check exact goldens on their runtime and reject unsupported generation."""
     builder()
+    if (platform.python_implementation(), sys.version_info[:2]) != ("CPython", (3, 11)):
+        output = tmp_path / "unsupported-output"
+        scratch = tmp_path / "unsupported-scratch"
+        result = run_builder(scratch, output, check=False)
+        assert result.returncode != 0
+        assert "Report generation requires CPython 3.11" in result.stderr
+        assert not scratch.exists()
+        assert not output.exists()
+        return
     outputs = [tmp_path / "first", tmp_path / "second"]
     for index, output in enumerate(outputs):
         run_builder(tmp_path / f"scratch-{index}", output)
@@ -238,3 +248,40 @@ def test_local_readme_links_resolve():
     for target in re.findall(r"\]\(([^)]+)\)", (REPORT / "README.md").read_text()):
         if not urlsplit(target).scheme:
             assert (REPORT / target).is_file(), target
+
+
+def test_same_runtime_render_is_byte_identical(tmp_path):
+    """Retain exact renderer comparisons on every supported test interpreter."""
+    build = builder()
+    first = build.render(tmp_path / "same-runtime-first").encode("utf-8")
+    second = build.render(tmp_path / "same-runtime-second").encode("utf-8")
+    assert first == second
+    assert (tmp_path / "same-runtime-first/calculation.json").read_bytes() == (
+        tmp_path / "same-runtime-second/calculation.json"
+    ).read_bytes()
+
+
+@pytest.mark.parametrize("implementation, version, accepted", [
+    ("CPython", (3, 11), True),
+    ("CPython", (3, 12), False),
+    ("CPython", (3, 13), False),
+    ("PyPy", (3, 11), False),
+])
+def test_declared_generation_runtime(implementation, version, accepted, monkeypatch):
+    """The golden runtime contract includes implementation and minor version."""
+    build = builder()
+    monkeypatch.setattr(build.platform, "python_implementation", lambda: implementation)
+    monkeypatch.setattr(build.sys, "version_info", version)
+    if accepted:
+        build.require_generation_runtime()
+    else:
+        with pytest.raises(RuntimeError, match="Report generation requires CPython 3.11"):
+            build.require_generation_runtime()
+
+
+def test_published_rebuild_command_declares_runtime(tmp_path):
+    """Both entry points must select the interpreter that owns the goldens."""
+    build = builder()
+    command = "uv run --python 3.11 --no-project python"
+    assert command in build.render(tmp_path / "runtime-command")
+    assert command in (REPORT / "README.md").read_text()

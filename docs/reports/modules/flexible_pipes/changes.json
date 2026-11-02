@@ -3,5 +3,10 @@
     "revision": "A",
     "date": "2026-10-28",
     "change": "Synthetic full-wall geometry and mass are presented with an independent radius-based calculation, generated figures and explicit qualification limits."
+  },
+  {
+    "revision": "B",
+    "date": "2026-11-02",
+    "change": "Report generation is bound to CPython 3.11 so exact golden comparisons use the declared arithmetic runtime."
   }
 ]

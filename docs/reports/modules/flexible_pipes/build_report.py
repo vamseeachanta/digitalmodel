@@ -8,8 +8,10 @@ import hashlib
 from html import escape
 import json
 from pathlib import Path
+import platform
 import re
 import runpy
+import sys
 
 ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = "examples/domains/subsea/flexible_pipe_geometry.py"
@@ -20,6 +22,9 @@ RELATIVE_TOLERANCE = 1e-12
 CHANGES = [{
     "revision": "A", "date": "2026-10-28",
     "change": "Synthetic full-wall geometry and mass are presented with an independent radius-based calculation, generated figures and explicit qualification limits.",
+}, {
+    "revision": "B", "date": "2026-11-02",
+    "change": "Report generation is bound to CPython 3.11 so exact golden comparisons use the declared arithmetic runtime.",
 }]
 SOURCE_PATHS = {
     "G": (NOTE, "Synthetic inputs, circle geometry and independent hand calculation"),
@@ -33,6 +38,12 @@ SOURCE_PATHS = {
     "P": ("docs/api/_assets/brand.css", "Existing palette only"),
     "R": ("docs/reports/modules/flexible_pipes/build_report.py", "Report generation and comparison criterion"),
 }
+
+
+def require_generation_runtime():
+    """Bind published artifacts to the interpreter used for committed goldens."""
+    if platform.python_implementation() != "CPython" or sys.version_info[:2] != (3, 11):
+        raise RuntimeError("Report generation requires CPython 3.11; use uv run --python 3.11 --no-project python")
 
 
 def refresh_checks(data):
@@ -245,8 +256,8 @@ Stiffness estimates and structural screening interfaces are not qualified by a m
 Source SHA-256 digests identify the exact bytes consumed. No timestamps or scratch/output paths are embedded; no metadata is removed for the deterministic comparison.</p>
 <ul>{sources}</ul><p><a href="source_register.json">Machine-readable source register</a> · <a href="changes.json">Change record</a></p>
 <p>From the repository root, with externally supplied scratch and output directories:</p>
-<pre>PYTHONPATH=src uv run --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"</pre>
-<p>The output directory receives the report, source register and change record. Calculation intermediates remain in scratch.
+<pre>PYTHONPATH=src uv run --python 3.11 --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"</pre>
+<p>Generation requires CPython 3.11 and rejects other runtimes before writing artifacts. The output directory receives the report, source register and change record. Calculation intermediates remain in scratch.
 The local README documents rebuilding and delivery. Tests always use separate external directories.</p>
 <h2 id="s10">10. Way forward</h2>
 <p>The synthetic geometry and mass comparison can support software regression for this case. Before applying the methods to a manufactured pipe,
@@ -264,6 +275,10 @@ def main():
     parser.add_argument("--scratch", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    try:
+        require_generation_runtime()
+    except RuntimeError as error:
+        parser.error(str(error))
     page = render(args.scratch)
     args.output.mkdir(parents=True, exist_ok=True)
     for name, content in {
