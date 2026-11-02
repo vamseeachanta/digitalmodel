@@ -1,0 +1,148 @@
+{
+  "report": "fatigue-applications",
+  "revision": "00",
+  "sources": [
+    {
+      "id": "source-hand",
+      "locator": "Module docstring and uniform-bar tests",
+      "path": "tests/structural/fatigue_apps/test_tension_stress_conversion_hand_calcs.py",
+      "sha256": "8d42f963d526c4034cfb02f237d820821f2fd4e437753cc3b72d49838398d1ea",
+      "title": "Independent uniform-bar derivation",
+      "use": "independent synthetic derivation"
+    },
+    {
+      "id": "source-offline",
+      "locator": "TensionStressConverter: constructor, lookup loading, interpolation and conversion",
+      "path": "src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py",
+      "sha256": "5fb3fa666ec9d18ca6e04a6895763eac26a5e08649a695c531f6fc218a73e2b5",
+      "title": "Offline converter",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-exports",
+      "locator": "__all__",
+      "path": "src/digitalmodel/structural/fatigue_apps/__init__.py",
+      "sha256": "baecc04798804977f76f37aa7e860c885954b917e6d9f7b584bdda49033cd4f2",
+      "title": "Package public exports",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-scaling",
+      "locator": "LoadScalingProcessor: reference selection, scaling limits, superposition",
+      "path": "src/digitalmodel/structural/fatigue_apps/load_scaling.py",
+      "sha256": "3cca32386f507af59bc66fc72d496d4d60a76d46af31d8537d70c7419e3fa1a4",
+      "title": "Load scaling",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-processor",
+      "locator": "TensionToStressConverter; process_fatigue_condition; process_configuration",
+      "path": "src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py",
+      "sha256": "f8f86917da8b2967816ba6a160c5227d4b8cbf127883296cfd0685968dc9aab1",
+      "title": "Reference-sea-state processing",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-counter",
+      "locator": "RainflowCounter.count_cycles; _rainflow_algorithm",
+      "path": "src/digitalmodel/structural/fatigue_apps/rainflow_counter.py",
+      "sha256": "e2a38124bb7c294b8110425cb9852411931766dbf50e9219d08f2787da4cdad7",
+      "title": "Exported counter",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-counting",
+      "locator": "RainflowCounter.process_batch: unconditional refusal",
+      "path": "src/digitalmodel/structural/fatigue_apps/rainflow_counting.py",
+      "sha256": "1477ee172c751379f3edb165edd66e169985bf7c883e9b17760c6348297356c8",
+      "title": "Alternate counter and damage handoff",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-contract",
+      "locator": "refuse_damage_calculation; fapps_counting and fapps_counter registry entries",
+      "path": "src/digitalmodel/fatigue/counting_contract.py",
+      "sha256": "2d450f2e8e13564aee8e64ce5d92f8f83a5383b65136b3beec4e54ef4875dbbf",
+      "title": "Counting contract",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-damage",
+      "locator": "SNCurveParameters.threshold; cycles_to_failure; calculate_damage; calculate_fatigue_life",
+      "path": "src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py",
+      "sha256": "cf09a09321afcc4fb4998976a466e3978effe68bac92890749d1d56b8219b73e",
+      "title": "Exported damage calculation",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-alternate",
+      "locator": "SNCurve; FatigueDamageCalculator",
+      "path": "src/digitalmodel/structural/fatigue_apps/fatigue_damage.py",
+      "sha256": "d71327b871f7258f108bbe9f1b14e440317248f619542cc1cf9342b407838a6d",
+      "title": "Alternate damage calculation",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-validation",
+      "locator": "FatigueValidator.validate_all",
+      "path": "src/digitalmodel/structural/fatigue_apps/fatigue_validation/validator.py",
+      "sha256": "977e2d83c551cdfd8d43baf7baa451c3dfe66c4b4d37894eecb8b56c9c57c04e",
+      "title": "Validation placeholder",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-example",
+      "locator": "LoadScalingProcessor.process_fatigue_condition; unchanged",
+      "path": "src/digitalmodel/structural/fatigue_apps/examples/load_scaling_runner.py",
+      "sha256": "e36d494dc513c041f0b68eccf65b03677a25330e0172edc0189cb3bd2cfb5a10",
+      "title": "Existing standalone example",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-pack",
+      "locator": "Purpose, methods, known failure modes; historical evidence, not a current execution record",
+      "path": "src/digitalmodel/structural/fatigue_apps/docs/agent-pack.md",
+      "sha256": "2893394a63f7fbf3519872681cbeafa98ed37363a86f8258d78653244e4a3aab",
+      "title": "Knowledge pack",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-scaling-test",
+      "locator": "Import of absent LoadScaler; explicit collection fails",
+      "path": "tests/structural/fatigue_apps/test_load_scaling.py",
+      "sha256": "eaa9db228f0595a0adb7949287f2f719dcf7fae5f9f05a8db0d5f6a495cfb7bf",
+      "title": "Baseline scaling suite",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-report-test",
+      "locator": "Independent Decimal oracle, mutation, parsed HTML, scratch paths and deterministic rebuild",
+      "path": "tests/structural/fatigue_apps/test_module_report.py",
+      "sha256": "c6853505a77a76bf3919a18a023fe327b8c6237a2072d8d8875ac8bf955de20f",
+      "title": "Report acceptance checks",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-layout",
+      "locator": "Embedded house stylesheet",
+      "path": "docs/reports/pipeline-ffs-assessment.html",
+      "sha256": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f",
+      "title": "Report layout exemplar",
+      "use": "implementation evidence"
+    },
+    {
+      "id": "source-prefixes",
+      "locator": "Prefixes table: kilo, mega and milli",
+      "title": "NIST Metric (SI) Prefixes",
+      "url": "https://www.nist.gov/pml/owm/metric-si-prefixes",
+      "use": "Exact unit factors; no engineering calibration"
+    },
+    {
+      "id": "source-roundoff",
+      "locator": "sys.float_info.epsilon; gamma bound derived in report acceptance tests",
+      "title": "Python system floating-point information",
+      "url": "https://docs.python.org/3/library/sys.html#sys.float_info",
+      "use": "Floating-point roundoff only"
+    }
+  ]
+}
