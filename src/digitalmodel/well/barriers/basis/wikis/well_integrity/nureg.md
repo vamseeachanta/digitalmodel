@@ -1,6 +1,6 @@
 ---
 code_id: NUREG-0492
-publisher: US NRC
+publisher: Nuclear Regulatory Commission
 revision: 1981
 ---
 

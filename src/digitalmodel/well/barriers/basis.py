@@ -24,7 +24,7 @@ def citation(source: str) -> Citation:
                 "section 4.4.1, printed page 99",
                 "https://pds-forum.com/wp-content/uploads/2023/01/"
                 "PDS-Data-Handbook-2021-example-pages-reduced-2023-01-26.pdf"),
-        "nureg": ("NUREG-0492", "US NRC", "1981",
+        "nureg": ("NUREG-0492", "Nuclear Regulatory Commission", "1981",
                   "chapter VII; chapter XI pages 12-13 and equation XI-24",
                   "https://www.nrc.gov/regulations-legislation/nureg-series-"
                   "publications/publications-prepared-by-nrc-staff/sr0492"),
