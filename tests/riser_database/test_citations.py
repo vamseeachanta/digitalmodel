@@ -14,6 +14,7 @@ consumer helper degrades.
 from __future__ import annotations
 
 import os
+import shutil
 import time
 import warnings
 from pathlib import Path
@@ -279,3 +280,131 @@ def test_helper_returns_cited_values_in_context():
     assert cited["f_wt"].value == 1.05
     assert cited["f_bt"].value == 0.96
     assert cited["von_mises_df"].value == 0.67
+
+
+def test_helper_rejects_stale_configured_wiki(tmp_path, monkeypatch):
+    """Issue 2166: stale metadata shall raise, rather than remove citations.
+
+    The frontmatter-only fixture supplies identity metadata, not engineering
+    values. Replacing its revision with a synthetic sentinel independently
+    establishes the expected mismatch; no calculation is performed.
+    """
+    root = shutil.copytree(_fixture_repo_root(), tmp_path / "wiki")
+    page = (
+        root / "knowledge" / "wikis" / "engineering-standards" / "wiki"
+        / "standards" / "dnv-rp-c203.md"
+    )
+    metadata = page.read_text(encoding="utf-8")
+    metadata = metadata.replace('revision: "2021"', 'revision: "stale-test-revision"')
+    page.write_text(metadata, encoding="utf-8")
+    monkeypatch.setenv("LLM_WIKI_PATH", str(root))
+
+    with pytest.raises(CitationResolutionError) as exc:
+        getters.riser_citations()
+
+    assert exc.value.code_id == "dnv-rp-c203"
+    assert exc.value.reason.startswith("frontmatter_mismatch:revision:")
+
+
+@pytest.mark.parametrize("route", ["explicit", "environment"])
+@pytest.mark.parametrize(
+    "code_id", ["dnv-os-f201", "dnv-rp-c203", "api-rp-16q", "api-std-2rd"]
+)
+@pytest.mark.parametrize(
+    "failure", ["page_missing", "frontmatter_missing", "frontmatter_mismatch"]
+)
+def test_helper_preserves_configured_page_errors(
+    tmp_path, monkeypatch, route, code_id, failure
+):
+    """The schema contract rejects missing pages and invalid identity metadata.
+
+    Identity fields come from the frontmatter-only citation fixtures, whose
+    provenance is recorded in FIXTURE_PROVENANCE.md. Missing pages and synthetic
+    revisions independently establish the expected errors; no licensed value
+    or engineering calculation is used.
+    """
+    filename = f"{code_id}.md"
+    ignore = shutil.ignore_patterns(filename) if failure == "page_missing" else None
+    root = shutil.copytree(_fixture_repo_root(), tmp_path / "wiki", ignore=ignore)
+    page = (
+        root / "knowledge" / "wikis" / "engineering-standards" / "wiki"
+        / "standards" / filename
+    )
+    if failure == "frontmatter_missing":
+        page.write_text("Synthetic page without frontmatter.\n", encoding="utf-8")
+    elif failure == "frontmatter_mismatch":
+        lines = page.read_text(encoding="utf-8").splitlines()
+        page.write_text(
+            "\n".join(
+                "revision: stale-test-revision" if line.startswith("revision:") else line
+                for line in lines
+            ) + "\n",
+            encoding="utf-8",
+        )
+    repo_root = root if route == "explicit" else None
+    if route == "environment":
+        monkeypatch.setenv("LLM_WIKI_PATH", str(root))
+
+    with pytest.raises(CitationResolutionError) as exc:
+        getters.riser_citations(repo_root=repo_root)
+
+    assert exc.value.code_id == code_id
+    assert exc.value.wiki_path.endswith(filename)
+    assert exc.value.reason.startswith(failure)
+
+
+@pytest.mark.parametrize("route", ["explicit", "LLM_WIKI_PATH", "DIGITALMODEL_REPO_ROOT"])
+@pytest.mark.parametrize("root_kind", ["missing", "empty", "file"])
+def test_helper_rejects_invalid_configured_root(tmp_path, monkeypatch, route, root_kind):
+    """An explicit configuration is not standalone discovery, even if invalid.
+
+    Synthetic absent, empty and non-directory roots contain no source data;
+    rejection follows the resolver and schema configuration contracts.
+    """
+    root = tmp_path / "invalid-wiki"
+    if root_kind == "empty":
+        root.mkdir()
+    elif root_kind == "file":
+        root.write_text("Synthetic non-directory root.\n", encoding="utf-8")
+    repo_root = root if route == "explicit" else None
+    if route != "explicit":
+        monkeypatch.setenv(route, str(root))
+    # A valid lower-priority clone must not hide an invalid configuration.
+    from digitalmodel.citations import resolver
+
+    monkeypatch.setattr(resolver, "_KNOWN_LOCAL_CLONES", (_fixture_repo_root(),))
+
+    with pytest.raises(CitationResolutionError) as exc:
+        getters.riser_citations(repo_root=repo_root)
+
+    assert not exc.value.reason.startswith("resolver_unconfigured:")
+
+
+def test_standalone_warning_does_not_mask_later_configuration(
+    _no_wiki_anywhere, tmp_path, monkeypatch
+):
+    """A warned standalone caller shall recover and still reject stale metadata.
+
+    The expected complete bundle comes from the documented public wrapper
+    contract. A synthetic revision then invalidates that bundle independently
+    of the warning state. No engineering value is asserted.
+    """
+    with pytest.warns(RuntimeWarning, match="standalone mode"):
+        assert getters.riser_citations() == {}
+    root = shutil.copytree(_fixture_repo_root(), tmp_path / "wiki")
+    monkeypatch.setenv("LLM_WIKI_PATH", str(root))
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", RuntimeWarning)
+        cited = getters.riser_citations()
+        assert set(cited) == {"dff", "scf", "f_wt", "f_bt", "von_mises_df"}
+        # This fixture uses the overlay layout, matching the resolver contract.
+        page = root / "knowledge" / cited["von_mises_df"].citation.wiki_path
+        text = page.read_text(encoding="utf-8")
+        text = text.replace('revision: "2e-2013"', 'revision: "stale-test-revision"')
+        page.write_text(text, encoding="utf-8")
+        with pytest.raises(CitationResolutionError) as exc:
+            getters.riser_citations()
+
+    assert exc.value.code_id == "api-std-2rd"
+    assert exc.value.reason.startswith("frontmatter_mismatch:revision:")
