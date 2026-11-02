@@ -76,6 +76,13 @@
   .countdown .cap{color:var(--muted)}
   .lead-explain{font-size:13px; color:var(--muted); align-self:center; max-width:34ch}
   .lead-explain b{color:var(--ink); font-weight:640}
+  /* Small-screen status requirement: at <=560 CSS px, stack all three fields
+     with an 8 px gap and left alignment; let the explanation use the full width. */
+  @media (max-width:560px){
+    .status{grid-template-columns:1fr; gap:8px}
+    .countdown{text-align:left}
+    .lead-explain{max-width:none}
+  }
 
   .panel{padding:8px 14px 6px}
   .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:3px}
@@ -447,19 +454,29 @@ function computeVerdict(){
 /* ---------- render ---------- */
 const el=id=>document.getElementById(id);
 
-/* size the three trace canvases to the available viewport so the whole console
-   (status + 3 traces + decision strip + transport) fits on one screen.
-   Chrome height is MEASURED at runtime (not guessed) so it self-corrects on any
-   viewport; must run after at least one render() so the canvases have real heights. */
+/* Trace sizing requirement for this demonstration (application layout choices,
+   not engineering coefficients or a validated readability threshold):
+   - At <=860 CSS px, the controls stack above the charts and the page scrolls.
+     Each trace shall have at least 100 CSS px; the motion trace gets more space.
+     The chosen 420 px budget and 30/40/30 split give 420 x 0.30 = 126 px,
+     420 x 0.40 = 168 px, and 420 - 126 - 168 = 126 px, each above 100 px.
+   - Desktop fitting is retained. Fresh-load baseline 05067ed1 at 1440 x 900,
+     headless Chromium, light theme, scale 1 and network fonts blocked: each
+     trace is 864 px wide; wave/motion/governing heights are 100/133/99 px.
+   Desktop chrome height is measured after render() establishes canvas heights. */
 function sizePanels(){
   const traces=[el("cvWave"),el("cvMotion"),el("cvGov")];
   const curTrace=traces.reduce((s,c)=>s+c.getBoundingClientRect().height,0);
   const tp=document.querySelector(".transport");
   if(!curTrace||!tp) return;
-  // everything above + between + below the three traces (hero, status, heads, strip, transport)
-  const nonTrace=tp.getBoundingClientRect().bottom - curTrace;
-  let avail=window.innerHeight - nonTrace - 10;           // 10px breathing room
-  avail=Math.max(150, Math.min(avail, 560));              // total height shared by the 3 trace canvases
+  // Stacked controls scroll above the traces; preserve a readable trace height.
+  let avail=420;
+  if(!window.matchMedia('(max-width: 860px)').matches){
+    // everything above + between + below the three traces (hero, status, heads, strip, transport)
+    const nonTrace=tp.getBoundingClientRect().bottom - curTrace;
+    avail=window.innerHeight - nonTrace - 10;             // 10px breathing room
+    avail=Math.max(150, Math.min(avail, 560));            // total height shared by the 3 trace canvases
+  }
   const wave=Math.round(avail*0.30), motion=Math.round(avail*0.40), gov=avail-wave-motion;
   el("cvWave").setAttribute("height", wave);
   el("cvMotion").setAttribute("height", motion);
