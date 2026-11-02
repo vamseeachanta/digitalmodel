@@ -30,6 +30,6 @@
     {"id": "B", "path": "docs/reports/modules/planing_hull/build_report.py", "locator": "calculate; validate; force_figure; render; build", "use": "All displayed results, comparisons and figure coordinates."},
     {"id": "L", "path": "docs/api/cfd/turbulent-flat-plate-verification.html", "locator": "first style block", "use": "Existing layout only; no numerical answers reused."},
     {"id": "C", "path": "docs/api/_assets/brand.css", "locator": "canonical palette", "use": "Inlined existing asset; no shared style edits."},
-    {"id": "E", "path": "scripts/reports/build_vessel_seakeeping_module_report.py", "locator": "render and change panel", "use": "House-style structure and local comment export pattern only."}
+    {"id": "E", "path": "scripts/reports/build_vessel_seakeeping_module_report.py", "locator": "render and change panel", "citation_only": true, "use": "Historical house-style structure and local comment export pattern; this file is not read or executed by the builder and is not a rebuild dependency."}
   ]
 }

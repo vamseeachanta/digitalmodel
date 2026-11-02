@@ -8,5 +8,10 @@
     "change": "Numerical dependencies are declared in the isolated rebuild and test commands, and the pressure projection is corrected to the horizontal plane to make the calculation reproducible and its force direction explicit.",
     "date": "2026-10-28",
     "revision": "B"
+  },
+  {
+    "change": "The historical style example remains cited without acting as a rebuild dependency; consumed calculation, test, documentation and style sources remain digest-bound so unrelated example edits cannot stale the delivered report.",
+    "date": "2026-11-02",
+    "revision": "C"
   }
 ]

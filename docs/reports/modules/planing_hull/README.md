@@ -22,7 +22,10 @@ overlap. For an intentional report refresh, select this report folder as
 No volatile metadata is generated. Reproducibility compares complete UTF-8
 bytes, without removing timestamps, paths or other fields. Source digests in the
 embedded calculation bind the report to the inspected implementation, test,
-register, local documentation and assets. Any source change requires a rebuild.
+register, local documentation and assets. Any consumed source change requires a
+rebuild. The historical style example remains cited in the register, marked
+`citation_only`; its bytes are not read or executed by the builder and do not
+affect the generated output.
 The local source/register files remain in place; an external preview can be read
 standalone, while repository links resolve in the delivered repository folder.
 

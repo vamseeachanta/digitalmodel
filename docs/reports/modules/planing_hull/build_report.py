@@ -18,6 +18,9 @@ CHANGES = [{
 }, {
     "revision": "B", "date": "2026-10-28",
     "change": "Numerical dependencies are declared in the isolated rebuild and test commands, and the pressure projection is corrected to the horizontal plane to make the calculation reproducible and its force direction explicit.",
+}, {
+    "revision": "C", "date": "2026-11-02",
+    "change": "The historical style example remains cited without acting as a rebuild dependency; consumed calculation, test, documentation and style sources remain digest-bound so unrelated example edits cannot stale the delivered report.",
 }]
 # H: REL_TOL rationale in the existing independent hydrostatics test note.
 REL_TOL = 64 * math.ulp(1.0)
@@ -50,7 +53,8 @@ def hand_values(depth, density, gravity):
 
 def source_digests(register):
     """Pin all calculation, inspection, layout and local delivery sources."""
-    paths = {item["path"] for item in register["sources"] if "path" in item}
+    paths = {item["path"] for item in register["sources"]
+             if "path" in item and not item.get("citation_only", False)}
     paths.update(path.relative_to(ROOT).as_posix() for path in (REGISTER, HERE / "README.md"))
     return {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
             for path in sorted(paths)}

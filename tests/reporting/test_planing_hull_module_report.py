@@ -311,3 +311,55 @@ def test_pressure_integral_uses_horizontal_projection(tmp_path):
     assert "horizontal projection of both straight sides" in html
     assert "dFz = p cos(beta) ds = p dx" in html
     assert "vertical projection of both straight sides" not in html
+
+
+def test_report_sources_are_includable_without_retaining_scratch():
+    delivered = [path.relative_to(ROOT).as_posix() for path in (
+        REPORT / "README.md", SCRIPT, REPORT / "changes.json",
+        REPORT / "index.html", REPORT / "source_register.json",
+    )]
+    controls = ["docs/reports/modules/planing_hull/calculation.json",
+                "docs/reports/modules/planing_hull/unlisted.html",
+                "docs/reports/modules/unlisted_module/index.html"]
+    env = {key: value for key, value in os.environ.items()
+           if not key.startswith("GIT_")}
+    env["GIT_CONFIG_GLOBAL"] = os.devnull
+    env["GIT_CONFIG_NOSYSTEM"] = "1"
+    result = subprocess.run(
+        ["git", "-c", f"core.excludesFile={os.devnull}", "check-ignore",
+         "--no-index", "-z", "--stdin"], cwd=ROOT, env=env,
+        input="\0".join(delivered + controls) + "\0", text=True,
+        capture_output=True, check=False,
+    )
+    assert result.returncode in (0, 1), result.stderr
+    assert set(filter(None, result.stdout.split("\0"))) == set(controls)
+
+
+def test_historical_reference_is_not_a_rebuild_dependency(tmp_path, monkeypatch):
+    build = builder()
+    register = json.loads((REPORT / "source_register.json").read_text())
+    root = tmp_path / "checkout"
+    paths = {source["path"] for source in register["sources"] if "path" in source}
+    paths.update(path.relative_to(ROOT).as_posix() for path in (
+        REPORT / "source_register.json", REPORT / "README.md",
+    ))
+    for name in paths:
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / name).read_bytes())
+    monkeypatch.setattr(build, "ROOT", root)
+    monkeypatch.setattr(build, "HERE", root / REPORT.relative_to(ROOT))
+    monkeypatch.setattr(build, "REGISTER", build.HERE / "source_register.json")
+    before = build.source_digests(register)
+    reference = next(source for source in register["sources"] if source["id"] == "E")
+    (root / reference["path"]).write_bytes(b"# Changed historical example\n")
+    assert build.source_digests(register) == before
+    assert reference["path"] not in before
+    # Consumed calculation and style sources must still invalidate their digests.
+    for source_id in ("M", "L", "C"):
+        source = next(source for source in register["sources"] if source["id"] == source_id)
+        target = root / source["path"]
+        target.write_bytes(target.read_bytes() + b"\n")
+        after = build.source_digests(register)
+        assert after[source["path"]] != before[source["path"]]
+        before = after
