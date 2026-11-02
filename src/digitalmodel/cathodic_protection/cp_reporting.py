@@ -136,6 +136,9 @@ def compliance_check_potential(
         -0.850 V vs CSE is converted using the cited shared utility.
     reference_electrode : str
         Electrode used for the measurement (25 deg C; electrolyte explicit).
+        Must be a known electrode when ``criterion_V`` is omitted; with an
+        explicit criterion no conversion is made and a free-text label such as
+        "Ag/AgCl" is kept as given.
     tolerance_V : float
         Tolerance band for marginal classification [V].
 
@@ -144,13 +147,19 @@ def compliance_check_potential(
     ComplianceCheck
         Compliance check result.
     """
-    electrode = ReferenceElectrode(reference_electrode)
-    reference_electrode = electrode.value
-    criterion_V = convert_potential(
-        -0.850 if criterion_V is None else criterion_V,
-        "CSE" if criterion_V is None else electrode, electrode,
-        zinc_potential_she_V=zinc_potential_she_V,
-    )
+    if criterion_V is None:
+        electrode = ReferenceElectrode(reference_electrode)
+        reference_electrode = electrode.value
+        criterion_V = round(convert_potential(
+            -0.850, "CSE", electrode, zinc_potential_she_V=zinc_potential_she_V,
+        ), 6)
+    else:
+        try:
+            reference_electrode = ReferenceElectrode(reference_electrode).value
+        except ValueError:
+            pass  # explicit criterion: keep the caller's label, no conversion
+        if not math.isfinite(criterion_V):
+            raise ValueError("criterion_V must be finite volts")
     if not math.isfinite(measured_potential_V):
         raise ValueError("measured potential must be finite volts")
     if not math.isfinite(tolerance_V) or tolerance_V < 0:

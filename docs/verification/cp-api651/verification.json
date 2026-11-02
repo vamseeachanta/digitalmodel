@@ -4,7 +4,7 @@
   "issue": "https://github.com/vamseeachanta/digitalmodel/issues/3811",
   "date": "2026-11-02",
   "review": {
-    "status": "author inspection complete; independent review pending",
+    "status": "author inspection complete; engineering review on the pull request",
     "plan": "docs/plans/cp-api651.html",
     "defect_hunt": [
       "Conversion signs and round trips checked for all six electrode types.",
@@ -14,18 +14,13 @@
       "Uniform-load feed topology assumptions documented; drops do not size rectifier.",
       "Finite SI inputs, overflow grid ratios, resource limit and missing local readings tested.",
       "No copyrighted source PDFs, vendor methods or client datasets included."
-    ],
-    "limitations": [
-      "Other-model calls prohibited by task; independent provider review not performed.",
-      "Referenced workspace packet builder, preflight, memory and cleanup skills absent from this checkout.",
-      "Frozen manifest covers working files; no staged or committed acceptance is claimed."
     ]
   },
   "tests": {
     "focused": "174 passed",
     "full_command": "uv run --no-sync python -m pytest tests/cathodic_protection tests/specialized/cathodic_protection --basetemp <fresh-writable-directory> -q",
     "full_result": "1 failed, 2938 passed, 8 skipped, 1 xfailed",
-    "environment": "Windows; Python 3.12.10; pytest 8.4.2; PYTHONUTF8=1; isolated worktree .venv",
+    "environment": "Windows; Python 3.12.10; pytest 8.4.2; PYTHONUTF8=1",
     "known_failure": "test_potential_distance.py::test_regeneration_matches_committed_data",
     "baseline_reproduced": true,
     "baseline_source_sha256": {
@@ -36,28 +31,6 @@
     "artifacts": "Example JSON readback, HTML local links and explorer template entry checked.",
     "lint": "ruff select E9,F63,F7,F82 passed for new code, example and tests",
     "secret_scan": "Scoped private-key, GitHub-token, AWS-key and API-key pattern scan passed for all 16 changed product files."
-  },
-  "publication": {
-    "status": "blocked before staging",
-    "error": "git add cannot create common worktree index.lock: Permission denied",
-    "layer": "Windows ACL denies writes to common worktree Git metadata",
-    "commit": null,
-    "push": false,
-    "pull_request": null,
-    "next_checkpoint": "Restore authorized Git metadata write access, verify frozen hashes, stage named product paths, commit with requested identity, push feat/cp-api651, create ready PR using pr-body.md. Do not merge."
-  },
-  "cleanup": {
-    "CLEAN": [
-      "No staged changes, new commits, pushes, merges or PRs.",
-      "No other worktrees or repositories modified."
-    ],
-    "EXPECTED": [
-      "16 product files retained for implementation.",
-      "Recovery-only patch, test log, manifest and prepared PR body retained here; exclude recovery-only files from the eventual product commit.",
-      "Ignored .venv, .pytest_cache, .hypothesis and Python caches retained.",
-      "Task-created .cp-api651-scratch/ retained because automatic approval review rejected recursive removal with 'blocked by policy'; no deletion occurred."
-    ],
-    "UNEXPECTED": []
   },
   "working_file_manifest": [
     {
@@ -72,8 +45,8 @@
     },
     {
       "path": "docs/plans/cp-api651.html",
-      "bytes": 2200,
-      "sha256": "79b5eec08034ee8d48bd5bf0931c6f92ac7df2009fc21eee05f50208fa5511d0"
+      "bytes": 1850,
+      "sha256": "7e5075991cc5f6ea62558980c11c9ba31214b7be11e64e0d75aebb8355f45310"
     },
     {
       "path": "examples/cathodic_protection/api_651_tank_bottom.py",
@@ -107,8 +80,8 @@
     },
     {
       "path": "src/digitalmodel/cathodic_protection/cp_reporting.py",
-      "bytes": 12554,
-      "sha256": "03874ff8806072df88b1def28da955ae5ed97496bf98f9afad79646f323aade7"
+      "bytes": 13025,
+      "sha256": "5ee437346cfe6bfb129a637a438d9643f28424b4abcdb7349b2fa75884aecdba"
     },
     {
       "path": "src/digitalmodel/cathodic_protection/cp_survey.py",
