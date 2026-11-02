@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Level-2 FAD assessment of crack-like flaws: the repo's single BS 7910
 # ABOUTME: Option 1 curve, the API 579 Level 2 (Level 2A) curve, Kr-Lr vs envelope.
 """Crack-like flaw assessment on the Failure Assessment Diagram (#1270).
@@ -50,6 +53,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from typing import Optional
+
+from digitalmodel.asset_integrity._validation import finite_number
 
 
 # ---------------------------------------------------------------------------
@@ -259,6 +264,18 @@ def assess_crack_like_flaw(
     the Annex J lower-bound fallback.  The governing (max) K of the deepest
     and surface points is used.
     """
+    for name, value in (("a_mm", a_mm), ("c_mm", c_mm), ("t_mm", t_mm),
+                        ("sigma_y_mpa", sigma_y_mpa), ("sigma_u_mpa", sigma_u_mpa),
+                        ("e_mpa", e_mpa), ("width_mm", width_mm)):
+        finite_number(value, name)
+    for name, value in (("sigma_m_mpa", sigma_m_mpa), ("sigma_b_mpa", sigma_b_mpa)):
+        finite_number(value, name, positive=False)
+    if sigma_m_mpa + sigma_b_mpa <= 0:
+        raise ValueError("A positive tensile membrane or bending load is required")
+    if sigma_u_mpa <= sigma_y_mpa:
+        raise ValueError("Material domain requires sigma_u_mpa > sigma_y_mpa")
+    if cvn_joules is not None:
+        finite_number(cvn_joules, "cvn_joules")
     notes: list = []
     if k_mat is None:
         if cvn_joules is None:
@@ -269,6 +286,7 @@ def assess_crack_like_flaw(
             "(BS 7910 Annex J lower bound)."
         )
 
+    finite_number(k_mat, "k_mat")
     k_deep = newman_raju_k(a_mm, c_mm, t_mm, sigma_m_mpa, sigma_b_mpa,
                            width_mm=width_mm, phi_deg=90.0)
     k_surf = newman_raju_k(a_mm, c_mm, t_mm, sigma_m_mpa, sigma_b_mpa,
@@ -283,6 +301,9 @@ def assess_crack_like_flaw(
     kr = k_applied / k_mat
     cutoff = lr_max(sigma_y_mpa, sigma_u_mpa)
     f_lr = fad_curve_option1(lr, sigma_y_mpa, sigma_u_mpa, e_mpa)
+    # FAD criterion: within both the plastic-collapse cutoff and fracture curve.
+    if not all(math.isfinite(v) for v in (lr, kr, f_lr, cutoff, k_applied, sigma_ref)):
+        raise ValueError("FAD result is non-finite; assessment is not evaluated")
     acceptable = lr <= cutoff and kr <= f_lr
     margin = (f_lr / kr) if kr > 0 else float("inf")
     if lr > cutoff:
@@ -320,7 +341,14 @@ def critical_flaw_depth_mm(
     Level-1 chart).  Returns 0.0 when even a vanishing depth is unacceptable.
     Depth is additionally capped so a/c stays within Newman-Raju validity.
     """
+    for name, value in (("length_mm", length_mm), ("t_mm", t_mm),
+                        ("max_depth_fraction", max_depth_fraction), ("tol_mm", tol_mm)):
+        finite_number(value, name)
+    if max_depth_fraction >= 1:
+        raise ValueError("max_depth_fraction must be in (0, 1)")
     c_mm = length_mm / 2.0
+    if tol_mm >= min(t_mm, c_mm):
+        raise ValueError("tol_mm must be smaller than the physical depth interval")
     hi_cap = min(max_depth_fraction * t_mm, c_mm)  # a <= c validity
     kwargs = dict(c_mm=c_mm, t_mm=t_mm, sigma_m_mpa=sigma_m_mpa,
                   sigma_b_mpa=sigma_b_mpa, sigma_y_mpa=sigma_y_mpa,

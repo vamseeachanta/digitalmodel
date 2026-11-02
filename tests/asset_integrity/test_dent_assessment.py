@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for dent / dent-gouge screening — depth-threshold behaviour,
 # ABOUTME: Appendix R strain derivation anchor, monotonicity, routing, validation.
 """Tests for digitalmodel.asset_integrity.dent_assessment.
@@ -43,7 +46,7 @@ def test_defaults_are_the_published_values():
 def test_depth_just_below_7pct_accepts():
     r = assess_dent(OD, WT, 0.069 * OD)
     assert isinstance(r, DentAssessment)
-    assert r.verdict == "ACCEPT"
+    assert r.verdict == "NEEDS_ASSESSMENT"  # A29: depth alone is provisional.
     assert r.depth_ratio == pytest.approx(0.069)
     assert "depth screen" in r.governing_criterion
 
@@ -59,14 +62,14 @@ def test_depth_just_above_7pct_needs_assessment_without_strain():
 
 def test_depth_exactly_at_limit_accepts():
     r = assess_dent(OD, WT, PLAIN_DENT_DEPTH_LIMIT * OD)
-    assert r.verdict == "ACCEPT"
+    assert r.verdict == "NEEDS_ASSESSMENT"  # A29: depth alone is provisional.
 
 
 def test_threshold_is_parameterized():
     # ASME B31.8 operational practice (6 % OD) via the parameter.
     r = assess_dent(OD, WT, 0.065 * OD, plain_dent_depth_limit=0.06)
     assert r.verdict == "NEEDS_ASSESSMENT"
-    assert assess_dent(OD, WT, 0.065 * OD).verdict == "ACCEPT"
+    assert assess_dent(OD, WT, 0.065 * OD).verdict == "NEEDS_ASSESSMENT"
 
 
 # --- Appendix R strain estimate (DERIVATION-ANCHOR) --------------------------
@@ -128,7 +131,8 @@ def test_strain_governs_when_depth_screen_passes():
 def test_deep_but_strain_qualified_dent_is_monitor():
     # Long smooth dent on a large pipe: 7.5 % OD (over the depth screen) but
     # estimated strain well under 6 % -> strain-qualified MONITOR.
-    r = assess_dent(42.0, 0.5, 0.075 * 42.0, 60.0, 60.0)
+    r = assess_dent(42.0, 0.5, 0.075 * 42.0, 60.0, 60.0,
+                    on_weld=False, restrained=False, with_gouge_or_metal_loss=False)
     assert r.strain is not None and r.strain.eps_max < PLAIN_DENT_STRAIN_LIMIT
     assert r.verdict == "MONITOR"
     assert "strain-qualified" in r.governing_criterion
@@ -137,7 +141,8 @@ def test_deep_but_strain_qualified_dent_is_monitor():
 # --- Monotonicity: deeper is never better ------------------------------------
 def test_verdict_monotonic_in_depth_with_strain():
     depths = [0.2, 0.5, 1.0, 1.5, 1.9, 2.4, 3.0, 3.6]
-    ranks = [VERDICT_ORDER[assess_dent(OD, WT, d, 12.0, 12.0).verdict]
+    ranks = [VERDICT_ORDER[assess_dent(OD, WT, d, 12.0, 12.0, on_weld=False, restrained=False,
+                                     with_gouge_or_metal_loss=False).verdict]
              for d in depths]
     assert ranks == sorted(ranks)
     assert ranks[0] == VERDICT_ORDER["ACCEPT"]
@@ -170,14 +175,14 @@ def test_on_weld_is_stricter_than_body():
     depth = 0.05 * OD  # ACCEPT on the body, over the 2 % OD weld screen
     body = assess_dent(OD, WT, depth)
     weld = assess_dent(OD, WT, depth, on_weld=True)
-    assert body.verdict == "ACCEPT"
+    assert body.verdict == "NEEDS_ASSESSMENT"  # A29
     assert weld.verdict == "REJECT"
     assert VERDICT_ORDER[weld.verdict] > VERDICT_ORDER[body.verdict]
 
 
 def test_shallow_dent_on_weld_is_monitor_not_accept():
     r = assess_dent(OD, WT, 0.015 * OD, on_weld=True)
-    assert r.verdict == "MONITOR"
+    assert r.verdict == "NEEDS_ASSESSMENT"  # A29: profile is missing.
     assert "weld" in r.governing_criterion
 
 
@@ -189,9 +194,9 @@ def test_weld_threshold_parameterized():
 
 def test_restrained_caps_accept_at_monitor():
     depth = 0.04 * OD
-    assert assess_dent(OD, WT, depth).verdict == "ACCEPT"
+    assert assess_dent(OD, WT, depth).verdict == "NEEDS_ASSESSMENT"
     r = assess_dent(OD, WT, depth, restrained=True)
-    assert r.verdict == "MONITOR"
+    assert r.verdict == "NEEDS_ASSESSMENT"  # A29
     assert any("restrained" in n for n in r.validity_notes)
 
 
@@ -212,7 +217,7 @@ def test_sharp_dent_gets_profile_reliability_note():
 
 def test_zero_depth_accepts_with_no_strain():
     r = assess_dent(OD, WT, 0.0)
-    assert r.verdict == "ACCEPT"
+    assert r.verdict == "NEEDS_ASSESSMENT"  # A29: depth alone is provisional.
     assert r.strain is None
     assert r.depth_ratio == 0.0
 

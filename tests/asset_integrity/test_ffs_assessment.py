@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 Tests for FFS Phase 1 wall thickness assessment modules.
 
@@ -87,15 +90,15 @@ class TestGridParserFromDataFrame:
         from digitalmodel.asset_integrity.assessment.grid_parser import GridParser
         df = _uniform_grid(4, 4, 0.375)
         df.iloc[2, :] = float("nan")
-        result = GridParser.from_dataframe(df, drop_all_nan_rows=True)
-        assert result.shape[0] == 3
+        with pytest.raises(ValueError, match="complete coverage"):
+            GridParser.from_dataframe(df, drop_all_nan_rows=True)  # A03
 
     def test_nan_not_dropped_by_default(self):
         from digitalmodel.asset_integrity.assessment.grid_parser import GridParser
         df = _uniform_grid(4, 4, 0.375)
         df.iloc[2, :] = float("nan")
-        result = GridParser.from_dataframe(df)
-        assert result.shape[0] == 4
+        with pytest.raises(ValueError, match="complete coverage"):
+            GridParser.from_dataframe(df)  # A03
 
     def test_mm_to_inch_conversion(self):
         from digitalmodel.asset_integrity.assessment.grid_parser import GridParser
@@ -193,8 +196,8 @@ class TestGridParserMinMax:
     def test_min_thickness_ignores_nan(self):
         from digitalmodel.asset_integrity.assessment.grid_parser import GridParser
         df = pd.DataFrame([[0.5, float("nan")], [0.4, 0.6]])
-        result = GridParser.from_dataframe(df)
-        assert pytest.approx(GridParser.min_thickness(result)) == 0.4
+        with pytest.raises(ValueError, match="complete coverage"):
+            GridParser.min_thickness(df)  # A03: no statistic can bridge an unmeasured cell.
 
 
 # ===========================================================================
@@ -746,6 +749,7 @@ class TestFFSDecision:
             t_mm_in=0.400,
             t_min_in=0.300,
             corrosion_rate_in_per_yr=0.0,
+            corrosion_rate_basis="qualified synthetic zero-rate control",
         )
         assert result["remaining_life_yr"] == float("inf")
 
