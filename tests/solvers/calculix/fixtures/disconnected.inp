@@ -1,0 +1,21 @@
+** Two disjoint synthetic tetrahedra, one with no support path.
+*NODE
+1, 0, 0, 0
+2, 1, 0, 0
+3, 0, 1, 0
+4, 0, 0, 1
+5, 3, 0, 0
+6, 4, 0, 0
+7, 3, 1, 0
+8, 3, 0, 1
+*ELEMENT, TYPE=C3D4, ELSET=BODY
+1, 1, 2, 3, 4
+*ELEMENT, TYPE=C3D4, ELSET=OTHER
+2, 5, 6, 7, 8
+*MATERIAL, NAME=STEEL
+*ELASTIC
+200000, 0.3
+*SOLID SECTION, ELSET=BODY, MATERIAL=STEEL
+*SOLID SECTION, ELSET=OTHER, MATERIAL=STEEL
+*BOUNDARY
+1, 1, 3
