@@ -1,0 +1,82 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aboveground tank-bottom cathodic protection</title>
+<style>body{font:16px/1.55 system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;color:#183248}
+pre{background:#eff4f6;padding:1rem;overflow:auto}td,th{padding:.4rem .7rem;border:1px solid #bccbd3;text-align:left}
+table{border-collapse:collapse}a{color:#006978}code{font-size:.9em}.note{border-left:4px solid #ad6c14;padding-left:1rem}</style></head>
+<body><h1>Aboveground tank-bottom cathodic protection</h1>
+<p><code>digitalmodel.cathodic_protection.api_651_tank_bottom</code> provides preliminary ribbon-grid sizing
+in the context of API RP 651, fifth edition (2024). It calculates independent checks, not a protection or
+standard-compliance verdict. Every design rating and acceptance limit is supplied by the caller.</p>
+<pre>from digitalmodel.cathodic_protection import convert_potential
+
+convert_potential(-0.850, "CSE", "Ag/AgCl/seawater")  # -0.784 V
+convert_potential(-0.850, "CSE", "SCE")              # -0.775 V</pre>
+<p>The executable <a href="../../../examples/cathodic_protection/api_651_tank_bottom.py">worked example</a>
+prints its synthetic inputs and results as JSON:</p>
+<pre>PYTHONPATH=src uv run python examples/cathodic_protection/api_651_tank_bottom.py</pre>
+<p>In PowerShell, set <code>$env:PYTHONPATH = 'src'</code> before the command.</p>
+<table><thead><tr><th>Quantity</th><th>Value</th><th>Basis</th></tr></thead><tbody>
+<tr><td>Diameter (m)</td><td>40.0</td><td>Synthetic input</td></tr>
+<tr><td>Area (m²)</td><td>1,256.637</td><td>π × 20²</td></tr>
+<tr><td>Current density (mA/m²)</td><td>25.0</td><td>Assumed input, no API default</td></tr>
+<tr><td>Current (A)</td><td>31.416</td><td>Area × 25 / 1,000</td></tr>
+<tr><td>Rated ribbon output (A/m)</td><td>0.047</td><td>Assumed input, requires life/electrolyte qualification</td></tr>
+<tr><td>Minimum ribbon length (m)</td><td>668.424</td><td>31.41592654 / 0.047</td></tr>
+</tbody></table><p>Table 1. Synthetic sizing arithmetic; rounded presentation gives 1,256.6 m², 31.42 A and 668.4 m.</p>
+<p><code>ribbon_grid</code> clips each row to the circular boundary using exact chord geometry.
+The number of rows is rounded up and pitch adjusted down. Optional orthogonal rows double the active
+length; uncoated busbar length is excluded. Installed length is checked against current capacity, and
+nominal pitch is checked against the supplied spacing limit. Neither check establishes curved-edge coverage.</p>
+<p><code>conductor_voltage_drop</code> uses I × resistance-per-metre × length for a lumped end load.
+Uniform discharge gives half that drop for a one-end feed and one eighth for equal-voltage feeds at
+both ends. The tank calculation uses current per installed ribbon metre for the specified longest feed span
+and a separate, supplied busbar path current. Current sharing, unequal feed voltages, joints, cable losses,
+electrolyte resistance and rectifier sizing require a project circuit model. The reported drops are not added
+into a predicted polarization or rectifier voltage.</p>
+<p class="note">An HDPE barrier can shield the bottom from anodes below it. Dry sand, oil-contaminated sand
+and voids can interrupt electrolyte contact even when enough ribbon is installed. The resistivity warning
+uses a project threshold; there is no universal resistivity pass criterion. The example assigns 100 Ω·m
+and a 200 Ω·m warning threshold solely for demonstration.</p>
+<p><code>check_center_edge_polarization</code> compares supplied IR-corrected local readings with an explicit
+criterion and reports their signed difference. Missing readings remain unassessed. Synthetic readings
+of −0.900 and −0.950 V CSE both meet a supplied −0.850 V CSE criterion, with a +0.050 V centre-minus-edge
+difference. This does not establish protection elsewhere, polarization shift, or an overprotection limit.</p>
+<h2>Reference electrodes and survey criteria</h2>
+<p>The shared <code>reference_electrodes</code> utility is exported at package level for all CP calculations.
+Survey, assessment-report, monitoring and potential-check entry points use that utility. Existing design
+modules retain the electrode of their governing native criteria; conversion alone does not change a criterion.</p>
+<p>The selected 25 °C offsets vs SHE are CSE +0.316 V, nominal Ag/AgCl/seawater +0.250 V,
+Ag/AgCl/saturated KCl +0.197 V and saturated calomel +0.241 V. SHE is zero by definition.
+Each lookup returns electrolyte conditions and a validated public citation sidecar. The alternative
++0.256 V Ag/AgCl value is not interchangeable with the selected nominal seawater table value; it differs
+by 6 mV and requires its own electrolyte/construction basis. The selected SCE value differs by 3 mV
+from +0.244 V; the selected CSE-to-SCE offset is 0.075 V, rather than 0.072 V.</p>
+<p>Conversion follows E<sub>target</sub> = E<sub>source</sub> + E<sub>reference,source</sub> −
+E<sub>reference,target</sub>. Bare <code>Ag/AgCl</code> is rejected. Temperature correction is not implemented;
+the utility rejects temperatures other than 25 °C. Nominal seawater values do not replace calibration for
+the actual chloride activity, temperature and junction arrangement.</p>
+<p>Zinc is a pseudo-reference and requires a finite <code>zinc_potential_she_V</code> supplied from calibration.
+Using −0.800 V solely as an illustration gives a CSE-to-zinc offset of +1.116 V and converts −0.850 V CSE
+to +0.266 V zinc. No universal zinc offset is embedded. Legacy monitoring zinc/MMO offsets are now
+unassigned; zinc alarm thresholds require calibration and MMO alarm thresholds require a separately
+calibrated criterion.</p>
+<p><code>analyze_cis_survey</code> and <code>compliance_check_potential</code> accept
+<code>reference_electrode</code>. Omitted criteria are converted from their existing CSE defaults; explicitly
+supplied criteria are already in the measurement electrode. Results show that electrode and its numeric
+criterion. Existing CSE calls retain their behavior. Survey ON/OFF selection retains its previous behavior;
+ON readings alone do not demonstrate an IR-free protection criterion.</p>
+<h2>Public method sources</h2><ul>
+<li><a href="https://www.apiwebstore.org/standards/651">API RP 651, fifth edition (2024), public scope</a>:
+application context only; paid text and proprietary design values are excluded.</li>
+<li><a href="https://www.wbdg.org/FFC/DOD/STC/tsewg_tp16.pdf">DoD Electrical TP-16 (March 2017)</a>,
+section 5.11, printed pp128–131: tank area, current requirement, ribbon quantity, liner arrangement,
+multiple feeds and foundation resistivity. The printed ribbon multiplication sign is dimensionally
+inconsistent with its numerical example; this implementation uses I/q.</li>
+<li><a href="https://ceocor.lu/wp-content/uploads/2018/11/Reference-Electrodes-for-Monitoring-of-Cathodic-Protection-on-Buried-Pipelines-R11-Approved-November-2018.pdf">CEOCOR Rev 11 (November 2018)</a>,
+section 3.4, Table 1, p12: selected CSE and Ag/AgCl offsets. Only selected values are implemented.</li>
+<li><a href="https://standards.iteh.ai/catalog/standards/astm/ccf20561-4d48-4fcd-8ce7-0025addda1d2/astm-g215-17">ASTM G215-17 public distributor preview</a>,
+Table 1, sections 6.2.3 and 7.1.1: SCE/SHE, sign convention and zinc drift. Sources retrieved 2 November 2026.</li></ul>
+<p>Follow-ups outside this repository: external explorer/website integration and a CP topic-bank note.
+The local <a href="../../api/structural/cathodic-protection-explorer.html">CP explorer</a> links this guide.</p>
+</body></html>

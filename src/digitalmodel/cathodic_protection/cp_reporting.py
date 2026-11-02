@@ -15,9 +15,14 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+import math
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+from digitalmodel.cathodic_protection.reference_electrodes import (
+    ReferenceElectrode, convert_potential,
+)
 
 
 class ComplianceStatus(str, Enum):
@@ -114,9 +119,11 @@ class CPAssessmentReport(BaseModel):
 
 def compliance_check_potential(
     measured_potential_V: float,
-    criterion_V: float = -0.850,
+    criterion_V: float | None = None,
     reference_electrode: str = "CSE",
     tolerance_V: float = 0.020,
+    *,
+    zinc_potential_she_V: float | None = None,
 ) -> ComplianceCheck:
     """Check measured protection potential against criterion.
 
@@ -125,9 +132,10 @@ def compliance_check_potential(
     measured_potential_V : float
         Measured structure-to-electrolyte potential [V].
     criterion_V : float
-        Protection criterion potential [V] (default -0.850 V vs CSE).
+        Explicit criterion in the measurement electrode [V]. If omitted,
+        -0.850 V vs CSE is converted using the cited shared utility.
     reference_electrode : str
-        Reference electrode type for reporting.
+        Electrode used for the measurement (25 deg C; electrolyte explicit).
     tolerance_V : float
         Tolerance band for marginal classification [V].
 
@@ -136,6 +144,17 @@ def compliance_check_potential(
     ComplianceCheck
         Compliance check result.
     """
+    electrode = ReferenceElectrode(reference_electrode)
+    reference_electrode = electrode.value
+    criterion_V = convert_potential(
+        -0.850 if criterion_V is None else criterion_V,
+        "CSE" if criterion_V is None else electrode, electrode,
+        zinc_potential_she_V=zinc_potential_she_V,
+    )
+    if not math.isfinite(measured_potential_V):
+        raise ValueError("measured potential must be finite volts")
+    if not math.isfinite(tolerance_V) or tolerance_V < 0:
+        raise ValueError("tolerance_V must be finite and non-negative")
     if measured_potential_V <= criterion_V:
         status = ComplianceStatus.COMPLIANT
     elif measured_potential_V <= criterion_V + tolerance_V:

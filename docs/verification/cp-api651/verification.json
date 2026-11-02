@@ -1,0 +1,144 @@
+{
+  "base_commit": "0a84de6c23608409fbc7b123d17321d395c135fb",
+  "branch": "feat/cp-api651",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/3811",
+  "date": "2026-11-02",
+  "review": {
+    "status": "author inspection complete; independent review pending",
+    "plan": "docs/plans/cp-api651.html",
+    "defect_hunt": [
+      "Conversion signs and round trips checked for all six electrode types.",
+      "Ag/AgCl electrolyte ambiguity rejected; zinc requires explicit calibration.",
+      "Native offshore criterion retained rather than substituted with onshore CSE default.",
+      "Minimum ribbon quantity separated from actual chord-grid length and polarization.",
+      "Uniform-load feed topology assumptions documented; drops do not size rectifier.",
+      "Finite SI inputs, overflow grid ratios, resource limit and missing local readings tested.",
+      "No copyrighted source PDFs, vendor methods or client datasets included."
+    ],
+    "limitations": [
+      "Other-model calls prohibited by task; independent provider review not performed.",
+      "Referenced workspace packet builder, preflight, memory and cleanup skills absent from this checkout.",
+      "Frozen manifest covers working files; no staged or committed acceptance is claimed."
+    ]
+  },
+  "tests": {
+    "focused": "174 passed",
+    "full_command": "uv run --no-sync python -m pytest tests/cathodic_protection tests/specialized/cathodic_protection --basetemp <fresh-writable-directory> -q",
+    "full_result": "1 failed, 2938 passed, 8 skipped, 1 xfailed",
+    "environment": "Windows; Python 3.12.10; pytest 8.4.2; PYTHONUTF8=1; isolated worktree .venv",
+    "known_failure": "test_potential_distance.py::test_regeneration_matches_committed_data",
+    "baseline_reproduced": true,
+    "baseline_source_sha256": {
+      "potential_distance.py": "67c0693bf504815c85f6a9d16d3ab53a53cb4ced2273eaf41fc75c5727de6e24",
+      "generate_potential_distance.py": "2149c6baf11aa6aa588e7425659c5767d5aaa4c2d569256a708365495d2dbdc7"
+    },
+    "follow_up": "https://github.com/vamseeachanta/digitalmodel/issues/3815",
+    "artifacts": "Example JSON readback, HTML local links and explorer template entry checked.",
+    "lint": "ruff select E9,F63,F7,F82 passed for new code, example and tests",
+    "secret_scan": "Scoped private-key, GitHub-token, AWS-key and API-key pattern scan passed for all 16 changed product files."
+  },
+  "publication": {
+    "status": "blocked before staging",
+    "error": "git add cannot create common worktree index.lock: Permission denied",
+    "layer": "Windows ACL denies writes to common worktree Git metadata",
+    "commit": null,
+    "push": false,
+    "pull_request": null,
+    "next_checkpoint": "Restore authorized Git metadata write access, verify frozen hashes, stage named product paths, commit with requested identity, push feat/cp-api651, create ready PR using pr-body.md. Do not merge."
+  },
+  "cleanup": {
+    "CLEAN": [
+      "No staged changes, new commits, pushes, merges or PRs.",
+      "No other worktrees or repositories modified."
+    ],
+    "EXPECTED": [
+      "16 product files retained for implementation.",
+      "Recovery-only patch, test log, manifest and prepared PR body retained here; exclude recovery-only files from the eventual product commit.",
+      "Ignored .venv, .pytest_cache, .hypothesis and Python caches retained.",
+      "Task-created .cp-api651-scratch/ retained because automatic approval review rejected recursive removal with 'blocked by policy'; no deletion occurred."
+    ],
+    "UNEXPECTED": []
+  },
+  "working_file_manifest": [
+    {
+      "path": "docs/api/structural/cathodic-protection-explorer.html",
+      "bytes": 14009,
+      "sha256": "a5ef95b769eeaa816f9b94de69e422aedf93c0429dc65ad928cae2aae69c29d0"
+    },
+    {
+      "path": "docs/domains/cathodic_protection/api_651_tank_bottom.html",
+      "bytes": 7691,
+      "sha256": "a050668d6b963a412a54106772ce74702dc4c869ec08b3ef2f2d6ae63cb81587"
+    },
+    {
+      "path": "docs/plans/cp-api651.html",
+      "bytes": 2200,
+      "sha256": "79b5eec08034ee8d48bd5bf0931c6f92ac7df2009fc21eee05f50208fa5511d0"
+    },
+    {
+      "path": "examples/cathodic_protection/api_651_tank_bottom.py",
+      "bytes": 1603,
+      "sha256": "58eabeacbc4bfa28536be9c964040ee5077ae173f33d8d110fd77dc7a2fd24e1"
+    },
+    {
+      "path": "scripts/capabilities/build_cathodic_protection_explorer.py",
+      "bytes": 12235,
+      "sha256": "3a2b34c6587bfffd5c68593240d899aa58629162bfd9263d2609c6a4f1a1c0b3"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/__init__.py",
+      "bytes": 19074,
+      "sha256": "fdb602055109d7363f1cd5869f3d86e314515ccb68aa672f4b282db087c95484"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/api_651_tank_bottom.py",
+      "bytes": 12266,
+      "sha256": "f58ddb8f2eb243b066dbcf7c54f0626bba4db034d7590179cb744d7b6862e494"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/api_rp_1632.py",
+      "bytes": 6884,
+      "sha256": "9a1af58f5e052ddab21929670cd6cf9acb91ea8da98fefd1f4637f4f232dc8ab"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/cp_monitoring.py",
+      "bytes": 12991,
+      "sha256": "d70756afdb821ff6ef3b7a5977e679d9f0b6a456749678327fac227509af74ea"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/cp_reporting.py",
+      "bytes": 12554,
+      "sha256": "03874ff8806072df88b1def28da955ae5ed97496bf98f9afad79646f323aade7"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/cp_survey.py",
+      "bytes": 17421,
+      "sha256": "6c8b32cb0a1b49f161177a063f866561eadc581891e0c93052b43311bab5727a"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/iso_15589_2.py",
+      "bytes": 7795,
+      "sha256": "5b97d350dfa308e73da1ebbaf780c2581ba6e03abf15584b0692ccc0e2c4c699"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/pipeline_cp.py",
+      "bytes": 18534,
+      "sha256": "6ef5cb8cdc1555a278c755182d0a288cd8bdccdd5cf216f67ae8a7904bcd12f3"
+    },
+    {
+      "path": "src/digitalmodel/cathodic_protection/reference_electrodes.py",
+      "bytes": 5357,
+      "sha256": "1289d64439a442edb724e11a708b91678d2ae812426829cb01476693832ed3c5"
+    },
+    {
+      "path": "tests/cathodic_protection/test_api_651_tank_bottom.py",
+      "bytes": 5781,
+      "sha256": "a77f575f351867dcf9f3b12bf1d280f2ad40a76f5233a1f1b19c2acaa576d879"
+    },
+    {
+      "path": "tests/cathodic_protection/test_reference_electrodes.py",
+      "bytes": 5426,
+      "sha256": "554aaa8b3f933c3f954736bc4fa571be4b37f5fdbeee47136d832fd44abf5147"
+    }
+  ]
+}
