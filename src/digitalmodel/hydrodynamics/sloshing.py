@@ -391,6 +391,7 @@ def api650_annex_e(
     liquid_density_kg_m3: float,
     shell_weight_n: float,
     roof_weight_n: float,
+    bottom_weight_n: float,
     shell_cg_m: float,
     roof_cg_m: float,
     roof_reaction_n: float,
@@ -440,9 +441,11 @@ def api650_annex_e(
       E.6.1.2.2(1-3): Xis=.375[1+1.333(u/tanh(u)-1)]H for D/H>=1.333,
       otherwise (.5+.060D/H)H, u=.866D/H; Xcs=Xc+.937H/(z*sinh(z)).
       Slab equivalent heights include bottom pressure and may exceed fill height.
-    * E.6.1(1-3), E.6.1.5(1,2): Vi=Ai*(Ws+Wr+Wi), Vc=Ac*Wc;
+    * E.6.1(1-3), E.6.1.5(1,2): Vi=Ai*(Ws+Wr+Wf+Wi), Vc=Ac*Wc;
       V=hypot(Vi,Vc); moments=hypot(Ai*(Wi*Xi+Ws*Xs+Wr*Xr),Ac*Wc*Xc),
-      with Xis/Xcs substituted for slab moment. No appurtenance weights are added.
+      with Xis/Xcs substituted for slab moment. Wf is the bottom weight; it
+      adds to Vi but not to Mrw/Ms (it acts at the base). No appurtenance
+      weights are added.
     * E.6.1.4(1a-6): at Y below the surface, Ni [N/mm] is
       8.48*Ai*G*D*H*(Y/H-.5*(Y/H)**2)*tanh(u) for D/H>=1.333;
       otherwise 5.22*Ai*G*D²*(q-.5q²), q=Y/(.75D), for Y<.75D,
@@ -454,6 +457,8 @@ def api650_annex_e(
     * E.6.2.1.1.1(1,2), Table E-6: J=Mrw/[D²*(wt*(1-.4Av)+wa)] at
       zero gas pressure; wt=(Ws+roof_reaction)/(pi*D). Thresholds .785/1.54
       distinguish no calculated uplift, conditional uplift and redesign/anchors.
+      E.6.2.1.1-1a caps the annular resistance at wa<=201.1*H*D*Ge N/m with
+      Ge=G*(1-.4Av); a larger entered wa is rejected.
       Shell compression, annular plate, piping and anchor checks remain required.
     * API STD 650, 12th ed., Addendum 2 (January 2016), E.7.2(1-5):
       delta_s=.42D*Af. For SUG I/II, Af=K*SD1*I*min(1/Tc,4/Tc²);
@@ -483,7 +488,7 @@ def api650_annex_e(
         "tl_s", "importance_factor", "rwi", "rwc", "k",
     }
     numeric_names = positive_names | {
-        "shell_weight_n", "roof_weight_n", "shell_cg_m", "roof_cg_m", "roof_reaction_n",
+        "shell_weight_n", "roof_weight_n", "bottom_weight_n", "shell_cg_m", "roof_cg_m", "roof_reaction_n",
         "sds_g", "sd1_g", "minimum_ai_g", "vertical_acceleration_g",
         "annular_resistance_n_per_m", "available_freeboard_m",
     }
@@ -524,7 +529,7 @@ def api650_annex_e(
         wave_tl = v["tl_s"] if seismic_use_group == "III" else 4.0
         wave_i = 1.0 if seismic_use_group == "III" else v["importance_factor"]
         af = v["k"] * v["sd1_g"] * wave_i * min(1 / tc, wave_tl / tc**2)
-        vi = ai * (v["shell_weight_n"] + v["roof_weight_n"] + wi)
+        vi = ai * (v["shell_weight_n"] + v["roof_weight_n"] + v["bottom_weight_n"] + wi)
         vc = ac * wc
         dry_moment = v["shell_weight_n"] * v["shell_cg_m"] + v["roof_weight_n"] * v["roof_cg_m"]
         mrw = math.hypot(ai * (wi * xi + dry_moment), ac * wc * xc)
@@ -535,6 +540,10 @@ def api650_annex_e(
                               seismic_use_group == "II" and v["sds_g"] >= .33)
         required = advisory if freeboard_required else 0.0
         wt = (v["shell_weight_n"] + v["roof_reaction_n"]) / (math.pi * d)
+        ge = rho / 1000 * (1 - .4 * v["vertical_acceleration_g"])
+        if v["annular_resistance_n_per_m"] > 201.1 * h * d * ge:
+            raise ValueError(
+                "annular_resistance_n_per_m exceeds the E.6.2.1.1-1a limit 201.1*H*D*Ge (N/m)")
         resistance = wt * (1 - .4 * v["vertical_acceleration_g"]) + v["annular_resistance_n_per_m"]
         if resistance <= 0:
             raise ValueError("positive self-anchorage resistance is required")

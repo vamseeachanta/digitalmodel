@@ -33,7 +33,8 @@ pressure is zero in this scope.
 `Ac` uses the force transition TL and ASD reduction; `Af` is independent of Rwc.
 The wave calculation uses the 4 s transition and project importance for SUG I/II,
 and mapped TL with unit importance for SUG III. The Table E.7 minimum is applied
-by SUG and SDS. `purchaser_freeboard=True` adopts the advisory clearance in cases
+by SUG and SDS. Where the E.7.2 text and Table E.7 differ for SUG II with
+SDS < 0.33g, the table's advisory note is followed. `purchaser_freeboard=True` adopts the advisory clearance in cases
 without a mandatory numeric minimum. No containment or impact-resistant-roof
 alternative is credited. `freeboard_ok=None` distinguishes those advisory cases
 from an evaluated pass; `freeboard_required` preserves the distinction even
@@ -53,11 +54,13 @@ is included. The approximate effective weights need not sum to total weight.
 All site and tank data in
 [`examples/hydrodynamics/api650_annex_e.py`](../../../examples/hydrodynamics/api650_annex_e.py)
 are assumed demonstration inputs, not measured or client-supplied data. The case
-uses a 20 m diameter, 10 m water depth, 12.000 mm net shell, 1,000 kN shell and
-200 kN roof, with CGs 5.5 m and 11 m. All roof weight reacts on the shell. The
+uses a 20 m diameter, 10 m water depth, 12.000 mm net shell, 1,000 kN shell,
+200 kN roof and 190 kN bottom, with shell and roof CGs 5.5 m and 11 m. All roof weight reacts on the shell. The
 assumed design site parameters are SDS=0.6g, SD1=0.3g, TL=8 s, SUG II,
 I=1.25, Rwi=3.5, Rwc=2, K=1.5, minimum Ai=0.007g and Av=0. Qualified annular
-resistance is assumed to be 100 kN/m; available freeboard is 1.0 m.
+resistance is assumed to be 40 kN/m, below the E.6.2.1.1-1a limit
+201.1 H D Ge = 40.22 kN/m; available freeboard is 1.0 m. The bottom weight adds to
+the impulsive base shear but not to the overturning moments.
 
 ```sh
 PYTHONPATH=src uv run python examples/hydrodynamics/api650_annex_e.py
@@ -68,21 +71,21 @@ Independent arithmetic and rounded intermediate values are recorded in
 
 | Quantity | Result |
 | --- | ---: |
-| Tc (s) | 4.771686 |
-| Wi / Wc (MN) | 16.707952 / 13.467749 |
-| Xi / Xc (m) | 3.750000 / 6.050613 |
-| Xis / Xcs (m) | 7.968657 / 7.723285 |
-| Ai / Ac / Af (g) | 0.214286 / 0.058941 / 0.098819 |
-| Base shear (MN) | 3.918662 |
-| Ringwall / slab moment (MN m) | 15.822636 / 30.796401 |
-| Wave height / required freeboard (m) | 0.830076 / 0.581053 |
-| J (-) | 0.332133 |
-| Hydrodynamic / combined hoop stress (MPa) | 14.268071 / 95.990154 |
+| Tc (s) | 4.772 |
+| Wi / Wc (MN) | 16.708 / 13.468 |
+| Xi / Xc (m) | 3.750 / 6.051 |
+| Xis / Xcs (m) | 7.969 / 7.723 |
+| Ai / Ac / Af (g) | 0.214 / 0.0589 / 0.0988 |
+| Base shear (MN) | 3.959 |
+| Ringwall / slab moment (MN m) | 15.823 / 30.796 |
+| Wave height / required freeboard (m) | 0.830 / 0.581 |
+| J (-) | 0.669 |
+| Hydrodynamic / combined hoop stress (MPa) | 14.27 / 95.99 |
 
 Table: illustrative SUG II case, evaluated at the liquid bottom with Av=0.
 
-The 1.0 m available clearance exceeds the 0.581053 m minimum for this case.
-J=0.332133 is below 0.785, so no uplift is calculated by this screen. Hoop
+The 1.0 m available clearance exceeds the 0.581 m minimum for this case.
+J=0.669 is below 0.785, so no uplift is calculated by this screen. Hoop
 acceptance is not established because no allowable is supplied.
 
 ## Sources and follow-ups
@@ -102,6 +105,3 @@ Floating-roof lift, rim seals, jamming, seal damage and impact pressure at the
 shell-roof junction require separate analysis; inertial roof weight alone does
 not model them. Also excluded are baffles, bolted/elevated/isolated tanks,
 soil-structure interaction, sliding and component/foundation capacities.
-The workspace-hub `scripts/capabilities/build_sloshing_explorer.py` update is a
-follow-up outside this repository. Integration with the separate floating-roof
-tank work remains a follow-up.

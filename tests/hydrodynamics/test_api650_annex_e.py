@@ -10,15 +10,24 @@ from digitalmodel.hydrodynamics import sloshing as s
 def inputs(**changes):
     values = dict(
         diameter_m=20.0, fill_height_m=10.0, liquid_density_kg_m3=1000.0,
-        shell_weight_n=1_000_000.0, roof_weight_n=200_000.0,
+        shell_weight_n=1_000_000.0, roof_weight_n=200_000.0, bottom_weight_n=190_000.0,
         shell_cg_m=5.5, roof_cg_m=11.0, roof_reaction_n=200_000.0,
         shell_thickness_m=0.012, sds_g=0.6, sd1_g=0.3, tl_s=8.0,
         importance_factor=1.25, rwi=3.5, rwc=2.0, k=1.5,
         minimum_ai_g=0.007, vertical_acceleration_g=0.0,
-        annular_resistance_n_per_m=100_000.0, seismic_use_group="II",
+        seismic_use_group="II",
         available_freeboard_m=1.0, purchaser_freeboard=False,
     )
-    return values | changes
+    values |= changes
+    if "annular_resistance_n_per_m" not in changes:
+        # 40 kN/m, or the E.6.2.1.1-1a cap 201.1*H*D*Ge where that is lower.
+        try:
+            ge = values["liquid_density_kg_m3"] / 1000 * (1 - .4 * values["vertical_acceleration_g"])
+            cap = 201.1 * values["fill_height_m"] * values["diameter_m"] * ge
+            values["annular_resistance_n_per_m"] = min(40_000.0, cap) if math.isfinite(cap) else 40_000.0
+        except TypeError:
+            values["annular_resistance_n_per_m"] = 40_000.0
+    return values
 
 
 def test_worked_example():
@@ -44,11 +53,11 @@ def test_worked_example():
     assert r.ai_g == pytest.approx(.214285714, abs=1e-9)
     assert r.ac_g == pytest.approx(.058941430, abs=1e-9)
     assert r.af_g == pytest.approx(.098818621, abs=1e-9)
-    # Vi=.214285714*(1.2e6+16,707,951.624)=3,837,418.205 N.
+    # Vi=.214285714*(1.2e6+1.9e5+16,707,951.624)=3,878,132.491 N (Wf included).
     # Vc=.058941430*13,467,748.880=793,808.376 N; V=hypot(Vi,Vc).
-    assert r.impulsive_shear_n == pytest.approx(3_837_418.205, abs=.001)
+    assert r.impulsive_shear_n == pytest.approx(3_878_132.491, abs=.001)
     assert r.convective_shear_n == pytest.approx(793_808.376, abs=.001)
-    assert r.base_shear_n == pytest.approx(3_918_661.789, abs=.001)
+    assert r.base_shear_n == pytest.approx(3_958_540.559, abs=.001)
     # Dry moment = 1e6*5.5+2e5*11=7.7e6 N m.
     # Mrw=hypot(Ai*(Wi*3.75+7.7e6), Ac*Wc*6.050613).
     # Ms uses Xis=7.968657 and Xcs=7.723285.
@@ -58,8 +67,9 @@ def test_worked_example():
     assert r.wave_height_m == pytest.approx(.830076418, abs=1e-9)
     assert r.required_freeboard_m == pytest.approx(.581053493, abs=1e-9)
     assert r.freeboard_ok is True
-    # J=15,822,636.497/[400*(1.2e6/(pi*20)+1e5)]=.332133153.
-    assert r.anchorage_ratio_j == pytest.approx(.332133153, abs=1e-9)
+    # wa=40,000 N/m is below the cap 201.1*10*20*1.0=40,220 N/m.
+    # J=15,822,636.497/[400*(1.2e6/(pi*20)+4e4)]=.669332198.
+    assert r.anchorage_ratio_j == pytest.approx(.669332198, abs=1e-9)
     assert r.anchorage_status == "no_calculated_uplift"
     # Ni=8480*Ai*20*10*.5*tanh(1.732)=170,682.745 N/m.
     # Nc=1850*Ac*400/cosh(1.84)=13,513.325 N/m.
@@ -155,6 +165,7 @@ def test_units_and_scaling():
     ("diameter_m",float("inf")), ("minimum_ai_g",-.1),
     ("vertical_acceleration_g",1), ("roof_reaction_n",300_000),
     ("evaluation_depth_m",11), ("annular_resistance_n_per_m",-1),
+    ("annular_resistance_n_per_m",40_221), ("bottom_weight_n",-1),
     ("seismic_use_group","IV"), ("purchaser_freeboard","false"),
 ])
 def test_invalid_inputs(key,value):
