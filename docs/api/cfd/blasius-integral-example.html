@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blasius skin friction: local coefficient to plate mean</title>
+  <style>
+    body { max-width: 56rem; margin: 2rem auto; padding: 0 1rem;
+           font-family: sans-serif; line-height: 1.6; color: #172b3a; }
+    pre { overflow-x: auto; padding: 1rem; background: #f2f5f7; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #b5c3cc; padding: 0.5rem; text-align: left; }
+    caption { caption-side: bottom; text-align: left; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Blasius skin friction: local coefficient to plate mean</h1>
+  <h2>Summary</h2>
+  <p>The analytical average of the local Blasius skin-friction coefficient
+  over one plate face is twice its trailing-edge value. The
+  <a href="../../../examples/openfoam/blasius_integral.py">runnable example</a>
+  compares that integral with <code>blasius_plate_cd</code>. This checks the
+  formulas; it supplies no CFD validation evidence.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <caption>Table 1. Changes to this example.</caption>
+    <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+    <tbody><tr><td>1</td><td>2026-10-27</td><td>Added the analytical integral and
+    unit example to distinguish local friction from the plate mean.</td></tr></tbody>
+  </table>
+
+  <h2>Basis and coefficient definition</h2>
+  <p>The existing public
+  <a href="https://su2code.github.io/tutorials/Laminar_Flat_Plate/">SU2 laminar
+  flat plate tutorial</a>, in its background section and skin-friction equation,
+  gives the rounded Blasius local law <code>Cf(x) = 0.664 / sqrt(Re_x)</code>.
+  That coefficient is retained without fitting. The example assumes steady,
+  incompressible laminar flow with uniform free-stream speed, constant
+  kinematic viscosity and zero pressure gradient.</p>
+  <p>Here <code>Re_x = U*x/nu</code> and
+  <code>Cf(x) = tau_w(x)/(rho*U^2/2)</code>. For constant span <code>b</code>,
+  drag on one wetted face is <code>D = b*integral(tau_w(x) dx)</code>.
+  Normalizing by <code>(rho*U^2/2)*b*L</code> gives the plate coefficient
+  <code>Cd = integral(Cf(x) dx)/L</code>, based on that face's area
+  <code>b*L</code>. No second-face or pressure drag is included.</p>
+
+  <h2>Analytical integration at the leading edge</h2>
+  <pre>Re_L = U*L/nu
+Cf(x) = Cf(L)*sqrt(L/x)
+
+Cd = lim(epsilon -&gt; 0+) integral(epsilon to L, Cf(x) dx)/L
+   = lim(epsilon -&gt; 0+) 2*Cf(L)*sqrt(L)*(sqrt(L) - sqrt(epsilon))/L
+   = 2*Cf(L)
+   = (2*0.664)/sqrt(Re_L)
+   = 1.328/sqrt(Re_L)</pre>
+  <p>The factor two follows from the antiderivative of
+  <code>x^(-1/2)</code>; <code>1.328</code> is derived as
+  <code>2*0.664</code>. Although the local coefficient diverges at
+  <code>x=0</code>, its improper integral is finite. The example never evaluates
+  <code>Cf(0)</code> and uses no quadrature grid, leading-edge cutoff or new
+  numerical flow solution.</p>
+
+  <h2>Synthetic inputs and units</h2>
+  <p>The inputs are chosen for arithmetic illustration, not taken from a
+  measured fluid: <code>U=1 m/s</code>, <code>L=0.1 m</code>, and
+  <code>nu=0.00001 m^2/s</code>. Thus</p>
+  <pre>Re_L = (1 m/s)*(0.1 m)/(0.00001 m^2/s) = 10000
+sqrt(Re_L) = 100
+Cf(L) = 0.664/100 = 0.00664
+Cd = 2*0.00664 = 0.01328</pre>
+  <p>Reynolds number and both coefficients are dimensionless. In centimetres
+  the same physical inputs are <code>100 cm/s</code>, <code>10 cm</code> and
+  <code>0.1 cm^2/s</code>, using the
+  <a href="https://www.bipm.org/en/measurement-units/si-prefixes">SI prefix
+  definition for centi</a>, which gives
+  <code>1 m = 100 cm</code>. Their ratio again gives <code>Re_L=10000</code>.
+  Velocity and length change by the length conversion factor; kinematic
+  viscosity changes by its square. Mixing unit systems changes the result.</p>
+
+  <h2>Run the saved example</h2>
+  <p>From the repository root, in an environment with the package's import
+  dependencies available:</p>
+  <pre>PYTHONPATH=src python examples/openfoam/blasius_integral.py</pre>
+  <p>The executable checks agreement with the package helper and prints:</p>
+  <pre>Formula comparison only; no CFD validation.
+Re_L = 10000
+Cf(L) = 6.640e-03
+Plate mean from integral = 1.328e-02
+Plate coefficient from helper = 1.328e-02
+integral / Cf(L) = 2.0</pre>
+  <p>The companion tests independently integrate the local power law, check
+  the hand calculation, repeat the calculation in centimetres and execute
+  the saved example. The existing helper's constants are not imported as
+  expected values.</p>
+
+  <h2>Formula checks and remaining CFD validation</h2>
+  <p>Agreement here establishes consistency of the rounded analytical laws
+  and Reynolds-number construction for the specified assumptions. It does not
+  establish mesh convergence, wall-shear accuracy, boundary-layer profiles,
+  transition behaviour or drag from a solved flow field. The ideal leading-edge
+  law is used as a mathematical reference, not a resolved leading-edge model.</p>
+  <p>This is partial scope for issue #1167. Remaining work includes reusable
+  comparison of solved wall-shear data with the reference, explicit sample and
+  leading-edge treatment for that data, and solver-backed profile, thickness
+  and mesh-convergence checks. The separate
+  <a href="flat-plate-blasius-verification.html">flat plate CFD report</a>
+  describes existing solver evidence; no result from that report is regenerated
+  or extended by this formula example.</p>
+</main>
+</body>
+</html>
