@@ -293,4 +293,5 @@ def test_original_json_export_command_includes_new_tables(tmp_path, monkeypatch)
         )
         == 330
     )
-    assert len(list(tmp_path.rglob("*.json"))) == 10
+    # Ten original configs plus seven explicit projections; no table is dropped.
+    assert len(list(tmp_path.rglob("*.json"))) == 17
