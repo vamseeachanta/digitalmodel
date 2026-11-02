@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "checked_at_utc": "2026-11-02T14:47:06.825281+00:00",
+  "basis": "public references; synthetic example inputs; no production qualification",
+  "review": "author inspection only; independent model/provider review not performed under task restriction",
+  "python": "3.12.10",
+  "pytest": "8.4.2",
+  "related_tests": {
+    "passed": 1547,
+    "skipped": 32,
+    "failed": 0,
+    "command": "PYTHONPATH=src uv run --no-sync python -m pytest tests/process_piping tests/field_development tests/materials tests/structural/analysis/wall_thickness_codes tests/structural/analysis/test_wall_thickness_geometry_finite.py -q --basetemp=tmp-process-piping/related-tests"
+  },
+  "routing_tests": {
+    "passed": 120,
+    "failed": 0,
+    "command": "PYTHONUTF8=1 PYTHONPATH=src uv run --no-sync python -m pytest tests/docs/test_digitalmodel_routing_contract.py tests/scripts/test_detect_touched_domains.py -q --basetemp=tmp-process-piping/routing-tests"
+  },
+  "wheel": {
+    "built": true,
+    "packaged_reference_records": 5,
+    "installed_example_readback": true
+  },
+  "lint": "ruff check and git diff --check passed",
+  "limits": [
+    "PCC-1-informed bounded screen, not full Appendix O selection/rotation",
+    "pointwise elastic hydro stress cap, not full piping stress analysis",
+    "horizontal constant-T/Z gas; no local fitting choking/noise prediction",
+    "two-phase velocity only, no slip/pressure-drop/sand/corrosion model",
+    "external explorer page deferred to its owning repository"
+  ],
+  "files": [
+    {
+      "path": ".claude/quality-gates.yaml",
+      "sha256": "b9f480d3928400f8e621a06fcd13cf5b21a49ea401e1175b11cc27296b228782",
+      "bytes": 29732
+    },
+    {
+      "path": "docs/domains/process-piping/index.html",
+      "sha256": "dec72517ca37090e09646b9fb2fc1f565ec5388e87a23964ad88781bb8da2497",
+      "bytes": 9223
+    },
+    {
+      "path": "docs/maps/digitalmodel-operator-map.md",
+      "sha256": "4f8b4b5d748d5f7f7bc6d5d50e71b5fdaa6bde0d058eaa53a095e37a79d6ebfd",
+      "bytes": 21165
+    },
+    {
+      "path": "docs/plans/process-piping.html",
+      "sha256": "432dd4597c4b320dda7ad35271140a18907d60bb42735cf336b1718c135281e2",
+      "bytes": 3187
+    },
+    {
+      "path": "docs/registry/module-routing.yaml",
+      "sha256": "9d563a2eacc42d6825ef8d8e5d2c8bc5ea498e855efd3eecb90cdcb65d585402",
+      "bytes": 38797
+    },
+    {
+      "path": "examples/workflows/process-piping/example.py",
+      "sha256": "02fad4524b10137e902e78f779c41a5280f8187028adc3448de97c212667422a",
+      "bytes": 5027
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "07dcfa45967f56b8109743d2c399bc270f4068b54900e1c8fceb55aea17ba804",
+      "bytes": 17968
+    },
+    {
+      "path": "scripts/ci/detect_touched_domains.py",
+      "sha256": "43d87186a3e970520a2c293e3f1e20c360ad44a55398460c04151a6b63fcf93f",
+      "bytes": 22581
+    },
+    {
+      "path": "src/digitalmodel/field_development/onshore_layout.py",
+      "sha256": "7495dd01689ed86ef1e986986477c24bd5e8ce92f71c09f2cc3f3aa0e7ade615",
+      "bytes": 21562
+    },
+    {
+      "path": "src/digitalmodel/infrastructure/utils/pipe_friction.py",
+      "sha256": "e0a29cc64adca600bc39fcf43ee9ead1c82fcd410d618a7816b942c3eda37266",
+      "bytes": 954
+    },
+    {
+      "path": "src/digitalmodel/process_piping/__init__.py",
+      "sha256": "8f8edb7fffbd96852b2e1ebbd328e4624223481aa09c309696acde0cc3b2bfbe",
+      "bytes": 574
+    },
+    {
+      "path": "src/digitalmodel/process_piping/_basis.py",
+      "sha256": "d3145a670f0a3bbf6b194c75520e3981977fd8d2a7df1cccf973b212672a4a24",
+      "bytes": 2690
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/api-rp-14e.md",
+      "sha256": "1619e004395be5feb19478718d38a71d95b4b9e22c8cba73db523e51cc043da5",
+      "bytes": 734
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/ashrae-fundamentals.md",
+      "sha256": "02a4957aa64a7430976873ab186cf4245be8e162ff4c4a222e9b68b0743c3071",
+      "bytes": 425
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/asme-b31-3.md",
+      "sha256": "05a63fe36d8cc4c4d22764e66a36770b904028a6b766bb63271446f4029731d6",
+      "bytes": 1040
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/asme-pcc-1.md",
+      "sha256": "dbb5ebe4c7cd79a6f6e0a9fd7b11a1a6dc13f20b524e72103ad0d659fff2ad43",
+      "bytes": 1060
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/pipe-flow.md",
+      "sha256": "a40b03e73c67a87e0317b0237ef965248e71352256d7d7f1718108ffdd077f7c",
+      "bytes": 947
+    },
+    {
+      "path": "src/digitalmodel/process_piping/bolting.py",
+      "sha256": "74eee905e9cc3057958cd6fd247c55d14de03f534eb8872dfde7f886e544e262",
+      "bytes": 9554
+    },
+    {
+      "path": "src/digitalmodel/process_piping/line_sizing.py",
+      "sha256": "7aec873656b4747e223487ea54f368ab2fef2a3d033c8459d6a4a0d5a6166fc5",
+      "bytes": 13593
+    },
+    {
+      "path": "src/digitalmodel/process_piping/pressure.py",
+      "sha256": "fe36e00f31a032cd9df5e2fded7635af40144daa53abf394e734c536063d3cfb",
+      "bytes": 7248
+    },
+    {
+      "path": "tests/DOMAINS.md",
+      "sha256": "92a890ccabb9a0a8a4fdf22536063914b3cce9a421bec3407d70e86bfc80e6aa",
+      "bytes": 38225
+    },
+    {
+      "path": "tests/field_development/test_api.py",
+      "sha256": "4ea914cca28ce2d26b2c849f34d14cb5c9507b476c1fe11c31b4cfd2a99eeaaf",
+      "bytes": 30078
+    },
+    {
+      "path": "tests/field_development/test_subsea_bridge.py",
+      "sha256": "112a476c385ed6e5cfe4077c012ce3a29092c119b4df1ab5e0737e2c9eefa6d2",
+      "bytes": 7142
+    },
+    {
+      "path": "tests/process_piping/test_bolting.py",
+      "sha256": "2e7cc48612e7ae941b69b2a6c8ce3f6e60ddb418bf3ed742fed9df1c00b0f067",
+      "bytes": 3625
+    },
+    {
+      "path": "tests/process_piping/test_example.py",
+      "sha256": "69a190d70e93a570100d15b45c7e487a6bccff7bb49a71fe43d9ab88c300d067",
+      "bytes": 1031
+    },
+    {
+      "path": "tests/process_piping/test_line_sizing.py",
+      "sha256": "61eecd36d46b86bb4efdc8a1dd93ab0c09487514a30bbe06c36bf8871b5da5f3",
+      "bytes": 7310
+    },
+    {
+      "path": "tests/process_piping/test_pressure.py",
+      "sha256": "14b1f9946cbcfc85a11779bd9dc49d0274b6edb81a39038128d302c0d0fd8f1a",
+      "bytes": 4473
+    },
+    {
+      "path": "tests/process_piping/test_public_basis.py",
+      "sha256": "8596269471ed801d39753a9110bc6bfbf8cdbbab88c3bcbbcfd5ce34008807d8",
+      "bytes": 1630
+    },
+    {
+      "path": "tests/scripts/test_detect_touched_domains.py",
+      "sha256": "afcb9fc7cab7bf46d68de59048bc48ae9bd168437c0aa08bb62e47bb2facb91e",
+      "bytes": 54783
+    }
+  ],
+  "publication_route": "GitHub Git Data API; local staging denied by Windows ACL on worktree Git metadata",
+  "local_git_state": "source changes preserved uncommitted; no local ref or index update attempted through an alternate path"
+}

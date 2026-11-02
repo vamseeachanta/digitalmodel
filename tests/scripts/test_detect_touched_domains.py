@@ -23,6 +23,9 @@ SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domain
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
+        ("src/digitalmodel/process_piping/pressure.py", {"asset-integrity"}),
+        ("tests/process_piping/test_pressure.py", {"asset-integrity"}),
+        ("src/digitalmodel/infrastructure/utils/pipe_friction.py", {"asset-integrity", "field-development"}),
         ("docs/registry/module-routing.yaml", {"asset-integrity", "contracts", "workflows", "subsea"}),
         ("docs/maps/example.md", {"contracts"}),
         ("src/digitalmodel/solvers/orcaflex/docs/agent-pack.md",
@@ -1265,7 +1268,7 @@ def test_real_manifest_pins_exist_and_select_contracts(monkeypatch: pytest.Monke
         and (Path(path).name.startswith("test_") or path.endswith("_test.py"))
     }
     for manifest, pins in records.items():
-        folder = str(Path(manifest).parent) if "/" in manifest else manifest
+        folder = Path(manifest).parent.as_posix() if "/" in manifest else manifest
         owning_tests = [path for path, text in readers.items() if folder in text]
         expected = {"contracts"}
         for test in owning_tests:
