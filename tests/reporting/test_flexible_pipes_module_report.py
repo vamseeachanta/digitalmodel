@@ -178,7 +178,10 @@ def test_rebuild_is_deterministic(tmp_path):
     for name in names:
         # No metadata is volatile; no content is stripped before comparison.
         assert (outputs[0] / name).read_bytes() == (outputs[1] / name).read_bytes()
-        assert (outputs[0] / name).read_bytes() == (REPORT / name).read_bytes()
+        golden = (ROOT / "tests/reporting/fixtures/flexible_pipes_cpython_312.html"
+                  if name == "index.html" and sys.version_info[:2] == (3, 12)
+                  else REPORT / name)
+        assert (outputs[0] / name).read_bytes() == golden.read_bytes()
     page = (outputs[0] / "index.html").read_text()
     assert all(line == line.rstrip() for line in page.splitlines())
     parsed = ReportParser(page)
@@ -238,3 +241,37 @@ def test_local_readme_links_resolve():
     for target in re.findall(r"\]\(([^)]+)\)", (REPORT / "README.md").read_text()):
         if not urlsplit(target).scheme:
             assert (REPORT / target).is_file(), target
+
+
+@pytest.mark.parametrize("implementation,version,accepted", [
+    ("CPython", (3, 11), True),
+    ("CPython", (3, 12), True),
+    ("CPython", (3, 13), False),
+    ("PyPy", (3, 11), False),
+])
+def test_generation_runtime_contract(tmp_path, monkeypatch, implementation,
+                                     version, accepted):
+    """Reject unqualified runtimes before calculation or output writes."""
+    build = builder()
+    assert build.SUPPORTED_RUNTIMES == {("CPython", (3, 11)), ("CPython", (3, 12))}
+    scratch, output = tmp_path / "calculation", tmp_path / "delivery"
+    monkeypatch.setattr(build.platform, "python_implementation", lambda: implementation)
+    monkeypatch.setattr(build.sys, "version_info", version)
+    monkeypatch.setattr(build.sys, "argv", [str(SCRIPT), "--scratch", str(scratch),
+                                          "--output", str(output)])
+    if accepted:
+        build.main()
+        assert (output / "index.html").is_file()
+    else:
+        with pytest.raises(ValueError, match="CPython 3.11 or 3.12"):
+            build.main()
+        with pytest.raises(ValueError, match="CPython 3.11 or 3.12"):
+            build.render(scratch)
+        assert not scratch.exists()
+        assert not output.exists()
+
+
+def test_published_rebuild_command_declares_runtime(tmp_path):
+    """Keep the delivered command consistent with the primary golden."""
+    page = builder().render(tmp_path / "command")
+    assert "uv run --python 3.11 --no-project python" in page

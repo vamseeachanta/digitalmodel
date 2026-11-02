@@ -8,8 +8,10 @@ import hashlib
 from html import escape
 import json
 from pathlib import Path
+import platform
 import re
 import runpy
+import sys
 
 ROOT = Path(__file__).resolve().parents[4]
 EXAMPLE = "examples/domains/subsea/flexible_pipe_geometry.py"
@@ -17,9 +19,13 @@ NOTE = "examples/domains/subsea/flexible_pipe_geometry.md"
 # Source G: NOTE, Independent hand calculation. This software comparison
 # tolerance does not prescribe material accuracy or engineering acceptance.
 RELATIVE_TOLERANCE = 1e-12
+SUPPORTED_RUNTIMES = {("CPython", (3, 11)), ("CPython", (3, 12))}
 CHANGES = [{
     "revision": "A", "date": "2026-10-28",
     "change": "Synthetic full-wall geometry and mass are presented with an independent radius-based calculation, generated figures and explicit qualification limits.",
+}, {
+    "revision": "B", "date": "2026-11-02",
+    "change": "CPython 3.11 and 3.12 have separate exact report goldens because floating-point summation differs between these runtimes.",
 }]
 SOURCE_PATHS = {
     "G": (NOTE, "Synthetic inputs, circle geometry and independent hand calculation"),
@@ -163,6 +169,8 @@ def geometry_figure(data):
 
 def render(scratch):
     """Generate the self-contained report without importing solver or fatigue code."""
+    if (platform.python_implementation(), sys.version_info[:2]) not in SUPPORTED_RUNTIMES:
+        raise ValueError("Report generation requires CPython 3.11 or 3.12")
     data = refresh_checks(calculate(scratch))
     inputs = value_table(data, data["input_keys"], "Synthetic inputs; chosen for arithmetic only [G, E].")
     outputs = value_table(data, [key for key in data["values"] if key not in data["input_keys"]],
@@ -245,13 +253,14 @@ Stiffness estimates and structural screening interfaces are not qualified by a m
 Source SHA-256 digests identify the exact bytes consumed. No timestamps or scratch/output paths are embedded; no metadata is removed for the deterministic comparison.</p>
 <ul>{sources}</ul><p><a href="source_register.json">Machine-readable source register</a> · <a href="changes.json">Change record</a></p>
 <p>From the repository root, with externally supplied scratch and output directories:</p>
-<pre>PYTHONPATH=src uv run --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"</pre>
+<pre>PYTHONPATH=src uv run --python 3.11 --no-project python docs/reports/modules/flexible_pipes/build_report.py --scratch "$REPORT_SCRATCH" --output "$REPORT_OUTPUT"</pre>
 <p>The output directory receives the report, source register and change record. Calculation intermediates remain in scratch.
-The local README documents rebuilding and delivery. Tests always use separate external directories.</p>
+The primary delivery uses CPython 3.11; CPython 3.12 has a separate exact HTML golden because floating-point summation differs.
+Other runtimes are not qualified for generation. The local README documents rebuilding and delivery. Tests always use separate external directories.</p>
 <h2 id="s10">10. Way forward</h2>
 <p>The synthetic geometry and mass comparison can support software regression for this case. Before applying the methods to a manufactured pipe,
 obtain the reference basis listed in Section 8, independently verify the corresponding method and define acceptance criteria for the governing case.
-Structural and API qualification remain open under <a href="https://github.com/vamseeachanta/digitalmodel/issues/3343">issue 3343</a>.
+Structural and API qualification remain open under issue #3343.
 No structural acceptance follows from the arithmetic disposition or deterministic rebuild.</p>
 <script id="calculation" type="application/json">{payload}</script>
 </main></body></html>

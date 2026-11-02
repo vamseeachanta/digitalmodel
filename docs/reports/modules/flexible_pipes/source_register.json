@@ -1,5 +1,5 @@
 {
-  "revision": "A",
+  "revision": "B",
   "readiness": "synthetic arithmetic only",
   "freshness": "Exact source SHA-256 equality on rebuild; no volatile metadata",
   "units": [
@@ -49,7 +49,7 @@
       "id": "T",
       "path": "tests/reporting/test_flexible_pipes_module_report.py",
       "use": "Independent oracle, rebuild and stale-calculation tests",
-      "sha256": "454ccca8efd66a6c235fa79dcda89c35a7537113c89b67f2d2be10d007e492c5"
+      "sha256": "6ea3bb1b58b163c93fc2afcab2a8a57a6af3b77ac3b1af93df16c2d43e76d95e"
     },
     {
       "id": "L",
@@ -67,7 +67,7 @@
       "id": "R",
       "path": "docs/reports/modules/flexible_pipes/build_report.py",
       "use": "Report generation and comparison criterion",
-      "sha256": "c77182372af2f115b2b0f09dda2261b0ecea484ccb3de1c44b2c13c1557a9cf2"
+      "sha256": "d3b0cda444612c7fbaf6bd2c5bea37b3f129fcadadf3396c2b38759bdca14bd7"
     }
   ]
 }

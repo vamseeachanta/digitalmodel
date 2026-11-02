@@ -24,11 +24,20 @@ PYTHONPATH=src uv run --python 3.11 --no-project python docs/reports/modules/fle
 
 Repeat with distinct directories to compare `index.html`, `changes.json` and
 `source_register.json`. Builds from identical source bytes with the same Python
-runtime are byte-identical: no volatile metadata is removed. The committed
-goldens match Python 3.11. A local Python 3.12 rebuild changes the wall-area
-relative difference from `0.0e+00` to `1.5e-16`, within the `1e-12` arithmetic
-criterion, but fails the byte comparison. Cross-version byte identity has not
-been established.
+runtime are byte-identical: no volatile metadata is removed. The primary
+`index.html` golden uses CPython 3.11; the
+[CPython 3.12 fixture](../../../../tests/reporting/fixtures/flexible_pipes_cpython_312.html)
+qualifies CPython 3.12 separately. Both runtimes retain exact comparisons with their own golden
+and with a second local build, and the same independent numerical oracle.
+Generation on other implementations or minor versions is rejected before any
+output is written. To rebuild the CPython 3.12 golden, replace `--python 3.11`
+with `--python 3.12` in both commands; the builder still writes `index.html`
+into the external output directory. Delivery uses that file as
+the CPython 3.12 fixture in the reporting tests.
+
+CPython 3.12 changes the wall-area relative difference from `0.0e+00` to
+`1.5e-16`, within the `1e-12` arithmetic criterion. Cross-version byte identity
+is not claimed.
 
 Rebuilding the committed goldens also requires LF source and golden bytes.
 The pinned paths currently have no explicit LF checkout attributes. Automatic
