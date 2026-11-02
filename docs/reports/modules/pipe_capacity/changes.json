@@ -1,0 +1,14 @@
+{
+  "report": "pipe-capacity-module-analysis",
+  "revisions": [
+    {
+      "revision": "0",
+      "date": "2026-10-28",
+      "changes": [
+        "Added a source-linked method map to distinguish implementation from numerical qualification.",
+        "Added synthetic annulus integrals, computed results and parsed-output checks with reproducible records.",
+        "Retained explicit capacity exclusions and the existing standalone example without alteration."
+      ]
+    }
+  ]
+}
