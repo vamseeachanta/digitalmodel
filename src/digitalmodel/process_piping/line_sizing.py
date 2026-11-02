@@ -89,6 +89,10 @@ def _validate(flow: Flow, velocity_limit_m_s: float) -> None:
     nonnegative(
         length_m=flow.length_m, roughness_m=flow.roughness_m, fittings_k=flow.fittings_k
     )
+    if isinstance(flow.elevation_change_m, bool) or not isinstance(
+        flow.elevation_change_m, (float, int)
+    ):
+        raise ValueError("elevation_change_m must be a finite number")
     nonnegative(elevation_magnitude=abs(flow.elevation_change_m))
     if flow.phase != "two_phase":
         positive(viscosity_pa_s=flow.viscosity_pa_s)

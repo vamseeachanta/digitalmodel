@@ -1,34 +1,95 @@
 {
-  "schema_version": 1,
-  "checked_at_utc": "2026-11-02T14:47:06.825281+00:00",
-  "basis": "public references; synthetic example inputs; no production qualification",
-  "review": "author inspection only; independent model/provider review not performed under task restriction",
-  "python": "3.12.10",
-  "pytest": "8.4.2",
+  "schema_version": 2,
+  "checked_at_utc": "2026-11-02T15:56:58.319178+00:00",
+  "base_revision": "0a84de6c23608409fbc7b123d17321d395c135fb",
+  "basis": "Public references and explicitly synthetic demonstration inputs; no production qualification.",
+  "review": "Single-provider defect inspection only; independent engineering review remains outstanding under the prohibition on other models.",
+  "scope_review": {
+    ".claude/quality-gates.yaml": "Retain: CI uses explicit roots and commands; adds only process_piping tests to the existing asset-integrity gate.",
+    "docs/maps/digitalmodel-operator-map.md": "Retain: adds process_piping discovery row.",
+    "docs/registry/module-routing.yaml": "Retain: registers module, documentation and tests.",
+    "pyproject.toml": "Retain: packages five reference records required for calculation-time citation resolution.",
+    "scripts/ci/detect_touched_domains.py": "Retain: routes new source/data and shared friction helper to their test consumers.",
+    "src/digitalmodel/field_development/onshore_layout.py": "Retain: extracts and re-exports the existing friction factor without changing its numerical behavior.",
+    "tests/DOMAINS.md": "Retain: assigns process_piping tests to the existing asset-integrity domain.",
+    "tests/field_development/test_api.py": "Retain: compares the documented POSIX report-path representation on Windows; production code already returns as_posix().",
+    "tests/field_development/test_subsea_bridge.py": "Retain: replaces a shared /tmp fixture with pytest tmp_path so the required related suite runs on Windows without cross-test file collisions.",
+    "tests/scripts/test_detect_touched_domains.py": "Retain: adds routing cases; normalizes a manifest path to match repository-relative POSIX references on Windows."
+  },
+  "recommended_drops": [],
+  "tdd": {
+    "red": "4 failed, 35 passed: Boolean longitudinal stress/elevation accepted; None/string elevation raised TypeError.",
+    "green": "1551 passed, 32 skipped after signed-input validation corrections."
+  },
+  "runtime": {
+    "python": "3.12.10",
+    "pytest": "8.4.2",
+    "environment": "PYTHONUTF8=1; PYTHONPATH=src; UV_CACHE_DIR points to writable temporary storage."
+  },
   "related_tests": {
-    "passed": 1547,
+    "passed": 1551,
     "skipped": 32,
     "failed": 0,
-    "command": "PYTHONPATH=src uv run --no-sync python -m pytest tests/process_piping tests/field_development tests/materials tests/structural/analysis/wall_thickness_codes tests/structural/analysis/test_wall_thickness_geometry_finite.py -q --basetemp=tmp-process-piping/related-tests"
+    "command": "uv run --no-sync python -m pytest tests/process_piping tests/field_development tests/materials tests/structural/analysis/wall_thickness_codes tests/structural/analysis/test_wall_thickness_geometry_finite.py -q",
+    "log_sha256": "1c158ffc6deeeb950f178b8f799d019cf8f11c941b7d0bcfbd0c565a649d163b"
   },
   "routing_tests": {
     "passed": 120,
     "failed": 0,
-    "command": "PYTHONUTF8=1 PYTHONPATH=src uv run --no-sync python -m pytest tests/docs/test_digitalmodel_routing_contract.py tests/scripts/test_detect_touched_domains.py -q --basetemp=tmp-process-piping/routing-tests"
+    "command": "uv run --no-sync python -m pytest tests/docs/test_digitalmodel_routing_contract.py tests/scripts/test_detect_touched_domains.py -q",
+    "evidence": "Included in initial combined run: 1667 passed, 32 skipped, 402.00 s. Engineering suite rerun after four regression cases were added.",
+    "combined_log_sha256": "1fee3218d48b06d1385cd2fed10e79b50107fc886b19989badeb59761a7fbe1c"
   },
+  "diagnostics": [
+    "Default uv cache write denied by sandbox; relocated to permitted temporary storage.",
+    "A 25-second diagnostic timeout interrupted the mapping-loop test; the original unrestricted run completed successfully.",
+    "Non-isolated wheel build lacked setuptools; isolated offline build succeeded using the existing temporary build cache.",
+    "Expanded lint found an unchanged unused AnalogueMatch import in test_subsea_bridge.py; no unrelated lint edit was made."
+  ],
   "wheel": {
     "built": true,
     "packaged_reference_records": 5,
-    "installed_example_readback": true
+    "source_and_data_bytes_verified": true,
+    "sha256": "8c31a4f85e26483c67cab78fc6fd271bca07cf8666e9182fbfe3f5dc2a7b80f0",
+    "command": "uv build --wheel --offline --out-dir <temporary-wheel-directory>"
   },
-  "lint": "ruff check and git diff --check passed",
+  "example": {
+    "readback_verified": true,
+    "ordered_wall_mm": 6.1837904216127715,
+    "hydro_target_mpa": 6.521739130434782,
+    "water_velocity_m_s": 1.6910741381395444,
+    "water_drop_bar_per_100_m": 0.26365693749048025
+  },
+  "lint": "Scoped implementation/new tests, CI script and routing tests passed ruff; git diff --check passed.",
   "limits": [
-    "PCC-1-informed bounded screen, not full Appendix O selection/rotation",
-    "pointwise elastic hydro stress cap, not full piping stress analysis",
-    "horizontal constant-T/Z gas; no local fitting choking/noise prediction",
-    "two-phase velocity only, no slip/pressure-drop/sand/corrosion model",
-    "external explorer page deferred to its owning repository"
+    "Full current-edition compliance and independent engineering review are not established.",
+    "PCC-1-informed bounded screen, not complete Appendix O selection/rotation or a field torque procedure.",
+    "Pointwise elastic hydro stress cap, not full piping stress analysis.",
+    "Horizontal constant-T/Z gas; no local fitting choking/noise prediction.",
+    "Two-phase velocity only; no slip, pressure drop, sand or corrosion model.",
+    "External explorer integration remains in its owning repository."
   ],
+  "public_bundle_review": {
+    "destination": "Local preparation for a public repository; no publication performed.",
+    "date": "2026-11-02",
+    "identifiers": "PR draft excludes request identities and internal tracking references.",
+    "rights": "Method citations and short public-reference records only; no copied standards tables or original PDFs.",
+    "secret_check": "Manual inspection plus bounded token/private-key pattern scan: no matches.",
+    "verdict": "Disclosure inspection completed; engineering qualification remains outstanding."
+  },
+  "cleanup": {
+    "clean": [
+      "No staged changes, stashes, task locks or tracked build output."
+    ],
+    "expected": [
+      "Uncommitted task deliverables listed in process-piping-files.txt.",
+      "Ignored build/ and src/digitalmodel.egg-info/ retained because automatic approval review blocked their removal.",
+      "Named temporary test/build evidence and caches retained; no deletion outside the worktree.",
+      "Existing sibling worktrees preserved; process ownership of unrelated sessions was not changed."
+    ],
+    "unexpected": []
+  },
+  "local_git_state": "Source preserved uncommitted and unstaged; no branch/index/ref mutation or remote write performed.",
   "files": [
     {
       "path": ".claude/quality-gates.yaml",
@@ -44,6 +105,16 @@
       "path": "docs/maps/digitalmodel-operator-map.md",
       "sha256": "4f8b4b5d748d5f7f7bc6d5d50e71b5fdaa6bde0d058eaa53a095e37a79d6ebfd",
       "bytes": 21165
+    },
+    {
+      "path": "docs/plans/process-piping-files.txt",
+      "sha256": "e6738157e46bd00c147e317f81c43ad195f6e4368450cef21a1cc009c8cb814e",
+      "bytes": 1381
+    },
+    {
+      "path": "docs/plans/process-piping-pr-body.md",
+      "sha256": "bc56d4fdd7623a44c2de0f6441a940c607d1f7086395cd3f9debc959daea3c14",
+      "bytes": 4957
     },
     {
       "path": "docs/plans/process-piping.html",
@@ -122,13 +193,13 @@
     },
     {
       "path": "src/digitalmodel/process_piping/line_sizing.py",
-      "sha256": "7aec873656b4747e223487ea54f368ab2fef2a3d033c8459d6a4a0d5a6166fc5",
-      "bytes": 13593
+      "sha256": "d94cb328c993ceb3407a0ee8c2fe9664c11e12f0615c4909af16423bfdbddbfe",
+      "bytes": 13785
     },
     {
       "path": "src/digitalmodel/process_piping/pressure.py",
-      "sha256": "fe36e00f31a032cd9df5e2fded7635af40144daa53abf394e734c536063d3cfb",
-      "bytes": 7248
+      "sha256": "c77ea46a65c268bf8fb8bc9480bae7b69ec5adcfce8f9c249d5ef9cfeaec8140",
+      "bytes": 7312
     },
     {
       "path": "tests/DOMAINS.md",
@@ -157,13 +228,13 @@
     },
     {
       "path": "tests/process_piping/test_line_sizing.py",
-      "sha256": "61eecd36d46b86bb4efdc8a1dd93ab0c09487514a30bbe06c36bf8871b5da5f3",
-      "bytes": 7310
+      "sha256": "4b0ec4088b285b4b7cae9f2d5f753ec60cc8b6901bad95ad51b0166a9b956fc8",
+      "bytes": 7427
     },
     {
       "path": "tests/process_piping/test_pressure.py",
-      "sha256": "14b1f9946cbcfc85a11779bd9dc49d0274b6edb81a39038128d302c0d0fd8f1a",
-      "bytes": 4473
+      "sha256": "afc456fec6c5a595ec0d468d288a2ac7444d83004e89eec546770a2a0452c85c",
+      "bytes": 4522
     },
     {
       "path": "tests/process_piping/test_public_basis.py",
@@ -176,6 +247,5 @@
       "bytes": 54783
     }
   ],
-  "publication_route": "GitHub Git Data API; local staging denied by Windows ACL on worktree Git metadata",
-  "local_git_state": "source changes preserved uncommitted; no local ref or index update attempted through an alternate path"
+  "hash_scope": "All stage-list paths except this self-referential verification record."
 }

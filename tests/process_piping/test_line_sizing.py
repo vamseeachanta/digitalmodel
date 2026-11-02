@@ -189,6 +189,9 @@ def test_public_service_limit():
         dict(fittings_k=-1),
         dict(viscosity_pa_s=0),
         dict(length_m=-1),
+        dict(elevation_change_m=True),
+        dict(elevation_change_m=None),
+        dict(elevation_change_m="10"),
     ],
 )
 def test_invalid(water, changes):

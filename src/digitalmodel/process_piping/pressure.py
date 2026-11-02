@@ -150,7 +150,9 @@ def hydrotest_pressure(
         test_yield_pa=test_yield_pa,
         component_test_limit_pa=component_test_limit_pa,
     )
-    if not isinstance(other_longitudinal_stress_pa, (float, int)):
+    if isinstance(other_longitudinal_stress_pa, bool) or not isinstance(
+        other_longitudinal_stress_pa, (float, int)
+    ):
         raise ValueError("other longitudinal stress must be finite")
     nonnegative(longitudinal_magnitude=abs(other_longitudinal_stress_pa))
     if minimum_test_wall_m >= outside_diameter_m / 6:

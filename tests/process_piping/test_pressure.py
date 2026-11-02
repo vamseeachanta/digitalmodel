@@ -134,6 +134,7 @@ def test_hydro_yield_reduction_and_component_limit():
         dict(other_longitudinal_stress_pa=240e6),
         dict(minimum_test_wall_m=0.05),
         dict(design_pressure_pa=-1),
+        dict(other_longitudinal_stress_pa=True),
     ],
 )
 def test_invalid_hydro(kwargs):
