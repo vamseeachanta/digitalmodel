@@ -42,18 +42,18 @@ All counts are assumed, rather than taken from typical-count tables.</p>
 The shell is assumed to have light rust. The baseline is an average-fit vapor-mounted primary seal
 and a bolted deck with unknown seam length. These inputs describe an illustration, not measured plant data.</p>
 <table><thead><tr><th>Baseline component</th><th>Loss [kg/year]</th></tr></thead><tbody>
-<tr><td>Rim seal</td><td>1,957.42</td></tr><tr><td>Deck fittings</td><td>697.16</td></tr>
-<tr><td>Deck seams</td><td>805.14</td></tr><tr><td>Standing subtotal</td><td>3,459.72</td></tr>
-<tr><td>Withdrawal</td><td>26.84</td></tr><tr><td>Total routine loss</td><td>3,486.56</td></tr>
+<tr><td>Rim seal</td><td>1,957</td></tr><tr><td>Deck fittings</td><td>697.2</td></tr>
+<tr><td>Deck seams</td><td>805.1</td></tr><tr><td>Standing subtotal</td><td>3,460</td></tr>
+<tr><td>Withdrawal</td><td>26.84</td></tr><tr><td>Total routine loss</td><td>3,487</td></tr>
 </tbody><caption>Table 1. Baseline annual routine loss; component rounding may differ from the rounded total.</caption></table>
 <table><thead><tr><th>Change from baseline; other inputs fixed</th><th>Total loss [kg/year]</th><th>Reduction [kg/year]</th></tr></thead><tbody>
-<tr><td>Liquid-mounted primary, average fit</td><td>1,996.59</td><td>1,489.98</td></tr>
-<tr><td>Liquid-mounted primary with rim-mounted secondary, average fit</td><td>1,616.79</td><td>1,869.78</td></tr>
-<tr><td>Vapor-mounted primary, verified tight fit</td><td>3,165.20</td><td>321.37</td></tr>
-<tr><td>Welded deck, baseline seal retained</td><td>2,681.42</td><td>805.14</td></tr>
+<tr><td>Liquid-mounted primary, average fit</td><td>1,997</td><td>1,490</td></tr>
+<tr><td>Liquid-mounted primary with rim-mounted secondary, average fit</td><td>1,617</td><td>1,870</td></tr>
+<tr><td>Vapor-mounted primary, verified tight fit</td><td>3,165</td><td>321.4</td></tr>
+<tr><td>Welded deck, baseline seal retained</td><td>2,681</td><td>805.1</td></tr>
 </tbody><caption>Table 2. Independent design changes; seal and deck improvements are not combined in these rows.</caption></table>
-<p>For this inventory and baseline, the liquid-mounted primary substitution reduces loss by 1,489.98 kg/year,
-more than the 805.14 kg/year reduction from welded seams. That ranking is case-specific:
+<p>For this inventory and baseline, the liquid-mounted primary substitution reduces loss by 1,490 kg/year,
+more than the 805.1 kg/year reduction from welded seams. That ranking is case-specific:
 seal condition, seam length and fitting inventory govern the result. It is not a construction or structural design conclusion.</p>
 <h2>API 2000 normal vent capacity comparison</h2>
 <p><code>NormalVentingBasis</code> requires a cited edition/design basis, transfer factors in Nm³ air per m³ liquid,
@@ -71,8 +71,8 @@ and thermal duties of 1,000 Nm³/h in each direction. Required capacities are 1,
 and 2,000 Nm³/h outward. Assumed capacities of 2,000 and 2,200 Nm³/h give margins of 250 and 200 Nm³/h.
 Pressure duty is 1.5 + 0.2 = 1.7 kPa versus an assumed 2.0 kPag limit;
 vacuum duty is 0.3 + 0.1 = 0.4 kPa versus an assumed 0.5 kPa magnitude limit.</p>
-<p>These vent duties and curve points are synthetic arithmetic inputs. They are not API 2000 table values,
-thermal-duty calculations or certified vent ratings. The result retains <code>COMPARISON_ONLY</code>
+<p>These vent duties and curve points are round illustrative inputs. The caller must confirm the transfer
+factors against the governing API 2000 edition; they are not thermal-duty calculations or certified vent ratings. The result retains <code>COMPARISON_ONLY</code>
 even when the entered normal checks pass. A design vent selection remains unestablished.</p>
 <h2>Support legs, landed roofs and limits</h2>
 <p>Adjustable support-leg penetrations contribute fitting losses; fixed legs or hangers without deck openings

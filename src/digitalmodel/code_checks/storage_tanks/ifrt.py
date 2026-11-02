@@ -192,7 +192,8 @@ class Liquid:
     """Stable stock at the average liquid surface temperature.
 
     Molecular weight is for VAPOR; density is for LIQUID. Product selects
-    KC=1 refined or KC=.4 crude per AP-42 Eq. 2-3 definition (June 2026).
+    KC=.4 for crude oil and KC=1 for all other organic liquids (the
+    "refined" option) per AP-42 Eq. 2-3 definition (June 2026).
     No product-property defaults are supplied.
     """
 

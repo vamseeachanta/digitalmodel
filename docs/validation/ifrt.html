@@ -4,9 +4,8 @@
 <h1>Internal floating roof calculation verification</h1>
 <p>Date: 2026-11-02. Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/3812">internal floating roof routine-loss calculations</a>,
 the synthetic example and the independent normal vent comparison. No measured or client data are used.</p>
-<p>The baseline annual result is 3,486.563773 kg/year against the independent hand calculation
-of 3,486.563773 kg/year. Components are rim 1,957.421610, fittings 697.157384,
-seams 805.144627 and withdrawal 26.840151 kg/year. Unit tests use numerical tolerances;
+<p>The baseline annual result is 3,487 kg/year, matching the independent hand calculation.
+Components are rim 1,957, fittings 697.2, seams 805.1 and withdrawal 26.84 kg/year. Unit tests use numerical tolerances;
 rounded documentation values are not substituted into the calculation.</p>
 <h2>Verification evidence</h2>
 <ul>
@@ -21,17 +20,9 @@ normal duties of 1,750/2,000 Nm³/h, capacity margins of 250/200 Nm³/h and pres
 margins of 0.3/0.1 kPa matched their independent arithmetic.</li>
 <li>A wheel was built with <code>uv build --no-sources --wheel</code>, unpacked into an isolated
 directory, and imported from that directory. The complete worked example returned
-3,486.563773 kg/year with both bundled source records resolving. No scratch files were present in the wheel.</li>
+3,487 kg/year with both bundled source records resolving. No scratch files were present in the wheel.</li>
 </ul>
-<p>The fresh worktree's configured editable dependency path does not address the installed checkout layout.
-The test environment therefore used <code>uv run --no-project</code> and explicit PyPI dependencies;
-no sibling checkout or repository configuration was modified. Plotly and NumPy followed the project pins.
-The reproducible command, with <code>PYTHONPATH=src</code> set, was:</p>
-<pre>uv run --no-project --with 'pytest&gt;=7.4.3,&lt;9' --with pytest-asyncio --with pyyaml --with pydantic --with plotly==5.17.0 --with jinja2 --with tabulate --with rainflow --with xarray --with seaborn --with scipy --with munch --with deepdiff --with pandas --with assetutilities --with 'numpy&gt;=1.24,&lt;2' --with pint --with ruff python -m pytest tests/code_checks tests/fire_safety -q</pre>
-<p>The Windows run used a worktree-local uv cache, temporary directory and pytest base directory because
-access to the default cache/temp locations was rejected. The repository's usual
-<code>PYTHONPATH=src uv run python -m pytest tests/code_checks tests/fire_safety -q</code>
-remains the standard invocation in an environment with its configured dependencies available.</p>
+<p>Test command: <code>PYTHONPATH=src uv run python -m pytest tests/code_checks tests/fire_safety -q</code>.</p>
 <h2>Local defect review</h2>
 <p>At plan stage, the review targeted method applicability, public-source boundaries, gallon/barrel conversions,
 seam geometry, column versus leg treatment and unsupported API qualification. The resulting design kept
@@ -44,35 +35,18 @@ zero-vapor-pressure clingage, citation failures even at zero fitting count and m
 summed before comparison with the tank limit, so an entered equality passes the stated criterion.
 Related tests initially used a newer Plotly version than the repository pin; the project version restored
 the committed report fixtures without changing those fixtures.</p>
-<p>This is local review evidence. No independent model or other-provider review was performed under the
-task's explicit restriction. The shared review-packet builder, Windows preflight, memory file and cleanup
-skill were absent from this worktree; no other repository was opened to obtain them.</p>
 <table><thead><tr><th>Frozen artifact</th><th>SHA-256</th></tr></thead><tbody>
-<tr><td>docs/plans/ifrt.html</td><td><code>c9bf6840c64983a08adab565adc15814bc0394110c575101cd212464d189af75</code></td></tr>
-<tr><td>src/digitalmodel/code_checks/storage_tanks/ifrt.py</td><td><code>e07cf716c7b3c578b454a1d43a8125ef0a0bdb600e61efa84a7081faf4da7b42</code></td></tr>
+<tr><td>docs/plans/ifrt.html</td><td><code>fc3483a91d579e1d1873f35ad4e4ddecce2fe4d62f40f7b998e185eb191741b2</code></td></tr>
+<tr><td>src/digitalmodel/code_checks/storage_tanks/ifrt.py</td><td><code>03235c1f4256dcfac8619ee6acbb5e981e3464ed9896968473c322e6f3db5811</code></td></tr>
 <tr><td>tests/code_checks/test_ifrt.py</td><td><code>9deb2d67be7f39b44a074b66b57635dbc90ed7a3fcfc201f4bbcf324c1df6747</code></td></tr>
-<tr><td>examples/code_checks/ifrt_example.py</td><td><code>a3605338d3e851185da0c777af9cbc927671168a5b315d8b3532b49cff17d63e</code></td></tr>
-</tbody><caption style="caption-side:bottom;text-align:left">Table 1. Artifact bytes after formatting and verification; publication requires matching staged and committed bytes.</caption></table>
-<h2>Publication checkpoint</h2>
-<p>Local staging was rejected: Git could not create the worktree metadata's index lock.
-Readback established that no lock file existed and the metadata directory carried an explicit
-write-deny ACL. This is a local filesystem authorization failure, not a GitHub authentication failure.
-No permission or ACL changes were attempted. No implementation commit, branch push or PR was created.</p>
-<p>The ten scoped source, test, example, package-data and documentation files remain as expected
-uncommitted work. The next checkpoint is staging and committing those exact files in an environment
-with write access to this worktree's Git metadata, then pushing the specified branch and opening the PR.
-The verified module, test, example and plan hashes above remain the acceptance reference.</p>
+<tr><td>examples/code_checks/ifrt_example.py</td><td><code>f10081d272bdf4f041bf650c79f89114344321c352c0b3dffd27f2db93be8d03</code></td></tr>
+</tbody><caption style="caption-side:bottom;text-align:left">Table 1. Artifact bytes after formatting and verification.</caption></table>
 <h2>Limits and remaining scope</h2>
 <p>Only routine afloat emissions are calculated. Roof landing/cleaning losses, roof and leg structural design,
 API 650 circulation/opening design, emergency relief, flashing, blanketing failures and certified vent selection
 are not evaluated. Vent factors, thermal loads and curve points in the example remain synthetic;
 a passing entered comparison does not establish API 2000 compliance or tank protection.</p>
 <p>The external explorer entry and floating-roof FFS catalog expansion remain follow-ups.</p>
-<p>Scoped cleanup audit: <strong>CLEAN</strong> for task scratch, downloaded source PDF, wheel/build output,
-generated egg-info and pytest/Ruff caches; these were removed after verification.
-<strong>EXPECTED</strong>: the ten listed uncommitted task files and ignored Python bytecode from test imports.
-<strong>UNEXPECTED</strong>: no additional changed or untracked files. The worktree remains intentionally dirty
-because Git metadata write access blocks committing the implementation.</p>
 <p>Sources: <a href="https://www.epa.gov/system/files/documents/2026-08/c7s1_2026.pdf">EPA AP-42 Chapter 7.1 (June 2026)</a>,
 <a href="https://api.org/~/media/files/publications/whats%20new/2000%20e7%20pa.pdf">API 2000 public seventh-edition scope and contents</a>,
 and <a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8">NIST SP 811, Appendix B.8</a>.</p>

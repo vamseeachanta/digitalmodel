@@ -31,8 +31,8 @@ with 0.2 kPa connected loss; rated vacuum capacity 2000 Nm3/h at 0.3 kPa
 differential with 0.1 kPa connected loss. Assumed tank limits are +2 kPag and
 0.5 kPa vacuum magnitude. All air flows refer to 0 C and 101.3 kPa absolute.
 
-These vent factors, thermal duties, tank limits and curve points are synthetic
-inputs for arithmetic verification, not values extracted from API 2000 or
-certified device curves. API 2000 edition qualification, tank-specific thermal
+These vent factors, thermal duties, tank limits and curve points are round
+illustrative inputs for arithmetic verification, not certified device curves;
+the governing API 2000 edition's factors must be confirmed by the caller. API 2000 edition qualification, tank-specific thermal
 duty derivation, open-vent circulation and all emergency cases remain unresolved.
 The vent illustration does not establish a protective arrangement for this tank.

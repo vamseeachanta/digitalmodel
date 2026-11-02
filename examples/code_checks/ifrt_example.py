@@ -44,6 +44,9 @@ def worked_example() -> dict:
             "liquid_rim_secondary_average": ifrt.public_seal_factor(
                 "liquid_mounted", secondary="rim_mounted"
             ),
+            "vapor_primary_tight": ifrt.public_seal_factor(
+                "vapor_mounted", fit="tight", gaps_verified=True
+            ),
         },
     )
     vent_source = Citation(
