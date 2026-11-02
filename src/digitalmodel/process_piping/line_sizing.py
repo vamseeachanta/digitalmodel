@@ -60,22 +60,23 @@ class LineResult:
     citations: tuple[Citation, ...]
 
 
-def service_velocity_limit(service: str) -> CitedValue:
-    """Selected water upper bounds, ASHRAE Fundamentals 2017 Ch.22 Table22.
+def service_velocity_limit(service: str, *, velocity_limit_m_s: float) -> CitedValue:
+    """Attach a method citation to a required caller-selected water limit.
 
-    General water 10 ft/s; pump suction/drains 7 ft/s. Conversion 1 ft =
-    0.3048 m exactly (international foot). These are screening guidance,
-    not universal process/noise/erosion criteria. No gas/steam or materials
-    table is inferred. Table source:
-    https://handbook.ashrae.org/handbooks/f17/IP/F17_Ch22/f17_ch22_ip.aspx
+    The caller supplies and qualifies the limit in m/s; no handbook values
+    or defaults are included. The citation identifies guidance for selecting
+    a limit, not the source of the supplied number: ASHRAE Handbook—Fundamentals
+    (2017), Chapter 22, Pipe and Tube Design, Water Velocities Based on Type
+    of Service. This is no process/noise/erosion qualification.
     """
+    positive(velocity_limit_m_s=velocity_limit_m_s)
     refs = citations("velocity")
-    upper_ft_s = {"general_water": 10, "pump_suction_water": 7}
-    if service not in upper_ft_s:
+    services = ("general_water", "pump_suction_water")
+    if service not in services:
         raise ValueError(
-            f"unsupported service; choose {tuple(upper_ft_s)} or supply a qualified limit"
+            f"unsupported service; choose {services} or use a qualified limit directly"
         )
-    return CitedValue(upper_ft_s[service] * 0.3048, refs[0], "m/s")
+    return CitedValue(velocity_limit_m_s, refs[0], "m/s")
 
 
 def _validate(flow: Flow, velocity_limit_m_s: float) -> None:
@@ -111,6 +112,21 @@ def _validate(flow: Flow, velocity_limit_m_s: float) -> None:
             )
 
 
+def _isothermal_parameters(
+    p1: float, density: float, velocity: float, resistance: float
+) -> tuple[float, float]:
+    """Require a subcritical solution before either gas reporting method."""
+    b = (density * velocity) ** 2 * (p1 / density)
+    critical = math.sqrt(b)
+    if critical >= p1:
+        raise ValueError("inlet reaches isothermal choking; increase candidate size")
+    if p1 * p1 - b - b * (resistance + 2 * math.log(p1 / critical)) <= 0:
+        raise ValueError(
+            "requested flow is choked or has no subcritical isothermal solution"
+        )
+    return b, critical
+
+
 def _isothermal_outlet(
     p1: float, density: float, velocity: float, resistance: float
 ) -> float:
@@ -125,18 +141,11 @@ def _isothermal_outlet(
     acceleration/vena-contracta choking is not resolved. The upper-pressure
     root is bracketed between isothermal critical p=sqrt(G²*RT) and p1.
     """
-    b = (density * velocity) ** 2 * (p1 / density)
-    critical = math.sqrt(b)
-    if critical >= p1:
-        raise ValueError("inlet reaches isothermal choking; increase candidate size")
+    b, critical = _isothermal_parameters(p1, density, velocity, resistance)
 
     def residual(p2):
         return p1 * p1 - p2 * p2 - b * (resistance + 2 * math.log(p1 / p2))
 
-    if residual(critical) <= 0:
-        raise ValueError(
-            "requested flow is choked or has no subcritical isothermal solution"
-        )
     lo, hi = critical, p1
     for _ in range(100):
         mid = (lo + hi) / 2
@@ -163,7 +172,8 @@ def evaluate_line(
     switching policy, not an ASME requirement or an accuracy guarantee.
     Outlet velocity governs the velocity check even on the low-drop branch.
     Constant viscosity, temperature and Z are assumed. Inlet or calculated
-    outlet isothermal choking is rejected. No acoustic-noise prediction.
+    outlet isothermal choking is rejected. Subcritical isothermal feasibility
+    is required before the reporting-method switch. No acoustic-noise prediction.
 
     Two-phase: API RP 14E 1991 2.5(a) eq.(2.14), Ve=C/sqrt(rho_m) in
     ft/s and lb/ft³. The SI conversion is Ve=.3048*C/sqrt(rho/16.01846337396).
@@ -246,6 +256,7 @@ def evaluate_line(
         dp += flow.density_kg_m3 * 9.80665 * flow.elevation_change_m
     else:
         p1 = flow.inlet_pressure_pa_abs
+        _isothermal_parameters(p1, flow.density_kg_m3, velocity, resistance)
         method = "inlet_density"
         if dp / p1 > 0.10:
             p2 = _isothermal_outlet(p1, flow.density_kg_m3, velocity, resistance)

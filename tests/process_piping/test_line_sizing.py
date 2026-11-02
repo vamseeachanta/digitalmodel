@@ -100,6 +100,31 @@ def test_gas_low_drop_and_isothermal_residual():
     assert large.pressure_drop_pa > 0.1e6
 
 
+def test_short_high_mach_gas_requires_subcritical_solution():
+    # Inlet-density loss is only 6.2%, and the approximate outlet stays below
+    # the sonic/velocity limits, but the integrated equation has no solution.
+    flow = gas(flow_m3_s=2.299656, viscosity_pa_s=1.8e-5, length_m=1)
+    diameter = (4.5 - 2 * 0.237) * 0.0254
+    velocity = 4 * flow.flow_m3_s / (math.pi * diameter**2)
+    b = (10 * velocity) ** 2 * (1e6 / 10)
+    resistance = 0.01629 / diameter  # Independent rounded Swamee-Jain result.
+    assert resistance * 10 * velocity**2 / 2 < 0.1e6
+    assert 1e12 - b - b * (resistance + 2 * math.log(1e6 / math.sqrt(b))) < 0
+    with pytest.raises(ValueError, match="no subcritical isothermal solution"):
+        evaluate_line(flow, nps=4, schedule="40", velocity_limit_m_s=300)
+
+
+def test_size_line_rejects_short_choked_candidate():
+    flow = gas(flow_m3_s=2.299656, viscosity_pa_s=1.8e-5, length_m=1)
+    result = size_line(
+        flow, candidate_nps=(4, 5), schedules=("40",), velocity_limit_m_s=300
+    )
+    assert result.nps == 5
+    assert result.within_velocity_limit
+    with pytest.raises(ValueError, match="no subcritical isothermal solution"):
+        size_line(flow, candidate_nps=(4,), velocity_limit_m_s=300)
+
+
 def test_gas_threshold_choking_and_fittings():
     assert (
         size_line(gas(), velocity_limit_m_s=40, maximum_pressure_drop_pa=1e5).nps == 5
@@ -172,12 +197,30 @@ def test_two_phase_us_customary_c_conversion():
         )
 
 
-def test_public_service_limit():
-    # ASHRAE Fundamentals 2017 Ch22 Table22, pump suction upper bound 7ft/s.
-    assert service_velocity_limit("pump_suction_water").value == pytest.approx(2.1336)
-    assert service_velocity_limit("general_water").value == pytest.approx(3.048)
+@pytest.mark.parametrize("service", ["pump_suction_water", "general_water"])
+def test_service_limit_uses_caller_input(service):
+    # Synthetic screening values, not handbook data.
+    for limit in (1.5, 2.5):
+        result = service_velocity_limit(service, velocity_limit_m_s=limit)
+        assert result.value == limit
+        assert result.units == "m/s"
+        assert result.citation.code_id == "ashrae-fundamentals"
+
+
+def test_service_limit_has_no_default():
+    with pytest.raises(TypeError):
+        service_velocity_limit("general_water")
+
+
+@pytest.mark.parametrize("limit", [0, -1, math.nan, math.inf, True, None, "2"])
+def test_service_limit_rejects_invalid_input(limit):
     with pytest.raises(ValueError):
-        service_velocity_limit("gas")
+        service_velocity_limit("general_water", velocity_limit_m_s=limit)
+
+
+def test_service_limit_rejects_unsupported_service():
+    with pytest.raises(ValueError, match="unsupported service"):
+        service_velocity_limit("gas", velocity_limit_m_s=2)
 
 
 @pytest.mark.parametrize(

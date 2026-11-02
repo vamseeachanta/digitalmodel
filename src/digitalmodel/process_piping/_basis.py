@@ -34,7 +34,8 @@ _RECORDS = {
         "ashrae-fundamentals",
         "ASHRAE",
         "2017",
-        "Chapter 22, Table 22, selected water-service upper bounds",
+        "Chapter 22, Pipe and Tube Design; Water Velocities Based on Type of Service; "
+        "selection guidance only, numeric limit supplied by caller",
     ),
     "erosion": ("api-rp-14e", "API", "1991", "Fifth edition, 2.5(a), eq. (2.14)"),
 }

@@ -7,8 +7,10 @@ material allowables, flange ratings or gasket factors is embedded.
 Dimension spot checks: NPS 6 OD 6.625in, Sch40 .280in, NPS4 Sch40
 .237in wall, existing B36.10M catalog and Wheatland A53 submittal chart:
 https://www.wheatland.com/wp-content/uploads/2017/12/ASTM-A53-Schedule-40-Submittal-Sheet.pdf
-NPS6 Class300: twelve 3/4in fasteners, ASME B16.5 bolting dimensions:
-https://apiint.com/flange-dimensions/bolt-stud-torque-charts/ansi-asme-b16-5-bolt-chart/
+NPS6 Class300: twelve 3/4in fasteners and 215.806 mm² tensile area are
+assumed for illustration; confirm against the governing flange standard.
+Reference: ASME B16.5-2025, Pipe Flanges and Flanged Fittings:
+NPS 1/2 Through NPS 24, Metric/Inch Standard.
 All stress/allowance/friction/gasket/flange inputs below are illustrative
 case assumptions, not sourced material properties or product limits.
 Methods and source clauses are in the imported calculation docstrings.
@@ -128,7 +130,8 @@ def run_example() -> dict:
         "water_nps4": asdict(water_line),
         "selected_water_line": asdict(picked),
         "general_water_velocity_guidance": asdict(
-            service_velocity_limit("general_water")
+            # Synthetic limit, assumed for illustration; qualify for actual service.
+            service_velocity_limit("general_water", velocity_limit_m_s=2)
         ),
         "gas_nps4": asdict(
             evaluate_line(gas, nps=4, schedule="40", velocity_limit_m_s=40)
