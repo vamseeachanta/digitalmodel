@@ -308,6 +308,10 @@ docs/reports/*
 !docs/domains/cathodic_protection/reports/
 !docs/domains/cathodic_protection/reports/**
 
+# Retain selected module reports through directory-local exceptions.
+!docs/reports/modules/
+docs/reports/modules/*/
+
 # ==========================================
 # Project-Specific: Agent/AI Runtime
 # ==========================================
