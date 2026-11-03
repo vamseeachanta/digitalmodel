@@ -73,6 +73,11 @@ public `sources` locators. Each calculation validates its records through the
 existing wiki resolver. Set `LLM_WIKI_PATH` to an authorized wiki checkout whose
 source records carry the following metadata. Paths are relative to that checkout.
 
+Citation targets may be standards, sources or concepts pages carrying the cited
+clause, as permitted by the calculation citation contract, rule 7. The BSEE
+record uses a source page for its External Overpressure section. Page category
+does not replace edition, section, sibling or project metadata validation.
+
 | Wiki path | code_id | publisher | revision | section |
 | --- | --- | --- | --- | --- |
 | `wikis/engineering/wiki/standards/dnvgl-st-f101-2017.md` | DNVGL-ST-F101 | DNV | 2017 | Sections 5.4.4-5.4.5 |
