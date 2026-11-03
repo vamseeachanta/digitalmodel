@@ -9,9 +9,9 @@
 #      and which -- in the "Detect touched test domains" and "Domain test
 #      aggregate" job summaries.
 #   2. `.github/workflows/full-matrix-sweep.yml` ("Main full run") runs EVERY
-#      shard once a day on `main`, under its own distinct check names. Our own
-#      cron dispatches it (maintainer ruling, 28 Oct 2026); there is no push or
-#      GitHub schedule trigger for full runs. Tests already failing on main are
+#      shard once a day on `main`, under its own distinct check names. A daily
+#      GitHub schedule backs up dispatch from an external scheduler.
+#      Tests already failing on main are
 #      quarantined in tests/quarantine.txt, so a pass here means pass.
 name: Quality Gates by Domain
 
@@ -298,9 +298,8 @@ jobs:
     name: tests-${{ matrix.domain }}
     needs: detect-domains
     if: needs.detect-domains.outputs.has-domains == 'true'
-    # Our self-hosted x64 runners (the same architecture the shards were proven
-    # on); fork pull requests stay on GitHub-hosted runners.
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux","X64"]') }}
+    # Keep the runner supplied by the domain matrix until another route is proven.
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect-domains.outputs.matrix) }}

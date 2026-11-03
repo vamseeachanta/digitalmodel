@@ -376,8 +376,8 @@ def compare_results(baseline_path: Path, results: Path, max_age: float, summary:
     return 0 if report["passed"] else 1
 
 
-# Events that can produce a main baseline. The Main full run is dispatched by our
-# own cron (workflow_dispatch); push and schedule keep older baselines readable.
+# Events that can produce a main baseline. The Main full run supports an external
+# scheduler and a daily schedule; push keeps older baselines readable.
 MAIN_RUN_EVENTS = frozenset({"push", "schedule", "workflow_dispatch"})
 
 
@@ -399,8 +399,8 @@ def gh_json(endpoint: str) -> dict[str, Any]:
 def is_main_sweep(run: dict[str, Any], repository: str) -> bool:
     """Require a completed main run from this repository's own main.
 
-    The Main full run is dispatched by our own cron (workflow_dispatch); push and
-    schedule stay accepted so older published baselines remain readable.
+    The Main full run supports external dispatch and a daily schedule; push
+    stays accepted so older published baselines remain readable.
     """
     return (run.get("event") in MAIN_RUN_EVENTS
             and run.get("head_branch") == "main"

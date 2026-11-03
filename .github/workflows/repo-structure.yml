@@ -11,7 +11,7 @@ on:
 # GitHub Actions workflow syntax, concurrency (unversioned):
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: repo-structure-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:

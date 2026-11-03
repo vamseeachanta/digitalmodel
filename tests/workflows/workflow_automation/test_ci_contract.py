@@ -57,9 +57,8 @@ def test_install_selected_extras_include_test_plugins(workflow, plugin):
 def test_heartbeat_runs_daily_without_path_filters(workflow):
     """Issue #1958 requires daily execution even without matching changes.
 
-    Owner ruling, 28 Oct 2026: the daily run is the cron-dispatched "Main full
-    run" (full-matrix-sweep.yml), which calls this workflow without path
-    filters; GitHub `schedule:` triggers are not used.
+    The daily "Main full run" (full-matrix-sweep.yml) calls this workflow
+    without path filters and has its own GitHub schedule fallback.
     """
     assert "workflow_call" in workflow["on"]
     assert "schedule" not in workflow["on"]

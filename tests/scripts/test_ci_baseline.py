@@ -46,7 +46,18 @@ def evidence_metadata(monkeypatch):
     monkeypatch.setattr(ci, "gh_text", lambda endpoint: f"FAILED {EVIDENCE_NODE} - assertion\n")
 
 
-def run_health_writer(body, *, active=True, existing=True):
+FULL_RUN_JOBS = (
+    'full-matrix', 'sweep-tests', 'quality-gates-report', 'atlas-drift', 'docs',
+    'repo-structure', 'meshing-bridge', 'workflow-automation', 'content-store',
+    'capability-card-links',
+)
+
+
+def sweep_needs(**results):
+    return {name: {'result': results.get(name, 'success')} for name in FULL_RUN_JOBS}
+
+
+def run_health_writer(body, *, active=True, existing=True, needs=None, baseline_available=True):
     """Execute the shipped health script with isolated GitHub and file doubles."""
     workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
     step = next(s for s in workflow['jobs']['sweep-result']['steps']
@@ -57,7 +68,9 @@ def run_health_writer(body, *, active=True, existing=True):
     const baseline = {tests: input.active ? {'tests/example.py::test_case':
       {shard: 'example', first_seen_run: 1, run_id: 10}} : {},
       shards: {example: {parsed: true, conclusion: 'success'}}};
-    const fakeFs = {existsSync: () => false, readFileSync: () => JSON.stringify(baseline)};
+    process.env.SWEEP_NEEDS = JSON.stringify(input.needs);
+    const fakeFs = {existsSync: path => path === 'baseline.json' && input.baseline_available,
+      readFileSync: () => JSON.stringify(baseline)};
     const issue = {number: 1, title: 'main-health: example', body: input.body};
     const github = {paginate: async (method) => method === 'issues' && input.existing ? [issue] : [],
       rest: {issues: {listForRepo: 'issues', listLabelsForRepo: 'labels',
@@ -74,9 +87,68 @@ def run_health_writer(body, *, active=True, existing=True):
     '''
     completed = subprocess.run(
         ['node', '-e', harness], input=json.dumps(dict(
-            script=step['with']['script'], body=body, active=active, existing=existing)),
+            script=step['with']['script'], body=body, active=active, existing=existing,
+            needs=needs if needs is not None else sweep_needs(),
+            baseline_available=baseline_available)),
         text=True, capture_output=True, check=True, timeout=30)
     return json.loads(completed.stdout)
+
+
+def test_sweep_result_waits_for_every_daily_check():
+    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
+    job = workflow['jobs']['sweep-result']
+    assert set(job['needs']) == set(FULL_RUN_JOBS)
+    assert job['if'] == 'always()'
+    for name in ('Update main health', 'Enforce full sweep result'):
+        step = next(step for step in job['steps'] if step['name'] == name)
+        assert step['env']['SWEEP_NEEDS'] == '${{ toJSON(needs) }}'
+        assert 'always()' in step['if']
+
+
+@pytest.mark.parametrize('job', FULL_RUN_JOBS)
+@pytest.mark.parametrize('conclusion', ['failure', 'cancelled', 'skipped', 'timed_out', ''])
+def test_health_keeps_non_successful_daily_check_open(job, conclusion):
+    output = run_health_writer('', active=False, needs=sweep_needs(**{job: conclusion}))
+    update = output['calls'][0]
+    assert update['state'] == 'open'
+    assert f'| {job} | {conclusion or "unknown"} |' in update['body']
+    assert 'Incomplete full-run evidence: ' + job in update['body']
+
+
+def test_health_creates_issue_for_daily_check_without_test_failure():
+    output = run_health_writer('', active=False, existing=False,
+                               needs=sweep_needs(docs='failure'))
+    assert [call['kind'] for call in output['calls']] == ['label', 'create']
+
+
+def test_health_missing_baseline_is_incomplete():
+    output = run_health_writer('', active=False, baseline_available=False)
+    assert output['calls'][0]['state'] == 'open'
+    assert 'Incomplete shard evidence: baseline unavailable' in output['calls'][0]['body']
+
+
+@pytest.mark.parametrize('job', FULL_RUN_JOBS)
+@pytest.mark.parametrize('conclusion', ['success', 'failure', 'cancelled', 'skipped', ''])
+def test_full_sweep_enforces_every_job(job, conclusion):
+    workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
+    step = next(step for step in workflow['jobs']['sweep-result']['steps']
+                if step['name'] == 'Enforce full sweep result')
+    harness = r'''
+    const input = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+    process.env.SWEEP_NEEDS = JSON.stringify(input.needs);
+    const failures = [];
+    const core = {setFailed: value => failures.push(value)};
+    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+    new AsyncFunction('core', input.script)(core).then(() =>
+      console.log(JSON.stringify(failures)));
+    '''
+    completed = subprocess.run(['node', '-e', harness], input=json.dumps({
+        'script': step['with']['script'], 'needs': sweep_needs(**{job: conclusion}),
+    }), text=True, capture_output=True, check=True, timeout=30)
+    failures = json.loads(completed.stdout)
+    assert bool(failures) is (conclusion != 'success')
+    if failures:
+        assert job in failures[0]
 
 
 @pytest.mark.parametrize('active', [True, False])
@@ -142,7 +214,7 @@ def test_health_workflow_names_and_soft_failure_are_preserved():
     ]
     step = next(s for s in steps if s['name'] == 'Update main health')
     assert step['continue-on-error'] is True
-    assert step['if'] == "github.ref == 'refs/heads/main'"
+    assert step['if'] == "always() && github.ref == 'refs/heads/main'"
 
 
 def result(shard="example", ids=(SCR,), conclusion="failure", **updates):

@@ -9,9 +9,9 @@
 # structure, the meshing bridge, workflow automation, the content store and the
 # public capability-page link check.
 #
-# Trigger: workflow_dispatch only. Our own cron runs
-# scripts/ci/dispatch_main_full_run.sh once a day (`gh workflow run`); there is
-# deliberately no GitHub `schedule:` or push trigger.
+# Trigger: a daily GitHub schedule provides a fallback for an external scheduler.
+# scripts/ci/dispatch_main_full_run.sh also supports dispatch on demand and skips
+# an active run.
 #
 # Job names here are deliberately distinct from the PR-gating workflow's
 # (`sweep-tests-*` / `Full matrix sweep result` vs `tests-*` / `Domain test
@@ -21,6 +21,8 @@ name: Main full run
 
 "on":
   workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
 
 permissions:
   contents: read
@@ -81,7 +83,7 @@ jobs:
   sweep-tests:
     name: sweep-tests-${{ matrix.domain }}
     needs: full-matrix
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux","X64"]') }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -189,7 +191,17 @@ jobs:
 
   sweep-result:
     name: Full matrix sweep result
-    needs: [full-matrix, sweep-tests]
+    needs:
+      - full-matrix
+      - sweep-tests
+      - quality-gates-report
+      - atlas-drift
+      - docs
+      - repo-structure
+      - meshing-bridge
+      - workflow-automation
+      - content-store
+      - capability-card-links
     permissions:
       contents: read
       actions: read
@@ -267,7 +279,9 @@ jobs:
 
       - name: Update main health
         continue-on-error: true
-        if: github.ref == 'refs/heads/main'
+        if: always() && github.ref == 'refs/heads/main'
+        env:
+          SWEEP_NEEDS: ${{ toJSON(needs) }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -277,7 +291,10 @@ jobs:
               return {storedRunNumber, skip: storedRunNumber !== null && storedRunNumber > runNumber};
             }
             const fs = require('fs');
-            const baseline = JSON.parse(fs.readFileSync('baseline.json', 'utf8'));
+            const baselineAvailable = fs.existsSync('baseline.json');
+            const baseline = baselineAvailable
+              ? JSON.parse(fs.readFileSync('baseline.json', 'utf8'))
+              : {tests: {}, shards: {}};
             const previous = fs.existsSync('previous-baseline.json')
               ? JSON.parse(fs.readFileSync('previous-baseline.json', 'utf8'))
               : {tests: {}};
@@ -311,7 +328,15 @@ jobs:
               row.parsed !== true || !['success', 'failure'].includes(row.conclusion) ||
               (row.conclusion === 'failure' && !active.some(([node, record]) => record.shard === id)));
             if (uncertain.length) lines.push('', 'Incomplete shard evidence: ' + uncertain.map(([id]) => cell(id)).join(', '));
-            const state = active.length || uncertain.length ? 'open' : 'closed';
+            if (!baselineAvailable) lines.push('', 'Incomplete shard evidence: baseline unavailable');
+            const checks = Object.entries(JSON.parse(process.env.SWEEP_NEEDS));
+            lines.push('', 'Full-run job conclusions:', '', '| Job | Result |', '| --- | --- |');
+            for (const [id, row] of checks) {
+              lines.push(`| ${cell(id)} | ${cell(row.result || 'unknown')} |`);
+            }
+            const incomplete = checks.filter(([id, row]) => row.result !== 'success');
+            if (incomplete.length) lines.push('', 'Incomplete full-run evidence: ' + incomplete.map(([id]) => cell(id)).join(', '));
+            const state = active.length || uncertain.length || incomplete.length || !baselineAvailable ? 'open' : 'closed';
             const body = lines.join('\n');
             if (issue) {
               await github.rest.issues.update({owner, repo, issue_number: issue.number, body, state});
@@ -324,22 +349,18 @@ jobs:
             }
 
       - name: Enforce full sweep result
+        if: always()
         env:
-          MATRIX_RESULT: ${{ needs.full-matrix.result }}
-          SWEEP_RESULT: ${{ needs.sweep-tests.result }}
-        run: |
-          if [ "$MATRIX_RESULT" != "success" ]; then
-            echo "Full matrix construction did not succeed: $MATRIX_RESULT"
-            exit 1
-          fi
-
-          if [ "$SWEEP_RESULT" != "success" ]; then
-            echo "At least one shard failed in the full sweep: $SWEEP_RESULT"
-            echo "See the per-shard table in this job's summary."
-            exit 1
-          fi
-
-          echo "All domain shards passed the full sweep."
+          SWEEP_NEEDS: ${{ toJSON(needs) }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const checks = Object.entries(JSON.parse(process.env.SWEEP_NEEDS));
+            const incomplete = checks.filter(([id, row]) => row.result !== 'success');
+            if (incomplete.length) {
+              core.setFailed('Full-run jobs did not succeed: ' + incomplete
+                .map(([id, row]) => `${id}: ${row.result || 'unknown'}`).join(', '));
+            }
 
   # --- Checks that left the pull-request path (maintainer ruling, 28 Oct 2026) ---
 

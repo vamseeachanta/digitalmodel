@@ -6,7 +6,7 @@
 #
 # The full quality-gates CLI (documentation, coverage, bandit, both Python
 # versions) moved to the "Main full run" workflow (full-matrix-sweep.yml), which
-# our own cron dispatches once a day on main. No push or schedule trigger here.
+# runs daily on main with a GitHub schedule and supports external dispatch.
 name: Quality Gates
 
 on:

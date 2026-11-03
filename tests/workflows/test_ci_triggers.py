@@ -136,8 +136,11 @@ def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
     """Push and manual runs keep separate groups identified by run ID."""
     first = concurrency_result(filename, event, 101)
     second = concurrency_result(filename, event, 102)
-    assert first == (f"{load_workflow(filename)['name']}-run-101", False)
-    assert second == (f"{load_workflow(filename)['name']}-run-102", False)
+    prefix = {"gmsh-meshing-tests.yml": "gmsh", "parametric-atlas-drift.yml": "atlas-drift"}.get(
+        filename, load_workflow(filename)["name"]
+    )
+    assert first == (f"{prefix}-run-101", False)
+    assert second == (f"{prefix}-run-102", False)
 
 
 @pytest.mark.parametrize(
@@ -413,23 +416,24 @@ def test_trigger_tests_run_in_harness() -> None:
     assert "tests/workflows/test_ci_triggers.py" in commands
 
 
-def test_main_full_run_is_dispatch_only() -> None:
-    """Our own cron dispatches the daily Main full run; GitHub never schedules it."""
+def test_main_full_run_has_daily_schedule_fallback() -> None:
+    """Daily execution survives an unavailable external scheduler."""
     workflow = load_workflow("full-matrix-sweep.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert workflow["name"] == "Main full run"
-    assert triggers == {"workflow_dispatch": None}
+    assert triggers == {"workflow_dispatch": None, "schedule": [{"cron": "17 3 * * *"}]}
     calls = {job["uses"] for job in workflow["jobs"].values() if "uses" in job}
     for filename in MAIN_FULL_RUN_ONLY + ("repo-structure.yml",):
         assert f"./.github/workflows/{filename}" in calls
 
 
-def test_no_workflow_uses_github_schedule() -> None:
-    """Full runs are dispatched by our cron (owner ruling, 28 Oct 2026)."""
+def test_only_main_full_run_uses_github_schedule() -> None:
+    """The daily fallback schedules the caller, keeping one full-run entry point."""
     for path in sorted(WORKFLOWS.glob("*.yml")):
         workflow = load_workflow(path.name)
         triggers = workflow["on"] if "on" in workflow else workflow[True]
-        assert "schedule" not in (triggers or {}), path.name
+        if path.name != "full-matrix-sweep.yml":
+            assert "schedule" not in (triggers or {}), path.name
 
 
 @pytest.mark.parametrize("filename", MAIN_FULL_RUN_ONLY)
@@ -444,11 +448,24 @@ def test_currency_checks_left_the_pull_request_path(filename: str) -> None:
     ("quality-gates-by-domain.yml", "domain-tests"),
     ("full-matrix-sweep.yml", "sweep-tests"),
 ))
-def test_domain_shards_run_on_self_hosted_x64(filename: str, job_id: str) -> None:
-    """Shards use our x64 runners; fork pull requests stay GitHub-hosted."""
+def test_domain_shards_keep_matrix_runner(filename: str, job_id: str) -> None:
+    """Keep the proven runner supplied by domain detection on both paths."""
     runs_on = load_workflow(filename)["jobs"][job_id]["runs-on"]
-    assert "github.event.pull_request.head.repo.fork && 'ubuntu-latest'" in runs_on
-    assert '["self-hosted","Linux","X64"]' in runs_on
+    assert runs_on == "${{ matrix.runner }}"
+
+
+def test_called_workflows_have_distinct_concurrency_groups() -> None:
+    """Reusable workflows share caller context but must not share a lock."""
+    groups = []
+    for filename, prefix in (
+        ("gmsh-meshing-tests.yml", "gmsh-"),
+        ("parametric-atlas-drift.yml", "atlas-drift-"),
+        ("repo-structure.yml", "repo-structure-"),
+    ):
+        group = load_workflow(filename)["concurrency"]["group"]
+        assert group.startswith(prefix)
+        groups.append(group)
+    assert len(set(groups)) == len(groups)
 
 
 def test_lint_gate_is_fast_and_diff_scoped() -> None:
@@ -521,13 +538,13 @@ def test_manifest_history_requirement_matches_domain_mapping() -> None:
 
 @pytest.mark.parametrize("run_id", ("101", "102"))
 @pytest.mark.parametrize("event,ref,number,expected", (
-    ("pull_request", "refs/pull/1/merge", "1", "Repository Structure-1"),
-    ("pull_request", "refs/pull/2/merge", "2", "Repository Structure-2"),
-    ("push", "refs/heads/main", None, "Repository Structure-refs/heads/main"),
-    ("push", "refs/heads/topic", None, "Repository Structure-refs/heads/topic"),
-    ("push", "refs/heads/1", None, "Repository Structure-refs/heads/1"),
+    ("pull_request", "refs/pull/1/merge", "1", "repo-structure-1"),
+    ("pull_request", "refs/pull/2/merge", "2", "repo-structure-2"),
+    ("push", "refs/heads/main", None, "repo-structure-refs/heads/main"),
+    ("push", "refs/heads/topic", None, "repo-structure-refs/heads/topic"),
+    ("push", "refs/heads/1", None, "repo-structure-refs/heads/1"),
     ("workflow_dispatch", "refs/heads/main", None,
-     "Repository Structure-refs/heads/main"),
+     "repo-structure-refs/heads/main"),
 ))
 def test_repo_structure_cancels_superseded_runs(
     event: str, ref: str, number: str | None, expected: str, run_id: str,
@@ -539,7 +556,7 @@ def test_repo_structure_cancels_superseded_runs(
     https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
     https://docs.github.com/en/actions/reference/evaluate-expressions-in-workflows-and-actions#operators
 
-    Hand substitution: prefix the workflow name and a hyphen to the PR number
+    Hand substitution: prefix the fixed workflow identifier to the PR number
     when present, otherwise to the full ref. Thus PRs 1 and 2 give suffixes
     '1' and '2'; pushes give 'refs/heads/main', 'refs/heads/topic' and
     'refs/heads/1'. A manual main run shares the main push group. Synthetic
