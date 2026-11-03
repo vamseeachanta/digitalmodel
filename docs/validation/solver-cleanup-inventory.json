@@ -192,7 +192,7 @@
       "sources": [
         {
           "path": "src/digitalmodel/solvers/calculix/fem_chain.py",
-          "sha256": "855c7be3208f45220a39dea7dc760168d093752460fad068af3ce442d53a5808"
+          "sha256": "b2aa1928507ee21b07b04a87ae25be210edde20b955f1941bb29d8b42c318aa0"
         }
       ],
       "observations": {

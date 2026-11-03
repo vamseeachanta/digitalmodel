@@ -303,7 +303,20 @@ class FEMChain:
         """
         Full chain: plate with hole -> mesh -> solve -> Kt.
 
-        Uses quarter-symmetry model with W/d > 5 so theoretical Kt ~ 3.0.
+        Uses quarter symmetry with transverse width W=200 and hole diameter
+        d=20 (W/d=10). Kt uses gross-section stress: peak hole sigma_xx divided
+        by sigma_applied. A net-section factor instead uses nominal stress
+        sigma_applied * W/(W-d), so the two factors are not interchangeable.
+
+        Reference: COMSOL 6.3, "Kirsch Infinite Plate Problem", Model Definition:
+        https://doc.comsol.com/6.3/doc/com.comsol.help.models.sme.kirsch_plate/kirsch_plate.html
+        Its plane-stress square has the same width-to-hole ratio and distributed
+        traction. Kirsch's infinite-plate limit gives Kt=3.0 on a gross basis.
+        For the finite-width strip comparison, see Peterson's Stress
+        Concentration Factors, 2nd ed. (1997), Chart 4.1:
+        https://onlinelibrary.wiley.com/doi/10.1002/9780470172674.ch4
+        That strip approximation is not an exact solution for this finite square,
+        solid mesh and equivalent nodal loading; no chart values are used here.
         """
         plate_w = 200.0
         plate_h = 200.0

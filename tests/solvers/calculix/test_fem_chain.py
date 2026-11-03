@@ -641,7 +641,16 @@ class TestFEMChain:
         reason="Requires gmsh and CalculiX (ccx)",
     )
     def test_plate_with_hole_kt(self):
-        """AC: Plate with hole Kt within 5% of 3.0 (infinite plate theory)."""
+        """AC: Gross-section Kt within 5% of Kirsch's infinite-plate value 3.0.
+
+        COMSOL 6.3, "Kirsch Infinite Plate Problem", Model Definition, uses the
+        same W/d=10 square proportions with distributed traction; see the source
+        link in FEMChain.run_plate_validation. Peterson's Stress Concentration
+        Factors, 2nd ed. (1997), Chart 4.1, provides a finite-width strip
+        comparison, not an exact oracle for this finite square and nodal loading.
+        The denominator is applied gross-section stress, not net-section stress.
+        Retain the existing 5% criterion; an observed solver Kt is not the oracle.
+        """
         chain = FEMChain()
         result = chain.run_plate_validation(sigma_applied=100.0)
         kt = result["kt"]
