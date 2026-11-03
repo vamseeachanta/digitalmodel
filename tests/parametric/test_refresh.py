@@ -145,6 +145,45 @@ def test_riser_fatigue_fingerprint_tracks_touchdown(tmp_path):
     assert after != before
 
 
+def test_spectral_fatigue_staleness_tracks_grid_source(tmp_path, monkeypatch):
+    """Changing the copied grid policy shall invalidate the stored fatigue atlas."""
+    import shutil
+
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        monkeypatch.delenv(key, raising=False)
+    _copy_basis("spectral-fatigue", tmp_path)
+    relative = "src/digitalmodel/hydrodynamics/models.py"
+    live_source = refresh.REPO_ROOT / relative
+    copied_source = tmp_path / relative
+    copied_source.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(live_source, copied_source)
+    original = copied_source.read_bytes()
+    before_digest = hashlib.sha256(original).hexdigest()
+    fingerprint = refresh.content_fingerprint
+    monkeypatch.setattr(refresh, "content_fingerprint", lambda wid: fingerprint(wid, tmp_path))
+    before = refresh.refresh_status("spectral-fatigue")
+    assert before["stale"] is False
+    assert before["current"] == before["stored"] == fingerprint("spectral-fatigue", tmp_path)
+    changed = original.replace(b"DEFAULT_TAIL_MULTIPLIER = 20.0",
+                               b"DEFAULT_TAIL_MULTIPLIER = 10.0")
+    assert changed != original
+    try:
+        copied_source.write_bytes(changed)
+        assert hashlib.sha256(copied_source.read_bytes()).hexdigest() != before_digest
+        during = refresh.refresh_status("spectral-fatigue")
+        assert during["stale"] is True
+        assert during["current"] == fingerprint("spectral-fatigue", tmp_path)
+        assert during["current"] != before["current"]
+        assert during["stored"] == before["stored"]
+    finally:
+        copied_source.write_bytes(original)
+        assert hashlib.sha256(live_source.read_bytes()).hexdigest() == before_digest
+    assert hashlib.sha256(copied_source.read_bytes()).hexdigest() == before_digest
+    restored = refresh.refresh_status("spectral-fatigue")
+    assert restored["stale"] is False
+    assert restored["current"] == before["current"]
+
+
 @pytest.fixture
 def stub_refresh_builds(monkeypatch, tmp_path):
     """Replace registry builds with validation records saved in temporary storage."""
@@ -172,15 +211,15 @@ def stub_refresh_builds(monkeypatch, tmp_path):
             destination = tmp_path / workflow_id
             destination.mkdir()
             (destination / "validation.json").write_text(
-                json.dumps(records[workflow_id]) + "\n", encoding="utf-8",
+                json.dumps(records[workflow_id]) + "\n", encoding="utf-8", newline="\n",
             )
             basename = f"atlas-{workflow_id}"
             staged = (atlas_root or tmp_path) / basename / "rebuilt"
             staged.mkdir(parents=True)
             (staged / "validation.json").write_text(
-                json.dumps(records[workflow_id]) + "\n", encoding="utf-8",
+                json.dumps(records[workflow_id]) + "\n", encoding="utf-8", newline="\n",
             )
-            (staged.parent / "default.txt").write_text("rebuilt")
+            (staged.parent / "default.txt").write_text("rebuilt", encoding="utf-8", newline="\n")
             return SimpleNamespace(validation=records[workflow_id],
                                    basename=basename, atlas_id="rebuilt")
 
@@ -209,7 +248,7 @@ def test_apply_failed_validation_returns_distinct_status(
     assert built == ids
     assert "all atlases current" not in output
     for workflow_id, record in zip(ids, records):
-        assert json.loads((tmp_path / workflow_id / "validation.json").read_text()) == record
+        assert json.loads((tmp_path / workflow_id / "validation.json").read_text(encoding="utf-8")) == record
         if not record["passes"]:
             assert f"WARNING: {workflow_id} regenerated but failed validation gate" in output
 
@@ -236,8 +275,8 @@ def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
     ids, built = stub_refresh_builds([{}])
     previous = tmp_path / f"atlas-{ids[0]}"
     previous.mkdir()
-    (previous / "default.txt").write_text("previous")
-    (previous / "validation.json").write_text('{"passes": true}\n')
+    (previous / "default.txt").write_text("previous", encoding="utf-8", newline="\n")
+    (previous / "validation.json").write_text('{"passes": true}\n', encoding="utf-8", newline="\n")
     before = _file_digests(previous)
     assert refresh.main(["--apply"]) == 2
     assert built == ids
@@ -247,7 +286,7 @@ def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
 
 
 def _file_digests(root):
-    return {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
+    return {path.relative_to(root).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in root.rglob("*") if path.is_file()}
 
 
@@ -274,7 +313,7 @@ def disk_refresh_builds(monkeypatch, tmp_path):
                           pd.DataFrame({"value": [0.0]}), {"passes": True},
                           {"content_fingerprint": "previous"})
             atlas.save(root)
-            (root / wid / "old" / "notes.txt").write_text("retained\n")
+            (root / wid / "old" / "notes.txt").write_text("retained\n", encoding="utf-8", newline="\n")
             originals[wid] = _file_digests(root / wid)
 
         def stub_build(wid, atlas_root=None):

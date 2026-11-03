@@ -9,8 +9,12 @@ import json
 import tempfile
 from pathlib import Path
 from click.testing import CliRunner
+import numpy as np
+import pandas as pd
 
 from digitalmodel.hydrodynamics.cli import cli
+from digitalmodel.hydrodynamics.models import WaveParameters, WaveSpectrumType
+from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 
 
 # ============================================================================
@@ -26,7 +30,8 @@ def runner():
 @pytest.fixture
 def temp_output_file():
     """Temporary output file for JSON/CSV results"""
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False,
+                                     encoding="utf-8", newline="\n") as f:
         yield f.name
     Path(f.name).unlink(missing_ok=True)
 
@@ -37,6 +42,65 @@ def temp_output_file():
 
 class TestSpectrumCommand:
     """Test wave spectrum CLI command"""
+
+    @pytest.mark.parametrize("spectrum_type", ["pm", "jonswap", "bretschneider", "issc"])
+    def test_default_grid_matches_api(self, runner, tmp_path, spectrum_type):
+        """Omitted CLI grid options shall retain the shared spectrum tail."""
+        output = tmp_path / "spectrum.csv"
+        result = runner.invoke(cli, [
+            "spectrum", "--type", spectrum_type, "--hs", "4", "--tp", "6",
+            "--output", output.as_posix(),
+        ])
+        assert result.exit_code == 0, result.output
+        actual = pd.read_csv(output, encoding="utf-8")
+        # For this synthetic Tp=6 s case, omega_p=pi/3 rad/s and 20*omega_p
+        # is 20.9439510239 rad/s. The shared numerical policy uses 1000 points.
+        assert len(actual) == 1000
+        assert actual["frequency_rad_s"].iloc[0] == pytest.approx(0.02)
+        assert actual["frequency_rad_s"].iloc[-1] == pytest.approx(20.9439510239)
+        kind = (WaveSpectrumType.PIERSON_MOSKOWITZ if spectrum_type == "pm"
+                else WaveSpectrumType(spectrum_type))
+        omega, density = WaveSpectra().generate_spectrum(WaveParameters(
+            spectrum_type=kind, significant_height=4.0, peak_period=6.0,
+        ))
+        np.testing.assert_allclose(actual["frequency_rad_s"], omega)
+        np.testing.assert_allclose(actual["spectral_density"], density, atol=1e-15)
+        if spectrum_type == "pm":
+            # The independent gamma-function PM integral in the spectrum
+            # documentation gives m0=1, m2=2.1731 and Tz=4.262 s. The 0.02 s
+            # allowance covers the tail/quadrature budget and CLI rounding.
+            fields = dict(line.split(":", 1) for line in result.output.splitlines()
+                          if ":" in line)
+            assert float(fields["Hs"].split()[0]) == pytest.approx(4.0)
+            assert float(fields["Tz"].split()[0]) == pytest.approx(4.262, abs=0.02)
+            assert float(result.output.split("m2 = ")[1].split()[0]) == pytest.approx(2.1731, rel=0.005)
+
+    @pytest.mark.parametrize("options,count,lower,upper", [
+        (["--freq-min", "0.1"], 1000, 0.1, 20.9439510239),
+        (["--freq-max", "3"], 1000, 0.02, 3.0),
+        (["--n-points", "31"], 31, 0.02, 20.9439510239),
+        (["--freq-min", "0.1", "--freq-max", "3", "--n-points", "31"],
+         31, 0.1, 3.0),
+    ])
+    def test_explicit_grid_options(self, runner, tmp_path, options, count, lower, upper):
+        output = tmp_path / "spectrum.csv"
+        result = runner.invoke(cli, [
+            "spectrum", "--type", "pm", "--hs", "4", "--tp", "6",
+            "--output", output.as_posix(), *options,
+        ])
+        assert result.exit_code == 0, result.output
+        actual = pd.read_csv(output, encoding="utf-8")["frequency_rad_s"]
+        np.testing.assert_allclose(actual, np.linspace(lower, upper, count))
+
+    @pytest.mark.parametrize("options", [
+        ["--freq-min", "30"], ["--freq-max", "0.01"], ["--n-points", "1"],
+    ])
+    def test_invalid_grid_is_rejected(self, runner, options):
+        result = runner.invoke(cli, [
+            "spectrum", "--type", "pm", "--hs", "4", "--tp", "6", *options,
+        ])
+        assert result.exit_code != 0
+        assert "Error:" in result.output
 
     def test_jonswap_spectrum(self, runner):
         """Test JONSWAP spectrum generation"""
@@ -79,7 +143,7 @@ class TestSpectrumCommand:
         ])
 
         assert result.exit_code == 0
-        assert f'saved to: {csv_file}' in result.output
+        assert f'saved to: {Path(csv_file).as_posix()}' in result.output
 
         # Verify CSV file exists
         assert Path(csv_file).exists()
@@ -137,7 +201,7 @@ class TestOCIMFWindCommand:
         assert Path(temp_output_file).exists()
 
         # Verify JSON structure
-        with open(temp_output_file, 'r') as f:
+        with open(temp_output_file, 'r', encoding="utf-8") as f:
             data = json.load(f)
 
         assert 'vessel' in data
@@ -188,7 +252,7 @@ class TestOCIMFCurrentCommand:
         assert result.exit_code == 0
         assert Path(temp_output_file).exists()
 
-        with open(temp_output_file, 'r') as f:
+        with open(temp_output_file, 'r', encoding="utf-8") as f:
             data = json.load(f)
 
         assert 'loads' in data
@@ -245,7 +309,7 @@ class TestCombinedEnvironmentCommand:
         assert result.exit_code == 0
         assert Path(temp_output_file).exists()
 
-        with open(temp_output_file, 'r') as f:
+        with open(temp_output_file, 'r', encoding="utf-8") as f:
             data = json.load(f)
 
         assert 'vessel' in data

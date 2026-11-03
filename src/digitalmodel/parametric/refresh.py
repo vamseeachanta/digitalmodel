@@ -126,6 +126,7 @@ SOURCE_FILES: dict[str, list[str]] = {
     "spectral_fatigue": [
         "src/digitalmodel/fatigue/spectral_fatigue.py",
         "src/digitalmodel/hydrodynamics/wave_spectra.py",
+        "src/digitalmodel/hydrodynamics/models.py",
     ],
     "fpso_mooring_full": [
         "src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py",
@@ -167,7 +168,7 @@ LIBRARY_EXPECTATIONS: dict[str, dict[str, Any]] = {
 
 
 def _registry_rows() -> list[dict[str, Any]]:
-    return yaml.safe_load(REGISTRY.read_text())["workflows"]
+    return yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))["workflows"]
 
 
 def _row(workflow_id: str) -> dict[str, Any]:

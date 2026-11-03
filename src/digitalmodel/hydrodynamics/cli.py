@@ -39,9 +39,9 @@ def cli():
 @click.option('--hs', type=float, required=True, help='Significant wave height (m)')
 @click.option('--tp', type=float, required=True, help='Peak period (s)')
 @click.option('--gamma', type=float, default=3.3, help='JONSWAP gamma parameter')
-@click.option('--freq-min', type=float, default=0.02, help='Minimum frequency (rad/s)')
-@click.option('--freq-max', type=float, default=2.0, help='Maximum frequency (rad/s)')
-@click.option('--n-points', type=int, default=100, help='Number of frequency points')
+@click.option('--freq-min', type=float, default=None, help='Minimum frequency (rad/s); defaults to the shared grid')
+@click.option('--freq-max', type=float, default=None, help='Maximum frequency (rad/s); defaults to the peak-scaled grid')
+@click.option('--n-points', type=int, default=None, help='Number of frequency points; defaults to the shared grid')
 @click.option('--output', '-o', type=click.Path(), help='Output CSV file')
 def spectrum_cmd(spectrum_type, hs, tp, gamma, freq_min, freq_max, n_points, output):
     """Generate wave spectrum"""
@@ -55,15 +55,16 @@ def spectrum_cmd(spectrum_type, hs, tp, gamma, freq_min, freq_max, n_points, out
             'issc': WaveSpectrumType.ISSC,
         }
 
-        # Create wave parameters
+        # Forward only supplied overrides so the model owns the grid defaults.
+        grid_options = {key: value for key, value in {
+            'freq_min': freq_min, 'freq_max': freq_max, 'n_frequencies': n_points,
+        }.items() if value is not None}
         params = WaveParameters(
             spectrum_type=type_map[spectrum_type],
             significant_height=hs,
             peak_period=tp,
             gamma=gamma,
-            freq_min=freq_min,
-            freq_max=freq_max,
-            n_frequencies=n_points
+            **grid_options,
         )
 
         # Generate spectrum
@@ -94,8 +95,8 @@ def spectrum_cmd(spectrum_type, hs, tp, gamma, freq_min, freq_max, n_points, out
                 'period_s': 2 * np.pi / frequencies,
                 'spectral_density': S,
             })
-            df.to_csv(output, index=False)
-            click.echo(f"\nSpectrum saved to: {output}")
+            df.to_csv(output, index=False, encoding="utf-8", lineterminator="\n")
+            click.echo(f"\nSpectrum saved to: {Path(output).as_posix()}")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
@@ -148,12 +149,12 @@ def ocimf_wind_cmd(vessel_type, length, beam, draft, displacement, wind_speed,
         click.echo(f"  Yaw (Mz):     {loads['Mz_yaw_Nm']/1e6:.1f} MN·m")
 
         if output:
-            with open(output, 'w') as f:
+            with open(output, 'w', encoding="utf-8", newline="\n") as f:
                 json.dump({
                     'vessel': vessel.to_dict(),
                     'loads': loads,
                 }, f, indent=2)
-            click.echo(f"\nResults saved to: {output}")
+            click.echo(f"\nResults saved to: {Path(output).as_posix()}")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
@@ -206,12 +207,12 @@ def ocimf_current_cmd(vessel_type, length, beam, draft, displacement, current_sp
         click.echo(f"  Yaw (Mz):        {loads['Mz_yaw_Nm']/1e6:.1f} MN·m")
 
         if output:
-            with open(output, 'w') as f:
+            with open(output, 'w', encoding="utf-8", newline="\n") as f:
                 json.dump({
                     'vessel': vessel.to_dict(),
                     'loads': loads,
                 }, f, indent=2)
-            click.echo(f"\nResults saved to: {output}")
+            click.echo(f"\nResults saved to: {Path(output).as_posix()}")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
@@ -274,13 +275,13 @@ def combined_env_cmd(vessel_type, wind_speed, wind_direction, current_speed,
         click.echo(f"  Resultant = {combined['F_resultant_N']/1e3:.1f} kN @ {combined['resultant_direction_deg']:.1f}°")
 
         if output:
-            with open(output, 'w') as f:
+            with open(output, 'w', encoding="utf-8", newline="\n") as f:
                 json.dump({
                     'vessel': vessel.to_dict(),
                     'environment': env.to_dict(),
                     'results': result,
                 }, f, indent=2)
-            click.echo(f"\nResults saved to: {output}")
+            click.echo(f"\nResults saved to: {Path(output).as_posix()}")
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
