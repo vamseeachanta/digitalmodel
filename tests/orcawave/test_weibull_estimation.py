@@ -6,6 +6,7 @@ import math
 
 import numpy as np
 import pytest
+from scipy.integrate import quad
 from scipy.stats import weibull_min
 
 from digitalmodel.orcawave.weibull_fit import (
@@ -200,3 +201,77 @@ def test_affine_equivariance():
 
 def test_three_parameter_law_is_explicit():
     assert WeibullDistribution(2, 3, 1).location == 1
+
+
+def _integrated_population_moments(shape):
+    """Independent Source W substitution t=exp(u), X=k*expm1(u/k).
+
+    The transformed density is exp(u-exp(u)). Integrate centered powers
+    directly to avoid subtracting gamma moments. The omitted tails outside
+    [-50, 5] contribute below 1e-12 for the constructed shapes tested here;
+    quadrature error estimates must also be below 1e-10.
+    """
+
+    def integrate(order, center=0.0):
+        value, error = quad(
+            lambda u: (
+                (shape * math.expm1(u / shape) - center) ** order
+                * math.exp(u - math.exp(u))
+            ),
+            -50,
+            5,
+            epsabs=2e-12,
+            epsrel=2e-12,
+        )
+        assert error < 1e-10
+        return value
+
+    mean = integrate(1)
+    variance = integrate(2, mean)
+    skewness = integrate(3, mean) / variance**1.5
+    return mean, variance, skewness
+
+
+@pytest.mark.parametrize("shape", [0.5, 1.0, 4.0, 15.0])
+def test_population_recovery_within_supported_moment_bracket(shape):
+    """Independent population integration recovers all three parameters.
+
+    The bracket reaches the supported upper endpoint. The 1e-8 relative
+    tolerance covers quadrature and scalar-root arithmetic, not sample error.
+    """
+    moments = _integrated_population_moments(shape)
+    law = distribution_from_moments(*moments, shape_bounds=(0.2, 16))
+    np.testing.assert_allclose(
+        [law.shape, law.scale, law.location], [shape, shape, -shape], rtol=1e-8
+    )
+
+
+def test_large_shape_population_moment_estimation_is_rejected():
+    """Independent large-shape moments must not produce a spurious solution."""
+    moments = _integrated_population_moments(10000)
+    with pytest.raises(ValueError, match="Moment estimation requires.*16"):
+        distribution_from_moments(*moments, shape_bounds=(0.5, 20000))
+
+
+@pytest.mark.parametrize(
+    "bounds", [(0.5, math.nextafter(16, math.inf)), (16, 17), (0.5, 20000)]
+)
+def test_moment_estimator_rejects_entire_unsupported_bracket(bounds):
+    """Reject the supplied bracket rather than silently clipping its endpoint.
+
+    Even exponential population moments inside the supported domain do not
+    justify evaluating an unsupported upper endpoint during root finding.
+    """
+    with pytest.raises(ValueError, match="Moment estimation requires.*16"):
+        distribution_from_moments(5, 4, 2, shape_bounds=bounds)
+
+
+def test_sample_moment_fit_enforces_estimator_shape_domain():
+    """The sample-moment entry point propagates the same explicit restriction."""
+    with pytest.raises(ValueError, match="Moment estimation requires.*16"):
+        fit_weibull(
+            [1, 2, 3, 4, 8],
+            method="moments",
+            location_bounds=(-10, 0.99),
+            shape_bounds=(0.5, 20000),
+        )

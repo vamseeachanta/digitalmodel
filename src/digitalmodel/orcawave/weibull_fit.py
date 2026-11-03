@@ -418,10 +418,17 @@ def distribution_from_moments(
 
     Skewness=(G3-3G1*G2+2G1^3)/(G2-G1^2)^(3/2), Gj=Gamma(1+j/k).
     Solve this scalar equation; lambda=sqrt(v/(G2-G1^2)), gamma=m-lambda*G1.
-    Shape bounds are caller numerical inputs, not empirical validity limits.
-    Raises ValueError if the moments cannot be matched within that bracket.
+    Require 0 < shape_bounds[0] < shape_bounds[1] <= 16. This numerical
+    estimator limit avoids ill-conditioned subtraction of gamma moments at
+    large shapes; it is not a physical validity limit on the Weibull law.
+    Reject the entire bracket rather than clipping it. Raises ValueError
+    for unsupported brackets or moments that cannot be matched within them.
     """
     lo, hi = _bounds(shape_bounds, "shape", positive=True)
+    if hi > 16:
+        raise ValueError(
+            "Moment estimation requires shape bounds with upper endpoint <= 16"
+        )
     if not np.all(np.isfinite([mean, variance, skewness])) or variance <= 0:
         raise ValueError("Require finite mean, positive variance and finite skewness")
 
@@ -470,8 +477,9 @@ def fit_weibull(
       for k<1 the likelihood diverges as gamma approaches the sample minimum.
       This non-regularity follows from (k-1)*log(x_min-gamma) in log density.
     * ``moments``: population-style sample moments (divisor n) and the
-      gamma-moment equations of ``distribution_from_moments``. A solution
-      outside the location bracket is rejected, not clipped.
+      gamma-moment equations of ``distribution_from_moments``. The upper
+      shape bound must be <= 16, the supported numerical estimator limit.
+      A solution outside the location bracket is rejected, not clipped.
     * ``probability_plot``: profile gamma, least squares of
       y=log[-log(1-p)] on log(x-gamma), p_i=(i-.3)/(n+.4). The plotting
       positions and transform are NIST e-Handbook 1.3.3.30 (Weibull Plot):

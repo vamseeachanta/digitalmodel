@@ -13,6 +13,7 @@ before using an extrapolation for design.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-22 | Add distribution, estimation, diagnostics and a synthetic example to support response extreme analysis. |
+| 2 | 2026-11-03 | Restrict moment-estimator shape brackets to avoid inaccurate large-shape solutions; add independent population controls. |
 
 ## Inputs and scope
 
@@ -114,7 +115,17 @@ These follow by expanding the central moments of W. An unattainable skewness,
 or a resulting location outside the supplied bracket, raises `ValueError`.
 Clipping the moment estimate would break the matching equations.
 `distribution_from_moments` also accepts externally supplied population moments
-with a required shape bracket.
+with a required shape bracket. Both entry points require
+`0 < shape_bounds[0] < shape_bounds[1] <= 16`. A bracket with an upper endpoint
+above 16 raises `ValueError` before the gamma-moment equation is evaluated;
+it is not clipped, even if its solution would lie below 16. This is a numerical
+estimator restriction because subtraction of nearly equal gamma terms loses
+skewness accuracy at large shapes. It is not a physical limit on the Weibull
+law, and does not restrict the shape brackets of the maximum-likelihood or
+probability-plot methods. Independent transformed-density integration checks
+population recovery within the supported bracket and rejection of a bracket
+containing shape 10000. Estimation beyond this domain requires a separately
+validated method for central moments.
 
 ### Probability-plot least squares
 
