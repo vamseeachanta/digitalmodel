@@ -32,7 +32,9 @@ def box_spec(tmp_path, symmetry="none", flags="0 0", partial=False):
             ["Synthetic box", "1 1", flags, str(len(panels))]
             + [" ".join(map(str, point)) for panel in panels for point in panel]
         )
-        + "\n"
+        + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     return DiffractionSpec.model_validate(
         {
@@ -90,7 +92,7 @@ def test_matching_pairs_pass(tmp_path, backend_type, symmetry, flags):
             "xz+yz": "xz and yz planes",
         }[symmetry]
         assert (
-            yaml.safe_load(result.read_text())["Bodies"][0]["BodyMeshSymmetry"]
+            yaml.safe_load(result.read_text(encoding="utf-8"))["Bodies"][0]["BodyMeshSymmetry"]
             == expected
         )
 
@@ -123,6 +125,60 @@ def test_buoyancy_from_whole_body_volume(tmp_path, backend_type, symmetry, flags
     report = backend.preflight_reports[0]
     assert report["status"] == "PASS"
     assert report["volume_m3"] == pytest.approx(8)
+
+
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize(
+    "symmetry,flags", [("none", "0 0"), ("xz", "0 1"), ("xz+yz", "1 1")]
+)
+@pytest.mark.parametrize(
+    "width,annotated", [(12, False), (24, False), (5, False), (1, False), (12, True)]
+)
+def test_packed_and_unpacked_df2_are_equivalent(
+    tmp_path, backend_type, mode, symmetry, flags, width, annotated
+):
+    """4*2*1=8 m3 and 1000*8=8000 kg, independent of coordinate wrapping."""
+    spec = box_spec(tmp_path, symmetry, flags, partial=True)
+    spec.vessel.geometry.buoyancy_relative_tolerance = 0
+    backend = backend_type()
+    generate(backend, spec, tmp_path, mode)
+    unpacked_report = backend.preflight_reports[0].copy()
+    mesh = tmp_path / "box.gdf"
+    unpacked_mesh = AQWABackend()._parse_gdf(mesh)
+    lines = mesh.read_text(encoding="utf-8").splitlines()
+    tokens = " ".join(lines[4:]).split()
+    records = [" ".join(tokens[i:i + width]) for i in range(0, len(tokens), width)]
+    if annotated:
+        records = [f"{record} end of panel {i}" for i, record in enumerate(records, 1)]
+    mesh.write_text("\n".join(lines[:4] + records) + "\n", encoding="utf-8", newline="\n")
+
+    generate(backend, spec, tmp_path, mode)
+    packed_mesh = AQWABackend()._parse_gdf(mesh)
+    assert packed_mesh.vertices == pytest.approx(unpacked_mesh.vertices)
+    assert packed_mesh.panels.tolist() == unpacked_mesh.panels.tolist()
+    report = backend.preflight_reports[0]
+    assert report["status"] == unpacked_report["status"] == "PASS"
+    assert report["volume_m3"] == pytest.approx(8)
+    assert report["volume_m3"] == pytest.approx(unpacked_report["volume_m3"])
+    assert report["relative_tolerance"] == unpacked_report["relative_tolerance"] == 0
+
+
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("title", ["123", "123 synthetic", "123 456"])
+def test_numeric_gdf_title_does_not_shift_coordinates(tmp_path, backend_type, mode, title):
+    spec = box_spec(tmp_path, "xz", "0 1", partial=True)
+    spec.vessel.geometry.buoyancy_relative_tolerance = 0
+    mesh = tmp_path / "box.gdf"
+    lines = mesh.read_text(encoding="utf-8").splitlines()
+    lines[0] = title
+    mesh.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    backend = backend_type()
+    generate(backend, spec, tmp_path, mode)
+    assert backend.preflight_reports[0]["status"] == "PASS"
+    # The numeric title does not change 4*2*1=8 m3 of displaced volume.
+    assert backend.preflight_reports[0]["volume_m3"] == pytest.approx(8)
 
 
 @pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
@@ -169,9 +225,9 @@ def test_unreliable_geometry_cannot_pass_df2(tmp_path, backend_type):
     spec.vessel.geometry.buoyancy_relative_tolerance = 0
     mesh = tmp_path / "box.gdf"
     # Delete one wetted quad and adjust the count: an open box has no valid V.
-    lines = mesh.read_text().splitlines()
+    lines = mesh.read_text(encoding="utf-8").splitlines()
     lines[3] = str(int(lines[3]) - 1)
-    mesh.write_text("\n".join(lines[:-4]) + "\n")
+    mesh.write_text("\n".join(lines[:-4]) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="DF2 requires a closed"):
         generate(backend_type(), spec, tmp_path)
 
@@ -244,41 +300,46 @@ def packed_diamond_spec(tmp_path, partial=False, width=12):
     mesh.write_text("\n".join(
         ["Synthetic diamond", "1 1", "0 1", str(len(panels))]
         + [" ".join(coordinates[i:i + width]) for i in range(0, len(coordinates), width)]
-    ) + "\n")
+    ) + "\n", encoding="utf-8", newline="\n")
     return spec
 
 
 @pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
 @pytest.mark.parametrize("width", [12, 24, 5, 1])
-def test_packed_full_body_refuses_reflection(tmp_path, mode, width):
+def test_packed_full_body_refuses_reflection(tmp_path, mode, backend_type, width):
     spec = packed_diamond_spec(tmp_path, width=width)
     assert spec.vessel.geometry.buoyancy_relative_tolerance is None
     with pytest.raises(ValueError, match="both sides"):
-        generate(OrcaWaveBackend(), spec, tmp_path, mode)
+        generate(backend_type(), spec, tmp_path, mode)
     assert not list((tmp_path / "output").glob("*"))
 
 
 @pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
 @pytest.mark.parametrize("width", [12, 24, 5, 1])
-def test_packed_matching_sector_passes(tmp_path, mode, width):
+def test_packed_matching_sector_passes(tmp_path, mode, backend_type, width):
     spec = packed_diamond_spec(tmp_path, partial=True, width=width)
-    result = generate(OrcaWaveBackend(), spec, tmp_path, mode)
-    assert yaml.safe_load(result.read_text())["Bodies"][0]["BodyMeshSymmetry"] == "xz plane"
+    result = generate(backend_type(), spec, tmp_path, mode)
+    assert result.exists()
+    if backend_type is OrcaWaveBackend:
+        assert yaml.safe_load(result.read_text(encoding="utf-8"))["Bodies"][0]["BodyMeshSymmetry"] == "xz plane"
 
 
 @pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
 @pytest.mark.parametrize("symmetry,flags", [("none", "0 0"), ("xz", "0 1")])
 @pytest.mark.parametrize("defect", [
     "zero_count", "negative_count", "fractional_count", "invalid_count",
     "missing_count", "too_few", "too_many", "nan", "inf", "invalid_coordinate",
 ])
 def test_gdf_coordinate_stream_must_be_complete_and_finite(
-    tmp_path, mode, symmetry, flags, defect
+    tmp_path, mode, backend_type, symmetry, flags, defect
 ):
     spec = box_spec(tmp_path, symmetry, flags, partial=True)
     mesh = tmp_path / "box.gdf"
-    header = mesh.read_text().splitlines()[:4]
-    coordinates = mesh.read_text().splitlines()[4:]
+    header = mesh.read_text(encoding="utf-8").splitlines()[:4]
+    coordinates = mesh.read_text(encoding="utf-8").splitlines()[4:]
     tokens = " ".join(coordinates).split()
     counts = {"zero_count": "0", "negative_count": "-1", "fractional_count": "1.5",
               "invalid_count": "bad", "missing_count": ""}
@@ -291,20 +352,21 @@ def test_gdf_coordinate_stream_must_be_complete_and_finite(
     else:
         # A later coordinate in a packed panel must not be discarded.
         tokens[5] = {"nan": "nan", "inf": "inf", "invalid_coordinate": "bad"}[defect]
-    mesh.write_text("\n".join(header + [" ".join(tokens)]) + "\n")
+    mesh.write_text("\n".join(header + [" ".join(tokens)]) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="GDF.*(panel count|coordinates)"):
-        generate(OrcaWaveBackend(), spec, tmp_path, mode)
+        generate(backend_type(), spec, tmp_path, mode)
     assert not list((tmp_path / "output").glob("*"))
 
 
 @pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
 @pytest.mark.parametrize("annotation", ["end of panel 1", "end of panel 9"])
-def test_panel_annotation_cannot_hide_missing_coordinates(tmp_path, mode, annotation):
+def test_panel_annotation_cannot_hide_missing_coordinates(tmp_path, mode, backend_type, annotation):
     spec = packed_diamond_spec(tmp_path, partial=True)
     mesh = tmp_path / "box.gdf"
-    lines = mesh.read_text().splitlines()
+    lines = mesh.read_text(encoding="utf-8").splitlines()
     lines[4] = "0 0 -1 " + annotation
-    mesh.write_text("\n".join(lines) + "\n")
+    mesh.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="Invalid GDF coordinates"):
-        generate(OrcaWaveBackend(), spec, tmp_path, mode)
+        generate(backend_type(), spec, tmp_path, mode)
     assert not list((tmp_path / "output").glob("*"))

@@ -32,6 +32,79 @@ def parse_symmetry_flags(line):
     return flags
 
 
+def read_gdf_panels(file_path: Path) -> tuple[tuple[int, int], np.ndarray]:
+    """Read stored panels using WAMIT v7.4, section 6.1 coordinate ordering.
+
+    Line breaks may occur anywhere in the twelve scalars defining each panel.
+    Comment lines, an optional title and numbered panel annotations are supported.
+    """
+    with file_path.open(encoding="utf-8", errors="replace") as stream:
+        lines = [
+            line.strip() for line in stream
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+    if lines:
+        try:
+            float(lines[0].split()[0])
+        except ValueError:
+            lines = lines[1:]
+        else:
+            # A numeric title remains a title when the next two records
+            # contain ULEN/GRAV and a complete pair of symmetry flags.
+            if len(lines) > 2 and len(lines[2].split()) == 2:
+                try:
+                    parse_symmetry_flags(lines[2])
+                except ValueError:
+                    pass  # The ordinary header validation below will diagnose it.
+                else:
+                    lines = lines[1:]
+    if len(lines) < 3:
+        raise ValueError(f"{file_path.name}: incomplete GDF header")
+    flags = parse_symmetry_flags(lines[1])
+    try:
+        panel_count = int(lines[2].split()[0])
+    except (ValueError, IndexError) as exc:
+        raise ValueError("Invalid GDF panel count: expected a positive integer") from exc
+    if panel_count <= 0:
+        raise ValueError("Invalid GDF panel count: expected a positive integer")
+    return flags, _gdf_coordinates(lines[3:], panel_count, file_path.name)
+
+
+def _gdf_coordinates(lines: list[str], panel_count: int, name: str) -> np.ndarray:
+    """Require complete finite coordinates and retain panel/vertex error context."""
+    tokens = []
+    for line in lines:
+        coordinates, marker, annotation = line.partition("end of panel")
+        tokens.extend(coordinates.split())
+        if marker and (
+            len(tokens) % 12 or annotation.strip() != str(len(tokens) // 12)
+        ):
+            raise ValueError("Invalid GDF coordinates: invalid panel annotation")
+    expected = 12 * panel_count
+    if len(tokens) != expected:
+        context = f"{name}: panel {len(tokens) // 12 + 1}, vertex {len(tokens) % 12 // 3 + 1}"
+        raise ValueError(
+            f"Invalid GDF coordinates ({context}): expected {expected} values "
+            f"for {panel_count} panels, got {len(tokens)}"
+        )
+    values = np.empty(expected, dtype=np.float64)
+    for index, token in enumerate(tokens):
+        try:
+            values[index] = float(token)
+        except ValueError as exc:
+            raise ValueError(
+                f"Invalid GDF coordinates ({name}: panel {index // 12 + 1}, "
+                f"vertex {index % 12 // 3 + 1}): coordinates must be numeric"
+            ) from exc
+    if not np.isfinite(values).all():
+        index = int(np.flatnonzero(~np.isfinite(values))[0])
+        raise ValueError(
+            f"Invalid GDF coordinates ({name}: panel {index // 12 + 1}, "
+            f"vertex {index % 12 // 3 + 1}): coordinates must be finite"
+        )
+    return values.reshape(panel_count, 4, 3)
+
+
 def validate_symmetry(flags, declared, vertices=None):
     """Require the spec and the stored sector to describe the same cuts."""
     declared = getattr(declared, "value", declared)
