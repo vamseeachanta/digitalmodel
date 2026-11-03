@@ -11,9 +11,12 @@ from .basefile import (
     validate_variation_document,
     write_variation_model,
 )
+from .variation_audit import load_variation_document, validate_resolved_variation
 
 __all__ = [
     "build_variation_document",
+    "load_variation_document",
+    "validate_resolved_variation",
     "validate_variation_document",
     "write_variation_model",
 ]

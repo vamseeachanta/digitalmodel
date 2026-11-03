@@ -38,7 +38,7 @@ API579Parameters:
       Conical: [1.001, 1.056, 1.199, 1.394, 1.618, 1.857, 2.103, 2.351, 2.600, 2.847, 3.091, 3.331, 3.568, 3.801, 4.032, 4.262, 4.492, 4.727, 4.970, 5.225, 5.497]
       Spherical: []
 
-#TODO Consolidate inputs in a more centralized fashion (during db wiring up). See API579_py_ecs_API_RP_2RD_template.yml
+#TODO Consolidate inputs in a more centralized fashion (during db wiring up). See API579_py_riser-sys-a_API_RP_2RD_template.yml
 Outer_Pipe:
   Geometry:
     Nominal_ID: NULL

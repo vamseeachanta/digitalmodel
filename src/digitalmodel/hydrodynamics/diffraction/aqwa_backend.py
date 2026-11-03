@@ -17,6 +17,12 @@ from GDF mesh files and emitted in AQWA's fixed-column format.
 
 from __future__ import annotations
 
+from digitalmodel.hydrodynamics.diffraction.external_matrix_contract import (
+    native_matrix,
+    validate_aqwa_matrix_axes,
+    write_matrix_provenance,
+)
+
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -212,6 +218,7 @@ class AQWABackend:
         content = "\r\n".join(all_cards) + "\r\n"
         with open(output_path, "w", newline="") as f:
             f.write(content)
+        write_matrix_provenance(spec, output_dir, "aqwa")
         return output_path
 
     def generate_modular(
@@ -254,6 +261,7 @@ class AQWABackend:
             file_cards = header + cards if idx == 0 else cards
             file_path.write_text("\n".join(file_cards) + "\n")
 
+        write_matrix_provenance(spec, output_dir, "aqwa")
         return output_dir
 
     # -----------------------------------------------------------------
@@ -833,40 +841,27 @@ class AQWABackend:
     # -----------------------------------------------------------------
 
     def build_deck7(self, spec: DiffractionSpec) -> list[str]:
-        """Build Deck 7: wave force spectrum with optional FIDP/FISK cards.
+        """Build Deck 7: wave force spectrum with optional FIDP/SSTF cards.
 
-        Emits FIDP (Frequency Independent DamPing) cards when a body has
-        ``external_damping`` defined, and FISK (Frequency Independent
-        StifFness/sKiffness) cards when ``external_stiffness`` is defined.
+        Emit FIDP damping and SSTF additional structural stiffness.
+        Source: AQWA Reference Manual 2025 R1 sections 11.6.1 and 11.7.1.
         All-zero matrices are skipped.
         """
         cards: list[str] = []
         cards.extend(_deck_banner(7))
-        cards.append(f"{_WS:>10s}WFS1")
-
         bodies = spec.get_bodies()
-        for body in bodies:
+        for index, body in enumerate(bodies, start=1):
+            # AQWA Reference Manual 2025 R1 chapter 11: one WFS* per body.
+            header = f"WFS{index}" if index < 10 else f"WF{index}"
+            cards.append(f"{_WS:>10s}{header}")
+            validate_aqwa_matrix_axes(body)
             vessel = body.vessel
-            if vessel.external_damping is not None and self._matrix_has_nonzero(
-                vessel.external_damping
-            ):
-                cards.extend(
-                    self._build_matrix_cards(
-                        vessel.external_damping,
-                        keyword="FIDP",
-                    )
-                )
-            if vessel.external_stiffness is not None and self._matrix_has_nonzero(
-                vessel.external_stiffness
-            ):
-                cards.extend(
-                    self._build_matrix_cards(
-                        vessel.external_stiffness,
-                        keyword="FISK",
-                    )
-                )
+            for kind, keyword in (("damping", "FIDP"), ("stiffness", "SSTF")):
+                matrix = native_matrix(vessel, kind, "aqwa")
+                if matrix is not None and self._matrix_has_nonzero(matrix):
+                    cards.extend(self._build_matrix_cards(matrix, keyword=keyword))
+            cards.append(" END")
 
-        cards.append(" END")
         return cards
 
     @staticmethod
@@ -879,7 +874,7 @@ class AQWABackend:
         matrix: list[list[float]],
         keyword: str = "FIDP",
     ) -> list[str]:
-        """Build AQWA 6x6 matrix cards (FIDP or FISK format).
+        """Build AQWA 6x6 matrix cards (FIDP or SSTF format).
 
         Each row of the 6x6 matrix becomes one card line with the format::
 

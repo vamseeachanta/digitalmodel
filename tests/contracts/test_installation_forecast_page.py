@@ -1,0 +1,343 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Public forecast artifact disclosure and integrity contract."""
+import hashlib
+import inspect
+import json
+import os
+import re
+import subprocess
+from copy import deepcopy
+from decimal import Decimal
+from html.parser import HTMLParser
+from pathlib import Path
+
+import pytest
+
+from scripts.capabilities import build_installation_forecast_page as builder
+from scripts.capabilities.build_capabilities_inventory import registered_site_paths
+
+ROOT = Path(__file__).resolve().parents[2]
+PAGE = ROOT / 'docs/api/installation/installation-forecast.html'
+LABEL = 'SIMULATED DEMO, not connected offshore'
+CRITERIA = ('Load limits are provisional demonstration assumptions; '
+            'engineering applicability is unresolved.')
+
+
+class Resources(HTMLParser):
+    def handle_starttag(self, tag, attrs):
+        if tag in {'script', 'style', 'link', 'img', 'iframe', 'object', 'embed'}:
+            assert not {'src', 'href', 'data'}.intersection(dict(attrs))
+
+
+def test_disclosures_and_self_containment():
+    text = PAGE.read_text(encoding='utf-8')
+    assert f'<title>{LABEL}</title>' in text
+    assert f'<h1>{LABEL}</h1>' in text
+    assert CRITERIA in text
+    Resources().feed(text)
+    assert len(PAGE.read_bytes()) < 5_000_000
+    assert 'window_probability' in text
+    assert 'Engineering acceptance: NOT EVALUATED' in text
+
+
+def test_manifest_integrity():
+    manifest = json.loads(PAGE.with_suffix('.manifest.json').read_text(encoding='utf-8'))
+    assert manifest['sha256'] == hashlib.sha256(PAGE.read_bytes()).hexdigest()
+    assert manifest['size_bytes'] == PAGE.stat().st_size
+    assert manifest['sanitization']['findings'] == 0
+    assert manifest['sanitization']['terms_checked'] > 0
+    assert manifest['numerical_basis'] == builder.NUMERICAL_BASIS
+
+
+def test_numerical_basis_explains_published_limits_and_alerts():
+    text = PAGE.read_text(encoding='utf-8')
+    basis = json.loads(PAGE.with_suffix('.manifest.json').read_text())['numerical_basis']
+    assert basis['status'] == 'provisional; no basis recorded'
+    conversion = Decimal(str(basis['kN_per_Te']))
+    assert conversion == Decimal('9.81')
+    loads = basis['load_limits_Te']
+    expected = {'Master-link load-path proxy: TopRigging End B': Decimal('173.637'),
+                'Sling2 End B tension': Decimal('106.8309')}
+    assert set(loads) == set(expected)
+    assert {label: Decimal(str(value)) * conversion for label, value in loads.items()} == expected
+    cutoff = Decimal(str(basis['alert_probability']))
+    assert cutoff == Decimal(1) / 5
+    for frame in embedded_scenario(text)['frames']:
+        for channel in frame['channels']:
+            if channel['assumed_limit'] is None:
+                continue
+            assert channel['assumed_limit'] == pytest.approx(float(expected[channel['label']]))
+            alert = channel['exceedance']
+            assert Decimal(str(alert['alert_probability'])) == cutoff
+            assert alert['alert'] is (Decimal(str(alert['window_probability'])) >= cutoff)
+    assert basis['status'] in text
+    assert 'assumed, based on previous experience' not in text
+    assert 'Calibration error trajectories are not published' in text
+    assert 'Revision history' in text
+
+
+def test_independent_worked_probability_example():
+    basis = json.loads(PAGE.with_suffix('.manifest.json').read_text())['numerical_basis']
+    example = basis['worked_example']
+    assert example['forecast_kN'] == [100, 110]
+    # Hand-worked maxima: two equal the limit, three exceed it.
+    maxima = [max(f + e for f, e in zip(example['forecast_kN'], errors, strict=True))
+              for errors in example['error_trajectories_kN']]
+    assert maxima == [110, 110, 111, 111, 112]
+    assert example['limit_kN'] == 110
+    assert sum(value > example['limit_kN'] for value in maxima) == 3
+    assert example['window_probability'] == 3 / 5
+    assert example['alert'] is True
+    text = PAGE.read_text(encoding='utf-8')
+    assert '3 / 5 = 60.0 %' in text
+    assert '20.0 %' in text
+
+
+def test_limit_sources_are_explicit_without_workbook_attribution():
+    text = render_embedded_scenario()
+    basis = builder.NUMERICAL_BASIS
+    assert set(basis['load_limit_sources']) == set(basis['load_limits_Te'])
+    for source in basis['load_limit_sources'].values():
+        assert source in text
+        assert 'original derivation is unverified' in source
+    assert 'Acceptance criteria come from a workbook' not in text
+    assert 'Source criteria originate from a splash-zone workbook' not in text
+
+
+def test_forecast_settings_derive_counts_and_display_probability_fractions():
+    from digitalmodel.workflows.installation_forecast import exceedance_forecast
+
+    text = render_embedded_scenario()
+    settings = builder.NUMERICAL_BASIS['forecast_settings']
+    defaults = inspect.signature(exceedance_forecast).parameters
+    for setting, parameter in [('order', 'order'), ('ridge', 'ridge'), ('horizon_s', 'horizon_s'),
+                               ('stride_samples', 'stride'), ('min_calibration_windows', 'min_calibration')]:
+        assert settings[setting] == defaults[parameter].default
+    assert 'fixed order 40, ridge 0.001' in text
+    assert 'N = floor((NOW / 0.5 - 359) / 10) + 1' in text
+    counts, exceedances = [], []
+    for frame in embedded_scenario(text)['frames']:
+        origin = round((frame['now_s'] - settings['trace_start_s']) / settings['sample_interval_s'])
+        steps = round(settings['horizon_s'] / settings['sample_interval_s'])
+        n = len(range(3 * settings['order'] - 1, origin - steps + 1, settings['stride_samples']))
+        counts.append(n)
+        for channel in frame['channels']:
+            for series in ('history', 'forecast'):
+                times = channel[series]['times']
+                assert all(b - a == pytest.approx(settings['sample_interval_s'])
+                           for a, b in zip(times, times[1:]))
+            assert channel['forecast']['times'][-1] - frame['now_s'] == settings['horizon_s']
+            if 'exceedance' not in channel:
+                continue
+            e = channel['exceedance']
+            assert e['calibration_windows'] == n
+            k = round(e['window_probability'] * n)
+            assert e['window_probability'] == pytest.approx(k / n, abs=1e-12)
+            assert f'{k} of {n} windows' in text
+            if channel['label'].startswith('Master-link'):
+                exceedances.append(k)
+    assert counts == [13, 25, 37, 49, 61]
+    assert exceedances == [0, 3, 1, 14, 23]
+
+
+def test_alert_explanation_uses_retained_peak_and_limit():
+    text = render_embedded_scenario()
+    frame = next(f for f in embedded_scenario(text)['frames'] if f['now_s'] == 420)
+    channel = next(c for c in frame['channels'] if c['label'].startswith('Master-link'))
+    peak, limit = max(channel['forecast']['values']), channel['assumed_limit']
+    assert channel['exceedance']['alert'] is True
+    assert f'{peak:.1f} kN is {limit - peak:.1f} kN below the {limit:.1f} kN limit' in text
+    assert 'alert comes from the back-test error spread' in text
+
+
+def test_conversion_records_public_standard_gravity_source():
+    text = render_embedded_scenario()
+    source = builder.NUMERICAL_BASIS['kN_per_Te_source']
+    assert 'physics.nist.gov' in source
+    assert '9.80665' in source
+    assert 'rounded' in source
+    assert source in text
+
+
+@pytest.mark.parametrize(('frame_index', 'channel_index', 'alert', 'above_limit', 'explained'), [
+    (-1, 1, True, False, True), (-1, 2, True, False, True),
+    (-1, 1, False, False, False), (-1, 1, True, True, False),
+    (3, 1, False, False, False), (3, 1, True, True, False),
+])
+def test_error_spread_explanation_follows_each_channel(frame_index, channel_index, alert, above_limit, explained):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    frame = scenario['frames'][frame_index]
+    channel = frame['channels'][channel_index]
+    channel['exceedance'].update(alert=alert, window_probability=float(alert))
+    channel['forecast']['values'] = [channel['assumed_limit'] + (1 if above_limit else -1)] * len(
+        channel['forecast']['values'])
+    frame['channels'], scenario['frames'] = [channel], [frame]
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    text = builder.render({'demo': {'scenarios': [scenario]}}, config)
+    assert ('alert comes from the back-test error spread' in text) is explained
+    if explained:
+        assert f'At NOW {frame["now_s"]:g} s the plotted forecast peak' in text
+
+
+def test_calibration_text_is_derived_when_settings_change(monkeypatch):
+    settings = dict(builder.NUMERICAL_BASIS['forecast_settings'], order=3, horizon_s=20,
+                    sample_interval_s=2, stride_samples=3, trace_start_s=4)
+    monkeypatch.setitem(builder.NUMERICAL_BASIS, 'forecast_settings', settings)
+    text = builder.numerical_basis_html([{'now_s': 40}, {'now_s': 46}])
+    assert '3 * 3 - 1 = 8' in text
+    assert '10-sample horizon' in text
+    assert 'ends at sample 18' in text
+    assert 'N = floor(((NOW - 4) / 2 - 18) / 3) + 1' in text
+    assert 'This gives 1 and 2 complete windows' in text
+
+
+def test_manifest_bytes_follow_builder_order_and_record_carry_over():
+    raw = PAGE.with_suffix('.manifest.json').read_bytes()
+    manifest = json.loads(raw)
+    keys = ['sha256', 'size_bytes', 'source_sha256', 'numerical_basis',
+            'sanitization', 'reduction', 'provenance_note']
+    assert list(manifest) == keys
+    assert 'carried over from revision 0' in manifest['provenance_note']
+    assert 'not revalidated against external inputs' in manifest['provenance_note']
+    assert raw == (json.dumps({key: manifest[key] for key in keys}, indent=2) + '\n').encode()
+
+
+@pytest.mark.parametrize('channel_index', [1, 2])
+def test_render_rejects_load_limit_inconsistent_with_basis(channel_index):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    scenario['frames'][0]['channels'][channel_index]['assumed_limit'] += 1
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    with pytest.raises(ValueError, match='numerical basis'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+def test_render_rejects_alert_cutoff_inconsistent_with_basis():
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    for frame in scenario['frames']:
+        for channel in frame['channels']:
+            if 'exceedance' in channel:
+                channel['exceedance']['alert_probability'] = 0.5
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.5}}
+    with pytest.raises(ValueError, match='numerical basis'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+@pytest.mark.parametrize(('limit', 'probability', 'alert'), [(100, 0.0, False), (99, 1.0, True)])
+def test_constant_history_has_hand_worked_exceedance(limit, probability, alert):
+    from digitalmodel.workflows.installation_forecast import exceedance_forecast
+
+    # All forecasts and all back-test errors are exactly 100 and 0 respectively.
+    result = exceedance_forecast(list(range(15)), [100] * 15, 14, limit,
+                                 horizon_s=2, order=1, stride=1, alert_probability=0.2)
+    assert result['calibration_windows'] == 11
+    assert result['window_probability'] == probability
+    assert result['alert'] is alert
+
+
+def test_builder_publishes_numerical_basis(tmp_path):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    config_raw = json.dumps(config).encode('utf-8')
+    payload = {'demo': {'scenarios': [deepcopy(scenario)]},
+               'provenance': {'demo_config': {'sha256': hashlib.sha256(config_raw).hexdigest()}}}
+    for name, raw in (('payload', json.dumps(payload).encode('utf-8')), ('config', config_raw),
+                      ('terms', b'["reserved-example-term"]')):
+        (tmp_path / name).write_bytes(raw)
+    output = tmp_path / 'forecast.html'
+    builder.build(tmp_path / 'payload', tmp_path / 'config', output, tmp_path / 'terms')
+    manifest = json.loads(output.with_suffix('.manifest.json').read_text())
+    assert manifest['numerical_basis'] == builder.NUMERICAL_BASIS
+    assert manifest['sha256'] == hashlib.sha256(output.read_bytes()).hexdigest()
+
+
+def test_navigation_is_registered():
+    assert str(Path('installation/installation-forecast.html')) in registered_site_paths(ROOT)
+
+
+def test_commented_navigation_is_not_registered(tmp_path, monkeypatch):
+    nav = tmp_path / 'docs/capability-map/capabilities-sections.yml'
+    nav.parent.mkdir(parents=True)
+    nav.write_text('sections: []\n# ../installation/installation-forecast.html\n', encoding='utf-8')
+    monkeypatch.setitem(globals(), 'ROOT', tmp_path)
+    with pytest.raises(AssertionError):
+        test_navigation_is_registered()
+
+
+def embedded_scenario(text):
+    return json.loads(re.search(
+        r'<script type="application/json" id="forecast-data">(.*?)</script>',
+        text, re.S,
+    ).group(1))
+
+
+def render_embedded_scenario():
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    threshold = next(channel['exceedance']['alert_probability']
+                     for frame in scenario['frames'] for channel in frame['channels']
+                     if 'exceedance' in channel)
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': threshold}}
+    return builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+def test_display_values_have_no_float_artifacts():
+    text = re.sub(r'<script\b[^>]*>.*?</script>', '', PAGE.read_text(encoding='utf-8'), flags=re.S)
+    # Preserve the exact public source constant while checking displayed results.
+    text = text.replace('9.80665 m/s^2', '')
+    assert not re.search(r'\d+\.\d{4,}', text)
+
+
+def test_render_formats_values_without_rounding_embedded_data():
+    text = render_embedded_scenario()
+    assert 'Provisional load limit: 106.831 kN.' in text
+    assert 'Provisional exceedance probability: 0.027; alert threshold: 0.200;' in text
+    assert embedded_scenario(text) == embedded_scenario(PAGE.read_text(encoding='utf-8'))
+
+
+def test_embedded_data_reproduces_page():
+    assert render_embedded_scenario().encode('utf-8') == PAGE.read_bytes()
+
+
+def test_autocrlf_checkout_preserves_manifest_integrity(tmp_path):
+    env = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+    repo, checkout = tmp_path / 'repo', tmp_path / 'checkout'
+    repo.mkdir()
+    paths = ('.gitattributes', PAGE.relative_to(ROOT), PAGE.with_suffix('.manifest.json').relative_to(ROOT))
+    for path in paths:
+        target = repo / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / path).read_bytes())
+
+    def git(*args):
+        return subprocess.run(['git', '-c', 'core.autocrlf=true', '-c', 'core.safecrlf=false', *args],
+                              cwd=repo, env=env, check=True, capture_output=True)
+
+    git('init', '--quiet')
+    git('add', '--', *map(str, paths))
+    git('checkout-index', '--all', '--prefix=' + str(checkout) + os.sep)
+    page = checkout / PAGE.relative_to(ROOT)
+    manifest_bytes = page.with_suffix('.manifest.json').read_bytes()
+    manifest = json.loads(manifest_bytes)
+    assert manifest['sha256'] == hashlib.sha256(page.read_bytes()).hexdigest()
+    assert manifest['size_bytes'] == page.stat().st_size
+    assert b'\r' not in manifest_bytes
+
+
+def test_all_private_scan_terms_absent():
+    manifest_path = PAGE.with_suffix('.manifest.json')
+    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    fingerprints = manifest['sanitization']['substring_fingerprints']
+    assert len(fingerprints) == manifest['sanitization']['terms_checked']
+    assert fingerprints
+    for path in (PAGE, manifest_path):
+        text = path.read_text(encoding='utf-8').casefold()
+        for item in fingerprints:
+            size = item['length']
+            assert size > 0
+            assert all(hashlib.sha256(text[i:i + size].encode('utf-8')).hexdigest()
+                       != item['sha256'] for i in range(len(text) - size + 1))
+
+
+if __name__ == '__main__':
+    raise SystemExit(pytest.main([__file__]))

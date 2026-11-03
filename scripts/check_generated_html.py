@@ -71,6 +71,16 @@ class Generator:
 
 GENERATORS = (
     Generator(
+        "scripts/capabilities/build_self_elevating_monitoring.py",
+        ("docs/api/hydro/self-elevating-monitoring.html",),
+        inputs=(
+            "pyproject.toml",
+            "scripts/capabilities/build_self_elevating_monitoring.py",
+            "scripts/capabilities/self_elevating_monitoring.html.template",
+            "src/digitalmodel/marine_ops/self_elevating_monitoring.py",
+        ),
+    ),
+    Generator(
         "examples/demos/asset_integrity/ffs_showcase.py",
         ("docs/api/ffs/ffs-showcase.html",),
         inputs=("examples/demos/asset_integrity/ffs_showcase.py",),
@@ -146,6 +156,14 @@ GENERATORS = (
     Generator(
         "scripts/capabilities/build_sloshing_cfd_showcase.py",
         ("docs/api/cfd/sloshing-cfd-study.html",),
+    ),
+    # Exact input/output digests and command are in the generated data record.
+    Generator(
+        "scripts/capabilities/build_generic_hull_screening.py",
+        ("docs/api/cfd/generic-hull-roll-screening.html",
+         "docs/api/cfd/data/generic_hull_roll_screening.json",
+         "tests/hydrodynamics/test_generic_hull_screening.py"),
+        inputs=("src/digitalmodel/hydrodynamics/utube_tank.py",),
     ),
     Generator(
         "scripts/capabilities/build_dual_tank_sloshing_study.py",

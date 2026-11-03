@@ -280,7 +280,12 @@ def fatigue_assessment(
                     _CheckedWoehlerCurve(sn_curve)
                     if isinstance(sn_curve, WoehlerCurve) else _CheckedCurve(sn_curve)
                 )
-                result = miner_damage(counted, checked_curve)
+                if type(sn_curve) is WoehlerCurve:
+                    # Keep the primitive's deterministic path for plain curves.
+                    checked_curve.cycles(counted["stress_range"].to_numpy(dtype=float))
+                    result = miner_damage(counted, sn_curve)
+                else:
+                    result = miner_damage(counted, checked_curve)
                 damage = result.attrs["total_damage"]
                 scaled = damage * scale
         except (FloatingPointError, OverflowError) as exc:

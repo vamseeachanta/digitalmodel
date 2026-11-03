@@ -1,0 +1,47 @@
+{
+  "basis": "Hand-constructed chart example; all input numbers are arbitrary synthetic values, not a physical prediction. Amplitudes are indexed by period, heading, then degree of freedom. At heading 90 degrees, Roll curves for beams 36, 24 and 30 are respectively [7, 2, 5], [3, 5, 1] and [4, 6, 9]. Hand calculation gives maxima max(7, 2, 5) = 7, max(3, 5, 1) = 5 and max(4, 6, 9) = 9. Retaining input order gives sensitivity points (36, 7), (24, 5), (30, 9). Missing responses contribute no points. Other headings and degrees of freedom deliberately have distinct values.",
+  "periods_s": [4, 8, 12],
+  "headings_deg": [0, 90],
+  "dof_names": ["Heave", "roll"],
+  "selected_dof": "Roll",
+  "selected_heading_idx": 1,
+  "geometry": {"length_bp": 120, "draft": 6, "block_coefficient": 0.8},
+  "entries": [
+    {
+      "variation_id": "synthetic__beam=36",
+      "beam": 36,
+      "has_response": true,
+      "amplitudes": [[[11, 21], [31, 7]], [[12, 22], [32, 2]], [[13, 23], [33, 5]]]
+    },
+    {
+      "variation_id": "synthetic__missing-result",
+      "beam": 27,
+      "has_response": false,
+      "amplitudes": null
+    },
+    {
+      "variation_id": "synthetic__beam=24",
+      "beam": 24,
+      "has_response": true,
+      "amplitudes": [[[14, 24], [34, 3]], [[15, 25], [35, 5]], [[16, 26], [36, 1]]]
+    },
+    {
+      "variation_id": "synthetic__beam=30",
+      "beam": 30,
+      "has_response": true,
+      "amplitudes": [[[17, 27], [37, 4]], [[18, 28], [38, 6]], [[19, 29], [39, 9]]]
+    },
+    {
+      "variation_id": "synthetic__missing-amplitude",
+      "beam": 33,
+      "has_response": true,
+      "amplitudes": null
+    }
+  ],
+  "expected_curves": [
+    {"label": "beam=36", "x": [4, 8, 12], "y": [7, 2, 5]},
+    {"label": "beam=24", "x": [4, 8, 12], "y": [3, 5, 1]},
+    {"label": "beam=30", "x": [4, 8, 12], "y": [4, 6, 9]}
+  ],
+  "expected_sensitivity_points": [[36, 7], [24, 5], [30, 9]]
+}

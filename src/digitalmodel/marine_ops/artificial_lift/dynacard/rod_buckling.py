@@ -82,6 +82,9 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         Raises:
             ValidationError: If load data or rod string data is missing/invalid.
         """
+        # Each call owns a fresh result; unavailable inputs cannot reuse a
+        # previous call's thresholds or verdicts.
+        self.result = self._create_result()
         # Record what actually ran, rather than relying on a default string.
         self.result.analysis_method = (
             "downhole_card" if downhole_card is not None
@@ -585,41 +588,16 @@ def estimate_neutral_point(
     rod_weight: float,
     fluid_density: float = 62.4,
     rod_length: float = 5000.0,
-) -> float:
+) -> None:
+    """Return None: surface load extrema cannot determine a neutral depth.
+
+    The arguments are retained for call compatibility. A card is indexed by
+    stroke phase at one depth; determining where axial load crosses zero
+    requires a depth-resolved axial load profile. No formula based solely on
+    these extrema, total weight and length can recover that profile.
+    See RodBucklingCalculator._summarise_compression and issue #1871.
     """
-    Estimate neutral point depth from surface card loads.
-
-    Simplified estimation for quick analysis.
-
-    Args:
-        surface_load_max: Peak polished rod load (lbs)
-        surface_load_min: Minimum polished rod load (lbs)
-        rod_weight: Total rod string weight (lbs)
-        fluid_density: Fluid density (lbs/ft^3)
-        rod_length: Total rod string length (feet)
-
-    Returns:
-        Estimated neutral point depth in feet from surface.
-    """
-    # Buoyancy factor
-    steel_density = 490.0
-    buoyancy_factor = 1.0 - fluid_density / steel_density
-
-    # Buoyant rod weight
-    buoyant_weight = rod_weight * buoyancy_factor
-
-    # Fluid load estimate (difference between upstroke and downstroke)
-    fluid_load = surface_load_max - surface_load_min - buoyant_weight
-
-    # Neutral point estimation
-    # At neutral point: weight above = fluid load below
-    if buoyant_weight > 0:
-        neutral_fraction = fluid_load / buoyant_weight
-        neutral_depth = rod_length * max(0.0, min(1.0, neutral_fraction))
-    else:
-        neutral_depth = rod_length
-
-    return neutral_depth
+    return None
 
 
 def calculate_critical_buckling_load(

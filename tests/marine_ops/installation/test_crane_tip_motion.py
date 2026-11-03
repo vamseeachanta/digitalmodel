@@ -23,6 +23,40 @@ from digitalmodel.marine_ops.installation.models import (
 
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
+# Issue #2543 specifies these gamma cases and the 1% variance tolerance.
+_GAMMAS = (1.0, 3.3, 7.0)
+_ENERGY_TOLERANCE = 0.01
+# Synthetic sea state from the worked example in
+# docs/domains/installation/jonswap-normalisation.md: m0 = 4**2/16 = 1 m².
+_HS_M = 4.0
+_TP_S = 8.0
+
+
+@pytest.fixture
+def converged_frequencies():
+    """Use the normalisation reference's 20001-point logarithmic grid.
+
+    Basis: docs/domains/installation/jonswap-normalisation.md, Worked example
+    and Equations and numerical method. With x=omega/wp, the unenhanced
+    upper tail is 1-exp(-5/(4*100**4)); the lower tail at x=0.01 is
+    exp(-5/(4*0.01**4)). The reference bounds enhancement outside
+    [0.5, 2] by 2e-11 for the specified gamma cases. The full-spectrum
+    multiplier is at most one, so these also bound the normalised tails.
+    Grid refinement and band extension are checked explicitly below.
+    """
+    wp = 2 * np.pi / _TP_S
+    return wp * np.geomspace(0.01, 100.0, 20001)
+
+
+@pytest.fixture
+def constant_complex_transfer(converged_frequencies):
+    """Synthetic 3+4i m/m transfer: |H|=sqrt(3²+4²)=5 by hand.
+
+    Both components are deliberately nonzero to distinguish complex
+    magnitude from either component; the gain is independent of frequency.
+    """
+    return np.full(converged_frequencies.shape, 3.0 + 4.0j)
+
 
 class TestComplexRAOConversion:
     """Complex RAO amplitude/phase roundtrip."""
@@ -169,6 +203,50 @@ class TestJONSWAPSpectrum:
         S_j = _jonswap_spectrum(omega, hs=2.0, wp=0.8, gamma=3.3)
         assert np.max(S_j) > np.max(S)  # JONSWAP peak is sharper
 
+    @pytest.mark.parametrize("gamma", _GAMMAS)
+    def test_spectrum_energy_and_frequency_grid_convergence(
+        self, gamma, converged_frequencies
+    ):
+        """Check m0=Hs²/16 and separate mesh error from bandwidth loss.
+
+        Equation and tail basis: docs/domains/installation/
+        jonswap-normalisation.md, Equations and numerical method.
+        Synthetic Hs=4 gives wave variance 1 m² by hand. Halve the
+        logarithmic step twice (10001, 20001, 40001 points), then extend
+        both tails by a decade with 60001 points, retaining the fine
+        grid step (six decades instead of four). Require each change
+        to use less than 1/100 of the issue's 1% energy error budget.
+        """
+        wp = 2 * np.pi / _TP_S
+        grids = (
+            wp * np.geomspace(0.01, 100.0, 10001),
+            converged_frequencies,
+            wp * np.geomspace(0.01, 100.0, 40001),
+            wp * np.geomspace(0.001, 1000.0, 60001),
+        )
+        moments = []
+        expected_variance = _HS_M**2 / 16
+        for omega in grids:
+            density = _jonswap_spectrum(omega, _HS_M, wp, gamma=gamma)
+            assert np.all(np.isfinite(density))
+            assert np.all(density >= 0)
+            moment = _trapezoid(density, omega)
+            assert moment == pytest.approx(
+                expected_variance, rel=_ENERGY_TOLERANCE
+            )
+            moments.append(moment)
+
+        relative_changes = np.abs(np.diff(moments)) / expected_variance
+        assert np.all(relative_changes < _ENERGY_TOLERANCE / 100)
+        # Retain measured evidence in pytest's passed-test output (-rA).
+        relative_errors = np.abs(np.array(moments) / expected_variance - 1)
+        print(
+            f"gamma={gamma}: max energy error={max(relative_errors):.1e}; "
+            f"coarse/selected change={relative_changes[0]:.1e}; "
+            f"selected/fine change={relative_changes[1]:.1e}; "
+            f"extended-band change={relative_changes[2]:.1e} (fractions)"
+        )
+
 
 class TestSignificantMotion:
     """Spectral integration for significant motion."""
@@ -204,3 +282,71 @@ class TestSignificantMotion:
         v1 = crane_tip_significant_velocity(heave_rao, 1.0, 8.0, vessel.rao_frequencies)
         v2 = crane_tip_significant_velocity(heave_rao, 2.0, 8.0, vessel.rao_frequencies)
         assert v2 > v1
+
+    @pytest.mark.parametrize("gamma", _GAMMAS)
+    def test_constant_transfer_significant_motion_matches_hand_value(
+        self, gamma, converged_frequencies, constant_complex_transfer
+    ):
+        """|H|=5, Hs=4: response variance=25*4²/16=25 m² by hand.
+
+        Basis: docs/domains/installation/jonswap-normalisation.md,
+        Worked example. The API returns single-amplitude motion
+        2*sqrt(25)=10 m; significant double amplitude is |H|*Hs=20 m.
+        Neither expected response uses a production integration helper.
+        Tolerance: issue #2543, 1%.
+        """
+        amplitude = np.abs(constant_complex_transfer)
+        assert amplitude == pytest.approx(5.0)
+        motion = crane_tip_significant_motion(
+            amplitude, _HS_M, _TP_S, converged_frequencies, gamma=gamma
+        )
+        assert motion == pytest.approx(10.0, rel=_ENERGY_TOLERANCE)
+        assert 2 * motion == pytest.approx(5.0 * _HS_M, rel=_ENERGY_TOLERANCE)
+
+    @pytest.mark.parametrize("gamma", _GAMMAS)
+    @pytest.mark.parametrize(
+        "rotation", [1.0, 1.0j, -1.0, -1.0j],
+        ids=["zero", "quarter-turn", "half-turn", "minus-quarter-turn"],
+    )
+    def test_constant_transfer_phase_preserves_energy(
+        self, gamma, rotation, converged_frequencies, constant_complex_transfer
+    ):
+        """Quarter-turn rotations preserve |3+4i|²=25 at every frequency.
+
+        The synthetic rotations are unit complex numbers. The reference's
+        m0=Hs²/16 gives response variance 25 m² and single-amplitude
+        motion 10 m for every phase. Both are independently known hand
+        values (normalisation reference, Worked example); use issue
+        #2543's 1% tolerance. Only amplitude enters the response API.
+        """
+        transfer = constant_complex_transfer * rotation
+        amplitude, phase = _decompose_complex(transfer)
+        assert amplitude == pytest.approx(5.0)
+        # Independently reconstruct the rotated input, including its phase.
+        np.testing.assert_allclose(
+            amplitude * np.exp(1j * np.deg2rad(phase)), transfer
+        )
+        density = _jonswap_spectrum(
+            converged_frequencies, _HS_M, 2 * np.pi / _TP_S, gamma=gamma
+        )
+        response_variance = _trapezoid(
+            np.abs(transfer)**2 * density, converged_frequencies
+        )
+        assert response_variance == pytest.approx(25.0, rel=_ENERGY_TOLERANCE)
+        motion = crane_tip_significant_motion(
+            amplitude, _HS_M, _TP_S, converged_frequencies, gamma=gamma
+        )
+        assert motion == pytest.approx(10.0, rel=_ENERGY_TOLERANCE)
+
+    @pytest.mark.parametrize("gamma", _GAMMAS)
+    def test_zero_transfer_gives_zero_motion(self, gamma, converged_frequencies):
+        """Zero gain gives zero response variance even with nonzero Hs.
+
+        Hand calculation: 0² * Hs²/16 = 0 (normalisation reference,
+        Worked example). Exact zero is expected without quadrature error.
+        """
+        motion = crane_tip_significant_motion(
+            np.zeros_like(converged_frequencies), _HS_M, _TP_S,
+            converged_frequencies, gamma=gamma,
+        )
+        assert motion == 0.0

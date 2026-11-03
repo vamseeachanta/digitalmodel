@@ -22,62 +22,19 @@ class ComprehensiveSummarizer:
         pass
     
     def summarize_individual(self, results: AnalysisResults) -> IndividualSummary:
-        """Generate individual run summary.
-        
+        """Withhold the individual summary until compliance can be assessed.
+
         Args:
-            results: Analysis results for a single run
-            
-        Returns:
-            Individual summary
+            results: Analysis results for a single run.
+
+        Raises:
+            NotImplementedError: The compliance assessment is unavailable.
         """
-        key_findings = []
-        pass_fail_status = {}
-        critical_issues = []
-        recommendations = []
-        
-        # Analyze pretension results
-        if results.pretension_metrics:
-            if results.pretension_metrics.convergence_percentage < 90:
-                critical_issues.append("Poor pretension convergence")
-            pass_fail_status['pretension'] = results.pretension_metrics.convergence_percentage >= 75
-            
-            if results.pretension_metrics.recommendations:
-                recommendations.extend(results.pretension_metrics.recommendations)
-        
-        # Analyze stiffness results
-        if results.stiffness_metrics:
-            if results.stiffness_metrics.anisotropy_factor > 3.0:
-                key_findings.append("High stiffness anisotropy detected")
-            pass_fail_status['stiffness'] = results.stiffness_metrics.anisotropy_factor < 5.0
-        
-        # Analyze fender results
-        if results.fender_metrics:
-            if results.fender_metrics.overloaded_fenders:
-                critical_issues.append(f"Overloaded fenders: {results.fender_metrics.overloaded_fenders}")
-            pass_fail_status['fender'] = len(results.fender_metrics.overloaded_fenders) == 0
-        
-        # Overall assessment
-        if all(pass_fail_status.values()):
-            overall_assessment = "PASS - All criteria met"
-        elif any(critical_issues):
-            overall_assessment = "FAIL - Critical issues identified"
-        else:
-            overall_assessment = "CONDITIONAL PASS - Some issues require attention"
-        
-        return IndividualSummary(
-            run_id=results.run_id,
-            key_findings=key_findings,
-            metrics_dashboard={
-                'convergence': results.pretension_metrics.convergence_percentage if results.pretension_metrics else None,
-                'anisotropy': results.stiffness_metrics.anisotropy_factor if results.stiffness_metrics else None,
-            },
-            pass_fail_status=pass_fail_status,
-            critical_issues=critical_issues,
-            recommendations=recommendations,
-            overall_assessment=overall_assessment,
-            compliance_status={'DNV-OS-E301': True}  # Placeholder
+        raise NotImplementedError(
+            "DNV-OS-E301 compliance assessment is unavailable; "
+            "individual compliance cannot be assured without assessed evidence."
         )
-    
+
     def summarize_group(self, group_name: str, results: List[AnalysisResults]) -> GroupSummary:
         """Generate group summary.
         
@@ -111,30 +68,19 @@ class ComprehensiveSummarizer:
         )
     
     def summarize_overall(self, all_results: Dict[str, List[AnalysisResults]]) -> OverallSummary:
-        """Generate overall summary.
-        
+        """Withhold the overall summary until compliance can be assessed.
+
         Args:
-            all_results: All results organized by group
-            
-        Returns:
-            Overall summary
+            all_results: All results organized by group.
+
+        Raises:
+            NotImplementedError: The compliance assessment is unavailable.
         """
-        total_runs = sum(len(results) for results in all_results.values())
-        total_groups = len(all_results)
-        
-        return OverallSummary(
-            total_runs=total_runs,
-            total_groups=total_groups,
-            executive_summary="Comprehensive mooring analysis completed successfully",
-            system_conclusions=["System meets design requirements"],
-            design_recommendations=["No immediate changes required"],
-            risk_assessment={'overall': 'LOW'},
-            next_steps=["Continue regular monitoring"],
-            compliance_summary={'DNV-OS-E301': True},
-            performance_matrix=None,  # To be implemented
-            critical_actions=[]
+        raise NotImplementedError(
+            "DNV-OS-E301 compliance assessment is unavailable; "
+            "overall compliance cannot be assured without assessed evidence."
         )
-    
+
     def generate_recommendations(self, summary: OverallSummary) -> List[str]:
         """Generate actionable recommendations.
         

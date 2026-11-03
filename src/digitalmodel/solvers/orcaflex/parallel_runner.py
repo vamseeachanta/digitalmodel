@@ -5,7 +5,7 @@ knows how to build a text-YAML model for a case and what to extract from the res
 worker:
 
 1. builds the model (``adapter.build(case, model_dir) -> master.yml``) and hashes the input
-   (every model file plus the canonical case JSON);
+   (the selected relative master path, every model file and the canonical case JSON);
 2. loads it with one solver thread, applies ``adapter.prepare(model, case)`` if present, and solves
    statics (``adapter.statics(model, case)`` if present, else ``CalculateStatics``) and, for
    ``analysis == "dynamics"``, the simulation;
@@ -44,6 +44,8 @@ from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Any, Iterable
 
+from .qa_admission import AdmissionContext, AdmissionRefused
+
 DEFAULT_MAX_WORKERS = 57  # owner decision W325: 90 % of the 64 cores of the licensed host
 ANALYSES = ("statics", "dynamics")
 CASE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
@@ -70,6 +72,7 @@ def fault_class(phase: str, *, licensing: bool, io_error: bool) -> tuple[str, bo
     if io_error or phase == "reopen":
         return "infra_fault", True
     return {
+        "admission": "admission_failed",
         "build": "build_failed",
         "load": "load_failed",
         "prepare": "build_failed",
@@ -110,20 +113,36 @@ def check_workers(n: int) -> int:
     return int(n)
 
 
-def check_cases(cases: Iterable[dict]) -> list[dict]:
+def check_cases(cases: Iterable[dict], *, qa: AdmissionContext | None = None,
+                expected_dll: str = "11.6c") -> tuple[list[dict], dict[str, dict[str, str]]]:
+    """Check case syntax and require B1–B9 evidence before batch admission.
+
+    Evidence authorities are supplied through ``qa``; submitted case fields
+    cannot declare their own approval. Return cases and their validated worker
+    bindings. See qa_admission for the contract.
+    """
     cases = list(cases)
     seen = set()
     for c in cases:
         cid = c.get("case_id", "")
-        if not CASE_ID.match(cid):
+        if not isinstance(cid, str) or not CASE_ID.fullmatch(cid):
             raise ValueError(f"case_id {cid!r}: letters, digits, '.', '_' and '-' only")
         if cid in seen:
             raise ValueError(f"duplicate case_id {cid!r}")
         seen.add(cid)
         if c.get("analysis") not in ANALYSES:
             raise ValueError(f"{cid}: analysis {c.get('analysis')!r} not in {ANALYSES}")
-        json.dumps(c)  # must be JSON-serialisable (it is hashed and sent to a worker)
-    return cases
+        json.dumps(c, allow_nan=False)  # strict JSON, hashed and sent to a worker
+    if cases and not isinstance(qa, AdmissionContext):
+        raise AdmissionRefused("B1", "missing QA admission context")
+    bindings = {}
+    for c in cases:
+        binding = qa.validate(c, expected_dll)
+        bindings[c["case_id"]] = {
+            "admitted_input_sha256": binding.admitted_input_sha256,
+            "qa_evidence_sha256": binding.qa_evidence_sha256,
+        }
+    return cases, bindings
 
 
 # --------------------------------------------------------------------------- digests
@@ -138,12 +157,18 @@ def sha256_file(path: Path) -> str:
 
 
 def input_digest(master: Path, case: dict) -> str:
-    """SHA-256 over every file of the text model (master.yml and all files below its folder, whatever their
-    type - YAML, CSV data, external-function or hydrodynamic files - sorted by relative path) and the canonical
-    JSON of the case."""
+    """SHA-256 over the selected relative master path, all model files and case JSON.
+
+    The first line is compact JSON identifying the master relative to its folder.
+    Every file below that folder follows, sorted by relative path, regardless of
+    type (YAML, CSV, external-function or hydrodynamic data). The canonical case
+    JSON is appended last. Absolute preparation and worker paths do not participate.
+    """
     master = Path(master)
     root = master.parent
     h = hashlib.sha256()
+    h.update(json.dumps({"master": master.relative_to(root).as_posix()},
+                        separators=(",", ":")).encode() + b"\n")
     for p in sorted((q for q in root.rglob("*") if q.is_file()),
                     key=lambda q: q.relative_to(root).as_posix()):
         h.update(f"{p.relative_to(root).as_posix()}:{sha256_file(p)}\n".encode())
@@ -205,8 +230,13 @@ def _verify(ofx, model, analysis: str) -> None:
 
 
 def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: str = "11.6",
-            expected_dll: str = "11.6c", threads: int = 1, keep_sim: bool = False) -> dict:
-    """Run one case in this process; never raises - failures are returned as a ledger record."""
+            expected_dll: str = "11.6c", threads: int = 1, keep_sim: bool = False,
+            admitted_input_sha256: str | None = None, qa_evidence_sha256: str | None = None) -> dict:
+    """Execute a case admitted by run_cases; failures become ledger records.
+
+    This worker primitive consumes the parent admission identities. It does
+    not authenticate signatures independently and is not an admission API.
+    """
     out = Path(out_dir)
     cid = case["case_id"]
     work = out / "work" / cid
@@ -214,26 +244,36 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
                            "started_utc": _utc(), "worker_pid": os.getpid(), "threads": threads,
                            "input_sha256": None, "orcaflex_dll": None, "sim_sha256": None, "sim_bytes": None,
                            "sim_kept": None, "results_path": None, "results_sha256": None, "message": ""}
+    rec["qa_evidence_sha256"] = qa_evidence_sha256
     timings: dict[str, float] = {}
     t_all, cpu0 = time.perf_counter(), time.process_time()
-    phase = "load"
+    phase = "admission"
     ofx = None
+    built = False
     try:
-        ofx, dll = _api(pin, expected_dll)
-        rec["orcaflex_dll"] = dll
-        if dll != expected_dll:
-            rec.update(status="version_drift", retry=False, message=f"DLL {dll} != pinned {expected_dll}")
-            return rec
+        if not admitted_input_sha256 or not qa_evidence_sha256:
+            raise AdmissionRefused("B1", "worker is missing parent admission identities")
+        phase = "load"
         ad = _adapter(adapter)
         if work.exists():
             shutil.rmtree(work)
         phase = "build"
+        built = True
         t = time.perf_counter()
         master = Path(ad.build(case, work / "model"))
         rec["input_sha256"] = input_digest(master, case)
         timings["build"] = time.perf_counter() - t
 
+        phase = "admission"
+        if rec["input_sha256"] != admitted_input_sha256:
+            raise AdmissionRefused("B2", "built input differs from admitted fingerprint")
+
         phase = "load"
+        ofx, dll = _api(pin, expected_dll)
+        rec["orcaflex_dll"] = dll
+        if dll != expected_dll:
+            rec.update(status="version_drift", retry=False, message=f"DLL {dll} != pinned {expected_dll}")
+            return rec
         t = time.perf_counter()
         model = ofx.Model(str(master))
         model.threadCount = threads
@@ -279,6 +319,7 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
         res = out / "results" / f"{cid}.json"
         res.parent.mkdir(parents=True, exist_ok=True)
         res.write_text(json.dumps({"case_id": cid, "input_sha256": rec["input_sha256"], "sim_sha256": rec["sim_sha256"],
+                                   "qa_evidence_sha256": rec["qa_evidence_sha256"],
                                    "statics_info": info, "channels": channels}, indent=1, sort_keys=True),
                        encoding="utf-8")
         rec["results_path"] = res.relative_to(out).as_posix()
@@ -294,7 +335,7 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
             status, retry = exc.status, False
         else:
             lic = ofx is not None and _is_licensing(ofx, exc)
-            io = ofx is not None and _is_io(ofx, exc)
+            io = _is_io(ofx, exc)
             status, retry = fault_class(phase, licensing=lic, io_error=io)
         rec.update(status=status, retry=retry, phase=phase, message=f"{type(exc).__name__}: {exc}"[:2000])
     finally:
@@ -302,9 +343,9 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
         rec["timings_s"] = {k: round(v, 3) for k, v in timings.items()}
         rec["cpu_s"] = round(time.process_time() - cpu0, 3)
         rec["finished_utc"] = _utc()
-        if not keep_sim or rec.get("status") != "ok":
+        if built and (not keep_sim or rec.get("status") != "ok"):
             shutil.rmtree(work / "model", ignore_errors=True)
-        if not keep_sim and rec.get("status") != "ok":  # a .sim saved before a later phase failed is not kept
+        if built and not keep_sim and rec.get("status") != "ok":  # a .sim saved before a later phase failed is not kept
             try:
                 (work / f"{cid}.sim").unlink(missing_ok=True)
             except OSError:
@@ -322,7 +363,8 @@ def reextract(case: dict, *, adapter: str, out_dir: str | Path, ledger_record: d
     out = Path(out_dir)
     cid = case["case_id"]
     rec = {k: ledger_record.get(k) for k in ("case_id", "attempt", "analysis", "input_sha256", "orcaflex_dll",
-                                              "sim_sha256", "sim_bytes", "sim_kept", "threads")}
+                                              "sim_sha256", "sim_bytes", "sim_kept", "threads",
+                                              "qa_evidence_sha256")}
     rec.update(event=tag, started_utc=_utc(), results_path=None, results_sha256=None, message="")
     t0 = time.perf_counter()
     try:
@@ -340,6 +382,7 @@ def reextract(case: dict, *, adapter: str, out_dir: str | Path, ledger_record: d
         prev = json.loads((out / ledger_record["results_path"]).read_text(encoding="utf-8")) \
             if ledger_record.get("results_path") and (out / ledger_record["results_path"]).exists() else {}
         res.write_text(json.dumps({"case_id": cid, "input_sha256": rec["input_sha256"], "sim_sha256": rec["sim_sha256"],
+                                   "qa_evidence_sha256": rec["qa_evidence_sha256"],
                                    "statics_info": prev.get("statics_info"), "channels": channels},
                                   indent=1, sort_keys=True), encoding="utf-8")
         rec.update(status="ok", results_path=res.relative_to(out).as_posix(), results_sha256=sha256_file(res))
@@ -386,7 +429,8 @@ def write_stop_record(path: Path | None, reason: str | None, records: Iterable[d
 
 def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_workers: int = DEFAULT_MAX_WORKERS,
               max_attempts: int = 3, keep_sim: bool = False, pin: str = "11.6", expected_dll: str = "11.6c",
-              threads: int = 1, on_record=None, stop_record_path: Path | None = None) -> dict:
+              threads: int = 1, on_record=None, stop_record_path: Path | None = None,
+              qa: AdmissionContext | None = None) -> dict:
     """Run ``cases`` on ``max_workers`` processes; returns the final record per case and the stop reason.
 
     At most ``max_workers`` cases are in flight: a case is submitted only when a worker slot is free, so a stop
@@ -394,7 +438,7 @@ def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_w
     A retry joins the back of the queue. If the worker pool breaks (a worker process died), its in-flight cases
     are recorded as ``infra_fault`` attempts (retried within ``max_attempts``), nothing more is submitted to it,
     and a new pool is started once they are drained; after ``MAX_POOL_RESTARTS`` restarts the batch stops."""
-    cases = check_cases(cases)
+    cases, bindings = check_cases(cases, qa=qa, expected_dll=expected_dll)
     workers = check_workers(min(max_workers, max(1, len(cases))))
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
@@ -426,7 +470,7 @@ def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_w
             while queue and not broken and guard.stop_reason is None and len(pending) < workers:
                 c, a = queue.popleft()
                 try:
-                    pending[pool.submit(run_one, c, attempt=a, **kw)] = (c, a)
+                    pending[pool.submit(run_one, c, attempt=a, **kw, **bindings[c["case_id"]])] = (c, a)
                 except BrokenProcessPool:
                     queue.appendleft((c, a))
                     broken = True

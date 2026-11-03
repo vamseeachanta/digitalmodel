@@ -44,6 +44,16 @@ DISCOVERY_FALSE_POSITIVES = {
         "renders the reference-jacket analysis under docs/domains, not docs/api; "
         "dedicated reporting tests verify byte reproduction"
     ),
+    "scripts/reporting/report_evidence_audit.py": (
+        "writes docs/audits/module-report-evidence.json and "
+        "docs/audits/module-report-evidence.html, not docs/api pages; "
+        "command: python scripts/reporting/report_evidence_audit.py --root . "
+        "--observations docs/audits/module-report-evidence.json "
+        "--out-dir docs/audits; inputs: the JSON observations, the Git tree at "
+        "its inspection_revision and current bytes of its frozen source_files; "
+        "tests/reporting/test_report_evidence_audit.py checks output stability "
+        "and stale-input handling without executing report builders"
+    ),
     "scripts/reports/build_vessel_seakeeping_module_report.py": (
         "renders the seakeeping analysis under docs/reports, not docs/api; "
         "dedicated reporting tests verify byte reproduction and worked values"
@@ -109,6 +119,10 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/semantic_validate.py": (
         "writes caller-selected validation reports, not committed docs/api pages"
     ),
+    "scripts/studies/surface_crack_verdict.py": (
+        "renders the surface-crack analysis under docs/domains, not docs/api; "
+        "tests/solvers/calculix/test_surface_crack_verdict.py verifies reproduction"
+    ),
     "docs/api/cfd/report_build/house.py": (
         "shared HTML rendering helpers; it does not write a page"
     ),
@@ -147,6 +161,9 @@ EXCLUDED_GENERATORS = {
 
 # Generated-looking pages which cannot yet be reproduced deterministically.
 PAGE_EXCLUSIONS = {
+    "docs/api/installation/installation-forecast.html": (
+        "builder requires reviewed inputs held outside the repository"
+    ),
     "docs/api/cfd/cylinder-re100-verification.html": (
         "upgrade_reports.py requires a caller-supplied solved cylinder run"
     ),

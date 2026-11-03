@@ -186,6 +186,46 @@ def test_citations_validated_through_citation_schema():
                           "section": "s", "wiki_path": "not/under/wikis.md"}])
 
 
+def _public_citation(**overrides):
+    citation = dict(
+        code_id="Drag Equation", publisher="NASA", revision="Public web edition",
+        section="Drag equation", url="https://www1.grc.nasa.gov/drag-equation/",
+        retrieved="2026-10-20", note="Equation only; coefficients are assumed.",
+    )
+    citation.update(overrides)
+    return citation
+
+
+def test_public_web_citations_coexist_with_wiki_citations():
+    from digitalmodel.reporting import render_html
+
+    spec = _spec(citations=[
+        _public_citation(),
+        Citation(code_id="Example", publisher="Example", revision="1",
+                 section="Example section", wiki_path=WIKI),
+    ])
+    assert spec.citations[0] == _public_citation()
+    html = render_html(spec)
+    assert 'href="https://www1.grc.nasa.gov/drag-equation/"' in html
+    assert "NASA" in html and "Retrieved 2026-10-20" in html
+    assert WIKI in html
+    assert '<span class="k">Citations</span> 2' in html
+    assert ReportSpec.model_validate_json(spec.model_dump_json()).citations == spec.citations
+
+
+@pytest.mark.parametrize("change", [
+    {"url": "javascript:alert(1)"},
+    {"url": "file:///example.html"},
+    {"url": "https://example.com", "retrieved": ""},
+    {"url": "https://example.com", "retrieved": "2026-02-30"},
+    {"url": "https://example.com", "publisher": " "},
+    {"url": "https://example.com", "wiki_path": WIKI},
+])
+def test_public_web_citations_reject_invalid_sources(change):
+    with pytest.raises(ValidationError):
+        _spec(citations=[_public_citation(**change)])
+
+
 def test_manifest_required_fields_enforced_when_supplied():
     assert _spec(manifest={}).manifest == {}
     full = {

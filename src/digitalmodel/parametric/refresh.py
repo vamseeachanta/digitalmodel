@@ -66,6 +66,7 @@ SOURCE_FILES: dict[str, list[str]] = {
         "src/digitalmodel/fatigue/sn_curves.py",
         "src/digitalmodel/fatigue/c203_sn_tables.py",
         "src/digitalmodel/fatigue/damage.py",
+        "src/digitalmodel/fatigue/_deterministic.py",
     ],
     # response is a replicated T-N formula; track the workflow so divergence
     # from the source flags the atlas stale.
@@ -121,9 +122,11 @@ SOURCE_FILES: dict[str, list[str]] = {
     "riser_fatigue": [
         "src/digitalmodel/riser_fatigue/workflow.py",
         "src/digitalmodel/riser_fatigue/touchdown.py",
+        "src/digitalmodel/riser_fatigue/validation.py",
         "src/digitalmodel/fatigue/sn_curves.py",
         "src/digitalmodel/fatigue/c203_sn_tables.py",
         "src/digitalmodel/fatigue/damage.py",
+        "src/digitalmodel/fatigue/_deterministic.py",
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],
@@ -171,7 +174,7 @@ LIBRARY_EXPECTATIONS: dict[str, dict[str, Any]] = {
 
 
 def _registry_rows() -> list[dict[str, Any]]:
-    return yaml.safe_load(REGISTRY.read_text())["workflows"]
+    return yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))["workflows"]
 
 
 def _row(workflow_id: str) -> dict[str, Any]:

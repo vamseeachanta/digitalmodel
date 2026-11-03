@@ -1,14 +1,14 @@
 # Catenary Riser Module
 
 **Version**: 1.0.0
-**Status**: Analytical screening; native qualification pending
+**Status**: DRAFT analytical screening; maintainer and native qualification pending
 **Standards**: DNV-OS-F201, API RP 1111
 
 ## Overview
 
 Catenary riser analysis for offshore applications including simple catenary configurations, lazy wave risers with buoyancy modules, effective weight calculations, and OrcaFlex model generation.
 
-The simple analyzer uses a horizontal-tangent vertex model; see [governing equations and regression worksheet](docs/engineering-basis.md). Check `result.converged` before using analytical output. Top angles are from vertical. The public lazy-wave analyzer remains quarantined and raises `NotImplementedError`; its example below describes an unavailable route. Native statics/dynamics and export qualification remain pending; see [QA gates](docs/agent-pack.md#5-qa-gates).
+The simple analyzer uses a horizontal-tangent vertex model; see [governing equations and regression worksheet](docs/engineering-basis.md). Check `result.converged` before using analytical output. Top angles are from vertical. The public lazy-wave analyzer remains quarantined and raises `NotImplementedError`; use the separate installation screen for the synthetic worked comparison. Native statics/dynamics and export qualification remain pending; see [QA gates](docs/agent-pack.md#5-qa-gates).
 
 ## Core Features
 
@@ -116,28 +116,23 @@ print(f"\nTop Tension: {result.top_tension/1000:.2f} kN")
 print(f"Top Angle: {result.top_angle:.2f}° from vertical")
 print(f"Suspended Length: {result.arc_length:.2f} m")
 
-# Lazy wave with buoyancy
-buoy_module = BuoyancyModule(
-    name="BuoyModule1",
-    length=200.0,
-    outer_diameter=1.5,
-    buoyancy_material_density=500,  # Syntactic foam
-    start_length=300.0,
-)
+# LazyWaveAnalyzer.analyze remains quarantined and raises NotImplementedError.
+# For the separate static piecewise screen and synthetic worked comparison:
+from digitalmodel.subsea.catenary_riser.planning import sweep_lazy_wave
+# Supply explicit section lengths, weights, controls and all selection limits.
 
-lazy_config = LazyWaveConfiguration(
-    riser=riser,
-    buoyancy_modules=[buoy_module],
-)
-
-lazy_analyzer = LazyWaveAnalyzer()
-lazy_result = lazy_analyzer.analyze(lazy_config)
-
-print(f"\nLazy Wave Results:")
-print(f"Sag Bend Depth: {lazy_result.sag_bend_depth:.2f} m")
-print(f"Hog Bend Depth: {lazy_result.hog_bend_depth:.2f} m")
-print(f"Arch Height: {lazy_result.arch_height:.2f} m")
 ```
+
+## Qualified route contracts and worked comparison
+
+See [route qualification and installation analysis](docs/route-qualification.md)
+for the axes, origins, units, equations, required limits, evidence gaps and a
+synthetic 1000 m comparison. Run the reproducible example with
+`PYTHONPATH=src python examples/subsea/catenary_installation_screen.py`.
+`SimpleCatenaryAnalyzer` and `EffectiveWeightCalculator` use configuration gravity
+unless an explicit analyzer override is supplied. Constructor checks reject invalid
+geometry, unpaired coatings and overlapping or duplicate module definitions.
+The report flags partial evidence and never infers certification from rendering.
 
 ## Module Structure
 

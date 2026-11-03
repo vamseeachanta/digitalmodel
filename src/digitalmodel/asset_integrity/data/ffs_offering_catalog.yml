@@ -117,6 +117,7 @@ engines:
   calculix-nonlinear: {status: planned, issue: 2173}
   parts-3-7-10: {status: planned, issue: 1274}
   parts-8-11-13-14: {status: planned, issue: 2203}
+  api579-coverage-intake: {module: asset_integrity.api579_coverage, status: workflow, workflow: api579-coverage-screen, issue: 2203, caveat: "evidence intake only; all engineering verdicts NOT_EVALUATED; published-example qualification pending"}
   platform-damaged-member: {status: planned, issue: 2198}
   mooring-chain-degradation: {status: planned, issue: 2199}
   flexible-pipe-screen: {status: planned, issue: 2200}
@@ -145,8 +146,8 @@ industries:
           - {mechanism: dent-gouge / gouges, codes: [api-579-1, pdam], parts: [12], engines: [dents], tiers: [T1, T2], status: engine, caveat: "gouge-only PDAM path not implemented"}
           - {mechanism: "crack-like flaws (SCC, seam weld, girth weld, fatigue cracks, hook cracks)", codes: [api-579-1, bs-7910, api-rp-1176], parts: [9], engines: [crack-fad, part9-level2, part9-level1], tiers: [T1, T2, T3], status: engine}
           - {mechanism: fatigue crack growth / remaining life / leak-before-break, codes: [bs-7910, api-579-1], parts: [9], engines: [crack-growth], tiers: [T2], status: engine, issue: 2177}
-          - {mechanism: laminations / inclusions, codes: [api-579-1], parts: [13], engines: [parts-8-11-13-14], tiers: [T1, T2], status: planned}
-          - {mechanism: "wrinkles, buckles, ovality, ripples", codes: [api-579-1], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
+          - {mechanism: laminations / inclusions, codes: [api-579-1], parts: [13], engines: [parts-8-11-13-14], tiers: [T1, T2], status: planned, issue: 2203}
+          - {mechanism: "wrinkles, buckles, ovality, ripples", codes: [api-579-1], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned, issue: 2203}
           - {mechanism: manufacturing defects in pipe body, codes: [pdam], engines: [], tiers: [T2], status: none}
           - {mechanism: geohazard / ground-movement strain demand, codes: [api-rp-1133], engines: [], tiers: [T2], status: none}
           - {mechanism: direct-assessment programme support (ECDA / ICDA region and indication ranking), codes: [nace-sp0502, nace-sp0206], engines: [], tiers: [T1], status: none}
@@ -166,11 +167,11 @@ industries:
           - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: engine}
           - {mechanism: hydrogen blisters / HIC / SOHIC, codes: [api-579-1], parts: [7], engines: [parts-3-7-10], tiers: [T1, T2], status: planned}
           - {mechanism: brittle fracture susceptibility (MAT), codes: [api-579-1], parts: [3], engines: [parts-3-7-10], tiers: [T1, T2], status: planned}
-          - {mechanism: "weld misalignment, out-of-roundness, bulges", codes: [api-579-1], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
+          - {mechanism: "weld misalignment, out-of-roundness, bulges", codes: [api-579-1], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned, issue: 2203}
           - {mechanism: "crack-like flaws (weld cracks, SCC, fatigue)", codes: [api-579-1, bs-7910], parts: [9], engines: [crack-fad, part9-level2], tiers: [T2, T3], status: engine}
           - {mechanism: creep / creep-fatigue, codes: [api-579-1], parts: [10], engines: [parts-3-7-10], tiers: [T2, T3], status: planned}
-          - {mechanism: fire damage, codes: [api-579-1], parts: [11], engines: [parts-8-11-13-14], tiers: [T1, T2], status: planned}
-          - {mechanism: "fatigue (crack initiation, cyclic-service screen)", codes: [api-579-1], parts: [14], engines: [parts-8-11-13-14, sn-fatigue], tiers: [T1, T2], status: planned, caveat: "S-N library exists; Part 14 screening not wired"}
+          - {mechanism: fire damage, codes: [api-579-1], parts: [11], engines: [parts-8-11-13-14], tiers: [T1, T2], status: planned, issue: 2203}
+          - {mechanism: "fatigue (crack initiation, cyclic-service screen)", codes: [api-579-1], parts: [14], engines: [parts-8-11-13-14, sn-fatigue], tiers: [T1, T2], status: planned, issue: 2203, caveat: "S-N library exists; Part 14 screening not wired"}
           - {mechanism: re-rate / MAWP reduction, codes: [api-579-1, api-510], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T2], status: validated}
       - asset: process piping (API 570 -> API 579)
         defects:
@@ -188,7 +189,7 @@ industries:
           - {mechanism: shell course thinning / fill-height re-rate, codes: [api-653, api-579-1], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: engine, caveat: "API 650 one-foot method not wired"}
           - {mechanism: "settlement (planar tilt, out-of-plane differential, edge, bottom)", codes: [api-653], engines: [tank-settlement-screen], tiers: [T1], status: planned, issue: 2172}
           - {mechanism: "settlement beyond Annex B limits (strain limit, buckling, collapse)", codes: [api-579-1], engines: [tank-level3, calculix-nonlinear, annex-f-material], tiers: [T3], status: planned, issue: 2174, note: "Annex B1 (2007) / Annex 2D (2016+)"}
-          - {mechanism: "shell distortion (buckling, flat spots, peaking, out-of-roundness)", codes: [api-579-1, api-653], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
+          - {mechanism: "shell distortion (buckling, flat spots, peaking, out-of-roundness)", codes: [api-579-1, api-653], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned, issue: 2203}
           - {mechanism: floating roof / seal / appurtenance damage, codes: [api-653], engines: [], tiers: [T1], status: none}
       - asset: any fixed equipment
         defects:
@@ -286,7 +287,7 @@ industries:
         defects:
           - {mechanism: "tube / header wall thinning (erosion, fireside corrosion)", codes: [api-579-1, nbic], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: engine, caveat: "2026-06-27 record covers pipe/vessel t_min, not ASME I / NBIC tube rules"}
           - {mechanism: "creep damage / remaining life (Larson-Miller, Omega)", codes: [api-579-1], parts: [10], engines: [parts-3-7-10], tiers: [T2, T3], status: planned}
-          - {mechanism: thermal fatigue / creep-fatigue, codes: [api-579-1], parts: [14, 10], engines: [parts-8-11-13-14], tiers: [T2], status: planned}
+          - {mechanism: thermal fatigue / creep-fatigue, codes: [api-579-1], parts: [14, 10], engines: [parts-8-11-13-14], tiers: [T2], status: planned, issue: 2203}
           - {mechanism: crack-like flaws in headers / nozzles, codes: [api-579-1, bs-7910], parts: [9], engines: [crack-fad], tiers: [T2, T3], status: engine}
 
 # Public overviews consulted for the catalog page's Sources block. Rendered by

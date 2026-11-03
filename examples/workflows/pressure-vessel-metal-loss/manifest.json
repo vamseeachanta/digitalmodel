@@ -1,0 +1,204 @@
+{
+  "acceptance_criteria": "DATA GAP; no assessment level or service verdict",
+  "basis": "ASSUMED for this illustrative calculation; not measured or material-qualified",
+  "chart_precision": "0.1 mm and 0.1 MPa; rounded after calculation",
+  "charts": {
+    "membrane-stress.csv": {
+      "rows": [
+        {
+          "hoop_stress_mpa": "75.0",
+          "longitudinal_stress_mpa": "37.5",
+          "metal_loss_mm": "0.0"
+        },
+        {
+          "hoop_stress_mpa": "77.4",
+          "longitudinal_stress_mpa": "38.7",
+          "metal_loss_mm": "0.5"
+        },
+        {
+          "hoop_stress_mpa": "80.0",
+          "longitudinal_stress_mpa": "40.0",
+          "metal_loss_mm": "1.0"
+        },
+        {
+          "hoop_stress_mpa": "82.8",
+          "longitudinal_stress_mpa": "41.4",
+          "metal_loss_mm": "1.5"
+        },
+        {
+          "hoop_stress_mpa": "85.7",
+          "longitudinal_stress_mpa": "42.9",
+          "metal_loss_mm": "2.0"
+        },
+        {
+          "hoop_stress_mpa": "88.9",
+          "longitudinal_stress_mpa": "44.4",
+          "metal_loss_mm": "2.5"
+        },
+        {
+          "hoop_stress_mpa": "92.3",
+          "longitudinal_stress_mpa": "46.2",
+          "metal_loss_mm": "3.0"
+        },
+        {
+          "hoop_stress_mpa": "96.0",
+          "longitudinal_stress_mpa": "48.0",
+          "metal_loss_mm": "3.5"
+        },
+        {
+          "hoop_stress_mpa": "100.0",
+          "longitudinal_stress_mpa": "50.0",
+          "metal_loss_mm": "4.0"
+        },
+        {
+          "hoop_stress_mpa": "104.3",
+          "longitudinal_stress_mpa": "52.2",
+          "metal_loss_mm": "4.5"
+        },
+        {
+          "hoop_stress_mpa": "109.1",
+          "longitudinal_stress_mpa": "54.5",
+          "metal_loss_mm": "5.0"
+        },
+        {
+          "hoop_stress_mpa": "114.3",
+          "longitudinal_stress_mpa": "57.1",
+          "metal_loss_mm": "5.5"
+        },
+        {
+          "hoop_stress_mpa": "120.0",
+          "longitudinal_stress_mpa": "60.0",
+          "metal_loss_mm": "6.0"
+        },
+        {
+          "hoop_stress_mpa": "126.3",
+          "longitudinal_stress_mpa": "63.2",
+          "metal_loss_mm": "6.5"
+        },
+        {
+          "hoop_stress_mpa": "133.3",
+          "longitudinal_stress_mpa": "66.7",
+          "metal_loss_mm": "7.0"
+        },
+        {
+          "hoop_stress_mpa": "141.2",
+          "longitudinal_stress_mpa": "70.6",
+          "metal_loss_mm": "7.5"
+        },
+        {
+          "hoop_stress_mpa": "150.0",
+          "longitudinal_stress_mpa": "75.0",
+          "metal_loss_mm": "8.0"
+        }
+      ],
+      "sha256": "5631926b65e8bec34e7e6922ae81905049410c94e532f07f6e7d21b167201a3a"
+    },
+    "remaining-thickness.csv": {
+      "rows": [
+        {
+          "metal_loss_mm": "0.0",
+          "remaining_thickness_mm": "16.0"
+        },
+        {
+          "metal_loss_mm": "0.5",
+          "remaining_thickness_mm": "15.5"
+        },
+        {
+          "metal_loss_mm": "1.0",
+          "remaining_thickness_mm": "15.0"
+        },
+        {
+          "metal_loss_mm": "1.5",
+          "remaining_thickness_mm": "14.5"
+        },
+        {
+          "metal_loss_mm": "2.0",
+          "remaining_thickness_mm": "14.0"
+        },
+        {
+          "metal_loss_mm": "2.5",
+          "remaining_thickness_mm": "13.5"
+        },
+        {
+          "metal_loss_mm": "3.0",
+          "remaining_thickness_mm": "13.0"
+        },
+        {
+          "metal_loss_mm": "3.5",
+          "remaining_thickness_mm": "12.5"
+        },
+        {
+          "metal_loss_mm": "4.0",
+          "remaining_thickness_mm": "12.0"
+        },
+        {
+          "metal_loss_mm": "4.5",
+          "remaining_thickness_mm": "11.5"
+        },
+        {
+          "metal_loss_mm": "5.0",
+          "remaining_thickness_mm": "11.0"
+        },
+        {
+          "metal_loss_mm": "5.5",
+          "remaining_thickness_mm": "10.5"
+        },
+        {
+          "metal_loss_mm": "6.0",
+          "remaining_thickness_mm": "10.0"
+        },
+        {
+          "metal_loss_mm": "6.5",
+          "remaining_thickness_mm": "9.5"
+        },
+        {
+          "metal_loss_mm": "7.0",
+          "remaining_thickness_mm": "9.0"
+        },
+        {
+          "metal_loss_mm": "7.5",
+          "remaining_thickness_mm": "8.5"
+        },
+        {
+          "metal_loss_mm": "8.0",
+          "remaining_thickness_mm": "8.0"
+        }
+      ],
+      "sha256": "6db8e063fabe6b01dcafbf95a8f809424ceef6f16bc1ccbc78503db1b0aea87c"
+    }
+  },
+  "geometry_basis": "Uniform external loss; fixed inner radius; closed ends; thin shell",
+  "inputs": {
+    "basis": "ASSUMED for this illustrative calculation; not measured or material-qualified",
+    "metal_loss_mm": [
+      0.0,
+      0.5,
+      1.0,
+      1.5,
+      2.0,
+      2.5,
+      3.0,
+      3.5,
+      4.0,
+      4.5,
+      5.0,
+      5.5,
+      6.0,
+      6.5,
+      7.0,
+      7.5,
+      8.0
+    ],
+    "shell": {
+      "inner_radius_mm": 600.0,
+      "nominal_thickness_mm": 16.0,
+      "pressure_mpa": 2.0
+    }
+  },
+  "membrane_basis": "MIT Pressure Vessels (2001), Stresses, equations (2) and (3), p. 3",
+  "source_sha256": {
+    "examples/workflows/pressure-vessel-metal-loss/input.json": "64be463ea4355faca6df5d40147423bb0fd60e76f69f417b55c4135f893df032",
+    "scripts/reporting/build_pressure_vessel_metal_loss.py": "101c5e8eb3a2908f1b2ea1d7f82f2c4b80411aaf579fcff11846a4a3bae52856",
+    "src/digitalmodel/asset_integrity/pressure_vessel_metal_loss.py": "69d5fa57e3ea21522ae5fc8b781a9af2ad16c63230a1575ba96218afe13a1267"
+  }
+}

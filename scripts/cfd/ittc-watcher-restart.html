@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Convergence watcher restart guard</title>
+<style>body{font:16px system-ui;max-width:900px;margin:3rem auto;padding:1rem;line-height:1.6}textarea{width:100%;height:8rem}pre{background:#eee;padding:1rem}h1,h2{color:#17465b}</style></head><body>
+<h1>1. Executive summary</h1>
+<p>Draft for maintainer review</p>
+<p>The convergence watcher is a file-based stopping monitor. Analysis is performed to determine whether coefficient history is eligible for convergence assessment; key results are summarized below.</p>
+<ul><li>Restart protection<ul><li>History modified at or before arming is withheld from assessment.</li><li>Empty current history produces a waiting result.</li></ul></li><li>Operational decision<ul><li>Convergence assessment requires a subsequent coefficient write.</li></ul></li></ul>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>2026-10-19</td><td>Initial issue; restart freshness requirement added.</td></tr>
+<tr><td>1</td><td>2026-10-25</td><td>Watcher-loop regression evidence and dated revision history added to establish discovery, trigger suppression and pass-reset coverage.</td></tr>
+</tbody>
+</table>
+<p>Table 1. Document revisions and reasons for change.</p>
+<h1>2. System</h1>
+<p>The monitor reads coefficient history and creates a stop-trigger file after consecutive passing checks. The solver responds only when its abort function is configured.</p>
+<pre>Coefficient writer → versioned history → freshness gate → convergence criterion
+                                                              ↓
+                                                    consecutive passes → trigger</pre>
+<p>Figure: logical monitoring boundary. Physical geometry and mesh are outside this software check.</p>
+<h1>3. Basis</h1>
+<p>Eligibility is evaluated using a strict timestamp comparison. The opened history must have modification time m greater than arming time a; equality is rejected because a later write is not established.</p>
+<p>Both timestamps use nanoseconds on the system clock. Existing convergence limits remain operator inputs; no engineering limit is established by this freshness check.</p>
+<h1>4. Inputs</h1>
+<p>Synthetic inputs are used to demonstrate the comparison. Arming time is 10 ns; candidate modification times are 9, 10 and 11 ns. These values are test inputs, not measured timestamps.</p>
+<h1>5. Method</h1>
+<p>The arming time is captured once before polling. Modification time is read from the opened file descriptor, and stale output is rejected before coefficient rows are parsed.</p>
+<p>The latest selected history is assessed without falling back to an older complete history. Consecutive passes are reset when the selected path changes or a waiting result is returned.</p>
+<h1>6. Worked example</h1>
+<p>The comparison is repeated by subtracting a from m. Differences of −1 and 0 ns fail the strict positive condition; a difference of 1 ns permits row assessment.</p>
+<p>For the fresh case, four synthetic rows have iteration labels 1 through 4 and unit coefficient values. Two windows of two iterations give means of 1 and 1. Their spread and end-to-end difference are zero, so both percentage checks are zero. A header-only history instead returns a waiting result before these calculations.</p>
+<h1>7. Validation and pre-flight</h1>
+<p>Offline tests pass all 80 cases: seven in-memory freshness cases, eight file-backed restart cases and 65 supervision guards. Four restart cases execute the shipped Bash watcher with real coefficient directories, one fixed arming time, and stubbed polling and solver liveness. Stale converged history and fresh empty or header-only history coexist without creating a trigger. Fresh convergence creates a trigger only after the required consecutive passes; both a waiting result and a newly selected history reset the count.</p>
+<p>Negative controls detect oldest-file discovery, removal of the waiting-result reset, removal of the selected-history reset and repeated arming-time capture. Each control is rejected for both empty and header-only inputs, giving eight detections in eight probes. The shipped watcher is unchanged by these disposable probes.</p>
+<ul><li>Scope and synthetic inputs identified: checked.</li><li>Criterion source and hand calculation provided: checked.</li><li>Current results only: checked.</li><li>Physical-system schematic and engineering qualification: outside the software-only scope.</li><li>Comment export and change panel supplied: checked in source; browser behavior not verified.</li><li>Writer-family exemplar: not available in the permitted repository scope.</li></ul>
+<h1>8. Limitations and operation</h1>
+<p>Modification after arming establishes file freshness, not writer identity. A copied or manually touched history can satisfy this timestamp condition. A shared clock and normal coefficient-writer ownership are required.</p>
+<p>For a stale result, continue waiting for current output as required by the freshness criterion. Do not touch an old history to make it eligible. A watcher armed after output has stopped waits for another write.</p>
+<h1>9. Appendix</h1>
+<h2>9.1 Data register</h2>
+<p>The timestamps, iteration labels and constant coefficient values are synthetic. No measured or licensed engineering data is used. File-backed integration and Bash execution are verified with stubbed polling and solver liveness; behavior with a running solver and browser comment export remain unverified.</p>
+<h2>9.2 Sources and reproduction</h2>
+<p>Requirement: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2027">repository issue 2027</a>, suggested fix and regression case. Method: <code>scripts/cfd/ittc_watch.sh</code>, embedded criterion. Reproduction: <code>tests/scripts/test_ittc_watch_freshness.py</code> and <code>tests/scripts/test_ittc_watch_restart.py</code>. The former executes the shipped criterion with synthetic file metadata; the latter uses actual files.</p>
+<p>The restart suite also executes the shipped watcher loop to assess coefficient discovery and trigger creation.</p>
+<p>Spread is 100(maximum window mean − minimum window mean) / overall mean. Drift is 100|last window mean − first window mean| / overall mean. Both expressions are retained from the watcher; this report establishes no new standards-derived constants.</p>
+<h1>10. Review comments</h1>
+<p>Comments are entered below and exported as a separate file for saving beside this document.</p>
+<label for="comments">Review comments</label><textarea id="comments"></textarea>
+<button id="save">Save comments</button><details><summary>Changes</summary><p>Strict freshness gate; restart pass reset; regression cases and reproducible example.</p></details>
+<script>document.getElementById('save').onclick=()=>{const blob=new Blob([JSON.stringify({comments:document.getElementById('comments').value},null,2)+'\n'],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='ittc-watcher-restart.comments.json';link.click();URL.revokeObjectURL(link.href);};</script>
+</body></html>

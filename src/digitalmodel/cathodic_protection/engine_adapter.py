@@ -6,6 +6,11 @@
 ``run_cathodic_protection(cfg)`` is the single entry the YAML engine calls.
 It dispatches on ``cfg["inputs"]["calculation_type"]``:
 
+``ECDA``
+    Four-survey correlation with user-confirmed criteria, ranked dig evidence
+    and an interactive chainage chart. This route returns ``ASSESSMENT``;
+    it does not assert a design PASS/FAIL or compliance with a standard.
+
 ``DNV_RP_B401_offshore``
     The new package: zones validated as
     :class:`~digitalmodel.cathodic_protection.marine_structure_cp.StructuralZone`,
@@ -133,6 +138,7 @@ from digitalmodel.citations import CitedValue
 KEY_B401: Final = "DNV_RP_B401_offshore"
 KEY_F103: Final = "DNV_RP_F103"
 KEY_F103_ANODE_BANK: Final = "DNV_RP_F103_anode_bank"
+KEY_ECDA: Final = "ECDA"
 # Deprecated alias of KEY_F103 pinned to DNV-RP-F103 2010 (owner decision 2026-09-27).
 KEY_F103_2010: Final = "DNV_RP_F103_2010"
 F103_2010_PINNED_EDITION: Final[F103Edition] = "2010"
@@ -143,6 +149,7 @@ KEY_B401_LEGACY: Final = "DNV_RP_B401_offshore_legacy"
 KEY_F103_LEGACY: Final = "DNV_RP_F103_2010_legacy"
 
 CALCULATION_TYPES: Final[tuple[str, ...]] = (
+    KEY_ECDA,
     KEY_B401,
     KEY_F103,
     KEY_F103_ANODE_BANK,
@@ -174,6 +181,7 @@ USE_STATUS_ENGINEERING_VALIDATION: Final = "engineering-validation-required"
 USE_STATUS_EXPERIMENTAL: Final = "experimental-known-understatement"
 USE_STATUS_CITED_PENDING_REVIEW: Final = "cited-pending-review"
 USE_STATUS_BY_KEY: Final[dict[str, str]] = {
+    KEY_ECDA: USE_STATUS_ENGINEERING_VALIDATION,
     KEY_B401: USE_STATUS_CLIENT_EOR,
     KEY_F103: USE_STATUS_CLIENT_EOR,
     KEY_F103_ANODE_BANK: USE_STATUS_ENGINEERING_VALIDATION,
@@ -1271,6 +1279,10 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
     """
     inputs = _section(cfg, "inputs")
     key = inputs.get("calculation_type")
+    if key == KEY_ECDA:
+        from digitalmodel.cathodic_protection.ecda_workflow import run_ecda
+
+        return run_ecda(cfg)
     if key == KEY_B401:
         return _run_b401(cfg)
     if key == KEY_F103:
@@ -1312,6 +1324,7 @@ __all__ = [
     "F103_2010_PINNED_EDITION",
     "KEY_F103",
     "KEY_F103_ANODE_BANK",
+    "KEY_ECDA",
     "KEY_F103_2010",
     "KEY_F103_LEGACY",
     "STATUS_FAIL",

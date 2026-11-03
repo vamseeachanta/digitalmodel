@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "database": "structure_properties",
+  "units": {
+    "area_m2": "m^2",
+    "iy_m4": "m^4",
+    "iz_m4": "m^4",
+    "torsion_constant_m4": "m^4",
+    "elastic_modulus_pa": "Pa",
+    "density_kg_per_m3": "kg/m^3",
+    "dry_mass_kg_per_m": "kg/m"
+  },
+  "records": []
+}

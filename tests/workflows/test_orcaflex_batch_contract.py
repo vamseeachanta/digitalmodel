@@ -93,8 +93,14 @@ def test_packaged_defaults_agree_with_router():
     assert run["work_dir"] == orb.DEFAULT_WORK_DIR
 
 
-@pytest.mark.parametrize("default_token", ["~", ""])
+@pytest.mark.parametrize("default_token", ["~", "null", "Null", "NULL", ""])
 def test_duration_render_preserves_native_default_spelling_and_source(tmp_path, default_token):
+    """YAML 1.1 null type (2005), yaml.org/type/null.html, lists these tokens.
+
+    The native blank/default distinction follows the reproduction in #2051.
+    Fixture durations and damping are synthetic pass-through values: only the
+    main duration changes to the example input's explicit override.
+    """
     cfg = _example(tmp_path)
     source = tmp_path / "base_model.yml"
     source.write_text(
@@ -175,6 +181,115 @@ def test_partial_batch_keeps_diagnostics_and_refuses(tmp_path):
     verdict = _assert_verdict(result, "FAIL", False, 1)
     assert verdict.issues
     assert Path(rows[0]["sim_path"]).is_file()
+
+
+def test_failed_variants_have_distinct_case_identifiers(tmp_path, monkeypatch):
+    """Issue #2051 follow-up: each manifest row must identify its failure.
+
+    Independent count: the example's three headings yield three failed rows;
+    their zero-based indices are the identifiers in the manifest, regardless
+    of the order in which the executor returns its results.
+    """
+    cfg = _example(tmp_path)
+
+    def failed_pool(self, files, config):
+        return {"results": [
+            {"file_path": path, "status": "failed", "error": "synthetic failure"}
+            for path in reversed(files)
+        ]}
+
+    monkeypatch.setattr(orb._MockOrcaFlexBatch, "process_files_parallel", failed_pool)
+    result = orb.router(cfg)
+    settings = result["orcaflex_run_batch"]
+    verdict = _assert_verdict(result, "FAIL", False, 1)
+    assert len(verdict.issues) == len(settings["cases"]) == 3
+    assert [row["index"] for row in settings["cases"]] == [0, 1, 2]
+    assert len(set(verdict.issues)) == 3
+    for row, issue in zip(settings["cases"], verdict.issues):
+        assert issue == (
+            f"{row['model']} (case {row['index']}): synthetic failure"
+        )
+
+
+def test_variant_columns_cannot_replace_manifest_identity(tmp_path):
+    """The generated identity must equal the requested case, even on failure."""
+    requested = {
+        "index": 0,  # First case in a zero-based enumeration, not a solver value.
+        "model": "base_model.yml",
+        "input_file": tmp_path / "case.yml",
+        "case": {"index": "variant-index", "model": "variant-model"},
+    }
+    row = orb._manifest_rows([requested], {"results": []})[0]
+    assert row["index"] == requested["index"]
+    assert row["model"] == requested["model"]
+
+
+@pytest.mark.parametrize("outcomes", [
+    [("failed", "synthetic failure"), ("success", None)],
+    [("success", None), ("failed", "synthetic failure")],
+    [("success", None), ("success", None)],
+    [("success", "synthetic failure")],
+])
+def test_ambiguous_or_contradictory_results_refuse(tmp_path, monkeypatch, outcomes):
+    """Issue #2051 requires completed-case evidence, not last-record wins.
+
+    Independent accounting: one requested input with either duplicate records
+    or a success carrying an error has no unambiguous completion. Therefore
+    completed = zero, failed = one, and the central contract must refuse.
+    """
+    cfg = _example(tmp_path)
+    _single_model(cfg)
+
+    def ambiguous_pool(self, files, config):
+        return {"results": [
+            {"file_path": files[0], "status": status, "error": error}
+            for status, error in outcomes
+        ]}
+
+    monkeypatch.setattr(orb._MockOrcaFlexBatch, "process_files_parallel", ambiguous_pool)
+    result = orb.router(cfg)
+    summary = _read_summary(result)
+    assert summary["completed"] == 0
+    assert summary["failed"] == summary["total_cases"] == 1
+    verdict = _assert_verdict(result, "FAIL", False, 1)
+    error = result["orcaflex_run_batch"]["cases"][0]["error"]
+    assert error
+    assert error in verdict.issues[0]
+    manifest = Path(result["orcaflex_run_batch"]["outputs"]["manifest"])
+    with manifest.open() as stream:
+        row = next(csv.DictReader(stream))
+    assert row["status"] == "failed"
+    assert row["error"] == error
+
+
+def test_ambiguous_case_keeps_other_completed_case_evidence(tmp_path, monkeypatch):
+    """Independent count: one clean case plus one duplicate gives one of each.
+
+    The mock worker creates the clean simulation; duplicating only the other
+    result must not erase the clean completion or permit a successful exit.
+    """
+    cfg = _example(tmp_path)
+    settings = _single_model(cfg)
+    settings["models"]["files"].append("second_model.yml")
+    (tmp_path / "second_model.yml").write_bytes((tmp_path / "base_model.yml").read_bytes())
+    process = orb._MockOrcaFlexBatch.process_files_parallel
+
+    def duplicate_one_result(self, files, config):
+        summary = process(self, files, config)
+        duplicate = next(r for r in summary["results"] if r["file_path"] == files[-1])
+        summary["results"].append(dict(duplicate))
+        return summary
+
+    monkeypatch.setattr(orb._MockOrcaFlexBatch, "process_files_parallel", duplicate_one_result)
+    result = orb.router(cfg)
+    summary = _read_summary(result)
+    assert summary["completed"] == summary["failed"] == 1
+    clean, ambiguous = result["orcaflex_run_batch"]["cases"]
+    assert clean["status"] == "completed"
+    assert Path(clean["sim_path"]).is_file()
+    assert ambiguous["status"] == "failed"
+    assert ambiguous["sim_path"] is None
+    _assert_verdict(result, "FAIL", False, 1)
 
 
 def test_native_yaml_utf8_bom_names_survive_rendering(tmp_path):

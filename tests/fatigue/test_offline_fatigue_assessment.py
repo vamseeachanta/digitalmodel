@@ -29,12 +29,14 @@ import pandas as pd
 import pytest
 from pylife.materiallaws.woehlercurve import WoehlerCurve
 
+from digitalmodel.fatigue.damage import miner_damage
 from digitalmodel.fatigue.orcaflex_fatigue import (
     CurveBasis,
     FatigueReport,
     StressHistory,
     fatigue_assessment,
 )
+from digitalmodel.fatigue.rainflow import rainflow_count
 
 
 class SyntheticCurve:
@@ -371,6 +373,27 @@ def test_qualified_endurance_with_mixed_bins(endurance_curve, history, basis):
             expected = 1000 * (cycle.stress_range / 4) ** -2
             assert cycle.allowable_cycles == pytest.approx(expected)
             assert cycle.damage == pytest.approx(cycle.cycles / expected)
+
+
+@pytest.mark.parametrize("stress_range,k_1,k_2", [
+    (14.69, 2.7, 3.9), (12.69, 3.1, 4.3), (2.0, 2.0, np.inf),
+])
+def test_plain_woehler_matches_direct_miner_exactly(basis, stress_range, k_1, k_2):
+    # Synthetic non-dyadic ratios exercise the primitive's deterministic power.
+    history = StressHistory([0, stress_range], "MPa")
+    curve = WoehlerCurve(pd.Series({
+        "SD": 4.3, "ND": 1000.0, "k_1": k_1, "k_2": k_2,
+    }))
+    direct = miner_damage(rainflow_count(history.samples), curve)
+    report = fatigue_assessment(
+        {"detail": history}, curve, 10,
+        exposure_duration=2, time_unit="year", curve_basis=basis,
+    )
+    location = report.locations["detail"]
+    assert location.exposure_damage == direct.attrs["total_damage"]
+    assert [cycle.allowable_cycles for cycle in location.cycles] == (
+        direct["allowable_cycles"].tolist()
+    )
 
 
 @pytest.mark.parametrize("parameters", [

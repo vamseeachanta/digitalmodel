@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Mapping, Sequence
 
+from .near_wall_acceptance import pending_near_wall
 from .region_refinement import finest_in_plane_cell
 from .hull_case_regions import region_provenance, region_tokens
 from .hull_wave_extent import wave_selection_tokens
@@ -99,6 +100,7 @@ def _condition_tokens(derivation: "HullCaseDerivation") -> Dict[str, str]:
         "KINLET": f"{turb.k:.10e}",
         "OMEGAINLET": f"{turb.omega:.10e}",
         "NUTINLET": f"{turb.nut:.10e}",
+        "NUTWALLFUNCTION": cfg.wall_treatment["selected"],
     }
 
 
@@ -184,6 +186,7 @@ def case_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
             "n": list(derivation.decomposition),
         },
         "turbulence": derivation.turbulence.to_provenance(),
+        "wall_treatment": cfg.wall_treatment,
         "force_reference": derivation.force_reference.to_provenance(),
         "iterations": {
             "end_time": cfg.end_time,
@@ -265,13 +268,13 @@ def _mesh_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
             "The post-mesh face-area gate (#2033) scores the written hull "
             "patch against it."
         ),
+        "near_wall_acceptance": pending_near_wall(),
         "wall_normal_first_cell_height_m": derivation.first_cell_height,
         "y_plus_target": derivation.config.y_plus_target,
         "wall_resolution_note": (
-            "snappyHexMesh is scale-invariant here (relativeSizes true, hull "
-            "level (0 0), refinement from length-scaled topoSet boxes) but the "
-            "requirement it must satisfy scales with Reynolds number, not with "
-            "geometry. This height is what the near-wall mesh has to deliver "
-            "at this condition; it is recorded, not enforced."
+            "this height is the wall-normal requirement at this condition; "
+            "it is recorded, not enforced. Surface refinement targets are "
+            "recorded separately from the requested box scale and do not "
+            "establish achieved wall-normal spacing."
         ),
     }

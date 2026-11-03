@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ doc.title }} — Draft for review</title>
+<title>{{ doc.title }} — {{ report_status|default('Draft for review') }}</title>
 {%- if plotlyjs %}
 <script type="text/javascript">{{ plotlyjs|safe }}</script>
 {%- endif %}
@@ -22,8 +22,8 @@
 </style>
 </head>
 <body class="doc">
-<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>Draft for review</span></div></header>
-<div class="hero"><div class="wrap"><h1>{{ doc.title }}</h1><p>Draft for review</p>
+<header class="masthead"><div class="wrap"><span class="brand">Cathodic protection</span><span>{{ report_status|default('Draft for review') }}</span></div></header>
+<div class="hero"><div class="wrap"><h1>{{ doc.title }}</h1><p>{{ report_status|default('Draft for review') }}</p>
 {%- for std in standards %}
 <p>{{ std.code_id }} — {{ std.edition }}</p>
 {%- endfor %}
@@ -114,6 +114,6 @@
 </section>
 {%- endfor %}
 </main></div>
-<footer><div class="wrap">Draft for review</div></footer>
-</body>
+<footer><div class="wrap">{{ report_status|default('Draft for review') }}</div></footer>
+{% block body_end %}{% endblock %}</body>
 </html>

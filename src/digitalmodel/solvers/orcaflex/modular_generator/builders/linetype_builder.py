@@ -12,6 +12,8 @@ from .base import BaseBuilder
 from .registry import BuilderRegistry
 
 
+# Citation limitations: docs/domains/orcaflex/generator-standards.md
+# Inventory entries: pipe-material and pipe-code-inputs (NOT_EVALUATED).
 # Default material properties by grade. The DNV-ST-F101 yield (kN/m2) is sourced
 # from the canonical grade matrix (issue #1089) — these grades already used the
 # canonical ISO SMYS (X52 360, X60 415, X65 450, X70 485 MPa), so smys_kn_m2()

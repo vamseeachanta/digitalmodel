@@ -8,6 +8,22 @@ Usage:
     PYTHONPATH="src:../assetutilities/src" python3 -m \
         digitalmodel.marine_ops.artificial_lift.dynacard.training
 
+Current generator population
+----------------------------
+The stroke-basis correction gives NORMAL, TUBING_MOVEMENT and
+PLUNGER_UNDERTRAVEL the same default stroke draw, and aligns NORMAL and
+PLUNGER_UNDERTRAVEL noise. Those two default card populations are intentionally
+identical. Physical loss requires explicit matched travel and lost-motion
+inputs; it cannot be inferred from a synthetic condition label.
+Synthetic training excludes both undertravel and tubing movement because their
+defaults lack distinguishing content above the configured load-noise scale.
+
+The numerical comparisons below describe the historical, disjoint-range
+generators and the stored model trained on them. They do not score the current
+generator population. The stored model, its confidence values and published
+examples require separate revalidation; no retrain is performed by the stroke
+correction. See docs/domains/artificial_lift/dynacard-stroke-basis.html.
+
 What ``cv_accuracy`` in the exported model means
 ------------------------------------------------
 It is five-fold cross-validation on cards drawn from :mod:`card_generators`,
@@ -53,14 +69,13 @@ identical plunger travel. Whether these modes separate on real cards is
 **unknown and untested** (issue #1864). Treat 0.9942 as an upper bound on
 synthetic separability and as no evidence at all about field performance.
 
-One physics note, deliberately not acted on here: TUBING_MOVEMENT's 130-180 in
-stroke looks backwards for a *downhole* card. Unanchored tubing stretches as
-fluid load transfers to it on the upstroke, and that stretch is lost motion --
-the plunger should travel *less* than the surface stroke, not more. The
-generator docstring ("elongated card, excessive position range") describes a
-surface-card appearance applied to a pump-card generator. Changing the range is
-a physics decision that would invalidate #1875's plate calibration and every
-pinned value downstream, so it is recorded rather than fixed.
+The historical TUBING_MOVEMENT generator used a disjoint stroke range and
+described a surface-card appearance in a downhole-card generator. The current
+stroke correction replaces that range with the shared default draw. Supplied
+matched anchored pump travel and additional lost motion determine an explicit
+travel reduction; absolute travel across installations remains non-diagnostic.
+The correction does not establish a physical operating envelope or revalidate
+the stored classifier and its earlier calibration.
 """
 
 import json
@@ -69,7 +84,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .card_generators import ALL_GENERATORS, generate_training_dataset
+from .card_generators import generate_training_dataset
 from .feature_extraction import FeatureExtractor
 
 _MODEL_PATH = Path(__file__).parent / "data" / "dynacard_classifier.json"
@@ -174,9 +189,9 @@ def train_and_export(
     from sklearn.model_selection import cross_val_score
     from sklearn.preprocessing import LabelEncoder
 
-    print(f"Generating {samples_per_mode} samples per mode "
-          f"({len(ALL_GENERATORS)} modes)...")
     cards, labels = generate_training_dataset(samples_per_mode=samples_per_mode)
+    print(f"Generated {samples_per_mode} samples per mode "
+          f"({len(set(labels))} modes)...")
 
     print("Extracting features...")
     X, y_str, scaling = _extract_features_for_dataset(cards, labels)

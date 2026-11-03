@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """CP survey data analysis and interpretation.
 
 Provides tools for processing and interpreting cathodic protection survey
@@ -16,9 +19,13 @@ References
 from __future__ import annotations
 
 import math
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from digitalmodel.cathodic_protection.reference_electrodes import (
+    ReferenceElectrode, convert_potential,
+)
 
 
 # Protection criteria
@@ -32,15 +39,19 @@ class CISSurveyPoint(BaseModel):
 
     distance_m: float = Field(..., description="Distance along pipeline [m]")
     on_potential_V: float = Field(
-        ..., description="ON (energized) potential [V vs CSE]"
+        ..., description="ON potential [V vs survey reference electrode; default CSE]"
     )
     off_potential_V: Optional[float] = Field(
-        None, description="OFF (instant-off) potential [V vs CSE]"
+        None, description="OFF potential [V vs survey reference electrode; default CSE]"
     )
 
 
 class CISAnalysisResult(BaseModel):
     """Result of CIS data analysis."""
+
+    reference_electrode: ReferenceElectrode = ReferenceElectrode.CSE
+    protection_criterion_V: float = PROTECTION_POTENTIAL_CSE
+    overprotection_limit_V: float = OVERPROTECTION_LIMIT_CSE
 
     total_points: int = Field(..., description="Total survey points analyzed")
     protected_points: int = Field(
@@ -103,11 +114,164 @@ class AttenuationResult(BaseModel):
     )
 
 
+CRITERIA_NOTE = "user to confirm against the governing code"
+SEVERITIES = ("minor", "moderate", "severe", "very_severe")
+
+
+class SurveyInput(BaseModel):
+    """Finite, validated inputs for synthetic and user-supplied survey criteria."""
+
+    model_config = ConfigDict(allow_inf_nan=False, extra="forbid", frozen=True)
+
+
+class PCMSurveyPoint(SurveyInput):
+    """PCM signal amplitude in mA at a non-negative pipeline chainage."""
+
+    distance_m: float = Field(ge=0)
+    signal_current_mA: float = Field(gt=0)
+
+
+class CriteriaProvenance(SurveyInput):
+    """Explicit basis reference and confirmation supplied with assessment criteria."""
+
+    kind: Literal["engineering", "demonstration"]
+    reference: str
+    confirmed: bool = Field(strict=True)
+
+    @field_validator("reference")
+    @classmethod
+    def nonblank_reference(cls, value: str) -> str:
+        """Require a source reference rather than an empty provenance record."""
+        if not value.strip():
+            raise ValueError("reference must not be blank")
+        return value.strip()
+
+    @model_validator(mode="after")
+    def engineering_confirmation(self) -> CriteriaProvenance:
+        """Reject engineering criteria without an explicit confirmation record."""
+        if self.kind == "engineering" and not self.confirmed:
+            raise ValueError("engineering criteria require confirmation")
+        return self
+
+
+class PCMConfig(SurveyInput):
+    """Explicit inclusive segment threshold and its supplied basis; no defaults."""
+
+    loss_unit: Literal["dB/m", "mA/m"]
+    loss_threshold: float = Field(ge=0, description=CRITERIA_NOTE)
+    provenance: CriteriaProvenance
+
+
+class PCMSegment(SurveyInput):
+    """Signed current loss over a segment; a gain remains negative."""
+
+    start_m: float
+    end_m: float
+    distance_m: float
+    start_current_mA: float
+    end_current_mA: float
+    loss_per_m: float
+    loss_unit: Literal["dB/m", "mA/m"]
+    loss_threshold: float
+    flagged: bool
+    provenance: CriteriaProvenance
+
+
+def analyze_pcm_survey(
+    survey_points: list[PCMSurveyPoint], config: PCMConfig | None = None,
+) -> list[PCMSegment]:
+    """Sort by chainage and flag signed loss >= threshold at segment midpoints.
+
+    Decibel loss uses current amplitude: 20 log10(I_start / I_end) / length,
+    following NIST SP 811 (2008), section 8.7, Logarithmic quantities and units.
+    Duplicate chainages and non-positive currents are rejected. Zero or one
+    reading yields no segment. Every threshold is a user input; user to confirm
+    against the governing code.
+    """
+    if config is None:
+        raise ValueError("PCM requires explicit criteria and provenance")
+    config = PCMConfig.model_validate(config.model_dump())
+    points = sorted(
+        (PCMSurveyPoint.model_validate(p.model_dump()) for p in survey_points),
+        key=lambda p: p.distance_m,
+    )
+    segments = []
+    for start, end in zip(points, points[1:]):
+        length = end.distance_m - start.distance_m
+        if length == 0:
+            raise ValueError("duplicate PCM chainage")
+        if config.loss_unit == "dB/m":
+            loss = 20 * (math.log10(start.signal_current_mA)
+                         - math.log10(end.signal_current_mA)) / length
+        else:
+            loss = (start.signal_current_mA - end.signal_current_mA) / length
+        segments.append(PCMSegment(
+            start_m=start.distance_m, end_m=end.distance_m,
+            distance_m=start.distance_m + length / 2,
+            start_current_mA=start.signal_current_mA,
+            end_current_mA=end.signal_current_mA,
+            loss_per_m=loss, loss_unit=config.loss_unit,
+            loss_threshold=config.loss_threshold, flagged=loss >= config.loss_threshold,
+            provenance=config.provenance,
+        ))
+    return segments
+
+
+class ACVGIndication(SurveyInput):
+    """ACVG reading; direction describes an optional along-pipeline indication."""
+
+    distance_m: float = Field(ge=0)
+    reading: float
+    unit: Literal["dB_uV", "relative"]
+    direction: Literal["upstream", "downstream"] | None = None
+    severity: str = ""
+    provenance: CriteriaProvenance | None = None
+
+
+class ACVGBands(SurveyInput):
+    """Inclusive lower bands; user to confirm against the governing code.
+
+    All boundaries and their provenance are required. No conversion
+    between dB microvolts and instrument-relative readings is inferred.
+    """
+
+    unit: Literal["dB_uV", "relative"]
+    moderate_min: float = Field(description=CRITERIA_NOTE)
+    severe_min: float = Field(description=CRITERIA_NOTE)
+    very_severe_min: float = Field(description=CRITERIA_NOTE)
+    provenance: CriteriaProvenance
+
+    @model_validator(mode="after")
+    def ordered_bands(self) -> ACVGBands:
+        """Require strictly increasing severity boundaries."""
+        if not self.moderate_min < self.severe_min < self.very_severe_min:
+            raise ValueError("ACVG bands must be strictly increasing")
+        return self
+
+
+def classify_acvg_indication(
+    indication: ACVGIndication, bands: ACVGBands | None = None,
+) -> ACVGIndication:
+    """Return a classified copy using unit-matched, user-set severity bands."""
+    if bands is None:
+        raise ValueError("ACVG requires explicit criteria and provenance")
+    bands = ACVGBands.model_validate(bands.model_dump())
+    indication = ACVGIndication.model_validate(indication.model_dump())
+    if indication.unit != bands.unit:
+        raise ValueError("ACVG reading unit must match the severity bands unit")
+    thresholds = (bands.moderate_min, bands.severe_min, bands.very_severe_min)
+    severity = SEVERITIES[sum(indication.reading >= edge for edge in thresholds)]
+    return indication.model_copy(update={"severity": severity, "provenance": bands.provenance})
+
+
 def analyze_cis_survey(
     survey_points: list[CISSurveyPoint],
     use_off_potential: bool = True,
-    protection_criterion_V: float = PROTECTION_POTENTIAL_CSE,
-    overprotection_limit_V: float = OVERPROTECTION_LIMIT_CSE,
+    protection_criterion_V: float | None = None,
+    overprotection_limit_V: float | None = None,
+    *,
+    reference_electrode: ReferenceElectrode | str = "CSE",
+    zinc_potential_she_V: float | None = None,
 ) -> CISAnalysisResult:
     """Analyze close-interval survey data for protection compliance.
 
@@ -121,17 +285,44 @@ def analyze_cis_survey(
     use_off_potential : bool
         Use OFF (instant-off) potentials if available (default True).
     protection_criterion_V : float
-        Protection potential criterion [V vs CSE].
+        Explicit criterion in the survey electrode [V]. If omitted, the
+        existing CSE default is converted using the cited shared utility.
     overprotection_limit_V : float
-        Overprotection limit [V vs CSE].
+        Explicit limit in the survey electrode [V]; omitted CSE default is converted.
+    reference_electrode : ReferenceElectrode or str
+        Electrode used for all readings and returned statistics; default CSE.
+        Offsets use the 25 deg C conditions in reference_electrodes.py.
 
     Returns
     -------
     CISAnalysisResult
         Survey analysis statistics and deficiency locations.
     """
+    reference_electrode = ReferenceElectrode(reference_electrode)
+    options = {"zinc_potential_she_V": zinc_potential_she_V}
+    protection_criterion_V = convert_potential(
+        PROTECTION_POTENTIAL_CSE if protection_criterion_V is None else protection_criterion_V,
+        "CSE" if protection_criterion_V is None else reference_electrode,
+        reference_electrode, **options,
+    )
+    overprotection_limit_V = convert_potential(
+        OVERPROTECTION_LIMIT_CSE if overprotection_limit_V is None else overprotection_limit_V,
+        "CSE" if overprotection_limit_V is None else reference_electrode,
+        reference_electrode, **options,
+    )
+    if overprotection_limit_V >= protection_criterion_V:
+        raise ValueError("overprotection limit must be below protection criterion")
+    basis = dict(reference_electrode=reference_electrode,
+                 protection_criterion_V=protection_criterion_V,
+                 overprotection_limit_V=overprotection_limit_V)
+    for point in survey_points:
+        if not math.isfinite(point.on_potential_V) or (
+            point.off_potential_V is not None and not math.isfinite(point.off_potential_V)
+        ):
+            raise ValueError("survey potentials must be finite volts")
     if not survey_points:
         return CISAnalysisResult(
+            **basis,
             total_points=0,
             protected_points=0,
             underprotected_points=0,
@@ -169,6 +360,7 @@ def analyze_cis_survey(
     protection_pct = (protected + overprotected) / total * 100.0 if total > 0 else 0.0
 
     return CISAnalysisResult(
+        **basis,
         total_points=total,
         protected_points=protected,
         underprotected_points=underprotected,
