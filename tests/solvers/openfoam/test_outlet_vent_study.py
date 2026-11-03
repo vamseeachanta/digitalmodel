@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import re
 
 import pytest
 
@@ -119,6 +120,17 @@ def test_vent_variant_preserves_the_area_independent_transfer_metric(study):
         inlet_u = bcs[("inlet", "U")]
         assert inlet_u.bc_type is BoundaryType.FLOW_RATE_INLET_VELOCITY
         assert inlet_u.extra["volumetricFlowRate"] == "constant 19.19576571"
+
+
+@pytest.mark.parametrize("variant", ["baseline_full_height_outlet", "vent_top"])
+@pytest.mark.parametrize("flow_rate", [0, 0.0, 19.195765710000003])
+def test_built_inlet_preserves_numeric_flow_rate(study, tmp_path, variant, flow_rate):
+    """Check zero by value and retain the exact nonzero round-trip rate."""
+    case_dir, _ = study._build_case(tmp_path, variant, flow_rate, 10, 1)
+    velocity = (case_dir / "0" / "U").read_text(encoding="utf-8")
+    constants = re.findall(r"volumetricFlowRate\s+constant\s+([^;\s]+)\s*;", velocity)
+    assert len(constants) == 1
+    assert float(constants[0]) == flow_rate
 
 
 def test_unknown_variant_fails_closed(study):
