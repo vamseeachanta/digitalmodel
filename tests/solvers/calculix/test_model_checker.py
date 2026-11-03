@@ -76,6 +76,63 @@ def test_surface_path_to_supported_component(link, tmp_path):
     assert report.status == "PASS"
 
 
+@pytest.mark.parametrize("keyword", ["TIE", "CONTACT PAIR"])
+@pytest.mark.parametrize("master_type", ["NODE", "node", "ELEMENT", None])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_connection_requires_element_master(deck, capsys, keyword, master_type, interface):
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    nodal_master = master_type is not None and master_type.upper() == "NODE"
+    type_param = "" if master_type is None else f",TYPE={master_type}"
+    master_row = "1" if nodal_master else "BODY,S1"
+    connection = ("*TIE,NAME=JOIN\nSLAVE,MASTER\n" if keyword == "TIE" else
+                  "*CONTACT PAIR,INTERACTION=FRICTIONLESS,TYPE=NODE TO SURFACE\n"
+                  "SLAVE,MASTER\n*SURFACE INTERACTION,NAME=FRICTIONLESS\n")
+    text += (f"*SURFACE,NAME=MASTER{type_param}\n{master_row}\n"
+             "*SURFACE,NAME=SLAVE,TYPE=NODE\n5\n"
+             + connection)
+    path = deck(text=text)
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == int(nodal_master)
+        evidence = json.loads(capsys.readouterr().out)
+    if nodal_master:
+        assert evidence["status"] == "FAIL"
+        invalid = next(f for f in evidence["findings"]
+                       if f["code"] == "incompatible_master_surface")
+        assert invalid["severity"] == "error"
+        assert tuple(invalid["entity_ids"]) == (f"keyword:{keyword}", "surface:MASTER")
+        assert invalid["line"] > 0 and invalid["fix_hint"]
+        unsupported = [f for f in evidence["findings"] if f["code"] == "unconstrained_part"]
+        assert [tuple(f["entity_ids"]) for f in unsupported] == [("step:0", "element:2")]
+        assert "contact_path" not in {f["code"] for f in evidence["findings"]}
+    else:
+        assert evidence["status"] == "PASS"
+        expected = {"contact_path"} if keyword == "CONTACT PAIR" else set()
+        assert {f["code"] for f in evidence["findings"]} == expected
+
+
+@pytest.mark.parametrize("master_type", ["NODE", "node", "ELEMENT", None])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_tie_exemption_requires_element_master(deck, capsys, master_type, interface):
+    nodal_master = master_type is not None and master_type.upper() == "NODE"
+    type_param = "" if master_type is None else f",TYPE={master_type}"
+    master_row = "1" if nodal_master else "BODY,S1"
+    path = deck("*NODE\n99,0,0,0\n"
+                f"*SURFACE,NAME=MASTER{type_param}\n{master_row}\n"
+                "*SURFACE,NAME=SLAVE,TYPE=NODE\n99\n"
+                "*TIE,NAME=JOIN\nSLAVE,MASTER\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == int(nodal_master)
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == ("FAIL" if nodal_master else "PASS")
+    pairs = [tuple(f["entity_ids"]) for f in evidence["findings"] if f["code"] == "unmerged_nodes"]
+    assert pairs == ([("node:1", "node:99")] if nodal_master else [])
+    assert ("incompatible_master_surface" in {f["code"] for f in evidence["findings"]}) == nodal_master
+
+
 @pytest.mark.parametrize("face", ["SPOS", "SNEG", "S1", "S2"])
 @pytest.mark.parametrize("interface", ["api", "cli"])
 def test_spring_element_surface_cannot_supply_support(deck, capsys, face, interface):
@@ -168,8 +225,8 @@ def test_coincident_node_tolerance(deck, distance, tolerance, expected):
 
 
 def test_tie_exempts_only_nodes_on_opposite_surfaces(deck):
-    extra = "*NODE\n99,0,0,0\n100,0,0,0\n*NSET,NSET=LEFT\n1\n*NSET,NSET=RIGHT\n99\n"
-    extra += ("*SURFACE,NAME=MASTER,TYPE=NODE\nLEFT\n"
+    extra = "*NODE\n99,0,0,0\n100,0,0,0\n*NSET,NSET=RIGHT\n99\n"
+    extra += ("*SURFACE,NAME=MASTER,TYPE=ELEMENT\nBODY,S1\n"
               "*SURFACE,NAME=SLAVE,TYPE=NODE\nRIGHT\n*TIE,NAME=JOIN\nSLAVE,MASTER\n")
     pairs = [f.entity_ids for f in check_deck(deck(extra)).findings if f.code == "unmerged_nodes"]
     assert ("node:1", "node:99") not in pairs
@@ -345,7 +402,9 @@ def test_direct_surface_keeps_members_when_declared(deck, surface_type, kind, ex
                    f"*{kind},{kind}=SELECTED\n{later}\n")
     model = Deck(read_blocks(deck(text=text)))
     model.parse()
-    assert _references_and_sections(model)["FACE"] == expected
+    surface = _references_and_sections(model)["FACE"]
+    assert surface.nodes == expected
+    assert surface.surface_type == surface_type
 
 
 @pytest.mark.parametrize("card,kind", [
@@ -906,7 +965,7 @@ def test_surface_load_references_are_resolved(deck):
 
 def test_contact_does_not_exempt_coincident_nodes(deck):
     extra = ("*NODE\n99,0,0,0\n*NSET,NSET=DUPLICATE\n99\n"
-             "*SURFACE,NAME=MASTER,TYPE=NODE\nFIXED\n"
+             "*SURFACE,NAME=MASTER,TYPE=ELEMENT\nBODY,S1\n"
              "*SURFACE,NAME=SLAVE,TYPE=NODE\nDUPLICATE\n"
              "*CONTACT PAIR\nSLAVE,MASTER\n")
     assert "unmerged_nodes" in codes(check_deck(deck(extra)))

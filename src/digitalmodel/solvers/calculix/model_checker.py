@@ -115,7 +115,13 @@ def _surface_nodes(model: Deck, block: Block) -> set[int]:
     return nodes.intersection(model.nodes)
 
 
-def _references_and_sections(model: Deck) -> dict[str, set[int]]:
+@dataclass(frozen=True)
+class _Surface:
+    surface_type: str
+    nodes: set[int]
+
+
+def _references_and_sections(model: Deck) -> dict[str, _Surface]:
     assigned = set()
     surfaces = {}
     for block in model.blocks:
@@ -149,7 +155,8 @@ def _references_and_sections(model: Deck) -> dict[str, set[int]]:
                                     "manual sections 6.2, 7.3, 7.81, 7.117, 7.118 and 7.121.",
                                     block.line)
             elif k == "SURFACE":
-                surfaces[p["NAME"].upper()] = _surface_nodes(model, block)
+                surfaces[p["NAME"].upper()] = _Surface(
+                    p.get("TYPE", "ELEMENT").upper(), _surface_nodes(model, block))
             elif k in {"CLOAD", "DLOAD", "DSLOAD"}:
                 for row in block.rows:
                     if k == "DSLOAD":
@@ -171,7 +178,7 @@ def _references_and_sections(model: Deck) -> dict[str, set[int]]:
     return surfaces
 
 
-def _connections(model: Deck, surfaces: dict[str, set[int]],
+def _connections(model: Deck, surfaces: dict[str, _Surface],
                  components: _Components) -> list[tuple[set[int], set[int]]]:
     ties = []
     for block in model.blocks:
@@ -185,15 +192,24 @@ def _connections(model: Deck, surfaces: dict[str, set[int]],
             names = [v.upper() for v in row]
             for name in names:
                 model.reference("surface", name, block.line, block=block)
-            left, right = (surfaces.get(name, set()) for name in names)
-            if not left or not right:
+            left, right = (surfaces.get(name) for name in names)
+            if left is None or right is None or not left.nodes or not right.nodes:
                 model.error("empty_surface", tuple(f"surface:{n}" for n in names),
                             "Connection has an empty or unresolved surface",
                             "Populate both surfaces with valid mesh entities.", block.line)
                 continue
-            components.join(left | right)
+            # CalculiX 2.22 manual, sections 7.22, 7.128 and 7.132:
+            # ordinary ties and contact pairs require an element-face master.
+            if right.surface_type != "ELEMENT":
+                model.error("incompatible_master_surface",
+                            (f"keyword:{block.keyword}", f"surface:{names[1]}"),
+                            "Connection requires an element-face master surface",
+                            "Define the master with TYPE=ELEMENT and valid element faces.",
+                            block.line)
+                continue
+            components.join(left.nodes | right.nodes)
             if block.keyword == "TIE":
-                ties.append((left, right))
+                ties.append((left.nodes, right.nodes))
             else:
                 model.findings.append(Finding("warning", "contact_path",
                     tuple(f"surface:{n}" for n in names),
