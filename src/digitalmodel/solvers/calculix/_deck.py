@@ -231,12 +231,14 @@ class Deck:
             previously_defined = target in self.sets[kind]
             members = self.sets[kind].setdefault(target, set())
             for row in block.rows:
-                values = [v for v in row if v]
                 if "GENERATE" in p:
-                    if len(values) not in {2, 3}:
+                    # CalculiX 2.22 User's Manual, 7.53 (*ELSET) and 7.100
+                    # (*NSET): require both endpoints in their own fields;
+                    # only the omitted third field defaults to increment 1.
+                    if len(row) not in {2, 3} or not all(row[:2]):
                         raise ValueError("Invalid set generation")
-                    start, stop = map(positive_id, values[:2])
-                    stride = positive_id(values[2]) if len(values) == 3 else 1
+                    start, stop = map(positive_id, row[:2])
+                    stride = positive_id(row[2]) if len(row) == 3 and row[2] else 1
                     if stop < start:
                         raise ValueError("Descending generation")
                     # Local ID-span cap bounds expansion memory/time; it is not
@@ -245,6 +247,7 @@ class Deck:
                         raise ValueError("Set generation exceeds supported size")
                     members.update(str(v) for v in range(start, stop + 1, stride))
                 else:
+                    values = [v for v in row if v]
                     # CalculiX 2.22 User's Manual, 7.53 (*ELSET) and 7.100
                     # (*NSET): referenced sets must already be defined. Copy
                     # their current membership; later additions stay local.

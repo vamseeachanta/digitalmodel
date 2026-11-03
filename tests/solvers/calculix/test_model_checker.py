@@ -166,6 +166,69 @@ def test_case_comments_generated_nested_sets_and_d_exponents(deck):
     assert validate_model(deck(text=base)).status == "PASS"
 
 
+@pytest.fixture
+def generated_set_deck(deck):
+    """Make generated sets decide support or sections for two components."""
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+
+    def write(kind, record):
+        generated = f"*{kind},{kind}=GENERATED,GENERATE\n{record}\n"
+        if kind == "NSET":
+            text = base.replace("*BOUNDARY\n1, 1, 3\n",
+                                generated + "*BOUNDARY\nGENERATED,1,3\n")
+        else:
+            text = base.replace("*SOLID SECTION, ELSET=BODY, MATERIAL=STEEL\n"
+                                "*SOLID SECTION, ELSET=OTHER, MATERIAL=STEEL\n",
+                                generated + "*SOLID SECTION, ELSET=GENERATED,MATERIAL=STEEL\n")
+            text = text.replace("*BOUNDARY\n1, 1, 3\n", "*BOUNDARY\n1,1,3\n5,1,3\n")
+        return deck(text=text)
+
+    return write
+
+
+@pytest.mark.parametrize("kind,last", [("NSET", 5), ("ELSET", 2)])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+@pytest.mark.parametrize("record", [
+    "1,,{last}", ",1,{last}", "1, ,{last}", " ,1,{last}",
+    "1,{last},,1", "1,{last},1,1",
+])
+def test_generated_set_rejects_missing_endpoints_and_extra_fields(
+    generated_set_deck, capsys, kind, last, interface, record,
+):
+    path = generated_set_deck(kind, record.format(last=last))
+    if interface == "api":
+        report = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "FAIL"
+    assert any(f["code"] == "parse_error" and f["severity"] == "error"
+               and f"keyword:{kind}" in f["entity_ids"] and f["line"] > 0
+               for f in report["findings"])
+
+
+@pytest.mark.parametrize("kind,last,expected", [
+    ("NSET", 5, {1, 2, 3, 4, 5}), ("ELSET", 2, {1, 2}),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+@pytest.mark.parametrize("record", ["1,{last}", "1,{last},", "1,{last}, ", "1,{last},1"])
+def test_generated_set_defaults_only_omitted_increment(
+    generated_set_deck, capsys, kind, last, expected, interface, record,
+):
+    # CalculiX 2.22 User's Manual, 7.53 (*ELSET) and 7.100 (*NSET):
+    # endpoints occupy the first two fields; only the increment defaults to 1.
+    path = generated_set_deck(kind, record.format(last=last))
+    if interface == "api":
+        report = validate_model(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "PASS"
+    parsed = Deck(read_blocks(path))
+    parsed.parse()
+    assert parsed.resolve_set(kind.lower(), "GENERATED") == expected
+
+
 def test_direct_boundary_keeps_members_when_declared(deck):
     base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
     text = base.replace("*BOUNDARY\n1, 1, 3",
