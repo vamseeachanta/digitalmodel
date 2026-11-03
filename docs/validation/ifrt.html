@@ -18,6 +18,13 @@ The engineering-register checker passed for the three changed Markdown files.</l
 <li>The example JSON was executed and read back. Baseline masses, seal/deck comparisons,
 normal duties of 1,750/2,000 Nm³/h, capacity margins of 250/200 Nm³/h and pressure/vacuum
 margins of 0.3/0.1 kPa matched their independent arithmetic.</li>
+<li>Published reference (added 2026-11-03): the calculation reproduces EPA AP-42 Chapter 7.1 (June 2026),
+Example 4, a 70 ft welded-deck internal floating roof tank storing RVP 13 gasoline. Published answers are
+withdrawal 136.5, rim seal 231.8, deck fittings 3,961.9, deck seams 0 and total 4,330.2 lb/year.
+Withdrawal loss matches to 0.1 lb/year. The published example rounds P* to 0.178 before use; with the
+unrounded P* of 0.17773 the rim-seal and fitting losses are 0.15 % lower, and with P* = 0.178 they match
+the published values to 0.1 lb/year. The test is <code>test_reproduces_published_ap42_example_4_ifrt</code>;
+the IFRT test file now holds 39 cases.</li>
 <li>A wheel was built with <code>uv build --no-sources --wheel</code>, unpacked into an isolated
 directory, and imported from that directory. The complete worked example returned
 3,487 kg/year with both bundled source records resolving. No scratch files were present in the wheel.</li>
@@ -38,7 +45,7 @@ the committed report fixtures without changing those fixtures.</p>
 <table><thead><tr><th>Frozen artifact</th><th>SHA-256</th></tr></thead><tbody>
 <tr><td>docs/plans/ifrt.html</td><td><code>fc3483a91d579e1d1873f35ad4e4ddecce2fe4d62f40f7b998e185eb191741b2</code></td></tr>
 <tr><td>src/digitalmodel/code_checks/storage_tanks/ifrt.py</td><td><code>03235c1f4256dcfac8619ee6acbb5e981e3464ed9896968473c322e6f3db5811</code></td></tr>
-<tr><td>tests/code_checks/test_ifrt.py</td><td><code>9deb2d67be7f39b44a074b66b57635dbc90ed7a3fcfc201f4bbcf324c1df6747</code></td></tr>
+<tr><td>tests/code_checks/test_ifrt.py</td><td><code>31fd80735ca9bb40ddfbadbe60788446e90c14f72312e5b210f8c90f7e76fcd8</code></td></tr>
 <tr><td>examples/code_checks/ifrt_example.py</td><td><code>f10081d272bdf4f041bf650c79f89114344321c352c0b3dffd27f2db93be8d03</code></td></tr>
 </tbody><caption style="caption-side:bottom;text-align:left">Table 1. Artifact bytes after formatting and verification.</caption></table>
 <h2>Limits and remaining scope</h2>

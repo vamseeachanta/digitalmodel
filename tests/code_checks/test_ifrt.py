@@ -330,3 +330,62 @@ def test_missing_bundled_source_fails_closed(case, monkeypatch, tmp_path):
     monkeypatch.setattr(module, "__file__", str(tmp_path / "ifrt.py"))
     with pytest.raises(CitationResolutionError, match="page_missing"):
         estimate_losses(case)
+
+
+def _ap42_table_value(value, section, units):
+    """A caller-supplied factor cited to the bundled public EPA record."""
+    from digitalmodel.citations.schema import Citation
+
+    citation = Citation(
+        "EPA-AP42-7.1",
+        "EPA",
+        "June 2026",
+        section,
+        "wikis/engineering-standards/epa-ap42-7-1.md",
+    )
+    return CitedValue(value, citation, units)
+
+
+def test_reproduces_published_ap42_example_4_ifrt():
+    # Published reference: EPA AP-42 Ch. 7.1 (June 2026), Example 4, pp.
+    # 7.1-204 to 7.1-209: 70 ft welded-deck IFRT, RVP 13 gasoline, Tulsa.
+    # Published inputs: D=70 ft; Q=1,189,359 bbl/yr; CS=0.0015 bbl/1000 ft2;
+    # WL=5.6 lb/gal; NC=1, FC=1 ft; KRa=0.3 (liquid-mounted, rim-mounted
+    # secondary); PVA=7.36 psia, PA=14.36 psia; MV=62; KC=1; KD=0 (welded);
+    # FF=36(2)+14+10+56+7.9(20)+43+6.2=359 lb-mole/yr.
+    # Published answers: LW=136.5, LR=231.8, LF=3,961.9, LD=0,
+    # LT=4,330.2 lb/yr. The example rounds P* to 0.178 before multiplying;
+    # unrounded P*=0.177726, so LR and LF here are 0.15 % lower.
+    # Conversions (NIST SP 811 B.8): 1 ft=0.3048 m; 1 bbl=0.158987294928 m3;
+    # 1 lb=0.45359237 kg; 1 US gal=0.003785411784 m3; 1 psi=6.894757293 kPa.
+    psi = 6.894757293168361
+    lb = 0.45359237
+    case = IFRTCase(
+        tank=Tank(70 * 0.3048, 40 * 0.3048, (math.pi * 0.3048,)),
+        liquid=Liquid(7.36 * psi, 14.36 * psi, 62.0, 5.6 * lb / 0.003785411784),
+        rim_seal=public_seal_factor("liquid_mounted", secondary="rim_mounted"),
+        fittings=(
+            DeckFitting(
+                "fitting_factor_sum_example_4",
+                1,
+                _ap42_table_value(
+                    359.0, "Example 4, step 11c; Table 7.1-12", "lbmol/year"
+                ),
+            ),
+        ),
+        deck_type="welded",
+        annual_net_throughput_m3=1_189_359 * 0.158987294928,
+        clingage=gasoline_clingage(),
+    )
+    result = estimate_losses(case)
+    assert result.vapor_pressure_function == pytest.approx(0.178, abs=5e-4)
+    assert result.withdrawal_kg_year / lb == pytest.approx(136.5, abs=0.05)
+    assert result.rim_kg_year / lb == pytest.approx(231.8, rel=2e-3)
+    assert result.fittings_kg_year / lb == pytest.approx(3961.9, rel=2e-3)
+    assert result.seams_kg_year == 0.0
+    assert result.total_kg_year / lb == pytest.approx(4330.2, rel=2e-3)
+    # Same equations with the published rounded P*=0.178 give the exact
+    # published standing losses, isolating the rounding difference.
+    scale = 0.178 / result.vapor_pressure_function
+    assert result.rim_kg_year * scale / lb == pytest.approx(231.8, abs=0.05)
+    assert result.fittings_kg_year * scale / lb == pytest.approx(3961.9, abs=0.05)
