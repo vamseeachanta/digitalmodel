@@ -12,6 +12,7 @@ procedure and structural response before using the comparison operationally.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 0 | 2026-10-28 | Added three preload methods, six-stage water-contact sensitivity and independent equilibrium checks to expose capacity and load-transfer limits. |
+| 1 | 2026-11-03 | Replaced the regional tide record with generic assumed tide offsets and removed contextual references that carried no numerical input, so the note stays a generic method. |
 
 ## Public basis and assumptions
 
@@ -25,19 +26,15 @@ and 2 command fractions `f` and `(1+f)/2` of target; stages 3 through 6 command
 the target. Here `f=0.6`, with range 0.4 to 0.8. Stages 1 through 4 have a
 positive reference draft; stages 5 and 6 use an assumed elevated air gap.
 
-The [regional coastal wetland Ramsar information sheet (2024)](https://rsis.ramsar.org/RISapp/files/RISrep/GA1652RIS_2412_fr.pdf),
-section 4.4.4, page 12, reports tidal excursions of about 1.0 m during neaps and
-2.0 m during springs. The default sensitivity interprets 2.0 m as low-to-high
-range and assumes symmetric offsets of -1.0, 0.0 and +1.0 m. A separate neap
-comparison can use offsets of -0.5 to +0.5 m. This coastal regional context is
-not an offshore site prediction, tidal datum, time series or design extreme.
-Both public documents were retrieved successfully on 2026-10-28.
+The default tide sensitivity uses generic symmetric offsets of -1.0, 0.0 and
++1.0 m, a 2.0 m low-to-high range **assumed, based on previous experience**. A
+smaller range, for example -0.5 to +0.5 m, can be run from the command line.
+No regional tide record is used. These offsets are not a site prediction, tidal
+datum, time series or design extreme. The public case paper was retrieved
+successfully on 2026-10-28.
 
-A 2026 public industry article on preload draft is contextual information
-identified in the study brief; its text was not supplied or used numerically.
-Air gap, draft, sea state, tide, ballast and choice of preload method remain
-unpublished inputs. They are represented by explicit ranges and alternatives,
-without treating any as known event conditions.
+Air gap, draft, sea state, tide, ballast and choice of preload method are
+project inputs. They are represented here by explicit ranges and alternatives.
 
 Every other numerical scenario input and its range is **assumed, based on
 previous experience**. The three existing
@@ -168,8 +165,9 @@ target shortfall grows to 9.6 MN. Additional headroom from buoyancy therefore
 comes with reduced preload, rather than increased proven soil capacity. No
 active draft controller or compensating ballast is assumed.
 
-With the same imposed settlement, fore-leg loss gives 1.4 degrees trim; an aft
-leg loss gives 1.3 degrees heel. These rotations follow geometry, rather than
+With the same imposed settlement, a fore-leg settlement trial gives 1.4 degrees
+trim (atan(1.0/40.0)); an aft-leg settlement trial gives 1.3 degrees heel
+(atan(1.0/44.0)). These rotations follow geometry, rather than
 an inferred difference in method performance. At reference tide the staged
 in-water trials produce up to 2.8 MN absolute reaction change, while elevated
 trials retain water clearance and have zero buoyancy transfer. Higher tide can
@@ -191,6 +189,6 @@ centre-of-gravity motion, structural flexibility, jacking controls, wave forces,
 soil transport, remoulding, rebound and accumulated penetration between stages.
 No ballast reachability or hull structural capacity is qualified. Independent
 support histories and the frozen soil profile may differ materially from an
-installation. Obtain site investigation and tide data, qualify all ballast and
+installation. Obtain site investigation and site tide data, qualify all ballast and
 hull particulars, confirm method clauses, and assess transient response before
 selecting or changing an actual procedure.

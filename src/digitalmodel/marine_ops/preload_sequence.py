@@ -314,13 +314,13 @@ class HullGeometry:
 
 @dataclass(frozen=True)
 class MethodStage:
-    """One held-weight state, with signed reference draft and a trial loss leg.
+    """One held-weight state, with signed reference draft and a settlement-trial leg.
 
     dry_leg_loads_kn encode total weight and both CG moments as equivalent dry
     support reactions. Actual ballast compartment layout is not qualified.
     Positive draft is immersion; negative draft is air gap at zero tide. Tide
     changes water level at fixed jacking position and fixed ballast in a state.
-    A null trial leg requests independent loss cases for each of the three legs.
+    A null trial leg requests independent settlement trials for each of the three legs.
     """
 
     method: str
@@ -547,7 +547,7 @@ class PreloadMethodCheck:
 def compare_preload_methods(curves: Sequence[LayeredPenetrationCurve], hull: HullGeometry,
                             stages: Sequence[MethodStage], *, tide_levels_m: Sequence[float],
                             target_kn: float, settlement_m: float) -> tuple[PreloadMethodCheck, ...]:
-    """Evaluate every state, tide and leg before and after a trial support loss.
+    """Evaluate every state, tide and leg before and after a prescribed settlement trial.
 
     Curves may differ by leg. Settlement is prescribed, never inferred from
     peak/trough depths. Required reactions are not capped at available soil

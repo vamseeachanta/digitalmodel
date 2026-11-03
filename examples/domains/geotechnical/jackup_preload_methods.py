@@ -60,10 +60,6 @@ PUBLIC_SOURCES = [
      'year': 2021, 'locator': 'Example Rig Move 1, page 5',
      'url': 'https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2021-13.pdf',
      'use': 'A 2006 operation used six leg-by-leg stages, the first four with hull in water.'},
-    {'title': 'Regional coastal wetland Ramsar information sheet', 'year': 2024,
-     'locator': 'Section 4.4.4, page 12',
-     'url': 'https://rsis.ramsar.org/RISapp/files/RISrep/GA1652RIS_2412_fr.pdf',
-     'use': 'Reported tidal excursion about 1.0 m neaps and 2.0 m springs; not a site tide prediction.'},
 ]
 
 LIMITS = [
@@ -72,9 +68,8 @@ LIMITS = [
     'Negative reactions invalidate the assumed three-support contact state.',
     'No penetration memory, remoulding, rebound, lateral loading or structural stiffness.',
     'Sea state is an unresolved input range; wave-induced forces are excluded.',
-    'A 2026 public industry article on preload draft is context only; no event input is known.',
     'Six stages and first four in water follow the public case; loads and within-stage sweeps are assumed.',
-    'Regional spring excursion is interpreted as a 2.0 m low-to-high range; symmetric offsets are assumed.',
+    'Tide offsets are generic assumed values (2.0 m low-to-high by default); no site tide record is used.',
     'Method clauses and required standards edition remain to be confirmed.',
 ]
 
@@ -118,9 +113,9 @@ def figure_spec(rows: Sequence[PreloadMethodCheck], profile: str,
         summaries = [_summary(rows, method, tide) for tide in tides]
         metrics = [
             ('maximum_nominal_reaction_per_leg_kn', 'Best achieved nominal reaction', 1000),
-            ('minimum_peak_headroom_kn', 'Least peak headroom including trial loss', 1000),
-            ('maximum_absolute_trim_deg', 'Trial-loss trim', 1),
-            ('maximum_absolute_redistribution_kn', 'Trial-loss redistribution magnitude', 1000),
+            ('minimum_peak_headroom_kn', 'Least peak headroom including settlement trial', 1000),
+            ('maximum_absolute_trim_deg', 'Settlement-trial trim', 1),
+            ('maximum_absolute_redistribution_kn', 'Settlement-trial redistribution magnitude', 1000),
         ]
         for index, (key, label, scale) in enumerate(metrics, 1):
             values = [min(s[key]) if isinstance(s[key], list) else s[key] for s in summaries]
@@ -142,14 +137,14 @@ def figure_spec(rows: Sequence[PreloadMethodCheck], profile: str,
                                'line': {'dash': 'dash'},
                                'hovertemplate': '%{x:.1f} m<br>%{y:.1f} MN<extra>%{fullData.name}</extra>'})
         traces.append({'type': 'scatter', 'mode': 'lines+markers',
-                       'name': method + ': Trial-loss heel', 'x': list(tides),
+                       'name': method + ': Settlement-trial heel', 'x': list(tides),
                        'y': [s['maximum_absolute_heel_deg'] for s in summaries],
                        'xaxis': 'x3', 'yaxis': 'y3', 'line': {'dash': 'dot'},
                        'hovertemplate': '%{x:.1f} m<br>%{y:.1f} degrees<extra>%{fullData.name}</extra>'})
         troughs = [s['minimum_post_peak_reserve_kn'] for s in summaries]
         if any(value is not None for value in troughs):
             traces.append({'type': 'scatter', 'mode': 'lines+markers',
-                           'name': method + ': Least post-peak reserve including trial loss',
+                           'name': method + ': Least post-peak reserve including settlement trial',
                            'x': list(tides), 'y': [None if v is None else v / 1000 for v in troughs],
                            'xaxis': 'x2', 'yaxis': 'y2', 'line': {'dash': 'dot'},
                            'hovertemplate': '%{x:.1f} m<br>%{y:.1f} MN<extra>%{fullData.name}</extra>'})
@@ -185,7 +180,7 @@ def write_examples(destination: Path, *, tide_levels_m: tuple[float, ...] = (-1.
                          (transverse / 2, -longitudinal / 3)), values['water_weight_kn_m3'])
     destination.mkdir(parents=True, exist_ok=True)
     assumptions = {'basis': BASIS, 'inputs': ASSUMPTIONS, 'tide_levels_m': tide_levels_m,
-                   'tide_basis': 'Regional Ramsar record, section 4.4.4: about 1.0 m neaps and 2.0 m springs; symmetric offsets assumed',
+                   'tide_basis': 'generic symmetric offsets, assumed, based on previous experience; no site tide record',
                    'public_sources': PUBLIC_SOURCES,
                    'standards': STANDARDS, 'limits': LIMITS,
                    'ballast_convention': 'maximum total weight equals three reserves plus available ballast'}

@@ -276,3 +276,39 @@ def test_simultaneous_state_trials_each_leg_without_repeating_nominal():
     assert len(rows) == 12
     assert len([r for r in rows if r.condition == 'nominal']) == 3
     assert {r.trial_leg for r in rows if r.condition != 'nominal'} == {0, 1, 2}
+
+
+# Review check of the default figures quoted in the domain note, using the
+# example geometry: 40 m long by 36 m broad, legs at (0, 80/3), (-22, -40/3)
+# and (22, -40/3) so the leg triangle centroid is the waterplane centre.
+DEFAULT_HULL = HullGeometry(40, 36, 6, ((0, 80 / 3), (-22, -40 / 3), (22, -40 / 3)), 10)
+
+
+def test_documented_default_figures_match_hand_calculation():
+    stages = preload_method_stages(target_kn=30000, reserve_kn=12000, maximum_weight_kn=72000,
+                                   wet_draft_m=1.0, elevated_air_gap_m=1.0)
+    by_method = {}
+    for stage in stages:
+        by_method.setdefault(stage.method, []).append(stage)
+    # One leg at a time: 12 + 18 = 30 MN on the active leg, 12 MN elsewhere.
+    assert by_method['one_leg_at_a_time'][0].dry_leg_loads_kn == pytest.approx((30000, 12000, 12000))
+    # All legs: demand 3*18 = 54 MN exceeds 72 - 36 = 36 MN, so 12 + 12 = 24 MN each.
+    assert by_method['all_legs'][0].dry_leg_loads_kn == pytest.approx((24000,) * 3)
+    # Stage 3 commands the full target; its first substep loads leg 0 in water.
+    full = next(s for s in by_method['staged_in_water_then_elevated']
+                if s.number == 3 and s.trial_leg == 0)
+    # Level hull, centred waterplane: B = 40*36*draft*10 kN, one third to each leg.
+    for tide, draft, expected in ((-1.0, 0.0, 30000), (0.0, 1.0, 25200), (1.0, 2.0, 20400)):
+        assert 40 * 36 * draft * 10 / 3 == pytest.approx(30000 - expected)
+        result = hull_response(DEFAULT_HULL, full, tide_m=tide)
+        assert result.reactions_kn[0] == pytest.approx(expected)
+    # Elevated hull, 1.0 m settlement: rotation only, no buoyancy transfer.
+    elevated = by_method['one_leg_at_a_time'][0]
+    fore = hull_response(DEFAULT_HULL, elevated, failed_leg=0, settlement_m=1.0)
+    assert fore.trim_deg == pytest.approx(math.degrees(math.atan(1.0 / 40.0)))
+    assert fore.heel_deg == pytest.approx(0)
+    assert fore.reaction_changes_kn == pytest.approx((0, 0, 0))
+    aft = hull_response(DEFAULT_HULL, elevated, failed_leg=1, settlement_m=1.0)
+    # Aft legs 44 m apart: heel atan(1/44); mean aft drop 0.5 m over 40 m gives trim.
+    assert abs(aft.heel_deg) == pytest.approx(math.degrees(math.atan(1.0 / 44.0)))
+    assert abs(aft.trim_deg) == pytest.approx(math.degrees(math.atan(0.5 / 40.0)))
