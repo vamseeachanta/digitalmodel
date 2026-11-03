@@ -123,7 +123,7 @@ def test_vent_variant_preserves_the_area_independent_transfer_metric(study):
 
 
 @pytest.mark.parametrize("variant", ["baseline_full_height_outlet", "vent_top"])
-@pytest.mark.parametrize("flow_rate", [0, 0.0, 19.195765710000003])
+@pytest.mark.parametrize("flow_rate", [0, 0.0, 1e-12, 19.195765710000003])
 def test_built_inlet_preserves_numeric_flow_rate(study, tmp_path, variant, flow_rate):
     """Check zero by value and retain the exact nonzero round-trip rate."""
     case_dir, _ = study._build_case(tmp_path, variant, flow_rate, 10, 1)
@@ -131,6 +131,15 @@ def test_built_inlet_preserves_numeric_flow_rate(study, tmp_path, variant, flow_
     constants = re.findall(r"volumetricFlowRate\s+constant\s+([^;\s]+)\s*;", velocity)
     assert len(constants) == 1
     assert float(constants[0]) == flow_rate
+
+
+@pytest.mark.parametrize("variant", ["baseline_full_height_outlet", "vent_top"])
+@pytest.mark.parametrize("flow_rate", [0, 0.0, -0.0])
+def test_built_zero_flow_retains_canonical_spelling(study, tmp_path, variant, flow_rate):
+    """Retain the zero spelling required by existing resonant-build consumers."""
+    case_dir, _ = study._build_case(tmp_path, variant, flow_rate, 10, 1)
+    velocity = (case_dir / "0" / "U").read_text(encoding="utf-8")
+    assert re.search(r"volumetricFlowRate\s+constant 0;", velocity)
 
 
 def test_unknown_variant_fails_closed(study):
@@ -155,7 +164,7 @@ _VOL_DAT = """\
 
 def test_parse_vol_field_value_skips_comments_and_returns_series(study, tmp_path):
     dat = tmp_path / "volFieldValue.dat"
-    dat.write_text(_VOL_DAT)
+    dat.write_text(_VOL_DAT, encoding="utf-8", newline="\n")
 
     series = study.parse_vol_field_value(dat)
 
