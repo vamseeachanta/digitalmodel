@@ -6,6 +6,7 @@ All sample parameters below are constructed test inputs, not design criteria.
 Floating tolerances bound roundoff of the written arithmetic only.
 """
 
+from fractions import Fraction
 import math
 
 import numpy as np
@@ -302,3 +303,21 @@ def test_subnormal_return_level_power_retains_precision_after_scaling():
     assert law.return_level(math.nextafter(1, 2)) == pytest.approx(
         1.762747940478373e-15, rel=1e-12, abs=0
     )
+
+
+@pytest.mark.parametrize("quantity", ["mean", "first_moment"])
+@pytest.mark.parametrize("shape, scale", [(1, 1e16), (1, 1e308), (0.5, 5e15)])
+def test_moment_preserves_exact_sum_near_cancellation(quantity, shape, scale):
+    """Source W: E[X]=gamma+lambda*Gamma(1+1/k).
+
+    For k=1 and k=1/2 the gamma factor is exactly 1! and 2!.
+    Rational arithmetic on the supplied floats preserves their exact sum;
+    the negative adjacent float leaves a finite, nonzero residual.
+    """
+    factor = math.factorial(int(1 / shape))
+    location = -math.nextafter(factor * scale, 0)
+    expected = float(Fraction(location) + factor * Fraction(scale))
+    assert expected > 0
+    law = WeibullDistribution(shape, scale, location)
+    actual = law.mean if quantity == "mean" else law.moment(1)
+    assert actual == expected

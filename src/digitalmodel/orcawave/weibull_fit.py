@@ -177,11 +177,45 @@ class WeibullDistribution:
 
         Substitution t=z^k gives E[Z^j]=Gamma(1+j/k). Thus
         E[X^r]=sum_j binom(r,j)*gamma^(r-j)*lambda^j*Gamma(1+j/k).
-        Signed terms are combined in log space; OverflowError is raised
-        if the final moment exceeds float range.
+        Representable terms retain their signed operands before summation;
+        logarithms handle factors outside float range. OverflowError is
+        raised if the final moment exceeds float range.
         """
         if isinstance(order, bool) or not isinstance(order, int) or order < 0:
             raise ValueError("Moment order must be a nonnegative integer")
+        # Binary scaling preserves low-order bits before cancellation. Avoid
+        # log/exp round trips for normal factors, and combine their exponents
+        # before reconstructing each term so intermediate products stay finite.
+        terms = []
+        try:
+            for j in range(order + 1):
+                power = order - j
+                if self.location == 0 and power:
+                    continue
+                factors = (
+                    math.comb(order, j),
+                    self.location**power,
+                    self.scale**j,
+                    math.gamma(1 + j / self.shape),
+                )
+                if any(
+                    not math.isfinite(factor) or abs(factor) < np.finfo(float).tiny
+                    for factor in factors
+                ):
+                    break
+                mantissa, exponent = 1.0, 0
+                for factor in factors:
+                    fraction, shift = math.frexp(factor)
+                    mantissa *= fraction
+                    exponent += shift
+                terms.append(math.ldexp(mantissa, exponent))
+            else:
+                return math.fsum(terms)
+        except OverflowError:
+            # Large powers or gamma factors can still yield a finite moment
+            # after scaling; retain the logarithmic expansion for that range.
+            pass
+
         logs, signs = [], []
         for j in range(order + 1):
             power = order - j
