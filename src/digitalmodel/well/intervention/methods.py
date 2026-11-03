@@ -1,8 +1,7 @@
 """Problem-to-method options and explicitly scoped public reference envelopes.
 
-Selection basis: Khurana, DeWalt & Headworth (2003), 'Well intervention using
-rigless techniques', sections Wireline, Coiled tubing, Hydraulic workover and
-Alternate approach (original technical article by the study authors):
+Selection basis: 'Well intervention using rigless techniques' (2003), sections
+Wireline, Coiled tubing, Hydraulic workover and Alternate approach:
 https://www.offshore-mag.com/production/article/16755400/well-intervention-using-rigless-techniques
 Also RPSEA 08121-1502, Task 2 (7 June 2010), Tables 5-6, pp.63-65:
 https://edx.netl.doe.gov/dataset/coiled-tubing-drilling-and-intervention-systems-using-cost-effective-vessel/resource/7268bc40-e7ec-4743-9b39-012b107490f0/download

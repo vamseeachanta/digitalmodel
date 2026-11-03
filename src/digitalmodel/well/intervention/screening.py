@@ -1,11 +1,11 @@
 """Decline shortfall and bounded, constant-uplift economic screening.
 
 Public equation basis:
-* Arps (1945), Analysis of Decline Curves; public derivation in Blasingame,
-  Texas A&M PETE 613, Lecture 8 (2023), Appendix B, rate-time derivations:
+* Analysis of Decline Curves (1945); public rate-time derivation in
+  Texas A&M PETE 613, Lecture 8 (2023), Appendix B:
   https://blasingame.engr.tamu.edu/z_zCourse_Archive/P613_23A/P613_23A_Lectures/
   P613_23A_Lec_08_%28DCA_Gas_Wells%29_%5B600_dpi%5D_%28v20230228%29_%28pdf%29.pdf
-* DOE, Simple Photovoltaic Economic Calculations (2009), item 1: simple
+* DOE, Simple Photovoltaic Economic Calculations (31 March 2010), item 1: simple
   payback = investment / net benefit rate, without time value of money:
   https://www1.eere.energy.gov/solar/pdfs/simple_pv_economic_calculations_mi.pdf
 

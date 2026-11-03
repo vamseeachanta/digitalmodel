@@ -200,6 +200,47 @@ def test_reference_bands_are_sourced_ranges_and_not_offshore_budgets():
             reference_estimate(method)
 
 
+@pytest.mark.parametrize(
+    "method,duration,day_rate,cost",
+    [
+        # Duration: DOI 10.1063/5.0134919 comparison, IATMI22-187 Table 1.
+        # The five-day comparison endpoint remains independently unverified.
+        # Hand cost endpoints: 5*3500=17500; 20*8000=160000 USD.
+        (Method.SLICKLINE, (5, 20), (3500, 8000), (17500, 160000)),
+        # Duration: RPSEA Task 2 (2010) Table 6 survey; IATMI Table 1.
+        # Hand costs: 4*3500=14000; 7*8000=56000 USD.
+        (Method.E_LINE, (4, 7), (3500, 8000), (14000, 56000)),
+        # Duration: RPSEA Table 6 sand wash; IATMI Table 1.
+        # Hand costs: 4*12000=48000; 14*25000=350000 USD.
+        (Method.COILED_TUBING, (4, 14), (12000, 25000), (48000, 350000)),
+        # Duration: HWO case-study result; DOI comparison (unverified).
+        # Hand costs: 6*20000=120000; 10*38000=380000 USD.
+        (Method.HWU, (6, 10), (20000, 38000), (120000, 380000)),
+        # Duration: RPSEA Table 6 tubing/packer failure and casing leak.
+        # Hand costs: 20*18000=360000; 30*28000=840000 USD.
+        (Method.RIG_WORKOVER, (20, 30), (18000, 28000), (360000, 840000)),
+    ],
+)
+def test_reference_endpoints_against_independent_literals(
+    method, duration, day_rate, cost
+):
+    """Pin source inputs and hand costs independently of returned bands.
+
+    Rate citation: Workover Rigs Explained (23 July 2026), Table 1 for
+    wireline, CT and HWU; Basin-by-Basin Rate Overview for heavy mast.
+    https://www.sdbeyondpetro.com/workover-rigs-explained-types-uses-buyer-s-guide-2026
+    Duration citations and their links are in reference_estimate's docstring.
+    Accessible duration/rate endpoints were transcribed from those sources.
+    The five-day and ten-day DOI comparison endpoints preserve the reviewed
+    snapshot: TLS validation failed and the DOI route returned HTTP 403.
+    These assertions detect literal drift; they do not verify that source.
+    """
+    estimate = reference_estimate(method)
+    assert estimate.duration_days == Band(*duration)
+    assert estimate.day_rate_usd == Band(*day_rate)
+    assert estimate.cost_usd == Band(*cost)
+
+
 def test_payback_includes_deferral_and_elapsed_job_time():
     result = screen_economics(
         baseline_bopd=100,
@@ -280,7 +321,10 @@ def test_economics_rejects_dimensions_nonfinite_inputs_and_missing_basis():
     )
 
 
-def test_wireline_hook_calls_existing_pump_down_and_checks_clearance(monkeypatch):
+@pytest.mark.parametrize("inclination", [90, Q_(90, "degree"), Q_(math.pi / 2, "radian")])
+def test_wireline_hook_calls_existing_pump_down_and_checks_clearance(
+    monkeypatch, inclination
+):
     from digitalmodel.well.completion.pump_down import kinematics
 
     actual = kinematics.solve_line_speed
@@ -301,7 +345,7 @@ def test_wireline_hook_calls_existing_pump_down_and_checks_clearance(monkeypatch
         buoyed_bha_weight=Q_(873, "lbf"),
         buoyed_cable_weight=Q_(229, "lbf/kft"),
         lateral_length=Q_(4900, "ft"),
-        inclination_deg=90,
+        inclination_deg=inclination,
         mu=0.30,
         eccentricity=0.12,
         k=2,
@@ -397,6 +441,13 @@ def test_public_bsee_example():
         ("eccentricity", -0.1),
         ("k", 0),
         ("inclination_deg", 181),
+        ("inclination_deg", Q_(-1, "degree")),
+        ("inclination_deg", Q_(181, "degree")),
+        ("inclination_deg", Q_(400, "degree")),
+        ("inclination_deg", Q_(math.pi + 0.01, "radian")),
+        ("inclination_deg", Q_(math.nan, "degree")),
+        ("inclination_deg", Q_(math.inf, "radian")),
+        ("inclination_deg", Q_(1, "m")),
         ("drift_id", Q_(5, "in")),
         ("density", Q_(1, "day")),
     ],

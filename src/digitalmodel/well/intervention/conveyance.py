@@ -37,8 +37,9 @@ def wireline_conveyance(
     """Screen slickline/e-line access through the existing pump-down core.
 
     The supplied input set is required for deviated/horizontal wireline
-    evaluation. Units are Pint quantities or bare SI; inclination is degrees
-    from vertical and coefficients mu, eccentricity and K are caller inputs.
+    evaluation. Units are Pint quantities or bare SI; bare inclination is
+    degrees from vertical, and angle quantities are converted to degrees.
+    Coefficients mu, eccentricity and K are caller inputs.
     Basis: pump_down.force_balance.resisting_force (Coulomb balance) and
     pump_down.kinematics.solve_line_speed (DOE-HDBK-1012/3-92, Fluid Flow).
     No inclination cutoff or implicit coefficient is introduced here.
@@ -57,7 +58,8 @@ def wireline_conveyance(
     clearance = scalar(min_radial_clearance, "m", "radial clearance")
     if drift > diameter:
         raise ValueError("drift ID cannot exceed casing ID")
-    finite(inclination_deg, "inclination", maximum=180)
+    inclination = scalar(inclination_deg, "degree", "inclination")
+    inclination = finite(inclination, "inclination", maximum=180)
     scalar(rate, "m**3/s", "pump rate")
     scalar(density, "kg/m**3", "fluid density", positive=True)
     finite(mu, "mu")
@@ -67,7 +69,7 @@ def wireline_conveyance(
         buoyed_bha_weight,
         buoyed_cable_weight,
         lateral_length,
-        inclination_deg,
+        inclination,
         mu,
         eccentricity,
     )

@@ -53,7 +53,11 @@ while the duration evidence refers to subsea tasks. These contexts are not inter
 RPSEA Table 6 above. Rate source:
 <a href="https://www.sdbeyondpetro.com/workover-rigs-explained-types-uses-buyer-s-guide-2026">Workover Rigs Explained (23 July 2026), selected Table 1 rate facts and Eagle Ford paragraph</a>.
 The rate source is a supplier's budget guidance, not an independently validated market dataset.
-Source links and exclusions travel with each returned estimate; no currency conversion or escalation is applied.</p>
+Source links and exclusions travel with each returned estimate; no currency conversion or escalation is applied.
+The duration-comparison PDF could not be independently retrieved: TLS certificate
+validation failed, and its DOI route returned HTTP 403. Its five-day slickline and
+ten-day HWU comparison endpoints remain unverified; regression tests pin the
+reviewed values without establishing their source accuracy.</p>
 <p class="limit">Subsea total cost and duration bands require explicit project inputs.
 A transferable primary-source cost range for each subsea access class has not been
 established. Calling <code>reference_estimate</code> for RLWI, riser-based intervention
@@ -97,7 +101,7 @@ print(result.payback_from_start_days)  # PaybackBand(low=24.05, high=92.2)</code
 production. Deferred oil is q₀·d; restart payback is (C + p·q₀·d)/(p·u).
 Elapsed payback adds d. Cost, duration and uplift endpoints are enumerated to bound
 the scenarios. These are explicitly defined accounting identities using the
-<a href="https://www1.eere.energy.gov/solar/pdfs/simple_pv_economic_calculations_mi.pdf">DOE simple payback definition (2009), item 1</a>.
+<a href="https://www1.eere.energy.gov/solar/pdfs/simple_pv_economic_calculations_mi.pdf">DOE Simple Photovoltaic Economic Calculations (31 March 2010), item 1</a>.
 No discount, uplift decline, success probability or later recovery of deferred oil
 is assumed. A <code>None</code> payback bound denotes no finite recovery under that
 constant-uplift case. Finite extrapolated payback beyond the horizon is reported,
@@ -110,7 +114,8 @@ but <code>pays_out_in_all_cases</code> is false. Oil and net-cash pairs are orde
 <code>wireline_conveyance</code> directly, with measured drift, casing ID, tool OD, required
 clearance, pump rate, fluid density, buoyed weights, lateral length, inclination,
 friction, eccentricity and restriction coefficient. Physical inputs accept Pint
-quantities or bare SI; inclination is from vertical. The adapter calls the existing
+quantities or bare SI; bare inclination is in degrees from vertical, and angle
+quantities are converted to degrees before the 0–180 degree check. The adapter calls the existing
 <code>completion.pump_down</code> clearance, resistance and solved-speed functions.
 It returns a clearance failure, stall, pump-down screen pass, or a gravity-assisted
 branch needing review. A positive speed does not establish retrieval, tension,
