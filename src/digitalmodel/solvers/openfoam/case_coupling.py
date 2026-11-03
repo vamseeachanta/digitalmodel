@@ -410,7 +410,9 @@ def _exchange_boundary_conditions(flow_rate: float) -> list[BoundaryCondition]:
             "inlet", BoundaryType.FLOW_RATE_INLET_VELOCITY, "U",
             value="uniform (0 0 0)",
             # Keep canonical zero while round-tripping every nonzero rate.
-            extra={"volumetricFlowRate": f"constant {0 if flow_rate == 0 else flow_rate!r}"},
+            extra={
+                "volumetricFlowRate": f"constant {0 if flow_rate == 0 else float(flow_rate)!r}"
+            },
         ),
         BoundaryCondition("inlet", BoundaryType.ZERO_GRADIENT, "p_rgh"),
         BoundaryCondition(

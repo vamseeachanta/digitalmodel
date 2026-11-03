@@ -20,6 +20,7 @@ import importlib.util
 from pathlib import Path
 import re
 
+import numpy as np
 import pytest
 
 from digitalmodel.solvers.openfoam.models import BoundaryType
@@ -123,7 +124,9 @@ def test_vent_variant_preserves_the_area_independent_transfer_metric(study):
 
 
 @pytest.mark.parametrize("variant", ["baseline_full_height_outlet", "vent_top"])
-@pytest.mark.parametrize("flow_rate", [0, 0.0, 1e-12, 19.195765710000003])
+@pytest.mark.parametrize(
+    "flow_rate", [0, 0.0, 1e-12, 19.195765710000003, np.float64(19.195765710000003)]
+)
 def test_built_inlet_preserves_numeric_flow_rate(study, tmp_path, variant, flow_rate):
     """Check zero by value and retain the exact nonzero round-trip rate."""
     case_dir, _ = study._build_case(tmp_path, variant, flow_rate, 10, 1)
