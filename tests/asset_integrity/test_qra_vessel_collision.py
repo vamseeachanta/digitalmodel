@@ -153,3 +153,41 @@ def test_real_passing_ship_output_is_context_not_collision_consequence():
             passing_ship_forces=forces,
         )
         assert incomplete.hazard.status is EvaluationStatus.NOT_EVALUATED
+
+
+def test_ship_impact_screen_is_retained_without_inventing_consequences():
+    from digitalmodel.foam_system.sizing import Citation
+    from digitalmodel.technical_safety.accidental_loads import (
+        ShipImpactInputs,
+        screen_ship_impact,
+    )
+    from digitalmodel.technical_safety.criteria import get_criteria
+
+    # 0.5 * 5e6 * (1 + 0.4) * 2**2 / 1e6 = 14 MJ.
+    energy = screen_ship_impact(
+        ShipImpactInputs(
+            mass_kg=5e6,
+            speed_m_s=2.0,
+            added_mass_coefficient=0.4,
+            added_mass_citation=Citation(
+                "Synthetic scenario", "1", "assumed coefficient"
+            ),
+        ),
+        get_criteria("s_dp_001_1996_rev2"),
+        allow_test_criteria=True,
+    )
+    result = assess(impact_screen=energy)
+    assert result.impact_screen is energy
+    assert result.impact_screen.energy_mj == pytest.approx(14)
+    assert result.hazard.expected_fatalities_per_year == pytest.approx(0.1)
+    incomplete = assess(
+        inputs(collision_probability_per_transit=None, fatalities_per_collision=None),
+        impact_screen=energy,
+    )
+    assert incomplete.hazard.status is EvaluationStatus.NOT_EVALUATED
+    assert incomplete.missing_inputs == (
+        "collision_probability_per_transit",
+        "fatalities_per_collision",
+    )
+    with pytest.raises(TypeError, match="ShipImpactResult"):
+        assess(impact_screen={"energy_mj": 14})
