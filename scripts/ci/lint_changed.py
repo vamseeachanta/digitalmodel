@@ -34,9 +34,19 @@ def git(*args: str) -> str:
                           encoding="utf-8", errors="surrogateescape").stdout
 
 
-def changed_python_files(base: str) -> list[str]:
-    output = git("diff", "--name-only", "-z", "--diff-filter=ACMR", base, "HEAD", "--", "*.py")
-    return [path for path in output.split("\0") if path]
+def changed_python_files(base: str) -> list[tuple[str, str]]:
+    """Return (original path, current path), retaining Git's rename pairing."""
+    output = git("diff", "--name-status", "-z", "--find-renames", "--diff-filter=ACMR",
+                 base, "HEAD", "--")
+    fields = iter(output.rstrip("\0").split("\0")) if output else iter(())
+    files = []
+    for status in fields:
+        original = next(fields)
+        current = next(fields) if status.startswith(("R", "C")) else original
+        # Filter after pairing: a rename into Python may have a non-Python source.
+        if current.endswith(".py"):
+            files.append((original, current))
+    return files
 
 
 def findings(path: str, source: str) -> Counter[tuple[str, str]]:
@@ -64,10 +74,10 @@ def main() -> int:
     files = changed_python_files(args.base)
     print(f"Linting {len(files)} changed Python file(s) against {args.base[:12]}.")
     added_total = 0
-    for path in files:
+    for original, path in files:
         with open(path, encoding="utf-8", errors="surrogateescape") as handle:
             after = findings(path, handle.read())
-        before = findings(path, base_source(args.base, path))
+        before = findings(path, base_source(args.base, original))
         added = after - before
         for (code, message), count in sorted(added.items()):
             added_total += count

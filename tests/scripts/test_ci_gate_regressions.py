@@ -5,6 +5,7 @@
 
 import importlib.util
 import os
+from collections import Counter
 from pathlib import Path
 import subprocess
 import sys
@@ -31,10 +32,10 @@ def test_changed_python_files_preserves_git_filenames(tmp_path, monkeypatch, nam
 
     def diff_without_commits(*args):
         # Exercise real Git's quoting and delimiters without creating commits.
-        assert args[:2] == ("diff", "--name-only")
-        options = [arg for arg in args[2:] if arg.startswith("-") and arg != "--"]
+        assert args[:2] == ("diff", "--name-status")
+        options = [arg for arg in args[1:] if arg.startswith("-") and arg != "--"]
         result = subprocess.run(
-            ["git", "diff", "--no-index", "--name-only", *options, "before", "after"],
+            ["git", "diff", "--no-index", *options, "before", "after"],
             capture_output=True, text=True, encoding="utf-8", errors="surrogateescape",
         )
         assert result.returncode == 1, result.stderr
@@ -42,9 +43,77 @@ def test_changed_python_files_preserves_git_filenames(tmp_path, monkeypatch, nam
 
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(lint_changed, "git", diff_without_commits)
-    expected = f"after/{name}"
-    assert lint_changed.changed_python_files("base") == [expected]
-    assert Path(expected).read_text(encoding="utf-8") == "answer = 42\n"
+    expected = f"before/{name}"
+    assert lint_changed.changed_python_files("base") == [(expected, expected)]
+    assert Path(expected).read_text(encoding="utf-8") == "pass\n"
+
+
+@pytest.mark.parametrize("output,expected", [
+    ("", []),
+    ("A\0new.py\0M\0changed.py\0R100\0old.txt\0renamed.py\0"
+     "R100\0removed.py\0now.txt\0C100\0source.py\0copy.py\0M\0last.py\0",
+     [("new.py", "new.py"), ("changed.py", "changed.py"),
+      ("old.txt", "renamed.py"), ("source.py", "copy.py"), ("last.py", "last.py")]),
+])
+def test_changed_python_files_pairs_status_records(monkeypatch, output, expected):
+    def git_status(*args):
+        assert args == ("diff", "--name-status", "-z", "--find-renames",
+                        "--diff-filter=ACMR", "base", "HEAD", "--")
+        return output
+
+    monkeypatch.setattr(lint_changed, "git", git_status)
+    assert lint_changed.changed_python_files("base") == expected
+
+
+@pytest.mark.parametrize("added_import,expected_status", [("", 0), ("import sys\n", 1)])
+def test_renamed_python_file_compares_original_findings(
+    tmp_path, monkeypatch, capsys, added_import, expected_status,
+):
+    """A rename retains existing findings and still gates added findings."""
+    before = tmp_path / "before"
+    after = tmp_path / "after"
+    before.mkdir()
+    after.mkdir()
+    source = "import os\n" + "\n".join(f"value_{i} = {i}" for i in range(20)) + "\n"
+    old = before / "old résumé.py"
+    new = after / "new résumé.py"
+    old.write_text(source, encoding="utf-8")
+    new.write_text(added_import + source, encoding="utf-8")
+
+    def diff_without_commits(*args):
+        assert args[0] == "diff"
+        options = [arg for arg in args[1:] if arg.startswith("-") and arg != "--"]
+        result = subprocess.run(
+            ["git", "diff", "--no-index", *options, "before", "after"],
+            capture_output=True, text=True, encoding="utf-8", errors="surrogateescape",
+        )
+        assert result.returncode == 1, result.stderr
+        return result.stdout
+
+    def original_source(base, path):
+        assert base == "base"
+        return Path(path).read_text(encoding="utf-8") if path.startswith("before/") else ""
+
+    def fixture_findings(path, source):
+        # Isolate rename comparison from the external linter installation.
+        # Both revisions must use the destination's lint configuration.
+        assert path == "after/new résumé.py"
+        return Counter(("F401", f"unused {name}") for name in ("os", "sys")
+                       if f"import {name}\n" in source)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(lint_changed, "git", diff_without_commits)
+    monkeypatch.setattr(lint_changed, "base_source", original_source)
+    monkeypatch.setattr(lint_changed, "findings", fixture_findings)
+    monkeypatch.setattr(sys, "argv", ["lint_changed.py", "--base", "base"])
+    assert lint_changed.main() == expected_status
+    output = capsys.readouterr().out
+    if added_import:
+        assert "1 new lint finding(s)" in output
+        assert "unused sys" in output
+        assert "unused os" not in output
+    else:
+        assert "No new lint findings." in output
 
 
 def test_ci_matrix_memory_failure_fails_pytest(tmp_path):
