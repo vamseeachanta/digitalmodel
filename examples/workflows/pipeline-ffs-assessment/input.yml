@@ -36,3 +36,6 @@ revision_history:
   - rev: '04'
     date: '2026-10-22'
     description: Withheld reduced-wall clearance where the circumferential criterion is unavailable; marked the affected life and inspection interval not evaluated and preserved required measurement actions.
+  - rev: '05'
+    date: '2026-11-03'
+    description: Reconciled calculation-source pins with the integrated corrosion projection and report renderer; retained withheld reduced-wall clearance and the previous revision history.

@@ -183,6 +183,17 @@ def test_source_pins(result):
         assert hashlib.sha256(payload).hexdigest() == source["sha256_lf"]
 
 
+def test_committed_calculation_source_pins():
+    manifest = json.loads(
+        (ROOT / "docs/reports/pipeline-ffs-assessment.manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert manifest["calculation_sources_sha256_lf"] == {
+        name: builder.digest(ROOT / name) for name in builder.CALCULATION_SOURCES
+    }
+
+
 def test_every_result_matches_existing_methods(result):
     from digitalmodel.asset_integrity.assessment.measurement_sufficiency import MeasurementSufficiency
 
@@ -630,6 +641,7 @@ def test_revision_history_follows_summary(tmp_path, result):
         ["02", "2026-10-21", "Established the supported wall interval and a passing and failing pressure bracket before the life search; retained numerical evidence and identified boundary censoring and unreachable targets. Both synthetic section results are unchanged."],
         ["03", "2026-10-21", "Excluded zero-wall endpoints from numerical life and limited pressure-projection qualification to the checked shell-parameter range because the remaining-thickness limits are not checked. Both synthetic section results are unchanged."],
         ["04", "2026-10-22", "Withheld reduced-wall clearance where the circumferential criterion is unavailable; marked the affected life and inspection interval not evaluated and preserved required measurement actions."],
+        ["05", "2026-11-03", "Reconciled calculation-source pins with the integrated corrosion projection and report renderer; retained withheld reduced-wall clearance and the previous revision history."],
     ]
     config = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")
     spec = builder.report_spec(ROOT, result)

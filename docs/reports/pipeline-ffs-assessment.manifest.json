@@ -845,14 +845,14 @@
     "src/digitalmodel/asset_integrity/dnv_rp_f101.py": "fdb7e0e3d928ba5f9462ae6a6dc40b033dedcfe3c7fb2106e7db65025dcc78bf",
     "src/digitalmodel/asset_integrity/pipeline_defect_screen.py": "0322401f640dd217e2c493e4fe6725a7256122c8dfdd59df5342dc40ce8eae80",
     "src/digitalmodel/asset_integrity/pipeline_defect_screen_inputs.py": "875626eb053a5333f082ee5c83486a048dee77dcc102e6bdbeed4e5e86aa7f1c",
-    "src/digitalmodel/asset_integrity/rstreng_2d.py": "79ada328af4155a77f812134c21fd5f524dfbbdcc4eaf3d0b3d0ffd63e2aa1b9",
+    "src/digitalmodel/asset_integrity/rstreng_2d.py": "bd1b9bafb2b9f40183ce24263738a75262433c59d0881918ae36278ad983b4a7",
     "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
     "src/digitalmodel/materials/grades.py": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90",
     "src/digitalmodel/reporting/assets/assessment_report.html.j2": "6ca3b435cf7104e4a8500fa97c514ceff8723f4a0e255adef08b484ea5740fb0",
-    "src/digitalmodel/reporting/engine.py": "f79f7b30faacf70af10d1469c75a4f334ba25f55fbe5a2f6f7a980966897ab50",
+    "src/digitalmodel/reporting/engine.py": "98723c8735157f2ae839bc8cd6ebf94ad6e1702ea780da3f119d62a76aed76f4",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
   },
-  "configuration_sha256_lf": "936345b41c861a322461ad7f6d0591a71a7dac0151a6786287ea9bc82170c680",
+  "configuration_sha256_lf": "c7963272b8a7a297e1b21bc2c9b2c5c2b4a696cf1712189c603cc6fea45fcf6d",
   "data_status": "synthetic, for demonstration",
   "digest_convention": "Input SHA-256 after CRLF to LF normalisation; output SHA-256 over exact UTF-8 bytes",
   "excluded_outputs": [
@@ -860,6 +860,6 @@
   ],
   "figures": "inline vector figures; 680-unit width; no raster or external dependencies",
   "intended_use": "worked example; no actual operating asset qualification",
-  "report_sha256": "314fe6e35d81ec836e3cb9fba323275eb0d0465e195417a0cbbbb81ee1eba929",
+  "report_sha256": "6746aeb5777c22a1cb6c2ba583dcd5956b04352c1c698785c0336d311c95f320",
   "schema_version": 1
 }
