@@ -61,7 +61,7 @@ def test_unconstrained_component_reports_elements_and_hint():
 
 @pytest.mark.parametrize("link", [
     "*TIE, NAME=JOIN\nSLAVE, MASTER\n",
-    "*CONTACT PAIR, INTERACTION=FRICTIONLESS\nSLAVE, MASTER\n"
+    "*CONTACT PAIR, INTERACTION=FRICTIONLESS, TYPE=NODE TO SURFACE\nSLAVE, MASTER\n"
     "*SURFACE INTERACTION, NAME=FRICTIONLESS\n",
 ])
 def test_surface_path_to_supported_component(link, tmp_path):
@@ -133,6 +133,102 @@ def test_tie_exemption_requires_element_master(deck, capsys, master_type, interf
     assert ("incompatible_master_surface" in {f["code"] for f in evidence["findings"]}) == nodal_master
 
 
+@pytest.mark.parametrize("mode,valid_mode,face_to_face", [
+    ("NODE TO SURFACE", True, False), ("node to surface", True, False),
+    ("SURFACE TO SURFACE", True, True), ("surface to surface", True, True),
+    ("MORTAR", True, True), ("MASSLESS", True, False),
+    ("UNKNOWN", False, False), ("", False, False), (None, False, False),
+])
+@pytest.mark.parametrize("slave_type", ["NODE", "ELEMENT", None])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_contact_slave_representation_matches_mode(deck, capsys, mode, valid_mode,
+                                                 face_to_face, slave_type, interface):
+    # CalculiX 2.22 manual, section 7.22 (*CONTACT PAIR): face-to-face
+    # formulations require an element-face slave; the master is always face-based.
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    nodal_slave = slave_type == "NODE"
+    type_param = "" if slave_type is None else f",TYPE={slave_type}"
+    row = "5" if nodal_slave else "OTHER,S1"
+    mode_param = "" if mode is None else f",TYPE={mode}"
+    path = deck(text=text + ("*SURFACE,NAME=MASTER\nBODY,S1\n"
+                            f"*SURFACE,NAME=SLAVE{type_param}\n{row}\n"
+                            f"*CONTACT PAIR,INTERACTION=FRICTIONLESS{mode_param}\nSLAVE,MASTER\n"
+                            "*SURFACE INTERACTION,NAME=FRICTIONLESS\n"))
+    valid = valid_mode and not (face_to_face and nodal_slave)
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == int(not valid)
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == ("PASS" if valid else "FAIL")
+    findings = {f["code"] for f in evidence["findings"]}
+    if valid:
+        assert findings == {"contact_path"}
+    else:
+        code = "incompatible_slave_surface" if valid_mode else "unsupported_contact_type"
+        finding = next(f for f in evidence["findings"] if f["code"] == code)
+        assert finding["severity"] == "error" and finding["line"] > 0
+        assert "7.22" in finding["fix_hint"]
+        unsupported = [f for f in evidence["findings"] if f["code"] == "unconstrained_part"]
+        assert [tuple(f["entity_ids"]) for f in unsupported] == [("step:0", "element:2")]
+        assert "contact_path" not in findings
+
+
+@pytest.mark.parametrize("quadratic_side", ["slave", "master"])
+@pytest.mark.parametrize("slave_type", ["NODE", "ELEMENT"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_quadratic_contact_requires_element_slave(deck, capsys, quadratic_side, slave_type, interface):
+    # Section 7.22 also requires face-based slaves when quadratic elements are used.
+    extra = ("*NODE\n11,2,0,0\n12,3,0,0\n13,2,1,0\n14,2,0,1\n"
+             "15,2.5,0,0\n16,2.5,0.5,0\n17,2,0.5,0\n18,2,0,0.5\n"
+             "19,2.5,0,0.5\n20,2,0.5,0.5\n"
+             "*ELEMENT,TYPE=C3D10,ELSET=OTHER\n2,11,12,13,14,15,16,17,18,19,20\n"
+             "*SOLID SECTION,ELSET=OTHER,MATERIAL=STEEL\n")
+    if slave_type == "NODE":
+        slave_row, master_row = ("11", "BODY,S1") if quadratic_side == "slave" else ("1", "OTHER,S1")
+    else:
+        slave_row, master_row = ("OTHER,S1", "BODY,S1") if quadratic_side == "slave" else ("BODY,S1", "OTHER,S1")
+    if quadratic_side == "master":
+        extra += "*BOUNDARY\n11,1,3\n"
+    path = deck(extra + (f"*SURFACE,NAME=SLAVE,TYPE={slave_type}\n{slave_row}\n"
+                         f"*SURFACE,NAME=MASTER\n{master_row}\n"
+                         "*CONTACT PAIR,TYPE=NODE TO SURFACE,INTERACTION=FRICTIONLESS\n"
+                         "SLAVE,MASTER\n*SURFACE INTERACTION,NAME=FRICTIONLESS\n"))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == int(slave_type == "NODE")
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == ("FAIL" if slave_type == "NODE" else "PASS")
+    findings = {f["code"] for f in evidence["findings"]}
+    assert ("incompatible_slave_surface" in findings) == (slave_type == "NODE")
+    assert ("contact_path" in findings) == (slave_type == "ELEMENT")
+
+
+@pytest.mark.parametrize("second_mode", ["SURFACE TO SURFACE", "node to surface"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_contact_modes_must_be_consistent(deck, capsys, second_mode, interface):
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    path = deck(text=text + ("*SURFACE,NAME=MASTER\nBODY,S1\n"
+                            "*SURFACE,NAME=SLAVE\nOTHER,S1\n"
+                            "*SURFACE INTERACTION,NAME=FRICTIONLESS\n"
+                            "*CONTACT PAIR,TYPE=NODE TO SURFACE,INTERACTION=FRICTIONLESS\n"
+                            "SLAVE,MASTER\n"
+                            f"*CONTACT PAIR,TYPE={second_mode},INTERACTION=FRICTIONLESS\n"
+                            "SLAVE,MASTER\n"))
+    mixed = second_mode == "SURFACE TO SURFACE"
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == int(mixed)
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == ("FAIL" if mixed else "PASS")
+    findings = {f["code"] for f in evidence["findings"]}
+    assert ("incompatible_contact_type" in findings) == mixed
+    assert ("unconstrained_part" in findings) == mixed
+    assert ("contact_path" in findings) != mixed
+
+
 @pytest.mark.parametrize("face", ["SPOS", "SNEG", "S1", "S2"])
 @pytest.mark.parametrize("interface", ["api", "cli"])
 def test_spring_element_surface_cannot_supply_support(deck, capsys, face, interface):
@@ -167,30 +263,74 @@ def test_spring_element_surface_cannot_supply_support(deck, capsys, face, interf
     ("S8R", "11,12,13,14,15,16,17,18", {11, 12, 13, 14, 15, 16, 17, 18}),
 ])
 @pytest.mark.parametrize("face", ["S1", "S2", "SNEG", "SPOS", "s1", "s2"])
-@pytest.mark.parametrize("interface", ["api", "cli"])
-def test_shell_surface_aliases_supply_support(deck, capsys, kind, connectivity, expected,
-                                             face, interface):
+def test_shell_surface_alias_membership(deck, kind, connectivity, expected, face):
     extra = ("*NODE\n11,2,0,0\n12,3,0,0\n13,2,1,0\n14,3,1,0\n"
              "15,2.5,0,0\n16,2.5,0.5,0\n17,2,0.5,0\n18,3,0.5,0\n"
              f"*ELEMENT,TYPE={kind},ELSET=OTHER\n2,{connectivity}\n"
              "*SHELL SECTION,ELSET=OTHER,MATERIAL=STEEL\n0.1\n")
-    assert "unconstrained_part" in codes(check_deck(deck(extra)))
-    path = deck(extra + "*SURFACE,NAME=MASTER\nBODY,S1\n"
-                f"*SURFACE,NAME=SLAVE\nOTHER,{face}\n"
-                "*TIE,NAME=JOIN\nSLAVE,MASTER\n")
-    if interface == "api":
-        evidence = check_deck(path).to_dict()
-    else:
-        assert main([path.as_posix(), "--json"]) == 0
-        evidence = json.loads(capsys.readouterr().out)
-    assert evidence["status"] == "PASS"
-    assert evidence["findings"] == []
+    path = deck(extra)
     # CalculiX 2.22 manual, section 7.128 (*SURFACE): S1/S2 designate
     # the negative/positive shell faces; both contain all shell nodes.
     model = Deck(read_blocks(path))
     model.parse()
     surface = Block("SURFACE", {"NAME": "FACE"}, [["OTHER", face]], 0)
     assert _surface_nodes(model, surface) == expected
+
+
+@pytest.mark.parametrize("kind,connectivity", [
+    ("S3", "11,12,13"), ("S4", "11,12,13,14"), ("S4R", "11,12,13,14"),
+    ("S6", "11,12,13,14,15,16"), ("S8", "11,12,13,14,15,16,17,18"),
+    ("S8R", "11,12,13,14,15,16,17,18"),
+])
+@pytest.mark.parametrize("shell_side", ["slave", "master", "mixed", "nodal"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_shell_tie_cannot_supply_support(deck, capsys, kind, connectivity,
+                                       shell_side, interface):
+    # CalculiX 2.22 manual, section 7.132 (*TIE): ordinary ties exclude shells.
+    extra = ("*NODE\n11,2,0,0\n12,3,0,0\n13,2,1,0\n14,3,1,0\n"
+             "15,2.5,0,0\n16,2.5,0.5,0\n17,2,0.5,0\n18,3,0.5,0\n"
+             f"*ELEMENT,TYPE={kind},ELSET=OTHER\n2,{connectivity}\n"
+             "*SHELL SECTION,ELSET=OTHER,MATERIAL=STEEL\n0.1\n")
+    slave = "*SURFACE,NAME=SLAVE\nOTHER,SPOS\n"
+    master = "*SURFACE,NAME=MASTER\nBODY,S1\n"
+    if shell_side == "master":
+        slave, master = "*SURFACE,NAME=SLAVE\nBODY,S1\n", "*SURFACE,NAME=MASTER\nOTHER,SNEG\n"
+    elif shell_side == "mixed":
+        slave += "BODY,S1\n"
+    elif shell_side == "nodal":
+        slave = "*SURFACE,NAME=SLAVE,TYPE=NODE\n11\n"
+    path = deck(extra + slave + master + "*TIE,NAME=JOIN\nSLAVE,MASTER\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    finding = next(f for f in evidence["findings"] if f["code"] == "incompatible_tie_surface")
+    assert finding["severity"] == "error" and finding["line"] > 0
+    assert "7.132" in finding["fix_hint"]
+    unsupported = [f for f in evidence["findings"] if f["code"] == "unconstrained_part"]
+    assert [tuple(f["entity_ids"]) for f in unsupported] == [("step:0", "element:2")]
+
+
+@pytest.mark.parametrize("shell_side", ["slave", "master"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_invalid_shell_tie_grants_no_coincidence_exemption(deck, capsys, shell_side, interface):
+    extra = ("*NODE\n11,0,0,0\n12,2,0,0\n13,2,1,0\n"
+             "*ELEMENT,TYPE=S3,ELSET=OTHER\n2,11,12,13\n"
+             "*SHELL SECTION,ELSET=OTHER,MATERIAL=STEEL\n0.1\n"
+             "*SURFACE,NAME=SHELL\nOTHER,SPOS\n*SURFACE,NAME=SOLID\nBODY,S1\n")
+    pair = "SHELL,SOLID" if shell_side == "slave" else "SOLID,SHELL"
+    path = deck(extra + f"*TIE,NAME=JOIN\n{pair}\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    assert "incompatible_tie_surface" in {f["code"] for f in evidence["findings"]}
+    pairs = [tuple(f["entity_ids"]) for f in evidence["findings"] if f["code"] == "unmerged_nodes"]
+    assert pairs == [("node:1", "node:11")]
 
 
 @pytest.mark.parametrize("attached", [False, True])

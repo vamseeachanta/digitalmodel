@@ -64,7 +64,8 @@ class _Components:
                 self.parent[self.root(nid)] = first
 
 
-def _surface_nodes(model: Deck, block: Block) -> set[int]:
+def _surface_nodes(model: Deck, block: Block, *,
+                   element_types: set[str] | None = None) -> set[int]:
     """Resolve actual element faces so unrelated face nodes are not tie-exempt."""
     nodes = set()
     # Zero-based indices derived from CalculiX 2.22 User's Manual, section
@@ -95,6 +96,8 @@ def _surface_nodes(model: Deck, block: Block) -> set[int]:
             raise ValueError("Unsupported surface type")
         for eid in model.target("elset", row[0], block.line, block=block):
             kind, conn = model.elements[eid]
+            if element_types is not None:
+                element_types.add(kind)
             face = row[1].upper()
             if kind.startswith("C3D"):
                 if not face.startswith("S"):
@@ -112,6 +115,9 @@ def _surface_nodes(model: Deck, block: Block) -> set[int]:
             else:
                 # Unsupported surface geometry must not manufacture a support path.
                 raise ValueError("Unsupported surface face")
+    if element_types is not None and block.params.get("TYPE", "ELEMENT").upper() == "NODE":
+        element_types.update(kind for kind, conn in model.elements.values()
+                             if kind not in MASS_TYPES and not nodes.isdisjoint(conn))
     return nodes.intersection(model.nodes)
 
 
@@ -119,6 +125,7 @@ def _surface_nodes(model: Deck, block: Block) -> set[int]:
 class _Surface:
     surface_type: str
     nodes: set[int]
+    element_types: set[str]
 
 
 def _references_and_sections(model: Deck) -> dict[str, _Surface]:
@@ -155,8 +162,10 @@ def _references_and_sections(model: Deck) -> dict[str, _Surface]:
                                     "manual sections 6.2, 7.3, 7.81, 7.117, 7.118 and 7.121.",
                                     block.line)
             elif k == "SURFACE":
+                element_types: set[str] = set()
                 surfaces[p["NAME"].upper()] = _Surface(
-                    p.get("TYPE", "ELEMENT").upper(), _surface_nodes(model, block))
+                    p.get("TYPE", "ELEMENT").upper(),
+                    _surface_nodes(model, block, element_types=element_types), element_types)
             elif k in {"CLOAD", "DLOAD", "DSLOAD"}:
                 for row in block.rows:
                     if k == "DSLOAD":
@@ -181,6 +190,8 @@ def _references_and_sections(model: Deck) -> dict[str, _Surface]:
 def _connections(model: Deck, surfaces: dict[str, _Surface],
                  components: _Components) -> list[tuple[set[int], set[int]]]:
     ties = []
+    contact_types = {b.params.get("TYPE", "").upper() for b in model.blocks
+                     if b.keyword == "CONTACT PAIR"}
     for block in model.blocks:
         if block.keyword not in {"TIE", "CONTACT PAIR"}:
             continue
@@ -207,6 +218,42 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
                             "Define the master with TYPE=ELEMENT and valid element faces.",
                             block.line)
                 continue
+            # CalculiX 2.22 manual, section 7.132 (*TIE): ordinary ties
+            # exclude shells, beams and two-dimensional element families.
+            if block.keyword == "TIE" and any(
+                    not kind.startswith("C3D") for kind in left.element_types | right.element_types):
+                model.error("incompatible_tie_surface",
+                            ("keyword:TIE", *(f"surface:{n}" for n in names)),
+                            "Ordinary tie requires three-dimensional solid surface members",
+                            "Use solid surfaces or a separately supported constraint; "
+                            "see CalculiX 2.22 manual section 7.132 (*TIE).", block.line)
+                continue
+            if block.keyword == "CONTACT PAIR":
+                # CalculiX 2.22 manual, section 7.22 (*CONTACT PAIR):
+                # TYPE is required and contact formulations cannot be mixed.
+                mode = block.params.get("TYPE", "").upper()
+                if mode not in {"NODE TO SURFACE", "SURFACE TO SURFACE", "MORTAR", "MASSLESS"}:
+                    model.error("unsupported_contact_type", ("keyword:CONTACT PAIR",),
+                                "Contact TYPE is missing or unsupported",
+                                "Specify NODE TO SURFACE, SURFACE TO SURFACE, MORTAR or MASSLESS; "
+                                "see CalculiX 2.22 manual section 7.22 (*CONTACT PAIR).", block.line)
+                    continue
+                if len(contact_types) != 1:
+                    model.error("incompatible_contact_type", ("keyword:CONTACT PAIR",),
+                                "Contact pairs declare different TYPE values",
+                                "Use one contact formulation throughout the deck; "
+                                "see CalculiX 2.22 manual section 7.22 (*CONTACT PAIR).", block.line)
+                    continue
+                quadratic = {"C3D10", "C3D15", "C3D20", "C3D20R", "S6", "S8", "S8R"}
+                if left.surface_type != "ELEMENT" and (
+                        mode in {"SURFACE TO SURFACE", "MORTAR"}
+                        or quadratic.intersection(left.element_types | right.element_types)):
+                    model.error("incompatible_slave_surface",
+                                ("keyword:CONTACT PAIR", f"surface:{names[0]}"),
+                                f"{mode} contact with these element families requires an element-face slave",
+                                "Define the slave with TYPE=ELEMENT for face-to-face or quadratic contact; "
+                                "see CalculiX 2.22 manual section 7.22 (*CONTACT PAIR).", block.line)
+                    continue
             components.join(left.nodes | right.nodes)
             if block.keyword == "TIE":
                 ties.append((left.nodes, right.nodes))
