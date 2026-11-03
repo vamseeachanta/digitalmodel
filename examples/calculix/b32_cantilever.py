@@ -44,17 +44,18 @@ def require_supported_calculix():
 
     CalculiX 2.21 fails this case's force balance; 2.22 and later releases
     other than 2.23 have not been qualified. The official 2.23 executable's
-    -v option prints the banner checked here (ccx_2.23.c).
+    -v option prints the banner checked here (ccx_2.23.c), then exits 201
+    through stop.f. Status zero remains supported for compatible builds.
     """
     if not is_calculix_available():
         raise RuntimeError("Native acceptance requires installed CalculiX 2.23 (ccx)")
     try:
         result = subprocess.run(
-            ["ccx", "-v"], capture_output=True, text=True, timeout=10,
+            ["ccx", "-v"], capture_output=True, text=True, encoding="utf-8", timeout=10,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise RuntimeError("Cannot determine CalculiX release") from exc
-    if result.returncode != 0:
+    if result.returncode not in (0, 201):
         raise RuntimeError("Cannot determine CalculiX release")
     banner = f"This is Version {SUPPORTED_CCX_VERSION}"
     if not any(line.strip() == banner for line in result.stdout.splitlines()):
@@ -92,10 +93,12 @@ def build_cantilever(work_dir):
     )
     # Solver-specific output cards supplement the writer's default requests.
     # OUTPUT=2D retains original node IDs; RF at the unloaded root is reaction.
-    deck = path.read_text().replace("*NODE FILE\n", "*NODE FILE, OUTPUT=2D\n")
+    deck = path.read_text(encoding="utf-8").replace(
+        "*NODE FILE\n", "*NODE FILE, OUTPUT=2D\n",
+    )
     deck = deck.replace("*END STEP\n",
                         "*NODE PRINT, NSET=ROOT, TOTALS=ONLY\nRF\n*END STEP\n")
-    path.write_text(deck)
+    path.write_text(deck, encoding="utf-8", newline="\n")
     return chain
 
 

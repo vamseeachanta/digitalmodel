@@ -31,7 +31,9 @@ def test_b32_deck_connectivity(tmp_path):
                       [1, 0, 0], [3, 0, 0]], dtype=float)
     connectivity = np.array([[0, 1, 3], [1, 2, 4]])
     writer = INPWriter(nodes, {"Line 3": {"connectivity": connectivity}})
-    lines = writer.write(tmp_path / "connectivity.inp").read_text().splitlines()
+    lines = writer.write(tmp_path / "connectivity.inp").read_text(
+        encoding="utf-8",
+    ).splitlines()
     keyword = "*ELEMENT, TYPE=B32, ELSET=EBEAM_B32"
     start = lines.index(keyword) + 1
     rows = [[int(value) for value in line.split(",")]
@@ -60,7 +62,7 @@ def test_b32_chain_beam_section(tmp_path):
                         "section_type": "RECT", "dimensions": (2., 4.)}],
     )
     assert ("*BEAM SECTION, ELSET=EBEAM_B32, MATERIAL=MAT, SECTION=RECT\n"
-            "2.0, 4.0\n") in path.read_text()
+            "2.0, 4.0\n") in path.read_text(encoding="utf-8")
 
 
 def _example():
@@ -72,7 +74,7 @@ def test_b32_saved_example_deck(tmp_path):
     """Check output requests and the independent calculation without a solver."""
     example = _example()
     chain = example["build_cantilever"](tmp_path)
-    text = (tmp_path / f"{chain.JOB_NAME}.inp").read_text()
+    text = (tmp_path / f"{chain.JOB_NAME}.inp").read_text(encoding="utf-8")
     assert "*ELEMENT, TYPE=B32," in text
     assert "*NODE FILE, OUTPUT=2D\nU\n" in text
     assert "*NODE PRINT, NSET=ROOT, TOTALS=ONLY\nRF\n" in text
@@ -85,7 +87,7 @@ def test_b32_saved_example_deck(tmp_path):
 
 
 def _mock_solver(example, monkeypatch, *, stdout="This is Version 2.23\n",
-                 returncode=0, error=None):
+                 returncode=201, error=None):
     """Simulate only the version probe; no native result is fabricated."""
     probe = example["require_supported_calculix"]
     monkeypatch.setitem(probe.__globals__, "is_calculix_available", lambda: True)
@@ -95,26 +97,29 @@ def _mock_solver(example, monkeypatch, *, stdout="This is Version 2.23\n",
     return run
 
 
-def test_b32_supported_release(monkeypatch):
+@pytest.mark.parametrize("returncode", [0, 201])
+def test_b32_supported_release(monkeypatch, returncode):
     """Only the release qualified for this case may run native acceptance."""
+    # Official 2.23 ccx_2.23.c calls stop.f after -v; stop.f exits 201.
     example = _example()
     run = _mock_solver(example, monkeypatch,
-                       stdout="\nThis is Version 2.23\n\n")
+                       stdout="\nThis is Version 2.23\n\n", returncode=returncode)
     assert example["require_supported_calculix"]() == "2.23"
     run.assert_called_once_with(
-        ["ccx", "-v"], capture_output=True, text=True, timeout=10,
+        ["ccx", "-v"], capture_output=True, text=True, encoding="utf-8", timeout=10,
     )
 
 
+@pytest.mark.parametrize("returncode", [0, 201])
 @pytest.mark.parametrize("banner", [
     "This is Version 2.21\n", "This is Version 2.22\n",
     "This is Version 2.24\n", "This is Version 2.230\n",
     "This is Version 2.23.1\n", "unrecognized output\n", "",
 ])
-def test_b32_rejects_unqualified_release(monkeypatch, banner):
+def test_b32_rejects_unqualified_release(monkeypatch, banner, returncode):
     """Old, future and unidentified releases provide no acceptance evidence."""
     example = _example()
-    _mock_solver(example, monkeypatch, stdout=banner)
+    _mock_solver(example, monkeypatch, stdout=banner, returncode=returncode)
     with pytest.raises(RuntimeError, match="requires CalculiX 2.23"):
         example["require_supported_calculix"]()
 
@@ -130,10 +135,11 @@ def test_b32_version_probe_error(monkeypatch, error):
         example["require_supported_calculix"]()
 
 
-def test_b32_version_probe_nonzero(monkeypatch):
+@pytest.mark.parametrize("returncode", [1, 127, 200, 202, -9])
+def test_b32_version_probe_nonzero(monkeypatch, returncode):
     """Even a qualified banner is insufficient when the probe fails."""
     example = _example()
-    _mock_solver(example, monkeypatch, returncode=1)
+    _mock_solver(example, monkeypatch, returncode=returncode)
     with pytest.raises(RuntimeError, match="Cannot determine CalculiX release"):
         example["require_supported_calculix"]()
 

@@ -12,6 +12,7 @@ writing the deck alone establishes no displacement or reaction result.
 | 1 | 2026-10-27 | Add a reproducible quadratic beam case to extend type-mapping coverage. |
 | 2 | 2026-10-27 | Qualify native support forces by solver release after an equilibrium failure. |
 | 3 | 2026-11-02 | Require the qualified release before native execution to reject incompatible force recovery. |
+| 4 | 2026-11-02 | Accept the documented version-command status so the qualified executable can reach native acceptance. |
 
 ## Assumptions and independent reference
 
@@ -38,8 +39,11 @@ to an external scratch directory selected by the caller:
 For native execution, provide a CalculiX 2.23 `ccx` executable and its runtime
 libraries through the environment. Confirm that `ccx -v` reports
 `This is Version 2.23`. The example and native test both probe that same
-executable before solving. A different or unidentified release, a failed probe
-or a probe exceeding ten seconds raises an error; it does not skip force checks.
+executable before solving. The official version command exits with status 201:
+`ccx_2.23.c` calls `stop.f`, which calls `exit(201)`. Statuses 0 and 201 are
+accepted only with the exact qualified banner. A different or unidentified
+release, another failure status or a probe exceeding ten seconds raises an
+error; it does not skip force checks.
 The release requirement is limited to this B32 case and does not change the
 general `FEMChain` interface or claim qualification of other analyses.
 
@@ -106,9 +110,11 @@ before native execution. Its expected version banner follows the `-v` handler
 in `ccx_2.23.c` from the official source linked above. No parser multiplier,
 reaction assertion change or tolerance relaxation is applied.
 
-The release-guard revision was checked without a native solver on 2026-11-02;
-it does not independently reproduce the earlier 2.23 native results. An unskipped
-native test and saved-example solve remain required before native acceptance.
+The version-status correction was checked on 2026-11-02 with the official 2.23
+executable. Its version probe returned 201; the native test passed without a
+skip and the saved example's `--solve` succeeded at the unchanged tolerances.
+All 29 B32 tests passed, covering both accepted statuses, exact release matching,
+other failure statuses, missing executables, probe exceptions and timeouts.
 
 ## Limits and remaining work
 
