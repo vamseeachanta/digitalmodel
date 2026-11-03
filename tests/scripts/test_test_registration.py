@@ -5,6 +5,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Registration oracles use explicit set membership, independent of the audit."""
 
+import glob
 import importlib.util
 import json
 import subprocess
@@ -283,14 +284,52 @@ def test_scoped_directory_glob_excludes_descendant_files(tmp_path):
     }
 
 
-@pytest.mark.parametrize("root", ["tests/example/", "tests/example/test_example.py"])
-def test_explicit_roots_bypass_directory_glob_exclusions(tmp_path, root):
-    """Explicitly selected descendants bypass the ignored ancestor traversal."""
+@pytest.mark.parametrize(
+    ("root", "excluded"),
+    [
+        ("tests/", True),
+        ("tests/example/", False),
+        ("tests/exam*/", False),
+        ("./tests/example/", False),
+        ("tests/example/test_example.py", False),
+        ("./tests/example/test_example.py", False),
+        ("tests/example/test_*.py", False),
+    ],
+)
+def test_explicit_roots_bypass_directory_glob_exclusions(tmp_path, root, excluded):
+    """Native collection distinguishes explicit roots from recursive traversal."""
     repo = fixture_repo(tmp_path, command=f"python -m pytest {root}")
     (repo / "tests/conftest.py").write_text(
         "collect_ignore_glob = ['exam?le']\n", encoding="utf-8", newline="\n"
     )
-    assert load_guard().audit(repo) == set()
+    # Expand the unquoted argument as a shell would, preserving any ./ prefix.
+    arguments = glob.glob(root, root_dir=repo)
+    assert arguments
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "--collect-only",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            *arguments,
+        ],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert result.returncode == (5 if excluded else 0), result.stdout + result.stderr
+    node = "tests/example/test_example.py::test_example"
+    assert (node in result.stdout) is not excluded
+    expected = (
+        {"collection-excluded|example|tests/example/test_example.py"}
+        if excluded
+        else set()
+    )
+    assert load_guard().audit(repo) == expected
 
 
 def test_nonmatching_directory_glob_preserves_registration(tmp_path):

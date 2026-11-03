@@ -26,13 +26,12 @@ if __package__ in (None, ""):
 from scripts.ci import detect_touched_domains as detector
 
 
-def matches(
+def expand_root(
     root: Path,
-    path: str,
     pattern: str,
     cache: dict[str, list[tuple[str, bool]]] | None = None,
-) -> bool:
-    """Match a shell-expanded directory or file, without prefix collisions."""
+) -> list[tuple[str, bool]]:
+    """Resolve a test root to normalized paths and their directory status."""
     pattern = pattern.removeprefix("./").rstrip("/")
     if Path(pattern).is_absolute() or ".." in Path(pattern).parts:
         raise ValueError("Test roots must be repository-relative")
@@ -44,9 +43,19 @@ def matches(
         cache[pattern] = [
             (item.relative_to(root).as_posix(), item.is_dir()) for item in candidates
         ]
+    return cache[pattern]
+
+
+def matches(
+    root: Path,
+    path: str,
+    pattern: str,
+    cache: dict[str, list[tuple[str, bool]]] | None = None,
+) -> bool:
+    """Match a shell-expanded directory or file, without prefix collisions."""
     return any(
         path == item or (is_dir and path.startswith(item + "/"))
-        for item, is_dir in cache[pattern]
+        for item, is_dir in expand_root(root, pattern, cache)
     )
 
 
@@ -269,9 +278,16 @@ def glob_targets(path: str, pattern: str) -> list[str]:
 
 
 def collection_excluded(
-    root: Path, path: str, roots: list[str], rules: list[tuple[str, str]]
+    root: Path,
+    path: str,
+    roots: list[str],
+    rules: list[tuple[str, str]],
+    cache: dict[str, list[tuple[str, bool]]] | None = None,
 ) -> bool:
     """Account for recursive ignores; explicitly named paths bypass recursion."""
+    explicit_roots = [
+        item for pattern in roots for item, _ in expand_root(root, pattern, cache)
+    ]
     for kind, pattern in rules:
         if kind == "norecurse":
             targets = [
@@ -292,11 +308,8 @@ def collection_excluded(
             targets = [pattern] if matches(root, path, pattern) else []
         for target in targets:
             explicit = any(
-                matches(root, target, item)
-                and (root / item.rstrip("/")).is_file()
-                or item.rstrip("/") == target.rstrip("/")
-                or item.startswith(target.rstrip("/") + "/")
-                for item in roots
+                item == target or item.startswith(target + "/")
+                for item in explicit_roots
             )
             if not explicit:
                 return True
@@ -408,7 +421,7 @@ def audit(root: Path) -> set[str]:
             glob_targets(path, pattern) for pattern in globs
         ):
             findings.add(f"command-excluded|{name}|{path}")
-        if collection_excluded(root, path, roots, rules):
+        if collection_excluded(root, path, roots, rules, cache):
             findings.add(f"collection-excluded|{name}|{path}")
         selected = {domain.name for domain in detector.touched_domains([path], domains)}
         if name not in selected and not (
