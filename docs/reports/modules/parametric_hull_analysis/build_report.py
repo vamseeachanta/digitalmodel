@@ -56,7 +56,7 @@ def hand_reference():
 
 
 def source_digests():
-    """Bind the actual method, report sources, tests, generator and layout."""
+    """Bind the method, report sources, tests, generator and consumed layout."""
     if METHOD.read_bytes() != METHOD_BYTES:
         raise ValueError("Imported calculation source changed; restart the builder")
     register = json.loads((HERE / "sources.json").read_text(encoding="utf-8"))

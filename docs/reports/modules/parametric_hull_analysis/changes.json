@@ -3,5 +3,10 @@
     "revision": "A",
     "date": "2026-10-28",
     "change": "The existing hull-analysis routes and heading contract are documented with an independently derived synthetic encounter-frequency example; wider engineering qualification remains open."
+  },
+  {
+    "revision": "B",
+    "date": "2026-11-03",
+    "change": "Layout provenance now binds only the inlined stylesheet and page template; an unused report builder is excluded so unrelated edits cannot invalidate this report."
   }
 ]

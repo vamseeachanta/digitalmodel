@@ -191,6 +191,19 @@ def test_rebuild_is_deterministic(tmp_path):
         assert digest == hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
 
 
+def test_layout_provenance_binds_consumed_sources_only():
+    """An unrelated report builder must not invalidate this report's layout."""
+    sources = json.loads((REPORT / "sources.json").read_text(encoding="utf-8"))
+    layout_sources = {
+        "docs/api/cfd/turbulent-flat-plate-verification.html",
+        "docs/api/_assets/brand.css",
+    }
+    assert set(sources["layout"]["paths"]) == layout_sources
+    digests = builder().source_digests()
+    assert layout_sources <= set(digests)
+    assert "scripts/reports/build_vessel_seakeeping_module_report.py" not in digests
+
+
 @pytest.mark.parametrize("field", ["k", "moving", "stationary", "reference", "difference_moving"])
 def test_report_rejects_stale_calculation(tmp_path, monkeypatch, field):
     """A changed returned calculation must never leave a stale displayed result."""
