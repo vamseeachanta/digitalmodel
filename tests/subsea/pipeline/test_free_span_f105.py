@@ -90,7 +90,7 @@ def below_onset_input(ref_input):
 # pi, and the area, kinetic-energy and beam-equation hand derivations. No
 # expected value is obtained from SpanNaturalFrequency or its private helpers.
 _BEAM_REFERENCE = json.loads(
-    Path(__file__).with_name("free_span_beam_reference.json").read_text()
+    Path(__file__).with_name("free_span_beam_reference.json").read_text(encoding="utf-8")
 )
 # Exact integral/mass balances and scaling incur floating-point roundoff only.
 _BALANCE_REL_TOL = 1e-12
@@ -196,6 +196,28 @@ class TestPinnedBeamReference:
                               abs=0.0)
             )
         assert varied.m_effective_kgm == reference.m_effective_kgm
+
+    def test_reference_case_absolute_si_values(self):
+        """Decimal SI hand calculation of the reference case, independent of
+        the fixture's rational fractions.
+
+        OD 0.4 m, WT 0.05 m (ID 0.3 m), L 20 m, E 200 GPa, steel 7800,
+        contents 800, seawater 1000 kg/m^3, Ca = 1 (gap 10 D):
+            I   = pi/64 * (0.4^4 - 0.3^4)           = 8.590292e-4 m^4
+            EI  = 2.0e11 * I                        = 1.718058e8 N m^2
+            m_e = 7800*0.054978 + 800*0.070686 + 1000*0.125664
+                = 428.828 + 56.549 + 125.664        = 611.040 kg/m
+            f_1 = pi/(2*20^2) * sqrt(1.718058e8 / 611.040)
+                = 3.926991e-3 * 530.256             = 2.08230 Hz
+        """
+        inp = PipeSpanInput(
+            **_BEAM_REFERENCE["inputs"], bc=BoundaryConditionF105.PINNED_PINNED
+        )
+        result = SpanNaturalFrequency(inp).compute()
+        assert result.EI_Nm2 == pytest.approx(1.718058e8, rel=1e-6)
+        assert result.m_effective_kgm == pytest.approx(611.040, rel=1e-6)
+        assert result.fn_IL_hz == pytest.approx(2.08230, rel=1e-4)
+        assert result.fn_CF_hz == pytest.approx(2.08230, rel=1e-4)
 
 
 class TestAddedMassCoefficient:
