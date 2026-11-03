@@ -89,11 +89,11 @@ def _surface_nodes(model: Deck, block: Block) -> set[int]:
         if not row or not row[0]:
             raise ValueError("Empty surface target")
         if block.params.get("TYPE", "ELEMENT").upper() == "NODE":
-            nodes.update(model.target("nset", row[0], block.line))
+            nodes.update(model.target("nset", row[0], block.line, block=block))
             continue
         if block.params.get("TYPE", "ELEMENT").upper() != "ELEMENT":
             raise ValueError("Unsupported surface type")
-        for eid in model.target("elset", row[0], block.line):
+        for eid in model.target("elset", row[0], block.line, block=block):
             kind, conn = model.elements[eid]
             face = row[1].upper()
             if kind.startswith("C3D"):
@@ -122,16 +122,16 @@ def _references_and_sections(model: Deck) -> dict[str, set[int]]:
                                 ("INTERACTION", "interaction"), ("SURFACE", "surface")):
                 if param in p and not (k in {"NODE", "ELEMENT", "NSET", "ELSET"}
                                        and param in {"NSET", "ELSET"}):
-                    model.reference(kind, p[param], block.line)
+                    model.reference(kind, p[param], block.line, block=block)
             if k in SECTION_KEYWORDS:
-                ids = model.target("elset", p["ELSET"], block.line)
+                ids = model.target("elset", p["ELSET"], block.line, block=block)
                 if not ids:
                     model.findings.append(Finding("warning", "unused_section",
                         (f"section:{k}:{p['ELSET'].upper()}",), "Section has no elements",
                         "Assign the section to a populated element set or remove it.", block.line))
                 # A missing material must not count as a valid structural section.
                 if k in {"SOLID SECTION", "SHELL SECTION", "BEAM SECTION", "MEMBRANE SECTION"}:
-                    model.reference("material", p["MATERIAL"], block.line)
+                    model.reference("material", p["MATERIAL"], block.line, block=block)
                 if "COMPOSITE" in p:
                     raise ValueError("Composite section references require a reader extension")
                 for eid in sorted(ids):
@@ -149,9 +149,9 @@ def _references_and_sections(model: Deck) -> dict[str, set[int]]:
             elif k in {"CLOAD", "DLOAD", "DSLOAD"}:
                 for row in block.rows:
                     if k == "DSLOAD":
-                        model.reference("surface", row[0], block.line)
+                        model.reference("surface", row[0], block.line, block=block)
                     else:
-                        model.target("nset" if k == "CLOAD" else "elset", row[0], block.line)
+                        model.target("nset" if k == "CLOAD" else "elset", row[0], block.line, block=block)
             elif k in {"MPC", "EQUATION", "RIGID BODY", "COUPLING", "SUBMODEL", "MODEL CHANGE",
                        "SYSTEM", "TRANSFORM", "NGEN", "NFILL", "NCOPY", "ELGEN", "ELCOPY",
                        "PART", "ASSEMBLY", "INSTANCE"}:
@@ -180,7 +180,7 @@ def _connections(model: Deck, surfaces: dict[str, set[int]],
                 continue
             names = [v.upper() for v in row]
             for name in names:
-                model.reference("surface", name, block.line)
+                model.reference("surface", name, block.line, block=block)
             left, right = (surfaces.get(name, set()) for name in names)
             if not left or not right:
                 model.error("empty_surface", tuple(f"surface:{n}" for n in names),
@@ -226,7 +226,7 @@ def _boundary_stages(model: Deck) -> list[tuple[int, set[int]]]:
                     active.clear()
                 first_boundary = False
                 for row in block.rows:
-                    nodes = model.target("nset", row[0], block.line)
+                    nodes = model.target("nset", row[0], block.line, block=block)
                     kind = row[1].upper()
                     if kind in {"ENCASTRE", "PINNED", "XSYMM", "YSYMM", "ZSYMM",
                                 "XASYMM", "YASYMM", "ZASYMM"}:

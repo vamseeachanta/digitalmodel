@@ -359,15 +359,19 @@ class FEMChain:
     # ------------------------------------------------------------------
 
     def _extract_gmsh_data(self, gmsh_module):
-        """Extract nodes and elements from gmsh into internal storage."""
+        """Extract the plate's volume mesh, excluding boundary entities."""
         node_tags, node_coords, _ = gmsh_module.model.mesh.getNodes()
         self._nodes = node_coords.reshape(-1, 3)
 
         self._elements = {}
         for etype in gmsh_module.model.mesh.getElementTypes():
-            etags, enodes = gmsh_module.model.mesh.getElementsByType(etype)
             props = gmsh_module.model.mesh.getElementProperties(etype)
             name, dim, npn = props[0], props[1], props[3]
+            # Plate geometry is a solid. Its lower-dimensional mesh entities
+            # are geometric boundaries, with no structural section intent.
+            if dim != 3:
+                continue
+            etags, enodes = gmsh_module.model.mesh.getElementsByType(etype)
             conn = enodes.reshape(-1, npn)
             self._elements[name] = {
                 "connectivity": conn - 1,  # 0-based

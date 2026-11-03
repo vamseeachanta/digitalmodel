@@ -166,6 +166,78 @@ def test_case_comments_generated_nested_sets_and_d_exponents(deck):
     assert validate_model(deck(text=base)).status == "PASS"
 
 
+def test_direct_boundary_keeps_members_when_declared(deck):
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    text = base.replace("*BOUNDARY\n1, 1, 3",
+                        "*NSET,NSET=FIXED\n1\n*BOUNDARY\nFIXED,1,3\n"
+                        "*NSET,NSET=FIXED\n5")
+    report = check_deck(deck(text=text))
+    assert report.status == "FAIL"
+    assert [f.entity_ids for f in report.findings if f.code == "unconstrained_part"] == [
+        ("step:0", "element:2")]
+
+
+def test_direct_section_keeps_members_when_declared(deck):
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    text = base.replace("*ELEMENT, TYPE=C3D4, ELSET=OTHER", "*ELEMENT, TYPE=C3D4")
+    text = text.replace("*SOLID SECTION, ELSET=OTHER, MATERIAL=STEEL",
+                        "*ELSET,ELSET=BODY\n2")
+    report = check_deck(deck(text=text))
+    assert report.status == "FAIL"
+    assert [f.entity_ids for f in report.findings if f.code == "missing_section"] == [
+        ("element:2",)]
+
+
+@pytest.mark.parametrize("keyword,kind", [("CLOAD", "NSET"), ("DLOAD", "ELSET")])
+def test_direct_load_keeps_members_when_declared(deck, monkeypatch, keyword, kind):
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    record = "SELECTED,1,1" if keyword == "CLOAD" else "SELECTED,P1,1"
+    text = base + (f"*{kind},{kind}=SELECTED\n1\n*{keyword}\n{record}\n"
+                   f"*{kind},{kind}=SELECTED\n2\n")
+    resolved = []
+    original = Deck.target
+
+    def observe(model, target_kind, value, *args, **kwargs):
+        ids = original(model, target_kind, value, *args, **kwargs)
+        if value == "SELECTED":
+            resolved.append(ids)
+        return ids
+
+    monkeypatch.setattr(Deck, "target", observe)
+    check_deck(deck(text=text))
+    assert resolved == [{1}]
+
+
+@pytest.mark.parametrize("surface_type,kind,expected", [
+    ("NODE", "NSET", {1}), ("ELEMENT", "ELSET", {1, 2, 3}),
+])
+def test_direct_surface_keeps_members_when_declared(deck, surface_type, kind, expected):
+    from digitalmodel.solvers.calculix.model_checker import _references_and_sections
+
+    base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    later = 5 if kind == "NSET" else 2
+    row = "SELECTED" if kind == "NSET" else "SELECTED,S1"
+    text = base + (f"*{kind},{kind}=SELECTED\n1\n"
+                   f"*SURFACE,NAME=FACE,TYPE={surface_type}\n{row}\n"
+                   f"*{kind},{kind}=SELECTED\n{later}\n")
+    model = Deck(read_blocks(deck(text=text)))
+    model.parse()
+    assert _references_and_sections(model)["FACE"] == expected
+
+
+@pytest.mark.parametrize("card,kind", [
+    ("*BOUNDARY\nLATER,1,3", "NSET"), ("*CLOAD\nLATER,1,1", "NSET"),
+    ("*DLOAD\nLATER,P1,1", "ELSET"),
+    ("*SURFACE,NAME=FACE\nLATER,S1", "ELSET"),
+    ("*SOLID SECTION,ELSET=LATER,MATERIAL=STEEL", "ELSET"),
+])
+def test_direct_card_cannot_acquire_forward_set(deck, card, kind):
+    report = check_deck(deck(f"{card}\n*{kind},{kind}=LATER\n1\n"))
+    assert report.status == "FAIL"
+    assert any(f.code == "missing_reference" and f"{kind.lower()}:LATER" in f.entity_ids
+               for f in report.findings)
+
+
 @pytest.mark.parametrize("nested", [False, True])
 def test_reopened_node_set_does_not_expand_earlier_support(deck, nested):
     base = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
@@ -301,6 +373,23 @@ def test_nondecimal_digit_ids_return_structured_failure(deck, capsys, extra, int
         report = json.loads(capsys.readouterr().out)
     assert report["status"] == "FAIL"
     assert any(f["severity"] == "error" for f in report["findings"])
+
+
+@pytest.mark.parametrize("kind", ["NSET", "ELSET"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_oversized_decimal_set_member_returns_parse_error(deck, capsys, kind, interface):
+    # Exceed the interpreter's active decimal-conversion limit using input text.
+    oversized = "9" * (sys.get_int_max_str_digits() + 1)
+    path = deck(f"*{kind},{kind}=INVALID\n{oversized}\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    assert any(f["code"] == "parse_error" and f["severity"] == "error"
+               and f"keyword:{kind}" in f["entity_ids"] and f["line"] > 0
+               for f in evidence["findings"])
 
 
 @pytest.mark.parametrize("record", [
@@ -555,6 +644,35 @@ def test_full_solve_passes_warnings_and_returns_gate_evidence(deck, monkeypatch,
     assert result["success"] and len(calls) == 1
     assert result["qa_gate"]["status"] == "PASS"
     assert result["qa_gate"]["findings"][0]["severity"] == "warning"
+
+
+def test_plate_extraction_excludes_boundary_entities_before_gate(tmp_path):
+    nodes = np.array([[0., 0., 0.], [1., 0., 0.], [0., 1., 0.], [0., 0., 1.]])
+    # A volume mesh also contains geometric edges, faces and vertices. They
+    # describe its boundary and must not become structural beams or shells.
+    entities = {
+        1: ("Line 2", 1, 2, [1, 2]),
+        2: ("Triangle 3", 2, 3, [1, 2, 3]),
+        4: ("Tetrahedron 4", 3, 4, [1, 2, 3, 4]),
+        15: ("Point", 0, 1, [1]),
+    }
+    mesh = SimpleNamespace(
+        getNodes=lambda: (np.arange(1, 5), nodes.ravel(), []),
+        getElementTypes=lambda: list(entities),
+        getElementsByType=lambda kind: (np.array([kind]), np.array(entities[kind][3])),
+        getElementProperties=lambda kind: (
+            entities[kind][0], entities[kind][1], 1, entities[kind][2]),
+    )
+    chain = FEMChain(tmp_path)
+    chain._extract_gmsh_data(SimpleNamespace(model=SimpleNamespace(mesh=mesh)))
+    chain._node_sets = {"FIXED": [0]}
+    path = chain.setup_analysis({"name": "STEEL", "E": 200000, "nu": 0.3}, [],
+                                [{"node_set": "FIXED", "dof_start": 1, "dof_end": 3}])
+    assert validate_model(path).status == "PASS"
+    assert set(chain._elements) == {"Tetrahedron 4"}
+    parsed = Deck(read_blocks(path))
+    parsed.parse()
+    assert parsed.elements == {1: ("C3D4", (1, 2, 3, 4))}
 
 
 def test_gmsh_style_mesh_through_writer_is_checked(tmp_path):

@@ -33,6 +33,7 @@ class Block:
     params: dict[str, str]
     rows: list[list[str]]
     line: int
+    targets: dict[tuple[str, str], set[str] | None] = field(default_factory=dict)
 
 
 # Connectivity widths including midside nodes: CalculiX 2.22 User's Manual,
@@ -168,6 +169,7 @@ class Deck:
         for block in self.blocks:
             try:
                 self._definition(block)
+                self._snapshot_targets(block)
             except (ValueError, IndexError, KeyError, OverflowError):
                 self.error("parse_error", (f"keyword:{block.keyword}",),
                            "Malformed or duplicate definition", "Correct the keyword data and identifiers.",
@@ -249,7 +251,9 @@ class Deck:
                     for value in values:
                         name = value.upper()
                         if name.isascii() and name.isdigit():
-                            members.add(name)
+                            # Convert while definition errors are caught, before
+                            # later sorting or reference resolution can raise.
+                            members.add(str(positive_id(name)))
                         else:
                             self.used.add((kind, name))
                             if name not in self.sets[kind] or (name == target and not previously_defined):
@@ -264,6 +268,23 @@ class Deck:
             if not name or name in self.definitions[kind]:
                 raise ValueError("Invalid named definition")
             self.definitions[kind].add(name)
+
+    def _snapshot_targets(self, block: Block) -> None:
+        """Retain only the set memberships used by this card at declaration."""
+        targets = []
+        if block.keyword not in {"NODE", "ELEMENT", "NSET", "ELSET"}:
+            targets.extend((kind.lower(), block.params[kind])
+                           for kind in ("NSET", "ELSET") if kind in block.params)
+        kind = {"BOUNDARY": "nset", "CLOAD": "nset", "DLOAD": "elset"}.get(block.keyword)
+        if block.keyword == "SURFACE":
+            kind = "nset" if block.params.get("TYPE", "ELEMENT").upper() == "NODE" else "elset"
+        if kind:
+            targets.extend((kind, row[0]) for row in block.rows if row and row[0])
+        for kind, value in targets:
+            name = value.upper()
+            if not (name.isascii() and name.isdigit()):
+                members = self.sets[kind].get(name)
+                block.targets[(kind, name)] = None if members is None else members.copy()
 
     def missing(self, kind: str, name: str, context: tuple[str, ...] = (),
                 line: int = 0) -> None:
@@ -287,9 +308,15 @@ class Deck:
         if name not in self.sets[kind]:
             self.missing(kind, name)
             return set()
+        ids = self._resolve_members(kind, name, self.sets[kind][name], active)
+        self.resolved[key] = ids
+        return ids
+
+    def _resolve_members(self, kind: str, name: str, members: set[str],
+                         active: tuple[str, ...] = ()) -> set[int]:
         ids: set[int] = set()
         universe = self.nodes if kind == "nset" else self.elements
-        for item in sorted(self.sets[kind][name], key=lambda value: (int(value), value)):
+        for item in sorted(members, key=lambda value: (int(value), value)):
             if item.isascii() and item.isdigit():
                 value = int(item)
                 if value not in universe:
@@ -299,10 +326,10 @@ class Deck:
             else:
                 self.used.add((kind, item))
                 ids.update(self.resolve_set(kind, item, (*active, name)))
-        self.resolved[key] = ids
         return ids
 
-    def target(self, kind: str, value: str, line: int = 0) -> set[int]:
+    def target(self, kind: str, value: str, line: int = 0, *,
+               block: Block | None = None) -> set[int]:
         """Resolve a direct mesh ID or a named set and retain usage."""
         value = value.upper()
         if value.isascii() and value.isdigit():
@@ -312,13 +339,20 @@ class Deck:
             self.missing("node" if kind == "nset" else "element", value, line=line)
             return set()
         self.used.add((kind, value))
+        if block is not None and (kind, value) in block.targets:
+            members = block.targets[(kind, value)]
+            if members is None:
+                self.missing(kind, value, line=line)
+                return set()
+            return self._resolve_members(kind, value, members)
         return self.resolve_set(kind, value)
 
-    def reference(self, kind: str, value: str, line: int = 0) -> None:
+    def reference(self, kind: str, value: str, line: int = 0, *,
+                  block: Block | None = None) -> None:
         """Track a symbolic reference against its own namespace."""
         value = value.upper()
         self.used.add((kind, value))
         if kind in self.sets:
-            self.resolve_set(kind, value)
+            self.target(kind, value, line, block=block)
         elif value not in self.definitions[kind]:
             self.missing(kind, value, line=line)
