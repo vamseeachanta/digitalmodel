@@ -26,6 +26,7 @@ is never assigned to permanent cement.</p>
 <tbody>
 <tr><td>1</td><td>2026-11-02</td><td>Initial screen, graph and synthetic example.</td></tr>
 <tr><td>2</td><td>2026-11-02</td><td>Require caller criteria and rates; correct cemented coverage and enforce graph boundaries.</td></tr>
+<tr><td>3</td><td>2026-11-03</td><td>Reject envelopes with no cement above inflow even when the supplied coverage minimum is zero.</td></tr>
 </tbody>
 </table>
 
@@ -44,7 +45,7 @@ for those records. Attach their stable references in <code>evidence</code>.</p>
 required above-zone coverage, and formation integrity with the governing future
 pressure at each barrier base. Both pressures use MPa at that base, with the same
 datum. Coverage is <code>max(0, min(base MD, zone top MD) - top MD)</code>;
-an uncemented gap above inflow contributes nothing. The pressure margin must be strictly positive. The caller supplies future
+an uncemented gap above inflow contributes nothing, and an envelope with zero coverage is rejected even when the supplied minimum is zero. The pressure margin must be strictly positive. The caller supplies future
 recharge, hydrostatic translation and the governing formation-strength evidence.
 Separate envelopes require separate independence groups and no MD overlap in
 this simplified model. A continuous combined barrier or shared annular job

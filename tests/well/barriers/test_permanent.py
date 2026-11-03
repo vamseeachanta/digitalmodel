@@ -144,3 +144,21 @@ def test_above_zone_counts_only_cemented_length(top, base, expected):
     assert result.meets_screen is expected
     if not expected:
         assert "above_zone" in result.zones[0].rejections[0][1]
+
+
+@pytest.mark.parametrize("top, base, expected", [
+    (2010, 2130, False),  # Wholly below the zone top: no cement above inflow.
+    (2000, 2120, False),  # Top exactly at the zone top: zero coverage.
+    (1999, 2119, True),   # 1 m of cement above inflow meets a zero minimum.
+])
+def test_zero_coverage_minimum_still_requires_cement_above_inflow(top, base, expected):
+    # Hand check: coverage = max(0, min(base, 2000) - top) -> 0, 0 and 1 m.
+    result = screen_permanent_barriers(
+        (FlowZone("gas", 2000, criteria(required_barriers=1,
+            min_plug_length_md_m=60, min_above_zone_md_m=0)),),
+        (barrier(top_md_m=top, base_md_m=base),),
+        gas_migration=False, sustained_casing_pressure=False,
+    )
+    assert result.meets_screen is expected
+    if not expected:
+        assert "above_zone" in result.zones[0].rejections[0][1]

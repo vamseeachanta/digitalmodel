@@ -92,6 +92,8 @@ def screen_permanent_barriers(
 Length = base MD - top MD; cemented above-zone coverage is
 max(0, min(plug base MD, zone top MD) - plug top MD).
 Pressure margin = formation integrity - maximum future pressure, at base.
+Coverage must also be strictly positive: an envelope with no cement above
+the zone top is rejected even when the supplied minimum is zero.
 Length/coverage use >=; base formation strength uses strictly > as an explicit
 screening policy. Geometry alone cannot verify bonding or placement.
 True anomaly or unknown observation holds the screen for investigation; this
@@ -150,7 +152,10 @@ hold is a screening policy, not a gas-migration diagnostic or standard limit.
             defects = []
             if b.base_md_m - b.top_md_m < c.min_plug_length_md_m:
                 defects.append("plug_length")
-            if max(0, min(b.base_md_m, zone.top_md_m) - b.top_md_m) < c.min_above_zone_md_m:
+            coverage = max(0, min(b.base_md_m, zone.top_md_m) - b.top_md_m)
+            # No cement above the inflow point cannot isolate it, whatever
+            # minimum the caller supplies (including zero).
+            if coverage <= 0 or coverage < c.min_above_zone_md_m:
                 defects.append("above_zone")
             if b.formation_integrity_at_base_mpa <= b.maximum_pressure_below_at_base_mpa:
                 defects.append("formation_strength")

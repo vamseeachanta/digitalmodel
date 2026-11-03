@@ -268,3 +268,19 @@ def test_known_failed_event_does_not_evaluate_rate_approximation():
     assert "known_failed_event" in row.flags
     with pytest.raises(ValueError, match="lambda"):
         run((edge,), (replace(failed, known_failed=False),))
+
+
+def test_first_order_pfd_against_exact_average_unavailability_at_bound():
+    # NUREG-0492 ch. XI: exact time-averaged unavailability of a periodically
+    # tested component is 1 - (1 - exp(-x)) / x with x = lambda*tau; the
+    # first-order form is x / 2. At the module's x = 0.1 limit:
+    # exact = 1 - (1 - e^-0.1) / 0.1 = 0.0483742, first order = 0.05,
+    # i.e. the approximation overstates by 3.36 % (conservative).
+    import math
+
+    q = pfd_average(RateBand(1e-4, 1e-4, 1e-4, "Synthetic boundary rate"), 1000)
+    exact = 1 - (1 - math.exp(-0.1)) / 0.1
+    assert exact == pytest.approx(0.0483742, rel=1e-6)
+    assert q.nominal == pytest.approx(0.05)
+    assert q.nominal / exact == pytest.approx(1.0336, abs=1e-4)
+    assert q.nominal >= exact
