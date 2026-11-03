@@ -385,3 +385,70 @@ def test_large_shape_variance_retains_scaled_log_exponential_limit(scale_ratio):
     """
     variance = WeibullDistribution(1e16, scale_ratio * 1e16).variance
     assert variance == pytest.approx(scale_ratio**2 * math.pi**2 / 6, rel=1e-12, abs=0)
+
+
+@pytest.mark.parametrize("api", ["quantile", "return_level"])
+@pytest.mark.parametrize("shape", [1e8, 1e16, 1e308])
+@pytest.mark.parametrize("hazard", [0.5, 2.0])
+def test_centered_quantile_retains_small_power_increment(api, shape, hazard):
+    """Source W: gamma=-lambda=-k gives Q=k*expm1(ln(t)/k).
+
+    This independent centered inverse remains finite when t^(1/k) rounds
+    to one. Both tails and both inverse APIs retain the signed increment.
+    """
+    law = WeibullDistribution(shape, shape, -shape)
+    argument = -math.expm1(-hazard) if api == "quantile" else math.exp(hazard)
+    expected = shape * math.expm1(math.log(hazard) / shape)
+    assert getattr(law, api)(argument) == pytest.approx(expected, rel=2e-14, abs=0)
+
+
+@pytest.mark.parametrize("quantity", ["mean", "first_moment", "second_moment"])
+@pytest.mark.parametrize("shape", [16.0, 1e8, 1e16, 1e308])
+@pytest.mark.parametrize("offset", [0.0, 2.0])
+def test_centered_moments_match_transformed_exponential_quadrature(
+    quantity, shape, offset
+):
+    """Source W: T=Z^k is exponential and X=offset+k*expm1(ln(T)/k).
+
+    The actual float offset is recovered independently with rational sums.
+    Integration in u=ln(T) avoids gamma-function increments and cancellation
+    of raw moments. Omitted tails contribute below 1e-25 for these inputs.
+    """
+    location = -shape + offset
+    actual_offset = float(Fraction(shape) + Fraction(location))
+    order = 2 if quantity == "second_moment" else 1
+
+    def integrand(u):
+        response = actual_offset + shape * math.expm1(u / shape)
+        return response**order * math.exp(u - math.exp(u))
+
+    expected, error = quad(integrand, -80, 6, epsabs=1e-11, epsrel=1e-11)
+    assert error < 1e-10
+    law = WeibullDistribution(shape, shape, location)
+    actual = law.mean if quantity == "mean" else law.moment(order)
+    assert actual == pytest.approx(expected, rel=2e-10, abs=1e-12)
+    if order == 2:
+        assert actual == pytest.approx(law.variance + law.mean**2, rel=2e-10)
+
+
+@pytest.mark.parametrize("shape", [1e8, 1e16, 1e308])
+@pytest.mark.parametrize("response", [-2.0, -1.0, 0.0, 1.0, 2.0])
+def test_centered_cdf_retains_distance_increment(shape, response):
+    """Source W: gamma=-lambda=-k gives log hazard=k*log1p(x/k).
+
+    The centered algebra retains x even when x+k rounds to k. At large k,
+    F(1) tends to 1-exp(-e), independently of rounded raw distances.
+    """
+    law = WeibullDistribution(shape, shape, -shape)
+    log_hazard = shape * math.log1p(response / shape)
+    log_survival = -math.exp(log_hazard)
+    probability = -math.expm1(log_survival)
+    assert law.cdf(response) == pytest.approx(probability, rel=2e-14, abs=0)
+    assert law.logsf(response) == pytest.approx(log_survival, rel=2e-14, abs=0)
+    assert law.logcdf(response) == pytest.approx(math.log(probability), rel=2e-14)
+    np.testing.assert_allclose(
+        law.cdf([[response, 0], [math.inf, -math.inf]]),
+        [[probability, -math.expm1(-1)], [1, 0]],
+        rtol=2e-14,
+        atol=0,
+    )

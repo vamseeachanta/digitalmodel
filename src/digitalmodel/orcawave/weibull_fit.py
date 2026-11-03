@@ -11,7 +11,7 @@ The general density, standard CDF, inverse and gamma moments on that page
 give every distribution equation below by X = gamma + lambda*Z.
 Source G: NIST DLMF, online edition 2026, 5.7.4 (psi-function series):
 https://dlmf.nist.gov/5.7.E4
-Integration gives the log-gamma series used for large-shape variance.
+Integration gives the log-gamma series used for large-shape moments.
 """
 
 from __future__ import annotations
@@ -65,7 +65,19 @@ class WeibullDistribution:
                 np.logaddexp(np.log(np.abs(array)), np.log(abs(self.location))),
                 np.log(difference),
             )
-            return difference, log_distance - math.log(self.scale)
+            log_z = log_distance - math.log(self.scale)
+            # TwoSum recovers the low part of x-gamma. Near z=1, form
+            # z-1 with that part before log1p: subtracting logarithms or
+            # rounding the distance first loses increments amplified by k.
+            virtual = difference - array
+            remainder = (array - (difference - virtual)) + (-self.location - virtual)
+            relative = ((difference - self.scale) + remainder) / self.scale
+            log_z = np.where(
+                (difference > 0) & (np.abs(relative) < 0.5),
+                np.log1p(relative),
+                log_z,
+            )
+            return difference, log_z
 
     def pdf(self, x: ArrayLike) -> Response:
         """Density, including the right-hand limit at location (Source W)."""
@@ -128,6 +140,14 @@ class WeibullDistribution:
             # Subnormal factors/products still use the logarithmic fallback.
             positive = scaled_scale * multiplier
             direct = np.ldexp(positive + scaled_location, exponent)
+            # Near unit power, retain exp(power)-1 before the power rounds
+            # to one. Binary scaling also keeps the centered sum finite.
+            if self.location < 0:
+                centered = np.ldexp(
+                    (scaled_scale + scaled_location) + scaled_scale * np.expm1(power),
+                    exponent,
+                )
+                direct = np.where(np.abs(power) < 0.5, centered, direct)
             tiny = np.finfo(float).tiny
             representable = (
                 np.isfinite(multiplier)
@@ -183,10 +203,50 @@ class WeibullDistribution:
         E[X^r]=sum_j binom(r,j)*gamma^(r-j)*lambda^j*Gamma(1+j/k).
         Representable terms retain their signed operands before summation;
         logarithms handle factors outside float range. OverflowError is
-        raised if the final moment exceeds float range.
+        raised if the final moment exceeds float range. For large shapes,
+        the first two moments use centered identities to retain increments.
         """
         if isinstance(order, bool) or not isinstance(order, int) or order < 0:
             raise ValueError("Moment order must be a nonnegative integer")
+        if self.shape >= 16 and order in (1, 2):
+            if order == 2:
+                # Source W: E[X^2]=Var[X]+E[X]^2. The nonnegative sum
+                # avoids cancellation between three large raw terms.
+                mean = self.moment(1)
+                result = mean * mean + self.variance
+                if not math.isfinite(result):
+                    raise OverflowError("Second moment exceeds float range")
+                return result
+            inverse = 1 / self.shape
+            # Source G integrated: logGamma(1+u)/u=-Euler+
+            # sum_{n>=2} (-1)^n*zeta(n)*u^(n-1)/n. For u<=1/16,
+            # the tail after n=20 is below 4e-26 in this scaled series.
+            coefficient = math.fsum(
+                [-float(np.euler_gamma)]
+                + [
+                    (-1) ** n * zeta(n, 1) * inverse ** (n - 1) / n
+                    for n in range(2, 21)
+                ]
+            )
+            log_gamma = inverse * coefficient
+            # Retain Gamma(1+u)-1 before Gamma rounds to one; factoring
+            # out u also preserves the increment when u is subnormal.
+            ratio = (
+                math.expm1(log_gamma) / log_gamma
+                if abs(log_gamma) >= np.finfo(float).eps
+                else 1.0
+            )
+            correction = (self.scale / self.shape) * coefficient * ratio
+            if self.location < 0:
+                return math.fsum((self.scale + self.location, correction))
+            exponent = math.frexp(max(self.scale, self.location))[1]
+            return math.ldexp(
+                math.fsum(
+                    math.ldexp(term, -exponent)
+                    for term in (self.location, self.scale, correction)
+                ),
+                exponent,
+            )
         # Binary scaling preserves low-order bits before cancellation. Avoid
         # log/exp round trips for normal factors, and combine their exponents
         # before reconstructing each term so intermediate products stay finite.
