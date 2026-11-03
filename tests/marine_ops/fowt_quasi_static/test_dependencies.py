@@ -2,7 +2,7 @@
 # # Licensed under the MIT License. See LICENSE file for details.
 
 """Optional solver installation and required CI enrolment contracts."""
-from importlib.metadata import version
+import json
 import os
 from pathlib import Path
 import shlex
@@ -17,11 +17,30 @@ ROOT = Path(__file__).resolve().parents[3]
 
 def test_solver_extra_declares_the_executed_versions():
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    # Pins are the retained calculation environment, not the test interpreter.
+    # Source: pyproject.toml fowt extra and the committed report manifest.
     versions = {"capytaine": "3.0.0", "moorpy": "1.3.0",
                 "shapely": "2.1.2", "matplotlib": "3.10.9"}
     assert set(project["project"]["optional-dependencies"]["fowt"]) == {
         f"{name}=={release}" for name, release in versions.items()}
-    assert {name: version(name) for name in versions} == versions
+    manifest_path, = (ROOT / "docs/reports").glob("fowt-*-mooring-analysis.manifest.json")
+    retained = json.loads(manifest_path.read_text())["results"]
+    assert {name.lower(): value for name, value in retained["versions"].items()} == {
+        name: versions[name] for name in ("capytaine", "moorpy")}
+    for run in retained["bem_provenance"].values():
+        executed = run["inputs"]["versions"]
+        assert all(executed[name] == versions[name] for name in ("capytaine", "shapely"))
+
+
+def test_base_shapely_requirement_covers_the_imported_api():
+    # Shapely 2.1.0 API docs: constrained_delaunay_triangles was added in 2.1.0.
+    from packaging.requirements import Requirement
+
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    requirement, = (Requirement(value) for value in project["project"]["dependencies"]
+                    if Requirement(value).name == "shapely")
+    assert "2.0.7" not in requirement.specifier
+    assert "2.1.0" in requirement.specifier
 
 
 def test_ci_domain_enrols_the_suite_and_installs_the_solver_extra():
@@ -62,5 +81,7 @@ for function, args in ((low_frequency_solver, ()), (mooring_system, ({},))):
         continue
     raise AssertionError('Solver execution requires its optional dependency')
 """
-    subprocess.run([sys.executable, "-I", "-B", "-c", code, str(ROOT / "src")],
-                   check=True, env=environment, capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "-I", "-B", "-c", code, str(ROOT / "src")],
+        env=environment, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr

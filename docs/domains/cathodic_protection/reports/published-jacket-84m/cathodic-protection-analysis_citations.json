@@ -1,0 +1,14 @@
+{
+  "citations": [
+    {
+      "code_id": "dnv-rp-b401",
+      "note": "Method citation only; the potential criterion is a stated assumption.",
+      "publisher": "DNV",
+      "revision": "2021-05",
+      "section": "Anode mass; Anode resistance; Anode current output",
+      "source_project": null,
+      "source_sibling": "generic",
+      "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md"
+    }
+  ]
+}

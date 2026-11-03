@@ -6,13 +6,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Read-only checks can stop superseded runs within the same workflow/ref.
+# GitHub Actions workflow syntax, concurrency (unversioned):
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   repo-structure:
     name: Repository structure contract
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - uses: actions/checkout@v4
         with:

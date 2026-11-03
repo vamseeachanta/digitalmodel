@@ -15,6 +15,7 @@ Tests cover:
 
 import pytest
 import math
+from pathlib import Path
 
 
 class TestPipeLayer:
@@ -255,6 +256,75 @@ class TestEdgeCases:
         assert len(pipe.layers) == 2
         assert pipe.layers[1].name == "3LPP Coating"
         assert abs(pipe.outer_diameter_mm - 616.6) < 0.1
+
+
+@pytest.fixture
+def circular_section_example(capsys):
+    """Execute the documented snippet so its inputs and API cannot drift."""
+    document = (
+        Path(__file__).resolve().parents[3]
+        / "docs/examples/circular-section-weight-buoyancy.md"
+    ).read_text(encoding="utf-8")
+    snippet = document.split("```python\n")[1].split("```")[0]
+    namespace = {"__name__": "__main__"}
+    exec(compile(snippet, "circular-section-weight-buoyancy.md", "exec"), namespace)
+    return namespace["pipe"]
+
+
+class TestCircularSectionWorkedExample:
+    """Independent expectations from the worked example's H1 hand derivation."""
+
+    def test_layer_geometry_and_mass(self, circular_section_example):
+        """Check millimetre inputs against H1 annular areas in square metres."""
+        pipe = circular_section_example
+        # S1 dimensions; H1: pi/4 * (OD_m**2 - ID_m**2).
+        assert pipe.inner_diameter_mm == 180
+        assert pipe.outer_diameter_mm == 250
+        assert [layer.cross_sectional_area_m2 for layer in pipe.layers] == pytest.approx(
+            [0.0019 * math.pi, 0.001025 * math.pi, 0.0046 * math.pi]
+        )
+        # H1 areas times S1 synthetic densities, independently reduced by hand.
+        assert [layer.weight_per_meter_kg for layer in pipe.layers] == pytest.approx(
+            [15.2 * math.pi, 1.025 * math.pi, 11.04 * math.pi]
+        )
+
+    def test_dry_mass_and_displacement(self, circular_section_example, capsys):
+        """Check H1 dry mass and full exterior displacement, including the bore."""
+        pipe = circular_section_example
+        assert pipe.total_weight_in_air_kg_m == pytest.approx(27.265 * math.pi)
+        assert pipe.displaced_volume_m3_m == pytest.approx(0.015625 * math.pi)
+        assert pipe.buoyancy_force_kg_m == pytest.approx(15.625 * math.pi)
+        # H1 arithmetic rounded only for display; U1/G1 establish the labels.
+        assert capsys.readouterr().out == (
+            "Dry mass: 85.7 kg/m\n"
+            "Displaced volume: 0.049087 m^3/m\n"
+            "Displaced water mass: 49.1 kg/m\n"
+            "Submerged mass equivalent: 36.6 kg/m\n"
+            "Submerged force: 0.359 kN/m\n"
+        )
+
+    def test_submerged_mass(self, circular_section_example):
+        """H1: (27.265 - 15.625) pi = 11.64 pi kg/m, downward positive."""
+        assert circular_section_example.submerged_weight_kg_m == pytest.approx(
+            11.64 * math.pi
+        )
+        assert not circular_section_example.is_buoyant
+
+    @pytest.mark.parametrize(
+        ("attribute", "hand_mass_coefficient"),
+        [
+            ("total_weight_in_air_kN_m", 27.265),
+            ("buoyancy_force_kN_m", 15.625),
+            ("submerged_weight_kN_m", 11.64),
+        ],
+        ids=["dry", "buoyancy", "submerged"],
+    )
+    def test_force_units(
+        self, circular_section_example, attribute, hand_mass_coefficient
+    ):
+        """H1 mass times G1 gravity, divided by U1 newtons per kilonewton."""
+        expected_kN_m = hand_mass_coefficient * math.pi * 9.81 / 1000
+        assert getattr(circular_section_example, attribute) == pytest.approx(expected_kN_m)
 
 
 if __name__ == "__main__":

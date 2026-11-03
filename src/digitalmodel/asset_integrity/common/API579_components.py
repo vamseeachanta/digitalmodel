@@ -257,7 +257,9 @@ class API579_components():
             LMLFileNameArray.append('LML_' + str(fileIndex) + '_')
             decimalArray = pd.Series(
                 [2, 2, 0, 0, 0, 0, 3, 3, 3, 3, 3, 1, 1, 3, 3, 3],
-                index=LMLSummaryDF.columns.values)
+                index=LMLSummaryDF.columns.drop(
+                    ["Level 2 qualification", "Level 2 limitation",
+                     "Level 2 governing interval"]))
             LMLSummaryDF = LMLSummaryDF.round(decimalArray)
             LMLSummaryDFArray.append(LMLSummaryDF)
             if self._generate_plots():
@@ -948,7 +950,9 @@ class API579_components():
                 if cfg['Geometry']['NominalID'] is None:
                     cfg['Geometry']['NominalID'] = cfg['Geometry'][
                         'NominalOD'] - 2 * cfg['Geometry']['DesignWT']
-                (tavgiL2, sL2) = self.LMLLevel2Evaluation(dfLTA, customData)
+                intervals = self.LMLLevel2Intervals(dfLTA)
+                tavgiL2 = [interval['mean_wall'] for interval in intervals]
+                sL2 = [interval['length'] for interval in intervals]
                 RSFL2 = []
                 MAWPrL2 = []
                 MtL2 = []
@@ -970,6 +974,18 @@ class API579_components():
                     MtL2.append(data['Mt'])
                     MAWPrEvaluationL2.append(data['MAWPrEvaluation'])
 
+                # Select by pressure, retaining the matching geometry and factors.
+                # Equal pressures use the first start-major/end-major interval.
+                governing_index = min(range(len(intervals)), key=MAWPrL2.__getitem__)
+                governing_interval = dict(intervals[governing_index])
+                governing_interval.update({
+                    "FCA": FCA,
+                    "adjusted_mean_wall": intervals[governing_index]['mean_wall'] - FCA,
+                    "MAWPr": MAWPrL2[governing_index],
+                    "RSF": RSFL2[governing_index],
+                    "Mt": MtL2[governing_index],
+                })
+
             LMLResult = {
                 "FCA": FCA,
                 "tc": tc,
@@ -985,6 +1001,15 @@ class API579_components():
                 "MAWPr, L1": MAWPrL1,
                 "MAWPr, L2": min(MAWPrL2),
                 "RSF, L2": min(RSFL2),
+                "Level 2 governing interval": governing_interval,
+                "Level 2 qualification": "NOT_EVALUATED",
+                "Level 2 limitation": (
+                    "Spatial integration only; edition-specific API 579 "
+                    "procedure and pressure equations remain unqualified. "
+                    "s uses index span + 1; Level 2 uses endpoint distance. "
+                    "Folias interpolation clamps outside the supplied table range; "
+                    "table coverage and source values require qualification."
+                ),
                 "Mt, L2": min(MtL2),
                 "tavg": trd
             }
@@ -1008,17 +1033,20 @@ class API579_components():
     def LMLMAWPrEvaluation(self, data, cfg, Level):
         import numpy as np
 
+        RSFa = data['RSFa']
+        # API 579-1/ASME FFS-1, Fitness-For-Service (2016), Part 5,
+        # Table 5.2, Folias Factor: use the caller-supplied cylindrical table.
+        # Source values and edition coverage remain the caller's responsibility;
+        # this interpolation adds no standards-derived constants.
+        Mt = np.interp(
+            data['LongitudinalFlawLengthParameter'],
+            cfg['API579Parameters']['FoliasFactor']['FlawParameter'],
+            cfg['API579Parameters']['FoliasFactor']['Mt']['Cylindrical'])
         if data['LongitudinalFlawLengthParameter'] <= 0.354:
             RtFloor = 0.2
-        elif data['LongitudinalFlawLengthParameter'] < 20:
-            RSFa = data['RSFa']
-            # TODO: Bring Table into an Excel sheet format or array format
-            Mt = np.interp(
-                data['LongitudinalFlawLengthParameter'],
-                cfg['API579Parameters']['FoliasFactor']['FlawParameter'],
-                cfg['API579Parameters']['FoliasFactor']['Mt']['Cylindrical'])
+        elif data['LongitudinalFlawLengthParameter'] <= 20:
             RtFloor = (RSFa - RSFa / Mt) / (1 - RSFa / Mt)
-        elif data['LongitudinalFlawLengthParameter'] > 20:
+        else:
             RtFloor = 0.9
 
         if data['Rt'] > RtFloor:
@@ -1047,15 +1075,77 @@ class API579_components():
         return result
 
     def LMLLevel2Evaluation(self, dfLTA, data):
-        tavgi = []
-        s = []
-        for i in range(0, len(dfLTA.columns)):
-            LongitudinalCTP = dfLTA.iloc[:, i].values
-            LongitudinalCTPAscending = sorted(LongitudinalCTP)
-            for j in range(1, len(LongitudinalCTPAscending)):
-                s.append((j + 1) * (dfLTA.index[1] - dfLTA.index[0]))
-                tavgi.append(
-                    sum(LongitudinalCTPAscending[0:j]) /
-                    len(LongitudinalCTPAscending[0:j]))
+        """Return mean-wall and length lists in measured interval order.
 
-        return (tavgi, s)
+        Compatibility wrapper for :meth:`LMLLevel2Intervals`; ``data`` is
+        retained for callers. No edition-specific qualification is implied.
+        """
+        intervals = self.LMLLevel2Intervals(dfLTA)
+        return (
+            [interval['mean_wall'] for interval in intervals],
+            [interval['length'] for interval in intervals],
+        )
+
+    def LMLLevel2Intervals(self, dfLTA):
+        """Return endpoint geometry and integration evidence for each interval.
+
+        Rows are strictly increasing longitudinal coordinates, columns are
+        circumferential planes. The critical profile is the minimum wall at
+        each longitudinal station. Coordinates and walls share a length unit.
+        Every pair of measured endpoints is included, without extrapolation or
+        sorting readings. Piecewise-linear wall is assumed between readings.
+        Ordering is start row, end row. Positions are zero-based within the
+        supplied grid; coordinates are the corresponding original row labels.
+        ``length`` and ``mean_wall`` use the input length unit, ``area`` its
+        square. Wall means are measured, before future corrosion allowance.
+
+        Profile basis: API 579-1/ASME FFS-1, Fitness-For-Service (2016),
+        Part 5, Required Data/Measurements for a FFS Assessment; Part 4,
+        Required Data/Measurements for a FFS Assessment (critical profiles).
+
+        Integration source: NIST DLMF (2010), §3.5(i), Eq. 3.5.1,
+        https://dlmf.nist.gov/3.5.E1, applied separately to each segment:
+        A = sum((x[k+1]-x[k]) * (t[k]+t[k+1])/2), mean = A/(x[end]-x[start]).
+        This is exact for the assumed linear segments; the factor 2 is the
+        trapezoid endpoint average, not an API 579 coefficient.
+
+        Qualification remains NOT_EVALUATED: geometric regressions do not
+        qualify an edition-specific Level 2 procedure. The sole production
+        caller is LMLAcceptability via API579LML and lml; its saved RSF/MAWPr
+        outputs from the old sorted method require reassessment from raw grids.
+        No inventory or qualification of external saved results is established.
+        """
+        if len(dfLTA.index) < 2 or len(dfLTA.columns) < 1:
+            raise ValueError("Spatial profiles require two rows and one column")
+        try:
+            coordinates = np.asarray(dfLTA.index, dtype=float)
+            walls = dfLTA.to_numpy(dtype=float)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Profiles require finite numeric coordinates and walls") from exc
+        if not np.isfinite(coordinates).all() or not np.isfinite(walls).all():
+            raise ValueError("Profiles require finite numeric coordinates and walls")
+        if not np.all(coordinates[1:] > coordinates[:-1]):
+            raise ValueError("Profile coordinates must be strictly increasing")
+        if np.any(walls < 0):
+            raise ValueError("Profile walls must be nonnegative")
+
+        intervals = []
+        critical_wall = walls.min(axis=1)
+        for start in range(len(coordinates) - 1):
+            area = 0.0
+            for end in range(start + 1, len(coordinates)):
+                pitch = coordinates[end] - coordinates[end - 1]
+                # NIST DLMF (2010), Eq. 3.5.1: trapezoidal segment area.
+                area += pitch * (critical_wall[end - 1] + critical_wall[end]) / 2
+                length = coordinates[end] - coordinates[start]
+                intervals.append({
+                    "start_position": start,
+                    "end_position": end,
+                    "start_coordinate": float(coordinates[start]),
+                    "end_coordinate": float(coordinates[end]),
+                    "length": float(length),
+                    "area": float(area),
+                    "mean_wall": float(area / length),
+                })
+
+        return intervals

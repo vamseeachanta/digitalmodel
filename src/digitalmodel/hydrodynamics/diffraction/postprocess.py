@@ -21,6 +21,7 @@ Entry point: ``postprocess_diffraction_run(bundle_dir, out_dir)``.
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List
@@ -30,6 +31,7 @@ import numpy as np
 from digitalmodel.hydrodynamics.diffraction.orcaflex_exporter import OrcaFlexExporter
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
 from digitalmodel.hydrodynamics.diffraction.output_validator import OutputValidator
+from digitalmodel.hydrodynamics.diffraction.input_schemas import EnvironmentSpec
 
 RESULTS_JSON_NAMES = ("diffraction_results.json", "results.json")
 _RESULT_KEYS = {"raos", "added_mass", "damping"}
@@ -78,11 +80,15 @@ def postprocess_diffraction_run(
     out_dir: str | Path,
     *,
     make_plots: bool = True,
+    environment: EnvironmentSpec | None = None,
 ) -> PostprocResult:
     """Postprocess one diffraction run bundle on Linux (no license).
 
     Loads the bundle, re-runs output validation, exports OrcaFlex-ready vessel
     type + coefficient CSVs, renders RAO plots, and writes an index manifest.
+
+    Supply the analysis input's ``environment`` to evaluate report GM. Bundles
+    do not retain density or gravity; without it GM remains NOT_EVALUATED.
     """
     results = load_results_bundle(bundle_dir)
     out = Path(out_dir)
@@ -103,7 +109,7 @@ def postprocess_diffraction_run(
     # 4) Standardized self-contained HTML report (the same generator the
     #    benchmark path uses; a view over the bundle, never a copy). Optional
     #    like the plots — a missing plotly/report dep never fails postprocess.
-    report_path = _build_html_report(results, out, report)
+    report_path = _build_html_report(results, out, report, environment=environment)
 
     # 5) Index manifest.
     index = {
@@ -132,7 +138,8 @@ def postprocess_diffraction_run(
 
 
 def _build_html_report(
-    results: DiffractionResults, out: Path, validation_report: Dict[str, Any]
+    results: DiffractionResults, out: Path, validation_report: Dict[str, Any],
+    *, environment: EnvironmentSpec | None = None,
 ) -> Path | None:
     """Render the standardized diffraction HTML report from the bundle.
 
@@ -148,7 +155,6 @@ def _build_html_report(
     try:
         from digitalmodel.hydrodynamics.diffraction.report_generator import (
             build_report_data_from_solver_results,
-            compute_natural_periods,
             compute_stability,
             generate_diffraction_report,
         )
@@ -162,22 +168,44 @@ def _build_html_report(
         # Deterministic label from the bundle itself.
         report_data.report_date = results.analysis_date or results.created_date or ""
 
-        # Enrich with stability + natural periods when hydrostatics travelled
-        # in the bundle (Optional on DiffractionResults). Clean field mapping;
-        # skipped silently when absent.
+        # Numeric bundles omit waterplane moments, floatation centre and inertia.
+        # Preserve those gaps rather than manufacturing data or natural periods.
         if results.hydrostatics is not None:
-            report_data.hydrostatics = results.hydrostatics
-            stability = compute_stability(results.hydrostatics)
-            report_data.gm_transverse = stability.get("gm_transverse")
-            report_data.gm_longitudinal = stability.get("gm_longitudinal")
-            report_data.bm_transverse = stability.get("bm_transverse")
-            report_data.bm_longitudinal = stability.get("bm_longitudinal")
-            report_data.kb = stability.get("kb")
-            if report_data.added_mass_diagonal:
-                report_data.natural_periods = compute_natural_periods(
-                    results.hydrostatics,
-                    report_data.added_mass_diagonal,
-                    report_data.frequencies_rad_s,
+            from digitalmodel.hydrodynamics.diffraction.report_data_models import (
+                HydrostaticData,
+            )
+
+            hs = results.hydrostatics
+            report_data.hydrostatics = HydrostaticData(
+                volume=hs.displacement_volume,
+                mass=hs.mass,
+                centre_of_buoyancy=hs.centre_of_buoyancy,
+                centre_of_mass=hs.centre_of_gravity,
+                waterplane_area=hs.waterplane_area,
+                restoring_matrix=hs.stiffness_matrix.tolist(),
+            )
+            if (
+                environment is not None
+                and results.unit_system == "SI"
+                and math.isfinite(environment.gravity)
+                and math.isfinite(hs.displacement_volume)
+                and hs.displacement_volume > 0
+            ):
+                # OrcaWave WebHelp, Results: Hydrostatics, Hydrostatic stiffness
+                # matrix (online edition accessed 2026-10-19): C44=rho*g*V*GM_T,
+                # C55=rho*g*V*GM_L for a free-floating displacement body.
+                stability = compute_stability(
+                    report_data.hydrostatics,
+                    rho=environment.water_density,
+                    g=environment.gravity,
+                )
+                report_data.gm_transverse = stability["gm_transverse"]
+                report_data.gm_longitudinal = stability["gm_longitudinal"]
+                report_data.kb = stability["kb"]
+            else:
+                report_data.executive_warnings.append(
+                    "GM NOT_EVALUATED: an input environment, SI bundle units "
+                    "and finite positive gravity and displaced volume are required."
                 )
 
         report_path = out / f"{results.vessel_name}_diffraction_report.html"

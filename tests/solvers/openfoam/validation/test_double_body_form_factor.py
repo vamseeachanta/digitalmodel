@@ -232,16 +232,18 @@ def test_the_sign_check_is_not_conditional_on_the_hull_class() -> None:
     assert ok["defect"] is False
 
 
-def test_no_verdict_anywhere_claims_a_pass_or_a_validation(tmp_path) -> None:
+def test_form_factor_claims_no_pass_and_manifest_claims_no_validation(tmp_path) -> None:
     """The vocabulary is load-bearing. ``referent_free_resistance`` says why:
     a criterion invented after looking at the answer is not a criterion, and a
     band that says 'passed' has been promoted to one."""
     manifest = evaluate_double_body_run(
         _force_file(tmp_path, WORKED_EXAMPLES["normal"]), _config()
     )
-    blob = json.dumps(manifest).lower()
+    verdict_blob = json.dumps(manifest["form_factor"]).lower()
     for forbidden in ("passed", "validated", "all_passed"):
-        assert forbidden not in blob, forbidden
+        assert forbidden not in verdict_blob, forbidden
+    assert "validated" not in json.dumps(manifest).lower()
+    assert "all_passed" not in manifest
     assert manifest["form_factor"]["verdict"] in (
         "not_implausible",
         "implausible",
@@ -338,7 +340,9 @@ def test_a_settled_force_is_stable_and_a_drifting_one_is_not(tmp_path) -> None:
         _force_file(tmp_path, 1.25, name="settled.dat"), _config()
     )
     assert settled["force_convergence"]["verdict"] == "stable"
-    assert settled["admissibility"]["admissible"] is True
+    # A stable force alone no longer qualifies the wall treatment.
+    assert settled["near_wall"]["status"] == "NOT_EVALUATED"
+    assert settled["admissibility"]["admissible"] is False
 
     drifting = evaluate_double_body_run(
         _force_file(tmp_path, 1.25, drift=0.05, name="drifting.dat"), _config()

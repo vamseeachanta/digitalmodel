@@ -47,10 +47,11 @@ except ImportError:
 from .sn_curves import SNCurveBase
 from .damage_accumulation import LinearDamageAccumulation
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 logger = logging.getLogger(__name__)
 
 # np.trapezoid was added in NumPy 2.0; fall back to np.trapz for 1.x
-_trapz = getattr(np, 'trapezoid', np.trapz)
 
 # Type aliases
 FrequencyArray = np.ndarray
@@ -131,7 +132,7 @@ class FrequencyDomainBase(ABC):
             else:
                 integrand = (2 * np.pi * freq) ** i * psd_vals
 
-            moments[f'm{i}'] = _trapz(integrand, freq)
+            moments[f'm{i}'] = _trapezoid(integrand, freq)
 
         # Calculate derived parameters
         m0, m1, m2, m4 = moments['m0'], moments['m1'], moments['m2'], moments['m4']
@@ -345,7 +346,7 @@ class DirlikMethod(FrequencyDomainBase):
             m = 3.0  # Default slope
 
         # Equivalent stress using moment method
-        moment_ratio = _trapz(
+        moment_ratio = _trapezoid(
             pdf_values * (s_normalized ** m), s_normalized
         ) * ds
 

@@ -23,6 +23,7 @@ Quick-start::
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 from .models import (
     BoundaryConditionF105,
@@ -37,6 +38,7 @@ from .span_fatigue_damage import SpanFatigueDamage
 from .span_natural_frequency import SpanNaturalFrequency
 from .span_onset_screening import SpanOnsetScreening
 from .span_viv_response import SpanVIVAmplitude
+from .wave_velocity import compute_wave_velocity
 
 __all__ = [
     "FreespanVIVFatigue",
@@ -62,16 +64,25 @@ class FreespanVIVFatigue:
     ----------
     inp                   PipeSpanInput with all pipeline and site data
     submerged_weight_N_m  Submerged weight W_sub [N/m] for static check
-    alpha                 Current / (current+wave) ratio (default 1.0)
-    KC                    Keulegan-Carpenter number (default 30)
+    alpha                 Optional current / (current+wave) ratio override
+    KC                    Optional Keulegan-Carpenter number override
+
+    When velocity is omitted and a sea state is supplied, the existing wave
+    calculator provides Uw [m/s] and Tu [s] at the pipe centre. The dimensionless
+    definitions are KC = Uw*Tu/OD and alpha = Uc/(Uc+Uw), with OD in metres.
+    For zero total speed, alpha is defined as 1 (the no-wave convention);
+    automatic zero Uw gives KC = 0. Explicit alpha and KC independently override
+    their derived values, including zero and the former default values.
+    Without automatic velocity resolution, omitted alpha and KC retain the
+    legacy defaults 1 and 30 from this facade's existing API.
     """
 
     def __init__(
         self,
         inp: PipeSpanInput,
         submerged_weight_N_m: float = 850.0,
-        alpha: float = 1.0,
-        KC: float = 30.0,
+        alpha: float | None = None,
+        KC: float | None = None,
     ) -> None:
         self._inp = inp
         self._W_sub = submerged_weight_N_m
@@ -80,7 +91,7 @@ class FreespanVIVFatigue:
 
     def assess(self) -> SpanVIVResult:
         """Run the complete F105 assessment and return SpanVIVResult."""
-        inp = self._inp
+        inp, alpha, KC = self._resolve_wave_input()
 
         # 1 — Natural frequencies
         freq_calc = SpanNaturalFrequency(inp)
@@ -98,7 +109,7 @@ class FreespanVIVFatigue:
             freq.EI_Nm2, freq.m_effective_kgm,
         )
         il_A = amp.il_amplitude_over_D()
-        cf_A = amp.cf_amplitude_over_D(alpha=self._alpha, KC=self._KC)
+        cf_A = amp.cf_amplitude_over_D(alpha=alpha, KC=KC)
         il_sigma = amp.stress_from_amplitude(il_A, freq.fn_IL_hz, mode="IL")
         cf_sigma = amp.stress_from_amplitude(cf_A, freq.fn_CF_hz, mode="CF")
 
@@ -144,6 +155,36 @@ class FreespanVIVFatigue:
             span_utilization=utilization,
         )
 
+    def _resolve_wave_input(self) -> tuple[PipeSpanInput, float, float]:
+        """Resolve a fresh input copy and response ratios for this assessment."""
+        inp = self._inp
+        Hs, Tp, depth = inp.Hs_m, inp.Tp_s, inp.water_depth_m
+        # Existing API defaults, retained outside automatic sea-state resolution.
+        alpha, KC = 1.0, 30.0
+        velocity = inp.wave_velocity_ms
+        if any(value is not None for value in (Hs, Tp, depth)):
+            if Hs is None or Tp is None or depth is None:
+                raise ValueError("Hs_m, Tp_s and water_depth_m must be supplied together")
+            for name, value in zip(("Hs_m", "Tp_s", "water_depth_m"), (Hs, Tp, depth)):
+                if not math.isfinite(value) or value <= 0.0:
+                    raise ValueError(f"{name} must be finite and strictly positive")
+            if velocity is None:
+                wave = compute_wave_velocity(
+                    Hs=Hs, Tp=Tp, water_depth_m=depth,
+                    pipe_elevation_m=inp.seabed_gap_m, pipe_od_m=inp.od_m,
+                )
+                velocity = wave.Uw_ms
+                KC = velocity * wave.Tu_s / inp.od_m
+                total = inp.current_velocity_ms + velocity
+                alpha = inp.current_velocity_ms / total if total != 0.0 else 1.0
+        if self._alpha is not None:
+            alpha = self._alpha
+        if self._KC is not None:
+            KC = self._KC
+        if velocity is None:
+            velocity = 0.0
+        return replace(inp, wave_velocity_ms=velocity), alpha, KC
+
     # ------------------------------------------------------------------
     # Multi-current probability-weighted assessment
     # ------------------------------------------------------------------
@@ -172,8 +213,6 @@ class FreespanVIVFatigue:
             screening, amplitudes, and stresses correspond to the current
             speed that produces the maximum (unweighted) damage.
         """
-        from dataclasses import replace
-
         if not current_bins:
             raise ValueError("current_bins must not be empty")
 

@@ -1,0 +1,74 @@
+{
+  "coarse": {
+    "pass": true,
+    "schema_version": 2,
+    "level": "coarse",
+    "depth_m": 1500,
+    "frequency_count": 350,
+    "deck_sha256": "e98ef3ce462eb09426ea097677691ff5076dc38b74e2e3574e1bca2b117df423",
+    "specification_sha256": "c0fa3a4eb57ca836e02ca54aa0caab972e031b7db57786f066e6ce3c150a96c5",
+    "expected_sha256": "756bb6db5d3dc6f3ebb9f91c7fd0080dbd22e3f61c853346fdaceebad2be1c31",
+    "df3": {
+      "hull": {
+        "pass": true,
+        "panels": 74191,
+        "max_span_m": 0.7863211496949972,
+        "limit_m": 0.8383265196279277,
+        "oversized_panels": 0
+      },
+      "lid": {
+        "pass": true,
+        "panels": 3259,
+        "max_span_m": 0.7110084216185892,
+        "limit_m": 0.8383265196279277,
+        "oversized_panels": 0
+      }
+    },
+    "lid": {
+      "pass": true,
+      "panels": 3259,
+      "area_m2": 379.35949815914864
+    },
+    "historical_failures": {
+      "DF5.2": "FAIL",
+      "DF5.3": "FAIL"
+    },
+    "native_acceptance": "OPEN"
+  },
+  "fine": {
+    "pass": true,
+    "schema_version": 2,
+    "level": "fine",
+    "depth_m": 1500,
+    "frequency_count": 350,
+    "deck_sha256": "a7c4bf2f2e16c7699bafd9b56aa89a03050a08c9f5379f5b10ae5e8480ce533c",
+    "specification_sha256": "c0fa3a4eb57ca836e02ca54aa0caab972e031b7db57786f066e6ce3c150a96c5",
+    "expected_sha256": "756bb6db5d3dc6f3ebb9f91c7fd0080dbd22e3f61c853346fdaceebad2be1c31",
+    "df3": {
+      "hull": {
+        "pass": true,
+        "panels": 113471,
+        "max_span_m": 0.5652673731212703,
+        "limit_m": 0.8383265196279277,
+        "oversized_panels": 0
+      },
+      "lid": {
+        "pass": true,
+        "panels": 5899,
+        "max_span_m": 0.5500257707041105,
+        "limit_m": 0.8383265196279277,
+        "oversized_panels": 0
+      }
+    },
+    "lid": {
+      "pass": true,
+      "panels": 5899,
+      "area_m2": 379.65120770245215
+    },
+    "historical_failures": {
+      "DF5.2": "FAIL",
+      "DF5.3": "FAIL"
+    },
+    "native_acceptance": "OPEN"
+  }
+}

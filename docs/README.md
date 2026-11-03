@@ -14,6 +14,7 @@ routing registries.
 | [docs/maps/digitalmodel-operator-map.md](maps/digitalmodel-operator-map.md) | Repo-wide code/tests/docs operator map |
 | [docs/registry/module-routing.yaml](registry/module-routing.yaml) | Canonical machine-readable module routing registry |
 | [Engineering analysis criteria](standards/analysis-parametric-lookup-criteria.html) | Required criteria for new or materially revised analysis deliverables, parametric studies and lookup datasets |
+| [Signed residual operators](standards/signed-residual-operators.html) | Explicit signed values, absolute residuals, relative errors and zero-reference handling |
 | [Engineering analysis workflow](standards/engineering-analysis-workflow.html) | Stage actions, evidence handoffs and exit conditions; [ANSYS](domains/ansys/analysis-workflow.html) and [AQWA](domains/aqwa/analysis-workflow.html) domain mappings |
 
 ## Route By Issue Type
@@ -28,7 +29,15 @@ New and materially revised engineering analysis deliverables shall follow the [p
 | Infrastructure, configs, or workflow routing | `src/digitalmodel/infrastructure/`, `src/digitalmodel/workflows/`, or `src/digitalmodel/data_systems/` | matching tests plus integration tests | domain docs and this routing entry point |
 | Documentation/indexing maintenance | `docs/README.md`, `docs/domains/README.md`, operator map, and registry | `tests/docs/test_digitalmodel_routing_contract.py` | this file |
 
+## Operational runbooks
+
+- [Codex exec standard input in automation](runbooks/codex-exec-stdin.md):
+  disconnect inherited input when supplying only a prompt argument, or supply
+  finite stdin context intentionally.
+
 ## Curated Routing Surfaces
+
+For offline reference interchange, see the [solver-reference export contract](domains/data_systems/solver-reference-exports.md), including strict readers, state rules, an adapter audit and a worked example.
 
 Curated routing surfaces are authoritative for issue work because they are small,
 reviewed, and intended for repeat use:
@@ -43,6 +52,7 @@ reviewed, and intended for repeat use:
 - [Common analysis workflow](standards/engineering-analysis-workflow.html)
 - [ANSYS analysis workflow](domains/ansys/analysis-workflow.html)
 - [AQWA analysis workflow](domains/aqwa/analysis-workflow.html)
+- [Welded-padeye parametric demand analysis](domains/lifting/welded-padeye.html) — offline demands, exact lookup and worked example; historical reproduction remains unverified
 - focused tests that validate these surfaces
 
 The criteria and workflow definitions are documentation surfaces; the module routing registry remains unchanged. The existing documentation-routing tests remain applicable to their original contracts and do not establish criteria adoption or automated workflow enforcement.
@@ -53,6 +63,15 @@ Raw inventory surfaces are discovery aids only. Broad generated indexes, histori
 reports, logs, cached outputs, and large extracted inventories can help locate
 candidate files, but they do not replace the curated routing surfaces above.
 
+## Knowledge pack review evidence
+
+The [pipelay review and clearance index](registry/pipelay-review-clearance.json)
+links durable lesson entries, review responsibilities and C01–C07 evidence to
+the analytical knowledge pack. Assignments and clearance remain
+`NOT_EVALUATED`; offline regression does not establish native installation
+clearance. The index specifies evidence requirements and contains no executed
+review receipt.
+
 ## Repo-vs-Bulk-Artifact-Store
 
 The universal placement rule is repo-vs-bulk-artifact-store. Keep source, tests,
@@ -60,3 +79,7 @@ small curated docs, operator maps, and routing registries in the repo. Put large
 generated, binary, cache, raw crawl, or fast-growing artifacts in a bulk artifact
 store instead. `/mnt/ace/data` is the current workspace-hub implementation example
 for that bulk store, not a path that should be hard-coded into portable repo logic.
+
+## Operational runbooks
+
+- [Detached commands over SSH](runbooks/ssh-detached-launch.md): explicit stream redirection, Linux session separation and completion checks.

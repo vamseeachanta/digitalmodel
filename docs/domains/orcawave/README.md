@@ -4,6 +4,9 @@
 
 See also: [OrcaFlex & OrcaWave Manuals and References](../orcaflex/MANUALS_AND_REFERENCES.md) for official documentation links, YAML format reference, and API resources.
 
+[Slowly varying drift analysis](slow-drift-input-validation.md) documents the
+input validation, numerical tolerances and a constructed QTF worked example.
+
 ---
 
 ## Quick start

@@ -6,6 +6,17 @@ all existing model data and then loads the named file.  The flat
 composition form, and it merges incrementally instead.
 """
 
-from .basefile import build_variation_document, write_variation_model
+from .basefile import (
+    build_variation_document,
+    validate_variation_document,
+    write_variation_model,
+)
+from .variation_audit import load_variation_document, validate_resolved_variation
 
-__all__ = ["build_variation_document", "write_variation_model"]
+__all__ = [
+    "build_variation_document",
+    "load_variation_document",
+    "validate_resolved_variation",
+    "validate_variation_document",
+    "write_variation_model",
+]

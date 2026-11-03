@@ -84,9 +84,22 @@ def liquid_capacity(
                  vapor_pressure=vapor_pressure)
     if p_downstream > p_upstream or vapor_pressure >= p_upstream:
         raise ValueError("forward flow and a liquid inlet are required")
-    limit = (recovery_factor / piping_factor)**2 * (
-        p_upstream - critical_pressure_ratio * vapor_pressure
-    )
+    pressure_head = p_upstream - critical_pressure_ratio * vapor_pressure
+    _positive(choked_pressure_drop=pressure_head)
+    # Emerson, Control Valve Sourcebook — Oil & Gas (2013), ch. 3, p. 3-5:
+    # dp_max = (FLP/Fp)^2 * (p1-FF*pv). Keep the square's exponent separate
+    # so only the final differential can underflow or overflow. frexp gives
+    # x=m*2^e; hence the squared ratio contributes 2*(e_recovery-e_piping).
+    recovery_mantissa, recovery_exponent = math.frexp(recovery_factor)
+    piping_mantissa, piping_exponent = math.frexp(piping_factor)
+    head_mantissa, head_exponent = math.frexp(pressure_head)
+    try:
+        limit = math.ldexp(
+            (recovery_mantissa / piping_mantissa)**2 * head_mantissa,
+            2 * (recovery_exponent - piping_exponent) + head_exponent,
+        )
+    except OverflowError:
+        raise ValueError("choked_pressure_drop must be finite and positive") from None
     _positive(choked_pressure_drop=limit)
     drop = p_upstream - p_downstream
     effective = min(drop, limit)

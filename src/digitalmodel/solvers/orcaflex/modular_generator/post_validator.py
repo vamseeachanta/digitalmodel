@@ -87,6 +87,17 @@ _KNOWN_TOP_LEVEL_KEYS = (
 )
 
 
+def _object_name_key(name: Any) -> str:
+    """Return a comparison key, preserving source spelling outside lookup.
+
+    Orcina OrcaFlex webhelp, "The model", object names paragraph
+    (unversioned, accessed 2026-10-19) specifies case-insensitive names:
+    https://www.orcina.com/webhelp/OrcaFlex/Content/html/Themodel.htm
+    Stringification matches the registry's handling of numeric YAML names.
+    """
+    return str(name).casefold()
+
+
 @dataclass
 class ValidationWarning:
     """A single validation finding."""
@@ -286,7 +297,7 @@ class PostGenerationValidator:
             List of validation warnings for missing line type references.
         """
         warnings: list[ValidationWarning] = []
-        defined_lt = set(defined.get("LineTypes", {}).keys())
+        defined_lt = {_object_name_key(n) for n in defined.get("LineTypes", {})}
 
         if not defined_lt:
             # No line types defined at all; skip check (might be a
@@ -310,7 +321,7 @@ class PostGenerationValidator:
                         for row in value:
                             if isinstance(row, list) and len(row) >= 1:
                                 lt_name = row[0]
-                                if lt_name and lt_name not in defined_lt:
+                                if lt_name and _object_name_key(lt_name) not in defined_lt:
                                     warnings.append(
                                         ValidationWarning(
                                             level="error",
@@ -351,8 +362,7 @@ class PostGenerationValidator:
         # Shapes, Links, FlexJoints, other Lines, etc.
         valid_targets: set[str] = set()
         for section_names in defined.values():
-            valid_targets.update(str(n) for n in section_names.keys())
-        valid_targets.update(_BUILTIN_CONNECTIONS)
+            valid_targets.update(_object_name_key(n) for n in section_names)
 
         for file_name, data in files.items():
             lines = data.get("Lines")
@@ -380,7 +390,10 @@ class PostGenerationValidator:
                                 # OrcaFlex arc-length or node references.
                                 if isinstance(target, (int, float)):
                                     continue
-                                if target not in valid_targets:
+                                if (
+                                    target not in _BUILTIN_CONNECTIONS
+                                    and _object_name_key(target) not in valid_targets
+                                ):
                                     end_label = (
                                         "End A" if row_idx == 0 else "End B"
                                     )
@@ -419,8 +432,8 @@ class PostGenerationValidator:
             List of validation warnings for invalid winch references.
         """
         warnings: list[ValidationWarning] = []
-        defined_vessels = set(defined.get("Vessels", {}).keys())
-        defined_lines = set(defined.get("Lines", {}).keys())
+        defined_vessels = {_object_name_key(n) for n in defined.get("Vessels", {})}
+        defined_lines = {_object_name_key(n) for n in defined.get("Lines", {})}
 
         for file_name, data in files.items():
             winches = data.get("Winches")
@@ -436,7 +449,7 @@ class PostGenerationValidator:
                 # Connection is typically [vessel_name, line_name]
                 if len(connection) >= 1 and connection[0]:
                     vessel_ref = connection[0]
-                    if vessel_ref not in defined_vessels:
+                    if _object_name_key(vessel_ref) not in defined_vessels:
                         warnings.append(
                             ValidationWarning(
                                 level="error",
@@ -452,7 +465,7 @@ class PostGenerationValidator:
                         )
                 if len(connection) >= 2 and connection[1]:
                     line_ref = connection[1]
-                    if line_ref not in defined_lines:
+                    if _object_name_key(line_ref) not in defined_lines:
                         warnings.append(
                             ValidationWarning(
                                 level="error",
@@ -489,11 +502,10 @@ class PostGenerationValidator:
         """
         warnings: list[ValidationWarning] = []
 
-        # Build full set of valid targets (all named objects + built-ins)
+        # Build object lookup keys; built-in keywords are checked separately.
         all_names: set[str] = set()
         for section_names in defined.values():
-            all_names.update(section_names.keys())
-        all_names.update(_BUILTIN_CONNECTIONS)
+            all_names.update(_object_name_key(n) for n in section_names)
 
         for file_name, data in files.items():
             # Check Links
@@ -509,7 +521,8 @@ class PostGenerationValidator:
                             if (
                                 target
                                 and isinstance(target, str)
-                                and target not in all_names
+                                and target not in _BUILTIN_CONNECTIONS
+                                and _object_name_key(target) not in all_names
                             ):
                                 warnings.append(
                                     ValidationWarning(
@@ -540,7 +553,8 @@ class PostGenerationValidator:
                         if (
                             target
                             and isinstance(target, str)
-                            and target not in all_names
+                            and target not in _BUILTIN_CONNECTIONS
+                            and _object_name_key(target) not in all_names
                         ):
                             warnings.append(
                                 ValidationWarning(

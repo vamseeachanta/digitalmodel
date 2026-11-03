@@ -17,7 +17,11 @@ class MooringSegmentType(str, Enum):
 
 
 class ChainGrade(str, Enum):
-    """Chain grades per DNV-OS-E302 / API 2SK."""
+    """Chain grade labels with unresolved DNV-OS-E302 / API 2SK attribution.
+
+    See docs/domains/orcaflex/generator-standards.md, chain-grade-label
+    (NOT_EVALUATED); membership does not establish standard qualification.
+    """
 
     R3 = "R3"
     R3S = "R3S"

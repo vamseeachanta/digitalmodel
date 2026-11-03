@@ -5,7 +5,7 @@
 
 Report mode preserves the first exit code. Enforce mode requires register
 evidence for every recovered ID. Both attempts inherit console output.
-Signal retries are diagnostic and preserve the first exit code in both modes.
+Atlas runs directly and does not participate in the retry pilot.
 """
 
 import argparse
@@ -153,19 +153,6 @@ def observation() -> dict:
             "run_id": os.environ.get("GITHUB_RUN_ID", "unknown"), "runner_cpu": cpu}
 
 
-def record(path: Path, code: int, retry_code: int) -> None:
-    """Record both signal attempts without clearing the original failure."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = dict(observation(), kind="signal-exit", first_attempt_exit_code=code,
-                   retry_exit_code=retry_code, exit_code=code)
-    path.write_text(json.dumps(payload, indent=2) + "\n")
-    message = f"signal exit {code}; retry exit: {retry_code}; returned {code}"
-    print(f"::warning::{message}", flush=True)
-    if os.environ.get("GITHUB_STEP_SUMMARY"):
-        with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as handle:
-            handle.write(f"### Signal retry\n\n{message}\n")
-
-
 def first_failures(path: Path) -> tuple[dict[str, str], list[dict[str, str]]]:
     """Keep established failures and raw attributes of unidentified failures."""
     failures: dict[str, str] = {}
@@ -263,7 +250,6 @@ def main() -> int:
     parser.add_argument("--max-retry-ids", type=int, default=20)
     parser.add_argument("--mode", choices=("report", "enforce"), default="report")
     parser.add_argument("--register", type=Path, default=Path(".github/ci/flaky-register.yml"))
-    parser.add_argument("--signal-retry", action="store_true")
     parser.add_argument("--decide-only", action="store_true")
     parser.add_argument("--from-log", type=Path)
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -281,12 +267,6 @@ def main() -> int:
     started = time.time_ns()
     code = execute(command)
     if code == 0:
-        return code
-    if args.signal_retry and args.shard not in NO_RETRY_SHARDS:
-        if code < 128 or code in TIMEOUT_CODES:
-            return code
-        retry_code = execute(command)
-        record(args.junit.parent / f"flaky-{args.shard}.json", code, retry_code)
         return code
     return retry_tests(args, command, code, started)
 

@@ -39,14 +39,14 @@ def _spec(tmp_path, symmetry="xz", lid=True, panels=None):
     mesh_file = tmp_path / "synthetic.gdf"
     records = ["Synthetic symmetric box", "1.0 9.81", "0 0", str(len(panels))]
     records.extend(" ".join(map(str, vertex)) for panel in panels for vertex in panel)
-    mesh_file.write_text("\n".join(records) + "\n")
+    mesh_file.write_text("\n".join(records) + "\n", encoding="utf-8", newline="\n")
     return DiffractionSpec.model_validate({
         "version": "1.0",
         "analysis_type": "diffraction",
         "vessel": {
             "name": "synthetic",
             "type": "barge",
-            "geometry": {"mesh_file": str(mesh_file), "symmetry": symmetry},
+            "geometry": {"mesh_file": mesh_file.as_posix(), "symmetry": symmetry},
             "inertia": {
                 "mass": 8200.0,
                 "centre_of_gravity": [0.0, 0.0, -0.5],
@@ -265,7 +265,8 @@ def test_heading_helper_limits_symmetric_range(headings, expected):
 
 # CRLF single-deck digests captured at 47876058 before changing the writer,
 # with geometry.symmetry="none" and the existing heading flags unchanged.
-# The multi-body fixture digests reflect the explicit GDF fixture migration.
+# The multi-body digests include one empty WFS block per body; removing the
+# additional block recovers both earlier digests without any other byte change.
 _NONE_DIGESTS = {
     "spec_ship_raos.yml": (
         "fced3caccca828ff595cd0bd6261da338c7ab25ece791c12a6b828924fe01efe",
@@ -276,8 +277,8 @@ _NONE_DIGESTS = {
         "6b44238a436779bbb38424ecc15a884d71b32b7e1094658d6cbf653d53e0e2f4",
     ),
     "spec_fpso_turret.yml": (
-        "2c0180359f28658263cf80ef3ba2abc7579cd1262d564dbfb9170dce4a5911e5",
-        "5a3bcd9c0919814f4f61249c912d4591df9412cce71c4cc0b6c0523f16624cd7",
+        "e18a2d721648d951f48e8ff24dbe0758abe89f1322fe22b5c07e139ed9bd4114",
+        "404eef2ade678b95cc4876548903473c18abc912a3b5ef8bf3034d035a9e2a15",
     ),
 }
 
@@ -294,7 +295,15 @@ def test_none_decks_match_base_bytes_and_half_builds_repeat(tmp_path, fixture):
         first = ("\r\n".join(backend._assemble_all_decks(spec)) + "\r\n").encode()
         second = ("\r\n".join(backend._assemble_all_decks(spec)) + "\r\n").encode()
         assert first == second
-        assert hashlib.sha256(first).hexdigest() == digest
+        if len(spec.get_bodies()) == 2:
+            assert backend.build_deck7(spec)[-4:] == [
+                "          WFS1", " END", "          WFS2", " END",
+            ]
+        assert hashlib.sha256(first).hexdigest() == digest, (
+            "Rebuild and inspect with: python -m pytest "
+            "tests/hydrodynamics/diffraction/test_aqwa_half_deck.py "
+            "-k test_none_decks_match_base_bytes_and_half_builds_repeat -vv"
+        )
     half = _spec(tmp_path)
     backend = AQWABackend()
     first = backend.generate_single(half, tmp_path / "first").read_bytes()
@@ -308,14 +317,14 @@ def test_none_decks_match_base_bytes_and_half_builds_repeat(tmp_path, fixture):
 def test_xz_requires_a_loadable_verified_mesh(tmp_path, deck, mesh_case):
     spec = _spec(tmp_path)
     if mesh_case == "missing":
-        spec.vessel.geometry.mesh_file = str(tmp_path / "missing.gdf")
+        spec.vessel.geometry.mesh_file = (tmp_path / "missing.gdf").as_posix()
     elif mesh_case == "relative":
         # The file exists beside the spec, but no spec directory is supplied.
         spec.vessel.geometry.mesh_file = Path(spec.vessel.geometry.mesh_file).name
     else:
         mesh_file = tmp_path / "synthetic.dat"
-        mesh_file.write_text("unsupported mesh format\n")
-        spec.vessel.geometry.mesh_file = str(mesh_file)
+        mesh_file.write_text("unsupported mesh format\n", encoding="utf-8", newline="\n")
+        spec.vessel.geometry.mesh_file = mesh_file.as_posix()
         spec.vessel.geometry.mesh_format = "dat"
     with pytest.raises(ValueError, match="xz.*verified"):
         getattr(AQWABackend(), f"build_deck{deck}")(spec)
@@ -328,7 +337,7 @@ def test_mixed_bodies_do_not_hide_an_unverified_xz_mesh(tmp_path):
     data["bodies"] = [{"vessel": vessel}, {"vessel": vessel}]
     mixed = DiffractionSpec.model_validate(data)
     mixed.bodies[0].vessel.geometry.symmetry = "none"
-    mixed.bodies[1].vessel.geometry.mesh_file = str(tmp_path / "missing.gdf")
+    mixed.bodies[1].vessel.geometry.mesh_file = (tmp_path / "missing.gdf").as_posix()
     with pytest.raises(ValueError, match="xz.*verified"):
         AQWABackend().build_deck6(mixed)
 

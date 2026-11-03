@@ -1,0 +1,338 @@
+Installed 8 packages in 891ms
+CHECK trailing_whitespace_fixer exit 0
+CHECK end_of_file_fixer exit 1
+[path removed]
+[path removed]
+[path removed]
+CHECK check_json exit 0
+CHECK check_yaml exit 0
+CHECK check_merge_conflict exit 0
+CHECK check_case_conflict exit 0
+CHECK check_symlinks exit 0
+CHECK check_executables_have_shebangs exit 1
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+[path removed]
+[path removed]
+[path removed]
+  If it is supposed to be executable, double-check its shebang.
+CHECK check_shebang_scripts_are_executable exit 0
+CHECK detect_private_key exit 0
+CHECK check_added_large_files exit 0
+CHECK fix_byte_order_marker exit 0
+CHECK mixed_line_ending exit 0
+CHECK mypy exit 1
+benchmarks/fe10_nafems_le1/tools/validate_decks.py:14: error: Function is missing a return type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/validate_decks.py:14: note: Use "-> None" if function does not return a value
+benchmarks/fe10_nafems_le1/tools/sanitize_output.py:12: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/sanitize_output.py:31: error: Function is missing a return type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/sanitize_output.py:31: note: Use "-> None" if function does not return a value
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:25: error: Function is missing a return type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:25: note: Use "-> None" if function does not return a value
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:33: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/build_decks.py:37: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/build_decks.py:47: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/build_decks.py:51: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/build_decks.py:62: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/build_decks.py:108: error: Function is missing a return type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/build_decks.py:134: error: Function is missing a return type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/build_decks.py:134: note: Use "-> None" if function does not return a value
+benchmarks/fe10_nafems_le1/tools/extract_stresses.py:20: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/extract_stresses.py:47: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/extract_stresses.py:65: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/extract_stresses.py:79: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/extract_stresses.py:105: error: Function is missing a return type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/tools/extract_stresses.py:105: note: Use "-> None" if function does not return a value
+benchmarks/fe10_nafems_le1/tools/build_expected.py:41: error: "object" has no attribute "values"  [attr-defined]
+benchmarks/fe10_nafems_le1/compare.py:40: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:45: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:58: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:70: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:96: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:121: error: Function is missing a return type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:125: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:131: error: Function is missing a type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:143: error: Function is missing a return type annotation  [no-untyped-def]
+benchmarks/fe10_nafems_le1/compare.py:143: note: Use "-> None" if function does not return a value
+Found 26 errors in 7 files (checked 8 source files)
+CHECK pydocstyle exit 1
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D103: Missing docstring in public function
+[path removed]
+        D415: First line should end with a period, question mark, or exclamation point (not '>')
+[path removed]
+        D103: Missing docstring in public function
+CHECK structure exit 0
+repository structure OK: 18281 paths
+CHECK windows-paths exit 0
+FAILED: ['end_of_file_fixer', 'check_executables_have_shebangs', 'mypy', 'pydocstyle']

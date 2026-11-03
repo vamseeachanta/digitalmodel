@@ -11,6 +11,7 @@ Tests core functionality including:
 
 import pytest
 import numpy as np
+from dataclasses import replace
 from pathlib import Path
 
 from digitalmodel.mooring_analysis import (
@@ -359,6 +360,42 @@ class TestMooringDesigner:
             assert result.safety_factor > 0
             assert result.utilization > 0
             assert isinstance(result.passes, bool)
+
+    @pytest.mark.parametrize(
+        "entry_point, condition",
+        [
+            ("analyze_line_tension", ConditionType.INTACT),
+            ("analyze_intact_condition", ConditionType.INTACT),
+            ("analyze_damaged_condition", ConditionType.DAMAGED),
+            ("analyze_all_conditions", ConditionType.INTACT),
+            ("analyze_all_conditions", ConditionType.DAMAGED),
+            ("analyze_all_conditions", ConditionType.TRANSIENT),
+        ],
+    )
+    def test_buoyant_line_rejection_reaches_public_api(
+        self, simple_system, environment, entry_point, condition,
+    ):
+        """The synthetic 500 m buoyant line must never yield a passing design.
+
+        Pretension is 500 kN, vertical span 90 m, and horizontal separation
+        380 m. The unsupported touchdown model must raise through every entry
+        point, including a damaged case where the buoyant line survives.
+        """
+        buoyant_line = simple_system.lines[1]
+        buoyant_line.segments = [replace(POLYESTER_140MM, length=500.0)]
+        designer = MooringDesigner(simple_system)
+        load_case = DesignLoadCase(
+            name="buoyant_touchdown", condition=condition,
+            environment=environment, damaged_line_id="ML1",
+        )
+
+        with pytest.raises(ValueError, match="positive submerged weight"):
+            if entry_point == "analyze_line_tension":
+                designer.analyze_line_tension(buoyant_line, (0.0, 0.0, 0.0))
+            elif entry_point == "analyze_all_conditions":
+                designer.analyze_all_conditions([load_case])
+            else:
+                getattr(designer, entry_point)(load_case)
 
     def test_analyze_damaged_condition(self, simple_system, environment):
         """Test damaged condition analysis"""

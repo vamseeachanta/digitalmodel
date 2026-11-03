@@ -228,7 +228,7 @@
           opt (trans (list (cadr (assoc 11 ent))
                            (caddr (assoc 11 ent))
                            (cadddr (assoc 11 ent))) 
-                     (cdr(assoc -1 ent)) ; from ECS
+                     (cdr(assoc -1 ent)) ; from entity coordinate system
                      1)               ; to current UCS
     )
     (if (getvar "DIMCLRD")

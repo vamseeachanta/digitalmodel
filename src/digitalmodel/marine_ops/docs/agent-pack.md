@@ -5,7 +5,7 @@
 | Module / repository | `marine_ops` / `digitalmodel` |
 | Package path | `src/digitalmodel/marine_ops/` |
 | Scope | Direct Python files; sub-packages retain separate qualification |
-| Pack revision / status | 2 / DRAFT — unverified screening inputs |
+| Pack revision / status | 3 / DRAFT — unverified screening inputs |
 | Current code reference | Functions in the same Git revision as this pack |
 | Prior discovery code pin | `7aad603be1c6136106dbb2381ce5096b050654f8` |
 | Prior implementation-map pin | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
@@ -22,6 +22,12 @@ The catalogue is unverified screening input, not a standards-derived design
 allowable. The [calculation basis](envelope-basis.md) defines equations B1–B5 and
 table B6. Audit disposition: [2747](https://github.com/vamseeachanta/digitalmodel/issues/2747).
 
+## Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 3 | 2026-10-19 | Define operation selection and reject repeated keys before calculation to prevent silent replacement; retain other qualification gaps. |
+
 ## 2. Inputs and outputs
 
 `operation_envelope()` validates at calculation entry, including custom
@@ -31,6 +37,15 @@ Magnitude shape is frequency by heading; ambiguous square grids are rejected.
 Frequency units shall be rad/s; magnitude units shall be m/m for translations
 and deg/m for rotations; criterion units shall be m or deg respectively.
 Declared units survive `RAOSet.from_dict()` and are rejected rather than converted.
+
+`envelope_for_operations()` treats `operations=None` as the complete catalogue
+in catalogue order. An explicit empty list raises `ValueError`. Each supplied
+name or custom `Operation` is resolved before calculation; repeated resolved
+keys raise `ValueError`, including a catalogue name paired with a custom object
+using that key. Different criteria or basis text do not distinguish identical
+keys. Distinct keys retain the supplied order, including custom operations.
+Unknown names raise `KeyError` before any selected envelope is calculated.
+These are API selection rules from issue #2768, item S10, not physical criteria.
 
 Alpha shall be in `(0,1]`; limits, Tp, reference Hs and cap shall be finite and
 positive; gamma shall be finite and at least 1. `None` selects default Tp or
@@ -141,7 +156,7 @@ rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.0
 | S07 | Nonpositive zeroth moment becomes `0.0`, obscuring a negative variance as a nonresponding axis. [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288] | no detection check exists | Numerical validation gap; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
 | S08 | All plotting import exceptions become `None`; initialization errors and an absent optional dependency are indistinguishable. [src/digitalmodel/marine_ops/operation_envelope.py:L237-L243] | C5-2 covers successful plotting only; no detection check exists for the fallback | Observable fallback/status gap; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
 | S09 | Empty plot input leaves an empty metadata string and generates an empty figure. [src/digitalmodel/marine_ops/operation_envelope.py:L247-L260] | no detection check exists | Empty-result validity; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
-| S10 | `operations=[]` returns `{}`; repeated operation keys overwrite earlier results. [src/digitalmodel/marine_ops/operation_envelope.py:L220-L231] | C5-2 covers four distinct default keys only; no detection check exists for empty/duplicate keys | Explicit empty semantics and duplicate detection needed; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| S10 | `envelope_for_operations()` rejects empty selections and repeated resolved keys before spectral evaluation; distinct keys retain input order. | `tests/marine_ops/test_envelope_selection.py::test_empty_operations_rejected_before_calculation`; `test_repeated_operation_key_rejected_before_calculation`; `test_default_catalogue_order_and_forwarded_arguments`; `test_distinct_custom_keys_preserve_selection_order`; `test_selected_operations_keep_closed_form_limits` | Selection contract implemented; remaining qualification is tracked by #2768. |
 | S11 | External frequency, heading and magnitude arrays are cast to float without locale-aware parsing; malformed text raises and non-finite values are not rejected locally. [src/digitalmodel/marine_ops/operation_envelope.py:L269-L280] | no detection check exists | No thousands/decimal separator contract; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
 | S12 | Requested heading uses nearest absolute angular difference, without circular wrap or a maximum mismatch check. [src/digitalmodel/marine_ops/operation_envelope.py:L275-L280] | C2-3 covers an exact available heading only; no detection check exists for wrap/off-grid targets | Heading coverage limit; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
 | S13 | Frequencies outside the supplied RAO band use endpoint-clamped magnitude. [src/digitalmodel/marine_ops/operation_envelope.py:L273-L280] | no detection check exists | Extrapolation hidden by interpolation; [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
@@ -486,7 +501,7 @@ Required accountable discipline: engineering calculations quality manager; maint
 
 | Item | Evidence / unresolved limit | Issue |
 |---|---|---|
-| U1 / S01–S16: input semantics and negative-path coverage | Units, numeric validity, coverage and evaluated status are addressed by revision 1. Upstream conventions, empty mappings and plot fallbacks remain open. [src/digitalmodel/marine_ops/operation_envelope.py:L119-L288] | [2768](https://github.com/vamseeachanta/digitalmodel/issues/2768) |
+| U1 / S01–S16: input semantics and negative-path coverage | Units, numeric validity, coverage and evaluated status are addressed by revision 1. Revision 3 addresses operation selection (S10). Upstream conventions, empty plots, plot fallbacks and out-of-band response sensitivity remain open. `operation_envelope()`, `envelope_for_operations()` and `plot_envelopes()` remain screening APIs. | #2768 |
 | U2: standards provenance | The screening sidecar now exposes missing edition/clause/table qualification; standards provenance remains open. [src/digitalmodel/marine_ops/operation_envelope.py:L55-L112] [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L73] | [2769](https://github.com/vamseeachanta/digitalmodel/issues/2769) |
 | Method-map follow-up and public documentation locators | Additional method-family mapping and codenaming remain required; inventory alone is not qualification. [src/digitalmodel/marine_ops/operation_envelope.py:L145-L165] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L280] | [2770](https://github.com/vamseeachanta/digitalmodel/issues/2770) |
 | U3: frequency-dependent independent benchmark | The dedicated tests include synthetic constant gains and an analytical low-pass integral; an independent physical benchmark remains open. [tests/marine_ops/test_operation_envelope.py:L24-L56] [tests/marine_ops/test_operation_envelope.py:L73-L148] | [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771) |

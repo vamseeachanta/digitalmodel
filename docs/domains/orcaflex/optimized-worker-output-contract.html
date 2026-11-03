@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Optimized worker output contract</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 70em; margin: auto; padding: 2em; line-height: 1.5; color: #172b3a; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #adb8c0; padding: .6em; text-align: left; }
+    caption { caption-side: bottom; text-align: left; padding: .5em 0; }
+    pre { background: #edf2f5; padding: 1em; overflow-x: auto; }
+    code { font-family: ui-monospace, monospace; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Optimized worker output contract</h1>
+  <p>The optimized V2 worker refuses native execution when the interface is unavailable.
+  Regression artifacts require the boolean setting <code>mock_mode=True</code> and carry
+  separate status, directory, filename and content markers. A regression completion
+  does not establish that a native simulation has run.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>Initial</td><td>2026-10-22</td><td>Document the existing refusal and
+    explicit mock contract, with a reproducible example and output-preservation tests.</td></tr></tbody>
+    <caption>Table 1. Document revision history.</caption>
+  </table>
+
+  <section>
+    <h2>Scope and sources</h2>
+    <p>This contract applies to <code>process_single_file_worker</code> and
+    <code>OrcaFlexOptimizedParallelAnalysis</code> in
+    <a href="../../../src/digitalmodel/solvers/orcaflex/orcaflex_optimized_parallel_v2.py">the optimized V2 module</a>.
+    The refusal criterion comes from issue 2521 (2026). The marking convention comes from
+    <a href="../../../src/digitalmodel/solvers/orcaflex/core/mock_artifacts.py">core/mock_artifacts.py</a>.
+    The implementation is already present; this document and example do not change native execution.</p>
+    <p>The <a href="../../../tests/solvers/orcaflex/test_optimized_parallel_contract.py">contract tests</a>
+    state expected paths, marker text and independent hand counts. No engineering equations,
+    constants, coefficients or numerical acceptance limits are introduced.</p>
+  </section>
+
+  <section>
+    <h2>Configuration and interpretation</h2>
+    <table>
+      <thead><tr><th>Condition</th><th>Result</th><th>Reported outputs</th></tr></thead>
+      <tbody>
+        <tr><td>Interface unavailable; mock mode omitted or false</td><td><code>failed</code>,
+        <code>is_mock=False</code>, diagnostic error</td><td>Empty list, even when older native outputs exist</td></tr>
+        <tr><td><code>mock_mode=True</code>, with an existing input</td><td><code>mock_success</code>,
+        <code>is_mock=True</code></td><td>Only explicitly enabled regression artifacts</td></tr>
+        <tr><td>Mock mode supplied as a string, integer or null</td><td><code>failed</code>,
+        boolean-setting diagnostic</td><td>Empty list</td></tr>
+        <tr><td>Artifact write fails</td><td><code>failed</code>, diagnostic error</td>
+        <td>Only files saved before the failure; a partial file list is not completion</td></tr>
+      </tbody>
+      <caption>Table 2. Software outcomes required by issue 2521 and the existing worker contract.</caption>
+    </table>
+    <p><code>mock_mode</code> defaults to false and is checked as a boolean.
+    Explicit true bypasses native execution even when an interface is available.
+    <code>save_sim</code> defaults to true; <code>save_dat</code> defaults to false.
+    With both disabled, a mock request can complete with an empty output list.</p>
+    <p>For input <code>model.dat</code> and configured output directory <code>results</code>,
+    mock outputs are <code>results_mock/model.mock.sim</code> and, when enabled,
+    <code>results_mock/model_processed.mock.dat</code>. Their content starts with
+    <code>Mock simulation for model.dat</code>. Without an output directory setting,
+    a sibling of the input directory receives the <code>_mock</code> suffix.
+    The input and native output paths are preserved.</p>
+    <p>Batch <code>successful</code> counts only status <code>success</code>;
+    <code>mock_successful</code> counts only status <code>mock_success</code>;
+    <code>failed</code> counts failed or exceptional requests. Consumers that previously
+    treated mock results as native successes shall read the separate mock counter.</p>
+  </section>
+
+  <section>
+    <h2>Worked example: inputs, method and answer</h2>
+    <p>The <a href="../../../examples/orcaflex/optimized_worker_contract.py">executable example</a>
+    creates two synthetic files, <code>first.dat</code> and <code>second.dat</code>, each
+    containing <code>Synthetic regression input; not a native model.</code> and a newline.
+    They are test fixtures and contain no engineering inputs.</p>
+    <p>A new directory is supplied by the caller. Existing directories are refused to
+    preserve their contents. From the repository root, with dependencies installed and
+    a new directory selected outside the checkout, the example is run as follows:</p>
+    <pre><code>PYTHONPATH=src python examples/orcaflex/optimized_worker_contract.py "$EXAMPLE_DIR"</code></pre>
+    <p>Before importing the worker, the example blocks the native binding with an isolated
+    test double. A previously loaded native-enabled worker is refused. The first batch
+    omits mock opt-in. The second batch explicitly sets <code>mock_mode=True</code> and
+    enables both save types. Each batch uses one thread, selected only to bound demonstration
+    resources. Every reported regression file is read back and checked for its marker.</p>
+    <p>Independent hand count: the two requests without an interface give zero native
+    completions, zero mock completions and two failures. The two explicit mock requests
+    give zero native completions, two mock completions and zero failures. Two inputs
+    multiplied by two enabled output types give four marked artifacts. These counts follow
+    the issue's software contract; no physical result is calculated.</p>
+    <pre id="expected-answer">{
+  "refused": {"successful": 0, "mock_successful": 0, "failed": 2},
+  "regression": {"successful": 0, "mock_successful": 2, "failed": 0},
+  "artifacts": [
+    "results_mock/first.mock.sim",
+    "results_mock/first_processed.mock.dat",
+    "results_mock/second.mock.sim",
+    "results_mock/second_processed.mock.dat"
+  ]
+}</pre>
+    <p>The JSON payload is printed after <code>RESULT:</code>; timing and diagnostics
+    are omitted from the answer. Paths in the answer are relative to the example directory.</p>
+  </section>
+
+  <section>
+    <h2>Limits and next use</h2>
+    <p>Native simulation validity is not established by these fixtures. Mock artifacts
+    shall not be used as solver results. A native save returning without a file is rejected;
+    file existence alone does not establish freshness, convergence or numerical validity.
+    Native execution and process-pool startup require separate integration evidence.</p>
+    <p>The earlier optimized module without the V2 suffix is a separate implementation
+    and is outside this document's coverage. These tests do not establish equivalent
+    behavior for that implementation or other runner entry points.</p>
+  </section>
+</main>
+</body>
+</html>

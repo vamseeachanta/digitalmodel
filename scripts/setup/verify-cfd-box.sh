@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # verify-cfd-box.sh — confirm a provisioned box can run interFoam + MPI, then
-# (optionally) run the 3D scaling benchmark labelled for this host so it can be
-# compared head-to-head with ace-linux-2 (digitalmodel #1495).
+# (optionally) run the 3D scaling benchmark labelled by workstation capacity for
+# comparison with the shared-workstation reference (digitalmodel #1495).
 #
 # Run AFTER provisioning, with OpenFOAM sourced:
 #   source /usr/lib/openfoam/openfoam2312/etc/bashrc
@@ -91,15 +91,16 @@ fi
 (( FAIL )) && exit 1
 
 if [[ "${1:-}" == "--benchmark" ]]; then
-  echo "== full 3D scaling benchmark (labelled '$(hostname -s)') =="
-  echo "   (matches the a-l-2 case: cpb=60/216k cells, 0.30s window, core ladder)"
+  capacity="$("$PY" -c 'import os; cores = os.cpu_count(); print(f"{cores}-core-workstation" if cores else "workstation")')"
+  echo "== full 3D scaling benchmark (labelled by capacity) =="
+  echo "   (matches the reference case: cpb=60/216k cells, 0.30s window, core ladder)"
   ranks=$(nproc); ladder="1 2 4 8 16"; (( ranks >= 24 )) && ladder="$ladder 24"; (( ranks >= 32 )) && ladder="$ladder 32"
   $PY scripts/cfd/run_sloshing_3d_benchmark.py --work-dir "$WORK_DIR" \
-      --cpb 60 --end-time 0.30 --dt 0.001 --ranks $ladder --label "$(hostname -s)"
+      --cpb 60 --end-time 0.30 --dt 0.001 --ranks $ladder
   echo ""
-  echo "Compare vs a-l-2 baseline:"
+  echo "Compare vs shared-workstation reference:"
   echo "  $PY scripts/setup/compare-cfd-benchmark.py \\"
   echo "      docs/api/cfd/sloshing-3d-benchmark.json \\"
-  echo "      docs/api/cfd/sloshing-3d-benchmark-$(hostname -s).json"
+  echo "      docs/api/cfd/sloshing-3d-benchmark-${capacity}.json"
 fi
 echo "verify-cfd-box: OK"

@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """Atlas refresh / staleness contract (#799, epic #794)."""
 
 from __future__ import annotations
@@ -27,9 +30,29 @@ def test_parametric_workflow_ids_discovered():
 
 
 def test_committed_atlases_are_current():
-    for wid in ("mooring-fatigue", "api-rp-2rd-riser", "rao-tabulation"):
+    for wid in ("mooring-fatigue", "api-rp-2rd-riser", "rao-tabulation",
+                "synthetic-rope-mooring-fatigue"):
         status = refresh.refresh_status(wid)
         assert status["stale"] is False, f"{wid} unexpectedly stale: {status}"
+
+
+def test_committed_synthetic_rope_query_returns_screening_estimate(tmp_path):
+    """The shipped in-range query must use a current atlas without escalation."""
+    import yaml
+
+    row = refresh._row("synthetic-rope-atlas-query")
+    cfg = yaml.safe_load((refresh.REPO_ROOT / row["input"]).read_text())
+    cfg["parametric_query"]["output_dir"] = str(tmp_path)
+    result = router(cfg)["parametric_query"]["result"]
+    assert result["in_range"] is True
+    assert result.get("stale", False) is False
+    assert result["response"] == "fatigue_life_years"
+    assert result["value"] > 0.0
+    assert result["screening_status"] in {"pass", "fail"}
+    lo, hi = result["confidence"]["band"]
+    assert lo <= result["value"] <= hi
+    assert "screening estimate" in result["disclaimer"].lower()
+    assert result["provenance"]["atlas_id"]
 
 
 def test_fresh_build_is_not_stale(tmp_path):
@@ -377,3 +400,11 @@ def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     assert roots[0] != root
     assert not roots[0].exists()
     assert sorted(path.name for path in root.iterdir()) == ids
+
+
+def test_fatigue_atlases_track_the_deterministic_power_module():
+    """PR 3803 review round 3: allowable cycles and SD are computed through
+    fatigue._deterministic, so a change to it must mark both atlases stale."""
+    rel = "src/digitalmodel/fatigue/_deterministic.py"
+    for basename in ("mooring_fatigue", "riser_fatigue"):
+        assert rel in refresh.SOURCE_FILES[basename], basename

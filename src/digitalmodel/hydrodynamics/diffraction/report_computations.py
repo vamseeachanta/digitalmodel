@@ -64,8 +64,10 @@ def compute_stability(
     rho_g_v = rho * g * V
     result["gm_transverse"] = C[3][3] / rho_g_v if rho_g_v > 0 else None
     result["gm_longitudinal"] = C[4][4] / rho_g_v if rho_g_v > 0 else None
-    result["bm_transverse"] = hydrostatics.Lxx / V
-    result["bm_longitudinal"] = hydrostatics.Lyy / V
+    if hydrostatics.Lxx is not None:
+        result["bm_transverse"] = hydrostatics.Lxx / V
+    if hydrostatics.Lyy is not None:
+        result["bm_longitudinal"] = hydrostatics.Lyy / V
     result["kb"] = hydrostatics.centre_of_buoyancy[2]  # z-coordinate
 
     return result
@@ -84,7 +86,7 @@ def compute_radii_of_gyration(
     I = hydrostatics.inertia_matrix
     result: Dict[str, float] = {}
 
-    if M > 0:
+    if M > 0 and I is not None:
         for label, idx in [("r_xx", 3), ("r_yy", 4), ("r_zz", 5)]:
             val = I[idx][idx]
             result[label] = math.sqrt(val / M) if val > 0 else 0.0
@@ -113,6 +115,9 @@ def compute_natural_periods(
         "heave": None, "roll": None, "pitch": None,
         "yaw": None,
     }
+
+    if I is None:
+        return result
 
     # Only compute for DOFs with restoring stiffness
     for dof_name, dof_idx, key in [

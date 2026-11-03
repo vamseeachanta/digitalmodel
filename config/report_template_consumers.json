@@ -1,0 +1,83 @@
+{
+  "template": "examples/demos/gtm/report_template.py",
+  "template_sha256": "e8b91e404c36479fe7af5974952304ba73616186128bca03879643e97a3517b0",
+  "evidence_markers": [
+    "--clr-primary:",
+    ".report-header .case-badge",
+    ".report-footer"
+  ],
+  "classification_source": "scripts/generated_html_ownership.py:MANUAL_PAGES",
+  "freshness": "NOT_EVALUATED",
+  "consumers": [
+    {
+      "path": "docs/api/buckling/ship-panel-buckling.html",
+      "sha256": "8ecdcf0c02416ef00f9406738f416920d7e66e4ad0b2deeef8dce78876eb7687",
+      "page_classification": "manual"
+    },
+    {
+      "path": "docs/api/buckling/ship-plate-buckling.html",
+      "sha256": "6962a6a046391bc6e6467be618fe681e5a3e05af6bf2bd1cb65fbe3063752b01",
+      "page_classification": "manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_01_freespan_report.html",
+      "sha256": "adba8265285d9ef9cd030e777878d2922da0e6dccaf7d6fb0a6d0030fe5a2353",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_02_wall_thickness_report.html",
+      "sha256": "8396e8610f7a5ad1c8ec53d384d8fe7eed627ad9fbb83c192e6b424615e7d903",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_03_mudmat_installation_report.html",
+      "sha256": "10767201b509e9027754bfe04ee97d5a904a43dfbc0e90a0e5051e986093886c",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_04_shallow_pipelay_report.html",
+      "sha256": "35d5fe4dab6f500795cd26ad1d6e11d2f3abe60fcbdb9bb18054b026a71ea206",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_05_jumper_installation_report.html",
+      "sha256": "7bbcc9eae946234fd27fea548f0ab606d529ca560ccb8b74a939bccb142c34ab",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_06_marine_structure_cp_report.html",
+      "sha256": "dbd36272a06be4f1b3574705e3aa4dc5a80ce4bd30813352762fdb6447bec422",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_07_pipeline_cp_report.html",
+      "sha256": "3900c2f0a14ce64a7988aaa79a9e3f04ebbca1d59c5aa43d4a14084d8a75a52d",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_08_iccp_design_report.html",
+      "sha256": "db009b6765d78a1c2520a6cd5d20bcad88545abbc6914c320b89c8e9d49fe281",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_09_cp_retrofit_remaining_life_report.html",
+      "sha256": "0746a4063190b897abf1a3cbeac07d626718018df1cf5aef994028041878e431",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/gtm/output/demo_10_cad_plate_buckling_verification_report.html",
+      "sha256": "9dbbb329df8e455caf99f2690db635a086e5d6ce4e40791c1b16dd8cd6606fac",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/structural/output/ship_panel_buckling_report.html",
+      "sha256": "80fcc21b354dec320564dc04b467fe94cbea60e27e86bce2966d7ca70a4407ac",
+      "page_classification": "not_classified_as_manual"
+    },
+    {
+      "path": "examples/demos/structural/output/ship_plate_buckling_report.html",
+      "sha256": "b91839ef8da773743c8bcfa2217d64d98bf00ffa33c07d9924759ab51bbaa696",
+      "page_classification": "not_classified_as_manual"
+    }
+  ]
+}

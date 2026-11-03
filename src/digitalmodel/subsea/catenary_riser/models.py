@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: Data models for catenary riser analysis including simple catenary,
 lazy wave configurations, buoyancy modules, and results per DNV-OS-F201 and API RP 1111.
@@ -8,6 +11,24 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict
 from enum import Enum
 import numpy as np
+
+
+def _range(name, value, *, positive=False):
+    """Validate finite geometric/property inputs; bounds are definitions."""
+    if not np.isfinite(value) or (value <= 0 if positive else value < 0):
+        bound = "positive" if positive else "nonnegative"
+        raise ValueError(f"{name} must be finite and {bound}")
+
+
+def _coating(thickness, density, prefix="coating"):
+    if thickness is not None:
+        _range(f"{prefix}_thickness", thickness)
+    if density is not None:
+        _range(f"{prefix}_density", density)
+    if thickness and density is None:
+        raise ValueError(f"{prefix}_density is required with positive thickness")
+    if density and not thickness:
+        raise ValueError(f"{prefix}_thickness is required with positive density")
 
 
 class RiserType(Enum):
@@ -43,6 +64,16 @@ class MaterialProperties:
     yield_strength: Optional[float] = None  # MPa
     ultimate_strength: Optional[float] = None  # MPa
 
+    def __post_init__(self):
+        _range("youngs_modulus", self.youngs_modulus, positive=True)
+        _range("density", self.density, positive=True)
+        # Isotropic elastic stability: positive shear and bulk moduli.
+        if not np.isfinite(self.poissons_ratio) or not -1 < self.poissons_ratio < .5:
+            raise ValueError("poissons_ratio must satisfy -1 < nu < 0.5")
+        for name in ("yield_strength", "ultimate_strength"):
+            if getattr(self, name) is not None:
+                _range(name, getattr(self, name), positive=True)
+
 
 @dataclass
 class FluidProperties:
@@ -51,6 +82,12 @@ class FluidProperties:
     density: float  # kg/m³
     kinematic_viscosity: Optional[float] = None  # m²/s
     bulk_modulus: Optional[float] = None  # MPa
+
+    def __post_init__(self):
+        _range("density", self.density)
+        for name in ("kinematic_viscosity", "bulk_modulus"):
+            if getattr(self, name) is not None:
+                _range(name, getattr(self, name), positive=True)
 
 
 # Standard materials
@@ -125,6 +162,24 @@ class RiserConfiguration:
     water_depth: Optional[float] = None  # m
     horizontal_offset: Optional[float] = None  # m
 
+    # Compatibility input from engineering-basis.md E4, assumed rather than a
+    # site acceleration. Supply the acceleration appropriate to the calculation.
+    gravity: float = 9.81  # m/s²
+
+    def __post_init__(self):
+        for name in ("outer_diameter", "wall_thickness", "length", "gravity"):
+            _range(name, getattr(self, name), positive=True)
+        if 2 * self.wall_thickness >= self.outer_diameter:
+            raise ValueError("wall_thickness must be less than outer_diameter/2")
+        _coating(self.coating_thickness, self.coating_density)
+        for name in ("water_depth", "horizontal_offset", "top_tension_applied"):
+            if getattr(self, name) is not None:
+                _range(name, getattr(self, name), positive=True)
+        if self.top_angle is not None and (
+            not np.isfinite(self.top_angle) or not 0 < self.top_angle < 90
+        ):
+            raise ValueError("top_angle must be between 0 and 90 degrees from vertical")
+
     @property
     def inner_diameter(self) -> float:
         """Inner diameter of pipe (m)"""
@@ -156,7 +211,7 @@ class RiserConfiguration:
     @property
     def steel_weight_per_length(self) -> float:
         """Steel weight per unit length in air (N/m)"""
-        return self.pipe_cross_section * self.material.density * 9.81
+        return self.pipe_cross_section * self.material.density * self.gravity
 
     @property
     def coating_weight_per_length(self) -> float:
@@ -165,18 +220,18 @@ class RiserConfiguration:
             D_outer = self.outer_diameter
             D_coat = self.outer_diameter + 2 * self.coating_thickness
             A_coat = np.pi / 4 * (D_coat**2 - D_outer**2)
-            return A_coat * self.coating_density * 9.81
+            return A_coat * self.coating_density * self.gravity
         return 0.0
 
     @property
     def contents_weight_per_length(self) -> float:
         """Contents weight per unit length (N/m)"""
-        return self.internal_area * self.internal_fluid.density * 9.81
+        return self.internal_area * self.internal_fluid.density * self.gravity
 
     @property
     def buoyancy_per_length(self) -> float:
         """Buoyancy force per unit length (N/m)"""
-        return self.displaced_volume_per_length * self.external_fluid.density * 9.81
+        return self.displaced_volume_per_length * self.external_fluid.density * self.gravity
 
     @property
     def effective_weight_per_length(self) -> float:
@@ -214,8 +269,16 @@ class BuoyancyModule:
     outer_coating_thickness: Optional[float] = None  # m
     outer_coating_density: Optional[float] = None  # kg/m³
 
+    def __post_init__(self):
+        for name in ("length", "outer_diameter"):
+            _range(name, getattr(self, name), positive=True)
+        for name in ("buoyancy_material_density", "start_length"):
+            _range(name, getattr(self, name))
+        _coating(self.outer_coating_thickness, self.outer_coating_density, "outer_coating")
+
     def buoyancy_force_per_length(
         self, external_fluid: FluidProperties, riser_outer_diameter: float,
+        gravity: float = 9.81,
     ) -> float:
         """
         Net buoyancy force per unit length (N/m).
@@ -228,6 +291,8 @@ class BuoyancyModule:
         - Positive = downward force (module weight exceeds buoyancy)
         """
         # Governing annular Archimedes balance: engineering-basis.md E4.
+        # Default acceleration is the compatibility assumption documented there.
+        _range("gravity", gravity, positive=True)
         # The required inner diameter includes the riser coating; its displaced
         # area is already included in the bare riser effective weight.
         if not (np.isfinite(riser_outer_diameter) and
@@ -244,17 +309,17 @@ class BuoyancyModule:
 
         # Weight of buoyancy material
         V_buoy = np.pi / 4 * (self.outer_diameter**2 - riser_outer_diameter**2)
-        w_buoy = V_buoy * self.buoyancy_material_density * 9.81
+        w_buoy = V_buoy * self.buoyancy_material_density * gravity
 
         # Weight of outer coating
         if self.outer_coating_thickness and self.outer_coating_density:
             V_coat = np.pi / 4 * (D_outer**2 - self.outer_diameter**2)
-            w_coat = V_coat * self.outer_coating_density * 9.81
+            w_coat = V_coat * self.outer_coating_density * gravity
         else:
             w_coat = 0.0
 
         # Buoyancy force (upward)
-        w_displaced = V_displaced * external_fluid.density * 9.81
+        w_displaced = V_displaced * external_fluid.density * gravity
 
         # Net force: module weight minus buoyancy
         # Negative when buoyancy exceeds weight (upward force)
@@ -281,6 +346,23 @@ class LazyWaveConfiguration:
     min_touchdown_tension: Optional[float] = None  # N
     max_angle_at_hang_off: Optional[float] = None  # degrees from vertical
 
+    def __post_init__(self):
+        names = [m.name for m in self.buoyancy_modules]
+        if len(names) != len(set(names)):
+            raise ValueError("duplicate buoyancy module names")
+        if "bare_riser" in names:
+            raise ValueError("bare_riser is a reserved module name")
+        end = 0.0
+        for module in sorted(self.buoyancy_modules, key=lambda m: m.start_length):
+            if module.start_length < end:
+                raise ValueError("buoyancy module intervals overlap")
+            end = module.start_length + module.length
+            if end > self.riser.length:
+                raise ValueError("buoyancy module exceeds riser length")
+            coated = self.riser.outer_diameter + 2 * (self.riser.coating_thickness or 0)
+            if module.outer_diameter <= coated:
+                raise ValueError("module outer_diameter must exceed coated riser diameter")
+
     def total_buoyancy_length(self) -> float:
         """Total length of buoyancy modules (m)"""
         return sum(m.length for m in self.buoyancy_modules)
@@ -298,6 +380,7 @@ class LazyWaveConfiguration:
             buoy_force = module.buoyancy_force_per_length(
                 self.riser.external_fluid,
                 self.riser.outer_diameter + 2 * (self.riser.coating_thickness or 0.0),
+                gravity=self.riser.gravity,
             )
             # Net weight in buoyancy section
             section_weight = bare_weight + buoy_force  # buoy_force is negative (upward)

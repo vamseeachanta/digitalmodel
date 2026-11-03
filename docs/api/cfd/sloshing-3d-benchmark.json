@@ -2,7 +2,7 @@
   "meta": {
     "generated_by": "scripts/cfd/run_sloshing_3d_benchmark.py",
     "solver": "interFoam (VOF), OpenFOAM ESI v2312, Open MPI 4.1.6",
-    "box": "a-l-2 / dev-secondary (32 cores)",
+    "box": "32-core workstation",
     "epic": "#1429",
     "issue": "#1433",
     "purpose": "MPI strong-scaling of a representative 3D forced-roll sloshing case to size the 3D L-tank run (this box vs a heavier node)",
@@ -121,7 +121,7 @@
   "contention": {
     "box_load_during_run": "~7 (shared box) for this 216k sweep",
     "followup_512k_run": "a cpb=80/512k sweep launched next was INVALIDATED \u2014 box load spiked to ~24 (an npm install + other work saturated the cores); np=16 came out slower than np=8, a pure contention artifact, so clean high-core scaling could not be measured on this shared box right now",
-    "implication": "the binding constraint on a-l-2 is not the interFoam scaling (0.93 efficiency at 4 cores is excellent) but that the box is heavily SHARED; sustained high-core CFD contends with other work and wall-clock is unpredictable during busy periods"
+    "implication": "the binding constraint on the shared 32-core workstation is not the interFoam scaling (0.93 efficiency at 4 cores is excellent) but that the box is heavily SHARED; sustained high-core CFD contends with other work and wall-clock is unpredictable during busy periods"
   },
   "production_projection": {
     "basis": "216k-cell case, s_per_step measured here; a real 3D case is ~6-12 drive cycles ~ 1000-2500 steps (adaptive dt)",
@@ -133,12 +133,12 @@
       17.6,
       44.1
     ],
-    "note": "finer production meshes (500k-1M cells) cost ~2-5x more per step but scale to more cores; on a-l-2 the shared-load ceiling matters more than the core count"
+    "note": "finer production meshes (500k-1M cells) cost ~2-5x more per step but scale to more cores; on the shared 32-core workstation the shared-load ceiling matters more than the core count"
   },
   "machine_verdict": {
     "solver_scaling": "interFoam scales well intrinsically \u2014 0.93 parallel efficiency at 4 cores, ~0.6 at 8 (216k cells); the knee is a cells/rank limit (efficiency craters below ~27k cells/rank)",
     "adequate_for": "single 3D cases + small methodology sweeps at ~4-8 cores, ideally in a quiet window (~15-40 min per 216k-cell case)",
-    "wait_for_heavier_node": "only for a LARGE production sweep needing predictable high-throughput wall-clock \u2014 a-l-2's shared load (not core count) is then the binding constraint; a dedicated/less-contended node or scheduled quiet-window runs would fix it. GPU boxes do NOT help (interFoam is CPU/MPI-bound)",
+    "wait_for_heavier_node": "only for a LARGE production sweep needing predictable high-throughput wall-clock \u2014 the shared 32-core workstation's shared load (not core count) is then the binding constraint; a dedicated/less-contended node or scheduled quiet-window runs would fix it. GPU boxes do NOT help (interFoam is CPU/MPI-bound)",
     "real_gate": "still the geometry (#640 real B_db/D_db), not compute \u2014 a 3D run without it is methodology-only regardless of machine"
   }
 }

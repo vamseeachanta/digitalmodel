@@ -8,6 +8,12 @@
 <h1>Criterion summary coverage contract</h1>
 <p><code>postprocess.evaluate.summarise</code> reports supplied final checks and their coverage.
 It changes no criterion, limit, factor or acceptance value and does not establish design acceptance.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>Initial</td><td>2026-10-12</td><td>Defined explicit coverage so passing observations cannot hide absent final results.</td></tr>
+<tr><td>Worked example</td><td>2026-10-22</td><td>Added hand-counted inputs and answers, with seeded integration regressions to check caller reconciliation.</td></tr>
+</table>
 <h2>Inputs and reconciliation</h2>
 <p>The positional iterable of <code>(case_id, CaseCheck)</code> is retained. Two optional keyword arguments
 make coverage explicit: <code>expected_cases</code> maps criterion ID to sensitivity group to applicable
@@ -39,6 +45,55 @@ Groups may overlap; row counts use their union, so a case is counted once per cr
 <p>SCREENING checks count as recorded coverage but never yield PASS by themselves. Empty selections are
 NOT_EVALUATED; a completely undeclared empty input returns an empty dictionary. A failed solve is a coverage
 gap, not an engineering FAIL. A supplied stale PASS cannot overcome a failed final ledger outcome.</p>
+<h2>Worked example: passing observations with a missing sensitivity result</h2>
+<p>All inputs are synthetic final observations. Criterion <code>criterion</code> applies to logical case
+<code>A</code> in the base group and logical case <code>B</code> in the sensitivity group.
+The manifest declares both cases; the final ledger has an <code>ok</code> result for A and no entry for B.
+Only A has a supplied PASS check. No engineering limit or demand calculation is needed for this example.</p>
+<p>The method is set membership under <code>summarise</code>'s contract:
+expected = {A, B}; recorded checks = {A}; final ok results = {A};
+missing = expected minus (recorded checks intersect final ok results) = {B}.
+The hand count is two expected minus one complete case, leaving one missing case.
+After a successful retry supplies both the final <code>ok</code> outcome and B's PASS check,
+the missing set is empty: two expected minus two complete cases leaves zero missing cases.</p>
+<pre id="worked-example"><code>from digitalmodel.drilling_riser.postprocess.evaluate import CaseCheck, summarise
+
+expected = {"criterion": {"base": ["A"], "sensitivity": ["B"]}}
+checks = [("A", CaseCheck("criterion", "PASS", "synthetic final observation"))]
+outcomes = {"A": "ok"}  # B is declared but has no final ledger entry.
+incomplete = summarise(
+    checks, expected_cases=expected, ledger_outcomes=outcomes
+)["criterion"]
+
+retry_checks = checks + [("B", CaseCheck("criterion", "PASS", "synthetic retry"))]
+retry_outcomes = {**outcomes, "B": "ok"}
+complete = summarise(
+    retry_checks, expected_cases=expected, ledger_outcomes=retry_outcomes
+)["criterion"]
+</code></pre>
+<table>
+<tr><th>Answer</th><th>Before retry</th><th>After retry</th></tr>
+<tr><td>observed_status</td><td>PASS</td><td>PASS</td></tr>
+<tr><td>coverage_complete</td><td>false</td><td>true</td></tr>
+<tr><td>missing_cases / missing_count</td><td>[B] / 1</td><td>[] / 0</td></tr>
+<tr><td>status</td><td>NOT_EVALUATED</td><td>PASS</td></tr>
+<tr><td>base / sensitivity status</td><td>PASS / NOT_EVALUATED</td><td>PASS / PASS</td></tr>
+</table>
+<p>A failed final solve for B has the same coverage consequence as the absent entry, while
+<code>final_outcomes</code> retains the failure cause. An unsupported criterion instead has an
+<code>ok</code> final result but a NOT_EVALUATED check; it appears in <code>unevaluated_cases</code>.
+Neither condition creates an engineering FAIL. An observed engineering FAIL remains FAIL even when another
+case is missing, so the next step is to resolve coverage gaps and retain the engineering finding.</p>
+<p>For seeded results, keep the expected logical cases and each case's seed IDs from the manifest declarations.
+Collect final attempts, verify their result digests, and pass the exact declared seed IDs to
+<code>evaluate_case</code>. A missing or failed seed leaves the logical case unevaluated and its logical
+outcome other than <code>ok</code>. Count missing logical cases, not missing seeds: losing one or both seeds
+of B still leaves one missing logical case. A later successful retry must restore the seed result as well
+as its final outcome before coverage can become complete.</p>
+<p>The snippet is executed by <code>test_documented_worked_example_executes</code>.
+The filesystem-backed tests in <code>tests/drilling_riser/postprocess/test_summary_seeded_collection.py</code>
+exercise collection, digest readback, exact seed evaluation and summary construction. Their setting-ratio
+fixtures use arbitrary synthetic inputs and do not qualify a seed sample size or an extreme-value estimator.</p>
 <h2>Compatibility and sources</h2>
 <p>Existing callers in <code>test_evaluate.py</code> and <code>test_w510_significant_range.py</code> keep
 the positional interface; <code>postprocess/__init__.py</code> still exports the function. A formerly passing

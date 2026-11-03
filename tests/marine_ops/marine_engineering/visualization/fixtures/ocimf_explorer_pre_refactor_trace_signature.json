@@ -3,6 +3,7 @@
   "captured_at": "2026-05-20",
   "build_script_path": "scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py",
   "build_script_function": "make_polar_overlay",
+  "build_script_blob_sha": "08e84f7083ca298b914dc5396d3f182f10a1f44e",
   "polar_call_sites": [
     {
       "figure_key": "A10",
@@ -99,5 +100,5 @@
       ]
     }
   },
-  "note": "Captured BEFORE any refactor of build_coefficient_explorer.py. The source_commit_sha must predate any refactor commit; regression test #13 enforces this via git log assertion."
+  "note": "Captured BEFORE any refactor of build_coefficient_explorer.py. The build_script_blob_sha is the Git blob resolved from source_commit_sha:build_script_path; the provenance test checks those exact historical source bytes and the declared function, independently of HEAD ancestry."
 }

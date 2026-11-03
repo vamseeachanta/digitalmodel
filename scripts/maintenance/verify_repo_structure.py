@@ -15,7 +15,7 @@ import datetime
 import fnmatch
 import re
 import subprocess
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import yaml
 
@@ -27,6 +27,40 @@ except ModuleNotFoundError:
 FIELDS = ("maintainer", "reason", "category", "reviewed_on",
           "follow_up_issue_or_permanent_justification")
 PLACEHOLDER = re.compile(r"\b(todo|tbd|placeholder)\b", re.I)
+EMPTY_METADATA = {"pending", "unknown", "unassigned", "none", "n/a", "not applicable"}
+
+
+class StructureSafeLoader(yaml.SafeLoader):
+    """Reject duplicate mapping keys before a later value can replace a rule."""
+
+
+def unique_mapping(loader, node):
+    """Check nested mappings as well as the contract's top-level keys."""
+    loader.flatten_mapping(node)
+    keys = set()
+    for key_node, _ in node.value:
+        key = loader.construct_object(key_node)
+        try:
+            if key in keys:
+                raise ValueError("duplicate key")
+            keys.add(key)
+        except (TypeError, ValueError) as error:
+            raise yaml.constructor.ConstructorError(
+                None, None, "invalid or duplicate contract key", key_node.start_mark
+            ) from error
+    return loader.construct_mapping(node)
+
+
+StructureSafeLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping
+)
+
+
+def substantive_metadata(value):
+    """Require content rather than missing values, punctuation or placeholders."""
+    return (isinstance(value, str) and any(c.isalnum() for c in value)
+            and not PLACEHOLDER.search(value)
+            and value.strip().casefold() not in EMPTY_METADATA)
 
 
 def matches(path, pattern):
@@ -37,14 +71,16 @@ def matches(path, pattern):
 
 def valid_path(path):
     """Accept repository-relative normalized POSIX paths only."""
-    return (isinstance(path, str) and bool(path) and not path.startswith("/")
-            and "\\" not in path and ".." not in path.split("/")
-            and "." not in path.split("/") and "//" not in path)
+    return (isinstance(path, str) and bool(path) and not PureWindowsPath(path).drive
+            and "\\" not in path and not any(c in path for c in "\x00\n\r\t")
+            and all(part not in {"", ".", ".."} for part in path.split("/")))
 
 
 def validate_config(config):
     """Reject malformed rules and incomplete or placeholder exceptions."""
-    if not isinstance(config, dict) or config.get("version") != 1:
+    # Schema version is defined by the approved plan's draft contract (2026-05-07).
+    if (not isinstance(config, dict) or type(config.get("version")) is not int
+            or config["version"] != 1):
         return ["config: schema-version"]
     errors = []
     for field in ("allowed_tracked_notebooks", "generated_patterns", "ci_artifact_patterns",
@@ -69,7 +105,9 @@ def validate_config(config):
                   "forbidden_patterns"):
         if any(not valid_path(value) for value in config[field]):
             errors.append(f"config: {field}-path")
-    if set(config["required_metadata_for_exceptions"]) != set(FIELDS):
+    metadata = config["required_metadata_for_exceptions"]
+    if (not all(isinstance(value, str) for value in metadata)
+            or len(metadata) != len(FIELDS) or set(metadata) != set(FIELDS)):
         errors.append("config: exception-required-fields")
     for number, row in enumerate(config["durable_exceptions"], 1):
         label = f"exception[{number}]"
@@ -80,8 +118,7 @@ def validate_config(config):
             errors.append(f"{label}: pattern")
         for field in FIELDS:
             value = row.get(field)
-            if (not isinstance(value, str) or not value.strip() or PLACEHOLDER.search(value)
-                    or value.strip().casefold() in {"pending", "unknown", "unassigned"}):
+            if not substantive_metadata(value):
                 errors.append(f"{label}: {field}")
         try:
             datetime.date.fromisoformat(row.get("reviewed_on", ""))
@@ -95,7 +132,10 @@ def validate_config(config):
             ):
                 errors.append(f"{label}: concrete-follow-up")
         elif category == "permanent_durable_generated_evidence":
-            if not isinstance(follow, str) or not follow.startswith("permanent: ") or len(follow) < 40:
+            # Existing contract: docs/standards/repo-structure.md, exception schema.
+            if (not isinstance(follow, str) or not follow.startswith("permanent: ")
+                    or len(follow.strip()) < 40
+                    or not substantive_metadata(follow.removeprefix("permanent: "))):
                 errors.append(f"{label}: permanent-justification")
         else:
             errors.append(f"{label}: category")
@@ -145,7 +185,7 @@ def main():
     args = parser.parse_args()
     config_path = args.config or args.repo / "config/repo_structure.yml"
     try:
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+        config = yaml.load(config_path.read_text(encoding="utf-8"), Loader=StructureSafeLoader)
         paths = git_paths(args.repo)
         errors = check_paths(paths, config)
         if not validate_config(config):

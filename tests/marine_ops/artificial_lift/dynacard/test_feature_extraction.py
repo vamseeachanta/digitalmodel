@@ -193,10 +193,10 @@ def _make_mock_analysis_results(card: CardData):
     return AnalysisResults(
         downhole_card=card,
         fillage=PumpFillageAnalysis(fillage=0.85),
-        ideal_card=IdealCardAnalysis(shape_similarity=0.92),
+        ideal_card=IdealCardAnalysis(shape_similarity=0.92, legacy_shape_feature=0.92),
         card_geometry=CardGeometryAnalysis(
             area=500000.0,
-            perimeter=30000.0,
+            legacy_perimeter_feature=30000.0,
             position_range=100.0,
             load_range=8000.0,
             zone_area_fractions=[0.25, 0.25, 0.25, 0.25],

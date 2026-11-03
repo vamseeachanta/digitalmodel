@@ -1,0 +1,9 @@
+# program: MYSTRAN 19.0.0
+# mesh: patch
+# recovery: centroid; arithmetic mean of two fibre stresses; global axes
+eid,sigma_xx_MPa,sigma_yy_MPa,tau_xy_MPa
+1,299.999991,300.000009,80.7692441
+2,299.99975,300.00025,80.7692323
+3,300.000347,299.999653,80.7691577
+4,299.999696,300.000304,80.7691582
+5,299.999965,300.000035,80.7692297

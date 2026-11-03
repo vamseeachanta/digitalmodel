@@ -149,7 +149,16 @@ def _read_profile(run_dir, receipt, override):
     raw = request.read_bytes()
     if hashlib.sha256(raw).hexdigest() != receipt.get('request_sha256'):
         raise ValueError('Request identity mismatch')
-    embedded = yaml.safe_load(raw).get('extraction', {}).get('supplemental_profile')
+    try:
+        document = yaml.safe_load(raw)
+    except yaml.YAMLError as error:
+        raise ValueError(f'Invalid request YAML: {error}') from error
+    if not isinstance(document, dict):
+        raise ValueError('Request root must be a mapping')
+    extraction = document.get('extraction', {})
+    if not isinstance(extraction, dict):
+        raise ValueError('Request extraction must be a mapping')
+    embedded = extraction.get('supplemental_profile')
     if override is not None and embedded is not None and override != embedded:
         raise ValueError('Supplemental profile override conflicts with embedded profile')
     profile = embedded if override is None else override

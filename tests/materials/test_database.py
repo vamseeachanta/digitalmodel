@@ -86,9 +86,21 @@ def test_provenance_pins_the_repository_source(database):
         assert provenance.original_source_terms == "not re-verified in this job"
 
 
-def test_source_revision_is_unassigned_until_merge(database):
-    assert all(record.provenance.repository_revision is None
+def test_source_revision_is_assigned_and_reachable_from_main(database):
+    """Issue #2778: the merged source revision must be a main ancestor.
+
+    Expected identity is the merge commit recorded for PR #2741, independently
+    inspected with Git; the separate digest test checks its source bytes.
+    """
+    revision = "b4c10284fa7d28398e6fa02c262c219c0fec8fef"
+    assert all(record.provenance.repository_revision == revision
                for record in database.values())
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", revision, "origin/main"],
+        cwd=Path(__file__).resolve().parents[2],
+        check=True,
+        capture_output=True,
+    )
 
 
 def test_digest_only_provenance_needs_no_git_history(monkeypatch):
@@ -186,6 +198,8 @@ def test_shipped_docs_match_source_provenance(database, path):
         assert "https://github.com/vamseeachanta/digitalmodel/issues/2778" in document
     else:
         assert provenance.repository_revision in document
+        assert "digest-only" not in document
+        assert "assigned after merge" not in document
 
 
 def test_edition_metadata_is_not_inferred(database):
@@ -345,3 +359,47 @@ def test_key_lookup_does_not_reenter_grade_reconciliation(database, monkeypatch)
     monkeypatch.setattr(grades, "get", forbidden)
     monkeypatch.setattr(grades, "all_grades", forbidden)
     assert database[record.key] is record
+
+
+def test_pack_line_citations_resolve_at_assigned_revision(database):
+    """Issue #2778: every locator must name a nonempty range in pinned history.
+
+    Expected bounds come from Git's source text, independently of the loader.
+    This checks resolution; engineering meaning still requires document review.
+    """
+    root = Path(__file__).resolve().parents[2]
+    pack = (root / "src/digitalmodel/materials/docs/agent-pack.md").read_text(
+        encoding="utf-8"
+    )
+    revision = database.lookup("X52").provenance.repository_revision
+    assert revision is not None
+    citations = re.findall(r"\[([^\]\s]+):L(\d+)-L(\d+)\]", pack)
+    assert citations, "the pack must retain its source locators"
+    sources = {}
+    for path, first, last in citations:
+        if path not in sources:
+            sources[path] = subprocess.run(
+                ["git", "show", f"{revision}:{path}"],
+                cwd=root, check=True, capture_output=True,
+            ).stdout.decode("utf-8").splitlines()
+        # One-based, inclusive source locators, as specified in the pack header.
+        assert 1 <= int(first) <= int(last) <= len(sources[path]), path
+        assert any(line.strip() for line in sources[path][int(first) - 1:int(last)])
+
+
+def test_materials_ci_checkout_includes_pinned_history():
+    """Issue #2778: the existing materials domain gate needs complete history."""
+    import yaml
+
+    root = Path(__file__).resolve().parents[2]
+    workflow = yaml.safe_load(
+        (root / ".github/workflows/quality-gates-by-domain.yml").read_text(
+            encoding="utf-8"
+        )
+    )
+    steps = workflow["jobs"]["domain-tests"]["steps"]
+    checkout, = (step for step in steps
+                 if step.get("uses", "").startswith("actions/checkout@"))
+    # The existing domain workflow uses zero to retain history for citations;
+    # this is a workflow contract, not an engineering limit.
+    assert checkout["with"]["fetch-depth"] == 0

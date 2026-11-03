@@ -56,6 +56,8 @@ _SUPPORTED_TYPES = {"GML", "LML"}
 # Folias factor breakpoints per API 579 Table 4.4 simplified cylindrical column
 _LAMBDA_LOWER = 0.354
 _LAMBDA_UPPER = 20.0
+# Existing flaw-identification heuristic; not a code acceptance criterion.
+_FLAW_THRESHOLD_RATIO = 0.9
 
 
 class Level2Engine:
@@ -119,6 +121,36 @@ class Level2Engine:
             return self._evaluate_gml(grid_df)
         return self._evaluate_lml(grid_df)
 
+    def local_loss_projection_domain(self, grid_df: pd.DataFrame):
+        """Lambda-range wall interval when only current minima decrease.
+
+        Geometry is checked without evaluating an unsupported strength result.
+        The existing Table 4.4 cap and Rt=1 exception govern this interval;
+        remaining-thickness ratio and minimum-wall limits are not checked.
+        Zero is a mathematical endpoint, not a qualified perforated wall.
+        ``None`` means the current geometry is outside that lambda range.
+        """
+        values = grid_df.to_numpy(dtype=float)
+        present = values[~np.isnan(values)]
+        dimensions = (self._od, self._nominal_wt, self._t_min)
+        if (self._type != "LML" or not present.size
+                or not np.isfinite(present).all() or (present <= 0).any()
+                or not all(math.isfinite(v) and v > 0 for v in dimensions)
+                or self._od <= 2 * self._t_min):
+            raise ValueError("Local-loss projection requires positive finite geometry")
+        upper = float(present.min())
+        projected = grid_df.copy()
+        projected[grid_df == upper] = 0.0  # Geometry only; no strength calculation.
+        _, projected_lam, _ = self._lml_geometry(projected)
+        if projected_lam <= _LAMBDA_UPPER:
+            return 0.0, upper
+        lower = self._t_min  # Rt=1 remains supported by the existing engine.
+        _, current_lam, _ = self._lml_geometry(grid_df)
+        threshold = self._nominal_wt * _FLAW_THRESHOLD_RATIO
+        if current_lam <= _LAMBDA_UPPER and upper >= threshold:
+            lower = min(lower, threshold)
+        return (lower, upper) if lower <= upper else None
+
     # ------------------------------------------------------------------
     # GML assessment (Part 4 Level 2)
     # ------------------------------------------------------------------
@@ -169,22 +201,7 @@ class Level2Engine:
         # t_c: future thickness outside the flaw = t_min (conservative)
         t_c = self._t_min
 
-        # Flaw characterisation: bounding box of cells below threshold
-        threshold = self._nominal_wt * 0.9
-        flaw_mask = grid_df < threshold
-
-        # Longitudinal flaw extent in grid rows (integer count)
-        flaw_rows = flaw_mask.any(axis=1)
-        flaw_row_count = int(flaw_rows.sum())
-
-        # Row spacing: derive from index if numeric; default to 1.0 (unit index)
-        row_spacing = self._infer_spacing(grid_df.index)
-        l_a = max(flaw_row_count * row_spacing, row_spacing)
-
-        # Folias factor
-        nominal_id = self._od - 2.0 * t_c
-        lam = self._shell_parameter(l_a, nominal_id, t_c)
-        mt = self._folias_factor(l_a, nominal_id, t_c)
+        l_a, lam, mt = self._lml_geometry(grid_df)
 
         # Thickness ratio Rt = t_mm / t_c
         rt = t_mm / t_c if t_c > 0 else 1.0
@@ -225,6 +242,16 @@ class Level2Engine:
             "lambda": lam,
             "applicability": applicability,
         }
+
+    def _lml_geometry(self, grid_df: pd.DataFrame):
+        """Shared geometry for assessment and projection-domain qualification."""
+        flaw_mask = grid_df < self._nominal_wt * _FLAW_THRESHOLD_RATIO
+        flaw_row_count = int(flaw_mask.any(axis=1).sum())
+        spacing = self._infer_spacing(grid_df.index)
+        length = max(flaw_row_count * spacing, spacing)
+        nominal_id = self._od - 2.0 * self._t_min
+        return (length, self._shell_parameter(length, nominal_id, self._t_min),
+                self._folias_factor(length, nominal_id, self._t_min))
 
     # ------------------------------------------------------------------
     # Static helpers

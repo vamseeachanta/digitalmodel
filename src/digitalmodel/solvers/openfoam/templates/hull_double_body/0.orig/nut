@@ -36,7 +36,7 @@ boundaryField
 
     hull
     {
-        type            nutkWallFunction;
+        type            @NUTWALLFUNCTION@;
         value           $internalField;
     }
 }

@@ -2,7 +2,8 @@
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Local variant of the primary lane's stage4 gate (fetched 2026-09-04): the same
 # gates, run ON the solve host without ssh.  usage: stage4_gate_local.sh <case>
-# Gate 1 mass balance |drift| <= 0.5 %; Gate 2 settling: two 400-iteration windows of
+# Gate 1 maximum water-content drift against an explicit caller limit;
+# Gate 2 settling: two 400-iteration windows of
 # forces_hull: POWER GATE = total force within 1 % between two 400-it windows and pressure wobble
 # < 2 % of the total (decision 2026-09-06; the 0.2 % per-component gate is reported for information);
 # plausibility 0.6 < Cf/ITTC < 1.3.
@@ -17,19 +18,16 @@ echo "=== $CASE on $(hostname -s) $(date -u +%FT%TZ) ==="
 fail=0
 
 # ---- gate 1: mass balance ---------------------------------------------------
-FIRST=$(grep -a -m1 '^Phase-1 volume fraction' log.interFoam 2>/dev/null | awk '{print $5}')
-LAST=$(grep -a '^Phase-1 volume fraction' log.interFoam 2>/dev/null | tail -1 | awk '{print $5}')
-NIT=$(grep -ac '^Time = ' log.interFoam 2>/dev/null)
-if [ -z "$FIRST" ] || [ -z "$LAST" ]; then
-  echo "  MASS BALANCE        : FAIL (no Phase-1 volume fraction line in log.interFoam)"; fail=1
-else
-  awk -v a="$FIRST" -v b="$LAST" -v n="$NIT" 'BEGIN{
-    d=100*(b-a)/a; ok=(d<0.5 && d>-0.5)
-    printf "  Phase-1 fraction    : first %.6f  last %.6f  over %d iterations\n", a, b, n
-    printf "  mass drift          : %+.4f %%   (gate 0.5 %%)\n", d
-    printf "  MASS BALANCE        : %s\n", ok?"PASS":"FAIL"
-    exit !ok }' || fail=1
+# OpenFOAM v2312 (2023), VoF/alphaEqn.H lines 124–128 prints the
+# volume-weighted phase fraction. The helper documents the fixed-volume basis.
+mass_args=()
+if [ "${DM_CFD_FIXED_DOMAIN:-}" = true ]; then
+  mass_args+=(--fixed-domain)
 fi
+if [ -n "${DM_CFD_MASS_DRIFT_RTOL:-}" ]; then
+  mass_args+=(--max-relative-drift="$DM_CFD_MASS_DRIFT_RTOL")
+fi
+python3 "$SCRIPT_DIR/domain_mass_balance.py" log.interFoam "${mass_args[@]}" || fail=1
 BEACH=$(grep -ac '^beachDamping:' log.interFoam 2>/dev/null)
 echo "  beach report lines  : ${BEACH:-0}  $(grep -a -m1 '^beachDamping:' log.interFoam 2>/dev/null | cut -c1-70)"
 

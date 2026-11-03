@@ -46,7 +46,7 @@ class TestTodoBasicStructure:
 
     def test_has_auth_handler(self):
         src = _read_source("digitaltwinfeed/todobasic/todobasic.py")
-        assert "auth.get_password" in src or "get_password" in src
+        assert "@auth.verify_password" in src
 
     def test_has_error_handler(self):
         src = _read_source("digitaltwinfeed/todobasic/todobasic.py")

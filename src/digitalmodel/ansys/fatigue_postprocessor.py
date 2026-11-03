@@ -1,5 +1,5 @@
 # ABOUTME: Post-process ANSYS stress results for fatigue damage assessment
-# ABOUTME: S-N curve evaluation, stress range extraction, cumulative damage (Miner)
+# ABOUTME: S-N evaluation, equivalent-stress scalar differences, Miner damage
 
 """
 Fatigue Postprocessor
@@ -22,6 +22,13 @@ Supported S-N curves:
     - DNV-RP-C203 curves: B1, B2, C, C1, D, E, F, F1, F3, W1, W3
     - Custom user-defined curves
 
+The built-in table contains air curves only; environment is metadata and
+changing its label does not select another environment's curve parameters.
+Positive ranges are extrapolated below the stored threshold without a cut-off.
+
+A capability inventory and executable worked example are provided in
+``docs/domains/ansys/fatigue-postprocessor.md``.
+
 All functions return APDL command text or computed fatigue results.
 No ANSYS installation required.
 """
@@ -30,9 +37,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Optional
 
-import numpy as np
 import pandas as pd
 
 
@@ -300,7 +305,7 @@ class FatiguePostprocessor:
         component_name : str
             Node component name for stress extraction.
         load_step_pairs : list[tuple[int, int]]
-            Pairs of (load_step_max, load_step_min) for stress range.
+            Pairs of (load_step_max, load_step_min) for signed scalar differences.
 
         Returns
         -------
@@ -312,7 +317,7 @@ class FatiguePostprocessor:
 
         lines = [
             "/POST1",
-            f"! --- Fatigue Stress Range Extraction ---",
+            "! --- Signed Equivalent-Stress Differences ---",
             f"! Component: {component_name}",
             "! LIMITATION: not the von Mises of the stress difference.",
             "! Subtract stress components before forming equivalent stress.",
@@ -325,7 +330,7 @@ class FatiguePostprocessor:
         for idx, (ls_max, ls_min) in enumerate(load_step_pairs):
             label = f"SR_{idx + 1}"
             lines.extend([
-                f"! Stress range {idx + 1}: LS{ls_max} - LS{ls_min}",
+                f"! Signed scalar difference {idx + 1}: LS{ls_max} - LS{ls_min}",
                 f"SET,{ls_max}",
                 f"CMSEL,S,{component_name}",
                 f"ETABLE,SEQV_MAX_{idx},S,EQV",
@@ -334,7 +339,7 @@ class FatiguePostprocessor:
                 f"CMSEL,S,{component_name}",
                 f"ETABLE,SEQV_MIN_{idx},S,EQV",
                 "",
-                f"! Calculate stress range",
+                "! Subtract equivalent-stress scalars",
                 f"SADD,{label},SEQV_MAX_{idx},SEQV_MIN_{idx},1,-1",
                 f"PRETAB,{label}",
                 "",
@@ -346,6 +351,10 @@ class FatiguePostprocessor:
 
     def generate_sn_curve_apdl(self, sn_curve: SNcurve) -> str:
         """Generate APDL parameter definitions for an S-N curve.
+
+        These commands define parameters only; they do not evaluate life or
+        implement a threshold cut-off. The Python evaluator extrapolates for
+        positive ranges and ignores the threshold and environment metadata.
 
         Returns
         -------
@@ -361,6 +370,10 @@ class FatiguePostprocessor:
             f"*SET,N_TRANS,{sn_curve.N_transition:.1E}",
             f"*SET,S_THRESH,{sn_curve.threshold_mpa}",
             "",
+            "! Parameter definitions only; no fatigue evaluation is performed.",
+            "! S_THRESH is metadata; the Python evaluator applies no cut-off.",
+            "! Positive stress ranges use finite S-N extrapolation in Python.",
+            "! Environment is metadata only; it does not select curve values.",
             "! N = 10^(log_a - m * log10(S))",
             "! Use m1/log_a1 for N <= N_TRANS",
             "! Use m2/log_a2 for N > N_TRANS",
