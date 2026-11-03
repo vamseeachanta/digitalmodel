@@ -24,7 +24,10 @@
     <h2>Revision history</h2>
     <table>
       <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-      <tbody><tr><td>Initial</td><td>2026-10-20</td><td>Document the registration invariant and a worked omission example to prevent new paths from escaping explicit commands.</td></tr></tbody>
+      <tbody>
+        <tr><td>Initial</td><td>2026-10-20</td><td>Document the registration invariant and a worked omission example to prevent new paths from escaping explicit commands.</td></tr>
+        <tr><td>1</td><td>2026-11-03</td><td>Identify the integration tree as the pull request acceptance target so ledger reconciliation uses the configuration and test inventory evaluated by CI.</td></tr>
+      </tbody>
       <caption>Table 1. Guide revision history.</caption>
     </table>
     <h2>Run the audit</h2>
@@ -34,6 +37,14 @@
       of the domain matrix, followed by the regression tests. No test module or
       conftest is imported by the audit. Configuration is read from the same
       <code>.claude/quality-gates.yaml</code> commands consumed by the domain workflow.
+    </p>
+    <p>
+      For a pull request, the workflow evaluates the integration of the current
+      base tip and the pull request head. Run the audit and its repository-ledger
+      regression against that same tree. Record both revisions with the result;
+      a result from an older branch tree does not establish integration readiness.
+      Configuration, discovered files and ledger entries must come from the same
+      evaluated tree.
     </p>
     <h2>Method and sources</h2>
     <ol>
@@ -84,6 +95,14 @@ Discovered minus Commanded = {test_sibling.py}</pre>
       execution, repair commands or establish test readiness. New files in an
       excluded directory require their own reviewed disposition. Removing a gap
       also requires removing the corresponding stale ledger entry.
+    </p>
+    <p>
+      When the base advances, reconcile exact entries against the integration
+      tree before accepting the result. Remove exceptions for registrations that
+      the base has repaired, preserve reasons for unchanged findings, and inspect
+      each newly exposed gap before adding its exact key and reason. Re-run both
+      the audit and the required harness. A reconciled ledger alone does not
+      establish that the harness or domain tests passed.
     </p>
     <p>
       Existing command and metadata omissions remain tracked under issue 2083.
