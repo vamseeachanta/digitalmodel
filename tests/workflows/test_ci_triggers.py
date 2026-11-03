@@ -407,13 +407,34 @@ def test_base_consumers_use_local_tip() -> None:
     assert register["env"]["REGISTER_BASE"] == "${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}"
 
 
-def test_trigger_tests_run_in_harness() -> None:
-    """The harness executes trigger regressions on every pull request."""
+@pytest.mark.parametrize("path", (
+    "tests/workflows/test_ci_triggers.py",
+    "tests/scripts/test_ci_gate_regressions.py",
+))
+def test_trigger_tests_run_in_harness(path: str) -> None:
+    """The harness executes gate regressions on every pull request."""
     workflow = load_workflow("quality-gates-by-domain.yml")
     commands = "\n".join(
         step.get("run", "") for step in workflow["jobs"]["ci-harness-tests"]["steps"]
     )
-    assert "tests/workflows/test_ci_triggers.py" in commands
+    assert path in shlex.split(commands.replace("\\\n", ""))
+
+
+def test_workflow_automation_keeps_hosted_runner() -> None:
+    """Keep the established runner for automation tests and reusable calls."""
+    workflow = load_workflow("workflow-automation-tests.yml")
+    assert workflow["jobs"]["test"]["runs-on"] == "ubuntu-latest"
+
+
+def test_full_quality_report_retains_failure_diagnostics() -> None:
+    """A daily CLI failure retains its test log and coverage artifacts."""
+    job = load_workflow("full-matrix-sweep.yml")["jobs"]["quality-gates-report"]
+    upload = next(step for step in job["steps"]
+                  if step.get("name") == "Upload quality gate results")
+    assert upload["if"] == "always()"
+    assert {
+        "reports/quality-gates-pytest-full.log", "htmlcov/", "coverage.xml",
+    } <= set(upload["with"]["path"].splitlines())
 
 
 def test_main_full_run_has_daily_schedule_fallback() -> None:

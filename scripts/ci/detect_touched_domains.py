@@ -26,6 +26,7 @@ FULL_MATRIX_PATHS = {
     ".claude/quality-gates.yaml",
     "tests/DOMAINS.md",
     "tests/conftest.py",
+    "tests/quarantine.txt",
     # The repository-root conftest.py carries collect_ignore, which decides what
     # a recursive collect can see at all. It belongs here for the same reason
     # pytest.ini does: an edit to either can add or remove tests everywhere, so
@@ -37,6 +38,7 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("scripts/ci/", ("workflows",)),
     ("scripts/enforcement/", ("workflows",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),

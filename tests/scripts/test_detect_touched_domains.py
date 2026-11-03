@@ -50,6 +50,26 @@ def load_detector_module():
     return module
 
 
+@pytest.mark.parametrize("path", ["tests/quarantine.txt", "./tests/quarantine.txt"])
+def test_quarantine_change_selects_every_domain(path: str) -> None:
+    """Collection exemptions affect correctness in every shard."""
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    assert detector.touched_domains([path], domains) == domains
+
+
+@pytest.mark.parametrize("path", [
+    "scripts/ci/lint_changed.py",
+    "scripts/ci/dispatch_main_full_run.sh",
+])
+def test_ci_script_change_selects_workflows(path: str) -> None:
+    """CI helper edits must exercise their workflow regressions."""
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {domain.name for domain in detector.touched_domains([path], domains)}
+    assert selected == {"workflows"}
+
+
 @pytest.mark.parametrize(("path", "expected"), [
     ("src/digitalmodel/orcaflex/installation_analysis.py",
      {"orcaflex", "marine-ops-other", "workflows"}),

@@ -1,9 +1,9 @@
 name: Workflow Automation Tests
 
 # Daily dependency-drift coverage (issue #1958) now comes from the daily
-# "Main full run" (full-matrix-sweep.yml), which calls this workflow; our own
-# cron dispatches it, so there is no GitHub schedule or push trigger here
-# (maintainer ruling, 28 Oct 2026).
+# "Main full run" (full-matrix-sweep.yml), scheduled daily at 03:17 UTC.
+# External dispatch is an optional supplement. This reusable workflow keeps
+# pull-request triggers; the daily caller supplies scheduled execution.
 on:
   pull_request:
     paths:
@@ -23,7 +23,7 @@ permissions:
 jobs:
   test:
     name: test (${{ matrix.python-version }})
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
