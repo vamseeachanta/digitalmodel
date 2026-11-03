@@ -17,7 +17,7 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 <h2>Scope and method</h2>
 <p>Observation time: 2026-10-25T01:31:50.079551+00:00. Source revision: <code>44b88d703865cd5489ec95bf2a32ab750ce72dcf</code>.</p>
 <p>Discovery roots: docs/benchmarks, docs/domains/openfoam, docs/reports, docs/subsea/cross_sections.</p>
-<p>35 tracked HTML pages were enumerated; 30 are outside the reviewed subset. Supporting pages are included in discovery. This is not a complete repository census.</p>
+<p>40 tracked HTML pages were enumerated; 35 are outside the reviewed subset. Supporting pages are included in discovery. This is not a complete repository census.</p>
 <p>Only tracked, public paths are eligible. No report producer or solver runs. Audit outputs are excluded from discovery and source hashes. The JSON observations block preserves judgments, criteria, observation time and source digests. Regeneration refuses stale source digests. Links assume publication in docs/audits; an output directory elsewhere is staging only. There is no generated timestamp to exclude.</p>
 <h2>Reviewed reports and proposed card links</h2>
 <section id="cfd-calm-water"><h3>CFD calm-water resistance</h3>
@@ -79,8 +79,8 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 <li>No report-specific test execution record is asserted.</li>
 </ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
 <li><a href="../benchmarks/unit_box/benchmark_report.html">docs/benchmarks/unit_box/benchmark_report.html</a>: <code>1519db4683059bdde303d7bfe9a459ea18762d0475f11624d2f7828bd7a2b3bd</code></li>
-<li><a href="../benchmarks/unit_box/benchmark_report.json">docs/benchmarks/unit_box/benchmark_report.json</a>: <code>57a751c8cc09e9b8c7b128b8792885bfc13d9e58dc63fa19ffce9f45f03fb9c5</code></li>
-<li><a href="../../src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py">src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py</a>: <code>85df0b21710539b8ff29ca84acb34b85fbb0524a2296022f233187f46b82d1fb</code></li>
+<li><a href="../benchmarks/unit_box/benchmark_report.json">docs/benchmarks/unit_box/benchmark_report.json</a>: <code>29cb712e76793365fb53763b25b0b3f069151a8f271d8777e095ef3974b1252d</code></li>
+<li><a href="../../src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py">src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py</a>: <code>2dcbb5fcae95eca0016087d3cfc4fab5ffae5183726df67dabc7e042940a1ee6</code></li>
 <li><a href="../../tests/hydrodynamics/diffraction/test_unit_box_benchmark.py">tests/hydrodynamics/diffraction/test_unit_box_benchmark.py</a>: <code>0de9c11cf8db9e8fa4a156138b3d916f196cff98f36d01c34a66f9f241082e79</code></li>
 <li><a href="../../tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py">tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py</a>: <code>43c37403e9b52b2911459ffd2473fdb2dd49dcb449732388a5165bc19325ba55</code></li>
 </ul></details></section>
@@ -120,11 +120,11 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 <li>The scenario assumptions are declared criteria, not independent validation references.</li>
 </ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
 <li><a href="../reports/pipeline-ffs-assessment.html">docs/reports/pipeline-ffs-assessment.html</a>: <code>488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f</code></li>
-<li><a href="../reports/pipeline-ffs-assessment.manifest.json">docs/reports/pipeline-ffs-assessment.manifest.json</a>: <code>2fcf9c16dddd995421a44e49c11e4df5db48d5b59d70f34446f36913d9240e23</code></li>
+<li><a href="../reports/pipeline-ffs-assessment.manifest.json">docs/reports/pipeline-ffs-assessment.manifest.json</a>: <code>a661abec53d3552ec20879fb1bf22fe037c7dc3594c1014924f87151a2c4ea54</code></li>
 <li><a href="../../examples/workflows/pipeline-ffs-assessment/assumptions.yml">examples/workflows/pipeline-ffs-assessment/assumptions.yml</a>: <code>f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952</code></li>
 <li><a href="../../examples/workflows/pipeline-ffs-assessment/input.yml">examples/workflows/pipeline-ffs-assessment/input.yml</a>: <code>af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b</code></li>
 <li><a href="../../scripts/reporting/build_pipeline_ffs_report.py">scripts/reporting/build_pipeline_ffs_report.py</a>: <code>194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578</code></li>
-<li><a href="../../tests/asset_integrity/test_pipeline_ffs_assessment.py">tests/asset_integrity/test_pipeline_ffs_assessment.py</a>: <code>91e4a179b40e22d1eaa199b7c450d28f0f6d96b5770ddc0a16ef3c0e52996e14</code></li>
+<li><a href="../../tests/asset_integrity/test_pipeline_ffs_assessment.py">tests/asset_integrity/test_pipeline_ffs_assessment.py</a>: <code>60cbd464c0be6b2ba62553fea9710aaa0896cb396b5fead651856d8ce8154396</code></li>
 </ul></details></section>
 <h2>Evidence gaps and prioritized next actions</h2>
 <ol>
@@ -133,7 +133,7 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 <li>Priority 2; diffraction-report-pipeline; qualification: Keep the synthetic report-pipeline label; obtain retained independent solver outputs and justified physical comparison criteria for a program benchmarking analysis.</li>
 <li>Priority 2; padeye-analysis; missing-evidence: Run the report-specific tests and retain a digest-bound result record; resolve sourced allowables and outstanding lifting checks before qualification claims.</li>
 <li>Priority 2; pipeline-assessment; qualification: Execute and retain the report-specific tests and independent expected-answer evidence before presenting numerical verification; preserve the synthetic-input label.</li>
-<li>Priority 3; coverage; coverage: Review 30 additional tracked HTML pages in the declared roots; these include supporting pages and are not counts of missing reports.</li>
+<li>Priority 3; coverage; coverage: Review 35 additional tracked HTML pages in the declared roots; these include supporting pages and are not counts of missing reports.</li>
 </ol>
 <h2>Known limits</h2>
 <p>This inventory establishes record accessibility and review boundaries, not engineering accuracy or completion of missing reports. Private data, external records, solver results not retained here, engineering calculations and website linking are not evaluated. Implementation sources cannot serve as independent engineering references. Proposed links are local files; website changes require separate work.</p>

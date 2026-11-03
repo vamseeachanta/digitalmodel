@@ -21,9 +21,29 @@ from packaging.requirements import Requirement
 import pytest
 import yaml
 
+from tests.scripts._pytest_selection import pytest_selects_target
+
+
+def assert_wavespectra_command(gate, path, pytestconfig):
+    assert gate["enabled"]
+    assert pytest_selects_target(
+        pytestconfig, gate["command"], path, [path], require_explicit_target=True,
+    )
+    assert ".[test]" in shlex.split(gate["command"])
+
+
+def test_wavespectra_command_guard_rejects_disabled_gate(pytestconfig):
+    path = "tests/hydrodynamics/test_wavespectra_adapter.py"
+    gate = {
+        "enabled": False,
+        "command": f"uv run --with-editable '.[test]' python -m pytest {path}",
+    }
+    with pytest.raises(AssertionError):
+        assert_wavespectra_command(gate, path, pytestconfig)
+
 
 @pytest.mark.parametrize("surface", ["ownership", "test_roots", "command"])
-def test_wavespectra_adapter_runs_in_hydrodynamics_ci(surface):
+def test_wavespectra_adapter_runs_in_hydrodynamics_ci(surface, pytestconfig):
     root = Path(__file__).resolve().parents[2]
     path = Path(__file__).resolve().relative_to(root).as_posix()
     if surface == "ownership":
@@ -49,9 +69,7 @@ def test_wavespectra_adapter_runs_in_hydrodynamics_ci(surface):
         ]
         assert owners == ["tests-hydrodynamics-other"]
     else:
-        command = shlex.split(gate["command"])
-        assert path in command[command.index("pytest") + 1:]
-        assert ".[test]" in command
+        assert_wavespectra_command(gate, path, pytestconfig)
 
 
 def test_wavespectra_is_a_test_only_dependency():

@@ -192,3 +192,70 @@ def test_divergence_onset_hand_case_and_order_invariance():
     assert divergence_onset([15.0, 30.0, 60.0]) == 0.5
     assert divergence_onset([60.0, 15.0, 60.0, 30.0]) == 0.5
     assert divergence_onset([15.0]) == 2.0
+
+
+def test_crank_projection_and_inverse_match_hand_values():
+    """Independently project a synthetic radius-5 in circle on its diameter.
+
+    The stroke is 10 in. At 15 cycles/min, T=60/15=4 s and omega=2*pi/T
+    =pi/2 rad/s. Starting at the bottom, the circle's cardinal projections
+    at t=[0,1,2,3,4] s give x=[0,5,10,5,0] in. Tangential speed is
+    radius*omega=5*pi/2 in/s, so its projected velocities are
+    [0,5*pi/2,0,-5*pi/2,0] in/s. On the rising half cycle, positions
+    [0,5,10] in occur at [0,1,2] s; -1 and 11 in lie outside the stroke.
+    These are geometry and unit-conversion hand values, not fitted data.
+    Absolute 1e-12 at analytical zeros and relative 1e-12 elsewhere bound
+    floating-point roundoff only.
+    """
+    assert angular_velocity(15.0) == pytest.approx(math.pi / 2, rel=1e-12, abs=0)
+    for time, position, velocity in [
+        (0.0, 0.0, 0.0),
+        (1.0, 5.0, 5 * math.pi / 2),
+        (2.0, 10.0, 0.0),
+        (3.0, 5.0, -5 * math.pi / 2),
+        (4.0, 0.0, 0.0),
+    ]:
+        assert crank_position(time, 10.0, 15.0) == pytest.approx(
+            position, rel=1e-12, abs=1e-12 if position == 0 else 0
+        )
+        assert crank_velocity(time, 10.0, 15.0) == pytest.approx(
+            velocity, rel=1e-12, abs=1e-12 if velocity == 0 else 0
+        )
+    for position, time in [(0.0, 0.0), (5.0, 1.0), (10.0, 2.0)]:
+        assert time_at_position(position, 10.0, 15.0) == pytest.approx(
+            time, rel=1e-12, abs=1e-12 if time == 0 else 0
+        )
+    for position in [-1.0, 11.0]:
+        with pytest.raises(ValueError, match="outside"):
+            time_at_position(position, 10.0, 15.0)
+
+
+def test_peak_trains_have_independent_period_and_trigger_phase():
+    """Supply synthetic ringing at 60 cycles/min: one peak every second.
+
+    At 15 crank cycles/min the period is 60/15=4 s and top is at 2 s.
+    Bottom-triggered peaks occur at [1,2,3,4] s; top-triggered peaks at
+    [3,4] s. A 3.5 s horizon excludes 4 s, giving [1,2,3] and [3] s.
+    At 10 crank cycles/min top is at (60/10)/2=3 s; through a supplied
+    4 s horizon, peaks are [1,2,3,4] and [4] s. Thus the first turnaround
+    for speeds [10,15] is min(3,2)=2 s. All expected lists follow by
+    counting seconds from their trigger, without a production helper.
+    These supplied-frequency cases do not qualify an empirical natural
+    frequency constant or the physical excitation phase.
+    """
+    fast = peak_times(15.0, 60.0)
+    assert fast.interval_s == 1.0
+    assert fast.top_of_stroke_s == 2.0
+    assert fast.upstroke == [1.0, 2.0, 3.0, 4.0]
+    assert fast.downstroke == [3.0, 4.0]
+
+    short = peak_times(15.0, 60.0, max_time_s=3.5)
+    assert short.upstroke == [1.0, 2.0, 3.0]
+    assert short.downstroke == [3.0]
+
+    slow = peak_times(10.0, 60.0, max_time_s=4.0)
+    assert slow.interval_s == 1.0
+    assert slow.top_of_stroke_s == 3.0
+    assert slow.upstroke == [1.0, 2.0, 3.0, 4.0]
+    assert slow.downstroke == [4.0]
+    assert divergence_onset([10.0, 15.0]) == 2.0

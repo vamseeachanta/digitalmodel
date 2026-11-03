@@ -71,9 +71,9 @@
     },
     "docs/domains/passing_ship/preparation/revisions.json": {
       "basis": "Preparation record or implementation; first issue created with this change.",
-      "record_count": 3,
+      "record_count": 4,
       "retrieval_date": "2026-10-14",
-      "sha256": "35471bb2e11cea7785bcf4487373f0da343670b226ae16d46e88e5087efffafc",
+      "sha256": "bfde5c720ceb626263f1a5648a41deb651d0aafe08b19f23de3e50fabf1c1350",
       "source_url": "repository-relative:docs/domains/passing_ship/preparation/revisions.json"
     },
     "docs/domains/passing_ship/preparation/sources.json": {
@@ -108,7 +108,7 @@
       "basis": "Preparation record or implementation; first issue created with this change.",
       "record_count": 1,
       "retrieval_date": "2026-10-14",
-      "sha256": "657715c97dca3584c90867af18d7340e1b0ee7cf98955751e2ee8999e1b10232",
+      "sha256": "f4e2bcac3c5170a27d96938067b636be1dd306a981e7d1d68afb35b5678192c3",
       "source_url": "repository-relative:src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py"
     },
     "src/digitalmodel/hydrodynamics/passing_ship/preparation.py": {
@@ -140,12 +140,12 @@
     "docs/domains/passing_ship/preparation/execution.json": "1a4018fd8d6e861399a5da1517047c32bb412e9843c980db04ad9f5dd398a70c",
     "docs/domains/passing_ship/preparation/matrix.json": "0baa0440a7c277b0aa86bbb8e0f939c71cd3c79b43cc2d1d70a0baba46c95c9d",
     "docs/domains/passing_ship/preparation/model.json": "c693d0cf30105c48f42856059d2e49750221fcbf849c77a8e2dc4650a346bd33",
-    "docs/domains/passing_ship/preparation/revisions.json": "35471bb2e11cea7785bcf4487373f0da343670b226ae16d46e88e5087efffafc",
+    "docs/domains/passing_ship/preparation/revisions.json": "bfde5c720ceb626263f1a5648a41deb651d0aafe08b19f23de3e50fabf1c1350",
     "docs/domains/passing_ship/preparation/sources.json": "5c39677c8949af9fa505ae914fb3b1064e1caa31a08d94c4a91dc91e4b93b764",
     "src/digitalmodel/hydrodynamics/passing_ship/calculator.py": "898abaad32fe52845cd8894b3f1bb659c066c256de7df9201a9c04031cb5edfb",
     "src/digitalmodel/hydrodynamics/passing_ship/configuration.py": "63190f191ce4e578bb61390aa78b090bb041978b8a8832f09a11ee48e343c1cd",
     "src/digitalmodel/hydrodynamics/passing_ship/formulations.py": "0f251cdd95df37a28b38255c56f8b133a3424f898403a88c0ce17ccfca1e8c71",
-    "src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py": "657715c97dca3584c90867af18d7340e1b0ee7cf98955751e2ee8999e1b10232",
+    "src/digitalmodel/hydrodynamics/passing_ship/input_schemas.py": "f4e2bcac3c5170a27d96938067b636be1dd306a981e7d1d68afb35b5678192c3",
     "src/digitalmodel/hydrodynamics/passing_ship/preparation.py": "57cfa67b83c9ce7f7f4f19a6aaff598a90d83fd3091d8b3a833c490404e42d03",
     "src/digitalmodel/hydrodynamics/passing_ship/preparation_report.py": "8408220bd61c77e808bb8c7b962ef21c10dbe4429cf1cbfea82400b24ecbc07c",
     "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py": "5a0e89d7f4b07f70bb78fd90ed9dc621fae49c7e079c6b43ed81045ab4b5c969"
@@ -153,11 +153,11 @@
   "launch_allowed": false,
   "matrix_entries": 18,
   "outputs": {
-    "campaign.json": "53e4e29916054433f56bffa4fae5e054d39a73d91a0eae7bf9d8973f8a732f32",
+    "campaign.json": "18c18bc39e927146ef773158361a304ab5852c66860d643d1a77ebb983941bb0",
     "force_samples.json": "7a6acd94f7f8356489034aab38808ab84ce5db2218add535dca7a09709d9b30a",
-    "report.html": "b61c74b101b582de084c38d8400dc8a3adb36d82d06da4a329024a3fb1ecc4bb"
+    "report.html": "d63305710023c4166f8759f56aec34c92eb37fcafa314fd1a07b7c9d9625a104"
   },
   "qualified_benchmarks": 0,
   "response_cases": 0,
-  "revision": "3"
+  "revision": "4"
 }

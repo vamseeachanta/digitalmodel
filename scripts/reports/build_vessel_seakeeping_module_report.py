@@ -25,7 +25,9 @@ CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
            {"revision": "B", "date": "2026-10-24", "change":
             "The shared workflow test source digest is refreshed after unrelated test changes to restore exact report rebuilds; calculation inputs and results are unchanged."},
            {"revision": "C", "date": "2026-10-26", "change":
-            "Provenance now records the dedicated rebuild test and independent calculation fixture instead of unrelated workflow assertions; a manifest binds the delivered files to their exact bytes."}]
+            "Provenance now records the dedicated rebuild test and independent calculation fixture instead of unrelated workflow assertions; a manifest binds the delivered files to their exact bytes."},
+           {"revision": "D", "date": "2026-10-31", "change":
+            "Sea-state result values in the calculation record are stored to 13 significant digits so the delivered bytes do not depend on last-bit floating-point differences between processors; displayed values are unchanged."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
@@ -53,7 +55,9 @@ def calculate(scratch):
     rows = []
     for row in raw:
         for key in ("hs", "tp", "probability", "significant_amplitude", "criterion"):
-            row[key] = float(row[key])
+            # Thirteen significant digits keep the committed bytes independent of
+            # last-bit summation differences between CPUs (relative error < 1e-12).
+            row[key] = float(f"{float(row[key]):.13g}")
         row["operable"] = row["operable"] == "True"
         rows.append(row)
     return {"inputs": inputs, "rows": rows, "summary": result["dofs"],

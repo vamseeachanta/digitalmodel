@@ -21,6 +21,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -35,6 +36,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-1",
             "line_type": "wire",
@@ -45,6 +47,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-2",
             "line_type": "wire",
@@ -55,6 +58,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-3",
             "line_type": "wire",
@@ -65,13 +69,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-001",
       "outputs": {
@@ -95,7 +101,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -118,6 +125,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -132,6 +140,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-1",
             "line_type": "wire",
@@ -142,6 +151,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-2",
             "line_type": "wire",
@@ -152,6 +162,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-3",
             "line_type": "wire",
@@ -162,13 +173,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-002",
       "outputs": {
@@ -192,7 +205,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -215,6 +229,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -229,6 +244,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-1",
             "line_type": "wire",
@@ -239,6 +255,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-2",
             "line_type": "wire",
@@ -249,6 +266,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-3",
             "line_type": "wire",
@@ -259,13 +277,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-003",
       "outputs": {
@@ -289,7 +309,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -312,6 +333,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -326,6 +348,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-1",
             "line_type": "wire",
@@ -336,6 +359,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-2",
             "line_type": "wire",
@@ -346,6 +370,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-3",
             "line_type": "wire",
@@ -356,13 +381,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-004",
       "outputs": {
@@ -386,7 +413,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -409,6 +437,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -423,6 +452,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-1",
             "line_type": "wire",
@@ -433,6 +463,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-2",
             "line_type": "wire",
@@ -443,6 +474,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-3",
             "line_type": "wire",
@@ -453,13 +485,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-005",
       "outputs": {
@@ -483,7 +517,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -506,6 +541,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -520,6 +556,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-1",
             "line_type": "wire",
@@ -530,6 +567,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-2",
             "line_type": "wire",
@@ -540,6 +578,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-3",
             "line_type": "wire",
@@ -550,13 +589,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-006",
       "outputs": {
@@ -580,7 +621,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -603,6 +645,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -617,6 +660,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-1",
             "line_type": "wire",
@@ -627,6 +671,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-2",
             "line_type": "wire",
@@ -637,6 +682,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-3",
             "line_type": "wire",
@@ -647,13 +693,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-007",
       "outputs": {
@@ -677,7 +725,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -700,6 +749,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -714,6 +764,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-1",
             "line_type": "wire",
@@ -724,6 +775,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-2",
             "line_type": "wire",
@@ -734,6 +786,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-3",
             "line_type": "wire",
@@ -744,13 +797,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-008",
       "outputs": {
@@ -774,7 +829,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -797,6 +853,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -811,6 +868,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-1",
             "line_type": "wire",
@@ -821,6 +879,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-2",
             "line_type": "wire",
@@ -831,6 +890,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-3",
             "line_type": "wire",
@@ -841,13 +901,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-009",
       "outputs": {
@@ -871,7 +933,8 @@
           "speed_knots": 3.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -894,6 +957,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -908,6 +972,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-1",
             "line_type": "wire",
@@ -918,6 +983,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-2",
             "line_type": "wire",
@@ -928,6 +994,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-3",
             "line_type": "wire",
@@ -938,13 +1005,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-010",
       "outputs": {
@@ -968,7 +1037,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -991,6 +1061,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -1005,6 +1076,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-1",
             "line_type": "wire",
@@ -1015,6 +1087,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-2",
             "line_type": "wire",
@@ -1025,6 +1098,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-3",
             "line_type": "wire",
@@ -1035,13 +1109,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-011",
       "outputs": {
@@ -1065,7 +1141,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -1088,6 +1165,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -1102,6 +1180,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-1",
             "line_type": "wire",
@@ -1112,6 +1191,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-2",
             "line_type": "wire",
@@ -1122,6 +1202,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-3",
             "line_type": "wire",
@@ -1132,13 +1213,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-012",
       "outputs": {
@@ -1162,7 +1245,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -1185,6 +1269,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -1199,6 +1284,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-1",
             "line_type": "wire",
@@ -1209,6 +1295,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-2",
             "line_type": "wire",
@@ -1219,6 +1306,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-3",
             "line_type": "wire",
@@ -1229,13 +1317,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-013",
       "outputs": {
@@ -1259,7 +1349,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -1282,6 +1373,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -1296,6 +1388,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-1",
             "line_type": "wire",
@@ -1306,6 +1399,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-2",
             "line_type": "wire",
@@ -1316,6 +1410,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-3",
             "line_type": "wire",
@@ -1326,13 +1421,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-014",
       "outputs": {
@@ -1356,7 +1453,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -1379,6 +1477,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -1393,6 +1492,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-1",
             "line_type": "wire",
@@ -1403,6 +1503,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-2",
             "line_type": "wire",
@@ -1413,6 +1514,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-3",
             "line_type": "wire",
@@ -1423,13 +1525,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-015",
       "outputs": {
@@ -1453,7 +1557,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -1476,6 +1581,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -1490,6 +1596,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-1",
             "line_type": "wire",
@@ -1500,6 +1607,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-2",
             "line_type": "wire",
@@ -1510,6 +1618,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-3",
             "line_type": "wire",
@@ -1520,13 +1629,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 286.3382338807559,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-016",
       "outputs": {
@@ -1550,7 +1661,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -1573,6 +1685,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -1587,6 +1700,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-1",
             "line_type": "wire",
@@ -1597,6 +1711,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-2",
             "line_type": "wire",
@@ -1607,6 +1722,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-3",
             "line_type": "wire",
@@ -1617,13 +1733,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 312.98917893747654,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-017",
       "outputs": {
@@ -1647,7 +1765,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     },
     {
       "analysis_cases": [
@@ -1670,6 +1789,7 @@
       },
       "moored_vessel": {
         "draft": null,
+        "fenders": [],
         "hull": {
           "beam": 14.83,
           "block_coefficient": 0.75,
@@ -1684,6 +1804,7 @@
             "anchor_y": 20.0,
             "fairlead_x": 50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-1",
             "line_type": "wire",
@@ -1694,6 +1815,7 @@
             "anchor_y": -20.0,
             "fairlead_x": 50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-2",
             "line_type": "wire",
@@ -1704,6 +1826,7 @@
             "anchor_y": 20.0,
             "fairlead_x": -50.0,
             "fairlead_y": 7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-3",
             "line_type": "wire",
@@ -1714,13 +1837,15 @@
             "anchor_y": -20.0,
             "fairlead_x": -50.0,
             "fairlead_y": -7.415,
+            "horizontal_stiffness_n_m": null,
             "length": 538.1245919646806,
             "line_id": "line-4",
             "line_type": "wire",
             "pretension": 600.0
           }
         ],
-        "rao_source": null
+        "rao_source": null,
+        "wind_load": null
       },
       "name": "matrix-018",
       "outputs": {
@@ -1744,7 +1869,8 @@
           "speed_knots": 5.0
         },
         "vessel_type": "tanker"
-      }
+      },
+      "response_settings": null
     }
   ]
 }

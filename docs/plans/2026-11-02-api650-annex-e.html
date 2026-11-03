@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>API 650 Annex E implementation plan</title>
+<style>body{max-width:900px;margin:3rem auto;font:17px/1.55 sans-serif;color:#172b3a}h1,h2{color:#123b58}</style>
+<h1>API 650 Annex E seismic screening plan</h1>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/3813">Seismic screening issue</a>.</p>
+<h2>Engineering basis and design</h2>
+<p>The implementation will extend sloshing.py with a keyword-only SI calculation and a dataclass result. The existing convective-period helper will be reused. Public API 650 (2007) and NCREE load equations will support the two-mode weights, force heights, spectrum shape, SRSS shear, moments and hoop demands. API's public 12th-edition Addendum 2 (2016), E.7.2, will govern wave height and freeboard. These distinct revisions will be disclosed; full compliance with a current edition will not be claimed.</p>
+<p>Project factors I, Rwi, Rwc, K, the governing impulsive coefficient floor, site design spectrum parameters, vertical acceleration, roof reaction and qualified annular resistance will be explicit inputs. Material allowables, site classifications and annular plate resistance will not be inferred. A J ratio will indicate no uplift, conditional self-anchorage or required redesign/anchorage without qualifying a completed design.</p>
+<h2>Verification</h2>
+<p>Tests will precede implementation and will establish a red result. A hand-arithmetic example will check each intermediate quantity. Regressions will cover both geometry branches, both spectrum branches, SUG freeboard rules, independent force/wave accelerations, J thresholds, depth-dependent hoop demand, dimensional scaling, nonfinite inputs and invalid geometry. Module tests, hydrodynamics and seismic folders will be run. A local defect review will inspect final equations, source versions, units, validation and public diff.</p>
+<h2>Plan defect review</h2>
+<p>Defects sought: edition mixing, force-reduced wave height, slab heights above liquid treated as invalid, all roof weight used as shell reaction, J reported as final design acceptance, invented material factors, nonfinite input acceptance and wholesale standards reproduction. Controls will include explicit source revisions, separate Af and Ac, explicit roof reaction, conditional J language, required project factors and finite-value checks. A concise worked example and user guide will accompany the calculation. The external explorer and floating-roof dynamics will be identified as follow-ups.</p>
+</html>

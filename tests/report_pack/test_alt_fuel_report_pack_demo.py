@@ -11,6 +11,11 @@ and a provenance manifest. The demo lives in
 
 import csv
 import json
+import os
+import shutil
+import subprocess
+import sys
+from importlib import resources
 from pathlib import Path
 
 import pytest
@@ -101,9 +106,14 @@ def test_checked_in_demo_csvs_match_a_fresh_run(tmp_path):
     directory reproduce a fresh run of sizing_input.yml (same columns, same
     rows, values equal to float round-trip)."""
     _run_sizing(tmp_path)
+    _assert_demo_csvs_match(tmp_path / "data")
+
+
+def _assert_demo_csvs_match(output_dir: Path) -> None:
+    """Compare emitted tables with the tracked synthetic demo reference."""
     for name in CSV_NAMES:
         committed = (DEMO_DIR / "data" / name).read_text(encoding="utf-8")
-        fresh = (tmp_path / "data" / name).read_text(encoding="utf-8")
+        fresh = (output_dir / name).read_text(encoding="utf-8")
         committed_rows = list(csv.DictReader(committed.splitlines()))
         fresh_rows = list(csv.DictReader(fresh.splitlines()))
         assert len(committed_rows) == len(fresh_rows), name
@@ -117,6 +127,55 @@ def test_checked_in_demo_csvs_match_a_fresh_run(tmp_path):
                     ), (name, key)
                 except ValueError:
                     assert committed_value == fresh_value, (name, key)
+
+
+def test_demo_sizing_runs_through_engine_cli(tmp_path):
+    """The documented module command produces the demo CSVs in scratch."""
+    input_file = tmp_path / "sizing_input.yml"
+    shutil.copyfile(DEMO_DIR / input_file.name, input_file)
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join(
+        filter(None, (str(REPO_ROOT / "src"), env.get("PYTHONPATH")))
+    )
+    # Exercise the ordinary CLI path without pytest's engine argv workaround.
+    env.pop("PYTEST_CURRENT_TEST", None)
+    completed = subprocess.run(
+        [sys.executable, "-m", "digitalmodel", input_file.name],
+        cwd=tmp_path,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    _assert_demo_csvs_match(tmp_path / "data")
+    with (tmp_path / "data" / CSV_NAMES[0]).open(encoding="utf-8") as stream:
+        summary = next(csv.DictReader(stream))
+    # Independent arithmetic for sizing_input.yml, also checked in
+    # test_alt_fuel_ship_sizing_workflow.py::test_fixture_fuel_chain_hand_verified:
+    # 4750 / 0.95 + 500 = 5500 kW; / 0.50 = 11000 kW LHV;
+    # 11000 * 3.6 MJ/kWh / 120 MJ/kg = 330 kg/h;
+    # 330 * (4000 / 12) * 1.10 = 121000 kg before port boil-off.
+    for key, expected in (
+        ("electrical_power_kw", 5500.0),
+        ("fuel_lhv_power_kw", 11000.0),
+        ("fuel_mass_flow_kg_per_h", 330.0),
+        ("voyage_fuel_kg", 121000.0),
+    ):
+        assert float(summary[key]) == pytest.approx(expected)
+    assert summary["voyage_profile"] == "True"
+    # The demo's port dwell increases tank volume above the dwell-free anchor.
+    assert float(summary["gross_tank_volume_m3"]) > 1856.34
+
+
+def test_sizing_base_config_is_a_package_resource():
+    """Application configuration is discoverable through package resources."""
+    label = "alt_fuel_ship_sizing"
+    config = resources.files("digitalmodel").joinpath(
+        "base_configs", "modules", label, f"{label}.yml"
+    )
+    assert config.is_file()
+    assert yaml.safe_load(config.read_text(encoding="utf-8"))["basename"] == label
 
 
 def test_checked_in_demo_pack_renders_from_example_dir(tmp_path):
