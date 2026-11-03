@@ -296,12 +296,14 @@ class WaveSpectra:
         Args:
             frequencies: Frequency array (rad/s)
             spectrum: Spectral density array (m²·s)
-            n: Moment order (0, 1, 2, etc.)
+            n: Moment order; negative orders require positive frequencies.
 
         Returns:
             Spectral moment
         """
         frequencies = np.asarray(frequencies, dtype=float)
+        if n < 0 and np.any(frequencies <= 0):
+            raise ValueError("Negative spectral moments require positive frequencies")
         integrand = frequencies**n * spectrum
         return float(_trapezoid(integrand, frequencies))
 

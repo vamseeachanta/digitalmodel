@@ -189,6 +189,20 @@ def test_power_accepts_integer_frequencies(frequency_dtype):
     assert power == pytest.approx(83333.33333333333)
 
 
+@pytest.mark.parametrize("start", [0.0, -1.0])
+def test_negative_moments_require_positive_frequencies(start):
+    """Reject nonpositive frequencies before reciprocal powers can warn."""
+    ws = WaveSpectra()
+    omega = np.array([start, 1.0, 2.0])
+    density = np.array([0.0, 1.0, 0.0])
+    # Nonnegative moments retain support for a zero-frequency endpoint.
+    assert math.isfinite(ws.spectral_moment(omega, density, n=0))
+    with pytest.raises(ValueError, match="positive frequencies"):
+        ws.spectral_moment(omega, density, n=-1)
+    with pytest.raises(ValueError, match="positive frequencies"):
+        ws.spectrum_statistics(omega, density)
+
+
 @pytest.mark.parametrize("fluid", [{"water_density": 0, "gravity": 10},
                                     {"water_density": 1000, "gravity": float("nan")}])
 def test_invalid_power_properties(fluid):

@@ -10,6 +10,7 @@ Energy period and incident deep-water power are available from the same samples.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-22 | Document the peak-scaled grid and period and power calculations to address tail truncation. |
+| 2 | 2026-11-03 | Record refreshed atlas values, clarify the default sample cost and reject nonpositive frequencies for negative moments. |
 
 ## Equations and sources
 
@@ -105,6 +106,8 @@ substantially when the upper bound changes.
 - Arrays passed to moment and statistic methods must be matching, finite,
   non-negative spectra on a strictly increasing positive angular-frequency grid.
   These methods integrate the supplied band and do not extrapolate a tail.
+  Negative moments raise `ValueError` for nonpositive frequencies before
+  reciprocal powers are evaluated; nonnegative moments retain zero-endpoint support.
 
 ISSC retains its existing approximate mean-period formulation. This change fixes
 its grid but does not recalibrate that formulation. The existing approximate
@@ -140,7 +143,7 @@ This is a source audit; it does not qualify downstream engineering results.
 | --- | --- |
 | Hydrodynamics CLI and hull catalog | Construct default `WaveParameters`; inherit the wider grid. Catalog interpolation clamps RAOs beyond their supplied band, requiring engineering review of tail coverage. |
 | RAO spectral fatigue workflow | Uses generator defaults; inherits the wider grid. Stress RAOs are clamped outside their input band, so results require review against available RAO coverage. |
-| Parametric fatigue generation | Uses generator defaults with a frequency-independent stress gain; inherits the wider grid. Fourth-moment fatigue results and stored atlases require regeneration and review. |
+| Parametric fatigue generation | Uses generator defaults with a frequency-independent stress gain; inherits the wider grid. The default count increases from 100 to 1000 samples per scatter cell, giving about ten times the spectrum sampling work; total runtime depends on the caller. Fourth-moment fatigue results and stored atlases require regeneration and review. |
 | Scatter fatigue | Supplies all bounds and count from the response grid; retains its explicit band. |
 | Seakeeping operability | Supplies bounds and count from the RAO frequencies; retains its explicit band. |
 | Operation envelope | Supplies its own peak-scaled bounds and count through `envelope_numerics`; retains its explicit band. |
@@ -149,6 +152,14 @@ This is a source audit; it does not qualify downstream engineering results.
 | Marine-analysis profiling helper | Supplies count but inherits the new upper bound; coarse resolutions require convergence checks. |
 | Visualization and legacy scripts and examples | Some import `WaveSpectra` but use older spectrum interfaces; no active default-generator call was found in those paths. Repairing obsolete interfaces is separate work. |
 | Existing spectrum tests | Grid-size assertions follow the new default. Finite-band moment snapshots explicitly request the former grid. Coverage and width assertions account for the extended tail. |
+
+The refreshed atlases were compared at all former grid nodes: 60 fatigue nodes
+and 8 RAO nodes. The largest relative change in annual fatigue damage is a
+90.7 % decrease; the largest relative change in tabulated heave amplitude is
+0.0 %. The fatigue comparison uses the fixed stress gain and finite frequency
+band of this screening atlas; it is not a physical benchmark. Both rebuilt
+atlases pass their existing holdout validation. The seakeeping report retains
+its explicit response grid and worked values, with updated source digests.
 
 Later work includes finite-depth power, calibrated ISSC equivalence, RAO-band
 policy, convergence requirements for user-specified coarse grids and requalification
