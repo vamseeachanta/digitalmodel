@@ -231,22 +231,19 @@ def _boundary_stages(model: Deck) -> list[tuple[int, set[int]]]:
                 first_boundary = False
                 for row in block.rows:
                     nodes = model.target("nset", row[0], block.line, block=block)
-                    kind = row[1].upper()
-                    if kind in {"ENCASTRE", "PINNED", "XSYMM", "YSYMM", "ZSYMM",
-                                "XASYMM", "YASYMM", "ZASYMM"}:
-                        active.update(nodes)
-                    else:
-                        first = int(kind)
-                        last = int(row[2]) if len(row) > 2 and row[2] else first
-                        if not 1 <= first <= last <= 6:
-                            raise ValueError("Invalid structural degree of freedom")
-                        if len(row) > 3 and row[3]:
-                            number(row[3])
-                        # Rotational BCs do not constrain translational-only solid nodes.
-                        active.update(nodes if first <= 3 else nodes & rotational)
+                    # CalculiX 2.22 User's Manual, section 7.4: numeric DOFs.
+                    first = int(row[1])
+                    last = int(row[2]) if len(row) > 2 and row[2] else first
+                    if not 1 <= first <= last <= 6:
+                        raise ValueError("Invalid structural degree of freedom")
+                    if len(row) > 3 and row[3]:
+                        number(row[3])
+                    # Rotational BCs do not constrain translational-only solid nodes.
+                    active.update(nodes if first <= 3 else nodes & rotational)
         except (ValueError, IndexError):
             model.error("parse_error", (f"keyword:{block.keyword}",), "Invalid step or boundary data",
-                        "Correct step pairing and structural boundary condition records.", block.line)
+                        "Correct step pairing and use numeric structural boundary degrees of freedom.",
+                        block.line)
     if in_step:
         model.error("parse_error", (f"step:{step}",), "Step has no END STEP",
                     "Terminate the analysis step.")

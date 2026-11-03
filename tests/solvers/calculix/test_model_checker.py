@@ -595,6 +595,73 @@ def test_boundary_reset_is_checked_per_step(deck):
     assert "unconstrained_part" in codes(report)
 
 
+@pytest.mark.parametrize("label", [
+    "ENCASTRE", "PINNED", "XSYMM", "YSYMM", "ZSYMM",
+    "XASYMM", "YASYMM", "ZASYMM", "encastre", "pinned", "xsymm",
+    "ysymm", "zsymm", "xasymm", "yasymm", "zasymm", "Encastre", "INVALID",
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_named_boundary_labels_return_structured_failure(deck, capsys, label, interface):
+    # CalculiX 2.22 User's Manual, section 7.4 (*BOUNDARY): numeric DOFs.
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    path = deck(text=base.replace("FIXED, 1, 3", f"FIXED,{label}"))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+        with pytest.raises(ModelCheckError) as caught:
+            validate_model(path)
+        assert caught.value.report.to_dict() == evidence
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    assert {f["code"] for f in evidence["findings"]} == {
+        "parse_error", "unconstrained_part",
+    }
+    finding = next(f for f in evidence["findings"] if f["code"] == "parse_error")
+    assert finding["severity"] == "error"
+    assert "keyword:BOUNDARY" in finding["entity_ids"]
+    assert finding["line"] == base.splitlines().index("*BOUNDARY") + 1
+    assert "numeric structural" in finding["fix_hint"]
+    unsupported = next(f for f in evidence["findings"] if f["code"] == "unconstrained_part")
+    assert "element:1" in unsupported["entity_ids"]
+
+
+@pytest.mark.parametrize("boundary,unsupported", [
+    ("ENCASTRE\nFIXED,1,3", True),
+    ("1,3\nFIXED,ENCASTRE", False),
+    ("1,3\n*BOUNDARY\nFIXED,ENCASTRE", False),
+    ("1,3\n*STEP\n*STATIC\n*BOUNDARY,OP=NEW\nFIXED,ENCASTRE\n*END STEP", True),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_named_boundary_rows_block_with_numeric_restraints(deck, capsys, boundary,
+                                                          unsupported, interface):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    path = deck(text=base.replace("FIXED, 1, 3", f"FIXED,{boundary}"))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    errors = {f["code"] for f in evidence["findings"] if f["severity"] == "error"}
+    assert "parse_error" in errors
+    assert ("unconstrained_part" in errors) is unsupported
+
+
+@pytest.mark.parametrize("boundary", ["1", "1,3", "2,,0.0"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_numeric_boundary_dofs_remain_supported(deck, capsys, boundary, interface):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    path = deck(text=base.replace("FIXED, 1, 3", f"FIXED,{boundary}"))
+    if interface == "api":
+        evidence = validate_model(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS"
+    assert evidence["findings"] == []
+
+
 @pytest.mark.parametrize("first_op", ["NEW", "MOD"])
 def test_only_first_boundary_card_applies_op_in_each_step(deck, first_op):
     # Element 1 uses {1,2,3,4}; element 2 uses {5,6,7,8}; their intersection is empty.
