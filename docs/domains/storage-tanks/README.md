@@ -22,6 +22,8 @@ checks metadata; it does not authenticate a numeric value or approve a design.
   thickness, MAWP, hydrotest pressure and a pressure sweep with design point.
 - [Inputs and unrounded results](shell-thickness-examples.json): input echo,
   course results, evidence gaps and report digests.
+- [API 650 Annex E seismic screen](api650-annex-e.md): 20 m tank, 10 m fill,
+  SUG II; base shear, moments, freeboard, anchorage ratio J and hoop demand.
 
 Both pages use the house reporting engine. Compact pages load Plotly from its
 public CDN; the default generator embeds it for offline use. Chart hover data

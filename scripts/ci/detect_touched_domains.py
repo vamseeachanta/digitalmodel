@@ -37,6 +37,11 @@ FULL_MATRIX_PATHS = {
     PYPROJECT_PATH,
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("src/digitalmodel/process_piping/", ("asset-integrity",)),
+    (
+        "src/digitalmodel/infrastructure/utils/pipe_friction.py",
+        ("asset-integrity", "field-development"),
+    ),
     ("scripts/enforcement/", ("workflows",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
@@ -79,6 +84,7 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("tests/specialized/cathodic_protection/", ("cathodic-protection",)),
 )
 PACKAGE_DATA_DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("process_piping/", ("asset-integrity",)),
     ("orcaflex/", ("orcaflex",)),
     ("subsea/", ("subsea",)),
     ("naval_architecture/", ("naval-architecture",)),
