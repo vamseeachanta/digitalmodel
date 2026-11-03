@@ -11,6 +11,7 @@ import argparse
 import ast
 import configparser
 import fnmatch
+import glob
 import json
 import re
 import shlex
@@ -32,13 +33,19 @@ def expand_root(
     cache: dict[str, list[tuple[str, bool]]] | None = None,
 ) -> list[tuple[str, bool]]:
     """Resolve a test root to normalized paths and their directory status."""
-    pattern = pattern.removeprefix("./").rstrip("/")
+    pattern = pattern.removeprefix("./")
     if Path(pattern).is_absolute() or ".." in Path(pattern).parts:
         raise ValueError("Test roots must be repository-relative")
+    if not glob.has_magic(pattern):
+        pattern = pattern.rstrip("/")
+    if any(char in pattern for char in "{}()") or any(
+        expression in pattern for expression in ("[^", "[:", "[.", "[=")
+    ):
+        raise ValueError("Unsupported shell pattern in test root")
     cache = {} if cache is None else cache
     if pattern not in cache:
         candidates = (
-            root.glob(pattern) if any(c in pattern for c in "*?[") else [root / pattern]
+            root / item for item in glob.glob(pattern, root_dir=root, recursive=False)
         )
         cache[pattern] = [
             (item.relative_to(root).as_posix(), item.is_dir()) for item in candidates
@@ -59,23 +66,48 @@ def matches(
     )
 
 
+def validate_shell_expansion(command: str, tokens: list[str], start: int) -> None:
+    """Permit unquoted expansion only for positional pytest test roots."""
+    value_options = {
+        "--ignore",
+        "--ignore-glob",
+        "-p",
+        "--tb",
+        "--junitxml",
+        "--import-mode",
+    }
+    raw_tokens = re.findall(r"""(?:[^\s'"]+|'[^']*'|"[^"]*")+""", command)
+    for index, raw in enumerate(raw_tokens):
+        is_root = (
+            index >= start
+            and tokens[index].startswith(("tests/", "./tests/"))
+            and (index == start or tokens[index - 1] not in value_options)
+        )
+        quoted = re.findall(r"'[^']*'|\"[^\"]*\"", raw)
+        if is_root and any(char in part for part in quoted for char in "*?["):
+            raise ValueError("Quoted wildcard test roots need explicit audit support")
+        unquoted = re.sub(r"'[^']*'|\"[^\"]*\"", "", raw)
+        if not is_root and any(char in unquoted for char in "*?[~"):
+            raise ValueError("Shell expansion outside test roots is unsupported")
+
+
 def pytest_tokens(command: str) -> list[str]:
     """Validate the executable invocation before reading pytest arguments."""
-    if any(char in command for char in ";&|`$\n\\"):
+    command = re.sub(
+        r'(?<!\S)--with[ \t]+"assetutilities @ git\+https://github\.com/'
+        r'\$\{GITHUB_REPOSITORY%/\*\}/assetutilities\.git@main"(?=[ \t]|$)',
+        "--with assetutilities",
+        command,
+    )
+    if any(char in command for char in ";&|`$\n\r\\{}()"):
         raise ValueError("Unsupported shell composition in pytest command")
-    for raw in re.findall(r"""(?:[^\s'"]+|'[^']*'|"[^"]*")+""", command):
-        if shlex.split(raw)[0].startswith(("tests/", "./tests/")) and any(
-            char in segment
-            for segment in re.findall(r"'[^']*'|\"[^\"]*\"", raw)
-            for char in "*?["
-        ):
-            raise ValueError("Quoted wildcard test roots need explicit audit support")
     tokens = shlex.split(command)
     starts = [
         i + 2 for i in range(len(tokens) - 1) if tokens[i : i + 2] == ["-m", "pytest"]
     ]
     if len(starts) != 1:
         raise ValueError("Expected exactly one python -m pytest invocation")
+    validate_shell_expansion(command, tokens, starts[0])
     executable = starts[0] - 3
     if executable < 0 or not re.fullmatch(
         r"python(?:3(?:\.\d+)?)?", tokens[executable]
@@ -120,15 +152,22 @@ def pytest_arguments(command: str) -> tuple[list[str], list[str], list[str]]:
                 "Pytest configuration overrides need explicit audit support"
             )
         elif option in {"-p", "--tb", "--junitxml", "--import-mode"}:
-            if "=" not in arg and not next(args, ""):
+            value = arg.split("=", 1)[1] if "=" in arg else next(args, "")
+            if not value:
                 raise ValueError(f"Missing value for {option}")
+            if option == "-p" and value not in {
+                "no:cacheprovider",
+                "no:randomly",
+                "no:sugar",
+            }:
+                raise ValueError("Only supported reporting-plugin disabling is allowed")
         elif arg in {
             "--no-header",
             "--disable-warnings",
             "--strict-markers",
             "-x",
             "-s",
-        } or (arg.startswith(("-r", "-q", "-v")) and not arg.startswith("--")):
+        } or re.fullmatch(r"-[qv]+|-r[a-zA-Z]+", arg):
             continue
         elif (
             arg.startswith("-")
@@ -152,12 +191,9 @@ def validate_collection_policy(tree: ast.Module) -> None:
         ):
             raise ValueError("Collection policy mutations need explicit audit support")
         if (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and (
-                isinstance(node.func.value, ast.Name)
-                and node.func.value.id in {"collect_ignore", "collect_ignore_glob"}
-            )
+            isinstance(node, ast.Name)
+            and isinstance(node.ctx, ast.Load)
+            and node.id in {"collect_ignore", "collect_ignore_glob"}
         ):
             raise ValueError("Collection policy mutations need explicit audit support")
         if (
@@ -182,17 +218,90 @@ def validate_collection_policy(tree: ast.Module) -> None:
                 raise ValueError("Unsupported collection policy base directory")
 
 
+def hook_binding(node: ast.AST) -> str:
+    """Read explicit Python bindings without importing a conftest module."""
+    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        return node.name
+    if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+        return node.id
+    if isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store):
+        return node.attr
+    if isinstance(node, ast.alias):
+        return node.asname or node.name.split(".")[0]
+    return ""
+
+
+def marker_registration_only(node: ast.AST) -> bool:
+    """Recognize the existing literal marker-only pytest_configure functions."""
+    if (
+        not isinstance(node, ast.FunctionDef)
+        or node.decorator_list
+        or len(node.args.args) != 1
+    ):
+        return False
+    argument = node.args.args[0].arg
+    for statement in node.body:
+        if (
+            isinstance(statement, ast.Expr)
+            and isinstance(statement.value, ast.Constant)
+            and isinstance(statement.value.value, str)
+        ):
+            continue
+        if not isinstance(statement, ast.Expr) or not isinstance(
+            statement.value, ast.Call
+        ):
+            return False
+        call = statement.value
+        if not (
+            isinstance(call.func, ast.Attribute)
+            and isinstance(call.func.value, ast.Name)
+            and call.func.value.id == argument
+            and call.func.attr == "addinivalue_line"
+            and not call.keywords
+            and len(call.args) == 2
+            and all(
+                isinstance(arg, ast.Constant) and isinstance(arg.value, str)
+                for arg in call.args
+            )
+            and isinstance(call.args[0], ast.Constant)
+            and call.args[0].value == "markers"
+        ):
+            return False
+    return True
+
+
+def validate_file_collection_hooks(tree: ast.Module) -> None:
+    """Allow runtime item hooks and literal marker registration, not file hooks."""
+    runtime_hooks = {
+        "pytest_collection_modifyitems",
+        "pytest_runtest_makereport",
+        "pytest_runtest_setup",
+        "pytest_runtest_teardown",
+    }
+    for node in ast.walk(tree):
+        name = hook_binding(node)
+        if name == "*":
+            raise ValueError("Wildcard conftest imports need explicit audit support")
+        if not name.startswith("pytest_") or name in runtime_hooks:
+            continue
+        if name == "pytest_configure" and marker_registration_only(node):
+            continue
+        raise ValueError("Dynamic file collection hooks need explicit audit support")
+
+
 def collection_rules(root: Path) -> list[tuple[str, str]]:
     """Read declarative ignores with AST; never execute a conftest file."""
     config = configparser.ConfigParser(interpolation=None)
     config.read(root / "pytest.ini", encoding="utf-8")
+    if not config.has_option("pytest", "norecursedirs"):
+        raise ValueError("An explicit norecursedirs collection policy is required")
     rules = [
         ("norecurse", item)
         for item in config["pytest"].get("norecursedirs", "").split()
     ]
     addopts = config["pytest"].get("addopts", "")
     _, ignores, globs = pytest_arguments(
-        "python -m pytest tests/ " + addopts.replace("\n", " ")
+        "python -m pytest tests/ " + shlex.join(shlex.split(addopts))
     )
     rules.extend(("path", item) for item in ignores)
     rules.extend(("glob", item) for item in globs)
@@ -202,12 +311,8 @@ def collection_rules(root: Path) -> list[tuple[str, str]]:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         validate_collection_policy(tree)
+        validate_file_collection_hooks(tree)
         for node in tree.body:
-            if (
-                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-                and node.name == "pytest_ignore_collect"
-            ):
-                raise ValueError("Dynamic collection hooks need explicit audit support")
             if not isinstance(node, ast.Assign):
                 continue
             names = {
@@ -299,7 +404,10 @@ def collection_excluded(
                 item
                 for item in targets
                 if fnmatch.fnmatchcase(
-                    item if "/" in pattern else Path(item).name, pattern
+                    (root.absolute() / item).as_posix()
+                    if "/" in pattern
+                    else Path(item).name,
+                    "*/" + pattern if "/" in pattern else pattern,
                 )
             ]
         elif kind == "glob":
@@ -344,7 +452,7 @@ def missing_roots(
             *commands.get(domain.name, ([], [], []))[0],
         ]
         for item in roots:
-            if not list(root.glob(item.rstrip("/"))):
+            if not any((root / path).exists() for path, _ in expand_root(root, item)):
                 findings.add(f"missing-root|{domain.name}|{item}")
     return findings
 
@@ -463,6 +571,7 @@ def main(argv: list[str] | None = None) -> int:
         KeyError,
         TypeError,
         SyntaxError,
+        StopIteration,
         yaml.YAMLError,
     ) as error:
         print(f"Test registration audit failed: {error}", file=sys.stderr)

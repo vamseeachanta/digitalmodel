@@ -8,6 +8,8 @@
 import glob
 import importlib.util
 import json
+import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -94,12 +96,12 @@ def test_consistent_configuration_passes(tmp_path):
             "command-excluded",
         ),
         (
-            "python -m pytest --ignore-glob=tests/*/test_*.py tests/example/",
+            "python -m pytest --ignore-glob='tests/*/test_*.py' tests/example/",
             ["tests/example/"],
             "command-excluded",
         ),
         (
-            "python -m pytest --ignore-glob=tests/exam?le tests/",
+            "python -m pytest --ignore-glob='tests/exam?le' tests/",
             ["tests/example/"],
             "command-excluded",
         ),
@@ -187,6 +189,16 @@ def test_nonexistent_root_is_reported_even_without_a_discovered_file(tmp_path):
         "tests/example/test_example.py::test_example",
         "; echo pytest",
         "--override-ini testpaths=tests/other",
+        "-qkfixture",
+        "-qmunit",
+        "-vcother.ini",
+        "-qoaddopts=--ignore=tests/example/",
+        "-vpfixture_plugin",
+        "-p fixture_plugin",
+        "-p=fixture_plugin",
+        "-p no:python",
+        "-p no:unittest",
+        "\r",
     ],
 )
 def test_unmodelled_selection_fails_closed(tmp_path, extra):
@@ -246,6 +258,20 @@ def test_pytest_words_are_not_an_invocation(tmp_path, command):
         "collect_ignore = []\ncollect_ignore += ['example/test_example.py']",
         "_tests_dir = Path('elsewhere')\ncollect_ignore = [str(_tests_dir / 'test_example.py')]",
         "def pytest_ignore_collect(path): return True",
+        "if True:\n    def pytest_ignore_collect(path): return True",
+        "pytest_ignore_collect = lambda path: True",
+        "from helper import pytest_ignore_collect",
+        "from helper import callback as pytest_collect_file",
+        "def pytest_pycollect_makemodule(path): return None",
+        "def pytest_collect_directory(path): return None",
+        "def pytest_make_collect_report(collector): return None",
+        "def pytest_collection(session): return True",
+        "from helper import *",
+        "pytest_plugins = ['helper']",
+        "import sys\nsys.modules[__name__].pytest_ignore_collect = lambda path: True",
+        "def pytest_configure(config): config.option.ignore.append('example')",
+        "collect_ignore = []\ncollect_ignore[:] = ['example/test_example.py']",
+        "collect_ignore = []\ncollect_ignore[0:0] = ['example/test_example.py']",
     ],
 )
 def test_dynamic_collection_policy_fails_closed(tmp_path, declaration):
@@ -356,6 +382,311 @@ def test_shell_globs_are_expanded_before_registration_checks(tmp_path, argument)
         tmp_path, command=f"uv run --no-project python -m pytest {argument}"
     )
     assert load_guard().audit(repo) == set()
+
+
+def shell_test_environment():
+    """Keep inherited shell, Git and pytest settings out of the native oracle."""
+    excluded_env = {
+        "BASH_ENV",
+        "ENV",
+        "BASHOPTS",
+        "SHELLOPTS",
+        "GLOBIGNORE",
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_COMMON_DIR",
+        "PYTEST_ADDOPTS",
+        "PYTEST_PLUGINS",
+    }
+    env = {key: value for key, value in os.environ.items() if key not in excluded_env}
+    env["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"
+    return env
+
+
+def native_bash_collection(repo, argument):
+    """Collect with checked shell defaults and only the fixture configuration."""
+    bash = shutil.which("bash")
+    if bash is None:
+        pytest.skip("Native Bash is required for the shell comparison")
+    return subprocess.run(
+        [
+            bash,
+            "--noprofile",
+            "--norc",
+            "-c",
+            "shopt -u dotglob globstar nullglob failglob extglob; "
+            "for option in dotglob globstar nullglob failglob extglob; do "
+            'if shopt -q "$option"; then exit 99; fi; done; '
+            f'exec "$@" {argument}',
+            "bash",
+            sys.executable,
+            "-m",
+            "pytest",
+            "--collect-only",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--import-mode=importlib",
+            "-c",
+            str(repo / "pytest.ini"),
+            "--rootdir",
+            str(repo),
+            "--confcutdir",
+            str(repo),
+        ],
+        cwd=repo,
+        env=shell_test_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+
+
+@pytest.mark.parametrize(
+    ("argument", "expected"),
+    [
+        ("tests/example/**/test_*.py", {"nested/test_child.py"}),
+        ("tests/example/*/test_*.py", {"nested/test_child.py"}),
+        ("tests/example/**/**/test_*.py", {"nested/deeper/test_deep.py"}),
+        ("tests/example/*_test.py", {"visible_test.py"}),
+        (
+            "tests/example/*/",
+            {"nested/test_child.py", "nested/deeper/test_deep.py"},
+        ),
+        ("tests/example/test_example.py/", {"test_example.py"}),
+        (
+            "tests/example/*",
+            {
+                "test_example.py",
+                "visible_test.py",
+                "nested/test_child.py",
+                "nested/deeper/test_deep.py",
+            },
+        ),
+        ("tests/example/.hidden*", {".hidden/test_hidden.py", ".hidden_test.py"}),
+        ("tests/example/.hidden/", {".hidden/test_hidden.py"}),
+        ("tests/example/absent*.py", set()),
+    ],
+)
+def test_registration_matches_default_bash_collection(tmp_path, argument, expected):
+    """Recursive and hidden expansion must agree with native Bash and pytest."""
+    repo = fixture_repo(tmp_path, command=f"python -m pytest {argument}")
+    files = {
+        "test_example.py",
+        "visible_test.py",
+        "nested/test_child.py",
+        "nested/deeper/test_deep.py",
+        ".hidden/test_hidden.py",
+        ".hidden_test.py",
+    }
+    for name in files - {"test_example.py"}:
+        path = repo / "tests/example" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("def test_fixture(): pass\n", encoding="utf-8", newline="\n")
+    result = native_bash_collection(repo, argument)
+    assert result.returncode == (0 if expected else 4), result.stdout + result.stderr
+    assert {
+        line.split("::")[0].removeprefix("tests/example/")
+        for line in result.stdout.splitlines()
+        if line.startswith("tests/example/") and "::" in line
+    } == expected
+    findings = load_guard().audit(repo)
+    assert {
+        name
+        for name in files
+        if f"missing-command|example|tests/example/{name}" not in findings
+    } == expected
+    assert (f"missing-root|example|{argument}" in findings) is (not expected)
+    if not expected:
+        assert "file or directory not found" in result.stderr
+
+
+@pytest.mark.parametrize(
+    "argument", ["tests/example/**/test_*.py", "tests/example/*_test.py"]
+)
+def test_shell_unmatched_roots_are_reported_missing(tmp_path, argument):
+    """A deep or hidden match cannot rescue a root Bash leaves unexpanded."""
+    repo = fixture_repo(tmp_path, command=f"python -m pytest {argument}")
+    for name in ("nested/deeper/test_deep.py", ".hidden_test.py"):
+        path = repo / "tests/example" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("def test_fixture(): pass\n", encoding="utf-8", newline="\n")
+    assert f"missing-root|example|{argument}" in load_guard().audit(repo)
+
+
+@pytest.mark.parametrize(
+    "argument",
+    [
+        "tests/example/{test_example,missing}.py",
+        "tests/example/test_[^x]*.py",
+        "tests/example/test_[[:alpha:]]*.py",
+        "tests/example/@(test_example).py",
+    ],
+)
+def test_unmodelled_shell_patterns_fail_closed(tmp_path, argument):
+    with pytest.raises(ValueError):
+        load_guard().audit(
+            fixture_repo(tmp_path, command=f"python -m pytest {argument}")
+        )
+
+
+DEPENDENCY_OPTION = (
+    '--with "assetutilities @ git+https://github.com/'
+    '${GITHUB_REPOSITORY%/*}/assetutilities.git@main"'
+)
+
+
+def test_recognized_dependency_prefix_preserves_registration(tmp_path):
+    """The supported dependency expression does not alter pytest selection."""
+    command = f"uv run --no-sources {DEPENDENCY_OPTION} --with-editable '.[test]' "
+    repo = fixture_repo(tmp_path, command=command + "python -m pytest tests/example/")
+    assert load_guard().audit(repo) == set()
+
+
+@pytest.mark.parametrize(
+    "option",
+    [
+        DEPENDENCY_OPTION.replace('"', "'"),
+        DEPENDENCY_OPTION.replace("${GITHUB_REPOSITORY%/*}", "$GITHUB_REPOSITORY"),
+        DEPENDENCY_OPTION.replace("%/*", "%%/*"),
+        DEPENDENCY_OPTION.replace("%/*", "#*/"),
+        DEPENDENCY_OPTION.replace("$", "\\$"),
+        DEPENDENCY_OPTION.replace('--with "', '--with x"'),
+        DEPENDENCY_OPTION + "suffix",
+        DEPENDENCY_OPTION + "$(echo invalid)",
+        DEPENDENCY_OPTION + "`echo invalid`",
+        DEPENDENCY_OPTION + "; echo invalid",
+        DEPENDENCY_OPTION + "\n",
+        DEPENDENCY_OPTION.replace("--with ", "--with\n"),
+        DEPENDENCY_OPTION + " --with $(echo invalid)",
+    ],
+)
+def test_dependency_exception_does_not_allow_shell_composition(tmp_path, option):
+    command = f"uv run {option} python -m pytest tests/example/"
+    with pytest.raises(ValueError):
+        load_guard().audit(fixture_repo(tmp_path, command=command))
+
+
+@pytest.mark.parametrize("suffix", [" -k fixture", " --pyargs", " --with package"])
+def test_dependency_exception_preserves_pytest_validation(tmp_path, suffix):
+    command = f"uv run {DEPENDENCY_OPTION} python -m pytest tests/example/{suffix}"
+    with pytest.raises(ValueError):
+        load_guard().audit(fixture_repo(tmp_path, command=command))
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "uv run --with {package,echo} python -m pytest tests/example/",
+        "uv run --with tests/* python -m pytest tests/example/",
+        "python -m pytest tests/example/ --tb {short,tests/other}",
+    ],
+)
+def test_unquoted_expansion_outside_roots_fails_closed(tmp_path, command):
+    with pytest.raises(ValueError):
+        load_guard().audit(fixture_repo(tmp_path, command=command))
+
+
+@pytest.mark.parametrize("extra", ["--tb tests/*", "--tb=tests/*", "-p tests/*"])
+def test_unquoted_option_value_globs_fail_closed(tmp_path, extra):
+    with pytest.raises(ValueError):
+        load_guard().audit(
+            fixture_repo(tmp_path, command=f"python -m pytest tests/example/ {extra}")
+        )
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        "-q",
+        "-vv",
+        "-rfE",
+        "-p no:cacheprovider",
+        "-p=no:cacheprovider",
+        "-p no:randomly",
+        "-p no:sugar",
+    ],
+)
+def test_supported_reporting_options_preserve_registration(tmp_path, extra):
+    command = f"python -m pytest tests/example/ {extra}"
+    assert load_guard().audit(fixture_repo(tmp_path, command=command)) == set()
+
+
+def test_missing_recursion_policy_requires_explicit_configuration(tmp_path):
+    repo = fixture_repo(tmp_path)
+    path = repo / "pytest.ini"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("norecursedirs = .git\n", ""),
+        encoding="utf-8",
+        newline="\n",
+    )
+    with pytest.raises(ValueError):
+        load_guard().audit(repo)
+
+
+def test_literal_marker_registration_is_supported(tmp_path):
+    repo = fixture_repo(tmp_path)
+    (repo / "tests/conftest.py").write_text(
+        "def pytest_configure(config):\n"
+        "    config.addinivalue_line('markers', 'fixture: a fixture marker')\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    assert load_guard().audit(repo) == set()
+
+
+@pytest.mark.parametrize("pattern", ["example/nested", "tests/example/nested"])
+def test_recursion_path_patterns_match_suffixes(tmp_path, pattern):
+    repo = fixture_repo(tmp_path, command="python -m pytest tests/")
+    path = repo / "pytest.ini"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "norecursedirs = .git", f"norecursedirs = {pattern}"
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    nested = repo / "tests/example/nested/test_nested.py"
+    nested.parent.mkdir()
+    nested.write_text("def test_nested(): pass\n", encoding="utf-8", newline="\n")
+    native = native_bash_collection(repo, "tests/")
+    assert native.returncode == 0, native.stdout + native.stderr
+    assert "test_nested.py::" not in native.stdout
+    assert (
+        "collection-excluded|example|tests/example/nested/test_nested.py"
+        in load_guard().audit(repo)
+    )
+
+
+def test_ini_ignore_globs_are_literal_arguments(tmp_path):
+    repo = fixture_repo(tmp_path)
+    with (repo / "pytest.ini").open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write("addopts = --ignore-glob=tests/example/test_*.py\n")
+    assert (
+        "collection-excluded|example|tests/example/test_example.py"
+        in load_guard().audit(repo)
+    )
+
+
+def test_missing_harness_step_has_an_audit_diagnostic(tmp_path):
+    repo = fixture_repo(tmp_path)
+    workflow = repo / ".github/workflows/quality-gates-by-domain.yml"
+    workflow.parent.mkdir(parents=True)
+    workflow.write_text(
+        yaml.safe_dump({"jobs": {"ci-harness-tests": {"steps": []}}}),
+        encoding="utf-8",
+        newline="\n",
+    )
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--root", str(repo)],
+        env=shell_test_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    assert result.returncode == 1
+    assert "Test registration audit failed:" in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 @pytest.mark.parametrize(
