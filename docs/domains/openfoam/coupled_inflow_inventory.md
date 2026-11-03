@@ -11,6 +11,7 @@ atmospheric vent introduced by #1528.
 | --- | --- | --- |
 | 1 | 2026-10-19 | Bound constant inflow by duration and initialized headroom to prevent planned overflow. |
 | 2 | 2026-10-25 | Preserve exact-capacity acceptance under arithmetic roundoff while retaining overflow rejection. |
+| 3 | 2026-11-02 | Preserve emitted mesh coordinate precision so initialized capacity matches the inventory limit. |
 
 ## Method and decision
 
@@ -43,6 +44,14 @@ The limit is tank capacity itself, with no empirical allowance or coefficient.
 `setFieldsDict` initialization. Thus an upward mesh snap reduces the headroom
 used by the gate. The inventory is assumed to describe the state at the declared
 start time; restart-field inventories are not inspected.
+
+Mesh coordinates in `blockMeshDict` use a round-trip numeric representation,
+so the inventory dimensions also reach the emitted mesh. A synthetic height of
+10.000049 m previously became 10.0 m under four-decimal formatting, reducing
+the emitted headroom by 588.0 mL at 90% fill. Regressions parse the emitted
+vertices, cell counts and `setFieldsDict` bounds to count initialized wet cells
+and compare actual headroom with planned inflow. The height, length and width
+cases retain their input precision; the arithmetic tolerance is unchanged.
 
 Headroom is computed from the fraction of dry vertical cells, avoiding
 cancellation in `1 - snapped_fill` near a full tank. The comparison permits

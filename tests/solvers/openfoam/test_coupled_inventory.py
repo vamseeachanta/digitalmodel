@@ -10,6 +10,7 @@ Other numbers below are synthetic test inputs, with their arithmetic stated.
 """
 
 from dataclasses import replace
+import math
 from pathlib import Path
 import re
 
@@ -232,7 +233,7 @@ def test_documented_worked_example(capsys):
         Path(__file__).resolve().parents[3]
         / "docs/domains/openfoam/coupled_inflow_inventory.md"
     )
-    example = doc.read_text().split("```python\n")[1].split("```")[0]
+    example = doc.read_text(encoding="utf-8").split("```python\n")[1].split("```")[0]
     exec(compile(example, str(doc), "exec"), {})
     assert capsys.readouterr().out == (
         "end time: 3.1 s\nplanned inflow: 60.0 m3\nheadroom: 600.0 m3\n"
@@ -249,5 +250,59 @@ def test_built_case_and_manifest_record_guarded_duration(tmp_path):
     assert manifest.solver["headroom_m3"] == 600.0
     case_dir = OpenFOAMCaseBuilder(case).build(tmp_path)
     assert re.search(
-        r"endTime\s+3\.1257;", (case_dir / "system/controlDict").read_text()
+        r"endTime\s+3\.1257;", (case_dir / "system/controlDict").read_text(encoding="utf-8")
     )
+
+
+@pytest.mark.parametrize(
+    "dimension,value,expected_headroom",
+    [
+        ("tank_height", 10.000049, 120.000588),
+        ("tank_length", 20.000049, 120.000294),
+        ("tank_width", 6.000049, 120.000980),
+    ],
+)
+def test_inventory_matches_emitted_mesh_and_initialization(
+    tmp_path, dimension, value, expected_headroom
+):
+    """Synthetic exact-capacity inflow must fit the emitted, initialized mesh."""
+    # OpenStax, University Physics Vol. 1 (2016), section 14.5: Q=dV/dt.
+    # At 90% fill, four of 40 cells are dry. Independent headroom arithmetic:
+    # 20*6*10.000049/10=120.000588; 20.000049*6*10/10=120.000294;
+    # 20*6.000049*10/10=120.000980 m3. A 10% transfer fills that headroom.
+    sweep, spec = reference(fill=0.9, capacity=0.1)
+    spec = replace(spec, **{dimension: value})
+    sweep = replace(sweep, fill_depth=0.9 * spec.tank_height)
+    case = map_sweep_case_to_openfoam_case(sweep, spec)
+    result = verify_coupling(case, sweep, spec)
+    case_dir = OpenFOAMCaseBuilder(case).build(tmp_path)
+    mesh = (case_dir / "system/blockMeshDict").read_text(encoding="utf-8")
+    vertex_section = re.search(r"vertices\s*\((.*?)\);", mesh, re.DOTALL)
+    assert vertex_section is not None
+    vertices = [
+        tuple(float(c) for c in coords.split())
+        for coords in re.findall(r"\(([^()]*)\)", vertex_section.group(1))
+    ]
+    assert len(vertices) == 8
+    lower = [min(v[axis] for v in vertices) for axis in range(3)]
+    lengths = [max(v[axis] for v in vertices) - lower[axis] for axis in range(3)]
+    cells = re.search(r"hex\s*\([^)]*\)\s*\(([^()]*)\)", mesh)
+    assert cells is not None
+    n_z = int(cells.group(1).split()[2])
+    initialization = (case_dir / "system/setFieldsDict").read_text(encoding="utf-8")
+    box = re.search(r"box\s+\(([^()]*)\)\s+\(([^()]*)\);", initialization)
+    assert box is not None
+    box_min, box_max = (list(map(float, corner.split())) for corner in box.groups())
+    assert all(box_min[axis] <= lower[axis] for axis in range(3))
+    assert all(box_max[axis] >= lower[axis] + lengths[axis] for axis in (0, 1))
+    wet_cells = sum(
+        box_min[2] <= lower[2] + (cell + 0.5) * lengths[2] / n_z <= box_max[2]
+        for cell in range(n_z)
+    )
+    assert wet_cells == 36
+    emitted_headroom = math.prod(lengths) * (n_z - wet_cells) / n_z
+    assert emitted_headroom == pytest.approx(expected_headroom, rel=2e-15, abs=0.0)
+    assert result.headroom_m3 == pytest.approx(emitted_headroom, rel=2e-15, abs=0.0)
+    assert result.planned_inflow_m3 == pytest.approx(emitted_headroom, rel=2e-15, abs=0.0)
+    # Precision is checked exactly after parsing, independently of volume tolerances.
+    assert lengths == [spec.tank_length, spec.tank_width, spec.tank_height]
