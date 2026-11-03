@@ -14,6 +14,7 @@ import numpy as np
 
 from .inp_writer import ELEMENT_TYPE_MAP, INPWriter
 from .result_parser import CalculiXResultParser
+from .model_checker import validate_model
 
 
 def is_calculix_available() -> bool:
@@ -213,12 +214,13 @@ class FEMChain:
     # Solve
     # ------------------------------------------------------------------
 
-    def solve(self, n_threads: int = 1) -> dict:
-        """Run ccx solver. Returns dict with 'success' and 'message'."""
-        if not is_calculix_available():
-            raise RuntimeError("CalculiX (ccx) not found in PATH")
+    def solve(self, n_threads: int = 1, *, node_tolerance: float = 1e-6) -> dict:
+        """Check the current deck, then run ccx; errors block and warnings pass."""
         if self._inp_path is None:
             raise RuntimeError("No INP file — call setup_analysis first")
+        qa_gate = validate_model(self._inp_path, tolerance=node_tolerance)
+        if not is_calculix_available():
+            raise RuntimeError("CalculiX (ccx) not found in PATH")
 
         job = self._inp_path.stem
         env = {"OMP_NUM_THREADS": str(n_threads)}
@@ -236,6 +238,7 @@ class FEMChain:
             "success": result.returncode == 0,
             "message": result.stdout[-500:] if result.stdout else "",
             "stderr": result.stderr[-500:] if result.stderr else "",
+            "qa_gate": qa_gate.to_dict(),
         }
 
     # ------------------------------------------------------------------
@@ -356,15 +359,19 @@ class FEMChain:
     # ------------------------------------------------------------------
 
     def _extract_gmsh_data(self, gmsh_module):
-        """Extract nodes and elements from gmsh into internal storage."""
+        """Extract the plate's volume mesh, excluding boundary entities."""
         node_tags, node_coords, _ = gmsh_module.model.mesh.getNodes()
         self._nodes = node_coords.reshape(-1, 3)
 
         self._elements = {}
         for etype in gmsh_module.model.mesh.getElementTypes():
-            etags, enodes = gmsh_module.model.mesh.getElementsByType(etype)
             props = gmsh_module.model.mesh.getElementProperties(etype)
             name, dim, npn = props[0], props[1], props[3]
+            # Plate geometry is a solid. Its lower-dimensional mesh entities
+            # are geometric boundaries, with no structural section intent.
+            if dim != 3:
+                continue
+            etags, enodes = gmsh_module.model.mesh.getElementsByType(etype)
             conn = enodes.reshape(-1, npn)
             self._elements[name] = {
                 "connectivity": conn - 1,  # 0-based
