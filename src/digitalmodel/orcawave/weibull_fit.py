@@ -9,6 +9,9 @@ Weibull Distribution:
 https://www.itl.nist.gov/div898/handbook/eda/section3/eda3668.htm
 The general density, standard CDF, inverse and gamma moments on that page
 give every distribution equation below by X = gamma + lambda*Z.
+Source G: NIST DLMF, online edition 2026, 5.7.4 (psi-function series):
+https://dlmf.nist.gov/5.7.E4
+Integration gives the log-gamma series used for large-shape variance.
 """
 
 from __future__ import annotations
@@ -20,7 +23,7 @@ from typing import TYPE_CHECKING, Callable
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 from scipy.optimize import brentq, minimize_scalar
-from scipy.special import gammaln, logsumexp
+from scipy.special import gammaln, logsumexp, zeta
 
 if TYPE_CHECKING:
     from .motion_statistics import ScatterCell
@@ -117,18 +120,19 @@ class WeibullDistribution:
             power = np.log(base) / self.shape
             # Avoid a log/exp round trip before cancelling the signed location.
             multiplier = np.power(base, 1 / self.shape)
-            reference = max(self.scale, abs(self.location))
-            ratio = self.scale / reference
-            # Source W, divided by a common finite reference before adding.
-            # Subnormal factors/products lose precision before rescaling;
-            # use the logarithmic fallback unless all are normal floats.
-            positive = ratio * multiplier
-            direct = reference * (positive + self.location / reference)
+            exponent = math.frexp(max(self.scale, abs(self.location)))[1]
+            scaled_scale = math.ldexp(self.scale, -exponent)
+            scaled_location = math.ldexp(self.location, -exponent)
+            # Source W: binary scaling preserves the signed operands' bits
+            # before cancellation; an arbitrary reference rounds both first.
+            # Subnormal factors/products still use the logarithmic fallback.
+            positive = scaled_scale * multiplier
+            direct = np.ldexp(positive + scaled_location, exponent)
             tiny = np.finfo(float).tiny
             representable = (
                 np.isfinite(multiplier)
                 & (multiplier >= tiny)
-                & (ratio >= tiny)
+                & (scaled_scale >= tiny)
                 & (positive >= tiny)
             )
             if np.all(representable):
@@ -247,8 +251,34 @@ class WeibullDistribution:
     @property
     def variance(self) -> float:
         """Variance independent of location (Source W, standard deviation)."""
-        a = gammaln(1 + 1 / self.shape)
         b = gammaln(1 + 2 / self.shape)
+        if self.shape >= 16:
+            inverse = 1 / self.shape
+            # Source G, integrated: d=logGamma(1+2u)-2logGamma(1+u)
+            # =sum_{n>=2} (-1)^n*zeta(n)*(2^n-2)*u^n/n, u=1/k.
+            # Keep d/u^2: u^2 can underflow even with finite variance.
+            # For u<=1/16, the tail after n=20 is below 2e-18 in d/u^2.
+            scaled_difference = math.fsum(
+                (-1) ** n * zeta(n, 1) * (2**n - 2) / n * inverse ** (n - 2)
+                for n in range(2, 21)
+            )
+            difference = inverse * inverse * scaled_difference
+            # log((1-exp(-d))/d)=-d/2+O(d^2); omit only a correction
+            # smaller than eps/2, without dividing subnormal quantities.
+            correction = (
+                math.log(-math.expm1(-difference) / difference)
+                if difference >= np.finfo(float).eps
+                else 0.0
+            )
+            log_variance = (
+                2 * (math.log(self.scale) - math.log(self.shape))
+                + b
+                + math.log(scaled_difference)
+                + correction
+            )
+            with np.errstate(over="ignore"):
+                return float(np.exp(log_variance))
+        a = gammaln(1 + 1 / self.shape)
         # Source W: lambda^2 * exp(b) * (1-exp(2*a-b)). No factor
         # is exponentiated until its scale has been included.
         with np.errstate(over="ignore", divide="ignore"):

@@ -11,6 +11,7 @@ import math
 
 import numpy as np
 import pytest
+from scipy.integrate import quad
 
 from digitalmodel.orcawave.weibull_fit import WeibullDistribution
 
@@ -321,3 +322,66 @@ def test_moment_preserves_exact_sum_near_cancellation(quantity, shape, scale):
     law = WeibullDistribution(shape, scale, location)
     actual = law.mean if quantity == "mean" else law.moment(1)
     assert actual == expected
+
+
+@pytest.mark.parametrize("api", ["quantile", "return_level"])
+@pytest.mark.parametrize("scale", [1e16, 1e308])
+@pytest.mark.parametrize("direction", [0, math.inf])
+def test_quantile_preserves_exact_sum_near_cancellation(api, scale, direction):
+    """Source W, online edition 2026, 1.3.6.6.8: k=1 and hazard=1.
+
+    Q=gamma+lambda: 10^16-(10^16-2)=2 exactly. At either scale, moving
+    gamma to an adjacent float leaves the exact signed rational residual.
+    """
+    location = -math.nextafter(scale, direction)
+    expected = float(Fraction(scale) + Fraction(location))
+    law = WeibullDistribution(1, scale, location)
+    argument = -math.expm1(-1) if api == "quantile" else math.e
+    assert getattr(law, api)(argument) == expected
+
+
+def test_near_cancellation_quantile_array_preserves_endpoints():
+    """Source W: hazards 0, 1, infinity give gamma, 2, infinity exactly."""
+    law = WeibullDistribution(1, 1e16, -(1e16 - 2))
+    np.testing.assert_array_equal(
+        law.quantile([[0, -math.expm1(-1)], [1, -math.expm1(-1)]]),
+        [[-(1e16 - 2), 2], [math.inf, 2]],
+    )
+
+
+@pytest.mark.parametrize("shape", [math.nextafter(16, 0), 16, 1e4, 1e8, 1e16, 1e308])
+def test_large_shape_variance_matches_transformed_exponential_quadrature(shape):
+    """Source W: T=Z^k is exponential, so Var[X]=Var[k*(T^(1/k)-1)].
+
+    With u=ln(T), the density is exp(u-exp(u)); expm1 avoids subtracting
+    nearly equal moments. Bounds -80 to 6 omit less than 10^-26 of either
+    moment for k>=16. Independent quadrature gives 1.4160672342528875 at
+    k=16 and 1.644934023817455 at k=10^8, with lambda=k.
+    """
+
+    def integrand(u, order):
+        response = shape * math.expm1(u / shape)
+        return response**order * math.exp(u - math.exp(u))
+
+    mean, mean_error = quad(integrand, -80, 6, args=(1,), epsabs=1e-11, epsrel=1e-11)
+    second, second_error = quad(
+        integrand, -80, 6, args=(2,), epsabs=1e-11, epsrel=1e-11
+    )
+    assert mean_error < 1e-10
+    assert second_error < 1e-10
+    variance = WeibullDistribution(shape, shape).variance
+    assert math.isfinite(variance) and variance > 0
+    assert variance == pytest.approx(second - mean**2, rel=2e-10, abs=0)
+
+
+@pytest.mark.parametrize("scale_ratio", [1e-16, 1, 2])
+def test_large_shape_variance_retains_scaled_log_exponential_limit(scale_ratio):
+    """Source W: k*(T^(1/k)-1) -> ln(T), Var[ln(T)]=pi^2/6.
+
+    At k=10^16 the finite-k correction is below 10^-14; lambda=c*k
+    gives c^2*pi^2/6, namely 1.6449340668482264 at c=1 and
+    6.579736267392906 at c=2. This also checks a representable tiny variance.
+    Reference: NIST DLMF, online edition 2026, 5.7.4 at z=0, integrated.
+    """
+    variance = WeibullDistribution(1e16, scale_ratio * 1e16).variance
+    assert variance == pytest.approx(scale_ratio**2 * math.pi**2 / 6, rel=1e-12, abs=0)
