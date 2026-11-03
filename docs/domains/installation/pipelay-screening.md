@@ -65,10 +65,37 @@ dynamic analysis. Each A&R stage requires compatible endpoints, cable length
 and pipe forces. Original lay forces do not automatically describe that stage.
 Compare demand with independently qualified cable, winch and rigging capacities.
 
+## Citation sidecars and prerequisites
+
+`pressure_screen` and `displacement_controlled_check` return an additional
+`citations` tuple of `Citation` records beside the unchanged numeric fields and
+public `sources` locators. Each calculation validates its records through the
+existing wiki resolver. Set `LLM_WIKI_PATH` to an authorized wiki checkout whose
+source records carry the following metadata. Paths are relative to that checkout.
+
+| Wiki path | code_id | publisher | revision | section |
+| --- | --- | --- | --- | --- |
+| `wikis/engineering/wiki/standards/dnvgl-st-f101-2017.md` | DNVGL-ST-F101 | DNV | 2017 | Sections 5.4.4-5.4.5 |
+| `wikis/engineering/wiki/sources/bsee-tap-434-2003.md` | BSEE-TAP-434 | BSEE | 2003 | External Overpressure |
+| `wikis/engineering/wiki/standards/dnv-os-f101-2013.md` | DNV-OS-F101 | DNV | 2013 | Sec. 5 D |
+
+Table 1. Required edition-specific citation records; each also requires
+`source_sibling: generic`, with `source_project` absent or YAML `null`.
+
+The first two records govern the pressure checks and ovality floor; the third
+governs the displacement interaction. Missing pages, mismatched publication,
+edition, section or sibling metadata, unexpected project scope, and resolved
+paths outside the configured wiki raise `CitationResolutionError` before a
+numeric result is returned. A current-edition page cannot substitute for a
+legacy-edition record. Provisioning and qualifying these wiki records remains
+the responsibility of their source repository; synthetic test metadata verifies
+the validation behavior without establishing engineering source qualification.
+
 ## Worked example
 
 All inputs below are synthetic illustration values, not measured engineering
-data or standard default factors. Run the example from this checkout:
+data or standard default factors. Configure the citation records above, then
+run the example from this checkout:
 
 ```powershell
 $env:PYTHONPATH = 'src'
@@ -91,15 +118,15 @@ gamma_e=2 and q=0.8. It does not classify the example's free sagbend.
 | Sagbend bending strain (%) | 0.125 | 0.500 |
 | Overbend bending strain (%) | 0.100 | Not evaluated |
 
-Table 1. Natural-catenary results; rigid-pipe touchdown bending is approximate.
+Table 2. Natural-catenary results; rigid-pipe touchdown bending is approximate.
 
-The pressure calculation gives Pc=22.943425 MPa and Ppr=4.480000 MPa.
-The collapse utilization is 0.110271 and propagation utilization is 0.564732,
+The pressure calculation gives Pc=22.9 MPa and Ppr=4.48 MPa.
+The collapse utilization is 0.110 and propagation utilization is 0.565,
 both below the stated criterion 1. The conditional strain interaction gives
-U=0.491949, also below 1 for the supplied illustrative basis. This does not
+U=0.492, also below 1 for the supplied illustrative basis. This does not
 establish installation acceptance. A separate A&R state with H_end=30 kN,
 V_end=40 kN, cable length 100 m, wet cable weight 100 N/m and zero head weight
-gives static top tension 58.309519 kN and demand 69.971423 kN at factor 1.2.
+gives static top tension 58.3 kN and demand 70.0 kN at factor 1.2.
 No cable or winch capacity is specified; that acceptance check is not established.
 Independent arithmetic and the dimensionless collapse-cubic residual are
 recorded in `tests/installation/test_pipelay_screening.py`.
@@ -126,7 +153,7 @@ Use one case in the separately scheduled licensed OrcaFlex run. Retain model,
 native result, software version, case identifier, units, input/output SHA-256
 digests and exported tension, suspended length, touchdown position and curvature.
 
-First reproduce Table 1's S-lay free-span boundary, without stinger/contact,
+First reproduce Table 2's S-lay free-span boundary, without stinger/contact,
 current or dynamics, in a flexible-line reference model with negligible EI and
 EA sufficiently high that extension is negligible. Proposed comparison criterion:
 within 1% for free-span upper tension, length and offset after mesh convergence.
@@ -141,14 +168,13 @@ source. Explorer/website integration belongs to its owning repository as follow-
 
 ## Public sources
 
-- [Aleyaasin (2023), section 3, equations (19)-(25)](https://doi.org/10.1007/s40868-023-00131-8):
+- [Surrogate models for the stiffened catenaries: applications in subsea pipe laying (2023), section 3, equations (19)-(25)](https://doi.org/10.1007/s40868-023-00131-8):
   natural-catenary equilibrium, geometry and bending; section 5 discusses limits.
-- [Ahamad et al. (2022), equations (14)-(20)](https://www.ukm.my/jkukm/wp-content/uploads/2022/3406/14.pdf):
+- [Pipeline Wall Thickness Assessment of Various Material Grades and Water Depths Using American and Norwegian Standards (2022), equations (14)-(20)](https://doi.org/10.17576/jkukm-2022-34(6)-14):
   published DNVGL-ST-F101 (2017) collapse, propagation and applicability.
-- [BSEE TAP 434, Guidance Document on Strain Based Design, External Overpressure](https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/434ab.pdf):
+- [BSEE TAP 434 (2003), Guidance Document on Strain Based Design, External Overpressure](https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/434ab.pdf):
   independent public presentation of the collapse cubic and ovality floor.
-- [Mustafina (2015), Anchor Damage Assessment of Subsea Pipelines, p.57, equation (41)](https://uis.brage.unit.no/uis-xmlui/bitstream/handle/11250/1248742/Master%20Thesis_Mustafina%20Adeliya.pdf):
+- [Anchor Damage Assessment of Subsea Pipelines (2015), p.57, equation (41)](https://hdl.handle.net/11250/1248742):
   public legacy displacement-control interaction; no project data from that work
-  is used. The published equation was available in the indexed excerpt;
-  direct retrieval returned HTTP 502 during this implementation. Governing
+  is used. The persistent identifier replaces the obsolete document URL. Governing
   current-edition capacity selection remains a required external input.

@@ -5,12 +5,39 @@ from dataclasses import asdict
 
 import pytest
 
+from digitalmodel.citations import Citation, CitationResolutionError
 from digitalmodel.installation.pipelay.screening import (
     ar_cable_tension,
     displacement_controlled_check,
     lay_geometry,
     pressure_screen,
 )
+
+
+CITATION_RECORDS = (
+    dict(code_id="DNVGL-ST-F101", publisher="DNV", revision="2017",
+         section="Sections 5.4.4-5.4.5", source_sibling="generic",
+         wiki_path="wikis/engineering/wiki/standards/dnvgl-st-f101-2017.md"),
+    dict(code_id="BSEE-TAP-434", publisher="BSEE", revision="2003",
+         section="External Overpressure", source_sibling="generic",
+         wiki_path="wikis/engineering/wiki/sources/bsee-tap-434-2003.md"),
+    dict(code_id="DNV-OS-F101", publisher="DNV", revision="2013",
+         section="Sec. 5 D", source_sibling="generic",
+         wiki_path="wikis/engineering/wiki/standards/dnv-os-f101-2013.md"),
+)
+
+
+@pytest.fixture(autouse=True)
+def citation_wiki(tmp_path, monkeypatch):
+    """Synthetic metadata exercises validation, without qualifying real sources."""
+    monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
+    for record in CITATION_RECORDS:
+        path = tmp_path / record["wiki_path"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        metadata = "\n".join(f"{key}: {value}" for key, value in record.items()
+                             if key != "wiki_path")
+        path.write_text(f"---\n{metadata}\n---\n", encoding="utf-8", newline="\n")
+    return tmp_path
 
 
 def pressure_inputs():
@@ -274,3 +301,140 @@ def test_extreme_finite_values_fail_before_nonfinite_output():
         ar_cable_tension(horizontal_end_force_n=1e308, downward_end_force_n=1e308,
                          suspended_cable_length_m=100, cable_submerged_weight_n_per_m=0,
                          submerged_head_weight_n=0, dynamic_factor=2)
+
+
+@pytest.mark.parametrize("record_index", range(3))
+def test_citation_sidecar_is_validated_and_preserves_numbers(record_index):
+    if record_index < 2:
+        result = pressure_screen(**pressure_inputs())
+        assert result.collapse_pa == pytest.approx(22.943424742e6)
+        assert result.propagation_pa == pytest.approx(4.48e6)
+        citation = result.citations[record_index]
+    else:
+        result = displacement_controlled_check(**dcc_inputs())
+        assert result.utilisation == pytest.approx(1.0)
+        citation = result.citations[0]
+    assert isinstance(citation, Citation)
+    for field, expected in CITATION_RECORDS[record_index].items():
+        assert getattr(citation, field) == expected
+    assert citation.source_project is None
+
+
+@pytest.mark.parametrize("record_index", range(3))
+def test_citation_missing_page_stops_calculation(citation_wiki, record_index):
+    record = CITATION_RECORDS[record_index]
+    path = citation_wiki / record["wiki_path"]
+    path.rename(path.with_suffix(".unavailable"))
+    with pytest.raises(CitationResolutionError, match="page_missing") as error:
+        if record_index < 2:
+            pressure_screen(**pressure_inputs())
+        else:
+            displacement_controlled_check(**dcc_inputs())
+    assert error.value.code_id == record["code_id"]
+
+
+@pytest.mark.parametrize("record_index", range(3))
+@pytest.mark.parametrize("field,mismatch", [
+    (field, mismatch)
+    for field in ("code_id", "publisher", "revision", "section", "source_sibling")
+    for mismatch in (False, True)
+] + [("source_project", True)])
+def test_citation_provenance_rejected(citation_wiki, record_index, field, mismatch):
+    record = CITATION_RECORDS[record_index]
+    path = citation_wiki / record["wiki_path"]
+    original = path.read_text(encoding="utf-8")
+    old_line = f"{field}: {record.get(field)}\n"
+    new_line = f"{field}: unexpected\n" if mismatch else ""
+    modified = (original.replace(old_line, new_line) if field != "source_project"
+                else original.replace("---\n", f"---\n{new_line}", 1))
+    path.write_text(modified, encoding="utf-8", newline="\n")
+    with pytest.raises(CitationResolutionError, match=f"frontmatter_.*:{field}") as error:
+        if record_index < 2:
+            pressure_screen(**pressure_inputs())
+        else:
+            displacement_controlled_check(**dcc_inputs())
+    assert error.value.code_id == record["code_id"]
+
+
+def test_citation_sidecars_remain_json_serialisable():
+    import json
+
+    for result in (pressure_screen(**pressure_inputs()),
+                   displacement_controlled_check(**dcc_inputs())):
+        payload = json.loads(json.dumps(asdict(result), allow_nan=False))
+        assert payload["citations"][0]["source_sibling"] == "generic"
+        assert "\\" not in payload["citations"][0]["wiki_path"]
+
+
+@pytest.mark.parametrize("record_index", range(3))
+def test_citation_accepts_null_optional_project(citation_wiki, record_index):
+    path = citation_wiki / CITATION_RECORDS[record_index]["wiki_path"]
+    text = path.read_text(encoding="utf-8")
+    path.write_text(text.replace("---\n", "---\nsource_project: null\n", 1),
+                    encoding="utf-8", newline="\n")
+    result = (pressure_screen(**pressure_inputs()) if record_index < 2
+              else displacement_controlled_check(**dcc_inputs()))
+    assert result.citations[-1].source_project is None
+
+
+def test_citation_rejects_resolved_path_outside_wiki(citation_wiki, monkeypatch):
+    from digitalmodel.installation.pipelay import screening
+
+    source = citation_wiki / CITATION_RECORDS[0]["wiki_path"]
+    outside = citation_wiki.parent / "outside-wiki.md"
+    outside.write_text(source.read_text(encoding="utf-8"),
+                       encoding="utf-8", newline="\n")
+    monkeypatch.setattr(screening, "resolve_wiki_path", lambda *args, **kwargs: outside)
+    with pytest.raises(CitationResolutionError, match="source_outside_wiki"):
+        pressure_screen(**pressure_inputs())
+
+
+def test_citation_unconfigured_wiki_stops_calculation(citation_wiki, monkeypatch):
+    monkeypatch.setenv("LLM_WIKI_PATH", str(citation_wiki / "unavailable"))
+    with pytest.raises(CitationResolutionError, match="wiki_unavailable") as error:
+        pressure_screen(**pressure_inputs())
+    assert error.value.code_id == "DNVGL-ST-F101"
+
+
+def test_citation_malformed_frontmatter_stops_calculation(citation_wiki):
+    path = citation_wiki / CITATION_RECORDS[0]["wiki_path"]
+    text = path.read_text(encoding="utf-8")
+    path.write_text(text.replace("---\n", "---\ntitle: [\n", 1),
+                    encoding="utf-8", newline="\n")
+    with pytest.raises(CitationResolutionError, match="invalid_frontmatter"):
+        pressure_screen(**pressure_inputs())
+
+
+@pytest.mark.parametrize("record_index", range(3))
+@pytest.mark.parametrize("field", ["code_id", "publisher", "revision"])
+@pytest.mark.parametrize("missing", [False, True], ids=["mismatched", "missing"])
+def test_citation_nested_metadata_cannot_mask_top_level(citation_wiki, record_index,
+                                                       field, missing):
+    record = CITATION_RECORDS[record_index]
+    path = citation_wiki / record["wiki_path"]
+    text = path.read_text(encoding="utf-8")
+    original = f"{field}: {record[field]}\n"
+    replacement = "" if missing else f"{field}: unexpected\n"
+    text = text.replace(original, replacement)
+    text = text.replace("\n---\n", f"\naudit:\n  {original}---\n")
+    path.write_text(text, encoding="utf-8", newline="\n")
+    with pytest.raises(CitationResolutionError, match=f"frontmatter_.*:{field}"):
+        if record_index < 2:
+            pressure_screen(**pressure_inputs())
+        else:
+            displacement_controlled_check(**dcc_inputs())
+
+
+def test_example_uses_validated_sidecars_with_synthetic_metadata():
+    import json
+    import runpy
+    from pathlib import Path
+
+    example = Path(__file__).resolve().parents[2] / "examples/workflows/pipelay-screening/example.py"
+    payload = runpy.run_path(example.as_posix())["worked_example"]()
+    json.dumps(payload, allow_nan=False)
+    assert payload["s_lay"]["top_tension_n"] == pytest.approx(300000)
+    assert payload["pressure"]["collapse_pa"] == pytest.approx(22.943424742e6)
+    assert payload["conditional_displacement_interaction"]["utilisation"] == pytest.approx(0.49194913549)
+    assert len(payload["pressure"]["citations"]) == 2
+    assert len(payload["conditional_displacement_interaction"]["citations"]) == 1

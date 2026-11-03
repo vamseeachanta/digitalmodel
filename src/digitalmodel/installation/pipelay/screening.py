@@ -7,28 +7,37 @@ inferred from the lay method. No standard design-factor table is embedded.
 
 Public method sources (no vendor algorithms or paid tables):
 
-* Aleyaasin (2023), Marine Systems & Ocean Technology 18, 140-150,
+* Surrogate models for the stiffened catenaries: applications in subsea
+  pipe laying (2023), Marine Systems & Ocean Technology 18, 140-150,
   section 3, equations (19)-(25), doi:10.1007/s40868-023-00131-8.
-* Ahamad et al. (2022), Jurnal Kejuruteraan 34(6), 1135-1147,
+* Pipeline Wall Thickness Assessment of Various Material Grades and Water
+  Depths Using American and Norwegian Standards (2022),
+  Jurnal Kejuruteraan 34(6), 1135-1147,
   equations (14)-(20), doi:10.17576/jkukm-2022-34(6)-14. These document
   the DNVGL-ST-F101 (2017) external-pressure method, now DNV-ST-F101.
-* Mustafina (2015), Anchor Damage Assessment of Subsea Pipelines,
+* Anchor Damage Assessment of Subsea Pipelines (2015),
   University of Stavanger, p.57, equation (41): external-overpressure
   displacement-controlled interaction. Capacity and exponent are inputs;
   current-edition strain-capacity and factor selection is not implemented.
-* BSEE TAP 434, Guidance Document on Strain Based Design, section
+* BSEE TAP 434 (2003), Guidance Document on Strain Based Design, section
   "External Overpressure": collapse cubic and minimum ovality 0.005.
 
 See ``docs/domains/installation/pipelay-screening.md`` for the worked case,
 scope, ovality carry-over and native comparison protocol. Results retain public
-source locators; they do not assert resolution against a private standards wiki.
+source locators and validated edition-, section- and sibling-specific Citation
+sidecars for the standards-derived pressure and strain checks.
 """
 
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 
+import yaml
+
+from digitalmodel.citations import Citation, CitationResolutionError, validate_citation
+from digitalmodel.citations.resolver import resolve_wiki_base, resolve_wiki_path
 from digitalmodel.code_checks.dnv_os_f101 import (
     collapse_pressure,
     elastic_collapse_pressure,
@@ -45,10 +54,66 @@ from digitalmodel.installation.pipelay.stress import _require_finite
 CATENARY_SOURCE = "https://doi.org/10.1007/s40868-023-00131-8#Sec3"
 PRESSURE_SOURCE = "https://www.ukm.my/jkukm/wp-content/uploads/2022/3406/14.pdf#page=5"
 OVALITY_SOURCE = "https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/434ab.pdf"
-INTERACTION_SOURCE = (
-    "https://uis.brage.unit.no/uis-xmlui/bitstream/handle/11250/1248742/"
-    "Master%20Thesis_Mustafina%20Adeliya.pdf"
+INTERACTION_SOURCE = "https://hdl.handle.net/11250/1248742"
+
+_PRESSURE_CITATIONS = (
+    Citation(code_id="DNVGL-ST-F101", publisher="DNV", revision="2017",
+             section="Sections 5.4.4-5.4.5", source_sibling="generic",
+             wiki_path="wikis/engineering/wiki/standards/dnvgl-st-f101-2017.md",
+             note=PRESSURE_SOURCE),
+    Citation(code_id="BSEE-TAP-434", publisher="BSEE", revision="2003",
+             section="External Overpressure", source_sibling="generic",
+             wiki_path="wikis/engineering/wiki/sources/bsee-tap-434-2003.md",
+             note=OVALITY_SOURCE),
 )
+_INTERACTION_CITATIONS = (
+    Citation(code_id="DNV-OS-F101", publisher="DNV", revision="2013",
+             section="Sec. 5 D", source_sibling="generic",
+             wiki_path="wikis/engineering/wiki/standards/dnv-os-f101-2013.md",
+             note=f"Public reproduction: {INTERACTION_SOURCE}, p. 57, equation (41)"),
+)
+
+
+def _validated_citations(citations: tuple[Citation, ...]) -> tuple[Citation, ...]:
+    """Validate the existing contract plus section and sibling/project metadata."""
+    try:
+        base = resolve_wiki_base()
+    except CitationResolutionError as exc:
+        raise CitationResolutionError(code_id=citations[0].code_id,
+                                      wiki_path=citations[0].wiki_path,
+                                      reason="wiki_unavailable") from exc
+    for citation in citations:
+        path = resolve_wiki_path(citation.wiki_path, override=base)
+        # Resolved containment covers symlinks and directory junctions alike.
+        if not path.resolve().is_relative_to(base.resolve()):
+            raise CitationResolutionError(code_id=citation.code_id,
+                                          wiki_path=citation.wiki_path,
+                                          reason="source_outside_wiki")
+        validate_citation(citation, repo_root=base)
+        text = path.read_text(encoding="utf-8")
+        match = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
+        try:
+            metadata = yaml.safe_load(match.group(1)) if match else None
+        except yaml.YAMLError as exc:
+            raise CitationResolutionError(code_id=citation.code_id,
+                                          wiki_path=citation.wiki_path,
+                                          reason="invalid_frontmatter") from exc
+        if not isinstance(metadata, dict):
+            raise CitationResolutionError(code_id=citation.code_id,
+                                          wiki_path=citation.wiki_path,
+                                          reason="invalid_frontmatter")
+        for field in ("code_id", "publisher", "revision", "section",
+                      "source_sibling", "source_project"):
+            actual = metadata.get(field)
+            # Unquoted edition years are YAML integers in existing frontmatter.
+            if field == "revision" and type(actual) is int:
+                actual = str(actual)
+            if actual != getattr(citation, field):
+                kind = "mismatch" if field in metadata else "missing"
+                raise CitationResolutionError(code_id=citation.code_id,
+                                              wiki_path=citation.wiki_path,
+                                              reason=f"frontmatter_{kind}:{field}")
+    return citations
 
 
 def _positive(**values: float) -> None:
@@ -95,7 +160,8 @@ def lay_geometry(
 ) -> LayGeometry:
     """Natural catenary with a horizontal tangent at touchdown; no bending EI.
 
-    Aleyaasin (2023), section 3, equations (19)-(25): a=H/w,
+    Surrogate models for the stiffened catenaries (2023), section 3,
+    equations (19)-(25): a=H/w,
     T=H+w*h, L=sqrt(h*(h+2*a)), x=a*asinh(L/a), R_min=a,
     epsilon_b=D/(2*R). The latter is also used for the stinger overbend.
     These are equilibrium/curvature identities, with no empirical coefficients.
@@ -155,6 +221,7 @@ class PressureScreen:
     collapse_passes: bool
     propagation_passes: bool
     sources: tuple[str, ...]
+    citations: tuple[Citation, ...]
 
 
 def pressure_screen(
@@ -165,7 +232,8 @@ def pressure_screen(
 ) -> PressureScreen:
     """Reuse DNV pressure helpers with explicit inputs and applicability checks.
 
-    Ahamad et al. (2022), equations (14)-(20), documenting DNVGL-ST-F101
+    Pipeline Wall Thickness Assessment (2022), equations (14)-(20),
+    documenting DNVGL-ST-F101
     (2017) sections 5.4.4-5.4.5: Pel=2*E*(t/D)^3/(1-nu^2),
     Pp=2*fy*alpha_fab*t/D; (Pc-Pel)*(Pc^2-Pp^2)=Pc*Pel*Pp*f0*D/t;
     Ppr=35*fy*alpha_fab*(t/D)^2.5. The existing helper supplies the
@@ -175,7 +243,7 @@ def pressure_screen(
     Propagation failure means propagation is possible AFTER buckle initiation;
     the calculation does not determine buckle initiation or arrestor spacing.
 
-    BSEE TAP 434, "External Overpressure", documents f0>=0.005, applied by
+    BSEE TAP 434 (2003), "External Overpressure", documents f0>=0.005, applied by
     the existing collapse helper and reported here. Measured ovality is
     (Dmax-Dmin)/D, dimensionless. No dent or bending-induced ovalisation model.
     Use separate calls with the applicable characteristic wall (e.g. t1/t2),
@@ -202,6 +270,7 @@ def pressure_screen(
     net = external_pressure_pa - minimum_internal_pressure_pa
     if net < 0:
         raise ValueError("internal overpressure is outside this screen")
+    citations = _validated_citations(_PRESSURE_CITATIONS)
     try:
         pel = elastic_collapse_pressure(outer_diameter_m, wall_thickness_m,
                                         youngs_modulus_pa, poisson_ratio)
@@ -220,7 +289,7 @@ def pressure_screen(
     _nonnegative(collapse_utilisation=uc, propagation_utilisation=up)
     # The helper's documented imperfection floor is exposed, never hidden.
     return PressureScreen(net, max(ovality, 0.005), pel, pp, pc, ppr, uc, up,
-                          uc <= 1, up <= 1, (PRESSURE_SOURCE, OVALITY_SOURCE))
+                          uc <= 1, up <= 1, (PRESSURE_SOURCE, OVALITY_SOURCE), citations)
 
 
 @dataclass(frozen=True)
@@ -232,6 +301,7 @@ class DisplacementCheck:
     utilisation: float
     passes: bool
     sources: tuple[str, ...]
+    citations: tuple[Citation, ...]
 
 
 def displacement_controlled_check(
@@ -242,7 +312,8 @@ def displacement_controlled_check(
 ) -> DisplacementCheck:
     """Evaluate a supplied external-pressure displacement-control design basis.
 
-    Mustafina (2015), p.57 equation (41), documenting DNV-OS-F101 (2013),
+    Anchor Damage Assessment of Subsea Pipelines (2015), p.57 equation (41),
+    documenting DNV-OS-F101 (2013),
     Sec.5 D, displacement-controlled combined loading:
     U=(epsilon_Sd*gamma_e/epsilon_c)^q + (pe-pmin)*gamma_m*gamma_sc/Pc <=1.
     The published interaction uses q=0.8. q, epsilon_c and every factor are
@@ -268,6 +339,7 @@ def displacement_controlled_check(
     _factors(gamma_e=gamma_e, gamma_m=gamma_m, gamma_sc=gamma_sc)
     if characteristic_strain_capacity >= 1 or design_compressive_strain >= 1:
         raise ValueError("strain inputs must be fractions smaller than 1")
+    citations = _validated_citations(_INTERACTION_CITATIONS)
     try:
         strain = (design_compressive_strain / characteristic_strain_capacity * gamma_e
                   ) ** interaction_exponent
@@ -277,7 +349,7 @@ def displacement_controlled_check(
         raise ValueError("derived utilisation is outside numerical range") from exc
     _nonnegative(strain_term=strain, pressure_term=pressure, utilisation=utilisation)
     return DisplacementCheck(strain, pressure, utilisation, utilisation <= 1,
-                             (INTERACTION_SOURCE,))
+                             (INTERACTION_SOURCE,), citations)
 
 
 @dataclass(frozen=True)
@@ -297,7 +369,8 @@ def ar_cable_tension(
 ) -> ARCableTension:
     """A&R cable force balance for a specified suspended configuration.
 
-    Derived from Aleyaasin (2023), equations (10)-(11), vertical force balance
+    Derived from Surrogate models for the stiffened catenaries (2023),
+    equations (10)-(11), vertical force balance
     and resultant tension: Vtop=Vend+w_c*Lc+Whead, Ttop=hypot(Hend,Vtop).
     Here the lower-end pipe force replaces the zero-end-force boundary in (10).
     Tdesign=dynamic_factor*Ttop is a declared screening envelope, not a

@@ -1,4 +1,8 @@
-"""Synthetic SI example: run from the repository with PYTHONPATH=src."""
+"""Synthetic SI example; requires PYTHONPATH=src and qualified wiki citations.
+
+Set LLM_WIKI_PATH as described in the installation screening guide. Missing or
+mismatched citation records stop the example before results are emitted.
+"""
 
 from dataclasses import asdict
 import json
