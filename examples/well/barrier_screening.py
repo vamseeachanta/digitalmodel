@@ -9,20 +9,19 @@ from dataclasses import asdict
 import json
 
 from digitalmodel.well.barriers import (
-    ConsequencePolicy, FailureEvent, FlowZone, LeakConnection,
-    Node, PermanentBarrier, SinkConsequence, generic_topside_rate,
-    public_norsok_2013_criteria, rank_leak_paths, screen_permanent_barriers,
+    BarrierCriteria, ConsequencePolicy, FailureEvent, FlowZone, LeakConnection,
+    Node, PermanentBarrier, RateBand, SinkConsequence,
+    rank_leak_paths, screen_permanent_barriers,
 )
 
 
 def worked_example() -> dict:
     """Return synthetic inputs and results; no files or external services used."""
-    criteria = public_norsok_2013_criteria(
-        "mobile_hydrocarbon", "open_hole", min_above_zone_md_m=50,
-    )
+    criteria = BarrierCriteria(2, 120, 80,
+        "Synthetic screening inputs; no standard-derived acceptance values")
     zones = (FlowZone("mobile_gas_zone", 2000, criteria),)
     plugs = tuple(PermanentBarrier(
-        name, "mobile_gas_zone", top, top + 100, 35, 30, True, True, name,
+        name, "mobile_gas_zone", top, top + 120, 35, 30, True, True, name,
         "Synthetic separate-placement, complete-cross-section and base-pressure evidence",
     ) for name, top in (("primary", 1800), ("secondary", 1600)))
     permanent = screen_permanent_barriers(
@@ -33,13 +32,14 @@ def worked_example() -> dict:
     policy = ConsequencePolicy(10, .01, 1, 2, 3, 5, 10,
         "Synthetic: water/oil/gas weights 1/2/3; pressure >=10 MPa factor5; "
         "H2S >=0.01 mole fraction factor10; no acceptance threshold")
-    rate = generic_topside_rate("leak_in_closed_position")
+    rate = RateBand(4e-7, 5e-7, 6e-7,
+        "Synthetic sensitivity inputs; no handbook or measured failure data")
     # Identical anomaly in both wells: first valve is confirmed leaking.
-    # It receives q=1, rather than the generic prior for an unfailed valve.
+    # It receives q=1, rather than a rate-based prior for an unfailed valve.
     events = (
         FailureEvent("closed_valve_1_leak", "leak_in_closed_position", rate,
-                     1000, known_failed=True),
-        FailureEvent("closed_valve_2_leak", "leak_in_closed_position", rate, 1000),
+                     800, known_failed=True),
+        FailureEvent("closed_valve_2_leak", "leak_in_closed_position", rate, 800),
     )
     ranked = []
     for source, fluid, pressure, h2s in (

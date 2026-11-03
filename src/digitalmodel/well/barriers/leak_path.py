@@ -46,6 +46,8 @@ Modes: leak_in_closed_position, failure_to_close, external_leak. A nonempty
 common_cause_group marks dependence; multiple distinct events in such a group
 are rejected. To model a specified common failure, reuse a single event ID on
 each affected connection. Its probability and evidence remain caller inputs.
+A known-failed event is conditioned to probability one without evaluating its
+rate band or proof-test interval; those fields apply only to unfailed events.
 """
 
     event_id: str
@@ -59,7 +61,7 @@ each affected connection. Its probability and evidence remain caller inputs.
 @dataclass(frozen=True)
 class Node:
     node_id: str
-    kind: str  # source, cavity (annulus/tubing/wellhead void), sink
+    kind: str  # source (no incoming edges), cavity, sink (no outgoing edges)
 
 
 @dataclass(frozen=True)
@@ -136,25 +138,6 @@ class RankedLeakRisk:
 
 
 _MODES = ("leak_in_closed_position", "failure_to_close", "external_leak")
-
-
-def generic_topside_rate(mode: str) -> RateBand:
-    """Illustrative valve-only proxy, PDS 2021 sec.4.4.1 printed p99.
-
-DU 2.3e-6/h and aggregate review interval [2.1,2.6]e-6/h are scaled by fixed
-LCP 0.15 or FTC 0.45 fractions. The split of DU and fixed-fraction propagation
-are assumptions; bands are not per-mode confidence intervals. Delayed operation
-is excluded. No external-leak or permanent cement failure rate is available.
-The proxy excludes pilot valves and is not calibrated to a particular well.
-"""
-    citation("pds")
-    fractions = {"leak_in_closed_position": 0.15, "failure_to_close": 0.45}
-    if mode not in fractions:
-        raise ValueError("no public generic external-leak rate; supply a sourced rate")
-    f = fractions[mode]
-    return RateBand(2.1e-6 * f, 2.3e-6 * f, 2.6e-6 * f,
-                    f"PDS 2021 sec.4.4.1 p99; generic topside proxy; fixed {mode} "
-                    f"fraction {f}; derived sensitivity band; not well-qualified", "pds")
 
 
 def pfd_average(rate: RateBand, proof_test_interval_h: float) -> ProbabilityBand:
@@ -291,8 +274,8 @@ causes and synchronized tests remain limitations, named on every result.
             groups.add(event.common_cause_group)
         event_map[event.event_id] = event
         boolean("known_failed", event.known_failed)
-        band = pfd_average(event.rate, event.proof_test_interval_h)
-        probabilities[event.event_id] = ProbabilityBand(1, 1, 1) if event.known_failed else band
+        probabilities[event.event_id] = (ProbabilityBand(1, 1, 1) if event.known_failed
+            else pfd_average(event.rate, event.proof_test_interval_h))
     adjacency: dict[str, list[LeakConnection]] = {n: [] for n in node_map}
     element_states: dict[str, tuple[str, bool]] = {}
     mode_events: dict[tuple[str, str], str] = {}
@@ -300,6 +283,10 @@ causes and synchronized tests remain limitations, named on every result.
         text("element_id", edge.element_id)
         if edge.from_node not in node_map or edge.to_node not in node_map:
             raise ValueError("unknown connection node")
+        if node_map[edge.from_node].kind == "sink":
+            raise ValueError("connections must not leave a sink")
+        if node_map[edge.to_node].kind == "source":
+            raise ValueError("connections must not enter a source")
         if edge.valve_state not in ("open", "closed"):
             raise ValueError("valve_state must be open or closed")
         boolean("closure_demanded", edge.closure_demanded)

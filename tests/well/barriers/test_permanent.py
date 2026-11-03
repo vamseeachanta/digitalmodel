@@ -6,19 +6,16 @@ import pytest
 
 from digitalmodel.well.barriers import (
     BarrierCriteria, FlowZone, PermanentBarrier, screen_permanent_barriers,
-    public_norsok_2013_criteria,
 )
 
 
 def criteria(**changes):
-    # Public D-010 rev.4 seminar, slides 8, 9 and 12. This example selects
-    # two separate 100 m plugs, each at least 50 m above a mobile gas zone.
-    return replace(BarrierCriteria(2, 100, 50, "Public D-010 rev.4 seminar"), **changes)
+    return replace(BarrierCriteria(2, 120, 80, "Synthetic screening inputs"), **changes)
 
 
 def barrier(name="primary", **changes):
     return replace(PermanentBarrier(
-        name, "gas", 1800, 1900, 35, 30, True, True, name,
+        name, "gas", 1800, 1920, 35, 30, True, True, name,
         "Synthetic placement, cross-section and formation records",
     ), **changes)
 
@@ -27,21 +24,21 @@ def screen(plugs=None, **changes):
     return screen_permanent_barriers(
         (FlowZone("gas", 2000, criteria()),),
         plugs if plugs is not None else (
-            barrier(), barrier("secondary", top_md_m=1600, base_md_m=1700),
+            barrier(), barrier("secondary", top_md_m=1600, base_md_m=1720),
         ), gas_migration=False, sustained_casing_pressure=False, **changes,
     )
 
 
 def test_two_verified_envelopes_hand_example():
     result = screen()
-    # Lengths: 1900-1800=100 m and 1700-1600=100 m.
-    # Above-zone coverage: 2000-1800=200 m and 2000-1600=400 m >= 50 m.
+    # Lengths: 1920-1800=120 m and 1720-1600=120 m.
+    # Cemented length above inflow: 120 m in each plug, exceeding 80 m.
     # Base-pressure margins: 35-30=5 MPa, strictly positive.
     assert result.meets_screen
     assert result.zones[0].qualified_barriers == ("primary", "secondary")
     assert result.zones[0].pressure_margins_mpa == (5, 5)
-    assert result.zones[0].criteria.min_plug_length_md_m == 100
-    assert result.zones[0].criteria.min_above_zone_md_m == 50
+    assert result.zones[0].criteria.min_plug_length_md_m == 120
+    assert result.zones[0].criteria.min_above_zone_md_m == 80
     assert result.citations
 
 
@@ -61,15 +58,15 @@ def test_defective_barrier_is_not_counted(change, reason):
 
 
 def test_exact_length_and_position_boundaries():
-    assert screen((barrier(top_md_m=1950, base_md_m=2050),),
+    assert screen((barrier(top_md_m=1920, base_md_m=2040),),
                   ).zones[0].qualified_barriers == ("primary",)
 
 
 def test_duplicate_independence_group_and_overlapping_plugs_do_not_count_twice():
     a = barrier()
-    for b in (barrier("b", top_md_m=1600, base_md_m=1700,
+    for b in (barrier("b", top_md_m=1600, base_md_m=1720,
                       independence_group="primary"),
-              barrier("b", top_md_m=1850, base_md_m=1950)):
+              barrier("b", top_md_m=1850, base_md_m=1970)):
         assert not screen((a, b)).meets_screen
         assert "independence_not_established" in screen((a, b)).zones[0].flags
 
@@ -81,7 +78,7 @@ def test_duplicate_independence_group_and_overlapping_plugs_do_not_count_twice()
 def test_anomaly_or_missing_observation_holds_screen(gas, scp, flag):
     result = screen_permanent_barriers(
         (FlowZone("gas", 2000, criteria()),),
-        (barrier(), barrier("b", top_md_m=1600, base_md_m=1700)),
+        (barrier(), barrier("b", top_md_m=1600, base_md_m=1720)),
         gas_migration=gas, sustained_casing_pressure=scp,
     )
     assert not result.meets_screen
@@ -122,24 +119,28 @@ def test_empty_or_duplicate_zone_and_barrier_ids_rejected():
         screen((barrier(), barrier()))
 
 
-@pytest.mark.parametrize("inflow, count", [
-    ("mobile_hydrocarbon", 2), ("overpressured_flow_to_surface", 2),
-    ("normal_water_no_surface_flow", 1), ("crossflow_only", 1),
-])
-@pytest.mark.parametrize("setting, length", [
-    ("open_hole", 100), ("cased_without_foundation", 100),
-    ("cased_on_verified_foundation", 50),
-])
-def test_public_historical_criteria_select_count_and_length(inflow, count, setting, length):
-    c = public_norsok_2013_criteria(inflow, setting, min_above_zone_md_m=50)
-    assert c.required_barriers == count
-    assert c.min_plug_length_md_m == length
-    assert "2013" in c.basis
+def test_criteria_have_no_builtin_standard_selector():
+    from digitalmodel.well import barriers
+    from digitalmodel.well.barriers import permanent
+
+    assert not hasattr(barriers, "public_norsok_2013_criteria")
+    assert not hasattr(permanent, "public_norsok_2013_criteria")
 
 
-def test_unsupported_inflow_or_setting_and_open_hole_coverage_rejected():
-    for inflow, setting, coverage in (("unknown", "open_hole", 50),
-                                      ("mobile_hydrocarbon", "shoe_transition", 50),
-                                      ("mobile_hydrocarbon", "open_hole", 49)):
-        with pytest.raises(ValueError):
-            public_norsok_2013_criteria(inflow, setting, min_above_zone_md_m=coverage)
+@pytest.mark.parametrize("top, base, expected", [
+    (1800, 1860, False),  # The uncemented gap contributes no coverage.
+    (1800, 1890, True),   # Exact cemented-length boundary wholly above inflow.
+    (1910, 2030, True),   # Exact boundary for a plug straddling inflow.
+    (1911, 2031, False),
+    (2010, 2130, False),  # No cement above inflow.
+])
+def test_above_zone_counts_only_cemented_length(top, base, expected):
+    result = screen_permanent_barriers(
+        (FlowZone("gas", 2000, criteria(required_barriers=1,
+            min_plug_length_md_m=60, min_above_zone_md_m=90)),),
+        (barrier(top_md_m=top, base_md_m=base),),
+        gas_migration=False, sustained_casing_pressure=False,
+    )
+    assert result.meets_screen is expected
+    if not expected:
+        assert "above_zone" in result.zones[0].rejections[0][1]

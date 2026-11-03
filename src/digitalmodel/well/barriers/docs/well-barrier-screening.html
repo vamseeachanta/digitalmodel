@@ -20,26 +20,31 @@ No field calibration, current-standard compliance or quantitative release risk
 is established. The two calculations are independent: a valve probability
 is never assigned to permanent cement.</p>
 
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>2026-11-02</td><td>Initial screen, graph and synthetic example.</td></tr>
+<tr><td>2</td><td>2026-11-02</td><td>Require caller criteria and rates; correct cemented coverage and enforce graph boundaries.</td></tr>
+</tbody>
+</table>
+
 <h2>Permanent-barrier envelope</h2>
 <p>Supply each <code>FlowZone</code> with a <code>BarrierCriteria</code>: required
 count, minimum plug length in measured-depth metres, minimum coverage above the
 zone in measured-depth metres, and the criterion source/edition/clause.
-<code>public_norsok_2013_criteria</code> optionally selects the limited historical
-public count/length basis for explicitly classified mobile-hydrocarbon,
-overpressured surface-flow, normal-water/no-surface-flow or crossflow-only cases.
-Open-hole, cased without foundation, and cased on verified foundation settings
-are supported. No automatic inflow classification or current universal cement
-minimum is supplied. Hole type, foundations, annular verification and
-jurisdiction affect selection.</p>
+All criteria are caller inputs; no standard-derived selector is supplied.
+Hole type, foundations, annular verification and jurisdiction affect selection.</p>
 <p>A <code>PermanentBarrier</code> represents an entire isolating envelope.
 Its externally verified cross-section includes all annuli and formation contact
 (rock to rock). Placement, long-term material suitability, bonding and test
 evidence require engineering assessment; a Boolean assertion is not a substitute
 for those records. Attach their stable references in <code>evidence</code>.</p>
-<p>The screen compares plug length with its minimum, plug-top position with
+<p>The screen compares plug length with its minimum, cemented length above inflow with
 required above-zone coverage, and formation integrity with the governing future
 pressure at each barrier base. Both pressures use MPa at that base, with the same
-datum. The pressure margin must be strictly positive. The caller supplies future
+datum. Coverage is <code>max(0, min(base MD, zone top MD) - top MD)</code>;
+an uncemented gap above inflow contributes nothing. The pressure margin must be strictly positive. The caller supplies future
 recharge, hydrostatic translation and the governing formation-strength evidence.
 Separate envelopes require separate independence groups and no MD overlap in
 this simplified model. A continuous combined barrier or shared annular job
@@ -54,7 +59,8 @@ selected criteria, rejected-barrier reasons and citation sidecars.</p>
 Each directed <code>LeakConnection</code> identifies a WBE and a failure event.
 Opposite flow requires a separate connection. Source pressures, flow direction
 and cavity connectivity are supplied assumptions; no pressure-network solver
-verifies them. Sinks are terminal boundaries.</p>
+verifies them. Connections into sources and out of sinks are rejected, including inactive
+failure-mode connections. Sources cannot serve as intermediate cavities.</p>
 <table>
 <thead><tr><th>Connection mode</th><th>Included route</th></tr></thead>
 <tbody>
@@ -80,7 +86,7 @@ P(sink | source demand) = Boolean union of minimal event sets
 ranking score = P(sink | source demand) * supplied consequence weight</pre>
 <p>The model assumes constant DU rates, full proof-test coverage, negligible
 restoration time and uniformly timed demands. The upper rate times interval
-must be at most 0.1. Products of average PFDs additionally assume independent
+must be at most 0.1 for unfailed events. Products of average PFDs additionally assume independent
 random test phases; synchronized testing can produce a different joint average.
 Permanently abandoned barriers without proof testing cannot use this formula
 as a lifetime leak probability.</p>
@@ -90,6 +96,8 @@ AC, the result is qA*(qB+qC-qB*qC), rather than a sum of path probabilities.
 Each minimal set retains one representative geometric route and its own PFD.
 Traversal and graph limits raise an error rather than return a partial ranking.</p>
 <p>Known failed elements use <code>known_failed=True</code> and probability 1.
+Their rate band and proof-test interval are retained as input metadata but are
+not evaluated; an observation of failure supersedes the rate approximation.
 Unknown data must not be entered as zero. Distinct event IDs require an explicit
 <code>independence_basis</code>. Repeated IDs remain shared. Distinct events
 with the same declared common-cause group are rejected; a specified common
@@ -97,13 +105,11 @@ failure can instead be represented by one event shared across affected routes.
 No beta model, hidden dependencies or test correlations are inferred.</p>
 
 <h2>Failure data and consequences</h2>
-<p><code>generic_topside_rate</code> supplies a limited public PDS valve proxy.
-Its closed-leak and failure-to-close bands are derived using fixed mode fractions
-from the generic DU data. These bands are sensitivities, not measured per-mode
-confidence limits. Delayed operation, pilots, external leaks, cement, downhole
-equipment and well-specific degradation are excluded. Other rates require a
-<code>RateBand</code> with bounds in 1/h and a source and uncertainty explanation
-in <code>basis</code>. Generic population data do not qualify a particular well.</p>
+<p>Supply each failure mode with a <code>RateBand</code>: bounds in 1/h,
+a source and an uncertainty explanation in <code>basis</code>. No handbook
+rate or mode fraction is embedded. The example uses synthetic sensitivity
+inputs and makes no population-data claim. Supplied data require qualification
+for well equipment, permanent cement, degradation and the failure mode.</p>
 <p>Each sink receives a fluid, release-scenario pressure in MPa and H2S mole
 fraction. A required <code>ConsequencePolicy</code> supplies comparison weights
 and pressure/sour thresholds. No threshold or weight is a standard default.
@@ -114,16 +120,18 @@ release mass, exposure, ignition, dispersion or acceptance limit is calculated.<
 
 <h2>Worked example</h2>
 <pre>PYTHONPATH=src uv run python examples/well/barrier_screening.py</pre>
-<p>Two separate synthetic 100 m MD envelopes are located at 1800–1900 m and
-1600–1700 m above a zone beginning at 2000 m. Their selected coverage minimum
-is 50 m; their actual coverage is 200 m and 400 m. Base formation integrity
+<p>Two separate synthetic 120 m MD envelopes are located at 1800–1920 m and
+1600–1720 m above a zone beginning at 2000 m. Their selected coverage minimum
+is 80 m; their cemented coverage is 120 m each. These are illustrative caller
+criteria with no standard-derived acceptance values. Base formation integrity
 35 MPa exceeds governing base pressure 30 MPa by 5 MPa. With the assumed
 placement and full-cross-section verification and no observed anomalies,
 the supplied two-envelope screen is met.</p>
 <p>The leak comparison uses two series closed valves in either well. The first
 has the same confirmed leakage anomaly in both cases. Its probability is 1.
-For the remaining valve, the generic closed-leak rate is 3.45e-7/h and the
-test interval is 1000 h, giving 0.0001725. The graph probability is therefore
+For the remaining valve, the synthetic closed-leak rate band is [4.0, 5.0, 6.0]e-7/h and the
+test interval is 800 h, giving a nominal PFD of 2.0e-4 with bounds
+1.6e-4 and 2.4e-4. The graph probability is therefore
 identical. The high-pressure sour-gas example uses 50 MPa and 0.02 H2S mole
 fraction; the water injector uses 1 MPa and zero H2S. Synthetic policy inputs
 use a 10 MPa pressure threshold and 0.01 sour threshold, gas weight 3, water
@@ -131,10 +139,10 @@ weight 1, pressure multiplier 5 and sour multiplier 10.</p>
 <table>
 <thead><tr><th>Case</th><th>Conditional PFD</th><th>Severity weight</th><th>Score</th><th>Score sensitivity band</th></tr></thead>
 <tbody>
-<tr><td>HP sour gas</td><td>0.0001725</td><td>150</td><td>0.025875</td><td>0.023625–0.029250</td></tr>
-<tr><td>LP water injector</td><td>0.0001725</td><td>1</td><td>0.0001725</td><td>0.0001575–0.0001950</td></tr>
+<tr><td>HP sour gas</td><td>2.0e-4</td><td>150.0</td><td>0.030</td><td>0.024–0.036</td></tr>
+<tr><td>LP water injector</td><td>2.0e-4</td><td>1.0</td><td>2.0e-4</td><td>1.6e-4–2.4e-4</td></tr>
 </tbody>
-<caption>Table 2. Same confirmed anomaly; synthetic consequence policy produces a 150:1 score ratio.</caption>
+<caption>Table 2. Same confirmed anomaly; synthetic consequence policy produces a 150.0:1 score ratio.</caption>
 </table>
 <p>The example prints JSON with synthetic-data status, envelope inputs,
 failure data, policy, probability bands, representative paths and citation
@@ -142,13 +150,14 @@ sidecars. The pytest example independently checks the arithmetic.</p>
 
 <h2>Public sources and qualification boundary</h2>
 <ul>
-<li><a href="https://www.offshorenorge.no/globalassets/dokumenter/drift/presentasjonerarrangementer/plug--abandonment-seminar-2013/3---norsok--garry-brewster.pdf">NORSOK D-010 revision-4 chapter-9 public seminar, 2013</a>,
-slides 8–9 and 12–14. This historical public basis is not a verification of the current standard.</li>
+<li>NORSOK D-010, <em>Well integrity in drilling and well operations</em>,
+revision 4 (2013), Well barrier element acceptance criteria: Cement plug.
+Reference only; no acceptance-table values are reproduced.</li>
 <li><a href="https://oeuk.org.uk/product/well-decommissioning-guidelines-issue-6/">OEUK Well Decommissioning Guidelines public scope and edition history</a>.
 The full guidelines require payment. No numeric OEUK requirement is inferred;
 current jurisdiction-specific values and applicability require supplied criteria.</li>
-<li><a href="https://pds-forum.com/wp-content/uploads/2023/01/PDS-Data-Handbook-2021-example-pages-reduced-2023-01-26.pdf">PDS Data Handbook 2021 public example pages</a>, section 4.4.1, printed page 99.
-Only the limited valve proxy and uncertainty explanation are used.</li>
+<li>SINTEF <em>PDS Data Handbook</em>, 2021 edition, section 4.4.1.
+Reference only; no rates, intervals or mode fractions are reproduced.</li>
 <li><a href="https://www.nrc.gov/regulations-legislation/nureg-series-publications/publications-prepared-by-nrc-staff/sr0492">NRC Fault Tree Handbook, NUREG-0492, January 1981</a>,
 chapter VII; chapter XI pp.12–13 and equation XI-24: Boolean probability and periodic-test unavailability.</li>
 <li><a href="https://www.iso.org/standard/63192.html">ISO 16530-1:2017, public scope</a>:

@@ -1,4 +1,4 @@
-"""Public-source citation sidecars and bounded input checks.
+"""Reference citation sidecars and bounded input checks.
 
 Source records are shipped with this package. Resolution uses this package's
 explicit directory, never a sibling repository or a machine-specific wiki.
@@ -13,25 +13,21 @@ from digitalmodel.citations import Citation, validate_citation
 
 
 def citation(source: str) -> Citation:
-    """Resolve a public basis record; missing or mismatched metadata fails closed."""
+    """Resolve a basis record; missing or mismatched metadata fails closed."""
     records = {
-        "norsok": ("D010-PUBLIC-SEMINAR", "Offshore Norge", "2013",
-                   "slides 8-9, 12-14; D-010 rev.4 chapter 9 and EAC table 24",
-                   "https://www.offshorenorge.no/globalassets/dokumenter/drift/"
-                   "presentasjonerarrangementer/plug--abandonment-seminar-2013/"
-                   "3---norsok--garry-brewster.pdf"),
-        "pds": ("PDS-PUBLIC-EXCERPT", "SINTEF", "2021",
-                "section 4.4.1, printed page 99",
-                "https://pds-forum.com/wp-content/uploads/2023/01/"
-                "PDS-Data-Handbook-2021-example-pages-reduced-2023-01-26.pdf"),
+        "norsok": ("NORSOK-D010", "Standards Norway", "4 (2013)",
+                   "Well barrier element acceptance criteria: Cement plug",
+                   "NORSOK D-010, Well integrity in drilling and well operations"),
+        "pds": ("PDS-DATA-HANDBOOK", "SINTEF", "2021",
+                "section 4.4.1", "PDS Data Handbook, 2021 edition"),
         "nureg": ("NUREG-0492", "Nuclear Regulatory Commission", "1981",
                   "chapter VII; chapter XI pages 12-13 and equation XI-24",
                   "https://www.nrc.gov/regulations-legislation/nureg-series-"
                   "publications/publications-prepared-by-nrc-staff/sr0492"),
     }
-    code, publisher, revision, section, url = records[source]
+    code, publisher, revision, section, note = records[source]
     item = Citation(code, publisher, revision, section,
-                    f"wikis/well_integrity/{source}.md", note=url,
+                    f"wikis/well_integrity/{source}.md", note=note,
                     source_sibling="generic")
     validate_citation(item, repo_root=Path(__file__).with_name("basis"))
     return item

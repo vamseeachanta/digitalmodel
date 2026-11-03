@@ -7,7 +7,7 @@ import pytest
 
 from digitalmodel.well.barriers import (
     ConsequencePolicy, FailureEvent, LeakConnection, Node, RateBand,
-    SinkConsequence, generic_topside_rate, pfd_average, rank_leak_paths,
+    SinkConsequence, pfd_average, rank_leak_paths,
 )
 
 
@@ -31,17 +31,19 @@ def run(edges, events, nodes=None, sinks=None, **changes):
     )
 
 
-def test_pfd_units_and_generic_rate_band():
-    # Public PDS 2021 sec 4.4.1 p99: aggregate DU rate 2.3e-6 /h,
-    # interval [2.1,2.6]e-6 /h; fixed LCP fraction 0.15 is an assumption
-    # when applied to the aggregate DU rate. q=3.45e-7*1000/2=0.0001725.
-    rate = generic_topside_rate("leak_in_closed_position")
-    q = pfd_average(rate, 1000)
-    assert (q.low, q.nominal, q.high) == pytest.approx((0.0001575, 0.0001725, 0.000195))
-    assert pfd_average(rate, 2000).nominal == pytest.approx(2 * q.nominal)
-    assert generic_topside_rate("failure_to_close").nominal_per_hour == pytest.approx(1.035e-6)
-    with pytest.raises(ValueError, match="external"):
-        generic_topside_rate("external_leak")
+def test_pfd_units_and_caller_rate_band():
+    rate = RateBand(4e-7, 5e-7, 6e-7, "Synthetic sensitivity inputs")
+    q = pfd_average(rate, 800)
+    assert (q.low, q.nominal, q.high) == pytest.approx((.00016, .0002, .00024))
+    assert pfd_average(rate, 1600).nominal == pytest.approx(2 * q.nominal)
+
+
+def test_rates_have_no_builtin_handbook_proxy():
+    from digitalmodel.well import barriers
+    from digitalmodel.well.barriers import leak_path
+
+    assert not hasattr(barriers, "generic_topside_rate")
+    assert not hasattr(leak_path, "generic_topside_rate")
 
 
 def test_series_events_and_consequence_hand_example():
@@ -77,9 +79,12 @@ def test_repeated_event_is_one_failure_and_supersets_are_absorbed():
 
 def test_cycles_disconnected_sink_and_open_conduit():
     edges = (LeakConnection("r", "a", "pipe", None, "open"),
-             LeakConnection("a", "r", "return", None, "open"),
+             LeakConnection("a", "b", "forward", None, "open"),
+             LeakConnection("b", "a", "return", None, "open"),
              LeakConnection("a", "s", "outlet", None, "open"))
-    assert run(edges, ())[0].probability.nominal == 1
+    nodes = (Node("r", "source"), Node("a", "cavity"),
+             Node("b", "cavity"), Node("s", "sink"))
+    assert run(edges, (), nodes)[0].probability.nominal == 1
     row = run(edges[:1], ())[0]
     assert row.probability.nominal == 0
     assert row.paths == ()
@@ -230,11 +235,36 @@ def test_citation_records_fail_closed_without_touching_canonical_sources(tmp_pat
     record.write_bytes(good_bytes.replace(b"revision: 2021", b"revision: 1900"))
     tampered_hash = hashlib.sha256(record.read_bytes()).hexdigest()
     with pytest.raises(CitationResolutionError, match="mismatch"):
-        generic_topside_rate("leak_in_closed_position")
+        pfd_average(RateBand(4e-7, 5e-7, 6e-7, "Caller-supplied basis", "pds"), 800)
     record.write_bytes(good_bytes)
     restored_hash = hashlib.sha256(record.read_bytes()).hexdigest()
     assert copied_hash != tampered_hash and copied_hash == restored_hash
     record.unlink()
     with pytest.raises(CitationResolutionError, match="page_missing"):
-        generic_topside_rate("leak_in_closed_position")
+        pfd_average(RateBand(4e-7, 5e-7, 6e-7, "Caller-supplied basis", "pds"), 800)
     assert before == {p: hashlib.sha256(p.read_bytes()).hexdigest() for p in before}
+
+
+@pytest.mark.parametrize("state", ["open", "closed"])
+def test_connections_leaving_sinks_are_rejected_even_if_inactive(state):
+    with pytest.raises(ValueError, match="sink"):
+        run((LeakConnection("s", "a", "v", "A", state),), (event("A"),))
+
+
+@pytest.mark.parametrize("state", ["open", "closed"])
+def test_connections_entering_sources_are_rejected_even_if_inactive(state):
+    nodes = (Node("r", "source"), Node("r2", "source"), Node("s", "sink"))
+    edges = (LeakConnection("r", "r2", "v", "A", state),
+             LeakConnection("r2", "s", "outlet", None, "open"))
+    with pytest.raises(ValueError, match="source"):
+        run(edges, (event("A"),), nodes)
+
+
+def test_known_failed_event_does_not_evaluate_rate_approximation():
+    failed = event("A", q=.1, known_failed=True)  # lambda*tau exceeds 0.1.
+    edge = LeakConnection("r", "s", "v", "A")
+    row = run((edge,), (failed,))[0]
+    assert (row.probability.low, row.probability.nominal, row.probability.high) == (1, 1, 1)
+    assert "known_failed_event" in row.flags
+    with pytest.raises(ValueError, match="lambda"):
+        run((edge,), (replace(failed, known_failed=False),))
