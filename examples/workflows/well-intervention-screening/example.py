@@ -6,17 +6,21 @@ https://www.data.bsee.gov/Production/Files/Production-A-2023.pdf
 Downloaded and checked 2026-11-02; PDF SHA-256:
 9d148eeb9927e73f396e2e50777202b1317ae24e79d73e98f49ccabd883689b6
 
-Only source oil volumes and producing days are observations. Fit parameters,
-midpoint approximation, threshold, uplift, costs, margin and outage are
-illustrative inputs. No historical intervention or recovery is asserted.
+Only source oil volumes and producing days are observations. Observation dates,
+assessment date, threshold, recency limits, uplift, costs, margin, outage and
+horizon are required caller inputs with a stated basis. No historical
+intervention or recovery is asserted.
 The same report (pages 5-11) shows 0 bbl and 0 producing days for this
 completion from May to December 2023; zero-day months are not rate
-observations and are not passed as history. The screen uses only data
-available by 30 April 2023.
+observations and are not passed as history. The caller must qualify the
+assessment date and the representative dates assigned to these monthly records.
 """
 
+import argparse
 from datetime import date
 import json
+import math
+from pathlib import Path
 
 from digitalmodel.well.intervention import (
     Band,
@@ -35,49 +39,81 @@ BSEE_ROWS = ((1, 1820, 30), (2, 1504, 27), (3, 1685, 30), (4, 41, 2))
 SOURCE = "BSEE OGOR-A 2023, Report 4081 pp.1-4, API 177194065600 D02"
 
 
-def worked_example() -> dict:
-    """Return checked screening values; no source fetch or file writes.
+def worked_example(
+    *,
+    observation_dates: list[date],
+    as_of: date,
+    shortfall_fraction: float,
+    consecutive_points: int,
+    max_age_days: float,
+    max_gap_days: float,
+    uplift_bopd: Band,
+    cost_usd: Band,
+    duration_days: Band,
+    net_price_usd_per_bbl: float,
+    horizon_days: float,
+    basis: str,
+) -> dict:
+    """Screen source rates using required caller assumptions, with no defaults.
 
-    Illustrative fit: qi=1820/30; Di=ln(1820/1685)/59=0.001306287073 /d,
-    b=0, start=16-Jan-2023. Fit is supplied, not fitted by the module.
-    At 16-Apr q_fit=53.937639862 bopd; measured=41/2=20.5 bopd.
-    Constant uplift economics: C=USD20k-40k, outage=2-4 d, u=10-20 bopd,
-    net margin=USD50/bbl, H=180 d. Deferred=41-82 bbl; elapsed
-    payback=24.05-92.2 d. Cost and uplift are not field-calibrated.
+    The exponential fit uses the first and third source rates and the elapsed
+    days between their supplied representative dates. The fit form is an
+    illustrative choice, not an inferred reservoir model. Input dates must
+    belong to their source months; no monthly representative day is inferred.
+    The basis must explain the date approximation and screening/economic inputs.
+    Nothing is fetched or written by this function.
     """
+    if len(observation_dates) != len(BSEE_ROWS) or any(
+        not isinstance(day, date) or (day.year, day.month) != (2023, row[0])
+        for day, row in zip(observation_dates, BSEE_ROWS)
+    ):
+        raise ValueError("observation_dates must match the four source months")
+    if not isinstance(basis, str) or not basis.strip():
+        raise ValueError("basis must describe the caller's scenario inputs")
+    first_rate = BSEE_ROWS[0][1] / BSEE_ROWS[0][2]
+    third_rate = BSEE_ROWS[2][1] / BSEE_ROWS[2][2]
+    elapsed = (observation_dates[2] - observation_dates[0]).days
     fit = DeclineFit(
-        1820 / 30,
-        0.001306287072616592,
+        first_rate,
+        math.log(first_rate / third_rate) / elapsed,
         0,
-        date(2023, 1, 16),
-        "illustrative Jan/Mar two-point exponential fit",
+        observation_dates[0],
+        "illustrative first/third-rate exponential fit; " + basis,
     )
     history = [
-        RatePoint(date(2023, month, 16), oil / days, SOURCE)
-        for month, oil, days in BSEE_ROWS
+        RatePoint(day, oil / days, SOURCE)
+        for day, (_, oil, days) in zip(observation_dates, BSEE_ROWS)
     ]
     candidate = candidate_screen(
         fit,
         history,
-        shortfall_fraction=0.2,
-        consecutive_points=1,
-        as_of=date(2023, 4, 30),
-        max_age_days=31,
-        max_gap_days=40,
+        shortfall_fraction=shortfall_fraction,
+        consecutive_points=consecutive_points,
+        as_of=as_of,
+        max_age_days=max_age_days,
+        max_gap_days=max_gap_days,
     )
     economics = screen_economics(
         baseline_bopd=history[-1].rate_bopd,
-        uplift_bopd=Band(10, 20),
-        cost_usd=Band(20000, 40000),
-        duration_days=Band(2, 4),
-        net_price_usd_per_bbl=50,
-        horizon_days=180,
-        basis="illustrative inputs, not BSEE treatment or field cost estimates",
+        uplift_bopd=uplift_bopd,
+        cost_usd=cost_usd,
+        duration_days=duration_days,
+        net_price_usd_per_bbl=net_price_usd_per_bbl,
+        horizon_days=horizon_days,
+        basis=basis,
     )
     return {
         "source": SOURCE,
+        "scenario_readiness": "caller_supplied_scenario",
+        "observation_dates": [day.isoformat() for day in observation_dates],
+        "as_of": as_of.isoformat(),
         "candidate": candidate.candidate,
-        "criterion": "more than 20% below fit, one recent positive-rate observation",
+        "criterion": {
+            "shortfall_fraction": shortfall_fraction,
+            "consecutive_points": consecutive_points,
+            "max_age_days": max_age_days,
+            "max_gap_days": max_gap_days,
+        },
         "predicted_bopd": candidate.predicted_bopd,
         "measured_bopd": candidate.measured_bopd,
         "shortfall_fraction": candidate.shortfall_fraction,
@@ -88,11 +124,27 @@ def worked_example() -> dict:
             economics.payback_from_start_days.low,
             economics.payback_from_start_days.high,
         ],
-        "net_cash_180_days_usd": economics.net_cash_usd,
-        "limitation": "April has only two producing days; midpoint rates and fit are approximate.",
+        "horizon_days": horizon_days,
+        "net_cash_usd": economics.net_cash_usd,
+        "limitation": "April has only two producing days; representative dates and fit are approximate.",
         "economics_basis": economics.basis,
     }
 
 
+def main() -> None:
+    """Require a JSON scenario file; dates use ISO format and bands are pairs."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--scenario", type=Path, required=True)
+    args = parser.parse_args()
+    params = json.loads(args.scenario.read_text(encoding="utf-8"))
+    params["observation_dates"] = [
+        date.fromisoformat(value) for value in params["observation_dates"]
+    ]
+    params["as_of"] = date.fromisoformat(params["as_of"])
+    for key in ("uplift_bopd", "cost_usd", "duration_days"):
+        params[key] = Band(*params[key])
+    print(json.dumps(worked_example(**params), indent=2))
+
+
 if __name__ == "__main__":
-    print(json.dumps(worked_example(), indent=2))
+    main()

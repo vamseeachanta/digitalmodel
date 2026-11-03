@@ -17,6 +17,12 @@ options, compares supplied decline fits with measured oil rates, and bounds
 constant-uplift payback including deferred production. Outputs support candidate
 investigation. They do not approve a treatment or establish well integrity.</p>
 
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-11-03</td><td>Remove unverified duration defaults and require scenario inputs to prevent unsupported estimates.</td></tr>
+</table>
+
 <h2>Method and access</h2>
 <p><code>method_options(Problem.SAND, subsea=True)</code> returns slickline bailing,
 qualified powered e-line cleaning, and coiled-tubing circulation options. Each option
@@ -41,23 +47,27 @@ for a particular scope is not established by these cross-case bounds.</p>
 no independent e-line rate is claimed. Rig rate refers to Eagle Ford heavy mast,
 while the duration evidence refers to subsea tasks. These contexts are not interchangeable.</caption>
 <tr><th>Method</th><th>Case/task duration [day]</th><th>Unit day rate [USD/day]</th><th>Duration evidence</th></tr>
-<tr><td>Slickline</td><td>5–20</td><td>3,500–8,000</td><td>CAT-07H method comparison; IATMI22-187 Table 1</td></tr>
+<tr><td>Slickline</td><td>Required caller input</td><td>3,500–8,000</td><td>No default duration: comparison endpoint unverified</td></tr>
 <tr><td>E-line</td><td>4–7</td><td>3,500–8,000</td><td>RPSEA Table 6 survey; IATMI22-187 powered cleanout</td></tr>
 <tr><td>Coiled tubing</td><td>4–14</td><td>12,000–25,000</td><td>RPSEA Table 6 sand wash; IATMI22-187</td></tr>
-<tr><td>HWU</td><td>6–10</td><td>20,000–38,000</td><td>MENA snubbing result; CAT-07H method comparison</td></tr>
+<tr><td>HWU</td><td>Required caller input</td><td>20,000–38,000</td><td>No default duration: comparison endpoint unverified</td></tr>
 <tr><td>Rig workover</td><td>20–30</td><td>18,000–28,000</td><td>RPSEA Table 6 tubing repair to casing-leak repair</td></tr>
 </table>
-<p>Duration sources: <a href="https://eprints.upnyk.ac.id/36925/1/6-%20Prosiding%20AIP%20Conference%202023-Gas%20lift%20optimization%20of%20CAT-07H%20%28June%202023%29.pdf">CAT-07H gas-lift study (2023), DOI 10.1063/5.0134919</a>;
+<p>Retained duration sources:
 <a href="https://journal.iatmi.or.id/index.php/ojs/article/download/309/316">IATMI22-187 (2022), Table 1</a>;
-<a href="https://www.halliburton.com/en/resources/first-hwo-snubbing-campaign-in-mena">MENA HWO case study, six-day result versus ten-day plan (publication date unstated)</a>;
 RPSEA Table 6 above. Rate source:
-<a href="https://www.sdbeyondpetro.com/workover-rigs-explained-types-uses-buyer-s-guide-2026">Workover Rigs Explained (23 July 2026), selected Table 1 rate facts and Eagle Ford paragraph</a>.
+<a href="https://www.sdbeyondpetro.com/workover-rigs-explained-types-uses-buyer-s-guide-2026">Workover Rigs Explained (23 July 2026), selected Table 1 rate facts and heavy-mast paragraph</a>.
 The rate source is a supplier's budget guidance, not an independently validated market dataset.
 Source links and exclusions travel with each returned estimate; no currency conversion or escalation is applied.
-The duration-comparison PDF could not be independently retrieved: TLS certificate
-validation failed, and its DOI route returned HTTP 403. Its five-day slickline and
-ten-day HWU comparison endpoints remain unverified; regression tests pin the
-reviewed values without establishing their source accuracy.</p>
+The earlier duration-comparison endpoints could not be independently verified and
+are no longer returned. Slickline and HWU calls without both
+<code>duration_days=Band(low_days, high_days)</code> and a nonblank
+<code>duration_basis</code> raise an error. Other methods accept the same override.
+Returned <code>duration_basis</code> and <code>duration_readiness</code> distinguish
+<code>caller_supplied_scenario</code> from <code>public_reference_only</code>.
+Caller-supplied durations are not independently verified; their source links
+contain only the retained rate citation. Neither status establishes an actual
+job estimate or suitability for economics without qualification.</p>
 <p class="limit">Subsea total cost and duration bands require explicit project inputs.
 A transferable primary-source cost range for each subsea access class has not been
 established. Calling <code>reference_estimate</code> for RLWI, riser-based intervention
@@ -81,22 +91,24 @@ insufficient and zero-rate histories are distinguished from positive candidate e
 Use one well/completion and fluid stream with a consistent producing-day or
 calendar-day rate basis. A rate below fit does not distinguish depletion, choke
 changes, water breakthrough, allocation errors or removable damage.</p>
-<p><code>uplift_from_shortfall(candidate, Band(0.25, 0.75))</code> converts a
-positive fit-to-measurement gap to an assumed 25%–75% recovered share. Recovery
+<p><code>uplift_from_shortfall(candidate, recovery_fraction)</code> converts a
+positive fit-to-measurement gap to the supplied recovered-share band. Recovery
 fractions are required scenario inputs in [0,1], not success probabilities or
-treatment coefficients. Alternatively supply incremental oil directly as below.</p>
-<pre><code>from digitalmodel.well.intervention import Band, screen_economics
+treatment coefficients. No recovered fraction is supplied by this module.
+Alternatively supply incremental oil directly as below. Every variable in this
+snippet must be supplied with a qualified basis; no numerical default is implied.</p>
+<pre><code>from digitalmodel.well.intervention import screen_economics
 
 result = screen_economics(
-    baseline_bopd=20.5,
-    uplift_bopd=Band(10, 20),         # assumed incremental oil, not total liquid
-    cost_usd=Band(20_000, 40_000),    # assumed total direct job cost
-    duration_days=Band(2, 4),        # assumed full production outage
-    net_price_usd_per_bbl=50,        # net realized margin, not gross price
-    horizon_days=180,                # elapsed days from job start
-    basis="illustrative assumptions; not a field estimate",
+    baseline_bopd=measured_oil_rate,
+    uplift_bopd=incremental_oil_band,
+    cost_usd=total_job_cost_band,
+    duration_days=full_outage_days_band,
+    net_price_usd_per_bbl=net_realized_margin,
+    horizon_days=elapsed_days_from_job_start,
+    basis=scenario_basis,
 )
-print(result.payback_from_start_days)  # PaybackBand(low=24.05, high=92.2)</code></pre>
+print(result.payback_from_start_days)</code></pre>
 <p>The oil balance is u·max(H−d,0) − q₀·min(d,H), relative to continued baseline
 production. Deferred oil is q₀·d; restart payback is (C + p·q₀·d)/(p·u).
 Elapsed payback adds d. Cost, duration and uplift endpoints are enumerated to bound
@@ -137,27 +149,42 @@ Only four small federal-data records are retained as literals; no source PDF is 
 <caption>One completion's reported oil and producing days, at the reported monthly conditions.
 The API's other completion records are excluded. Rates are volume divided by producing days.</caption>
 <tr><th>Month [2023]</th><th>Oil [bbl]</th><th>Producing time [day]</th><th>Producing-day oil rate [bbl/day]</th></tr>
-<tr><td>January</td><td>1,820</td><td>30</td><td>60.666667</td></tr>
-<tr><td>February</td><td>1,504</td><td>27</td><td>55.703704</td></tr>
-<tr><td>March</td><td>1,685</td><td>30</td><td>56.166667</td></tr>
-<tr><td>April</td><td>41</td><td>2</td><td>20.500000</td></tr>
+<tr><td>January</td><td>1,820</td><td>30</td><td>60.7</td></tr>
+<tr><td>February</td><td>1,504</td><td>27</td><td>55.7</td></tr>
+<tr><td>March</td><td>1,685</td><td>30</td><td>56.2</td></tr>
+<tr><td>April</td><td>41</td><td>2</td><td>20.5</td></tr>
 </table>
-<p>The illustrative two-point exponential fit uses January and March midpoint
-rates: qi = 60.666667 bbl/day, Di = ln(1820/1685)/59 = 0.001306287073/day,
-b = 0, start = 16 January 2023. At 16 April, the fitted rate is 53.937640 bbl/day.
-The measured 20.5 bbl/day is 61.993% below it, exceeding the chosen 20% threshold
-with one qualifying observation. Monthly midpoint approximation and April's two
-producing days limit representativeness. The fit is an example input, not a
-validated reservoir model or an external decline-pipeline result.
-The same report (pages 5–11) shows 0 bbl and 0 producing days for this completion
-from May to December 2023. Zero-day months are not rate observations and are not
-passed as history; the screen uses only data available by 30 April 2023.</p>
-<p>With the hypothetical economic inputs above, deferred oil is 41–82 bbl,
-elapsed payback is 24.05–92.20 days and 180-day net cash is USD43,900–155,950.
-These scenarios recover their outlay within the chosen 180-day horizon.
-The BSEE records do not establish any intervention, treatment outcome, cost,
-uplift or removable production loss. A candidate flag therefore does not establish
-that the actual well will pay out.</p>
+<p>The runnable example requires <code>--scenario scenario.json</code> and has
+no default scenario. The JSON object must contain <code>observation_dates</code>
+(four ISO dates in the four source months), <code>as_of</code> (ISO date),
+<code>shortfall_fraction</code>, <code>consecutive_points</code>,
+<code>max_age_days</code>, <code>max_gap_days</code>, <code>uplift_bopd</code>,
+<code>cost_usd</code>, <code>duration_days</code>,
+<code>net_price_usd_per_bbl</code>, <code>horizon_days</code> and
+<code>basis</code>. Bands are two-element arrays. The basis must explain the
+representative dates and screening/economic assumptions. The exponential fit
+uses the first and third reported rates and elapsed days between supplied dates;
+it does not impose a midpoint date. Output carries
+<code>scenario_readiness="caller_supplied_scenario"</code> and the supplied basis.
+The CLI and Python function both reject missing required inputs.</p>
+<pre><code>PYTHONPATH=src python examples/workflows/well-intervention-screening/example.py --scenario scenario.json</code></pre>
+<p>The <a href="../../../tests/well/intervention/test_screening.py">synthetic
+regression case</a> explicitly supplies monthly day-16 dates, an assessment date
+of 30 April 2023, a 20.0% threshold, one qualifying point, a 31-day maximum age
+and a 40-day maximum gap. These are test assumptions, not source observations or
+recommended screening criteria. Under those inputs the fitted April rate is
+53.9 bbl/day against 20.5 bbl/day measured, a 62.0% shortfall. Monthly representative
+dates and April's two producing days limit representativeness. The same report
+(pages 5–11) shows 0 bbl and 0 producing days from May to December 2023;
+zero-day months are not rate observations and are excluded from history.</p>
+<p>The same synthetic test explicitly supplies uplift of 10–20 bbl/day,
+cost of USD20,000–40,000, outage of 2–4 days, net margin of USD50/bbl and a
+180-day horizon. Conditional hand calculations give 41–82 bbl deferred oil,
+24.1–92.2 days elapsed payback and USD43,900–155,950 net cash over 180 days.
+These values are regression evidence only; the runnable example requires the
+caller to supply all scenario values. The BSEE records do not establish any
+intervention, treatment outcome, cost, uplift or removable production loss.
+A candidate flag therefore does not establish that the actual well will pay out.</p>
 
 <h2>Integration limits and follow-ups</h2>
 <p>The external decline pipeline can pass qi, nominal Di, b, fit start and measured

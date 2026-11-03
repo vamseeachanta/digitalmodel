@@ -182,10 +182,18 @@ def test_reference_bands_are_sourced_ranges_and_not_offshore_budgets():
         Method.HWU,
         Method.RIG_WORKOVER,
     ):
-        estimate = reference_estimate(method)
+        if method in (Method.SLICKLINE, Method.HWU):
+            estimate = reference_estimate(
+                method, duration_days=Band(2, 3), duration_basis="synthetic scenario"
+            )
+            assert estimate.duration_readiness == "caller_supplied_scenario"
+        else:
+            estimate = reference_estimate(method)
+            assert estimate.duration_readiness == "public_reference_only"
         assert estimate.duration_days.low < estimate.duration_days.high
         assert estimate.day_rate_usd.low < estimate.day_rate_usd.high
         assert estimate.sources and "reference" in estimate.limitations.lower()
+        assert estimate.duration_basis
         assert (
             estimate.cost_usd.low
             == estimate.duration_days.low * estimate.day_rate_usd.low
@@ -203,19 +211,12 @@ def test_reference_bands_are_sourced_ranges_and_not_offshore_budgets():
 @pytest.mark.parametrize(
     "method,duration,day_rate,cost",
     [
-        # Duration: DOI 10.1063/5.0134919 comparison, IATMI22-187 Table 1.
-        # The five-day comparison endpoint remains independently unverified.
-        # Hand cost endpoints: 5*3500=17500; 20*8000=160000 USD.
-        (Method.SLICKLINE, (5, 20), (3500, 8000), (17500, 160000)),
         # Duration: RPSEA Task 2 (2010) Table 6 survey; IATMI Table 1.
         # Hand costs: 4*3500=14000; 7*8000=56000 USD.
         (Method.E_LINE, (4, 7), (3500, 8000), (14000, 56000)),
         # Duration: RPSEA Table 6 sand wash; IATMI Table 1.
         # Hand costs: 4*12000=48000; 14*25000=350000 USD.
         (Method.COILED_TUBING, (4, 14), (12000, 25000), (48000, 350000)),
-        # Duration: HWO case-study result; DOI comparison (unverified).
-        # Hand costs: 6*20000=120000; 10*38000=380000 USD.
-        (Method.HWU, (6, 10), (20000, 38000), (120000, 380000)),
         # Duration: RPSEA Table 6 tubing/packer failure and casing leak.
         # Hand costs: 20*18000=360000; 30*28000=840000 USD.
         (Method.RIG_WORKOVER, (20, 30), (18000, 28000), (360000, 840000)),
@@ -231,14 +232,154 @@ def test_reference_endpoints_against_independent_literals(
     https://www.sdbeyondpetro.com/workover-rigs-explained-types-uses-buyer-s-guide-2026
     Duration citations and their links are in reference_estimate's docstring.
     Accessible duration/rate endpoints were transcribed from those sources.
-    The five-day and ten-day DOI comparison endpoints preserve the reviewed
-    snapshot: TLS validation failed and the DOI route returned HTTP 403.
-    These assertions detect literal drift; they do not verify that source.
+    Unverified duration endpoints are rejected rather than pinned as defaults.
     """
     estimate = reference_estimate(method)
     assert estimate.duration_days == Band(*duration)
     assert estimate.day_rate_usd == Band(*day_rate)
     assert estimate.cost_usd == Band(*cost)
+
+
+@pytest.mark.parametrize("method", [Method.SLICKLINE, Method.HWU])
+def test_unverified_duration_defaults_are_rejected(method):
+    with pytest.raises(ValueError, match="explicit duration_days and duration_basis"):
+        reference_estimate(method)
+
+
+@pytest.mark.parametrize("method", list(Method)[:5])
+@pytest.mark.parametrize("basis", [None, "", "   "])
+def test_explicit_reference_duration_requires_basis(method, basis):
+    with pytest.raises(ValueError, match="duration_basis"):
+        reference_estimate(method, duration_days=Band(2, 3), duration_basis=basis)
+
+
+@pytest.mark.parametrize("method", [Method.SLICKLINE, Method.HWU])
+def test_duration_basis_alone_cannot_enable_unverified_defaults(method):
+    with pytest.raises(ValueError, match="duration_days"):
+        reference_estimate(method, duration_basis="synthetic assumption")
+
+
+@pytest.mark.parametrize(
+    "method,rate,cost",
+    [
+        (Method.SLICKLINE, Band(3500, 8000), Band(7000, 24000)),
+        (Method.HWU, Band(20000, 38000), Band(40000, 114000)),
+        (Method.E_LINE, Band(3500, 8000), Band(7000, 24000)),
+    ],
+)
+def test_explicit_duration_propagates_scenario_readiness_and_hand_costs(method, rate, cost):
+    # Synthetic 2..3 day input; rate endpoints retain the cited rate basis.
+    estimate = reference_estimate(
+        method, duration_days=Band(2, 3), duration_basis="synthetic duration scenario"
+    )
+    assert estimate.duration_days == Band(2, 3)
+    assert estimate.day_rate_usd == rate
+    assert estimate.cost_usd == cost
+    assert estimate.duration_basis == "synthetic duration scenario"
+    assert estimate.duration_readiness == "caller_supplied_scenario"
+    assert "not independently verified" in estimate.limitations
+    from digitalmodel.well.intervention.methods import RATES
+
+    assert estimate.sources == (RATES,)
+
+
+def example_module():
+    import runpy
+    from pathlib import Path
+
+    return runpy.run_path(
+        str(
+            Path(__file__).resolve().parents[3]
+            / "examples/workflows/well-intervention-screening/example.py"
+        )
+    )
+
+
+def example_scenario():
+    """Synthetic required inputs, with no implied field calibration."""
+    return dict(
+        observation_dates=[date(2023, month, 16) for month in range(1, 5)],
+        as_of=date(2023, 4, 30),
+        shortfall_fraction=0.2,
+        consecutive_points=1,
+        max_age_days=31,
+        max_gap_days=40,
+        uplift_bopd=Band(10, 20),
+        cost_usd=Band(20000, 40000),
+        duration_days=Band(2, 4),
+        net_price_usd_per_bbl=50,
+        horizon_days=180,
+        basis="synthetic inputs, not field estimates",
+    )
+
+
+def test_runnable_example_requires_every_scenario_input():
+    run = example_module()["worked_example"]
+    params = example_scenario()
+    with pytest.raises(TypeError):
+        run()
+    for key in params:
+        with pytest.raises(TypeError):
+            run(**{k: v for k, v in params.items() if k != key})
+
+
+def test_runnable_example_propagates_inputs_and_hand_calculations():
+    run = example_module()["worked_example"]
+    params = example_scenario()
+    result = run(**params)
+    assert result["candidate"]
+    assert result["payback_from_start_days"] == pytest.approx([24.05, 92.2])
+    assert result["net_cash_usd"] == (43900, 155950)
+    assert result["economics_basis"] == params["basis"]
+    assert result["scenario_readiness"] == "caller_supplied_scenario"
+    # These changes must reach the screen, not a baked-in 20%/180-day case.
+    changed = run(**(params | {"shortfall_fraction": 0.7, "horizon_days": 2}))
+    assert not changed["candidate"]
+    assert changed["net_cash_usd"] == (-42050, -22050)
+
+
+def test_runnable_example_rejects_dates_outside_source_months():
+    params = example_scenario()
+    params["observation_dates"] = [date(2024, month, 16) for month in range(1, 5)]
+    with pytest.raises(ValueError, match="source months"):
+        example_module()["worked_example"](**params)
+
+
+def test_runnable_example_cli_requires_scenario_file():
+    import subprocess
+    import sys
+
+    result = subprocess.run(
+        [sys.executable, example_module()["__file__"]],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert "--scenario" in result.stderr
+
+
+def test_runnable_example_cli_uses_explicit_json(tmp_path):
+    import json
+    import subprocess
+    import sys
+
+    params = example_scenario()
+    params["observation_dates"] = [d.isoformat() for d in params["observation_dates"]]
+    params["as_of"] = params["as_of"].isoformat()
+    for key in ("uplift_bopd", "cost_usd", "duration_days"):
+        params[key] = [params[key].low, params[key].high]
+    scenario = tmp_path / "scenario.json"
+    scenario.write_text(json.dumps(params))
+    result = subprocess.run(
+        [sys.executable, example_module()["__file__"], "--scenario", str(scenario)],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    values = json.loads(result.stdout)
+    assert values["net_cash_usd"] == [43900, 155950]
+    assert values["scenario_readiness"] == "caller_supplied_scenario"
 
 
 def test_payback_includes_deferral_and_elapsed_job_time():

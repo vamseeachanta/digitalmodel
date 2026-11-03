@@ -22,8 +22,6 @@ from .screening import Band
 RIGLESS = "https://www.offshore-mag.com/production/article/16755400/well-intervention-using-rigless-techniques"
 RPSEA = "https://edx.netl.doe.gov/dataset/coiled-tubing-drilling-and-intervention-systems-using-cost-effective-vessel/resource/7268bc40-e7ec-4743-9b39-012b107490f0/download"
 IATMI = "https://journal.iatmi.or.id/index.php/ojs/article/download/309/316"
-CAT07H = "https://eprints.upnyk.ac.id/36925/1/6-%20Prosiding%20AIP%20Conference%202023-Gas%20lift%20optimization%20of%20CAT-07H%20%28June%202023%29.pdf"
-HWO = "https://www.halliburton.com/en/resources/first-hwo-snubbing-campaign-in-mena"
 RATES = "https://www.sdbeyondpetro.com/workover-rigs-explained-types-uses-buyer-s-guide-2026"
 
 
@@ -174,19 +172,24 @@ class ReferenceEstimate:
     cost_usd: Band
     sources: tuple[str, ...]
     limitations: str
+    duration_basis: str
+    duration_readiness: str
 
 
-def reference_estimate(method: Method | str) -> ReferenceEstimate:
+def reference_estimate(
+    method: Method | str,
+    *,
+    duration_days: Band | None = None,
+    duration_basis: str | None = None,
+) -> ReferenceEstimate:
     """Return cited reference ranges, never a default offshore budget.
 
     Durations are case/task envelopes, NOT universal typical durations:
-    * slickline 5-20 d: AIP 2023, doi:10.1063/5.0134919, comparison of
-      intervention methods (CAT-07H), 5 d; IATMI22-187 (2022), Table 1, 20 d.
+    * slickline: no default; the previously used lower endpoint is unverified.
     * e-line 4-7 d: RPSEA Task 2 (2010), Table 6, BH survey 4 d; IATMI22-187,
       Table 1, powered cleanout 7 d.
     * CT 4-14 d: RPSEA Table 6, sand wash 4 d; IATMI22-187 Table 1, 14 d.
-    * HWU 6-10 d: first HWO snubbing campaign in MENA, public case study,
-      result 6 d; CAT-07H comparison, 10 d. Source HWO date not stated.
+    * HWU: no default; the previously used upper endpoint is unverified.
     * rig 20-30 d: RPSEA Table 6, tubing failure 20 d and casing leak 30 d.
 
     Selected unit day-rate facts: Beyond Petroleum Equipment, 23 July 2026,
@@ -200,13 +203,20 @@ def reference_estimate(method: Method | str) -> ReferenceEstimate:
     riser-based or rig jobs are embedded. Their cost/duration bands shall be
     supplied to screen_economics with a project-specific basis. Onshore rates
     shall not be assigned to offshore spreads. No escalation or FX is applied.
+
+    Slickline and HWU require explicit duration_days and a nonblank
+    duration_basis. Other methods accept the same override. Caller inputs
+    carry caller_supplied_scenario readiness, never independent verification;
+    retained published ranges carry public_reference_only readiness. Neither
+    status establishes suitability for an actual intervention. Duration source
+    links are included only when the published duration is used.
     """
     method = Method(method)
     cases = {
-        Method.SLICKLINE: (5, 20, 3500, 8000, (CAT07H, IATMI)),
+        Method.SLICKLINE: (None, None, 3500, 8000, ()),
         Method.E_LINE: (4, 7, 3500, 8000, (RPSEA, IATMI)),
         Method.COILED_TUBING: (4, 14, 12000, 25000, (RPSEA, IATMI)),
-        Method.HWU: (6, 10, 20000, 38000, (HWO, CAT07H)),
+        Method.HWU: (None, None, 20000, 38000, ()),
         Method.RIG_WORKOVER: (20, 30, 18000, 28000, (RPSEA,)),
     }
     if method not in cases:
@@ -214,13 +224,31 @@ def reference_estimate(method: Method | str) -> ReferenceEstimate:
             "subsea cost and duration bands must be supplied with their project basis"
         )
     d0, d1, c0, c1, sources = cases[method]
+    if duration_days is None:
+        if d0 is None or duration_basis is not None:
+            raise ValueError("explicit duration_days and duration_basis are required")
+        duration = Band(d0, d1)
+        basis = "Published case/task envelope; see duration sources."
+        readiness = "public_reference_only"
+    else:
+        if not isinstance(duration_days, Band):
+            raise ValueError("duration_days must be a Band in days")
+        if not isinstance(duration_basis, str) or not duration_basis.strip():
+            raise ValueError("explicit duration_days and duration_basis are required")
+        duration = duration_days
+        basis = duration_basis.strip()
+        readiness = "caller_supplied_scenario"
+        sources = ()
     return ReferenceEstimate(
-        Band(d0, d1),
+        duration,
         Band(c0, c1),
-        Band(d0 * c0, d1 * c1),
+        Band(duration.low * c0, duration.high * c1),
         sources + (RATES,),
         "Reference sensitivity only: case durations and 2026 US-onshore unit rates "
         "have different scopes. Excludes mobilization, offshore vessel/rig/support, "
         "weather, services, materials, chemicals, contingency and deferred oil; "
-        "no field cost estimate or current quote is established.",
+        "no field cost estimate or current quote is established. "
+        "Caller-supplied durations are not independently verified.",
+        basis,
+        readiness,
     )
