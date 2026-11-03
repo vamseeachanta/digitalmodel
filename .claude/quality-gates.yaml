@@ -30,6 +30,7 @@ gates:
         "tests/asset_integrity/",
         "tests/engineering_validation/",
         "tests/materials/",
+        "tests/process_piping/",
         "tests/test_wall_thickness.py",
         "tests/test_wall_thickness_api_rp_2rd.py",
         "tests/test_wall_thickness_api_std_2rd.py",
@@ -43,7 +44,7 @@ gates:
         "tests/test_wall_thickness_parametric.py",
         "tests/test_wall_thickness_phases.py",
       ]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/asset_integrity/ tests/engineering_validation/ tests/materials/ tests/test_wall_thickness.py tests/test_wall_thickness_api_rp_2rd.py tests/test_wall_thickness_api_std_2rd.py tests/test_wall_thickness_codes/ tests/test_wall_thickness_comparison.py tests/test_wall_thickness_dnv_editions.py tests/test_wall_thickness_editions.py tests/test_wall_thickness_interactive_report.py tests/test_wall_thickness_lookup.py tests/test_wall_thickness_mt_report.py tests/test_wall_thickness_parametric.py tests/test_wall_thickness_phases.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable '.[test]' python -m pytest tests/asset_integrity/ tests/engineering_validation/ tests/materials/ tests/process_piping/ tests/test_wall_thickness.py tests/test_wall_thickness_api_rp_2rd.py tests/test_wall_thickness_api_std_2rd.py tests/test_wall_thickness_codes/ tests/test_wall_thickness_comparison.py tests/test_wall_thickness_dnv_editions.py tests/test_wall_thickness_editions.py tests/test_wall_thickness_interactive_report.py tests/test_wall_thickness_lookup.py tests/test_wall_thickness_mt_report.py tests/test_wall_thickness_parametric.py tests/test_wall_thickness_phases.py -rfE -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 

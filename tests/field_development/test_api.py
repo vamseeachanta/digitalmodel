@@ -221,7 +221,7 @@ class TestScreenDemoConfigs:
             260.0,
         ]
         assert result["layout"]["field"] == "Demo Onshore Field"
-        assert result["report_path"] == str(report)
+        assert result["report_path"] == report.as_posix()
         text = report.read_text(encoding="utf-8")
         assert text.startswith("# Screening report — Demo Onshore Field")
         assert "FL-1" in text
