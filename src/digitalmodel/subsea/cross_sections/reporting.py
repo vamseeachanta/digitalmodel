@@ -207,9 +207,9 @@ def _atomic_write(path: Path, text: str) -> Path:
     try:
         with candidate.open(mode="x", encoding="utf-8", newline="\n") as stream:
             tmp = candidate
+            if mode is not None:
+                tmp.chmod(mode)
             stream.write(text)
-        if mode is not None:
-            tmp.chmod(mode)
         tmp.replace(path)
     finally:
         if tmp is not None and tmp.exists():

@@ -11,6 +11,7 @@ in a separate directory. No engineering calculations or acceptance limits change
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-22 | Add destination preflight, artifact links and disposable examples to prevent overwritten outputs and broken links. |
+| Correction | 2026-11-03 | Apply retained permissions before writing replacement content and cite the exclusive creation API in use. |
 
 ## Audit coverage
 
@@ -31,7 +32,7 @@ Canonical identities and relative paths follow Python 3.11
 [`Path.resolve` and `Path.samefile`](https://docs.python.org/3.11/library/pathlib.html#pathlib.Path.resolve)
 and [`os.path.relpath`](https://docs.python.org/3.11/library/os.path.html#os.path.relpath).
 Exclusive temporary creation follows
-[`NamedTemporaryFile`](https://docs.python.org/3.11/library/tempfile.html#tempfile.NamedTemporaryFile).
+[`open(..., mode="x")`](https://docs.python.org/3.11/library/functions.html#open).
 These are filesystem rules; no empirical coefficients or numerical tolerances
 are introduced. HTML/Markdown links percent-encode reserved filename characters;
 JSON manifests retain ordinary filesystem paths. The explorer accepts relative

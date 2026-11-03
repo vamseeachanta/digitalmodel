@@ -5,7 +5,9 @@ file and must fail before rendering. The old <name>.tmp is unrelated input,
 not a scratch file owned by this invocation (issue #2315).
 """
 
+from contextlib import contextmanager
 from hashlib import sha256
+from pathlib import Path
 import os
 import stat
 import uuid
@@ -106,3 +108,49 @@ def test_exclusive_temporary_collision_preserves_unowned_file(tmp_path, monkeypa
 
     assert sha256(retained.read_bytes()).digest() == before
     assert not (tmp_path / reporting.REPORT_MD).exists()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX report permissions")
+@pytest.mark.parametrize("report_format, name", [
+    ("md", reporting.REPORT_MD), ("html", reporting.REPORT_HTML),
+])
+def test_private_replacement_is_private_while_writing(
+    tmp_path, monkeypatch, report_format, name,
+):
+    destination = tmp_path / name
+    destination.write_text("previous report\n", encoding="utf-8")
+    destination.chmod(0o600)
+    original_open = Path.open
+    observations = []
+
+    @contextmanager
+    def inspect_open(path, *args, **kwargs):
+        with original_open(path, *args, **kwargs) as stream:
+            if kwargs.get("mode") == "x":
+                original_write = stream.write
+
+                def inspect_write(text):
+                    # Inspect the real temporary file before and after flushing.
+                    assert stat.S_IMODE(os.fstat(stream.fileno()).st_mode) == 0o600
+                    count = original_write(text)
+                    stream.flush()
+                    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+                    assert path.read_text(encoding="utf-8") == text
+                    assert destination.read_text(encoding="utf-8") == "previous report\n"
+                    observations.append(path)
+                    return count
+
+                monkeypatch.setattr(stream, "write", inspect_write)
+            yield stream
+
+    monkeypatch.setattr(Path, "open", inspect_open)
+    previous_mask = os.umask(0o022)
+    try:
+        assert reporting.write_report_files(tmp_path, {report_format}) == [destination]
+    finally:
+        os.umask(previous_mask)
+
+    assert len(observations) == 1
+    assert not observations[0].exists()
+    assert stat.S_IMODE(destination.stat().st_mode) == 0o600
+    assert destination.read_text(encoding="utf-8") != "previous report\n"
