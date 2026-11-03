@@ -195,6 +195,21 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
     for block in model.blocks:
         if block.keyword not in {"TIE", "CONTACT PAIR"}:
             continue
+        # CalculiX 2.22 manual, sections 7.22 (*CONTACT PAIR) and 7.132 (*TIE):
+        # required parameters must be valid before a connection supplies support.
+        parameter = "NAME" if block.keyword == "TIE" else "INTERACTION"
+        value = block.params.get(parameter, "")
+        if not value.strip():
+            model.error("missing_connection_parameter",
+                        (f"keyword:{block.keyword}", f"parameter:{parameter}"),
+                        f"{block.keyword} requires a nonempty {parameter}",
+                        f"Specify {parameter} with a nonempty value; contact INTERACTION "
+                        "must name a defined SURFACE INTERACTION; see CalculiX 2.22 "
+                        "manual sections 7.22 (*CONTACT PAIR) and 7.132 (*TIE).", block.line)
+            continue
+        if block.keyword == "CONTACT PAIR" and value.upper() not in model.definitions["interaction"]:
+            # Reference validation has already reported the undefined interaction.
+            continue
         for row in block.rows:
             if len(row) != 2 or not all(row):
                 model.error("parse_error", (f"keyword:{block.keyword}",), "Expected two surface names",

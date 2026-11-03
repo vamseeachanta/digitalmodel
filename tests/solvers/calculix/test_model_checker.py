@@ -76,6 +76,72 @@ def test_surface_path_to_supported_component(link, tmp_path):
     assert report.status == "PASS"
 
 
+@pytest.mark.parametrize("keyword,parameters,valid", [
+    ("TIE", "", False),
+    ("TIE", ",NAME", False),
+    ("TIE", ",NAME=", False),
+    ("TIE", ',NAME="   "', False),
+    ("TIE", ",NAME=JOIN", True),
+    ("CONTACT PAIR", "", False),
+    ("CONTACT PAIR", ",INTERACTION", False),
+    ("CONTACT PAIR", ",INTERACTION=", False),
+    ("CONTACT PAIR", ',INTERACTION="   "', False),
+    ("CONTACT PAIR", ",INTERACTION=ABSENT", False),
+    ("CONTACT PAIR", ",INTERACTION=STEEL", False),
+    ("CONTACT PAIR", ",INTERACTION=FRICTIONLESS", True),
+    ("CONTACT PAIR", ",INTERACTION=frictionless", True),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_connection_parameters_required_before_support_join(deck, capsys, keyword,
+                                                           parameters, valid, interface):
+    # CalculiX 2.22 manual, sections 7.22 (*CONTACT PAIR) and 7.132 (*TIE):
+    # INTERACTION must name a surface interaction; ties require a nonempty NAME.
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    mode = ",TYPE=NODE TO SURFACE" if keyword == "CONTACT PAIR" else ""
+    path = deck(text=text + "*SURFACE,NAME=MASTER\nBODY,S1\n"
+                "*SURFACE,NAME=SLAVE,TYPE=NODE\n5\n"
+                f"*{keyword}{mode}{parameters}\nSLAVE,MASTER\n"
+                "*SURFACE INTERACTION,NAME=FRICTIONLESS\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        exit_code = main([path.as_posix(), "--json"])
+        evidence = json.loads(capsys.readouterr().out)
+        assert exit_code == (0 if valid else 1)
+    assert evidence["status"] == ("PASS" if valid else "FAIL")
+    unsupported = [tuple(f["entity_ids"]) for f in evidence["findings"]
+                   if f["code"] == "unconstrained_part"]
+    assert unsupported == ([] if valid else [("step:0", "element:2")])
+    assert ("contact_path" in {f["code"] for f in evidence["findings"]}) == (
+        valid and keyword == "CONTACT PAIR")
+    if not valid:
+        error = next(f for f in evidence["findings"] if f["code"] in {
+            "missing_connection_parameter", "missing_reference"})
+        assert error["severity"] == "error" and error["line"] > 0 and error["fix_hint"]
+
+
+@pytest.mark.parametrize("parameters,valid", [
+    ("", False), (",NAME", False), (",NAME=", False),
+    (',NAME="   "', False), (",NAME=JOIN", True),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_tie_name_required_before_coincidence_exemption(deck, capsys, parameters, valid, interface):
+    path = deck("*NODE\n99,0,0,0\n"
+                "*SURFACE,NAME=MASTER\nBODY,S1\n"
+                "*SURFACE,NAME=SLAVE,TYPE=NODE\n99\n"
+                f"*TIE{parameters}\nSLAVE,MASTER\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        exit_code = main([path.as_posix(), "--json"])
+        evidence = json.loads(capsys.readouterr().out)
+        assert exit_code == (0 if valid else 1)
+    assert evidence["status"] == ("PASS" if valid else "FAIL")
+    pairs = [tuple(f["entity_ids"]) for f in evidence["findings"]
+             if f["code"] == "unmerged_nodes"]
+    assert pairs == ([] if valid else [("node:1", "node:99")])
+
+
 @pytest.mark.parametrize("keyword", ["TIE", "CONTACT PAIR"])
 @pytest.mark.parametrize("master_type", ["NODE", "node", "ELEMENT", None])
 @pytest.mark.parametrize("interface", ["api", "cli"])
