@@ -25,7 +25,9 @@ from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
+from pylife.materiallaws.woehlercurve import WoehlerCurve
 
 from digitalmodel.fatigue.orcaflex_fatigue import (
     CurveBasis,
@@ -262,16 +264,26 @@ def test_object_complex_curve_endurance_is_rejected(
 
 
 @pytest.mark.parametrize("allowable, damage", [(1000.0, 0.003), (np.inf, 0.0)])
-def test_real_object_curve_endurance_is_accepted(history, basis, allowable, damage):
+def test_real_object_curve_counts_follow_endurance_contract(
+    history, basis, allowable, damage,
+):
     class ObjectCurve:
         def cycles(self, ranges):
             return np.full(ranges.shape, allowable, dtype=object)
 
+    if np.isinf(allowable):
+        # An arbitrary curve has no qualified endurance-limit metadata.
+        with pytest.raises(ValueError, match="allowable_cycles"):
+            fatigue_assessment(
+                {"detail": history}, ObjectCurve(), 10,
+                exposure_duration=2, time_unit="year", curve_basis=basis,
+            )
+        return
     report = fatigue_assessment(
         {"detail": history}, ObjectCurve(), 10,
         exposure_duration=2, time_unit="year", curve_basis=basis,
     )
-    # Three counted cycles / 1000 = 0.003; infinite endurance gives zero damage.
+    # Three counted cycles / 1000 = 0.003.
     assert report.locations["detail"].exposure_damage == pytest.approx(damage)
 
 
@@ -303,16 +315,81 @@ def test_curve_without_masked_counts_is_accepted(history, basis):
     assert report.locations["detail"].exposure_damage == pytest.approx(0.003)
 
 
-def test_infinite_endurance_means_zero_damage(history, basis):
-    class EnduranceLimitCurve:
+def test_unqualified_infinite_endurance_is_rejected(history, basis):
+    class UnqualifiedCurve:
         def cycles(self, ranges):
             return np.full_like(ranges, np.inf)
 
+    with pytest.raises(ValueError, match="allowable_cycles"):
+        fatigue_assessment(
+            {"detail": history}, UnqualifiedCurve(), 10,
+            exposure_duration=2, time_unit="year", curve_basis=basis,
+        )
+
+
+@pytest.fixture
+def endurance_curve():
+    # Chosen test law: N(R) = 1000 * (R/4)**-2 at/above 4; infinity below.
+    # These are synthetic range-based parameters, not an engineering curve.
+    return WoehlerCurve(pd.Series({
+        "SD": 4.0, "ND": 1000.0, "k_1": 2.0, "k_2": np.inf,
+    }))
+
+
+@pytest.mark.parametrize("stress_range, allowable, damage", [
+    (2.0, np.inf, 0.0), (4.0, 1000.0, 0.0005), (8.0, 250.0, 0.002),
+])
+def test_qualified_endurance_and_boundary(
+    endurance_curve, basis, stress_range, allowable, damage,
+):
+    # A single residual half-cycle contributes 0.5/N(R), including at the knee.
     report = fatigue_assessment(
-        {"detail": history}, EnduranceLimitCurve(), 10,
+        {"detail": StressHistory([0, stress_range], "MPa")}, endurance_curve, 10,
         exposure_duration=2, time_unit="year", curve_basis=basis,
     )
-    assert report.locations["detail"].exposure_damage == 0.0
+    location = report.locations["detail"]
+    assert location.cycles[0].allowable_cycles == pytest.approx(allowable)
+    assert location.exposure_damage == pytest.approx(damage)
+    assert location.design_life_damage == pytest.approx(5 * damage)
+
+
+def test_qualified_endurance_with_mixed_bins(endurance_curve, history, basis):
+    report = fatigue_assessment(
+        {"detail": history}, endurance_curve, 10,
+        exposure_duration=2, time_unit="year", curve_basis=basis,
+    )
+    location = report.locations["detail"]
+    # The range-2 full cycle is below the limit and contributes zero.
+    # Residuals give (6**2 + 8**2 + 7**2 + 5**2)/(2*1000*4**2) = 87/16000.
+    assert location.exposure_damage == pytest.approx(87 / 16000)
+    assert location.design_life_damage == pytest.approx(5 * 87 / 16000)
+    for cycle in location.cycles:
+        if cycle.stress_range < 4:
+            assert cycle.allowable_cycles == np.inf
+            assert cycle.damage == 0.0
+        else:
+            expected = 1000 * (cycle.stress_range / 4) ** -2
+            assert cycle.allowable_cycles == pytest.approx(expected)
+            assert cycle.damage == pytest.approx(cycle.cycles / expected)
+
+
+@pytest.mark.parametrize("parameters", [
+    {"k_2": 2.0}, {"SD": 2.0}, {"SD": 1.0}, {"SD": np.nan},
+    {"ND": 0.0}, {"ND": np.inf}, {"k_1": 0.0}, {"k_1": np.inf},
+])
+def test_unqualified_woehler_infinity_is_rejected(parameters, basis):
+    class InvalidEnduranceCurve(WoehlerCurve):
+        def cycles(self, ranges):
+            return np.full_like(ranges, np.inf)
+
+    values = {"SD": 4.0, "ND": 1000.0, "k_1": 2.0, "k_2": np.inf}
+    values.update(parameters)
+    curve = InvalidEnduranceCurve(pd.Series(values))
+    with pytest.raises(ValueError, match="allowable_cycles"):
+        fatigue_assessment(
+            {"detail": StressHistory([0, 2], "MPa")}, curve, 10,
+            exposure_duration=2, time_unit="year", curve_basis=basis,
+        )
 
 
 def test_inputs_are_not_modified(history, basis):

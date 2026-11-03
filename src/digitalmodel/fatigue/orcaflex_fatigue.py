@@ -10,6 +10,8 @@ in the same declared unit. No amplitude conversion, mean-stress, thickness or
 environmental correction is applied. CurveBasis records the caller's chosen
 basis, not its qualification.
 Complex scalar values are rejected even when stored in object arrays.
+Infinite counts require a WoehlerCurve with positive finite SD, ND and k_1,
+k_2 = positive infinity, and counted ranges strictly below SD.
 
 Counting and damage use the existing rainflow_count and miner_damage primitives.
 Residual pairs retain their half-cycle weights exactly once. Exact ranges are
@@ -28,6 +30,7 @@ from numbers import Real
 from typing import Protocol
 
 import numpy as np
+from pylife.materiallaws.woehlercurve import WoehlerCurve
 
 from .damage import miner_damage
 from .rainflow import rainflow_count
@@ -37,7 +40,7 @@ class SNCurve(Protocol):
     """Caller-supplied range-based curve compatible with miner_damage."""
 
     def cycles(self, stress_ranges: np.ndarray) -> np.ndarray:
-        """Return positive allowable counts; positive infinity means no damage."""
+        """Return positive counts; infinity requires qualified Woehler endurance."""
         ...
 
 
@@ -164,7 +167,43 @@ class _CheckedCurve:
             raise ValueError(
                 "allowable_cycles must match ranges and be positive, without NaN"
             )
+        if np.isposinf(allowable).any():
+            endurance = np.zeros_like(ranges, dtype=bool)
+            if isinstance(self.curve, WoehlerCurve):
+                limit = np.asarray(self.curve.SD, dtype=float)
+                endurance = np.isposinf(self.curve.k_2) & (ranges < limit)
+                for parameter in (limit, self.curve.ND, self.curve.k_1):
+                    value = np.asarray(parameter, dtype=float)
+                    endurance &= np.isfinite(value) & (value > 0)
+            if (np.isposinf(allowable) & ~endurance).any():
+                raise ValueError("allowable_cycles contain unqualified infinity")
         return allowable
+
+
+class _CheckedWoehlerCurve(_CheckedCurve, WoehlerCurve):
+    """Miner-only view preserving the wrapped curve's endurance qualification.
+
+    Only genuine WoehlerCurve instances use this view. Counting still delegates
+    to the original curve, and Miner sees its original qualification parameters.
+    """
+
+    curve: WoehlerCurve
+
+    @property
+    def SD(self):
+        return self.curve.SD
+
+    @property
+    def ND(self):
+        return self.curve.ND
+
+    @property
+    def k_1(self):
+        return self.curve.k_1
+
+    @property
+    def k_2(self):
+        return self.curve.k_2
 
 
 def fatigue_assessment(
@@ -194,10 +233,12 @@ def fatigue_assessment(
     Raises:
         ValueError: Invalid histories, units, durations, curve counts or overflow.
 
-    Constant histories have no cycles and zero damage. Positive infinite curve
-    endurance is permitted and contributes zero damage. No curve or environment
-    is selected automatically. This function does not qualify an engineering
-    design or select acceptance factors.
+    Constant histories have no cycles and zero damage. Infinite counts contribute
+    zero damage only for WoehlerCurve bins strictly below positive finite SD,
+    with positive finite ND and k_1 and positive infinite k_2. Other infinite
+    counts are rejected. No curve or environment is selected automatically.
+    This function does not qualify an engineering design or select acceptance
+    factors.
     """
     exposure = _duration(exposure_duration, "exposure_duration")
     life = _duration(design_life, "design_life")
@@ -235,7 +276,11 @@ def fatigue_assessment(
                 # Weights 1 and 0.5 are passed unchanged to the Miner sum(n/N).
                 if not counted["cycles"].isin([0.5, 1.0]).all():
                     raise ValueError("unexpected rainflow cycle weights")
-                result = miner_damage(counted, _CheckedCurve(sn_curve))
+                checked_curve = (
+                    _CheckedWoehlerCurve(sn_curve)
+                    if isinstance(sn_curve, WoehlerCurve) else _CheckedCurve(sn_curve)
+                )
+                result = miner_damage(counted, checked_curve)
                 damage = result.attrs["total_damage"]
                 scaled = damage * scale
         except (FloatingPointError, OverflowError) as exc:
