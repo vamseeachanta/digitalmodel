@@ -412,13 +412,24 @@ def test_incomplete_evidence_is_validated_before_serialization(artifact):
     assert row.to_dict()["evidence"] == [artifact.to_dict()]
 
 
-def test_inventory_matches_the_pinned_source():
+@pytest.mark.parametrize("default_encoding", ["utf-8", "cp1252"])
+def test_inventory_matches_the_pinned_source(monkeypatch, default_encoding):
     import re
     from digitalmodel.aqg.diffraction import criteria_source
 
+    # Emulate locale defaults independently of the installed system locales.
+    read_text = Path.read_text
+
+    def read_with_default_encoding(path, encoding=None, errors=None):
+        return read_text(path, encoding=encoding or default_encoding, errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", read_with_default_encoding)
+
     root = Path(__file__).resolve().parents[3]
     source = root / "src/digitalmodel" / criteria_source()["document"]
-    expected = re.findall(r"^\| (G4\.\d[a-z])\s*\|", source.read_text(), re.MULTILINE)
+    expected = re.findall(
+        r"^\| (G4\.\d[a-z])\s*\|", source.read_text(encoding="utf-8"), re.MULTILINE
+    )
     assert tuple(c.check_id for c in assess([]).checks) == tuple(expected)
 
 
