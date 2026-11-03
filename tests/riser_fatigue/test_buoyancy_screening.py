@@ -412,3 +412,38 @@ def test_output_retains_governing_interval_and_spectral_basis(atlas, responses, 
         "duration_s": 10.0,
         "source": "synthetic power-law S-N",
     }
+
+
+def test_off_unit_frequency_and_noninteger_slope_hand_calculation(
+    atlas, responses, limits
+):
+    """Checks the Hz-to-angular moment order away from 1 Hz, where f**n == 1.
+
+    Synthetic triangle PSD G=(0,5,0) MPa²/Hz at f=(0.1,0.2,0.3) Hz.
+    Trapezoid: m0=0.1*5=0.5 MPa²; integral of f²G is 0.1*0.04*5=0.02 Hz²MPa².
+    Rice crossing rate nu0=sqrt(0.02/0.5)=0.2 Hz (the 2*pi factors cancel).
+    Rayleigh range scale 2*sqrt(2*m0)=2 MPa; with invented m=3, A=1000,
+    T=100 s and Gamma(2.5)=3*sqrt(pi)/4=1.329340:
+    D=0.2*100*2**3*1.329340/1000=0.2126944.
+    """
+    gamma_2p5 = 3.0 * 3.141592653589793**0.5 / 4.0
+    expected = 0.2 * 100.0 * 2.0**3 * gamma_2p5 / 1000.0
+    assert expected == pytest.approx(0.2126944, rel=1e-6)
+    responses["a"] = replace(
+        responses["a"],
+        spectra=tuple(
+            StressSpectrum(s, (0.1, 0.2, 0.3), (0.0, 5.0, 0.0), "synthetic PSD")
+            for s in (50.0, 100.0)
+        ),
+    )
+    row = next(
+        r
+        for r in rank_buoyancy_candidates(
+            atlas,
+            responses,
+            limits,
+            SpectralBasis(3.0, 3.0, 100.0, "synthetic S-N"),
+        ).candidates
+        if r.case_id == "a"
+    )
+    assert row.screen_spectral_damage == pytest.approx((expected, expected))
