@@ -117,7 +117,7 @@ remains a sample maximum and is not relabelled as a return level.
 
 For each parameter independently, fit the Gumbel maximum distribution by
 the [NIST/SEMATECH e-Handbook method of moments](https://www.itl.nist.gov/div898/handbook/eda/section3/eda366g.htm).
-With annual maxima x, sample standard deviation s using n−1, and the harmonic-limit
+With annual maxima x, sample standard deviation s using n−1, and the Euler–Mascheroni
 constant γE, use β = s√6/π and μ = mean(x) − γEβ. Invert the published maximum
 CDF at annual non-exceedance probability 1−1/T:
 xT = μ − β ln[−ln(1−1/T)]. Reject fewer than three blocks or zero variation.

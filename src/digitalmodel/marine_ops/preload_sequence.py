@@ -290,6 +290,7 @@ class HullGeometry:
     prescribed support levels. Small-angle vertical geometry retains exact
     arctangent reporting. Horizontal CG motion and structural flexibility are
     excluded. Weight density is kN/m3; hull depth limits deck immersion.
+    Every leg must lie within or on the waterplane rectangle, as leg wells do.
     """
 
     length_m: float
@@ -309,6 +310,8 @@ class HullGeometry:
                 raise ValueError('each leg needs x and y coordinates')
             for value in xy:
                 finite('leg coordinate', value, minimum=-math.inf)
+            if abs(xy[0]) > self.breadth_m / 2 or abs(xy[1]) > self.length_m / 2:
+                raise ValueError('each leg must lie within or on the hull waterplane')
         _support_plane(self.leg_xy_m, (0, 0, 0))
 
 

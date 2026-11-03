@@ -12,7 +12,7 @@ procedure and structural response before using the comparison operationally.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 0 | 2026-10-28 | Added three preload methods, six-stage water-contact sensitivity and independent equilibrium checks to expose capacity and load-transfer limits. |
-| 1 | 2026-11-03 | Replaced the regional tide record with generic assumed tide offsets and removed contextual references that carried no numerical input, so the note stays a generic method. |
+| 1 | 2026-11-03 | Replaced the regional tide record with generic assumed tide offsets and removed contextual references that carried no numerical input, so the note stays a generic method. Moved the default legs inside the 40.0 m by 36.0 m waterplane (spacing 28.5 m by 34.0 m), added a leg-position check and updated the rotation and redistribution results. Added standard titles. |
 
 ## Public basis and assumptions
 
@@ -45,8 +45,8 @@ uses the sand load-spread branch, stiff-over-soft clay and uniform soft clay.
 
 | Input | Default | Independent sensitivity range |
 | --- | --- | --- |
-| Rectangular hull length, breadth, depth | 40.0, 36.0, 6.0 m | 30.0–70.0, 30.0–66.0, 5.0–10.0 m |
-| Longitudinal and transverse leg spacing | 40.0, 44.0 m | 30.0–50.0, 36.0–54.0 m |
+| Rectangular hull length, breadth, depth | 40.0, 36.0, 6.0 m | 40.0–70.0, 36.0–66.0, 5.0–10.0 m |
+| Longitudinal and transverse leg spacing | 28.5, 34.0 m | 24.0–30.0, 30.0–36.0 m |
 | Water weight density | 10.0 kN/m³ | 9.8–10.2 kN/m³ |
 | Dry reserve per leg | 12.0 MN | 6.0–18.0 MN |
 | Available ballast weight | 36.0 MN | 18.0–72.0 MN |
@@ -71,6 +71,9 @@ No actual ballast compartment layout, pump sequence or equipment rating is suppl
 | Simultaneous all-legs | One elevated state, with available extra weight shared equally | SNAME T&RB 5-5A, Rev 3 (2008), clause: TO CONFIRM; ISO 19905-1, 2012 edition, clause: TO CONFIRM |
 | Staged leg-by-leg | Six stages with three sequential substeps per stage; first four in water, final two elevated | SNAME T&RB 5-5A, Rev 3 (2008), clause: TO CONFIRM; ISO 19905-1, 2012 edition, clause: TO CONFIRM |
 
+SNAME T&RB 5-5A is *Guidelines for Site Specific Assessment of Mobile Jack-Up
+Units*; ISO 19905-1 is *Site-specific assessment of mobile offshore units, Part 1:
+Jack-ups*. Later ISO 19905-1 editions than 2012 exist and have not been reviewed.
 Clauses have not been confirmed against a standard copy. These citations identify
 an intended engineering context, without claiming conformity or establishing the
 required current edition. No licensed table, complete section or numerical
@@ -95,7 +98,7 @@ and its two first moments gives buoyancy and its centre of action, including
 partial water contact. Barycentric support functions transfer that buoyancy into
 three leg reactions while preserving vertical force and both moments.
 
-Each fault trial starts from the corresponding nominal stage, holding the other
+Each settlement trial starts from the corresponding nominal stage, holding the other
 two support levels fixed. Sequential states trial their active leg; the
 simultaneous state independently trials each leg. Trials do not accumulate into
 later stages. The imposed 1.0 m settlement is a sensitivity, not a predicted
@@ -165,13 +168,14 @@ target shortfall grows to 9.6 MN. Additional headroom from buoyancy therefore
 comes with reduced preload, rather than increased proven soil capacity. No
 active draft controller or compensating ballast is assumed.
 
-With the same imposed settlement, a fore-leg settlement trial gives 1.4 degrees
-trim (atan(1.0/40.0)); an aft-leg settlement trial gives 1.3 degrees heel
-(atan(1.0/44.0)). These rotations follow geometry, rather than
-an inferred difference in method performance. At reference tide the staged
-in-water trials produce up to 2.8 MN absolute reaction change, while elevated
-trials retain water clearance and have zero buoyancy transfer. Higher tide can
-bring an elevated hull into water contact. The CSV retains each resulting load
+With the same imposed settlement, a fore-leg settlement trial gives 2.0 degrees
+trim (atan(1.0/28.5)); an aft-leg settlement trial gives 1.7 degrees heel
+(atan(1.0/34.0)) and 1.0 degree trim (atan(0.5/28.5)). These rotations follow
+geometry, rather than an inferred difference in method performance. At reference
+tide the staged in-water trials produce up to 4.0 MN absolute reaction change.
+Because the hull extends beyond the settled leg, an elevated trial at the 1.0 m
+air gap brings the hull end just into the water and transfers at most 0.03 MN.
+At +1.0 m tide the elevated trials transfer up to 3.8 MN. The CSV retains each resulting load
 transfer and the capacity margins of all three legs.
 
 ## Evidence, limitations and next steps

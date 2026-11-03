@@ -25,8 +25,10 @@ from digitalmodel.marine_ops.preload_sequence import (
 
 BASIS = 'assumed, based on previous experience'
 STANDARDS = [
-    {'document': 'SNAME T&RB 5-5A', 'edition': 'Rev 3 (2008)', 'clause': 'TO CONFIRM'},
-    {'document': 'ISO 19905-1', 'edition': '2012', 'clause': 'TO CONFIRM'},
+    {'document': 'SNAME T&RB 5-5A', 'title': 'Guidelines for Site Specific Assessment of Mobile Jack-Up Units',
+     'edition': 'Rev 3 (2008)', 'clause': 'TO CONFIRM'},
+    {'document': 'ISO 19905-1', 'title': 'Site-specific assessment of mobile offshore units, Part 1: Jack-ups',
+     'edition': '2012; later editions exist and are not reviewed', 'clause': 'TO CONFIRM'},
 ]
 # Every numerical scenario input carries an independent sensitivity range.
 # They are illustrative bounds, not a measured regional or equipment envelope.
@@ -38,11 +40,11 @@ class AssumedInput(TypedDict):
 
 
 ASSUMPTIONS: dict[str, AssumedInput] = {
-    'hull_length_m': {'value': 40.0, 'range': [30.0, 70.0]},
-    'hull_breadth_m': {'value': 36.0, 'range': [30.0, 66.0]},
+    'hull_length_m': {'value': 40.0, 'range': [40.0, 70.0]},
+    'hull_breadth_m': {'value': 36.0, 'range': [36.0, 66.0]},
     'hull_depth_m': {'value': 6.0, 'range': [5.0, 10.0]},
-    'leg_longitudinal_spacing_m': {'value': 40.0, 'range': [30.0, 50.0]},
-    'leg_transverse_spacing_m': {'value': 44.0, 'range': [36.0, 54.0]},
+    'leg_longitudinal_spacing_m': {'value': 28.5, 'range': [24.0, 30.0]},
+    'leg_transverse_spacing_m': {'value': 34.0, 'range': [30.0, 36.0]},
     'water_weight_kn_m3': {'value': 10.0, 'range': [9.8, 10.2]},
     'reserve_per_leg_kn': {'value': 12000.0, 'range': [6000.0, 18000.0]},
     'maximum_total_weight_kn': {'value': 72000.0, 'range': [54000.0, 108000.0]},

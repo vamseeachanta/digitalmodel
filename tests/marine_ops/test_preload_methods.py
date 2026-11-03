@@ -205,7 +205,7 @@ def test_offline_example_outputs_all_profiles_and_methods(tmp_path):
     spec.loader.exec_module(module)
     module.write_examples(tmp_path)
     import csv
-    with (tmp_path / 'comparison.csv').open() as stream:
+    with (tmp_path / 'comparison.csv').open(encoding='utf-8', newline='') as stream:
         rows = list(csv.DictReader(stream))
     assert {row['profile'] for row in rows} == {'stiff_over_soft', 'sand_over_soft', 'uniform_soft'}
     assert {row['method'] for row in rows} == {
@@ -279,9 +279,16 @@ def test_simultaneous_state_trials_each_leg_without_repeating_nominal():
 
 
 # Review check of the default figures quoted in the domain note, using the
-# example geometry: 40 m long by 36 m broad, legs at (0, 80/3), (-22, -40/3)
-# and (22, -40/3) so the leg triangle centroid is the waterplane centre.
-DEFAULT_HULL = HullGeometry(40, 36, 6, ((0, 80 / 3), (-22, -40 / 3), (22, -40 / 3)), 10)
+# example geometry: a 40 m long by 36 m broad waterplane with legs at
+# (0, 19), (-17, -9.5) and (17, -9.5). The leg triangle centroid is the
+# waterplane centre and every leg lies inside the waterplane.
+DEFAULT_HULL = HullGeometry(40, 36, 6, ((0, 19), (-17, -9.5), (17, -9.5)), 10)
+
+
+def test_legs_outside_the_waterplane_are_rejected():
+    with pytest.raises(ValueError, match='within or on the hull waterplane'):
+        HullGeometry(40, 36, 6, ((0, 80 / 3), (-22, -40 / 3), (22, -40 / 3)), 10).validate()
+    DEFAULT_HULL.validate()
 
 
 def test_documented_default_figures_match_hand_calculation():
@@ -302,13 +309,19 @@ def test_documented_default_figures_match_hand_calculation():
         assert 40 * 36 * draft * 10 / 3 == pytest.approx(30000 - expected)
         result = hull_response(DEFAULT_HULL, full, tide_m=tide)
         assert result.reactions_kn[0] == pytest.approx(expected)
-    # Elevated hull, 1.0 m settlement: rotation only, no buoyancy transfer.
     elevated = by_method['one_leg_at_a_time'][0]
+    # Fore leg settles 1.0 m: draft = -1 + (y + 9.5)/28.5, zero at the leg (y=19)
+    # and 1/28.5 m at the bow (y=20). Wet wedge volume 36*1*(1/28.5)/2 m3,
+    # centroid y = 19 + 2/3. Fore shape function N0 = (y + 9.5)/28.5.
     fore = hull_response(DEFAULT_HULL, elevated, failed_leg=0, settlement_m=1.0)
-    assert fore.trim_deg == pytest.approx(math.degrees(math.atan(1.0 / 40.0)))
+    wedge = 36 * 1 * (1 / 28.5) / 2 * 10
+    fore_share = wedge * (19 + 2 / 3 + 9.5) / 28.5
+    assert fore.trim_deg == pytest.approx(math.degrees(math.atan(1.0 / 28.5)))
     assert fore.heel_deg == pytest.approx(0)
-    assert fore.reaction_changes_kn == pytest.approx((0, 0, 0))
+    assert fore.buoyancy_kn == pytest.approx(wedge)
+    assert fore.reaction_changes_kn[0] == pytest.approx(-fore_share)
+    assert fore.reaction_changes_kn[1] == pytest.approx(-(wedge - fore_share) / 2)
+    # Aft legs 34 m apart: heel atan(1/34); mean aft drop 0.5 m over 28.5 m gives trim.
     aft = hull_response(DEFAULT_HULL, elevated, failed_leg=1, settlement_m=1.0)
-    # Aft legs 44 m apart: heel atan(1/44); mean aft drop 0.5 m over 40 m gives trim.
-    assert abs(aft.heel_deg) == pytest.approx(math.degrees(math.atan(1.0 / 44.0)))
-    assert abs(aft.trim_deg) == pytest.approx(math.degrees(math.atan(0.5 / 40.0)))
+    assert abs(aft.heel_deg) == pytest.approx(math.degrees(math.atan(1.0 / 34.0)))
+    assert abs(aft.trim_deg) == pytest.approx(math.degrees(math.atan(0.5 / 28.5)))
