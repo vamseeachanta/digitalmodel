@@ -15,19 +15,45 @@ def inputs(**changes):
         shell_thickness_m=0.012, sds_g=0.6, sd1_g=0.3, tl_s=8.0,
         importance_factor=1.25, rwi=3.5, rwc=2.0, k=1.5,
         minimum_ai_g=0.007, vertical_acceleration_g=0.0,
+        annular_resistance_n_per_m=40_000.0,
+        # Synthetic criteria, not values from API STD 650 tables.
+        no_uplift_j_limit=.9, self_anchored_j_limit=1.7,
+        freeboard_wave_fraction=.6, freeboard_sds_threshold_g=.4,
         seismic_use_group="II",
         available_freeboard_m=1.0, purchaser_freeboard=False,
     )
     values |= changes
-    if "annular_resistance_n_per_m" not in changes:
-        # 40 kN/m, or the E.6.2.1.1-1a cap 201.1*H*D*Ge where that is lower.
-        try:
-            ge = values["liquid_density_kg_m3"] / 1000 * (1 - .4 * values["vertical_acceleration_g"])
-            cap = 201.1 * values["fill_height_m"] * values["diameter_m"] * ge
-            values["annular_resistance_n_per_m"] = min(40_000.0, cap) if math.isfinite(cap) else 40_000.0
-        except TypeError:
-            values["annular_resistance_n_per_m"] = 40_000.0
     return values
+
+
+def test_caller_criteria_control_dispositions_without_changing_demands():
+    # Synthetic criteria exercise the interface; no table values are supplied.
+    base = s.api650_annex_e(**inputs())
+    trial = s.api650_annex_e(**inputs(
+        no_uplift_j_limit=.5, self_anchored_j_limit=.6,
+        freeboard_wave_fraction=.6, freeboard_sds_threshold_g=.8,
+    ))
+    assert trial.anchorage_status == "redesign_or_mechanical_anchorage_required"
+    assert trial.anchorage_ratio_j == base.anchorage_ratio_j
+    assert trial.base_shear_n == base.base_shear_n
+    assert trial.wave_height_m == base.wave_height_m
+    assert trial.advisory_freeboard_m == pytest.approx(.6 * trial.wave_height_m)
+    assert trial.freeboard_required is False
+    assert trial.required_freeboard_m == 0
+    assert trial.freeboard_ok is None
+
+
+@pytest.mark.parametrize("group", ["I", "II", "III"])
+@pytest.mark.parametrize("fraction", [.25, .85, 1.0])
+def test_freeboard_uses_callers_fraction_for_every_group(group, fraction):
+    r = s.api650_annex_e(**inputs(
+        seismic_use_group=group, purchaser_freeboard=True,
+        freeboard_wave_fraction=fraction,
+    ))
+    expected = fraction * r.wave_height_m
+    assert r.required_freeboard_m == pytest.approx(expected)
+    assert r.advisory_freeboard_m == pytest.approx(expected)
+    assert r.freeboard_ok is (expected <= 1.0)
 
 
 def test_worked_example():
@@ -63,9 +89,9 @@ def test_worked_example():
     # Ms uses Xis=7.968657 and Xcs=7.723285.
     assert r.ringwall_moment_nm == pytest.approx(15_822_636.497, abs=.001)
     assert r.slab_moment_nm == pytest.approx(30_796_401.386, abs=.001)
-    # delta=.42*20*.098818621; freeboard=.7*delta.
+    # delta=.42*20*.098818621; synthetic freeboard criterion=.6*delta.
     assert r.wave_height_m == pytest.approx(.830076418, abs=1e-9)
-    assert r.required_freeboard_m == pytest.approx(.581053493, abs=1e-9)
+    assert r.required_freeboard_m == pytest.approx(.498045851, abs=1e-9)
     assert r.freeboard_ok is True
     # wa=40,000 N/m is below the cap 201.1*10*20*1.0=40,220 N/m.
     # J=15,822,636.497/[400*(1.2e6/(pi*20)+4e4)]=.669332198.
@@ -84,7 +110,8 @@ def test_worked_example():
 
 @pytest.mark.parametrize("diameter,height", [(30, 10), (10, 20), (1.333*10, 10)])
 def test_geometry_branches(diameter, height):
-    r = s.api650_annex_e(**inputs(diameter_m=diameter, fill_height_m=height))
+    r = s.api650_annex_e(**inputs(diameter_m=diameter, fill_height_m=height,
+                                 annular_resistance_n_per_m=20_000))
     ratio = diameter/height
     expected_wi = (math.tanh(.866*ratio)/(.866*ratio) if ratio >= 1.333
                    else 1-.218*ratio)
@@ -105,12 +132,27 @@ def test_force_and_wave_spectra_are_independent():
     assert long.af_g == a.af_g  # SUG II uses 4 s, not force TL.
     iii = s.api650_annex_e(**inputs(seismic_use_group="III", importance_factor=1.5, tl_s=2))
     assert iii.af_g == pytest.approx(1.5*.3*2/a.convective_period_s**2)
-    assert iii.required_freeboard_m == iii.wave_height_m
+    assert iii.required_freeboard_m == pytest.approx(.6 * iii.wave_height_m)
+
+
+@pytest.mark.parametrize("group", ["I", "II", "III"])
+@pytest.mark.parametrize("diameter,height", [(2, 1), (20, 10)])
+def test_wave_importance_matches_both_period_branches(group, diameter, height):
+    # E.7.2-2/-3 retain I for SUG I/II; E.7.2-4/-5 omit it for SUG III.
+    values = inputs(seismic_use_group=group, diameter_m=diameter,
+                    fill_height_m=height, annular_resistance_n_per_m=300,
+                    tl_s=4, importance_factor=1.25)
+    base = s.api650_annex_e(**values)
+    values["importance_factor"] = 1.5
+    higher_importance = s.api650_annex_e(**values)
+    factor = 1 if group == "III" else 1.5 / 1.25
+    assert higher_importance.af_g == pytest.approx(base.af_g * factor)
+    assert higher_importance.wave_height_m == pytest.approx(base.wave_height_m * factor)
 
 
 @pytest.mark.parametrize("group,sds,purchaser,required", [
     ("I", .6, False, False), ("I", .6, True, True),
-    ("II", .329, False, False), ("II", .33, False, True),
+    ("II", .399, False, False), ("II", .4, False, True),
     ("III", .1, False, True),
 ])
 def test_freeboard_rules(group, sds, purchaser, required):
@@ -121,9 +163,9 @@ def test_freeboard_rules(group, sds, purchaser, required):
     assert r.advisory_freeboard_m > 0
 
 
-@pytest.mark.parametrize("target,status", [(0.7,"no_calculated_uplift"),
-    (.785,"no_calculated_uplift"), (1.0,"uplift_requires_further_checks"),
-    (1.54,"uplift_requires_further_checks"), (1.55,"redesign_or_mechanical_anchorage_required")])
+@pytest.mark.parametrize("target,status", [(.8,"no_calculated_uplift"),
+    (.85,"no_calculated_uplift"), (1.2,"uplift_requires_further_checks"),
+    (1.65,"uplift_requires_further_checks"), (1.8,"redesign_or_mechanical_anchorage_required")])
 def test_j_criteria(target, status):
     r = s.api650_annex_e(**inputs())
     # J=M/[D^2*(Ws/(pi*D)+roof_reaction/(pi*D)+wa)] at Av=0.
@@ -134,16 +176,35 @@ def test_j_criteria(target, status):
     assert trial.anchorage_status == status
 
 
+@pytest.mark.parametrize("key,at_limit,above_limit", [
+    ("no_uplift_j_limit", "no_calculated_uplift", "uplift_requires_further_checks"),
+    ("self_anchored_j_limit", "uplift_requires_further_checks",
+     "redesign_or_mechanical_anchorage_required"),
+])
+def test_j_limits_are_inclusive(key, at_limit, above_limit):
+    j = s.api650_annex_e(**inputs()).anchorage_ratio_j
+    # Set each limit to the calculated J, avoiding inversion-rounding at equality.
+    values = inputs(no_uplift_j_limit=.5, self_anchored_j_limit=1.7)
+    values[key] = j
+    assert s.api650_annex_e(**values).anchorage_status == at_limit
+    values[key] = math.nextafter(j, 0)
+    assert s.api650_annex_e(**values).anchorage_status == above_limit
+
+
 def test_hoop_depth_and_vertical_component():
     top = s.api650_annex_e(**inputs(evaluation_depth_m=0))
     assert top.impulsive_hoop_force_n_per_m == 0
     assert top.hydrostatic_hoop_stress_pa == 0
     assert top.convective_hoop_force_n_per_m > 0
-    base = s.api650_annex_e(**inputs())
-    vertical = s.api650_annex_e(**inputs(vertical_acceleration_g=.2))
+    base = s.api650_annex_e(**inputs(annular_resistance_n_per_m=30_000))
+    vertical = s.api650_annex_e(**inputs(vertical_acceleration_g=.2,
+                                        annular_resistance_n_per_m=30_000))
     assert vertical.hydrodynamic_hoop_stress_pa == base.hydrodynamic_hoop_stress_pa
     assert vertical.combined_hoop_stress_pa > base.combined_hoop_stress_pa
     assert vertical.anchorage_ratio_j > base.anchorage_ratio_j
+    wt = 1_200_000 / (math.pi * 20)
+    assert vertical.anchorage_ratio_j / base.anchorage_ratio_j == pytest.approx(
+        (wt + 30_000) / (wt * (1 - .4 * .2) + 30_000))
     tall = s.api650_annex_e(**inputs(diameter_m=10, fill_height_m=20))
     assert tall.impulsive_hoop_force_n_per_m == pytest.approx(2600*tall.ai_g*10**2)
 
@@ -180,7 +241,8 @@ def test_citation_absence_fails_closed(monkeypatch):
 
 
 def test_spectrum_short_period_cap_and_floor():
-    r = s.api650_annex_e(**inputs(diameter_m=2, fill_height_m=1))
+    r = s.api650_annex_e(**inputs(diameter_m=2, fill_height_m=1,
+                                 annular_resistance_n_per_m=300))
     assert r.convective_period_s < 4
     assert r.af_g == pytest.approx(1.5*.3*1.25/r.convective_period_s)
     capped = s.api650_annex_e(**inputs(sd1_g=100))
@@ -201,7 +263,8 @@ def test_tall_tank_hoop_upper_branch_and_slab_height():
     r = s.api650_annex_e(**inputs(diameter_m=10, fill_height_m=20, evaluation_depth_m=2))
     q = 2/(.75*10)
     assert r.impulsive_hoop_force_n_per_m == pytest.approx(5220*r.ai_g*100*(q-.5*q*q))
-    shallow = s.api650_annex_e(**inputs(diameter_m=100, fill_height_m=1))
+    shallow = s.api650_annex_e(**inputs(diameter_m=100, fill_height_m=1,
+                                       annular_resistance_n_per_m=20_000))
     assert shallow.xcs_m > 1  # effective slab height includes bottom-pressure moment
 
 
@@ -237,3 +300,64 @@ def test_mandatory_zero_wave_is_an_evaluated_zero():
     assert r.required_freeboard_m == 0
     assert r.freeboard_ok is True
     assert r.wave_height_m == 0
+
+
+@pytest.mark.parametrize("key,value", [
+    ("no_uplift_j_limit", 0), ("self_anchored_j_limit", .9),
+    ("self_anchored_j_limit", .8), ("freeboard_wave_fraction", 0),
+    ("freeboard_wave_fraction", 1.1), ("freeboard_sds_threshold_g", -.1),
+    ("no_uplift_j_limit", True), ("freeboard_wave_fraction", "0.6"),
+])
+def test_invalid_caller_criteria(key, value):
+    with pytest.raises(ValueError, match=key):
+        s.api650_annex_e(**inputs(**{key: value}))
+
+
+@pytest.mark.parametrize("key", [
+    "no_uplift_j_limit", "self_anchored_j_limit",
+    "freeboard_wave_fraction", "freeboard_sds_threshold_g",
+])
+def test_caller_criteria_are_required(key):
+    values = inputs()
+    del values[key]
+    with pytest.raises(TypeError, match=key):
+        s.api650_annex_e(**values)
+
+
+def test_bottom_weight_adds_only_to_impulsive_shear():
+    base = s.api650_annex_e(**inputs())
+    delta_weight = 125_000.0
+    heavier = s.api650_annex_e(**inputs(bottom_weight_n=190_000 + delta_weight))
+    assert heavier.impulsive_shear_n - base.impulsive_shear_n == pytest.approx(
+        base.ai_g * delta_weight)
+    assert heavier.convective_shear_n == base.convective_shear_n
+    assert heavier.ringwall_moment_nm == base.ringwall_moment_nm
+    assert heavier.slab_moment_nm == base.slab_moment_nm
+    assert heavier.anchorage_ratio_j == base.anchorage_ratio_j
+
+
+def test_annular_cap_includes_vertical_acceleration():
+    # Av=.2 gives Ge=.92 G and a cap of 37,002.4 N/m for this tank.
+    # The fixed default 40 kN/m is below the Av=0 cap but above this limit.
+    with pytest.raises(ValueError, match="annular_resistance_n_per_m"):
+        s.api650_annex_e(**inputs(vertical_acceleration_g=.2))
+
+
+def test_annular_resistance_at_vertical_cap_is_allowed():
+    cap = 40_220 * (1 - .4 * .2)
+    assert cap == pytest.approx(37_002.4)
+    r = s.api650_annex_e(**inputs(vertical_acceleration_g=.2,
+                                 annular_resistance_n_per_m=cap))
+    wt = 1_200_000 / (math.pi * 20)
+    assert r.anchorage_ratio_j == pytest.approx(
+        r.ringwall_moment_nm / (20**2 * (wt * .92 + cap)))
+    with pytest.raises(ValueError, match="annular_resistance_n_per_m"):
+        s.api650_annex_e(**inputs(vertical_acceleration_g=.2,
+                                 annular_resistance_n_per_m=math.nextafter(cap, math.inf)))
+
+
+def test_input_variants_do_not_adjust_annular_resistance():
+    assert inputs(diameter_m=2, fill_height_m=1)["annular_resistance_n_per_m"] == 40_000
+    assert inputs(vertical_acceleration_g=.2)["annular_resistance_n_per_m"] == 40_000
+    with pytest.raises(ValueError, match="annular_resistance_n_per_m"):
+        s.api650_annex_e(**inputs(diameter_m=2, fill_height_m=1))

@@ -310,12 +310,12 @@ def router(cfg: dict) -> dict:
 _ANNEX_E_CITATIONS = (
     {
         "type": "Citation", "standard": "API STD 650", "revision": "11th edition, 2007",
-        "section": "E.4.5.2; E.4.6.1; E.6.1.1-E.6.1.5; E.6.2.1.1.1; Table E-6",
+        "section": "E.4.5.2; E.4.6.1; E.6.1.1-E.6.1.5; E.6.2.1.1.1; Table E-6 (anchorage ratio criteria)",
         "source": "https://law.resource.org/pub/us/cfr/ibr/002/api.650.2007.pdf",
     },
     {
         "type": "Citation", "standard": "API STD 650", "revision": "12th edition, Addendum 2, January 2016",
-        "section": "E.7.2, equations 1-5 and Table E.7",
+        "section": "E.7.2, equations 1-5; Table E.7 (minimum required freeboard)",
         "source": "https://www.api.org/~/media/files/publications/addenda-and-errata/650_e12%20addendum%202.pdf",
     },
     {
@@ -406,6 +406,10 @@ def api650_annex_e(
     minimum_ai_g: float,
     vertical_acceleration_g: float,
     annular_resistance_n_per_m: float,
+    no_uplift_j_limit: float,
+    self_anchored_j_limit: float,
+    freeboard_wave_fraction: float,
+    freeboard_sds_threshold_g: float,
     seismic_use_group: str,
     available_freeboard_m: float,
     purchaser_freeboard: bool,
@@ -454,23 +458,31 @@ def api650_annex_e(
       Hydrostatic stress=rho*g*Y*D/(2t); dynamic=hypot(Ni,Nc)/t;
       combined=hydrostatic+hypot(dynamic,Av*hydrostatic), using the 2007 SRSS
       vertical combination. Material acceptance is not evaluated.
-    * E.6.2.1.1.1(1,2), Table E-6: J=Mrw/[D²*(wt*(1-.4Av)+wa)] at
-      zero gas pressure; wt=(Ws+roof_reaction)/(pi*D). Thresholds .785/1.54
-      distinguish no calculated uplift, conditional uplift and redesign/anchors.
+    * E.6.2.1.1.1(1,2): J=Mrw/[D²*(wt*(1-.4Av)+wa)] at
+      zero gas pressure; wt=(Ws+roof_reaction)/(pi*D). The required caller inputs
+      no_uplift_j_limit and self_anchored_j_limit distinguish no calculated
+      uplift, conditional uplift and redesign/anchors. Qualify them against
+      API STD 650, Annex E, Table E-6 (anchorage ratio criteria).
       E.6.2.1.1-1a caps the annular resistance at wa<=201.1*H*D*Ge N/m with
       Ge=G*(1-.4Av); a larger entered wa is rejected.
       Shell compression, annular plate, piping and anchor checks remain required.
     * API STD 650, 12th ed., Addendum 2 (January 2016), E.7.2(1-5):
       delta_s=.42D*Af. For SUG I/II, Af=K*SD1*I*min(1/Tc,4/Tc²);
       for III, Af=K*SD1*min(1/Tc,TL/Tc²) (unit importance for wave only).
-      Table E.7 sets full-wave freeboard for III and .7-wave for II when
-      SDS>=.33; other cases have advisory .7-wave clearance. The purchaser
-      boolean adopts that .7-wave minimum in otherwise advisory cases. No credit
-      is taken for containment or a roof designed for sloshing impact.
+      Required freeboard_wave_fraction applies to the selected SUG, including
+      III; freeboard_sds_threshold_g supplies the mandatory SUG II SDS trigger.
+      Qualify both against API STD 650, Annex E, Table E.7 (minimum required
+      freeboard). The purchaser boolean adopts the caller's wave fraction in
+      otherwise advisory cases. SUG III always requires a numeric minimum.
+      No credit is taken for containment or a roof designed for sloshing impact.
     * NCREE 2014 research highlights, "Seismic Assessment of Steel Liquid Storage
       Tanks", pp. 85-87, Table 1 independently presents the two-mode load method.
 
-    All project factors are required: no material or factor table is embedded.
+    All project factors and table criteria are required; no table is embedded.
+    J limits must be positive and increasing; the wave fraction must be in
+    (0, 1] and the SDS trigger nonnegative. The caller must establish the
+    criteria for the governing edition and selected SUG; validation alone
+    does not establish their engineering suitability.
     For a floating roof, include its inertial weight at its actual CG, but retain
     a separate assessment of roof lift, rim/seal damage and jamming. This linear
     screen does not calculate shell-roof impact pressure or floating-roof motion.
@@ -486,11 +498,12 @@ def api650_annex_e(
     positive_names = {
         "diameter_m", "fill_height_m", "liquid_density_kg_m3", "shell_thickness_m",
         "tl_s", "importance_factor", "rwi", "rwc", "k",
+        "no_uplift_j_limit", "self_anchored_j_limit", "freeboard_wave_fraction",
     }
     numeric_names = positive_names | {
         "shell_weight_n", "roof_weight_n", "bottom_weight_n", "shell_cg_m", "roof_cg_m", "roof_reaction_n",
         "sds_g", "sd1_g", "minimum_ai_g", "vertical_acceleration_g",
-        "annular_resistance_n_per_m", "available_freeboard_m",
+        "annular_resistance_n_per_m", "available_freeboard_m", "freeboard_sds_threshold_g",
     }
     v = {name: _annex_e_number(name, values[name], positive=name in positive_names)
          for name in numeric_names}
@@ -498,6 +511,10 @@ def api650_annex_e(
         raise ValueError("seismic_use_group must be I, II or III")
     if not isinstance(purchaser_freeboard, bool):
         raise ValueError("purchaser_freeboard must be a boolean")
+    if v["self_anchored_j_limit"] <= v["no_uplift_j_limit"]:
+        raise ValueError("self_anchored_j_limit must exceed no_uplift_j_limit")
+    if v["freeboard_wave_fraction"] > 1:
+        raise ValueError("freeboard_wave_fraction must be at most 1")
     if v["minimum_ai_g"] < .007:
         raise ValueError("minimum_ai_g must include the governing floor, at least .007")
     if v["vertical_acceleration_g"] >= 1:
@@ -535,9 +552,10 @@ def api650_annex_e(
         mrw = math.hypot(ai * (wi * xi + dry_moment), ac * wc * xc)
         ms = math.hypot(ai * (wi * xis + dry_moment), ac * wc * xcs)
         wave = .42 * d * af
-        advisory = wave * (1.0 if seismic_use_group == "III" else .7)
+        advisory = wave * v["freeboard_wave_fraction"]
         freeboard_required = (seismic_use_group == "III" or purchaser_freeboard or
-                              seismic_use_group == "II" and v["sds_g"] >= .33)
+                              seismic_use_group == "II" and
+                              v["sds_g"] >= v["freeboard_sds_threshold_g"])
         required = advisory if freeboard_required else 0.0
         wt = (v["shell_weight_n"] + v["roof_reaction_n"]) / (math.pi * d)
         ge = rho / 1000 * (1 - .4 * v["vertical_acceleration_g"])
@@ -571,8 +589,8 @@ def api650_annex_e(
                ni, nc, hydro, dynamic, combined)
     if not all(math.isfinite(value) for value in results):
         raise ValueError("Annex E results exceed the finite numerical range")
-    status = ("no_calculated_uplift" if j <= .785 else
-              "uplift_requires_further_checks" if j <= 1.54 else
+    status = ("no_calculated_uplift" if j <= v["no_uplift_j_limit"] else
+              "uplift_requires_further_checks" if j <= v["self_anchored_j_limit"] else
               "redesign_or_mechanical_anchorage_required")
     return AnnexEResult(
         product_weight_n=wp, impulsive_weight_n=wi, convective_weight_n=wc,
@@ -589,7 +607,7 @@ def api650_annex_e(
         citations=tuple(dict(citation) for citation in _ANNEX_E_CITATIONS),
         limitations=(
             "Public-source screening basis: 2007 load equations and 2016 freeboard; current-edition compliance is not established.",
-            "Site minima, factors and annular resistance require project qualification.",
+            "Site minima, factors, anchorage limits, freeboard criteria and annular resistance require project qualification.",
             "Shell compression, annular plate, piping, sliding, anchor and foundation capacities are not evaluated.",
             "No hoop allowable is supplied; material acceptance is not evaluated.",
             "Floating-roof lift, jamming, seal damage and shell-roof impact pressure require separate analysis.",

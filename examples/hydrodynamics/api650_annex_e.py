@@ -3,6 +3,7 @@
 Run from the repository root with PYTHONPATH=src uv run python
 examples/hydrodynamics/api650_annex_e.py. Output is SI JSON with citations.
 The example is arithmetic validation, not a qualified site or tank design.
+Anchorage and freeboard criteria are synthetic, not API STD 650 table values.
 """
 from dataclasses import asdict
 import json
@@ -23,6 +24,9 @@ def worked_example() -> AnnexEResult:
         minimum_ai_g=0.007, vertical_acceleration_g=0.0,
         # Below the E.6.2.1.1-1a cap 201.1*H*D*Ge = 40,220 N/m for this tank.
         annular_resistance_n_per_m=40_000.0, seismic_use_group="II",
+        # Synthetic criteria only; replace with qualified criteria for design.
+        no_uplift_j_limit=.9, self_anchored_j_limit=1.7,
+        freeboard_wave_fraction=.6, freeboard_sds_threshold_g=.4,
         available_freeboard_m=1.0, purchaser_freeboard=False,
     )
 

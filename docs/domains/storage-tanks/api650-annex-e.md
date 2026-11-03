@@ -6,6 +6,12 @@ ringwall/slab moments, sloshing clearance, an anchorage ratio and hoop demands.
 `dataclasses.asdict(result)` gives JSON-compatible output including Citation
 sidecars and limitations. The existing `screen_tank` and router are unchanged.
 
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 1 | 2026-11-02 | Caller criteria are required to avoid reproducing tabulated values; the example uses synthetic criteria and isolated weight and cap tests are added. |
+
 This is a **public-source screening basis**, using API 650 11th edition (2007)
 load equations and the 12th-edition Addendum 2 (January 2016) freeboard provisions.
 It does not establish compliance with a complete later edition. The 2007 wave
@@ -32,9 +38,12 @@ pressure is zero in this scope.
 
 `Ac` uses the force transition TL and ASD reduction; `Af` is independent of Rwc.
 The wave calculation uses the 4 s transition and project importance for SUG I/II,
-and mapped TL with unit importance for SUG III. The Table E.7 minimum is applied
-by SUG and SDS. Where the E.7.2 text and Table E.7 differ for SUG II with
-SDS < 0.33g, the table's advisory note is followed. `purchaser_freeboard=True` adopts the advisory clearance in cases
+and mapped TL with unit importance for SUG III. Supply the required
+`freeboard_wave_fraction` for the selected SUG, including SUG III, and
+`freeboard_sds_threshold_g` for the mandatory SUG II trigger. These criteria
+must be qualified against API STD 650, Annex E, Table E.7 (minimum required
+freeboard) for the governing edition; no tabulated values are embedded.
+SUG III always requires a numeric minimum. `purchaser_freeboard=True` adopts the advisory clearance in cases
 without a mandatory numeric minimum. No containment or impact-resistant-roof
 alternative is credited. `freeboard_ok=None` distinguishes those advisory cases
 from an evaluated pass; `freeboard_required` preserves the distinction even
@@ -42,7 +51,12 @@ when a mandatory calculation gives a true zero wave. The advisory clearance
 is always reported.
 
 J is a self-anchorage **screen only**. A no-uplift result is not a completed
-self-anchorage design. Uplift below the upper threshold still requires shell
+self-anchorage design. Supply required `no_uplift_j_limit` and
+`self_anchored_j_limit` criteria qualified against API STD 650, Annex E,
+Table E-6 (anchorage ratio criteria). The limits must be positive and increasing;
+the freeboard wave fraction must be in (0, 1] and its SDS trigger nonnegative.
+Numeric validation does not establish suitability for the governing tank.
+Uplift below the upper threshold still requires shell
 compression, annular plate and piping checks. Above it, annular redesign or
 mechanical anchorage is required; mechanical-anchor capacity is not evaluated.
 The hoop result is demand only: no material allowable or acceptance is inferred.
@@ -62,6 +76,11 @@ resistance is assumed to be 40 kN/m, below the E.6.2.1.1-1a limit
 201.1 H D Ge = 40.22 kN/m; available freeboard is 1.0 m. The bottom weight adds to
 the impulsive base shear but not to the overturning moments.
 
+The example uses **synthetic criteria**, not API STD 650 table values:
+no-uplift J limit 0.9, self-anchored J limit 1.7, freeboard wave fraction 0.6
+and SUG II SDS trigger 0.4g. These assumed criteria exercise the interface;
+they must be replaced by qualified criteria before design use.
+
 ```sh
 PYTHONPATH=src uv run python examples/hydrodynamics/api650_annex_e.py
 ```
@@ -78,27 +97,28 @@ Independent arithmetic and rounded intermediate values are recorded in
 | Ai / Ac / Af (g) | 0.214 / 0.0589 / 0.0988 |
 | Base shear (MN) | 3.959 |
 | Ringwall / slab moment (MN m) | 15.823 / 30.796 |
-| Wave height / required freeboard (m) | 0.830 / 0.581 |
+| Wave height / required freeboard (m) | 0.830 / 0.498 |
 | J (-) | 0.669 |
 | Hydrodynamic / combined hoop stress (MPa) | 14.27 / 95.99 |
 
-Table: illustrative SUG II case, evaluated at the liquid bottom with Av=0.
+Table: illustrative SUG II case with synthetic criteria, evaluated at the liquid bottom with Av=0.
 
-The 1.0 m available clearance exceeds the 0.581 m minimum for this case.
-J=0.669 is below 0.785, so no uplift is calculated by this screen. Hoop
-acceptance is not established because no allowable is supplied.
+The 1.0 m available clearance exceeds the 0.498 m synthetic minimum for this case.
+J=0.669 is below the synthetic no-uplift limit of 0.9. These dispositions
+demonstrate arithmetic only; conformance with the standard's criteria is not
+established. Hoop acceptance is not established because no allowable is supplied.
 
 ## Sources and follow-ups
 
 - [API 650, 11th edition (2007), public incorporation-by-reference copy](https://law.resource.org/pub/us/cfr/ibr/002/api.650.2007.pdf):
-  E.4.5.2, E.4.6.1, E.6.1 and E.6.2.1.1.1/Table E-6. The function docstring
+  E.4.5.2, E.4.6.1, E.6.1 and E.6.2.1.1.1; Table E-6 (anchorage ratio criteria). The function docstring
   identifies each equation and coefficient.
 - [API 650, 12th-edition Addendum 2 (January 2016), publisher PDF](https://www.api.org/~/media/files/publications/addenda-and-errata/650_e12%20addendum%202.pdf):
-  E.7.2 equations 1-5 and Table E.7, page E-26.
+  E.7.2 equations 1-5; Table E.7 (minimum required freeboard).
 - [NCREE, Seismic Assessment of Steel Liquid Storage Tanks, 103E4](https://www.ncree.niar.org.tw/assets/file/103E4.pdf):
   pp. 85-87, Table 1, independent presentation of the two-mode loads and hoop forces.
 
-No standards PDF, whole section or material table is distributed here. The source
+No standards PDF, table or tabulated criteria are distributed here. The source
 revisions are disclosed rather than silently combined into a current-edition claim.
 
 Floating-roof lift, rim seals, jamming, seal damage and impact pressure at the
