@@ -3,5 +3,10 @@
     "revision": "A",
     "date": "2026-10-28",
     "change": "The existing hull-analysis routes and heading contract are documented with an independently derived synthetic encounter-frequency example; wider engineering qualification remains open."
+  },
+  {
+    "revision": "B",
+    "date": "2026-11-02",
+    "change": "Source bindings are refreshed for the chart documentation and limited to the layout files actually read, removing an unrelated report builder dependency; synthetic inputs and calculated values are unchanged."
   }
 ]

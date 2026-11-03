@@ -191,6 +191,21 @@ def test_rebuild_is_deterministic(tmp_path):
         assert digest == hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
 
 
+def test_unrelated_report_builder_is_not_read(tmp_path, monkeypatch):
+    """Unrelated report edits or removal must not invalidate this delivery."""
+    build = builder()
+    expected = build.render(tmp_path / "before")
+    read_bytes = Path.read_bytes
+    unrelated = ROOT / "scripts/reports/build_vessel_seakeeping_module_report.py"
+
+    def reject_unrelated(path):
+        assert path != unrelated, "Unrelated report builder must not be read"
+        return read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", reject_unrelated)
+    assert build.render(tmp_path / "after") == expected
+
+
 @pytest.mark.parametrize("field", ["k", "moving", "stationary", "reference", "difference_moving"])
 def test_report_rejects_stale_calculation(tmp_path, monkeypatch, field):
     """A changed returned calculation must never leave a stale displayed result."""
