@@ -69,12 +69,20 @@ OCCT_STEP_UNIT_NAMES: dict[str, LengthUnit] = {
     "foot": "ft",
 }
 
-# Display tessellation only: the triangles approximate curved faces within this
-# fraction of the bounding-box diagonal. Volume, area and the bounding box are
-# computed from the exact B-rep, not from these triangles. 0.5 rad is the
-# OCCT BRepMesh default angular deflection.
+# Chosen display budget: linear deflection = 0.1% of the bounding-box diagonal,
+# hence 0.1 / 100 = 1e-3. This is a mesher target, not a certified error bound or
+# an OCCT default. A 1 m diagonal requests 1 mm deflection. Volume, area and the
+# bounding box use the exact B-rep and are independent of display tessellation.
+# Only the angular setting (0.5 rad) is the OCCT BRepMesh default.
 RELATIVE_LINEAR_DEFLECTION = 1e-3
 ANGULAR_DEFLECTION_RAD = 0.5
+
+# Chosen input precision policy: accept conversion factors rounded to ten
+# significant decimal digits. Their worst relative rounding error is 5e-10
+# (half a unit in the tenth digit, with leading digit >= 1). Twice that bound
+# gives 1e-9, leaving room for binary64 conversion/multiplication (<1e-15 here).
+# This allowance does not change the exact inch and foot definitions.
+UNIT_FACTOR_REL_TOL = 1e-9
 
 _OCP_LOCK = threading.Lock()
 _P21_TOKEN = re.compile(r"'(?:[^']|'')*'|/\*.*?\*/|;", re.S)
@@ -135,9 +143,9 @@ def _step_length_unit(body: str, instances: dict[int, str], nested: bool) -> Len
     )
     metres = float(measure.group(1).replace("D", "E")) * METRES_PER_UNIT[base]
     unit = STEP_CONVERSION_NAMES[name]
-    # The named unit and its stated factor are independent declarations; a
-    # disagreement is a contradiction, not a rounding question.
-    if not isclose(metres, METRES_PER_UNIT[unit], rel_tol=1e-9):
+    # Cross-check the independent name and factor within the input precision
+    # policy above; larger disagreements are contradictory declarations.
+    if not isclose(metres, METRES_PER_UNIT[unit], rel_tol=UNIT_FACTOR_REL_TOL):
         raise UnitsError("STEP conversion-based unit name and factor conflict")
     return unit
 
@@ -312,8 +320,14 @@ def _read_step_shape(path: Path, declared: LengthUnit | None) -> Any:
     # agree with the header parse, or the identity scale below is not valid.
     if kernel != ({declared} if declared else set()):
         raise UnitsError("STEP length unit is interpreted inconsistently")
-    if reader.TransferRoots() == 0:
+    roots = reader.NbRootsForTransfer()
+    transferred = reader.TransferRoots()
+    if transferred == 0:
         raise CadReadError("STEP file has no transferable shape")
+    if transferred != roots:
+        raise CadReadError(
+            f"STEP root transfer is incomplete ({transferred} of {roots} roots)"
+        )
     return reader.OneShape()
 
 
@@ -332,8 +346,14 @@ def _read_iges_shape(path: Path, unit: LengthUnit) -> Any:
     section.SetUnitFlag(IGES_UNIT_FLAG_FOR[unit])
     section.SetUnitName(TCollection_HAsciiString(OCCT_UNIT[unit]))
     model.SetGlobalSection(section)
-    if reader.TransferRoots() == 0:
+    roots = reader.NbRootsForTransfer()
+    transferred = reader.TransferRoots()
+    if transferred == 0:
         raise CadReadError("IGES file has no transferable shape")
+    if transferred != roots:
+        raise CadReadError(
+            f"IGES root transfer is incomplete ({transferred} of {roots} roots)"
+        )
     return reader.OneShape()
 
 

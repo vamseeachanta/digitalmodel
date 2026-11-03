@@ -7,8 +7,13 @@ geometry kernel. Round-trip tests build a box and a cylinder with build123d,
 export them with the OCP writers in tmp_path and skip when OCP is absent.
 """
 
+import builtins
+import os
 import re
-from math import pi
+import shlex
+import textwrap
+from pathlib import Path
+from math import pi, sqrt
 
 import pytest
 
@@ -172,6 +177,11 @@ CYLINDER = {
 
 @pytest.fixture
 def build123d():
+    if os.environ.get("CAD_REQUIRE_KERNEL") == "1":
+        import OCP  # noqa: F401
+        import build123d
+
+        return build123d
     pytest.importorskip("OCP")
     return pytest.importorskip("build123d")
 
@@ -193,6 +203,7 @@ def _export(shape, path, unit):
         STEPControl_Writer,
     )
 
+    shapes = shape if isinstance(shape, list) else [shape]
     STEPControl_Controller.Init_s()
     IGESControl_Controller.Init_s()
     saved = {
@@ -204,11 +215,13 @@ def _export(shape, path, unit):
         if path.suffix == ".step":
             Interface_Static.SetCVal_s("write.step.unit", OCCT_UNIT[unit])
             writer = STEPControl_Writer()
-            assert writer.Transfer(shape, STEPControl_AsIs) == IFSelect_RetDone
+            for item in shapes:
+                assert writer.Transfer(item, STEPControl_AsIs) == IFSelect_RetDone
             assert writer.Write(str(path)) == IFSelect_RetDone
         else:
             writer = IGESControl_Writer(OCCT_UNIT[unit], 1)  # 1: B-rep solids
-            assert writer.AddShape(shape)
+            for item in shapes:
+                assert writer.AddShape(item)
             writer.ComputeModel()
             assert writer.Write(str(path))
     finally:
@@ -227,6 +240,9 @@ def _check(result, expected):
     for corner, hand in zip(brep.bounding_box, expected["box"]):
         assert corner == pytest.approx(hand, abs=1e-6)
     assert result.entities and {e.kind for e in result.entities} == {"triangle"}
+    # Independent display policy: 0.1% of the hand-calculated box diagonal.
+    diagonal = sqrt(sum((b - a) ** 2 for a, b in zip(*expected["box"])))
+    assert brep.linear_deflection_m == pytest.approx(diagonal * (0.1 / 100))
     low, high = brep.bounding_box
     slack = 2 * brep.linear_deflection_m
     assert all(
@@ -302,3 +318,121 @@ def test_unreadable_step_fails_with_package_error(build123d, tmp_path):
     path.write_text("not a STEP file\n", encoding="ascii")
     with pytest.raises(CadReadError):
         read_cad(path, units="m")
+
+
+@pytest.mark.parametrize("suffix", ["step", "igs"])
+def test_all_roots_are_read(build123d, tmp_path, suffix):
+    """Two independent boxes: 2 * (0.1 * 0.2 * 0.3) = 0.012 m^3."""
+    shapes = [build123d.Box(100, 200, 300).wrapped for _ in range(2)]
+    path = _export(shapes, tmp_path / f"two-boxes.{suffix}", "mm")
+    result = read_cad(path)
+    assert result.brep.solids == 2
+    assert result.brep.volume_m3 == pytest.approx(0.012)
+    assert result.brep.is_valid
+
+
+@pytest.mark.parametrize("suffix", ["step", "igs"])
+@pytest.mark.parametrize("transferred", [0, 1])
+def test_incomplete_root_transfer_is_refused(
+    build123d, tmp_path, monkeypatch, suffix, transferred
+):
+    """A valid first box must not hide a failed second root in either adapter."""
+    from OCP import IGESControl, STEPControl
+
+    shapes = [build123d.Box(100, 200, 300).wrapped for _ in range(2)]
+    path = _export(shapes, tmp_path / f"partial.{suffix}", "mm")
+    module, name = (
+        (STEPControl, "STEPControl_Reader")
+        if suffix == "step"
+        else (IGESControl, "IGESControl_Reader")
+    )
+    factory = getattr(module, name)
+
+    class InterruptedReader:
+        def __init__(self):
+            self.reader = factory()
+
+        def __getattr__(self, attr):
+            return getattr(self.reader, attr)
+
+        def TransferRoots(self):
+            assert self.reader.NbRootsForTransfer() == 2
+            if transferred:
+                assert self.reader.TransferOneRoot(1)
+                assert not self.reader.OneShape().IsNull()
+            return transferred
+
+    monkeypatch.setattr(module, name, InterruptedReader)
+    message = "incomplete" if transferred else "no transferable shape"
+    with pytest.raises(CadReadError, match=message):
+        read_cad(path)
+
+
+def test_cad_ci_enrollment(monkeypatch, capsys):
+    """Execute the workflow's command builder, checking the effective gate."""
+    import yaml
+
+    root = Path(__file__).resolve().parents[2]
+    rows = (root / "tests/DOMAINS.md").read_text().splitlines()
+    contracts = next(row for row in rows if row.startswith("| contracts "))
+    assert "`tests/cad/`" in contracts
+    workflow = yaml.safe_load(
+        (root / ".github/workflows/quality-gates-by-domain.yml").read_text()
+    )
+    steps = workflow["jobs"]["domain-tests"]["steps"]
+    builder = next(step for step in steps if step.get("id") == "gate")
+    script = builder["run"].split("<<'PY'\n", 1)[1].split("\nPY", 1)[0]
+    monkeypatch.setenv("GATE_NAME", "tests-contracts")
+    exec(compile(textwrap.dedent(script), "<command builder>", "exec"), {})
+    argv = shlex.split(capsys.readouterr().out.strip())
+    assert "tests/cad/" in argv
+    for pin in (
+        "cadquery-ocp==7.9.3.0",
+        "build123d==0.7.0",
+        "py-lib3mf==2.3.1",
+        "numpy==1.26.4",
+        "ezdxf==1.4.5",
+        "meshio==5.3.5",
+    ):
+        assert any(argv[i : i + 2] == ["--with", pin] for i in range(len(argv)))
+    gate = next(step for step in steps if step.get("id") == "domain-gate")
+    assert gate["env"]["CAD_REQUIRE_KERNEL"] == "1"
+    assert not gate.get("continue-on-error", False)
+
+
+def test_required_kernel_cannot_skip(monkeypatch):
+    """Gating CI treats a missing kernel as a failure, including import errors."""
+    monkeypatch.setenv("CAD_REQUIRE_KERNEL", "1")
+    actual_import = builtins.__import__
+
+    def missing(name, *args, **kwargs):
+        if name == "OCP":
+            raise ModuleNotFoundError("OCP")
+        return actual_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", missing)
+    with pytest.raises(ModuleNotFoundError, match="OCP"):
+        build123d.__wrapped__()
+
+
+@pytest.mark.parametrize(
+    ("name", "factor", "accepted"),
+    [
+        ("inch", "0.025400000012", True),
+        ("inch", "0.025400000052", False),
+        ("foot", "0.30480000015", True),
+        ("foot", "0.30480000062", False),
+    ],
+)
+def test_step_factor_precision_policy(name, factor, accepted):
+    """Independent probes near 0.5 and 2 parts per billion of exact factors.
+
+    Inch: 0.000000000012 / 0.0254 < 1e-9, but 0.000000000052 / 0.0254 > 1e-9.
+    Foot: 0.00000000015 / 0.3048 < 1e-9, but 0.00000000062 / 0.3048 > 1e-9.
+    """
+    text = _p21(_context(1, 2), *_conversion(name, factor))
+    if accepted:
+        assert step_declared_units(text) == {"inch": "in", "foot": "ft"}[name]
+    else:
+        with pytest.raises(UnitsError, match="conflict"):
+            step_declared_units(text)
