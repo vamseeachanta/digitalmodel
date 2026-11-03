@@ -13,6 +13,9 @@ Golden values (vetted, independently reproduced):
          M=2.0617 -> pf=2288.7 psi (RSF=0.8859, safe=1646.5) ~16% > MAX.
 """
 
+from dataclasses import asdict
+import json
+
 import numpy as np
 import pytest
 
@@ -178,3 +181,166 @@ def test_no_pandas_pure_numpy():
     # guard: projection returns a numpy array, not a pandas object
     d_eff = project_grid(GRID, T)
     assert isinstance(d_eff, np.ndarray)
+
+
+@pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])
+@pytest.mark.parametrize("weights", [None, [1.0, 3.0]])
+def test_raw_pit_qualification_survives_projection(projection, weights):
+    """Synthetic reproduction from issue #2335 (2026).
+
+    Hand calculation: raw d/t = .475/.5 = .95. Equal weights give
+    (.475+.025)/2 = .25 in, d/t = .50; weights [1,3] give
+    (.475+3*.025)/4 = .1375 in, d/t = .275. MAX gives .475 in.
+    All raw cases exceed the existing depth envelope documented in
+    docs/domains/rstreng-2d-validation-2026-06-29.md, Purpose/Result surface
+    (2026; ASME B31G-2012 basis). Projected weighted cases stay inside it.
+    """
+    r = rstreng_2d_river_bottom(
+        D, T, [0.0, 8.0], [[0.475, 0.025]] * 2, SMYS,
+        projection=projection, circ_weights=weights,
+    )
+    weighted = projection == PROJECTION_AREA_WEIGHTED
+    expected_depth = (0.25 if weights is None else 0.1375) if weighted else 0.475
+    assert r.d_eff_in == pytest.approx([expected_depth, expected_depth])
+    assert r.within_applicability is weighted  # legacy projected-profile flag
+    assert r.projected_profile_applicability is r.result.applicability
+    assert r.projected_profile_applicability.ok is weighted
+    assert r.raw_grid_applicability.ok is False
+    assert r.details["raw_max_d_over_t"] == pytest.approx(0.95)
+    assert r.details["max_d_over_t"] == pytest.approx(expected_depth / T)
+    assert r.screening_eligible is False
+    assert r.applicability.ok is False
+    assert "RSTRENG_2D_RAW_DEPTH_OUTSIDE_APPLICABILITY" in r.applicability.flags
+    assert r.sensitivity_only is weighted
+
+
+@pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])
+def test_small_weight_deep_pit_remains_ineligible(projection):
+    """Issue #2335 synthetic columns with positive arc widths [1, 63].
+
+    Hand calculation: (.475 + 63*.025)/64 in is the weighted depth;
+    MAX retains .475 in and raw d/t = .475/.5 = .95 for both rules.
+    Depth qualification and sensitivity-only purpose follow
+    docs/domains/rstreng-2d-validation-2026-06-29.md, Purpose/Result surface
+    and AREA-WEIGHTED Caveat (2026; ASME B31G-2012 basis).
+    """
+    r = rstreng_2d_river_bottom(
+        D, T, [X[0], X[-1]], [[0.475, 0.025]] * 2, SMYS,
+        projection=projection, circ_weights=[1.0, 63.0],
+    )
+    weighted = projection == PROJECTION_AREA_WEIGHTED
+    expected_depth = (0.475 + 63.0 * 0.025) / 64.0 if weighted else 0.475
+    assert r.d_eff_in == pytest.approx([expected_depth, expected_depth])
+    assert r.details["max_d_over_t"] == pytest.approx(expected_depth / T)
+    assert r.details["raw_max_d_over_t"] == pytest.approx(0.95)
+    assert r.within_applicability is weighted
+    assert r.projected_profile_applicability is r.result.applicability
+    assert r.projected_profile_applicability.ok is weighted
+    assert r.raw_grid_applicability.ok is False
+    assert r.screening_eligible is False
+    assert r.applicability.ok is False
+    assert "RSTRENG_2D_RAW_DEPTH_OUTSIDE_APPLICABILITY" in r.applicability.flags
+    assert r.sensitivity_only is weighted
+    assert ("RSTRENG_2D_SENSITIVITY_ONLY" in r.applicability.flags) is weighted
+    if weighted:
+        assert r.details["affected_width"] == pytest.approx(64.0)
+
+
+@pytest.mark.parametrize("weights", [[0.0, 63.0], [1.0, 0.0], [0.0, 0.0]])
+def test_zero_arc_width_rejected(weights):
+    """Issue #2335: zeroing either [1, 63] width cannot drop a measurement.
+
+    The synthetic .475/.025 in columns are retained at both axial stations.
+    Zero is the rejected boundary of project_grid's positive-width contract,
+    including a zero total width; the deep column cannot be excluded.
+    """
+    grid = [[0.475, 0.025]] * 2
+    with pytest.raises(ValueError, match=r"circ_weights \(arc widths\) must be > 0"):
+        project_grid(grid, T, projection=PROJECTION_AREA_WEIGHTED, circ_weights=weights)
+    with pytest.raises(ValueError, match=r"circ_weights \(arc widths\) must be > 0"):
+        rstreng_2d_river_bottom(
+            D, T, [X[0], X[-1]], grid, SMYS,
+            projection=PROJECTION_AREA_WEIGHTED, circ_weights=weights,
+        )
+
+
+@pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])
+def test_weighted_column_permutation_keeps_raw_qualification(projection):
+    """Issue #2335: reverse both measured columns and their [1, 63] widths.
+
+    Independently, (.475 + 63*.025)/64 = (63*.025 + .475)/64 in;
+    MAX and raw d/t remain .475 in and .475/.5 = .95 respectively.
+    Qualification follows the validation record cited in the small-weight test.
+    Serialization must preserve it along with the unchanged pressure result.
+    """
+    grid = np.array([[0.475, 0.025]] * 2)
+    weights = np.array([1.0, 63.0])
+    original = rstreng_2d_river_bottom(
+        D, T, [X[0], X[-1]], grid, SMYS,
+        projection=projection, circ_weights=weights,
+    )
+    permuted = rstreng_2d_river_bottom(
+        D, T, [X[0], X[-1]], grid[:, ::-1], SMYS,
+        projection=projection, circ_weights=weights[::-1],
+    )
+    payload = json.loads(json.dumps(asdict(permuted)))
+    assert payload == json.loads(json.dumps(asdict(original)))
+    weighted = projection == PROJECTION_AREA_WEIGHTED
+    expected_depth = (0.475 + 63.0 * 0.025) / 64.0 if weighted else 0.475
+    assert payload["d_eff_in"] == pytest.approx([expected_depth, expected_depth])
+    assert payload["within_applicability"] is weighted
+    assert payload["raw_grid_applicability"]["ok"] is False
+    assert payload["details"]["raw_max_d_over_t"] == pytest.approx(0.95)
+    assert payload["details"]["screening_eligible"] is False
+    assert payload["details"]["sensitivity_only"] is weighted
+    qualification = payload["details"]["applicability"]
+    assert qualification["ok"] is False
+    assert "RSTRENG_2D_RAW_DEPTH_OUTSIDE_APPLICABILITY" in qualification["flags"]
+    assert ("RSTRENG_2D_SENSITIVITY_ONLY" in qualification["flags"]) is weighted
+
+
+@pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])
+@pytest.mark.parametrize("raw_depth,raw_ok", [(0.399, True), (0.400, True), (0.401, False)])
+def test_raw_depth_boundary_and_serialized_qualification(projection, raw_depth, raw_ok):
+    """Hand calculation: .399/.5=.798, .400/.5=.8, .401/.5=.802.
+
+    Synthetic boundary cases bracket the inclusive depth envelope from
+    docs/domains/rstreng-2d-validation-2026-06-29.md, Purpose/Result surface
+    (2026; ASME B31G-2012 basis). Equal-weight means halve each raw ratio.
+    Sensitivity-only qualification follows the same record's Caveat.
+    """
+    from dataclasses import asdict
+    import json
+
+    r = rstreng_2d_river_bottom(
+        D, T, [0.0, 8.0], [[raw_depth, 0.0]] * 2, SMYS, projection=projection,
+    )
+    weighted = projection == PROJECTION_AREA_WEIGHTED
+    assert r.raw_grid_applicability.ok is raw_ok
+    assert r.sensitivity_only is weighted
+    assert r.screening_eligible is (raw_ok and not weighted)
+    assert r.applicability.ok is r.screening_eligible
+    assert ("RSTRENG_2D_SENSITIVITY_ONLY" in r.applicability.flags) is weighted
+    # A plain dataclass/JSON consumer must retain both qualification dimensions.
+    payload = json.loads(json.dumps(asdict(r)))
+    assert payload["raw_grid_applicability"]["ok"] is raw_ok
+    assert payload["details"]["sensitivity_only"] is weighted
+    assert payload["details"]["screening_eligible"] is r.screening_eligible
+    assert payload["details"]["applicability"] == r.applicability.to_dict()
+
+
+def test_legacy_construction_without_raw_qualification_is_not_evaluated():
+    """A legacy constructor supplies no raw measurements, so eligibility is unknown.
+
+    The existing synthetic golden grid supplies the unchanged pressure result.
+    No additional engineering limit is assumed for the missing source grid.
+    """
+    r = rstreng_2d_river_bottom(D, T, X, GRID, SMYS)
+    legacy = RiverBottom2DResult(
+        r.projection_rule, r.axial_positions_in, r.d_eff_in,
+        r.governing_segment, r.result, r.within_applicability,
+    )
+    assert legacy.within_applicability is True
+    assert legacy.raw_grid_applicability.ok is False
+    assert legacy.screening_eligible is False
+    assert "RSTRENG_2D_RAW_DEPTH_NOT_EVALUATED" in legacy.applicability.flags

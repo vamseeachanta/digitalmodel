@@ -206,7 +206,8 @@ def _environment() -> Environment:
 
 
 def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER,
-                assessment_presentation: bool = False) -> str:
+                assessment_presentation: bool = False,
+                public_presentation: bool = False) -> str:
     """Render the spec to a self-contained HTML document.
 
     Raises :class:`~digitalmodel.reporting.provenance.ProvenanceError` when the
@@ -216,6 +217,8 @@ def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER,
     spec.provenance.require()
     house_css, _script = _template_parts(_DEFAULT_TEMPLATE)
     template_name = "verification_report.html.j2" if spec.verification_presentation else TEMPLATE_NAME
+    if public_presentation:
+        template_name = "public_report.html.j2"
     if assessment_presentation:
         template_name = "assessment_report.html.j2"
     template = _environment().get_template(template_name)
@@ -252,6 +255,8 @@ def write_report(
     out_dir: Path | str,
     stem: str,
     pdf: PdfMode = "auto",
+    *,
+    public_presentation: bool = False,
 ) -> ReportArtifacts:
     """Write report artifacts and their manifest under the output directory.
 
@@ -275,7 +280,10 @@ def write_report(
     validate_output_paths(*destinations)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    html_path.write_text(render_html(spec), encoding="utf-8", newline="\n")
+    html_path.write_text(
+        render_html(spec, public_presentation=public_presentation),
+        encoding="utf-8", newline="\n",
+    )
     status = render_pdf(html_path, pdf_path, pdf)
     _write_json(citations_path, {"citations": spec.citations})
 
