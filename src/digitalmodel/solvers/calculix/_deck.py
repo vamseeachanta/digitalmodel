@@ -89,8 +89,23 @@ def positive_id(value: str) -> int:
     return result
 
 
-def read_blocks(path: Path, active: tuple[Path, ...] = ()) -> list[Block]:
-    """Expand relative includes, detecting cycles and keyword continuations."""
+def _keyword(line: str, start: int) -> Block:
+    """Read a complete keyword header without consuming its data records."""
+    fields = [v.strip() for v in line[1:].split(",")]
+    if not fields[0]:
+        raise ValueError("Empty keyword")
+    keyword = " ".join(fields[0].upper().split())
+    params = {}
+    for value in fields[1:]:
+        if not value:
+            continue
+        name, sep, data = value.partition("=")
+        params[name.strip().upper()] = data.strip().strip("\"'") if sep else ""
+    return Block(keyword, params, [], start)
+
+
+def _expanded_lines(path: Path, active: tuple[Path, ...]) -> Iterable[tuple[str, int]]:
+    """Insert included text before interpreting keyword or data continuations."""
     path = path.resolve()
     if path in active:
         raise ValueError("Cyclic include")
@@ -99,15 +114,13 @@ def read_blocks(path: Path, active: tuple[Path, ...] = ()) -> list[Block]:
     if len(active) >= 64:
         raise ValueError("Include nesting exceeds 64 files")
     lines = path.read_text(encoding="utf-8").removeprefix("\ufeff").splitlines()
-    result: list[Block] = []
-    current: Block | None = None
     i = 0
     while i < len(lines):
         line = lines[i].strip()
         i += 1
         if not line or line.startswith("**"):
             continue
-        if line.startswith("*"):
+        if line.partition(",")[0].strip().upper() == "*INCLUDE":
             start = i
             while line.endswith(",") and i < len(lines):
                 following = lines[i].strip()
@@ -118,27 +131,34 @@ def read_blocks(path: Path, active: tuple[Path, ...] = ()) -> list[Block]:
                     break
                 line += following
                 i += 1
-            fields = [v.strip() for v in line[1:].split(",")]
-            if not fields[0]:
-                raise ValueError("Empty keyword")
-            keyword = " ".join(fields[0].upper().split())
-            params = {}
-            for value in fields[1:]:
-                if not value:
-                    continue
-                name, sep, data = value.partition("=")
-                params[name.strip().upper()] = data.strip().strip("\"'") if sep else ""
-            current = Block(keyword, params, [], start)
-            if keyword == "INCLUDE":
-                target = params.get("INPUT")
-                if not target:
-                    raise ValueError("Include requires INPUT")
-                result.extend(read_blocks(path.parent / target, (*active, path)))
-                current = None
-            else:
-                result.append(current)
-        elif current is not None:
-            current.rows.append([v.strip() for v in line.split(",")])
+            target = _keyword(line, start).params.get("INPUT")
+            if not target:
+                raise ValueError("Include requires INPUT")
+            # CalculiX 2.22 manual, section 7.75 (*INCLUDE): insert the
+            # contents without resetting the active keyword on either side.
+            yield from _expanded_lines(path.parent / target, (*active, path))
+        else:
+            yield line, i
+
+
+def read_blocks(path: Path, active: tuple[Path, ...] = ()) -> list[Block]:
+    """Parse the expanded stream while preserving keyword context across files."""
+    result: list[Block] = []
+    lines = list(_expanded_lines(path, active))
+    i = 0
+    while i < len(lines):
+        line, start = lines[i]
+        i += 1
+        if line.startswith("*"):
+            while line.endswith(",") and i < len(lines):
+                following = lines[i][0]
+                if following.startswith("*") or "=" not in following:
+                    break
+                line += following
+                i += 1
+            result.append(_keyword(line, start))
+        elif result:
+            result[-1].rows.append([v.strip() for v in line.split(",")])
         else:
             raise ValueError("Data outside a keyword block")
     return result

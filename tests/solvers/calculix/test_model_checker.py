@@ -142,6 +142,60 @@ def test_tie_name_required_before_coincidence_exemption(deck, capsys, parameters
     assert pairs == ([] if valid else [("node:1", "node:99")])
 
 
+@pytest.mark.parametrize("ties,valid", [
+    ("*TIE,NAME=JOIN\n", False),
+    ("*TIE,NAME=JOIN\nSLAVE,MASTER\nSLAVE,MASTER\n", False),
+    ("*TIE,NAME=JOIN\nSLAVE,MASTER\nSLAVE\n", False),
+    ("*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=JOIN\nSLAVE,MASTER\n", False),
+    ("*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=join\nSLAVE,MASTER\n", False),
+    ("*TIE,NAME=JOIN\nSLAVE,MASTER\n", True),
+    ("*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=OTHER_JOIN\nSECOND_SLAVE,MASTER\n", True),
+])
+@pytest.mark.parametrize("purpose", ["support", "coincidence"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_tie_shape_and_unique_names_precede_connections(deck, capsys, ties, valid,
+                                                       purpose, interface):
+    # CalculiX 2.22 manual, section 7.132 (*TIE): one named surface pair.
+    if purpose == "support":
+        text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+        slave = "5"
+    else:
+        text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+        text += "*NODE\n99,0,0,0\n"
+        slave = "99"
+    if "SECOND_SLAVE" in ties:
+        text += ("*NODE\n100,0.25,0.25,0\n"
+                 "*SURFACE,NAME=SECOND_SLAVE,TYPE=NODE\n100\n")
+    path = deck(text=text + "*SURFACE,NAME=MASTER\nBODY,S1\n"
+                f"*SURFACE,NAME=SLAVE,TYPE=NODE\n{slave}\n" + ties)
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == int(not valid)
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == ("PASS" if valid else "FAIL")
+    expected_code = "unconstrained_part" if purpose == "support" else "unmerged_nodes"
+    expected_ids = ("step:0", "element:2") if purpose == "support" else ("node:1", "node:99")
+    assert [tuple(f["entity_ids"]) for f in evidence["findings"]
+            if f["code"] == expected_code] == ([] if valid else [expected_ids])
+    if not valid:
+        error = next(f for f in evidence["findings"]
+                     if f["code"] in {"parse_error", "duplicate_tie_name"})
+        assert error["severity"] == "error" and error["line"] > 0 and error["fix_hint"]
+
+
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_empty_tie_blocks_supported_mesh(deck, capsys, interface):
+    path = deck("*TIE,NAME=JOIN\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    assert "parse_error" in {f["code"] for f in evidence["findings"]}
+
+
 @pytest.mark.parametrize("keyword", ["TIE", "CONTACT PAIR"])
 @pytest.mark.parametrize("master_type", ["NODE", "node", "ELEMENT", None])
 @pytest.mark.parametrize("interface", ["api", "cli"])
@@ -842,6 +896,109 @@ def test_includes_resolve_relative_to_containing_file_and_detect_cycles(tmp_path
     assert "parse_error" in codes(check_deck(root))
 
 
+@pytest.mark.parametrize("record", [
+    "1, 0, 0, 0", "3, 0, 1, 0", "1, 1, 2, 3, 4", "1, 2, 3", "FIXED, 1, 3",
+])
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_include_data_continues_parent_keyword(deck, tmp_path, capsys, record, nested, interface):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    folder = tmp_path / "includes"
+    folder.mkdir()
+    child = folder / "records.inp"
+    child.write_text(record + "\n", encoding="utf-8", newline="\n")
+    if nested:
+        (folder / "wrapper.inp").write_text('*INCLUDE,\nINPUT="records.inp"\n',
+                                            encoding="utf-8", newline="\n")
+    include = "includes/wrapper.inp" if nested else "includes/records.inp"
+    expected = check_deck(deck(text=base)).to_dict()
+    path = deck(text=base.replace(record + "\n", f'*INCLUDE,INPUT="{include}"\n'))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence == expected
+    parsed = Deck(read_blocks(path))
+    parsed.parse()
+    assert parsed.nodes[1] == (0.0, 0.0, 0.0)
+    assert parsed.nodes[3] == (0.0, 1.0, 0.0)
+
+
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_element_connectivity_continues_inside_include(deck, tmp_path, capsys, interface):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    (tmp_path / "tail.inp").write_text("3,4\n", encoding="utf-8", newline="\n")
+    path = deck(text=base.replace("1, 1, 2, 3, 4\n",
+                                  "1, 1, 2,\n*INCLUDE,INPUT=tail.inp\n"))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS"
+    parsed = Deck(read_blocks(path))
+    parsed.parse()
+    assert parsed.elements == {1: ("C3D4", (1, 2, 3, 4))}
+
+
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_include_keyword_remains_active_after_return(deck, tmp_path, capsys, interface):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    (tmp_path / "nodes.inp").write_text("*NODE\n1, 0, 0, 0\n",
+                                       encoding="utf-8", newline="\n")
+    path = deck(text=base.replace("*NODE\n1, 0, 0, 0\n", "*INCLUDE,INPUT=nodes.inp\n"))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS"
+
+
+@pytest.mark.parametrize("keyword_in_child", [False, True])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_keyword_parameters_continue_across_include(deck, tmp_path, capsys,
+                                                   keyword_in_child, interface):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    parameters = "TYPE=C3D4,ELSET=BODY\n"
+    (tmp_path / "keyword.inp").write_text("*ELEMENT,\n" if keyword_in_child else parameters,
+                                         encoding="utf-8", newline="\n")
+    header = ("*INCLUDE,INPUT=keyword.inp\n" + parameters if keyword_in_child else
+              "*ELEMENT,\n*INCLUDE,INPUT=keyword.inp\n")
+    path = deck(text=base.replace("*ELEMENT, TYPE=C3D4, ELSET=BODY\n", header))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS"
+
+
+@pytest.mark.parametrize("ending", ["empty", "cycle", "depth"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_include_stream_retains_context_and_limits(deck, tmp_path, capsys, ending, interface):
+    if ending == "depth":
+        for i in range(64):
+            (tmp_path / f"part{i}.inp").write_text(
+                f"*INCLUDE,INPUT=part{i + 1}.inp\n" if i < 63 else "",
+                encoding="utf-8", newline="\n")
+        path = deck(f"*INCLUDE,INPUT=part0.inp\n")
+    else:
+        (tmp_path / "records.inp").write_text(
+            "*INCLUDE,INPUT=model.inp\n" if ending == "cycle" else "",
+            encoding="utf-8", newline="\n")
+        path = deck("*INCLUDE,INPUT=records.inp\n")
+    valid = ending == "empty"
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == int(not valid)
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == ("PASS" if valid else "FAIL")
+    assert ("parse_error" in {f["code"] for f in evidence["findings"]}) == (not valid)
+
+
 @pytest.mark.parametrize("value", [0, -1, float("nan"), float("inf")])
 def test_invalid_tolerance_rejected(deck, value):
     with pytest.raises(ValueError, match="tolerance"):
@@ -1173,8 +1330,9 @@ def test_contact_does_not_exempt_coincident_nodes(deck):
     extra = ("*NODE\n99,0,0,0\n*NSET,NSET=DUPLICATE\n99\n"
              "*SURFACE,NAME=MASTER,TYPE=ELEMENT\nBODY,S1\n"
              "*SURFACE,NAME=SLAVE,TYPE=NODE\nDUPLICATE\n"
-             "*CONTACT PAIR\nSLAVE,MASTER\n")
-    assert "unmerged_nodes" in codes(check_deck(deck(extra)))
+             "*CONTACT PAIR,TYPE=NODE TO SURFACE,INTERACTION=FRICTIONLESS\nSLAVE,MASTER\n"
+             "*SURFACE INTERACTION,NAME=FRICTIONLESS\n")
+    assert {"contact_path", "unmerged_nodes"} <= codes(check_deck(deck(extra)))
 
 
 def test_extreme_finite_coordinates_and_small_tolerance_do_not_crash(deck):

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Pre-run connectivity and reference QA for structural CalculiX INP decks.
@@ -9,6 +12,7 @@ contact engagement. Coordinates and tolerance use the deck's length unit.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from itertools import product
@@ -190,6 +194,8 @@ def _references_and_sections(model: Deck) -> dict[str, _Surface]:
 def _connections(model: Deck, surfaces: dict[str, _Surface],
                  components: _Components) -> list[tuple[set[int], set[int]]]:
     ties = []
+    tie_names = Counter(b.params.get("NAME", "").upper() for b in model.blocks
+                        if b.keyword == "TIE")
     contact_types = {b.params.get("TYPE", "").upper() for b in model.blocks
                      if b.keyword == "CONTACT PAIR"}
     for block in model.blocks:
@@ -207,6 +213,22 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
                         "must name a defined SURFACE INTERACTION; see CalculiX 2.22 "
                         "manual sections 7.22 (*CONTACT PAIR) and 7.132 (*TIE).", block.line)
             continue
+        if block.keyword == "TIE":
+            # CalculiX 2.22 manual, section 7.132 (*TIE): exactly one pair
+            # and a name unused by any other tie. Reject every duplicate
+            # before the first declaration can join or exempt any nodes.
+            if tie_names[value.upper()] > 1:
+                model.error("duplicate_tie_name", (f"tie:{value.upper()}",),
+                            "Tie name is used by more than one TIE card",
+                            "Assign a unique NAME to each tie; see CalculiX 2.22 "
+                            "manual section 7.132 (*TIE).", block.line)
+                continue
+            if len(block.rows) != 1:
+                model.error("parse_error", ("keyword:TIE",),
+                            f"TIE requires exactly one surface pair; found {len(block.rows)} rows",
+                            "Provide one slave/master surface pair per uniquely named tie; "
+                            "see CalculiX 2.22 manual section 7.132 (*TIE).", block.line)
+                continue
         if block.keyword == "CONTACT PAIR" and value.upper() not in model.definitions["interaction"]:
             # Reference validation has already reported the undefined interaction.
             continue
