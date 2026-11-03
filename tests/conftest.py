@@ -2,6 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Pytest configuration for marine engineering tests."""
 import sys
+import os
 import importlib.util
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -141,10 +142,9 @@ if 'digitalmodel.subsea.catenary_riser.legacy.catenary_riser_summary' not in sys
 
 # Quarantine: tests that already fail on main, listed with a reason in
 # tests/quarantine.txt and tracked by one GitHub issue. Each listed test still
-# runs; it is marked xfail(strict=False), so a failure does not fail the gate and
-# a pass is reported as XPASS -- the signal to delete its line. A node id without
-# a parameter suffix covers every parametrization of that test; a bare file
-# path covers every test in that file.
+# runs; CI reports XPASS for restoration review, while local unexpected passes
+# fail. Only specific test ids are allowed. An id without a parameter suffix
+# covers every parametrization of that test.
 _QUARANTINE_FILE = Path(__file__).parent / "quarantine.txt"
 
 
@@ -157,6 +157,8 @@ def _read_quarantine(path: Path = _QUARANTINE_FILE) -> dict[str, str]:
         if not line or line.startswith("#"):
             continue
         node_id, _, reason = line.partition(" | ")
+        if ".py::" not in node_id:
+            raise ValueError("Quarantine requires a specific test id")
         entries[node_id.strip()] = reason.strip() or "quarantined: failing on main"
     return entries
 
@@ -168,7 +170,24 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         node_id = item.nodeid
         reason = (quarantine.get(node_id)
-                  or quarantine.get(node_id.split("[", 1)[0])
-                  or quarantine.get(node_id.split("::", 1)[0]))
+                  or quarantine.get(node_id.split("[", 1)[0]))
         if reason:
-            item.add_marker(pytest.mark.xfail(reason=f"quarantine: {reason}", strict=False))
+            item.add_marker(pytest.mark.xfail(
+                reason=f"quarantine: {reason}", strict=os.environ.get("CI") != "true"))
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    """Preserve expected outcomes in JUnit, including non-strict XPASS."""
+    report = yield
+    outcome = None
+    if hasattr(report, "wasxfail"):
+        if report.skipped:
+            outcome = "xfailed"
+        elif report.passed:
+            outcome = "xpassed"
+    elif report.failed and str(report.longrepr).startswith("[XPASS(strict)]"):
+        outcome = "xpassed"
+    if outcome:
+        item.user_properties.append(("pytest_xfail_outcome", outcome))
+    return report

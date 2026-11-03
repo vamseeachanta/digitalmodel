@@ -94,6 +94,19 @@ def parse_junit(path: Path) -> tuple[list[str], list[str], int]:
     return sorted(set(failed)), sorted(set(errored)), len(cases)
 
 
+def expected_outcomes(path: Path) -> dict[str, list[str]]:
+    """Read explicit pytest outcomes; ordinary passes and skips stay distinct."""
+    outcomes: dict[str, set[str]] = {"xfailed": set(), "xpassed": set()}
+    for case in ElementTree.parse(path).getroot().iter("testcase"):
+        for prop in case.findall("properties/property"):
+            if prop.get("name") == "pytest_xfail_outcome":
+                outcome = prop.get("value")
+                if outcome not in outcomes:
+                    raise ValueError("Unknown pytest expected outcome")
+                outcomes[outcome].add(junit_id(case))
+    return {key: sorted(nodes) for key, nodes in outcomes.items()}
+
+
 def summary_id(text: str) -> str:
     """Separate a short-summary reason while preserving parameter whitespace."""
     depth = 0
@@ -136,6 +149,7 @@ def extract(args: argparse.Namespace) -> None:
     row = dict(shard=args.shard, sha=args.sha, run_id=args.run, attempt=args.attempt,
                completed_at=args.completed_at, conclusion=args.conclusion,
                parsed=False, failed=[], errored=[], collected=0, exit_code=args.exit_code,
+               xfailed=[], xpassed=[],
                first_attempt_exit_code=args.exit_code, first_attempt_failed={}, recovered=[])
     try:
         parser = parse_junit if args.command == "extract" else parse_log
@@ -143,6 +157,7 @@ def extract(args: argparse.Namespace) -> None:
         row.update(parsed=True, failed=failed, errored=errored, collected=collected)
         messages = {node: "" for node in failed + errored}
         if args.command == "extract":
+            row.update(expected_outcomes(args.source))
             for case in ElementTree.parse(args.source).getroot().iter("testcase"):
                 failure = next((child for child in case if child.tag in {"failure", "error"}), None)
                 if failure is not None:
@@ -182,6 +197,7 @@ def publish(results: Path, previous: str, output: Path) -> None:
             continue
         shard = row["shard"]
         metadata = {key: row.get(key) for key in ("sha", "run_id", "completed_at", "conclusion", "parsed", "exit_code", "collected")}
+        metadata.update({key: row.get(key, []) for key in ("xfailed", "xpassed")})
         baseline["shards"][shard] = metadata
         if row["parsed"] is not True:
             continue

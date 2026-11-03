@@ -181,6 +181,19 @@ def test_quarantine_entries_record_restore_conditions():
             assert "; restore:" in line, line.partition(" | ")[0]
 
 
+def test_quarantine_requires_specific_test_ids(tmp_path):
+    """A new test in a formerly exempt module must retain its gate."""
+    spec = importlib.util.spec_from_file_location("gate_conftest", ROOT / "tests/conftest.py")
+    conftest = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(conftest)
+    entries = conftest._read_quarantine()
+    assert all("::" in node for node in entries)
+    path = tmp_path / "quarantine.txt"
+    path.write_text("tests/test_example.py | known fixture failure; restore: fix fixture\n")
+    with pytest.raises(ValueError, match="specific test id"):
+        conftest._read_quarantine(path)
+
+
 @pytest.mark.parametrize("active", [0, 2])
 @pytest.mark.parametrize("override", [False, True])
 def test_full_run_dispatch_uses_checkout_metadata(tmp_path, active, override):

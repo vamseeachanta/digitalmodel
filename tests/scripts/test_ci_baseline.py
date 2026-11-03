@@ -57,7 +57,8 @@ def sweep_needs(**results):
     return {name: {'result': results.get(name, 'success')} for name in FULL_RUN_JOBS}
 
 
-def run_health_writer(body, *, active=True, existing=True, needs=None, baseline_available=True):
+def run_health_writer(body, *, active=True, existing=True, needs=None, baseline_available=True,
+                      outcomes=None):
     """Execute the shipped health script with isolated GitHub and file doubles."""
     workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
     step = next(s for s in workflow['jobs']['sweep-result']['steps']
@@ -67,7 +68,7 @@ def run_health_writer(body, *, active=True, existing=True, needs=None, baseline_
     const calls = [], notices = [];
     const baseline = {tests: input.active ? {'tests/example.py::test_case':
       {shard: 'example', first_seen_run: 1, run_id: 10}} : {},
-      shards: {example: {parsed: true, conclusion: 'success'}}};
+      shards: {example: {parsed: true, conclusion: 'success', ...input.outcomes}}};
     process.env.SWEEP_NEEDS = JSON.stringify(input.needs);
     const fakeFs = {existsSync: path => path === 'baseline.json' && input.baseline_available,
       readFileSync: () => JSON.stringify(baseline)};
@@ -89,7 +90,7 @@ def run_health_writer(body, *, active=True, existing=True, needs=None, baseline_
         ['node', '-e', harness], input=json.dumps(dict(
             script=step['with']['script'], body=body, active=active, existing=existing,
             needs=needs if needs is not None else sweep_needs(),
-            baseline_available=baseline_available)),
+            baseline_available=baseline_available, outcomes=outcomes or {})),
         text=True, capture_output=True, check=True, timeout=30)
     return json.loads(completed.stdout)
 
@@ -125,6 +126,57 @@ def test_health_missing_baseline_is_incomplete():
     output = run_health_writer('', active=False, baseline_available=False)
     assert output['calls'][0]['state'] == 'open'
     assert 'Incomplete shard evidence: baseline unavailable' in output['calls'][0]['body']
+
+
+@pytest.mark.parametrize('field,label', [('xfailed', 'XFAIL'), ('xpassed', 'XPASS')])
+def test_health_exposes_expected_outcomes_without_ordinary_failures(field, label):
+    node = 'tests/test_example.py::test_known_failure'
+    output = run_health_writer('', active=False, existing=False, outcomes={field: [node]})
+    assert [call['kind'] for call in output['calls']] == ['label', 'create']
+    body = output['calls'][-1]['body']
+    assert '#3720' in body
+    assert f'| {node} | example | {label} |' in body
+
+
+@pytest.mark.parametrize('ci_mode', [True, False])
+def test_real_quarantine_outcomes_reach_daily_baseline(tmp_path, ci_mode):
+    """Exercise the collection/report hooks, real JUnit and baseline publication."""
+    probe = tmp_path / 'probe'
+    probe.mkdir()
+    (probe / 'conftest.py').write_text((ROOT / 'tests/conftest.py').read_text())
+    (probe / 'test_probe.py').write_text(
+        'def test_expected():\n    assert False\n'
+        'def test_recovered():\n    assert True\n'
+        'def test_unlisted():\n    assert True\n')
+    (probe / 'quarantine.txt').write_text(
+        'test_probe.py::test_expected | measured failure; restore: correct example\n'
+        'test_probe.py::test_recovered | measured failure; restore: correct example\n')
+    junit = probe / 'junit.xml'
+    env = {**os.environ, 'PYTHONPATH': str(ROOT / 'src')}
+    env.pop('CI', None)
+    if ci_mode:
+        env['CI'] = 'true'
+    completed = subprocess.run(
+        [sys.executable, '-m', 'pytest', '-q', '-rA', '-p', 'no:cacheprovider',
+         f'--basetemp={tmp_path / "inner"}', f'--junitxml={junit}',
+         '-o', 'junit_family=xunit2'],
+        cwd=probe, env=env, text=True, capture_output=True, timeout=30)
+    assert completed.returncode == (0 if ci_mode else 1), completed.stdout + completed.stderr
+    results = probe / 'results'
+    ci.main(['extract', '--junit', str(junit), '--shard', 'example', '--sha', 'abc123',
+             '--run', '123', '--attempt', '1',
+             '--conclusion', 'success' if ci_mode else 'failure',
+             '--exit-code', str(completed.returncode), '--out', str(results / 'result-example.json')])
+    row = json.loads((results / 'result-example.json').read_text())
+    assert row['parsed'] is True
+    assert row['xfailed'] == ['test_probe.py::test_expected']
+    assert row['xpassed'] == ['test_probe.py::test_recovered']
+    assert row['failed'] == ([] if ci_mode else ['test_probe.py::test_recovered'])
+    output = probe / 'baseline.json'
+    ci.publish(results, 'none', output)
+    shard = json.loads(output.read_text())['shards']['example']
+    assert shard['xfailed'] == row['xfailed']
+    assert shard['xpassed'] == row['xpassed']
 
 
 @pytest.mark.parametrize('job', FULL_RUN_JOBS)

@@ -336,7 +336,16 @@ jobs:
             }
             const incomplete = checks.filter(([id, row]) => row.result !== 'success');
             if (incomplete.length) lines.push('', 'Incomplete full-run evidence: ' + incomplete.map(([id]) => cell(id)).join(', '));
-            const state = active.length || uncertain.length || incomplete.length || !baselineAvailable ? 'open' : 'closed';
+            const expected = Object.entries(baseline.shards).flatMap(([shard, row]) =>
+              ['xfailed', 'xpassed'].flatMap(outcome => (row[outcome] || []).map(id =>
+                ({id, shard, outcome: outcome === 'xfailed' ? 'XFAIL' : 'XPASS'}))));
+            lines.push('', 'Expected outcomes tracked in #3720; review XPASS entries for restoration.',
+              '', '| Test id | Shard | Outcome |', '| --- | --- | --- |');
+            for (const row of expected.slice(0, 200)) {
+              lines.push(`| ${cell(row.id)} | ${cell(row.shard)} | ${row.outcome} |`);
+            }
+            lines.push('', `Showing at most 200 of ${expected.length} expected outcomes.`);
+            const state = active.length || uncertain.length || incomplete.length || expected.length || !baselineAvailable ? 'open' : 'closed';
             const body = lines.join('\n');
             if (issue) {
               await github.rest.issues.update({owner, repo, issue_number: issue.number, body, state});
