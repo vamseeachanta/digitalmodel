@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -161,7 +164,8 @@ def _section_basis(cfg: Mapping[str, Any]) -> dict[str, Any]:
 
     Xu (2023), p. 242 Section 2 gives the section dimensions. Interpreting
     that section as a symmetric trapezoid is an assumption. Radius c/(2*pi)
-    uses the existing B401 Table 10-7 note 2 kernel; mass remains independent.
+    follows DNV-RP-B401, Cathodic protection design, 2021 edition,
+    Calculation of anode resistance; mass remains independent.
     """
     working = copy.deepcopy(dict(cfg))
     inputs = working["inputs"]
@@ -197,8 +201,8 @@ def estimate_published_jacket_retrofit(
     Supply the existing published-jacket B401 configuration, including its
     sourced zone areas and design densities. Changed or missing calculation
     inputs and unsupported overrides are rejected before the adapter runs.
-    The declared assumed basis is
-    B401 edition 2021, life 25 years, capacity 2000 Ah/kg, utilisation 0.90,
+    The route uses DNV-RP-B401, Cathodic protection design, 2021 edition.
+    The declared assumed basis is life 25 years, capacity 2000 Ah/kg, utilisation 0.90,
     nominal 323.4 kg interpreted as net alloy, density 2750 kg/m3, and a
     depleted section retaining its length and similar shape. These are assumed,
     based on previous experience, not additional claims from Xu (2023).
@@ -207,6 +211,8 @@ def estimate_published_jacket_retrofit(
     radius independently of nominal mass; resistivity 0.22 ohm.m,
     driving voltage 0.25 V and installed count 569. The unchanged B401 route
     determines the original aggregate checks on the declared assumed basis.
+    The depletion assumption gives 3.580 A final output rather than the
+    paper's printed 3.63 A (p. 242, Section 2).
 
     The phase order MUST be selected explicitly. Xu p. 244 Table 3 prints
     initial / maintain / late, so ``initial_mean_final`` follows its headings.
@@ -214,15 +220,15 @@ def estimate_published_jacket_retrofit(
     maintain and late; it must not be presented as the paper's phase mapping.
     Neither choice changes the original design densities or installed count.
 
-    Hand check of the upper-zone estimate with initial/final/mean assumed:
+    Hand check of the upper-zone estimate with the printed initial/mean/final mapping:
     Xu p. 242 Tables 1–2 gives area 3726.8 m2, initial/mean/final design
     densities 150/70/100 mA/m2. Xu p. 244 Table 3 gives 170/80/110 mA/m2.
     Initial extra estimate = (170-150)*3726.8/1000 = 74.536 A;
-    mean extra estimate = (110-70)*3726.8/1000 = 149.072 A;
-    final signed extra estimate = (80-100)*3726.8/1000 = -74.536 A.
-    The mass-count estimate is ceil(149.072*25*8760/(2000*.90*323.4)) = 57.
-    The kernel supplies 8760 h/year and the B401 Sec. 7.7 Eq. 2 mass rule;
-    Sec. 7.8 and Table 10-7 identify the existing current-output checks.
+    mean extra estimate = (80-70)*3726.8/1000 = 37.268 A;
+    final signed extra estimate = (110-100)*3726.8/1000 = 37.268 A.
+    The kernel supplies 8760 h/year and reuses DNV-RP-B401, Cathodic
+    protection design, 2021 edition: Anode mass calculations, Calculation
+    of number of anodes, and Calculation of anode resistance.
     Negative signed changes are retained but add no current-sizing credit.
 
     Demand contributions are returned per source zone. The pooled shortfall
@@ -308,10 +314,11 @@ def estimate_published_jacket_retrofit(
     zones[DEEP_ZONE]["assigned_anodes_estimate"] = count
     return {
         "status": "ESTIMATE",
+        "edition": result["edition"],
         "basis": "estimate on stated assumptions, not an acceptance of an installed design",
         "source": SOURCE,
         "declared_assumed_basis": (
-            "Estimate assumed, based on previous experience: B401 edition 2021; "
+            "Estimate assumed, based on previous experience: "
             "life 25 years; capacity 2000 Ah/kg; utilisation 0.90; nominal "
             "323.4 kg interpreted as net alloy; symmetric-trapezoid perimeter "
             "radius independent of mass; similar-shape depletion at fixed length."

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -34,13 +37,15 @@ def design():
     return yaml.safe_load(INPUT.read_text(encoding="utf-8"))
 
 
-def estimate(design, order="initial_final_mean"):
-    """Select the explicitly stated phase-order assumption for this estimate."""
+def estimate(design, order="initial_mean_final"):
+    """Select the printed phase mapping unless testing the swapped sensitivity."""
     return estimate_published_jacket_retrofit(design, phase_order=order)
 
 
 def hand_outputs():
-    """Existing section-periphery model: B401 (2021), Sec. 7.8, Table 10-7.
+    """DNV-RP-B401, Cathodic protection design, 2021 edition:
+
+    Calculation of number of anodes; Calculation of anode resistance.
 
     Xu (2023), p. 242 Section 2: length 2.020 m, nominal mass 323.4 kg,
     resistivity 0.22 ohm.m and driving voltage 0.25 V. Assumed net mass,
@@ -71,7 +76,7 @@ def test_upper_zone_hand_calculation_estimate(design):
     Life, capacity, utilisation and net mass are the declared assumed basis;
     8760 h/year is the existing kernel conversion, not a source table value.
     """
-    zone = estimate(design)["zones"]["upper-bare-seawater"]
+    zone = estimate(design, "initial_final_mean")["zones"]["upper-bare-seawater"]
     assert zone["extra_current_A_estimate"] == pytest.approx(
         {"initial": 74.536, "mean": 149.072, "final": -74.536}
     )
@@ -105,8 +110,11 @@ def test_design_baseline_unchanged_on_declared_assumed_basis(design):
     assert design == original
 
 
-@pytest.mark.parametrize("order", ["initial_final_mean", "initial_mean_final"])
-def test_total_is_sized_from_unrounded_pooled_demand_estimate(design, order):
+@pytest.mark.parametrize("order, expected_counts, governing", [
+    ("initial_mean_final", (74, 78, 55), "initial"),
+    ("initial_final_mean", (234, 78, 0), "mass"),
+])
+def test_total_is_sized_from_unrounded_pooled_demand_estimate(design, order, expected_counts, governing):
     """Xu Tables 1–3 differences; independent geometry and mass arithmetic."""
     result = estimate(design, order)
     mean_delta, final_delta = (621.182, -231.906) if order == "initial_final_mean" else (194.638, 194.638)
@@ -120,12 +128,42 @@ def test_total_is_sized_from_unrounded_pooled_demand_estimate(design, order):
         "initial": math.ceil(389.276 / initial),
         "final": math.ceil(max(final_delta, 0) / final),
     }
+    # Printed mapping: ceil(194.638*25*8760/(2000*.90*323.4)) = 74;
+    # ceil(389.276/5.012...) = 78; ceil(194.638/3.580...) = 55.
+    assert tuple(checks.values()) == expected_counts
     counts = total["anodes_estimate"]
     for check, count in checks.items():
         suffix = "mass" if check == "mass" else f"{check}_current"
         assert counts[f"count_by_{suffix}_estimate"] == count
     assert counts["additional_anodes_estimate"] == max(checks.values())
     assert counts["governing_check_estimate"] == max(checks, key=checks.get)
+    assert counts["governing_check_estimate"] == governing
+
+
+def test_printed_mapping_matches_fixture_and_upper_zone_hand_values(design):
+    """Table 3: maintain is mean and late is final; no columns are exchanged.
+
+    Upper-zone increments: (170-150)*3726.8/1000 = 74.536 A initial;
+    (80-70)*3726.8/1000 = 37.268 A mean;
+    (110-100)*3726.8/1000 = 37.268 A final.
+    """
+    result = estimate(design)
+    higher = design["inputs"]["structure"]["verification_evidence"]["higher_density_basis"]["zones"]
+    for name, densities in higher.items():
+        assert result["zones"][name]["subtropical_density_mA_m2"] == pytest.approx(
+            {phase: value * 1000 for phase, value in densities.items()}
+        )
+    assert result["zones"]["upper-bare-seawater"]["extra_current_A_estimate"] == pytest.approx(
+        {"initial": 74.536, "mean": 37.268, "final": 37.268}
+    )
+
+
+def test_standard_edition_is_separate_from_experience_based_assumptions(design):
+    result = estimate(design)
+    assert result["edition"] == "2021"
+    assert "B401" not in result["declared_assumed_basis"]
+    assert "2021" not in result["declared_assumed_basis"]
+    assert "assumed, based on previous experience" in result["declared_assumed_basis"]
 
 
 def test_only_deep_zone_receives_pooled_anodes_estimate(design):
@@ -137,7 +175,7 @@ def test_only_deep_zone_receives_pooled_anodes_estimate(design):
     """
     result = estimate(design)
     total = result["total_estimate"]["anodes_estimate"]["additional_anodes_estimate"]
-    assert total == math.ceil(621.182 * 25 * 8760 / (2000 * .90 * 323.4))
+    assert total == math.ceil(389.276 / hand_outputs()[0]) == 78
     for zone_id, zone in result["zones"].items():
         assert zone["assigned_anodes_estimate"] == (total if zone_id == "lower-bare-seawater" else 0)
     assert result["placement_estimate"]["depths_m_estimate"] == [70.5, 84.1]
@@ -162,8 +200,8 @@ def test_phase_mapping_is_explicit_and_source_headings_retained(design):
         estimate_published_jacket_retrofit(design)
     with pytest.raises(ValueError, match="phase_order"):
         estimate(design, "unknown")
-    assumed = estimate(design)
-    paper = estimate(design, "initial_mean_final")
+    assumed = estimate(design, "initial_final_mean")
+    paper = estimate(design)
     assert assumed["phase_order"] == "initial_final_mean"
     assert "initial / maintain / late" in assumed["phase_order_basis"]
     assert "assumed" in assumed["phase_order_basis"]
@@ -343,5 +381,5 @@ def test_explicit_declared_defaults_and_reordered_zones_remain_supported(design)
     design["inputs"]["structure"]["zones"].reverse()
     original = copy.deepcopy(design)
     result = estimate(design)
-    assert result["total_estimate"]["anodes_estimate"]["additional_anodes_estimate"] == 234
+    assert result["total_estimate"]["anodes_estimate"]["additional_anodes_estimate"] == 78
     assert design == original
