@@ -8,8 +8,10 @@ import json
 import os
 import re
 import subprocess
+import sys
 import shutil
 import shlex
+import hashlib
 from typing import Any
 
 import pytest
@@ -21,7 +23,8 @@ GATES = (
     "quality-gates-by-domain.yml",
     "gmsh-meshing-tests.yml",
 )
-MERGE_GATES = (*GATES, "quality-gates.yml", "parametric-atlas-drift.yml")
+# Atlas retains its existing merge guard; the full quality guard is retired.
+MERGE_GATES = (*GATES, "parametric-atlas-drift.yml")
 
 
 def load_workflow(filename: str) -> dict:
@@ -237,13 +240,13 @@ def git(directory: Path, *args: str) -> str:
     env = {key: value for key, value in os.environ.items()
            if not key.startswith("GIT_")}
     result = subprocess.run(["git", "-C", str(directory), *args], env=env,
-                            capture_output=True, text=True, check=True)
+                            capture_output=True, encoding="utf-8", check=True)
     return result.stdout.strip()
 
 
 def fixture_commit(directory: Path, filename: str, content: str) -> str:
     """Commit a text change in the disposable fixture only."""
-    (directory / filename).write_text(content, encoding="utf-8")
+    (directory / filename).write_text(content, encoding="utf-8", newline="\n")
     git(directory, "add", filename)
     git(directory, "commit", "-m", "Update fixture content")
     return git(directory, "rev-parse", "HEAD")
@@ -266,7 +269,7 @@ def advance_base(origin: Path, count: int) -> str:
     env = {key: value for key, value in os.environ.items()
            if not key.startswith("GIT_")}
     subprocess.run(["git", "-C", str(origin), "fast-import", "--quiet"],
-                   input="".join(records), text=True, env=env, capture_output=True,
+                   input="".join(records), encoding="utf-8", env=env, capture_output=True,
                    check=True)
     return git(origin, "rev-parse", "main")
 
@@ -308,7 +311,7 @@ def merge_fixture(root: Path, case: str) -> tuple[Path, Path, Path, str, str, st
     git(runner, "checkout", "--detach", head)
     assert git(runner, "rev-parse", "--is-shallow-repository") == "true"
     probe = subprocess.run(["git", "-C", str(runner), "merge-base", tip, head],
-                           capture_output=True, text=True,
+                           capture_output=True, encoding="utf-8",
                            env={key: value for key, value in os.environ.items()
                                 if not key.startswith("GIT_")})
     assert probe.returncode != 0
@@ -328,7 +331,7 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
     merge = job["steps"][index + 1]
     assert merge.get("id") == "build_merge"
     script = tmp_path / "merge.sh"
-    script.write_text(merge["run"], encoding="utf-8")
+    script.write_text(merge["run"], encoding="utf-8", newline="\n")
     # Only Git and the text tools used by the script are available, never API clients.
     tools = tmp_path / "bin"
     tools.mkdir()
@@ -369,10 +372,11 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
             f'  {quoted_git} reset --hard "$malformed" >/dev/null\n'
             'fi\n',
             encoding="utf-8",
+            newline="\n",
         )
         wrapper.chmod(0o755)
     result = subprocess.run([bash, "-x", str(script)], cwd=runner, env=env,
-                            capture_output=True, text=True, timeout=60)
+                            capture_output=True, encoding="utf-8", timeout=60)
     if case == "full-history":
         assert "--unshallow" in result.stderr, result.stderr
     if case in ("shallow", "fork-shallow"):
@@ -396,9 +400,9 @@ def test_local_merge_behavior(filename: str, case: str, tmp_path: Path) -> None:
         tested = git(runner, "rev-parse", "HEAD")
         tree = git(runner, "rev-parse", "HEAD^{tree}")
         assert f"tested={tested} first_parent={tip} second_parent={head} tip={tip} event_base={event_base} tree={tree}" in result.stdout
-        assert output.read_text().splitlines() == [f"tip={tip}"]
-        assert (runner / "head").read_text() == "head\n"
-        assert (runner / "base").read_text().startswith("base ")
+        assert output.read_text(encoding="utf-8").splitlines() == [f"tip={tip}"]
+        assert (runner / "head").read_text(encoding="utf-8") == "head\n"
+        assert (runner / "base").read_text(encoding="utf-8").startswith("base ")
 
 
 def test_base_consumers_use_local_tip() -> None:
@@ -422,8 +426,9 @@ def test_base_consumers_use_local_tip() -> None:
 
 
 @pytest.mark.parametrize("document", ("docs/earlier.md", "src/earlier.rst"))
+@pytest.mark.parametrize("bound_git", (False, True))
 def test_full_register_rejects_earlier_violation_with_clean_latest_commit(
-    document: str, tmp_path: Path,
+    document: str, bound_git: bool, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Execute the full-run step against a violation outside the latest diff."""
     merge_fixture(tmp_path, "stale-event")
@@ -435,10 +440,22 @@ def test_full_register_rejects_earlier_violation_with_clean_latest_commit(
     checker = Path("scripts/enforcement/check-engineering-register.py")
     (repository / checker.parent).mkdir(parents=True)
     shutil.copyfile(WORKFLOWS.parents[1] / checker, repository / checker)
+    caller = tmp_path / "runner"
+    caller_hashes = {path.relative_to(caller).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+                     for path in caller.rglob("*") if path.is_file()}
+    if bound_git:
+        for key, path in {
+            "GIT_DIR": caller / ".git", "GIT_WORK_TREE": caller,
+            "GIT_COMMON_DIR": caller / ".git", "GIT_INDEX_FILE": caller / ".git/index",
+        }.items():
+            monkeypatch.setenv(key, str(path))
     # Reproduce the former blind spot before running the shipped full-run step.
+    checker_env = {key: value for key, value in os.environ.items()
+                   if not key.startswith("GIT_")}
     latest = subprocess.run(
-        ["python", str(checker), "--diff", "HEAD^"], cwd=repository,
-        capture_output=True, text=True, check=False,
+        [sys.executable, str(checker), "--diff", "HEAD^"], cwd=repository,
+        env=checker_env,
+        capture_output=True, encoding="utf-8", check=False,
     )
     assert latest.returncode == 0, latest.stdout + latest.stderr
     job = load_workflow("quality-gates.yml")["jobs"]["quality-gates"]
@@ -446,11 +463,15 @@ def test_full_register_rejects_earlier_violation_with_clean_latest_commit(
                     if step.get("name") == "Check engineering register changes")
     result = subprocess.run(
         ["bash", "-e", "-c", register["run"]], cwd=repository,
-        env=dict(os.environ, REGISTER_BASE="HEAD^"),
-        capture_output=True, text=True, check=False,
+        env=checker_env,
+        capture_output=True, encoding="utf-8", check=False,
     )
     assert result.returncode == 1, result.stdout + result.stderr
     assert f"{document}:1: [R1-subject]" in result.stdout
+    assert caller_hashes == {
+        path.relative_to(caller).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in caller.rglob("*") if path.is_file()
+    }
 
 
 @pytest.mark.parametrize("prose_fails,quality_fails", (
@@ -472,23 +493,27 @@ def test_full_quality_reports_survive_prose_failure(
     (tmp_path / "docs/sample.md").write_text(
         "We verified the analysis.\n" if prose_fails
         else "The analysis meets the criterion.\n", encoding="utf-8",
+        newline="\n",
     )
     # The CLI double checks that report preparation ran and writes an artifact.
     package = tmp_path / "digitalmodel/workflows/automation"
     package.mkdir(parents=True)
-    (tmp_path / "digitalmodel/__init__.py").write_text("", encoding="utf-8")
+    (tmp_path / "digitalmodel/__init__.py").write_text("", encoding="utf-8", newline="\n")
     (package / "quality_gates_cli.py").write_text(
         "import json, os\nfrom pathlib import Path\n"
         "assert Path('reports').is_dir()\n"
         "Path('reports/quality_gates_results.json').write_text(\n"
-        "    json.dumps({'overall_status': os.environ['QUALITY_STATUS']}))\n"
+        "    json.dumps({'overall_status': os.environ['QUALITY_STATUS']}),\n"
+        "    encoding='utf-8', newline='\\n')\n"
         "raise SystemExit(int(os.environ['QUALITY_EXIT']))\n", encoding="utf-8",
+        newline="\n",
     )
     tool = tmp_path / "ruff"
     tool.write_text(
         "#!/bin/sh\nprintf '%s\\n' "
         "'[{\"filename\":\"src/example.py\",\"location\":{\"row\":7},\"code\":\"F401\"}]'\n"
         "exit 1\n", encoding="utf-8",
+        newline="\n",
     )
     tool.chmod(0o755)
     failed = False
@@ -511,7 +536,7 @@ def test_full_quality_reports_survive_prose_failure(
                 env=dict(os.environ, QUALITY_EXIT=str(int(quality_fails)),
                          PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
                          QUALITY_STATUS="failure" if quality_fails else "pass"),
-                capture_output=True, text=True, timeout=30, check=False,
+                capture_output=True, encoding="utf-8", timeout=30, check=False,
             )
             outcomes[step["name"]] = "failure" if result.returncode else "success"
             if result.returncode and not step.get("continue-on-error", False):
@@ -539,7 +564,7 @@ def test_full_quality_reports_survive_prose_failure(
     result = subprocess.run(
         ["bash", "-e", "-c", aggregate["steps"][0]["run"]], cwd=tmp_path,
         env=dict(os.environ, QUALITY_GATES_RESULT="failure" if failed else "success"),
-        capture_output=True, text=True, timeout=30, check=False,
+        capture_output=True, encoding="utf-8", timeout=30, check=False,
     )
     assert (result.returncode != 0) == failed
 

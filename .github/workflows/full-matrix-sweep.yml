@@ -68,6 +68,11 @@ jobs:
             echo "Dispatching all $total domain shards (no touched-domain gating)."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Validate CI policy
         run: >-
           uv run --no-project --with pytest --with pyyaml==6.0.2 python -m pytest
@@ -312,7 +317,7 @@ jobs:
             const {owner, repo} = context.repo;
             const title = 'Scheduled full test run failing on main';
             const issues = await github.paginate(github.rest.issues.listForRepo,
-              {owner, repo, state: 'all', per_page: 100});
+              {owner, repo, state: 'all', labels: 'main-health', per_page: 100});
             const issue = issues.find(item => item.title === title && !item.pull_request);
             const order = healthWriteOrder(issue?.body, context.runNumber);
             if (order.skip) {

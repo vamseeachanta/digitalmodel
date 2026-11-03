@@ -199,6 +199,7 @@ jobs:
       - name: Run bridge tests
         run: |
           uv run --frozen --extra cfd --extra test pytest -q \
+            tests/solvers/smoke/test_ci_registration.py \
             tests/solvers/gmsh_meshing/test_tank_fixture.py \
             tests/solvers/openfoam/test_poly_mesh_contract.py \
             tests/solvers/openfoam/test_gmsh_bridge.py \

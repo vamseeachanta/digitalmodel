@@ -5,6 +5,7 @@
 
 from pathlib import Path
 import importlib.util
+import json
 import os
 import subprocess
 import sys
@@ -93,6 +94,144 @@ def test_full_batch_schedule_and_issue_permissions():
     assert "always()" in health["if"]
     assert "continue-on-error" not in health
     assert "Scheduled full test run failing on main" in health["with"]["script"]
+
+
+def test_bridge_command_keeps_existing_smoke_registration():
+    """Retain smoke registration in the executable bridge test command."""
+    target = "tests/solvers/smoke/test_ci_registration.py"
+    jobs = workflow("gmsh-meshing-tests.yml")["jobs"]
+    command = next(step["run"] for job in jobs.values() for step in job["steps"]
+                   if step.get("name") == "Run bridge tests")
+    assert target in command.split()
+    assert (ROOT / target).is_file()
+
+
+def test_reusable_quality_workflow_has_no_unreachable_pr_steps():
+    """Full quality checks retain only steps reachable through their triggers."""
+    document = workflow("quality-gates.yml")
+    assert set(events(document)) == {"workflow_call", "workflow_dispatch"}
+    for job in document["jobs"].values():
+        for step in job["steps"]:
+            assert "pull_request" not in step.get("if", "")
+
+
+@pytest.mark.parametrize("filename", ["quality-gates.yml", "parametric-atlas-drift.yml"])
+def test_full_validation_callers_cannot_be_triggered_by_prs(filename):
+    """Check caller events as well as the reusable workflow's own events."""
+    documents = {path.name: workflow(path.name) for path in WORKFLOWS.iterdir()
+                 if path.suffix in {".yml", ".yaml"}}
+    pending, checked = [filename], set()
+    while pending:
+        target = pending.pop()
+        if target in checked:
+            continue
+        checked.add(target)
+        configured = events(documents[target])
+        triggers = {configured} if isinstance(configured, str) else set(configured)
+        assert not {"pull_request", "pull_request_target"}.intersection(triggers)
+        for name, document in documents.items():
+            if any(job.get("uses", "").split("@", 1)[0].endswith(f"/.github/workflows/{target}")
+                   for job in document["jobs"].values()):
+                pending.append(name)
+    assert "full-matrix-sweep.yml" in checked
+
+
+@pytest.mark.parametrize("trigger", ["pull_request", "[pull_request]", "{pull_request: null}"])
+def test_caller_guard_rejects_yaml_pr_callers(trigger, tmp_path, monkeypatch):
+    """Accept a manual caller, then reject every Actions event syntax in YAML."""
+    monkeypatch.setattr(sys.modules[__name__], "WORKFLOWS", tmp_path)
+    (tmp_path / "quality-gates.yml").write_text(
+        "on: workflow_call\njobs: {check: {runs-on: ubuntu-latest, steps: []}}\n",
+        encoding="utf-8", newline="\n",
+    )
+    (tmp_path / "full-matrix-sweep.yml").write_text(
+        "on: workflow_dispatch\njobs:\n  check:\n"
+        "    uses: ./.github/workflows/quality-gates.yml\n",
+        encoding="utf-8", newline="\n",
+    )
+    test_full_validation_callers_cannot_be_triggered_by_prs("quality-gates.yml")
+    (tmp_path / "caller.yaml").write_text(
+        f"on: {trigger}\njobs:\n  check:\n"
+        "    uses: ./.github/workflows/full-matrix-sweep.yml\n",
+        encoding="utf-8", newline="\n",
+    )
+    with pytest.raises(AssertionError):
+        test_full_validation_callers_cannot_be_triggered_by_prs("quality-gates.yml")
+
+
+def test_policy_javascript_runtime_is_provisioned_before_validation():
+    """Executable issue-writer regressions require an explicit Node runtime."""
+    steps = workflow("full-matrix-sweep.yml")["jobs"]["full-matrix"]["steps"]
+    setup = next(index for index, step in enumerate(steps)
+                 if step.get("uses", "").startswith("actions/setup-node@"))
+    validation = next(index for index, step in enumerate(steps)
+                      if step.get("name") == "Validate CI policy")
+    assert setup < validation
+    assert steps[setup]["with"]["node-version"] == "22"
+
+
+@pytest.mark.parametrize("labelled", [False, True])
+@pytest.mark.parametrize("active", [False, True])
+@pytest.mark.parametrize("newer", [False, True])
+def test_health_writer_uses_only_labelled_health_issues(labelled, active, newer):
+    """An unrelated matching title is preserved through failure and recovery."""
+    health = next(step for step in workflow("full-matrix-sweep.yml")["jobs"]
+                  ["sweep-result"]["steps"] if step.get("name") == "Update main health")
+    harness = r'''
+    const input = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+    const calls = [], queries = [], methods = [];
+    const title = 'Scheduled full test run failing on main';
+    const issues = [{number: 1, title, body: '', labels: []},
+      {number: 3, title, body: '', labels: ['main-health'], pull_request: {}}];
+    if (input.labelled) issues.push({number: 2, title, labels: ['main-health'],
+      body: input.newer ? '<!-- main-health-order: run_number=11 run_id=101 sha=abc123 -->' : '',
+      state: input.active ? 'closed' : 'open'});
+    const github = {
+      paginate: async (method, options) => {
+        if (method === 'labels') return [{name: 'main-health'}];
+        methods.push(method);
+        queries.push(options);
+        return issues.filter(issue => !options.labels || issue.labels.includes(options.labels));
+      },
+      rest: {issues: {listForRepo: 'issues', listLabelsForRepo: 'labels',
+        update: async value => calls.push({kind: 'update', ...value}),
+        create: async value => calls.push({kind: 'create', ...value})}}
+    };
+    const baseline = {tests: input.active ? {'tests/example.py::test_case':
+      {shard: 'example', first_seen_run: 1, run_id: 10}} : {},
+      shards: {example: {parsed: true, conclusion: 'success'}}};
+    const fs = {existsSync: () => false, readFileSync: () => JSON.stringify(baseline)};
+    const context = {repo: {owner: 'example', repo: 'example'},
+      runNumber: 10, runId: 100, sha: 'abc123'};
+    const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+    new AsyncFunction('require', 'github', 'context', 'core', input.script)(
+      () => fs, github, context, {notice: () => {}}
+    ).then(() => console.log(JSON.stringify({calls, queries, methods})));
+    '''
+    result = subprocess.run(
+        ["node", "-e", harness], input=json.dumps({
+            "script": health["with"]["script"], "labelled": labelled,
+            "active": active, "newer": newer,
+        }), env=dict(os.environ, BATCH_RESULTS="{}", REPORTING_STATUS="success"),
+        encoding="utf-8", capture_output=True, check=True, timeout=30,
+    )
+    output = json.loads(result.stdout)
+    assert output["methods"] == ["issues"]
+    assert output["queries"][0].get("labels") == "main-health"
+    assert output["queries"][0]["state"] == "all"
+    if labelled and newer:
+        assert output["calls"] == []
+    elif labelled:
+        assert len(output["calls"]) == 1
+        assert output["calls"][0]["kind"] == "update"
+        assert output["calls"][0]["issue_number"] == 2
+        assert output["calls"][0]["state"] == ("open" if active else "closed")
+    elif active:
+        assert len(output["calls"]) == 1
+        assert output["calls"][0]["kind"] == "create"
+        assert output["calls"][0]["labels"] == ["main-health"]
+    else:
+        assert output["calls"] == []
 
 
 def test_pages_matches_main_routing_and_cancellation():
@@ -195,7 +334,7 @@ def test_aggregate_enforces_harness_selection(selection, result, expected, tmp_p
     env = dict(os.environ, HAS_HARNESS=selection, HARNESS_RESULT=result,
                DETECT_RESULT="success", HAS_DOMAINS="false", DOMAIN_RESULT="skipped")
     completed = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
-                               env=env, capture_output=True, text=True, check=False)
+                               env=env, capture_output=True, encoding="utf-8", check=False)
     assert completed.returncode == expected, completed.stdout + completed.stderr
 
 
@@ -224,7 +363,7 @@ def test_unowned_inputs_select_full_matrix_and_enforce_aggregate(path, mixed, tm
                    HARNESS_RESULT="success" if result["harness"] else "skipped",
                    DETECT_RESULT="success", HAS_DOMAINS="true", DOMAIN_RESULT=domain_result)
         completed = subprocess.run(["bash", "-e", "-c", step["run"]], cwd=tmp_path,
-                                   env=env, capture_output=True, text=True, check=False)
+                                   env=env, capture_output=True, encoding="utf-8", check=False)
         assert completed.returncode == expected, completed.stdout + completed.stderr
 
 
