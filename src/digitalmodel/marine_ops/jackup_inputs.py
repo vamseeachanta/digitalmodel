@@ -65,10 +65,10 @@ def query_public_inputs(noaa_client, era5_client, gebco_client, start_date, end_
     """Consume the existing NOAA, ERA5 and GEBCO client interfaces.
 
     Clients must already be configured by the caller. This function reads no
-    credentials and implements no automatic provider substitution. GEBCO parse
-    failures propagate as ValueError; zero or nonfinite depths are rejected for
-    this offshore calculation. Returned sample maxima are not qualified design
-    extremes.
+    credentials and implements no automatic provider substitution. The existing
+    GEBCO client rejects missing, malformed and nonfinite elevations; zero depth
+    is also rejected for this offshore calculation. Returned sample maxima are
+    not qualified design extremes.
     """
     if era5_client is None:
         raise ValueError('ERA5 input is unavailable; no automatic substitution is permitted')

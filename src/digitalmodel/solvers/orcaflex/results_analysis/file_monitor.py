@@ -664,7 +664,7 @@ def create_orcaflex_monitor(watch_directory: str,
     Create a file monitor configured for OrcaFlex output files.
     
     Args:
-        watch_directory: Directory to monitor (e.g., "D:/1522/ctr7/orcaflex/rev_a08/output/csv")
+        watch_directory: Directory to monitor (e.g., "<project_data>/ctr7/orcaflex/rev_a08/output/csv")
         event_callback: Async callback function for file events
         **config_kwargs: Additional configuration options
         

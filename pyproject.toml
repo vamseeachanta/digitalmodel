@@ -303,6 +303,7 @@ exclude = ["tests*", "docs*"]
 [tool.setuptools.package-data]
 digitalmodel = [
     "py.typed",
+    "process_piping/basis/wikis/*.md",
     "riser_study/*.schema.json",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
@@ -311,6 +312,7 @@ digitalmodel = [
     "data_systems/data/steel_shapes*.json",
     "data_systems/data/steel_shapes_provenance.yaml",
     "foam_system/data/*.yml",
+    "technical_safety/data/*.yml",
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
     "subsea/riser_study/*.schema.json",

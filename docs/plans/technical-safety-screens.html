@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Technical safety screening plan</title>
+<h1>Technical safety screening plan</h1>
+<p>Scope will cover ship-impact energy and fire heat-flux selection for
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/3821">the requested feature</a>.
+Blowdown, flare, move-off and pump redundancy will remain outside this change.</p>
+<ol>
+<li>Tests will establish hand-calculated energy, explicit mass and speed units,
+edition selection, citation rejection, historical-use refusal, fire selection,
+water-credit conditions and the QRA boundary before implementation.</li>
+<li>A strict edition-keyed YAML loader will reuse the foam Citation sidecar.
+Only the historical collision limit and jet peak will be bundled;
+they will be marked superseded, unverified and usable only by explicit test opt-in.
+Pool and average/reduced fluxes will require cited caller criteria.</li>
+<li>Energy will use E = (m + a) v² / 2, with a = C_a m and no default C_a.
+Shared Pint units will provide conversions. Results will retain inputs and criteria.
+QRA will retain optional energy context without estimating damage or fatalities.</li>
+<li>Fire selection will use inventory phase, release rate, pressurised release,
+pool potential and ventilation. Mixed releases will retain both credible types.
+Water credit will require complete evidence and a cited reduced average flux;
+peak flux will remain unreduced. Unsupported scenarios will be refused.</li>
+<li>Focused and related pytest suites will run. Documentation and the pull
+request will record results, limitations and follow-ups.</li>
+</ol>
+<h2>Adversarial plan checks</h2>
+<p>Review will seek uncited or mismatched editions, non-finite arithmetic,
+unit ambiguity, mixed-fire under-selection, unjustified water credit and any
+inference from energy to fatality. Structural citation validation will not be
+represented as source verification. No original standard text will be copied.</p>
+<p>Independent review of the change will be recorded on the pull request.</p>
+<h2>Basis and verification limits</h2>
+<p>Public method sources will be the RISP JIP report, version 2 (October 2023,
+published by Offshore Norge),
+part ST-16725-2, section 3.4; Fire and Explosion Guidance issue 2 (March 2018), sections
+2.10.1–2.10.2, 3.4.2.2 and 8.7.4; and NIST SP 811 (2008), appendix B.8.
+Licensed current standard values will remain required inputs.</p>
+</html>

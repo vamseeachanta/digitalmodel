@@ -19,11 +19,15 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
+from digitalmodel.cathodic_protection.reference_electrodes import (
+    ReferenceElectrode, convert_potential, electrode_reference,
+)
+
 
 class ReferenceElectrodeType(str, Enum):
     """Reference electrode types for CP monitoring."""
 
-    AG_AGCL = "ag_agcl"  # Silver/Silver Chloride
+    AG_AGCL = "ag_agcl"  # Ag/AgCl in seawater (legacy monitoring key)
     CU_CUSO4 = "cu_cuso4"  # Copper/Copper Sulfate
     ZN = "zn"  # Zinc
     MMO = "mmo"  # Mixed Metal Oxide
@@ -43,28 +47,29 @@ class MonitoringEnvironment(str, Enum):
 # Reference electrode specifications
 REFERENCE_ELECTRODE_SPECS: dict[ReferenceElectrodeType, dict] = {
     ReferenceElectrodeType.AG_AGCL: {
-        "potential_vs_she_mV": 222,
+        "potential_vs_she_mV": 1000 * electrode_reference(ReferenceElectrode.AG_AGCL_SEAWATER).potential_she_V,
+        "reference_condition": "Ag/AgCl/seawater, nominal at 25 deg C",
         "stability_mV_yr": 2,
         "typical_life_years": 5,
         "environments": ["seawater", "brackish"],
         "temperature_range_c": (-2, 60),
     },
     ReferenceElectrodeType.CU_CUSO4: {
-        "potential_vs_she_mV": 316,
+        "potential_vs_she_mV": 1000 * electrode_reference(ReferenceElectrode.CSE).potential_she_V,
         "stability_mV_yr": 5,
         "typical_life_years": 3,
         "environments": ["soil", "freshwater"],
         "temperature_range_c": (-10, 50),
     },
     ReferenceElectrodeType.ZN: {
-        "potential_vs_she_mV": -763,
+        "potential_vs_she_mV": None,  # pseudo-reference; site calibration required
         "stability_mV_yr": 10,
         "typical_life_years": 15,
         "environments": ["seawater", "soil"],
         "temperature_range_c": (-2, 40),
     },
     ReferenceElectrodeType.MMO: {
-        "potential_vs_she_mV": 222,
+        "potential_vs_she_mV": None,  # no universal MMO reference offset
         "stability_mV_yr": 1,
         "typical_life_years": 20,
         "environments": ["seawater", "soil", "freshwater", "brackish"],
@@ -72,12 +77,17 @@ REFERENCE_ELECTRODE_SPECS: dict[ReferenceElectrodeType, dict] = {
     },
 }
 
-# Potential conversion offsets [mV] from row to column
-# Usage: V_target = V_source + CONVERSION[source][target]
+# Legacy offset view [mV], generated from the cited shared utility at 25 deg C.
+# Zinc and MMO have no fixed conversion row; use calibrated conversion explicitly.
+_REFERENCE_KEYS = {
+    "ag_agcl": ReferenceElectrode.AG_AGCL_SEAWATER,
+    "cu_cuso4": ReferenceElectrode.CSE,
+    "she": ReferenceElectrode.SHE,
+}
 POTENTIAL_CONVERSIONS: dict[str, dict[str, float]] = {
-    "ag_agcl": {"cu_cuso4": -94, "zn": 985, "she": 222},
-    "cu_cuso4": {"ag_agcl": 94, "zn": 1079, "she": 316},
-    "zn": {"ag_agcl": -985, "cu_cuso4": -1079, "she": -763},
+    source: {target: 1000 * convert_potential(0, source_ref, target_ref)
+             for target, target_ref in _REFERENCE_KEYS.items()}
+    for source, source_ref in _REFERENCE_KEYS.items()
 }
 
 
@@ -315,6 +325,8 @@ def design_monitoring_system(
 def set_alarm_thresholds(
     reference_electrode: ReferenceElectrodeType = ReferenceElectrodeType.AG_AGCL,
     environment: MonitoringEnvironment = MonitoringEnvironment.OFFSHORE_SUBMERGED,
+    *,
+    zinc_potential_she_V: float | None = None,
 ) -> AlarmThresholds:
     """Set CP monitoring alarm thresholds per applicable standards.
 
@@ -329,7 +341,18 @@ def set_alarm_thresholds(
     -------
     AlarmThresholds
         Alarm threshold values.
+
+    Notes
+    -----
+    Existing CSE and seawater criteria are retained in their native basis.
+    Other supported electrodes use reference_electrodes.convert_potential
+    (CEOCOR Rev 11 Table 1; ASTM G215-17 Table 1). Zinc requires calibration;
+    MMO has no universal offset. Conversion supports the tabulated 25 deg C.
     """
+    if reference_electrode == ReferenceElectrodeType.MMO:
+        raise ValueError("MMO reference requires a separately calibrated criterion")
+    target = (ReferenceElectrode.ZINC if reference_electrode == ReferenceElectrodeType.ZN
+              else _REFERENCE_KEYS[reference_electrode.value])
     if reference_electrode == ReferenceElectrodeType.CU_CUSO4:
         # NACE SP0169 criteria vs CSE
         underprotection = -0.850
@@ -338,14 +361,11 @@ def set_alarm_thresholds(
         # DNV-RP-B401 criteria vs Ag/AgCl
         underprotection = -0.800
         overprotection = -1.100
-    elif reference_electrode == ReferenceElectrodeType.ZN:
-        # Relative to zinc: protection ~+0.25 V
-        underprotection = 0.250
-        overprotection = -0.050
     else:
-        # Default to Ag/AgCl equivalent
-        underprotection = -0.800
-        overprotection = -1.100
+        # Preserve native marine criteria, converting their electrode basis.
+        options = {"zinc_potential_she_V": zinc_potential_she_V}
+        underprotection = convert_potential(-0.800, "Ag/AgCl/seawater", target, **options)
+        overprotection = convert_potential(-1.100, "Ag/AgCl/seawater", target, **options)
 
     # Rapid change alarm: 50 mV/hr suggests interference or equipment issue
     rapid_change = 50.0

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
+from math import isfinite
 from pathlib import Path
 from typing import Any
 
@@ -250,11 +251,20 @@ class MudmatBearingCapacityWorkflow:
         fos = float(workflow_cfg.get("design", {}).get("factor_of_safety", 2.0))
         applied_v = float(loads["vertical_kN"])
         applied_h = float(loads.get("horizontal_kN", 0.0))
+        for name, value in (("horizontal_kN", applied_h), ("factor_of_safety", fos)):
+            if not isfinite(value):
+                raise ValueError(f"{name} must be a finite number")
+        if applied_h < 0:
+            raise ValueError("horizontal_kN must be nonnegative")
+        if fos <= 0:
+            raise ValueError("factor_of_safety must be positive")
         allowable_v = result.vertical_capacity_kn / fos
         allowable_h = result.sliding_capacity_kn / fos
         bearing_util = applied_v / allowable_v if allowable_v > 0 else float("inf")
         sliding_util = (
-            (applied_h / allowable_h) if applied_h > 0 and allowable_h > 0 else 0.0
+            applied_h / allowable_h
+            if allowable_h > 0
+            else (float("inf") if applied_h > 0 else 0.0)
         )
         governing = "bearing" if bearing_util >= sliding_util else "sliding"
         passes = bearing_util <= 1.0 and sliding_util <= 1.0
