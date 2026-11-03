@@ -76,6 +76,66 @@ def test_surface_path_to_supported_component(link, tmp_path):
     assert report.status == "PASS"
 
 
+@pytest.mark.parametrize("face", ["SPOS", "SNEG", "S1", "S2"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_spring_element_surface_cannot_supply_support(deck, capsys, face, interface):
+    extra = ("*NODE\n11,2,0,0\n12,3,0,0\n"
+             "*ELEMENT,TYPE=SPRING2,ELSET=OTHER\n2,11,12\n"
+             "*SPRING,ELSET=OTHER\n1,1\n100\n")
+    untied = check_deck(deck(extra))
+    assert untied.status == "FAIL"
+    assert "unconstrained_part" in codes(untied)
+    path = deck(extra + "*SURFACE,NAME=MASTER\nBODY,S1\n"
+                f"*SURFACE,NAME=SLAVE\nOTHER,{face}\n"
+                "*TIE,NAME=JOIN\nSLAVE,MASTER\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    assert {f["code"] for f in evidence["findings"]} == {
+        "parse_error", "empty_surface", "unconstrained_part",
+    }
+    unsupported = next(f for f in evidence["findings"] if f["code"] == "unconstrained_part")
+    assert "element:2" in unsupported["entity_ids"]
+
+
+@pytest.mark.parametrize("kind,connectivity,expected", [
+    ("S3", "11,12,13", {11, 12, 13}),
+    ("S4", "11,12,13,14", {11, 12, 13, 14}),
+    ("S4R", "11,12,13,14", {11, 12, 13, 14}),
+    ("S6", "11,12,13,14,15,16", {11, 12, 13, 14, 15, 16}),
+    ("S8", "11,12,13,14,15,16,17,18", {11, 12, 13, 14, 15, 16, 17, 18}),
+    ("S8R", "11,12,13,14,15,16,17,18", {11, 12, 13, 14, 15, 16, 17, 18}),
+])
+@pytest.mark.parametrize("face", ["S1", "S2", "SNEG", "SPOS", "s1", "s2"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_shell_surface_aliases_supply_support(deck, capsys, kind, connectivity, expected,
+                                             face, interface):
+    extra = ("*NODE\n11,2,0,0\n12,3,0,0\n13,2,1,0\n14,3,1,0\n"
+             "15,2.5,0,0\n16,2.5,0.5,0\n17,2,0.5,0\n18,3,0.5,0\n"
+             f"*ELEMENT,TYPE={kind},ELSET=OTHER\n2,{connectivity}\n"
+             "*SHELL SECTION,ELSET=OTHER,MATERIAL=STEEL\n0.1\n")
+    assert "unconstrained_part" in codes(check_deck(deck(extra)))
+    path = deck(extra + "*SURFACE,NAME=MASTER\nBODY,S1\n"
+                f"*SURFACE,NAME=SLAVE\nOTHER,{face}\n"
+                "*TIE,NAME=JOIN\nSLAVE,MASTER\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS"
+    assert evidence["findings"] == []
+    # CalculiX 2.22 manual, section 7.128 (*SURFACE): S1/S2 designate
+    # the negative/positive shell faces; both contain all shell nodes.
+    model = Deck(read_blocks(path))
+    model.parse()
+    surface = Block("SURFACE", {"NAME": "FACE"}, [["OTHER", face]], 0)
+    assert _surface_nodes(model, surface) == expected
+
+
 @pytest.mark.parametrize("attached", [False, True])
 def test_mass_requires_structural_connection(deck, attached):
     extra = "*NODE\n99, 9, 9, 9\n*ELEMENT, TYPE=MASS, ELSET=LUMP\n"

@@ -103,7 +103,11 @@ def _surface_nodes(model: Deck, block: Block) -> set[int]:
                 if index < 0 or index >= len(faces[len(conn)]):
                     raise ValueError("Invalid face")
                 nodes.update(conn[i] for i in faces[len(conn)][index])
-            elif kind.startswith("S") and face in {"SPOS", "SNEG"}:
+            elif kind in {"S3", "S4", "S4R", "S6", "S8", "S8R"}:
+                # Shell faces 1/2 alias NEG/POS in section 7.128.
+                face = {"S1": "SNEG", "S2": "SPOS"}.get(face, face)
+                if face not in {"SPOS", "SNEG"}:
+                    raise ValueError("Unsupported surface face")
                 nodes.update(conn)
             else:
                 # Unsupported surface geometry must not manufacture a support path.
