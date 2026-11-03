@@ -1,0 +1,20 @@
+# Synthetic geometry; hand calculation is documented in README.md and tests.
+basename: tank_settlement_screen
+tank_settlement:
+  component_id: SYNTHETIC-TANK
+  tank:
+    diameter_m: 10
+    height_m: 12
+    fill_height_m: 8
+    course_thicknesses_mm: [8, 6]
+    material_grade: unspecified
+  shell_survey:
+    angles_deg: [0, 45, 90, 135, 180, 225, 270, 315]
+    elevations_mm: [15, 14.949747468305834, 12, 10.707106781186548, 9, 5.050252531694167, 4, 9.292893218813452]
+  edge:
+    radial_extent_m: 2
+    shell_elevation_mm: -12
+    reference_elevation_mm: -2
+  bottom_profile:
+    distances_m: [0, 1, 3, 4]
+    elevations_mm: [0, -4, 1, 4]

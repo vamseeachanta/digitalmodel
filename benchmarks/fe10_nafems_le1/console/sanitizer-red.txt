@@ -1,0 +1,19 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+[path removed]
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+collected 22 items / 21 deselected / 1 selected
+
+tests/solvers/mystran/test_fe10_benchmark.py F                           [100%]
+
+=================================== FAILURES ===================================
+___________________ test_sanitizer_preserves_numeric_results ___________________
+tests/solvers/mystran/test_fe10_benchmark.py:142: in test_sanitizer_preserves_numeric_results
+    assert module.sanitize(f"Deallocate {matrix_name}\n") == "Deallocate [matrix label removed]\n"
+E   AssertionError: assert 'Deallocate [matrix label removed]\n' == 'Deallocate [...el removed]\n'
+E
+E     - Deallocate [matrix label removed]
+E     + Deallocate [matrix label removed]
+=========================== short test summary info ============================
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_sanitizer_preserves_numeric_results
+======================= 1 failed, 21 deselected in 0.12s =======================

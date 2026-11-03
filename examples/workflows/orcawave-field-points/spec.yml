@@ -1,9 +1,5 @@
-# OrcaWave field-points use-case template (issue #953, epic #942/#938).
-#
-# Exercises outputs.field_points: a named "airgap_splash" point group emits the
-# combined OrcaWave key "FieldPointX, FieldPointY, FieldPointZ" plus the
-# DetectAndSkipFieldPointsInsideBodies switch. Self-contained: reuses the
-# committed 5-panel WAMIT GDF unit box so the spec converts offline (no license).
+# Offline field-point input example; input-prepared, not physically validated.
+# Numeric basis and synthetic choices: README.md, Input basis.
 version: "1.0"
 analysis_type: diffraction
 
@@ -19,13 +15,14 @@ vessel:
     length_units: m
   inertia:
     mass: 1025.0
-    centre_of_gravity: [0.0, 0.0, -0.5]
+    # Geometric centroid of the unit box; assumes uniform mass distribution.
+    centre_of_gravity: [0.5, 0.5, -0.5]
     radii_of_gyration: [0.4, 0.4, 0.4]
 
 environment:
   water_depth: 100.0
   water_density: 1025.0
-  gravity: 9.80665
+  gravity: 9.81  # Reference GDF header.
 
 frequencies:
   input_type: frequency
@@ -54,7 +51,5 @@ outputs:
         - [-2.0, 0.0, 0.5]
 
 metadata:
-  project: "orcawave_gap_specs"
-  author: "digitalmodel"
-  description: "Field-points (airgap/splash) unit-box template (issue #953)"
+  description: "Synthetic field-point inputs; no airgap or splash results"
   tags: [example, orcawave, field_points, airgap, "issue-953"]

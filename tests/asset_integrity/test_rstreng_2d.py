@@ -13,6 +13,9 @@ Golden values (vetted, independently reproduced):
          M=2.0617 -> pf=2288.7 psi (RSF=0.8859, safe=1646.5) ~16% > MAX.
 """
 
+from dataclasses import asdict
+import json
+
 import numpy as np
 import pytest
 
@@ -209,6 +212,91 @@ def test_raw_pit_qualification_survives_projection(projection, weights):
     assert r.applicability.ok is False
     assert "RSTRENG_2D_RAW_DEPTH_OUTSIDE_APPLICABILITY" in r.applicability.flags
     assert r.sensitivity_only is weighted
+
+
+@pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])
+def test_small_weight_deep_pit_remains_ineligible(projection):
+    """Issue #2335 synthetic columns with positive arc widths [1, 63].
+
+    Hand calculation: (.475 + 63*.025)/64 in is the weighted depth;
+    MAX retains .475 in and raw d/t = .475/.5 = .95 for both rules.
+    Depth qualification and sensitivity-only purpose follow
+    docs/domains/rstreng-2d-validation-2026-06-29.md, Purpose/Result surface
+    and AREA-WEIGHTED Caveat (2026; ASME B31G-2012 basis).
+    """
+    r = rstreng_2d_river_bottom(
+        D, T, [X[0], X[-1]], [[0.475, 0.025]] * 2, SMYS,
+        projection=projection, circ_weights=[1.0, 63.0],
+    )
+    weighted = projection == PROJECTION_AREA_WEIGHTED
+    expected_depth = (0.475 + 63.0 * 0.025) / 64.0 if weighted else 0.475
+    assert r.d_eff_in == pytest.approx([expected_depth, expected_depth])
+    assert r.details["max_d_over_t"] == pytest.approx(expected_depth / T)
+    assert r.details["raw_max_d_over_t"] == pytest.approx(0.95)
+    assert r.within_applicability is weighted
+    assert r.projected_profile_applicability is r.result.applicability
+    assert r.projected_profile_applicability.ok is weighted
+    assert r.raw_grid_applicability.ok is False
+    assert r.screening_eligible is False
+    assert r.applicability.ok is False
+    assert "RSTRENG_2D_RAW_DEPTH_OUTSIDE_APPLICABILITY" in r.applicability.flags
+    assert r.sensitivity_only is weighted
+    assert ("RSTRENG_2D_SENSITIVITY_ONLY" in r.applicability.flags) is weighted
+    if weighted:
+        assert r.details["affected_width"] == pytest.approx(64.0)
+
+
+@pytest.mark.parametrize("weights", [[0.0, 63.0], [1.0, 0.0], [0.0, 0.0]])
+def test_zero_arc_width_rejected(weights):
+    """Issue #2335: zeroing either [1, 63] width cannot drop a measurement.
+
+    The synthetic .475/.025 in columns are retained at both axial stations.
+    Zero is the rejected boundary of project_grid's positive-width contract,
+    including a zero total width; the deep column cannot be excluded.
+    """
+    grid = [[0.475, 0.025]] * 2
+    with pytest.raises(ValueError, match=r"circ_weights \(arc widths\) must be > 0"):
+        project_grid(grid, T, projection=PROJECTION_AREA_WEIGHTED, circ_weights=weights)
+    with pytest.raises(ValueError, match=r"circ_weights \(arc widths\) must be > 0"):
+        rstreng_2d_river_bottom(
+            D, T, [X[0], X[-1]], grid, SMYS,
+            projection=PROJECTION_AREA_WEIGHTED, circ_weights=weights,
+        )
+
+
+@pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])
+def test_weighted_column_permutation_keeps_raw_qualification(projection):
+    """Issue #2335: reverse both measured columns and their [1, 63] widths.
+
+    Independently, (.475 + 63*.025)/64 = (63*.025 + .475)/64 in;
+    MAX and raw d/t remain .475 in and .475/.5 = .95 respectively.
+    Qualification follows the validation record cited in the small-weight test.
+    Serialization must preserve it along with the unchanged pressure result.
+    """
+    grid = np.array([[0.475, 0.025]] * 2)
+    weights = np.array([1.0, 63.0])
+    original = rstreng_2d_river_bottom(
+        D, T, [X[0], X[-1]], grid, SMYS,
+        projection=projection, circ_weights=weights,
+    )
+    permuted = rstreng_2d_river_bottom(
+        D, T, [X[0], X[-1]], grid[:, ::-1], SMYS,
+        projection=projection, circ_weights=weights[::-1],
+    )
+    payload = json.loads(json.dumps(asdict(permuted)))
+    assert payload == json.loads(json.dumps(asdict(original)))
+    weighted = projection == PROJECTION_AREA_WEIGHTED
+    expected_depth = (0.475 + 63.0 * 0.025) / 64.0 if weighted else 0.475
+    assert payload["d_eff_in"] == pytest.approx([expected_depth, expected_depth])
+    assert payload["within_applicability"] is weighted
+    assert payload["raw_grid_applicability"]["ok"] is False
+    assert payload["details"]["raw_max_d_over_t"] == pytest.approx(0.95)
+    assert payload["details"]["screening_eligible"] is False
+    assert payload["details"]["sensitivity_only"] is weighted
+    qualification = payload["details"]["applicability"]
+    assert qualification["ok"] is False
+    assert "RSTRENG_2D_RAW_DEPTH_OUTSIDE_APPLICABILITY" in qualification["flags"]
+    assert ("RSTRENG_2D_SENSITIVITY_ONLY" in qualification["flags"]) is weighted
 
 
 @pytest.mark.parametrize("projection", [PROJECTION_MAX, PROJECTION_AREA_WEIGHTED])

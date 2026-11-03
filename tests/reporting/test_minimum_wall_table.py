@@ -9,6 +9,7 @@ import hashlib
 import inspect
 import io
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -131,7 +132,7 @@ def test_stock_search_steps_until_collapse_and_propagation_pass(monkeypatch):
 
 
 @pytest.mark.parametrize("code", [DesignCode.ISO_13623, DesignCode.PD_8010_2])
-def test_faulty_collapse_is_never_called_or_published(code, monkeypatch):
+def test_suppressed_collapse_is_never_called_or_published(code, monkeypatch):
     strategy = table.CODE_REGISTRY[code]
 
     def forbidden(*args):
@@ -141,7 +142,8 @@ def test_faulty_collapse_is_never_called_or_published(code, monkeypatch):
     rows = table.rows_for(config(), code, 20)
     assert rows
     for row in rows:
-        assert row["collapse_status"] == "collapse not shown (#1920)"
+        assert row["collapse_status"] == (
+            "fix merged in 9e1fdb88; suppression retained until #1920 is closed and reviewed")
         assert row["collapse_utilisation_percent"] == ""
         assert row["selection_status"] != "selected"
 
@@ -205,6 +207,35 @@ def test_source_digest_mismatch_rejects_generation(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="Source digest mismatch"):
         table.build(table.INPUT, tmp_path / "output")
     assert not (tmp_path / "output").exists()
+
+
+@pytest.mark.parametrize("binding", [
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+])
+def test_source_digests_ignore_inherited_git_bindings(tmp_path, monkeypatch, binding):
+    other = tmp_path / "other-repository"
+    clean_env = {key: value for key, value in os.environ.items()
+                 if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
+    subprocess.run(["git", "init", "--quiet", str(other)], env=clean_env, check=True)
+    marker = other / "caller.txt"
+    marker.write_text("caller content\n", encoding="utf-8", newline="\n")
+    files = [marker, other / ".git/HEAD", other / ".git/config"]
+    before = {path: path.read_bytes() for path in files}
+    target = other / ".git" if binding in {"GIT_DIR", "GIT_COMMON_DIR"} else other
+    monkeypatch.setenv(binding, str(target))
+    check_output = subprocess.check_output
+
+    def checked_output(*args, **kwargs):
+        assert not {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}.intersection(
+            kwargs.get("env", os.environ))
+        return check_output(*args, **kwargs)
+
+    monkeypatch.setattr(table.subprocess, "check_output", checked_output)
+    digests = table.source_digests(config()["source_commit"])
+    manifest = json.loads((DATA / "minimum-wall.manifest.json").read_text(encoding="utf-8"))
+    assert digests == manifest["strategy_sources"], REBUILD
+    assert {path: path.read_bytes() for path in files} == before
+    assert os.environ[binding] == str(target)
 
 
 def test_all_deliverables_are_not_ignored():
@@ -296,6 +327,20 @@ def test_missing_and_suppressed_checks_retain_unqualified_status(rebuilt_manifes
         propagation = records[code]["checks"]["propagation"]
         assert propagation["evaluation_status"] == "not implemented"
         assert "Check is not implemented" in propagation["qualification_gaps"]
+
+
+def test_suppression_reason_matches_rows_and_provenance(rebuilt_manifest):
+    reason = "fix merged in 9e1fdb88; suppression retained until #1920 is closed and reviewed"
+    assert reason in rebuilt_manifest["limitations"]
+    for code in ("ISO-13623", "PD-8010-2"):
+        collapse = rebuilt_manifest["check_provenance"][code]["checks"]["collapse"]
+        assert reason in collapse["qualification_gaps"]
+        assert not collapse["criterion_applied"]
+        for row in rebuilt_manifest["rows"]:
+            if row["code"] == code:
+                assert row["collapse_status"] == reason
+                assert row["collapse_utilisation_percent"] == ""
+                assert row["selection_status"] != "selected"
 
 
 def test_citation_inventory_is_bound_to_pinned_criteria(rebuilt_manifest):

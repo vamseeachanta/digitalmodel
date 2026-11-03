@@ -1,0 +1,222 @@
+{
+  "schema_version": 2,
+  "checked_at_utc": "2026-11-02T15:56:58.319178+00:00",
+  "base_revision": "0a84de6c23608409fbc7b123d17321d395c135fb",
+  "basis": "Public references and explicitly synthetic demonstration inputs; no production qualification.",
+  "review": "Author defect inspection; independent engineering review on the pull request.",
+  "scope_review": {
+    ".claude/quality-gates.yaml": "Retain: CI uses explicit roots and commands; adds only process_piping tests to the existing asset-integrity gate.",
+    "docs/maps/digitalmodel-operator-map.md": "Retain: adds process_piping discovery row.",
+    "docs/registry/module-routing.yaml": "Retain: registers module, documentation and tests.",
+    "pyproject.toml": "Retain: packages five reference records required for calculation-time citation resolution.",
+    "scripts/ci/detect_touched_domains.py": "Retain: routes new source/data and shared friction helper to their test consumers.",
+    "src/digitalmodel/field_development/onshore_layout.py": "Retain: extracts and re-exports the existing friction factor without changing its numerical behavior.",
+    "tests/DOMAINS.md": "Retain: assigns process_piping tests to the existing asset-integrity domain.",
+    "tests/field_development/test_api.py": "Retain: compares the documented POSIX report-path representation on Windows; production code already returns as_posix().",
+    "tests/field_development/test_subsea_bridge.py": "Retain: replaces a shared /tmp fixture with pytest tmp_path so the required related suite runs on Windows without cross-test file collisions.",
+    "tests/scripts/test_detect_touched_domains.py": "Retain: adds routing cases; normalizes a manifest path to match repository-relative POSIX references on Windows."
+  },
+  "recommended_drops": [],
+  "tdd": {
+    "red": "4 failed, 35 passed: Boolean longitudinal stress/elevation accepted; None/string elevation raised TypeError.",
+    "green": "1551 passed, 32 skipped after signed-input validation corrections."
+  },
+  "runtime": {
+    "python": "3.12.10",
+    "pytest": "8.4.2",
+    "environment": "PYTHONUTF8=1; PYTHONPATH=src."
+  },
+  "related_tests": {
+    "passed": 1551,
+    "skipped": 32,
+    "failed": 0,
+    "command": "uv run --no-sync python -m pytest tests/process_piping tests/field_development tests/materials tests/structural/analysis/wall_thickness_codes tests/structural/analysis/test_wall_thickness_geometry_finite.py -q",
+    "log_sha256": "1c158ffc6deeeb950f178b8f799d019cf8f11c941b7d0bcfbd0c565a649d163b"
+  },
+  "routing_tests": {
+    "passed": 120,
+    "failed": 0,
+    "command": "uv run --no-sync python -m pytest tests/docs/test_digitalmodel_routing_contract.py tests/scripts/test_detect_touched_domains.py -q",
+    "evidence": "Included in initial combined run: 1667 passed, 32 skipped, 402.00 s. Engineering suite rerun after four regression cases were added.",
+    "combined_log_sha256": "1fee3218d48b06d1385cd2fed10e79b50107fc886b19989badeb59761a7fbe1c"
+  },
+  "wheel": {
+    "built": true,
+    "packaged_reference_records": 5,
+    "source_and_data_bytes_verified": true,
+    "sha256": "8c31a4f85e26483c67cab78fc6fd271bca07cf8666e9182fbfe3f5dc2a7b80f0",
+    "command": "uv build --wheel --offline --out-dir <temporary-wheel-directory>"
+  },
+  "example": {
+    "readback_verified": true,
+    "ordered_wall_mm": 6.1837904216127715,
+    "hydro_target_mpa": 6.521739130434782,
+    "water_velocity_m_s": 1.6910741381395444,
+    "water_drop_bar_per_100_m": 0.26365693749048025
+  },
+  "lint": "Scoped implementation/new tests, CI script and routing tests passed ruff; git diff --check passed.",
+  "limits": [
+    "Full current-edition compliance and independent engineering review are not established.",
+    "PCC-1-informed bounded screen, not complete Appendix O selection/rotation or a field torque procedure.",
+    "Pointwise elastic hydro stress cap, not full piping stress analysis.",
+    "Horizontal constant-T/Z gas; no local fitting choking/noise prediction.",
+    "Two-phase velocity only; no slip, pressure drop, sand or corrosion model.",
+    "External explorer integration remains in its owning repository."
+  ],
+  "public_bundle_review": {
+    "destination": "Public repository pull request.",
+    "date": "2026-11-02",
+    "identifiers": "PR draft excludes request identities and internal tracking references.",
+    "rights": "Method citations and short public-reference records only; no copied standards tables or original PDFs.",
+    "secret_check": "Manual inspection plus bounded token/private-key pattern scan: no matches.",
+    "verdict": "Disclosure inspection completed; engineering qualification remains outstanding."
+  },
+  "files": [
+    {
+      "path": ".claude/quality-gates.yaml",
+      "sha256": "b9f480d3928400f8e621a06fcd13cf5b21a49ea401e1175b11cc27296b228782",
+      "bytes": 29732
+    },
+    {
+      "path": "docs/domains/process-piping/index.html",
+      "sha256": "b69cb758aafc2f254fc168da107622665607e44dea2615c1d5401354ee9fbe89",
+      "bytes": 9472
+    },
+    {
+      "path": "docs/maps/digitalmodel-operator-map.md",
+      "sha256": "4f8b4b5d748d5f7f7bc6d5d50e71b5fdaa6bde0d058eaa53a095e37a79d6ebfd",
+      "bytes": 21165
+    },
+    {
+      "path": "docs/plans/process-piping.html",
+      "sha256": "b209001b83b47c237fac5c94c7796a5d5db1c42625815b314cf1f4ac998fcc6f",
+      "bytes": 2905
+    },
+    {
+      "path": "docs/registry/module-routing.yaml",
+      "sha256": "9d563a2eacc42d6825ef8d8e5d2c8bc5ea498e855efd3eecb90cdcb65d585402",
+      "bytes": 38797
+    },
+    {
+      "path": "examples/workflows/process-piping/example.py",
+      "sha256": "02fad4524b10137e902e78f779c41a5280f8187028adc3448de97c212667422a",
+      "bytes": 5027
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "07dcfa45967f56b8109743d2c399bc270f4068b54900e1c8fceb55aea17ba804",
+      "bytes": 17968
+    },
+    {
+      "path": "scripts/ci/detect_touched_domains.py",
+      "sha256": "43d87186a3e970520a2c293e3f1e20c360ad44a55398460c04151a6b63fcf93f",
+      "bytes": 22581
+    },
+    {
+      "path": "src/digitalmodel/field_development/onshore_layout.py",
+      "sha256": "7495dd01689ed86ef1e986986477c24bd5e8ce92f71c09f2cc3f3aa0e7ade615",
+      "bytes": 21562
+    },
+    {
+      "path": "src/digitalmodel/infrastructure/utils/pipe_friction.py",
+      "sha256": "e0a29cc64adca600bc39fcf43ee9ead1c82fcd410d618a7816b942c3eda37266",
+      "bytes": 954
+    },
+    {
+      "path": "src/digitalmodel/process_piping/__init__.py",
+      "sha256": "8f8edb7fffbd96852b2e1ebbd328e4624223481aa09c309696acde0cc3b2bfbe",
+      "bytes": 574
+    },
+    {
+      "path": "src/digitalmodel/process_piping/_basis.py",
+      "sha256": "99a2968930a297b8198e3b9676fb45d0f7107ed069b5cac9b78e15bfe4cd9159",
+      "bytes": 2691
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/api-rp-14e.md",
+      "sha256": "174b883f3e449ee4601e244b63c1a6ef77eb8078c6f612733a27c3ba1c4a7ff1",
+      "bytes": 740
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/ashrae-fundamentals.md",
+      "sha256": "02a4957aa64a7430976873ab186cf4245be8e162ff4c4a222e9b68b0743c3071",
+      "bytes": 425
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/asme-b31-3.md",
+      "sha256": "bdd643ab70a0402e55b34d370df52248a9e6980c1318196195e428ba5b7e9086",
+      "bytes": 1124
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/asme-pcc-1.md",
+      "sha256": "dbb5ebe4c7cd79a6f6e0a9fd7b11a1a6dc13f20b524e72103ad0d659fff2ad43",
+      "bytes": 1060
+    },
+    {
+      "path": "src/digitalmodel/process_piping/basis/wikis/pipe-flow.md",
+      "sha256": "a40b03e73c67a87e0317b0237ef965248e71352256d7d7f1718108ffdd077f7c",
+      "bytes": 947
+    },
+    {
+      "path": "src/digitalmodel/process_piping/bolting.py",
+      "sha256": "d76ef890fb8439df7d32e5197d88b99000f4bb37737c6aaf58d37b36c62a64b0",
+      "bytes": 9657
+    },
+    {
+      "path": "src/digitalmodel/process_piping/line_sizing.py",
+      "sha256": "c9009f9f64b269f04e79a4580343a6a535ddad10abfd57536c1a32792c2df846",
+      "bytes": 13786
+    },
+    {
+      "path": "src/digitalmodel/process_piping/pressure.py",
+      "sha256": "4ddf3c745c9cfc20216bf1a81d2f2a97ebb3e3b99fae7c7469c174c042c5a96e",
+      "bytes": 7588
+    },
+    {
+      "path": "tests/DOMAINS.md",
+      "sha256": "92a890ccabb9a0a8a4fdf22536063914b3cce9a421bec3407d70e86bfc80e6aa",
+      "bytes": 38225
+    },
+    {
+      "path": "tests/field_development/test_api.py",
+      "sha256": "4ea914cca28ce2d26b2c849f34d14cb5c9507b476c1fe11c31b4cfd2a99eeaaf",
+      "bytes": 30078
+    },
+    {
+      "path": "tests/field_development/test_subsea_bridge.py",
+      "sha256": "112a476c385ed6e5cfe4077c012ce3a29092c119b4df1ab5e0737e2c9eefa6d2",
+      "bytes": 7142
+    },
+    {
+      "path": "tests/process_piping/test_bolting.py",
+      "sha256": "2e7cc48612e7ae941b69b2a6c8ce3f6e60ddb418bf3ed742fed9df1c00b0f067",
+      "bytes": 3625
+    },
+    {
+      "path": "tests/process_piping/test_example.py",
+      "sha256": "69a190d70e93a570100d15b45c7e487a6bccff7bb49a71fe43d9ab88c300d067",
+      "bytes": 1031
+    },
+    {
+      "path": "tests/process_piping/test_line_sizing.py",
+      "sha256": "cad1a74886f5371f2acd4aaf38fa21e2bfe0a8ed9b576e5573f56c8551d08a95",
+      "bytes": 7480
+    },
+    {
+      "path": "tests/process_piping/test_pressure.py",
+      "sha256": "afc456fec6c5a595ec0d468d288a2ac7444d83004e89eec546770a2a0452c85c",
+      "bytes": 4522
+    },
+    {
+      "path": "tests/process_piping/test_public_basis.py",
+      "sha256": "8596269471ed801d39753a9110bc6bfbf8cdbbab88c3bcbbcfd5ce34008807d8",
+      "bytes": 1630
+    },
+    {
+      "path": "tests/scripts/test_detect_touched_domains.py",
+      "sha256": "afcb9fc7cab7bf46d68de59048bc48ae9bd168437c0aa08bb62e47bb2facb91e",
+      "bytes": 54783
+    }
+  ],
+  "hash_scope": "All stage-list paths except this self-referential verification record."
+}

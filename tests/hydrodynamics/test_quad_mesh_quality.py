@@ -10,6 +10,7 @@ fixture dimensions and criteria are synthetic geometric inputs, not solver limit
 
 from dataclasses import asdict
 from fractions import Fraction
+from itertools import permutations
 import json
 import math
 
@@ -243,6 +244,130 @@ def test_mesh_report_keeps_panel_indices_and_failures():
         "NOT_EVALUATED", "NOT_EVALUATED", "FAIL",
     ]
     assert report.status == "FAIL"
+
+
+@pytest.mark.parametrize("order", list(permutations(("rectangle", "concave", "warped"))))
+@pytest.mark.parametrize("bounded", [False, True], ids=["missing-limits", "explicit-limits"])
+def test_mixed_quad_report_panel_permutation(order, bounded):
+    """Independent table on [0,1]^2; dimensions and bounds are synthetic.
+
+    Rectangle: x=2u,y=v gives J=2; edges (2,1,2,1) give ratio 2,
+    and zero adjacent-edge dot products give four right angles (90 degrees).
+    Concave: x=2u-3uv/2,y=2v-3uv/2 gives J=4-3u-3v, minimum -2.
+    Edges (2,sqrt(5/2),sqrt(5/2),2) give ratio sqrt(8/5). Interior
+    angles are 90, atan(1/3), 360-acos(-3/5), atan(1/3) in degrees;
+    the negative turn at the reflex corner makes the planar quad nonconvex.
+    Warp: x=u,y=v,z=uv gives edges (1,sqrt(2),sqrt(2),1), ratio sqrt(2).
+    The centre normal is (-1,-1,2)/sqrt(6); the plane through p0 has
+    maximum vertex distance 1/sqrt(6). Projected J=(u+v+2)/sqrt(6)
+    has minimum 2/sqrt(6), which does not qualify the warped surface map.
+
+    Exact planarity (tolerance zero) and positive planar J are required.
+    Optional inclusive bounds equal the rectangle's ratio, angles and J;
+    these geometric choices provide no solver or hydrostatic qualification.
+    Three panels give 3! = 6 orders; each is checked against this table,
+    never against another production report. Node numbering stays fixed.
+    """
+    nodes = np.asarray(RECTANGLE + [
+        [0, 0, 0], [2, 0, 0], [0.5, 0.5, 0], [0, 2, 0],
+        [0, 0, 0], [1, 0, 0], [1, 1, 1], [0, 1, 0],
+    ], dtype=float)
+    connectivity = {
+        "rectangle": [0, 1, 2, 3],
+        "concave": [4, 5, 6, 7],
+        "warped": [8, 9, 10, 11],
+    }
+    criteria = QuadQualityCriteria(
+        basis="Synthetic rectangle hand calculation in this test",
+        max_edge_ratio=2, min_angle_deg=90, max_angle_deg=90, min_jacobian=2,
+    ) if bounded else None
+    limited_pass = "PASS" if bounded else "NOT_EVALUATED"
+    limited_fail = "FAIL" if bounded else "NOT_EVALUATED"
+    acute = math.degrees(math.atan(1 / 3))
+    expected = {
+        "rectangle": {
+            "edge_ratio": 2,
+            "corner_angles_deg": [90] * 4,
+            "convex": True,
+            "min_projected_jacobian": 2,
+            "max_plane_distance": 0,
+            "status": limited_pass,
+            "checks": {
+                "edge_ratio": limited_pass, "corner_angles": limited_pass,
+                "convexity": "PASS", "mapping_jacobian": "PASS", "planarity": "PASS",
+            },
+        },
+        "concave": {
+            "edge_ratio": math.sqrt(8 / 5),
+            "corner_angles_deg": [90, acute, 360 - math.degrees(math.acos(-3 / 5)), acute],
+            "convex": False,
+            "min_projected_jacobian": -2,
+            "max_plane_distance": 0,
+            "status": "FAIL",
+            "checks": {
+                "edge_ratio": limited_pass, "corner_angles": limited_fail,
+                "convexity": "FAIL", "mapping_jacobian": "FAIL", "planarity": "PASS",
+            },
+        },
+        "warped": {
+            "edge_ratio": math.sqrt(2),
+            "corner_angles_deg": None,
+            "convex": None,
+            "min_projected_jacobian": 2 / math.sqrt(6),
+            "max_plane_distance": 1 / math.sqrt(6),
+            "status": "FAIL",
+            "checks": {
+                "edge_ratio": limited_pass, "corner_angles": "NOT_EVALUATED",
+                "convexity": "NOT_EVALUATED", "mapping_jacobian": "NOT_EVALUATED",
+                "planarity": "FAIL",
+            },
+        },
+    }
+    summary_statuses = {
+        "edge_ratio": limited_pass, "corner_angles": limited_fail,
+        "convexity": "FAIL", "mapping_jacobian": "FAIL", "planarity": "FAIL",
+    }
+    report = assess_quad_mesh(
+        nodes, [connectivity[name] for name in order], planarity_tolerance=0,
+        criteria=criteria,
+    )
+    payload = json.loads(json.dumps(report.to_dict(), allow_nan=False))
+    assert report.status == payload["status"] == "FAIL"
+    assert report.planarity_tolerance == payload["planarity_tolerance"] == 0
+    assert report.criteria == criteria
+    assert payload["criteria"] == (asdict(criteria) if criteria is not None else None)
+    assert report.solver_qualification.status == "NOT_EVALUATED"
+    assert payload["solver_qualification"]["status"] == "NOT_EVALUATED"
+    assert len(report.panels) == len(payload["panels"]) == len(order)
+    for index, name in enumerate(order):
+        row = expected[name]
+        panel = report.panels[index]
+        # Both the object and its strict JSON snapshot use the hand table.
+        for actual in ({**asdict(panel), "status": panel.status}, payload["panels"][index]):
+            assert actual["panel_index"] == index
+            assert actual["status"] == row["status"]
+            assert actual["convex"] is row["convex"]
+            for metric in ("edge_ratio", "corner_angles_deg", "min_projected_jacobian",
+                           "max_plane_distance"):
+                if row[metric] is None:
+                    assert actual[metric] is None
+                else:
+                    assert actual[metric] == pytest.approx(row[metric])
+            assert {
+                key: check["status"] for key, check in actual["checks"].items()
+            } == row["checks"]
+            assert all(check["reason"] for check in actual["checks"].values())
+    assert set(report.check_summaries) == set(payload["check_summaries"]) == set(summary_statuses)
+    for check, status in summary_statuses.items():
+        summary = report.check_summaries[check]
+        serialized = payload["check_summaries"][check]
+        assert summary.status == serialized["status"] == status
+        for category, outcome in (("passed_panels", "PASS"), ("failed_panels", "FAIL"),
+                                  ("not_evaluated_panels", "NOT_EVALUATED")):
+            indices = tuple(index for index, name in enumerate(order)
+                            if expected[name]["checks"][check] == outcome)
+            assert getattr(summary, category) == indices
+            assert serialized[category] == list(indices)
 
 
 def test_empty_mesh_is_not_evaluated():

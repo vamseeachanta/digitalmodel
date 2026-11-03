@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import math
 from bisect import bisect_left
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -74,12 +75,17 @@ class CalibrationTable:
     Volume increases with sounding and decreases with ullage. Strict volume
     monotonicity makes the inverse unique. Partial tables are permitted, but
     queries are bounded by the measured rows, rather than the reference height.
-    Calibration is for the reference attitude; corrections are not inferred.
+    Reference lookup does not apply corrections. Optional correction columns
+    are signed additions to the declared reading at one explicit attitude.
+    They are indexed by the raw gauge reading, not the corrected depth.
     """
 
     points: tuple[tuple[float, float], ...]
     reading_kind: Literal["sounding", "ullage"]
     reference_height_m: float
+    trim_corrections_m: tuple[float, ...] | None = None
+    list_corrections_m: tuple[float, ...] | None = None
+    correction_attitude_deg: tuple[float, float] | None = None
 
     def __post_init__(self):
         height = positive(self.reference_height_m, "reference_height_m")
@@ -100,6 +106,71 @@ class CalibrationTable:
                 raise ValueError("depth and volume must be strictly monotonic")
         object.__setattr__(self, "points", points)
         object.__setattr__(self, "reference_height_m", height)
+        has_corrections = False
+        for name in ("trim_corrections_m", "list_corrections_m"):
+            values = getattr(self, name)
+            if values is None:
+                continue
+            has_corrections = True
+            try:
+                values = tuple(finite(value, name) for value in values)
+            except TypeError as exc:
+                raise ValueError(f"{name} must contain one value per row") from exc
+            if len(values) != len(points):
+                raise ValueError(f"{name} must contain one value per row")
+            object.__setattr__(self, name, values)
+        if has_corrections != (self.correction_attitude_deg is not None):
+            raise ValueError(
+                "correction columns require an explicit trim/list attitude"
+            )
+        if has_corrections:
+            attitude = self.correction_attitude_deg
+            if (
+                not isinstance(attitude, Sequence)
+                or isinstance(attitude, (str, bytes, bytearray, Mapping))
+                or len(attitude) != 2
+            ):
+                raise ValueError("correction attitude must be a trim/list pair")
+            trim, heel = attitude
+            attitude = (finite(trim, "trim_deg"), finite(heel, "list_deg"))
+            # Same single-valued surface domain as centre_sounding:
+            # OpenStax Precalculus 2e (2021), §5.4, vertical tangent excluded.
+            if any(abs(angle) >= 90 for angle in attitude):
+                raise ValueError("correction angles must lie between -90 and 90")
+            object.__setattr__(self, "correction_attitude_deg", attitude)
+
+    def corrected_depth_at(
+        self, gauge_depth_m: float, *, trim_deg: float, list_deg: float
+    ) -> float:
+        """Add interpolated row corrections for exactly the qualified attitude.
+
+        d_ref = d_gauge + c_trim(d_gauge) + c_list(d_gauge). This is an
+        explicit input convention, not an inferred tank correction law.
+        Linear interpolation: OpenStax Precalculus 2e (2021), §2.1.
+        A missing component contributes zero. Do not also apply geometric
+        gauge-to-centre correction. No interpolation between attitudes or
+        corrected inverse is offered. Caller qualifies the table and clipping.
+        """
+        if self.correction_attitude_deg is None:
+            raise ValueError("table has no qualified correction columns")
+        attitude = (finite(trim_deg, "trim_deg"), finite(list_deg, "list_deg"))
+        if attitude != self.correction_attitude_deg:
+            raise ValueError("trim/list does not match the correction-table attitude")
+        depth = finite(gauge_depth_m, "gauge_depth_m")
+        # Interpolate even a zero column so raw queries remain row-bounded.
+        corrected = depth
+        for values in (self.trim_corrections_m, self.list_corrections_m):
+            if values is not None:
+                corrected += _interpolate(depth, self.depths, values)
+        return bounded_depth(corrected, self.reference_height_m)
+
+    def volume_at_gauge(
+        self, gauge_depth_m: float, *, trim_deg: float, list_deg: float
+    ) -> float:
+        """Apply table corrections once, then bounded reference-volume lookup."""
+        return self.volume_at(
+            self.corrected_depth_at(gauge_depth_m, trim_deg=trim_deg, list_deg=list_deg)
+        )
 
     def volume_at(self, depth_m: float) -> float:
         """Interpolate volume in m³ from the table's declared reading kind."""
@@ -121,18 +192,28 @@ class CalibrationTable:
 
     @classmethod
     def from_csv(
-        cls, path: str | Path, *, reading_kind: str, reference_height_m: float
+        cls,
+        path: str | Path,
+        *,
+        reading_kind: str,
+        reference_height_m: float,
+        correction_attitude_deg: tuple[float, float] | None = None,
     ) -> CalibrationTable:
-        """Read exactly depth_m,volume_m3 columns; extra columns are refused."""
+        """Read depth/volume and optional signed trim/list correction columns."""
         with Path(path).open(encoding="utf-8", newline="") as stream:
             reader = csv.DictReader(stream)
-            if reader.fieldnames is None or sorted(reader.fieldnames) != [
-                "depth_m",
-                "volume_m3",
-            ]:
-                raise ValueError("CSV requires only depth_m and volume_m3 columns")
-            points = _read_rows(list(reader))
-        return cls(points, reading_kind, reference_height_m)
+            if reader.fieldnames is None or len(set(reader.fieldnames)) != len(
+                reader.fieldnames
+            ):
+                raise ValueError("CSV requires unique column names")
+            points, corrections = _read_rows(list(reader))
+        return cls(
+            points,
+            reading_kind,
+            reference_height_m,
+            correction_attitude_deg=correction_attitude_deg,
+            **corrections,
+        )
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> CalibrationTable:
@@ -156,25 +237,46 @@ class CalibrationTable:
             raise ValueError("invalid calibration YAML") from exc
         finally:
             loader.dispose()
-        if not isinstance(data, dict) or set(data) != {
+        required = {
             "reading_kind",
             "reference_height_m",
             "rows",
-        }:
+        }
+        if (
+            not isinstance(data, dict)
+            or not required <= set(data)
+            or set(data) - (required | {"correction_attitude_deg"})
+        ):
             raise ValueError("YAML requires reading_kind, reference_height_m and rows")
+        points, corrections = _read_rows(data["rows"])
         return cls(
-            _read_rows(data["rows"]), data["reading_kind"], data["reference_height_m"]
+            points,
+            data["reading_kind"],
+            data["reference_height_m"],
+            correction_attitude_deg=data.get("correction_attitude_deg"),
+            **corrections,
         )
 
 
-def _read_rows(rows: list) -> tuple[tuple[float, float], ...]:
+def _read_rows(rows: list) -> tuple[tuple[tuple[float, float], ...], dict]:
     if not isinstance(rows, list):
         raise ValueError("rows must be a list of depth_m/volume_m3 mappings")
     points = []
+    required = {"depth_m", "volume_m3"}
+    optional = {"trim_correction_m", "list_correction_m"}
+    columns = set(rows[0]) if rows and isinstance(rows[0], dict) else required
+    if not required <= columns or columns - (required | optional):
+        raise ValueError("unsupported calibration columns")
+    corrections = {column: [] for column in columns & optional}
     for row in rows:
-        if not isinstance(row, dict) or set(row) != {"depth_m", "volume_m3"}:
-            raise ValueError("each row requires only depth_m and volume_m3")
+        if not isinstance(row, dict) or set(row) != columns:
+            raise ValueError("each row must have the same calibration columns")
         points.append(
             (finite(row["depth_m"], "depth_m"), finite(row["volume_m3"], "volume_m3"))
         )
-    return tuple(points)
+        for column, values in corrections.items():
+            values.append(finite(row[column], column))
+    return tuple(points), {
+        column.replace("_correction_m", "_corrections_m"): tuple(values)
+        for column, values in corrections.items()
+    }

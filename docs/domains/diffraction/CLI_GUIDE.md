@@ -21,6 +21,9 @@ diffraction --help
 
 ## Commands
 
+For offline input preparation with declared physical inputs, see the
+[mesh-to-spec example](tutorials/mesh-to-spec.md), which uses `resolve`.
+
 ### 1. convert-aqwa
 
 Convert AQWA diffraction results to OrcaFlex format.

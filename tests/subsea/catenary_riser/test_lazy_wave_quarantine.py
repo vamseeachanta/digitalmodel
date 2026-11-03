@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Quarantine contract for the non-functional lazy-wave analyzer.
 
 `subsea.catenary_riser.LazyWaveAnalyzer` never solved a lazy-wave catenary. It returned
@@ -83,8 +86,10 @@ def test_buoyancy_invariance_is_no_longer_reachable(basic_riser):
     to assert that the results actually DIFFER -- not deleted. Until then, the quarantine
     is what makes the invariance unreachable.
     """
+    # Constructor conditioning now refuses a module smaller than the pipe.
+    with pytest.raises(ValueError, match="outer_diameter"):
+        _config(basic_riser, length=50.0, outer_diameter=0.35, density=900)
     configs = [
-        _config(basic_riser, length=50.0, outer_diameter=0.35, density=900),
         _config(basic_riser, length=300.0, outer_diameter=0.65, density=450),
         _config(basic_riser, length=800.0, outer_diameter=1.50, density=200),
     ]

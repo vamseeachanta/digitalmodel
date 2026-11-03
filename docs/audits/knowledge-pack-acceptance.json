@@ -3962,7 +3962,7 @@
         "tests/asset_integrity/test_pitting.py",
         "tests/asset_integrity/test_pitting_workflow.py",
         "tests/asset_integrity/test_preliminary_pressure_screen.py",
-        "tests/asset_integrity/test_pyintegrity_bs7910_ecs_2500ft_buoy_jt.py",
+        "tests/asset_integrity/test_pyintegrity_bs7910_riser-sys-a_2500ft_buoy_jt.py",
         "tests/asset_integrity/test_pyintegrity_gml_lml_api579.py",
         "tests/asset_integrity/test_rbi_screening.py",
         "tests/asset_integrity/test_real_inspection_fixtures.py",

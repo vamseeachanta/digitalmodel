@@ -45,11 +45,13 @@ class TestBuildHoldOutTestSet:
         test_set = build_hold_out_test_set(samples_per_mode=3)
         assert len(test_set) >= 50
 
-    def test_covers_all_18_modes(self):
-        """All 18 failure modes must appear in the test set."""
+    def test_covers_eligible_synthetic_modes(self):
+        """Undertravel and tubing defaults lack distinguishing label content."""
         test_set = build_hold_out_test_set(samples_per_mode=3)
         modes_present = {card.label for card in test_set}
-        assert modes_present == set(ALL_GENERATORS.keys())
+        assert modes_present == set(ALL_GENERATORS) - {
+            "PLUNGER_UNDERTRAVEL", "TUBING_MOVEMENT"
+        }
 
     def test_cards_have_valid_structure(self):
         """Every labelled card must have a valid CardData and string label."""

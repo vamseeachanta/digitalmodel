@@ -19,15 +19,15 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.scada_export import (
 
 
 def worked_example() -> dict:
-    """Return a surface-only inventory; the duplicated downhole trace is flagged."""
+    """Return a surface inventory with acquisition metadata and copied-data flags."""
     text = (
         "Card Time|Card Type|Stroke Period|SPM|Stroke Length|"
         "Surface Positions|Surface Loads|Downhole Positions|Downhole Loads\n"
-        "2020-01-01T00:00:00Z|Current|6|10|4|"
+        "2020-01-01T00:00:00.1234567Z|Current|6|10|4|"
         "0,2,4,2,0|10,30,30,10,10|0,1,0|0,1,0\n"
     )
     cards = read_scada_export(io.StringIO(text))
-    return summarize_cards(cards)
+    return summarize_cards(cards, include_acquisition=True)
 
 
 if __name__ == "__main__":

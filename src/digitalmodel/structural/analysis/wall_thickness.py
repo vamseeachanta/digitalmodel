@@ -97,6 +97,14 @@ class PipeGeometry:
     fabrication_tolerance: float = 0.125  # 12.5 % default per DNV
 
     def __post_init__(self):
+        for field_name, label in (
+            ("outer_diameter", "Outer diameter"),
+            ("wall_thickness", "Wall thickness"),
+            ("corrosion_allowance", "Corrosion allowance"),
+            ("fabrication_tolerance", "Fabrication tolerance"),
+        ):
+            if not math.isfinite(getattr(self, field_name)):
+                raise ValueError(f"{label} must be finite")
         if self.outer_diameter <= 0:
             raise ValueError("Outer diameter must be positive")
         if self.wall_thickness <= 0:

@@ -3,6 +3,8 @@
 
 """Synthetic final checks and ledger outcomes; no solver or engineering limits."""
 
+from itertools import permutations, product
+
 import pytest
 
 from digitalmodel.drilling_riser.postprocess.evaluate import (
@@ -245,3 +247,155 @@ def test_returned_criteria_are_sorted():
         ledger_outcomes={"C-1": "ok", "C-2": "ok"},
     )
     assert list(s) == ["CR-01", "CR-02"]
+
+
+def _permuted_summaries(results, groups, outcomes):
+    """Cross every result, within-group case and group insertion order."""
+    for result_order in permutations(results):
+        for case_orders in product(*(permutations(cases) for cases in groups.values())):
+            for group_order in permutations(zip(groups, case_orders)):
+                yield summarise(
+                    result_order,
+                    expected_cases={
+                        "CR-02": {group: iter(cases) for group, cases in group_order}
+                    },
+                    ledger_outcomes=outcomes,
+                )["CR-02"]
+
+
+def _ordered_checks(last_status):
+    """Synthetic ranks: C-1=1/4, C-2=2/4, C-3=3/4 (PASS) or 6/4 (FAIL).
+
+    These unique fractions only select the governing observation; statuses are
+    supplied explicitly, without evaluating an engineering criterion.
+    """
+    last_u = 3 / 4 if last_status == "PASS" else 6 / 4
+    return (
+        ("C-1", CaseCheck("CR-02", "PASS", "synthetic", u=1 / 4)),
+        ("C-2", CaseCheck("CR-02", "PASS", "synthetic", u=2 / 4)),
+        ("C-3", CaseCheck("CR-02", last_status, "synthetic", u=last_u)),
+    )
+
+
+def _assert_summary_contents(
+    actual, *, expected, recorded, missing, counts, outcomes, governing
+):
+    """Compare semantic sets and keyed outcomes against hand-counted fixtures."""
+    assert set(actual["expected_cases"]) == expected
+    assert set(actual["recorded_cases"]) == recorded
+    assert set(actual["missing_cases"]) == missing
+    assert actual["missing_count"] == len(missing)
+    assert actual["unevaluated_cases"] == []
+    assert actual["counts"] == counts
+    assert actual["final_outcomes"] == outcomes
+    assert actual["governing"]["case_id"] == governing[0]
+    assert actual["governing"]["u"] == governing[1]
+    assert actual["max_u"] == governing[1]
+
+
+@pytest.mark.parametrize("last_status", ["PASS", "FAIL"])
+def test_summary_is_invariant_to_case_and_group_order(last_status):
+    """Refs #2277: complete coverage is independent of input ordering.
+
+    Hand count: G={C-1,C-2}, I={C-2,C-3}; the union has three cases,
+    not four. All three are recorded, so no case is missing. With C-3
+    passing, aggregate/G/I PASS counts are 3/2/2. With C-3 failing,
+    they are 2/2/1 and FAIL counts are 1/0/1. C-3 governs the union
+    and I; C-2 governs G, using the fractions in _ordered_checks.
+    Each status exercises 3! * 2! * 2! * 2! = 48 input orders.
+    """
+    results = _ordered_checks(last_status)
+    groups = {"G": ("C-1", "C-2"), "I": ("C-2", "C-3")}
+    outcomes = {"C-1": "ok", "C-2": "ok", "C-3": "ok"}
+    # Counts are the hand calculation above, independent of summarise.
+    aggregate_counts = {"PASS": 3, "FAIL": 0, "NOT_EVALUATED": 0}
+    sensitivity_counts = {"PASS": 2, "FAIL": 0, "NOT_EVALUATED": 0}
+    last_u = 3 / 4
+    if last_status == "FAIL":
+        aggregate_counts = {"PASS": 2, "FAIL": 1, "NOT_EVALUATED": 0}
+        sensitivity_counts = {"PASS": 1, "FAIL": 1, "NOT_EVALUATED": 0}
+        last_u = 6 / 4
+
+    summaries = list(_permuted_summaries(results, groups, outcomes))
+    assert len(summaries) == 48
+    for actual in summaries:
+        assert set(actual["groups"]) == {"G", "I"}
+        assert actual["status"] == last_status
+        assert actual["observed_status"] == last_status
+        assert actual["coverage_complete"] is True
+        assert {key: group["status"] for key, group in actual["groups"].items()} == {
+            "G": "PASS", "I": last_status
+        }
+        for group, cases, counts, governing in (
+            (actual, {"C-1", "C-2", "C-3"}, aggregate_counts, ("C-3", last_u)),
+            (actual["groups"]["G"], {"C-1", "C-2"},
+             {"PASS": 2, "FAIL": 0, "NOT_EVALUATED": 0}, ("C-2", 2 / 4)),
+            (actual["groups"]["I"], {"C-2", "C-3"}, sensitivity_counts, ("C-3", last_u)),
+        ):
+            _assert_summary_contents(
+                group, expected=cases, recorded=cases, missing=set(), counts=counts,
+                outcomes={cid: outcomes[cid] for cid in cases}, governing=governing,
+            )
+            assert group["coverage_complete"] is True
+            assert group["observed_status"] == group["status"]
+
+
+@pytest.mark.parametrize("last_status", ["PASS", "FAIL"])
+@pytest.mark.parametrize("absent_outcome", ["ok", "statics_diverged", "missing"])
+def test_incomplete_coverage_survives_group_permutation(last_status, absent_outcome):
+    """Refs #2277: every order withholds PASS while retaining observed FAIL.
+
+    Hand count: G={C-1,C-2}, I={C-2,C-3,C-4}, union={C-1,C-2,C-3,C-4}.
+    Recorded={C-1,C-2,C-3}, so missing={C-4}: four expected minus three
+    recorded is one gap, confined to I. Observed aggregate/G/I PASS counts
+    are 3/2/2, or 2/2/1 with C-3 failing; FAIL counts are then 1/0/1.
+    C-3 governs the union and I; C-2 governs G. Missing ledger evidence,
+    a failed solve and an ok ledger entry without a check all leave the gap.
+    Each status/outcome pair exercises 3! * 2! * 3! * 2! = 144 orders.
+    """
+    results = _ordered_checks(last_status)
+    groups = {"G": ("C-1", "C-2"), "I": ("C-2", "C-3", "C-4")}
+    outcomes = {"C-1": "ok", "C-2": "ok", "C-3": "ok"}
+    if absent_outcome != "missing":
+        outcomes["C-4"] = absent_outcome
+    expected_outcomes = {**outcomes, "C-4": absent_outcome}
+    aggregate_counts = {"PASS": 3, "FAIL": 0, "NOT_EVALUATED": 0}
+    sensitivity_counts = {"PASS": 2, "FAIL": 0, "NOT_EVALUATED": 0}
+    final_status = "NOT_EVALUATED"
+    last_u = 3 / 4
+    if last_status == "FAIL":
+        aggregate_counts = {"PASS": 2, "FAIL": 1, "NOT_EVALUATED": 0}
+        sensitivity_counts = {"PASS": 1, "FAIL": 1, "NOT_EVALUATED": 0}
+        final_status = "FAIL"
+        last_u = 6 / 4
+
+    summaries = list(_permuted_summaries(results, groups, outcomes))
+    assert len(summaries) == 144
+    for actual in summaries:
+        assert actual["status"] == final_status
+        assert actual["observed_status"] == last_status
+        assert actual["coverage_complete"] is False
+        assert set(actual["groups"]) == {"G", "I"}
+        assert {key: group["status"] for key, group in actual["groups"].items()} == {
+            "G": "PASS", "I": final_status
+        }
+        for group, cases, counts in (
+            (actual, {"C-1", "C-2", "C-3", "C-4"}, aggregate_counts),
+            (actual["groups"]["I"], {"C-2", "C-3", "C-4"}, sensitivity_counts),
+        ):
+            _assert_summary_contents(
+                group, expected=cases, recorded=cases - {"C-4"}, missing={"C-4"},
+                counts=counts, outcomes={cid: expected_outcomes[cid] for cid in cases},
+                governing=("C-3", last_u),
+            )
+            assert group["status"] == final_status
+            assert group["observed_status"] == last_status
+            assert group["coverage_complete"] is False
+        base = actual["groups"]["G"]
+        _assert_summary_contents(
+            base, expected={"C-1", "C-2"}, recorded={"C-1", "C-2"}, missing=set(),
+            counts={"PASS": 2, "FAIL": 0, "NOT_EVALUATED": 0},
+            outcomes={"C-1": "ok", "C-2": "ok"}, governing=("C-2", 2 / 4),
+        )
+        assert base["observed_status"] == "PASS"
+        assert base["coverage_complete"] is True

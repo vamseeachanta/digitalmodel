@@ -23,6 +23,7 @@ import inspect
 import io
 import json
 import math
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -42,6 +43,8 @@ NATIVE_CORROSION = {
 }
 FABRICATION = {DesignCode.DNV_ST_F101, DesignCode.DNV_ST_F201}
 SUPPRESSED = {DesignCode.ISO_13623, DesignCode.PD_8010_2}
+COLLAPSE_SUPPRESSION = (
+    "fix merged in 9e1fdb88; suppression retained until #1920 is closed and reviewed")
 PRESSURE_METHODS = {
     DesignCode.DNV_ST_F101: ("pressure_containment",),
     DesignCode.DNV_ST_F201: ("pressure_containment",),
@@ -119,6 +122,8 @@ REVISION_HISTORY = [
      "change": "Initial pressure grid and stock selection trace with explicit check gaps"},
     {"revision": 1, "date": "2026-10-26",
      "change": "Preserve per-check coefficient references and unresolved qualification gaps for stock trials"},
+    {"revision": 2, "date": "2026-11-03",
+     "change": "Refresh source pin after solver fixes; retain collapse suppression pending review and isolate Git reads"},
 ]
 
 
@@ -196,7 +201,7 @@ def pressure_checks(cfg, code, wall_mm, pressure_mpa):
 
 
 def external_checks(cfg, code, wall_mm, pressure_mpa):
-    """Evaluate available external checks; never call the known faulty solvers."""
+    """Evaluate external checks while retaining collapse suppression pending review."""
     strategy = CODE_REGISTRY[code]()
     objects = _objects(cfg, wall_mm, pressure_mpa)
     checks = {}
@@ -273,7 +278,7 @@ def rows_for(cfg, code, pressure_mpa):
                 ("pass" if external[name] <= 1 else "fail")
                 if name in external else "not implemented")
         if code in SUPPRESSED:
-            row["collapse_status"] = "collapse not shown (#1920)"
+            row["collapse_status"] = COLLAPSE_SUPPRESSION
         rows.append(row)
         if not failed:
             break
@@ -292,9 +297,12 @@ def source_digests(commit):
     sources.append(ROOT / "scripts/reporting/build_riser_pipe_comparison.py")
     sources.append(CRITERIA)
     digests = {}
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
     for source in sources:
         relative = source.relative_to(ROOT).as_posix()
-        pinned = subprocess.check_output(["git", "show", f"{commit}:{relative}"], cwd=ROOT)
+        pinned = subprocess.check_output(
+            ["git", "show", f"{commit}:{relative}"], cwd=ROOT, env=env)
         if source.read_bytes() != pinned:
             raise ValueError(f"Source digest mismatch: {relative}")
         digests[relative] = {"sha256": hashlib.sha256(pinned).hexdigest()}
@@ -336,7 +344,7 @@ def _check_provenance(code, name, strategy, entry, criteria):
         gaps.append("Check is not implemented")
     if name == "collapse" and code in SUPPRESSED:
         status = "suppressed (#1920)"
-        gaps.append("Known collapse solver fault (#1920); no collapse result is used")
+        gaps.append(COLLAPSE_SUPPRESSION)
     reference = entry.get("checks", {}).get(native, {})
     prefix = "Unqualified repository metadata: "
     symbols = list(COEFFICIENTS[code][name]) if available else []
@@ -417,7 +425,8 @@ def build(input_path=INPUT, output_dir=OUTPUT):
         "limitations": [
             "Implemented strategy results; standard conformity not established", "no edition claim",
             "pressure basis remains ASSUMED gauge pending confirmed pressure data",
-            "collapse not shown (#1920) for ISO 13623 and PD 8010-2; no completed stock selection for these routes",
+            COLLAPSE_SUPPRESSION,
+            "No completed stock selection for ISO 13623 and PD 8010-2 while collapse is suppressed",
             "propagation not implemented for API RP 2RD, API STD 2RD and DNV-ST-F201; collapse also not implemented for DNV-ST-F201",
             "external checks retain their implemented wall bases; no extra corrosion deduction is imposed on nominal-wall external checks",
             "stock list is illustrative; applicability, material qualification, combined loading and availability are not established",

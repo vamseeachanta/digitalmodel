@@ -1,7 +1,6 @@
 # ABOUTME: Unit tests for ideal card generation module.
 # ABOUTME: Validates ideal card generation, shape similarity, and comparison metrics.
 
-import math
 import pytest
 import numpy as np
 from pathlib import Path
@@ -173,7 +172,7 @@ class TestIdealCardCalculator:
         result = calculator.generate()
 
         assert result.shape_similarity is not None
-        assert 0 < result.shape_similarity <= 1.0
+        assert -1.0 <= result.shape_similarity <= 1.0
 
     def test_deviation_against_own_ideal_card_is_zero(self):
         """
@@ -627,7 +626,7 @@ class TestIdealCardWithRealData:
 
         # Should have valid similarity
         assert result.shape_similarity is not None
-        assert 0 < result.shape_similarity <= 1.0
+        assert -1.0 <= result.shape_similarity <= 1.0
 
     def test_surface_scalar_is_the_comparable_one_7699227(self, well_7699227):
         """

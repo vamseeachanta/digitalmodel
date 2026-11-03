@@ -501,9 +501,11 @@ and the <a href="../../../scripts/cfd/reduce_tld_two_peak.py">tuned-absorber mod
 Transfer to the invented geometry remains an assumption, including inside that band. The
 <a href="#comparison">single-tank comparison</a> illustrates peak splitting and merging; its amplitudes
 do not establish a design ranking.</p>
+<p>Related: <a href="generic-hull-roll-screening.html">generic hull roll screening estimate</a>.</p>
 <p>Draft for maintainer review.</p>
 <h2 id="revisions">Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+<tr><td>Related pages</td><td>2026-10-27</td><td>Link to the generic hull roll screening estimate added for related anti-roll context.</td></tr>
 <tr><td>Display precision</td><td>2026-10-23</td><td>Damping-axis labels distinguished and comparison percentages rounded to one decimal place; source precision retained in the evidence record.</td></tr>
 <tr><td>Evidence</td><td>2026-10-23</td><td>Archived CFD reductions added with provenance and evidence-class limits to distinguish measurements from illustrative predictions.</td></tr>
 <tr><td>Geometry</td><td>2026-10-23</td><td>Independent illustrative dimensions and conduit area selected to separate the predictions from the reference geometry.</td></tr>

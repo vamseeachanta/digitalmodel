@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solver evidence decimal boundaries</title>
+</head>
+<body>
+<main>
+  <h1>Solver evidence decimal boundaries</h1>
+  <h2>Summary</h2>
+  <p>The bounded correction for issue 2125 makes emitted canonical decimals readable
+    under their receiving contract. It rejects overlong canonical output,
+    replay values outside package bounds, and fixed-width values whose adjusted
+    exponent falls outside package bounds. No result is promoted to qualified use.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>Initial</td><td>2026-10-19</td><td>Document the decimal
+      representation correction and bounded discovery coverage.</td></tr>
+      <tr><td>Validation update</td><td>2026-10-25</td><td>Record independent
+        review coverage, repeated local checks and the outstanding hosted
+        domain result.</td></tr></tbody>
+  </table>
+  <p>Table 1. Revision history.</p>
+
+  <h2>Plan-lite</h2>
+  <ol>
+    <li>Slice 1 will make <code>analysis_records.decimal_text</code> reject canonical
+      expansion beyond its existing input-length bound.</li>
+    <li>Slice 2 will apply the package decimal contract within
+      <code>analysis_replay.canonical_measurement</code>, while preserving its
+      narrower raw bounds and checking the emitted coefficient length.</li>
+    <li>Slice 3 will check package compatibility within
+      <code>cylinder_results.parse_e24</code> and preserve its error type, exact
+      value and half-quantum.</li>
+    <li>The new test module <code>test_evidence_decimal_boundaries.py</code> will
+      exercise independent point shifts, both representation edges, signed zero,
+      nonfinite values, non-ASCII digits and hostile ambient Decimal context.</li>
+    <li>Tests of the affected modules and Ruff will run. Independent reciprocal
+      review will remain required before acceptance.</li>
+  </ol>
+
+  <h2>Sources and arithmetic</h2>
+  <p>The representation rules are software contracts, not engineering tolerances.
+    Their source is repository revision <code>6476218e</code>:</p>
+  <ul>
+    <li><a href="../../src/digitalmodel/ansys/analysis_records.py">
+      analysis_records.decimal_text</a> defines ASCII decimal syntax, an input
+      limit of 128 characters and adjusted exponents of magnitude at most 100.</li>
+    <li><a href="../../src/digitalmodel/ansys/analysis_replay.py">
+      analysis_replay.canonical_measurement</a> defines the additional raw limit
+      of 64 coefficient digits and stored exponent magnitude at most 128.
+      Canonical output must remain within the same receiving bounds.</li>
+    <li><a href="../../src/digitalmodel/ansys/cylinder_results.py">
+      cylinder_results.parse_e24</a> defines the fixed-width E24.16 field and
+      half-quantum q = 0.5 &times; 10<sup>e &minus; 16</sup>.
+      This correction preserves that equation.</li>
+  </ul>
+  <p>Expected test strings are derived by moving the decimal point, with the
+    independent arithmetic written in each test docstring. For example,
+    0.1 &times; 10<sup>&minus;100</sup> = 10<sup>&minus;101</sup> falls below the
+    package bound. A positive expansion with two prefix characters, 99 leading
+    fractional zeros and 28 coefficient digits has 129 characters and is refused.
+    The corresponding 27-digit expansion has 128 characters and remains exact.
+    The half-quantum examples are calculated directly from the equation above.</p>
+
+  <h2>Bounded reader and qualification inventory</h2>
+  <table>
+    <thead><tr><th>Boundary inspected</th><th>Disposition</th></tr></thead>
+    <tbody>
+      <tr><td>ANSYS package JSON and digest input in analysis_records and
+        analysis_evidence</td><td>Canonical decimal output-length check added;
+        JSON transport and CSV behavior unchanged.</td></tr>
+      <tr><td>ANSYS replay measurement normalization and record validation in
+        analysis_replay</td><td>Package-compatible output required; raw replay
+        bounds retained. Diagnostic role and failed history are unchanged.</td></tr>
+      <tr><td>ANSYS fixed-width extraction in cylinder_results</td><td>Adjusted
+        exponent checked against package contract; written exponent bound retained.</td></tr>
+      <tr><td>ANSYS qualified lookup in analysis_lookup</td><td>Existing explicit
+        qualification markers, independent verification and live evidence checks
+        inspected; no change is made to those gates.</td></tr>
+      <tr><td>ANSYS matrix publication and coverage builders in
+        analysis_matrix_publish, analysis_observed, analysis_pressure_observed and
+        analysis_replay</td><td>Located; aggregate-count consistency and transition
+        dispatch remain outside this correction.</td></tr>
+      <tr><td>Other located solver boundaries: solvers/ghs/comparison,
+        solvers/openfoam/smoke_evidence and solvers/smoke/model_manifest</td><td>
+        Search results only; behavioral audit and adapter rollout are not established.</td></tr>
+    </tbody>
+  </table>
+  <p>Table 2. Coverage is limited to the named boundaries; no complete adapter
+    registry or package-wide qualification audit is claimed.</p>
+
+  <h2>Adversarial checks and limitations</h2>
+  <p>Plan inspection identified three ways a plausible decimal could cross one
+    boundary but fail the next: expanded string length, adjusted exponent and
+    non-ASCII digits. Code inspection additionally identified that a short positive
+    exponent could expand beyond replay's own coefficient limit. Regression cases
+    reproduced each defect before its correction. The correction rejects these
+    inputs rather than rounding or changing their magnitude.</p>
+  <p>The focused regression run passed 104 tests. The affected-module run
+    (<code>test_analysis*.py</code>, <code>test_cylinder_results*.py</code> and
+    the new boundary module) passed 515 tests, with three existing private-fixture
+    skips. The new module contains 27 representation cases. Ruff passed on the
+    three changed source modules and the new test module.</p>
+  <p>The broader ANSYS run passed 2,416 tests with 410 existing platform or
+    private-fixture skips and two licensed-solver tests excluded from execution.
+    NumPy, pandas and psutil were constrained to the versions declared in
+    <a href="../../pyproject.toml">pyproject.toml</a>. An earlier unconstrained
+    environment failed three unchanged weld-assessment tests because NumPy lacked
+    <code>trapz</code>; the constrained run resolves those failures without a
+    source change to that module.</p>
+  <p>Existing stored evidence is not rewritten. A previously accepted value outside
+    the receiving contract now refuses; its original bytes must remain retained.
+    No licensed solver is started or queried, and no native qualification is
+    established by these synthetic tests.</p>
+
+  <h2>Independent review and repeated validation</h2>
+  <p>Independent review at revision <code>a635ead1</code> identified no blocking
+    code finding in the five changed files. It repeated the 27 boundary cases
+    and the affected-module suite: 515 tests passed with three existing
+    private-fixture skips. The broader 2,416-test count above was not independently
+    repeated.</p>
+  <p>Subsequent local runs repeated the 27 boundary cases and the affected-module
+    suite: 515 tests passed with three existing private-fixture skips.
+    Hosted domain coverage remains incomplete: the harness and domain jobs in
+    <a href="../../.github/workflows/quality-gates-by-domain.yml">the domain
+      workflow</a> run <code>39283649402</code> were cancelled before test steps
+    ran, and the aggregate failed. A rerun was requested at the same revision;
+    its second attempt remains queued. Acceptance
+    still requires completed hosted results; the local representation tests
+    establish no native solver or engineering qualification.</p>
+
+  <h2>Later slices</h2>
+  <p>Issue 2125 remains open for aggregate count derivation, provider-metadata and
+    permissive-register adversarial audit, matrix-transition dispatch, append-case
+    admission, derived-response provenance and observed solver-header identity.
+    These changes require their own tested corrections and independent review.</p>
+</main>
+</body>
+</html>

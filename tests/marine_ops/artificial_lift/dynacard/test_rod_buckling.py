@@ -673,10 +673,10 @@ class TestEstimateNeutralPoint:
             fluid_density=55.0,
             rod_length=5000.0,
         )
-        assert 0 <= neutral <= 5000
+        assert neutral is None
 
-    def test_high_fluid_load_gives_deeper_neutral(self):
-        """Test that higher fluid load gives deeper neutral point."""
+    def test_different_fluid_loads_cannot_determine_depth(self):
+        """Changing load extrema does not supply a depth-resolved profile."""
         neutral_low = estimate_neutral_point(
             surface_load_max=10000,
             surface_load_min=8000,
@@ -689,22 +689,22 @@ class TestEstimateNeutralPoint:
             rod_weight=4000,
             rod_length=5000.0,
         )
-        # Higher fluid load should give deeper neutral point
-        assert neutral_high >= neutral_low
+        # Surface extrema provide no depth profile, even at different loads.
+        assert neutral_high is neutral_low is None
 
-    def test_zero_rod_weight_returns_full_length(self):
-        """Test that zero rod weight returns full rod length."""
+    def test_zero_rod_weight_cannot_determine_depth(self):
+        """Zero rod weight does not imply a known neutral depth."""
         neutral = estimate_neutral_point(
             surface_load_max=10000,
             surface_load_min=5000,
             rod_weight=0,
             rod_length=5000.0,
         )
-        # With no rod weight, neutral point is at bottom
-        assert neutral == 5000.0
+        # Zero rod weight does not supply the missing depth profile.
+        assert neutral is None
 
-    def test_heavy_rod_gives_shallower_neutral(self):
-        """Test that heavier rod gives shallower neutral point."""
+    def test_different_rod_weights_cannot_determine_depth(self):
+        """Total weight does not define a depth-resolved load profile."""
         neutral_light = estimate_neutral_point(
             surface_load_max=12000,
             surface_load_min=5000,
@@ -717,11 +717,11 @@ class TestEstimateNeutralPoint:
             rod_weight=6000,
             rod_length=5000.0,
         )
-        # Heavier rod should have shallower neutral point
-        assert neutral_heavy <= neutral_light
+        # Total rod weight cannot recover the missing load-versus-depth profile.
+        assert neutral_heavy is neutral_light is None
 
-    def test_returns_within_bounds(self):
-        """Test neutral point is always within rod length."""
+    def test_varied_extrema_cannot_determine_depth(self):
+        """Unsupported depths stay unavailable for every input pair."""
         for load_max in [8000, 12000, 16000]:
             for load_min in [3000, 5000, 7000]:
                 neutral = estimate_neutral_point(
@@ -730,7 +730,7 @@ class TestEstimateNeutralPoint:
                     rod_weight=4000,
                     rod_length=5000.0,
                 )
-                assert 0 <= neutral <= 5000.0
+                assert neutral is None
 
 
 class TestCalculateCriticalBucklingLoad:

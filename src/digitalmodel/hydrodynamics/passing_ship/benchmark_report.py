@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Generate self-contained HTML benchmark report for passing ship Wang (1975) calculator."""
 
 import json
@@ -9,6 +12,8 @@ from typing import Optional
 
 from assetutilities.units import TrackedQuantity
 
+from .analysis import AnalysisResult
+from .response_report import response_sections
 from .calculator import PassingShipCalculator
 from .configuration import VesselConfig, EnvironmentalConfig, CalculationConfig
 
@@ -220,14 +225,25 @@ def _dof_block(name, pid, badge_color, badge_text, badge_desc, stats, obs, data_
         f'<div>{_plot_div(pid, data_j, layout_j)}</div></div></div>')
 
 
-def generate_benchmark_report(output_path: Optional[str] = None) -> str:
+def generate_benchmark_report(
+    output_path: Optional[str] = None,
+    *, response_results: Optional[list[AnalysisResult]] = None,
+) -> str:
     """Generate the passing ship benchmark HTML report.
 
     Args:
         output_path: Path to write HTML file. If None, returns HTML string only.
+        response_results: Computed analysis cases for tension and motion sections.
 
     Returns:
         HTML string of the report.
+
+    Regeneration notes:
+        The generation timestamp and Git revision identify each build. Embedded
+        plot arrays retain solver precision, so floating-point differences
+        between platforms can also change the serialized HTML bytes. These
+        metadata and serialization differences are expected; regenerated arrays
+        require numerical comparison before a change is treated as cosmetic.
     """
     calc = _build_calculator()
     xn, surge, sway, yaw = _run_sweep(calc)
@@ -350,7 +366,7 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 <h3>A. Wang (1975) Reference</h3><ul>
 <li><strong>Paper:</strong> Wang, S. (1975). "Dynamic effects of ship passage on moored vessels." <em>J. Waterways, Harbors &amp; Coastal Engineering</em>, ASCE.</li>
 <li><strong>MathCAD:</strong> "Calculation of forces and moments from Wang.pdf"</li>
-<li><strong>VBA:</strong> modPassingShip.bas (Nick Barczak, July 2016)</li></ul>
+<li><strong>VBA:</strong> modPassingShip.bas (the original spreadsheet author, July 2016)</li></ul>
 <h3>B. Formulation Summary</h3>
 <table><thead><tr><th>Function</th><th>Expression</th></tr></thead><tbody>
 <tr><td>Sectional area</td><td>S(x) = A<sub>max</sub> &middot; (1 &minus; 4x&sup2;/L&sup2;)</td></tr>
@@ -362,6 +378,7 @@ def generate_benchmark_report(output_path: Optional[str] = None) -> str:
 <tr><td>ft &rarr; m</td><td>{ft_to_m}</td></tr><tr><td>lbf &rarr; N</td><td>{lbf_to_n}</td></tr>
 <tr><td>ft&middot;lbf &rarr; N&middot;m</td><td>{ft_lbf_to_nm}</td></tr>
 <tr><td>slug/ft&sup3; &rarr; kg/m&sup3;</td><td>{slug_ft3_to_kg_m3}</td></tr></tbody></table></div>
+{response_sections(response_results or [])}
 </div></body></html>"""
 
     if output_path:

@@ -45,8 +45,14 @@ class PipeSpanInput:
     ------------------
     water_density_kgm3   seawater density [kg/m³]
     current_velocity_ms  current speed Uc [m/s]
-    wave_velocity_ms     wave-induced velocity Uw [m/s]
+    wave_velocity_ms     wave-induced velocity Uw [m/s]; None = resolve in facade
     seabed_gap_m         gap e between pipe bottom and seabed [m]
+    Hs_m, Tp_s          optional significant wave height [m], peak period [s]
+    water_depth_m       optional total water depth [m]
+
+    Supply all three sea-state fields together, finite and strictly positive.
+    The facade computes Uw only when wave_velocity_ms is None; an explicit
+    zero overrides the sea state. With no sea state, None means no waves.
 
     Damping
     -------
@@ -79,7 +85,7 @@ class PipeSpanInput:
     # --- marine environment ---
     water_density_kgm3: float = 1025.0
     current_velocity_ms: float = 0.8
-    wave_velocity_ms: float = 0.0
+    wave_velocity_ms: float | None = None
     seabed_gap_m: float = 0.5
 
     # --- boundary condition ---
@@ -104,6 +110,11 @@ class PipeSpanInput:
     gamma_on_IL: float = 1.1
     gamma_on_CF: float = 1.3
     gamma_k: float = 1.15
+
+    # Optional sea state, appended to preserve existing positional arguments.
+    Hs_m: float | None = None
+    Tp_s: float | None = None
+    water_depth_m: float | None = None
 
 
 @dataclass

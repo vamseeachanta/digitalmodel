@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unit-box orientation: solver run request</title>
+<main>
+<h1>Unit-box orientation: solver run request</h1>
+<p>Status: native execution NOT_EVALUATED in this change. The existing repaired
+mesh is preserved. This request will be executed only by the solver manager after
+review. It does not authorize a run from a development environment.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-19</td><td>Initial request for native hydrostatic readback of the repaired box.</td></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Defined time budgets, evidence reuse conditions and fixed-spec screening to prevent unlike-input acceptance.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Added command timeout flags to enforce the stated solver caps.</td></tr>
+</table>
+<h2>Purpose and retained inputs</h2>
+<p>The run will check positive heave restoring stiffness, displaced volume,
+waterplane area and vertical centre of buoyancy for the repaired five-panel box.
+Both historical defects (inverted sides and inverted bottom) will remain offline
+negative controls; they will not be submitted to a solver. The geometry and
+repair history are recorded in
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/898">issue 898</a>.
+The checkout already includes the repair and the general orientation checker.</p>
+<p>Both programs will use <a href="spec.yml">spec.yml</a> and
+<a href="unit_box.gdf">unit_box.gdf</a>. The manager will record the repository
+revision, SHA-256 of each retained input and generated deck, solver version,
+settings, native outputs, extraction mapping and compact comparison JSON.
+Native binary outputs will be retained in the approved solver archive, with a
+manifest linking their digests; no binary outputs belong in this public change.</p>
+<h2>Preparation and execution</h2>
+<p>First, the standalone command will verify exact outward winding of every
+face and agreement of all axis volumes without importing any solver:</p>
+<pre>python scripts/validation/check_unit_box_orientation.py examples/hydrodynamics/diffraction/unit_box_rao/unit_box.gdf</pre>
+<p>The manager will generate packages using the existing CLI generators, inspect
+mesh orientation and density/gravity in the emitted decks, and then execute:</p>
+<pre>diffraction run-orcawave examples/hydrodynamics/diffraction/unit_box_rao/spec.yml --dry-run -o output/orcawave/
+diffraction run-aqwa examples/hydrodynamics/diffraction/unit_box_rao/spec.yml --dry-run -o output/aqwa/
+diffraction run-orcawave examples/hydrodynamics/diffraction/unit_box_rao/spec.yml -t 180 -o output/orcawave/
+diffraction run-aqwa examples/hydrodynamics/diffraction/unit_box_rao/spec.yml -t 300 -o output/aqwa/</pre>
+<p>Command source: repository
+<a href="../../../../src/digitalmodel/hydrodynamics/diffraction/cli.py">cli.py,
+run_orcawave_cmd and run_aqwa_cmd</a>, and the adjacent <a href="README.md">README</a>.
+These commands have not been executed for this change: the diffraction package
+initialization attempts a licensed API import.</p>
+<p>Expected retained outputs are the OrcaWave native results and hydrodynamic data
+export described in the README, and the AQWA native listing plus generated deck.
+The manager will preserve native hydrostatic terms and their units, and extract
+heave added mass and damping on the spec frequency grid for comparison context.
+Successful process exit alone will not establish acceptance.</p>
+<p>Licensed duration estimates include native readback: OrcaWave 1 minute with a
+3-minute cap; AQWA 2 minutes with a 5-minute cap. These are assumed, based on
+previous experience; the README supplies a seconds-scale OrcaWave solve basis,
+but no measured AQWA timing is available. At the cap the manager will stop the
+run, retain diagnostics and request a revised budget before retrying.</p>
+<p>The linked issue records an OrcaWave 11.6c solve with positive heave stiffness.
+Retention of the native output is not established by the inspected issue record;
+no archive manifest or input/output digest binding is supplied there. If the
+manager locates retained native evidence matching the repaired mesh, spec and
+solver settings, the OrcaWave allocation will cover readback only and AQWA alone
+will be solved. Otherwise both bounded runs will be required.</p>
+<h2>Criteria and sources</h2>
+<p>The exact geometry is a unit cube wetted below z = 0: volume 1 m³,
+waterplane area 1 m² and centre of buoyancy z = -0.5 m, derived from the linked
+GDF coordinates. All panels will point outward under the right-hand cross-product
+convention. The spec supplies density 1025 kg/m³ and gravity 9.80665 m/s²,
+giving K33 = density × gravity × waterplane area = 10051.8 N/m (display rounded;
+screening will use the unrounded product).
+The GDF header carries a different gravity; the manager will confirm that each
+program uses the spec gravity, and will record the actual setting rather than
+silently compare unlike inputs. Sources: spec environment, GDF coordinates, and
+<a href="../../../../src/digitalmodel/hydrodynamics/diffraction/mesh_orientation.py">mesh_orientation.py,
+axis-volume identity</a>.</p>
+<p>The hydrostatic screening band is 0.5% relative to the analytical reference,
+with positive K33 and volume required. This reuses the repository AQG-style
+hydrostatics band from
+<a href="../../../../src/digitalmodel/hydrodynamics/diffraction/cross_solver_acceptance.py">cross_solver_acceptance.py,
+DEFAULT_CRITERIA[HYDROSTATICS]</a>; it is not an independently verified standards
+limit. Each program will be checked against the analytical reference separately.
+Inside-band values remain PASS_CONDITIONAL until native readback, input settings
+and provenance have been checked. Outside-band results fail.</p>
+<p>Dynamic cross-program comparison will use the same module's added-mass band
+of 5% and radiation-damping band of 10%, normalized by the peak magnitude of
+the relevant mode over the solved grid. These are contextual checks only:
+own-mesh convergence is NOT_EVALUATED for this coarse fixture. Roll, pitch,
+full response qualification and convergence studies are outside this orientation
+request; the five-panel mesh cannot establish them.</p>
+<h2>Offline native-result screen</h2>
+<p>For each program, the manager will create a JSON object with these required
+fields: <code>mesh_sha256</code> (SHA-256 of the mesh bytes after CRLF-to-LF
+normalization, from the standalone QA output),
+<code>density_kg_m3</code>, <code>gravity_m_s2</code>, <code>k33_n_per_m</code>,
+<code>volume_m3</code>, <code>waterplane_area_m2</code>, and <code>cob_z_m</code>.
+Every value will be extracted from retained native evidence, converted explicitly
+to the indicated SI units and checked against the spec. A digest in this manually
+prepared object binds the mesh only; it does not authenticate the native results.</p>
+<p>The screen will require density and gravity to equal the spec values and will
+fail any mismatch. Observed settings will not redefine the K33 reference.
+Archive manifests will separately retain SHA-256 digests of the original bytes.</p>
+<pre>python scripts/validation/check_unit_box_orientation.py examples/hydrodynamics/diffraction/unit_box_rao/unit_box.gdf --observations output/observations.json</pre>
+<p>The command emits relative residuals and a conditional screening disposition.
+Missing, non-finite, malformed or digest-mismatched observations fail closed.
+Without observations, native hydrostatics remain NOT_EVALUATED.</p>
+<h2>Closure evidence</h2>
+<p>Closure will require reviewed native output readback from both programs, signed
+hydrostatic values within the stated band, exact input/deck digests, and the
+retained archive manifest. Historical results are not requalified by the mesh
+checks. Synthetic benchmark HTML will not be regenerated as solver evidence.</p>
+</main>
+</html>

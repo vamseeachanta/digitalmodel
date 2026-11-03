@@ -142,7 +142,7 @@ def _write_floating_campaign(path: Path) -> Path:
                 "current": {
                     "speed": 1.0,
                     "direction": 270,
-                    "profile": [[0, 0.46], [6, 0.39], [15, 0.33]],
+                    "profile": [[0, 0.46], [6, 0.39], [8, 0.38]],
                 },
                 "wind": {"speed": 5, "direction": 270},
             },
@@ -404,7 +404,7 @@ class TestFloatingCampaignCurrentProfileScaled:
                     "current": {
                         "speed": 1.0,
                         "direction": 270,
-                        "profile": [[0, 0.46], [6, 0.39], [15, 0.33]],
+                        "profile": [[0, 0.46], [6, 0.39], [8, 0.38]],
                     },
                     "wind": {"speed": 5, "direction": 270},
                 },
@@ -469,9 +469,9 @@ class TestFloatingCampaignCurrentProfileScaled:
         assert result.run_count == 2
 
         # Verify scaling via the campaign spec directly for precision.
-        # Base depth is 8m, profile depths are [0, 6, 15].
+        # Base depth is 8m, profile depths are [0, 6, 8].
         # For water_depth=15: scale = 15/8 = 1.875
-        #   new profile depths = [0, 11.25, 28.125]
+        #   new profile depths = [0, 11.25, 15].
         # For water_depth=8: scale = 1.0 (unchanged)
         for name, spec in gen.spec.generate_run_specs():
             wd = spec.environment.water.depth
@@ -485,18 +485,18 @@ class TestFloatingCampaignCurrentProfileScaled:
                 # Unchanged: scale=1.0
                 assert profile[0][0] == pytest.approx(0.0)
                 assert profile[1][0] == pytest.approx(6.0)
-                assert profile[2][0] == pytest.approx(15.0)
+                assert profile[2][0] == pytest.approx(8.0)
             elif wd == 15.0:
                 # Scaled: scale=15/8=1.875
                 scale = 15.0 / 8.0
                 assert profile[0][0] == pytest.approx(0.0 * scale)
                 assert profile[1][0] == pytest.approx(6.0 * scale)
-                assert profile[2][0] == pytest.approx(15.0 * scale)
+                assert profile[2][0] == pytest.approx(8.0 * scale)
 
                 # Speed factors remain unchanged
                 assert profile[0][1] == pytest.approx(0.46)
                 assert profile[1][1] == pytest.approx(0.39)
-                assert profile[2][1] == pytest.approx(0.33)
+                assert profile[2][1] == pytest.approx(0.38)
 
 
 class TestSlayCampaignGeneratesCorrectly:

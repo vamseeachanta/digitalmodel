@@ -328,3 +328,48 @@ def test_router_without_fracture_skips_window(tmp_path):
     result = out["pore_pressure"]["result"]
     assert "pore_pressure" in result
     assert "drilling_window" not in result
+
+
+@pytest.mark.parametrize(
+    "fracture, ecd, static_width, dynamic_width, static_ok, dynamic_ok, centre",
+    [(14.0, 0.75, 2.5, 1.75, True, True, 11.375),
+     (14.0, 2.5, 2.5, 0.0, True, False, None),
+     (14.0, 3.0, 2.5, -0.5, True, False, None),
+     (10.0, 0.75, -1.5, -2.25, False, False, None)],
+)
+def test_safe_window_widths_from_hand_interval_arithmetic(
+    fracture, ecd, static_width, dynamic_width, static_ok, dynamic_ok, centre,
+):
+    """Specified interval bookkeeping, not an empirical uncertainty model.
+
+    Definition: floor = pore bound + supplied kick margin; ceiling = fracture
+    bound - supplied loss margin. With zero spread, both quantiles equal the
+    supplied scalar; no normal-quantile coefficient is needed.
+    Pore = 10 ppg, kick = .5 ppg, loss = 1 ppg: floor = 10.5.
+    For fracture 14: ceiling = 13, static width = 2.5; ECD .75 gives
+    dynamic ceiling 12.25, width 1.75, midpoint 11.375 ppg.
+    ECD 2.5 closes the dynamic interval; ECD 3 gives width -.5.
+    Fracture 10 gives ceiling 9, static width -1.5 and dynamic width -2.25.
+    Relative/absolute 1e-12 checks arithmetic including zero-width closure;
+    it is not a prescribed operational tolerance. All inputs are synthetic.
+    """
+    pore = PorePressureDistribution(p50=10.0, sigma=0.0, methods={"specified": 10.0})
+    frac = PorePressureDistribution(
+        p50=fracture, sigma=0.0, methods={"specified": fracture},
+    )
+    result = safe_drilling_window(
+        pore, frac, ecd_delta_ppg=ecd, kick_margin_ppg=0.5, loss_margin_ppg=1.0,
+    )
+    assert result.static_low_emw_ppg == 10.5
+    assert result.dynamic_low_emw_ppg == 10.5
+    assert result.static_width_ppg == pytest.approx(static_width, rel=1e-12, abs=1e-12)
+    assert result.dynamic_width_ppg == pytest.approx(dynamic_width, rel=1e-12, abs=1e-12)
+    assert result.static_feasible is static_ok
+    assert result.dynamic_feasible is dynamic_ok
+    if centre is None:
+        assert result.recommended_mud_weight_ppg() is None
+    else:
+        assert result.recommended_mud_weight_ppg() == pytest.approx(centre, rel=1e-12)
+    saved = result.as_dict()
+    assert saved["static_width_ppg"] == pytest.approx(static_width, abs=1e-12)
+    assert saved["dynamic_width_ppg"] == pytest.approx(dynamic_width, abs=1e-12)

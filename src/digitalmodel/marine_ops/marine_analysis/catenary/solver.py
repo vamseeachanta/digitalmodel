@@ -34,7 +34,7 @@ class CatenaryInput:
     horizontal_span: float     # Horizontal distance [m]
     vertical_span: float       # Vertical distance (+ = fairlead higher) [m]
     weight_per_length: float   # Submerged weight [N/m]
-    ea_stiffness: float        # Axial stiffness EA [N]
+    ea_stiffness: float        # Axial stiffness EA [N]; inf means inextensible
     water_depth: Optional[float] = None
     seabed_friction: float = 0.0
 
@@ -106,6 +106,10 @@ class CatenarySolver:
         straight_dist = np.sqrt(params.horizontal_span**2 + params.vertical_span**2)
         if params.length < straight_dist:
             raise ValueError(f"Length {params.length}m < straight distance {straight_dist:.2f}m")
+        if np.isinf(params.ea_stiffness) and params.length == straight_dist:
+            raise ValueError(
+                "Length must exceed straight distance for an inextensible catenary"
+            )
 
         # Solve for H and signed low-point geometry.
         H_solution, u_anchor, u_fairlead, converged, iterations = (
