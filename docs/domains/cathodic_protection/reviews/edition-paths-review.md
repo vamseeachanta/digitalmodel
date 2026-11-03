@@ -3,7 +3,7 @@
 ## Summary
 
 The source review records implemented edition selection at commit
-`d34bda5cf18d11be48b17c7ba94e5c8127af2bf2`. The record
+`6e88ab33e957cc354fedc678968c51200695adeb`. The record
 contains 28 entries: 16 PASS and
 12 FAIL under the criterion below. CP source
 and calculator tests are unchanged. Numerical design results are not issued by
@@ -15,6 +15,7 @@ this review.
 | --- | --- | --- |
 | Initial | 2026-10-25 | Record implemented edition branches, shared behavior and evidence gaps so edition claims can be limited to reviewed code. |
 | 1 | 2026-10-26 | Add the existing F103 field-joint citation assertions and record the uncovered B401 retrofit clause; update dispositions to match the identified evidence. |
+| 2 | 2026-11-03 | Refresh the source pin and eight shifted anchors against main; limit integrity checks to anchor text so unrelated edits do not invalidate the record. Recheck the retrofit assertions and retain the clause gap. |
 
 Table 1. Review revision history.
 
@@ -53,7 +54,12 @@ The machine-readable companion is [edition-paths-review.json](edition-paths-revi
 It is a list with one object per reviewed topic. `kind` distinguishes numerical
 or label differences, software routing, shared behavior and the ABS scope limit.
 `file`, `line`, `anchor` and `evidence` locate the observed source; `commit` pins
-the bytes. `test` contains existing test references, not a claim that each named
+the source revision. Line numbers apply to that revision; local links open the
+corresponding repository file, whose lines can move. Exact anchor text must also
+remain in HEAD and the working tree. Unrelated edits and line shifts are allowed;
+changing or removing a recorded anchor requires a refreshed record. This text
+check does not establish semantic equivalence of the surrounding implementation.
+`test` contains existing test references, not a claim that each named
 test was executed in this review. `label` transcribes the code-carried edition
 and clause identifiers without reproducing publication values. `missing` explains
 every FAIL; `coverage` limits what the named assertions establish.
@@ -66,7 +72,7 @@ every FAIL; `coverage` limits what the named assertions establish.
 | `_ANODE_TEMPERATURE_EDITIONS` | `119` | [`src/digitalmodel/cathodic_protection/b401_tables.py:119`](../../../../src/digitalmodel/cathodic_protection/b401_tables.py#L119) | Matches the inspected ref. |
 | `design_driving_voltage` | `913` | [`src/digitalmodel/cathodic_protection/b401_tables.py:913`](../../../../src/digitalmodel/cathodic_protection/b401_tables.py#L913) | Matches the inspected ref. |
 | `Edition` | `27` | [`src/digitalmodel/cathodic_protection/_edition.py:27`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L27) | Matches the inspected ref. |
-| `_run_b401` | `562` | [`src/digitalmodel/cathodic_protection/engine_adapter.py:562`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L562) | Matches the inspected ref. |
+| `_run_b401` | `562` | [`src/digitalmodel/cathodic_protection/engine_adapter.py:570`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L570) | Anchor retained; location refreshed. |
 
 Table 2. Spec inventory locations rechecked against the available source ref.
 
@@ -85,7 +91,7 @@ inputs. No equivalence of standard editions is inferred.
 | [b401-driving-voltage](#b401-driving-voltage) | B401 | difference | PASS | [`src/digitalmodel/cathodic_protection/b401_tables.py:913`](../../../../src/digitalmodel/cathodic_protection/b401_tables.py#L913) |
 | [b401-retrofit](#b401-retrofit) | B401 | difference | FAIL | [`src/digitalmodel/cathodic_protection/b401_structures_phases_retrofit.py:127`](../../../../src/digitalmodel/cathodic_protection/b401_structures_phases_retrofit.py#L127) |
 | [b401-labels](#b401-labels) | B401 | difference | PASS | [`src/digitalmodel/cathodic_protection/b401_tables.py:76`](../../../../src/digitalmodel/cathodic_protection/b401_tables.py#L76) |
-| [b401-report-retrofit](#b401-report-retrofit) | B401 | difference | FAIL | [`src/digitalmodel/cathodic_protection/report_recommendations.py:98`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L98) |
+| [b401-report-retrofit](#b401-report-retrofit) | B401 | difference | FAIL | [`src/digitalmodel/cathodic_protection/report_recommendations.py:101`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L101) |
 | [b401-edition-routing](#b401-edition-routing) | B401 | routing | FAIL | [`src/digitalmodel/cathodic_protection/_edition.py:27`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L27) |
 | [b401-f103-companion](#b401-f103-companion) | B401 | difference | FAIL | [`src/digitalmodel/cathodic_protection/dnv_rp_b401.py:93`](../../../../src/digitalmodel/cathodic_protection/dnv_rp_b401.py#L93) |
 | [f103-linepipe](#f103-linepipe) | F103 | difference | PASS | [`src/digitalmodel/cathodic_protection/f103_tables.py:786`](../../../../src/digitalmodel/cathodic_protection/f103_tables.py#L786) |
@@ -97,15 +103,15 @@ inputs. No equivalence of standard editions is inferred.
 | [f103-utilisation-source](#f103-utilisation-source) | F103 | difference | PASS | [`src/digitalmodel/cathodic_protection/f103_tables.py:1088`](../../../../src/digitalmodel/cathodic_protection/f103_tables.py#L1088) |
 | [f103-labels](#f103-labels) | F103 | difference | PASS | [`src/digitalmodel/cathodic_protection/f103_tables.py:87`](../../../../src/digitalmodel/cathodic_protection/f103_tables.py#L87) |
 | [f103-bank-equations](#f103-bank-equations) | F103 | difference | PASS | [`src/digitalmodel/cathodic_protection/f103_tables.py:666`](../../../../src/digitalmodel/cathodic_protection/f103_tables.py#L666) |
-| [f103-engine-joints](#f103-engine-joints) | F103 | difference | PASS | [`src/digitalmodel/cathodic_protection/engine_adapter.py:844`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L844) |
+| [f103-engine-joints](#f103-engine-joints) | F103 | difference | PASS | [`src/digitalmodel/cathodic_protection/engine_adapter.py:852`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L852) |
 | [f103-component-joints](#f103-component-joints) | F103 | difference | FAIL | [`src/digitalmodel/cathodic_protection/b401_component_zones.py:63`](../../../../src/digitalmodel/cathodic_protection/b401_component_zones.py#L63) |
 | [f103-bank-joints](#f103-bank-joints) | F103 | difference | FAIL | [`src/digitalmodel/cathodic_protection/pipeline_anode_bank.py:45`](../../../../src/digitalmodel/cathodic_protection/pipeline_anode_bank.py#L45) |
 | [f103-edition-routing](#f103-edition-routing) | F103 | routing | FAIL | [`src/digitalmodel/cathodic_protection/_edition.py:157`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L157) |
-| [f103-pinned-key](#f103-pinned-key) | F103 | routing | FAIL | [`src/digitalmodel/cathodic_protection/engine_adapter.py:880`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L880) |
+| [f103-pinned-key](#f103-pinned-key) | F103 | routing | FAIL | [`src/digitalmodel/cathodic_protection/engine_adapter.py:888`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L888) |
 | [b401-current-densities](#b401-current-densities) | B401 | shared | PASS | [`src/digitalmodel/cathodic_protection/b401_tables.py:675`](../../../../src/digitalmodel/cathodic_protection/b401_tables.py#L675) |
 | [b401-utilisation](#b401-utilisation) | B401 | shared | PASS | [`src/digitalmodel/cathodic_protection/b401_tables.py:414`](../../../../src/digitalmodel/cathodic_protection/b401_tables.py#L414) |
 | [b401-resistance](#b401-resistance) | B401 | shared | FAIL | [`src/digitalmodel/cathodic_protection/anode_sizing.py:313`](../../../../src/digitalmodel/cathodic_protection/anode_sizing.py#L313) |
-| [b401-design-life](#b401-design-life) | B401 | shared | FAIL | [`src/digitalmodel/cathodic_protection/engine_adapter.py:610`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L610) |
+| [b401-design-life](#b401-design-life) | B401 | shared | FAIL | [`src/digitalmodel/cathodic_protection/engine_adapter.py:618`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L618) |
 | [abs-single-edition](#abs-single-edition) | ABS | scope | PASS | [`src/digitalmodel/cathodic_protection/abs_ships_tables.py:13`](../../../../src/digitalmodel/cathodic_protection/abs_ships_tables.py#L13) |
 | [f103-result-metadata](#f103-result-metadata) | F103 | routing | FAIL | [`src/digitalmodel/cathodic_protection/dnv_rp_f103.py:78`](../../../../src/digitalmodel/cathodic_protection/dnv_rp_f103.py#L78) |
 
@@ -177,7 +183,7 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 **FAIL — B401; tokens: 2005, 2010, 2017, 2021.** The covered report behavior selects retrofit evidence for 2021 and retrofit documentation for earlier tokens; correctness of the emitted retrofit clause is not established.
 
-**Source:** [`src/digitalmodel/cathodic_protection/report_recommendations.py:98`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L98); [`src/digitalmodel/cathodic_protection/report_recommendations.py:132`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L132).
+**Source:** [`src/digitalmodel/cathodic_protection/report_recommendations.py:101`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L101); [`src/digitalmodel/cathodic_protection/report_recommendations.py:135`](../../../../src/digitalmodel/cathodic_protection/report_recommendations.py#L135).
 
 **Existing tests:** [`tests/cathodic_protection/test_report_recommendations.py::test_verified_options_use_edition_specific_retrofit_subject`](../../../../tests/cathodic_protection/test_report_recommendations.py)
 
@@ -191,7 +197,7 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 **FAIL — B401; tokens: 2005, 2010, 2017, 2021, 2008, 2011.** Canonical tokens are defined by Edition. The 2008 alias maps to 2005, the 2011 alias maps to 2010, missing input warns and defaults to 2021, and unsupported tokens including 1993 are rejected.
 
-**Source:** [`src/digitalmodel/cathodic_protection/_edition.py:27`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L27); [`src/digitalmodel/cathodic_protection/_edition.py:36`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L36); [`src/digitalmodel/cathodic_protection/_edition.py:127`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L127); [`src/digitalmodel/cathodic_protection/engine_adapter.py:562`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L562).
+**Source:** [`src/digitalmodel/cathodic_protection/_edition.py:27`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L27); [`src/digitalmodel/cathodic_protection/_edition.py:36`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L36); [`src/digitalmodel/cathodic_protection/_edition.py:127`](../../../../src/digitalmodel/cathodic_protection/_edition.py#L127); [`src/digitalmodel/cathodic_protection/engine_adapter.py:570`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L570).
 
 **Existing tests:** [`tests/cathodic_protection/test_edition_api_foundation.py::test_normalize_edition_accepts_supported_aliases`](../../../../tests/cathodic_protection/test_edition_api_foundation.py); [`tests/cathodic_protection/test_edition_api_foundation.py::test_normalize_edition_warns_and_defaults_when_missing`](../../../../tests/cathodic_protection/test_edition_api_foundation.py); [`tests/cathodic_protection/test_edition_api_foundation.py::test_normalize_edition_rejects_unknown_values`](../../../../tests/cathodic_protection/test_edition_api_foundation.py)
 
@@ -329,7 +335,7 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 **PASS — F103; tokens: 2010, 2019.** The YAML adapter resolves newer field-joint identifiers and infill under 2019, and uses the older enum under 2010.
 
-**Source:** [`src/digitalmodel/cathodic_protection/engine_adapter.py:844`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L844).
+**Source:** [`src/digitalmodel/cathodic_protection/engine_adapter.py:852`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L852).
 
 **Existing tests:** [`tests/cathodic_protection/test_engine_adapter.py::test_f103_2019_fbe_field_joints_resolve_by_infill`](../../../../tests/cathodic_protection/test_engine_adapter.py); [`tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_field_joint_ids_unchanged`](../../../../tests/cathodic_protection/test_engine_adapter.py)
 
@@ -383,7 +389,7 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 **FAIL — F103; tokens: 2010, 2019.** The neutral F103 key uses the selected or default 2019 token. The dated compatibility key pins 2010, warns and rejects a conflicting explicit edition.
 
-**Source:** [`src/digitalmodel/cathodic_protection/engine_adapter.py:880`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L880).
+**Source:** [`src/digitalmodel/cathodic_protection/engine_adapter.py:888`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L888).
 
 **Existing tests:** [`tests/cathodic_protection/test_engine_adapter.py::test_neutral_f103_key_without_edition_runs_the_2019_default`](../../../../tests/cathodic_protection/test_engine_adapter.py); [`tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_alias_pins_2010_with_deprecation`](../../../../tests/cathodic_protection/test_engine_adapter.py); [`tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_alias_accepts_a_matching_edition`](../../../../tests/cathodic_protection/test_engine_adapter.py); [`tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_alias_rejects_a_conflicting_edition`](../../../../tests/cathodic_protection/test_engine_adapter.py)
 
@@ -435,7 +441,7 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 **FAIL — B401; tokens: 2005, 2010, 2017, 2021.** The flat B401 adapter reads and validates the same design-life input/default for all tokens, then passes that life to the same coating and mass kernels. Component-local and phase-local lives remain explicit; no claim is made about a standard-required life.
 
-**Source:** [`src/digitalmodel/cathodic_protection/engine_adapter.py:610`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L610); [`src/digitalmodel/cathodic_protection/engine_adapter.py:704`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L704); [`src/digitalmodel/cathodic_protection/_kernels.py:127`](../../../../src/digitalmodel/cathodic_protection/_kernels.py#L127).
+**Source:** [`src/digitalmodel/cathodic_protection/engine_adapter.py:618`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L618); [`src/digitalmodel/cathodic_protection/engine_adapter.py:712`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L712); [`src/digitalmodel/cathodic_protection/_kernels.py:127`](../../../../src/digitalmodel/cathodic_protection/_kernels.py#L127).
 
 **Existing tests:** [`tests/cathodic_protection/test_edition_crosswalk.py::test_b401_current_demand_identical_across_editions`](../../../../tests/cathodic_protection/test_edition_crosswalk.py); [`tests/cathodic_protection/test_b401_structures_phases.py::test_temporary_phase_has_its_own_design_life`](../../../../tests/cathodic_protection/test_b401_structures_phases.py)
 
@@ -449,7 +455,7 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 **PASS — ABS; tokens: 2017-12.** The rebuilt ship table helper carries one fixed citation revision and has no edition selector. The public route key contains a historical date misnomer; it does not establish another edition.
 
-**Source:** [`src/digitalmodel/cathodic_protection/abs_ships_tables.py:13`](../../../../src/digitalmodel/cathodic_protection/abs_ships_tables.py#L13); [`src/digitalmodel/cathodic_protection/engine_adapter.py:139`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L139).
+**Source:** [`src/digitalmodel/cathodic_protection/abs_ships_tables.py:13`](../../../../src/digitalmodel/cathodic_protection/abs_ships_tables.py#L13); [`src/digitalmodel/cathodic_protection/engine_adapter.py:145`](../../../../src/digitalmodel/cathodic_protection/engine_adapter.py#L145).
 
 **Existing tests:** [`tests/cathodic_protection/test_abs_ships_rebuild.py::test_abs_table_values_are_cited`](../../../../tests/cathodic_protection/test_abs_ships_rebuild.py); [`tests/cathodic_protection/test_abs_tables.py::test_coating`](../../../../tests/cathodic_protection/test_abs_tables.py)
 
@@ -475,11 +481,12 @@ Table 3. Record dispositions against the implementation, coverage and label crit
 
 [test_edition_paths_review.py](../../../../tests/cathodic_protection/test_edition_paths_review.py)
 rejects malformed or duplicate-key JSON, missing required topics, invalid status
-records, unpinned revisions, non-repository source paths, stale source bytes,
-incorrect line anchors and nonexistent test definitions. Both primary and
-supporting source references are checked at the recorded commit and HEAD; the
-working source bytes must also match. The test references are resolved by Python
-syntax inspection without importing calculators or opening citation resources.
+records, unpinned revisions, non-repository source paths, incorrect pinned line
+anchors, missing anchor text and nonexistent test definitions. Both primary and
+supporting source references are checked at the recorded commit, HEAD and in the
+working tree. Exact stripped anchor text is checked at the recorded line in the
+pin and may move to another line in HEAD or the working tree. The test references
+are resolved by Python syntax inspection without importing calculators or opening citation resources.
 Every PASS has a nonempty test list, label and no missing item. The added guards require
 field-joint citation assertions for both F103 tokens, preserve the B401 retrofit
 clause-coverage gap, and compare every Markdown disposition and the summary
@@ -496,16 +503,27 @@ engineering results. Tests that would open standard resources or use
 excluded cases are outside this execution basis and are not run. Existing tests
 of CP calculators and their assertions are unchanged.
 
-For this revision, the starting integrity run passes five tests. With the three
+For revision 1, the starting integrity run passes five tests. With the three
 new guards, the unchanged records produce two failures and six passes. After
 correction, all eight integrity tests pass with `PYTHONUTF8` unset. These tests
 inspect code and assertion definitions; the F103 calculator tests named in the
 record are not executed by this run.
 
-The source pins deliberately fail when a cited source file changes at HEAD or in
-the working tree. A source change requires a new review of the affected behavior,
-updated references and a new revision-history row; moving a line number alone
-does not renew the review. Local links resolve against the frozen source bytes.
+For revision 2, the eight existing integrity tests pass before the changes.
+Seven new regression cases then produce three failures and twelve passes with
+the original check. After the anchor check and record refresh, all fifteen tests
+pass with no failures or skips. The cases accept unrelated edits and line shifts
+while rejecting changed anchors in the pin, HEAD or working tree and a wrong
+pinned line. The run uses the uncommitted tree; no merge or rebase is performed.
+
+The refreshed pin includes the adapter routing additions and recommendation
+changes on main. The eight recorded anchors in those files retain their text;
+their recorded line numbers and Table 2 are updated. The named retrofit subject
+test and the neighboring recommendation-source test were re-read at this pin:
+they still assert subject selection and mass/output labels, respectively,
+without asserting the emitted retrofit clause for every token. That gap remains
+FAIL. Anchor checks detect changed or removed anchor text, rather than every edit
+to the containing file; surrounding behavior still requires source review.
 
 ## Limitations and next checkpoint
 

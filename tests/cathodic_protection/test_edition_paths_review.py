@@ -50,11 +50,19 @@ def check_location(location, commit):
     assert path.parts[:3] == ("src", "digitalmodel", "cathodic_protection")
     line = location["line"]
     assert type(line) is int and line > 0
-    frozen = git_text(commit, path.as_posix())
-    assert frozen == git_text("HEAD", path.as_posix()), f"review needs refresh: {path}"
-    assert frozen == (ROOT / path).read_text(encoding="utf-8")
-    assert frozen.splitlines()[line - 1].strip() == location["anchor"]
-    assert location["anchor"]
+    anchor = location["anchor"]
+    assert anchor
+    frozen = git_text(commit, path.as_posix()).splitlines()
+    assert line <= len(frozen), f"pinned anchor out of bounds: {path}:{line}"
+    assert frozen[line - 1].strip() == anchor, f"pinned anchor changed: {path}:{line}"
+    # Line numbers describe the pin. Unrelated edits may move an intact anchor.
+    for revision, text in (
+        ("HEAD", git_text("HEAD", path.as_posix())),
+        ("working tree", (ROOT / path).read_text(encoding="utf-8")),
+    ):
+        assert anchor in {item.strip() for item in text.splitlines()}, (
+            f"review anchor missing at {revision}: {path}:{line}"
+        )
 
 
 def test_json_parses_and_has_review_rows(rows):
@@ -162,3 +170,43 @@ def test_markdown_dispositions_match_all_record_rows(rows):
         )
         assert register in text
         assert f"**{row['status']} — {row['code']};" in review_section(row["id"])
+
+
+@pytest.fixture
+def location_snapshot(tmp_path, monkeypatch):
+    """Provide independent pinned, committed and working source snapshots."""
+    filename = "src/digitalmodel/cathodic_protection/reviewed_path.py"
+    source = tmp_path / filename
+    source.parent.mkdir(parents=True)
+    frozen = "# context\ndef reviewed_path():\n    pass\n"
+    source.write_text(frozen, encoding="utf-8")
+    snapshots = {"pinned": frozen, "HEAD": frozen}
+    monkeypatch.setitem(globals(), "ROOT", tmp_path)
+    monkeypatch.setitem(globals(), "git_text", lambda revision, path: snapshots[revision])
+    location = {"file": filename, "line": 2, "anchor": "def reviewed_path():"}
+    return location, snapshots, source
+
+
+@pytest.mark.parametrize("changed_snapshot", ["HEAD", "working", "both"])
+def test_location_allows_unrelated_edits_and_line_shifts(location_snapshot, changed_snapshot):
+    location, snapshots, source = location_snapshot
+    changed = "# added context\n" + snapshots["pinned"] + "# unrelated addition\n"
+    if changed_snapshot in {"HEAD", "both"}:
+        snapshots["HEAD"] = changed
+    if changed_snapshot in {"working", "both"}:
+        source.write_text(changed, encoding="utf-8")
+    check_location(location, "pinned")
+
+
+@pytest.mark.parametrize("changed_snapshot", ["pinned", "HEAD", "working", "pinned-line"])
+def test_location_rejects_changed_anchor_or_wrong_pinned_line(location_snapshot, changed_snapshot):
+    location, snapshots, source = location_snapshot
+    changed = snapshots["pinned"].replace("def reviewed_path():", "def other_path():")
+    if changed_snapshot == "working":
+        source.write_text(changed, encoding="utf-8")
+    elif changed_snapshot == "pinned-line":
+        location["line"] = 1
+    else:
+        snapshots[changed_snapshot] = changed
+    with pytest.raises(AssertionError):
+        check_location(location, "pinned")

@@ -11,7 +11,7 @@
     "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
     "line": 116,
     "anchor": "_CATEGORY_IV_EDITIONS: Final[frozenset[str]] = frozenset({\"2021\"})",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_category_iv_only_in_2021"
     ],
@@ -41,7 +41,7 @@
     "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
     "line": 119,
     "anchor": "_ANODE_TEMPERATURE_EDITIONS: Final[frozenset[str]] = frozenset({\"2021\"})",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_2021_hot_anode_changes_driving_voltage_and_capacity",
       "tests/cathodic_protection/test_b401_tables.py::test_ambient_editions_reject_anode_temperature_above_30",
@@ -83,7 +83,7 @@
     "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
     "line": 913,
     "anchor": "def design_driving_voltage(",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_zinc_seawater_potential_changes_in_2021",
       "tests/cathodic_protection/test_b401_tables.py::test_design_driving_voltage_seawater"
@@ -119,7 +119,7 @@
     "file": "src/digitalmodel/cathodic_protection/b401_structures_phases_retrofit.py",
     "line": 127,
     "anchor": "if edition == \"2021\":",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_b401_structures_phases.py::test_retrofit_project_practice_and_2021_condition_inputs_fail_closed"
     ],
@@ -156,7 +156,7 @@
     "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
     "line": 76,
     "anchor": "_SOURCE_BY_EDITION: Final[dict[Edition, EditionSource]] = {",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_b401_tables.py::test_every_result_carries_the_edition_citation",
       "tests/cathodic_protection/test_b401_tables.py::test_table_label_follows_edition_numbering",
@@ -197,9 +197,9 @@
       "2021"
     ],
     "file": "src/digitalmodel/cathodic_protection/report_recommendations.py",
-    "line": 98,
+    "line": 101,
     "anchor": "retrofit_subject = \"retrofit evidence\" if edition == \"2021\" else \"retrofit documentation\"",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_report_recommendations.py::test_verified_options_use_edition_specific_retrofit_subject"
     ],
@@ -214,7 +214,7 @@
     "evidence": [
       {
         "file": "src/digitalmodel/cathodic_protection/report_recommendations.py",
-        "line": 132,
+        "line": 135,
         "anchor": "def _rule_source(edition: Any, key: str) -> str:"
       }
     ]
@@ -233,7 +233,7 @@
     "file": "src/digitalmodel/cathodic_protection/_edition.py",
     "line": 27,
     "anchor": "Edition = Literal[\"2005\", \"2010\", \"2017\", \"2021\"]",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_edition_api_foundation.py::test_normalize_edition_accepts_supported_aliases",
       "tests/cathodic_protection/test_edition_api_foundation.py::test_normalize_edition_warns_and_defaults_when_missing",
@@ -260,7 +260,7 @@
       },
       {
         "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
-        "line": 562,
+        "line": 570,
         "anchor": "def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:"
       }
     ]
@@ -277,7 +277,7 @@
     "file": "src/digitalmodel/cathodic_protection/dnv_rp_b401.py",
     "line": 93,
     "anchor": "_F103_EDITION_FOR_B401: Final[dict[Edition, F103Edition]] = {",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [],
     "label": "The wrapper docstring labels F103 Sec. 5.6.7, Eq. 14 only; no edition-specific Citation is returned.",
     "status": "FAIL",
@@ -306,7 +306,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 786,
     "anchor": "def linepipe_coating_row(",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019",
       "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_2019_concrete_weight_coating_selects_the_fbe_row",
@@ -337,7 +337,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 874,
     "anchor": "def field_joint_coating_row(",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_2010_none_maps_to_2019_bare_steel_row",
       "tests/cathodic_protection/test_f103_tables.py::test_other_2010_field_joint_ids_raise_under_2019",
@@ -369,7 +369,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 278,
     "anchor": "_BANDS_BY_EDITION: Final[",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_temperature_bands_per_edition",
       "tests/cathodic_protection/test_f103_tables.py::test_fluid_temperature_band_boundaries_2010",
@@ -405,7 +405,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 1138,
     "anchor": "def _check_ambient_for_2010(anode_surface_temperature_c: float) -> None:",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_anode_temperature_above_30_rejected_under_2010",
       "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_2019_buried_hot_anode_uses_table_6_3_row"
@@ -434,7 +434,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 1198,
     "anchor": "def anode_closed_circuit_potential(",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_anode_values_2010_defer_to_b401_2010"
     ],
@@ -464,7 +464,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 116,
     "anchor": "_OWN_ANODE_TABLE_EDITIONS: Final[frozenset[str]] = frozenset({\"2019\"})",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_anode_values_2010_defer_to_b401_2010",
       "tests/cathodic_protection/test_f103_tables.py::test_anode_values_2019_match_table_6_3"
@@ -498,7 +498,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 1088,
     "anchor": "def bracelet_utilisation_factor(edition: F103Edition | None = None) -> CitedValue:",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_bracelet_utilisation_factor_2010_defers_to_b401_table_10_8",
       "tests/cathodic_protection/test_f103_tables.py::test_bracelet_utilisation_factor_2019_cites_clause_6_4_2"
@@ -521,7 +521,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 87,
     "anchor": "_SOURCE_BY_EDITION: Final[dict[F103Edition, F103EditionSource]] = {",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_every_result_carries_the_edition_citation",
       "tests/cathodic_protection/test_edition_crosswalk.py::test_f103_flowline_60c_fbe_differs_between_2010_and_2019",
@@ -552,7 +552,7 @@
     "file": "src/digitalmodel/cathodic_protection/f103_tables.py",
     "line": 666,
     "anchor": "def anode_bank_formula_citations(",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_pipeline_anode_bank.py::test_formula_references_separate_standard_and_circuit_relation",
       "tests/cathodic_protection/test_pipeline_anode_bank.py::test_2010_uses_renumbered_sections_and_companion_table"
@@ -584,9 +584,9 @@
       "2019"
     ],
     "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
-    "line": 844,
+    "line": 852,
     "anchor": "def _f103_field_joint_coating(",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_engine_adapter.py::test_f103_2019_fbe_field_joints_resolve_by_infill",
       "tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_field_joint_ids_unchanged"
@@ -609,7 +609,7 @@
     "file": "src/digitalmodel/cathodic_protection/b401_component_zones.py",
     "line": 63,
     "anchor": "if edition == \"2019\"",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_b401_riser_components.py::test_f103_field_joint_coating_is_edition_cited"
     ],
@@ -633,7 +633,7 @@
     "file": "src/digitalmodel/cathodic_protection/pipeline_anode_bank.py",
     "line": 45,
     "anchor": "enum = FieldJointCoating if edition == \"2010\" else FieldJointCoating2019",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_pipeline_anode_bank.py::test_fjc_extension_uses_area_weighted_side_current_per_length"
     ],
@@ -659,7 +659,7 @@
     "file": "src/digitalmodel/cathodic_protection/_edition.py",
     "line": 157,
     "anchor": "def normalize_f103_edition(edition: str | None, *, stacklevel: int = 2) -> F103Edition:",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_f103_tables.py::test_2016_aliases_to_2019_with_a_warning",
       "tests/cathodic_protection/test_f103_tables.py::test_2021_alias_gives_the_2019_tables",
@@ -694,9 +694,9 @@
       "2019"
     ],
     "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
-    "line": 880,
+    "line": 888,
     "anchor": "if pinned_edition is None:",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_engine_adapter.py::test_neutral_f103_key_without_edition_runs_the_2019_default",
       "tests/cathodic_protection/test_engine_adapter.py::test_f103_2010_alias_pins_2010_with_deprecation",
@@ -725,7 +725,7 @@
     "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
     "line": 675,
     "anchor": "number, values = _CURRENT_DENSITY_BY_PHASE[DesignPhase(phase)]",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_current_demand_identical_across_editions",
       "tests/cathodic_protection/test_b401_tables.py::test_design_current_density_matches_table_1",
@@ -764,7 +764,7 @@
     "file": "src/digitalmodel/cathodic_protection/b401_tables.py",
     "line": 414,
     "anchor": "_UTILISATION_FACTOR: Final[dict[AnodeShape, float]] = {",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_b401_tables.py::test_utilisation_factor_matches_table_8"
     ],
@@ -794,7 +794,7 @@
     "file": "src/digitalmodel/cathodic_protection/anode_sizing.py",
     "line": 313,
     "anchor": "def calculate_anode_resistance(",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_kernels.py::TestTable107Resistance::test_long_slender_standoff_review_a2",
       "tests/cathodic_protection/test_kernels.py::TestTable107Resistance::test_short_slender_standoff_formula",
@@ -827,9 +827,9 @@
       "2021"
     ],
     "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
-    "line": 610,
+    "line": 618,
     "anchor": "design_data.get(\"design_life\", 25.0), \"design_data.design_life\"",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_edition_crosswalk.py::test_b401_current_demand_identical_across_editions",
       "tests/cathodic_protection/test_b401_structures_phases.py::test_temporary_phase_has_its_own_design_life"
@@ -845,7 +845,7 @@
     "evidence": [
       {
         "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
-        "line": 704,
+        "line": 712,
         "anchor": "total_mass = kernel.anode_mass(total_mean, design_life, capacity.value, u)"
       },
       {
@@ -864,7 +864,7 @@
     "file": "src/digitalmodel/cathodic_protection/abs_ships_tables.py",
     "line": 13,
     "anchor": "_BASE: Final = {",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [
       "tests/cathodic_protection/test_abs_ships_rebuild.py::test_abs_table_values_are_cited",
       "tests/cathodic_protection/test_abs_tables.py::test_coating"
@@ -878,7 +878,7 @@
     "evidence": [
       {
         "file": "src/digitalmodel/cathodic_protection/engine_adapter.py",
-        "line": 139,
+        "line": 145,
         "anchor": "KEY_ABS_SHIPS: Final = \"ABS_gn_ships_2018\""
       }
     ]
@@ -893,7 +893,7 @@
     "file": "src/digitalmodel/cathodic_protection/dnv_rp_f103.py",
     "line": 78,
     "anchor": "_LEGACY_RESULT_EDITION: Final[F103Edition] = \"2010\"",
-    "commit": "d34bda5cf18d11be48b17c7ba94e5c8127af2bf2",
+    "commit": "6e88ab33e957cc354fedc678968c51200695adeb",
     "test": [],
     "label": "The result validator supplies f103_standard_for_edition and edition_provenance; no normative clause is attached to metadata fallback policy.",
     "status": "FAIL",
