@@ -156,6 +156,14 @@ cad = [
     # different install line.
     "cadquery-ocp>=7.7,<8.0",
 ]
+cad-occ = [
+    # STEP and IGES readers in digitalmodel.cad (#2903). The OpenCASCADE kernel
+    # from cadquery-ocp, imported lazily as `OCP`: read_cad raises an ImportError
+    # naming this extra when it is absent. Same pin as the cad extra above.
+    # The round-trip tests also need build123d 0.7.x; 0.8 and later require
+    # numpy 2, which the numpy<2 runtime constraint excludes.
+    "cadquery-ocp>=7.7,<8.0",
+]
 gis-imagery = [
     # Optional Earth Engine support for the gis.imagery timelapse pipeline.
     # Not required: the pipeline falls back to public Planetary Computer STAC.

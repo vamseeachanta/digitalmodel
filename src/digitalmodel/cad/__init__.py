@@ -4,6 +4,7 @@
 
 from .converter import DwgConverter
 from .models import (
+    BrepSummary,
     CadGeometry,
     CadReadError,
     GeometryEntity,
@@ -14,6 +15,7 @@ from .models import (
 from .reader import read_cad
 
 __all__ = [
+    "BrepSummary",
     "CadGeometry",
     "CadReadError",
     "DwgConverter",

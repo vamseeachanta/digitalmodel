@@ -12,11 +12,11 @@ from digitalmodel.cad.models import normalized_geometry
 from digitalmodel.cad.units import resolve_units
 
 
-@pytest.mark.parametrize("suffix", ["step", "stp", "iges", "igs"])
-def test_kernel_formats_are_explicitly_deferred(tmp_path, suffix):
+@pytest.mark.parametrize("suffix", ["sldprt", "SLDASM", "ipt", "iam"])
+def test_native_solid_modeller_files_are_refused(tmp_path, suffix):
     path = tmp_path / f"synthetic.{suffix}"
     path.touch()
-    with pytest.raises(CadReadError, match="kernel adapters are not implemented"):
+    with pytest.raises(CadReadError, match="export STEP or IGES"):
         read_cad(path, units="m")
 
 
@@ -36,7 +36,12 @@ def test_missing_or_directory_input(tmp_path, is_directory):
 
 @pytest.mark.parametrize(
     ("suffix", "dependency", "extra"),
-    [("dxf", "ezdxf", "drawings"), ("stl", "meshio", "mesh")],
+    [
+        ("dxf", "ezdxf", "drawings"),
+        ("stl", "meshio", "mesh"),
+        ("step", "OCP", "cad-occ"),
+        ("igs", "OCP", "cad-occ"),
+    ],
 )
 def test_missing_dependency_has_actionable_error(
     tmp_path, monkeypatch, suffix, dependency, extra

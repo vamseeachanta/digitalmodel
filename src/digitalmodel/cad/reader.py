@@ -8,6 +8,10 @@ from .converter import DwgConverter
 from .models import CadGeometry, CadReadError, LengthUnit
 from .units import resolve_units
 
+# SolidWorks part/assembly and Inventor part/assembly suffixes. No licensed or
+# documented reader for these formats is used by this package.
+NATIVE_SOLID_MODELLER_SUFFIXES = frozenset({".sldprt", ".sldasm", ".ipt", ".iam"})
+
 
 def read_cad(
     path: str | Path,
@@ -18,7 +22,8 @@ def read_cad(
     """Read geometry in metres, refusing absent or contradictory units.
 
     ``units`` states the source coordinate unit; it fills missing file metadata.
-    STEP and IGES kernel adapters are deferred and fail explicitly.
+    STEP and IGES are read through the optional OCP kernel. Native SolidWorks
+    and Inventor files are refused; they are exported to STEP first.
     """
     path = Path(path)
     if not path.is_file():
@@ -43,7 +48,14 @@ def read_cad(
 
         return read_dwg(path, units, converter)
     if suffix in {".step", ".stp", ".iges", ".igs"}:
-        raise CadReadError("STEP and IGES kernel adapters are not implemented")
+        from .brep import read_brep
+
+        return read_brep(path, units)
+    if suffix in NATIVE_SOLID_MODELLER_SUFFIXES:
+        raise CadReadError(
+            "Native SolidWorks and Inventor files are not read; "
+            "export STEP or IGES from the authoring CAD system"
+        )
     raise CadReadError(
-        "Unsupported format; supported: DXF, STL, OBJ, DWG via converter"
+        "Unsupported format; supported: DXF, STL, OBJ, STEP, IGES, DWG via converter"
     )
