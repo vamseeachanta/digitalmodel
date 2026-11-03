@@ -146,8 +146,8 @@ def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
     """Push and manual runs never cancel an active run for the same ref."""
     first = concurrency_result(filename, event, 101)
     second = concurrency_result(filename, event, 102)
-    assert first == (f"{load_workflow(filename)['name']}-refs/heads/main", False)
-    assert second == first
+    assert first == (f"{load_workflow(filename)['name']}-run-101", False)
+    assert second == (f"{load_workflow(filename)['name']}-run-102", False)
 
 
 @pytest.mark.parametrize(
@@ -411,9 +411,14 @@ def test_base_consumers_use_local_tip() -> None:
     register = next(step for step in quality["jobs"]["quality-gates"]["steps"]
                     if step.get("name") == "Check engineering register changes")
     assert "REGISTER_BASE" not in register.get("env", {})
-    assert shlex.split(register["run"]) == [
+    command = next(line for line in register["run"].splitlines()
+                   if line.startswith("python "))
+    assert shlex.split(command) == [
         "python", "scripts/enforcement/check-engineering-register.py", "docs/", "src/",
+        "|", "tee", "reports/engineering-register.log",
     ]
+    assert "set -o pipefail" in register["run"]
+    assert register["shell"] == "bash"
 
 
 @pytest.mark.parametrize("document", ("docs/earlier.md", "src/earlier.rst"))
@@ -479,6 +484,13 @@ def test_full_quality_reports_survive_prose_failure(
         "    json.dumps({'overall_status': os.environ['QUALITY_STATUS']}))\n"
         "raise SystemExit(int(os.environ['QUALITY_EXIT']))\n", encoding="utf-8",
     )
+    tool = tmp_path / "ruff"
+    tool.write_text(
+        "#!/bin/sh\nprintf '%s\\n' "
+        "'[{\"filename\":\"src/example.py\",\"location\":{\"row\":7},\"code\":\"F401\"}]'\n"
+        "exit 1\n", encoding="utf-8",
+    )
+    tool.chmod(0o755)
     failed = False
     outcomes = {}
     uploaded = {}
@@ -497,6 +509,7 @@ def test_full_quality_reports_survive_prose_failure(
             result = subprocess.run(
                 ["bash", "-e", "-c", step["run"]], cwd=tmp_path,
                 env=dict(os.environ, QUALITY_EXIT=str(int(quality_fails)),
+                         PATH=str(tmp_path) + os.pathsep + os.environ["PATH"],
                          QUALITY_STATUS="failure" if quality_fails else "pass"),
                 capture_output=True, text=True, timeout=30, check=False,
             )
@@ -516,6 +529,10 @@ def test_full_quality_reports_survive_prose_failure(
     assert outcomes["Run Quality Gates"] == ("failure" if quality_fails else "success")
     report = uploaded["Upload quality gate results"]["reports/quality_gates_results.json"]
     assert json.loads(report)["overall_status"] == ("failure" if quality_fails else "pass")
+    evidence = uploaded["Upload quality gate results"]
+    register_log = evidence["reports/engineering-register.log"].decode()
+    assert ("docs/sample.md:1:" in register_log) is prose_fails
+    assert json.loads(evidence["reports/ruff_report.json"])[0]["code"] == "F401"
     assert failed == (prose_fails or quality_fails)
     aggregate = workflow["jobs"]["quality-gates-aggregate"]
     assert aggregate["if"] == "always()"
@@ -674,3 +691,38 @@ def test_repo_structure_cancels_superseded_runs(
     assert concurrency["cancel-in-progress"] == "${{ github.event_name == 'pull_request' }}"
     cancellation = evaluate_expression(concurrency["cancel-in-progress"][3:-2], context)
     assert cancellation is (event == "pull_request")
+
+
+@pytest.mark.parametrize("event", ("push", "pull_request"))
+def test_main_meshing_and_automation_path_additions_are_preserved(event):
+    """Keep newly registered inputs while preserving the scoped PR policy."""
+    gmsh = load_workflow("gmsh-meshing-tests.yml")
+    triggers = gmsh.get("on", gmsh.get(True))
+    assert {
+        "examples/hydrodynamics/oc4-semisub/**",
+        "tests/hydrodynamics/test_oc4_public_mesh.py",
+        "tests/hydrodynamics/test_oc4_extended_band.py",
+        "tests/hydrodynamics/test_oc4_complex_export.py",
+        "tests/hydrodynamics/test_oc4_staged_band.py",
+        "tests/hydrodynamics/test_oc4_tail_bound.py",
+        "tests/hydrodynamics/test_oc4_damage_tail.py",
+        "tests/hydrodynamics/test_oc4_retained_measurements.py",
+        "tests/solvers/smoke/test_ci_registration.py",
+    } <= set(triggers[event]["paths"])
+    automation = load_workflow("workflow-automation-tests.yml")
+    triggers = automation.get("on", automation.get(True))
+    assert {"pyproject.toml", "uv.lock", ".coveragerc", "pytest.ini",
+            ".github/workflows/workflow-automation-tests.yml"} <= set(triggers[event]["paths"])
+    assert triggers["schedule"] == [{"cron": "43 6 * * *"}]
+    assert "workflow_dispatch" in triggers
+
+
+def test_full_docs_retains_structure_inputs_and_link_check():
+    """Full docs stays reusable; its push path list keeps structure inputs."""
+    docs = load_workflow("docs.yml")
+    triggers = docs.get("on", docs.get(True))
+    assert {"tests/repo_structure/**", "config/markdown-link-check.json"} <= set(triggers["push"]["paths"])
+    assert "workflow_call" in triggers
+    commands = "\n".join(step.get("run", "") for step in docs["jobs"]["docs"]["steps"])
+    assert "markdown-link-check@3.11.2" in commands
+    assert "--config config/markdown-link-check.json docs/standards/repo-structure.md" in commands

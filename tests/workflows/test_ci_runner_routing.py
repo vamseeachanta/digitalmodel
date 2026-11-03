@@ -53,6 +53,7 @@ def runner_context(
         "github.event_name": event,
         "github.event.pull_request.head.repo.full_name": head,
         "github.event.pull_request.draft": draft,
+        "github.event.pull_request.head.repo.fork": event == "pull_request" and head != "base/repo",
         "matrix.domain": "contracts",
         "matrix.runner": "ubuntu-latest",
         "matrix.os": "ubuntu-latest",
@@ -119,11 +120,12 @@ def test_runner_selection_uses_only_trusted_allowlisted_overrides(
     filename: str, job_id: str, setting: str | None,
     event: str, head: str, draft: bool, trusted: bool,
 ) -> None:
-    """Unknown values stay hosted; drafts execute and forks remain hosted."""
-    expected = "ubuntu-latest"
-    if trusted and setting in ("self-hosted-arm64", "SeLf-HoStEd-ArM64"):
-        expected = ["self-hosted", "Linux", "ARM64"]
+    """Trusted jobs keep main's routes regardless of the retired variable."""
+    expected = ["self-hosted", "Linux"] if trusted else "ubuntu-latest"
+    if job_id in {"domain-tests", "sweep-tests", "test"}:
+        expected = "ubuntu-latest"
     context = runner_context(event, head, setting, draft)
+    assert "PR_GATE_RUNNER" not in str(load_workflow(filename)["jobs"][job_id]["runs-on"])
     assert selected_runner(filename, job_id, context) == expected
     condition = load_workflow(filename)["jobs"][job_id].get("if", "")
     assert "head.repo" not in condition and "PR_GATE_RUNNER" not in condition
@@ -138,10 +140,10 @@ def test_runner_selection_uses_only_trusted_allowlisted_overrides(
 def test_trusted_matrix_fallback_is_preserved(
     filename: str, job_id: str, matrix_key: str, setting: str | None,
 ) -> None:
-    """Unconfigured matrices keep their existing runner, including other labels."""
+    """Trusted matrices retain their runner without a variable override."""
     context = runner_context("workflow_dispatch", "", setting)
     context[matrix_key] = "ubuntu-22.04"
-    expected = ["self-hosted", "Linux", "ARM64"] if setting == "self-hosted-arm64" else "ubuntu-22.04"
+    expected = "ubuntu-22.04"
     assert selected_runner(filename, job_id, context) == expected
 
 
@@ -199,9 +201,14 @@ def test_fork_matrix_cannot_select_self_hosted_runner(
     assert selected_runner(filename, job_id, context) == "ubuntu-latest"
 
 
-def test_focused_gmsh_job_stays_hosted() -> None:
-    """The dedicated Gmsh job cannot run on ARM64."""
-    assert load_workflow(GMSH_JOB[0])["jobs"][GMSH_JOB[1]]["runs-on"] == "ubuntu-latest"
+@pytest.mark.parametrize("event,head,expected", (
+    ("pull_request", "base/repo", ["self-hosted", "x64"]),
+    ("pull_request", "fork/repo", "ubuntu-latest"),
+    ("schedule", "", ["self-hosted", "x64"]),
+))
+def test_focused_gmsh_retains_main_x64_route(event, head, expected) -> None:
+    """The dedicated Gmsh job uses x64 and keeps fork execution hosted."""
+    assert selected_runner(*GMSH_JOB, runner_context(event, head, None)) == expected
 
 
 @pytest.mark.parametrize("filename", sorted({name for name, _ in ROUTED_JOBS} | {GMSH_JOB[0]}))

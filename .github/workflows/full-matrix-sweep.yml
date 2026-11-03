@@ -17,8 +17,6 @@ concurrency:
   group: full-matrix-sweep-${{ github.ref }}-${{ github.run_id }}
   cancel-in-progress: false
 
-# PR_GATE_RUNNER accepts self-hosted-arm64; unset/unknown values keep hosted defaults.
-# Fork pull requests always stay on hosted runners.
 jobs:
   full-quality-gates:
     name: Full quality gates
@@ -34,7 +32,7 @@ jobs:
 
   full-matrix:
     name: Build full shard matrix
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       total: ${{ steps.matrix.outputs.total }}
@@ -92,11 +90,8 @@ jobs:
       UV_PYTHON: "3.11"
     name: sweep-tests-${{ matrix.domain }}
     needs: full-matrix
-    # Gmsh domains retain matrix.runner: no linux-aarch64 wheel is available.
-    # Marine engineering retains hosted Capytaine binaries.
-    # Subsea retains x64 byte-identical Parquet fixtures.
-    # Infrastructure other retains the hosted multiprocessing speed baseline.
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && matrix.domain != 'solver-smoke' && matrix.domain != 'specialized' && matrix.domain != 'marine-engineering' && matrix.domain != 'subsea' && matrix.domain != 'infrastructure-other' && fromJSON('["self-hosted","Linux","ARM64"]') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'ubuntu-latest' || matrix.runner) }}
+    # Preserve each shard's configured runner; fork jobs remain hosted.
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || matrix.runner }}
     timeout-minutes: 40
     strategy:
       fail-fast: false
@@ -204,7 +199,7 @@ jobs:
       actions: read
       issues: write
     if: always()
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Summarize shard results
         continue-on-error: true
@@ -328,26 +323,64 @@ jobs:
             // Include failures specific to another Python version, which may
             // not occur in the domain sweep's Python 3.11 baseline.
             const seen = new Set();
+            const qualityFindings = [];
+            const findingKeys = new Set();
+            function addFinding(tool, filename, line, rule, shard) {
+              // Publish only repository locations and rule IDs, never diagnostics.
+              const path = String(filename || '').replaceAll('\\', '/');
+              const relative = path.match(/(?:^|\/)((?:src|docs|tests)\/.+)$/);
+              const file = relative ? relative[1] : path.split('/').pop();
+              const key = JSON.stringify([tool, file, line, rule, shard]);
+              if (findingKeys.has(key)) return;
+              findingKeys.add(key);
+              qualityFindings.push({tool, file, line, rule, shard});
+            }
             function readQualityReports(directory) {
               if (!fs.existsSync(directory)) return;
               for (const entry of fs.readdirSync(directory, {withFileTypes: true})) {
                 const path = `${directory}/${entry.name}`;
                 if (entry.isDirectory()) {
                   readQualityReports(path);
-                } else if (entry.name === 'quality_gates_results.json' || entry.name === 'quality-gates-pytest-full.log') {
-                  let texts;
+                  continue;
+                }
+                const names = ['engineering-register.log', 'ruff_report.json', 'bandit_report.json',
+                  'quality_gates_results.json', 'quality-gates-pytest-full.log'];
+                if (!names.includes(entry.name)) continue;
+                const shard = directory.split('/')[1];
+                try {
                   const content = fs.readFileSync(path, 'utf8');
-                  if (entry.name.endsWith('.json')) {
-                    try {
-                      texts = (JSON.parse(content).results || []).map(result => result.metrics?.output_tail || '');
-                    } catch {
-                      failedJobs.push(['quality-report', {result: 'unreadable'}]);
-                      continue;
+                  if (entry.name === 'engineering-register.log') {
+                    for (const line of content.split('\n')) {
+                      const match = line.match(/^(.+?):(\d+): \[([^\]]+)\]/);
+                      if (match) addFinding('Register', match[1], Number(match[2]), match[3], shard);
                     }
-                  } else {
-                    texts = [content];
+                    continue;
                   }
-                  const shard = directory.split('/')[1];
+                  if (entry.name === 'ruff_report.json') {
+                    const findings = JSON.parse(content);
+                    if (!Array.isArray(findings)) throw Error('Invalid Ruff report');
+                    for (const row of findings) {
+                      if (!row.filename || !row.location?.row || !row.code) throw Error('Invalid Ruff finding');
+                      addFinding('Ruff', row.filename, row.location.row, row.code, shard);
+                    }
+                    continue;
+                  }
+                  if (entry.name === 'bandit_report.json') {
+                    const report = JSON.parse(content);
+                    if (!Array.isArray(report.results)) throw Error('Invalid Bandit report');
+                    if (report.errors?.length) failedJobs.push([`${shard}/bandit-errors`, {result: 'incomplete'}]);
+                    for (const row of report.results) {
+                      if (!row.filename || !row.line_number || !row.test_id) throw Error('Invalid Bandit finding');
+                      addFinding('Bandit', row.filename, row.line_number, row.test_id, shard);
+                    }
+                    continue;
+                  }
+                  let texts = [content];
+                  if (entry.name.endsWith('.json')) {
+                    const report = JSON.parse(content);
+                    if (!Array.isArray(report.results)) throw Error('Invalid quality report');
+                    texts = report.results.map(result => result.metrics?.output_tail || '');
+                  }
                   for (const text of texts) {
                     for (const line of text.split('\n')) {
                       const match = line.match(/^(?:FAILED|ERROR)\s+(tests\/.+?)(?:\s+-\s+.*)?$/);
@@ -358,6 +391,8 @@ jobs:
                       active.push([match[1], {shard, first_seen_run: 'current batch', run_id: context.runId}]);
                     }
                   }
+                } catch {
+                  failedJobs.push([`${shard}/${entry.name}`, {result: 'unreadable'}]);
                 }
               }
             }
@@ -377,6 +412,15 @@ jobs:
               lines.push(`| ${cell(id)} | ${cell(row.shard)} | ${row.first_seen_run} | ${row.run_id} | Resolved |`);
             }
             lines.push('', `Showing at most 200 of ${active.length + resolved.length} failure records.`);
+            lines.push('', 'Register, Ruff and Bandit findings.', '',
+              '| Tool | File | Line | Rule | Evidence |', '| --- | --- | --- | --- | --- |');
+            for (const row of qualityFindings.slice(0, 200)) {
+              lines.push(`| ${cell(row.tool)} | ${cell(row.file)} | ${cell(row.line)} | ${cell(row.rule)} | ${cell(row.shard)} |`);
+            }
+            const totals = ['Register', 'Ruff', 'Bandit'].map(tool =>
+              `${tool}: ${qualityFindings.filter(row => row.tool === tool).length}`).join(', ');
+            lines.push('', totals + '.',
+              `Showing ${Math.min(200, qualityFindings.length)} of ${qualityFindings.length} tool findings; complete findings: [quality-gate-results artifacts](${runUrl}).`);
             const uncertain = Object.entries(baseline.shards).filter(([id, row]) =>
               row.parsed !== true || !['success', 'failure'].includes(row.conclusion) ||
               (row.conclusion === 'failure' && !active.some(([node, record]) => record.shard === id)));

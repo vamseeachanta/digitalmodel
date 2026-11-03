@@ -47,7 +47,7 @@ def evidence_metadata(monkeypatch):
 
 
 def run_health_writer(body, *, active=True, existing=True, batch=None,
-                      missing=False, reporting="success", quality_tail=None):
+                      missing=False, reporting="success", quality_tail=None, quality_files=None):
     """Execute the shipped health script with isolated GitHub and file doubles."""
     workflow = yaml.safe_load((ROOT / '.github/workflows/full-matrix-sweep.yml').read_text())
     step = next(s for s in workflow['jobs']['sweep-result']['steps']
@@ -58,14 +58,17 @@ def run_health_writer(body, *, active=True, existing=True, batch=None,
     const baseline = {tests: input.active ? {'tests/example.py::test_case':
       {shard: 'example', first_seen_run: 1, run_id: 10}} : {},
       shards: {example: {parsed: true, conclusion: 'success'}}};
+    const files = {...input.quality_files};
+    if (input.quality_tail !== null) files['quality_gates_results.json'] = JSON.stringify(
+      {results: [{metrics: {output_tail: input.quality_tail}}]});
     const fakeFs = {
-      existsSync: path => path.startsWith('full-quality-results') && input.quality_tail !== null,
+      existsSync: path => path.startsWith('full-quality-results') && Object.keys(files).length > 0,
       readdirSync: path => path === 'full-quality-results'
         ? [{name: 'quality-gate-results-3.12', isDirectory: () => true}]
-        : [{name: 'quality_gates_results.json', isDirectory: () => false}],
+        : Object.keys(files).map(name => ({name, isDirectory: () => false})),
       readFileSync: path => {
       if (path.startsWith('full-quality-results/')) {
-        return JSON.stringify({results: [{metrics: {output_tail: input.quality_tail}}]});
+        return files[path.split('/').pop()];
       }
       if (input.missing) throw Error('Missing baseline');
       return JSON.stringify(baseline);
@@ -87,7 +90,7 @@ def run_health_writer(body, *, active=True, existing=True, batch=None,
     completed = subprocess.run(
         ['node', '-e', harness], input=json.dumps(dict(
             script=step['with']['script'], body=body, active=active, existing=existing,
-            missing=missing, quality_tail=quality_tail)),
+            missing=missing, quality_tail=quality_tail, quality_files=quality_files or {})),
         env=dict(os.environ, BATCH_RESULTS=json.dumps(batch or {}), REPORTING_STATUS=reporting),
         text=True, capture_output=True, check=True, timeout=30)
     return json.loads(completed.stdout)
@@ -192,6 +195,78 @@ def test_health_reports_failures_outside_the_sweep_python_version():
     assert update['body'].count('tests/example.py::test_version') == 1
     assert 'tests/example.py::test_collection' in update['body']
     assert 'quality-gate-results-3.12' in update['body']
+
+
+@pytest.mark.parametrize("filename,content,kind,location,rule", (
+    ("engineering-register.log", "docs/sample.md:12: [first-person] prohibited prose\n", "Register", "docs/sample.md", "first-person"),
+    ("ruff_report.json", json.dumps([{"filename": "src/example.py", "location": {"row": 7}, "code": "F401"}]), "Ruff", "src/example.py", "F401"),
+    ("bandit_report.json", json.dumps({"results": [{"filename": "src/example.py", "line_number": 9, "test_id": "B101"}]}), "Bandit", "src/example.py", "B101"),
+))
+def test_health_itemises_non_pytest_findings(filename, content, kind, location, rule):
+    output = run_health_writer("", active=False, quality_files={filename: content},
+                               batch={"full-quality-gates": {"result": "failure"}})
+    update = output["calls"][0]
+    assert update["state"] == "open"
+    assert f"| {kind} | {location} |" in update["body"]
+    assert rule in update["body"]
+    assert "quality-gate-results-3.12" in update["body"]
+
+
+@pytest.mark.parametrize("filename", ("ruff_report.json", "bandit_report.json"))
+def test_health_unreadable_tool_report_keeps_issue_open(filename):
+    update = run_health_writer("", active=False, quality_files={filename: "invalid"})["calls"][0]
+    assert update["state"] == "open"
+    assert "unreadable" in update["body"]
+    assert filename in update["body"]
+
+
+def test_health_limits_tool_table_and_links_complete_evidence():
+    findings = [{"filename": f"src/sample_{i}.py", "location": {"row": 1}, "code": "F401"}
+                for i in range(205)]
+    update = run_health_writer("", active=False, quality_files={
+        "ruff_report.json": json.dumps(findings),
+    }, batch={"full-quality-gates": {"result": "failure"}})["calls"][0]
+    assert update["state"] == "open"
+    assert update["body"].count("| Ruff | src/") == 200
+    assert "200 of 205" in update["body"]
+    assert "complete findings" in update["body"]
+    assert "actions/runs/100" in update["body"]
+
+
+def test_health_tool_findings_remove_absolute_prefixes_and_messages(tmp_path):
+    filename = str(tmp_path / "src" / "example.py")
+    update = run_health_writer("", active=False, quality_files={
+        "ruff_report.json": json.dumps([{"filename": filename, "location": {"row": 7},
+                                        "code": "F401", "message": "private diagnostic"}]),
+    })["calls"][0]
+    assert str(tmp_path) not in update["body"]
+    assert "private diagnostic" not in update["body"]
+    assert "| Ruff | src/example.py | 7 | F401 |" in update["body"]
+
+
+@pytest.mark.parametrize("findings", ([], [
+    {"filename": "src/example.py", "location": {"row": 7}, "code": "F401"},
+]))
+def test_health_green_batch_closes_with_clean_reports_or_lint_warnings(findings):
+    update = run_health_writer("", active=False, quality_files={
+        "engineering-register.log": "1 files scanned, 0 findings.\n",
+        "ruff_report.json": json.dumps(findings),
+        "bandit_report.json": json.dumps({"results": [], "errors": []}),
+    }, batch={"full-quality-gates": {"result": "success"}})["calls"][0]
+    assert update["state"] == "closed"
+
+
+@pytest.mark.parametrize("filename,report", (
+    ("ruff_report.json", {}), ("ruff_report.json", [{}]),
+    ("bandit_report.json", {}), ("bandit_report.json", {"results": [{}]}),
+    ("bandit_report.json", {"results": [], "errors": [{"filename": "src/example.py"}]}),
+))
+def test_health_invalid_or_incomplete_tool_results_cannot_close_issue(filename, report):
+    update = run_health_writer("", active=False, quality_files={
+        filename: json.dumps(report),
+    })["calls"][0]
+    assert update["state"] == "open"
+    assert "unreadable" in update["body"] or "incomplete" in update["body"]
 
 
 def result(shard="example", ids=(SCR,), conclusion="failure", **updates):

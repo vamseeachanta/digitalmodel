@@ -12,15 +12,13 @@ concurrency:
 permissions:
   contents: read
 
-# PR_GATE_RUNNER accepts self-hosted-arm64; unset/unknown values keep hosted defaults.
-# Fork pull requests always stay on hosted runners.
 jobs:
   quality-gates-aggregate:
     name: Run Quality Gates
     permissions: {}
     needs: quality-gates
     if: always()
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Verify matrix result
         env:
@@ -29,7 +27,7 @@ jobs:
 
   quality-gates:
     name: Quality Gates (Python ${{ matrix.python-version }})
-    runs-on: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && vars.PR_GATE_RUNNER == 'self-hosted-arm64' && fromJSON('["self-hosted","Linux","ARM64"]') || 'ubuntu-latest' }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -132,7 +130,11 @@ jobs:
 
       - name: Check engineering register changes
         # Full runs cover prose from every commit since the previous batch.
-        run: python scripts/enforcement/check-engineering-register.py docs/ src/
+        shell: bash
+        run: |
+          mkdir -p reports
+          set -o pipefail
+          python scripts/enforcement/check-engineering-register.py docs/ src/ | tee reports/engineering-register.log
 
       # Preserve quality evidence after prose failure without running after failed setup.
       - name: Create reports directory
@@ -142,7 +144,16 @@ jobs:
       - name: Run Quality Gates
         if: ${{ !cancelled() && steps.install_dependencies.outcome == 'success' }}
         run: |
+          set +e
           python -m digitalmodel.workflows.automation.quality_gates_cli check --json
+          gate_status=$?
+          # Retain every lint location, beyond the summary report's first ten.
+          ruff check src/ --output-format=json > reports/ruff_report.json
+          lint_status=$?
+          if [ "$lint_status" -gt 1 ]; then
+            exit "$lint_status"
+          fi
+          exit "$gate_status"
         continue-on-error: false
 
       - name: Upload quality gate results
@@ -152,6 +163,8 @@ jobs:
           name: quality-gate-results-${{ matrix.python-version }}
           path: |
             reports/quality_gates_results.json
+            reports/engineering-register.log
+            reports/ruff_report.json
             reports/bandit_report.json
             reports/quality-gates-pytest-full.log
             coverage.json

@@ -35,9 +35,14 @@ def test_pr_cancellation_is_scoped_and_main_is_preserved():
         if "pull_request" not in triggers:
             continue
         concurrency = document["concurrency"]
-        assert concurrency["group"] == (
-            "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
+        expected_group = (
+            "${{ github.workflow }}-${{ github.event_name == 'pull_request' && "
+            "format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}"
+            if path.name in {"quality-gates-by-domain.yml", "gmsh-meshing-tests.yml",
+                             "workflow-automation-tests.yml"}
+            else "${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}"
         )
+        assert concurrency["group"] == expected_group
         expected = "${{ github.event_name == 'pull_request' }}" if "push" in triggers else True
         assert concurrency["cancel-in-progress"] == expected
 
