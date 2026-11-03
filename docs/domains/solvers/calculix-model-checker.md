@@ -46,8 +46,18 @@ deck, so edits after setup are checked.
 ## Input scope and limits
 
 The reader supports case-insensitive keywords and names, relative includes,
-comments, continued element connectivity, generated sets, nested set unions,
-and forward references. Supported element widths are explicit in
+comments, continued element connectivity, generated sets and nested set unions.
+Numeric node and element IDs may precede their mesh definitions; material,
+amplitude, surface and contact-interaction names resolve against the complete
+deck. Forward references to node-set or element-set names are unsupported.
+Declare a referenced set before using it in another set, a boundary or load
+card, a section, or a surface definition. Set unions copy membership when
+declared, and direct cards retain the target set's membership at that card.
+Reopening a set adds members only for subsequent uses; it does not expand
+earlier unions or card targets. A later declaration cannot repair an earlier
+missing set reference.
+
+Supported element widths are explicit in
 `_deck.ELEMENT_NODES`; they cover common solid, plane, axisymmetric, shell,
 beam, truss, two-node spring/dashpot and point-mass elements. Element surfaces
 support tetrahedron, hexahedron and wedge faces and shell SPOS/SNEG faces.
