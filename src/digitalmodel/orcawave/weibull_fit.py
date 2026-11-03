@@ -205,9 +205,29 @@ class WeibullDistribution:
         logarithms handle factors outside float range. OverflowError is
         raised if the final moment exceeds float range. For large shapes,
         the first two moments use centered identities to retain increments.
+        For orders >= 3 with negative location, ValueError is raised when
+        abs(sum(terms))/sum(abs(terms)) <= sqrt(machine epsilon): that
+        signed expansion is outside the supported numerical domain.
         """
         if isinstance(order, bool) or not isinstance(order, int) or order < 0:
             raise ValueError("Moment order must be a nonnegative integer")
+
+        def checked_sum(terms):
+            result = math.fsum(terms)
+            if order >= 3 and self.location < 0:
+                largest = max(abs(term) for term in terms)
+                if largest:
+                    # Normalize before measuring cancellation so the sum of
+                    # magnitudes cannot overflow. sqrt(eps) is a numerical
+                    # conditioning cutoff, not a physical validity criterion.
+                    magnitude = math.fsum(abs(term / largest) for term in terms)
+                    limit = math.sqrt(np.finfo(float).eps) * magnitude
+                    if abs(result / largest) <= limit:
+                        raise ValueError(
+                            "Higher raw moment expansion is ill-conditioned"
+                        )
+            return result
+
         if self.shape >= 16 and order in (1, 2):
             if order == 2:
                 # Source W: E[X^2]=Var[X]+E[X]^2. The nonnegative sum
@@ -274,7 +294,7 @@ class WeibullDistribution:
                     exponent += shift
                 terms.append(math.ldexp(mantissa, exponent))
             else:
-                return math.fsum(terms)
+                return checked_sum(terms)
         except OverflowError:
             # Large powers or gamma factors can still yield a finite moment
             # after scaling; retain the logarithmic expansion for that range.
@@ -296,8 +316,8 @@ class WeibullDistribution:
         largest = max(logs)
         # Sum bounded, signed terms accurately even when the largest
         # positive and negative terms cancel exactly (Source W expansion).
-        signed_sum = math.fsum(
-            sign * math.exp(value - largest) for value, sign in zip(logs, signs)
+        signed_sum = checked_sum(
+            [sign * math.exp(value - largest) for value, sign in zip(logs, signs)]
         )
         if signed_sum == 0:
             return 0.0

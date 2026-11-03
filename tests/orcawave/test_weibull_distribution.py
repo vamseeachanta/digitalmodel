@@ -6,6 +6,7 @@ All sample parameters below are constructed test inputs, not design criteria.
 Floating tolerances bound roundoff of the written arithmetic only.
 """
 
+from decimal import Decimal, localcontext
 from fractions import Fraction
 import math
 
@@ -14,6 +15,28 @@ import pytest
 from scipy.integrate import quad
 
 from digitalmodel.orcawave.weibull_fit import WeibullDistribution
+
+
+def _inverse_control(law, api, argument):
+    """Source W inverse and derivative, evaluated on the supplied binary float.
+
+    Four ulps in the hazard are propagated through dQ/dt=lambda*t^(1/k)/(k*t),
+    with eight result ulps for the remaining arithmetic. Decimal precision 400
+    retains centered increments even at k=10^308, independently of NumPy's
+    log1p/exp/power implementations and their platform-dependent round trips.
+    """
+    with localcontext() as context:
+        context.prec = 400
+        supplied = Decimal.from_float(float(argument))
+        hazard = -(1 - supplied).ln() if api == "quantile" else supplied.ln()
+        shape = Decimal.from_float(float(law.shape))
+        scale = Decimal.from_float(float(law.scale))
+        power = (hazard.ln() / shape).exp()
+        expected = float(Decimal.from_float(float(law.location)) + scale * power)
+        sensitivity = abs(scale * power / (shape * hazard))
+        bound = float(sensitivity * Decimal.from_float(4 * math.ulp(float(hazard))))
+    assert math.isfinite(expected) and math.isfinite(bound)
+    return expected, bound + 8 * math.ulp(expected)
 
 
 def test_exponential_hand_calculation():
@@ -194,16 +217,19 @@ def test_negative_location_cancels_overflowing_quantile_term(api):
     assert getattr(law, api)(argument) == pytest.approx(1e308, rel=1e-12)
 
 
-def test_shifted_quantiles_keep_vector_endpoints_and_zero_crossing():
+def test_shifted_quantiles_keep_vector_endpoints_and_near_crossing():
     """NIST W, online edition 2026, 1.3.6.6.8: Q=10^308*(t-1).
 
-    For t=0,.5,1,2,infinity, Q=-10^308,-5*10^307,0,10^308,infinity.
+    Binary probabilities near the zero crossing need not recover exactly t=1.
     """
     law = WeibullDistribution(1, 1e308, -1e308)
     p = -np.expm1(-np.array([0, 0.5, 1, 2, math.inf]))
-    np.testing.assert_allclose(
-        law.quantile(p), [-1e308, -5e307, 0, 1e308, math.inf], rtol=1e-12
-    )
+    actual = law.quantile(p)
+    assert actual[0] == -1e308
+    assert actual[-1] == math.inf
+    for probability, value in zip(p[1:-1], actual[1:-1]):
+        expected, bound = _inverse_control(law, "quantile", probability)
+        assert value == pytest.approx(expected, rel=0, abs=bound)
 
 
 @pytest.mark.parametrize("quantity", ["variance", "second_moment"])
@@ -258,25 +284,28 @@ def test_raw_moment_raises_only_for_nonrepresentable_final_result():
 
 
 @pytest.mark.parametrize("api", ["quantile", "return_level"])
-def test_scaled_quantile_operands_preserve_exact_cancellation(api):
+def test_scaled_quantile_operands_use_supplied_binary_argument(api):
     """NIST W, online edition 2026, 1.3.6.6.8: Q=gamma+lambda*ln(N).
 
     k=1, lambda=5*10^307, gamma=-10^308 and N=e^2 give
-    Q=-10^308+2*(5*10^307)=0, before any separately rounded logarithms.
+    Q=-10^308+2*(5*10^307)=0 for exact hazard 2; the supplied float
+    argument perturbs that hazard, so its inverse and rounding bound are used.
     """
     law = WeibullDistribution(1, 5e307, -1e308)
     argument = -math.expm1(-2) if api == "quantile" else math.exp(2)
-    assert getattr(law, api)(argument) == 0
+    expected, bound = _inverse_control(law, api, argument)
+    assert getattr(law, api)(argument) == pytest.approx(expected, rel=0, abs=bound)
 
 
 @pytest.mark.parametrize("api", ["quantile", "return_level"])
 @pytest.mark.parametrize("shape, multiplier", [(0.5, 9), (1 / 3, 27)])
 @pytest.mark.parametrize("scale", [1, math.ldexp(1, 1000)])
-def test_quantile_power_keeps_hand_calculated_zero(api, shape, multiplier, scale):
-    """Source W: t=3 gives t^2=9 and t^3=27, exactly cancelling gamma."""
+def test_quantile_power_uses_supplied_binary_argument(api, shape, multiplier, scale):
+    """Source W: exact t=3 gives 9 or 27; binary inputs perturb cancellation."""
     law = WeibullDistribution(shape, scale, -multiplier * scale)
     argument = -math.expm1(-3) if api == "quantile" else math.exp(3)
-    assert getattr(law, api)(argument) == 0
+    expected, bound = _inverse_control(law, api, argument)
+    assert getattr(law, api)(argument) == pytest.approx(expected, rel=0, abs=bound)
 
 
 @pytest.mark.parametrize("probability, expected", [(2e-162, 4e-16), (1e-160, 1e-12)])
@@ -327,26 +356,29 @@ def test_moment_preserves_exact_sum_near_cancellation(quantity, shape, scale):
 @pytest.mark.parametrize("api", ["quantile", "return_level"])
 @pytest.mark.parametrize("scale", [1e16, 1e308])
 @pytest.mark.parametrize("direction", [0, math.inf])
-def test_quantile_preserves_exact_sum_near_cancellation(api, scale, direction):
-    """Source W, online edition 2026, 1.3.6.6.8: k=1 and hazard=1.
+def test_quantile_bounds_roundoff_near_cancellation(api, scale, direction):
+    """Source W, online edition 2026, 1.3.6.6.8: k=1 near hazard=1.
 
-    Q=gamma+lambda: 10^16-(10^16-2)=2 exactly. At either scale, moving
-    gamma to an adjacent float leaves the exact signed rational residual.
+    Q=gamma+lambda is exact only if the hazard is exactly one. Inverting
+    the actual binary probability or cycle count shifts this small residual.
     """
     location = -math.nextafter(scale, direction)
-    expected = float(Fraction(scale) + Fraction(location))
     law = WeibullDistribution(1, scale, location)
     argument = -math.expm1(-1) if api == "quantile" else math.e
-    assert getattr(law, api)(argument) == expected
+    expected, bound = _inverse_control(law, api, argument)
+    assert getattr(law, api)(argument) == pytest.approx(expected, rel=0, abs=bound)
 
 
 def test_near_cancellation_quantile_array_preserves_endpoints():
-    """Source W: hazards 0, 1, infinity give gamma, 2, infinity exactly."""
+    """Source W: endpoint probabilities are exact; interior inputs are binary."""
     law = WeibullDistribution(1, 1e16, -(1e16 - 2))
-    np.testing.assert_array_equal(
-        law.quantile([[0, -math.expm1(-1)], [1, -math.expm1(-1)]]),
-        [[-(1e16 - 2), 2], [math.inf, 2]],
-    )
+    probability = -math.expm1(-1)
+    actual = law.quantile([[0, probability], [1, probability]])
+    assert actual.shape == (2, 2)
+    assert actual[0, 0] == -(1e16 - 2)
+    assert actual[1, 0] == math.inf
+    expected, bound = _inverse_control(law, "quantile", probability)
+    np.testing.assert_allclose(actual[:, 1], expected, rtol=0, atol=bound)
 
 
 @pytest.mark.parametrize("shape", [math.nextafter(16, 0), 16, 1e4, 1e8, 1e16, 1e308])
@@ -398,8 +430,44 @@ def test_centered_quantile_retains_small_power_increment(api, shape, hazard):
     """
     law = WeibullDistribution(shape, shape, -shape)
     argument = -math.expm1(-hazard) if api == "quantile" else math.exp(hazard)
-    expected = shape * math.expm1(math.log(hazard) / shape)
-    assert getattr(law, api)(argument) == pytest.approx(expected, rel=2e-14, abs=0)
+    expected, bound = _inverse_control(law, api, argument)
+    assert getattr(law, api)(argument) == pytest.approx(expected, rel=0, abs=bound)
+
+
+@pytest.mark.parametrize("shape", [1e8, 1e16])
+@pytest.mark.parametrize("scale_ratio", [1.0, 1e100])
+@pytest.mark.parametrize("order", [3, 4, 5])
+def test_ill_conditioned_higher_raw_moment_is_rejected(shape, scale_ratio, order):
+    """Source W: X=lambda*expm1(u/k), with density exp(u-exp(u)).
+
+    At lambda=k=10^8, independent integration gives E[X^3] about -5.44487,
+    rather than the positive raw-expansion residual. Larger scales also
+    exercise the logarithmic fallback; no inaccurate finite result is allowed.
+    """
+    scale = shape * scale_ratio
+    law = WeibullDistribution(shape, scale, -scale)
+    if order == 3 and scale_ratio == 1:
+        reference, error = quad(
+            lambda u: (shape * math.expm1(u / shape)) ** 3 * math.exp(u - math.exp(u)),
+            -80,
+            6,
+            epsabs=1e-11,
+            epsrel=1e-11,
+        )
+        assert error < 2e-11
+        assert reference < -5
+    with pytest.raises(ValueError, match="ill-conditioned"):
+        law.moment(order)
+
+
+@pytest.mark.parametrize("order, expected", [(3, 2), (4, 9), (5, 44)])
+def test_well_conditioned_higher_raw_moments_keep_hand_controls(order, expected):
+    """Source W: for k=lambda=1, gamma=-1, E[T^j]=j!.
+
+    E[(T-1)^3]=6-6+3-1=2; E[(T-1)^4]=24-24+12-4+1=9;
+    E[(T-1)^5]=120-120+60-20+5-1=44, with no catastrophic cancellation.
+    """
+    assert WeibullDistribution(1, 1, -1).moment(order) == pytest.approx(expected)
 
 
 @pytest.mark.parametrize("quantity", ["mean", "first_moment", "second_moment"])
