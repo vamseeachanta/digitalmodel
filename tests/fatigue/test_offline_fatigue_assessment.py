@@ -488,3 +488,63 @@ print(report.locations["detail"].exposure_damage)
         text=True, check=True,
     )
     assert float(result.stdout.strip()) == pytest.approx(0.091)
+
+
+def test_astm_e1049_rainflow_example_through_assessment():
+    """Published counting reference: ASTM E1049-85, section 5.4.4 and Table 4.
+
+    The standard's history -2, 1, -3, 5, -1, 3, -4, 4, -2 counts as
+    range 3: 0.5, range 4: 1.5, range 6: 0.5, range 8: 1.0, range 9: 0.5.
+    With the chosen law N(R) = 1e12 / R**3, Miner damage is
+    (0.5*27 + 1.5*64 + 0.5*216 + 1.0*512 + 0.5*729) / 1e12 = 1094 / 1e12.
+    """
+
+    class CubicCurve:
+        def cycles(self, stress_ranges):
+            return 1e12 / np.asarray(stress_ranges, dtype=float) ** 3
+
+    report = fatigue_assessment(
+        {"astm": StressHistory([-2, 1, -3, 5, -1, 3, -4, 4, -2], "MPa")},
+        CubicCurve(), 1.0, exposure_duration=1.0, time_unit="year",
+        curve_basis=CurveBasis("Chosen N(R) = 1e12 / R**3", "MPa"),
+    )
+    counts = {}
+    for cycle in report.locations["astm"].cycles:
+        counts[cycle.stress_range] = counts.get(cycle.stress_range, 0.0) + cycle.cycles
+    assert counts == {3.0: 0.5, 4.0: 1.5, 6.0: 0.5, 8.0: 1.0, 9.0: 0.5}
+    assert report.locations["astm"].exposure_damage == pytest.approx(1094e-12)
+
+
+def test_c203_class_d_in_air_maps_to_woehler_range_curve():
+    """A bilinear range curve from the repository's DNV-RP-C203 table.
+
+    Class D in air: m1 = 3, log a1 = 12.164, m2 = 5, log a2 = 15.606, knee at
+    1e7 cycles. With SD = 10**((log a1 - 7) / m1), ND = 1e7, k_1 = m1 and
+    k_2 = m2, the assessment must reproduce log N = log a - m log S on both
+    segments. Above the knee the match is exact; below it the tabulated log a2
+    is rounded, so 0.5 % is allowed. This checks the range mapping only and
+    does not qualify any detail.
+    """
+    from digitalmodel.fatigue.c203_sn_tables import BILINEAR, N_KNEE_AIR
+
+    d = BILINEAR["D"]
+    sd = 10 ** ((d.log_a1_air - np.log10(N_KNEE_AIR)) / d.m1)
+    assert sd == pytest.approx(d.fatigue_limit_mpa, rel=1e-3)
+    curve = WoehlerCurve(pd.Series({
+        "SD": sd, "ND": N_KNEE_AIR, "k_1": d.m1, "k_2": d.m2,
+    }))
+    report = fatigue_assessment(
+        {"above": StressHistory([0.0, 100.0], "MPa"),
+         "below": StressHistory([0.0, 40.0], "MPa")},
+        curve, 1.0, exposure_duration=1.0, time_unit="year",
+        curve_basis=CurveBasis("DNV-RP-C203 (2011) class D, in air", "MPa"),
+    )
+    above = report.locations["above"].cycles[0]
+    below = report.locations["below"].cycles[0]
+    assert above.allowable_cycles == pytest.approx(
+        10 ** (d.log_a1_air - d.m1 * np.log10(100.0)), rel=1e-9)
+    assert below.allowable_cycles == pytest.approx(
+        10 ** (d.log_a2 - d.m2 * np.log10(40.0)), rel=5e-3)
+    assert report.locations["above"].exposure_damage == pytest.approx(
+        0.5 / above.allowable_cycles, rel=1e-12)
+    assert report.governing_location == "above"
