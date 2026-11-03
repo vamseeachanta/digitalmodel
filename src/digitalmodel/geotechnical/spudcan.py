@@ -669,17 +669,20 @@ def _capacity_events(points: tuple[PenetrationPoint, ...], model: _LayeredResist
     def recovery(start: int, target: float) -> float | None:
         return _support_depth(points[start:], model, target)
 
-    index = 0
+    index = peak_index = 0
     while index < len(points) - 1:
-        if _compare_loads(points[index + 1].load_kn, points[index].load_kn) >= 0:
+        # Retain the peak across near-equal samples so small steps accumulate.
+        order = _compare_loads(points[index + 1].load_kn, points[peak_index].load_kn)
+        if order >= 0:
+            if points[index + 1].load_kn >= points[peak_index].load_kn:
+                peak_index = index + 1
             index += 1
             continue
-        peak_index = index
         trough_index = index + 1
         index += 1
-        while index + 1 < len(points) and _compare_loads(points[index + 1].load_kn, points[index].load_kn) <= 0:
+        while index + 1 < len(points) and _compare_loads(points[index + 1].load_kn, points[trough_index].load_kn) <= 0:
             index += 1
-            if _compare_loads(points[index].load_kn, points[trough_index].load_kn) < 0:
+            if points[index].load_kn < points[trough_index].load_kn:
                 trough_index = index
         peak, trough = points[peak_index], points[trough_index]
         reached = None if preload_kn is None else _compare_loads(
@@ -688,6 +691,7 @@ def _capacity_events(points: tuple[PenetrationPoint, ...], model: _LayeredResist
         events.append(CapacityDrop(peak, trough, drop, 100 * drop / peak.load_kn,
                                   recovery(trough_index, peak.load_kn), reached,
                                   recovery(trough_index, preload_kn) if reached and preload_kn is not None else None))
+        peak_index = index
     return tuple(events)
 
 

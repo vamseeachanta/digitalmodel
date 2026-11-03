@@ -179,6 +179,49 @@ def test_small_physical_loss_is_retained_above_roundoff(dense):
     assert curve.punch_through_flag is True
 
 
+@pytest.mark.parametrize('scale', [1e-6, 1.0, 1e6])
+@pytest.mark.parametrize('dense', [False, True])
+def test_cumulative_subtolerance_steps_retain_physical_loss(scale, dense):
+    # D=6: punching starts at z=3.66 m. The existing clay expression gives
+    # q=31.7+5*(10-z)+(5-1e-9)*z=81.7-1e-9*z kPa thereafter.
+    # Peak q=81.69999999634; trough q=81.69999999 at z=10 m.
+    # Loss=(10-3.66)*1e-9*9*pi=5.706e-8*pi kN before scaling.
+    # Individual 0.01 m steps are below the relative load tolerance.
+    profile = LayeredProfile((clay(0, 10, 10 * scale, 4.999999999 * scale),
+                              clay(10, 30, 5 * scale, 4.999999999 * scale)))
+    depths = [i / 100 for i in range(1001)] if dense else [0, 10]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=10000 * scale)
+    assert len(curve.events) == 1
+    event = curve.events[0]
+    assert event.peak.depth_m == pytest.approx(3.66)
+    assert event.peak.pressure_kpa / scale == pytest.approx(81.69999999634, rel=1e-14)
+    assert event.trough.depth_m == 10
+    assert event.trough.pressure_kpa / scale == pytest.approx(81.69999999, rel=1e-14)
+    # Subtracting nearly equal loads loses precision; allow 0.01% of the loss.
+    assert event.drop_kn / scale == pytest.approx(5.706e-8 * math.pi, rel=1e-4, abs=0)
+    assert curve.post_peak_drop_kn == event.drop_kn
+    assert curve.punch_through_flag is True
+    assert curve.preload_support_depth_m is None
+
+
+@pytest.mark.parametrize('dense', [False, True])
+def test_cumulative_shallow_recovery_separates_subsequent_loss(dense):
+    # Above z=10 the preceding loss applies; below it q increases by
+    # 1e-10 kPa/m. Recovery of the 6.34e-9 kPa loss needs 63.4 m,
+    # outside this evaluated interval. A weaker third layer causes a second
+    # descent at z=20-6*(31.7-15.85)/15=13.66 m after the shallow recovery.
+    profile = LayeredProfile((clay(0, 10, 10, 4.999999999),
+                              clay(10, 20, 5, 1e-10), clay(20, 30, 2.5, 1e-10)))
+    depths = [i / 100 for i in range(2001)] if dense else [0, 10, 20]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=10000)
+    assert len(curve.events) == 2
+    assert curve.events[0].trough.depth_m == 10
+    assert curve.events[0].recovery_depth_m is None
+    assert curve.events[1].peak.depth_m == pytest.approx(13.66)
+    assert curve.events[1].trough.depth_m == 20
+    assert curve.punch_through_flag is True
+
+
 @pytest.mark.parametrize('direction', [-math.inf, math.inf])
 def test_single_point_support_accepts_preload_roundoff(direction):
     # q(10)=6.34*5+5*10=81.7 kPa; Q=735.3*pi kN for D=6.
