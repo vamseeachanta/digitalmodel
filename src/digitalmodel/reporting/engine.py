@@ -26,7 +26,7 @@ from typing import Any, Iterator, Mapping
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
-from digitalmodel._output_paths import validate_output_paths
+from digitalmodel._output_paths import relative_artifact_path, validate_output_paths
 from digitalmodel.reporting.calc_report import _DEFAULT_TEMPLATE, _template_parts
 from digitalmodel.reporting.figures import inline_plotlyjs, plotly_div
 from digitalmodel.reporting.pdf import PdfMode, PdfStatus, render_pdf
@@ -262,7 +262,7 @@ def write_report(
 
     HTML, best-effort PDF and citation sidecars use the supplied stem.
 
-    The manifest lists artifact names (pack-relative, portable), the
+    The manifest lists artifact paths relative to its resolved directory, the
     standards, the citation count and the PDF status; keys are sorted and no
     timestamp is generated.
 
@@ -278,6 +278,12 @@ def write_report(
     if pdf != "off":
         destinations.append(pdf_path)
     validate_output_paths(*destinations)
+    artifact_links = {
+        "html": relative_artifact_path(html_path, manifest_path),
+        "pdf": relative_artifact_path(pdf_path, manifest_path) if pdf != "off" else None,
+        "citations": relative_artifact_path(citations_path, manifest_path),
+        "manifest": relative_artifact_path(manifest_path, manifest_path),
+    }
     out_dir.mkdir(parents=True, exist_ok=True)
 
     html_path.write_text(
@@ -289,10 +295,8 @@ def write_report(
 
     manifest: dict[str, Any] = {
         "artifacts": {
-            "html": html_path.name,
-            "pdf": pdf_path.name if status.rendered else None,
-            "citations": citations_path.name,
-            "manifest": manifest_path.name,
+            **artifact_links,
+            "pdf": artifact_links["pdf"] if status.rendered else None,
         },
         "document": {
             "number": spec.document.number,

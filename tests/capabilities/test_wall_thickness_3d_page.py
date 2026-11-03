@@ -218,7 +218,7 @@ def test_main_writes_a_fetched_bounded_sidecar(tmp_path, capsys):
     assert "Data could not be loaded" in page
 
 
-@pytest.mark.parametrize("data_url", ["https://example.invalid/a.json", "../a.json", "a</script>.json"])
+@pytest.mark.parametrize("data_url", ["https://example.invalid/a.json", "//example.invalid/a.json", "a</script>.json"])
 def test_external_contract_rejects_nonlocal_urls(data_url):
     with pytest.raises(ValueError, match="sidecar"):
         _load_module().build_page(_study(), data_url=data_url)
