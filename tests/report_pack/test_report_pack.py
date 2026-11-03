@@ -41,7 +41,7 @@ RESULTS_CSV = (
 def _base_settings(tmp_path):
     csv_path = tmp_path / "data" / "results.csv"
     csv_path.parent.mkdir(parents=True, exist_ok=True)
-    csv_path.write_text(RESULTS_CSV, encoding="utf-8")
+    csv_path.write_text(RESULTS_CSV, encoding="utf-8", newline="\n")
     return {
         "document": {
             "number": "B0000-RPT-001-00",
@@ -331,9 +331,9 @@ def _settings_with_units_and_svg(tmp_path):
     settings = _base_settings(tmp_path)
     units_csv = tmp_path / "data" / "units.csv"
     units_csv.write_text(
-        "frame,x,utilisation\n-,m,-\nMidship,50.0,0.61\n", encoding="utf-8"
+        "frame,x,utilisation\n-,m,-\nMidship,50.0,0.61\n", encoding="utf-8", newline="\n"
     )
-    (tmp_path / "data" / "plot.svg").write_text(TINY_SVG, encoding="utf-8")
+    (tmp_path / "data" / "plot.svg").write_text(TINY_SVG, encoding="utf-8", newline="\n")
     settings["results"]["tables"].append(
         {"title": "Frame utilisation", "csv": "data/units.csv", "units_row": True}
     )
@@ -373,7 +373,7 @@ def test_svg_figure_with_script_rejected(tmp_path):
     settings = _settings_with_units_and_svg(tmp_path)
     (tmp_path / "data" / "plot.svg").write_text(
         '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
     with pytest.raises(ReportPackConfigError, match="must not contain scripts"):
         load_pack(_cfg(tmp_path, settings))
@@ -510,7 +510,7 @@ def test_example_pack_end_to_end(tmp_path):
 
 
 def test_every_standard_table_has_its_own_scroll_container(tmp_path):
-    """Issue 1625: each table needs a local scroll owner, including metadata.
+    """Issue 1625: each table needs a local scroll container, including metadata.
 
     Expected topology is hand-enumerated from the standard report structure:
     document, sign-off, revisions, results, references, sources and input echo.
@@ -571,7 +571,7 @@ def test_pack_tables_scroll_locally(tmp_path, layout_browser, viewport, media, s
     if shape == "unbroken":
         row[-1] = "unbroken" * 100  # Synthetic stress string, no physical meaning.
     (tmp_path / "data" / "results.csv").write_text(
-        ",".join(columns) + "\n" + ",".join(row) + "\n", encoding="utf-8"
+        ",".join(columns) + "\n" + ",".join(row) + "\n", encoding="utf-8", newline="\n"
     )
     spec = build_report_spec(load_pack(_cfg(tmp_path, settings)))
     table = spec.sections[2].blocks[-1]
