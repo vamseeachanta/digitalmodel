@@ -20,7 +20,8 @@ import math
 from pathlib import Path
 
 from ._deck import (
-    Block, Deck, Finding, MASS_TYPES, SECTION_KEYWORDS, canonical_token, number, read_blocks,
+    Block, Deck, Finding, MASS_TYPES, SECTION_KEYWORDS, canonical_token, number, positive_id,
+    read_blocks,
 )
 
 
@@ -100,22 +101,27 @@ def _surface_nodes(model: Deck, block: Block, *,
             continue
         if canonical_token(block.params.get("TYPE", "ELEMENT")) != "ELEMENT":
             raise ValueError("Unsupported surface type")
+        # Validate labels even when no elements are selected; CalculiX 2.22
+        # manual, section 7.128 (*SURFACE), uses these explicit face labels.
+        if not row[1].isascii():
+            raise ValueError("Invalid surface face")
+        face = row[1].replace(" ", "").replace("\t", "").upper()
+        if face not in {"S1", "S2", "S3", "S4", "S5", "S6", "SPOS", "SNEG"}:
+            raise ValueError("Invalid surface face")
         for eid in model.target("elset", row[0], block.line, block=block):
             kind, conn = model.elements[eid]
             if element_types is not None:
                 element_types.add(kind)
-            face = canonical_token(row[1])
             if kind.startswith("C3D"):
                 if not face.startswith("S"):
                     raise ValueError("Invalid face")
-                index = int(face[1:]) - 1
+                index = positive_id(face[1:]) - 1
                 if index < 0 or index >= len(faces[len(conn)]):
                     raise ValueError("Invalid face")
                 nodes.update(conn[i] for i in faces[len(conn)][index])
             elif kind in {"S3", "S4", "S4R", "S6", "S8", "S8R"}:
                 # Shell faces 1/2 alias NEG/POS in section 7.128.
-                face = {"S1": "SNEG", "S2": "SPOS"}.get(face, face)
-                if face not in {"SPOS", "SNEG"}:
+                if face not in {"S1", "S2", "SPOS", "SNEG"}:
                     raise ValueError("Unsupported surface face")
                 nodes.update(conn)
             else:
@@ -350,8 +356,8 @@ def _boundary_stages(model: Deck) -> list[tuple[int, set[int]]]:
                     nodes = model.target("nset", row[0], block.line, block=block)
                     # CalculiX 2.22 User's Manual, sections 7.4 and 10.1.2:
                     # structural DOFs are numeric; delete blanks before parsing.
-                    first = int(canonical_token(row[1]))
-                    last = int(canonical_token(row[2])) if len(row) > 2 and row[2] else first
+                    first = positive_id(row[1])
+                    last = positive_id(row[2]) if len(row) > 2 and row[2] else first
                     if not 1 <= first <= last <= 6:
                         raise ValueError("Invalid structural degree of freedom")
                     if len(row) > 3 and row[3]:

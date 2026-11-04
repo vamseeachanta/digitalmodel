@@ -74,18 +74,180 @@ def test_keyword_and_parameter_blanks_preserve_supported_mesh(deck, capsys, spac
     assert evidence["status"] == "PASS" and evidence["findings"] == []
 
 
+@pytest.mark.parametrize("spacing", ["", " ", "\t"])
+@pytest.mark.parametrize("source,replacement", [
+    ("2, 1, 0, 0", "2, 1_0, 0, 0"),
+    ("2, 1, 0, 0", "2, 1.0_0, 0, 0"),
+    ("2, 1, 0, 0", "2, 1e0_1, 0, 0"),
+    ("2, 1, 0, 0", "2, 1d0_1, 0, 0"),
+    ("2, 1, 0, 0", "2, \u0661, 0, 0"),
+    ("2, 1, 0, 0", "2, 1\u00a0.0, 0, 0"),
+    ("2, 1, 0, 0", "2, 1\x1f.0, 0, 0"),
+    ("2, 1, 0, 0", "2, 1\u00a0, 0, 0"),
+    ("2, 1, 0, 0", "2, 1\x1f, 0, 0"),
+    ("2, 1, 0, 0", "2, 1, 0, 0\u00a0"),
+    ("2, 1, 0, 0", "2, 1, 0, 0\x1f"),
+    ("2, 1, 0, 0", "2, 1, 0, 0\u0085"),
+    ("2, 1, 0, 0", "2, 1, 0, 0\u2028"),
+    ("1, 0, 0, 0", "\u0661, 0, 0, 0"),
+    ("1, 0, 0, 0", "0_1, 0, 0, 0"),
+    ("1, 1, 2, 3, 4", "0_1, 1, 2, 3, 4"),
+    ("1, 1, 2, 3, 4", "1, 0_1, 2, 3, 4"),
+    ("FIXED, 1, 3", "FIXED, 0_1, 3"),
+    ("FIXED, 1, 3", "FIXED, 1, 0_3"),
+    ("FIXED, 1, 3", "FIXED, \u0661, 3"),
+    ("FIXED, 1, 3", "FIXED, 0\u00a01, 3"),
+    ("FIXED, 1, 3", "FIXED, 0\x1f1, 3"),
+    ("FIXED, 1, 3", "FIXED, 1, 3, 0_0"),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_python_numeric_syntax_returns_parse_error(deck, capsys, spacing,
+                                                  source, replacement, interface):
+    # CalculiX 2.22 manual, sections 7.4 (*BOUNDARY) and 7.95 (*NODE):
+    # numeric fields use solver input syntax, not Python digit separators.
+    text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    record = ",".join(spacing.join(field.strip(" \t")) for field in replacement.split(","))
+    variant = text.replace(source, record)
+    assert variant != text
+    path = deck(text=variant)
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        captured = capsys.readouterr()
+        assert captured.err == ""
+        evidence = json.loads(captured.out)
+    keyword, line = {
+        "2, 1, 0, 0": ("NODE", 3), "1, 0, 0, 0": ("NODE", 3),
+        "1, 1, 2, 3, 4": ("ELEMENT", 8), "FIXED, 1, 3": ("BOUNDARY", 16),
+    }[source]
+    assert evidence["status"] == "FAIL"
+    assert any(f["code"] == "parse_error" and f["severity"] == "error" and
+               tuple(f["entity_ids"]) == (f"keyword:{keyword}",) and f["line"] == line
+               for f in evidence["findings"])
+
+
+@pytest.mark.parametrize("value,valid", [
+    ("S0_1", False), ("S\u0661", False), ("\u017f1", False), ("S1", True),
+    ("S+1", False), ("S01", False), ("S + 1", False), ("S1\u00a0", False),
+    ("S\x1f1", False), ("s 1", True),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+@pytest.mark.parametrize("empty", [False, True])
+def test_surface_face_index_rejects_python_numeric_syntax(deck, capsys, value, valid,
+                                                         interface, empty):
+    target = "EMPTY" if empty else "BODY"
+    path = deck(f"*ELSET,ELSET=EMPTY\n*SURFACE,NAME=FACE,TYPE=ELEMENT\n{target},{value}\n")
+    passed = valid
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == (0 if passed else 1)
+        captured = capsys.readouterr()
+        assert captured.err == ""
+        evidence = json.loads(captured.out)
+    assert evidence["status"] == ("PASS" if passed else "FAIL")
+    assert ("parse_error" in {f["code"] for f in evidence["findings"]}) == (not valid)
+    if not valid:
+        assert any(f["code"] == "parse_error" and
+                   tuple(f["entity_ids"]) == ("keyword:SURFACE",) and f["line"] == 19
+                   for f in evidence["findings"])
+
+
+@pytest.mark.parametrize("prefix", ["\u00a0", "\x0c", "\x0b", "\x1f"])
+@pytest.mark.parametrize("tail", ["*EQUATION", ""])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_invalid_record_prefix_cannot_hide_keyword(deck, capsys, prefix, tail, interface):
+    text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    text = text.replace("200000, 0.3\n", f"200000, 0.3\n{prefix}{tail}\n")
+    path = deck(text=text)
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        captured = capsys.readouterr()
+        assert captured.err == ""
+        evidence = json.loads(captured.out)
+    assert evidence["status"] == "FAIL"
+    assert any(f["code"] == "parse_error" and tuple(f["entity_ids"]) == ("deck",) and
+               f["line"] == 0 for f in evidence["findings"])
+
+
+@pytest.mark.parametrize("prefix", ["\u00a0", "\x0c", "\x0b", "\x1f"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_invalid_include_continuation_prefix_cannot_hide_keyword(
+    deck, tmp_path, capsys, prefix, interface,
+):
+    (tmp_path / "fragment.inp").write_text("", encoding="utf-8", newline="\n")
+    path = deck("*INCLUDE,INPUT=fragment.inp,\n" +
+                prefix + "*RIGID BODY,NSET=X,REF NODE=1\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        captured = capsys.readouterr()
+        assert captured.err == ""
+        evidence = json.loads(captured.out)
+    assert evidence["status"] == "FAIL"
+    assert any(f["code"] == "parse_error" and tuple(f["entity_ids"]) == ("deck",) and
+               f["line"] == 0 for f in evidence["findings"])
+
+
+@pytest.mark.parametrize("record,valid", [
+    ("0_1,3,1", False), ("1,0_3,1", False), ("1,3,0_1", False),
+    ("\u0661,3,1", False), ("1,3,\u0661", False), ("1,3,0\u00a01", False),
+    ("+01,+03,+01", True), ("0 1,0 3,0 1", True),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_generated_set_uses_solver_integer_syntax(deck, capsys, record, valid, interface):
+    text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    text = text.replace("*NSET, NSET=FIXED\n1, 2, 3",
+                        f"*NSET,NSET=FIXED,GENERATE\n{record}")
+    path = deck(text=text)
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == (0 if valid else 1)
+        captured = capsys.readouterr()
+        assert captured.err == ""
+        evidence = json.loads(captured.out)
+    assert evidence["status"] == ("PASS" if valid else "FAIL")
+    assert ("parse_error" in {f["code"] for f in evidence["findings"]}) == (not valid)
+    if not valid:
+        assert any(f["code"] == "parse_error" and
+                   tuple(f["entity_ids"]) == ("keyword:NSET",) and f["line"] == 10
+                   for f in evidence["findings"])
+
+
+@pytest.mark.parametrize("value", ["+1", "1.", ".1", "-1.0", "+1.e+0", "1.d-1", "1e0"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_solver_decimal_syntax_remains_supported(deck, capsys, value, interface):
+    text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    path = deck(text=text.replace("2, 1, 0, 0", f"2, {value}, 0, 0"))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS" and evidence["findings"] == []
+
+
 @pytest.mark.parametrize("spacing", [" ", "\t"])
 @pytest.mark.parametrize("source,replacement", [
     ("1, 0, 0, 0", "01, 0, 0, 0"),
+    ("1, 0, 0, 0", "+01, 0, 0, 0"),
     ("2, 1, 0, 0", "2, 1.0, 0, 0"),
     ("2, 1, 0, 0", "2, -1.0, 0, 0"),
     ("2, 1, 0, 0", "2, +1.0d+0, 0, 0"),
     ("1, 1, 2, 3, 4", "01, 1, 2, 3, 4"),
+    ("1, 1, 2, 3, 4", "+01, 1, 2, 3, 4"),
     ("1, 1, 2, 3, 4", "1, 01, 2, 3, 4"),
     ("1, 2, 3\n*MATERIAL", "01, 2, 3\n*MATERIAL"),
     ("FIXED, 1, 3", "01, 1, 3"),
     ("FIXED, 1, 3", "FIXED, 01, 3"),
+    ("FIXED, 1, 3", "FIXED, +01, 3"),
     ("FIXED, 1, 3", "FIXED, 1, 03"),
+    ("FIXED, 1, 3", "FIXED, 1, +03"),
     ("FIXED, 1, 3", "FIXED, 1, 3, -0.0d+0"),
     ("1, 2, 3\n*MATERIAL", "01, 03, 01\n*MATERIAL"),
 ])
@@ -126,6 +288,7 @@ def test_numeric_blanks_match_control_evidence(deck, capsys, spacing,
     ("1, 1, 2, 3, 4", "1, -01, 2, 3, 4"),
     ("2, 1, 0, 0", "2, NaN, 0, 0"),
     ("2, 1, 0, 0", "2, Inf, 0, 0"),
+    ("2, 1, 0, 0", "2, 1e400, 0, 0"),
     ("2, 1, 0, 0", "2, 1..0, 0, 0"),
     ("FIXED, 1, 3", "FIXED, 00, 3"),
     ("FIXED, 1, 3", "FIXED, 1, 07"),

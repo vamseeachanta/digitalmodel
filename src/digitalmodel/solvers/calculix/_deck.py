@@ -11,6 +11,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 import math
 from pathlib import Path
+import re
 
 
 @dataclass(frozen=True)
@@ -95,7 +96,12 @@ _KEYWORD_NAMES = {
 
 def number(value: str) -> float:
     """Delete insignificant blanks, accept exponents and reject nonfinite data."""
-    result = float(canonical_token(value).replace("D", "E"))
+    # CalculiX 2.22 manual, sections 7 and 7.95 (*NODE): real input uses
+    # decimal digits and E/D exponents, without Python digit separators.
+    token = value.replace(" ", "").replace("\t", "")
+    if not re.fullmatch(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[EeDd][+-]?[0-9]+)?", token):
+        raise ValueError("Invalid real numeric data")
+    result = float(token.upper().replace("D", "E"))
     if not math.isfinite(result):
         raise ValueError("Nonfinite numeric data")
     return result
@@ -103,7 +109,12 @@ def number(value: str) -> float:
 
 def positive_id(value: str) -> int:
     """Require positive integer entity identifiers after deleting blanks."""
-    result = int(canonical_token(value))
+    # CalculiX 2.22 manual, sections 7.4 (*BOUNDARY), 7.49 (*ELEMENT)
+    # and 7.95 (*NODE): integer fields do not use Python numeric syntax.
+    token = value.replace(" ", "").replace("\t", "")
+    if not re.fullmatch(r"[+-]?[0-9]+", token):
+        raise ValueError("Invalid integer numeric data")
+    result = int(token)
     if result <= 0:
         raise ValueError("Entity identifiers must be positive")
     return result
@@ -127,6 +138,14 @@ def _keyword(line: str, start: int) -> Block:
     return Block(keyword, params, [], start)
 
 
+def _record_line(value: str) -> str:
+    """Trim supported blanks and reject invalid prefixes on every read path."""
+    line = value.strip(" \t")
+    if line and (line[0].isspace() or not line[0].isprintable()):
+        raise ValueError("Invalid record prefix")
+    return line
+
+
 def _expanded_lines(path: Path, active: tuple[Path, ...]) -> Iterable[tuple[str, int]]:
     """Insert included text before interpreting keyword or data continuations."""
     path = path.resolve()
@@ -136,17 +155,19 @@ def _expanded_lines(path: Path, active: tuple[Path, ...]) -> Iterable[tuple[str,
     # headroom so excessive nesting becomes a finding rather than a traceback.
     if len(active) >= 64:
         raise ValueError("Include nesting exceeds 64 files")
-    lines = path.read_text(encoding="utf-8").removeprefix("\ufeff").splitlines()
+    # Preserve non-ASCII/control separators for the numeric validators;
+    # universal-newline reading already handles CRLF and CR input records.
+    lines = path.read_text(encoding="utf-8").removeprefix("\ufeff").split("\n")
     i = 0
     while i < len(lines):
-        line = lines[i].strip()
+        line = _record_line(lines[i])
         i += 1
         if not line or line.startswith("**"):
             continue
         if line.startswith("*") and _keyword(line, i).keyword == "INCLUDE":
             start = i
             while line.endswith(",") and i < len(lines):
-                following = lines[i].strip()
+                following = _record_line(lines[i])
                 if not following or following.startswith("**"):
                     i += 1
                     continue
@@ -181,7 +202,7 @@ def read_blocks(path: Path, active: tuple[Path, ...] = ()) -> list[Block]:
                 i += 1
             result.append(_keyword(line, start))
         elif result:
-            result[-1].rows.append([v.strip() for v in line.split(",")])
+            result[-1].rows.append([v.strip(" \t") for v in line.split(",")])
         else:
             raise ValueError("Data outside a keyword block")
     return result
