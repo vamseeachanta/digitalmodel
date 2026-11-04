@@ -71,11 +71,23 @@ DEFINITIONS = {
     "AMPLITUDE": ("amplitude", "NAME"),
     "SURFACE INTERACTION": ("interaction", "NAME"),
 }
+
+
+def canonical_token(value: str) -> str:
+    """Normalize semantic tokens; file names must retain their spelling.
+
+    CalculiX 2.22 User's Manual, section 7 (Input deck format): blanks are
+    insignificant and alphanumeric input is case insensitive. Apply this
+    only to names and semantic values, never to INCLUDE filenames.
+    """
+    return "".join(value.upper().split())
+
+
 # CalculiX 2.22 User's Manual, section 7 (Input deck format): blanks in
 # keyword names are insignificant. Retain the canonical multiword names
 # consumed by this gate, including operations that must fail closed.
 _KEYWORD_NAMES = {
-    "".join(name.split()): name
+    canonical_token(name): name
     for name in (*SECTION_KEYWORDS, *DEFINITIONS, "CONTACT PAIR", "END STEP",
                  "RIGID BODY", "MODEL CHANGE")
 }
@@ -102,16 +114,16 @@ def _keyword(line: str, start: int) -> Block:
     fields = [v.strip() for v in line[1:].split(",")]
     if not fields[0]:
         raise ValueError("Empty keyword")
-    keyword = "".join(fields[0].upper().split())
+    keyword = canonical_token(fields[0])
     keyword = _KEYWORD_NAMES.get(keyword, keyword)
     params = {}
     for value in fields[1:]:
         if not value:
             continue
         name, sep, data = value.partition("=")
-        # Normalize parameter names independently; filenames and other values
-        # retain their spelling and internal blanks (section 7.75, *INCLUDE).
-        params["".join(name.upper().split())] = data.strip().strip("\"'") if sep else ""
+        # Normalize parameter names independently; values retain their spelling
+        # until interpreted, preserving filenames (section 7.75, *INCLUDE).
+        params[canonical_token(name)] = data.strip().strip("\"'") if sep else ""
     return Block(keyword, params, [], start)
 
 
@@ -225,9 +237,9 @@ class Deck:
                     raise ValueError("Invalid node")
                 self.nodes[nid] = tuple(number(v) for v in row[1:]) + (0.0,) * (4 - len(row))
                 if "NSET" in p:
-                    self.sets["nset"].setdefault(p["NSET"].upper(), set()).add(str(nid))
+                    self.sets["nset"].setdefault(canonical_token(p["NSET"]), set()).add(str(nid))
         elif k == "ELEMENT":
-            kind = p["TYPE"].upper()
+            kind = canonical_token(p["TYPE"])
             width = ELEMENT_NODES.get(kind)
             if width is None:
                 self.error("unsupported_topology", (f"element_type:{kind}",),
@@ -252,13 +264,13 @@ class Deck:
                     raise ValueError("Duplicate element")
                 self.elements[eid] = (kind, tuple(nodes))
                 if "ELSET" in p:
-                    self.sets["elset"].setdefault(p["ELSET"].upper(), set()).add(str(eid))
+                    self.sets["elset"].setdefault(canonical_token(p["ELSET"]), set()).add(str(eid))
                 pending = []
             if pending:
                 raise ValueError("Incomplete element")
         elif k in {"NSET", "ELSET"}:
             kind = k.lower()
-            target = p[k].upper()
+            target = canonical_token(p[k])
             previously_defined = target in self.sets[kind]
             members = self.sets[kind].setdefault(target, set())
             for row in block.rows:
@@ -283,7 +295,7 @@ class Deck:
                     # (*NSET): referenced sets must already be defined. Copy
                     # their current membership; later additions stay local.
                     for value in values:
-                        name = value.upper()
+                        name = canonical_token(value)
                         if name.isascii() and name.isdigit():
                             # Convert while definition errors are caught, before
                             # later sorting or reference resolution can raise.
@@ -298,7 +310,7 @@ class Deck:
                                 members.update(self.sets[kind][name])
         elif k in DEFINITIONS:
             kind, param = DEFINITIONS[k]
-            name = p[param].upper()
+            name = canonical_token(p[param])
             if not name or name in self.definitions[kind]:
                 raise ValueError("Invalid named definition")
             self.definitions[kind].add(name)
@@ -311,11 +323,11 @@ class Deck:
                            for kind in ("NSET", "ELSET") if kind in block.params)
         kind = {"BOUNDARY": "nset", "CLOAD": "nset", "DLOAD": "elset"}.get(block.keyword)
         if block.keyword == "SURFACE":
-            kind = "nset" if block.params.get("TYPE", "ELEMENT").upper() == "NODE" else "elset"
+            kind = "nset" if canonical_token(block.params.get("TYPE", "ELEMENT")) == "NODE" else "elset"
         if kind:
             targets.extend((kind, row[0]) for row in block.rows if row and row[0])
         for kind, value in targets:
-            name = value.upper()
+            name = canonical_token(value)
             if not (name.isascii() and name.isdigit()):
                 members = self.sets[kind].get(name)
                 block.targets[(kind, name)] = None if members is None else members.copy()
@@ -329,7 +341,7 @@ class Deck:
     def resolve_set(self, kind: str, name: str,
                     active: tuple[str, ...] = ()) -> set[int]:
         """Validate expanded set members against the final mesh definitions."""
-        name = name.upper()
+        name = canonical_token(name)
         key = (kind, name)
         if key in self.resolved:
             return self.resolved[key]
@@ -365,7 +377,7 @@ class Deck:
     def target(self, kind: str, value: str, line: int = 0, *,
                block: Block | None = None) -> set[int]:
         """Resolve a direct mesh ID or a named set and retain usage."""
-        value = value.upper()
+        value = canonical_token(value)
         if value.isascii() and value.isdigit():
             universe = self.nodes if kind == "nset" else self.elements
             if int(value) in universe:
@@ -384,7 +396,7 @@ class Deck:
     def reference(self, kind: str, value: str, line: int = 0, *,
                   block: Block | None = None) -> None:
         """Track a symbolic reference against its own namespace."""
-        value = value.upper()
+        value = canonical_token(value)
         self.used.add((kind, value))
         if kind in self.sets:
             self.target(kind, value, line, block=block)

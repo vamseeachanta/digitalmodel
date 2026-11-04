@@ -74,6 +74,91 @@ def test_keyword_and_parameter_blanks_preserve_supported_mesh(deck, capsys, spac
     assert evidence["status"] == "PASS" and evidence["findings"] == []
 
 
+@pytest.mark.parametrize("spacing", [" ", "\t"])
+@pytest.mark.parametrize("location", ["definition", "reference", "both"])
+@pytest.mark.parametrize("namespace,symbol", [
+    ("nset", "FIXED"), ("elset", "BODY"), ("material", "STEEL"),
+    ("surface", "MASTER"), ("amplitude", "RAMP"), ("interaction", "FRICTIONLESS"),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_symbolic_blanks_resolve_definitions_and_references(deck, capsys, spacing,
+                                                          location, namespace, symbol, interface):
+    # CalculiX 2.22 manual, section 7: symbolic identities ignore blanks/case.
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    text = text.replace("*BOUNDARY\n1,", "*NSET,NSET=FIXED\n1\n*BOUNDARY\nFIXED,")
+    text += ("*AMPLITUDE,NAME=RAMP\n0,0,1,1\n*CLOAD,AMPLITUDE=RAMP\nFIXED,1,1\n"
+             "*SURFACE,NAME=MASTER\nBODY,S1\n*SURFACE,NAME=SLAVE,TYPE=NODE\n5\n"
+             "*SURFACE INTERACTION,NAME=FRICTIONLESS\n"
+             "*CONTACT PAIR,INTERACTION=FRICTIONLESS,TYPE=NODE TO SURFACE\nSLAVE,MASTER\n")
+    definitions = {"nset": "*NSET,", "elset": "*ELEMENT,", "material": "*MATERIAL,",
+                   "surface": "*SURFACE,", "amplitude": "*AMPLITUDE,",
+                   "interaction": "*SURFACE INTERACTION,"}
+    lines = []
+    for line in text.splitlines():
+        definition = line.replace(" ", "").startswith(definitions[namespace].replace(" ", ""))
+        if location == "both" or definition == (location == "definition"):
+            line = line.replace(symbol, spacing.join(symbol.lower()))
+        lines.append(line)
+    path = deck(text="\n".join(lines) + "\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS"
+    assert [f["code"] for f in evidence["findings"]] == ["contact_path"]
+    assert tuple(evidence["findings"][0]["entity_ids"]) == ("surface:SLAVE", "surface:MASTER")
+
+
+@pytest.mark.parametrize("spacing", [" ", "\t"])
+@pytest.mark.parametrize("kind", ["NSET", "ELSET"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_symbolic_blanks_preserve_set_alias_and_card_snapshots(deck, capsys, spacing, kind, interface):
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    name, member, other = ("FIXED", "1", "5") if kind == "NSET" else ("BODY", "1", "2")
+    spaced = spacing.join(name.lower())
+    if kind == "NSET":
+        text = text.replace("*BOUNDARY\n1, 1, 3\n",
+                            f"*NSET,NSET={name}\n{member}\n*NSET,NSET=ALIAS\n{spaced}\n"
+                            f"*BOUNDARY\n{spaced},1,3\n*NSET,NSET={spaced}\n{other}\n"
+                            "*BOUNDARY\nALIAS,1,3\n")
+    else:
+        text = text.replace("*SOLID SECTION, ELSET=OTHER, MATERIAL=STEEL\n", "")
+        text = text.replace("*SOLID SECTION, ELSET=BODY, MATERIAL=STEEL\n",
+                            f"*ELSET,ELSET=ALIAS\n{spaced}\n"
+                            f"*SOLID SECTION,ELSET={spaced},MATERIAL=STEEL\n"
+                            f"*ELSET,ELSET={spaced}\n{other}\n"
+                            "*SOLID SECTION,ELSET=ALIAS,MATERIAL=STEEL\n")
+    path = deck(text=text)
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    expected = "unconstrained_part" if kind == "NSET" else "missing_section"
+    assert any(f["code"] == expected and "element:2" in f["entity_ids"]
+               for f in evidence["findings"])
+    assert "missing_reference" not in {f["code"] for f in evidence["findings"]}
+
+
+@pytest.mark.parametrize("spacing", [" ", "\t"])
+@pytest.mark.parametrize("value", ["C3D4", "ELEMENT", "NODE", "S1"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_semantic_tokens_share_blank_normalization(deck, capsys, spacing, value, interface):
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    text += ("*SURFACE,NAME=MASTER,TYPE=ELEMENT\nBODY,S1\n"
+             "*SURFACE,NAME=SLAVE,TYPE=NODE\n5\n*TIE,NAME=JOIN\nSLAVE,MASTER\n")
+    text = text.replace(value, spacing.join(value.lower()))
+    path = deck(text=text)
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS" and evidence["findings"] == []
+
+
 @pytest.mark.parametrize("keyword", ["RIGIDBODY", "R I G I D B O D Y", "MODELCHANGE", "MODEL\tCHANGE"])
 @pytest.mark.parametrize("interface", ["api", "cli"])
 def test_keyword_blanks_cannot_hide_unsupported_topology(deck, capsys, keyword, interface):
@@ -185,6 +270,10 @@ def test_tie_name_required_before_coincidence_exemption(deck, capsys, parameters
     ("*TIE,NAME=JOIN\nSLAVE,MASTER\nSLAVE\n", False),
     ("*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=JOIN\nSLAVE,MASTER\n", False),
     ("*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=join\nSLAVE,MASTER\n", False),
+    ('*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=J O I N\nSLAVE,MASTER\n', False),
+    ('*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=J\tO\tI\tN\nSLAVE,MASTER\n', False),
+    ('*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME= j O i N \nSLAVE,MASTER\n', False),
+    ('*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=J OI\tN\nSLAVE,MASTER\n', False),
     ("*TIE,NAME=JOIN\nSLAVE,MASTER\n", True),
     ("*TIE,NAME=JOIN\nSLAVE,MASTER\n*TIE,NAME=OTHER_JOIN\nSECOND_SLAVE,MASTER\n", True),
 ])
@@ -219,6 +308,10 @@ def test_tie_shape_and_unique_names_precede_connections(deck, capsys, ties, vali
         error = next(f for f in evidence["findings"]
                      if f["code"] in {"parse_error", "duplicate_tie_name"})
         assert error["severity"] == "error" and error["line"] > 0 and error["fix_hint"]
+        if ties.count("*TIE") == 2:
+            duplicates = [f for f in evidence["findings"] if f["code"] == "duplicate_tie_name"]
+            assert len(duplicates) == 2
+            assert all(tuple(f["entity_ids"]) == ("tie:JOIN",) for f in duplicates)
 
 
 @pytest.mark.parametrize("interface", ["api", "cli"])

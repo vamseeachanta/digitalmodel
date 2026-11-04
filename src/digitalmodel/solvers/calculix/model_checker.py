@@ -19,7 +19,9 @@ from itertools import product
 import math
 from pathlib import Path
 
-from ._deck import Block, Deck, Finding, MASS_TYPES, SECTION_KEYWORDS, number, read_blocks
+from ._deck import (
+    Block, Deck, Finding, MASS_TYPES, SECTION_KEYWORDS, canonical_token, number, read_blocks,
+)
 
 
 @dataclass(frozen=True)
@@ -93,16 +95,16 @@ def _surface_nodes(model: Deck, block: Block, *,
     for row in block.rows:
         if not row or not row[0]:
             raise ValueError("Empty surface target")
-        if block.params.get("TYPE", "ELEMENT").upper() == "NODE":
+        if canonical_token(block.params.get("TYPE", "ELEMENT")) == "NODE":
             nodes.update(model.target("nset", row[0], block.line, block=block))
             continue
-        if block.params.get("TYPE", "ELEMENT").upper() != "ELEMENT":
+        if canonical_token(block.params.get("TYPE", "ELEMENT")) != "ELEMENT":
             raise ValueError("Unsupported surface type")
         for eid in model.target("elset", row[0], block.line, block=block):
             kind, conn = model.elements[eid]
             if element_types is not None:
                 element_types.add(kind)
-            face = row[1].upper()
+            face = canonical_token(row[1])
             if kind.startswith("C3D"):
                 if not face.startswith("S"):
                     raise ValueError("Invalid face")
@@ -119,7 +121,7 @@ def _surface_nodes(model: Deck, block: Block, *,
             else:
                 # Unsupported surface geometry must not manufacture a support path.
                 raise ValueError("Unsupported surface face")
-    if element_types is not None and block.params.get("TYPE", "ELEMENT").upper() == "NODE":
+    if element_types is not None and canonical_token(block.params.get("TYPE", "ELEMENT")) == "NODE":
         element_types.update(kind for kind, conn in model.elements.values()
                              if kind not in MASS_TYPES and not nodes.isdisjoint(conn))
     return nodes.intersection(model.nodes)
@@ -148,7 +150,7 @@ def _references_and_sections(model: Deck) -> dict[str, _Surface]:
                 ids = model.target("elset", p["ELSET"], block.line, block=block)
                 if not ids:
                     model.findings.append(Finding("warning", "unused_section",
-                        (f"section:{k}:{p['ELSET'].upper()}",), "Section has no elements",
+                        (f"section:{k}:{canonical_token(p['ELSET'])}",), "Section has no elements",
                         "Assign the section to a populated element set or remove it.", block.line))
                 # A missing material must not count as a valid structural section.
                 if k in {"SOLID SECTION", "SHELL SECTION", "BEAM SECTION", "MEMBRANE SECTION"}:
@@ -167,8 +169,8 @@ def _references_and_sections(model: Deck) -> dict[str, _Surface]:
                                     block.line)
             elif k == "SURFACE":
                 element_types: set[str] = set()
-                surfaces[p["NAME"].upper()] = _Surface(
-                    p.get("TYPE", "ELEMENT").upper(),
+                surfaces[canonical_token(p["NAME"])] = _Surface(
+                    canonical_token(p.get("TYPE", "ELEMENT")),
                     _surface_nodes(model, block, element_types=element_types), element_types)
             elif k in {"CLOAD", "DLOAD", "DSLOAD"}:
                 for row in block.rows:
@@ -194,9 +196,9 @@ def _references_and_sections(model: Deck) -> dict[str, _Surface]:
 def _connections(model: Deck, surfaces: dict[str, _Surface],
                  components: _Components) -> list[tuple[set[int], set[int]]]:
     ties = []
-    tie_names = Counter(b.params.get("NAME", "").upper() for b in model.blocks
+    tie_names = Counter(canonical_token(b.params.get("NAME", "")) for b in model.blocks
                         if b.keyword == "TIE")
-    contact_types = {"".join(b.params.get("TYPE", "").upper().split()) for b in model.blocks
+    contact_types = {canonical_token(b.params.get("TYPE", "")) for b in model.blocks
                      if b.keyword == "CONTACT PAIR"}
     for block in model.blocks:
         if block.keyword not in {"TIE", "CONTACT PAIR"}:
@@ -204,8 +206,8 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
         # CalculiX 2.22 manual, sections 7.22 (*CONTACT PAIR) and 7.132 (*TIE):
         # required parameters must be valid before a connection supplies support.
         parameter = "NAME" if block.keyword == "TIE" else "INTERACTION"
-        value = block.params.get(parameter, "")
-        if not value.strip():
+        value = canonical_token(block.params.get(parameter, ""))
+        if not value:
             model.error("missing_connection_parameter",
                         (f"keyword:{block.keyword}", f"parameter:{parameter}"),
                         f"{block.keyword} requires a nonempty {parameter}",
@@ -229,8 +231,8 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
             # CalculiX 2.22 manual, section 7.132 (*TIE): exactly one pair
             # and a name unused by any other tie. Reject every duplicate
             # before the first declaration can join or exempt any nodes.
-            if tie_names[value.upper()] > 1:
-                model.error("duplicate_tie_name", (f"tie:{value.upper()}",),
+            if tie_names[value] > 1:
+                model.error("duplicate_tie_name", (f"tie:{value}",),
                             "Tie name is used by more than one TIE card",
                             "Assign a unique NAME to each tie; see CalculiX 2.22 "
                             "manual section 7.132 (*TIE).", block.line)
@@ -241,7 +243,7 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
                             "Provide one slave/master surface pair per uniquely named tie; "
                             "see CalculiX 2.22 manual section 7.132 (*TIE).", block.line)
                 continue
-        if block.keyword == "CONTACT PAIR" and value.upper() not in model.definitions["interaction"]:
+        if block.keyword == "CONTACT PAIR" and value not in model.definitions["interaction"]:
             # Reference validation has already reported the undefined interaction.
             continue
         for row in block.rows:
@@ -249,7 +251,7 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
                 model.error("parse_error", (f"keyword:{block.keyword}",), "Expected two surface names",
                             "Provide a defined slave surface and master surface.", block.line)
                 continue
-            names = [v.upper() for v in row]
+            names = [canonical_token(v) for v in row]
             for name in names:
                 model.reference("surface", name, block.line, block=block)
             left, right = (surfaces.get(name) for name in names)
@@ -280,7 +282,7 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
             if block.keyword == "CONTACT PAIR":
                 # CalculiX 2.22 manual, section 7.22 (*CONTACT PAIR):
                 # TYPE is required and contact formulations cannot be mixed.
-                mode = "".join(block.params.get("TYPE", "").upper().split())
+                mode = canonical_token(block.params.get("TYPE", ""))
                 if mode not in {"NODETOSURFACE", "SURFACETOSURFACE", "MORTAR", "MASSLESS"}:
                     model.error("unsupported_contact_type", ("keyword:CONTACT PAIR",),
                                 "Contact TYPE is missing or unsupported",
@@ -340,7 +342,7 @@ def _boundary_stages(model: Deck) -> list[tuple[int, set[int]]]:
                 # applies only on the first boundary card in each step.
                 # Section 7 ignores blanks in semantic values; normalize OP
                 # here so the parser still preserves include filenames.
-                operation = "".join(block.params.get("OP", "MOD").upper().split())
+                operation = canonical_token(block.params.get("OP", "MOD"))
                 if first_boundary and operation == "NEW":
                     active.clear()
                 first_boundary = False
