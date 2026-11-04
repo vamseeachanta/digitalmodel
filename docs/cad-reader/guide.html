@@ -41,23 +41,28 @@ to determine whether coordinates have an explicit unit basis; key results are
 summarized below. Computer-aided design is abbreviated as CAD.</p>
 <ul>
 <li>Geometry ingestion is available for downstream analysis.
-<ul><li>Straight drawing primitives and mesh faces are returned in metres.</li></ul></li>
+<ul><li>Straight drawing primitives and mesh faces are returned in metres.</li>
+<li>STEP and IGES shapes provide display triangles in metres and exact kernel properties.</li></ul></li>
 <li>Unit evidence is required before coordinates are accepted.
 <ul><li>Missing source units are supplied explicitly; contradictory declarations are refused.</li></ul></li>
 </ul>
 <h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>0</td><td>2026-10-19</td><td>Initial reader guide establishes explicit unit handling and bounded geometry support.</td></tr>
-<tr><td>1</td><td>2026-10-25</td><td>Disclose exact-coordinate STL deduplication and test shared connectivity in both encodings.</td></tr></tbody></table>
+<tr><td>1</td><td>2026-10-25</td><td>Disclose exact-coordinate STL deduplication and test shared connectivity in both encodings.</td></tr>
+<tr><td>2</td><td>2026-11-03</td><td>Document optional STEP and IGES ingestion, unit rules, exact properties and limits to match the reader.</td></tr></tbody></table>
 </section>
 <section id="scope">
 <h2>2. Scope</h2>
 <p>Geometry is read from Drawing Exchange Format (DXF) modelspace,
-stereolithography (STL) meshes and Wavefront object (OBJ) meshes.
+stereolithography (STL) meshes, Wavefront object (OBJ) meshes, STEP and IGES files.
 Drawing (DWG) input is accepted through an external DXF converter interface.</p>
-<p>STEP solids and IGES surfaces are deferred. ISO 10303 exchange files are referred
-to as STEP; Initial Graphics Exchange Specification files are referred to as IGES.
-No geometry kernel or licensed solver is used.</p>
+<p>ISO 10303-21 exchange files are referred to as STEP; Initial Graphics Exchange
+Specification files are referred to as IGES. These two readers use the optional
+OpenCASCADE Technology (OCCT) geometry kernel, imported as OCP from cadquery-ocp.
+The DXF, mesh and DWG readers import no geometry kernel.</p>
+<p>Native SolidWorks (.sldprt, .sldasm) and Inventor (.ipt, .iam) files are refused.
+Export STEP or IGES from the authoring system before ingestion.</p>
 </section>
 <section id="basis">
 <h2>3. Basis and criteria</h2>
@@ -67,7 +72,19 @@ contradictions change the physical interpretation of a coordinate.</p>
 <p>The relation x_m = x_s × f is used, where x_m is a coordinate in metres,
 x_s is a source coordinate and f is metres per source unit. Metre identity,
 SI milli and centi prefixes, international inches and international feet
-are supported. The corresponding symbols are m, mm, cm, in and ft.</p>
+are supported. The corresponding symbols are m, mm, cm, in and ft.
+Kernel surface areas and volumes are scaled by f² and f³ respectively.</p>
+<p>STEP and IGES units are decoded from file text before kernel transfer.</p>
+<table><thead><tr><th>Format</th><th>Declaration</th><th>Accepted units</th></tr></thead><tbody>
+<tr><td>STEP</td><td>Length units in each GLOBAL_UNIT_ASSIGNED_CONTEXT</td><td>SI_UNIT metre with no prefix, MILLI or CENTI; CONVERSION_BASED_UNIT INCH or FOOT with factors 0.0254 m or 0.3048 m respectively.</td></tr>
+<tr><td>IGES</td><td>Global parameter 14 (units flag) and 15 (units name)</td><td>Flags 1 (in), 2 (mm), 4 (ft), 6 (m), 10 (cm); flag 3 with IN, INCH, MM, FT, M or CM.</td></tr>
+</tbody></table>
+<p>Missing declarations require caller units. A blank IGES flag and name do not
+silently default to inches. Conflicting STEP contexts, malformed or mismatched
+conversion factors, conflicting IGES flags and names, unsupported units and an
+IGES model space scale (Global parameter 13) other than 1 are refused. STEP units
+are cross-checked against the kernel report. The kernel output unit is set to the
+resolved source unit, so the conversion to metres is applied once.</p>
 <p>No geometric acceptance limit is assigned. Size plausibility, closure,
 structural suitability and converter fidelity are NOT_EVALUATED.</p>
 </section>
@@ -105,8 +122,26 @@ basis is the file, the caller or both. The meshio STL decoder deduplicates
 exact-coordinate corners into shared point indices before unit conversion;
 source corner numbering is not preserved. Face vertex order and winding are
 retained. No tolerance-based welding, triangulation or healing is performed by
-this interface. Two-facet ASCII and binary regressions check that six corners
-with one repeated position produce five points and one shared index.</p>
+the DXF and mesh readers. Two-facet ASCII and binary regressions check that six
+corners with one repeated position produce five points and one shared index.</p>
+<p>STEP and IGES results also contain a BrepSummary in <code>geometry.brep</code>.
+B-rep means boundary representation. These properties come from the kernel
+shape, independently of the display triangles.</p>
+<table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>solids</code>, <code>shells</code>, <code>faces</code></td><td>Counts of distinct topology entities.</td></tr>
+<tr><td><code>bounding_box</code></td><td>Minimum and maximum corners of exact geometry in metres.</td></tr>
+<tr><td><code>volume_m3</code></td><td>Sum over solids in cubic metres; None when no solid exists.</td></tr>
+<tr><td><code>surface_area_m2</code></td><td>Area in square metres over face occurrences, including faces outside solids. A face shared between solids can contribute more than once although the face count is distinct.</td></tr>
+<tr><td><code>is_valid</code></td><td>OCCT topology and geometry validity result; invalid shapes are returned with false and are not repaired.</td></tr>
+<tr><td><code>linear_deflection_m</code></td><td>Chord deviation allowed for display triangles, in metres.</td></tr>
+</tbody></table>
+<p>The display tessellation uses a chosen linear deflection of 10⁻³ of the
+bounding-box diagonal (one part in a thousand), and angular deflection of 0.5 rad
+(the OCCT default). This display setting is not an engineering acceptance limit.
+Each face is tessellated separately; <code>source_id</code> identifies the face.
+Points along shared edges repeat per face, and reversed faces have their triangle
+winding reordered. Exact area, volume and bounding box are not derived from this
+mesh. No analysis mesh quality or closure criterion is established.</p>
 </section>
 <section id="formats">
 <h2>5. Supported formats</h2>
@@ -119,19 +154,34 @@ polyfaces, blocks, annotations and other unlisted entities. Paperspace is outsid
 <li>STL: ASCII and binary triangle geometry. Header names do not establish units.</li>
 <li>OBJ: polygon faces with positive or relative negative position indices.
 Appearance is discarded. Line, point, freeform, continuation and unlisted records are refused.</li>
+<li>STEP (.step, .stp) and IGES (.iges, .igs): all transferable roots combined
+into one shape with faces. Zero or incomplete root transfers and wireframe-only
+shapes are refused.</li>
+<li>STEP and IGES exclusions: assembly structure, per-part units, names, colours,
+layers and product and manufacturing information are not returned. Input text
+must be UTF-8; raw legacy 8-bit names are refused.</li>
 <li>DWG: explicit converter configuration and the ordinary DXF unit gate.</li>
 </ul>
 </section>
 <section id="use">
 <h2>6. Use</h2>
 <p>Optional reader dependencies are loaded when their formats are requested.
-The drawings extra supplies ezdxf; the mesh extra supplies meshio, with the
-repository dependency constraint numpy&lt;2.</p>
+The <code>drawings</code> extra supplies ezdxf; <code>mesh</code> supplies meshio;
+<code>cad-occ</code> supplies cadquery-ocp for STEP and IGES. The repository
+constraint numpy&lt;2 applies. Importing the package requires no reader dependency.</p>
+<p>From the repository root, install the optional reader:</p>
+<pre><code>python -m pip install ".[cad-occ]"</code></pre>
 <pre><code>from digitalmodel.cad import read_cad
 
 drawing = read_cad("geometry.dxf")
 mesh = read_cad("surface.stl", units="mm")
-assert mesh.units == "m"</code></pre>
+assert mesh.units == "m"
+
+part = read_cad("part.step")  # Units come from the file declaration.
+print(part.brep.volume_m3, part.brep.is_valid)</code></pre>
+<p>OCCT translator settings are process-wide. This package serialises its reads
+and restores settings it changes. Other code changing these settings concurrently
+in the same process is not coordinated.</p>
 <p>The converter is configured with separate literal arguments containing
 {input} and {output}, a caller-selected positive timeout, and an existing writable
 scratch directory. Each attempt retains converted.dxf and converter.log in a
@@ -146,11 +196,28 @@ checked against the fixture definitions.</p>
 <p>Unit failures, malformed input, non-finite coordinates, optional dependency
 failures and converter errors are covered. A fake converter copies a synthetic
 DXF. No real drawing or real converter output is represented as validated.</p>
+<p>STEP and IGES unit parsing uses hand-written file fragments. Kernel round trips
+build a box and cylinder with build123d and write them with the same OCCT kernel
+used to read them. Independent hand expectations are 0.006 m³ and 0.22 m² for a
+100 × 200 × 300 mm box, and 0.001π m³ and 0.045π m² for a cylinder of radius
+50 mm and height 400 mm exported in inches. Volumes and areas are compared at
+relative 10⁻⁶, and bounding boxes at 10⁻⁶ m.</p>
+<p>Tests cover missing and conflicting units, malformed conversion factors, zero
+and partial root transfers, malformed input and UTF-8 refusal. The contracts gate
+requires kernel imports and pins cadquery-ocp 7.9.3.1.1 and build123d 0.7.0 with
+numpy 1.26.4. Local kernel fixtures can skip if optional packages are absent;
+<code>CAD_REQUIRE_KERNEL=1</code> makes missing kernel imports fail in that gate.
+No externally authored STEP or IGES fixture is exercised. Shell counts and shared-face
+area semantics remain without dedicated assertions; production-file fidelity and
+cross-platform behavior require further evidence.</p>
 </section>
 <section id="failures">
 <h2>8. Failure handling</h2>
 <p>Input failures are reported with CadReadError, and unit failures with its
-UnitsError subtype. Missing optional dependencies name the required extra.</p>
+UnitsError subtype. Missing optional dependencies raise ImportError naming the
+required extra. STEP and IGES read failures, zero or incomplete root transfers,
+missing faces and tessellation failures raise CadReadError. Kernel validity is
+reported separately and does not establish transfer completeness or design suitability.</p>
 <p>An absent unit basis is obtained from authoritative drawing information and
 supplied explicitly. Conflicting declarations are corrected at source. Unsupported
 geometry is exported to a supported representation with a documented conversion
@@ -169,11 +236,11 @@ the scope of each result.</p>
 <ul>
 <li>Unit definitions are sourced; expected coordinate products are independently calculated.</li>
 <li>Unsupported geometry and conflicting units are refused.</li>
-<li>No real drawing, converter or solver is used in the synthetic examples.</li>
-<li>Deferred kernel formats and downstream geometric criteria are stated.</li>
+<li>No real drawing, converter or solver is used in the synthetic examples; STEP and IGES fixtures use the optional geometry kernel.</li>
+<li>Kernel format exclusions and downstream geometric criteria are stated.</li>
 </ul>
 <details><summary>Change panel</summary><ul id="changes"></ul>
-<noscript>This revision documents exact-coordinate STL deduplication and shared connectivity tests for ASCII and binary input.</noscript></details>
+<noscript>This revision documents optional STEP and IGES ingestion, explicit units, exact properties, display triangles and validation limits.</noscript></details>
 <h3>9.2 Sources and companion artifacts</h3>
 <ul>
 <li>NIST SP 811 (2008), Appendix B.8, foot and inch entries:
@@ -194,8 +261,10 @@ the scope of each result.</p>
 </section>
 <section id="further">
 <h2>10. Further development</h2>
-<p>Kernel-backed STEP solids and IGES surfaces are required before those formats
-are accepted. Independent reference shapes and unit tests are required for each adapter.</p>
+<p>Externally authored STEP and IGES fixtures, shell-count and shared-face area
+assertions, and production-file fidelity checks remain follow-up work. Assembly
+structure, per-part units, caller-selected tessellation deflection and BREP input
+remain separate extensions. Native SolidWorks and Inventor geometry requires export.</p>
 <p>Curved drawing entities, block expansion, assembly metadata and converter
 fidelity checks remain separate extensions. Analysis-specific geometric criteria
 are supplied by downstream consumers.</p>
@@ -216,11 +285,24 @@ A downloaded file is moved to that folder manually if a folder picker is unavail
 </main>
 <script type="application/json" id="change-data">
 {
-  "revision": "1",
-  "date": "2026-10-25",
+  "revision": "2",
+  "date": "2026-11-03",
   "changes": [
-    {"section": "STL connectivity", "change": "Disclose exact-coordinate corner deduplication into shared point indices.", "reason": "Describe the decoder behavior without implying independent facet corners."},
-    {"section": "Validation", "change": "Add two-facet ASCII and binary STL regressions for shared connectivity and retained face order.", "reason": "Check five unique points from six corners with one repeated position."}
+    {
+      "section": "Scope and use",
+      "change": "Document STEP and IGES through the optional cad-occ extra and native-format export route.",
+      "reason": "Match the formats accepted by the reader."
+    },
+    {
+      "section": "Units and geometry",
+      "change": "Describe file declarations, metre normalization, exact B-rep properties, face-occurrence area and display triangles.",
+      "reason": "Distinguish physical properties from tessellation and state refusal rules."
+    },
+    {
+      "section": "Validation and limits",
+      "change": "Record synthetic kernel round trips, required imports, UTF-8 refusal and remaining fixture and topology coverage gaps.",
+      "reason": "Bound the evidence without implying production-file or cross-platform validation."
+    }
   ]
 }
 </script>

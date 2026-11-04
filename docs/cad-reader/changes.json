@@ -1,16 +1,21 @@
 {
-  "revision": "1",
-  "date": "2026-10-25",
+  "revision": "2",
+  "date": "2026-11-03",
   "changes": [
     {
-      "section": "STL connectivity",
-      "change": "Disclose exact-coordinate corner deduplication into shared point indices.",
-      "reason": "Describe the decoder behavior without implying independent facet corners."
+      "section": "Scope and use",
+      "change": "Document STEP and IGES through the optional cad-occ extra and native-format export route.",
+      "reason": "Match the formats accepted by the reader."
     },
     {
-      "section": "Validation",
-      "change": "Add two-facet ASCII and binary STL regressions for shared connectivity and retained face order.",
-      "reason": "Check five unique points from six corners with one repeated position."
+      "section": "Units and geometry",
+      "change": "Describe file declarations, metre normalization, exact B-rep properties, face-occurrence area and display triangles.",
+      "reason": "Distinguish physical properties from tessellation and state refusal rules."
+    },
+    {
+      "section": "Validation and limits",
+      "change": "Record synthetic kernel round trips, required imports, UTF-8 refusal and remaining fixture and topology coverage gaps.",
+      "reason": "Bound the evidence without implying production-file or cross-platform validation."
     }
   ]
 }
