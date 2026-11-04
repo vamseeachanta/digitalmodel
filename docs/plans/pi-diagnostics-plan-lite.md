@@ -15,8 +15,13 @@ Add `src/digitalmodel/production_engineering/pi_diagnostics.py` beside
    efficiency and J2/J1 = (ln(re/rw) - 0.75 + S1)/(ln(re/rw) - 0.75 + S2).
 3. `pre_stimulation_triage(current, previous, rock_fluid, thresholds)`: Pwf source,
    depletion (rate against PI), mobility (water cut and GOR), comparability
-   (stabilisation, flow regime, choke, lift setting), then skin. It stops at
+   (stabilisation, flow regime, choke, lift setting and Pwf), then skin. It stops at
    the first step that finds a cause and returns the cause, step and reason.
+   Required `TriageThresholds` fields: `pi_change_fraction`,
+   `rate_drop_fraction`, `water_cut_change`, `gor_change_fraction`,
+   `choke_change_64ths`, `reservoir_pressure_drop_psi`, `pwf_change_psi`.
+   Separate historical PI bands establish a change; the current band is also
+   inverted to skin, with zero in that band leaving skin attribution unresolved.
 
 `gigo_detector.py`, `ipr_models.py` and the package `__init__.py` are not
 changed; the new module is imported directly. Wiring the triage into
@@ -63,7 +68,8 @@ and may fix only these:
   reservoir-pressure decline and the allowed Pwf change in psi. The module
   supplies no field screening criterion. Depletion requires pressure-decline
   evidence and comparable operating conditions; either zero rate returns
-  insufficient data before skin inversion.
+  insufficient data before skin inversion. Only stated Pwf error is propagated;
+  the supplied rock/fluid inputs and ideal PI are held fixed.
 - The module cites Petroleum Production Systems, second edition,
   section 1.3.1, equations (1-6) and (1-8), and section 1.4, Example 1-1,
   equation (1-10), for the equation basis. The tests remain synthetic hand

@@ -569,3 +569,82 @@ def test_depletion_respects_caller_pwf_comparability_tolerance(pwf_tolerance, ca
 def test_screening_thresholds_reject_invalid_values(name, value):
     with pytest.raises(ValueError, match=name):
         replace(screening_thresholds(), **{name: value})
+
+
+@pytest.mark.parametrize("source", [PwfSource.MEASURED, PwfSource.CALCULATED])
+@pytest.mark.parametrize("rate", [240.0, 270.0])
+def test_separate_historical_pi_bands_can_leave_zero_skin_unresolved(source, rate):
+    # Prior J=450/300=1.5 lies above both current bands. With +/-60 psi:
+    # q=270 gives J=[270/360,270/240]=[0.75,1.125], S=[-7/9,7/3];
+    # q=240 gives J=[2/3,1], S=[0,3.5]. Both include ideal J=1 and S=0.
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=rate, pwf_source=source, pwf_error_psi=60.0),
+        well_test(q_oil_stb_d=450.0),
+        rock_fluid(),
+        thresholds=screening_thresholds(),
+    )
+    assert result.current_pi.pi_high_stb_d_psi < result.previous_pi.pi_low_stb_d_psi
+    assert result.cause is TriageCause.PWF_UNCERTAINTY
+    assert result.step == 5
+    assert "zero skin" in result.reason.lower()
+    assert result.skin is None
+    assert result.skin_pressure_drop_psi is None
+    assert result.flow_efficiency is None
+    assert result.pi_ratio_if_skin_removed is None
+    assert [f.step for f in result.findings] == [1, 2, 3, 4, 5]
+
+
+@pytest.mark.parametrize(
+    "rate,cause,expected_skin",
+    [
+        (210.0, TriageCause.SKIN_DAMAGE, 3.0),
+        (390.0, TriageCause.NO_SKIN_DAMAGE, -21.0 / 13.0),
+    ],
+)
+def test_current_pi_band_with_resolved_skin_sign_allows_diagnosis(
+    rate, cause, expected_skin
+):
+    # At q=210 the band J=[7/12,7/8] gives S=[1,5]; at q=390,
+    # J=[13/12,13/8] gives S=[-35/13,-7/13]. Neither contains zero.
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=rate, pwf_error_psi=60.0),
+        well_test(q_oil_stb_d=600.0),
+        rock_fluid(),
+        thresholds=screening_thresholds(),
+    )
+    assert result.cause is cause
+    assert result.step == 5
+    assert result.skin == pytest.approx(expected_skin, rel=0, abs=ABS)
+
+
+@pytest.mark.parametrize(
+    "pwf,rate,tolerance,cause",
+    [
+        (1800.0, 100.0, 5.0, TriageCause.NOT_COMPARABLE),
+        (1800.0, 100.0, 100.0, TriageCause.SKIN_DAMAGE),
+        (1600.0, 200.0, 5.0, TriageCause.NOT_COMPARABLE),
+        (1600.0, 200.0, 100.0, TriageCause.SKIN_DAMAGE),
+        (1705.0, 147.5, 4.0, TriageCause.NOT_COMPARABLE),
+        (1705.0, 147.5, 5.0, TriageCause.SKIN_DAMAGE),
+    ],
+)
+def test_falling_pi_respects_caller_pwf_comparability_tolerance(
+    pwf, rate, tolerance, cause
+):
+    # Each current test has J=q/(2000-Pwf)=0.5, against prior J=1.
+    # A Pwf change at the caller tolerance is allowed; beyond it is unresolved.
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=rate, pwf_psi=pwf),
+        well_test(),
+        rock_fluid(),
+        thresholds=replace(screening_thresholds(), pwf_change_psi=tolerance),
+    )
+    assert result.cause is cause
+    if cause is TriageCause.NOT_COMPARABLE:
+        assert result.step == 4
+        assert "pressure" in result.reason.lower()
+        assert result.skin is None
+        assert [f.step for f in result.findings] == [1, 2, 3, 4]
+    else:
+        assert result.step == 5
+        assert result.skin == pytest.approx(7.0, rel=0, abs=ABS)

@@ -17,7 +17,7 @@ formation damage (issue #3830):
    caller threshold, and operating conditions including Pwf stayed comparable.
 3. Mobility: water cut or GOR changed, which lowers oil PI without damage.
 4. Comparability: the tests are not stabilised or not taken under the same
-   flow regime, choke and lift setting.
+   flow regime, choke, lift setting and Pwf within the caller tolerance.
 5. Skin: only after steps 1 to 4 is the tested PI compared with the Darcy PI.
 
 The triage stops at the first step that finds a cause and returns the cause,
@@ -436,6 +436,8 @@ def _comparability_issues(
         issues.append("choke recorded on one test only")
     if current.lift_setting != previous.lift_setting:
         issues.append(f"lift setting differs ({previous.lift_setting} to {current.lift_setting})")
+    if abs(current.pwf_psi - previous.pwf_psi) > thresholds.pwf_change_psi:
+        issues.append("flowing bottomhole pressure changed beyond tolerance")
     return issues
 
 
@@ -452,6 +454,9 @@ def pre_stimulation_triage(
     Steps: 1 Pwf uncertainty, 2 depletion (pressure evidence and comparable
     conditions required), 3 mobility, 4 comparability, 5 skin. Positive skin
     within 32 binary64 ulps of equal tested/ideal PI is snapped to zero.
+    A current PI band spanning zero skin leaves the skin sign unresolved,
+    even when the historical PI bands are separate. Only Pwf uncertainty is
+    propagated; ideal PI from the supplied rock/fluid inputs is held fixed.
     """
     cur = current.pi_result()
     prev = previous.pi_result()
@@ -513,8 +518,6 @@ def pre_stimulation_triage(
     if abs(pi_change) <= thresholds.pi_change_fraction:
         if rate_drop > thresholds.rate_drop_fraction:
             issues = _comparability_issues(current, previous, thresholds)
-            if abs(current.pwf_psi - previous.pwf_psi) > thresholds.pwf_change_psi:
-                issues.append("flowing bottomhole pressure changed beyond tolerance")
             if issues:
                 return stop(
                     TriageCause.NOT_COMPARABLE, 2, "depletion",
@@ -606,6 +609,26 @@ def pre_stimulation_triage(
     )
     if math.isclose(cur.pi_stb_d_psi, pi_ideal, rel_tol=_PI_ROUNDOFF_REL_TOL, abs_tol=0.0):
         skin = 0.0
+    if cur.pwf_error_psi > 0.0:
+        # Skin decreases as PI increases: invert the high PI for the low skin.
+        skin_low, skin_high = (
+            0.0
+            if math.isclose(pi, pi_ideal, rel_tol=_PI_ROUNDOFF_REL_TOL, abs_tol=0.0)
+            else skin_from_pi(
+                pi, pi_ideal, rock_fluid.drainage_radius_ft, rock_fluid.wellbore_radius_ft
+            )
+            for pi in (cur.pi_high_stb_d_psi, cur.pi_low_stb_d_psi)
+        )
+        if skin_low <= 0.0 <= skin_high:
+            return stop(
+                TriageCause.PWF_UNCERTAINTY,
+                5,
+                "skin",
+                f"current Pwf uncertainty gives a skin band from {skin_low:.2f} "
+                f"to {skin_high:.2f} that includes zero skin; separate historical "
+                "PI bands resolve a decline but not its attribution to positive "
+                "skin; reduce Pwf uncertainty before further diagnosis",
+            )
     dp_skin = skin_pressure_drop_psi(cur.q_oil_stb_d, rock_fluid, skin)
     fe = flow_efficiency(current.pr_psi, current.pwf_psi, dp_skin)
     ratio = pi_ratio(
