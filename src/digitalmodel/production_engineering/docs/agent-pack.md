@@ -4,7 +4,7 @@
 |---|---|
 | Package | `src/digitalmodel/production_engineering` |
 | Code pin | `38a71b863625b15d5e8b6ecf19fbfb1f034b49df` (`origin/main` at revision 2; revision 1 pin `3554b14fde67f44b1c52b81b6c72106282eaff29`) |
-| Revision / status | 2 / DRAFT; engineering qualification UNVERIFIED |
+| Revision / status | 3 / DRAFT; engineering qualification UNVERIFIED |
 | Analysis family | EC (engineering calculation; proposed for these APIs) |
 
 Pinned implementation knowledge for inflow, outflow, nodal analysis, ESP screening, method screening, well-test quality, reconciliation and deterministic marginal-well economics. Hand arithmetic is evidence about equations and implementation; no field accuracy or published-example qualification is established.
@@ -15,6 +15,7 @@ Pinned implementation knowledge for inflow, outflow, nodal analysis, ESP screeni
 |---|---|---|
 | 1 | 2026-10-22 | Record pinned interfaces, independent arithmetic, executable gates and evidence gaps for review. |
 | 2 | 2026-10-31 | Add the Vogel test-point factory merged after the revision 1 pin and move `ipr_models.py` locators to the new pin; no other module changed. |
+| 3 | 2026-11-03 | Add `pi_diagnostics.py` (#3830); no other module changed. |
 
 ## 1. Purpose and scope
 
@@ -167,8 +168,33 @@ The inventory keys are relative Python module names plus public symbol names. `s
 | Economic forecast | cashflows contains MonthlyCashflow records for nonnegative operating months only; the negative month at the limit is omitted. NPVs include terminal net plugging cost; npv_workover_usd is None without an intervention. Warnings are text, not a failure status. | [src/digitalmodel/production_engineering/marginal_well_economics.py:L377-L412] [src/digitalmodel/production_engineering/marginal_well_economics.py:L419-L532] |
 
 All numeric defaults and the locations of their uses are enumerated in section 3; no default is endorsed merely by being documented. For result dataclasses, callers constructing objects directly supply all fields without defaults, including confidence and units; no output schema validation is added.
+| `pi_diagnostics.DARCY_OIL_FIELD_CONSTANT` | No inputs; exported constant `141.2` | Field-unit radial oil-flow conversion; published worked example not established | Float; export-list locator follows the inventory checker | [src/digitalmodel/production_engineering/pi_diagnostics.py:L584-L601] |
+| `pi_diagnostics.PiTestResult` | `q_oil_stb_d`, `drawdown_psi`, `pi_stb_d_psi`, `pwf_source`, `pwf_error_psi`, `pi_low_stb_d_psi`, `pi_high_stb_d_psi`, `band_bounded` | STB/d, psi, STB/d/psi; frozen dataclass has no constructor validation | Test PI and pressure-error band; unbounded upper end is infinite | [src/digitalmodel/production_engineering/pi_diagnostics.py:L141-L167] |
+| `pi_diagnostics.PiTestResult.high_change_fraction` | Stored high and nominal PI | Dimensionless; nominal PI must be nonzero for division | `(J_high - J)/J` float; infinite for an unbounded band with positive nominal PI | [src/digitalmodel/production_engineering/pi_diagnostics.py:L165-L167] |
+| `pi_diagnostics.PiTestResult.low_change_fraction` | Stored low and nominal PI | Dimensionless; nominal PI must be nonzero for division | `(J_low - J)/J` float | [src/digitalmodel/production_engineering/pi_diagnostics.py:L160-L162] |
+| `pi_diagnostics.PwfSource` | Enum value `measured` or `calculated` | Pressure provenance label; unknown enum value rejected | `PwfSource` member | [src/digitalmodel/production_engineering/pi_diagnostics.py:L67-L71] |
+| `pi_diagnostics.ReservoirRockFluid` | `permeability_md`, `net_pay_ft`, `oil_viscosity_cp`, `oil_fvf_rb_stb`, `drainage_radius_ft`, `wellbore_radius_ft` | md, ft, cp, rb/STB, ft, ft; frozen dataclass has no constructor validation; methods validate their consumed fields | Stored rock, fluid and circular drainage inputs | [src/digitalmodel/production_engineering/pi_diagnostics.py:L232-L254] |
+| `pi_diagnostics.ReservoirRockFluid.geometry_term` | Stored drainage and wellbore radii | ft; finite, positive radii with re > rw | `ln(re/rw) - 0.75` dimensionless float; positivity not enforced here | [src/digitalmodel/production_engineering/pi_diagnostics.py:L252-L254] |
+| `pi_diagnostics.ReservoirRockFluid.kh_md_ft` | Stored permeability and net pay | Both finite and > 0 | `k*h` float in md ft | [src/digitalmodel/production_engineering/pi_diagnostics.py:L242-L245] |
+| `pi_diagnostics.ReservoirRockFluid.mu_bo` | Stored oil viscosity and formation volume factor | Both finite and > 0 | `mu*Bo` float in cp rb/STB | [src/digitalmodel/production_engineering/pi_diagnostics.py:L247-L250] |
+| `pi_diagnostics.TriageCause` | Enum value: `pwf_uncertainty`, `depletion`, `no_decline`, `mobility_change`, `not_comparable`, `skin_damage`, `no_skin_damage`, `insufficient_data` | Diagnostic label; unknown enum value rejected | `TriageCause` member | [src/digitalmodel/production_engineering/pi_diagnostics.py:L74-L84] |
+| `pi_diagnostics.TriageFinding` | `step`, `name`, `cause_found`, `detail` | Step number, label, boolean and text; no constructor validation | Frozen finding for one evaluated step | [src/digitalmodel/production_engineering/pi_diagnostics.py:L375-L381] |
+| `pi_diagnostics.TriageResult` | `cause`, `step`, `reason`, `findings`, `current_pi`, `previous_pi`; `skin=None`, `skin_pressure_drop_psi=None`, `flow_efficiency=None`, `pi_ratio_if_skin_removed=None` | Skin, efficiency and PI ratio dimensionless; skin pressure drop in psi; no constructor validation | Frozen outcome with evaluated findings, both PI results and optional skin metrics | [src/digitalmodel/production_engineering/pi_diagnostics.py:L385-L397] |
+| `pi_diagnostics.TriageThresholds` | `pi_change_fraction=0.10`, `rate_drop_fraction=0.10`, `water_cut_change=0.05`, `gor_change_fraction=0.20`, `choke_change_64ths=0.0` | Fractions and choke in 64ths of an inch; caller screening inputs, no published criterion or constructor validation | Frozen triage thresholds | [src/digitalmodel/production_engineering/pi_diagnostics.py:L363-L371] |
+| `pi_diagnostics.WellTestPoint` | `q_oil_stb_d`, `pr_psi`, `pwf_psi`, `pwf_source`, `pwf_error_psi`, `water_cut_fraction`, `gor_scf_stb`, `stabilised`, `flow_regime`, `choke_64ths`, `lift_setting`; nullable fields still required | STB/d, psi, water-cut fraction, scf/STB, choke in 64ths of an inch; frozen dataclass has no constructor validation | Stored test inputs for ordered triage | [src/digitalmodel/production_engineering/pi_diagnostics.py:L333-L359] |
+| `pi_diagnostics.WellTestPoint.pi_result` | Stored rate, pressures, source and error | Delegates validation to `pi_from_test`; other test fields unused | `PiTestResult` | [src/digitalmodel/production_engineering/pi_diagnostics.py:L352-L359] |
+| `pi_diagnostics.darcy_radial_pi` | `rock_fluid`, `skin=0.0` | Finite skin; positive finite rock/fluid factors and radii, re > rw, geometry term + skin > 0 | Pseudo-steady-state oil PI float in STB/d/psi | [src/digitalmodel/production_engineering/pi_diagnostics.py:L257-L274] |
+| `pi_diagnostics.flow_efficiency` | `pr`, `pwf`, `dp_skin_psi` | psi; finite pressures and skin pressure drop, Pr > Pwf | Dimensionless `(Pr - Pwf - dP_skin)/(Pr - Pwf)`; no clipping | [src/digitalmodel/production_engineering/pi_diagnostics.py:L303-L311] |
+| `pi_diagnostics.pi_from_test` | `q`, `pr`, `pwf`, `pwf_source`, `pwf_error_psi=None` | STB/d and psi; finite inputs, q and error >= 0, Pr > Pwf; measured error defaults to 0; calculated source requires error | `PiTestResult`; upper PI is infinite when error >= drawdown | [src/digitalmodel/production_engineering/pi_diagnostics.py:L170-L223] |
+| `pi_diagnostics.pi_ratio` | `re_ft`, `rw_ft`, `skin_before`, `skin_after` | ft and dimensionless skin; finite positive radii, re > rw, finite skins, both geometry-plus-skin terms > 0 | Dimensionless J2/J1 float | [src/digitalmodel/production_engineering/pi_diagnostics.py:L314-L324] |
+| `pi_diagnostics.pre_stimulation_triage` | `current`, `previous`, `rock_fluid` (may be None), `thresholds=TriageThresholds()` | Validates test PI first; later field checks depend on reached step; no comprehensive physical-range or threshold validation; single-phase oil screening only | `TriageResult` at first stopping cause: Pwf uncertainty, depletion/no decline, mobility, comparability, then skin; absent rock/fluid yields insufficient data at step 5 | [src/digitalmodel/production_engineering/pi_diagnostics.py:L400-L581] |
+| `pi_diagnostics.skin_from_pi` | `pi_test`, `pi_ideal`, `re_ft`, `rw_ft` | PI in STB/d/psi, radii in ft; finite positive PI and radii, re > rw; caller supplies zero-skin ideal PI | Dimensionless skin float from the PI ratio | [src/digitalmodel/production_engineering/pi_diagnostics.py:L277-L287] |
+| `pi_diagnostics.skin_pressure_drop_psi` | `q`, `rock_fluid`, `skin` | STB/d; finite q >= 0 and finite skin; positive finite k, h, mu and Bo; radii unused | Pressure-drop float in psi; negative for negative skin | [src/digitalmodel/production_engineering/pi_diagnostics.py:L290-L300] |
 
 ## 3. Methods, equations and public basis
+
+- PI diagnostics equations: test PI and Pwf-error band, Darcy radial PI, skin from the PI ratio, skin pressure drop, flow efficiency and J2/J1 are documented in [src/digitalmodel/production_engineering/pi_diagnostics.py:L4-L51]. The module states units, single-phase limits and the absence of a pinned published worked example; triage defaults are caller screening inputs.
+
 
 Sources read on 2026-10-22: [open university thesis, *Inflow Performance Relationships (IPR) for Solution Gas Drive Reservoirs — a Semi-Analytical Approach* (2010), §§1.2.1–1.2.2, printed pp. 3, 5–6](https://blasingame.engr.tamu.edu/0_TAB_Grad/TAB_Grad_Thesis_Archive/MS_044_NASS%2CMaria_Thesis_TAMU_%28May_2010%29.pdf). This is secondary evidence of the equations, not an original-paper worked example. Repository companion: `docs/domains/production/production-engineering-literature.md`, “Open IPR equation passage ledger” and “Composite join derivation”.
 
