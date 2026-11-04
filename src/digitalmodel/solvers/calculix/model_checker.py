@@ -338,7 +338,10 @@ def _boundary_stages(model: Deck) -> list[tuple[int, set[int]]]:
             elif block.keyword == "BOUNDARY":
                 # CalculiX 2.22 User's Manual, section 7.4 (*BOUNDARY): OP
                 # applies only on the first boundary card in each step.
-                if first_boundary and block.params.get("OP", "MOD").upper() == "NEW":
+                # Section 7 ignores blanks in semantic values; normalize OP
+                # here so the parser still preserves include filenames.
+                operation = "".join(block.params.get("OP", "MOD").upper().split())
+                if first_boundary and operation == "NEW":
                     active.clear()
                 first_boundary = False
                 for row in block.rows:

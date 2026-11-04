@@ -1128,9 +1128,12 @@ def test_later_boundary_cannot_hide_unconstrained_first_step(deck):
 
 
 @pytest.mark.parametrize("keyword", ["*BOUNDARY", "*BOUND ARY", "*boun\tdary"])
+@pytest.mark.parametrize("operation", ["NEW", "N E W", "N\tE\tW", "n e w"])
 @pytest.mark.parametrize("interface", ["api", "cli"])
-def test_boundary_reset_is_checked_per_step(deck, capsys, keyword, interface):
-    path = deck(f"*STEP\n*STATIC\n{keyword},OP=NEW\n*END STEP\n")
+def test_boundary_reset_is_checked_per_step(deck, capsys, keyword, operation, interface):
+    # CalculiX 2.22 manual, sections 7 and 7.4: insignificant blanks in OP
+    # must not retain restraints when the first boundary card resets a step.
+    path = deck(f"*STEP\n*STATIC\n{keyword},OP={operation}\n*END STEP\n")
     if interface == "api":
         evidence = check_deck(path).to_dict()
     else:
