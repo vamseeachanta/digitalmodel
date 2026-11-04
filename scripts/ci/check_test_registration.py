@@ -389,9 +389,12 @@ def collection_excluded(
     rules: list[tuple[str, str]],
     cache: dict[str, list[tuple[str, bool]]] | None = None,
 ) -> bool:
-    """Account for recursive ignores; explicitly named paths bypass recursion."""
+    """Bypass recursive ignores only for files covered by explicit selections."""
     explicit_roots = [
-        item for pattern in roots for item, _ in expand_root(root, pattern, cache)
+        item
+        for pattern in roots
+        for item, is_dir in expand_root(root, pattern, cache)
+        if path == item or (is_dir and path.startswith(item + "/"))
     ]
     for kind, pattern in rules:
         if kind == "norecurse":

@@ -443,6 +443,61 @@ def native_bash_collection(repo, argument):
 
 
 @pytest.mark.parametrize(
+    "source", ["collect_ignore_glob", "collect_ignore", "norecursedirs"]
+)
+@pytest.mark.parametrize(
+    ("argument", "collected"),
+    [
+        ("tests/", set()),
+        ("tests/ tests/example/test_example.py", {"test_example.py"}),
+        ("tests/ ./tests/example/test_example.py", {"test_example.py"}),
+        (
+            "tests/ tests/example/",
+            {"test_example.py", "test_sibling.py"},
+        ),
+        (
+            "tests/ tests/example/test_*.py",
+            {"test_example.py", "test_sibling.py"},
+        ),
+    ],
+)
+def test_mixed_roots_bypass_exclusions_only_for_selected_files(
+    tmp_path, source, argument, collected
+):
+    """An explicit file preserves its selection without admitting its sibling."""
+    repo = fixture_repo(tmp_path, command=f"python -m pytest {argument}")
+    files = {"test_example.py", "test_sibling.py"}
+    (repo / "tests/example/test_sibling.py").write_text(
+        "def test_sibling(): pass\n", encoding="utf-8", newline="\n"
+    )
+    if source == "norecursedirs":
+        config = repo / "pytest.ini"
+        config.write_text(
+            config.read_text(encoding="utf-8").replace(
+                "norecursedirs = .git", "norecursedirs = .git example"
+            ),
+            encoding="utf-8",
+            newline="\n",
+        )
+    else:
+        pattern = "exam?le" if source == "collect_ignore_glob" else "example"
+        (repo / "tests/conftest.py").write_text(
+            f"{source} = [{pattern!r}]\n", encoding="utf-8", newline="\n"
+        )
+    result = native_bash_collection(repo, argument)
+    assert result.returncode == (0 if collected else 5), result.stdout + result.stderr
+    assert {
+        line.split("::")[0].removeprefix("tests/example/")
+        for line in result.stdout.splitlines()
+        if line.startswith("tests/example/") and "::" in line
+    } == collected
+    assert load_guard().audit(repo) == {
+        f"collection-excluded|example|tests/example/{name}"
+        for name in files - collected
+    }
+
+
+@pytest.mark.parametrize(
     ("argument", "expected"),
     [
         ("tests/example/**/test_*.py", {"nested/test_child.py"}),
