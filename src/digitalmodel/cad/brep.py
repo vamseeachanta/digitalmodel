@@ -141,7 +141,13 @@ def _step_length_unit(body: str, instances: dict[int, str], nested: bool) -> Len
     base = _step_length_unit(
         instances.get(int(measure.group(2)), ""), instances, nested=True
     )
-    metres = float(measure.group(1).replace("D", "E")) * METRES_PER_UNIT[base]
+    try:
+        factor = float(measure.group(1).replace("D", "E"))
+    except ValueError as error:
+        raise UnitsError(
+            "STEP conversion-based unit has an invalid length factor"
+        ) from error
+    metres = factor * METRES_PER_UNIT[base]
     unit = STEP_CONVERSION_NAMES[name]
     # Cross-check the independent name and factor within the input precision
     # policy above; larger disagreements are contradictory declarations.
@@ -474,9 +480,9 @@ def read_brep(path: Path, units: LengthUnit | None) -> CadGeometry:
         "step" if path.suffix.casefold() in {".step", ".stp"} else "iges"
     )
     try:
-        # ISO 10303-21 and IGES are ASCII formats; latin-1 decodes any byte so
-        # malformed input is refused by the parsers rather than the decoder.
-        text = path.read_text(encoding="latin-1")
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        raise CadReadError(f"{format.upper()} file is not valid UTF-8") from None
     except OSError:
         raise CadReadError(f"{format.upper()} file cannot be read") from None
     declared = (

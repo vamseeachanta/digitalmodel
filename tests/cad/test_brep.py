@@ -73,9 +73,10 @@ def _conversion(name: str, factor: str) -> list[str]:
         ([_context(1, 2), "#2 = ( LENGTH_UNIT() SI_UNIT(.CENTI.,.METRE.) );"], "cm"),
         ([_context(1, 2), *_conversion("FOOT", "0.3048")], "ft"),
         ([_context(1, 2), *_conversion("inch", "2.54E-02")], "in"),
+        ([_context(1, 2), *_conversion("inch", "2.54D-02")], "in"),
         ([_context(1, 3), f"#2 = {LENGTH_MM};", "#3 = ( PLANE_ANGLE_UNIT() );"], None),
     ],
-    ids=["milli", "centi", "foot", "inch", "unassigned"],
+    ids=["milli", "centi", "foot", "inch", "inch-d-exponent", "unassigned"],
 )
 def test_step_length_unit_declarations(data, expected):
     """Hand: FOOT factor 0.3048 m and inch 0.0254 m equal NIST SP 811 (2008),
@@ -100,6 +101,18 @@ def test_step_length_unit_declarations(data, expected):
 def test_step_unit_refusals(data, message):
     with pytest.raises(UnitsError, match=message):
         step_declared_units(_p21(*data))
+
+
+@pytest.mark.parametrize("factor", ["1.2.3", ".", "+.", "-."])
+def test_malformed_step_factor_raises_units_error(build123d, tmp_path, factor):
+    path = tmp_path / "malformed.step"
+    path.write_text(
+        _p21(_context(1, 2), *_conversion("inch", factor)),
+        encoding="utf-8",
+        newline="\n",
+    )
+    with pytest.raises(UnitsError, match="length factor"):
+        read_cad(path)
 
 
 def _iges(scale="1.0", flag="2", name="2HMM", delimiter=",", end=";") -> str:
@@ -278,23 +291,23 @@ def test_round_trip_reads_file_units(build123d, tmp_path, suffix, name, unit, ex
 def _strip_units(path):
     """Remove the length unit from a kernel-written file, keeping its layout."""
     if path.suffix == ".step":
-        text = path.read_text(encoding="ascii")
+        text = path.read_text(encoding="utf-8")
         text, count = re.subn(
             r"(GLOBAL_UNIT_ASSIGNED_CONTEXT\s*\(\s*\()#\d+,\s*", r"\1", text
         )
         assert count == 1
-        path.write_text(text, encoding="ascii")
+        path.write_text(text, encoding="utf-8", newline="\n")
         assert step_declared_units(text) is None
         return
-    lines = path.read_text(encoding="ascii").splitlines()
+    lines = path.read_text(encoding="utf-8").splitlines()
     rows = [i for i, line in enumerate(lines) if line[72:73] == "G"]
     section = "".join(lines[i][:72] for i in rows)
     assert section.count(",2,2HMM,") == 1
     section = section.replace(",2,2HMM,", ",,,     ")  # same length, same rows
     for n, i in enumerate(rows):
         lines[i] = section[72 * n : 72 * (n + 1)] + lines[i][72:]
-    path.write_text("\n".join(lines) + "\n", encoding="ascii")
-    assert iges_declared_units(path.read_text(encoding="ascii")) is None
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    assert iges_declared_units(path.read_text(encoding="utf-8")) is None
 
 
 @pytest.mark.parametrize("suffix", ["step", "igs"])
@@ -315,8 +328,16 @@ def test_file_without_units_needs_caller_units(build123d, tmp_path, suffix):
 
 def test_unreadable_step_fails_with_package_error(build123d, tmp_path):
     path = tmp_path / "broken.stp"
-    path.write_text("not a STEP file\n", encoding="ascii")
+    path.write_text("not a STEP file\n", encoding="utf-8", newline="\n")
     with pytest.raises(CadReadError):
+        read_cad(path, units="m")
+
+
+@pytest.mark.parametrize("suffix", ["step", "igs"])
+def test_invalid_utf8_raises_package_error(build123d, tmp_path, suffix):
+    path = tmp_path / f"invalid.{suffix}"
+    path.write_bytes(b"\xff")
+    with pytest.raises(CadReadError, match="UTF-8"):
         read_cad(path, units="m")
 
 
@@ -373,11 +394,13 @@ def test_cad_ci_enrollment(monkeypatch, capsys):
     import yaml
 
     root = Path(__file__).resolve().parents[2]
-    rows = (root / "tests/DOMAINS.md").read_text().splitlines()
+    rows = (root / "tests/DOMAINS.md").read_text(encoding="utf-8").splitlines()
     contracts = next(row for row in rows if row.startswith("| contracts "))
     assert "`tests/cad/`" in contracts
     workflow = yaml.safe_load(
-        (root / ".github/workflows/quality-gates-by-domain.yml").read_text()
+        (root / ".github/workflows/quality-gates-by-domain.yml").read_text(
+            encoding="utf-8"
+        )
     )
     steps = workflow["jobs"]["domain-tests"]["steps"]
     builder = next(step for step in steps if step.get("id") == "gate")
