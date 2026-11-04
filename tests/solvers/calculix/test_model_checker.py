@@ -885,6 +885,38 @@ def test_invalid_input_returns_errors_instead_of_crashing(deck, text):
     assert report.findings
 
 
+@pytest.mark.parametrize("keyword", ["*INCLUDE", "* INCLUDE", "*\tinclude "])
+@pytest.mark.parametrize("continued", [False, True])
+@pytest.mark.parametrize("content", ["supported", "unconstrained", "missing"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_include_keyword_whitespace_preserves_gate(deck, tmp_path, capsys,
+                                                  keyword, continued, content, interface):
+    base = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    fragment = base if content == "supported" else (
+        "*NODE\n5,3,0,0\n6,4,0,0\n7,3,1,0\n8,3,0,1\n"
+        "*ELEMENT,TYPE=C3D4,ELSET=OTHER\n2,5,6,7,8\n"
+        "*SOLID SECTION,ELSET=OTHER,MATERIAL=STEEL\n"
+    )
+    if content != "missing":
+        (tmp_path / "fragment.inp").write_text(fragment, encoding="utf-8", newline="\n")
+    header = keyword + (",\n" if continued else ",") + 'INPUT="fragment.inp"\n'
+    path = deck(text=header if content == "supported" else base + header)
+    valid = content == "supported"
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == (0 if valid else 1)
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == ("PASS" if valid else "FAIL")
+    findings = evidence["findings"]
+    if content == "unconstrained":
+        unsupported = [tuple(f["entity_ids"]) for f in findings
+                       if f["code"] == "unconstrained_part"]
+        assert unsupported == [("step:0", "element:2")]
+    elif content == "missing":
+        assert "parse_error" in {f["code"] for f in findings}
+
+
 def test_includes_resolve_relative_to_containing_file_and_detect_cycles(tmp_path):
     child = tmp_path / "mesh.inp"
     child.write_text((FIXTURES / "supported.inp").read_text(encoding="utf-8"),

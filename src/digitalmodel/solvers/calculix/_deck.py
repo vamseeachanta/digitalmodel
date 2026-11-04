@@ -120,7 +120,7 @@ def _expanded_lines(path: Path, active: tuple[Path, ...]) -> Iterable[tuple[str,
         i += 1
         if not line or line.startswith("**"):
             continue
-        if line.partition(",")[0].strip().upper() == "*INCLUDE":
+        if line.startswith("*") and _keyword(line, i).keyword == "INCLUDE":
             start = i
             while line.endswith(",") and i < len(lines):
                 following = lines[i].strip()
