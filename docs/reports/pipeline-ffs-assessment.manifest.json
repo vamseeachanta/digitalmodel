@@ -3,29 +3,54 @@
     "sections": [
       {
         "applicability": {
-          "flags": [],
-          "notes": [],
-          "ok": true
+          "flags": [
+            "LML_CIRCUMFERENTIAL_NOT_EVALUATED"
+          ],
+          "notes": [
+            "Circumferential extent criterion is not implemented; provide a qualified width assessment before crediting reduced wall"
+          ],
+          "ok": false
         },
         "axial_limit_psi": 36222.891356045504,
         "component": {
+          "allowable_stress_psi": null,
           "component_id": "Section A, 24 in line",
           "component_type": "pipe",
+          "corrosion_rate_basis": null,
           "corrosion_rate_in_per_yr": 0.005,
           "design_code": "B31.8",
           "design_pressure_psi": 800.0,
           "fca_in": 0.0,
           "nominal_od_in": 24.0,
           "nominal_wt_in": 0.5,
+          "row_spacing_in": null,
           "smys_psi": 52000.0
         },
         "coordinator": {
+          "applicability": {
+            "flags": [
+              "LML_CIRCUMFERENTIAL_NOT_EVALUATED"
+            ],
+            "notes": [
+              "Circumferential extent criterion is not implemented; provide a qualified width assessment before crediting reduced wall"
+            ],
+            "ok": false
+          },
           "assessment_type": "LML",
           "component_id": "Section A, 24 in line",
           "fca_in": 0.0,
+          "governing_criterion": "Screening FAIL; RSF=0.859 < allowable 0.90. Re-rate to MAWP_r=763 psi (MAWP x RSF/RSFa, API 579-1 §2.4.2.2). Other checks are not evaluated: Circumferential extent criterion is not implemented; provide a qualified width assessment before crediting reduced wall",
           "level_reached": 2,
+          "measurement_actions": [
+            {
+              "action": "escalate_level_2",
+              "count": null,
+              "location": "office Level 2 re-rating",
+              "rationale": "RSF below RSFa but above the replace floor"
+            }
+          ],
           "remaining_life_yr": 0.0,
-          "t_measured_avg_in": 0.42,
+          "t_measured_avg_in": 0.42000000000000004,
           "t_measured_min_in": 0.2,
           "t_min_in": 0.2564102564102564,
           "t_nominal_in": 0.5
@@ -76,8 +101,13 @@
           "smts_psi": 66700.0,
           "smys_psi": 52000.0
         },
-        "interval_yr": 5.77199028003072,
+        "interval_yr": null,
         "level1": {
+          "applicability": {
+            "flags": [],
+            "notes": [],
+            "ok": true
+          },
           "design_code": "B31.8",
           "margin_in": -0.056410256410256376,
           "pressure_wall_comparison": "MINIMUM_BELOW_PRESSURE_WALL",
@@ -86,9 +116,13 @@
         },
         "level2": {
           "applicability": {
-            "flags": [],
-            "notes": [],
-            "ok": true
+            "flags": [
+              "LML_CIRCUMFERENTIAL_NOT_EVALUATED"
+            ],
+            "notes": [
+              "Circumferential extent criterion is not implemented; provide a qualified width assessment before crediting reduced wall"
+            ],
+            "ok": false
           },
           "assessment_type": "LML",
           "flaw_length_in": 6.0,
@@ -101,91 +135,38 @@
           "t_am_in": 0.42000000000000004,
           "t_mm_in": 0.2
         },
-        "life_basis": "fixed-geometry reduced local-loss rating; lambda-range applicability only",
-        "life_limit_wall_in": 0.1422800971996928,
+        "life_basis": "Not evaluated: Reduced-wall projection requires an established circumferential criterion",
+        "life_limit_wall_in": null,
         "life_search": {
-          "domain_wall_in": [
-            0.0,
-            0.2
-          ],
-          "final_bracket": [
-            {
-              "applicability": {
-                "flags": [],
-                "notes": [],
-                "ok": true
-              },
-              "endpoint_kind": "evaluated",
-              "flaw_length_in": 6.0,
-              "pressure_psi": 799.9999999999999,
-              "wall_in": 0.14228009719969278
-            },
-            {
-              "applicability": {
-                "flags": [],
-                "notes": [],
-                "ok": true
-              },
-              "endpoint_kind": "evaluated",
-              "flaw_length_in": 6.0,
-              "pressure_psi": 800.0000000000002,
-              "wall_in": 0.1422800971996928
-            }
-          ],
-          "initial_bracket": [
-            {
-              "applicability": {
-                "flags": [
-                  "ZERO_WALL_UNQUALIFIED"
-                ],
-                "notes": [
-                  "A zero-wall mathematical endpoint does not qualify a perforated wall"
-                ],
-                "ok": false
-              },
-              "endpoint_kind": "evaluated",
-              "flaw_length_in": 6.0,
-              "pressure_psi": 0.0,
-              "wall_in": 0.0
-            },
-            {
-              "applicability": {
-                "flags": [],
-                "notes": [],
-                "ok": true
-              },
-              "endpoint_kind": "evaluated",
-              "flaw_length_in": 6.0,
-              "pressure_psi": 1021.9837434987936,
-              "wall_in": 0.2
-            }
-          ],
-          "monotonic": true,
+          "domain_wall_in": null,
+          "final_bracket": [],
+          "initial_bracket": [],
+          "monotonic": false,
           "qualification_scope": "lambda-range only",
-          "reason": "Passing wall retained with adjacent failing wall",
-          "status": "CROSSING",
+          "reason": "Reduced-wall projection requires an established circumferential criterion",
+          "status": "INAPPLICABLE",
           "target_pressure_psi": 800.0,
-          "wall_in": 0.1422800971996928
+          "wall_in": null
         },
         "life_sensitivity": [
           [
             0.0025,
-            23.08796112012288
+            null
           ],
           [
             0.005,
-            11.54398056006144
+            null
           ],
           [
             0.01,
-            5.77199028003072
+            null
           ]
         ],
         "local_loss_rating_psi": 1021.9837434987936,
         "name": "Section A, 24 in line",
         "pressure_rating_psi": 800.0,
         "reference_wall_in": 0.5,
-        "remaining_life_yr": 11.54398056006144,
+        "remaining_life_yr": null,
         "strength": {
           "applicability": {
             "flags": [],
@@ -193,7 +174,7 @@
             "ok": true
           },
           "decision": {
-            "action": "ACCEPT",
+            "action": "ESCALATE",
             "applicability": {
               "flags": [],
               "notes": [],
@@ -209,9 +190,10 @@
             "governing_criterion": "DNV-RP-F101: allowable/demand=1.456; Current demand passes: minimum allowable/demand >= 1.000.",
             "margin": 1.4558726015308445,
             "margin_allowable": 1.0,
+            "remaining_life_basis": null,
             "remaining_life_yr": null,
             "rerated_mawp_psi": null,
-            "verdict": "ACCEPT"
+            "verdict": "ESCALATE"
           },
           "governing_method": "DNV-RP-F101",
           "inputs": {
@@ -355,11 +337,15 @@
           ]
         },
         "strength_decision": {
-          "action": "ACCEPT",
+          "action": "ESCALATE",
           "applicability": {
-            "flags": [],
-            "notes": [],
-            "ok": true
+            "flags": [
+              "LML_CIRCUMFERENTIAL_NOT_EVALUATED"
+            ],
+            "notes": [
+              "Circumferential extent criterion is not implemented; provide a qualified width assessment before crediting reduced wall"
+            ],
+            "ok": false
           },
           "asset_class": "pipeline",
           "derated": null,
@@ -368,9 +354,10 @@
           "margin": 1.277479679373492,
           "margin_allowable": 1.0,
           "minimum_capacity_to_demand": 1.277479679373492,
-          "remaining_life_yr": 11.54398056006144,
+          "remaining_life_basis": null,
+          "remaining_life_yr": null,
           "rerated_mawp_psi": null,
-          "verdict": "ACCEPT"
+          "verdict": "ESCALATE"
         },
         "sufficiency": {
           "actions": [
@@ -405,34 +392,50 @@
       },
       {
         "applicability": {
-          "flags": [],
-          "notes": [],
-          "ok": true
+          "flags": [
+            "LML_CIRCUMFERENTIAL_NOT_EVALUATED"
+          ],
+          "notes": [
+            "Circumferential extent criterion is not implemented; provide a qualified width assessment before crediting reduced wall"
+          ],
+          "ok": false
         },
         "axial_limit_psi": 35883.425679840504,
         "component": {
+          "allowable_stress_psi": null,
           "component_id": "Section B, 12.75 in line",
           "component_type": "pipe",
+          "corrosion_rate_basis": null,
           "corrosion_rate_in_per_yr": 0.005,
           "design_code": "B31.8",
           "design_pressure_psi": 1000.0,
           "fca_in": 0.0,
           "nominal_od_in": 12.75,
           "nominal_wt_in": 0.5,
+          "row_spacing_in": null,
           "smys_psi": 52000.0
         },
         "coordinator": {
           "assessment_type": "LML",
           "component_id": "Section B, 12.75 in line",
           "fca_in": 0.0,
+          "governing_criterion": "Measurement sufficiency is TAKE_MORE: Local flaw is resolved by only 2 grid cells; the critical (river-bottom) thickness profile is under-sampled.",
           "level_reached": 1,
+          "measurement_actions": [
+            {
+              "action": "densify_readings",
+              "count": 3,
+              "location": "across and immediately around the flaw",
+              "rationale": "under-resolved local thickness profile"
+            }
+          ],
           "remaining_life_yr": 25.945512820512818,
-          "t_measured_avg_in": 0.4894444444444444,
+          "t_measured_avg_in": 0.48944444444444446,
           "t_measured_min_in": 0.3,
           "t_min_in": 0.1702724358974359,
           "t_nominal_in": 0.5
         },
-        "decision": "take more measurements",
+        "decision": "escalate",
         "inputs": {
           "axial_positions_in": [
             0,
@@ -506,6 +509,11 @@
         },
         "interval_yr": 12.972756410256409,
         "level1": {
+          "applicability": {
+            "flags": [],
+            "notes": [],
+            "ok": true
+          },
           "design_code": "B31.8",
           "margin_in": 0.12972756410256409,
           "pressure_wall_comparison": "MINIMUM_MEETS_PRESSURE_WALL",
@@ -514,9 +522,13 @@
         },
         "level2": {
           "applicability": {
-            "flags": [],
-            "notes": [],
-            "ok": true
+            "flags": [
+              "LML_CIRCUMFERENTIAL_NOT_EVALUATED"
+            ],
+            "notes": [
+              "Circumferential extent criterion is not implemented; provide a qualified width assessment before crediting reduced wall"
+            ],
+            "ok": false
           },
           "assessment_type": "LML",
           "flaw_length_in": 2.0,
@@ -558,7 +570,7 @@
             "ok": true
           },
           "decision": {
-            "action": "ACCEPT",
+            "action": "ESCALATE",
             "applicability": {
               "flags": [],
               "notes": [],
@@ -574,9 +586,10 @@
             "governing_criterion": "B31G: allowable/demand=2.724; Current demand passes: minimum allowable/demand >= 1.000.",
             "margin": 2.7239815803187764,
             "margin_allowable": 1.0,
+            "remaining_life_basis": null,
             "remaining_life_yr": null,
             "rerated_mawp_psi": null,
-            "verdict": "ACCEPT"
+            "verdict": "ESCALATE"
           },
           "governing_method": "B31G",
           "inputs": {
@@ -746,11 +759,15 @@
           ]
         },
         "strength_decision": {
-          "action": "ACCEPT",
+          "action": "ESCALATE",
           "applicability": {
-            "flags": [],
-            "notes": [],
-            "ok": true
+            "flags": [
+              "LML_CIRCUMFERENTIAL_NOT_EVALUATED"
+            ],
+            "notes": [
+              "Circumferential extent criterion is not implemented; provide a qualified width assessment before crediting reduced wall"
+            ],
+            "ok": false
           },
           "asset_class": "pipeline",
           "derated": null,
@@ -759,9 +776,10 @@
           "margin": 2.7239815803187764,
           "margin_allowable": 1.0,
           "minimum_capacity_to_demand": 2.7239815803187764,
+          "remaining_life_basis": null,
           "remaining_life_yr": 25.945512820512818,
           "rerated_mawp_psi": null,
-          "verdict": "ACCEPT"
+          "verdict": "ESCALATE"
         },
         "sufficiency": {
           "actions": [
@@ -809,22 +827,23 @@
     ]
   },
   "assumptions_sha256_lf": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
-  "builder_sha256_lf": "194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578",
+  "builder_sha256_lf": "5c3a29ce5bb21e6c50981fc83bc10122757d283e0921e5f4991e524043e6ff74",
   "calculation_sources_sha256_lf": {
-    "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
-    "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e40c309ae0a5a847b640973fb6e4e2a1ad2f43bdbcf77126e484c744a09bb239",
-    "src/digitalmodel/asset_integrity/assessment/ffs_decision.py": "d81c744e993a5155eaa1c8bce4945a4a2c13c2ec1c32aeaee671c27a68a64d0b",
-    "src/digitalmodel/asset_integrity/assessment/ffs_router.py": "68dc2e60c87e65799956e0c0fbcadcbfa115ad948e3493222d99d611972216b9",
-    "src/digitalmodel/asset_integrity/assessment/grid_parser.py": "ef3c73a838a00e08980f67ca34d94791347efd9abf7ddb32f9481751bfc9f969",
-    "src/digitalmodel/asset_integrity/assessment/level1_screener.py": "84fb0b073f02ee9a0f1be532f977c4054dfb8ab44e6a699b3addd0de774d1d62",
-    "src/digitalmodel/asset_integrity/assessment/level2_engine.py": "83d36e8b524f67b0b924372d6810cf902fb030304f755b634fd628775abf8eb8",
-    "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py": "751138e77faf469a0024ea71d0e72689e7ed57dd262eb796de5de3806919f22e",
-    "src/digitalmodel/asset_integrity/assessment/pitting.py": "6f83709c73fc060d2ace267ebb7750a7e443ed3d35d857ab186f77f7f64e24de",
+    "src/digitalmodel/asset_integrity/_validation.py": "e1cf99187088739e31c5dcbcb67f8aac5c0010b2ab42bfc6cfccb7f06f41f79e",
+    "src/digitalmodel/asset_integrity/applicability.py": "67f2ee9a56aac1f2548576c2de497d90b4f7b9bb405b50a8234ca394b5b7a1ab",
+    "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "e8d363b1b519e83c1b412f75ab10a9ba3a3522d2c2141be162f53c7ac8691aa2",
+    "src/digitalmodel/asset_integrity/assessment/ffs_decision.py": "343cb656962ea28dd4c28f304f82981683891d19ad6ab25177b7092d8565f851",
+    "src/digitalmodel/asset_integrity/assessment/ffs_router.py": "ab035d49e557b67acacc942faf224f6d054312229f886f5b5ca82d52f57e3ac9",
+    "src/digitalmodel/asset_integrity/assessment/grid_parser.py": "c8d98ceb97d4815a497b9f0edb6ea6122550b0052b231f1c27332901cbf03909",
+    "src/digitalmodel/asset_integrity/assessment/level1_screener.py": "68ae7aaa41a72b06b8824f7b57c3b497c1753e094187df456632463b09d8d65a",
+    "src/digitalmodel/asset_integrity/assessment/level2_engine.py": "a89fa0e5507451a3899cde6c3b26a24ba7f71ccc761e12ce8a496a1083668792",
+    "src/digitalmodel/asset_integrity/assessment/measurement_sufficiency.py": "433c3c6893d45f5dd99b67d4b81ba7d359a6d55303d8da317f596ada012cf8e1",
+    "src/digitalmodel/asset_integrity/assessment/pitting.py": "cdd9fb2960b4c045f30c2175825be54a8ee476059d98c10d7ce038fed3799bcb",
     "src/digitalmodel/asset_integrity/circumferential_defect.py": "d1ae4a23f5e6d8605a40292a976ef1523391ed98ef8c103e0febfb7227c7c952",
     "src/digitalmodel/asset_integrity/composite_repair.py": "5bd8d8621c87e072fc6559d730f138d705a34c02a81e9920454bdd5fcf026b34",
     "src/digitalmodel/asset_integrity/corroded_pipe.py": "4c8a45a6a0f05e4a777e705e95ae71e98d2ecb044fce866409b13c700bf371bd",
     "src/digitalmodel/asset_integrity/dnv_rp_f101.py": "fdb7e0e3d928ba5f9462ae6a6dc40b033dedcfe3c7fb2106e7db65025dcc78bf",
-    "src/digitalmodel/asset_integrity/pipeline_defect_screen.py": "03f92e926e4c84317e3f1c49dae734eee0271842cdffa2e161ea46c4f159bb2f",
+    "src/digitalmodel/asset_integrity/pipeline_defect_screen.py": "0322401f640dd217e2c493e4fe6725a7256122c8dfdd59df5342dc40ce8eae80",
     "src/digitalmodel/asset_integrity/pipeline_defect_screen_inputs.py": "875626eb053a5333f082ee5c83486a048dee77dcc102e6bdbeed4e5e86aa7f1c",
     "src/digitalmodel/asset_integrity/rstreng_2d.py": "3bb47a5f5e0a1ee10585ceddf222297ac64a8beabcf511f9889592c38ba44a07",
     "src/digitalmodel/codes.py": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54",
@@ -833,7 +852,7 @@
     "src/digitalmodel/reporting/engine.py": "98723c8735157f2ae839bc8cd6ebf94ad6e1702ea780da3f119d62a76aed76f4",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90"
   },
-  "configuration_sha256_lf": "af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b",
+  "configuration_sha256_lf": "936345b41c861a322461ad7f6d0591a71a7dac0151a6786287ea9bc82170c680",
   "data_status": "synthetic, for demonstration",
   "digest_convention": "Input SHA-256 after CRLF to LF normalisation; output SHA-256 over exact UTF-8 bytes",
   "excluded_outputs": [
@@ -841,6 +860,6 @@
   ],
   "figures": "inline vector figures; 680-unit width; no raster or external dependencies",
   "intended_use": "worked example; no actual operating asset qualification",
-  "report_sha256": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f",
+  "report_sha256": "314fe6e35d81ec836e3cb9fba323275eb0d0465e195417a0cbbbb81ee1eba929",
   "schema_version": 1
 }

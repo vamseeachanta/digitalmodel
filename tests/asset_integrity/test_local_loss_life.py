@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -34,28 +37,17 @@ def grid(wall=0.6, spacing=1.0):
 
 
 def test_applicable_crossing_has_passing_and_failing_evidence():
-    """Independent inversion of the documented legacy simplified relation.
-
-    The simplified form implemented by Level2Engine._folias_factor:
-    D=12-2*1=10 in, L=2*1=2 in, lambda=1.285*2/sqrt(10),
-    M=sqrt(1+0.48*lambda**2). Synthetic P0=1000 psi, demand=800 psi,
-    allowable RSF=1, hence r=0.8 and t=r*(M-1)/(M-r) in.
-    This algebraic inverse is independent of the bisection under test.
-    """
-    lam = 1.285 * 2 / math.sqrt(10)  # Source: Level2Engine._folias_factor.
-    mt = math.sqrt(1 + 0.48 * lam**2)  # Same source; no new coefficient.
-    expected = 0.8 * (mt - 1) / (mt - 0.8)
+    # A08: the former numerical root cannot qualify a missing width check.
+    lam = 1.285 * 2 / math.sqrt(10)
+    mt = math.sqrt(1 + 0.48 * lam**2)
+    raw = Level2Engine("LML", 12, 1, 1, 1).evaluate(grid())
+    assert raw["rsf"] == pytest.approx(.6 / (1 - .4 / mt))
+    assert not raw["applicability"].ok
     result = builder.local_loss_limit_wall(grid(), component(), 1.0, 1000.0)
-    assert result["status"] == "CROSSING"
-    assert result["wall_in"] == pytest.approx(expected)
-    assert result["monotonic"] is True
-    assert result["qualification_scope"] == "lambda-range only"
-    for bracket in (result["initial_bracket"], result["final_bracket"]):
-        low, high = bracket
-        assert high["applicability"]["ok"]
-        assert low["pressure_psi"] < 800 <= high["pressure_psi"]
-    assert result["final_bracket"][0]["applicability"]["ok"]
-    assert math.nextafter(result["final_bracket"][0]["wall_in"], math.inf) == result["wall_in"]
+    assert result["status"] == "INAPPLICABLE"
+    assert result["wall_in"] is None
+    assert result["initial_bracket"] == result["final_bracket"] == []
+    assert "circumferential" in result["reason"]
 
 
 def test_crossing_outside_applicability_is_censored_without_invalid_evaluation(monkeypatch):
@@ -90,37 +82,30 @@ def test_current_geometry_outside_applicability_has_no_life_limit():
 
 
 def test_target_above_current_capacity_has_no_future_crossing():
-    """Demand=2000 psi exceeds the synthetic uncorroded ceiling of 1000 psi."""
-    result = builder.local_loss_limit_wall(grid(), component(2000.0), 1.0, 1000.0)
-    assert result["status"] == "TARGET_UNREACHABLE"
-    assert result["wall_in"] == 0.6  # Current demand already fails: zero life.
+    # A08: no inferred crossing is allowed without a supported current wall.
+    result = builder.local_loss_limit_wall(grid(), component(2000), 1.0, 1000.0)
+    assert result["status"] == "INAPPLICABLE"
+    assert result["wall_in"] is None
 
 
 @pytest.mark.parametrize("pressure", [800.0, 1000.0])
 def test_no_crossing_for_constant_short_flaw_rating(pressure):
-    """M=1 short-flaw branch gives RSF=1 for every positive wall.
-
-    The zero-wall numerical singularity must not manufacture a pressure root.
-    Synthetic demand is at or below the constant 1000 psi rating.
-    """
+    # A08: an axial short-flaw result does not supply the width criterion.
     result = builder.local_loss_limit_wall(grid(spacing=0.01), component(pressure), 1.0, 1000.0)
     assert result["status"] == "INAPPLICABLE"
     assert result["wall_in"] is None
-    assert result["initial_bracket"][0]["pressure_psi"] == 1000.0
-    assert not result["initial_bracket"][0]["applicability"]["ok"]
-    assert result["initial_bracket"][0]["endpoint_kind"] == "right-hand limit"
+    assert result["initial_bracket"] == []
 
 
 def test_zero_wall_evidence_is_unqualified_for_nonunit_bulging():
-    """An evaluated zero wall is not the short-flaw right-hand limit."""
+    # A03/A08: zero measured wall cannot be used as a strength endpoint.
+    frame = grid(1)
+    frame.iloc[0, 1] = 0
+    with pytest.raises(ValueError, match="finite positive"):
+        builder.local_loss_limit_wall(frame, component(), 1.0, 1000.0)
     result = builder.local_loss_limit_wall(grid(), component(), 1.0, 1000.0)
-    endpoint = result["initial_bracket"][0]
-    assert endpoint["wall_in"] == 0.0
-    assert not endpoint["applicability"]["ok"]
-    assert endpoint["applicability"]["flags"] == ["ZERO_WALL_UNQUALIFIED"]
-    assert endpoint["endpoint_kind"] == "evaluated"
-    assert result["qualification_scope"] == "lambda-range only"
-    assert all(point["wall_in"] > 0 for point in result["final_bracket"])
+    assert result["wall_in"] is None
+    assert result["initial_bracket"] == []
 
 
 def test_target_at_current_wall_is_boundary_censored():
@@ -158,44 +143,31 @@ def test_projection_domain_accounts_for_new_degraded_rows():
 def test_increasing_flaw_length_does_not_move_a_pressure_root_past_domain():
     """Pre-existing flaw rows fix geometry throughout the depletion interval."""
     engine = Level2Engine("LML", 12.0, 1.0, 1.0, 1.0)
-    assert engine.local_loss_projection_domain(grid()) == (0.0, 0.6)
+    assert engine.local_loss_projection_domain(grid()) is None  # A08: circumferential check is missing.
     assert engine.local_loss_projection_domain(grid(0.6, 100.0)) is None
 
 
 def test_flaw_extent_jump_is_reported_as_a_bound():
-    """Synthetic target=990 psi lies between the two one-sided pressures.
-
-    The existing flaw heuristic is t<0.9*nominal (not a code criterion).
-    At t=0.9 in, one-row M=sqrt(1+0.48*(1.285/sqrt(10))**2);
-    just below it, two-row M=sqrt(1+0.48*(1.285*2/sqrt(10))**2).
-    P=1000*0.9/(1-0.1/M) brackets 990 psi. The source for M is the
-    simplified implementation in Level2Engine._folias_factor.
-    No continuous root exists at that geometry jump.
-    """
-    result = builder.local_loss_limit_wall(grid(0.95), component(990.0), 1.0, 1000.0)
-    assert result["status"] == "BOUNDED"
-    assert result["wall_in"] == 0.9
-    assert result["final_bracket"][0]["pressure_psi"] < 990
-    assert result["final_bracket"][1]["pressure_psi"] > 990
+    # A08: crossing a segmentation threshold cannot supply missing applicability.
+    result = builder.local_loss_limit_wall(grid(0.95), component(990), 1.0, 1000.0)
+    assert result["status"] == "INAPPLICABLE"
+    assert result["wall_in"] is None
+    assert result["final_bracket"] == []
 
 
 @pytest.mark.parametrize("where", ["endpoint", "interior"])
 def test_pressure_ordering_failure_prevents_a_crossing(monkeypatch, where):
-    """Fault injection: a unit-RSF bump violates the required pressure ordering.
-
-    For the synthetic grid, P(0)=0 < P(0.3) < P(0.6) < P0=1000 psi.
-    Replacing either lower/interior RSF by 1 makes its pressure exceed P(0.6).
-    """
-    original = Level2Engine.evaluate
-
-    def broken(engine, frame):
-        result = original(engine, frame)
-        if result["t_mm_in"] == (0.0 if where == "endpoint" else 0.3):
-            result["rsf"] = 1.0
-        return result
-
-    monkeypatch.setattr(Level2Engine, "evaluate", broken)
-    result = builder.local_loss_limit_wall(grid(), component(), 1.0, 1000.0)
+    # Retain independent numerical fault injection on a positive synthetic domain.
+    # A08 prevents using an unqualified physical wall to exercise the bisection.
+    def evaluate(wall):
+        pressure = 1100 if where == "interior" else wall * 1000
+        return {"wall_in": wall, "pressure_psi": pressure, "flaw_length_in": 1}
+    low = {"wall_in": .1, "pressure_psi": 1100 if where == "endpoint" else 100}
+    high = {"wall_in": 1, "pressure_psi": 1000}
+    evidence = {"domain_wall_in": [.1, 1], "monotonic": True}
+    def finish(status, wall, reason):
+        return {**evidence, "status": status, "wall_in": wall, "reason": reason}
+    result = builder._bisect_local_loss(evaluate, evidence, finish, low, high, 800)
     assert result["status"] == "NON_MONOTONIC"
     assert result["wall_in"] is None
     assert result["monotonic"] is False
@@ -213,30 +185,23 @@ def test_search_preserves_input_grid():
 def test_invalid_wall_readings_rejected(wall):
     """Nonpositive readings or missing all readings cannot qualify a projection."""
     frame = pd.DataFrame([[wall]])
-    with pytest.raises(ValueError, match="positive finite geometry"):
+    with pytest.raises(ValueError, match="finite positive"):
         builder.local_loss_limit_wall(frame, component(), 1.0, 1000.0)
 
 
 def test_missing_readings_do_not_create_false_flaw_rows():
-    """A missing synthetic background reading leaves the two-row hand case."""
+    # A03: unmeasured background cannot be silently excluded.
     frame = grid()
     frame.iloc[0, 0] = math.nan
-    actual = builder.local_loss_limit_wall(frame, component(), 1.0, 1000.0)
-    expected = builder.local_loss_limit_wall(grid(), component(), 1.0, 1000.0)
-    assert actual == expected
+    with pytest.raises(ValueError, match="complete coverage"):
+        builder.local_loss_limit_wall(frame, component(), 1.0, 1000.0)
 
 
 @pytest.mark.parametrize("dtype", ["int64", "float32"])
 def test_projection_supports_numeric_grid_dtypes(dtype):
-    """The two-row hand inverse above also applies after a uniform grid depletes.
-
-    The target is below the flaw-extent jump; both rows are degraded at the
-    continuous root. Integer or single-precision storage must not quantize trials.
-    """
-    frame = grid(1.0).astype(dtype)
-    mt = math.sqrt(1 + 0.48 * (1.285 * 2 / math.sqrt(10))**2)  # Level2Engine._folias_factor; see hand case.
-    expected = 0.8 * (mt - 1) / (mt - 0.8)
+    # A08: retain the full-wall boundary; do not search unqualified reduced wall.
+    frame = grid(1).astype(dtype)
     result = builder.local_loss_limit_wall(frame, component(), 1.0, 1000.0)
-    assert result["status"] == "CROSSING"
-    assert result["wall_in"] == pytest.approx(expected)
+    assert result["status"] == "BOUNDED"
+    assert result["wall_in"] == 1
     assert str(frame.dtypes.iloc[0]) == dtype

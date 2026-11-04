@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS HTML report generator.
 
 Produces a self-contained single-file HTML report suitable for printing to PDF.
@@ -31,7 +34,9 @@ from typing import Any, Mapping, Optional
 import numpy as np
 import pandas as pd
 
-from digitalmodel.asset_integrity.applicability import Applicability
+from digitalmodel.asset_integrity.applicability import Applicability, merge
+from digitalmodel.asset_integrity._validation import measured_grid
+from .ffs_decision import action_for
 
 _VERDICT_COLORS = {
     "ACCEPT": "#2e7d32",  # green
@@ -120,17 +125,45 @@ class FFSReport:
         Returns:
             Complete HTML document as a string.
         """
+        measured_grid(grid_df)
         today = assessment_date or datetime.utcnow().strftime("%Y-%m-%d")
         nominal_id = (
             nominal_id_in if nominal_id_in else nominal_od_in - 2.0 * nominal_wt_in
         )
 
         verdict = decision.get("verdict", "UNKNOWN")
-        # asset-class wording for the report (#2205); falls back to the verdict
-        verdict_label = str(decision.get("action") or verdict)
+        # Visible action must agree with the verdict's asset-class policy.
+        verdict_label = action_for(verdict, decision.get("asset_class", "pressure"))
+        if decision.get("action") is not None and decision["action"] != verdict_label:
+            raise ValueError("Report action is inconsistent with verdict and asset policy")
+        pit_screen = decision.get("level1", {}).get("pitting_screen", {})
+        if (verdict in {"ACCEPT", "MONITOR"}
+                and pit_screen.get("deep_pit_criterion_pass") is False):
+            raise ValueError("Report verdict conflicts with the independent pitting ligament failure")
+        embedded = decision.get("applicability")
+        if embedded is not None:
+            if isinstance(embedded, dict):
+                embedded = Applicability(embedded.get("ok") is True,
+                                         embedded.get("flags", []), embedded.get("notes", []))
+            if not isinstance(embedded, Applicability):
+                raise ValueError("Report applicability requires a validity record")
+            applicability = merge(embedded, applicability) if applicability is not None else merge(embedded)
+        if applicability is not None:
+            applicability = merge(applicability)
+        if applicability is not None and not applicability.ok and verdict in {"ACCEPT", "MONITOR"}:
+            verdict = verdict_label = "ESCALATE"
         rsf = decision.get("rsf", float("nan"))
         rsf_a = decision.get("rsf_a", 0.9)
-        remaining_life = decision.get("remaining_life_yr", float("nan"))
+        remaining_life = decision.get("remaining_life_yr")
+        if remaining_life is None:
+            remaining_life = math.nan
+        if remaining_life < 0:
+            remaining_life = math.nan
+        # Infinity means unlimited only with an independently qualified zero.
+        if remaining_life == math.inf and not (
+            decision.get("remaining_life_basis") and corrosion_rate_in_per_yr == 0
+        ):
+            remaining_life = math.nan
         criterion = decision.get("governing_criterion", "")
         if verdict == "REPAIR" and repair_recommendation:
             repair_summary = str(repair_recommendation.get("summary", "")).strip()
@@ -172,8 +205,9 @@ class FFSReport:
                 smys_psi,
                 corrosion_rate_in_per_yr,
             ),
-            FFSReport._section_level1(t_mm, t_min_in, design_code),
-            FFSReport._section_level2(rsf, rsf_a, t_am, t_mm, decision),
+            FFSReport._section_level1(t_mm, t_min_in, design_code,
+                                      decision.get("level1"), applicability),
+            FFSReport._section_level2(rsf, rsf_a, t_am, t_mm, decision, applicability),
             FFSReport._section_remaining_life(
                 t_mm, t_min_in, remaining_life, corrosion_rate_in_per_yr
             ),
@@ -326,7 +360,8 @@ class FFSReport:
                 "<h3>Applicability flags raised</h3>"
                 "<p>The defect lies outside the calibrated range of the "
                 "strength method(s) below; the numeric results are reported "
-                "for reference only and the verdict is ESCALATE.</p>"
+                "for reference only. Unsupported checks require escalation; "
+                "independently established repair or replacement actions remain governing.</p>"
                 f"<ul>{items}</ul></div>\n"
             )
         return (
@@ -358,7 +393,8 @@ class FFSReport:
         rl_str = (
             f"{remaining_life:.1f} yr"
             if math.isfinite(remaining_life)
-            else "&#x221e; (no corrosion)"
+            else "Unlimited (qualified zero corrosion rate)" if remaining_life == math.inf
+            else "Not evaluated (remaining-life basis unavailable)"
         )
         rsf_str = f"{rsf:.4f}" if math.isfinite(rsf) else "N/A"
         return (
@@ -422,12 +458,19 @@ class FFSReport:
         )
 
     @staticmethod
-    def _section_level1(t_mm: float, t_min: float, code: str) -> str:
+    def _section_level1(t_mm: float, t_min: float, code: str,
+                        level1: dict | None = None, applicability=None) -> str:
         margin = t_mm - t_min
-        verdict = "ACCEPT" if t_mm >= t_min else "FAIL"
-        color = _VERDICT_COLORS.get(
-            "ACCEPT" if t_mm >= t_min else "REPAIR", _DEFAULT_COLOR
-        )
+        # A mechanism-specific verdict is required; wall alone cannot clear it.
+        verdict = (level1 or {}).get("verdict", "Not evaluated")
+        if verdict == "ACCEPT" and t_mm < t_min:
+            verdict = "FAIL_LEVEL_1"
+        pit_verdict = (level1 or {}).get("pitting_screen", {}).get("verdict")
+        if pit_verdict and pit_verdict != "ACCEPT":
+            verdict = pit_verdict
+        if applicability is not None and not applicability.ok and verdict == "ACCEPT":
+            verdict = "Not evaluated (unsupported criterion)"
+        color = _VERDICT_COLORS.get(verdict, _DEFAULT_COLOR)
         return (
             "<div class='section'>\n"
             "<h2>3. Level 1 Assessment (API 579 Part 4/5 §4.3 / §5.3)</h2>\n"
@@ -439,6 +482,8 @@ class FFSReport:
             f"<tr><td>Margin (t_mm &#8722; t_min)</td><td>{margin:.4f}</td>"
             f"<td style='color:{color}'><strong>{html.escape(verdict)}</strong></td></tr>\n"
             "</table>\n"
+            "<p>Criterion: the mechanism-specific Level 1 verdict and measured-wall "
+            "criterion must pass within method applicability.</p>\n"
             "</div>\n"
         )
 
@@ -449,14 +494,18 @@ class FFSReport:
         t_am: float,
         t_mm: float,
         decision: dict,
+        applicability=None,
     ) -> str:
         rsf_str = f"{rsf:.4f}" if math.isfinite(rsf) else "N/A"
-        verdict = "ACCEPT" if rsf >= rsf_a else "FAIL"
-        color = _VERDICT_COLORS.get(
-            "ACCEPT" if rsf >= rsf_a else "REPAIR", _DEFAULT_COLOR
-        )
+        # No inferred badge may override mechanism verdict or applicability.
+        verdict = decision.get("level2", {}).get("verdict", "Not evaluated")
+        if verdict == "ACCEPT" and (not math.isfinite(rsf) or rsf < rsf_a):
+            verdict = "FAIL_LEVEL_2"
+        if applicability is not None and not applicability.ok and verdict == "ACCEPT":
+            verdict = "Not evaluated (unsupported criterion)"
+        color = _VERDICT_COLORS.get(verdict, _DEFAULT_COLOR)
         folias = decision.get("folias_factor", 1.0)
-        l2_verdict = decision.get("verdict", "")
+        l2_verdict = verdict
         return (
             "<div class='section'>\n"
             "<h2>4. Level 2 Assessment (API 579 Part 4/5 §4.4 / §5.4)</h2>\n"
@@ -486,7 +535,8 @@ class FFSReport:
         rl_str = (
             f"{remaining_life:.2f} years"
             if math.isfinite(remaining_life)
-            else "Unlimited (no further corrosion assumed)"
+            else "Unlimited (qualified zero corrosion rate)" if remaining_life == math.inf
+            else "Not evaluated (remaining-life basis unavailable)"
         )
         rate_str = f"{corr_rate:.4f} in/yr" if corr_rate is not None else "Not provided"
         return (

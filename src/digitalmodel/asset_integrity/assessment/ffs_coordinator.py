@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Canonical FFS coordinator — one data model + one orchestration call
 # ABOUTME: chaining the validated Phase-1 assessment modules end to end.
 """Canonical Fitness-For-Service coordinator (Phase-1 path).
@@ -24,7 +27,8 @@ Units: inches and psi (consistent with the Phase-1 modules).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
+import math
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
@@ -32,6 +36,7 @@ import numpy as np
 import pandas as pd
 
 from digitalmodel.asset_integrity.applicability import Applicability, merge
+from digitalmodel.asset_integrity._validation import finite_number, measured_grid
 from digitalmodel.asset_integrity.composite_repair import (
     CompositeRepairParameters,
     recommend_from_ffs_result,
@@ -62,10 +67,13 @@ class FFSComponent:
     nominal_wt_in: float
     design_pressure_psi: float
     smys_psi: Optional[float] = None
-    corrosion_rate_in_per_yr: float = 0.0
+    corrosion_rate_in_per_yr: Optional[float] = None
     fca_in: float = 0.0  # future corrosion allowance
     rsf_a: float = 0.90  # allowable remaining strength factor
     component_type: str = "pipe"
+    corrosion_rate_basis: Optional[str] = None
+    allowable_stress_psi: Optional[float] = None
+    row_spacing_in: Optional[float] = None
 
 
 @dataclass
@@ -102,7 +110,9 @@ class FFSAssessmentResult:
     @property
     def passes(self) -> bool:
         """True when the component is fit-for-service without re-rating."""
-        return self.verdict in ("ACCEPT", "MONITOR")
+        # Clearance requires supported strength and sufficient measurements.
+        return (self.verdict in ("ACCEPT", "MONITOR") and self.applicability.ok
+                and self.sufficiency_status == "SUFFICIENT")
 
     def to_dict(self) -> dict:
         """JSON-serialisable summary (for lookup tables / query layers)."""
@@ -131,6 +141,17 @@ class FFSAssessmentResult:
             # Added only when raised so the indexed 16-key surface (#1066)
             # is unchanged for every in-range assessment.
             payload["applicability"] = self.applicability.to_dict()
+        if not math.isfinite(self.remaining_life_yr):
+            payload["remaining_life_yr"] = None
+            payload["remaining_life_basis"] = self.decision.get("remaining_life_basis")
+            payload["remaining_life_status"] = (
+                "QUALIFIED_ZERO_RATE" if self.remaining_life_yr == math.inf
+                and self.decision.get("remaining_life_basis") else "NOT_EVALUATED")
+            if payload["remaining_life_status"] == "NOT_EVALUATED":
+                payload["remaining_life_reason"] = "Corrosion rate or qualified zero-rate basis is missing"
+        if self.sufficiency_status != "SUFFICIENT" or not self.applicability.ok or self.verdict == "ESCALATE":
+            payload["governing_criterion"] = self.decision.get("governing_criterion", "Required evidence is incomplete")
+            payload["measurement_actions"] = [asdict(a) for a in self.sufficiency.actions] if self.sufficiency else []
         return payload
 
 
@@ -154,10 +175,23 @@ def assess_component(
         repair_context: optional composite-repair screening context. Used only
             for REPAIR verdicts.
     """
+    if component.component_type != "pipe":
+        raise ValueError("component_type requires supported pipe geometry")
+    finite_number(component.nominal_wt_in, "nominal_wt_in")
+    finite_number(component.nominal_od_in, "nominal_od_in")
+    if component.nominal_od_in <= 2 * component.nominal_wt_in:
+        raise ValueError("Supported geometry requires OD > 2 WT")
+    finite_number(component.fca_in, "fca_in", positive=False)
     df = _to_grid_df(grid, input_units)
+    if component.fca_in >= float(measured_grid(df).min()):
+        raise ValueError("FCA consumes a measured ligament; strength is not evaluated")
+    # Assess future net wall once throughout screening, strength and life.
+    df = df - component.fca_in
+    measured_grid(df)
 
     route = FFSRouter.classify(
-        df, component.nominal_od_in, component.nominal_wt_in, force_type=force_type
+        df, component.nominal_od_in, component.nominal_wt_in, force_type=force_type,
+        row_spacing_in=component.row_spacing_in,
     )
     atype = route["assessment_type"]
 
@@ -166,6 +200,7 @@ def assess_component(
         nominal_od_in=component.nominal_od_in,
         design_pressure_psi=component.design_pressure_psi,
         smys_psi=component.smys_psi,
+        allowable_stress_psi=component.allowable_stress_psi,
     )
     t_min = screener.t_min()
     t_mm = GridParser.min_thickness(df)
@@ -178,9 +213,10 @@ def assess_component(
         # conservative closed-form Level 1 screen on top of the code t_min
         # check, and bound Level 2 by an equivalent LTA run through the
         # validated Part 5 engine (see assessment/pitting.py for the basis).
-        pit_char = characterize_pit_field(df, component.nominal_wt_in)
+        pit_char = characterize_pit_field(df, component.nominal_wt_in,
+                                         row_spacing_in=component.row_spacing_in)
         pit_l1 = screen_pitting_level1(
-            pit_char, t_min_in=t_min, fca_in=component.fca_in
+            pit_char, t_min_in=t_min
         )
         combined_verdict = (
             "ACCEPT"
@@ -202,11 +238,12 @@ def assess_component(
             nominal_wt_in=component.nominal_wt_in,
             t_min_in=t_min,
             rsf_a=component.rsf_a,
+            row_spacing_in=component.row_spacing_in,
         ).evaluate(df)
 
     # Applicability flags raised by the Level 2 engine (Folias lambda cap);
     # any flag makes the decision ESCALATE instead of a numeric verdict.
-    applicability = merge(l1.get("applicability"), l2.get("applicability"))
+    applicability = merge(l1.get("applicability", Applicability()), l2.get("applicability"))
 
     decision = FFSDecision.decide(
         level1_verdict=l1["verdict"],
@@ -218,7 +255,9 @@ def assess_component(
         corrosion_rate_in_per_yr=component.corrosion_rate_in_per_yr,
         design_pressure_psi=component.design_pressure_psi,
         applicability=applicability,
+        corrosion_rate_basis=component.corrosion_rate_basis,
     )
+    decision.update(level1=l1, level2=l2)
 
     sufficiency = MeasurementSufficiency().evaluate(
         df,
@@ -227,6 +266,12 @@ def assess_component(
         level1_result=l1,
         level2_result=l2,
     )
+
+    # A provisional strength pass cannot clear an incomplete field survey.
+    if sufficiency.status != "SUFFICIENT" and decision["verdict"] in ("ACCEPT", "MONITOR"):
+        decision = {**decision, "verdict": "ESCALATE", "action": "ESCALATE",
+                    "governing_criterion": "Measurement sufficiency is " + sufficiency.status
+                    + ": " + "; ".join(sufficiency.reasons)}
 
     rsf = float(l2["rsf"])
     # single source: the decision layer's MAWP_r (API 579-1 §2.4.2.2, #1273)

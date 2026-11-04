@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Dent and dent-gouge screening for pipelines (API 579-1 Part 12 scope)
 # ABOUTME: — depth screen, ASME B31.8 Appendix R strain estimate, conservative routing.
 """Dent and dent-gouge screening assessment for pipelines.
@@ -84,6 +87,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from digitalmodel.codes import API_579, ASME_B31_8
+from digitalmodel.asset_integrity._validation import finite_number
 
 # --- Published screening defaults (all parameterized in assess_dent) --------
 #: Plain-dent depth acceptance, d/OD.  EPRG plain-dent guideline (7 % OD);
@@ -139,9 +143,9 @@ class DentAssessment:
     verdict: str                          # ACCEPT|MONITOR|NEEDS_ASSESSMENT|REJECT
     governing_criterion: str
     strain: Optional[DentStrain] = None   # None when dent lengths not given
-    on_weld: bool = False
-    restrained: bool = False
-    with_gouge_or_metal_loss: bool = False
+    on_weld: Optional[bool] = None
+    restrained: Optional[bool] = None
+    with_gouge_or_metal_loss: Optional[bool] = None
     thresholds: dict = field(default_factory=dict)
     citations: list = field(default_factory=list)
     validity_notes: list = field(default_factory=list)
@@ -181,11 +185,12 @@ def dent_strain_b31_8(
     """
     _validate_geometry(od_in, wt_in)
     d = dent_depth_in
-    if d <= 0:
-        raise ValueError(f"dent depth must be > 0 for a strain estimate (got {d}).")
+    finite_number(d, "dent depth")
     ll, lc = dent_length_axial_in, dent_length_circ_in
-    if ll is None or lc is None or ll <= 0 or lc <= 0:
-        raise ValueError("dent lengths (axial and circumferential) must be > 0.")
+    finite_number(ll, "axial dent length")
+    finite_number(lc, "circumferential dent length")
+    if d >= od_in:
+        raise ValueError("dent depth must be smaller than OD")
 
     t = wt_in
     r0 = od_in / 2.0
@@ -198,6 +203,8 @@ def dent_strain_b31_8(
 
     eps_i = _effective_strain(eps1, eps2 + eps3)
     eps_o = _effective_strain(-eps1, -eps2 + eps3)
+    if not all(math.isfinite(v) for v in (r1, r2, eps_i, eps_o)):
+        raise ValueError("Dent strain is non-finite; detailed profile assessment required")
     return DentStrain(
         eps_circ_bending=eps1,
         eps_long_bending=eps2,
@@ -218,9 +225,9 @@ def assess_dent(
     dent_length_axial_in: Optional[float] = None,
     dent_length_circ_in: Optional[float] = None,
     *,
-    on_weld: bool = False,
-    restrained: bool = False,
-    with_gouge_or_metal_loss: bool = False,
+    on_weld: Optional[bool] = None,
+    restrained: Optional[bool] = None,
+    with_gouge_or_metal_loss: Optional[bool] = None,
     smys_psi: Optional[float] = None,
     plain_dent_depth_limit: float = PLAIN_DENT_DEPTH_LIMIT,
     weld_dent_depth_limit: float = WELD_DENT_DEPTH_LIMIT,
@@ -254,6 +261,18 @@ def assess_dent(
             plain-dent strain practice).
     """
     _validate_geometry(od_in, wt_in)
+    finite_number(dent_depth_in, "dent depth", positive=False)
+    for name, value in (("plain_dent_depth_limit", plain_dent_depth_limit),
+                        ("weld_dent_depth_limit", weld_dent_depth_limit), ("strain_limit", strain_limit)):
+        finite_number(value, name)
+        if value >= 1:
+            raise ValueError(f"{name} must be in (0, 1)")
+    for name, value in (("on_weld", on_weld), ("restrained", restrained),
+                        ("with_gouge_or_metal_loss", with_gouge_or_metal_loss)):
+        if value is not None and type(value) is not bool:
+            raise ValueError(f"{name} requires an explicit boolean confirmation")
+    if smys_psi is not None:
+        finite_number(smys_psi, "smys_psi")
     if dent_depth_in < 0:
         raise ValueError(f"dent depth must be >= 0 (got {dent_depth_in}).")
     if dent_depth_in >= od_in:
@@ -262,8 +281,8 @@ def assess_dent(
         )
     for name, val in (("dent_length_axial_in", dent_length_axial_in),
                       ("dent_length_circ_in", dent_length_circ_in)):
-        if val is not None and val <= 0:
-            raise ValueError(f"{name} must be > 0 if given (got {val}).")
+        if val is not None:
+            finite_number(val, name)
     if not (0.0 < weld_dent_depth_limit <= plain_dent_depth_limit):
         raise ValueError(
             "weld_dent_depth_limit must be in (0, plain_dent_depth_limit] — "
@@ -370,6 +389,20 @@ def assess_dent(
             "restrained dent: depth may increase if the restraint is "
             "removed; include in fatigue-susceptibility review.")
 
+    incomplete = []
+    if dent_length_axial_in is None or dent_length_circ_in is None:
+        incomplete.append("both axial and circumferential profiles are required")
+    if any(v is None for v in (on_weld, restrained, with_gouge_or_metal_loss)):
+        incomplete.append("weld, restraint and coincident-feature confirmations are required")
+    # A depth-only screen is provisional; preserve known rejection while
+    # withholding clearance until strain and feature evidence is complete.
+    if incomplete:
+        reason = "Clearance not evaluated: " + "; ".join(incomplete)
+        notes.append(reason)
+        if verdict in {"ACCEPT", "MONITOR"}:
+            verdict = "NEEDS_ASSESSMENT"
+        governing += "; " + reason
+
     return DentAssessment(
         od_in=od_in,
         wt_in=wt_in,
@@ -394,6 +427,8 @@ def assess_dent(
 
 
 def _validate_geometry(od_in: float, wt_in: float) -> None:
+    finite_number(od_in, "OD")
+    finite_number(wt_in, "wall thickness")
     if od_in <= 0 or wt_in <= 0 or wt_in >= od_in / 2.0:
         raise ValueError(f"Invalid geometry: OD={od_in}, t={wt_in}.")
 

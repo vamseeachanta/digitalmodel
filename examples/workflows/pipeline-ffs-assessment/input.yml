@@ -33,3 +33,6 @@ revision_history:
   - rev: '03'
     date: '2026-10-21'
     description: Excluded zero-wall endpoints from numerical life and limited pressure-projection qualification to the checked shell-parameter range because the remaining-thickness limits are not checked. Both synthetic section results are unchanged.
+  - rev: '04'
+    date: '2026-10-22'
+    description: Withheld reduced-wall clearance where the circumferential criterion is unavailable; marked the affected life and inspection interval not evaluated and preserved required measurement actions.

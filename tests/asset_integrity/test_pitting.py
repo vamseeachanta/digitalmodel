@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for API 579-1 Part 6 pitting assessment (assessment/pitting.py)
 # ABOUTME: — characterization, Level 1 screen, equivalent-LTA Level 2, routing.
 """Pitting assessment tests (#1269).
@@ -120,11 +123,11 @@ class TestCharacterization:
         assert char.pit_count == 0
 
     def test_nan_cells_are_not_pits(self):
-        g = _grid(pits=EIGHT_PITS)
-        g.iloc[0, 0] = np.nan
-        char = characterize_pit_field(g, NOMINAL)
-        assert char.pit_count == 8
-        assert char.total_valid_cells == 30 * 40 - 1
+        # A03/A18: unmeasured cells are neither sound wall nor an observed population.
+        grid = _grid(pits=EIGHT_PITS)
+        grid.iloc[0, 0] = np.nan
+        with pytest.raises(ValueError, match="complete coverage"):
+            characterize_pit_field(grid, NOMINAL)
 
     def test_background_median_ignores_pits(self):
         char = characterize_pit_field(_grid(pits=EIGHT_PITS), NOMINAL)
@@ -227,7 +230,7 @@ class TestLevel2EquivalentLTA:
             char, nominal_od_in=self.OD, nominal_wt_in=NOMINAL, t_min_in=self.TMIN
         )
         assert r["rsf"] == 1.0
-        assert r["verdict"] == "ACCEPT"
+        assert r["verdict"] == "NOT_EVALUATED"  # A18: route measured wall to metal loss.
         assert r["equivalent_lta"] is None
 
     def test_one_call_convenience(self):
@@ -328,7 +331,7 @@ class TestCoordinatorPitting:
         res = assess_component(_component(), _grid(pits=EIGHT_PITS),
                                force_type="PITTING")
         assert res.assessment_type == "PITTING"
-        assert res.verdict in ("ACCEPT", "MONITOR", "RE_RATE", "REPAIR", "REPLACE")
+        assert res.verdict == "ESCALATE"  # A19: nonuniform mean-depth representation.
         assert 0.0 < res.rsf <= 1.0
         assert res.level2["assessment_type"] == "PITTING"
         assert "equivalent local thin area" in res.level2["assessment_basis"]
@@ -370,67 +373,32 @@ NOMINAL_WT_REAL = 0.875  # 22.225 mm
 class TestRealFixtureIntegration:
     @pytest.fixture(scope="class")
     def real_grid(self):
-        return GridParser.from_csv(str(REAL_GRID), input_units="mm")
+        return pd.read_csv(REAL_GRID, header=None) / 25.4
 
     def test_characterize_real_scan(self, real_grid):
-        char = characterize_pit_field(real_grid, NOMINAL_WT_REAL)
-        # REGRESSION-ANCHOR: current data reduction of the real severe scan
-        # (11 isolated pits over 29 037 readings, deepest ~32 % of WT, on a
-        # background whose median sits at ~98.6 % of nominal)
-        assert char.pit_count == 11
-        assert char.pitted_cell_count == 48
-        assert char.pitted_cell_fraction == pytest.approx(48 / 29037, rel=1e-9)
-        assert char.max_pit_depth_ratio == pytest.approx(0.3240, abs=1e-3)
-        assert char.avg_pit_depth_ratio == pytest.approx(0.2574, abs=1e-3)
-        assert char.background_median_in / NOMINAL_WT_REAL == pytest.approx(
-            0.9861, abs=1e-3
-        )
-        # physical sanity: deepest reading matches the fixture register (~15.0 mm)
-        assert char.t_min_pit_in == pytest.approx(15.02 / 25.4, abs=0.02)
+        # A03/A18: incomplete measured populations require resurvey, not omission.
+        assert real_grid.isna().to_numpy().any()
+        with pytest.raises(ValueError, match="complete coverage"):
+            characterize_pit_field(real_grid, NOMINAL_WT_REAL)
 
     def test_assess_real_scan_as_pitting(self, real_grid):
-        component = FFSComponent(
-            component_id="RJ-101-boxend",
-            design_code="B31.8",
-            nominal_od_in=NOMINAL_OD_REAL,
-            nominal_wt_in=NOMINAL_WT_REAL,
-            design_pressure_psi=500.0,
-            smys_psi=80_000.0,
-            corrosion_rate_in_per_yr=0.25 / 25.4,
-        )
-        res = assess_component(component, real_grid, force_type="PITTING")
-        assert res.assessment_type == "PITTING"
-        assert "equivalent local thin area" in res.level2["assessment_basis"]
-        # REGRESSION-ANCHOR: at 500 psi the code t_min is small, so the
-        # equivalent-LTA thickness ratio caps and the RSF is unity; both
-        # Level 1 screens pass.
-        assert res.rsf == pytest.approx(1.0, abs=1e-9)
-        assert res.verdict == "ACCEPT"
-        assert res.level1["pitting_screen"]["verdict"] == "ACCEPT"
-        assert res.details["pitting_characterization"]["pit_count"] == 11
+        # A03: the coordinator must reject incomplete measurement coverage.
+        with pytest.raises(ValueError, match="complete coverage"):
+            assess_component(_component(), real_grid, force_type="PITTING")
 
     def test_real_severe_scan_auto_routes_to_pitting(self, real_grid):
         # REGRESSION-ANCHOR: the severe worst-zone scan is textbook pit
         # morphology (11 sharp separated minima, ~0.17 % of cells, background
         # median ~98.6 % of nominal) — the heuristic detects it.
-        route = FFSRouter.classify(
-            real_grid,
-            nominal_od_in=NOMINAL_OD_REAL,
-            nominal_wt_in=NOMINAL_WT_REAL,
-        )
-        assert route["assessment_type"] == "PITTING"
-        assert route["pitting"]["detected"] is True
-        assert route["pitting"]["pit_count"] == 11
+        # A03: auto-routing cannot infer an intact background across missing cells.
+        with pytest.raises(ValueError, match="complete coverage"):
+            FFSRouter.classify(real_grid, NOMINAL_OD_REAL, NOMINAL_WT_REAL)
 
     def test_real_mild_scan_stays_lml(self):
         # Opt-in safety: the mild scan has only 2 sub-threshold components —
         # below the pit-count floor — so its default classification is
         # unchanged by the pitting heuristic.
-        grid = GridParser.from_csv(
-            str(DATA / "ut_grid_RJ-103-pinend_ds8.csv"), input_units="mm"
-        )
-        route = FFSRouter.classify(
-            grid, nominal_od_in=NOMINAL_OD_REAL, nominal_wt_in=NOMINAL_WT_REAL
-        )
-        assert route["assessment_type"] == "LML"
-        assert route["pitting"]["detected"] is False
+        # A03: every incomplete fixture requires explicit missing-data resolution.
+        source = next(path for path in DATA.glob("ut_grid_*.csv") if "pinend" in path.name)
+        with pytest.raises(ValueError, match="complete coverage"):
+            GridParser.from_csv(str(source), input_units="mm")

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS Level 1 screening — minimum measured thickness vs code-required minimum.
 
 Implements API 579-1/ASME FFS-1 Level 1 acceptance criterion:
@@ -30,6 +33,9 @@ References:
 
 from __future__ import annotations
 
+from digitalmodel.asset_integrity._validation import finite_number
+from digitalmodel.asset_integrity.applicability import Applicability
+
 _SUPPORTED_CODES = {"B31.8", "B31.4", "ASME_VIII_DIV1"}
 
 # Default design factors (conservative — override via constructor kwargs)
@@ -47,8 +53,8 @@ class Level1Screener:
         smys_psi: Specified minimum yield strength (psi).
             Required for B31.4 and B31.8.
         allowable_stress_psi: Allowable design stress (psi).
-            Required for ASME_VIII_DIV1.  If not supplied, defaults to
-            SMYS / 3.5 (conservative ASME rule-of-thumb).
+            Required for ASME_VIII_DIV1 with an applicable material and
+            temperature basis; no strength-based substitute is inferred.
         b31_design_factor: Override the B31.4 / B31.8 design factor F
             (default 0.72).
         weld_joint_efficiency: ASME VIII weld joint efficiency E (default 1.0).
@@ -88,13 +94,18 @@ class Level1Screener:
         self._b31_df = b31_design_factor
         self._weld_eff = weld_joint_efficiency
 
-        if allowable_stress_psi is not None:
-            self._s_allow = allowable_stress_psi
-        elif smys_psi is not None:
-            # Conservative default: S = SMYS / 3.5 (approx. ASME low-alloy)
-            self._s_allow = smys_psi / 3.5
-        else:
-            self._s_allow = None
+        self._s_allow = allowable_stress_psi
+        finite_number(nominal_od_in, "nominal_od_in")
+        finite_number(design_pressure_psi, "design_pressure_psi")
+        for name, factor in (("b31_design_factor", b31_design_factor),
+                             ("weld_joint_efficiency", weld_joint_efficiency)):
+            finite_number(factor, name)
+            if factor > 1:
+                raise ValueError(f"{name} must be in (0, 1]")
+        if smys_psi is not None or self._code != "ASME_VIII_DIV1":
+            finite_number(smys_psi, "smys_psi")
+        if allowable_stress_psi is not None or self._code == "ASME_VIII_DIV1":
+            finite_number(allowable_stress_psi, "allowable_stress_psi (material/temperature basis)")
 
     # ------------------------------------------------------------------
     # Public interface
@@ -130,8 +141,15 @@ class Level1Screener:
                 margin_in (float): t_mm - t_min (positive = acceptable margin)
                 design_code (str): Design code used
         """
+        finite_number(tmm_in, "measured wall")
+        if 2 * tmm_in >= self._od:
+            raise ValueError("Measured wall requires OD > 2 times wall")
         t_min_val = self.t_min()
+        finite_number(t_min_val, "required wall")
+        if 2 * t_min_val >= self._od:
+            raise ValueError("Required wall lies outside supported cylindrical geometry")
         margin = tmm_in - t_min_val
+        # Clearance criterion: finite measured wall >= finite code minimum.
         verdict = "ACCEPT" if tmm_in >= t_min_val else "FAIL_LEVEL_1"
         return {
             "verdict": verdict,
@@ -139,6 +157,7 @@ class Level1Screener:
             "t_mm_in": tmm_in,
             "margin_in": margin,
             "design_code": self._code,
+            "applicability": Applicability(),  # Validated code and geometry domain.
         }
 
     # ------------------------------------------------------------------
@@ -175,7 +194,7 @@ class Level1Screener:
         """
         if self._s_allow is None:
             raise ValueError(
-                "allowable_stress_psi or smys_psi must be provided for "
+                "allowable_stress_psi must be provided for "
                 "design_code='ASME_VIII_DIV1'."
             )
         r = self._od / 2.0

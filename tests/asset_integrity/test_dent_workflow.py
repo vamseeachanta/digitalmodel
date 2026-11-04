@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Manual dent geometry workflow and shared decision contract."""
 import math
 from pathlib import Path
@@ -23,7 +26,7 @@ def test_strain_golden_and_report(tmp_path):
     expected = max(math.sqrt(x*x-x*(y+membrane)+(y+membrane)**2),
                    math.sqrt(x*x+x*(membrane-y)+(membrane-y)**2))
     assert result["assessment"]["strain"]["eps_max"] == pytest.approx(expected)
-    assert result["decision"]["verdict"] == "ACCEPT"
+    assert result["decision"]["verdict"] == "ESCALATE"  # A14: life is unknown.
     report = result["report_html"]
     assert "Appendix R" in report
     assert "manual" in report.lower()
@@ -34,7 +37,7 @@ def test_strain_golden_and_report(tmp_path):
 
 @pytest.mark.parametrize("params,verdict", [
     ({"with_gouge_or_metal_loss": True}, "ESCALATE"),
-    ({"restrained": True}, "MONITOR"),
+    ({"restrained": True}, "ESCALATE"),
     ({"on_weld": True}, "REPAIR"),
     ({"dent_length_axial_in": 1.0}, "ESCALATE"),
 ])

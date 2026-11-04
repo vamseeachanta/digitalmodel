@@ -25,6 +25,7 @@ from digitalmodel.asset_integrity.assessment import (
     FFSComponent,
     assess_component,
 )
+from digitalmodel.asset_integrity._validation import finite_number
 
 
 class FFSWorkflow:
@@ -62,5 +63,8 @@ def _to_grid(grid: Any):
     passed through unchanged (``assess_component`` handles DataFrame/ndarray/CSV).
     """
     if isinstance(grid, (list, tuple)):
-        return np.asarray(grid, dtype=float)
+        readings = np.asarray(grid, dtype=object)
+        for reading in readings.flat:
+            finite_number(reading, "wall measurement")
+        return readings.astype(float)
     return grid

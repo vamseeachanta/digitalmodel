@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Regression tests for the #1094 FFS strength-method quick-win fixes:
 # ABOUTME: unbiased area-average t_am, d/t applicability flags, frozen Folias cap.
 import math
@@ -17,17 +20,15 @@ from digitalmodel.asset_integrity.assessment.level2_engine import (
 def test_gml_t_am_is_area_average_not_mean_of_column_means():
     # Column 1 has a missing cell, so the old df.mean().mean() (mean of the
     # per-column means) would give 0.525; the true area-average is 0.500.
+    # A03: a partial population cannot establish an area-average assessment.
+    import pytest
     grid = pd.DataFrame({"c0": [0.40, 0.50], "c1": [0.60, np.nan]})
-    engine = Level2Engine("GML", nominal_od_in=20.0, nominal_wt_in=0.5,
-                          t_min_in=0.45)
-    result = engine.evaluate(grid)
-
-    valid = grid.to_numpy(dtype=float)
-    expected = float(np.nanmean(valid))  # = 1.5 / 3 = 0.5
-    assert math.isclose(result["t_am_in"], expected, rel_tol=1e-12)
+    engine = Level2Engine("GML", nominal_od_in=20.0, nominal_wt_in=0.5, t_min_in=0.45)
+    with pytest.raises(ValueError, match="complete coverage"):
+        engine.evaluate(grid)
+    complete = grid.fillna(0.50)  # Explicit synthetic measurement for arithmetic control.
+    result = engine.evaluate(complete)
     assert math.isclose(result["t_am_in"], 0.5, rel_tol=1e-12)
-    # The biased mean-of-column-means would have been 0.525.
-    assert not math.isclose(result["t_am_in"], 0.525, rel_tol=1e-6)
 
 
 # --- #2: B31G / Modified / RSTRENG applicability flag (d/t <= 0.80) -----------

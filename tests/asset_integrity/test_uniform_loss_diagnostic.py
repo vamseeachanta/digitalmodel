@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Safety and physical-coordinate tests for the unqualified FFS study diagnostic.
 # ABOUTME: Characterization outputs cannot be consumed as allowable wall envelopes.
 import math
@@ -38,7 +41,7 @@ def test_width_omission_is_characterized_not_presented_as_acceptance():
     assert narrow['inputs']['width_arc_in'] != wide['inputs']['width_arc_in']
     assert narrow['raw_level2']['rsf'] == wide['raw_level2']['rsf']
     assert narrow['raw_level2']['lambda'] == wide['raw_level2']['lambda']
-    assert narrow['assessment_status'] == 'UNQUALIFIED'
+    assert narrow['assessment_status'] == 'INAPPLICABLE'  # A08
 
 
 def test_out_of_range_cannot_become_a_pass_or_fail():

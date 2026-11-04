@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS decision engine — translate assessment margins into action verdicts.
 
 One shared verdict vocabulary for every asset class (issue #2205, owner
@@ -54,11 +57,12 @@ References:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Callable, Mapping, Optional, Union
 
-from digitalmodel.asset_integrity.applicability import Applicability
+from digitalmodel.asset_integrity.applicability import Applicability, merge
+from digitalmodel.asset_integrity._validation import finite_number
 from digitalmodel.units import Q_, ureg
 
 Number = Union[int, float]
@@ -210,6 +214,8 @@ def _require(q: Any, dimension: str, what: str) -> "ureg.Quantity":
 
 
 def _dimensionless(x: QuantityLike, what: str) -> float:
+    if isinstance(x, bool):
+        raise UnitTagError(f"{what} requires numeric evidence, not a boolean")
     if _is_quantity(x):
         if not x.dimensionless:
             raise UnitTagError(f"{what} is a ratio and must be dimensionless, got {x.units}")
@@ -220,6 +226,8 @@ def _dimensionless(x: QuantityLike, what: str) -> float:
 
 
 def _years(x: QuantityLike, what: str = "remaining_life_yr") -> float:
+    if isinstance(x, bool):
+        raise UnitTagError(f"{what} requires numeric evidence, not a boolean")
     if _is_quantity(x):
         return float(_require(x, "[time]", what).to("year").magnitude)
     if isinstance(x, (int, float)):
@@ -228,7 +236,7 @@ def _years(x: QuantityLike, what: str = "remaining_life_yr") -> float:
 
 
 def remaining_life(t_mm: "ureg.Quantity", t_min: "ureg.Quantity",
-                   rate: "ureg.Quantity") -> float:
+                   rate: "ureg.Quantity", *, zero_rate_basis: str | None = None) -> float:
     """Linear remaining-life projection, unit-aware.  Returns years.
 
     ``float('inf')`` when the rate is zero; ``0.0`` when t_mm <= t_min.
@@ -236,6 +244,11 @@ def remaining_life(t_mm: "ureg.Quantity", t_min: "ureg.Quantity",
     t_mm = _require(t_mm, "[length]", "t_mm")
     t_min = _require(t_min, "[length]", "t_min")
     rate = _require(rate, "[length]/[time]", "corrosion rate")
+    finite_number(t_mm.magnitude, "measured thickness")
+    finite_number(t_min.magnitude, "required thickness")
+    finite_number(rate.magnitude, "corrosion rate", positive=False)
+    if rate.magnitude == 0 and not (isinstance(zero_rate_basis, str) and zero_rate_basis.strip()):
+        raise ValueError("Zero corrosion rate requires an explicit qualified basis")
     if t_mm <= t_min:
         return 0.0
     if rate.magnitude == 0.0:
@@ -266,6 +279,7 @@ def scaled_limit(limit: "ureg.Quantity", dimension: str, *, label: str = "limit_
     allowable is non-positive (no meaningful ratio).
     """
     limit = _require(limit, dimension, "limit")
+    finite_number(limit.magnitude, "limit")
 
     def _derate(margin: float, allowable: float) -> Optional[Derating]:
         if allowable <= 0 or not math.isfinite(margin):
@@ -305,6 +319,7 @@ class Decision:
     governing_criterion: str
     derated: Optional["ureg.Quantity"] = None
     applicability: Applicability = field(default_factory=Applicability)
+    remaining_life_basis: str | None = None
 
     def to_dict(self) -> dict:
         """Legacy-shaped, JSON-friendly payload (``verdict`` is the shared word).
@@ -324,6 +339,7 @@ class Decision:
             "action": self.action,
             "asset_class": self.asset_class,
             "remaining_life_yr": self.remaining_life_yr,
+            "remaining_life_basis": self.remaining_life_basis,
             "governing_criterion": self.governing_criterion,
             "margin": self.margin,
             "margin_allowable": self.margin_allowable,
@@ -346,6 +362,7 @@ def decide(
     bands: Optional[DecisionBands] = None,
     screening_pass: Optional[bool] = None,
     applicability: Optional[Applicability] = None,
+    zero_rate_basis: str | None = None,
 ) -> Decision:
     """Shared FFS decision tree for any asset class.
 
@@ -363,20 +380,40 @@ def decide(
         screening_pass: Whether the primary screening passed.  ``None``
             derives it as ``margin >= allowable and remaining_life > 0``; the
             legacy wrapper passes the Level 1/Level 2 outcome explicitly.
-        applicability: Validity record from the strength method(s) (#1094).
-            When any flag is raised the verdict is ESCALATE and the numeric
-            tree is bypassed; the margin is still echoed for reference.
-            ``None`` means "no flags" so existing callers are unaffected.
+        applicability: Validity record from the strength methods. Unsupported
+            checks escalate while independently established failures retain
+            their required action. None means no additional method record.
+        zero_rate_basis: Explicit qualification for a zero-rate infinite life.
     """
     policy = _policy(asset_class)
     app = applicability if applicability is not None else Applicability()
+    if not isinstance(app, Applicability):
+        raise ValueError("applicability must be an explicit validity record")
+    app = merge(app)
     b = bands or policy.bands
     m = _dimensionless(margin, "margin")
     m_a = _dimensionless(margin_allowable, "margin_allowable")
     life = _years(remaining_life_yr)
+    allowable_unknown = math.isnan(m_a) and not app.ok
+    if not allowable_unknown:
+        finite_number(m_a, "margin_allowable")
+    for name, value in (("monitor_band", b.monitor_band), ("derate_floor", b.derate_floor),
+                        ("repair_life_yr", b.repair_life_yr)):
+        finite_number(value, name, positive=False)
+    if not allowable_unknown and b.derate_floor > m_a:
+        raise ValueError("Decision band ordering requires derate_floor <= allowable")
+    if life < 0:
+        raise ValueError("remaining life must be nonnegative or explicitly unknown")
+    if screening_pass is not None and type(screening_pass) is not bool:
+        raise ValueError("screening_pass must be a boolean or None")
+    life_known = math.isfinite(life) or (
+        life == math.inf and isinstance(zero_rate_basis, str) and bool(zero_rate_basis.strip()))
+    if life == math.inf and not life_known:
+        life = math.nan  # Unqualified infinity is unknown life, never unlimited.
     lbl = policy.margin_label
 
-    derating = derate(m, m_a) if derate is not None else None
+    derating = (derate(m, m_a) if derate is not None
+                and math.isfinite(m) and math.isfinite(m_a) else None)
     note = derating.note if derating is not None else policy.no_derate_note
 
     def _make(verdict: Verdict, criterion: str) -> Decision:
@@ -390,9 +427,23 @@ def decide(
             governing_criterion=criterion,
             derated=derating.value if derating is not None else None,
             applicability=app,
+            remaining_life_basis=zero_rate_basis if life == math.inf else None,
         )
 
-    # Outside a method's calibrated range: no numeric verdict (#1094).
+    # Independent numeric failures retain their required action even if another
+    # check is unavailable; missing applicability never improves that action.
+    app_note = ""
+    if not app.ok:
+        app_note = " Other checks are not evaluated: " + "; ".join(app.notes or app.flags)
+    if math.isfinite(m) and m < b.derate_floor:
+        return _make(Verdict.REPLACE,
+                     f"{lbl}={m:.3f} is below the de-rating floor {b.derate_floor:.2f}. "
+                     "Component must be replaced." + app_note)
+    if math.isfinite(m) and m < m_a:
+        return _make(Verdict.DERATE,
+                     f"Screening FAIL; {lbl}={m:.3f} < allowable {m_a:.2f}. " + note + app_note)
+
+    # Unsupported criteria with no independently established failure escalate.
     if not app.ok:
         flags = ", ".join(app.flags)
         notes = "; ".join(app.notes)
@@ -410,10 +461,16 @@ def decide(
             "higher assessment level.",
         )
 
+    if not life_known:
+        return _make(Verdict.ESCALATE,
+                     "Remaining life not evaluated: corrosion rate or qualified zero-rate "
+                     "basis is missing; establish the life basis before clearance.")
+
     if screening_pass is None:
         screening_pass = m >= m_a and life > 0.0
 
-    if screening_pass:
+    # Clearance requires both numeric strength/life and any supplied screen.
+    if screening_pass and m >= m_a and life > 0:
         if m < m_a + b.monitor_band:
             return _make(
                 Verdict.MONITOR,
@@ -425,18 +482,6 @@ def decide(
             f"Screening ACCEPT ({lbl}={m:.3f} >= {lbl}a={m_a:.2f}).",
         )
 
-    if m < b.derate_floor:
-        return _make(
-            Verdict.REPLACE,
-            f"{lbl}={m:.3f} is below the de-rating floor "
-            f"{lbl}_floor={b.derate_floor:.2f}.  Component must be replaced.",
-        )
-    if m < m_a:
-        return _make(
-            Verdict.DERATE,
-            f"Screening FAIL; {lbl}={m:.3f} in de-rating band "
-            f"[{b.derate_floor:.2f}, {m_a:.2f}).  {note}",
-        )
     # Margin acceptable but screening failed (e.g. thickness already below
     # t_min): repair if remaining life is short, otherwise operate de-rated.
     if life < b.repair_life_yr:
@@ -483,9 +528,10 @@ class FFSDecision:
         rsf_a: float,
         t_mm_in: float,
         t_min_in: float,
-        corrosion_rate_in_per_yr: float,
+        corrosion_rate_in_per_yr: float | None,
         design_pressure_psi: float | None = None,
         applicability: Optional[Applicability] = None,
+        corrosion_rate_basis: str | None = None,
     ) -> dict:
         """Determine the final FFS action verdict (legacy inch / psi signature).
 
@@ -529,9 +575,16 @@ class FFSDecision:
                 applicability (dict): ``{ok, flags, notes}`` echo of the
                     validity record (all-clear when none was supplied).
         """
-        life = remaining_life(
+        if level1_verdict not in {"ACCEPT", "FAIL_LEVEL_1", "NOT_EVALUATED"}:
+            raise ValueError("Unsupported Level 1 verdict")
+        if level2_verdict not in {"ACCEPT", "FAIL_LEVEL_2", "NOT_EVALUATED"}:
+            raise ValueError("Unsupported Level 2 verdict")
+        finite_number(t_mm_in, "measured thickness")
+        finite_number(t_min_in, "required thickness")
+        life = float("nan") if corrosion_rate_in_per_yr is None else remaining_life(
             Q_(t_mm_in, "inch"), Q_(t_min_in, "inch"),
             Q_(corrosion_rate_in_per_yr, "inch/year"),
+            zero_rate_basis=corrosion_rate_basis,
         )
         derate = (
             reduced_mawp(Q_(design_pressure_psi, "psi"))
@@ -541,9 +594,18 @@ class FFSDecision:
             rsf, rsf_a, life, "pressure", derate=derate,
             screening_pass=(level1_verdict == "ACCEPT" and level2_verdict == "ACCEPT"),
             applicability=applicability,
+            zero_rate_basis=corrosion_rate_basis,
         )
+        if (t_mm_in < t_min_in and level1_verdict == "FAIL_LEVEL_1"
+                and d.verdict == Verdict.ESCALATE):
+            # A missing independent check cannot erase the measured-wall failure.
+            d = replace(d, verdict=Verdict.REPAIR, action="REPAIR",
+                        governing_criterion="Measured wall is below required wall; repair or "
+                        "qualified detailed assessment is required. " + d.governing_criterion)
         out = d.to_dict()
         out["verdict"] = d.action
+        out["level1"] = {"verdict": level1_verdict}
+        out["level2"] = {"verdict": level2_verdict}
         return out
 
     # ------------------------------------------------------------------
@@ -562,7 +624,8 @@ class FFSDecision:
 
     @staticmethod
     def _remaining_life(
-        t_mm: float, t_min: float, rate: float
+        t_mm: float, t_min: float, rate: float, *, zero_rate_basis: str | None = None
     ) -> float:
         """Linear remaining-life projection in years (inch, inch/yr inputs)."""
-        return remaining_life(Q_(t_mm, "inch"), Q_(t_min, "inch"), Q_(rate, "inch/year"))
+        return remaining_life(Q_(t_mm, "inch"), Q_(t_min, "inch"), Q_(rate, "inch/year"),
+                              zero_rate_basis=zero_rate_basis)

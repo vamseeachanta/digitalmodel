@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the FFS Level 3 escalation interface — when to escalate
 # ABOUTME: beyond L1/L2 screening and the structured specialist handoff package.
 """Tests for digitalmodel.asset_integrity.assessment.level3_escalation."""
@@ -11,11 +14,14 @@ from digitalmodel.asset_integrity.assessment.level3_escalation import (
 
 # --- helpers ---------------------------------------------------------------
 def l1(verdict="ACCEPT", t_min=0.30, margin=0.16):
-    return {"verdict": verdict, "t_min_in": t_min, "margin_in": margin}
+    return {"verdict": verdict, "t_min_in": t_min, "margin_in": margin,
+            "applicability": {"ok": True, "flags": [], "notes": []}}
 
 
 def l2(rsf=0.95, rsf_a=0.90, t_mm=0.46, atype="GML"):
     return {
+        "verdict": "ACCEPT" if rsf >= rsf_a else "FAIL_LEVEL_2",  # A21
+        "applicability": {"ok": True, "flags": [], "notes": []},
         "rsf": rsf,
         "rsf_a": rsf_a,
         "t_mm_in": t_mm,

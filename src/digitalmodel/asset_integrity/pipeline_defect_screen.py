@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Offline blunt-metal-loss screen (inches/psi); no licensed tables."""
 
 from __future__ import annotations
@@ -127,10 +130,15 @@ def _circumferential_row(inputs, depth, length):
 
 def _decision(rows, applicability):
     governing = min(rows, key=lambda row: row["margin"])
+    supported = [row for row in rows if row["applicability"]["ok"]]
+    failed = [row for row in supported if row["margin"] < 1]
+    if failed:
+        # A supported independent failure retains its demand-reduction action.
+        governing = min(failed, key=lambda row: row["margin"])
     # This screen uses capacity/demand, not API 579 RSF severity bands:
     # ratio >= 1 -> ACCEPT, 0 <= ratio < 1 -> DERATE, any flag -> ESCALATE.
     decision = decide(
-        governing["margin"],
+        governing["margin"] if applicability.ok or failed else float("nan"),
         1.0,
         float("inf"),
         "pipeline",
@@ -139,8 +147,10 @@ def _decision(rows, applicability):
     ).to_dict()
     decision.pop("rsf")
     decision.pop("rsf_a")
+    if not np.isfinite(decision["margin"]):
+        decision["margin"] = None
     decision["remaining_life_yr"] = None
-    if not applicability.ok:
+    if not applicability.ok and not failed:
         decision["demand_limits_psi"] = None
         decision["governing_criterion"] = (
             "A fitness verdict is not established; engineering review required. "
@@ -148,30 +158,31 @@ def _decision(rows, applicability):
         )
         return governing["method"], decision
     criterion = "Current demand passes: minimum allowable/demand >= 1.000."
-    pressure = min(row["allowable_pressure_psi"] for row in rows[:-1])
-    axial = rows[-1]["allowable_axial_stress_psi"]
-    decision["demand_limits_psi"] = (
-        dict(pressure=pressure, axial_membrane_stress=axial)
-        if applicability.ok
-        else None
-    )
+    pressure_limits = [row["allowable_pressure_psi"] for row in supported
+                       if row["allowable_pressure_psi"] is not None]
+    pressure = min(pressure_limits) if pressure_limits else None
+    axial = (rows[-1]["allowable_axial_stress_psi"]
+             if rows[-1]["applicability"]["ok"] else None)
+    decision["demand_limits_psi"] = dict(pressure=pressure, axial_membrane_stress=axial)
     if decision["verdict"] == "DERATE":
-        pressure_failed = any(row["margin"] < 1 for row in rows[:-1])
-        axial_failed = rows[-1]["margin"] < 1
+        pressure_failed = any(row["margin"] < 1 and row["applicability"]["ok"] for row in rows[:-1])
+        axial_failed = rows[-1]["applicability"]["ok"] and rows[-1]["margin"] < 1
         decision["action"] = (
             "REDUCE PRESSURE AND AXIAL STRESS"
             if pressure_failed and axial_failed
             else "RE_RATE" if pressure_failed else "REDUCE AXIAL STRESS"
         )
         criterion = (
-            f"Demand exceeds allowable: pressure limit={pressure:.3f} psi; "
-            f"axial membrane stress limit={axial:.3f} psi. "
+            f"Demand exceeds an independently supported allowable: pressure limit={pressure} psi; "
+            f"axial membrane stress limit={axial} psi. "
             "Reduce each exceeded demand to its limit; engineering review required."
         )
     decision["governing_criterion"] = (
         f"{governing['method']}: allowable/demand={governing['margin']:.3f}; "
         + criterion
     )
+    if not applicability.ok:
+        decision["governing_criterion"] += " Other checks not evaluated: " + "; ".join(applicability.notes)
     return governing["method"], decision
 
 

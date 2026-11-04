@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: FFS Level 3 escalation interface — decides WHEN to escalate beyond
 # ABOUTME: L1/L2 screening and builds a structured handoff package for the office.
 """Level 3 (advanced assessment) escalation interface for FFS.
@@ -43,6 +46,10 @@ config-driven path remains at
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import math
+
+from digitalmodel.asset_integrity._validation import finite_number
+from digitalmodel.asset_integrity.applicability import Applicability
 
 # RSF at/below which the Level-2 closed-form re-rating is no longer applicable;
 # the component is in repair/replace territory and needs a Level-3 / engineering
@@ -117,10 +124,24 @@ def should_escalate_to_level3(
         ``reasons`` is a list of human-readable trigger strings (empty when not
         triggered).
     """
-    rsf = float(level2_result.get("rsf", 0.0))
-    rsf_a = float(level2_result.get("rsf_a", 0.0))
-
     reasons: list = []
+    finite_number(rsf_floor, "rsf_floor", positive=False)
+    if rsf_floor > 1:
+        raise ValueError("rsf_floor must be in [0, 1]")
+    rsf = _result_number(level2_result, "rsf")
+    rsf_a = _result_number(level2_result, "rsf_a")
+    if not math.isfinite(rsf) or not 0 <= rsf <= 1:
+        reasons.append("Level 2 RSF is missing, non-finite or outside [0, 1]; strength not evaluated.")
+    if not math.isfinite(rsf_a) or not 0 < rsf_a <= 1:
+        reasons.append("Level 2 allowable RSFa is missing or invalid; acceptance is not evaluated.")
+    for name, result in (("Level 1", level1_result), ("Level 2", level2_result)):
+        if result.get("verdict") != "ACCEPT":
+            reasons.append(f"{name} verdict is failed, unknown or not evaluated; engineering review required.")
+        app = result.get("applicability")
+        ok = app.ok if isinstance(app, Applicability) else app.get("ok") if isinstance(app, dict) else False
+        flags = app.flags if isinstance(app, Applicability) else app.get("flags", []) if isinstance(app, dict) else []
+        if ok is not True or flags:
+            reasons.append(f"{name} applicability is missing, invalid or unestablished; detailed assessment required.")
 
     if rsf < float(rsf_floor):
         reasons.append(
@@ -200,8 +221,8 @@ def escalate_to_level3(
     Returns:
         A fully-populated :class:`Level3Handoff`.
     """
-    rsf = float(level2_result.get("rsf", 0.0))
-    rsf_a = float(level2_result.get("rsf_a", 0.0))
+    rsf = _result_number(level2_result, "rsf")
+    rsf_a = _result_number(level2_result, "rsf_a")
 
     triggered, triggers = should_escalate_to_level3(
         level1_result,
@@ -234,6 +255,8 @@ def escalate_to_level3(
         recommended_analysis.append(
             "nonlinear FEA / detailed RSF (elastic-plastic) for severe metal loss"
         )
+    if triggered and not recommended_analysis:
+        recommended_analysis.append("Engineering review of missing or failed screening evidence")
 
     # --- Specific open questions for the specialist --------------------------
     open_questions: list = []
@@ -266,6 +289,8 @@ def escalate_to_level3(
             "Confirm the future corrosion allowance / remaining-life basis for "
             "re-rate vs repair vs replace."
         )
+    if triggered and not open_questions:
+        open_questions.append("Establish valid results, allowable and applicability for each required check.")
 
     # --- Complete record: echo every input so the specialist has it all ------
     data_package = {
@@ -299,3 +324,11 @@ def escalate_to_level3(
         open_questions=open_questions,
         notes=notes,
     )
+
+
+def _result_number(result, key):
+    """Absent/invalid result evidence must trigger a recorded handoff reason."""
+    value = result.get(key)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return math.nan
+    return float(value)

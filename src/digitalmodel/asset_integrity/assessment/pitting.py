@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: API 579-1 Part 6 pitting assessment — pit-field characterization,
 # ABOUTME: conservative Level 1 screening, Level 2 via equivalent-LTA bounding.
 """Pitting assessment per the METHODOLOGY of API 579-1/ASME FFS-1 Part 6.
@@ -69,6 +72,8 @@ import pandas as pd
 from scipy import ndimage
 
 from .level2_engine import Level2Engine
+from digitalmodel.asset_integrity._validation import finite_number, measured_grid
+from digitalmodel.asset_integrity.applicability import Applicability, flagged, merge
 
 # --- Characterization defaults --------------------------------------------
 # Readings below this fraction of nominal WT are pit candidates (>10 % loss).
@@ -109,6 +114,8 @@ class PitFieldCharacterization:
     pitted_region_col_count: int   # circumferential columns spanned
     row_spacing_in: float          # inferred from the grid index
     pit_sizes_cells: list = field(default_factory=list)
+    background_min_in: float | None = None
+    nonuniform_depth: bool = False
 
     def to_dict(self) -> dict:
         """JSON-serialisable summary."""
@@ -130,6 +137,7 @@ def characterize_pit_field(
     nominal_wt_in: float,
     *,
     pit_threshold_fraction: float = DEFAULT_PIT_THRESHOLD_FRACTION,
+    row_spacing_in: float | None = None,
 ) -> PitFieldCharacterization:
     """Characterize the pit field in a normalised wall-thickness grid.
 
@@ -149,16 +157,20 @@ def characterize_pit_field(
         :class:`PitFieldCharacterization` (all lengths in inches; spacing in
         grid units scaled by the inferred row spacing).
     """
-    values = grid_df.to_numpy(dtype=float)
+    finite_number(nominal_wt_in, "nominal_wt_in")
+    finite_number(pit_threshold_fraction, "pit_threshold_fraction")
+    if pit_threshold_fraction > 1:
+        raise ValueError("pit_threshold_fraction must be in (0, 1]")
+    values = measured_grid(grid_df)
     valid = np.isfinite(values)
     n_valid = int(valid.sum())
     threshold = pit_threshold_fraction * nominal_wt_in
-    row_spacing = Level2Engine._infer_spacing(grid_df.index)
+    row_spacing = Level2Engine._infer_spacing(grid_df.index, row_spacing_in)
 
     pit_mask = valid & (values < threshold)
     labels, n_pits = ndimage.label(pit_mask)  # 4-connectivity default
 
-    if n_pits == 0 or n_valid == 0:
+    if n_pits == 0:
         return PitFieldCharacterization(
             nominal_wt_in=nominal_wt_in,
             pit_threshold_in=threshold,
@@ -170,8 +182,8 @@ def characterize_pit_field(
             max_pit_depth_ratio=0.0,
             avg_pit_depth_in=0.0,
             avg_pit_depth_ratio=0.0,
-            t_min_pit_in=float(nominal_wt_in),
-            t_avg_pit_in=float(nominal_wt_in),
+            t_min_pit_in=float(values.min()),
+            t_avg_pit_in=float(values.mean()),
             background_median_in=(
                 float(np.median(values[valid])) if n_valid else float(nominal_wt_in)
             ),
@@ -183,6 +195,7 @@ def characterize_pit_field(
             pitted_region_col_count=0,
             row_spacing_in=row_spacing,
             pit_sizes_cells=[],
+            background_min_in=float(values.min()),
         )
 
     pitted_values = values[pit_mask]
@@ -238,6 +251,8 @@ def characterize_pit_field(
         pitted_region_col_count=col_count,
         row_spacing_in=row_spacing,
         pit_sizes_cells=[int(s) for s in sizes],
+        background_min_in=float(background.min()) if background.size else None,
+        nonuniform_depth=bool(np.ptp(pitted_values) > 0),
     )
 
 
@@ -278,19 +293,13 @@ def screen_pitting_level1(
         the numbers behind them.
     """
     c = characterization
-    if c.pit_count == 0:
-        return {
-            "verdict": "ACCEPT",
-            "average_criterion_pass": True,
-            "deep_pit_criterion_pass": True,
-            "t_avg_pit_in": c.t_avg_pit_in,
-            "t_min_in": t_min_in,
-            "fca_in": fca_in,
-            "rt_deepest_pit": 1.0,
-            "rt_min": rt_min,
-            "basis": "No readings below the pit threshold — no pitting to screen.",
-        }
-
+    _validate_characterization(c, t_min_in)
+    finite_number(fca_in, "fca_in", positive=False)
+    finite_number(rt_min, "rt_min")
+    if rt_min > 1:
+        raise ValueError("rt_min must be in (0, 1]")
+    if fca_in >= c.t_min_pit_in:
+        raise ValueError("FCA consumes the deepest ligament")
     avg_ok = (c.t_avg_pit_in - fca_in) >= t_min_in
     rt_deepest = (c.t_min_pit_in - fca_in) / c.nominal_wt_in
     deep_ok = rt_deepest >= rt_min
@@ -337,10 +346,15 @@ def assess_pitting_level2_equivalent_lta(
         ``equivalent_lta`` sub-dict describing the bounding region.
     """
     c = characterization
+    _validate_characterization(c, t_min_in)
+    # Constructing the engine validates every required geometry/allowable even
+    # when no pits were detected; no population bypasses the domain guards.
+    engine = Level2Engine("LML", nominal_od_in, nominal_wt_in, t_min_in, rsf_a,
+                          row_spacing_in=c.row_spacing_in)
     if c.pit_count == 0:
         return {
-            "verdict": "ACCEPT",
-            "rsf": 1.0,
+            "verdict": "NOT_EVALUATED",
+            "rsf": min(c.t_avg_pit_in / t_min_in, 1.0),
             "rsf_a": rsf_a,
             "t_am_in": c.t_avg_pit_in,
             "t_mm_in": c.t_min_pit_in,
@@ -349,10 +363,12 @@ def assess_pitting_level2_equivalent_lta(
             "flaw_length_in": 0.0,
             "rt": 1.0,
             "assessment_basis": (
-                "No readings below the pit threshold — no equivalent LTA "
-                "required; RSF = 1.0."
+                "No readings below the pit threshold; pitting disposition is "
+                "not evaluated. Assess the actual measured wall as metal loss."
             ),
             "equivalent_lta": None,
+            "applicability": flagged("PITTING_NO_PITS",
+                                     "No pits identified; assess the measured wall as metal loss"),
         }
 
     n_rows = max(int(c.pitted_region_row_count), 1)
@@ -364,14 +380,24 @@ def assess_pitting_level2_equivalent_lta(
         index=np.arange(n_rows, dtype=float) * c.row_spacing_in,
     )
 
-    engine = Level2Engine(
-        assessment_type="LML",
-        nominal_od_in=nominal_od_in,
-        nominal_wt_in=nominal_wt_in,
-        t_min_in=t_min_in,
-        rsf_a=rsf_a,
-    )
     result = engine.evaluate(eq_grid)
+    app = result["applicability"]
+    for failed, flag, reason in (
+        (c.t_min_pit_in / nominal_wt_in < DEFAULT_RT_MIN, "PITTING_DEEP_LIGAMENT",
+         "Deepest ligament is below the screening floor; mean wall cannot qualify it"),
+        (c.nonuniform_depth or not math.isclose(c.t_min_pit_in, c.t_avg_pit_in, rel_tol=1e-12),
+         "PITTING_NONUNIFORM_DEPTH",
+         "Nonuniform pit depths: mean-depth representation is not established"),
+        (c.background_min_in is None or c.background_min_in < t_min_in,
+         "PITTING_BACKGROUND_UNESTABLISHED",
+         "Measured background wall at or above required wall is not established"),
+    ):
+        if failed:
+            app = merge(app, flagged(flag, reason))
+    result["applicability"] = app
+    # Clearance needs every independent ligament and representation criterion.
+    if not app.ok and result["verdict"] == "ACCEPT":
+        result["verdict"] = "NOT_EVALUATED"
 
     result["assessment_type"] = "PITTING"
     result["assessment_basis"] = _ASSESSMENT_BASIS
@@ -398,6 +424,7 @@ def assess_pitting(
     fca_in: float = 0.0,
     pit_threshold_fraction: float = DEFAULT_PIT_THRESHOLD_FRACTION,
     rt_min: float = DEFAULT_RT_MIN,
+    row_spacing_in: float | None = None,
 ) -> dict:
     """Characterize + Level 1 screen + Level 2 equivalent-LTA in one call.
 
@@ -405,10 +432,15 @@ def assess_pitting(
         dict with keys ``characterization`` (:class:`PitFieldCharacterization`),
         ``level1`` (dict), ``level2`` (dict incl. ``assessment_basis``).
     """
+    finite_number(fca_in, "fca_in", positive=False)
+    values = measured_grid(grid_df)
+    if fca_in >= float(values.min()):
+        raise ValueError("FCA consumes a measured ligament")
     char = characterize_pit_field(
-        grid_df, nominal_wt_in, pit_threshold_fraction=pit_threshold_fraction
+        grid_df - fca_in, nominal_wt_in, pit_threshold_fraction=pit_threshold_fraction,
+        row_spacing_in=row_spacing_in,
     )
-    l1 = screen_pitting_level1(char, t_min_in=t_min_in, fca_in=fca_in, rt_min=rt_min)
+    l1 = screen_pitting_level1(char, t_min_in=t_min_in, rt_min=rt_min)
     l2 = assess_pitting_level2_equivalent_lta(
         char,
         nominal_od_in=nominal_od_in,
@@ -417,6 +449,25 @@ def assess_pitting(
         rsf_a=rsf_a,
     )
     return {"characterization": char, "level1": l1, "level2": l2}
+
+
+def _validate_characterization(c, t_min_in):
+    """Reject absent populations and invalid shared pitting reference data."""
+    for name, count in (("population count", c.total_valid_cells), ("pit count", c.pit_count),
+                        ("pitted cell count", c.pitted_cell_count)):
+        if type(count) is not int or count < 0:
+            raise ValueError(f"{name} must be an established nonnegative integer")
+    if c.total_valid_cells <= 0:
+        raise ValueError("Pitting requires valid measured readings")
+    for name, value in (("t_min_in", t_min_in), ("nominal_wt_in", c.nominal_wt_in),
+                        ("deepest ligament", c.t_min_pit_in),
+                        ("average pit wall", c.t_avg_pit_in), ("row spacing", c.row_spacing_in)):
+        finite_number(value, name)
+    if c.pit_count:
+        finite_number(c.pitted_region_length_in, "pitted region length")
+        if not math.isclose(c.pitted_region_row_count * c.row_spacing_in,
+                            c.pitted_region_length_in, rel_tol=1e-9):
+            raise ValueError("Pitted extent disagrees with row count and physical pitch")
 
 
 def router(cfg):

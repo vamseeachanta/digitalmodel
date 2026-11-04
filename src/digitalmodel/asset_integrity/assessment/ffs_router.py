@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS assessment router — API 579-1 Part 4 (GML) / Part 5 (LML) / Part 6 (pitting).
 
 Classification logic follows the applicability criteria of API 579-1/ASME FFS-1
@@ -40,6 +43,8 @@ from __future__ import annotations
 
 import pandas as pd
 
+from digitalmodel.asset_integrity._validation import finite_number, measured_grid
+
 # Fraction of nominal WT below which a cell is considered "degraded"
 _DEGRADED_FRACTION_OF_NOMINAL = 0.10  # >10 % loss counts as degraded cell
 
@@ -65,6 +70,7 @@ class FFSRouter:
         nominal_wt_in: float,
         *,
         force_type: str | None = None,
+        row_spacing_in: float | None = None,
     ) -> dict:
         """Classify the damage morphology and return routing metadata.
 
@@ -92,6 +98,11 @@ class FFSRouter:
             ValueError: If force_type is not ``'GML'``, ``'LML'``,
                 ``'PITTING'``, or None.
         """
+        measured_grid(grid_df)
+        finite_number(nominal_od_in, "nominal_od_in")
+        finite_number(nominal_wt_in, "nominal_wt_in")
+        if nominal_od_in <= 2 * nominal_wt_in:
+            raise ValueError("Supported geometry requires OD > 2 WT")
         if force_type is not None:
             _normalised = force_type.upper().strip()
             if _normalised not in _VALID_FORCE_TYPES:
@@ -114,7 +125,7 @@ class FFSRouter:
             grid_df, nominal_wt_in
         )
 
-        pitting_metrics = FFSRouter._pitting_morphology(grid_df, nominal_wt_in)
+        pitting_metrics = FFSRouter._pitting_morphology(grid_df, nominal_wt_in, row_spacing_in)
         if pitting_metrics["detected"]:
             assessment_type = "PITTING"
         else:
@@ -133,7 +144,7 @@ class FFSRouter:
 
     @staticmethod
     def _pitting_morphology(
-        grid_df: pd.DataFrame, nominal_wt_in: float
+        grid_df: pd.DataFrame, nominal_wt_in: float, row_spacing_in: float | None = None
     ) -> dict:
         """Evaluate the documented pitting-morphology heuristic.
 
@@ -144,7 +155,7 @@ class FFSRouter:
         # Local import: pitting depends on level2_engine; keep router import light.
         from .pitting import characterize_pit_field
 
-        char = characterize_pit_field(grid_df, nominal_wt_in)
+        char = characterize_pit_field(grid_df, nominal_wt_in, row_spacing_in=row_spacing_in)
         total = max(char.total_valid_cells, 1)
         largest_fraction = char.largest_pit_cells / total
         background_ratio = (

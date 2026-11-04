@@ -1,7 +1,12 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: run_workflow envelope + determinism golden for the FFS metal-loss route (#3285).
 """Tests for ``run_workflow("ffs-metal-loss")`` (G1, kind: in_memory)."""
 
 from __future__ import annotations
+
+from assetutilities.workflow_api.envelope import result_hash
 
 from digitalmodel.workflow_api import ResultEnvelope, run_workflow
 
@@ -22,10 +27,12 @@ def test_run_workflow_ffs_in_memory():
     assert env.result["kind"] == "in_memory"
     value = env.result["value"]
     # the #1066 indexed 16-key FFSAssessmentResult.to_dict() surface
-    assert set(value) == FFS_KEYS
+    assert set(value) == FFS_KEYS | {"governing_criterion", "measurement_actions"}
     assert value["assessment_type"] == "LML"
     # the measurement-sufficiency catch: an L1-ACCEPT that is under-measured
-    assert value["verdict"] == "ACCEPT"
+    assert value["verdict"] == "ESCALATE"  # A11: measurement evidence is insufficient.
+    assert value["passes"] is False
+    assert value["measurement_actions"]
     assert value["sufficiency_status"] == "TAKE_MORE"
     # digitalmodel stamps its OWN package version, not assetutilities'
     assert "package_version" in env.provenance["code_version"]
@@ -39,3 +46,9 @@ def test_ffs_golden():
     assert env.determinism["reproducible"] is True
     golden = load_golden("ffs_metal_loss.json")
     deep_approx(env.result, golden["result"], rel=1e-6)
+
+
+def test_ffs_golden_hash_matches_payload():
+    """Require the stored digest to describe the exact golden payload."""
+    golden = load_golden("ffs_metal_loss.json")
+    assert result_hash(golden["result"]) == golden["result_hash"]

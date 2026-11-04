@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Anonymized real riser-inspection fixtures exercise the canonical FFS chain (#1293).
 
 The grids are unmodified UT C-scan measurements (mm) from a real drilling-riser
@@ -32,40 +35,22 @@ GRIDS = {
 
 @pytest.mark.parametrize("name", GRIDS)
 def test_grid_parses_to_physical_thickness(name):
+    # A03: parsing cannot silently exclude gaps in the original measurement grid.
     fname, n_axial = GRIDS[name]
-    df = GridParser.from_csv(str(DATA / fname), input_units="mm")
-    assert df.shape == (n_axial, 64)
-    values = df.to_numpy()
-    assert np.isfinite(values).sum() > 0.5 * values.size
-    # physical envelope: ~15.0-26.0 mm observed -> inches
-    assert np.nanmin(values) > 14.9 / 25.4
-    assert np.nanmax(values) < 26.5 / 25.4
-    # real corrosion: every scan sits below nominal somewhere
-    assert np.nanmin(values) < NOMINAL_WT_IN
+    raw = pd.read_csv(DATA / fname, header=None)
+    assert raw.shape == (n_axial, 64)
+    assert raw.isna().to_numpy().any()
+    with pytest.raises(ValueError, match="complete coverage"):
+        GridParser.from_csv(str(DATA / fname), input_units="mm")
 
 
 def test_severe_worstzone_runs_canonical_ffs_chain():
-    component = FFSComponent(
-        component_id="RJ-101-boxend",
-        design_code="B31.8",
-        nominal_od_in=NOMINAL_OD_IN,
-        nominal_wt_in=NOMINAL_WT_IN,
-        design_pressure_psi=500.0,
-        smys_psi=80_000.0,
-        corrosion_rate_in_per_yr=0.25 / 25.4,
-    )
-    result = assess_component(
-        component,
-        str(DATA / "ut_grid_RJ-101-boxend_worstzone_fullres.csv"),
-        input_units="mm",
-    )
-    # PITTING joined the routing set in #1269 — this scan's isolated sharp
-    # minima on a near-nominal background are detected as pit morphology.
-    assert result.assessment_type in {"GML", "LML", "PITTING"}
-    assert result.t_measured_min_in == pytest.approx(15.02 / 25.4, abs=0.02)
-    assert result.t_measured_avg_in < NOMINAL_WT_IN
-    if result.rsf is not None:
-        assert 0.0 < result.rsf <= 1.0
+    # A03: missing readings withhold component clearance before routing.
+    fname, _ = GRIDS["severe_worstzone"]
+    component = FFSComponent("component", "B31.8", NOMINAL_OD_IN, NOMINAL_WT_IN,
+                             500.0, 80000.0, corrosion_rate_in_per_yr=0.25 / 25.4)
+    with pytest.raises(ValueError, match="complete coverage"):
+        assess_component(component, DATA / fname, input_units="mm")
 
 
 def test_gml_results_register_schema_and_ordering():
