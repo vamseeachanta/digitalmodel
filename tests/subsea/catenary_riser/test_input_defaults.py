@@ -296,8 +296,14 @@ def test_dimensional_inputs_are_real_numbers(value):
 
 def test_legacy_declination_grid_preserves_fractional_angles():
     from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import gethorizontalDistanceHangofftoTDPrange
-    from digitalmodel.subsea.catenary_riser.legacy.catenary_equation import CatenaryCalculator
-    target = CatenaryCalculator().calculate({"d": 10, "q": .75})["X"]
+    # Catenary Curve (2019), equations (9)-(12), p. 5:
+    # angle from horizontal psi=90-q; y=a+d=a/sin(q), so
+    # a=d*sin(q)/(1-sin(q)), X=a*ln(cot(q)+csc(q)), S=a*cot(q).
+    # Hand case: d=10 m, q=0.75 degrees from vertical,
+    # sin(q)=0.01308959557134444; a=0.132632055682 m,
+    # X=0.667012170477 m, S=10.131763968512 m.
+    # Source: https://www.mygeodesy.id.au/documents/Catenary%20Curve.pdf
+    target = 0.667012170477
     cfg = {"simpleCatenaryDefinition": {"verticalDistance": 10, "axialLineForce": None,
         "horizontalDistanceHangofftoTDP": {"range": [target]}},
         "catenaryResult": {"X": 1, "q": .85},
@@ -306,7 +312,9 @@ def test_legacy_declination_grid_preserves_fractional_angles():
         rows = gethorizontalDistanceHangofftoTDPrange(cfg)
     assert rows[0]["q"] == .75
     # Returned coordinates are rounded to three decimal places by the legacy API.
-    assert rows[0]["X"] == pytest.approx(target, abs=.0005)
+    assert rows[0]["X"] == pytest.approx(target, rel=0, abs=.0005)
+    assert rows[0]["S"] == pytest.approx(10.131763968512, rel=0, abs=.0005)
+    assert rows[0]["BendRadius"] == pytest.approx(0.132632055682, rel=0, abs=.0005)
 
 
 @pytest.mark.parametrize("data", [
@@ -357,17 +365,17 @@ def test_cli_errors_and_quarantine_do_not_replace_existing_output(tmp_path):
     from click.testing import CliRunner
     from digitalmodel.subsea.catenary_riser.cli import cli
     output = tmp_path / "existing.json"
-    output.write_text("preserved")
+    output.write_text("preserved", encoding="utf-8", newline="\n")
     for command in ["simple", "weight", "lazy-wave"]:
         args = [command, "--diameter", "1", "--thickness", "1"]
         if command != "weight":
             args += ["--length", "20", "--water-depth", "2", "--offset", "3"]
         result = CliRunner().invoke(cli, args + ["--output", str(output)])
         assert result.exit_code == 1 and "wall_thickness" in result.output
-        assert output.read_text() == "preserved"
+        assert output.read_text(encoding="utf-8") == "preserved"
     result = CliRunner().invoke(cli, ["lazy-wave", "--diameter", "1", "--thickness", ".1",
         "--length", "2000", "--water-depth", "1000", "--offset", "500",
         "--buoy-length", "200", "--buoy-diameter", "2", "--buoy-start", "300",
         "--output", str(output)])
     assert result.exit_code == 1 and "quarantined" in result.output
-    assert output.read_text() == "preserved"
+    assert output.read_text(encoding="utf-8") == "preserved"
