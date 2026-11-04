@@ -196,7 +196,7 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
     ties = []
     tie_names = Counter(b.params.get("NAME", "").upper() for b in model.blocks
                         if b.keyword == "TIE")
-    contact_types = {b.params.get("TYPE", "").upper() for b in model.blocks
+    contact_types = {"".join(b.params.get("TYPE", "").upper().split()) for b in model.blocks
                      if b.keyword == "CONTACT PAIR"}
     for block in model.blocks:
         if block.keyword not in {"TIE", "CONTACT PAIR"}:
@@ -214,6 +214,18 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
                         "manual sections 7.22 (*CONTACT PAIR) and 7.132 (*TIE).", block.line)
             continue
         if block.keyword == "TIE":
+            # CalculiX 2.22 manual, section 7.132 (*TIE): MULTISTAGE and
+            # CYCLIC SYMMETRY use distinct constraints and are mutually
+            # exclusive. Neither may supply ordinary-tie support/exemptions.
+            modes = {"MULTISTAGE", "CYCLICSYMMETRY"}.intersection(block.params)
+            if modes:
+                model.error("unsupported_tie_mode",
+                            ("keyword:TIE", *(f"parameter:{mode}" for mode in sorted(modes))),
+                            "Special tie modes are unsupported by this gate",
+                            "Use an ordinary tie or extend and test the special constraints; "
+                            "MULTISTAGE and CYCLIC SYMMETRY are mutually exclusive; "
+                            "see CalculiX 2.22 manual section 7.132 (*TIE).", block.line)
+                continue
             # CalculiX 2.22 manual, section 7.132 (*TIE): exactly one pair
             # and a name unused by any other tie. Reject every duplicate
             # before the first declaration can join or exempt any nodes.
@@ -268,8 +280,8 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
             if block.keyword == "CONTACT PAIR":
                 # CalculiX 2.22 manual, section 7.22 (*CONTACT PAIR):
                 # TYPE is required and contact formulations cannot be mixed.
-                mode = block.params.get("TYPE", "").upper()
-                if mode not in {"NODE TO SURFACE", "SURFACE TO SURFACE", "MORTAR", "MASSLESS"}:
+                mode = "".join(block.params.get("TYPE", "").upper().split())
+                if mode not in {"NODETOSURFACE", "SURFACETOSURFACE", "MORTAR", "MASSLESS"}:
                     model.error("unsupported_contact_type", ("keyword:CONTACT PAIR",),
                                 "Contact TYPE is missing or unsupported",
                                 "Specify NODE TO SURFACE, SURFACE TO SURFACE, MORTAR or MASSLESS; "
@@ -283,7 +295,7 @@ def _connections(model: Deck, surfaces: dict[str, _Surface],
                     continue
                 quadratic = {"C3D10", "C3D15", "C3D20", "C3D20R", "S6", "S8", "S8R"}
                 if left.surface_type != "ELEMENT" and (
-                        mode in {"SURFACE TO SURFACE", "MORTAR"}
+                        mode in {"SURFACETOSURFACE", "MORTAR"}
                         or quadratic.intersection(left.element_types | right.element_types)):
                     model.error("incompatible_slave_surface",
                                 ("keyword:CONTACT PAIR", f"surface:{names[0]}"),

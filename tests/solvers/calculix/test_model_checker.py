@@ -50,6 +50,43 @@ def test_supported_deck_and_serializable_evidence(deck):
     assert json.loads(json.dumps(report.to_dict()))["status"] == "PASS"
 
 
+@pytest.mark.parametrize("spacing", ["", " ", "\t"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_keyword_and_parameter_blanks_preserve_supported_mesh(deck, capsys, spacing, interface):
+    # CalculiX 2.22 manual, section 7: blanks in keyword and parameter names
+    # are insignificant, including within a word and between keyword words.
+    lines = []
+    for line in (FIXTURES / "supported.inp").read_text(encoding="utf-8").splitlines():
+        if line.startswith("*") and not line.startswith("**"):
+            fields = line.split(",")
+            fields[0] = "*" + spacing.join(fields[0][1:].replace(" ", ""))
+            for i, field in enumerate(fields[1:], 1):
+                name, separator, value = field.partition("=")
+                fields[i] = spacing.join(name.strip()) + separator + value
+            line = ",".join(fields)
+        lines.append(line)
+    path = deck(text="\n".join(lines) + "\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "PASS" and evidence["findings"] == []
+
+
+@pytest.mark.parametrize("keyword", ["RIGIDBODY", "R I G I D B O D Y", "MODELCHANGE", "MODEL\tCHANGE"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_keyword_blanks_cannot_hide_unsupported_topology(deck, capsys, keyword, interface):
+    path = deck(f"*{keyword}\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    assert "unsupported_topology" in {f["code"] for f in evidence["findings"]}
+
+
 def test_unconstrained_component_reports_elements_and_hint():
     report = check_deck(FIXTURES / "disconnected.inp")
     finding = next(f for f in report.findings if f.code == "unconstrained_part")
@@ -196,6 +233,45 @@ def test_empty_tie_blocks_supported_mesh(deck, capsys, interface):
     assert "parse_error" in {f["code"] for f in evidence["findings"]}
 
 
+@pytest.mark.parametrize("parameters,special", [
+    ("", False), (",ADJUST=NO,POSITION TOLERANCE=0.1", False),
+    (",MULTISTAGE", True), (",CYCLIC SYMMETRY", True),
+    (",CYCLICSYMMETRY", True), (",MULTISTAGE,CYCLIC SYMMETRY", True),
+    (",M U L T I S T A G E", True), (",cyc\tlic sym metry", True),
+])
+@pytest.mark.parametrize("surface_type", ["ELEMENT", "NODE"])
+@pytest.mark.parametrize("purpose", ["support", "coincidence"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_special_tie_modes_grant_no_support_or_exemption(deck, capsys, parameters,
+                                                       special, surface_type, purpose, interface):
+    # CalculiX 2.22 manual, section 7.132 (*TIE): MULTISTAGE requires nodal
+    # surfaces and excludes CYCLIC SYMMETRY; neither mode is an ordinary tie.
+    text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
+    if purpose == "coincidence":
+        text = text.replace("5, 3, 0, 0", "5, 0, 0, 0") + "*BOUNDARY\n5,1,3\n"
+    slave, master = ("OTHER,S1", "BODY,S1") if surface_type == "ELEMENT" else ("5", "1")
+    path = deck(text=text + (f"*SURFACE,NAME=SLAVE,TYPE={surface_type}\n{slave}\n"
+                            f"*SURFACE,NAME=MASTER,TYPE={surface_type}\n{master}\n"
+                            f"*TIE,NAME=JOIN{parameters}\nSLAVE,MASTER\n"))
+    valid = not special and surface_type == "ELEMENT"
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == int(not valid)
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == ("PASS" if valid else "FAIL")
+    code = "unconstrained_part" if purpose == "support" else "unmerged_nodes"
+    entities = ("step:0", "element:2") if purpose == "support" else ("node:1", "node:5")
+    assert [tuple(f["entity_ids"]) for f in evidence["findings"]
+            if f["code"] == code] == ([] if valid else [entities])
+    if special:
+        error = next(f for f in evidence["findings"] if f["code"] == "unsupported_tie_mode")
+        assert error["severity"] == "error" and error["line"] > 0
+        assert "keyword:TIE" in error["entity_ids"] and "7.132" in error["fix_hint"]
+    elif not valid:
+        assert "incompatible_master_surface" in {f["code"] for f in evidence["findings"]}
+
+
 @pytest.mark.parametrize("keyword", ["TIE", "CONTACT PAIR"])
 @pytest.mark.parametrize("master_type", ["NODE", "node", "ELEMENT", None])
 @pytest.mark.parametrize("interface", ["api", "cli"])
@@ -255,7 +331,9 @@ def test_tie_exemption_requires_element_master(deck, capsys, master_type, interf
 
 @pytest.mark.parametrize("mode,valid_mode,face_to_face", [
     ("NODE TO SURFACE", True, False), ("node to surface", True, False),
+    ("NODETOSURFACE", True, False), ("n o d e\tto sur face", True, False),
     ("SURFACE TO SURFACE", True, True), ("surface to surface", True, True),
+    ("SURFACETOSURFACE", True, True), ("sur face\tto sur face", True, True),
     ("MORTAR", True, True), ("MASSLESS", True, False),
     ("UNKNOWN", False, False), ("", False, False), (None, False, False),
 ])
@@ -325,9 +403,13 @@ def test_quadratic_contact_requires_element_slave(deck, capsys, quadratic_side, 
     assert ("contact_path" in findings) == (slave_type == "ELEMENT")
 
 
-@pytest.mark.parametrize("second_mode", ["SURFACE TO SURFACE", "node to surface"])
+@pytest.mark.parametrize("second_mode,mixed", [
+    ("SURFACE TO SURFACE", True), ("node to surface", False),
+    ("NODETOSURFACE", False), ("node\tto sur face", False),
+    ("SURFACETOSURFACE", True),
+])
 @pytest.mark.parametrize("interface", ["api", "cli"])
-def test_contact_modes_must_be_consistent(deck, capsys, second_mode, interface):
+def test_contact_modes_must_be_consistent(deck, capsys, second_mode, mixed, interface):
     text = (FIXTURES / "disconnected.inp").read_text(encoding="utf-8")
     path = deck(text=text + ("*SURFACE,NAME=MASTER\nBODY,S1\n"
                             "*SURFACE,NAME=SLAVE\nOTHER,S1\n"
@@ -336,7 +418,6 @@ def test_contact_modes_must_be_consistent(deck, capsys, second_mode, interface):
                             "SLAVE,MASTER\n"
                             f"*CONTACT PAIR,TYPE={second_mode},INTERACTION=FRICTIONLESS\n"
                             "SLAVE,MASTER\n"))
-    mixed = second_mode == "SURFACE TO SURFACE"
     if interface == "api":
         evidence = check_deck(path).to_dict()
     else:
@@ -885,7 +966,9 @@ def test_invalid_input_returns_errors_instead_of_crashing(deck, text):
     assert report.findings
 
 
-@pytest.mark.parametrize("keyword", ["*INCLUDE", "* INCLUDE", "*\tinclude "])
+@pytest.mark.parametrize("keyword", [
+    "*INCLUDE", "* INCLUDE", "*\tinclude ", "*I N C L U D E", "*inc\tlude",
+])
 @pytest.mark.parametrize("continued", [False, True])
 @pytest.mark.parametrize("content", ["supported", "unconstrained", "missing"])
 @pytest.mark.parametrize("interface", ["api", "cli"])
@@ -898,8 +981,8 @@ def test_include_keyword_whitespace_preserves_gate(deck, tmp_path, capsys,
         "*SOLID SECTION,ELSET=OTHER,MATERIAL=STEEL\n"
     )
     if content != "missing":
-        (tmp_path / "fragment.inp").write_text(fragment, encoding="utf-8", newline="\n")
-    header = keyword + (",\n" if continued else ",") + 'INPUT="fragment.inp"\n'
+        (tmp_path / "fragment Part.inp").write_text(fragment, encoding="utf-8", newline="\n")
+    header = keyword + (",\n" if continued else ",") + 'INPUT="fragment Part.inp"\n'
     path = deck(text=header if content == "supported" else base + header)
     valid = content == "supported"
     if interface == "api":
@@ -1044,9 +1127,18 @@ def test_later_boundary_cannot_hide_unconstrained_first_step(deck):
     assert "unconstrained_part" in codes(check_deck(deck(text=base)))
 
 
-def test_boundary_reset_is_checked_per_step(deck):
-    report = check_deck(deck("*STEP\n*STATIC\n*BOUNDARY,OP=NEW\n*END STEP\n"))
-    assert "unconstrained_part" in codes(report)
+@pytest.mark.parametrize("keyword", ["*BOUNDARY", "*BOUND ARY", "*boun\tdary"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_boundary_reset_is_checked_per_step(deck, capsys, keyword, interface):
+    path = deck(f"*STEP\n*STATIC\n{keyword},OP=NEW\n*END STEP\n")
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence["status"] == "FAIL"
+    assert [tuple(f["entity_ids"]) for f in evidence["findings"]
+            if f["code"] == "unconstrained_part"] == [("step:1", "element:1")]
 
 
 @pytest.mark.parametrize("label", [

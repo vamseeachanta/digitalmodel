@@ -71,6 +71,14 @@ DEFINITIONS = {
     "AMPLITUDE": ("amplitude", "NAME"),
     "SURFACE INTERACTION": ("interaction", "NAME"),
 }
+# CalculiX 2.22 User's Manual, section 7 (Input deck format): blanks in
+# keyword names are insignificant. Retain the canonical multiword names
+# consumed by this gate, including operations that must fail closed.
+_KEYWORD_NAMES = {
+    "".join(name.split()): name
+    for name in (*SECTION_KEYWORDS, *DEFINITIONS, "CONTACT PAIR", "END STEP",
+                 "RIGID BODY", "MODEL CHANGE")
+}
 
 
 def number(value: str) -> float:
@@ -94,13 +102,16 @@ def _keyword(line: str, start: int) -> Block:
     fields = [v.strip() for v in line[1:].split(",")]
     if not fields[0]:
         raise ValueError("Empty keyword")
-    keyword = " ".join(fields[0].upper().split())
+    keyword = "".join(fields[0].upper().split())
+    keyword = _KEYWORD_NAMES.get(keyword, keyword)
     params = {}
     for value in fields[1:]:
         if not value:
             continue
         name, sep, data = value.partition("=")
-        params[name.strip().upper()] = data.strip().strip("\"'") if sep else ""
+        # Normalize parameter names independently; filenames and other values
+        # retain their spelling and internal blanks (section 7.75, *INCLUDE).
+        params["".join(name.upper().split())] = data.strip().strip("\"'") if sep else ""
     return Block(keyword, params, [], start)
 
 
