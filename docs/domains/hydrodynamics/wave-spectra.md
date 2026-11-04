@@ -153,12 +153,17 @@ This is a source audit; it does not qualify downstream engineering results.
 | Visualization and legacy scripts and examples | Some import `WaveSpectra` but use older spectrum interfaces; no active default-generator call was found in those paths. Repairing obsolete interfaces is separate work. |
 | Existing spectrum tests | Grid-size assertions follow the new default. Finite-band moment snapshots explicitly request the former grid. Coverage and width assertions account for the extended tail. |
 
-The refreshed atlases were compared at all former grid nodes: 60 fatigue nodes
-and 8 RAO nodes. The largest relative change in annual fatigue damage is a
-90.7 % decrease; the largest relative change in tabulated heave amplitude is
-0.0 %. The fatigue comparison uses the fixed stress gain and finite frequency
-band of this screening atlas; it is not a physical benchmark. Both rebuilt
-atlases pass their existing holdout validation. The seakeeping report retains
+The stored fatigue atlas `077c33818cae` was compared at all 60 grid nodes with
+atlas `6840fbb96cb7`, pinned on main at commit `df9787d346c2`. The largest relative
+change in annual damage is a 90.7 % decrease. The stored RAO atlas `9961962768d6`
+was compared at all 8 nodes with main's `6b27320669f6`; the largest relative
+change in tabulated heave amplitude is 0.0 %. Nodes were matched by their axis
+coordinates, and relative changes use main's stored values as denominators.
+These are comparisons before integration with main, whose fatigue source has
+changed; fingerprints, regeneration and figures require checking again after
+integration. The fatigue comparison uses the fixed stress gain and finite
+frequency band of this screening atlas; it is not a physical benchmark. Both
+stored atlases record passing holdout validation. The seakeeping report retains
 its explicit response grid and worked values, with updated source digests.
 
 Later work includes finite-depth power, calibrated ISSC equivalence, RAO-band

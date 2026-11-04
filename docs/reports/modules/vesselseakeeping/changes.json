@@ -23,5 +23,10 @@
     "revision": "E",
     "date": "2026-11-03",
     "change": "Source digests are refreshed for the spectrum moment changes; the explicit response grid and worked calculation values are unchanged."
+  },
+  {
+    "revision": "F",
+    "date": "2026-11-03",
+    "change": "Provenance includes the shared spectrum grid source so changes to its validation and defaults are recorded; worked calculation values are unchanged."
   }
 ]

@@ -143,6 +143,31 @@ def build_delivery(tmp_path):
     return output
 
 
+def test_provenance_tracks_shared_spectrum_grid(tmp_path, monkeypatch):
+    """Changing the shared grid source must change the report's provenance."""
+    build = builder()
+    source = ROOT / "src/digitalmodel/hydrodynamics/models.py"
+    relative = source.relative_to(ROOT).as_posix()
+    original_bytes = source.read_bytes()
+    original_read = Path.read_bytes
+    original_digest = hashlib.sha256(original_bytes).hexdigest()
+    original_html = build.render(tmp_path / "original")
+    assert f"{relative}; SHA-256: {original_digest}" in original_html
+
+    altered_bytes = original_bytes + b"\n# Synthetic grid-source change.\n"
+
+    def read_bytes(path):
+        if path == source:
+            return altered_bytes
+        return original_read(path)
+
+    monkeypatch.setattr(Path, "read_bytes", read_bytes)
+    altered_html = build.render(tmp_path / "altered")
+    altered_digest = hashlib.sha256(altered_bytes).hexdigest()
+    assert f"{relative}; SHA-256: {altered_digest}" in altered_html
+    assert f"{relative}; SHA-256: {original_digest}" not in altered_html
+
+
 def assert_delivered_manifest_matches(fresh, delivered):
     """Require the delivered source and artifact bindings to match fresh bytes."""
     assert (delivered / "manifest.json").read_bytes() == (fresh / "manifest.json").read_bytes(), (
