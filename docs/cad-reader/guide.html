@@ -31,7 +31,7 @@ svg { max-width: 100%; height: auto; background: #f5f9fa; }
 <body>
 <header>
 <p class="title">CAD reader package guide</p>
-<p class="status">Draft for client review</p>
+<p class="status">Draft for maintainer review</p>
 </header>
 <main>
 <section id="summary">
@@ -51,7 +51,8 @@ summarized below. Computer-aided design is abbreviated as CAD.</p>
 <tbody><tr><td>0</td><td>2026-10-19</td><td>Initial reader guide establishes explicit unit handling and bounded geometry support.</td></tr>
 <tr><td>1</td><td>2026-10-25</td><td>Disclose exact-coordinate STL deduplication and test shared connectivity in both encodings.</td></tr>
 <tr><td>2</td><td>2026-11-03</td><td>Document optional STEP and IGES ingestion, unit rules, exact properties and limits to match the reader.</td></tr>
-<tr><td>3</td><td>2026-11-04</td><td>Describe shell-count and shared-face assertions to match the synthetic test coverage.</td></tr></tbody></table>
+<tr><td>3</td><td>2026-11-04</td><td>Describe shell-count and shared-face assertions to match the synthetic test coverage.</td></tr>
+<tr><td>4</td><td>2026-11-04</td><td>Document unitless metre and inch checks and synchronize the change panel so the guide reflects demonstrated coverage.</td></tr></tbody></table>
 </section>
 <section id="scope">
 <h2>2. Scope</h2>
@@ -202,7 +203,9 @@ build a box and cylinder with build123d and write them with the same OCCT kernel
 used to read them. Independent hand expectations are 0.006 m³ and 0.22 m² for a
 100 × 200 × 300 mm box, and 0.001π m³ and 0.045π m² for a cylinder of radius
 50 mm and height 400 mm exported in inches. Volumes and areas are compared at
-relative 10⁻⁶, and bounding boxes at 10⁻⁶ m.</p>
+relative 10⁻⁶, and bounding boxes at 10⁻⁶ m. Unitless files are also read with
+caller units of millimetres, metres and inches; volume, area, bounding box and
+display points are checked against the corresponding hand expectations.</p>
 <p>Tests cover missing and conflicting units, malformed conversion factors, zero
 and partial root transfers, malformed input and UTF-8 refusal. The contracts gate
 requires kernel imports and pins cadquery-ocp 7.9.3.1.1 and build123d 0.7.0 with
@@ -242,7 +245,7 @@ the scope of each result.</p>
 <li>Kernel format exclusions and downstream geometric criteria are stated.</li>
 </ul>
 <details><summary>Change panel</summary><ul id="changes"></ul>
-<noscript>This revision documents optional STEP and IGES ingestion, explicit units, exact properties, display triangles and validation limits.</noscript></details>
+<noscript>See the <a href="changes.json">current change record</a> for changes and their reasons.</noscript></details>
 <h3>9.2 Sources and companion artifacts</h3>
 <ul>
 <li>NIST SP 811 (2008), Appendix B.8, foot and inch entries:
@@ -263,8 +266,8 @@ the scope of each result.</p>
 </section>
 <section id="further">
 <h2>10. Further development</h2>
-<p>Externally authored STEP and IGES fixtures, shell-count and shared-face area
-assertions, and production-file fidelity checks remain follow-up work. Assembly
+<p>Externally authored STEP and IGES fixtures and production-file fidelity checks
+remain follow-up work. Assembly
 structure, per-part units, caller-selected tessellation deflection and BREP input
 remain separate extensions. Native SolidWorks and Inventor geometry requires export.</p>
 <p>Curved drawing entities, block expansion, assembly metadata and converter
@@ -287,23 +290,23 @@ A downloaded file is moved to that folder manually if a folder picker is unavail
 </main>
 <script type="application/json" id="change-data">
 {
-  "revision": "2",
-  "date": "2026-11-03",
+  "revision": "4",
+  "date": "2026-11-04",
   "changes": [
     {
-      "section": "Scope and use",
-      "change": "Document STEP and IGES through the optional cad-occ extra and native-format export route.",
-      "reason": "Match the formats accepted by the reader."
+      "section": "7. Validation",
+      "change": "Record unitless STEP and IGES checks in millimetres, metres and inches.",
+      "reason": "Match the demonstrated synthetic unit coverage without implying production-file validation."
     },
     {
-      "section": "Units and geometry",
-      "change": "Describe file declarations, metre normalization, exact B-rep properties, face-occurrence area and display triangles.",
-      "reason": "Distinguish physical properties from tessellation and state refusal rules."
+      "section": "9. Appendix",
+      "change": "Link the no-JavaScript change panel to the current change record.",
+      "reason": "Provide the current changes and reasons when scripting is unavailable."
     },
     {
-      "section": "Validation and limits",
-      "change": "Record synthetic kernel round trips, required imports, UTF-8 refusal and remaining fixture and topology coverage gaps.",
-      "reason": "Bound the evidence without implying production-file or cross-platform validation."
+      "section": "10. Further development",
+      "change": "Remove shell-count and shared-face assertions from future work and synchronize the displayed change record.",
+      "reason": "Keep the remaining work and displayed revision consistent with implemented checks."
     }
   ]
 }

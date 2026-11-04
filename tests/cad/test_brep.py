@@ -8,6 +8,7 @@ export them with the OCP writers in tmp_path and skip when OCP is absent.
 """
 
 import builtins
+import json
 import os
 import re
 import shlex
@@ -312,19 +313,84 @@ def _strip_units(path):
 
 
 @pytest.mark.parametrize("suffix", ["step", "igs"])
-def test_file_without_units_needs_caller_units(build123d, tmp_path, suffix):
-    """Hand: unchanged millimetre coordinates read as mm give 0.006 m^3.
+@pytest.mark.parametrize(
+    ("unit", "expected"),
+    [
+        ("mm", BOX),
+        (
+            "m",
+            {
+                "volume": 6_000_000.0,
+                "area": 220_000.0,
+                "box": ((-50.0, -100.0, -150.0), (50.0, 100.0, 150.0)),
+                "faces": 6,
+            },
+        ),
+        (
+            "in",
+            {
+                "volume": 98.322384,
+                "area": 141.9352,
+                "box": ((-1.27, -2.54, -3.81), (1.27, 2.54, 3.81)),
+                "faces": 6,
+            },
+        ),
+    ],
+    ids=["millimetres", "metres", "inches"],
+)
+def test_file_without_units_needs_caller_units(
+    build123d, tmp_path, suffix, unit, expected
+):
+    """Hand: unitless coordinates span 100 x 200 x 300 in the caller's unit.
 
-    The IGES result also shows the blank flag is not read as inches, which
-    would give 0.006 x 25.4^3 m^3.
+    Metres: V = 100*200*300 = 6000000 m^3;
+    A = 2*(20000+60000+30000) = 220000 m^2.
+    Inches: V = 2.54*5.08*7.62 = 98.322384 m^3;
+    A = 220000*0.0254^2 = 141.9352 m^2.
+    Half-extents are (50, 100, 150) times 0.0254 for inches, giving
+    (1.27, 2.54, 3.81) m (NIST SP 811 (2008), Appendix B.8).
+    Millimetres retain the original 0.006 m^3 box. No kernel default may
+    convert these coordinates before the caller's scale is applied.
     """
     path = _export(_shape(build123d, "box"), tmp_path / f"box.{suffix}", "mm")
     _strip_units(path)
     with pytest.raises(UnitsError, match="State units"):
         read_cad(path)
-    result = read_cad(path, units="mm")
+    result = read_cad(path, units=unit)
+    assert result.unit_decision.source_units == unit
     assert result.unit_decision.basis == "caller"
-    _check(result, BOX)
+    _check(result, expected)
+    for axis in range(3):
+        coordinates = [point[axis] for point in result.points]
+        assert (min(coordinates), max(coordinates)) == pytest.approx(
+            (expected["box"][0][axis], expected["box"][1][axis]), abs=1e-6
+        )
+
+
+def test_guide_change_panel_matches_record_and_coverage():
+    root = Path(__file__).resolve().parents[2]
+    guide = (root / "docs/cad-reader/guide.html").read_text(encoding="utf-8")
+    match = re.search(
+        r'<script type="application/json" id="change-data">\s*(.*?)\s*</script>',
+        guide,
+        re.DOTALL,
+    )
+    assert match is not None
+    record = json.loads(
+        (root / "docs/cad-reader/changes.json").read_text(encoding="utf-8")
+    )
+    assert json.loads(match.group(1)) == record
+    headings = set(re.findall(r"<h2>(.*?)</h2>", guide))
+    panel = guide.split("<summary>Change panel</summary>", 1)[1].split("</details>", 1)[
+        0
+    ]
+    assert 'href="changes.json"' in panel, "Change panel must link to changes.json"
+    for change in record["changes"]:
+        assert change["section"] in headings, change["section"]
+    revisions = re.findall(r"<tr><td>(\d+)</td><td>(\d{4}-\d{2}-\d{2})</td>", guide)
+    assert (record["revision"], record["date"]) == revisions[-1]
+    further = guide.split('<section id="further">', 1)[1].split("</section>", 1)[0]
+    assert not re.search(r"shell[- ]count|shared[- ]face", further, re.IGNORECASE)
 
 
 def test_unreadable_step_fails_with_package_error(build123d, tmp_path):
@@ -479,6 +545,10 @@ def test_cad_ci_enrollment(monkeypatch, capsys):
     exec(compile(textwrap.dedent(script), "<command builder>", "exec"), {})
     argv = shlex.split(capsys.readouterr().out.strip())
     assert argv.count("tests/cad/") == 1
+    readme = (root / "src/digitalmodel/cad/README.md").read_text(encoding="utf-8")
+    example = readme.split("```bash\n", 1)[1].split("```", 1)[0]
+    example_argv = shlex.split(example.replace("\\\n", " "))
+    assert "CAD_REQUIRE_KERNEL=1" in example_argv
     for pin in (
         "cadquery-ocp==7.9.3.1.1",
         "build123d==0.7.0",
@@ -488,6 +558,9 @@ def test_cad_ci_enrollment(monkeypatch, capsys):
         "meshio==5.3.5",
     ):
         assert any(argv[i : i + 2] == ["--with", pin] for i in range(len(argv)))
+        assert any(
+            example_argv[i : i + 2] == ["--with", pin] for i in range(len(example_argv))
+        )
     assert any(
         argv[i : i + 2] == ["--with-editable", ".[test]"] for i in range(len(argv))
     )

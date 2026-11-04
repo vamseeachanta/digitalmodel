@@ -1,11 +1,21 @@
 {
-  "revision": "3",
+  "revision": "4",
   "date": "2026-11-04",
   "changes": [
     {
-      "section": "Validation and limits",
-      "change": "Describe dedicated shell-count and shared-face area assertions while retaining external-fixture and cross-platform limits.",
-      "reason": "Match the synthetic test coverage without implying production-file validation."
+      "section": "7. Validation",
+      "change": "Record unitless STEP and IGES checks in millimetres, metres and inches.",
+      "reason": "Match the demonstrated synthetic unit coverage without implying production-file validation."
+    },
+    {
+      "section": "9. Appendix",
+      "change": "Link the no-JavaScript change panel to the current change record.",
+      "reason": "Provide the current changes and reasons when scripting is unavailable."
+    },
+    {
+      "section": "10. Further development",
+      "change": "Remove shell-count and shared-face assertions from future work and synchronize the displayed change record.",
+      "reason": "Keep the remaining work and displayed revision consistent with implemented checks."
     }
   ]
 }

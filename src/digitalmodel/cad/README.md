@@ -4,7 +4,7 @@ The CAD reader package is a geometry ingestion interface. Analysis is performed
 to determine whether coordinates have an explicit unit basis; key results are
 summarized below. Computer-aided design is abbreviated as CAD.
 
-Draft for client review
+Draft for maintainer review
 
 - Geometry ingestion is available for downstream analysis.
   - Straight Drawing Exchange Format (DXF) primitives and mesh faces are returned
@@ -21,6 +21,7 @@ Draft for client review
 | 0 | 2026-10-19 | Initial interface and synthetic examples establish explicit units. |
 | 1 | 2026-10-25 | Disclose exact-coordinate STL deduplication and test shared connectivity in both encodings. |
 | 2 | 2026-11-03 | Add STEP and IGES readers through the optional OCP kernel (#2903). |
+| 3 | 2026-11-04 | Document required kernel test imports and unitless metre and inch checks so missing dependencies cannot silently skip validation. |
 
 # 2. Scope
 
@@ -218,10 +219,24 @@ IGES in a temporary directory and read them back:
   and 0.045π m².
 
 Volume and area are checked to a relative 10⁻⁶ and the bounding box to 10⁻⁶ m,
-against hand values. A file with its length unit removed is refused without
-caller units and reads correctly with them. These tests skip when OCP or
-build123d is absent. They were run with cadquery-ocp 7.9.3 and build123d 0.7.0;
-build123d 0.8 and later require numpy 2.
+against hand values. Files with their length units removed are refused without
+caller units. Both STEP and IGES are checked with caller units of millimetres,
+metres and inches against independent volume, area and bounding-box expectations.
+These tests skip when OCP or build123d is absent unless
+`CAD_REQUIRE_KERNEL=1` is set, which makes either missing import fail.
+
+The `test` and `cad-occ` extras alone do not install build123d. To require every
+kernel round trip with the same dependency pins as the contracts gate:
+
+```bash
+CAD_REQUIRE_KERNEL=1 PYTHONPATH=src uv run --no-project --python 3.11 \
+  --with-editable '.[test,cad-occ]' --with 'cadquery-ocp==7.9.3.1.1' \
+  --with 'build123d==0.7.0' --with 'py-lib3mf==2.3.1' \
+  --with 'numpy==1.26.4' --with 'ezdxf==1.4.5' --with 'meshio==5.3.5' \
+  python -m pytest tests/cad
+```
+
+build123d 0.8 and later require numpy 2, outside this package's numpy constraint.
 
 # 8. Failure handling
 
