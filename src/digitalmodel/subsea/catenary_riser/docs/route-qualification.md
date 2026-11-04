@@ -173,15 +173,19 @@ Every historical section-6 row has a disposition in `qualification.json`, checke
 against the pack. TESTED records name package regressions; NOT_EVALUATED records
 carry a reason. Historical line numbers identify the original observation, while
 function names and updated links locate current code. The old inventory is retained
-so omissions are visible. Unqualified native exports, empirical legacy buoyancy
-sizing, RAO conventions, material presets and fatigue-input preprocessing require
-separate evidence. The legacy lazy-wave vertical-force defect is left to #2044.
+so omissions are visible. Native exports, RAO conventions, material presets and
+fatigue-spectrum applicability require separate evidence. Annular buoyancy sizing
+and numeric fatigue-bin conditioning have the bounded offline contracts in
+[input-conditioning.html](input-conditioning.html). The legacy lazy-wave
+vertical-force defect is left to #2044.
 
 ### Qualification evidence audit
 
 All 36 previously TESTED observations are checked against their named assertions.
-The revised inventory contains 35 TESTED and 51 NOT_EVALUATED observations out of
-86 historical observations. The broader-route observation remains NOT_EVALUATED:
+That audit recorded 35 TESTED and 51 NOT_EVALUATED observations. The subsequent
+input/default qualification records 53 TESTED and 33 NOT_EVALUATED observations
+out of 86 historical observations, including 33 explicit
+[input contracts](input-conditioning.html). The broader-route observation remains NOT_EVALUATED:
 a vertex overlap case cannot qualify arbitrary endpoints, elastic routes or
 native coordinate transformations. These counts describe evidence dispositions,
 not engineering acceptance or branch coverage.

@@ -24,6 +24,14 @@ E4. Archimedes balance per unit length: additional force is
 `A_coat=pi/4 (D_module_coated²-D_module²)`.
 The bare riser already accounts for its own displaced area.
 This is an annular volume balance, not an empirical coefficient.
+Public basis: [University Physics Volume 1 (2016), section 14.4,
+Archimedes' principle](https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy).
+The legacy sizing inverse is `D²=d²+4U/[pi*g*(rho_water-rho_foam)]`;
+requested uplift `U` is the supplied buoyancy factor times reference-fluid bare
+weight. The same uplift is subtracted from actual-fluid bare weight. Configured
+gravity is required; 9.81 is not inserted inside this inverse. Inch geometry is
+converted using the exact international inch, 0.0254 m, from
+[NIST SP 811 (2008), Appendix B.8, length table](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication811e2008.pdf).
 For `D_module=1 m`, `D_riser_coated=0.3 m`, foam 500 kg/m³,
 water 1025 kg/m³ and g=9.81 m/s², the added force is -3680.94717 N/m.
 
