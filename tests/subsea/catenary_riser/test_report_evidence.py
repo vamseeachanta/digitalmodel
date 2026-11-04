@@ -138,10 +138,14 @@ def test_no_groups_plain_dictionary_and_unknown_style():
 
 def test_report_defaults_preserve_missing_evidence():
     provenance = report.Provenance()
+    assert provenance.workflow == ""
+    assert provenance.workflow_version == ""
     assert provenance.standard_revision == ""
     assert provenance.run_id == ""
     assert provenance.generated_utc == ""
-    assert set(provenance.missing_fields) == {"standard_revision", "run_id", "generated_utc"}
+    assert set(provenance.missing_fields) == {
+        "workflow", "workflow_version", "standard_revision", "run_id", "generated_utc",
+    }
     data = report.RiserReportData("synthetic", "synthetic", "SCR", 2)
     assert data.max_strength_utilisation is None
     assert data.min_fatigue_life_years is None
