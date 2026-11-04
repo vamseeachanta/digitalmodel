@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import html
 import math
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Mapping, Optional
 
@@ -32,6 +33,20 @@ import numpy as np
 import pandas as pd
 
 from digitalmodel.asset_integrity.applicability import Applicability
+
+
+@dataclass(frozen=True)
+class ReportMethodology:
+    """Caller-declared method and qualification; not a compliance certificate.
+
+    No standard is inferred from asset class, units, or verdict. References
+    identify the basis actually used, including its edition where applicable.
+    """
+
+    name: str
+    qualification: str
+    references: tuple[str, ...] = ()
+
 
 _VERDICT_COLORS = {
     "ACCEPT": "#2e7d32",  # green
@@ -69,11 +84,15 @@ class FFSReport:
     """Generate an HTML FFS assessment report."""
 
     @staticmethod
-    def generate_screening_html(component_id, title, decision, sections, limitations):
+    def generate_screening_html(
+        component_id, title, decision, sections, limitations, *, methodology=None
+    ):
         """Render mechanism-specific screening without inferred metal-loss metrics."""
         from .screening_report import generate_screening_html
 
-        return generate_screening_html(component_id, title, decision, sections, limitations)
+        return generate_screening_html(
+            component_id, title, decision, sections, limitations, methodology=methodology
+        )
 
     @staticmethod
     def generate_html(
@@ -94,6 +113,7 @@ class FFSReport:
         sufficiency: Optional[object] = None,
         repair_recommendation: Optional[Mapping[str, Any]] = None,
         applicability: Optional[Applicability] = None,
+        methodology: Optional[ReportMethodology] = None,
     ) -> str:
         """Render the full FFS assessment as a self-contained HTML string.
 
@@ -116,6 +136,10 @@ class FFSReport:
                 for REPAIR verdicts.
             applicability: validity record from the strength methods; raised
                 flags are listed in the report footer (#1094).
+            methodology: Caller-declared method and qualification for the
+                footer. Omission makes no compliance claim. This renderer
+                retains its Part 4/5 metal-loss tables; use
+                ``generate_screening_html`` for other assessment methods.
 
         Returns:
             Complete HTML document as a string.
@@ -179,7 +203,7 @@ class FFSReport:
             ),
             FFSReport._section_methodology(design_code),
             FFSReport._section_appendix(grid_df),
-            FFSReport._html_foot(applicability),
+            FFSReport._html_foot(applicability, methodology=methodology),
         ]
 
         if sufficiency is not None:
@@ -313,7 +337,10 @@ class FFSReport:
         )
 
     @staticmethod
-    def _html_foot(applicability: Optional[Applicability] = None) -> str:
+    def _html_foot(
+        applicability: Optional[Applicability] = None, *,
+        methodology: Optional[ReportMethodology] = None,
+    ) -> str:
         flags = ""
         if applicability is not None and not applicability.ok:
             items = "".join(
@@ -329,6 +356,17 @@ class FFSReport:
                 "for reference only and the verdict is ESCALATE.</p>"
                 f"<ul>{items}</ul></div>\n"
             )
+        if methodology is None:
+            method = "Methodology and code qualification: NOT_EVALUATED (not supplied)."
+        else:
+            references = "".join(
+                f"<li>{html.escape(str(ref))}</li>" for ref in methodology.references
+            )
+            method = (
+                f"<p>Methodology: {html.escape(methodology.name)}</p>"
+                f"<p>Qualification: {html.escape(methodology.qualification)}</p>"
+                f"<ul>{references}</ul>"
+            )
         return (
             f"{flags}"
             "<div class='disclaimer'>"
@@ -336,7 +374,7 @@ class FFSReport:
             "All results are based on the data and assumptions provided. "
             "Engineering judgement is required to interpret results near acceptance limits. "
             "This report does not constitute a certified engineering assessment. "
-            "API 579-1/ASME FFS-1 2021 Edition criteria are applied."
+            f"{method}"
             "</div>\n</body>\n</html>"
         )
 
