@@ -159,6 +159,26 @@ def test_cli_manifest_binds_written_deliverables(tmp_path):
     assert_delivered_manifest_matches(output, REPORT)
 
 
+def test_grid_model_changes_invalidate_report_provenance(tmp_path, monkeypatch):
+    """Track grid defaults even when the worked example supplies its own grid."""
+    build = builder()
+    source = "src/digitalmodel/hydrodynamics/models.py"
+    path = ROOT / source
+    original = Path.read_bytes
+    changed_bytes = original(path) + b"\n# Synthetic grid source change.\n"
+    changed_digest = hashlib.sha256(changed_bytes).hexdigest()
+    delivered = json.loads((REPORT / "manifest.json").read_text(encoding="utf-8"))
+    assert delivered["sources"].get(source) == hashlib.sha256(original(path)).hexdigest()
+
+    def read_bytes(candidate):
+        return changed_bytes if candidate == path else original(candidate)
+
+    monkeypatch.setattr(Path, "read_bytes", read_bytes)
+    html = build.render(tmp_path / "changed-grid-source")
+    assert f"{source}; SHA-256: {changed_digest}" in html
+    assert html != (REPORT / "index.html").read_text(encoding="utf-8")
+
+
 @pytest.mark.parametrize("fault", ["empty", "source", "artifact"])
 def test_delivered_manifest_rejects_altered_hashes(tmp_path, fault):
     fresh = build_delivery(tmp_path)

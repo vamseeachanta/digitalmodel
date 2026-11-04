@@ -29,11 +29,14 @@ CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
            {"revision": "D", "date": "2026-10-31", "change":
             "Sea-state result values in the calculation record are stored to 13 significant digits so the delivered bytes do not depend on last-bit floating-point differences between processors; displayed values are unchanged."},
            {"revision": "E", "date": "2026-11-03", "change":
-            "Source digests are refreshed for the spectrum moment changes; the explicit response grid and worked calculation values are unchanged."}]
+            "Source digests are refreshed for the spectrum moment changes; the explicit response grid and worked calculation values are unchanged."},
+           {"revision": "F", "date": "2026-11-03", "change":
+            "Provenance now includes the shared spectrum grid source so changes to grid defaults invalidate the report; worked calculation values are unchanged."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
            "src/digitalmodel/hydrodynamics/wave_spectra.py",
+           "src/digitalmodel/hydrodynamics/models.py",
            "tests/hydrodynamics/test_seakeeping.py",
            "tests/reporting/test_vessel_seakeeping_module_report.py",
            "tests/reporting/fixtures/vessel_seakeeping_hand_calculation.json"]

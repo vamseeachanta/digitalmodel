@@ -153,13 +153,18 @@ This is a source audit; it does not qualify downstream engineering results.
 | Visualization and legacy scripts and examples | Some import `WaveSpectra` but use older spectrum interfaces; no active default-generator call was found in those paths. Repairing obsolete interfaces is separate work. |
 | Existing spectrum tests | Grid-size assertions follow the new default. Finite-band moment snapshots explicitly request the former grid. Coverage and width assertions account for the extended tail. |
 
-The refreshed atlases were compared at all former grid nodes: 60 fatigue nodes
-and 8 RAO nodes. The largest relative change in annual fatigue damage is a
-90.7 % decrease; the largest relative change in tabulated heave amplitude is
-0.0 %. The fatigue comparison uses the fixed stress gain and finite frequency
-band of this screening atlas; it is not a physical benchmark. Both rebuilt
-atlases pass their existing holdout validation. The seakeeping report retains
-its explicit response grid and worked values, with updated source digests.
+The stored atlases were compared against the main snapshot `df9787d346c2`:
+fatigue atlas `077c33818cae` against `6840fbb96cb7` at all 60 matching nodes,
+and RAO atlas `9961962768d6` against `6b27320669f6` at all 8 matching nodes.
+The largest relative change in annual fatigue damage is a 90.7 % decrease;
+the largest relative change in tabulated heave amplitude is 0.0 %. These are
+comparisons of committed snapshots before main integration. Regeneration and
+comparison must be repeated after integrating main's fatigue source changes.
+The fatigue comparison uses the fixed stress gain and finite frequency band
+of this screening atlas; it is not a physical benchmark. Both stored atlases
+pass their existing holdout validation. The seakeeping report retains its
+explicit response grid and worked values, with updated source digests that
+also track the shared grid source in `models.py`.
 
 Later work includes finite-depth power, calibrated ISSC equivalence, RAO-band
 policy, convergence requirements for user-specified coarse grids and requalification
