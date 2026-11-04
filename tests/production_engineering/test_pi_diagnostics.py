@@ -326,13 +326,14 @@ def test_triage_skin_step_without_reservoir_data_is_insufficient():
 
 
 def test_triage_pi_fall_without_positive_skin_is_unexplained():
-    # h = 5 ft gives k*h = 494.2 md-ft, so ideal J = 494.2/(141.2*7) = 0.5.
-    # Tested J fell from 1.0 to 150/300 = 0.5: S = 7*(0.5/0.5 - 1) = 0.
-    rf = rock_fluid(net_pay_ft=5.0)
+    # h = 4 ft gives k*h = 395.36 md-ft, so ideal J = 395.36/(141.2*7) = 0.4.
+    # Tested J fell from 1.0 to 150/300 = 0.5: S = 7*(0.4/0.5 - 1) = -1.4.
+    # (S exactly 0 is avoided: roundoff decides its sign.)
+    rf = rock_fluid(net_pay_ft=4.0)
     result = pre_stimulation_triage(well_test(q_oil_stb_d=150.0), well_test(), rf)
     assert result.cause is TriageCause.NO_SKIN_DAMAGE
     assert result.step == 5
-    assert result.skin == pytest.approx(0.0, rel=0, abs=ABS)
+    assert result.skin == pytest.approx(-1.4, rel=0, abs=ABS)
 
 
 def test_triage_no_decline_when_pi_rose():
