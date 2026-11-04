@@ -15,6 +15,7 @@ establishes cathodic protection, anode spacing or throwing power for a jacket.
 | --- | --- | --- |
 | A | 2026-10-26 | Derive both fields and provide reproducible screening data; structure current distribution is outside this calculation. |
 | B | 2026-10-26 | State the implementation plan and source-byte checks so the screening scope and reproduction safeguards are explicit. |
+| C | 2026-11-04 | Define numeric golden verification with exact schema and provenance checks; retain the original data. |
 
 ## Plan-lite
 
@@ -28,7 +29,7 @@ electrolyte. The finite-line form supplies the primary screening curve.
    to establish the fixed current and mass-equivalent radius.
 3. Generate both chart CSVs, the value manifest and basis metadata.
 4. Validate with hand calculations, limiting cases, independent equations for
-   every chart value, rejected input mutations and byte-for-byte regeneration.
+   every chart value, rejected input mutations and portable golden regeneration checks.
 
 Exclusions: structure potential, polarisation, installed anode spacing,
 boundary effects, coupled current/resistivity sensitivity and report generation.
@@ -153,8 +154,8 @@ The synthetic inputs cancel `pi` or form the triangle with half-length, radial
 distance and hypotenuse in the ratio `3:4:5`. They are algebraic test cases,
 not sourced environmental values. Tests check units, linear scaling, far-field
 and short-line limits, invalid domains, the existing B401 current basis, and
-every chart and manifest row. The generated bundle is compared byte for byte
-with the committed bundle.
+every chart and manifest row. Regeneration is checked against the committed
+bundle using the numeric and metadata criteria below.
 
 Before parsing or calculating, the generator hashes the exact fixture bytes
 and compares them with the pinned SHA-256 digest for the declared input revision.
@@ -164,6 +165,48 @@ from the verified bytes. The digest is also recorded in `basis.json`.
 The per-row expectations evaluate equations P and L independently of the field
 functions, using the logarithmic line integral for L; regeneration is a separate
 reproducibility check.
+
+### Portable golden verification
+
+The generator and committed golden files retain their original precision and
+bytes. The CSV reader compares headers (including order), row counts, row
+widths and row order exactly. Only `potential_shift_mv` in the two chart files
+and `value` in `values.csv` receive a numeric tolerance. Coordinates, current,
+geometry, resistivity, labels, units, quantity identifiers, source references
+and all other cells remain exact. The complete parsed `basis.json` object
+also remains exact, including revision, fixture digest and review status;
+JSON whitespace and platform line endings are immaterial.
+
+Numeric acceptance requires finite values and
+`abs(actual - golden) <= 1e-12 * max(abs(actual), abs(golden))`, with no absolute
+allowance. This reuses the independent-equation checks' relative tolerance;
+it is a numerical reproduction criterion, not a cathodic-protection criterion
+or an estimate of physical model accuracy. A zero reference therefore requires
+exact zero. Across the committed range, 2.469736 to 820.271295 mV, the largest
+allowance is less than 8.21e-10 mV, well below the 0.1 mV report display step.
+At 1000 mV, the allowance is 1e-9 mV: a 5e-10 mV perturbation passes and a
+2e-9 mV perturbation fails. Tests also reject non-finite values, missing cells,
+changed headers, reordered or missing rows, and altered coordinates or labels.
+
+Assessment on Windows with Python 3.12.10 reproduced the original first byte
+difference at index 649. The unchanged calculation and generator SHA-256 values
+were `67c0693bf504815c85f6a9d16d3ab53a53cb4ced2273eaf41fc75c5727de6e24` and
+`2149c6baf11aa6aa588e7425659c5767d5aaa4c2d569256a708365495d2dbdc7`.
+The point-source CSV matched byte for byte. Eleven finite-line potential cells
+and the same eleven manifest values differed: maximum absolute difference
+3.552713678800501e-15 mV; maximum relative difference
+2.5686339021099868e-16. The first differing finite-line data row (fourth row,
+rho = 0.20 ohm.m, surface gap = 3 m) contained 23.344690271487845 mV instead of
+23.344690271487842 mV. The JSON parsed identically but used Windows line endings.
+No golden value was replaced. This assessment establishes the observed Windows
+difference; execution on other platforms remains a separate check.
+
+The comparison follows the public Python 3.12 documentation for
+[floating-point limitations](https://docs.python.org/3.12/tutorial/floatingpoint.html),
+[`math.isclose`](https://docs.python.org/3.12/library/math.html#math.isclose) and
+[CSV reading](https://docs.python.org/3.12/library/csv.html#csv.reader).
+The tolerance is a project regression criterion, not a value from a standard.
+No equation, coefficient, standard table or calculation method is changed.
 
 From the repository root, use an environment with the package's import
 dependencies, including pydantic, numpy, scipy, PyYAML and loguru:
