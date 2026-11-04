@@ -246,7 +246,8 @@ def _export(shape, path, unit):
 def _check(result, expected):
     brep = result.brep
     assert result.units == "m"
-    assert brep.solids == 1 and brep.faces == expected["faces"]
+    assert brep.solids == 1 and brep.shells == 1
+    assert brep.faces == expected["faces"]
     assert brep.is_valid
     assert brep.volume_m3 == pytest.approx(expected["volume"], rel=1e-6)
     assert brep.surface_area_m2 == pytest.approx(expected["area"], rel=1e-6)
@@ -353,6 +354,69 @@ def test_all_roots_are_read(build123d, tmp_path, suffix):
 
 
 @pytest.mark.parametrize("suffix", ["step", "igs"])
+def test_shell_round_trip_has_area_without_solid_volume(build123d, tmp_path, suffix):
+    """A 100 x 200 x 300 mm shell has six faces and 0.22 m^2 of area.
+
+    The closed shell encloses space but contains no solid topology, so its
+    reported volume must be None rather than zero or the enclosed 0.006 m^3.
+    """
+    from OCP.TopAbs import TopAbs_SHELL
+    from OCP.TopExp import TopExp_Explorer
+    from OCP.TopoDS import TopoDS
+
+    explorer = TopExp_Explorer(_shape(build123d, "box"), TopAbs_SHELL)
+    assert explorer.More()
+    shell = TopoDS.Shell_s(explorer.Current())
+    explorer.Next()
+    assert not explorer.More()
+    path = _export(shell, tmp_path / f"shell.{suffix}", "mm")
+    result = read_cad(path)
+    brep = result.brep
+    assert result.units == "m"
+    assert brep.solids == 0 and brep.shells == 1 and brep.faces == 6
+    assert brep.volume_m3 is None
+    assert brep.surface_area_m2 == pytest.approx(0.22, rel=1e-6)
+    for corner, expected in zip(brep.bounding_box, BOX["box"]):
+        assert corner == pytest.approx(expected, abs=1e-6)
+    assert brep.is_valid
+    assert result.entities and {entity.kind for entity in result.entities} == {
+        "triangle"
+    }
+
+
+def test_shared_face_summary_counts_distinct_faces_and_area_occurrences(build123d):
+    """Two adjacent 100 mm cubes share one of their twelve face occurrences.
+
+    Distinct topology has eleven faces, but area includes both occurrences of
+    the shared face: 2 * 6 * 0.1^2 = 0.12 m^2. Volume is 2 * 0.1^3 m^3.
+    The kernel summary is tested directly because exchange translators can
+    duplicate shared topology during export or import.
+    """
+    from OCP.BRepAlgoAPI import BRepAlgoAPI_Splitter
+    from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
+    from OCP.gp import gp_Pnt
+    from OCP.TopTools import TopTools_ListOfShape
+
+    from digitalmodel.cad.brep import _summarise
+
+    shapes = TopTools_ListOfShape()
+    shapes.Append(BRepPrimAPI_MakeBox(100, 100, 100).Shape())
+    shapes.Append(BRepPrimAPI_MakeBox(gp_Pnt(100, 0, 0), 100, 100, 100).Shape())
+    splitter = BRepAlgoAPI_Splitter()
+    splitter.SetArguments(shapes)
+    splitter.Build()
+    assert splitter.IsDone()
+    summary, _ = _summarise(splitter.Shape(), scale=0.001)
+    assert summary.solids == 2 and summary.shells == 2
+    assert summary.faces == 11
+    assert summary.volume_m3 == pytest.approx(0.002, rel=1e-6)
+    assert summary.surface_area_m2 == pytest.approx(0.12, rel=1e-6)
+    assert summary.bounding_box[0] == pytest.approx((0, 0, 0), abs=1e-6)
+    assert summary.bounding_box[1] == pytest.approx((0.2, 0.1, 0.1), abs=1e-6)
+    assert summary.is_valid
+
+
+@pytest.mark.parametrize("suffix", ["step", "igs"])
 @pytest.mark.parametrize("transferred", [0, 1])
 def test_incomplete_root_transfer_is_refused(
     build123d, tmp_path, monkeypatch, suffix, transferred
@@ -408,7 +472,7 @@ def test_cad_ci_enrollment(monkeypatch, capsys):
     monkeypatch.setenv("GATE_NAME", "tests-contracts")
     exec(compile(textwrap.dedent(script), "<command builder>", "exec"), {})
     argv = shlex.split(capsys.readouterr().out.strip())
-    assert "tests/cad/" in argv
+    assert argv.count("tests/cad/") == 1
     for pin in (
         "cadquery-ocp==7.9.3.1.1",
         "build123d==0.7.0",
