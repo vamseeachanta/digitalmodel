@@ -265,8 +265,15 @@ def test_numeric_blanks_match_control_evidence(deck, capsys, spacing,
     record, separator, tail = replacement.partition("\n")
     spaced = ",".join(spacing.join(field.strip()) for field in record.split(","))
     variant = text.replace(source, spaced + separator + tail)
-    expected = json.loads(json.dumps(check_deck(deck(text=control)).to_dict()))
-    assert expected["status"] == "PASS"
+    expected = {"status": "PASS", "tolerance": 1e-6, "findings": []}
+    if source == "FIXED, 1, 3" and replacement == "01, 1, 3":
+        # A direct node restraint leaves the named set unused.
+        expected["findings"] = [{
+            "severity": "warning", "code": "unused_definition",
+            "entity_ids": ["nset:FIXED"], "line": 0,
+            "message": "Definition is not referenced",
+            "fix_hint": "Use the definition or remove it if obsolete.",
+        }]
     path = deck(text=variant)
     if interface == "api":
         evidence = json.loads(json.dumps(check_deck(path).to_dict()))
@@ -297,10 +304,62 @@ def test_numeric_blanks_match_control_evidence(deck, capsys, spacing,
 def test_numeric_blanks_preserve_invalid_data(deck, capsys, spacing,
                                              source, replacement, interface):
     text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
-    control = text.replace(source, replacement)
-    expected = json.loads(json.dumps(check_deck(deck(text=control)).to_dict()))
-    assert expected["status"] == "FAIL"
-    assert "parse_error" in {finding["code"] for finding in expected["findings"]}
+    keyword, line = {
+        "1, 0, 0, 0": ("NODE", 3),
+        "1, 1, 2, 3, 4": ("ELEMENT", 8),
+        "2, 1, 0, 0": ("NODE", 3),
+        "FIXED, 1, 3": ("BOUNDARY", 16),
+    }[source]
+    boundary = keyword == "BOUNDARY"
+    expected_error = {
+        "severity": "error", "code": "parse_error",
+        "entity_ids": [f"keyword:{keyword}"], "line": line,
+        "message": ("Invalid step or boundary data" if boundary
+                    else "Malformed or duplicate definition"),
+        "fix_hint": (
+            "Correct step pairing and use numeric structural boundary degrees of freedom."
+            if boundary else "Correct the keyword data and identifiers."
+        ),
+    }
+    expected_findings = [expected_error]
+    if keyword == "NODE":
+        # A bad record stops the NODE block; later records remain undefined.
+        first_missing = 1 if source == "1, 0, 0, 0" else 2
+        for owner, stop in [("nset:FIXED", 4), ("element:1", 5)]:
+            expected_findings.extend({
+                "severity": "error", "code": "missing_reference",
+                "entity_ids": [f"node:{nid}", owner], "line": 0,
+                "message": "Undefined node reference",
+                "fix_hint": "Define the referenced entity or correct its name or ID.",
+            } for nid in range(first_missing, stop))
+    if source in {"1, 0, 0, 0", "1, 1, 2, 3, 4"}:
+        expected_findings.append({
+            "severity": "error", "code": "empty_mesh", "entity_ids": ["mesh"],
+            "message": "No usable nodes or elements", "line": 0,
+            "fix_hint": "Supply a structural mesh and complete analysis definitions.",
+        })
+    if keyword == "ELEMENT":
+        expected_findings.extend([
+            {
+                "severity": "error", "code": "missing_reference",
+                "entity_ids": ["elset:BODY"], "line": 15,
+                "message": "Undefined elset reference",
+                "fix_hint": "Define the referenced entity or correct its name or ID.",
+            },
+            {
+                "severity": "warning", "code": "unused_section",
+                "entity_ids": ["section:SOLID SECTION:BODY"], "line": 15,
+                "message": "Section has no elements",
+                "fix_hint": "Assign the section to a populated element set or remove it.",
+            },
+        ])
+    if boundary:
+        expected_findings.append({
+            "severity": "error", "code": "unconstrained_part",
+            "entity_ids": ["step:0", "element:1"], "line": 0,
+            "message": "Connected part has no boundary condition or support path",
+            "fix_hint": "Apply structural restraints or connect the part to a constrained part.",
+        })
     spaced = ",".join(spacing.join(field.strip()) for field in replacement.split(","))
     path = deck(text=text.replace(source, spaced))
     if interface == "api":
@@ -308,14 +367,14 @@ def test_numeric_blanks_preserve_invalid_data(deck, capsys, spacing,
     else:
         assert main([path.as_posix(), "--json"]) == 1
         evidence = json.loads(capsys.readouterr().out)
-    assert evidence == expected
+    assert evidence == {"status": "FAIL", "tolerance": 1e-6, "findings": expected_findings}
 
 
 @pytest.mark.parametrize("spacing", [" ", "\t"])
 @pytest.mark.parametrize("interface", ["api", "cli"])
 def test_numeric_blanks_in_include_preserve_filename(deck, tmp_path, capsys, spacing, interface):
     text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
-    expected = check_deck(deck(text=text)).to_dict()
+    expected = {"status": "PASS", "tolerance": 1e-6, "findings": []}
     record = "2," + spacing.join("1.0") + ",0,0\n"
     (tmp_path / "Part 0 1.inp").write_text(record, encoding="utf-8", newline="\n")
     path = deck(text=text.replace("2, 1, 0, 0\n", '*INCLUDE,INPUT="Part 0 1.inp"\n'))
@@ -1372,7 +1431,7 @@ def test_include_data_continues_parent_keyword(deck, tmp_path, capsys, record, n
         (folder / "wrapper.inp").write_text('*INCLUDE,\nINPUT="records.inp"\n',
                                             encoding="utf-8", newline="\n")
     include = "includes/wrapper.inp" if nested else "includes/records.inp"
-    expected = check_deck(deck(text=base)).to_dict()
+    expected = {"status": "PASS", "tolerance": 1e-6, "findings": []}
     path = deck(text=base.replace(record + "\n", f'*INCLUDE,INPUT="{include}"\n'))
     if interface == "api":
         evidence = check_deck(path).to_dict()
