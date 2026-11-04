@@ -410,7 +410,7 @@ def test_cad_ci_enrollment(monkeypatch, capsys):
     argv = shlex.split(capsys.readouterr().out.strip())
     assert "tests/cad/" in argv
     for pin in (
-        "cadquery-ocp==7.9.3.0",
+        "cadquery-ocp==7.9.3.1.1",
         "build123d==0.7.0",
         "py-lib3mf==2.3.1",
         "numpy==1.26.4",
@@ -418,6 +418,9 @@ def test_cad_ci_enrollment(monkeypatch, capsys):
         "meshio==5.3.5",
     ):
         assert any(argv[i : i + 2] == ["--with", pin] for i in range(len(argv)))
+    assert any(
+        argv[i : i + 2] == ["--with-editable", ".[test]"] for i in range(len(argv))
+    )
     gate = next(step for step in steps if step.get("id") == "domain-gate")
     assert gate["env"]["CAD_REQUIRE_KERNEL"] == "1"
     assert not gate.get("continue-on-error", False)

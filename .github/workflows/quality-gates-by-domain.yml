@@ -429,8 +429,9 @@ jobs:
           if os.environ["GATE_NAME"] == "tests-contracts":
               # The CAD readers need kernel-enabled tests, including build123d's
               # legacy 3MF import; unpinned py-lib3mf no longer supplies it.
+              # hullprod in .[test] requires cadquery-ocp >=7.9.3.1.1.
               pins = (
-                  "cadquery-ocp==7.9.3.0", "build123d==0.7.0",
+                  "cadquery-ocp==7.9.3.1.1", "build123d==0.7.0",
                   "py-lib3mf==2.3.1", "numpy==1.26.4",
                   "ezdxf==1.4.5", "meshio==5.3.5",
               )
