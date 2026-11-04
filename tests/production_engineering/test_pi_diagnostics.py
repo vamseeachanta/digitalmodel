@@ -1,7 +1,7 @@
 """Productivity index from tests, skin and pre-stimulation triage (issue #3830).
 
-Hand checks (independent of the implementation; no expected value below is
-obtained by calling the module):
+Hand checks (numerical oracle values are independent of the implementation).
+A separate consistency assertion compares the PI ratio with flow efficiency:
 
 1. Pwf sensitivity. q = 300 STB/d, Pr = 2,000 psi, Pwf = 1,700 psi, so the
    drawdown is 300 psi and J = 300/300 = 1.000 STB/d/psi. A Pwf error of
@@ -31,11 +31,11 @@ obtained by calling the module):
 
 Equation basis: pseudo-steady-state radial inflow for a well centred in a
 closed circular drainage area, oil, field units (STB/d, md, ft, psi, cp,
-rb/STB), 141.2 = 1/0.00708. The equation is the standard textbook form; a
-published worked example with author, title, edition and page is not
-established in this test file (no published example could be read for this
-change). These are reproduction checks of the arithmetic, not field accuracy
-limits.
+rb/STB). Petroleum Production Systems, second edition, section 1.3.1,
+equations (1-6), (1-8), and section 1.4, Example 1-1, equation (1-10),
+provide the equation basis (publisher sample linked in the module).
+These synthetic hand cases check arithmetic; published-example qualification
+and field accuracy remain unestablished.
 
 Tolerance: 1e-9 absolute in output units, for floating-point roundoff only.
 """
@@ -43,6 +43,7 @@ Tolerance: 1e-9 absolute in output units, for floating-point roundoff only.
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 import pytest
 
@@ -51,6 +52,7 @@ from digitalmodel.production_engineering.pi_diagnostics import (
     PwfSource,
     ReservoirRockFluid,
     TriageCause,
+    TriageThresholds,
     WellTestPoint,
     darcy_radial_pi,
     flow_efficiency,
@@ -62,6 +64,20 @@ from digitalmodel.production_engineering.pi_diagnostics import (
 )
 
 ABS = 1e-9
+
+
+def screening_thresholds():
+    # Synthetic test inputs; these values are not recommended field criteria.
+    return TriageThresholds(
+        pi_change_fraction=0.10,
+        rate_drop_fraction=0.10,
+        water_cut_change=0.05,
+        gor_change_fraction=0.20,
+        choke_change_64ths=0.0,
+        reservoir_pressure_drop_psi=10.0,
+        pwf_change_psi=5.0,
+    )
+
 
 RW_FT = 0.5
 RE_FT = 0.5 * math.exp(7.75)  # ln(re/rw) - 0.75 = 7 exactly
@@ -116,7 +132,9 @@ def test_pi_from_test_point_value():
 
 
 def test_100_psi_error_at_300_psi_drawdown_gives_minus_25_plus_50_percent():
-    result = pi_from_test(300.0, 2000.0, 1700.0, PwfSource.CALCULATED, pwf_error_psi=100.0)
+    result = pi_from_test(
+        300.0, 2000.0, 1700.0, PwfSource.CALCULATED, pwf_error_psi=100.0
+    )
     assert result.pi_stb_d_psi == pytest.approx(1.0, rel=0, abs=ABS)
     assert result.pi_low_stb_d_psi == pytest.approx(0.75, rel=0, abs=ABS)
     assert result.pi_high_stb_d_psi == pytest.approx(1.5, rel=0, abs=ABS)
@@ -140,7 +158,9 @@ def test_measured_pwf_without_error_has_zero_band():
 
 def test_error_not_less_than_drawdown_leaves_upper_band_unbounded():
     # Drawdown 300 psi, error 300 psi: the low-drawdown end reaches zero.
-    result = pi_from_test(300.0, 2000.0, 1700.0, PwfSource.CALCULATED, pwf_error_psi=300.0)
+    result = pi_from_test(
+        300.0, 2000.0, 1700.0, PwfSource.CALCULATED, pwf_error_psi=300.0
+    )
     assert result.band_bounded is False
     assert math.isinf(result.pi_high_stb_d_psi)
     assert result.pi_low_stb_d_psi == pytest.approx(0.5, rel=0, abs=ABS)  # 300/600
@@ -225,15 +245,21 @@ def test_flow_efficiency_matches_pi_ratio_to_ideal():
     j_actual = darcy_radial_pi(rock_fluid(), skin=7.0)
     j_ideal = darcy_radial_pi(rock_fluid(), skin=0.0)
     dp = skin_pressure_drop_psi(j_actual * 300.0, rock_fluid(), skin=7.0)
-    assert flow_efficiency(2000.0, 1700.0, dp) == pytest.approx(j_actual / j_ideal, rel=0, abs=ABS)
+    fe = flow_efficiency(2000.0, 1700.0, dp)
+    assert fe == pytest.approx(0.5, rel=0, abs=ABS)
+    assert fe == pytest.approx(j_actual / j_ideal, rel=0, abs=ABS)
 
 
 def test_pi_ratio_remove_skin_7():
-    assert pi_ratio(RE_FT, RW_FT, skin_before=7.0, skin_after=0.0) == pytest.approx(2.0, rel=0, abs=ABS)
+    assert pi_ratio(RE_FT, RW_FT, skin_before=7.0, skin_after=0.0) == pytest.approx(
+        2.0, rel=0, abs=ABS
+    )
 
 
 def test_pi_ratio_skin_7_to_minus_2():
-    assert pi_ratio(RE_FT, RW_FT, skin_before=7.0, skin_after=-2.0) == pytest.approx(2.8, rel=0, abs=ABS)
+    assert pi_ratio(RE_FT, RW_FT, skin_before=7.0, skin_after=-2.0) == pytest.approx(
+        2.8, rel=0, abs=ABS
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -247,7 +273,9 @@ def test_triage_stops_at_pwf_source_when_change_is_inside_band():
     current = well_test(
         q_oil_stb_d=270.0, pwf_source=PwfSource.CALCULATED, pwf_error_psi=100.0
     )
-    result = pre_stimulation_triage(current, previous, rock_fluid())
+    result = pre_stimulation_triage(
+        current, previous, rock_fluid(), thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.PWF_UNCERTAINTY
     assert result.step == 1
     assert "calculated" in result.reason.lower()
@@ -258,7 +286,9 @@ def test_triage_passes_pwf_step_when_both_measured_then_finds_depletion():
     previous = well_test(q_oil_stb_d=300.0, pr_psi=2000.0, pwf_psi=1700.0)  # J = 1.0
     # Pr fell 100 psi; same J = 1.0 at 200 psi drawdown; rate fell to 200.
     current = well_test(q_oil_stb_d=200.0, pr_psi=1900.0, pwf_psi=1700.0)
-    result = pre_stimulation_triage(current, previous, rock_fluid())
+    result = pre_stimulation_triage(
+        current, previous, rock_fluid(), thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.DEPLETION
     assert result.step == 2
     assert [f.step for f in result.findings] == [1, 2]
@@ -266,7 +296,9 @@ def test_triage_passes_pwf_step_when_both_measured_then_finds_depletion():
 
 
 def test_triage_no_decline_when_rate_and_pi_hold():
-    result = pre_stimulation_triage(well_test(), well_test(), rock_fluid())
+    result = pre_stimulation_triage(
+        well_test(), well_test(), rock_fluid(), thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.NO_DECLINE
     assert result.step == 2
 
@@ -274,7 +306,9 @@ def test_triage_no_decline_when_rate_and_pi_hold():
 def test_triage_mobility_on_water_cut_change():
     previous = well_test()
     current = well_test(q_oil_stb_d=150.0, water_cut_fraction=0.40)  # J = 0.5
-    result = pre_stimulation_triage(current, previous, rock_fluid())
+    result = pre_stimulation_triage(
+        current, previous, rock_fluid(), thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.MOBILITY_CHANGE
     assert result.step == 3
     assert "water cut" in result.reason.lower()
@@ -283,7 +317,9 @@ def test_triage_mobility_on_water_cut_change():
 def test_triage_mobility_on_gor_change():
     previous = well_test()
     current = well_test(q_oil_stb_d=150.0, gor_scf_stb=900.0)
-    result = pre_stimulation_triage(current, previous, rock_fluid())
+    result = pre_stimulation_triage(
+        current, previous, rock_fluid(), thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.MOBILITY_CHANGE
     assert "gor" in result.reason.lower()
 
@@ -300,7 +336,9 @@ def test_triage_mobility_on_gor_change():
 def test_triage_not_comparable(overrides):
     previous = well_test()
     current = well_test(q_oil_stb_d=150.0, **overrides)
-    result = pre_stimulation_triage(current, previous, rock_fluid())
+    result = pre_stimulation_triage(
+        current, previous, rock_fluid(), thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.NOT_COMPARABLE
     assert result.step == 4
 
@@ -308,7 +346,9 @@ def test_triage_not_comparable(overrides):
 def test_triage_reaches_skin_and_reports_skin_values():
     previous = well_test()  # J = 1.0 = ideal
     current = well_test(q_oil_stb_d=150.0)  # J = 0.5 -> S = 7
-    result = pre_stimulation_triage(current, previous, rock_fluid())
+    result = pre_stimulation_triage(
+        current, previous, rock_fluid(), thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.SKIN_DAMAGE
     assert result.step == 5
     assert result.skin == pytest.approx(7.0, rel=0, abs=ABS)
@@ -319,7 +359,12 @@ def test_triage_reaches_skin_and_reports_skin_values():
 
 
 def test_triage_skin_step_without_reservoir_data_is_insufficient():
-    result = pre_stimulation_triage(well_test(q_oil_stb_d=150.0), well_test(), None)
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=150.0),
+        well_test(),
+        None,
+        thresholds=screening_thresholds(),
+    )
     assert result.cause is TriageCause.INSUFFICIENT_DATA
     assert result.step == 5
     assert result.skin is None
@@ -328,9 +373,10 @@ def test_triage_skin_step_without_reservoir_data_is_insufficient():
 def test_triage_pi_fall_without_positive_skin_is_unexplained():
     # h = 4 ft gives k*h = 395.36 md-ft, so ideal J = 395.36/(141.2*7) = 0.4.
     # Tested J fell from 1.0 to 150/300 = 0.5: S = 7*(0.4/0.5 - 1) = -1.4.
-    # (S exactly 0 is avoided: roundoff decides its sign.)
     rf = rock_fluid(net_pay_ft=4.0)
-    result = pre_stimulation_triage(well_test(q_oil_stb_d=150.0), well_test(), rf)
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=150.0), well_test(), rf, thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.NO_SKIN_DAMAGE
     assert result.step == 5
     assert result.skin == pytest.approx(-1.4, rel=0, abs=ABS)
@@ -339,6 +385,187 @@ def test_triage_pi_fall_without_positive_skin_is_unexplained():
 def test_triage_no_decline_when_pi_rose():
     previous = well_test()  # J = 1.0
     current = well_test(q_oil_stb_d=450.0)  # J = 1.5
-    result = pre_stimulation_triage(current, previous, rock_fluid())
+    result = pre_stimulation_triage(
+        current, previous, rock_fluid(), thresholds=screening_thresholds()
+    )
     assert result.cause is TriageCause.NO_DECLINE
     assert result.step == 2
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"pr_psi": 2000.0, "pwf_psi": 1850.0, "q_oil_stb_d": 150.0},
+        {"pr_psi": 1900.0, "q_oil_stb_d": 200.0, "choke_64ths": 40.0},
+        {"pr_psi": 1900.0, "q_oil_stb_d": 200.0, "stabilised": False},
+        {"pr_psi": 1900.0, "q_oil_stb_d": 200.0, "flow_regime": "transient"},
+        {"pr_psi": 1900.0, "q_oil_stb_d": 200.0, "lift_setting": "changed"},
+    ],
+)
+def test_constant_pi_rate_drop_requires_comparable_conditions(overrides):
+    result = pre_stimulation_triage(
+        well_test(**overrides),
+        well_test(),
+        rock_fluid(),
+        thresholds=screening_thresholds(),
+    )
+    assert result.cause is TriageCause.NOT_COMPARABLE
+    assert result.skin is None
+
+
+@pytest.mark.parametrize(
+    "test_with_error,error",
+    [("current", 400.0), ("current", 200.0), ("previous", 300.0)],
+)
+def test_measured_pressure_error_can_leave_pi_change_unresolved(test_with_error, error):
+    previous = well_test(pwf_error_psi=error if test_with_error == "previous" else 0.0)
+    current = well_test(
+        q_oil_stb_d=150.0, pwf_error_psi=error if test_with_error == "current" else 0.0
+    )
+    result = pre_stimulation_triage(
+        current, previous, rock_fluid(), thresholds=screening_thresholds()
+    )
+    assert result.cause is TriageCause.PWF_UNCERTAINTY
+    assert result.step == 1
+    assert "measured" in result.reason
+
+
+def test_measured_nonoverlapping_bands_still_allow_skin_diagnosis():
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=150.0, pwf_error_psi=10.0),
+        well_test(),
+        rock_fluid(),
+        thresholds=screening_thresholds(),
+    )
+    assert result.cause is TriageCause.SKIN_DAMAGE
+
+
+def test_gor_increase_from_zero_is_mobility_change():
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=150.0),
+        well_test(gor_scf_stb=0.0),
+        rock_fluid(),
+        thresholds=screening_thresholds(),
+    )
+    assert result.cause is TriageCause.MOBILITY_CHANGE
+    assert "GOR" in result.reason
+
+
+def test_gor_unchanged_at_zero_allows_skin_diagnosis():
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=150.0, gor_scf_stb=0.0),
+        well_test(gor_scf_stb=0.0),
+        rock_fluid(),
+        thresholds=screening_thresholds(),
+    )
+    assert result.cause is TriageCause.SKIN_DAMAGE
+
+
+def test_zero_skin_hand_case_is_not_damage():
+    # h=5 gives ideal J=0.5 and S=7*(0.5/0.5-1)=0 independently.
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=150.0),
+        well_test(),
+        rock_fluid(net_pay_ft=5.0),
+        thresholds=screening_thresholds(),
+    )
+    assert result.cause is TriageCause.NO_SKIN_DAMAGE
+    assert result.skin == pytest.approx(0.0, rel=0, abs=ABS)
+
+
+def test_small_resolved_positive_skin_remains_damage():
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=150.0),
+        well_test(),
+        rock_fluid(net_pay_ft=5.0 * (1.0 + 1e-8)),
+        thresholds=screening_thresholds(),
+    )
+    assert result.cause is TriageCause.SKIN_DAMAGE
+    assert result.skin == pytest.approx(7e-8, rel=0, abs=1e-14)
+
+
+@pytest.mark.parametrize("error", [0.0, 100.0, 400.0])
+def test_zero_rate_pi_fractions_are_undefined(error):
+    result = pi_from_test(0.0, 2000.0, 1700.0, PwfSource.MEASURED, error)
+    assert result.pi_stb_d_psi == 0.0
+    assert result.pi_low_stb_d_psi == 0.0
+    assert math.isnan(result.low_change_fraction)
+    assert math.isnan(result.high_change_fraction)
+    assert result.band_bounded is (error < 300.0)
+    if result.band_bounded:
+        assert result.pi_high_stb_d_psi == 0.0
+    else:
+        assert math.isinf(result.pi_high_stb_d_psi)
+
+
+@pytest.mark.parametrize(
+    "current_rate,previous_rate", [(0.0, 300.0), (300.0, 0.0), (0.0, 0.0)]
+)
+def test_zero_rate_triage_needs_positive_flow_before_skin(current_rate, previous_rate):
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=current_rate),
+        well_test(q_oil_stb_d=previous_rate),
+        rock_fluid(),
+        thresholds=screening_thresholds(),
+    )
+    assert result.cause is TriageCause.INSUFFICIENT_DATA
+    assert result.skin is None
+
+
+def test_triage_requires_explicit_screening_thresholds():
+    with pytest.raises(TypeError, match="thresholds"):
+        pre_stimulation_triage(well_test(), well_test(), rock_fluid())
+
+
+def test_all_threshold_values_are_required():
+    with pytest.raises(TypeError):
+        TriageThresholds()
+
+
+@pytest.mark.parametrize(
+    "pressure_tolerance,cause",
+    [
+        (99.0, TriageCause.DEPLETION),
+        (100.0, TriageCause.INSUFFICIENT_DATA),
+        (101.0, TriageCause.INSUFFICIENT_DATA),
+    ],
+)
+def test_depletion_requires_pressure_drop_beyond_caller_threshold(
+    pressure_tolerance, cause
+):
+    thresholds = replace(
+        screening_thresholds(), reservoir_pressure_drop_psi=pressure_tolerance
+    )
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=200.0, pr_psi=1900.0),
+        well_test(),
+        rock_fluid(),
+        thresholds,
+    )
+    assert result.cause is cause
+    assert result.skin is None
+
+
+@pytest.mark.parametrize(
+    "pwf_tolerance,cause",
+    [
+        (4.0, TriageCause.NOT_COMPARABLE),
+        (5.0, TriageCause.DEPLETION),
+    ],
+)
+def test_depletion_respects_caller_pwf_comparability_tolerance(pwf_tolerance, cause):
+    thresholds = replace(screening_thresholds(), pwf_change_psi=pwf_tolerance)
+    result = pre_stimulation_triage(
+        well_test(q_oil_stb_d=195.0, pr_psi=1900.0, pwf_psi=1705.0),
+        well_test(),
+        rock_fluid(),
+        thresholds,
+    )
+    assert result.cause is cause
+
+
+@pytest.mark.parametrize("name", list(TriageThresholds.__dataclass_fields__))
+@pytest.mark.parametrize("value", [-1.0, math.nan, math.inf])
+def test_screening_thresholds_reject_invalid_values(name, value):
+    with pytest.raises(ValueError, match=name):
+        replace(screening_thresholds(), **{name: value})

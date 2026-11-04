@@ -13,7 +13,7 @@ Add `src/digitalmodel/production_engineering/pi_diagnostics.py` beside
 2. Darcy radial PI for oil in field units with the constant 141.2, skin from
    the ratio of tested to zero-skin PI, the skin pressure drop, flow
    efficiency and J2/J1 = (ln(re/rw) - 0.75 + S1)/(ln(re/rw) - 0.75 + S2).
-3. `pre_stimulation_triage(current, previous, rock_fluid)`: Pwf source,
+3. `pre_stimulation_triage(current, previous, rock_fluid, thresholds)`: Pwf source,
    depletion (rate against PI), mobility (water cut and GOR), comparability
    (stabilisation, flow regime, choke, lift setting), then skin. It stops at
    the first step that finds a cause and returns the cause, step and reason.
@@ -59,10 +59,13 @@ and may fix only these:
 
 - Single-phase oil above the bubble point; vertical well, circular drainage
   area, pseudo-steady state; no rate-dependent (non-Darcy) skin.
-- Triage tolerances are caller inputs with round screening defaults
-  (PI 10 %, rate 10 %, water cut 0.05, GOR 20 %, any choke change); they are
-  not values from a published criterion.
-- A published textbook worked example (author, title, edition, page) is not
-  established for this change; the tests are hand-checked reproductions of
-  the arithmetic only. Validation against a published example remains open
+- Every triage tolerance is a required caller input, including the minimum
+  reservoir-pressure decline and the allowed Pwf change in psi. The module
+  supplies no field screening criterion. Depletion requires pressure-decline
+  evidence and comparable operating conditions; either zero rate returns
+  insufficient data before skin inversion.
+- The module cites Petroleum Production Systems, second edition,
+  section 1.3.1, equations (1-6) and (1-8), and section 1.4, Example 1-1,
+  equation (1-10), for the equation basis. The tests remain synthetic hand
+  checks; qualification against a published worked example remains open
   under #2011.

@@ -12,9 +12,9 @@ pressure drop, flow efficiency and the PI ratio J2/J1 for a change of skin.
 The triage orders the checks that come before a falling PI is read as
 formation damage (issue #3830):
 
-1. Pwf source: a calculated Pwf with a stated error may place the PI change
-   inside the measurement band.
-2. Depletion: rate fell while PI held, so the drawdown fell.
+1. Pwf uncertainty: any stated Pwf error may leave the PI change unresolved.
+2. Depletion: rate fell while PI held, reservoir pressure declined beyond the
+   caller threshold, and operating conditions including Pwf stayed comparable.
 3. Mobility: water cut or GOR changed, which lowers oil PI without damage.
 4. Comparability: the tests are not stabilised or not taken under the same
    flow regime, choke and lift setting.
@@ -33,17 +33,19 @@ mu in cp, Bo in rb/STB, re and rw in ft):
     FE = (Pr - Pwf - dP_skin) / (Pr - Pwf)
     J2/J1 = (ln(re/rw) - 0.75 + S1) / (ln(re/rw) - 0.75 + S2)
 
-The pseudo-steady-state radial inflow equation for a well centred in a closed
-circular drainage area, with Pr the average reservoir pressure, is the
-standard textbook form (for example Ahmed, T., Reservoir Engineering Handbook;
-Dake, L.P., Fundamentals of Reservoir Engineering). The constant
-141.2 = 1/0.00708 converts Darcy units to the field units above. No edition
-or page is pinned in this module; the tests are hand-checked reproductions of
-the arithmetic, and a published worked example is not established.
+Equation references: Petroleum Production Systems, second edition (2013),
+section 1.3.1, equations (1-6) and (1-8), pp. 11-13, gives the PI definition
+and circular-drainage pseudo-steady-state geometry term. Section 1.4,
+Example 1-1, equation (1-10), p. 16, gives the field-unit coefficient and
+units. The publisher's open sample was inspected; a worked-example
+qualification of this implementation remains unestablished:
+https://ptgmedia.pearsoncmg.com/images/9780137031580/samplepages/0137031580.pdf
 
-Thresholds of the triage (PI and rate tolerances, water-cut and GOR change
-limits) are screening inputs supplied by the caller. Their defaults are
-round screening values, not values from a published criterion.
+All triage thresholds must be supplied explicitly by the caller, including
+reservoir-pressure decline and Pwf comparability tolerances in psi. No field
+screening criterion is supplied by this module. A positive nominal reservoir
+pressure decline beyond that tolerance is evidence only within the stated
+single-phase model; reservoir-pressure uncertainty is not propagated.
 
 Limits: single-phase oil above the bubble point (linear IPR); vertical well,
 circular drainage area, no non-Darcy (rate-dependent) skin. Below the bubble
@@ -57,11 +59,15 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Union
 
-#: Darcy-to-field-unit constant for oil radial flow (STB/d, md, ft, psi, cp, rb/STB).
+#: Field-unit coefficient: Petroleum Production Systems, 2nd ed., Eq. (1-10).
 DARCY_OIL_FIELD_CONSTANT = 141.2
 
-#: Pseudo-steady-state shape term for a circular drainage area (dimensionless).
+#: Circular-drainage term: Petroleum Production Systems, 2nd ed., Eq. (1-8).
 _PSS_SHAPE_TERM = 0.75
+
+# A few dozen binary64 ulps cover roundoff in the radial PI arithmetic and
+# ratio cancellation at zero skin. This is numerical, not a screening limit.
+_PI_ROUNDOFF_REL_TOL = 32.0 * math.ulp(1.0)
 
 
 class PwfSource(Enum):
@@ -144,7 +150,9 @@ class PiTestResult:
     Units: rates STB/d, pressures psi, PI STB/d/psi. The low PI corresponds
     to Pwf - error (larger drawdown); the high PI to Pwf + error (smaller
     drawdown). When the error is not less than the drawdown, the high end is
-    unbounded (infinite) and ``band_bounded`` is False.
+    unbounded (infinite) and ``band_bounded`` is False. At zero rate the
+    nominal and low PI are zero; the upper bound retains that pressure-domain
+    rule. Relative changes from zero nominal PI are undefined (NaN).
     """
 
     q_oil_stb_d: float
@@ -158,12 +166,16 @@ class PiTestResult:
 
     @property
     def low_change_fraction(self) -> float:
-        """(J_low - J)/J; -0.25 means -25 %."""
+        """(J_low - J)/J; -0.25 means -25 %; NaN at zero nominal PI."""
+        if self.pi_stb_d_psi == 0.0:
+            return math.nan
         return self.pi_low_stb_d_psi / self.pi_stb_d_psi - 1.0
 
     @property
     def high_change_fraction(self) -> float:
-        """(J_high - J)/J; +0.50 means +50 %; infinite when unbounded."""
+        """(J_high - J)/J; infinite if unbounded; NaN at zero nominal PI."""
+        if self.pi_stb_d_psi == 0.0:
+            return math.nan
         return self.pi_high_stb_d_psi / self.pi_stb_d_psi - 1.0
 
 
@@ -361,14 +373,23 @@ class WellTestPoint:
 
 @dataclass(frozen=True)
 class TriageThresholds:
-    """Screening tolerances of the triage (caller-supplied; defaults are round
-    screening values, not from a published criterion)."""
+    """Required caller screening tolerances; no published defaults.
 
-    pi_change_fraction: float = 0.10  # |dJ|/J_prev within this -> PI held
-    rate_drop_fraction: float = 0.10  # (q_prev - q)/q_prev above this -> rate fell
-    water_cut_change: float = 0.05  # absolute change in water-cut fraction
-    gor_change_fraction: float = 0.20  # |dGOR|/GOR_prev
-    choke_change_64ths: float = 0.0  # any choke change beyond this -> not comparable
+    Fractions are dimensionless, choke is in 64ths of an inch, pressure
+    tolerances are in psi. Every value must be finite and non-negative.
+    """
+
+    pi_change_fraction: float
+    rate_drop_fraction: float
+    water_cut_change: float
+    gor_change_fraction: float
+    choke_change_64ths: float
+    reservoir_pressure_drop_psi: float
+    pwf_change_psi: float
+
+    def __post_init__(self) -> None:
+        for name in self.__dataclass_fields__:
+            object.__setattr__(self, name, _non_negative(name, getattr(self, name)))
 
 
 @dataclass(frozen=True)
@@ -397,18 +418,40 @@ class TriageResult:
     pi_ratio_if_skin_removed: Optional[float] = None
 
 
+def _comparability_issues(
+    current: WellTestPoint, previous: WellTestPoint, thresholds: TriageThresholds
+) -> list[str]:
+    """Operating differences that preclude attributing decline to depletion or skin."""
+    issues = []
+    if not current.stabilised or not previous.stabilised:
+        issues.append("a test is not stabilised")
+    if current.flow_regime != previous.flow_regime:
+        issues.append(f"flow regime differs ({previous.flow_regime} to {current.flow_regime})")
+    if current.choke_64ths is not None and previous.choke_64ths is not None:
+        if abs(current.choke_64ths - previous.choke_64ths) > thresholds.choke_change_64ths:
+            issues.append(
+                f"choke differs ({previous.choke_64ths:g} to {current.choke_64ths:g} /64 in)"
+            )
+    elif (current.choke_64ths is None) != (previous.choke_64ths is None):
+        issues.append("choke recorded on one test only")
+    if current.lift_setting != previous.lift_setting:
+        issues.append(f"lift setting differs ({previous.lift_setting} to {current.lift_setting})")
+    return issues
+
+
 def pre_stimulation_triage(
     current: WellTestPoint,
     previous: WellTestPoint,
     rock_fluid: Optional[ReservoirRockFluid],
-    thresholds: TriageThresholds = TriageThresholds(),
+    thresholds: TriageThresholds,
 ) -> TriageResult:
     """Ordered checks before a PI fall is attributed to skin.
 
-    Steps, in order, stopping at the first that finds a cause:
-    1 Pwf source, 2 depletion (rate against PI), 3 mobility (water cut and
-    GOR), 4 comparability (stabilisation, flow regime, choke, lift), 5 skin
-    (tested PI of the current test against the Darcy PI at S = 0).
+    All screening thresholds are required caller inputs. Zero flow on either
+    test yields insufficient data before relative PI or skin inversion.
+    Steps: 1 Pwf uncertainty, 2 depletion (pressure evidence and comparable
+    conditions required), 3 mobility, 4 comparability, 5 skin. Positive skin
+    within 32 binary64 ulps of equal tested/ideal PI is snapped to zero.
     """
     cur = current.pi_result()
     prev = previous.pi_result()
@@ -429,47 +472,69 @@ def pre_stimulation_triage(
     def passed(step: int, name: str, detail: str) -> None:
         findings.append(TriageFinding(step, name, False, detail))
 
-    # Step 1: Pwf source.
-    calculated = [
-        label
+    if cur.q_oil_stb_d == 0.0 or prev.q_oil_stb_d == 0.0:
+        return stop(
+            TriageCause.INSUFFICIENT_DATA,
+            1,
+            "flow",
+            "positive oil flow is required on both tests for relative PI and skin diagnosis",
+        )
+
+    # Step 1: Pwf uncertainty applies to measured and calculated pressures.
+    uncertain = [
+        f"{label} ({res.pwf_source.value})"
         for label, res in (("current", cur), ("previous", prev))
-        if res.pwf_source is PwfSource.CALCULATED
+        if res.pwf_error_psi > 0.0
     ]
-    if calculated:
+    if uncertain:
         overlap = (
             cur.pi_low_stb_d_psi <= prev.pi_high_stb_d_psi
             and prev.pi_low_stb_d_psi <= cur.pi_high_stb_d_psi
         )
-        if overlap:
+        if not cur.band_bounded or not prev.band_bounded or overlap:
             return stop(
                 TriageCause.PWF_UNCERTAINTY,
                 1,
                 "pwf_source",
-                f"Pwf of the {' and '.join(calculated)} test is calculated; the PI "
-                f"bands overlap (current {cur.pi_low_stb_d_psi:.3f} to "
+                f"Pwf uncertainty on the {' and '.join(uncertain)} test leaves "
+                "the PI change unresolved: bands overlap or an upper bound is "
+                f"unbounded (current {cur.pi_low_stb_d_psi:.3f} to "
                 f"{cur.pi_high_stb_d_psi:.3f}, previous {prev.pi_low_stb_d_psi:.3f} "
-                f"to {prev.pi_high_stb_d_psi:.3f} STB/d/psi), so the PI change is "
-                "not resolved; measure Pwf downhole before further diagnosis",
+                f"to {prev.pi_high_stb_d_psi:.3f} STB/d/psi); "
+                "reduce Pwf uncertainty before further diagnosis",
             )
-        passed(1, "pwf_source", "Pwf calculated but the PI bands do not overlap")
+        passed(1, "pwf_source", "stated Pwf errors give bounded, separate PI bands")
     else:
-        passed(1, "pwf_source", "Pwf measured on both tests")
+        passed(1, "pwf_source", "no Pwf error stated on either test")
 
     # Step 2: depletion (rate against PI).
-    pi_change = cur.pi_stb_d_psi / prev.pi_stb_d_psi - 1.0 if prev.pi_stb_d_psi > 0 else math.inf
-    if prev.q_oil_stb_d > 0:
-        rate_drop = 1.0 - cur.q_oil_stb_d / prev.q_oil_stb_d
-    else:
-        rate_drop = 0.0
+    pi_change = cur.pi_stb_d_psi / prev.pi_stb_d_psi - 1.0
+    rate_drop = 1.0 - cur.q_oil_stb_d / prev.q_oil_stb_d
     if abs(pi_change) <= thresholds.pi_change_fraction:
         if rate_drop > thresholds.rate_drop_fraction:
+            issues = _comparability_issues(current, previous, thresholds)
+            if abs(current.pwf_psi - previous.pwf_psi) > thresholds.pwf_change_psi:
+                issues.append("flowing bottomhole pressure changed beyond tolerance")
+            if issues:
+                return stop(
+                    TriageCause.NOT_COMPARABLE, 2, "depletion",
+                    "; ".join(issues) + "; constant PI and falling rate do not resolve depletion",
+                )
+            pressure_drop = previous.pr_psi - current.pr_psi
+            if pressure_drop <= thresholds.reservoir_pressure_drop_psi:
+                return stop(
+                    TriageCause.INSUFFICIENT_DATA, 2, "depletion",
+                    "constant PI and falling rate lack reservoir-pressure decline "
+                    "beyond the stated tolerance; depletion is unresolved",
+                )
             return stop(
                 TriageCause.DEPLETION,
                 2,
                 "depletion",
                 f"rate fell {rate_drop:.1%} while PI held ({pi_change:+.1%}); the "
                 f"drawdown fell from {prev.drawdown_psi:.1f} to {cur.drawdown_psi:.1f} "
-                "psi, which points to depletion, not damage",
+                f"psi, reservoir pressure fell {pressure_drop:.1f} psi beyond the "
+                "stated tolerance with comparable conditions; consistent with depletion",
             )
         return stop(
             TriageCause.NO_DECLINE,
@@ -498,7 +563,9 @@ def pre_stimulation_triage(
         )
     gor_prev = _finite("gor_scf_stb", previous.gor_scf_stb)
     gor_cur = _finite("gor_scf_stb", current.gor_scf_stb)
-    if gor_prev > 0:
+    if gor_prev == 0.0 and gor_cur > 0.0:
+        reasons.append(f"GOR rose from zero to {gor_cur:.0f} scf/STB")
+    elif gor_prev > 0:
         d_gor = gor_cur / gor_prev - 1.0
         if abs(d_gor) > thresholds.gor_change_fraction:
             reasons.append(f"GOR changed {d_gor:+.1%} ({gor_prev:.0f} to {gor_cur:.0f} scf/STB)")
@@ -512,20 +579,7 @@ def pre_stimulation_triage(
     passed(3, "mobility", "water cut and GOR within tolerance")
 
     # Step 4: comparability.
-    issues = []
-    if not current.stabilised or not previous.stabilised:
-        issues.append("a test is not stabilised")
-    if current.flow_regime != previous.flow_regime:
-        issues.append(f"flow regime differs ({previous.flow_regime} to {current.flow_regime})")
-    if current.choke_64ths is not None and previous.choke_64ths is not None:
-        if abs(current.choke_64ths - previous.choke_64ths) > thresholds.choke_change_64ths:
-            issues.append(
-                f"choke differs ({previous.choke_64ths:g} to {current.choke_64ths:g} /64 in)"
-            )
-    elif (current.choke_64ths is None) != (previous.choke_64ths is None):
-        issues.append("choke recorded on one test only")
-    if current.lift_setting != previous.lift_setting:
-        issues.append(f"lift setting differs ({previous.lift_setting} to {current.lift_setting})")
+    issues = _comparability_issues(current, previous, thresholds)
     if issues:
         return stop(
             TriageCause.NOT_COMPARABLE,
@@ -550,6 +604,8 @@ def pre_stimulation_triage(
         rock_fluid.drainage_radius_ft,
         rock_fluid.wellbore_radius_ft,
     )
+    if math.isclose(cur.pi_stb_d_psi, pi_ideal, rel_tol=_PI_ROUNDOFF_REL_TOL, abs_tol=0.0):
+        skin = 0.0
     dp_skin = skin_pressure_drop_psi(cur.q_oil_stb_d, rock_fluid, skin)
     fe = flow_efficiency(current.pr_psi, current.pwf_psi, dp_skin)
     ratio = pi_ratio(
