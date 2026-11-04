@@ -5,7 +5,7 @@
 | Module | data_systems/data_scraping |
 | Repository | digitalmodel |
 | Package path | `src/digitalmodel/data_systems/data_scraping` |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | `df9787d346c226aad513cab9d248f7be841b37d5` |
 | Implementation-map document pin | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` on `codex/implmap-work` |
 | Implementation-map data revision | `270c8759c374b67a7f032953e7fcdb14e0224461` |
@@ -98,6 +98,8 @@ AQG r0, section 10, Python calculations supplies G0 inputs/units/citations, G1 i
 | G4 | NOT_APPLICABLE | No diffraction mesh or hydrostatics is produced by the data-validation path. [src/digitalmodel/data_systems/data_scraping/validators/validate_ocimf_data.py:L65-L95] |
 | G5 | Applicable | C06 checks CSV/metadata agreement; C09 requires complete citation, sweep, node and issue evidence before review (AQG r0, section 9). [src/digitalmodel/data_systems/data_scraping/scrapers/base_scraper.py:L220-L276] |
 
+The C01–C07 results below are previously reported synthetic checks. Access to the original offline hand-check record and retained C06 files and digest is PENDING: no reachable public-safe locator is available. Reconstructed checks can establish current behaviour, but cannot establish access to those original artifacts. C09 remains pending for original-artifact access and issue tracking; the document checks do not close those gaps.
+
 | ID | Gate | Executable check and numeric pass criterion | Evidence / recorded result |
 | --- | --- | --- | --- |
 | C01 | G0 | Construct `BaseScraper` with a synthetic URL; rate limit = 2.0 s, timeout = 30 s, retries = 3 attempts; zero configuration mismatches. | PASS in the offline hand-check record; constructor only. [src/digitalmodel/data_systems/data_scraping/scrapers/base_scraper.py:L34-L66] |
@@ -105,7 +107,7 @@ AQG r0, section 10, Python calculations supplies G0 inputs/units/citations, G1 i
 | C03 | G0 | `DataValidator.validate_dataframe` on two complete numeric rows with required fields returns valid true and 100 score points; an empty frame returns valid false and 0 score points; 0 mismatches. | PASS; synthetic schema/empty-input regression check. [src/digitalmodel/data_systems/data_scraping/validators/data_validator.py:L65-L121] |
 | C04 | G2 | `parse_dimension('3 m')` = 3.0 m; doubling metre or foot input doubles the returned value within 0.01 m, allowing output rounding; 0 mismatches. | PASS; hand identity/scaling only, with no independent foot conversion benchmark. [src/digitalmodel/data_systems/data_scraping/scrapers/vessel_scraper.py:L103-L118] |
 | C05 | G2 | `EquipmentScraper.parse_weight('2 kg')` = 2.0 kg; `parse_weight('4 kg')` = twice that result with 0.0 kg difference; 0 mismatches. | PASS; hand identity/scaling only, without a catalog or licensed-standard value. [src/digitalmodel/data_systems/data_scraping/scrapers/equipment_scraper.py:L159-L178] |
-| C06 | G5 | Write a two-row synthetic frame using `save_csv`; `read_csv` row count and `save_metadata` extra `total_records` both = 2 rows; 0 count differences; record SHA-256. | PASS; files and digest retained in the external evidence record. [src/digitalmodel/data_systems/data_scraping/scrapers/base_scraper.py:L220-L276] |
+| C06 | G5 | Write a two-row synthetic frame using `save_csv`; `read_csv` row count and `save_metadata` extra `total_records` both = 2 rows; 0 count differences; record SHA-256. | Previously reported PASS; original files, retained digest and external evidence record access PENDING until a reachable public-safe locator is supplied. [src/digitalmodel/data_systems/data_scraping/scrapers/base_scraper.py:L220-L276] |
 | C07 | G1 | Import `BaseScraper`, `VesselScraper`, `DataValidator`, `EquipmentScraper`, `FenderScraper`, `OCIMFValidator`; 6 class imports, 0 licensed-interface imports. | PASS; no request, browser or solver started. [src/digitalmodel/data_systems/data_scraping/__init__.py:L15-L31] [src/digitalmodel/data_systems/data_scraping/scrapers/equipment_scraper.py:L8-L17] [src/digitalmodel/data_systems/data_scraping/scrapers/fender_scraper.py:L8-L16] [src/digitalmodel/data_systems/data_scraping/validators/validate_ocimf_data.py:L9-L17] |
 | C08 | G1 | `PYTHONPATH=src uv run --no-sources python -m pytest tests/data_systems/data_scraping -q -rA -p no:cacheprovider --basetemp=<external-directory>`; require 11 collected nodes, 0 failures and 0 collection errors. | FAIL at BASE and AFTER: 0 collected, 4 collection errors, 11 test bodies NOT_RUN; `ModuleNotFoundError: No module named 'scrapers'`; existing import defect, #1900 and issue pending (1). [tests/data_systems/data_scraping/test_direct_manufacturers.py:L7-L11] [tests/data_systems/data_scraping/test_fender_scraper.py:L11-L15] [tests/data_systems/data_scraping/test_pdf_extraction.py:L7-L10] [tests/data_systems/data_scraping/test_selenium.py:L11-L15] |
 | C09 | G5 | Resolve every pinned citation, resolve all 11 listed test definitions by AST, account for every sweep row and open item, and run pack lint; require 0 broken citations, 0 missing definitions, 0 untracked findings and 0 lint failures (counts). | Final evidence recorded in the change description; these document checks do not clear the failed module test gate. [tests/data_systems/data_scraping/test_pdf_extraction.py:L13-L180] |
@@ -569,7 +571,7 @@ The three PDF demonstrations need local catalog fixtures and can return before d
 
 ### Open items
 
-These are maintainer follow-ups; draft numbers identify the accompanying issue-draft list until issue numbers are assigned.
+These are maintainer follow-ups. The original accompanying seven issue drafts have no reachable public-safe locator; access to that draft text and assignment of issue numbers are PENDING. Draft numbers below are local cross-references to proposed follow-ups, not evidence that the original drafts are accessible or that issues were filed. The descriptions in this table define the proposed scope until draft text or resulting issues can be linked.
 
 | Item | Coverage gap / required action | Tracking |
 | --- | --- | --- |
