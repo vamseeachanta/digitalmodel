@@ -458,6 +458,12 @@ def test_cad_ci_enrollment(monkeypatch, capsys):
     import yaml
 
     root = Path(__file__).resolve().parents[2]
+    gates = yaml.safe_load(
+        (root / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    canonical = gates["tests-contracts"]
+    assert canonical["test_roots"].count("tests/cad/") == 1
+    assert shlex.split(canonical["command"]).count("tests/cad/") == 1
     rows = (root / "tests/DOMAINS.md").read_text(encoding="utf-8").splitlines()
     contracts = next(row for row in rows if row.startswith("| contracts "))
     assert "`tests/cad/`" in contracts

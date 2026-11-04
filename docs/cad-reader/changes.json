@@ -1,21 +1,11 @@
 {
-  "revision": "2",
-  "date": "2026-11-03",
+  "revision": "3",
+  "date": "2026-11-04",
   "changes": [
     {
-      "section": "Scope and use",
-      "change": "Document STEP and IGES through the optional cad-occ extra and native-format export route.",
-      "reason": "Match the formats accepted by the reader."
-    },
-    {
-      "section": "Units and geometry",
-      "change": "Describe file declarations, metre normalization, exact B-rep properties, face-occurrence area and display triangles.",
-      "reason": "Distinguish physical properties from tessellation and state refusal rules."
-    },
-    {
       "section": "Validation and limits",
-      "change": "Record synthetic kernel round trips, required imports, UTF-8 refusal and remaining fixture and topology coverage gaps.",
-      "reason": "Bound the evidence without implying production-file or cross-platform validation."
+      "change": "Describe dedicated shell-count and shared-face area assertions while retaining external-fixture and cross-platform limits.",
+      "reason": "Match the synthetic test coverage without implying production-file validation."
     }
   ]
 }

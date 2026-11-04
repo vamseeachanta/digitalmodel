@@ -438,7 +438,6 @@ jobs:
               command = command.replace(
                   "uv run ", "uv run " + " ".join(f"--with {pin}" for pin in pins) + " ", 1
               )
-              command += " tests/cad/"
           print(command)
           PY
           )

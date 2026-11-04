@@ -50,7 +50,8 @@ summarized below. Computer-aided design is abbreviated as CAD.</p>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>0</td><td>2026-10-19</td><td>Initial reader guide establishes explicit unit handling and bounded geometry support.</td></tr>
 <tr><td>1</td><td>2026-10-25</td><td>Disclose exact-coordinate STL deduplication and test shared connectivity in both encodings.</td></tr>
-<tr><td>2</td><td>2026-11-03</td><td>Document optional STEP and IGES ingestion, unit rules, exact properties and limits to match the reader.</td></tr></tbody></table>
+<tr><td>2</td><td>2026-11-03</td><td>Document optional STEP and IGES ingestion, unit rules, exact properties and limits to match the reader.</td></tr>
+<tr><td>3</td><td>2026-11-04</td><td>Describe shell-count and shared-face assertions to match the synthetic test coverage.</td></tr></tbody></table>
 </section>
 <section id="scope">
 <h2>2. Scope</h2>
@@ -207,9 +208,10 @@ and partial root transfers, malformed input and UTF-8 refusal. The contracts gat
 requires kernel imports and pins cadquery-ocp 7.9.3.1.1 and build123d 0.7.0 with
 numpy 1.26.4. Local kernel fixtures can skip if optional packages are absent;
 <code>CAD_REQUIRE_KERNEL=1</code> makes missing kernel imports fail in that gate.
-No externally authored STEP or IGES fixture is exercised. Shell counts and shared-face
-area semantics remain without dedicated assertions; production-file fidelity and
-cross-platform behavior require further evidence.</p>
+Dedicated assertions check shell counts for solids and a closed shell without
+solid topology, and confirm that shared-face area is counted per solid occurrence.
+No externally authored STEP or IGES fixture is exercised; production-file fidelity
+and cross-platform behavior require further evidence.</p>
 </section>
 <section id="failures">
 <h2>8. Failure handling</h2>

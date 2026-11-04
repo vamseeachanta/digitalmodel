@@ -406,6 +406,7 @@ def test_ci_subsea_command_collects_the_report_suite(monkeypatch, capsys):
         expected = original.copy()
         if name == "tests-contracts":
             assert original[:2] == ["uv", "run"]
+            assert original.count("tests/cad/") == 1
             pins = (
                 "cadquery-ocp==7.9.3.1.1",
                 "build123d==0.7.0",
@@ -415,7 +416,6 @@ def test_ci_subsea_command_collects_the_report_suite(monkeypatch, capsys):
                 "meshio==5.3.5",
             )
             expected[2:2] = [arg for pin in pins for arg in ("--with", pin)]
-            expected.append("tests/cad/")
         elif name == "tests-subsea":
             expected.append("tests/riser_fatigue/")
         assert command == expected, name
