@@ -292,11 +292,11 @@ def skin_from_pi(
     """Skin from tested and zero-skin theoretical PI (dimensionless).
 
     S = (ln(re/rw) - 0.75) (J_ideal / J_test - 1). ``pi_ideal`` is the Darcy
-    PI at S = 0 for the same rock, fluid and geometry.
+    PI at S = 0 for the same rock, fluid and geometry; ln(re/rw) - 0.75 > 0.
     """
     pi_test = _positive("pi_test", pi_test)
     pi_ideal = _positive("pi_ideal", pi_ideal)
-    return _geometry_term(re_ft, rw_ft) * (pi_ideal / pi_test - 1.0)
+    return _positive("geometry_term", _geometry_term(re_ft, rw_ft)) * (pi_ideal / pi_test - 1.0)
 
 
 def skin_pressure_drop_psi(

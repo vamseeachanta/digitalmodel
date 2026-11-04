@@ -232,9 +232,31 @@ def test_skin_from_pi_negative_for_stimulated_well():
     assert skin_from_pi(1.4, 1.0, RE_FT, RW_FT) == pytest.approx(-2.0, rel=0, abs=ABS)
 
 
+@pytest.mark.parametrize("re_ft", [2.0, math.exp(0.75)])
+def test_skin_from_pi_rejects_non_positive_geometry_term(re_ft):
+    # ln(2) - 0.75 < 0; ln(exp(0.75)) - 0.75 = 0.
+    # Neither geometry supports a positive zero-skin ideal PI.
+    with pytest.raises(ValueError, match="geometry_term must be positive"):
+        skin_from_pi(0.5, 1.0, re_ft, 1.0)
+
+
 def test_skin_pressure_drop():
     dp = skin_pressure_drop_psi(150.0, rock_fluid(), skin=7.0)
     assert dp == pytest.approx(150.0, rel=0, abs=ABS)
+
+
+def test_skin_pressure_drop_negative_for_stimulated_well():
+    # 141.2 * 150 * (-2) / 988.4 = -300/7 psi; retain the sign.
+    assert skin_pressure_drop_psi(150.0, rock_fluid(), skin=-2.0) == pytest.approx(
+        -300.0 / 7.0, rel=0, abs=ABS
+    )
+
+
+def test_flow_efficiency_distinguishes_drawdown_complement():
+    # (2000 - 1700 - 100) / (2000 - 1700) = 200/300 = 2/3.
+    assert flow_efficiency(2000.0, 1700.0, 100.0) == pytest.approx(
+        2.0 / 3.0, rel=0, abs=ABS
+    )
 
 
 def test_flow_efficiency_from_pressures():
@@ -595,14 +617,14 @@ def test_separate_historical_pi_bands_can_leave_zero_skin_unresolved(source, rat
 
 
 @pytest.mark.parametrize(
-    "rate,cause,expected_skin",
+    "rate,cause,expected_skin,expected_fe",
     [
-        (210.0, TriageCause.SKIN_DAMAGE, 3.0),
-        (390.0, TriageCause.NO_SKIN_DAMAGE, -21.0 / 13.0),
+        (210.0, TriageCause.SKIN_DAMAGE, 3.0, 0.7),
+        (390.0, TriageCause.NO_SKIN_DAMAGE, -21.0 / 13.0, 1.3),
     ],
 )
 def test_current_pi_band_with_resolved_skin_sign_allows_diagnosis(
-    rate, cause, expected_skin
+    rate, cause, expected_skin, expected_fe
 ):
     # At q=210 the band J=[7/12,7/8] gives S=[1,5]; at q=390,
     # J=[13/12,13/8] gives S=[-35/13,-7/13]. Neither contains zero.
@@ -615,6 +637,8 @@ def test_current_pi_band_with_resolved_skin_sign_allows_diagnosis(
     assert result.cause is cause
     assert result.step == 5
     assert result.skin == pytest.approx(expected_skin, rel=0, abs=ABS)
+    # FE = J/J_ideal: 210/300 = 0.700; 390/300 = 1.300.
+    assert result.flow_efficiency == pytest.approx(expected_fe, rel=0, abs=ABS)
 
 
 @pytest.mark.parametrize(
