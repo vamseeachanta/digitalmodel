@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for the shared FFS applicability layer (#1094): d/t flags on
 # ABOUTME: B31G/RSTRENG/DNV, ESCALATE routing in ffs_decision, report footer, goldens.
 """Applicability flags for the FFS strength methods (issue #1094).
@@ -281,9 +284,9 @@ def test_ffs_decision_escalates_when_any_flag_is_raised():
     assert "SOME_FLAG" in d["governing_criterion"]
     assert "outside the method range" in d["governing_criterion"]
     assert d["applicability"] == flagged.to_dict()
-    # the numeric result is still carried for reference, not used as a verdict
+    # Strength remains reference-only; an unsupported method assigns no rating.
     assert d["rsf"] == 0.97
-    assert d["rerated_mawp_psi"] == pytest.approx(1000.0)
+    assert d["rerated_mawp_psi"] is None
     assert math.isfinite(d["remaining_life_yr"])
 
 

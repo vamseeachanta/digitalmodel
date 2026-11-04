@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS decision engine — translate assessment margins into action verdicts.
 
 One shared verdict vocabulary for every asset class (issue #2205, owner
@@ -339,7 +342,7 @@ class Decision:
 def decide(
     margin: QuantityLike,
     margin_allowable: QuantityLike,
-    remaining_life_yr: QuantityLike,
+    remaining_life_yr: Optional[QuantityLike],
     asset_class: Union[str, AssetClass],
     *,
     derate: Optional[DerateFn] = None,
@@ -354,7 +357,8 @@ def decide(
             ratio, RSR ...).  Larger is safer; ``margin >= margin_allowable``
             passes.  Non-finite -> ESCALATE.
         margin_allowable: Allowable margin (e.g. RSFa = 0.90).
-        remaining_life_yr: Years (float) or a pint time quantity.
+        remaining_life_yr: Years (float) or a pint time quantity. None/NaN
+            means unknown; an explicit passing strength screen may omit life.
         asset_class: One of :data:`ASSET_CLASSES`.
         derate: Injected de-rating callable ``(margin, allowable) -> Derating``
             built with :func:`reduced_mawp` / :func:`scaled_limit`.  Evaluated
@@ -373,7 +377,7 @@ def decide(
     b = bands or policy.bands
     m = _dimensionless(margin, "margin")
     m_a = _dimensionless(margin_allowable, "margin_allowable")
-    life = _years(remaining_life_yr)
+    life = float("nan") if remaining_life_yr is None else _years(remaining_life_yr)
     lbl = policy.margin_label
 
     derating = derate(m, m_a) if derate is not None else None
@@ -388,7 +392,8 @@ def decide(
             margin_allowable=m_a,
             remaining_life_yr=life,
             governing_criterion=criterion,
-            derated=derating.value if derating is not None else None,
+            derated=(derating.value if derating is not None
+                     and verdict != Verdict.ESCALATE else None),
             applicability=app,
         )
 
@@ -437,6 +442,13 @@ def decide(
             f"Screening FAIL; {lbl}={m:.3f} in de-rating band "
             f"[{b.derate_floor:.2f}, {m_a:.2f}).  {note}",
         )
+    if math.isnan(life) or life == -math.inf:
+        return _make(
+            Verdict.ESCALATE,
+            f"Screening FAIL; {lbl}={m:.3f} >= allowable={m_a:.2f}, but "
+            "remaining life is not evaluated. Repair or de-rating cannot be "
+            "selected from missing life evidence; engineering review required.",
+        )
     # Margin acceptable but screening failed (e.g. thickness already below
     # t_min): repair if remaining life is short, otherwise operate de-rated.
     if life < b.repair_life_yr:
@@ -483,7 +495,7 @@ class FFSDecision:
         rsf_a: float,
         t_mm_in: float,
         t_min_in: float,
-        corrosion_rate_in_per_yr: float,
+        corrosion_rate_in_per_yr: Optional[float],
         design_pressure_psi: float | None = None,
         applicability: Optional[Applicability] = None,
     ) -> dict:
@@ -502,7 +514,8 @@ class FFSDecision:
             t_mm_in: Minimum measured wall thickness (inches).
             t_min_in: Code-required minimum wall thickness (inches).
             corrosion_rate_in_per_yr: Future corrosion rate (inches/year).
-                Use 0.0 for no further degradation.
+                None means unknown. Use an explicit 0.0 assumption for no
+                further degradation. Wall at/below t_min retains zero life.
             design_pressure_psi: Design pressure / MAWP.  When supplied, the
                 RSF-based re-rated pressure MAWP_r = MAWP * min(1, RSF/RSFa)
                 (API 579-1 §2.4.2.2) is computed and reported on every
@@ -529,10 +542,13 @@ class FFSDecision:
                 applicability (dict): ``{ok, flags, notes}`` echo of the
                     validity record (all-clear when none was supplied).
         """
-        life = remaining_life(
-            Q_(t_mm_in, "inch"), Q_(t_min_in, "inch"),
-            Q_(corrosion_rate_in_per_yr, "inch/year"),
-        )
+        if corrosion_rate_in_per_yr is None:
+            life = 0.0 if t_mm_in <= t_min_in else float("nan")
+        else:
+            life = remaining_life(
+                Q_(t_mm_in, "inch"), Q_(t_min_in, "inch"),
+                Q_(corrosion_rate_in_per_yr, "inch/year"),
+            )
         derate = (
             reduced_mawp(Q_(design_pressure_psi, "psi"))
             if design_pressure_psi is not None else None
@@ -544,6 +560,14 @@ class FFSDecision:
         )
         out = d.to_dict()
         out["verdict"] = d.action
+        out["corrosion_rate_in_per_yr"] = corrosion_rate_in_per_yr
+        out["level2_verdict"] = level2_verdict
+        comparator = ">=" if t_mm_in >= t_min_in else "<"
+        out["governing_criterion"] += (
+            f" Measured wall t_mm={t_mm_in:.3f} in {comparator} "
+            f"t_min={t_min_in:.3f} in; Level 1={level1_verdict}, "
+            f"Level 2={level2_verdict}."
+        )
         return out
 
     # ------------------------------------------------------------------
