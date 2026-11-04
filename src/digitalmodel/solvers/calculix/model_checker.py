@@ -348,9 +348,10 @@ def _boundary_stages(model: Deck) -> list[tuple[int, set[int]]]:
                 first_boundary = False
                 for row in block.rows:
                     nodes = model.target("nset", row[0], block.line, block=block)
-                    # CalculiX 2.22 User's Manual, section 7.4: numeric DOFs.
-                    first = int(row[1])
-                    last = int(row[2]) if len(row) > 2 and row[2] else first
+                    # CalculiX 2.22 User's Manual, sections 7.4 and 10.1.2:
+                    # structural DOFs are numeric; delete blanks before parsing.
+                    first = int(canonical_token(row[1]))
+                    last = int(canonical_token(row[2])) if len(row) > 2 and row[2] else first
                     if not 1 <= first <= last <= 6:
                         raise ValueError("Invalid structural degree of freedom")
                     if len(row) > 3 and row[3]:

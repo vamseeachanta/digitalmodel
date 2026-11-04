@@ -94,16 +94,16 @@ _KEYWORD_NAMES = {
 
 
 def number(value: str) -> float:
-    """Accept solver exponent notation and reject nonfinite numeric data."""
-    result = float(value.upper().replace("D", "E"))
+    """Delete insignificant blanks, accept exponents and reject nonfinite data."""
+    result = float(canonical_token(value).replace("D", "E"))
     if not math.isfinite(result):
         raise ValueError("Nonfinite numeric data")
     return result
 
 
 def positive_id(value: str) -> int:
-    """Require positive integer entity identifiers."""
-    result = int(value)
+    """Require positive integer entity identifiers after deleting blanks."""
+    result = int(canonical_token(value))
     if result <= 0:
         raise ValueError("Entity identifiers must be positive")
     return result

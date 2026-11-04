@@ -75,6 +75,96 @@ def test_keyword_and_parameter_blanks_preserve_supported_mesh(deck, capsys, spac
 
 
 @pytest.mark.parametrize("spacing", [" ", "\t"])
+@pytest.mark.parametrize("source,replacement", [
+    ("1, 0, 0, 0", "01, 0, 0, 0"),
+    ("2, 1, 0, 0", "2, 1.0, 0, 0"),
+    ("2, 1, 0, 0", "2, -1.0, 0, 0"),
+    ("2, 1, 0, 0", "2, +1.0d+0, 0, 0"),
+    ("1, 1, 2, 3, 4", "01, 1, 2, 3, 4"),
+    ("1, 1, 2, 3, 4", "1, 01, 2, 3, 4"),
+    ("1, 2, 3\n*MATERIAL", "01, 2, 3\n*MATERIAL"),
+    ("FIXED, 1, 3", "01, 1, 3"),
+    ("FIXED, 1, 3", "FIXED, 01, 3"),
+    ("FIXED, 1, 3", "FIXED, 1, 03"),
+    ("FIXED, 1, 3", "FIXED, 1, 3, -0.0d+0"),
+    ("1, 2, 3\n*MATERIAL", "01, 03, 01\n*MATERIAL"),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_numeric_blanks_match_control_evidence(deck, capsys, spacing,
+                                              source, replacement, interface):
+    # CalculiX 2.22 manual, sections 7 and 10.1.2: delete blanks before
+    # interpreting numbers, including integer IDs/DOFs and signed exponents.
+    text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    if replacement == "01, 03, 01\n*MATERIAL":
+        text = text.replace("*NSET, NSET=FIXED", "*NSET, NSET=FIXED, GENERATE")
+    control = text.replace(source, replacement)
+    assert control != text
+    # Only the data record changes; the following keyword stays unchanged.
+    record, separator, tail = replacement.partition("\n")
+    spaced = ",".join(spacing.join(field.strip()) for field in record.split(","))
+    variant = text.replace(source, spaced + separator + tail)
+    expected = json.loads(json.dumps(check_deck(deck(text=control)).to_dict()))
+    assert expected["status"] == "PASS"
+    path = deck(text=variant)
+    if interface == "api":
+        evidence = json.loads(json.dumps(check_deck(path).to_dict()))
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence == expected
+    parsed = Deck(read_blocks(path))
+    parsed.parse()
+    assert not parsed.findings
+    assert parsed.elements == {1: ("C3D4", (1, 2, 3, 4))}
+    assert parsed.nodes[1] == (0.0, 0.0, 0.0)
+    assert abs(parsed.nodes[2][0]) == 1.0
+
+
+@pytest.mark.parametrize("spacing", [" ", "\t"])
+@pytest.mark.parametrize("source,replacement", [
+    ("1, 0, 0, 0", "00, 0, 0, 0"),
+    ("1, 1, 2, 3, 4", "1, -01, 2, 3, 4"),
+    ("2, 1, 0, 0", "2, NaN, 0, 0"),
+    ("2, 1, 0, 0", "2, Inf, 0, 0"),
+    ("2, 1, 0, 0", "2, 1..0, 0, 0"),
+    ("FIXED, 1, 3", "FIXED, 00, 3"),
+    ("FIXED, 1, 3", "FIXED, 1, 07"),
+])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_numeric_blanks_preserve_invalid_data(deck, capsys, spacing,
+                                             source, replacement, interface):
+    text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    control = text.replace(source, replacement)
+    expected = json.loads(json.dumps(check_deck(deck(text=control)).to_dict()))
+    assert expected["status"] == "FAIL"
+    assert "parse_error" in {finding["code"] for finding in expected["findings"]}
+    spaced = ",".join(spacing.join(field.strip()) for field in replacement.split(","))
+    path = deck(text=text.replace(source, spaced))
+    if interface == "api":
+        evidence = json.loads(json.dumps(check_deck(path).to_dict()))
+    else:
+        assert main([path.as_posix(), "--json"]) == 1
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence == expected
+
+
+@pytest.mark.parametrize("spacing", [" ", "\t"])
+@pytest.mark.parametrize("interface", ["api", "cli"])
+def test_numeric_blanks_in_include_preserve_filename(deck, tmp_path, capsys, spacing, interface):
+    text = (FIXTURES / "supported.inp").read_text(encoding="utf-8")
+    expected = check_deck(deck(text=text)).to_dict()
+    record = "2," + spacing.join("1.0") + ",0,0\n"
+    (tmp_path / "Part 0 1.inp").write_text(record, encoding="utf-8", newline="\n")
+    path = deck(text=text.replace("2, 1, 0, 0\n", '*INCLUDE,INPUT="Part 0 1.inp"\n'))
+    if interface == "api":
+        evidence = check_deck(path).to_dict()
+    else:
+        assert main([path.as_posix(), "--json"]) == 0
+        evidence = json.loads(capsys.readouterr().out)
+    assert evidence == expected
+
+
+@pytest.mark.parametrize("spacing", [" ", "\t"])
 @pytest.mark.parametrize("location", ["definition", "reference", "both"])
 @pytest.mark.parametrize("namespace,symbol", [
     ("nset", "FIXED"), ("elset", "BODY"), ("material", "STEEL"),
