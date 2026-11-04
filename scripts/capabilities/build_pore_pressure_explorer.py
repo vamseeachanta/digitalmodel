@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Build the drilling pore-pressure / mud-weight explorer.
 
 Runs the Eaton pore-pressure predictor over a synthetic normal-compaction
@@ -33,7 +36,7 @@ _OUT_DIR = _REPO / "docs" / "api" / "structural"
 _PN = 8.6                         # normal pore-pressure gradient, ppg
 _ONSET_FT = 8000.0                # overpressure onset depth
 _DEPTH = [float(5000 + 500 * i) for i in range(0, 19)]   # 5000 .. 14000 ft
-_KICK_MARGIN = 0.3                # ppg trip/kick margin on min mud weight
+_KICK_MARGIN = 0.3                # assumed ppg margin on illustrative mud indicator
 
 
 def _overburden(z: float) -> float:
@@ -78,6 +81,17 @@ def build_study() -> dict:
             "bowers_status": "NOT_EVALUATED",
             "bowers_reason": "No Bowers calibration is supplied for the synthetic trend.",
             "data_basis": "assumed, based on previous experience",
+            "drilling_window_status": "NOT_EVALUATED",
+            "drilling_window_reason": (
+                "No fracture gradient is supplied or calculated; "
+                "no window ceiling is established."
+            ),
+            "not_covered": [
+                "collapse (shear failure)",
+                "weak bedding planes",
+                "natural fractures",
+                "chemical or time-dependent effects",
+            ],
         },
         "series": pts,
     }
@@ -91,7 +105,7 @@ _HTML = """<!DOCTYPE html>
 <title>Pore-pressure / mud-weight explorer — digitalmodel</title>
 <link rel="stylesheet" href="../_assets/brand.css">
 <style>
- :root{--soft:#f4f8fc;--ok:#1f9d57;--bad:#c0392b;--mw:#7c3aed}
+ :root{--soft:#f4f8fc;--bad:#c0392b;--mw:#7c3aed}
  *{box-sizing:border-box;margin:0;padding:0}
  body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
       color:var(--ink);line-height:1.5;padding:26px 20px 60px;max-width:1080px;margin:0 auto}
@@ -111,14 +125,14 @@ _HTML = """<!DOCTYPE html>
  .read{font-size:13px;color:var(--muted)}
  .read b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:20px;font-weight:700;color:var(--navy)}
  .scale{position:relative;height:40px;margin:14px 0 4px;border-radius:9px;overflow:hidden;
-        background:linear-gradient(90deg,#e6f5ec,#e6f5ec);border:1px solid var(--line)}
- .win{position:absolute;top:0;bottom:0;background:rgba(31,157,87,.16);border-left:2px solid var(--ok);border-right:2px solid var(--bad)}
+        background:var(--soft);border:1px solid var(--line)}
  .tick{position:absolute;top:-3px;bottom:-3px;width:2px}
  .tick.pp{background:var(--bad)} .tick.mw{background:var(--mw)} .tick.sv{background:var(--navy)}
  .tick span{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;white-space:nowrap}
  .scalelab{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding:0 2px}
  .cap{font-size:12px;color:var(--muted);margin-top:10px}
  .cap i{font-style:normal;font-weight:700}
+ .cap ul{padding-left:20px}
  .foot{color:var(--muted);font-size:12.5px;margin-top:14px}.foot a{color:var(--teal)}
 </style></head><body>
 <h1>Pore pressure &amp; mud weight &mdash; drilling explorer</h1>
@@ -141,12 +155,21 @@ Every evaluated point uses <code>eaton_pore_pressure</code>.</p>
     <div class="read">Mud-weight indicator<b id="rM" style="color:var(--mw)">&mdash;</b></div>
     <div class="read">Overburden<b id="rS">&mdash;</b></div>
   </div>
-  <div class="scale"><div class="win" id="win"></div>
+  <div class="scale">
     <div class="tick pp" id="tpp"><span style="color:var(--bad)">pore</span></div>
     <div class="tick mw" id="tmw"><span style="color:var(--mw)">mud</span></div>
     <div class="tick sv" id="tsv"><span style="color:var(--navy)">S_v</span></div></div>
   <div class="scalelab"><span>8 ppg</span><span>12</span><span>16</span><span>20 ppg</span></div>
-  <div class="cap">Shaded: illustrative band between the pore estimate plus the assumed 0.3 ppg margin and overburden; no fracture or stability criterion is evaluated.</div>
+  <div class="cap">
+    <p>Drilling window: <code>NOT_EVALUATED</code>. No fracture gradient is supplied or calculated;
+    no window ceiling is established. Overburden is a vertical-stress reference, not a loss bound.</p>
+    <p>Mud-weight indicator: pore estimate plus the assumed 0.3 ppg margin; no mud-weight recommendation.</p>
+    <p>Not covered:</p>
+    <ul><li>collapse (shear failure)</li><li>weak bedding planes</li>
+    <li>natural fractures</li><li>chemical or time-dependent effects</li></ul>
+    <p>The separate <a href="https://github.com/vamseeachanta/digitalmodel/blob/main/examples/workflows/wellbore-stability/README.md">wellbore stability screen</a>
+    carries <code>NOT_VALIDATED</code> and its own exclusions.</p>
+  </div>
 </div>
 
 <p class="foot">Built by <code>scripts/capabilities/build_pore_pressure_explorer.py</code> from
@@ -172,8 +195,6 @@ function render(){
   document.getElementById('rB').title = M.bowers_reason;
   document.getElementById('rM').textContent = p.mw.toFixed(2)+' ppg';
   document.getElementById('rS').textContent = p.sv.toFixed(2)+' ppg';
-  const win = document.getElementById('win');
-  win.style.left = pos(p.mw)+'%'; win.style.width = Math.max(0, pos(p.sv)-pos(p.mw))+'%';
   document.getElementById('tpp').style.left = pos(p.pp)+'%';
   document.getElementById('tmw').style.left = pos(p.mw)+'%';
   document.getElementById('tsv').style.left = pos(p.sv)+'%';
