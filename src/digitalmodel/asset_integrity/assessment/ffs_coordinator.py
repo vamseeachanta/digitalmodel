@@ -240,6 +240,7 @@ def assess_component(
         design_pressure_psi=component.design_pressure_psi,
         applicability=applicability,
     )
+    applicability = Applicability(**decision["applicability"])
     # GML's 1.0 placeholder is unused by that method, not a calculated factor.
     folias = l2.get("folias_factor", float("nan")) if atype != "GML" else float("nan")
     decision["folias_factor"] = folias if math.isfinite(folias) else None

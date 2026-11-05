@@ -61,7 +61,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Mapping, Optional, Union
 
-from digitalmodel.asset_integrity.applicability import Applicability
+from digitalmodel.asset_integrity.applicability import Applicability, merge
 from digitalmodel.units import Q_, ureg
 
 Number = Union[int, float]
@@ -516,6 +516,10 @@ class FFSDecision:
             corrosion_rate_in_per_yr: Future corrosion rate (inches/year).
                 None means unknown. Use an explicit 0.0 assumption for no
                 further degradation. Wall at/below t_min retains zero life.
+                Non-finite walls or a supplied rate that is non-finite or
+                negative raise an applicability flag and ESCALATE with
+                unevaluated life; finite walls are compared independently.
+                Invalid supplied rates escalate even at or below t_min.
             design_pressure_psi: Design pressure / MAWP.  When supplied, the
                 RSF-based re-rated pressure MAWP_r = MAWP * min(1, RSF/RSFa)
                 (API 579-1 §2.4.2.2) is computed and reported on every
@@ -532,17 +536,40 @@ class FFSDecision:
                 action (str): Same as ``verdict`` for the pressure class.
                 asset_class (str): ``"pressure"``.
                 remaining_life_yr (float): Estimated remaining service life.
-                    ``float('inf')`` when corrosion_rate_in_per_yr == 0.
+                    ``float('inf')`` for valid walls with an explicit zero
+                    rate above t_min; NaN for invalid inputs or an unknown
+                    rate above t_min.
                 governing_criterion (str): Human-readable description of the
                     governing assessment criterion.
                 rsf / margin (float): Echoed input RSF.
                 rsf_a / margin_allowable (float): Echoed input RSFa.
                 rerated_mawp_psi (float | None): MAWP_r when
-                    design_pressure_psi was supplied, else None.
+                    design_pressure_psi was supplied, else None; also None
+                    whenever the decision is ESCALATE.
                 applicability (dict): ``{ok, flags, notes}`` echo of the
                     validity record (all-clear when none was supplied).
         """
-        if corrosion_rate_in_per_yr is None:
+        finite_walls = math.isfinite(t_mm_in) and math.isfinite(t_min_in)
+        invalid_inputs = []
+        if not finite_walls:
+            invalid_inputs.append(Applicability(
+                ok=False, flags=["ffs.wall_not_evaluated"],
+                notes=["Measured and required wall thickness must both be finite; "
+                       "remaining life and pressure rating are not evaluated"],
+            ))
+        if corrosion_rate_in_per_yr is not None and (
+            not math.isfinite(corrosion_rate_in_per_yr) or corrosion_rate_in_per_yr < 0
+        ):
+            invalid_inputs.append(Applicability(
+                ok=False, flags=["ffs.corrosion_rate_not_evaluated"],
+                notes=["Supplied corrosion rate must be finite and non-negative "
+                       "(>= 0.000 in/year); remaining life and pressure rating "
+                       "are not evaluated"],
+            ))
+        if invalid_inputs:
+            life = float("nan")
+            applicability = merge(applicability, *invalid_inputs)
+        elif corrosion_rate_in_per_yr is None:
             life = 0.0 if t_mm_in <= t_min_in else float("nan")
         else:
             life = remaining_life(
@@ -562,10 +589,21 @@ class FFSDecision:
         out["verdict"] = d.action
         out["corrosion_rate_in_per_yr"] = corrosion_rate_in_per_yr
         out["level2_verdict"] = level2_verdict
-        comparator = ">=" if t_mm_in >= t_min_in else "<"
+        if finite_walls:
+            comparator = ">=" if t_mm_in >= t_min_in else "<"
+            wall_comparison = (
+                f"Measured wall t_mm={t_mm_in:.3f} in {comparator} "
+                f"t_min={t_min_in:.3f} in"
+            )
+        else:
+            measured = f"{t_mm_in:.3f} in" if math.isfinite(t_mm_in) else "Not evaluated"
+            required = f"{t_min_in:.3f} in" if math.isfinite(t_min_in) else "Not evaluated"
+            wall_comparison = (
+                "Measured wall comparison: Not evaluated (both operands must be finite); "
+                f"t_mm={measured}; t_min={required}"
+            )
         out["governing_criterion"] += (
-            f" Measured wall t_mm={t_mm_in:.3f} in {comparator} "
-            f"t_min={t_min_in:.3f} in; Level 1={level1_verdict}, "
+            f" {wall_comparison}; Level 1={level1_verdict}, "
             f"Level 2={level2_verdict}."
         )
         return out

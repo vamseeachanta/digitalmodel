@@ -812,8 +812,8 @@
   "builder_sha256_lf": "194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578",
   "calculation_sources_sha256_lf": {
     "src/digitalmodel/asset_integrity/applicability.py": "be4a47ed436f8f3d8072c2112792e75ad61c5c281fae59fc03af244fda9694b6",
-    "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "92180ce2f39ac63e31d544ee738f51f5f83e1c3b049be8615839259483b7da52",
-    "src/digitalmodel/asset_integrity/assessment/ffs_decision.py": "697ae1dad9c960b7025bb25f1d859a7c4ff2d9b6fae743344d118a276416c87d",
+    "src/digitalmodel/asset_integrity/assessment/ffs_coordinator.py": "a8490e56ecc5f465e768bb52df47848932b31974109fdc49bcb15314c96df820",
+    "src/digitalmodel/asset_integrity/assessment/ffs_decision.py": "6efb52a9360f18cd8ca5d79837ff654ad07975c517609bcc16cc009d6dde9e89",
     "src/digitalmodel/asset_integrity/assessment/ffs_router.py": "68dc2e60c87e65799956e0c0fbcadcbfa115ad948e3493222d99d611972216b9",
     "src/digitalmodel/asset_integrity/assessment/grid_parser.py": "ef3c73a838a00e08980f67ca34d94791347efd9abf7ddb32f9481751bfc9f969",
     "src/digitalmodel/asset_integrity/assessment/level1_screener.py": "84fb0b073f02ee9a0f1be532f977c4054dfb8ab44e6a699b3addd0de774d1d62",
