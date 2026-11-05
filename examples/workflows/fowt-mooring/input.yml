@@ -17,7 +17,7 @@ fowt_mooring:
     suspended_length: 320.0
     hang_off_elevation: 90.0
     nominal_horizontal_span: 260.0
-    # DNV-RP-0360 design-factored cable minimum bend radius (cable-specific input).
+    # Cable-specific minimum bend radius supplied by caller; no standard factor assumed.
     mbr_limit_m: 4.5
     mooring_type: hybrid   # catenary | taut | hybrid (lazy-wave host)
     floater_type: semi     # spar | semi | tlp

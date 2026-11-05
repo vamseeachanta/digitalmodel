@@ -390,6 +390,22 @@
         "atlases/fowt_mooring/0af02c3aaf14/grid.parquet": "b20ceb918eeb62b2c75d78627ad8aa79bea644418e24711d0808e0b0bba5be78",
         "atlases/fowt_mooring/0af02c3aaf14/surrogate.json": "d1b38bd155ab6c059f3b0481fec2ee2cf20c01ce98b1b95d3043a298bdd841fc",
         "atlases/fowt_mooring/0af02c3aaf14/validation.json": "f36dc786baffe565fe045853545518bef66d6f04d02e3bdec020df61f5dbe37e"
+      },
+      "citation_correction": {
+        "recorded_standard": {
+          "id": "DNV-RP-0360",
+          "edition": "2016-03",
+          "amended": "2021-10",
+          "scope": "static service in shallow water",
+          "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-0360-subsea-power-cables-in-shallow-water/"
+        },
+        "wind_cable_reference": {
+          "id": "DNV-ST-0359",
+          "edition": "2025-12"
+        },
+        "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-st-0359-subsea-power-cables-for-wind-power-plants/",
+        "verified_on": "2026-11-05",
+        "note": "Corrected metadata only; historical basis and artifact bytes retained. Dynamic applicability and MBR criteria are not established by the public scope page."
       }
     },
     {
@@ -452,6 +468,22 @@
         "atlases/fowt_mooring/15372d97a52f/grid.parquet": "b076b56a79a6aad44d4d994705694a2314d6344e98011847ba40d0f4e53b48b7",
         "atlases/fowt_mooring/15372d97a52f/surrogate.json": "5e5ebf9dd35de03e96babed2d272aee48df09668ccf44afd19250c9eb8d40752",
         "atlases/fowt_mooring/15372d97a52f/validation.json": "ef4cbead3e9ee3f8faafa4f93da4476ec9439ccce20d396b060d939d89563459"
+      },
+      "citation_correction": {
+        "recorded_standard": {
+          "id": "DNV-RP-0360",
+          "edition": "2016-03",
+          "amended": "2021-10",
+          "scope": "static service in shallow water",
+          "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-0360-subsea-power-cables-in-shallow-water/"
+        },
+        "wind_cable_reference": {
+          "id": "DNV-ST-0359",
+          "edition": "2025-12"
+        },
+        "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-st-0359-subsea-power-cables-for-wind-power-plants/",
+        "verified_on": "2026-11-05",
+        "note": "Corrected metadata only; historical basis and artifact bytes retained. Dynamic applicability and MBR criteria are not established by the public scope page."
       }
     },
     {
@@ -514,6 +546,22 @@
         "atlases/fowt_mooring/7ac02c8bc7f0/grid.parquet": "b076b56a79a6aad44d4d994705694a2314d6344e98011847ba40d0f4e53b48b7",
         "atlases/fowt_mooring/7ac02c8bc7f0/surrogate.json": "888680aea1ac422ff58d46f89c9d1b988f2a328ff80a5cdfdcb799c4482b233b",
         "atlases/fowt_mooring/7ac02c8bc7f0/validation.json": "ef4cbead3e9ee3f8faafa4f93da4476ec9439ccce20d396b060d939d89563459"
+      },
+      "citation_correction": {
+        "recorded_standard": {
+          "id": "DNV-RP-0360",
+          "edition": "2016-03",
+          "amended": "2021-10",
+          "scope": "static service in shallow water",
+          "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-0360-subsea-power-cables-in-shallow-water/"
+        },
+        "wind_cable_reference": {
+          "id": "DNV-ST-0359",
+          "edition": "2025-12"
+        },
+        "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-st-0359-subsea-power-cables-for-wind-power-plants/",
+        "verified_on": "2026-11-05",
+        "note": "Corrected metadata only; historical basis and artifact bytes retained. Dynamic applicability and MBR criteria are not established by the public scope page."
       }
     },
     {
@@ -577,7 +625,23 @@
         "atlases/fowt_mooring/b4046a89d219/surrogate.json": "d2d4493eb5e5c88d1ba39c3b0174dee08f1a0bb40d8040a248ec4222752f20d4",
         "atlases/fowt_mooring/b4046a89d219/validation.json": "f36dc786baffe565fe045853545518bef66d6f04d02e3bdec020df61f5dbe37e"
       },
-      "reason": "Stored fingerprint does not match retained publication basis."
+      "reason": "Stored fingerprint does not match retained publication basis.",
+      "citation_correction": {
+        "recorded_standard": {
+          "id": "DNV-RP-0360",
+          "edition": "2016-03",
+          "amended": "2021-10",
+          "scope": "static service in shallow water",
+          "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-0360-subsea-power-cables-in-shallow-water/"
+        },
+        "wind_cable_reference": {
+          "id": "DNV-ST-0359",
+          "edition": "2025-12"
+        },
+        "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-st-0359-subsea-power-cables-for-wind-power-plants/",
+        "verified_on": "2026-11-05",
+        "note": "Corrected metadata only; historical basis and artifact bytes retained. Dynamic applicability and MBR criteria are not established by the public scope page."
+      }
     },
     {
       "manifest": "atlases/fpso_mooring_full/879f4f041243/manifest.yaml",
@@ -3042,6 +3106,146 @@
         "atlases/riser_fatigue/2629bee51367/manifest.yaml": "5daf40da48f021bda1b82450bc2a537a2224aeade94afcdda70171801bd9e952",
         "atlases/riser_fatigue/2629bee51367/surrogate.json": "9a04d391040d904faa8f54a23d8dbc67c9aab4cf425195f110529f3f5fd714ba",
         "atlases/riser_fatigue/2629bee51367/validation.json": "16d68d0a5a50b7aede0a00a63148ecb34f646c40c91c12e8bfd8caefcbedb478"
+      }
+    },
+    {
+      "manifest": "atlases/fowt_mooring/1f1871cd817d/manifest.yaml",
+      "workflow_id": "fowt-mooring",
+      "recorded_code_version": "a1fed2cf0",
+      "source_revision": "1d9d0018aaf61db4cbba3d6c4d5864a34adbf4b0",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "1f1871cd817dbe06cc657a6a754f0e8b0433d7fcd68406de9ce158482afde05e",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "utilization_threshold",
+          "response": "mbr_utilisation",
+          "axes": [
+            {
+              "name": "watch_circle_radius",
+              "scale": "linear",
+              "grid": [
+                5,
+                10,
+                15,
+                20,
+                25,
+                30
+              ]
+            },
+            {
+              "name": "mbr_limit_m",
+              "scale": "linear",
+              "grid": [
+                4.0,
+                5.0,
+                6.0
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-RP-0360",
+            "edition": "2021-09"
+          }
+        ],
+        "input": "examples/workflows/fowt-mooring/input.yml",
+        "response_sources": [
+          "src/digitalmodel/orcaflex/mooring_design_fowt.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "785eb1d9d4e43b565f474025af4958e0803554c86ef5671f4170b204e3215272",
+        "src/digitalmodel/parametric/refresh.py": "33a24714821e9c0ad3f7d90780f9987591665dc5a55f211140b434ee397562cc",
+        "src/digitalmodel/parametric/generate.py": "7d957b173df23131682559714a2ab12b0f6670b97ef11cbbaebcaa2c8e1f2e24",
+        "examples/workflows/fowt-mooring/input.yml": "639a20abdd9024f1ff44cef4aa5257763c68eb2ddb9f5f24447c2b0393f8e115",
+        "src/digitalmodel/orcaflex/mooring_design_fowt.py": "7f21e909aaafe8e93080c7d4d8ecc65ed1cef684057fd43c1e73ae4c2072d125"
+      },
+      "artifacts": {
+        "atlases/fowt_mooring/1f1871cd817d/manifest.yaml": "566f30d25f1f4e1618e95e8f389478642fb87a7e5b324e2b65dfcb7c7c57150a",
+        "atlases/fowt_mooring/1f1871cd817d/grid.parquet": "0ceeab95f099a65e63d5b333f6e37bb2a934fce806586a96066ff0d281562076",
+        "atlases/fowt_mooring/1f1871cd817d/surrogate.json": "7d2a8cbe0667ec21b8dbf2697c974f8431c883063bef2b0e1d19b5ace98a11a5",
+        "atlases/fowt_mooring/1f1871cd817d/validation.json": "f36dc786baffe565fe045853545518bef66d6f04d02e3bdec020df61f5dbe37e"
+      },
+      "citation_correction": {
+        "recorded_standard": {
+          "id": "DNV-RP-0360",
+          "edition": "2016-03",
+          "amended": "2021-10",
+          "scope": "static service in shallow water",
+          "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-rp-0360-subsea-power-cables-in-shallow-water/"
+        },
+        "wind_cable_reference": {
+          "id": "DNV-ST-0359",
+          "edition": "2025-12"
+        },
+        "public_url": "https://www.dnv.com/energy/standards-guidelines/dnv-st-0359-subsea-power-cables-for-wind-power-plants/",
+        "verified_on": "2026-11-05",
+        "note": "Corrected metadata only; historical basis and artifact bytes retained. Dynamic applicability and MBR criteria are not established by the public scope page."
+      }
+    },
+    {
+      "manifest": "atlases/fowt_mooring/80a7a8947588/manifest.yaml",
+      "workflow_id": "fowt-mooring",
+      "recorded_code_version": "1d9d0018a",
+      "source_publication": "first-matching-artifact-publication",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "80a7a894758884146c3dc8beab1052d89735b1f0f2ec0387be2497f1a8352bdd",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "utilization_threshold",
+          "response": "mbr_utilisation",
+          "axes": [
+            {
+              "name": "watch_circle_radius",
+              "scale": "linear",
+              "grid": [
+                5,
+                10,
+                15,
+                20,
+                25,
+                30
+              ]
+            },
+            {
+              "name": "mbr_limit_m",
+              "scale": "linear",
+              "grid": [
+                4.0,
+                5.0,
+                6.0
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-ST-0359",
+            "edition": "2025-12"
+          }
+        ],
+        "input": "examples/workflows/fowt-mooring/input.yml",
+        "response_sources": [
+          "src/digitalmodel/orcaflex/mooring_design_fowt.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "785eb1d9d4e43b565f474025af4958e0803554c86ef5671f4170b204e3215272",
+        "src/digitalmodel/parametric/refresh.py": "0e6b1b25b1ec9cfe5cea129e69f1c603d004c43d796987d20b9e5eb6d49f4d44",
+        "src/digitalmodel/parametric/generate.py": "7d957b173df23131682559714a2ab12b0f6670b97ef11cbbaebcaa2c8e1f2e24",
+        "examples/workflows/fowt-mooring/input.yml": "474c9c55cc30fe40581bdebe81ef90f7eb607515c0a2bb422a686588f1834d14",
+        "src/digitalmodel/orcaflex/mooring_design_fowt.py": "aee381ec540759d959b02997594eeb9d2283a3984b049d2cbdd1ef5078b2896f"
+      },
+      "artifacts": {
+        "atlases/fowt_mooring/80a7a8947588/manifest.yaml": "2c5afc50cd2d3e766f33baf6ff6c744269f09c58f71523fc1a22731bef443c7a",
+        "atlases/fowt_mooring/80a7a8947588/grid.parquet": "b20ceb918eeb62b2c75d78627ad8aa79bea644418e24711d0808e0b0bba5be78",
+        "atlases/fowt_mooring/80a7a8947588/surrogate.json": "348541e2640790aa172726798c1845e206adf9ae7e2a0524e4deb7ad795b8476",
+        "atlases/fowt_mooring/80a7a8947588/validation.json": "f36dc786baffe565fe045853545518bef66d6f04d02e3bdec020df61f5dbe37e"
       }
     }
   ]

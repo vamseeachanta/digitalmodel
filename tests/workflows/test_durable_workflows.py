@@ -60,12 +60,14 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
 
     output_root = REPO_ROOT
     input_path = REPO_ROOT / workflow["input"]
-    if workflow["id"] == "hull-wastage-screen":
+    if workflow["id"] in {"hull-wastage-screen", "fowt-mooring"}:
         # Each run retains its outputs, so execute the example in a fresh tree.
         output_root = tmp_path
         input_path = output_root / workflow["input"]
         input_path.parent.mkdir(parents=True)
         input_path.write_bytes((REPO_ROOT / workflow["input"]).read_bytes())
+        if workflow["id"] == "fowt-mooring":
+            monkeypatch.chdir(output_root)
     if workflow["id"] == "fowt-mooring":
         (tmp_path / "wikis").mkdir()
         monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
@@ -76,20 +78,20 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
                 handler.close()
         with pytest.raises(CitationResolutionError) as exc_info:
             engine(inputfile=str(input_path))
-        assert exc_info.value.code_id == "DNV-RP-0360"
+        assert exc_info.value.code_id == "DNV-ST-0359"
         assert exc_info.value.reason == "page_missing"
 
-        page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+        page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-st-0359.md"
         page.parent.mkdir(parents=True)
         page.write_text(
-            "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+            "---\ncode_id: DNV-ST-0359\npublisher: DNV\nrevision: 2025-12\n---\n",
             encoding="utf-8",
             newline="\n",
         )
         cfg = engine(inputfile=str(input_path))
         citations = cfg["fowt_mooring"]["result"]["citations"]
         assert len(citations) == 1
-        assert citations[0]["code_id"] == "DNV-RP-0360"
+        assert citations[0]["code_id"] == "DNV-ST-0359"
     else:
         cfg = engine(inputfile=str(input_path))
 
