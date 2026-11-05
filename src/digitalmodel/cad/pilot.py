@@ -43,6 +43,11 @@ def _write_svg(geometry: CadGeometry, destination: Path) -> None:
         else:
             model.add_3dface(points)
     backend = svg.SVGBackend()
+    # Chosen preview styling: mode 3 draws an X so isolated points are visible;
+    # positive point size is in drawing units, hence 0.01 m in this metre model.
+    # The 0.01 m marker is a presentation choice, not a geometry tolerance.
+    # ezdxf POINT styling and virtual_entities() units:
+    # https://ezdxf.readthedocs.io/en/stable/dxfentities/point.html
     config = Configuration(
         background_policy=BackgroundPolicy.WHITE,
         color_policy=ColorPolicy.BLACK,
@@ -50,6 +55,10 @@ def _write_svg(geometry: CadGeometry, destination: Path) -> None:
         pdsize=0.01,  # Display symbol only; JSON retains point coordinates.
     )
     Frontend(RenderContext(doc), backend, config=config).draw_layout(model)
+    # Page defaults to millimetres; a 200 by 200 mm square is chosen to bound
+    # the preview equally in both axes. Page size sets no acceptance criterion
+    # and does not change JSON coordinates. Source: ezdxf 1.4.5,
+    # addons/drawing/layout.py, Page.units default (Units.mm).
     destination.write_text(backend.get_string(layout.Page(200, 200)), encoding="utf-8")
 
 
