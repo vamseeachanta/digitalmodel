@@ -5,7 +5,7 @@
 | Module / repository | `marine_ops` / `digitalmodel` |
 | Package path | `src/digitalmodel/marine_ops/` |
 | Scope | Direct Python files; sub-packages retain separate qualification |
-| Pack revision / status | 3 / DRAFT — unverified screening inputs |
+| Pack revision / status | 4 / DRAFT — unverified screening inputs |
 | Current code reference | Functions in the same Git revision as this pack |
 | Prior discovery code pin | `7aad603be1c6136106dbb2381ce5096b050654f8` |
 | Prior implementation-map pin | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
@@ -27,6 +27,7 @@ table B6. Audit disposition: [2747](https://github.com/vamseeachanta/digitalmode
 | Revision | Date | What changed and why |
 |---|---|---|
 | 3 | 2026-10-19 | Define operation selection and reject repeated keys before calculation to prevent silent replacement; retain other qualification gaps. |
+| 4 | 2026-11-05 | Add a current direct-definition inventory and checked neutral documentation references while preserving historical discovery and unresolved provenance. |
 
 ## 2. Inputs and outputs
 
@@ -190,6 +191,13 @@ Required reviewer: engineering calculations family quality manager, on a provide
 UNVERIFIED: U4 — a deputy quality manager assignment and shared-log entry are not established in this repository; nomination and registration remain required, [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771).
 
 ## 9. Dependencies and other implementations
+
+The [current method inventory](method-inventory.md) enumerates all direct-package
+files and explicit definitions at its stated revision, classifies structural
+relations and resolves neutral documentation references. The tables below
+retain the original map revision and search evidence. They do not describe
+the complete current package. Missing registry families and the withheld
+source remain explicit open items in the supplement.
 
 ### Direct dependencies and scope boundary
 
@@ -503,7 +511,7 @@ Required accountable discipline: engineering calculations quality manager; maint
 |---|---|---|
 | U1 / S01–S16: input semantics and negative-path coverage | Units, numeric validity, coverage and evaluated status are addressed by revision 1. Revision 3 addresses operation selection (S10). Upstream conventions, empty plots, plot fallbacks and out-of-band response sensitivity remain open. `operation_envelope()`, `envelope_for_operations()` and `plot_envelopes()` remain screening APIs. | #2768 |
 | U2: standards provenance | The screening sidecar now exposes missing edition/clause/table qualification; standards provenance remains open. [src/digitalmodel/marine_ops/operation_envelope.py:L55-L112] [src/digitalmodel/hydrodynamics/wave_spectra.py:L46-L73] | [2769](https://github.com/vamseeachanta/digitalmodel/issues/2769) |
-| Method-map follow-up and public documentation locators | Additional method-family mapping and codenaming remain required; inventory alone is not qualification. [src/digitalmodel/marine_ops/operation_envelope.py:L145-L165] [src/digitalmodel/marine_ops/operation_envelope.py:L190-L280] | [2770](https://github.com/vamseeachanta/digitalmodel/issues/2770) |
+| Method-map follow-up and public documentation locators | [Current inventory and checked neutral references](method-inventory.md) classify direct definitions and envelope dependencies. Formal registry additions and withheld-source equivalence remain open; inventory is not qualification. | #2770 |
 | U3: frequency-dependent independent benchmark | The dedicated tests include synthetic constant gains and an analytical low-pass integral; an independent physical benchmark remains open. [tests/marine_ops/test_operation_envelope.py:L24-L56] [tests/marine_ops/test_operation_envelope.py:L73-L148] | [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771) |
 | U4: deputy and shared lessons-log registration | Required assignments remain unverified, as stated in section 8 | [2771](https://github.com/vamseeachanta/digitalmodel/issues/2771) |
 | QA appendix and input fingerprints | Output mapping has no input fingerprint, standard revision or signature. [src/digitalmodel/marine_ops/operation_envelope.py:L151-L165] | #1556 |
