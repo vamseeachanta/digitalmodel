@@ -454,11 +454,11 @@
       ]
     },
     {
-      "claim": "`report.py:612` (`render_html`): Any builder incompatibility silently selects fallback HTML; the exception handler is at L637-L640 [src/digitalmodel/subsea/catenary_riser/report.py:L675-L707]",
+      "claim": "`report.py` (`render_html`): Builder incompatibility selects explicitly marked fallback HTML [src/digitalmodel/subsea/catenary_riser/report.py:L708-L743]",
       "status": "TESTED",
       "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
       "tests": [
-        "test_report_evidence.py::test_incompatible_builder_fallback_is_visible"
+        "test_report_qualification.py::test_incompatible_builder_selects_fallback_in_written_output"
       ]
     },
     {
@@ -642,7 +642,7 @@
       ]
     },
     {
-      "claim": "`report.py:477` (`_status_span`) [src/digitalmodel/subsea/catenary_riser/report.py:L529-L536]",
+      "claim": "`report.py` (`_status_span`) [src/digitalmodel/subsea/catenary_riser/report.py:L542-L549]",
       "status": "TESTED",
       "reason": "The unknown-style branch explicitly returns the supplied status text without a styled span. No broader native or engineering qualification is inferred.",
       "tests": [

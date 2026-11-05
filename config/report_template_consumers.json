@@ -1,6 +1,6 @@
 {
   "template": "examples/demos/gtm/report_template.py",
-  "template_sha256": "e8b91e404c36479fe7af5974952304ba73616186128bca03879643e97a3517b0",
+  "template_sha256": "82ed9e39a00b597f0d695ec2895527e839dbf5ef53139f1c3d62ee354ca73605",
   "evidence_markers": [
     "--clr-primary:",
     ".report-header .case-badge",
