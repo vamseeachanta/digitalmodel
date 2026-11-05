@@ -12,6 +12,7 @@ import csv
 import hashlib
 import html
 import json
+import math
 import re
 from pathlib import Path
 
@@ -27,14 +28,66 @@ CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
            {"revision": "C", "date": "2026-10-26", "change":
             "Provenance now records the dedicated rebuild test and independent calculation fixture instead of unrelated workflow assertions; a manifest binds the delivered files to their exact bytes."},
            {"revision": "D", "date": "2026-10-31", "change":
-            "Sea-state result values in the calculation record are stored to 13 significant digits so the delivered bytes do not depend on last-bit floating-point differences between processors; displayed values are unchanged."}]
+            "Sea-state result values in the calculation record are stored to 13 significant digits so the delivered bytes do not depend on last-bit floating-point differences between processors; displayed values are unchanged."},
+           {"revision": "E", "date": "2026-11-04", "change":
+            "Complete ordered output, finite scalar values and screening arithmetic are checked against independent input snapshots before reporting; returned summaries are copied to preserve the comparison basis."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
            "src/digitalmodel/hydrodynamics/wave_spectra.py",
            "tests/hydrodynamics/test_seakeeping.py",
            "tests/reporting/test_vessel_seakeeping_module_report.py",
+           "tests/reporting/test_seakeeping_report_contract.py",
            "tests/reporting/fixtures/vessel_seakeeping_hand_calculation.json"]
+
+
+def validate_output(inputs, rows, summaries, status):
+    """Require the complete ordered input basis and consistent screening evidence.
+
+    This local contract checks scalar records and screening arithmetic only;
+    it does not establish spectral accuracy or physical qualification.
+    """
+    dofs, states = inputs["dofs"], inputs["sea_states"]
+    row_keys = {"dof", "unit", "hs", "tp", "probability", "criterion",
+                "significant_amplitude", "operable"}
+    summary_keys = {"dof", "unit", "criterion", "operability_pct",
+                    "required_operability_pct", "passes"}
+    if (len(rows) != len(dofs) * len(states) or not isinstance(summaries, list)
+            or len(summaries) != len(dofs)):
+        raise ValueError("Report output has incomplete or surplus records")
+
+    def finite(value):
+        return (not isinstance(value, bool) and isinstance(value, (int, float))
+                and math.isfinite(value))
+
+    for index, (dof, summary) in enumerate(zip(dofs, summaries, strict=True)):
+        if (not isinstance(summary, dict) or set(summary) != summary_keys
+                or any(not finite(summary[key]) for key in (
+                    "criterion", "operability_pct", "required_operability_pct"))):
+            raise ValueError("Report output has invalid summary scalars or shape")
+        subset = rows[index * len(states):(index + 1) * len(states)]
+        for state, row in zip(states, subset, strict=True):
+            expected = {"dof": dof["name"], "unit": dof["unit"],
+                        "criterion": dof["criterion"], **state}
+            if (set(row) != row_keys or any(row[key] != value for key, value in expected.items())
+                    or any(not finite(row[key]) for key in (
+                        "hs", "tp", "probability", "criterion", "significant_amplitude"))
+                    or row["significant_amplitude"] < 0):
+                raise ValueError("Report output has invalid values, shape or coordinate order")
+            if row["operable"] is not (row["significant_amplitude"] <= dof["criterion"]):
+                raise ValueError("Report output has a stale sea-state verdict")
+        operability = 100 * sum(row["probability"] for row in subset if row["operable"]) / sum(
+            state["probability"] for state in states)
+        required = inputs["required_operability_pct"]
+        if (summary["dof"] != dof["name"] or summary["unit"] != dof["unit"]
+                or summary["criterion"] != dof["criterion"]
+                or summary["required_operability_pct"] != required
+                or not math.isclose(summary["operability_pct"], operability, rel_tol=0, abs_tol=1e-10)
+                or summary["passes"] is not (operability >= required)):
+            raise ValueError("Report output has a stale summary or changed labels")
+    expected_status = "pass" if all(row["passes"] for row in summaries) else "fail"
+    if status != expected_status:
+        raise ValueError("Report output has a stale overall verdict")
 
 
 def calculate(scratch):
@@ -51,16 +104,30 @@ def calculate(scratch):
     cfg["vessel_seakeeping"]["output_dir"] = str(scratch)
     result = router(cfg)["vessel_seakeeping"]
     with Path(result["results_csv"]).open() as stream:
-        raw = list(csv.DictReader(stream))
+        reader = csv.DictReader(stream)
+        columns = reader.fieldnames or []
+        if len(columns) != 8 or len(set(columns)) != 8:
+            raise ValueError("Report output has invalid CSV columns")
+        raw = list(reader)
     rows = []
     for row in raw:
+        try:
+            for key in ("hs", "tp", "probability", "significant_amplitude", "criterion"):
+                row[key] = float(row[key])
+        except (KeyError, TypeError, ValueError) as error:
+            raise ValueError("Report output has invalid scalar values") from error
+        if row.get("operable") not in ("True", "False"):
+            raise ValueError("Report output has an invalid sea-state verdict")
+        row["operable"] = row["operable"] == "True"
+        rows.append(row)
+    summaries = copy.deepcopy(result["dofs"])
+    validate_output(inputs, rows, summaries, result["screening_status"])
+    for row in rows:
         for key in ("hs", "tp", "probability", "significant_amplitude", "criterion"):
             # Thirteen significant digits keep the committed bytes independent of
             # last-bit summation differences between CPUs (relative error < 1e-12).
             row[key] = float(f"{float(row[key]):.13g}")
-        row["operable"] = row["operable"] == "True"
-        rows.append(row)
-    return {"inputs": inputs, "rows": rows, "summary": result["dofs"],
+    return {"inputs": inputs, "rows": rows, "summary": summaries,
             "status": result["screening_status"]}
 
 

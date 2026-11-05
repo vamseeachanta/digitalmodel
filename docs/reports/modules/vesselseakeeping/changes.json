@@ -18,5 +18,10 @@
     "revision": "D",
     "date": "2026-10-31",
     "change": "Sea-state result values in the calculation record are stored to 13 significant digits so the delivered bytes do not depend on last-bit floating-point differences between processors; displayed values are unchanged."
+  },
+  {
+    "revision": "E",
+    "date": "2026-11-04",
+    "change": "Complete ordered output, finite scalar values and screening arithmetic are checked against independent input snapshots before reporting; returned summaries are copied to preserve the comparison basis."
   }
 ]
