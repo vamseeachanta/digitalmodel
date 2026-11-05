@@ -30,7 +30,9 @@ CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
            {"revision": "D", "date": "2026-10-31", "change":
             "Sea-state result values in the calculation record are stored to 13 significant digits so the delivered bytes do not depend on last-bit floating-point differences between processors; displayed values are unchanged."},
            {"revision": "E", "date": "2026-11-04", "change":
-            "Complete ordered output, finite scalar values and screening arithmetic are checked against independent input snapshots before reporting; returned summaries are copied to preserve the comparison basis."}]
+            "Complete ordered output, finite scalar values and screening arithmetic are checked against independent input snapshots before reporting; returned summaries are copied to preserve the comparison basis."},
+           {"revision": "F", "date": "2026-11-05", "change":
+            "Occurrence weights are divided before conversion to percent so valid threshold equality is retained; independent literal and spectral boundary controls cover the correction."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
@@ -76,8 +78,8 @@ def validate_output(inputs, rows, summaries, status):
                 raise ValueError("Report output has invalid values, shape or coordinate order")
             if row["operable"] is not (row["significant_amplitude"] <= dof["criterion"]):
                 raise ValueError("Report output has a stale sea-state verdict")
-        operability = 100 * sum(row["probability"] for row in subset if row["operable"]) / sum(
-            state["probability"] for state in states)
+        operability = (sum(row["probability"] for row in subset if row["operable"]) / sum(
+            state["probability"] for state in states)) * 100.0
         required = inputs["required_operability_pct"]
         if (summary["dof"] != dof["name"] or summary["unit"] != dof["unit"]
                 or summary["criterion"] != dof["criterion"]

@@ -184,3 +184,55 @@ def test_valid_failed_screening_follows_current_evidence(control, tmp_path, monk
     assert "The requirement is not met." in build.summary_row(actual["summary"][0])
     assert "The criterion is met." in build.result_row(actual["rows"][1])
     assert "The requirement is met." in build.summary_row(actual["summary"][1])
+
+
+def test_literal_occurrence_threshold_equality(control):
+    """Accept an independently specified 95.0 percent boundary result."""
+    build, _, inputs = control
+    inputs["dofs"] = inputs["dofs"][:1]
+    inputs["sea_states"][0]["probability"] = 0.57
+    inputs["sea_states"][1]["probability"] = 0.03
+    dof = inputs["dofs"][0]
+    rows = [
+        {"dof": "heave", "unit": "m", **state, "criterion": 2.0,
+         "significant_amplitude": amplitude, "operable": operable}
+        for state, amplitude, operable in zip(
+            inputs["sea_states"], [1.0, 3.0], [True, False], strict=True,
+        )
+    ]
+    # The first state contributes 57 of 60 occurrence units: exactly 95 percent.
+    summaries = [{
+        "dof": dof["name"], "unit": dof["unit"], "criterion": 2.0,
+        "operability_pct": 95.0, "required_operability_pct": 95.0, "passes": True,
+    }]
+    build.validate_output(inputs, rows, summaries, "pass")
+
+
+def test_spectral_engine_occurrence_threshold_equality(control):
+    """Retain a passing threshold result produced by the actual spectral engine."""
+    import numpy as np
+
+    from digitalmodel.hydrodynamics.seakeeping import operability_analysis
+
+    build, _, inputs = control
+    inputs["dofs"] = [{"name": "heave", "unit": "m", "criterion": 0.75}]
+    inputs["sea_states"][0]["probability"] = 0.57
+    inputs["sea_states"][1]["probability"] = 0.03
+    result = operability_analysis(
+        np.linspace(0.1, 3.0, 100), np.ones(100),
+        inputs["sea_states"], {"heave": 0.75},
+    )
+    assert [row["operable"] for row in result["sea_state_results"]] == [True, False]
+    assert result["operability_pct"] == 95.0
+    rows = [
+        {"dof": "heave", "unit": "m", "criterion": 0.75,
+         **{key: value for key, value in row.items() if key != "m0"}}
+        for row in result["sea_state_results"]
+    ]
+    summaries = [{
+        "dof": "heave", "unit": "m", "criterion": 0.75,
+        "operability_pct": result["operability_pct"], "required_operability_pct": 95.0,
+        "passes": result["operability_pct"] >= 95.0,
+    }]
+    assert summaries[0]["passes"] is True
+    build.validate_output(inputs, rows, summaries, "pass")

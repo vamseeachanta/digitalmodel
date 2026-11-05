@@ -23,5 +23,10 @@
     "revision": "E",
     "date": "2026-11-04",
     "change": "Complete ordered output, finite scalar values and screening arithmetic are checked against independent input snapshots before reporting; returned summaries are copied to preserve the comparison basis."
+  },
+  {
+    "revision": "F",
+    "date": "2026-11-05",
+    "change": "Occurrence weights are divided before conversion to percent so valid threshold equality is retained; independent literal and spectral boundary controls cover the correction."
   }
 ]
