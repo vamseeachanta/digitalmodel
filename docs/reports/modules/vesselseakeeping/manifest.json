@@ -2,7 +2,7 @@
   "schema_version": 1,
   "digest_convention": "SHA-256 over exact committed UTF-8 bytes with LF line endings.",
   "generator": "scripts/reports/build_vessel_seakeeping_module_report.py",
-  "generator_sha256": "ff09cae5536c90a0335c9f2c7ffd374a07f42649189807c60447c1fba702d1d3",
+  "generator_sha256": "4b5873867d5fe89d430c50ce731bd06136759a40cd744d1fbdb615f0303c7484",
   "sources": {
     "examples/workflows/vessel-seakeeping/input.yml": "fc42a5a7c7d5601e4ca83d170ce34eeb43fe34fc84c773e018c417fc32e8debf",
     "examples/workflows/vessel-seakeeping/README.md": "5a2df6ab4e484fe8808b9c9f7ef936cb2d6815b5e3b5bd9b1314588e8b1f8e6d",
@@ -11,10 +11,11 @@
     "src/digitalmodel/hydrodynamics/wave_spectra.py": "5229f65a8d04826c0b5726e0113a8dc1bdfbd18396169748977a96a2300e0290",
     "tests/hydrodynamics/test_seakeeping.py": "fed19fb73145ecd7f6b2cf74756b85eda11f4da2d04150c70bb4311b37aa46d5",
     "tests/reporting/test_vessel_seakeeping_module_report.py": "cbd259f310d10727978d3ce9e97f760c8e52a8094996799104a9b52bf4026b64",
+    "tests/reporting/test_seakeeping_report_contract.py": "34fbf29106e66ecc6f6b7b91b077d48511b91314144d3bda0fd174b505081b8d",
     "tests/reporting/fixtures/vessel_seakeeping_hand_calculation.json": "df0ae3e3caa73fb9bb701a1cc6a3c8bb5b335c3a15abab223fd7633a3323808a"
   },
   "artifacts": {
-    "index.html": "273a3fa973ec81b7500bb0fe2e32838aa782f681f2cd29184453482e63e82733",
-    "changes.json": "a43151630cb797c91045ed893b55b117f2a00f8ce60dda54cd38f0ac0adfaa05"
+    "index.html": "e8aefee3e99d2acf096e9e282b211042a1dae379c3ad625694aed15da4cd01e9",
+    "changes.json": "c76813bcdc9afb942bc4758c15d883ee03e146bc698dbe53c4b02006f89c5285"
   }
 }
