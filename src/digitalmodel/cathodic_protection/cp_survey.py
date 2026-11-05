@@ -272,6 +272,7 @@ def analyze_cis_survey(
     *,
     reference_electrode: ReferenceElectrode | str = "CSE",
     zinc_potential_she_V: float | None = None,
+    temperature_c: float = 25.0,
 ) -> CISAnalysisResult:
     """Analyze close-interval survey data for protection compliance.
 
@@ -292,6 +293,9 @@ def analyze_cis_survey(
     reference_electrode : ReferenceElectrode or str
         Electrode used for all readings and returned statistics; default CSE.
         Offsets use the 25 deg C conditions in reference_electrodes.py.
+    temperature_c : float
+        Reference conversion temperature [deg C]. Only 25.0 is supported,
+        including when native criteria are supplied; no correction is inferred.
 
     Returns
     -------
@@ -299,7 +303,7 @@ def analyze_cis_survey(
         Survey analysis statistics and deficiency locations.
     """
     reference_electrode = ReferenceElectrode(reference_electrode)
-    options = {"zinc_potential_she_V": zinc_potential_she_V}
+    options = {"zinc_potential_she_V": zinc_potential_she_V, "temperature_c": temperature_c}
     protection_criterion_V = convert_potential(
         PROTECTION_POTENTIAL_CSE if protection_criterion_V is None else protection_criterion_V,
         "CSE" if protection_criterion_V is None else reference_electrode,

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Aboveground tank-bottom CP screening in the context of API RP 651.
 
 API RP 651, 5th edition (2024), scope:
@@ -223,6 +226,7 @@ def check_center_edge_polarization(
     criterion_V: float, reference_electrode: ReferenceElectrode | str = "CSE",
     criterion_reference: ReferenceElectrode | str = "CSE", ir_corrected: bool = True,
     zinc_potential_she_V: float | None = None,
+    temperature_c: float = 25.0,
 ) -> CenterEdgeResult:
     """Compare supplied IR-corrected potentials with an explicit criterion.
 
@@ -231,12 +235,15 @@ def check_center_edge_polarization(
     cited shared utility. No universal criterion or centre-to-edge allowable
     spread is supplied; the difference is descriptive only. Missing readings
     remain unassessed. Two locations cannot establish full bottom coverage.
+    The shared conversion supports only temperature_c=25.0; other conditions
+    require a separately qualified conversion and are rejected here.
     """
     if ir_corrected is not True:
         raise ValueError("IR-corrected (e.g. verified instant-off) potentials are required")
     criterion = convert_potential(
         criterion_V, criterion_reference, reference_electrode,
         zinc_potential_she_V=zinc_potential_she_V,
+        temperature_c=temperature_c,
     )
     for value in (center_potential_V, edge_potential_V):
         if value is not None and not math.isfinite(value):

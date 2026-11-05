@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Condition-specific offsets and preservation of physical criteria."""
 
 import itertools
@@ -118,3 +121,39 @@ def test_invalid_survey_and_report_values():
         with pytest.raises(ValueError):
             analyze_cis_survey([CISSurveyPoint(distance_m=0, on_potential_V=value)])
 
+
+@pytest.mark.parametrize("temperature_c", [5.0, 35.0, float("nan"), float("inf")])
+@pytest.mark.parametrize("native_criteria", [False, True])
+def test_survey_rejects_unsupported_conversion_temperature(temperature_c, native_criteria):
+    criteria = (
+        {"protection_criterion_V": -0.8, "overprotection_limit_V": -1.1}
+        if native_criteria else {}
+    )
+    with pytest.raises(ValueError, match="25 deg C"):
+        analyze_cis_survey(
+            [], reference_electrode="SCE", temperature_c=temperature_c, **criteria,
+        )
+
+
+@pytest.mark.parametrize("temperature_c", [5.0, 35.0, float("nan"), float("inf")])
+def test_report_rejects_unsupported_default_conversion_temperature(temperature_c):
+    with pytest.raises(ValueError, match="25 deg C"):
+        compliance_check_potential(-0.9, reference_electrode="SCE", temperature_c=temperature_c)
+
+
+def test_workflows_accept_explicit_conversion_temperature():
+    points = [CISSurveyPoint(distance_m=0, on_potential_V=-0.9, off_potential_V=-0.8)]
+    survey = analyze_cis_survey(points, reference_electrode="SCE", temperature_c=25.0)
+    report = compliance_check_potential(-0.8, reference_electrode="SCE", temperature_c=25.0)
+    assert survey.protected_points == 1
+    assert report.status == ComplianceStatus.COMPLIANT
+    assert survey.protection_criterion_V == pytest.approx(report.criterion_value)
+
+
+def test_report_explicit_native_criterion_does_not_use_tabulated_conversion():
+    report = compliance_check_potential(
+        -0.8, criterion_V=-0.79, reference_electrode="calibrated reference", temperature_c=35.0,
+    )
+    assert report.status == ComplianceStatus.COMPLIANT
+    assert report.criterion_value == -0.79
+    assert report.unit == "V vs calibrated reference"
