@@ -32,7 +32,9 @@ CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
            {"revision": "E", "date": "2026-11-04", "change":
             "Complete ordered output, finite scalar values and screening arithmetic are checked against independent input snapshots before reporting; returned summaries are copied to preserve the comparison basis."},
            {"revision": "F", "date": "2026-11-05", "change":
-            "Occurrence weights are divided before conversion to percent so valid threshold equality is retained; independent literal and spectral boundary controls cover the correction."}]
+            "Occurrence weights are divided before conversion to percent so valid threshold equality is retained; independent literal and spectral boundary controls cover the correction."},
+           {"revision": "G", "date": "2026-11-05", "change":
+            "Occurrence weights are accumulated in input order to preserve the spectral engine's threshold disposition across Python versions; literal and spectral four-state controls retain authentic failed screening."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
@@ -68,6 +70,8 @@ def validate_output(inputs, rows, summaries, status):
                     "criterion", "operability_pct", "required_operability_pct"))):
             raise ValueError("Report output has invalid summary scalars or shape")
         subset = rows[index * len(states):(index + 1) * len(states)]
+        operable_weight = 0.0
+        total_weight = 0.0
         for state, row in zip(states, subset, strict=True):
             expected = {"dof": dof["name"], "unit": dof["unit"],
                         "criterion": dof["criterion"], **state}
@@ -78,8 +82,11 @@ def validate_output(inputs, rows, summaries, status):
                 raise ValueError("Report output has invalid values, shape or coordinate order")
             if row["operable"] is not (row["significant_amplitude"] <= dof["criterion"]):
                 raise ValueError("Report output has a stale sea-state verdict")
-        operability = (sum(row["probability"] for row in subset if row["operable"]) / sum(
-            state["probability"] for state in states)) * 100.0
+            # Match the engine's ordered additions; sum() differs on Python 3.12.
+            total_weight += state["probability"]
+            if row["operable"]:
+                operable_weight += row["probability"]
+        operability = (operable_weight / total_weight) * 100.0
         required = inputs["required_operability_pct"]
         if (summary["dof"] != dof["name"] or summary["unit"] != dof["unit"]
                 or summary["criterion"] != dof["criterion"]

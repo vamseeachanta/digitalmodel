@@ -6,6 +6,7 @@
 import copy
 import csv
 import importlib.util
+import math
 from pathlib import Path
 
 import pytest
@@ -236,3 +237,52 @@ def test_spectral_engine_occurrence_threshold_equality(control):
     }]
     assert summaries[0]["passes"] is True
     build.validate_output(inputs, rows, summaries, "pass")
+
+
+@pytest.mark.parametrize("source", ["literal", "spectral"])
+def test_ordered_occurrence_accumulation_retains_failed_threshold(control, source):
+    """Preserve the four-state failed boundary across Python sum algorithms."""
+    build, _, inputs = control
+    inputs["dofs"] = [{"name": "heave", "unit": "m", "criterion": 0.75}]
+    inputs["sea_states"] = [
+        {"hs": hs, "tp": 6.0, "probability": probability}
+        for hs, probability in zip(
+            [1.0, 1.0, 2.0, 1.0], [0.03, 0.81, 0.05, 0.11], strict=True,
+        )
+    ]
+    # Ordered binary additions yield the float immediately below 95 percent.
+    expected = math.nextafter(95.0, -math.inf)
+    rows = [
+        {"dof": "heave", "unit": "m", "criterion": 0.75, **state,
+         "significant_amplitude": state["hs"] / 2.0, "operable": index != 2}
+        for index, state in enumerate(inputs["sea_states"])
+    ]
+    operability = expected
+    if source == "spectral":
+        import numpy as np
+
+        from digitalmodel.hydrodynamics.seakeeping import operability_analysis
+
+        result = operability_analysis(
+            np.linspace(0.1, 3.0, 100), np.ones(100),
+            inputs["sea_states"], {"heave": 0.75},
+        )
+        rows = [
+            {"dof": "heave", "unit": "m", "criterion": 0.75,
+             **{key: value for key, value in row.items() if key != "m0"}}
+            for row in result["sea_state_results"]
+        ]
+        operability = result["operability_pct"]
+    assert [row["operable"] for row in rows] == [True, True, False, True]
+    assert operability == expected
+    summaries = [{
+        "dof": "heave", "unit": "m", "criterion": 0.75,
+        "operability_pct": operability, "required_operability_pct": 95.0,
+        "passes": operability >= 95.0,
+    }]
+    assert summaries[0]["passes"] is False
+    build.validate_output(inputs, rows, summaries, "fail")
+    assert "The requirement is not met." in build.summary_row(summaries[0])
+    summaries[0]["passes"] = True
+    with pytest.raises(ValueError, match="stale summary"):
+        build.validate_output(inputs, rows, summaries, "pass")

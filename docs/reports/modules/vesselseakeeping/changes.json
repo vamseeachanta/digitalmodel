@@ -28,5 +28,10 @@
     "revision": "F",
     "date": "2026-11-05",
     "change": "Occurrence weights are divided before conversion to percent so valid threshold equality is retained; independent literal and spectral boundary controls cover the correction."
+  },
+  {
+    "revision": "G",
+    "date": "2026-11-05",
+    "change": "Occurrence weights are accumulated in input order to preserve the spectral engine's threshold disposition across Python versions; literal and spectral four-state controls retain authentic failed screening."
   }
 ]
