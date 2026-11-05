@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Synthetic 40 m tank example; run with PYTHONPATH=src uv run python <file>.
 
 All ratings, resistances, limits and potentials below are demonstration
@@ -33,7 +36,7 @@ def worked_example() -> dict:
     )
     sizing = assess_tank_bottom(inputs)
     potentials = check_center_edge_polarization(
-        -0.90, -0.95, criterion_V=-0.85,
+        -0.90, -0.95, criterion_V=-0.85, temperature_c=25.0,
     )
     return {
         "data_status": "synthetic demonstration; not engineering-qualified",

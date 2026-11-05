@@ -8,6 +8,11 @@ table{border-collapse:collapse}a{color:#006978}code{font-size:.9em}.note{border-
 <p><code>digitalmodel.cathodic_protection.api_651_tank_bottom</code> provides preliminary ribbon-grid sizing
 in the context of API RP 651, fifth edition (2024). It calculates independent checks, not a protection or
 standard-compliance verdict. Every design rating and acceptance limit is supplied by the caller.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody>
+<tr><td>1</td><td>2026-11-05</td><td>Expose reference conversion temperature in tank, survey and reporting
+entry points so unsupported conditions can be rejected explicitly.</td></tr>
+</tbody></table>
 <pre>from digitalmodel.cathodic_protection import convert_potential
 
 convert_potential(-0.850, "CSE", "Ag/AgCl/seawater")  # -0.784 V
@@ -56,6 +61,19 @@ from +0.244 V; the selected CSE-to-SCE offset is 0.075 V, rather than 0.072 V.</
 E<sub>reference,target</sub>. Bare <code>Ag/AgCl</code> is rejected. Temperature correction is not implemented;
 the utility rejects temperatures other than 25 °C. Nominal seawater values do not replace calibration for
 the actual chloride activity, temperature and junction arrangement.</p>
+<p><code>check_center_edge_polarization</code>, <code>analyze_cis_survey</code> and
+<code>compliance_check_potential</code> accept the keyword <code>temperature_c</code>, defaulting to
+25.0. Tank and survey checks forward it to the shared converter, which rejects other temperatures
+and nonfinite values, including when both electrodes are the same. Reporting applies this guard when
+converting an omitted criterion. An explicit reporting criterion remains in its supplied electrode
+and bypasses conversion; its suitability at the measurement conditions requires a separate basis.</p>
+<pre>check_center_edge_polarization(
+    -0.90, -0.95, criterion_V=-0.85, temperature_c=25.0,
+)
+# temperature_c=35.0 raises ValueError; no temperature correction is inferred.</pre>
+<p>The temperature dependence is discussed in CEOCOR Rev 11, sections 3.1, 3.2 and 3.4.
+The public source was checked on 5 November 2026. This change adds no electrode offsets or
+temperature coefficients.</p>
 <p>Zinc is a pseudo-reference and requires a finite <code>zinc_potential_she_V</code> supplied from calibration.
 Using −0.800 V solely as an illustration gives a CSE-to-zinc offset of +1.116 V and converts −0.850 V CSE
 to +0.266 V zinc. No universal zinc offset is embedded. Legacy monitoring zinc/MMO offsets are now

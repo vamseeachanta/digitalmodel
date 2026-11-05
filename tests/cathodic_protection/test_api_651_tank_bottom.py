@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Hand calculations for a screening model, not an API 651 qualification."""
 
 import math
@@ -140,3 +143,20 @@ def test_center_edge_in_survey_electrode():
     assert result.criterion_V == pytest.approx(-0.784)
     assert result.center_meets_criterion and result.edge_meets_criterion
 
+
+@pytest.mark.parametrize("temperature_c", [5.0, 35.0, float("nan"), float("inf")])
+def test_center_edge_rejects_unsupported_conversion_temperature(temperature_c):
+    with pytest.raises(ValueError, match="25 deg C"):
+        check_center_edge_polarization(
+            -0.90, -0.95, criterion_V=-0.85,
+            reference_electrode="SCE", temperature_c=temperature_c,
+        )
+
+
+def test_center_edge_accepts_explicit_conversion_temperature():
+    result = check_center_edge_polarization(
+        -0.90, -0.95, criterion_V=-0.85,
+        reference_electrode="SCE", temperature_c=25.0,
+    )
+    assert result.both_locations_meet_criterion
+    assert result.criterion_V == pytest.approx(-0.775)

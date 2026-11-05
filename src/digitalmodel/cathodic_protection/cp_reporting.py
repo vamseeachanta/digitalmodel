@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Auto-generate CP assessment reports.
 
 Provides tools for generating cathodic protection assessment reports
@@ -124,6 +127,7 @@ def compliance_check_potential(
     tolerance_V: float = 0.020,
     *,
     zinc_potential_she_V: float | None = None,
+    temperature_c: float = 25.0,
 ) -> ComplianceCheck:
     """Check measured protection potential against criterion.
 
@@ -141,6 +145,10 @@ def compliance_check_potential(
         "Ag/AgCl" is kept as given.
     tolerance_V : float
         Tolerance band for marginal classification [V].
+    temperature_c : float
+        Temperature [deg C] for converting the omitted CSE criterion; only
+        25.0 is supported. An explicit native criterion bypasses conversion
+        and remains the caller's responsibility at the measurement conditions.
 
     Returns
     -------
@@ -152,6 +160,7 @@ def compliance_check_potential(
         reference_electrode = electrode.value
         criterion_V = round(convert_potential(
             -0.850, "CSE", electrode, zinc_potential_she_V=zinc_potential_she_V,
+            temperature_c=temperature_c,
         ), 6)
     else:
         try:
