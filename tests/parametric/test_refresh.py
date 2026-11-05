@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
@@ -254,7 +255,7 @@ def test_apply_no_stale_atlas_status_pin(stub_refresh_builds, capsys):
     assert "all atlases current" in capsys.readouterr().out
 
 
-def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
+def test_apply_missing_passes_key_keeps_previous_atlas(stub_refresh_builds, tmp_path, capsys):
     """A missing passes key fails validation and preserves the previous atlas."""
     ids, built = stub_refresh_builds([{}])
     previous = tmp_path / f"atlas-{ids[0]}"
@@ -265,7 +266,8 @@ def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
     assert refresh.main(["--apply"]) == 2
     assert built == ids
     output = capsys.readouterr().out
-    assert "atlas-workflow-0/rebuilt/validation.json missing key 'passes'" in output
+    assert "WARNING: workflow-0 missing key 'passes'; failed validation gate" in output
+    assert "rebuilt/validation.json" not in output
     assert _file_digests(previous) == before
 
 
@@ -308,12 +310,13 @@ def disk_refresh_builds(monkeypatch, tmp_path):
             record = validations[ids.index(wid)]
             atlas = Atlas(wid, "old" if same_id else "new", "linear", "value", [],
                           pd.DataFrame({"value": [1.0]}),
-                          {} if isinstance(record, Exception) else record,
+                          record if isinstance(record, dict) else {},
                           {"content_fingerprint": "current"})
             atlas.save(destination)
             assert sorted(p.parent.name for p in root.glob("*/default.txt")) == ids
             if isinstance(record, Exception):
                 raise record
+            atlas.validation = record
             return atlas
 
         monkeypatch.setattr(build, "build_atlas_from_registry", stub_build)
@@ -391,8 +394,7 @@ def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     assert refresh.main(["--apply"]) == 2
     lines = capsys.readouterr().out.splitlines()
     assert lines[-2] == (
-        "  WARNING: workflow-0 workflow-0/new/validation.json "
-        "missing key 'passes'; failed validation gate")
+        "  WARNING: workflow-0 missing key 'passes'; failed validation gate")
     assert lines[-1] == (
         "1 rebuilt computed atlas(es) failed validation; "
         "previous version of each kept; exit status 2")
@@ -400,6 +402,100 @@ def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     assert roots[0] != root
     assert not roots[0].exists()
     assert sorted(path.name for path in root.iterdir()) == ids
+
+
+@pytest.mark.parametrize("record", [None, 1, False, "passes", ["passes"], []])
+def test_non_mapping_validation_keeps_previous_atlas(disk_refresh_builds, capsys, record):
+    root, ids, originals, roots, _ = disk_refresh_builds([record])
+    assert refresh.main(["--apply"]) == 2
+    assert _file_digests(root / ids[0]) == originals[ids[0]]
+    assert not roots[0].exists()
+    assert "WARNING: workflow-0 validation record is not a mapping" in capsys.readouterr().out
+
+
+def test_closing_block_lists_each_failed_workflow(disk_refresh_builds, capsys):
+    root, ids, originals, _, _ = disk_refresh_builds([{}, {"passes": False}])
+    assert refresh.main(["--apply"]) == 2
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[-3:] == [
+        "  WARNING: workflow-0 missing key 'passes'; failed validation gate",
+        "  WARNING: workflow-1 regenerated but failed validation gate",
+        "2 rebuilt computed atlas(es) failed validation; "
+        "previous version of each kept; exit status 2",
+    ]
+    assert not any("WARNING:" in line for line in lines[:-3])
+    assert not any("validation.json" in line for line in lines)
+    for wid in ids:
+        assert _file_digests(root / wid) == originals[wid]
+
+
+@pytest.mark.parametrize("failure", ["before-backup", "after-backup", "install"])
+@pytest.mark.parametrize("error_type", [OSError, KeyboardInterrupt])
+def test_interrupted_install_restores_previous_atlas(
+    disk_refresh_builds, monkeypatch, failure, error_type,
+):
+    root, ids, originals, roots, _ = disk_refresh_builds([{"passes": True}])
+    destination = root / ids[0]
+    rename = Path.rename
+
+    def failing_rename(source, target):
+        if source == destination:
+            if failure == "before-backup":
+                raise error_type("backup interrupted")
+            result = rename(source, target)
+            if failure == "after-backup":
+                raise error_type("backup interrupted")
+            return result
+        if source.name == "replacement" and failure == "install":
+            raise error_type("install interrupted")
+        return rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", failing_rename)
+    with pytest.raises(error_type, match="interrupted"):
+        refresh.main(["--apply"])
+    assert _file_digests(destination) == originals[ids[0]]
+    assert not roots[0].exists()
+    assert sorted(path.name for path in root.iterdir()) == ids
+
+
+def test_refresh_reports_leftover_temporary_folders_at_start(
+    stub_refresh_builds, tmp_path, capsys,
+):
+    stub_refresh_builds([])
+    leftover = tmp_path / ".refresh-interrupted"
+    leftover.mkdir()
+    (leftover / "evidence.txt").write_text("preserved", encoding="utf-8")
+    (tmp_path / ".refresh-ordinary-file").write_text("unrelated", encoding="utf-8")
+    assert refresh.main([]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == "WARNING: leftover refresh directory: .refresh-interrupted"
+    assert ".refresh-ordinary-file" not in "\n".join(lines)
+    assert (leftover / "evidence.txt").read_text(encoding="utf-8") == "preserved"
+
+
+def test_refresh_temporary_folders_are_ignored():
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "atlases/.refresh-interrupted/previous/default.txt"],
+        cwd=refresh.REPO_ROOT, capture_output=True, text=True,
+    )
+    assert result.returncode == 0
+
+
+def test_parametric_tests_have_a_hosted_job():
+    import yaml
+
+    workflow = yaml.safe_load(
+        (refresh.REPO_ROOT / ".github/workflows/parametric-atlas-drift.yml").read_text(
+            encoding="utf-8",
+        )
+    )
+    job = workflow["jobs"]["parametric-tests"]
+    assert job["runs-on"] == "ubuntu-latest"
+    assert "if" not in job
+    commands = "\n".join(step.get("run", "") for step in job["steps"])
+    assert "python -m pytest tests/parametric/" in commands
 
 
 def test_fatigue_atlases_track_the_deterministic_power_module():

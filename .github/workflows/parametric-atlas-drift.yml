@@ -28,13 +28,15 @@ jobs:
     name: Atlas staleness check
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
-      - name: Checkout code
+      - &atlas-checkout
+        name: Checkout code
         uses: actions/checkout@v4
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Build and guard local pull request merge
+      - &atlas-build-merge
+        name: Build and guard local pull request merge
         id: build_merge
         if: github.event_name == 'pull_request'
         shell: bash
@@ -121,3 +123,19 @@ jobs:
 
       - name: Atlas drift check (computed atlases must be up to date)
         run: python -m digitalmodel.parametric.refresh
+
+  parametric-tests:
+    name: Parametric package tests
+    runs-on: ubuntu-latest
+    steps:
+      - *atlas-checkout
+      - *atlas-build-merge
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v5
+      - name: Test parametric package
+        run: >-
+          uv run --no-sources --with-editable '.[test]'
+          python -m pytest tests/parametric/ -q -rA -p no:cacheprovider
+          --basetemp="$RUNNER_TEMP/parametric-tests"
