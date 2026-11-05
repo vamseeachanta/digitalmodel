@@ -6,13 +6,14 @@ Friction reuses the field-development Swamee–Jain implementation, now in
 infrastructure.utils.pipe_friction. Source locators ship in basis/wikis.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 
 from digitalmodel.citations.schema import Citation, CitedValue
 from digitalmodel.infrastructure.utils.pipe_friction import swamee_jain_friction_factor
 from digitalmodel.materials.line_pipe import list_nps, od_for_nps, wt_for_schedule
 from ._basis import citations, positive, nonnegative
+from .pressure import PressureDesign, ThicknessResult, pressure_thickness
 
 
 @dataclass(frozen=True)
@@ -58,6 +59,7 @@ class LineResult:
     within_velocity_limit: bool
     notes: tuple[str, ...]
     citations: tuple[Citation, ...]
+    pressure_requirement: ThicknessResult | None = None
 
 
 def service_velocity_limit(service: str) -> CitedValue:
@@ -295,6 +297,7 @@ def size_line(
     candidate_nps: tuple[float, ...] | None = None,
     maximum_pressure_drop_pa: float | None = None,
     minimum_wall_m: float = 0,
+    pressure_design: PressureDesign | None = None,
 ) -> LineResult:
     """Pick the smallest catalog NPS meeting supplied wall, velocity and dp limits.
 
@@ -303,8 +306,14 @@ def size_line(
     evaluated explicitly because gas outlet velocity and pressure budget
     may govern. No feasible candidate raises ValueError with rejection
     reasons. Missing catalog sizes/schedules are skipped, never fabricated.
-    A required minimum wall may come from pressure_thickness; this picker
-    does not independently establish the material's B31.3 design strength.
+    minimum_wall_m is a diameter-independent nominal-wall constraint.
+    With pressure_design, its outside diameter is replaced by each catalog
+    candidate's OD before calling pressure_thickness. All other factors and
+    allowances are retained; the caller must qualify them for every candidate.
+    Both wall constraints apply. The selected pressure requirement and its
+    citations are returned; without pressure_design the requirement is None.
+    Hydraulic bore remains the nominal catalog bore. No material strength,
+    hydrotest suitability or complete B31.3 compliance is inferred.
     Two-phase pressure-drop constraints are rejected, not silently ignored.
     """
     _validate(flow, velocity_limit_m_s)
@@ -329,8 +338,20 @@ def size_line(
             except KeyError:
                 continue
             candidates.append((wall, schedule))
+        requirement = None
+        if pressure_design is not None and candidates:
+            try:
+                requirement = pressure_thickness(
+                    replace(pressure_design, outside_diameter_m=od_for_nps(nps) * 0.0254)
+                )
+            except ValueError as error:
+                rejected.append(f"{nps:g}: {error}")
+                continue
         for wall, schedule in sorted(candidates):
             if wall < minimum_wall_m:
+                continue
+            if requirement is not None and wall < requirement.minimum_nominal_thickness_m:
+                rejected.append(f"{nps:g}/{schedule}: below pressure-required wall")
                 continue
             try:
                 result = evaluate_line(
@@ -346,6 +367,12 @@ def size_line(
                 maximum_pressure_drop_pa is None
                 or result.pressure_drop_pa <= maximum_pressure_drop_pa
             ):
+                if requirement is not None:
+                    result = replace(
+                        result,
+                        pressure_requirement=requirement,
+                        citations=result.citations + requirement.citations,
+                    )
                 return result
             rejected.append(f"{nps:g}/{schedule}: velocity or pressure budget exceeded")
     raise ValueError("no candidate meets supplied criteria; " + "; ".join(rejected))
