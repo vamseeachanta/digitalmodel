@@ -21,12 +21,13 @@ import yaml
 # tests/docs is two directory levels below the repository root.
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/docs/source_locators.py"
+CONVENTION = ROOT / "docs/standards/python-source-locators.md"
 # The fixture below has exactly two physical source lines, numbered from one.
 LOCATOR = b"[src/example/__init__.py:L1-L2]"
 
 
 @pytest.fixture
-def document(tmp_path):
+def document(tmp_path, request):
     source = tmp_path / "src/example/__init__.py"
     source.parent.mkdir(parents=True)
     source.write_bytes(b"# first source line\n# second source line\n")
@@ -35,6 +36,19 @@ def document(tmp_path):
         b"## 3. Method\n\nInitializer: `" + LOCATOR + b"`.\n\n"
         b"| Evidence | Meaning |\n|---|---|\n| `" + LOCATOR + b"` | initializer |\n"
     )
+    if getattr(request, "param", "synthetic") == "convention":
+        assert CONVENTION.is_file(), "Reusable source locator convention is missing"
+        examples = re.findall(
+            r"```markdown\n(.*?)```", CONVENTION.read_text(encoding="utf-8"), re.DOTALL,
+        )
+        assert len(examples) == 1, "Expected one reusable Markdown example"
+        # Resolve the documented example against the independent two-line fixture.
+        markdown.write_text(
+            examples[0].replace(
+                "[src/digitalmodel/corrosion/__init__.py:L7-L21]", LOCATOR.decode(),
+            ),
+            encoding="utf-8", newline="\n",
+        )
     return tmp_path, source, markdown
 
 
@@ -75,8 +89,9 @@ def test_contracts_workflows_provision_configured_formatter(workflow_name, job_n
     assert steps.index(setup) < steps.index(provision) < steps.index(gate)
 
 
-def test_initializer_locator_survives_configured_formatter(document):
-    _, source, markdown = document
+@pytest.mark.parametrize("document", ["synthetic", "convention"], indirect=True)
+def test_initializer_locator_survives_configured_formatter(document, check):
+    root, source, markdown = document
     # Literal source text establishes L1-L2; the helper supplies no expectation.
     assert source.read_bytes() == b"# first source line\n# second source line\n"
     config = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
@@ -108,6 +123,16 @@ def test_initializer_locator_survives_configured_formatter(document):
     assert b"`" + LOCATOR + b"`" in cells
     # One paragraph occurrence plus one table occurrence equals two.
     assert formatted.count(LOCATOR) == 2
+    assert check(markdown, root) == []
+    # A missing citation outside section two still fails after table formatting.
+    markdown.write_bytes(formatted.replace(LOCATOR, b"[src/example/absent.py:L1-L2]", 1))
+    assert check(markdown, root) == [
+        "pack.md:3: [src/example/absent.py:L1-L2]: missing Python source"
+    ]
+
+
+def test_convention_source_citations_resolve(check):
+    assert check(CONVENTION, ROOT) == []
 
 
 def test_locator_outside_inventory_resolves(document, check):
