@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Canonical FFS coordinator — one data model + one orchestration call
 # ABOUTME: chaining the validated Phase-1 assessment modules end to end.
 """Canonical Fitness-For-Service coordinator (Phase-1 path).
@@ -141,6 +144,7 @@ def assess_component(
     input_units: str = "in",
     force_type: Optional[str] = None,
     repair_context: Optional[Mapping[str, Any]] = None,
+    row_spacing_in: Optional[float] = None,
 ) -> FFSAssessmentResult:
     """Run the full Phase-1 FFS chain and return one unified result.
 
@@ -153,6 +157,8 @@ def assess_component(
             ("GML"/"LML"/"PITTING").
         repair_context: optional composite-repair screening context. Used only
             for REPAIR verdicts.
+        row_spacing_in: Explicit axial pitch in inches for pitting geometry;
+            omitted pitch on generated grids remains a provisional assumption.
     """
     df = _to_grid_df(grid, input_units)
 
@@ -178,7 +184,8 @@ def assess_component(
         # conservative closed-form Level 1 screen on top of the code t_min
         # check, and bound Level 2 by an equivalent LTA run through the
         # validated Part 5 engine (see assessment/pitting.py for the basis).
-        pit_char = characterize_pit_field(df, component.nominal_wt_in)
+        pit_char = characterize_pit_field(df, component.nominal_wt_in,
+                                         row_spacing_in=row_spacing_in)
         pit_l1 = screen_pitting_level1(
             pit_char, t_min_in=t_min, fca_in=component.fca_in
         )

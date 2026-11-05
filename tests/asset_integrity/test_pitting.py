@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for API 579-1 Part 6 pitting assessment (assessment/pitting.py)
 # ABOUTME: — characterization, Level 1 screen, equivalent-LTA Level 2, routing.
 """Pitting assessment tests (#1269).
@@ -328,7 +331,8 @@ class TestCoordinatorPitting:
         res = assess_component(_component(), _grid(pits=EIGHT_PITS),
                                force_type="PITTING")
         assert res.assessment_type == "PITTING"
-        assert res.verdict in ("ACCEPT", "MONITOR", "RE_RATE", "REPAIR", "REPLACE")
+        assert res.verdict == "ESCALATE"
+        assert "pitting.missing_axial_pitch" in res.applicability.flags
         assert 0.0 < res.rsf <= 1.0
         assert res.level2["assessment_type"] == "PITTING"
         assert "equivalent local thin area" in res.level2["assessment_basis"]
@@ -405,7 +409,9 @@ class TestRealFixtureIntegration:
         # equivalent-LTA thickness ratio caps and the RSF is unity; both
         # Level 1 screens pass.
         assert res.rsf == pytest.approx(1.0, abs=1e-9)
-        assert res.verdict == "ACCEPT"
+        # Generated CSV row labels do not establish physical axial pitch.
+        assert res.verdict == "ESCALATE"
+        assert "pitting.missing_axial_pitch" in res.applicability.flags
         assert res.level1["pitting_screen"]["verdict"] == "ACCEPT"
         assert res.details["pitting_characterization"]["pit_count"] == 11
 

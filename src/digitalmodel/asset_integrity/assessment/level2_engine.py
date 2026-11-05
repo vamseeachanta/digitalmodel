@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS Level 2 detailed assessment — RSF and Folias-factor calculations.
 
 Implements API 579-1/ASME FFS-1 Level 2 acceptance criterion:
@@ -98,11 +101,14 @@ class Level2Engine:
     # Public interface
     # ------------------------------------------------------------------
 
-    def evaluate(self, grid_df: pd.DataFrame) -> dict:
+    def evaluate(self, grid_df: pd.DataFrame, *, flaw_length_in: float | None = None) -> dict:
         """Run the Level 2 assessment on the parsed wall-thickness grid.
 
         Args:
             grid_df: Normalised wall-thickness DataFrame (inches).
+            flaw_length_in: Positive finite axial extent of an already
+                characterized LML region. Overrides mask-based geometry only;
+                thickness, Folias and RSF calculations remain unchanged.
 
         Returns:
             dict with keys:
@@ -117,9 +123,13 @@ class Level2Engine:
                     ``API579_FOLIAS_LAMBDA_GT_20`` when the shell parameter
                     exceeds the Table 4.4 range and M_t was frozen (#1094)
         """
+        if flaw_length_in is not None:
+            if (self._type != "LML" or not math.isfinite(flaw_length_in)
+                    or flaw_length_in <= 0):
+                raise ValueError("flaw_length_in requires a positive finite LML extent")
         if self._type == "GML":
             return self._evaluate_gml(grid_df)
-        return self._evaluate_lml(grid_df)
+        return self._evaluate_lml(grid_df, flaw_length_in=flaw_length_in)
 
     def local_loss_projection_domain(self, grid_df: pd.DataFrame):
         """Lambda-range wall interval when only current minima decrease.
@@ -186,7 +196,7 @@ class Level2Engine:
     # LML assessment (Part 5 Level 2)
     # ------------------------------------------------------------------
 
-    def _evaluate_lml(self, grid_df: pd.DataFrame) -> dict:
+    def _evaluate_lml(self, grid_df: pd.DataFrame, *, flaw_length_in=None) -> dict:
         """Part 5 Level 2: localised RSF with Folias factor.
 
         1. Identify the flaw bounding box (cells below threshold).
@@ -201,7 +211,7 @@ class Level2Engine:
         # t_c: future thickness outside the flaw = t_min (conservative)
         t_c = self._t_min
 
-        l_a, lam, mt = self._lml_geometry(grid_df)
+        l_a, lam, mt = self._lml_geometry(grid_df, flaw_length_in=flaw_length_in)
 
         # Thickness ratio Rt = t_mm / t_c
         rt = t_mm / t_c if t_c > 0 else 1.0
@@ -243,12 +253,15 @@ class Level2Engine:
             "applicability": applicability,
         }
 
-    def _lml_geometry(self, grid_df: pd.DataFrame):
+    def _lml_geometry(self, grid_df: pd.DataFrame, *, flaw_length_in=None):
         """Shared geometry for assessment and projection-domain qualification."""
-        flaw_mask = grid_df < self._nominal_wt * _FLAW_THRESHOLD_RATIO
-        flaw_row_count = int(flaw_mask.any(axis=1).sum())
-        spacing = self._infer_spacing(grid_df.index)
-        length = max(flaw_row_count * spacing, spacing)
+        if flaw_length_in is None:
+            flaw_mask = grid_df < self._nominal_wt * _FLAW_THRESHOLD_RATIO
+            flaw_row_count = int(flaw_mask.any(axis=1).sum())
+            spacing = self._infer_spacing(grid_df.index)
+            length = max(flaw_row_count * spacing, spacing)
+        else:
+            length = flaw_length_in
         nominal_id = self._od - 2.0 * self._t_min
         return (length, self._shell_parameter(length, nominal_id, self._t_min),
                 self._folias_factor(length, nominal_id, self._t_min))
