@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Grid-only Part 6 philosophy screen and Part 5 equivalent-LTA estimate (inches)."""
 from dataclasses import replace
 
@@ -56,11 +59,6 @@ def _levels(char, od, wt, minimum, fca, rsfa, rt_min):
     if effective.t_min_pit_in <= 0:
         return l1, {"rsf": None, "verdict": "not evaluated",
                     "assessment_basis": "FCA consumes the deepest ligament; strength is not evaluated."}
-    if effective.pitted_region_row_count == 1:
-        # Two half-pitch rows represent the same uniform region and preserve
-        # its physical length despite the engine's single-index spacing default.
-        effective = replace(effective, pitted_region_row_count=2,
-                            row_spacing_in=effective.row_spacing_in / 2)
     l2 = assess_pitting_level2_equivalent_lta(
         effective, nominal_od_in=od, nominal_wt_in=wt, t_min_in=minimum, rsf_a=rsfa)
     l2["assessment_basis"] = (
@@ -100,10 +98,9 @@ def _applicability(grid, char, minimum, fca, rt_min, l2):
 
 def _assess(block):
     grid, od, wt, minimum, fca, rsfa, rt_min, threshold = _read_input(block)
-    char = characterize_pit_field(grid, wt, pit_threshold_fraction=threshold)
     spacing = float(block["row_spacing_in"])
-    char = replace(char, row_spacing_in=spacing,
-                   pitted_region_length_in=char.pitted_region_row_count * spacing)
+    char = characterize_pit_field(grid, wt, pit_threshold_fraction=threshold,
+                                 row_spacing_in=spacing)
     if char.pit_count == 0:
         char = replace(char, t_min_pit_in=float(grid.to_numpy().min()),
                        t_avg_pit_in=float(grid.to_numpy().mean()))

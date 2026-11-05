@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Grid parser for FFS wall thickness inspection data.
 
 Normalises any supported input format to a 2-D pandas DataFrame where:
@@ -68,6 +71,10 @@ class GridParser:
             )
 
         result = df.copy().astype(float)
+        # Generated row labels remain labels even after filtering turns a
+        # RangeIndex into an ordinary numeric index. They do not measure inches.
+        if isinstance(df.index, pd.RangeIndex):
+            result.attrs["axial_coordinates"] = "generated"
 
         # Apply vendor data correction factor (e.g. C-scan %)
         if data_correction_factor != 1.0:
