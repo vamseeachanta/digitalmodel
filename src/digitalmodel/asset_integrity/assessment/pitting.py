@@ -263,6 +263,12 @@ def _row_spacing(grid_df, explicit):
     if (grid_df.attrs.get("axial_coordinates") == "generated"
             or isinstance(grid_df.index, pd.RangeIndex)):
         return 1.0, "generated"
+    # Temporal, categorical, boolean and complex labels do not measure inches,
+    # even when NumPy permits a lossy conversion to a real-valued array.
+    if grid_df.index.inferred_type not in {
+        "integer", "floating", "mixed-integer-float", "decimal", "string",
+    } or isinstance(grid_df.index, pd.CategoricalIndex):
+        return 1.0, "default"
     try:
         coordinates = np.asarray(grid_df.index, dtype=float)
     except (ValueError, TypeError):
@@ -270,7 +276,7 @@ def _row_spacing(grid_df, explicit):
     if (len(coordinates) < 2 or not np.isfinite(coordinates).all()
             or not (np.diff(coordinates) > 0).all()):
         return 1.0, "default"
-    return Level2Engine._infer_spacing(grid_df.index), "index"
+    return float(np.diff(coordinates).min()), "index"
 
 
 def _geometry_applicability(characterization):

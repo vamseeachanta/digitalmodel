@@ -1,9 +1,25 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-"""Synthetic geometry regressions; no engineering-method qualification."""
+"""Synthetic geometry regressions; no engineering-method qualification.
 
-import math
+Formula provenance: the existing approximation in level2_engine.py's module
+and _folias_factor docstrings supplies lambda = 1.285 L / sqrt(D tc),
+Mt = sqrt(1 + 0.48 min(lambda, 20)**2) for these fixtures (lambda > 0.354).
+The coefficients and cap describe that repository algorithm, not independently
+verified standard values. Its governing reference is API 579-1/ASME FFS-1,
+Fitness-For-Service, 2021 edition, Part 5 section 5.4 (Level 2 assessment),
+RSF equation (5.13); its Folias basis cites Part 4 equation (4.20) / Table 4.4.
+No verified standard copy is in hand; these are algorithm regression oracles.
+
+Independent derivation: decimal arithmetic at 50-digit precision, without
+production imports, substitutes D = 16 - 2 tc, Rt = min(pit_wall / tc, 1),
+and RSF = Rt / (1 - (1 - Rt) / Mt) into the relations above. The fixed
+expectations below cover (L, tc, pit_wall), in inches:
+(40, .35, .46), (40, .47, .46), (10, .35, .30), (40, .35, .30).
+They exercise capped/uncapped lambda, Rt = 1, and singleton/multirow extent.
+The singleton must also check RSF: its extent alone cannot prove strength.
+"""
 
 import numpy as np
 import pandas as pd
@@ -27,8 +43,13 @@ def component():
     return FFSComponent("synthetic", "B31.8", 16.0, 0.5, 1000.0, smys_psi=52000.0)
 
 
-@pytest.mark.parametrize("required", [0.35, 0.47])
-def test_custom_population_preserves_extent_without_engine_flaw_candidates(required):
+@pytest.mark.parametrize("required,expected_mt,expected_rsf", [
+    (0.35, 13.89244398944980, 1.0),
+    (0.47, 13.42242458472551, 0.98027729368594),
+])
+def test_custom_population_preserves_extent_without_engine_flaw_candidates(
+    required, expected_mt, expected_rsf,
+):
     grid = pd.DataFrame([[0.46, 0.5]] * 4, index=[0.0, 10.0, 20.0, 30.0])
     assert not (grid < 0.9 * 0.5).any().any()
     result = assess_pitting(grid, nominal_od_in=16.0, nominal_wt_in=0.5,
@@ -36,15 +57,17 @@ def test_custom_population_preserves_extent_without_engine_flaw_candidates(requi
     char, level2 = result["characterization"], result["level2"]
     assert char.pitted_region_length_in == 40.0
     assert level2["flaw_length_in"] == level2["equivalent_lta"]["axial_extent_in"] == 40.0
-    lam = 1.285 * 40.0 / math.sqrt((16.0 - 2.0 * required) * required)
-    mt = math.sqrt(1.0 + 0.48 * min(lam, 20.0) ** 2)
-    rt = min(0.46 / required, 1.0)
-    assert level2["folias_factor"] == pytest.approx(mt)
-    assert level2["rsf"] == pytest.approx(rt / (1.0 - (1.0 - rt) / mt))
+    assert level2["folias_factor"] == pytest.approx(expected_mt, rel=1e-12)
+    assert level2["rsf"] == pytest.approx(expected_rsf, rel=1e-12)
 
 
-@pytest.mark.parametrize("rows", [1, 4])
-def test_explicit_pitch_preserves_singleton_and_multirow_extent(rows):
+@pytest.mark.parametrize("rows,expected_mt,expected_rsf", [
+    (1, 3.97503413300357, 0.88909570793933),
+    (4, 13.89244398944980, 0.86604850506945),
+])
+def test_explicit_pitch_preserves_singleton_and_multirow_extent(
+    rows, expected_mt, expected_rsf,
+):
     grid = GridParser.from_numpy(np.array([[0.3, 0.5]] * rows))
     result = assess_pitting(grid, nominal_od_in=16.0, nominal_wt_in=0.5,
                             t_min_in=0.35, row_spacing_in=10.0)
@@ -53,11 +76,8 @@ def test_explicit_pitch_preserves_singleton_and_multirow_extent(rows):
     assert char.pitted_region_length_in == rows * 10.0
     assert result["level2"]["flaw_length_in"] == rows * 10.0
     assert "pitting.missing_axial_pitch" not in result["level2"]["applicability"].flags
-    indexed = pd.DataFrame([[0.3]] * rows, index=np.arange(rows) * 10.0)
-    expected_mt = Level2Engine._folias_factor(rows * 10.0, 16.0 - 2.0 * 0.35, 0.35)
-    assert result["level2"]["folias_factor"] == expected_mt
-    if rows > 1:
-        assert result["level2"]["rsf"] == Level2Engine("LML", 16.0, 0.5, 0.35).evaluate(indexed)["rsf"]
+    assert result["level2"]["folias_factor"] == pytest.approx(expected_mt, rel=1e-12)
+    assert result["level2"]["rsf"] == pytest.approx(expected_rsf, rel=1e-12)
 
 
 @pytest.mark.parametrize("kind,source", [("numpy", "generated"), ("index", "index"),
@@ -132,3 +152,37 @@ def test_explicit_engine_extent_requires_positive_finite_length(length):
     with pytest.raises(ValueError, match="flaw_length_in"):
         Level2Engine("LML", 16.0, 0.5, 0.35).evaluate(
             pd.DataFrame([[0.3]]), flaw_length_in=length)
+
+
+@pytest.mark.parametrize("kind", ["datetime", "datetime_tz", "timedelta", "period",
+                                  "boolean", "complex", "categorical"])
+@pytest.mark.parametrize("pitch", [None, 10.0])
+def test_nonphysical_indices_require_explicit_pitch(kind, pitch):
+    indices = {
+        "datetime": pd.date_range("2025-01-01", periods=3),
+        "datetime_tz": pd.date_range("2025-01-01", periods=3, tz="UTC"),
+        "timedelta": pd.timedelta_range("0 days", periods=3),
+        "period": pd.period_range("2025-01", periods=3, freq="M"),
+        "boolean": pd.Index([False, True, True]),
+        "complex": pd.Index([0j, 10 + 1j, 20 + 2j]),
+        "categorical": pd.CategoricalIndex([0, 10, 20]),
+    }
+    grid = GridParser.from_dataframe(
+        pd.DataFrame([[0.3, 0.5]] * 3, index=indices[kind]))
+    result = assess_pitting(grid, nominal_od_in=16.0, nominal_wt_in=0.5,
+                            t_min_in=0.35, row_spacing_in=pitch)
+    char = result["characterization"]
+    assert char.row_spacing_source == ("default" if pitch is None else "explicit")
+    assert char.row_spacing_in == (1.0 if pitch is None else pitch)
+    assert char.pitted_region_length_in == (3.0 if pitch is None else 30.0)
+    flags = result["level2"]["applicability"].flags
+    assert ("pitting.missing_axial_pitch" in flags) == (pitch is None)
+
+
+@pytest.mark.parametrize("index", [[0.0, 10.0, 25.0], ["0", "10", "25"]])
+def test_validated_numeric_coordinates_supply_minimum_pitch(index):
+    char = characterize_pit_field(
+        pd.DataFrame([[0.3, 0.5]] * 3, index=index), 0.5)
+    assert char.row_spacing_source == "index"
+    assert char.row_spacing_in == 10.0
+    assert char.pitted_region_length_in == 30.0
