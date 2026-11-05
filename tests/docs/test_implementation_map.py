@@ -6,7 +6,9 @@
 import copy
 import hashlib
 import importlib.util
+import os
 from pathlib import Path
+import sys
 
 import pytest
 import yaml
@@ -37,22 +39,42 @@ def test_implementation_map_references(map_document):
 
 
 @pytest.mark.parametrize("write", [False, True])
-@pytest.mark.parametrize("text", [
-    "agent_packs: {first: retained}\nagent_packs: {second: retained}\n",
-    "agent_packs:\n  first: retained\n  first: replaced\n",
-    "agent_packs: {first: retained, first: retained}\n",
-    "defaults: &packs {first: retained}\nagent_packs: {<<: *packs, first: replaced}\n",
-], ids=["top-level", "nested", "flow", "merged"])
-def test_duplicate_yaml_keys_are_rejected_before_inventory_work(
-        tmp_path, monkeypatch, capsys, text, write):
+@pytest.mark.parametrize("text,problem", [
+    ("agent_packs: {first: retained}\nagent_packs: {second: retained}\n", "duplicate mapping key"),
+    ("agent_packs:\n  first: retained\n  first: replaced\n", "duplicate mapping key"),
+    ("agent_packs: {first: retained, first: retained}\n", "duplicate mapping key"),
+    ("defaults: &packs {first: retained}\nagent_packs: {<<: *packs, first: replaced}\n",
+     "duplicate mapping key"),
+    ("agent_packs: {<<: {first: retained}, <<: {second: retained}}\n", "duplicate mapping key"),
+    ("agent_packs:\n  <<: {first: retained}\n  <<: {second: retained}\n", "duplicate mapping key"),
+    ("agent_packs: {<<: {<<: {first: retained}, <<: {second: retained}}}\n", "duplicate mapping key"),
+    ("agent_packs: {<<: [{<<: {first: retained}, <<: {second: retained}}]}\n", "duplicate mapping key"),
+    ("defaults: &packs {first: retained}\nagent_packs: {<<: *packs, <<: {second: retained}}\n",
+     "duplicate mapping key"),
+    ("agent_packs: !!map scalar\n", "expected a mapping node"),
+    ("agent_packs: !!map [item]\n", "expected a mapping node"),
+    ("!!map scalar\n", "expected a mapping node"),
+    ("!!map [item]\n", "expected a mapping node"),
+    ("? [item]\n: retained\n", "unhashable mapping key"),
+    ("agent_packs: {<<: [{first: retained}, {first: replaced}]}\n", "duplicate mapping key"),
+    ("agent_packs: [{first: retained, first: replaced}]\n", "duplicate mapping key"),
+    ("defaults: &packs {first: retained, first: replaced}\nagent_packs: *packs\n", "duplicate mapping key"),
+    ("agent_packs: !!set {first: null, first: null}\n", "duplicate mapping key"),
+], ids=["top-level", "nested", "flow", "merged", "repeated-merge-flow", "repeated-merge-block",
+        "inline-repeated-merge", "sequence-repeated-merge", "aliased-repeated-merge",
+        "tagged-scalar", "tagged-sequence", "root-tagged-scalar", "root-tagged-sequence",
+        "unhashable", "merge-sequence-collision", "sequence-duplicate", "anchored-duplicate",
+        "set-duplicate"])
+def test_invalid_yaml_mappings_are_rejected_before_inventory_work(
+        tmp_path, monkeypatch, capsys, text, problem, write):
     """Invalid mappings must not reach validation, regeneration or output writes."""
     import sys
 
     module = generator()
     target = tmp_path / "map.yaml"
-    target.write_text(text, encoding="utf-8")
+    target.write_text(text, encoding="utf-8", newline="\n")
     checkpoint = tmp_path / "checkpoint.json"
-    checkpoint.write_text("retained checkpoint", encoding="utf-8")
+    checkpoint.write_text("retained checkpoint", encoding="utf-8", newline="\n")
     calls = []
 
     def record(name, result):
@@ -73,18 +95,51 @@ def test_duplicate_yaml_keys_are_rejected_before_inventory_work(
     with pytest.raises(SystemExit) as error:
         module.main()
     assert error.value.code == 2
-    assert "duplicate mapping key" in capsys.readouterr().err
+    output = capsys.readouterr()
+    assert problem in output.err
+    assert "Traceback" not in output.err
+    assert output.out == ""
     assert calls == []
-    assert target.read_text(encoding="utf-8") == text
-    assert checkpoint.read_text(encoding="utf-8") == "retained checkpoint"
+    assert target.read_bytes() == text.encode("utf-8")
+    assert checkpoint.read_bytes() == b"retained checkpoint"
 
 
-def test_inventory_yaml_loader_preserves_safe_values_and_aliases():
+@pytest.mark.parametrize("write", [False, True])
+@pytest.mark.parametrize("value", ["scalar", "[item]"])
+def test_malformed_mapping_cli_exits_without_a_traceback(tmp_path, value, write):
+    """Interpreter-level failures must remain sanitized CLI errors without writes."""
+    import subprocess
+
+    text = f"agent_packs: !!map {value}\n"
+    target = tmp_path / "map.yaml"
+    target.write_text(text, encoding="utf-8", newline="\n")
+    checkpoint = tmp_path / "checkpoint.json"
+    checkpoint.write_text("retained checkpoint", encoding="utf-8", newline="\n")
+    args = [sys.executable, str(ROOT / "scripts/generate_implementation_map.py"),
+            "--root", str(tmp_path), "--map", "map.yaml"]
+    if write:
+        args += ["--write", "--checkpoint", str(checkpoint)]
+    environment = {key: value for key, value in os.environ.items()
+                   if key not in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")}
+    result = subprocess.run(args, capture_output=True, text=True, encoding="utf-8",
+                            env=environment, timeout=30)
+    assert result.returncode == 2
+    assert "expected a mapping node" in result.stderr
+    assert "Traceback" not in result.stderr
+    assert result.stdout == ""
+    assert target.read_bytes() == text.encode("utf-8")
+    assert checkpoint.read_bytes() == b"retained checkpoint"
+
+
+@pytest.mark.parametrize("text", [
+    "defaults: &packs {first: retained, enabled: yes}\n"
+    "agent_packs: *packs\nother: {<<: *packs, second: retained}\n",
+    "defaults: &packs {first: retained}\nagent_packs: *packs\n"
+    "other: {<<: [*packs, {second: retained}], third: retained}\n",
+    "defaults: &packs !!map {first: retained}\nagent_packs: *packs\n",
+], ids=["scalars-and-aliases", "merge-sequence", "tagged-mapping"])
+def test_inventory_yaml_loader_preserves_safe_values_and_aliases(text):
     """Strict inventory reads retain PyYAML scalar and anchor semantics."""
-    text = (
-        "defaults: &packs {first: retained, enabled: yes}\n"
-        "agent_packs: *packs\nother: {<<: *packs, second: retained}\n"
-    )
     doc = yaml.load(text, Loader=generator().InventorySafeLoader)
     assert doc == yaml.safe_load(text)
     assert doc["agent_packs"] is doc["defaults"]
@@ -106,7 +161,8 @@ def test_missing_path_is_reported(map_document):
 @pytest.fixture
 def sample(tmp_path):
     source = tmp_path / "sample.py"
-    source.write_text("class First:\n    def calculate(self):\n        return 1\n\nclass Second:\n    def calculate(self):\n        return 2\n")
+    source.write_text("class First:\n    def calculate(self):\n        return 1\n\nclass Second:\n    def calculate(self):\n        return 2\n",
+                      encoding="utf-8", newline="\n")
     entry = {"path": "sample.py", "symbol": "First.calculate", "line": 2,
              "file_sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
     doc = {key: [] for key in REQUIRED_KEYS}
@@ -225,7 +281,8 @@ def test_path_escape_is_rejected(sample):
 def test_symlink_escape_is_rejected(sample, tmp_path_factory):
     doc, root = sample
     outside = tmp_path_factory.mktemp("outside") / "source.py"
-    outside.write_text("class First:\n    def calculate(self):\n        return 1\n")
+    outside.write_text("class First:\n    def calculate(self):\n        return 1\n",
+                       encoding="utf-8", newline="\n")
     (root / "escaped.py").symlink_to(outside)
     doc["families"][0]["implementations"][0]["path"] = "escaped.py"
     assert any("path" in p for p in check_map(doc, root))
@@ -246,7 +303,8 @@ def test_regeneration_does_not_mutate_other_alias_consumers():
 def test_decorated_definition_accepts_definition_or_first_decorator(sample):
     doc, root = sample
     (root / "sample.py").write_text(
-        "class First:\n    @staticmethod\n    def calculate():\n        return 1\n")
+        "class First:\n    @staticmethod\n    def calculate():\n        return 1\n",
+        encoding="utf-8", newline="\n")
     for line in (2, 3):
         for family in doc["families"]:
             family["implementations"][0]["line"] = line
@@ -262,7 +320,9 @@ def test_diverged_copy_warns_without_losing_symbol_validity(sample):
     doc["families"][0]["implementations"].append(entry)
     result = generator().regenerate(doc, root, tracked_paths=["sample.py", "copy.py"], revision="b" * 40)
     assert generator().map_staleness(result, root) == []
-    (root / "copy.py").write_text((root / "copy.py").read_text().replace("return 1", "return 9"))
+    (root / "copy.py").write_text(
+        (root / "copy.py").read_text(encoding="utf-8").replace("return 1", "return 9"),
+        encoding="utf-8", newline="\n")
     assert check_map(result, root) == []
     stale = generator().map_staleness(result, root)
     assert any("byte group drift" in p for p in stale)
@@ -270,7 +330,7 @@ def test_diverged_copy_warns_without_losing_symbol_validity(sample):
 
 
 def test_reference_check_runs_in_ci_harness():
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     job = workflow["jobs"]["ci-harness-tests"]
     assert "if" not in job
     assert any("tests/docs/test_implementation_map.py" in step.get("run", "") for step in job["steps"])
@@ -313,22 +373,22 @@ def test_long_numeric_reports_have_bounded_search_cost(sample, map_document):
     doc, root = sample
     signal = next(f for f in map_document["families"] if f["id"] == "wind-and-current-force-routes")["search_signals"][0]
     doc["families"][0]["search_signals"] = [signal]
-    (root / "numeric-report.txt").write_text("0.5 " * 200000)
-    (root / "document.json").write_text(json.dumps(doc))
+    (root / "numeric-report.txt").write_text("0.5 " * 200000, encoding="utf-8", newline="\n")
+    (root / "document.json").write_text(json.dumps(doc), encoding="utf-8", newline="\n")
     program = """
 import importlib.util, json, pathlib, sys
 spec = importlib.util.spec_from_file_location('map_generator', sys.argv[1])
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 root = pathlib.Path(sys.argv[2])
-doc = json.loads((root / 'document.json').read_text())
+doc = json.loads((root / 'document.json').read_text(encoding='utf-8'))
 result = module.regenerate(doc, root, tracked_paths=['sample.py', 'numeric-report.txt'], revision='b' * 40)
 assert result['searched']['text_files_searched'] == 2
 assert result['families'][0]['search_audit'][0]['matching_files'] == 0
 """
     subprocess.run([sys.executable, "-c", program,
                     str(ROOT / "scripts/generate_implementation_map.py"), str(root)],
-                   check=True, capture_output=True, text=True, timeout=30)
+                   check=True, capture_output=True, text=True, encoding="utf-8", timeout=30)
 
 
 @pytest.mark.parametrize("path,symbol", [
@@ -375,23 +435,70 @@ def test_rejection_in_another_family_is_retained(sample):
 
 
 def test_ci_harness_prints_staleness_diagnostics():
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
+    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
     steps = workflow["jobs"]["ci-harness-tests"]["steps"]
     commands = [step.get("run", "") for step in steps]
     assert any("python scripts/generate_implementation_map.py" in command
                and "--write" not in command for command in commands)
 
 
-def test_inventory_excludes_external_links_without_reading_them(sample, tmp_path_factory):
+@pytest.mark.parametrize("directory_link", [False, True], ids=["file-link", "directory-link"])
+def test_inventory_excludes_external_links_without_reading_them(
+        sample, tmp_path_factory, directory_link):
     doc, root = sample
     outside = tmp_path_factory.mktemp("external_inventory") / "source.py"
-    outside.write_text("external source must not be searched")
-    (root / "external.py").symlink_to(outside)
-    texts, _, exclusions = generator().inventory(root, ["sample.py", "external.py"])
+    outside.write_text("external source must not be searched", encoding="utf-8", newline="\n")
+    if directory_link:
+        (root / "external").symlink_to(outside.parent, target_is_directory=True)
+        path = "external/source.py"
+    else:
+        (root / "external.py").symlink_to(outside)
+        path = "external.py"
+    texts, _, exclusions = generator().inventory(root, ["sample.py", path])
     assert set(texts) == {"sample.py"}
     assert exclusions["external_links"] == 1
-    doc["families"][0]["implementations"][0]["path"] = "external.py"
+    doc["families"][0]["implementations"][0]["path"] = path
     assert any("escaping path" in p for p in check_map(doc, root))
+
+
+@pytest.mark.parametrize("directory_link", [False, True], ids=["file-link", "directory-link"])
+def test_inventory_retains_internal_links(sample, directory_link):
+    doc, root = sample
+    if directory_link:
+        (root / "internal").symlink_to(root, target_is_directory=True)
+        path = "internal/sample.py"
+    else:
+        (root / "internal.py").symlink_to(root / "sample.py")
+        path = "internal.py"
+    texts, _, exclusions = generator().inventory(root, ["sample.py", path])
+    assert set(texts) == {"sample.py", path}
+    assert texts[path] == texts["sample.py"]
+    assert "external_links" not in exclusions
+    doc["families"][0]["implementations"][0]["path"] = path
+    assert check_map(doc, root) == []
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows junction creation requires Windows")
+def test_inventory_excludes_external_junction(sample, tmp_path_factory):
+    """Junctions must be excluded even when they are not reported as symlinks."""
+    import _winapi
+
+    doc, root = sample
+    outside = tmp_path_factory.mktemp("external_junction") / "source.py"
+    original = b"external source must not be searched"
+    outside.write_bytes(original)
+    link = root / "external"
+    _winapi.CreateJunction(str(outside.parent), str(link))
+    try:
+        assert not link.is_symlink()
+        texts, _, exclusions = generator().inventory(root, ["sample.py", "external/source.py"])
+        assert set(texts) == {"sample.py"}
+        assert exclusions["external_links"] == 1
+        doc["families"][0]["implementations"][0]["path"] = "external/source.py"
+        assert any("escaping path" in problem for problem in check_map(doc, root))
+    finally:
+        link.unlink()
+    assert outside.read_bytes() == original
 
 
 def test_registry_generator_has_a_reasoned_non_html_classification():
