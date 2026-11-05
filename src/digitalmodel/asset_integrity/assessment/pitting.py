@@ -65,6 +65,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from numbers import Real
 from typing import Optional
 
 import numpy as np
@@ -257,8 +258,10 @@ def characterize_pit_field(
 def _row_spacing(grid_df, explicit):
     """Return pitch and evidence source without treating grid labels as inches."""
     if explicit is not None:
-        if not math.isfinite(explicit) or explicit <= 0:
-            raise ValueError("row_spacing_in must be positive and finite")
+        if (isinstance(explicit, (bool, np.bool_, np.timedelta64, np.datetime64))
+                or not isinstance(explicit, Real)
+                or not math.isfinite(explicit) or explicit <= 0):
+            raise ValueError("row_spacing_in must be a positive finite real number")
         return float(explicit), "explicit"
     if (grid_df.attrs.get("axial_coordinates") == "generated"
             or isinstance(grid_df.index, pd.RangeIndex)):
@@ -285,8 +288,9 @@ def _geometry_applicability(characterization):
         return Applicability()
     return Applicability(
         ok=False, flags=["pitting.missing_axial_pitch"], notes=[
-            "Physical axial coordinates or explicit row_spacing_in are missing; "
-            "unit pitch is an assumption, not a measurement. Extent and pit "
+            "Physical axial pitch could not be established from coordinates or "
+            "explicit row_spacing_in; numeric coordinates must be finite and "
+            "strictly increasing. The unit pitch is an assumption, not a measurement. Extent and pit "
             "spacing are provisional; supply physical pitch before disposition."
         ],
     )

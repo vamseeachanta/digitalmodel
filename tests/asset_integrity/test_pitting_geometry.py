@@ -3,18 +3,16 @@
 
 """Synthetic geometry regressions; no engineering-method qualification.
 
-Formula provenance: the existing approximation in level2_engine.py's module
-and _folias_factor docstrings supplies lambda = 1.285 L / sqrt(D tc),
-Mt = sqrt(1 + 0.48 min(lambda, 20)**2) for these fixtures (lambda > 0.354).
-The coefficients and cap describe that repository algorithm, not independently
-verified standard values. Its governing reference is API 579-1/ASME FFS-1,
-Fitness-For-Service, 2021 edition, Part 5 section 5.4 (Level 2 assessment),
-RSF equation (5.13); its Folias basis cites Part 4 equation (4.20) / Table 4.4.
+Formula provenance: API 579-1/ASME FFS-1, Fitness-For-Service, 2021 edition,
+Part 5 (Assessment of Local Metal Loss) and Part 4 (Assessment of General
+Metal Loss). The module and _folias_factor docstrings in level2_engine.py
+identify the repository approximation used by these fixtures. Its coefficients
+and cap are not independently verified standard values.
 No verified standard copy is in hand; these are algorithm regression oracles.
 
 Independent derivation: decimal arithmetic at 50-digit precision, without
 production imports, substitutes D = 16 - 2 tc, Rt = min(pit_wall / tc, 1),
-and RSF = Rt / (1 - (1 - Rt) / Mt) into the relations above. The fixed
+and RSF = Rt / (1 - (1 - Rt) / Mt) into the identified approximation. The fixed
 expectations below cover (L, tc, pit_wall), in inches:
 (40, .35, .46), (40, .47, .46), (10, .35, .30), (40, .35, .30).
 They exercise capped/uncapped lambda, Rt = 1, and singleton/multirow extent.
@@ -132,7 +130,11 @@ def test_yaml_adapter_propagates_generated_labels_or_explicit_pitch(pitch):
         assert "applicability" not in result
 
 
-@pytest.mark.parametrize("pitch", [0.0, -1.0, float("nan"), float("inf")])
+@pytest.mark.parametrize("pitch", [
+    0.0, -1.0, float("nan"), float("inf"), True, False, np.True_,
+    np.timedelta64(10, "ns"), np.datetime64("2025-01-01"), "10", 10 + 0j,
+    [10.0],
+])
 def test_invalid_explicit_pitch_is_rejected(pitch):
     with pytest.raises(ValueError, match="row_spacing_in"):
         characterize_pit_field(pd.DataFrame([[0.3, 0.5]] * 4), 0.5, row_spacing_in=pitch)
@@ -147,7 +149,11 @@ def test_generated_provenance_survives_filtering_and_numeric_index_conversion():
     assert char.row_spacing_in == 1.0
 
 
-@pytest.mark.parametrize("length", [0.0, -1.0, float("nan"), float("inf")])
+@pytest.mark.parametrize("length", [
+    0.0, -1.0, float("nan"), float("inf"), True, False, np.True_,
+    np.timedelta64(10, "ns"), np.datetime64("2025-01-01"), "10", 10 + 0j,
+    [10.0],
+])
 def test_explicit_engine_extent_requires_positive_finite_length(length):
     with pytest.raises(ValueError, match="flaw_length_in"):
         Level2Engine("LML", 16.0, 0.5, 0.35).evaluate(
@@ -186,3 +192,35 @@ def test_validated_numeric_coordinates_supply_minimum_pitch(index):
     assert char.row_spacing_source == "index"
     assert char.row_spacing_in == 10.0
     assert char.pitted_region_length_in == 30.0
+
+
+def test_yaml_adapter_rejects_boolean_pitch():
+    import yaml
+
+    block = yaml.safe_load("row_spacing_in: true")
+    block.update(component=vars(component()), grid=[[0.3, 0.5]] * 4,
+                 force_type="PITTING")
+    with pytest.raises(ValueError, match="row_spacing_in"):
+        FFSWorkflow().router({"basename": "ffs", "ffs_assessment": block})
+
+
+@pytest.mark.parametrize("value", [10, 10.0, np.int64(10), np.float64(10)])
+def test_real_numeric_pitch_and_extent_remain_supported(value):
+    grid = pd.DataFrame([[0.3, 0.5]] * 3)
+    char = characterize_pit_field(grid, 0.5, row_spacing_in=value)
+    assert char.row_spacing_source == "explicit"
+    assert char.pitted_region_length_in == 30.0
+    result = Level2Engine("LML", 16.0, 0.5, 0.35).evaluate(
+        grid, flaw_length_in=value)
+    assert result["flaw_length_in"] == 10.0
+
+
+@pytest.mark.parametrize("index", [[20, 10, 0], [0, 10, 10], [0, 20, 10]])
+def test_unordered_coordinates_explain_pitch_requirement(index):
+    result = assess_pitting(pd.DataFrame([[0.3, 0.5]] * 3, index=index),
+                            nominal_od_in=16.0, nominal_wt_in=0.5, t_min_in=0.35)
+    applicability = result["level2"]["applicability"]
+    assert "pitting.missing_axial_pitch" in applicability.flags
+    note = " ".join(applicability.notes)
+    assert "could not be established" in note
+    assert "strictly increasing" in note

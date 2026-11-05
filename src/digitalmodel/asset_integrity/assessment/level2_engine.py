@@ -44,6 +44,7 @@ References:
 from __future__ import annotations
 
 import math
+from numbers import Real
 
 import numpy as np
 import pandas as pd
@@ -124,9 +125,11 @@ class Level2Engine:
                     exceeds the Table 4.4 range and M_t was frozen (#1094)
         """
         if flaw_length_in is not None:
-            if (self._type != "LML" or not math.isfinite(flaw_length_in)
-                    or flaw_length_in <= 0):
-                raise ValueError("flaw_length_in requires a positive finite LML extent")
+            if (self._type != "LML"
+                    or isinstance(flaw_length_in, (bool, np.bool_, np.timedelta64, np.datetime64))
+                    or not isinstance(flaw_length_in, Real)
+                    or not math.isfinite(flaw_length_in) or flaw_length_in <= 0):
+                raise ValueError("flaw_length_in requires a positive finite real LML extent")
         if self._type == "GML":
             return self._evaluate_gml(grid_df)
         return self._evaluate_lml(grid_df, flaw_length_in=flaw_length_in)
