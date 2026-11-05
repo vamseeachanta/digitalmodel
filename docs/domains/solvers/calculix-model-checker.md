@@ -39,6 +39,15 @@ deck, so edits after setup are checked.
 | `unmerged_nodes` | Error | Distinct nodes lie within the stated tolerance. Merge them or validate an intentional tie. Only opposite sides of an explicit tie are exempt; contact alone supplies no exemption. |
 | `missing_reference` | Error | A referenced node, element, set, material, surface, amplitude or contact interaction is undefined. Correct the name or define the entity. |
 | `missing_section` | Error | An element lacks a section or mass property assignment. Complete its analysis definition. |
+| `incompatible_section` | Error | A section or property does not support an assigned element type. Use a compatible section for each element family. |
+| `missing_connection_parameter` | Error | A tie lacks a nonempty NAME or a contact pair lacks a nonempty INTERACTION. Supply the parameter and define the named interaction for contact. |
+| `unsupported_tie_mode` | Error | A tie uses an unsupported or conflicting mode. Use the supported ordinary tie formulation or extend and test the gate. |
+| `duplicate_tie_name` | Error | Multiple ties share a name. Give each tie a unique name. |
+| `incompatible_master_surface` | Error | A tie or contact master is not an element-face surface. Define its master with TYPE=ELEMENT. |
+| `incompatible_tie_surface` | Error | An ordinary tie includes non-solid surface members. Use three-dimensional solid surfaces or a separately supported constraint. |
+| `unsupported_contact_type` | Error | Contact TYPE is missing or unsupported. Specify NODE TO SURFACE, SURFACE TO SURFACE, MORTAR or MASSLESS. |
+| `incompatible_contact_type` | Error | Contact pairs use different formulations. Use one contact TYPE throughout the deck. |
+| `incompatible_slave_surface` | Error | Face-to-face or quadratic contact has an incompatible slave surface. Define the slave with TYPE=ELEMENT. |
 | `unused_definition`, `unused_section` | Warning | A definition is unreferenced or a section selects no elements. Confirm its purpose or remove it. |
 | `contact_path` | Warning | A contact pair supplies a possible support path. Confirm gaps, normals and engagement independently. |
 | `parse_error`, `unsupported_topology`, `empty_mesh`, `empty_surface` | Error | The reader cannot establish a usable model. Correct the input or extend and test the supported reader. |
@@ -61,6 +70,7 @@ Supported element widths are explicit in
 `_deck.ELEMENT_NODES`; they cover common solid, plane, axisymmetric, shell,
 beam, truss, two-node spring/dashpot and point-mass elements. Element surfaces
 support tetrahedron, hexahedron and wedge faces and shell SPOS/SNEG faces.
+For supported shells, S1 aliases SNEG and S2 aliases SPOS.
 Node surfaces resolve node IDs or node sets.
 
 gmsh INP exports contain only a mesh. Add material, section and boundary
@@ -73,8 +83,10 @@ compute stiffness rank, assess mesh quality or qualify an analysis. Contact
 paths assume the declared pairs can engage. A tie joins its declared surfaces;
 its interpolation and effective tolerance require independent review.
 
-Boundary conditions persist between steps; `OP=NEW` resets the active
-restraints. Each step is checked independently. Rotational restraints alone
+Boundary conditions persist between steps. Only the first boundary card in a
+step applies `OP`; `OP=NEW` on that card resets the active restraints.
+Subsequent boundary cards accumulate restraints even if they repeat `OP=NEW`.
+Each step is checked independently. Rotational restraints alone
 do not support solid-only nodes. The reader blocks unsupported element types,
 coordinate transforms, mesh-generation keywords, assemblies, composite
 sections, equations, MPCs and rigid-body constraints. Other solver physics and
