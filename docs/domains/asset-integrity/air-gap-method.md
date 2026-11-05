@@ -3,7 +3,8 @@
 ## Summary
 
 The API calculates geometric clearance and compares it with a supplied minimum.
-It reports the first sampled breach of that minimum. It does not establish a
+It reports the first sampled breach of that minimum, including annual forecasts
+under a supplied constant subsidence rate. It does not establish a
 complete fixed-platform assessment or select design-basis criteria.
 
 ## Revision history
@@ -11,6 +12,7 @@ complete fixed-platform assessment or select design-basis criteria.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-28 | Define supplied-data subtraction and sampled comparisons with independent arithmetic checks. |
+| 1 | 2026-11-05 | Add constant-rate annual forecasts, catalog discovery and a reproducible synthetic capability example. |
 
 ## API and datum contract
 
@@ -45,6 +47,37 @@ need not increase. The result contains ordered `samples` and
 `first_sampled_breach`, the first supplied label with clearance below the minimum,
 or `None` if no supplied sample breaches it.
 
+## Supplied constant-rate forecast
+
+`SubsidenceForecast(reference_year, subsidence_m, rate_m_per_year)` supplies
+cumulative downward movement at an annual reference date and a constant,
+nonnegative rate in metres per year. `forecast_air_gap(basis, forecast, end_year)`
+evaluates every annual anniversary from the reference year through the end year,
+inclusive, using:
+
+```text
+subsidence(year) = reference subsidence + rate * (year - reference year)
+```
+
+Both years must be integers from 1 through 9999; the end cannot precede the
+reference year. Input and derived quantities must be finite. The forecast uses
+the existing sampled comparison, including its datum checks and equality rule.
+The first sampled breach is an annual label, not an exact continuous crossing
+date. `None` establishes no breach only at these samples within the horizon.
+No rate is fitted to history, no fractional-year duration is inferred and no
+day-count convention is needed for these annual increments.
+
+The reference deck elevation must precede all supplied cumulative subsidence.
+For a surveyed current deck elevation, rebase movement to that survey date;
+subtracting historical movement again would double-count subsidence. The water
+levels, crest and required clearance remain fixed for each forecast. Run separate
+bases for independently established return periods or environmental scenarios.
+
+[The generated capability page](air-gap-capability.md) provides an invented
+history, forecast and the geometry inputs to three remediation options. Its
+target-year lift deficit is `max(0, -margin)` only; it specifies neither a design
+lift height nor a feasible lift operation.
+
 ## Independent synthetic hand calculation
 
 The example is defined solely for subtraction checks: deck underside D = 10 m,
@@ -66,12 +99,14 @@ offsets and boundary probes solely to check input and coordinate contracts.
 ## Supplied-data limitations
 
 Deck elevation, still water, crest height, subsidence and minimum clearance
-require an independently established basis. Labels identify samples only: no
-calendar-year duration convention, interpolation, forecast rate or subsidence
-model is introduced. No uncertainty allowance is inferred. A result above the
+require an independently established basis. Supplied samples are not interpolated;
+the forecast is restricted to an explicitly supplied constant annual rate.
+No uncertainty allowance is inferred. A result above the
 supplied minimum establishes only this geometric comparison.
 
-Wave-in-deck loads, environmental selection, code criteria, raising or remediation
-advice and economic decisions remain outside this API. The offering catalog and
-public capability status remain unchanged. Issue #3443 remains open for those
-independently sourced parts and broader platform qualification.
+Wave-in-deck loads, environmental selection, code criteria, raising feasibility,
+operating limits and economic decisions remain outside this API. The offering
+catalog registers `air-gap` with status `engine`, meaning code and tests only.
+This status establishes supplied-data geometry, without a SIM verdict or broader
+platform qualification. Issue #3443 remains open for load screening, a qualified
+jacking sequence, assessment criteria and independent published-case validation.

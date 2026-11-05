@@ -5,7 +5,8 @@
 Method: docs/domains/asset-integrity/air-gap-method.md. Clearance is
 deck underside minus downward subsidence minus still water minus crest height;
 margin subtracts the supplied minimum. Zero is the algebraic comparison boundary,
-not a selected engineering criterion. Annual labels identify samples only.
+not a selected engineering criterion. Forecasts use a supplied constant annual
+rate; annual labels identify samples only, never a continuous crossing date.
 """
 
 from __future__ import annotations
@@ -49,6 +50,19 @@ class SubsidenceSample:
 
     date_label: int
     subsidence_m: float
+
+
+@dataclass(frozen=True)
+class SubsidenceForecast:
+    """Cumulative movement from the reference deck elevation and a supplied rate.
+
+    The rate is in metres per calendar-year increment, constant and nonnegative.
+    No measured-history fitting, day-count convention or uncertainty is inferred.
+    """
+
+    reference_year: int
+    subsidence_m: float
+    rate_m_per_year: float
 
 
 @dataclass(frozen=True)
@@ -152,3 +166,43 @@ def evaluate_sampled_air_gap(
             first_breach = label
         previous = label
     return SampledAirGap(tuple(rows), first_breach)
+
+
+def forecast_air_gap(
+    basis: AirGapBasis, forecast: SubsidenceForecast, end_year: int,
+) -> SampledAirGap:
+    """Evaluate inclusive annual samples under a supplied constant rate.
+
+    Args:
+        basis: Fixed deck reference elevation, still water, crest and minimum.
+            Subsidence is cumulative from this deck elevation; do not subtract
+            historical subsidence again from an already lowered survey elevation.
+        forecast: Cumulative downward movement at the reference year and rate.
+            Years are integers from 1 through 9999, sampled at the same annual
+            anniversary. No subannual date or continuous crossing is calculated.
+        end_year: Last sampled year, at or after the reference year.
+
+    Returns:
+        Annual geometry and the first sampled year below the supplied minimum.
+        None means no breach at these samples within this horizon only.
+
+    Raises:
+        ValueError: Years are invalid or reversed, magnitudes are invalid, datum
+            labels conflict, or input or derived arithmetic is nonfinite.
+    """
+    for year in (forecast.reference_year, end_year):
+        if isinstance(year, bool) or not isinstance(year, int) or not 1 <= year <= 9999:
+            raise ValueError("Each year must be an integer from 1 through 9999")
+    if end_year < forecast.reference_year:
+        raise ValueError("End year must not precede reference year")
+    _finite_number(forecast.subsidence_m, "subsidence_m", nonnegative=True)
+    _finite_number(forecast.rate_m_per_year, "rate_m_per_year", nonnegative=True)
+    samples = tuple(
+        SubsidenceSample(
+            year,
+            forecast.subsidence_m
+            + forecast.rate_m_per_year * (year - forecast.reference_year),
+        )
+        for year in range(forecast.reference_year, end_year + 1)
+    )
+    return evaluate_sampled_air_gap(basis, samples)

@@ -108,6 +108,7 @@ engines:
   hull-girder: {module: hull_girder_screening, status: engine}
   sn-fatigue: {module: structural.fatigue, status: engine, note: "221 S-N curves, 17 standards; library, not a verdict"}
   scour: {module: geotechnical.scour, status: engine, note: "screening only: sediment-motion threshold (FHWA-RD-03-052 eq. 3) and supplied-limit armour comparison; depth NOT_EVALUATED"}
+  air-gap: {module: asset_integrity.air_gap, status: engine, issue: 3443, note: "supplied-data geometry and constant-rate annual samples only; no wave loads, code criteria or SIM verdict"}
   structural-health: {module: structural.offshore_resilience.structural_health, status: engine, note: "sensor templates and alert framework"}
   tank-settlement-screen: {status: planned, issue: 2172}
   tank-level3: {status: planned, issue: 2174}
@@ -208,7 +209,7 @@ industries:
           - {mechanism: "corrosion wastage (splash zone, atmospheric)", codes: [api-rp-2sim, api-rp-2a], engines: [jacket-member-joint], tiers: [T1, T2], status: engine, note: "thickness-reduced re-check possible"}
           - {mechanism: fatigue cracks at tubular joints, codes: [api-rp-2sim, bs-7910, dnv-rp-c203], engines: [crack-fad, sn-fatigue], tiers: [T2, T3], status: engine}
           - {mechanism: "missing / severed / flooded members (pushover, RSR)", codes: [api-rp-2sim, iso-19902], engines: [platform-damaged-member, calculix-nonlinear], tiers: [T3], status: planned}
-          - {mechanism: "scour, subsidence, marine growth beyond design", codes: [api-rp-2sim], engines: [scour], tiers: [T1], status: engine, note: "scour capacity only; no SIM verdict"}
+          - {mechanism: "scour, subsidence, marine growth beyond design", codes: [api-rp-2sim], engines: [scour, air-gap], tiers: [T1], status: engine, note: "scour screening and supplied-data subsidence geometry only; no wave loads, marine-growth assessment or code criteria; no SIM verdict"}
           - {mechanism: structural health monitoring alerts, codes: [api-rp-2sim, dnv-st-0126], engines: [structural-health], tiers: [T1], status: engine}
       - asset: conductors, caissons, boat landings, risers guards
         defects:
