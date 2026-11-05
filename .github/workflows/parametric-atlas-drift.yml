@@ -134,6 +134,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+      - *atlas-build-merge
       - name: Retain canonical default-branch history
         shell: bash
         env:
@@ -141,9 +142,10 @@ jobs:
           DEFAULT_REPOSITORY_URL: ${{ github.event.repository.clone_url }}
         run: |
           set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
           git fetch --no-tags "$DEFAULT_REPOSITORY_URL" \
             "+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
-      - *atlas-build-merge
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'

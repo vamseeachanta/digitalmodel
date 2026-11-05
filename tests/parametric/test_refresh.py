@@ -501,7 +501,7 @@ def test_parametric_tests_have_a_hosted_job():
     drift_steps = workflow["jobs"]["atlas-drift"]["steps"]
     for key in ("repository", "ref"):
         assert checkout["with"][key] == drift_steps[0]["with"][key]
-    assert next(step for step in job["steps"] if step.get("id") == "build_merge") == drift_steps[1]
+    assert job["steps"][1] == drift_steps[1]
     commands = "\n".join(step.get("run", "") for step in job["steps"])
     assert "python -m pytest tests/parametric/" in commands
 
@@ -530,8 +530,12 @@ def test_parametric_tests_retain_canonical_default_branch():
     assert 'git fetch --no-tags "$DEFAULT_REPOSITORY_URL"' in command
     assert '"+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"' in command
     assert "--depth" not in command
+    first_fetch = command.index("git fetch ")
+    for setting in ("gc.auto 0", "maintenance.auto false"):
+        assert command.index(f"git config {setting}") < first_fetch
     merge_step = next(step for step in steps if step.get("id") == "build_merge")
-    assert 0 < steps.index(history_step) < steps.index(merge_step)
+    assert steps.index(merge_step) == 1
+    assert steps.index(merge_step) < steps.index(history_step)
 
 
 def test_fatigue_atlases_track_the_deterministic_power_module():
