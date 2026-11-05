@@ -24,7 +24,7 @@ check_map = _MODULE.check_map
 
 @pytest.fixture(scope="module")
 def map_document():
-    return yaml.safe_load(MAP_PATH.read_text(encoding="utf-8"))
+    return yaml.load(MAP_PATH.read_text(encoding="utf-8"), Loader=_MODULE.InventorySafeLoader)
 
 
 def test_implementation_map_references(map_document):
@@ -34,6 +34,62 @@ def test_implementation_map_references(map_document):
         import logging
         logging.getLogger(__name__).warning(
             "Implementation map snapshot has %s staleness diagnostics; run the generator to inspect drift.", len(stale))
+
+
+@pytest.mark.parametrize("write", [False, True])
+@pytest.mark.parametrize("text", [
+    "agent_packs: {first: retained}\nagent_packs: {second: retained}\n",
+    "agent_packs:\n  first: retained\n  first: replaced\n",
+    "agent_packs: {first: retained, first: retained}\n",
+    "defaults: &packs {first: retained}\nagent_packs: {<<: *packs, first: replaced}\n",
+], ids=["top-level", "nested", "flow", "merged"])
+def test_duplicate_yaml_keys_are_rejected_before_inventory_work(
+        tmp_path, monkeypatch, capsys, text, write):
+    """Invalid mappings must not reach validation, regeneration or output writes."""
+    import sys
+
+    module = generator()
+    target = tmp_path / "map.yaml"
+    target.write_text(text, encoding="utf-8")
+    checkpoint = tmp_path / "checkpoint.json"
+    checkpoint.write_text("retained checkpoint", encoding="utf-8")
+    calls = []
+
+    def record(name, result):
+        def called(*args):
+            calls.append(name)
+            return result
+        return called
+
+    monkeypatch.setattr(module, "check_map", record("check", []))
+    monkeypatch.setattr(module, "map_staleness", record("staleness", []))
+    monkeypatch.setattr(module, "regenerate", record("regenerate", {}))
+    monkeypatch.setattr(module, "render_map", record("render", text))
+    args = ["generator", "--root", str(tmp_path), "--map", "map.yaml"]
+    if write:
+        args += ["--write", "--checkpoint", str(checkpoint)]
+    monkeypatch.setattr(sys, "argv", args)
+
+    with pytest.raises(SystemExit) as error:
+        module.main()
+    assert error.value.code == 2
+    assert "duplicate mapping key" in capsys.readouterr().err
+    assert calls == []
+    assert target.read_text(encoding="utf-8") == text
+    assert checkpoint.read_text(encoding="utf-8") == "retained checkpoint"
+
+
+def test_inventory_yaml_loader_preserves_safe_values_and_aliases():
+    """Strict inventory reads retain PyYAML scalar and anchor semantics."""
+    text = (
+        "defaults: &packs {first: retained, enabled: yes}\n"
+        "agent_packs: *packs\nother: {<<: *packs, second: retained}\n"
+    )
+    doc = yaml.load(text, Loader=generator().InventorySafeLoader)
+    assert doc == yaml.safe_load(text)
+    assert doc["agent_packs"] is doc["defaults"]
+    # The inventory policy is local; unrelated PyYAML readers keep their loader.
+    assert yaml.safe_load("first: retained\nfirst: replaced\n") == {"first": "replaced"}
 
 
 def test_missing_path_is_reported(map_document):

@@ -53,6 +53,27 @@ EXCLUDED = {
 DEFINITION = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 
 
+class InventorySafeLoader(yaml.SafeLoader):
+    """Reject repeated inventory keys, including nested and merged mappings."""
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
+        """Check keys before constructing a mapping that could discard entries."""
+        self.flatten_mapping(node)
+        keys = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            try:
+                if key in keys:
+                    raise yaml.constructor.ConstructorError(
+                        None, None, "duplicate mapping key", key_node.start_mark)
+                keys.add(key)
+            except TypeError as error:
+                raise yaml.constructor.ConstructorError(
+                    None, None, "unhashable mapping key", key_node.start_mark
+                ) from error
+        return super().construct_mapping(node, deep=deep)
+
+
 def definitions(text: str) -> dict[str, Any]:
     """Index exact lexical qualified names without importing source modules."""
     with warnings.catch_warnings(record=True):
@@ -539,7 +560,7 @@ def render_map(original: str, doc: dict[str, Any]) -> str:
     output = io.StringIO()
     emitter.dump(merge(current, doc), output)
     rendered = output.getvalue()
-    if yaml.safe_load(rendered) != doc:
+    if yaml.load(rendered, Loader=InventorySafeLoader) != doc:
         raise ValueError("rendered map readback differs")
     return rendered
 
@@ -555,7 +576,11 @@ def main() -> int:
     args = parser.parse_args()
     sources = Sources(args.root)
     target = sources.target(args.map)
-    doc = yaml.safe_load(target.read_text(encoding="utf-8"))
+    try:
+        doc = yaml.load(target.read_text(encoding="utf-8"), Loader=InventorySafeLoader)
+    except yaml.YAMLError as error:
+        problem = getattr(error, "problem", "invalid YAML")
+        parser.exit(2, f"implementation map: {problem}\n")
     if args.write:
         print("Regenerating tracked-file searches and digests.", flush=True)
         doc = regenerate(doc, sources.root)
@@ -571,7 +596,7 @@ def main() -> int:
         return 1
     if args.write:
         target.write_text(render_map(target.read_text(encoding="utf-8"), doc), encoding="utf-8")
-        if yaml.safe_load(target.read_text(encoding="utf-8")) != doc:
+        if yaml.load(target.read_text(encoding="utf-8"), Loader=InventorySafeLoader) != doc:
             raise ValueError("generated map readback differs")
     stale = map_staleness(doc, sources.root)
     for warning in stale:
