@@ -494,8 +494,44 @@ def test_parametric_tests_have_a_hosted_job():
     job = workflow["jobs"]["parametric-tests"]
     assert job["runs-on"] == "ubuntu-latest"
     assert "if" not in job
+    checkout = job["steps"][0]
+    assert checkout["uses"] == "actions/checkout@v4"
+    assert checkout["with"]["fetch-depth"] == 0
+    assert "if" not in checkout
+    drift_steps = workflow["jobs"]["atlas-drift"]["steps"]
+    for key in ("repository", "ref"):
+        assert checkout["with"][key] == drift_steps[0]["with"][key]
+    assert next(step for step in job["steps"] if step.get("id") == "build_merge") == drift_steps[1]
     commands = "\n".join(step.get("run", "") for step in job["steps"])
     assert "python -m pytest tests/parametric/" in commands
+
+
+def test_parametric_tests_retain_canonical_default_branch():
+    import yaml
+
+    workflow = yaml.safe_load(
+        (refresh.REPO_ROOT / ".github/workflows/parametric-atlas-drift.yml").read_text(
+            encoding="utf-8",
+        )
+    )
+    steps = workflow["jobs"]["parametric-tests"]["steps"]
+    history_steps = [
+        step for step in steps if "DEFAULT_REPOSITORY_URL" in step.get("env", {})
+    ]
+    assert len(history_steps) == 1
+    history_step = history_steps[0]
+    assert "if" not in history_step
+    assert history_step["shell"] == "bash"
+    assert history_step["env"] == {
+        "DEFAULT_BRANCH": "${{ github.event.repository.default_branch }}",
+        "DEFAULT_REPOSITORY_URL": "${{ github.event.repository.clone_url }}",
+    }
+    command = history_step["run"]
+    assert 'git fetch --no-tags "$DEFAULT_REPOSITORY_URL"' in command
+    assert '"+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"' in command
+    assert "--depth" not in command
+    merge_step = next(step for step in steps if step.get("id") == "build_merge")
+    assert 0 < steps.index(history_step) < steps.index(merge_step)
 
 
 def test_fatigue_atlases_track_the_deterministic_power_module():

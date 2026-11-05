@@ -128,7 +128,21 @@ jobs:
     name: Parametric package tests
     runs-on: ubuntu-latest
     steps:
-      - *atlas-checkout
+      - name: Checkout code with full history
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Retain canonical default-branch history
+        shell: bash
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          DEFAULT_REPOSITORY_URL: ${{ github.event.repository.clone_url }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags "$DEFAULT_REPOSITORY_URL" \
+            "+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
       - *atlas-build-merge
       - uses: actions/setup-python@v5
         with:
