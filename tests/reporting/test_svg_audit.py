@@ -3,6 +3,7 @@
 
 """Namespace and label placement controls for static report graphics."""
 
+import sys
 from html.parser import HTMLParser
 
 import pytest
@@ -85,6 +86,106 @@ def test_numeric_labels_check_values_and_multiplicity_without_changing_markup():
     assert layout_audit.audit_svg_text(
         document, expected_labels={"curve": ["12.5 & 8.0"]}
     ).status == "FAIL"
+
+
+@pytest.fixture(
+    params=[
+        "{}",
+        "<g>{}</g>",
+        "<foreignObject>{}</foreignObject>",
+        "<foreignobject>{}</foreignobject>",
+        "<text>{}</text>",
+    ],
+    ids=["direct", "grouped", "foreign-object", "lowercase-foreign-object", "text"],
+)
+def nested_graphic(request):
+    return request.param.format('<svg id="other"><text>12.5</text></svg>')
+
+
+def test_nested_graphic_label_cannot_satisfy_outer_graphic(nested_graphic):
+    document = f'<svg id="curve">{nested_graphic}</svg>'
+    check = layout_audit.audit_svg_text(document, expected_labels={"curve": ["12.5"]})
+    assert check.status == "FAIL"
+    assert check.details == ("SVG 'curve' label '12.5': expected 1, found 0.",)
+
+
+def test_one_nested_label_cannot_satisfy_both_graphic_ids(nested_graphic):
+    document = f'<svg id="curve">{nested_graphic}</svg>'
+    check = layout_audit.audit_svg_text(
+        document, expected_labels={"curve": ["12.5"], "other": ["12.5"]}
+    )
+    assert check.status == "FAIL"
+    assert check.details == ("SVG 'curve' label '12.5': expected 1, found 0.",)
+
+
+def test_nested_graphic_keeps_its_own_label(nested_graphic):
+    document = f'<svg id="curve">{nested_graphic}</svg>'
+    check = layout_audit.audit_svg_text(document, expected_labels={"other": ["12.5"]})
+    assert check.status == "PASS"
+    assert check.details == ()
+
+
+def test_missing_label_in_nested_graphic_fails(nested_graphic):
+    document = f'<svg id="curve">{nested_graphic}</svg>'
+    check = layout_audit.audit_svg_text(document, expected_labels={"other": ["7.0"]})
+    assert check.status == "FAIL"
+    assert check.details == ("SVG 'other' label '7.0': expected 1, found 0.",)
+
+
+def test_labels_after_nested_graphic_are_counted_once_per_graphic(nested_graphic):
+    document = f'<svg id="curve"><g>{nested_graphic}<text>12.5</text></g></svg>'
+    # One text element belongs to each graphic, including the following sibling.
+    check = layout_audit.audit_svg_text(
+        document, expected_labels={"curve": ["12.5"], "other": ["12.5"]}
+    )
+    assert check.status == "PASS"
+    assert check.details == ()
+
+
+@pytest.mark.parametrize("wrapper", ["{}", "<foreignObject>{}</foreignObject>"])
+def test_text_after_excluded_subtree_remains_in_outer_label(wrapper):
+    nested = wrapper.format('<svg id="other"><text>12.5</text></svg>')
+    document = graphic(f'<tspan>7.0</tspan>{nested} &amp; <tspan>4.0</tspan>')
+    check = layout_audit.audit_svg_text(
+        document, expected_labels={"curve": ["7.0 & 4.0"], "other": ["12.5"]}
+    )
+    assert check.status == "PASS"
+    assert check.details == ()
+
+
+def test_three_nested_graphics_keep_separate_labels():
+    document = (
+        '<svg id="curve"><text>7.0</text>'
+        '<svg id="middle"><text>4.0</text>'
+        '<svg id="other"><text>12.5</text></svg></svg></svg>'
+    )
+    assert layout_audit.audit_svg_text(
+        document,
+        expected_labels={"curve": ["7.0"], "middle": ["4.0"], "other": ["12.5"]},
+    ).status == "PASS"
+    check = layout_audit.audit_svg_text(
+        document,
+        expected_labels={"curve": ["12.5"], "middle": ["12.5"], "other": ["12.5"]},
+    )
+    assert check.status == "FAIL"
+    assert check.details == (
+        "SVG 'curve' label '12.5': expected 1, found 0.",
+        "SVG 'middle' label '12.5': expected 1, found 0.",
+    )
+
+
+@pytest.mark.parametrize("container", ["g", "tspan"])
+@pytest.mark.parametrize("label, expected", [("12.5", "PASS"), ("7.0", "FAIL")])
+def test_deep_graphic_nesting_returns_a_label_assessment(container, label, expected):
+    depth = sys.getrecursionlimit() + 10
+    content = "<text>12.5</text>" if container == "g" else "12.5"
+    content = f"<{container}>" * depth + content + f"</{container}>" * depth
+    document = f'<svg id="curve">{content}</svg>' if container == "g" else graphic(content)
+    check = layout_audit.audit_svg_text(document, expected_labels={"curve": [label]})
+    assert check.status == expected
+    assert check.details == (
+        () if expected == "PASS" else ("SVG 'curve' label '7.0': expected 1, found 0.",)
+    )
 
 
 def test_legitimate_html_in_foreign_object_outside_text_is_allowed():

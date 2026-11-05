@@ -6,7 +6,8 @@
 The markup contract is CalcReport._section/_toc, MethodBlock.render and the
 ``numbered L1 / L2 sections`` rules in assets/calc_report_format.html. Section
 and subsection numbers are document ordinals, not engineering coefficients.
-This audit checks HTML labels and static SVG text structure. CSS cascade,
+This audit checks HTML labels and static SVG text structure. Expected-label
+attribution excludes nested SVG and foreignObject subtrees. CSS cascade,
 generated counter content, script changes and browser/PDF visibility require
 a separate rendered check.
 """
@@ -22,6 +23,10 @@ from bs4 import BeautifulSoup, Tag
 
 
 _SVG_NAMESPACE = "http://www.w3.org/2000/svg"
+_SVG_BOUNDARIES = (
+    f"{{{_SVG_NAMESPACE}}}svg",
+    f"{{{_SVG_NAMESPACE}}}foreignObject",
+)
 
 
 class _SVGParser(html5lib.HTMLParser):
@@ -41,12 +46,32 @@ class _SVGParser(html5lib.HTMLParser):
 
 
 def _text_content(node) -> str:
-    """Read text and tails in order, excluding comment contents."""
-    return (node.text or "") + "".join(
-        (_text_content(child) if isinstance(child.tag, str) else "")
-        + (child.tail or "")
-        for child in node
-    )
+    """Read text and tails, excluding comments and other graphic subtrees."""
+    parts = []
+    pending = [node]
+    while pending:
+        current = pending.pop()
+        if isinstance(current, str):
+            parts.append(current)
+            continue
+        parts.append(current.text or "")
+        for child in reversed(current):
+            pending.append(child.tail or "")
+            if isinstance(child.tag, str) and child.tag not in _SVG_BOUNDARIES:
+                pending.append(child)
+    return "".join(parts)
+
+
+def _graphic_texts(node):
+    """Yield text elements without entering nested SVG or foreignObject."""
+    pending = list(reversed(node))
+    while pending:
+        child = pending.pop()
+        if child.tag in _SVG_BOUNDARIES:
+            continue
+        if child.tag == f"{{{_SVG_NAMESPACE}}}text":
+            yield child
+        pending.extend(reversed(child))
 
 
 @dataclass(frozen=True)
@@ -67,6 +92,10 @@ def audit_svg_text(
     check, even if the recovered tree has no offending descendants left.
     Expected labels are complete text element contents (entities decoded,
     outer whitespace stripped), with exact multiplicity in the named graphic.
+    Nested SVG and foreignObject subtrees are excluded from that graphic's
+    labels and text content. Nested SVG IDs can be checked independently;
+    unnamed nested SVG never supplies an ancestor's labels. Only IDs and labels
+    supplied by the caller impose expected-label requirements.
     Coordinates, CSS, scripts, visibility and calculation accuracy are outside
     this check; no expected values are inferred from the document itself.
     """
@@ -97,7 +126,7 @@ def audit_svg_text(
             continue
         actual = Counter(
             _text_content(text).strip()
-            for text in figures[0].iter(f"{svg_ns}text")
+            for text in _graphic_texts(figures[0])
         )
         for label, count in Counter(labels).items():
             if actual[label] != count:
