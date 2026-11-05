@@ -374,7 +374,10 @@ class AnnexEResult:
 
 def _annex_e_number(name: str, value: float, *, positive: bool = False) -> float:
     """Validate a scalar SI input; no implicit unit or string conversions."""
-    if isinstance(value, bool) or not isinstance(value, (Real, Decimal)):
+    # NumPy durations can satisfy Real; temporal ticks are not SI magnitudes.
+    dtype_kind = getattr(getattr(value, "dtype", None), "kind", None)
+    if (dtype_kind in ("m", "M") or isinstance(value, bool)
+            or not isinstance(value, (Real, Decimal))):
         raise ValueError(f"{name} must be a finite numeric scalar")
     try:
         value = float(value)
