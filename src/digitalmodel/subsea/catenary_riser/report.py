@@ -665,6 +665,18 @@ margin:0 auto;font-size:.8rem;color:#718096;}
 """
 
 
+_SUPPLIED_RESULTS_NOTICE = (
+    "Supplied result rows are displayed; no solver analysis is run by this renderer. "
+    "Calculation time is supplied separately in Provenance. All outputs require "
+    "review by a qualified engineer before use in design or operational decisions."
+)
+
+
+def _supplied_rows_text(d: RiserReportData) -> str:
+    count = len(d.strength_results) + len(d.fatigue_results) + len(d.code_checks)
+    return f"Supplied result rows: {count:,}"
+
+
 def _render_fallback_html(d: RiserReportData, sections: list[tuple[str, str]],
                           timestamp: str) -> str:
     body = ""
@@ -680,13 +692,13 @@ def _render_fallback_html(d: RiserReportData, sections: list[tuple[str, str]],
   <div class="brand">digitalmodel — Engineering Intelligence</div>
   <h1>{_esc(d.riser_name)} — Riser Analysis Report</h1>
   <div class="subtitle">{_esc(d.riser_type)} · {_esc(d.project)}</div>
+  <div class="case-badge">{_esc(_supplied_rows_text(d))}</div>
   <div class="meta">Rendered {timestamp} · {_esc(d.provenance.mode_label)}</div>
 </div>
 <div class="report-body">
 {body}</div>
 <div class="report-footer">
-  <p class="disclaimer"><em>Preliminary engineering estimates. All outputs require
-  review by a qualified engineer before use in design or operational decisions.</em></p>
+  <p class="disclaimer"><em>{_esc(_SUPPLIED_RESULTS_NOTICE)}</em></p>
   <p>References: {_esc(' · '.join(d.standards))}</p>
   <p>&copy; {datetime.now().year} digitalmodel · aceengineer.com</p>
 </div>
@@ -707,8 +719,11 @@ def render_html(data: Union[RiserReportData, dict[str, Any]]) -> str:
                 title=f"{d.riser_name} — Riser Analysis Report",
                 subtitle=f"{d.riser_type} · {d.project}",
                 demo_id=d.provenance.run_id or "—",
-                case_count=len(d.strength_results) + len(d.fatigue_results),
+                case_count=len(d.strength_results) + len(d.fatigue_results) + len(d.code_checks),
                 code_refs=list(d.standards),
+                case_description=_supplied_rows_text(d),
+                timestamp_label="Rendered",
+                disclaimer=_SUPPLIED_RESULTS_NOTICE,
             )
             for title, content in sections:
                 report.add_section(title, content)
@@ -737,6 +752,9 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
     lines.append("")
     lines.append(f"*{d.riser_type} · {d.project}*  ")
     lines.append(f"*Rendered {timestamp} · {d.provenance.mode_label}*")
+    lines.append(f"*{_supplied_rows_text(d)}*")
+    lines.append("")
+    lines.append(_SUPPLIED_RESULTS_NOTICE)
     lines.append("")
 
     lines.append("## Executive Summary")
@@ -891,11 +909,11 @@ def generate_riser_report(
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     html_str = render_html(data)
-    output_path.write_text(html_str, encoding="utf-8")
+    output_path.write_text(html_str, encoding="utf-8", newline="\n")
     written = {"html": output_path}
 
     if md_path is not None:
-        md_path.write_text(render_markdown(data), encoding="utf-8")
+        md_path.write_text(render_markdown(data), encoding="utf-8", newline="\n")
         written["markdown"] = md_path
 
     return written

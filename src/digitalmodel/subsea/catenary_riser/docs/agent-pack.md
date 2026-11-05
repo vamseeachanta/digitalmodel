@@ -28,7 +28,7 @@ The public API exports material/fluid/configuration models, effective-weight cal
 
 Explicit-force solutions warn when their suspended span differs from the supplied offset; the force solution governs geometry. The simple analyzer assumes uniform weight, zero bending stiffness, static equilibrium and no current; the routing registry marks the containing subsea domain stable, which does not establish numerical validation of this analyzer. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L24-L36] [docs/registry/module-routing.yaml:L412-L417]
 
-The report generator consumes supplied results; it does not run a live analysis. [src/digitalmodel/subsea/catenary_riser/report.py:L1-L925]
+The report generator consumes supplied results; it does not run a live analysis. [src/digitalmodel/subsea/catenary_riser/report.py:L1-L943]
 
 ## 2. Inputs and outputs
 
@@ -50,7 +50,7 @@ The report generator consumes supplied results; it does not run a live analysis.
 | Top angle | degrees from vertical; `SimpleCatenaryAnalyzer.analyze_riser().top_angle` follows E3 | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L156-L157] |
 | Tension/angle distributions | m, N, degrees from horizontal | [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L218-L268] |
 | Convergence | `CatenaryRiserResult.converged`: true only when the span solve converges and suspended length fits; CLI refuses false | `SimpleCatenaryAnalyzer.analyze_riser` |
-| Reports | HTML and Markdown from supplied structures; invalid/missing positive finite utilisation or damage gives N/A; positive annual damage uses scientific notation; DFF and selection basis required for fatigue acceptance. The strength KPI is N/A with no strength results and N/A (incomplete) with unqualified rows; both formats always display it | [src/digitalmodel/subsea/catenary_riser/report.py:L1-L925] |
+| Reports | HTML and Markdown from supplied structures; invalid/missing positive finite utilisation or damage gives N/A; positive annual damage uses scientific notation; DFF and selection basis required for fatigue acceptance. The strength KPI is N/A with no strength results and N/A (incomplete) with unqualified rows; both formats always display it | [src/digitalmodel/subsea/catenary_riser/report.py:L1-L943] |
 
 Analytical vertex axes and angle conventions are tested in [route-qualification.md](route-qualification.md). A common transformation for legacy native exports remains NOT_EVALUATED; #2755.
 
@@ -175,7 +175,7 @@ Audit corrections (#2751); current function names supersede historical line entr
 | `report.py:235`: Missing code_checks becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L281-L284] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
 | `report.py:345`: Any report-builder import failure is swallowed [src/digitalmodel/subsea/catenary_riser/report.py:L391-L392] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
 | `report.py:356`: Fallback import failure or absent builder returns None [src/digitalmodel/subsea/catenary_riser/report.py:L406-L408] | Review the stated default, fallback or error path before engineering use. | no detection check exists; #2754. |
-| `report.py` (`render_html`): Builder incompatibility selects explicitly marked fallback HTML [src/digitalmodel/subsea/catenary_riser/report.py:L696-L728] | Renderer selection does not establish calculation qualification or certification. | `test_report_qualification.py::test_incompatible_builder_selects_fallback_in_written_output`; [#2754](https://github.com/vamseeachanta/digitalmodel/issues/2754). |
+| `report.py` (`render_html`): Builder incompatibility selects explicitly marked fallback HTML [src/digitalmodel/subsea/catenary_riser/report.py:L708-L743] | Renderer selection does not establish calculation qualification or certification. | `test_report_qualification.py::test_incompatible_builder_selects_fallback_in_written_output`; #2754. |
 
 sweep: 88 found
 
@@ -1361,7 +1361,7 @@ The core interfaces, quarantine, independent static checks, legacy calculator an
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L1-L185].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/saveData.py:L1-L47].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/models.py:L1-L543].
-- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/report.py:L1-L925].
+- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/report.py:L1-L943].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L1-L302].
 
 The main-path documentation includes the package README, domain README, durable workflow registry, generic static coverage note and canonicalization handoff.

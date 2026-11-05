@@ -340,7 +340,7 @@
       ]
     },
     {
-      "claim": "`report.py` (`render_html`): Builder incompatibility selects explicitly marked fallback HTML [src/digitalmodel/subsea/catenary_riser/report.py:L696-L728]",
+      "claim": "`report.py` (`render_html`): Builder incompatibility selects explicitly marked fallback HTML [src/digitalmodel/subsea/catenary_riser/report.py:L708-L743]",
       "status": "TESTED",
       "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
       "tests": [
