@@ -14,6 +14,12 @@ The older SRSS vertical hoop combination is retained and identified in the API.
 
 ## Inputs and interpretation
 
+Numeric arguments accept real numeric scalars, including integers, floats,
+decimal and rational numbers, and NumPy real scalars. Text, encoded text,
+booleans, arrays (including zero-dimensional arrays) and complex numbers are
+rejected with a `ValueError` naming the argument. Convert and validate imported
+data explicitly before calling the screen; no units are inferred from a value.
+
 Every project factor is explicit. Supply design `sds_g`, `sd1_g`, mapped `tl_s`,
 importance `importance_factor`, ASD reductions `rwi`/`rwc`, convective damping
 factor `k`, and the governing `minimum_ai_g`. The minimum is at least 0.007;

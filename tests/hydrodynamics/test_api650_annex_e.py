@@ -1,7 +1,10 @@
 """API 650 Annex E public-source screen: independent arithmetic and limits."""
 import math
 from dataclasses import asdict
+from decimal import Decimal
+from fractions import Fraction
 
+import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics import sloshing as s
@@ -31,7 +34,10 @@ def inputs(**changes):
 
 
 def test_worked_example():
-    r = s.api650_annex_e(**inputs())
+    assert_worked_example(s.api650_annex_e(**inputs()))
+
+
+def assert_worked_example(r):
     # Independent arithmetic, SI (API 2007 E.6.1; API 2016 E.7.2):
     # Wp=1000*9.80665*pi*20^2/4*10=30,808,499.596 N.
     # u=.866*2=1.732; tanh(u)=.939291838; Wi/Wp=.542316304.
@@ -237,3 +243,44 @@ def test_mandatory_zero_wave_is_an_evaluated_zero():
     assert r.required_freeboard_m == 0
     assert r.freeboard_ok is True
     assert r.wave_height_m == 0
+
+
+@pytest.mark.parametrize("key", [
+    key for key, value in inputs().items() if isinstance(value, float)
+] + ["evaluation_depth_m"])
+@pytest.mark.parametrize("representation", [
+    str, lambda value: str(value).encode(),
+    lambda value: bytearray(str(value), "ascii"),
+    lambda value: memoryview(str(value).encode()),
+    lambda value: True, lambda value: np.bool_(True),
+    lambda value: np.array(value), lambda value: np.array([value]),
+    lambda value: complex(value), lambda value: np.complex128(value),
+], ids=["text", "bytes", "bytearray", "memoryview", "bool", "numpy-bool",
+        "zero-dimensional-array", "one-element-array", "complex", "numpy-complex"])
+def test_numeric_inputs_reject_encoded_text_booleans_arrays_and_complex(key, representation):
+    values = inputs()
+    value = values.get(key, 10.0)
+    values[key] = representation(value)
+    with pytest.raises(ValueError, match=key):
+        s.api650_annex_e(**values)
+
+
+@pytest.mark.parametrize("key", [
+    key for key, value in inputs().items() if isinstance(value, float)
+] + ["evaluation_depth_m"])
+@pytest.mark.parametrize("unit", ["ns", "ps", "fs", "as"])
+@pytest.mark.parametrize("temporal", [np.timedelta64, np.datetime64])
+def test_numeric_inputs_reject_temporal_scalars(key, unit, temporal):
+    values = inputs()
+    values[key] = temporal(20, unit)
+    with pytest.raises(ValueError, match=rf"^{key} must be a finite numeric scalar$"):
+        s.api650_annex_e(**values)
+
+
+@pytest.mark.parametrize("scalar", [float, int, Decimal, Fraction, np.float64, np.int64])
+def test_real_numeric_scalar_types_preserve_engineering_results(scalar):
+    expected = s.api650_annex_e(**inputs())
+    values = inputs(diameter_m=scalar(20), evaluation_depth_m=scalar(10))
+    result = s.api650_annex_e(**values)
+    assert_worked_example(result)
+    assert result == expected

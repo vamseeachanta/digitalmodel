@@ -26431,7 +26431,7 @@ families:
     body_sha256: 58659f8a04fbecd9ce8be02626ef53be28702d87ab98624e4630f944e67c0e06
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: oval_tank_periods
-    line: 175
+    line: 177
     kind: function
     what: Evaluates finite-depth dispersion periods using equivalent rectangular tank geometry.
     signals:
@@ -26439,7 +26439,7 @@ families:
     - water_depth|omega|seabed|wave_number|wavenumber
     relation: independent
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: a6505dcfc18ef3aeb70d248ece05d057c4f63aed9ffac5366c605daf702252a4
   identical_groups: *aaffc5c7843
   notes: Discovered during the spectrum and stability search; routes use finite-depth iteration, deep-water approximations and velocity transfer functions.
@@ -26792,7 +26792,7 @@ families:
   - search: constants_or_keys
     pattern: fill_depth|fill_fraction|excitation_periods|resonance_tolerance
   inventory_scope:
-    revision: 3554b14fde67f44b1c52b81b6c72106282eaff29
+    revision: 50c5efcc5dd89befa90d0a5222fba92d98b56f57
     source_paths:
     - src/digitalmodel/hydrodynamics/sloshing.py
     method_note: docs/registry/implementation-map-families.md
@@ -26805,75 +26805,75 @@ families:
   implementations:
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: rectangular_tank_periods
-    line: 100
+    line: 102
     kind: function
     what: Evaluates antisymmetric linear modal periods for a rectangular tank.
     relation: independent
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: 742b71d11a1b352ba075d707e88ba8618475c49981fa7c5f86f463e27d9c5d66
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: cylindrical_tank_periods
-    line: 121
+    line: 123
     kind: function
     what: Evaluates lateral cylindrical-tank modal periods using stored derivative roots.
     relation: independent
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: 9acd3932d69600072b502f0d7038d3a7b1217e0572b45bccbd7b7972af2f7e4e
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: api650_convective_period
-    line: 142
+    line: 144
     kind: function
     what: Evaluates the existing simplified cylindrical convective-period expression.
     relation: independent
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: 1ae9c3db46f1bd89c202cbb283d4950401dd000ae8817c2204e2daca1118391b
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: oval_tank_periods
-    line: 175
+    line: 177
     kind: function
     what: Estimates oval-tank periods using equivalent free-surface geometry.
     relation: independent
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: a6505dcfc18ef3aeb70d248ece05d057c4f63aed9ffac5366c605daf702252a4
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: horizontal_cylinder_periods
-    line: 207
+    line: 209
     kind: function
     what: Adapts oval geometry to a horizontal circular cylinder.
     relation: delegate
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: 822a8af083bac4c4aa504a7ac74e2c5f540bee7e59afa223fcd3fd2a1c7cd6ed
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: resonance_check
-    line: 220
+    line: 222
     kind: function
     what: Compares natural and excitation periods using a supplied relative tolerance.
     relation: independent
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: 2bd6dbeed612b18764bcd329cb280a6dc844fd97006f45881705a1743bff9f01
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: screen_tank
-    line: 241
+    line: 243
     kind: function
     what: Combines selected analytical periods and resonance flags.
     relation: delegate
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: ea5075d6df05a30d915c8a2bf6f932e45f3e2bcb7dcb18eb551967d61254c360
   - path: src/digitalmodel/hydrodynamics/sloshing.py
     symbol: router
-    line: 277
+    line: 279
     kind: function
     what: Routes configuration to analytical sloshing geometry and screening helpers.
     relation: delegate
     module: hydrodynamics/sloshing.py
-    file_sha256: 511829b6a97092be35c95936fb19f7481cbfcc989561c05a05007c8f8ae100de
+    file_sha256: 3f1ea536ea41a8820922094e3cfd9718ae715c50143b3b479e163b74100fb820
     body_sha256: 77dc54119964cc72b13806bd8a3858b86c9627bddaa262c08391cc48739b34a5
   identical_groups: []
   search_audit:
@@ -54462,7 +54462,7 @@ rejected_candidates:
     implementation counts pending inspection.
 - path: src/digitalmodel/hydrodynamics/sloshing.py
   symbol: SloshingResult
-  line: 66
+  line: 68
   families:
   - sloshing
   disposition: needs_review
