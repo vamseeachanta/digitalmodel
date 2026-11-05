@@ -271,6 +271,7 @@ modules:
     key_tests: [tests/subsea/mooring_analysis/test_dynmoor.py, tests/subsea/mooring_analysis/test_dynmoor_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#dynmoor_mooring
   - module: foam_system
+    agent_pack: src/digitalmodel/foam_system/docs/agent-pack.md
     entry_point: src/digitalmodel/foam_system/
     maturity: development
     owner_wiki: docs/domains/fire_safety/foam-system-sizing.md
@@ -699,6 +700,7 @@ modules:
         agent_pack: src/digitalmodel/installation/jumper_installation/docs/agent-pack.md
         qa_family: IN
   - module: lifting_lug
+    agent_pack: src/digitalmodel/lifting_lug/docs/agent-pack.md
     entry_point: src/digitalmodel/lifting_lug/
     maturity: development
     owner_wiki: docs/domains/README.md
