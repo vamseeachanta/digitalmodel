@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS Level 2 detailed assessment — RSF and Folias-factor calculations.
 
 Implements API 579-1/ASME FFS-1 Level 2 acceptance criterion:
@@ -50,6 +53,7 @@ from digitalmodel.asset_integrity.applicability import (
     Applicability,
     check_upper_limit,
 )
+from .screening_report import finite_number
 
 _SUPPORTED_TYPES = {"GML", "LML"}
 
@@ -69,6 +73,7 @@ class Level2Engine:
         nominal_wt_in: Nominal wall thickness (inches).
         t_min_in: Code-required minimum wall thickness (inches).
         rsf_a: Allowable remaining strength factor (default 0.9).
+        row_spacing_in: Explicit axial pitch, overriding inferred index gaps.
 
     Raises:
         ValueError: If assessment_type is not ``'GML'`` or ``'LML'``.
@@ -81,6 +86,8 @@ class Level2Engine:
         nominal_wt_in: float,
         t_min_in: float,
         rsf_a: float = 0.9,
+        *,
+        row_spacing_in: float | None = None,
     ) -> None:
         normalised = assessment_type.strip().upper()
         if normalised not in _SUPPORTED_TYPES:
@@ -93,6 +100,10 @@ class Level2Engine:
         self._nominal_wt = nominal_wt_in
         self._t_min = t_min_in
         self._rsf_a = rsf_a
+        self._row_spacing = (
+            finite_number({"row_spacing_in": row_spacing_in}, "row_spacing_in")
+            if row_spacing_in is not None else None
+        )
 
     # ------------------------------------------------------------------
     # Public interface
@@ -247,7 +258,8 @@ class Level2Engine:
         """Shared geometry for assessment and projection-domain qualification."""
         flaw_mask = grid_df < self._nominal_wt * _FLAW_THRESHOLD_RATIO
         flaw_row_count = int(flaw_mask.any(axis=1).sum())
-        spacing = self._infer_spacing(grid_df.index)
+        spacing = (self._row_spacing if self._row_spacing is not None
+                   else self._infer_spacing(grid_df.index))
         length = max(flaw_row_count * spacing, spacing)
         nominal_id = self._od - 2.0 * self._t_min
         return (length, self._shell_parameter(length, nominal_id, self._t_min),
