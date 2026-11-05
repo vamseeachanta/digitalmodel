@@ -48,6 +48,8 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from decimal import Decimal
+from numbers import Real
 from typing import List
 
 # Standard gravity (m/s^2)
@@ -372,7 +374,7 @@ class AnnexEResult:
 
 def _annex_e_number(name: str, value: float, *, positive: bool = False) -> float:
     """Validate a scalar SI input; no implicit unit or string conversions."""
-    if isinstance(value, (bool, str)):
+    if isinstance(value, bool) or not isinstance(value, (Real, Decimal)):
         raise ValueError(f"{name} must be a finite numeric scalar")
     try:
         value = float(value)

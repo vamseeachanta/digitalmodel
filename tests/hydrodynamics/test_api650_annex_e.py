@@ -1,7 +1,10 @@
 """API 650 Annex E public-source screen: independent arithmetic and limits."""
 import math
 from dataclasses import asdict
+from decimal import Decimal
+from fractions import Fraction
 
+import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics import sloshing as s
@@ -237,3 +240,30 @@ def test_mandatory_zero_wave_is_an_evaluated_zero():
     assert r.required_freeboard_m == 0
     assert r.freeboard_ok is True
     assert r.wave_height_m == 0
+
+
+@pytest.mark.parametrize("key", [
+    key for key, value in inputs().items() if isinstance(value, float)
+] + ["evaluation_depth_m"])
+@pytest.mark.parametrize("representation", [
+    str, lambda value: str(value).encode(),
+    lambda value: bytearray(str(value), "ascii"),
+    lambda value: memoryview(str(value).encode()),
+    lambda value: True, lambda value: np.bool_(True),
+    lambda value: np.array(value), lambda value: np.array([value]),
+    lambda value: complex(value), lambda value: np.complex128(value),
+], ids=["text", "bytes", "bytearray", "memoryview", "bool", "numpy-bool",
+        "zero-dimensional-array", "one-element-array", "complex", "numpy-complex"])
+def test_numeric_inputs_reject_encoded_text_booleans_arrays_and_complex(key, representation):
+    values = inputs()
+    value = values.get(key, 10.0)
+    values[key] = representation(value)
+    with pytest.raises(ValueError, match=key):
+        s.api650_annex_e(**values)
+
+
+@pytest.mark.parametrize("scalar", [float, int, Decimal, Fraction, np.float64, np.int64])
+def test_real_numeric_scalar_types_preserve_engineering_results(scalar):
+    expected = s.api650_annex_e(**inputs())
+    values = inputs(diameter_m=scalar(20), evaluation_depth_m=scalar(10))
+    assert s.api650_annex_e(**values) == expected
