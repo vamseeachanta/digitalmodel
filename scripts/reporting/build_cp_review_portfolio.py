@@ -82,7 +82,7 @@ def validate_import_origins(root: Path, modules: dict[str, ModuleType] | None = 
     for name, module in list((sys.modules if modules is None else modules).items()):
         if name == "digitalmodel" or name.startswith("digitalmodel."):
             source = root.resolve() / "src"
-        elif name.startswith("cp_portfolio_") or name == "cp_review_document":
+        elif name.startswith("cp_portfolio_") or name in {"cp_review_document", "cp_worked_example"}:
             source = root.resolve() / "scripts/reporting"
         else:
             continue
@@ -269,10 +269,16 @@ def build_case(case: tuple[str, str, str], destination: Path,
     folder = destination / "cases" / case_id
     check_existing_pack(folder)
     folder.mkdir(parents=True, exist_ok=True)
+    if case_id in {"S02", "S03", "S06"}:
+        from cp_worked_example import public_spec
+        from cp_review_document import render_bound
+        spec = public_spec(spec, case_id, routed["results"])
+        page = render_bound(spec, case_id, status="Worked example — issued for information")
+    else:
+        page = render_review(spec, case_id)
     write_report(spec, folder, "report", pdf="off")
-    page = render_review(spec, case_id)
     (folder / "report.html").write_text(page, encoding="utf-8", newline="\n")
-    seed = comment_seed(page, case_id, "00")
+    seed = comment_seed(page, case_id, spec.document.revision)
     validate_comments(page, seed)
     write_json(folder / "report.comments.json", seed)
     write_json(folder / "results.json", routed["results"])

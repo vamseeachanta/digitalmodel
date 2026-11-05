@@ -49,6 +49,10 @@ SECTION_TITLES = (
     "References", "Acronyms and Symbols",
 )
 ASSUMED = "assumed"
+WORKED_EXAMPLE_BASIS = (
+    "Worked example on published geometry and assumed CP inputs, "
+    "not an installation design. "
+)
 
 
 def digest(path: Path) -> str:
@@ -219,7 +223,8 @@ def revision_history() -> Section:
     """Record the single issued revision of the sample analysis."""
     return Section(key="revision-history", title="Revision history", blocks=[
         TableBlock(title="Revision history", columns=["Revision", "Date", "What changed and why"],
-            rows=[["0", "2026-10-14", "Issued for information."]]),
+            rows=[["0", "2026-10-14", "Issued for information."],
+                  ["1", "2026-11-05", "Label the published-geometry worked example and its design limits."]]),
     ])
 
 
@@ -286,7 +291,8 @@ def summary_text(cfg: dict[str, Any], evidence: dict[str, Any]) -> str:
     count = stated["anode_count"]
     mass = stated["checks"][0]
     resized = evidence["arrangements"].get("rechecked", stated)
-    summary = (f"The reference jacket at {cfg['structural_model']['water_depth_m']:.1f} m "
+    summary = (WORKED_EXAMPLE_BASIS +
+        f"The reference jacket at {cfg['structural_model']['water_depth_m']:.1f} m "
         f"water depth is analysed with {count} anodes. "
         "Aggregate lifetime mass and initial and final current output are compared with "
         "the required quantities below, using DNV-RP-B401, Cathodic protection design, "

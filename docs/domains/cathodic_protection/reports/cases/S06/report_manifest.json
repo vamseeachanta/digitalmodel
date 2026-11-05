@@ -7,17 +7,23 @@
   },
   "citations_count": 5,
   "document": {
-    "client": "Internal module review - no client issuance",
-    "number": "R2281-CP-006-00",
-    "project": "Digitalmodel CP regression portfolio",
-    "revision": "00",
-    "title": "CP module review: Bracelet pipeline"
+    "client": "Not applicable — synthetic data",
+    "number": "R2281-CP-006-01",
+    "project": "Cathodic protection worked examples",
+    "revision": "01",
+    "title": "Cathodic protection analysis: bracelet pipeline worked example"
   },
   "execution_tool": "digitalmodel.reporting.engine",
   "pdf": {
     "engine": null,
     "message": "pdf rendering disabled (pdf: off)",
     "rendered": false
+  },
+  "presentation": {
+    "basis": "synthetic worked example; original numerical and citation provenance retained",
+    "builder": "scripts/reporting/build_cp_worked_examples.py",
+    "licensed_sources_resolved_again": false,
+    "results_reproduced": true
   },
   "report_layer": null,
   "standards": [

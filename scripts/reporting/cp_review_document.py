@@ -141,7 +141,17 @@ def render_review(spec: ReportSpec, case_id: str) -> str:
     reserved = {s.key for s in revised.sections}
     if any(s.key in reserved for s in revised.appendices):
         raise ValueError("Source section collides with review section IDs")
+    return render_bound(revised, case_id)
+
+
+def render_bound(spec: ReportSpec, case_id: str, *, status: str | None = None) -> str:
+    """Bind comment controls to a fully assembled report, including public examples."""
+    if not re.fullmatch(r"[A-Z][A-Z0-9_-]{0,39}", case_id):
+        raise ValueError("case_id must be a bounded public identifier")
+    revised = spec
     rendered = render_html(revised, pdf_status="not generated; manual print review deferred")
+    if status is not None:
+        rendered = rendered.replace("Draft for review", status)
     config = {"report_id": case_id, "revision": spec.document.revision,
               "sections": [{"id": s.key, "title": s.title}
                            for s in [*revised.sections, *revised.appendices]]}
