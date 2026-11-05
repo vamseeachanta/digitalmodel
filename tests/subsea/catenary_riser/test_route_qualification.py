@@ -76,8 +76,10 @@ def test_legacy_vertex_overlap(route, control):
 
 def test_route_inventory_has_output_evidence():
     routes = route_conventions()
-    assert len(routes) == 8
-    assert all(r["units"] == "m, N, N/m, degrees" for r in routes)
+    assert len(routes) == 9
+    analytical = [r for r in routes if r["route"].startswith("simple_")
+                  or r["route"] in {"legacy_force", "legacy_angle", "installation_sections"}]
+    assert all(r["units"] == "m, N, N/m, degrees" for r in analytical)
     assert all(r["evidence"] and r["origin"] and r["force_sign"] for r in routes)
     assert {r["status"] for r in routes} == {"TESTED", "QUARANTINED", "NOT_EVALUATED"}
 
@@ -163,3 +165,58 @@ def test_readme_example_preserves_lazy_wave_quarantine():
     example = readme.split("```python\n", 1)[1].split("```", 1)[0]
     calls = [n for n in ast.walk(ast.parse(example)) if isinstance(n, ast.Call)]
     assert not any(isinstance(n.func, ast.Attribute) and n.func.attr == "analyze" for n in calls)
+
+
+def test_native_export_conventions_do_not_inherit_analytical_claims():
+    """No native units, datum, phase or force convention has been qualified."""
+    record, = [r for r in route_conventions() if r["route"] == "legacy_exports"]
+    assert record["status"] == "NOT_EVALUATED"
+    for field in ("units", "axes", "origin", "angle", "force_sign", "phase"):
+        assert record[field].startswith("NOT_EVALUATED"), field
+
+
+@pytest.mark.parametrize("route", ["calculator", "methods"])
+def test_legacy_force_metadata_does_not_promise_an_angle(route):
+    data = {"F": 50, "w": 10, "d": 2}
+    if route == "calculator":
+        result = CatenaryCalculator().calculate(data)
+    else:
+        from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import catenaryEquation
+        result = catenaryEquation(data)
+    assert result["THorizontal"] == pytest.approx(30)
+    assert "q" not in result
+    record, = [r for r in route_conventions() if r["route"] == "legacy_force"]
+    assert record["angle"] == "not returned; q is retained input only"
+    assert record["phase"] == "NOT_APPLICABLE; static calculation"
+
+
+@pytest.mark.parametrize("control", [{"horizontal_tension": 30}, {"top_tension": 50}, {}])
+@pytest.mark.parametrize("hangoff_depth", [0, 5])
+def test_legacy_simple_plot_matches_modern_vertex_frame(unit_riser, monkeypatch, control, hangoff_depth):
+    """Three hand points establish reflection, vertical datum and metre scale.
+
+    For a=3, cosh(ln(3)/2)=2/sqrt(3). The midspan elevation above
+    touchdown is 2*sqrt(3)-3 m, independently of either package route.
+    """
+    from digitalmodel.subsea.catenary_riser.legacy import catenaryMethods as module
+    monkeypatch.setattr(module, "genericPlot", lambda data: None)
+    result = SimpleCatenaryAnalyzer().analyze_riser(unit_riser, **control)
+    legacy = CatenaryCalculator().calculate({"d": 2, "q": result.top_angle})
+    data = {"catenaryResult": legacy,
+            "commonDefinition": {"HangoffBelowMeanSeaLevel": hangoff_depth},
+            "Analysis": {"result_folder": "", "file_name": "unused"}}
+    module.simple_catenary_plot(data, spacing=2)
+    points = data["catenaryResult"]["PlotData"]
+    assert points["X"] == pytest.approx([0, 1.5 * math.log(3), 3 * math.log(3)])
+    assert points["Y"] == pytest.approx([
+        -hangoff_depth, 2 * math.sqrt(3) - 5 - hangoff_depth, -2 - hangoff_depth,
+    ])
+    # Reflect horizontal direction and translate the MSL ordinate to the vertex.
+    vertex_x = [result.horizontal_offset - x for x in points["X"]]
+    vertex_z = [y + hangoff_depth + result.water_depth for y in points["Y"]]
+    assert vertex_x == pytest.approx([3 * math.log(3), 1.5 * math.log(3), 0])
+    assert vertex_z == pytest.approx([2, 2 * math.sqrt(3) - 3, 0])
+    record, = [r for r in route_conventions() if r["route"] == "legacy_simple_plot"]
+    assert record["units"] == "m"
+    assert record["origin"] == "X=0 at hang-off; Y=0 at mean sea level"
+    assert record["phase"] == "NOT_APPLICABLE; static calculation"

@@ -5,7 +5,7 @@
 | Module | catenary_riser |
 | Repository | digitalmodel |
 | Package | src/digitalmodel/subsea/catenary_riser |
-| Pack revision | 2 |
+| Pack revision | 3 |
 | Historical code revision | 97dc074bad7e464d4b26ccd04bb83796ef4d0060 |
 | Analysis family | OrcaFlex riser and mooring (MR) |
 | Quality manager | Riser and mooring quality manager |
@@ -15,12 +15,16 @@ Audit update: #2751 corrects the analytical and status routes on main `a84b677f0
 
 Route qualification adds [explicit conventions and a synthetic installation analysis](route-qualification.md).
 The maintainer retains clearance responsibility; status remains DRAFT.
+The [bounded convention reconciliation](route-qualification.md#bounded-convention-reconciliation)
+tests the simple-plot datum and records open standards, export and discovery review.
+Native units, force signs and phase remain explicitly NOT_EVALUATED in package metadata.
 
 ## Revision history
 
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | DRAFT 2 | 2026-10-22 | Add route evidence, configured gravity, input conditioning, installation screens and partial-report evidence. Earlier pinned observations remain in the historical inventory. |
+| DRAFT 3 | 2026-11-05 | Record the tested simple-plot transformation and keep native conventions and remaining maintainer review open. |
 
 ## 1. Purpose and scope
 
@@ -52,7 +56,7 @@ The report generator consumes supplied results; it does not run a live analysis.
 | Convergence | `CatenaryRiserResult.converged`: true only when the span solve converges and suspended length fits; CLI refuses false | `SimpleCatenaryAnalyzer.analyze_riser` |
 | Reports | HTML and Markdown from supplied structures; invalid/missing positive finite utilisation or damage gives N/A; positive annual damage uses scientific notation; DFF and selection basis required for fatigue acceptance. The strength KPI is N/A with no strength results and N/A (incomplete) with unqualified rows; both formats always display it | [src/digitalmodel/subsea/catenary_riser/report.py:L1-L943] |
 
-Analytical vertex axes and angle conventions are tested in [route-qualification.md](route-qualification.md). A common transformation for legacy native exports remains NOT_EVALUATED; #2755.
+Analytical vertex axes and angle conventions are tested in [route-qualification.md](route-qualification.md). The simple legacy plot reflection and mean-sea-level translation are tested there. A common transformation for legacy native exports remains NOT_EVALUATED; #2755.
 
 ## 3. Method and governing standards
 
