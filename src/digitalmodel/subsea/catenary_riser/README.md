@@ -134,6 +134,13 @@ unless an explicit analyzer override is supplied. Constructor checks reject inva
 geometry, unpaired coatings and overlapping or duplicate module definitions.
 The report flags partial evidence and never infers certification from rendering.
 
+## Input conditioning and defaults
+
+See [input contracts and worked hand checks](docs/input-conditioning.html) for the
+33 section-6 dispositions, constructor ranges, gravity precedence, legacy inch
+boundary, numeric fatigue-bin contract and refusal behavior. Archived script
+imports perform no I/O; malformed explicit inputs never select defaults.
+
 ## Module Structure
 
 ```
