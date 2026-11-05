@@ -216,12 +216,43 @@ def test_report_uses_the_rate_basis_that_produced_the_decision():
     assert "Unlimited (no further corrosion assumed)" in _report(decision)
 
 
-def test_report_rejects_a_rate_that_conflicts_with_the_decision_basis():
+@pytest.mark.parametrize("source", ["adapter", "coordinator"])
+@pytest.mark.parametrize("rate", [math.nan, math.inf, -math.inf, -0.01])
+def test_report_accepts_explicit_invalid_rate_metadata_without_changing_escalation(source, rate):
+    if source == "adapter":
+        decision = FFSDecision.decide(
+            "ACCEPT", "ACCEPT", 0.96, 0.9, 0.42, 0.3, rate,
+        )
+    else:
+        component = FFSComponent(
+            "PIPE", "B31.8", 16.0, 0.5, 1000.0, smys_psi=52000,
+            corrosion_rate_in_per_yr=rate,
+        )
+        decision = assess_component(
+            component, np.full((3, 3), 0.42), force_type="GML",
+        ).decision
+
+    # Recreate the metadata value so NaN equality cannot rely on object identity.
+    report = _report(decision, float(str(rate)))
+    assert decision["verdict"] == "ESCALATE"
+    assert math.isnan(decision["remaining_life_yr"])
+    assert decision["rerated_mawp_psi"] is None
+    assert "ESCALATE" in report
+    assert report.count("Not evaluated") >= 2
+    assert "Unlimited" not in report
+    assert "no corrosion" not in report
+
+
+@pytest.mark.parametrize("basis_rate, supplied_rate", [
+    (0.01, 0.0), (0.01, math.nan), (math.nan, 0.01),
+    (None, math.nan), (math.nan, math.inf), (math.inf, math.nan),
+])
+def test_report_rejects_a_rate_that_conflicts_with_the_decision_basis(basis_rate, supplied_rate):
     decision = FFSDecision.decide(
-        "ACCEPT", "ACCEPT", 0.96, 0.9, 0.42, 0.3, 0.01,
+        "ACCEPT", "ACCEPT", 0.96, 0.9, 0.42, 0.3, basis_rate,
     )
     with pytest.raises(ValueError, match="corrosion rate"):
-        _report(decision, 0.0)
+        _report(decision, supplied_rate)
 
 
 def test_unknown_strength_has_no_numeric_comparison_verdict():

@@ -150,7 +150,10 @@ class FFSReport:
         if "corrosion_rate_in_per_yr" in decision:
             basis_rate = decision["corrosion_rate_in_per_yr"]
             if (corrosion_rate_in_per_yr is not None
-                    and corrosion_rate_in_per_yr != basis_rate):
+                    and corrosion_rate_in_per_yr != basis_rate
+                    and not (basis_rate is not None
+                             and math.isnan(corrosion_rate_in_per_yr)
+                             and math.isnan(basis_rate))):
                 raise ValueError("Report corrosion rate conflicts with the decision basis")
             corrosion_rate_in_per_yr = basis_rate
         criterion = decision.get("governing_criterion", "")
