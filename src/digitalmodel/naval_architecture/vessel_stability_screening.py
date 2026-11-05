@@ -335,7 +335,7 @@ def solve_equilibrium(
 
 @dataclass(frozen=True)
 class GZCurve:
-    """Righting-arm curve, tabulated at increasing heel angles from 0."""
+    """Righting-arm curve; lookups and areas require covered, finite angles."""
 
     heel_deg: tuple[float, ...]
     gz_m: tuple[float, ...]
@@ -355,10 +355,22 @@ class GZCurve:
             raise ValueError("GZ curve must start at 0 deg heel")
 
     def gz_at(self, heel_deg: float) -> float:
+        self._require_covered_angle(heel_deg)
         return interpolate_gz(list(self.heel_deg), list(self.gz_m), heel_deg)
 
+    def _require_covered_angle(self, heel_deg: float) -> None:
+        if not math.isfinite(heel_deg):
+            raise ValueError("GZ query angle must be finite")
+        if not self.heel_deg[0] <= heel_deg <= self.heel_deg[-1]:
+            raise ValueError(
+                f"angle {heel_deg:g} deg outside tabulated GZ range "
+                f"[{self.heel_deg[0]:g}, {self.heel_deg[-1]:g}]"
+            )
+
     def area_m_rad(self, from_deg: float, to_deg: float) -> float:
-        """Area under the curve between two heel angles [m*rad]."""
+        """Area between covered heel angles [m*rad], without extrapolation."""
+        self._require_covered_angle(from_deg)
+        self._require_covered_angle(to_deg)
         if to_deg < from_deg:
             raise ValueError("GZ area: to_deg must be >= from_deg")
         angles, values = list(self.heel_deg), list(self.gz_m)
