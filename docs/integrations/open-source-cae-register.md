@@ -1,0 +1,43 @@
+# Open-source CAE register
+
+Register of open-source simulation tools worth using in our offshore engineering ecosystem, and where each one stands in digitalmodel today. Started 5 Nov 2026 from a public LinkedIn post listing open alternatives to commercial closed-source simulation software, and from the tools named in its comments.
+
+Source: [LinkedIn post, "Looking for alternatives to commercial closed-source simulation software"](https://www.linkedin.com/posts/lonny-thompson_looking-for-alternatives-to-commercial-closed-share-7523714627994681344-MqUA/)
+
+Licences are as stated on each project's repository or site at the date above; check the project before redistributing. Test counts are `def test_` functions under the named test directory on `main` at 5 Nov 2026. "none" means we have no module, test or documented workflow.
+
+## Register
+
+| Tool | Licence | What it does | Link | Status in digitalmodel today (evidence) | Proposed next use (offshore) |
+|---|---|---|---|---|---|
+| CalculiX | GPL-2.0-or-later | Implicit/explicit structural FEA, solids, shells, beams (Abaqus-style input) | [calculix.de](https://www.calculix.de/) | **Integrated.** `src/digitalmodel/solvers/calculix` (`INPWriter`, `CalculiXResultParser`, `FEMChain`); 106 tests in `tests/solvers/calculix`. Shell/plasticity/buckling steps open in #2173; known red tests tracked in epic #1846 | Local strength and API 579 Level 3 work; cross-check against licensed FEA |
+| code_aster | GPL-3.0-or-later (verify on site) | General structural and thermo-mechanical FEA, fracture mechanics, non-linear materials | [code-aster.org](https://www.code-aster.org/) | **Evaluation only.** Appears as a "NOT_EVALUATED" comparison slot in `tests/solvers/calculix/test_surface_crack_verdict.py`; no module. Issues #253 (evaluation), #2178 (crack-driving-force spike) | Fracture/crack driving force and large topside models, after the #2178 spike |
+| OpenCourant | AGPL-3.0 (GitHub repo) | Open finite-element/structural solver listed in the post | [github.com/OpenCourant/OpenCourant](https://github.com/OpenCourant/OpenCourant) | none | Watch only; no offshore fit identified yet |
+| Kratos Multiphysics | BSD-style (verify on repo) | Multi-physics FEM framework (structural, fluid, coupling) | [kratosmultiphysics.org](https://kratosmultiphysics.org/) | none (no module or test) | Watch; FSI-style coupling is the only plausible fit |
+| FEniCSx (DOLFINx) | LGPL-3.0-or-later | Python PDE/FEM framework for custom formulations | [fenicsproject.org](https://fenicsproject.org/) | **Evaluation only.** Issue #1687 under epic #1846; no module | Custom PDE checks where no ready solver exists |
+| FreeCAD | LGPL-2.1-or-later | Parametric CAD, FEM workbench, headless `freecadcmd` | [freecad.org](https://www.freecad.org/) | **Partial.** Plan `docs/plans/2026-05-05-issue-277-freecad-deep-parametric-engineering.md` (#277, #1650); frame builder `src/digitalmodel/structural/parachute/freecad_frame_builder.py`; STEP/FreeCAD hooks in `solvers/gmsh_meshing/spool_pilot.py` (`tests/solvers/gmsh_meshing/test_spool_pilot.py`). No `src/digitalmodel/cad/freecad` package yet | Parametric geometry for spools, frames and hulls feeding Gmsh |
+| Gmsh | GPL-2.0-or-later with linking exception | Mesh generator (2D/3D, STEP in, many formats out) | [gmsh.info](https://gmsh.info/) | **Integrated.** `src/digitalmodel/solvers/gmsh_meshing` (68 tests in `tests/solvers/gmsh_meshing`); `hydrodynamics/diffraction/gmsh_mesh_builder.py` with GDF/DAT/MSH export (48 tests in `tests/hydrodynamics/diffraction/test_gmsh_mesh_builder.py` and `test_wrk5091_mesh_cli_exports.py`); `solvers/openfoam/gmsh_bridge.py` | Keep as the common mesh front end for CalculiX, MYSTRAN, OpenFOAM and panel codes |
+| ParaView | BSD-3-Clause | Scientific visualisation and post-processing (VTK based) | [paraview.org](https://www.paraview.org/) | **Hook only.** OpenFOAM runner can run `foamToVTK` "for PyVista/ParaView" (`src/digitalmodel/solvers/openfoam/runner.py`, `cli.py`); no ParaView scripting, no test | Scripted headless post-processing of CalculiX and OpenFOAM results into report figures (issue opened) |
+| PrePoMax | GPL-3.0 (GitHub) | Windows GUI pre/post-processor for CalculiX | [prepomax.fs.um.si](https://prepomax.fs.um.si/) | none | Independent checker GUI: open our generated `.inp` decks and inspect them by eye |
+| FEMM | Aladdin Free Public Licence (see site) | 2D magnetostatic, electrostatic, heat-flow FEA (Windows) | [femm.info](https://www.femm.info/) | none (only a name match in a `design_table_fem` test; no FEMM code) | Low priority; 2D thermal/electrical screening only |
+| OpenModelica | OSMC-PL / GPL-3.0 / AGPL-3.0 (dual, see site) | Modelica system simulation (control, hydraulics, drivetrains) | [openmodelica.org](https://openmodelica.org/) | none | Hydraulic/control subsystem models (tensioner, ballast systems); not near-term |
+| OpenRadioss | AGPL-3.0 | Explicit dynamics, crash and impact | [openradioss.org](https://www.openradioss.org/) | none | Dropped-object and impact screening; later |
+| LowLevelFEM.jl | MIT | Julia finite-element toolkit built on Gmsh | [github.com/perebalazs/LowLevelFEM.jl](https://github.com/perebalazs/LowLevelFEM.jl) | none | Watch only |
+| MFront | GPL-3.0 / LGPL-3.0 / CeCILL-A (see site) | Code generator for non-linear material behaviours; interfaces to code_aster, CalculiX and others | [thelfer.github.io/tfel](https://thelfer.github.io/tfel/web/index.html) | none | Custom material models (polymer, soil, thermal ageing) in CalculiX/code_aster (issue opened) |
+| Simvia | Company (code_aster support), not software | Commercial support and training for code_aster | [simvia.tech](https://simvia.tech/) | none | Reference only, if code_aster is adopted |
+| Elmer FEM | GPL-2.0-or-later (solver), LGPL libraries | Multi-physics FEM: heat, electrostatics, electromagnetics, flow | [elmerfem.org](https://www.elmerfem.org/) | none (name matches in src/tests are unrelated company names) | Electrostatic field solves for cathodic-protection cross-checks, and thermal problems (issue opened) |
+| Salome-Meca | LGPL-2.1 (SALOME) bundled with code_aster | GUI environment bundling SALOME geometry/mesh with code_aster | [code-aster.org](https://www.code-aster.org/) | none | Only if code_aster is adopted; our pipeline is scripted instead |
+| FEAScript | MIT | Browser/JavaScript FEM library | [feascript.com](https://feascript.com/) | none | Possible for light web demos; low priority |
+| OpenFOAM | GPL-3.0 | CFD toolbox (finite volume): marine VOF, sloshing, resistance | [openfoam.org](https://www.openfoam.org/) | **Integrated, deepest.** `src/digitalmodel/solvers/openfoam` (hull cases, sloshing coupling, convergence audit, pressure taps, mesh bridge); 1832 tests in `tests/solvers/openfoam`. Epic #1161 | Continue: sloshing, hull resistance, near-wall acceptance (`docs/benchmarks/near-wall-acceptance`) |
+
+Related open solver already in the repo but not in the post: MYSTRAN (NASTRAN-compatible linear FEA), `src/digitalmodel/solvers/mystran` (BDF writer, result parser, convergence, FEM chain), 106 tests in `tests/solvers/mystran`.
+
+## How we use open-source solvers
+
+An open solver is adopted only when it reproduces a trusted number, not because it is free. The post that started this register makes the same point: AI can help with scripting and post-processing, but verification, validation and engineering judgement stay with the engineer. In practice:
+
+- **Benchmark first.** Where we hold a commercial or analytical reference we compare against it before using an open tool for real work. The structural comparison framework is tracked in #1703 and epic #1846 (adopt only when the open solver lands on the same number as the licensed one).
+- **Pinned, repeatable runs.** `src/digitalmodel/solvers/benchmark` (88 tests in `tests/solvers/benchmark`) is a timing and fingerprint baseline pack for the solver stack (#2300). It shows a machine runs a fixed workload the same way; it is not itself a validation against commercial results.
+- **Reference cases in the repo.** `docs/benchmarks/` holds fixtures such as the closed-form catenary hand calculation (`catenary_closed_form`, 5 % tension band, no program results included), the diffraction `unit_box` reports, `near-wall-acceptance` and the sloshing analytical fixture. We state a result only where a case file backs it.
+- **Fail closed.** Solver wrappers check input compatibility (for example the CalculiX writer work in #2080) and record solver evidence rather than assuming success.
+- **Engineer signs off.** Scripts and post-processing may be automated; the assumptions, validity range and conclusion are reviewed by a person.
