@@ -19,6 +19,7 @@ established by a returned category.
 | Revision | Date       | What changed and why                                                                                                                      |
 | -------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | 0        | 2026-10-28 | Document the public API, synthetic classification example and qualification gaps; connect the pack to the registry and consistency tests. |
+| 1        | 2026-11-05 | Connect the shared screening-pack tests and replace the completed documentation follow-up with the remaining qualification limits. |
 
 ## 1. Purpose and scope
 
@@ -135,6 +136,7 @@ pytest cache. No solver is needed for the corrosion example or AST checks.
 ```bash
 PYTHONPATH=src uv run --no-project --with pytest python -m pytest \
   tests/corrosion tests/docs/test_corrosion_agent_pack.py \
+  tests/docs/test_screening_agent_packs.py \
   tests/docs/test_agent_pack_functions.py tests/test_main_module_routing.py \
   -q -rA -p no:cacheprovider --basetemp="$TMPDIR/corrosion-pack-tests"
 uv run --no-project python scripts/docs/check_agent_pack_functions.py \
@@ -240,6 +242,7 @@ the documented classification example and pack structure. Near-epsilon
 boundaries, invalid numeric domains, result-note mutability and custom-band
 note accuracy are inspected source behaviors without added runtime regression
 tests here. Full-repository execution, solver integration, independent material
-data qualification and physical validation are NOT_EVALUATED. Other packages in
-the parent [knowledge-pack issue](https://github.com/vamseeachanta/digitalmodel/issues/3339)
-remain follow-up; this pack does not close that issue.
+data qualification and physical validation are NOT_EVALUATED. The related
+foam-system and lifting-lug packs now share inventory and drift tests in
+`tests/docs/test_screening_agent_packs.py`. Engineering qualification remains
+open for all three screening packages.
