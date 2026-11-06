@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for pile_capacity.py composite API with alpha_method_capacity() (#1814).
 # ABOUTME: Written before implementation (TDD) — tests multi-layer and single-layer cases.
 """
@@ -107,6 +110,88 @@ class TestCompositeCapacityHandCalculations:
         assert result.total_capacity_kn == pytest.approx((600.0 + tip_pi) * math.pi)
         assert result.alpha == pytest.approx(tip_alpha)
         assert result.unit_skin_friction_kpa == pytest.approx(tip_friction)
+
+
+@pytest.fixture
+def pile_capacity_cfg(tmp_path):
+    """Keep routed summaries inside the test's temporary directory."""
+    return {
+        "pile_capacity": {
+            "pile": {
+                "diameter_m": 2.0,
+                "embedded_length_m": 3.0,
+                "Nc": SYNTHETIC_NC,
+            },
+            "soil": {"Su_kpa": 40.0, "sigma_v_kpa": 40.0},
+            "outputs": {"directory": tmp_path.as_posix()},
+        }
+    }
+
+
+class TestCfgRouterGeometryValidation:
+    """Reject invalid geometry before emitting a capacity or summary."""
+
+    @pytest.mark.parametrize("value", INVALID_GEOMETRY, ids=INVALID_GEOMETRY_IDS)
+    @pytest.mark.parametrize(
+        "field,layer_index",
+        [
+            ("diameter_m", None),
+            ("embedded_length_m", None),
+            ("diameter_m", 0),
+            ("thickness_m", 0),
+            ("thickness_m", 1),
+            ("thickness_m", 2),
+        ],
+        ids=["single-D", "single-L", "multi-D", "first", "middle", "tip"],
+    )
+    def test_invalid_cfg_geometry(
+        self, pile_capacity_cfg, tmp_path, field, layer_index, value
+    ):
+        from copy import deepcopy
+
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+
+        params = pile_capacity_cfg["pile_capacity"]
+        if layer_index is not None:
+            params["soil_layers"] = [
+                {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
+                for _ in range(3)
+            ]
+        if field == "thickness_m":
+            params["soil_layers"][layer_index][field] = value
+            message = rf"layers\[{layer_index}\] thickness"
+        else:
+            params["pile"][field] = value
+            message = "D" if field == "diameter_m" else "L"
+        before = deepcopy(pile_capacity_cfg)
+
+        with pytest.raises(ValueError, match=rf"^{message} must be finite and positive$"):
+            PileCapacityWorkflow().router(pile_capacity_cfg)
+
+        assert pile_capacity_cfg == before
+        assert list(tmp_path.iterdir()) == []
+
+    @pytest.mark.parametrize("multilayer", [False, True], ids=["single", "multi"])
+    def test_valid_cfg_capacity(self, pile_capacity_cfg, tmp_path, multilayer):
+        import json
+
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+
+        if multilayer:
+            pile_capacity_cfg["pile_capacity"]["soil_layers"] = [
+                {"thickness_m": 1.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0},
+                {"thickness_m": 2.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0},
+            ]
+        routed = PileCapacityWorkflow().router(pile_capacity_cfg)
+        result = routed["pile_capacity"]["result"]
+        # The nominal hand calculation above gives Qs=120*pi, Qp=280*pi kN.
+        assert result["skin_friction_kn"] == pytest.approx(120.0 * math.pi)
+        assert result["end_bearing_kn"] == pytest.approx(280.0 * math.pi)
+        assert result["total_capacity_kn"] == pytest.approx(400.0 * math.pi)
+        summary = json.loads(
+            (tmp_path / "pile_capacity_summary.json").read_text(encoding="utf-8")
+        )
+        assert summary["result"] == result
 
 
 class TestPileCapacityResultDataclass:
