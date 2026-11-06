@@ -97,6 +97,29 @@ def test_collapse_controlled_critical_depth_is_eight_mm():
     assert result["critical_depth"]["status"] == "BRACKETED_BOUNDARY"
 
 
+@pytest.mark.parametrize("quantity", ["kr", "tolerance_mm", "k_mat"])
+def test_report_preserves_small_values_and_compact_toughness(tmp_path, quantity):
+    """Read back nonzero ratios and tolerances from a collapse-case report."""
+    cfg = case()
+    cfg["crack_assessment"].update(
+        c_mm=20.0, width_mm=100.0, sigma_m_mpa=400.0, k_mat=1e6,
+        tol_mm=1e-6, output_dir=str(tmp_path),
+    )
+    result = router(cfg)["crack_fad_level2_handoff"]
+    report = Path(result["report_path"]).read_text(encoding="utf-8")
+    cells = dict(re.findall(r"<tr><td>([^<]+)</td><td>([^<]*)</td></tr>", report))
+    expected = {
+        "kr": result["assessment"]["kr"],
+        "tolerance_mm": cfg["crack_assessment"]["tol_mm"],
+        "k_mat": cfg["crack_assessment"]["k_mat"],
+    }
+    assert float(cells[quantity]) > 0
+    assert float(cells[quantity]) == pytest.approx(expected[quantity], rel=0.0005)
+    assert len(cells[quantity]) <= 9
+    assert cells["t_mm"] == "20.000"
+    assert cells["depth_mm"] == "8.000"
+
+
 @pytest.mark.parametrize("half_width", [10.1, 24.999])
 def test_narrow_plate_reference_stress_domain_rejected(half_width):
     """BS 7910:2013 Annex P wide-plate form requires half-width >= c+t."""

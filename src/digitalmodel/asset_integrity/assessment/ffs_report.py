@@ -75,6 +75,14 @@ class FFSReport:
         The curve check and the service disposition are reported separately:
         an inside-envelope point still requires specialist review.
         """
+        def format_value(key, value):
+            if not isinstance(value, float):
+                return value
+            dimension_mm = str(key).endswith("_mm") and key not in (
+                "tol_mm", "tolerance_mm",
+            )
+            return format(value, ".3f" if dimension_mm else ".4g")
+
         handoff = result["handoff"]
         sections = {
             "Revision history": {
@@ -96,7 +104,7 @@ class FFSReport:
         for heading, values in handoff["data_package"].items():
             sections[f"Handoff inputs: {heading}"] = values
         sections = {
-            heading: {key: f"{value:.3f}" if isinstance(value, float) else value
+            heading: {key: format_value(key, value)
                       for key, value in values.items()}
             for heading, values in sections.items()
         }
