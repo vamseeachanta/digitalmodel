@@ -288,6 +288,7 @@ def lazyWavePlot(data, spacing=10):
 
 
 def simple_catenary_plot(data, spacing=10):
+    """Plot angle-route geometry with BendRadius relative to mean sea level."""
     # HangoffToTouchDown Section
     X = []
     Y = []
@@ -312,6 +313,7 @@ def simple_catenary_plot(data, spacing=10):
         "X": X,
         "Y": Y,
         "label": "Catenary",
+        "ylabel": "Elevation relative to mean sea level [m]",
         "SaveAndShow": True,
         "fileName": data["Analysis"]["result_folder"]
         + "SCR_"
@@ -332,7 +334,8 @@ def genericPlot(data):
     plt.xlabel("Horizontal distance[m]", fontsize=12, fontweight="bold", color="black")
     # it creates plot Y-axis name, fontsize and colour
     plt.ylabel(
-        "Distance from seabed [m]", fontsize=12, fontweight="bold", color="black"
+        data.get("ylabel", "Distance from seabed [m]"),
+        fontsize=12, fontweight="bold", color="black"
     )
     # it creates plot tittle, color and size
     plt.title(

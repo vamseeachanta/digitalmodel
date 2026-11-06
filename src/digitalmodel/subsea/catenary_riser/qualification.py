@@ -26,7 +26,8 @@ def route_conventions() -> list[dict[str, str]]:
     for name in ("legacy_force", "legacy_angle"):
         routes.append(dict(
             common, route=name, angle=(
-                "not returned; q is retained input only" if name == "legacy_force"
+                "not returned; q is retained input only when F, w and d are supplied"
+                if name == "legacy_force"
                 else "q input from vertical; no distribution returned"
             ),
             evidence="test_route_qualification.py::test_legacy_vertex_overlap",
@@ -53,7 +54,10 @@ def route_conventions() -> list[dict[str, str]]:
         origin="X=0 at hang-off; Y=0 at mean sea level",
         axes="X toward touchdown; Y upward",
         angle="not returned", force_sign="not returned",
-        evidence="test_route_qualification.py::test_legacy_simple_plot_matches_modern_vertex_frame",
+        evidence=(
+            "test_route_qualification.py::test_legacy_simple_plot_matches_modern_vertex_frame; "
+            "requires legacy_angle result with BendRadius; legacy_force output raises KeyError"
+        ),
     ))
     routes.append(dict(
         common, route="installation_sections",

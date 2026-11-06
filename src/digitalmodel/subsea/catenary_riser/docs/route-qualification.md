@@ -17,6 +17,7 @@ qualify native exports, elasticity, bending, fatigue, current or dynamics.
 | DRAFT 1 | 2026-10-22 | Establish route contracts, input checks, screening and evidence gaps for independent review. |
 | DRAFT 2 | 2026-10-25 | Bind qualification observations to direct behavioral assertions and retain broader route gaps. |
 | DRAFT 3 | 2026-11-05 | Separate unqualified native conventions from analytical metadata and test the legacy simple-plot datum. |
+| DRAFT 4 | 2026-11-06 | Align the simple-plot axis label with its sea-level datum, state its angle-route input requirement and limit coverage claims to the tested inputs. |
 
 ## Sources and applicability
 
@@ -59,11 +60,11 @@ and positive effective weight acts downward.
 | `simple_H` | Vertex `(0,0)`; x toward top, z upward | Top from vertical; touchdown and distribution from horizontal | `test_route_qualification::test_modern_vertex_and_distributions` |
 | `simple_top_tension` | Same vertex; force governs span | Same | Same parameterised test |
 | `simple_span` | Same vertex; offset is suspended span, excluding any grounded tail | Same | Same parameterised test; `test_audit_regressions::test_geometry_inverse_and_exhaustion` |
-| `legacy_force` | Implied vertex; `d` is positive height; `F` is total top tension and `w` already N/m | No calculated angle; any supplied `q` is retained input | `test_route_qualification::test_legacy_vertex_overlap`, both legacy callers |
+| `legacy_force` | Implied vertex; `d` is positive height; `F` is total top tension and `w` already N/m | No calculated angle; any supplied `q` is retained input when `F`, `w` and `d` are supplied | `test_route_qualification::test_legacy_vertex_overlap`, both legacy callers; retention and non-use of `q` checked by `test_legacy_force_metadata_does_not_promise_an_angle` |
 | `legacy_angle` | Implied vertex; `BendRadius=a`; `b=1/a` only on the force route | `q` from vertical | Same test, both legacy callers |
 | `lazy_wave_analyzer` | No coordinates returned | No angle returned | QUARANTINED; `test_lazy_wave_quarantine` |
 | `legacy_exports` | Export-specific origin/axes; no common global transformation qualified | NOT_EVALUATED | NOT_EVALUATED for units, force signs and phase as well; missing type data and native evidence |
-| `legacy_simple_plot` | X=0 at hang-off, positive toward touchdown; Y=0 at mean sea level, positive upward | No angle output | `test_route_qualification::test_legacy_simple_plot_matches_modern_vertex_frame`; coordinate output only |
+| `legacy_simple_plot` | X=0 at hang-off, positive toward touchdown; Y=0 at mean sea level, positive upward | No angle output; requires `legacy_angle` result with `BendRadius`; unmodified `legacy_force` output raises `KeyError` | `test_route_qualification::test_legacy_simple_plot_matches_modern_vertex_frame`; coordinate output and requested axis label; `test_generic_plot_uses_requested_datum_and_preserves_default` checks the plotting helper's axis label; `test_simple_plot_refuses_force_output_before_plotting` checks the input boundary |
 | `installation_sections` | Vertex `(0,0)`; x toward top, z upward; `touchdown_point=(-span,-depth)` is displacement **from hang-off** | Top from vertical | `test_installation_planning::test_piecewise_hand_case` |
 
 The general elastic boundary-value catenary solver, legacy plotting coordinates
@@ -96,19 +97,27 @@ geometric translations and a horizontal reflection, without a force or phase
 transformation. The top angle remains measured from vertical; the returned
 angle distribution remains measured from horizontal.
 
-The package-output regression exercises horizontal-force, top-force and span
-controls at two hang-off depths. Three independent hand points for `a=3 m` and
+The package-output regression uses horizontal-force, top-force and span controls
+in the modern analyzer to supply the angle to the legacy angle route. That
+route supplies the plot input, including `BendRadius`; unmodified legacy
+force-route output lacks that field and raises `KeyError` before plotting.
+The plot receives two distinct inputs, one per hang-off depth; the modern
+control variants do not establish three plot input routes.
+Three independent hand points for `a=3 m` and
 `d=2 m` establish the reflection, ordinate offset and metre scale, including
 an interior ordinate derived from `cosh(ln(3)/2)=2/sqrt(3)`. The plotting callback
-is replaced in the test so that only returned coordinate arrays are evaluated.
-No image or native model is produced.
+is replaced in the coordinate test to inspect the returned arrays and the
+requested mean-sea-level elevation label. A separate test reads the real
+plotting helper's axis label and checks its unchanged seabed default for the
+lazy-wave callers. No saved image or native model is produced.
 
 `route_conventions()` records static phase as `NOT_APPLICABLE`. Native exports
 receive explicit `NOT_EVALUATED` fields for units, axes, origin, angles, force
 signs and phase; they inherit no analytical defaults. This records missing
 evidence rather than choosing a native convention. The legacy force route
 returns `S`, `X`, `THorizontal` and `b`; it does not calculate `q`. A `q` already
-present in its input dictionary remains input metadata.
+present in its input dictionary remains input metadata when `F`, `w` and `d`
+are supplied; a missing weight does not establish a valid force-route input.
 
 ### Readiness and discovery boundaries
 
@@ -150,6 +159,7 @@ assignment is not evidence that a reviewer has accepted or completed the work.
 | Native export coordinates and units | Riser and mooring engineering maintainer | Qualified type data, connection-frame transformation and target-version load/statics comparison | OPEN |
 | RAO phase and motion conventions | Riser and mooring engineering maintainer | Dataset provenance, axes/origins, phase signs and target-version comparison | OPEN |
 | Historical readiness and section-10 discoveries | Documentation maintainer | Claim-to-function-to-assertion review of the remaining inventory | OPEN |
+| Legacy force dispatch without weight and dependent sweep | Engineering maintainer | `catenaryEquation` selects its force branch on `F` alone, while the calculator requires `F`, `w` and `d`; with `F` and `q` but no `w`, the wrapper raises `KeyError` after the angle calculation. `gethorizontalDistanceHangofftoTDPrange` supplies that incomplete input and cannot complete. `test_legacy_force_without_weight_retains_open_dispatch_defect` records the wrapper failure; clearance requires corrected dispatch and a completing sweep regression. | OPEN |
 | Final clearance | Documentation and engineering maintainers | Recorded independent review and disposition of the open evidence | DRAFT |
 
 Table 2. Remaining review record for #2755; no approval is recorded.
