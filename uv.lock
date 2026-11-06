@@ -206,8 +206,8 @@ wheels = [
 
 [[package]]
 name = "assetutilities"
-version = "0.1.0"
-source = { registry = "https://pypi.org/simple" }
+version = "0.1.1"
+source = { git = "https://github.com/vamseeachanta/assetutilities?rev=a283574dd00d6050c480d487c3d6f1c89c3d00e8#a283574dd00d6050c480d487c3d6f1c89c3d00e8" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "build" },
@@ -232,7 +232,6 @@ dependencies = [
     { name = "playwright" },
     { name = "plotly" },
     { name = "pypdf2" },
-    { name = "pytest" },
     { name = "python-docx" },
     { name = "pyyaml" },
     { name = "ruamel-yaml" },
@@ -247,10 +246,6 @@ dependencies = [
     { name = "webcolors" },
     { name = "wkhtmltopdf" },
     { name = "xlsxwriter" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/67/28/0b6136cc026983a644f9fcbb1a60e10cd56958c4ee315f1421f7e8c8a7dc/assetutilities-0.1.0.tar.gz", hash = "sha256:6c4a62bda9f5223c71b25568dbb537bd6fa57ef2e085dd6e38cb05350b135d9f", size = 198808, upload-time = "2026-03-14T22:53:06.424Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/61/af/e572673a39984fe15a47b8f245dd46023be045b47057a974d03686d72e37/assetutilities-0.1.0-py3-none-any.whl", hash = "sha256:2a240acedc6af5073a189267b9be09cb1b2dd4e9d26278d6852f3d57998d7237", size = 243347, upload-time = "2026-03-14T22:53:04.867Z" },
 ]
 
 [[package]]
@@ -1488,7 +1483,7 @@ docs = [
 requires-dist = [
     { name = "aiofiles", marker = "extra == 'async'", specifier = ">=23.0.0,<25.0.0" },
     { name = "aiohttp", marker = "extra == 'test'", specifier = ">=3.9.0,<4.0.0" },
-    { name = "assetutilities", specifier = ">=0.0.7,<1.0.0" },
+    { name = "assetutilities", git = "https://github.com/vamseeachanta/assetutilities?rev=a283574dd00d6050c480d487c3d6f1c89c3d00e8" },
     { name = "asyncpg", marker = "extra == 'async'", specifier = ">=0.29.0,<1.0.0" },
     { name = "bandit", marker = "extra == 'dev'", specifier = "==1.7.5" },
     { name = "beautifulsoup4", specifier = ">=4.13.0,<5.0.0" },

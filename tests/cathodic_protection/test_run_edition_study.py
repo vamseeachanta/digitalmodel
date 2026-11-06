@@ -83,9 +83,13 @@ def test_cli_runs_outside_checkout_with_optimization(tmp_path):
 
 def test_assetutilities_uses_public_dependency_default():
     config = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert "assetutilities" not in config.get("tool", {}).get("uv", {}).get(
-        "sources", {}
-    )
+    source = config.get("tool", {}).get("uv", {}).get("sources", {}).get("assetutilities")
+    # A public checkout must not need a sibling directory: no path source.
+    # A pinned public GitHub commit is allowed (PyPI 0.1.0 lacks workflow_api).
+    if source is not None:
+        assert "path" not in source
+        assert source.get("git", "").startswith("https://github.com/vamseeachanta/assetutilities")
+        assert len(source.get("rev", "")) == 40
     assert any(
         dep.startswith("assetutilities>=") for dep in config["project"]["dependencies"]
     )

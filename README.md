@@ -88,8 +88,10 @@ Requires Python 3.11+. See [pyproject.toml](pyproject.toml) for full dependency 
 
 ### Install from a public checkout
 
-From the repository root, install with public PyPI dependencies; no sibling
-repository is required:
+From the repository root, install with public dependencies; no sibling
+repository is required. assetutilities comes from a pinned commit of its public
+GitHub repository (`[tool.uv.sources]`), because the PyPI release 0.1.0 lacks
+`assetutilities.workflow_api`:
 
 ```bash
 uv venv --python 3.11
@@ -108,7 +110,7 @@ uv pip install -e ../assetutilities
 ```
 
 This override applies to the current environment. A later `uv sync` will restore
-the public dependency selected by the project.
+the pinned public commit selected by the project.
 
 ### Reproduce the cathodic-protection edition study
 
