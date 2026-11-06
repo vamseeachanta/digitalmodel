@@ -154,7 +154,7 @@ def test_threshold_at_initial_depth_requires_resolution():
 
 
 @pytest.mark.parametrize("direction", [0.0, None, math.inf])
-def test_endpoint_threshold_comparison_remains_exact(direction):
+def test_endpoint_threshold_arrival_tolerates_roundoff(direction):
     def delta_k(depth):
         if depth == 0.005 and direction is not None:
             return math.nextafter(5, direction)
@@ -163,12 +163,8 @@ def test_endpoint_threshold_comparison_remains_exact(direction):
     result = integrate_growth(
         law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=4,
     )
-    if direction == 0:
-        assert result.status == "ARRESTED"
-        assert result.life_cycles is None
-    else:
-        assert result.status == "LIMIT_REACHED"
-        assert result.life_cycles == pytest.approx(1_382_716, rel=2e-6)
+    assert result.status == "LIMIT_REACHED"
+    assert result.life_cycles == pytest.approx(1_382_716, rel=2e-6)
 
 
 def test_arrest_inside_interval_preserves_only_reached_depth():
@@ -410,3 +406,63 @@ def test_large_absolute_tolerance_keeps_positive_corrected_life():
     assert math.isfinite(result.life_cycles)
     assert result.life_cycles > 0
     assert result.history[-1].cycles > 0
+
+
+@pytest.mark.parametrize("steps", [1, 4, 100])
+def test_power_law_threshold_arrival_tolerates_roundoff(steps):
+    initial, limit, amplitude, power = 0.001, 0.00982, 12.936, 0.41611251118884224
+    def delta_k(a):
+        return amplitude * (initial / a)**power
+
+    assert delta_k(limit) == math.nextafter(5.0, 0.0)
+    # Independent primitive of a**(3*power)/(C*amplitude**3*initial**(3*power)).
+    exponent = 3 * power + 1
+    expected = (limit**exponent - initial**exponent) / (
+        exponent * 1e-11 * amplitude**3 * initial**(3 * power)
+    )
+    result = integrate_growth(
+        law(threshold=5), delta_k, initial_m=initial, limit_m=limit, steps=steps,
+    )
+    assert result.status == "LIMIT_REACHED"
+    assert result.life_cycles == pytest.approx(expected, rel=2e-6)
+    assert result.history[-1].depth_m == limit
+    assert result.history[-1].cycles == result.life_cycles
+    assert result.estimated_error_cycles <= 1e-6 + 1e-6 * expected
+
+
+def test_resolved_arrest_before_limit_is_not_promoted_to_arrival():
+    result = integrate_growth(
+        law(threshold=5), lambda a: 10 - 1000 * a,
+        initial_m=0.001, limit_m=0.00501, steps=4,
+    )
+    assert result.status == "ARRESTED"
+    assert result.life_cycles is None
+    assert result.history[-1].depth_m < 0.005
+
+
+@pytest.mark.parametrize("policy, status", [("arrest", "ARRESTED"), ("propagate", "LIMIT_REACHED")])
+def test_explicit_threshold_equality_policy_resolves_constant_input(policy, status):
+    result = integrate_growth(
+        law(threshold=5), 5, initial_m=0.001, limit_m=0.005, steps=4,
+        threshold_equality=policy,
+    )
+    assert result.status == status
+    if policy == "propagate":
+        assert result.life_cycles == pytest.approx(0.004 / (1e-11 * 5**3))
+    else:
+        assert result.life_cycles is None
+        assert len(result.history) == 1
+
+
+def test_default_equality_error_names_resolution_keyword():
+    with pytest.raises(ValueError, match="threshold_equality"):
+        integrate_growth(law(threshold=5), 5, initial_m=0.001, limit_m=0.005, steps=4)
+
+
+@pytest.mark.parametrize("policy", [None, True, "ignore", [], {}])
+def test_invalid_threshold_equality_policy_rejected_before_early_return(policy):
+    with pytest.raises(ValueError, match="threshold_equality"):
+        integrate_growth(
+            law(), 10, initial_m=0.005, limit_m=0.005, steps=4,
+            threshold_equality=policy,
+        )

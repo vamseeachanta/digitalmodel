@@ -720,3 +720,50 @@ def test_router_checks_complete_contract(case, tmp_path):
     with pytest.raises(ValueError):
         router({"inspection_planning": {"crack_growth": inputs,
                                         "outputs": {"directory": tmp_path.as_posix()}}})
+
+
+def test_rounded_threshold_arrival_preserves_assessment_interval():
+    initial, limit, amplitude, power = 0.001, 0.00982, 12.936, 0.41611251118884224
+    exponent = 3 * power + 1
+    expected = (limit**exponent - initial**exponent) / (
+        exponent * 1e-11 * amplitude**3 * initial**(3 * power)
+    )
+    result = assess_crack_life(**(options() | dict(
+        law=GrowthLaw(1e-11, 3, 5, 0, 1, "Synthetic threshold-arrival fixture"),
+        delta_k=lambda a: amplitude * (initial / a)**power,
+        cycles_per_year=1_000_000, code_max_interval_years=10,
+        critical_depth_mm=9.82, wall_thickness_mm=20,
+        critical_depth_basis="Synthetic depth limit",
+    )))
+    assert result.growth.status == "LIMIT_REACHED"
+    assert result.inspection.remaining_life_years == pytest.approx(expected / 1e6, rel=2e-6)
+    assert result.inspection.next_inspection_interval_years == pytest.approx(expected / 2e6, rel=2e-6)
+
+
+def test_router_serializes_finite_rounded_threshold_arrival(monkeypatch, tmp_path):
+    initial, limit, amplitude, power = 0.001, 0.00982, 12.936, 0.41611251118884224
+    exponent = 3 * power + 1
+    expected = (limit**exponent - initial**exponent) / (
+        exponent * 1e-11 * amplitude**3 * initial**(3 * power)
+    )
+    monkeypatch.setattr(
+        "digitalmodel.fatigue.crack_growth.stress_intensity_factor",
+        lambda stress_range, depth, **kwargs: amplitude * (initial / depth)**power,
+    )
+    inputs = options()
+    inputs.pop("delta_k")
+    inputs.update(
+        law=dict(coefficient=1e-11, exponent=3, threshold=5, stress_ratio=0,
+                 walker_exponent=1, basis="Synthetic threshold-arrival fixture"),
+        stress_range_mpa=100, geometry_factor=1, cycles_per_year=1_000_000,
+        code_max_interval_years=10, critical_depth_mm=9.82, wall_thickness_mm=20,
+        critical_depth_basis="Synthetic depth limit",
+    )
+    result = router({"inspection_planning": {
+        "crack_growth": inputs, "outputs": {"directory": tmp_path.as_posix()},
+    }})["inspection_planning"]
+    saved = json.loads(Path(result["summary_json"]).read_text(encoding="utf-8"))
+    for payload in (result, saved):
+        assert payload["crack_assessment"]["growth"]["status"] == "LIMIT_REACHED"
+        assert payload["result"]["remaining_life_years"] == pytest.approx(expected / 1e6, rel=2e-6)
+        assert payload["result"]["next_inspection_interval_years"] == pytest.approx(expected / 2e6, rel=2e-6)

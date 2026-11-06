@@ -186,6 +186,7 @@ def integrate_growth(
     relative_tolerance: float = 1e-6,
     absolute_tolerance: float = 1e-6,
     max_refinements: int = 20,
+    threshold_equality: str = "raise",
 ) -> GrowthResult:
     """Integrate da/rate(a) by adaptive Simpson quadrature.
 
@@ -198,13 +199,18 @@ def integrate_growth(
     The Simpson /15 estimate assumes a smooth reciprocal growth rate;
     finite samples cannot certify arbitrary callables, exclude unsampled
     threshold dips or singularities, or bound their true integral error.
-    For continuous DeltaK, arrival exactly at a positive threshold at limit_m
-    uses the finite propagating-side rate. Positive threshold equality at
-    an initial or interior sample raises ValueError: an isolated touch and
-    a threshold plateau require explicit resolution before planning an
-    interval. Equality comparisons are exact; below-threshold values are
-    never promoted to growth. No automatic continuation through a touch is
-    established. Unvisited features remain outside the sampling guarantee.
+    For continuous DeltaK, positive-threshold arrival within the endpoint
+    depth resolution uses the finite propagating-side threshold rate. The
+    resolution is the initial panel width * 2**(-max_refinements), with a
+    floor of four ulps of limit_m. The approach probe must still propagate;
+    a resolved arrest before that probe retains null life. Treating an
+    unresolved final gap as arrival conservatively avoids an infinite-life
+    inspection cap. This depth classification is separate from the cycle
+    quadrature error estimate; unvisited dips remain outside the guarantee.
+    At initial/interior positive-threshold equality, threshold_equality
+    defaults to "raise". An explicitly qualified "arrest" policy uses the
+    stationary zero rate; "propagate" continues the positive branch through
+    equality, including plateaus. Neither policy promotes subthreshold input.
     All nodes in a sample batch are evaluated before an arrest decision;
     an otherwise unreachable equality in that batch can also raise.
     Arrest returns no finite life/error and only fully traversed initial
@@ -214,6 +220,8 @@ def integrate_growth(
     """
     if not isinstance(law, GrowthLaw):
         raise ValueError("law must be a GrowthLaw")
+    if threshold_equality not in ("raise", "arrest", "propagate"):
+        raise ValueError('threshold_equality must be "raise", "arrest" or "propagate"')
     controls = _integration_controls(
         initial_m, limit_m, steps, relative_tolerance, absolute_tolerance, max_refinements,
     )
@@ -221,24 +229,41 @@ def integrate_growth(
         delta_k = validate_scalar(delta_k, "DeltaK")
         if delta_k < 0:
             raise ValueError("DeltaK must be non-negative")
-    return _integrate_panels(law, delta_k, *controls)
+    return _integrate_panels(law, delta_k, *controls, threshold_equality)
 
 
-def _integrate_panels(law, delta_k, initial_m, limit_m, steps, relative, absolute, refinements):
+def _integrate_panels(
+    law, delta_k, initial_m, limit_m, steps, relative, absolute, refinements,
+    threshold_equality,
+):
     history = [GrowthPoint(initial_m, 0.0)]
     if initial_m >= limit_m:
         return GrowthResult("LIMIT_REACHED", 0.0, tuple(history), law.basis, 0.0)
     dk = delta_k if callable(delta_k) else lambda _: delta_k
+    depth_resolution = max(
+        math.ldexp((limit_m - initial_m) / steps, -min(refinements, 1074)),
+        4 * math.ulp(limit_m),
+    )
 
     def inverse_rate(depth):
         value = validate_scalar(dk(depth), "DeltaK")
         rate = law.rate(value)
-        if value == law.threshold and law.threshold > 0:
-            if depth != limit_m:
+        if rate == 0 and depth == limit_m and law.threshold > 0:
+            # Bracket an unresolved final arrest within the stated depth
+            # resolution. This also covers analytically exact arrival whose
+            # endpoint DeltaK rounds below the threshold. A stationary or
+            # resolved earlier arrest cannot pass the propagating probe.
+            approach = max(initial_m, limit_m - depth_resolution)
+            if law.rate(dk(approach)) > 0:
+                rate = law._propagation_rate(law.threshold)
+        if rate == 0 and value == law.threshold and law.threshold > 0:
+            if threshold_equality == "raise":
                 raise ValueError(
-                    "initial or interior threshold equality requires explicit resolution"
+                    "initial or interior threshold equality requires an explicit "
+                    'threshold_equality="arrest" or "propagate" policy'
                 )
-            rate = law._propagation_rate(value)
+            if threshold_equality == "propagate":
+                rate = law._propagation_rate(value)
         if rate == 0:
             return None
         inverse = 1 / rate

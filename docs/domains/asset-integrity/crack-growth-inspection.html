@@ -23,7 +23,8 @@ as <code>NOT_EVALUATED</code>; through-wall geometry alone establishes no LBB ac
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>1</td><td>2026-10-20</td><td>Growth, assessment-limit and inspection interfaces are documented with independent examples so their calculation basis can be checked.</td></tr>
-<tr><td>2</td><td>2026-10-22</td><td>Adaptive quadrature controls, error estimates, governing depth limits, total FAD length and crack-specific RBI policy evidence are clarified.</td></tr></tbody>
+<tr><td>2</td><td>2026-10-22</td><td>Adaptive quadrature controls, error estimates, governing depth limits, total FAD length and crack-specific RBI policy evidence are clarified.</td></tr>
+<tr><td>3</td><td>2026-11-06</td><td>Finite positive-threshold arrival, endpoint depth resolution and explicit equality policies are documented to prevent a rounded arrival from selecting the maximum inspection interval.</td></tr></tbody>
 <caption>Table 1. Document revisions.</caption></table>
 <h2>Method and source basis</h2>
 <p>The <a href="https://web.mit.edu/course/3/3.11/www/modules/fatigue.pdf">MIT
@@ -53,9 +54,24 @@ no upper count bound is imposed. The summed estimate is reported as
 <code>GrowthResult.estimated_error_cycles</code>
 against <code>absolute_tolerance + relative_tolerance * life_cycles</code>. Exhausting
 the refinement budget raises <code>ValueError</code>; no passing inspection plan is
-produced from an unconverged integral. A sampled threshold arrest returns null
-remaining cycles and null estimated error. History retains the initial depth and
-completed initial panels, without an unreached limiting-depth endpoint.</p>
+produced from an unconverged integral. For continuous DeltaK approaching a positive
+threshold at the limiting depth, the finite propagating-side threshold rate is used.
+A subthreshold endpoint is also treated as arrival when an approach probe still
+propagates within the endpoint depth resolution. That resolution is the initial panel
+width multiplied by <code>2**(-max_refinements)</code>, with a floor of four ulps of
+the limiting depth. Treating this unresolved final gap as arrival conservatively avoids
+an infinite-life inspection cap; the depth classification is separate from the cycle
+quadrature error estimate. A resolved sampled arrest returns null remaining cycles and
+null estimated error. History retains the initial depth and completed initial panels,
+without an unreached limiting-depth endpoint.</p>
+<p>At initial or interior equality with a positive threshold, the default
+<code>threshold_equality="raise"</code> policy raises <code>ValueError</code>, including
+constant DeltaK equal to the threshold. The kernel accepts an explicitly qualified
+<code>threshold_equality="arrest"</code> policy for stationary zero growth or
+<code>threshold_equality="propagate"</code> for the positive branch at equality,
+including a plateau. These policies do not promote subthreshold inputs. All nodes in a
+sample batch are evaluated before arrest is decided; an otherwise unreachable equality
+in that batch can also raise under the default policy.</p>
 <p>The error estimate assumes a smooth reciprocal growth rate. An arbitrary callable
 can contain unsampled threshold dips, singularities or oscillations; finite samples
 cannot certify their absence or bound the true integration error. Material calibration
@@ -87,7 +103,13 @@ and cannot be less than that planner's divisor of 2. The maximum interval and po
 basis are required; these inputs do not establish a crack-specific code interval.
 At or beyond the limit, remaining life and interval are zero and screening fails.
 Under threshold arrest, life and half-life are null and the supplied maximum interval
-governs only while the modeled loading and environment remain applicable.</p>
+governs only while the modeled loading and environment remain applicable. Finite
+positive-threshold arrival, including an unresolved endpoint gap within the stated depth
+resolution, instead uses the finite life divided by the policy divisor and capped by
+the maximum interval. Initial or interior equality raises under the default policy,
+so the assessment and router produce no inspection interval from that ambiguity.
+A separately qualified kernel equality policy can be supplied through the Python
+integration interface before passing its result to the inspection planner.</p>
 <p>Inspection policy is validated before growth integration. At RBI entry, mutable
 plan fields are revalidated against the cycle-to-year conversion, divisor, half-life,
 cap and interval, growth/screening status and policy basis; inconsistencies raise
