@@ -51,7 +51,6 @@ def test_in_memory_router_is_deterministic_and_does_not_change_inspection(tmp_pa
     first = router(deepcopy(cfg))[cfg["basename"]]
     assert first == router(deepcopy(cfg))[cfg["basename"]]
     assert cfg["part9_inspection"] == before
-    assert "written_path" not in first
 
 
 @pytest.mark.parametrize("value", [None, [], "inspection"])

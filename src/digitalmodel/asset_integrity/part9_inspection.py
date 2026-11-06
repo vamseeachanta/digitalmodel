@@ -119,8 +119,11 @@ def _valid(value, kind):
 def _require(data, observed, issues, path, kind):
     value = _get(data, path)
     if value is None or not _valid(value, kind):
+        reason = f"Required {kind} value was not established."
+        if kind == "date" and value is not None:
+            reason = "Required ISO date string was not established; quote the ISO date in YAML."
         issues.append({"field": path, "kind": "missing" if value is None else "invalid",
-                       "reason": f"Required {kind} value was not established."})
+                       "reason": reason})
     else:
         observed[path] = value
 

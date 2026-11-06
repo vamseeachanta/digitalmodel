@@ -104,13 +104,21 @@ def test_invalid_depth_never_counts_as_a_measurement(inspection, value):
 
 @pytest.mark.parametrize("group,key,value", [
     ("loads", "cyclic", 0), ("fabrication", "pwht", "false"),
-    ("inspection", "date", "2026-02-30"), ("flaw", "position", "unknown"),
+    ("inspection", "date", "2026-02-30"),
+    ("inspection", "date", yaml.safe_load("2026-10-20")),
+    ("inspection", "date", yaml.safe_load("2026-10-20T12:00:00Z")),
+    ("flaw", "position", "unknown"),
     ("material", "toughness_basis", "  "), ("geometry", "thickness_mm", None),
 ])
 def test_malformed_field_types(inspection, group, key, value):
     inspection[group][key] = value
-    assert assess_inspection(inspection)["measurement_sufficiency"]["status"] == (
-        "INSUFFICIENT_DATA")
+    sufficiency = assess_inspection(inspection)["measurement_sufficiency"]
+    assert sufficiency["status"] == "INSUFFICIENT_DATA"
+    if group == "inspection" and key == "date":
+        issue, = [item for item in sufficiency["issues"]
+                  if item["field"] == "inspection.date"]
+        assert issue["kind"] == "invalid"
+        assert "quote the ISO date" in issue["reason"]
 
 
 def test_empty_and_malformed_groups_are_reported():
