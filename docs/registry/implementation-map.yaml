@@ -27262,6 +27262,7 @@ families:
   limitations:
   - Only the inspected workflow route and its bending calculations are classified. Straightener removal is assumed; cyclic plasticity, ovalisation and native solver qualification are not established.
   - Inventory membership is neither numerical qualification nor an exhaustive repository audit.
+  - Membership comes from bounded source and call-site inspection. The algorithm pattern filters definition names; the zero matching_files value counts raw file-text matches, not inspected members.
   implementations:
   - path: src/digitalmodel/pipelay/workflow.py
     symbol: _reel_result
@@ -27335,6 +27336,7 @@ families:
   limitations:
   - Only the inspected pipelay lay-rate route is classified. Rate degradation and operating cutoffs are screening assumptions; weather persistence, coupled dynamics and native solver qualification are not established.
   - Inventory membership is neither numerical qualification nor an exhaustive repository audit.
+  - Membership comes from bounded source and call-site inspection. The algorithm pattern filters definition names; the zero matching_files value counts raw file-text matches, not inspected members.
   implementations:
   - path: src/digitalmodel/pipelay/workflow.py
     symbol: _operability

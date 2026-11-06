@@ -11,6 +11,7 @@ These checks establish inventory relationships only, not numerical qualification
 import ast
 import copy
 import hashlib
+import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -102,6 +103,7 @@ def resolved_calls(path, symbol, tree, nodes):
 
     Only the two inspected modules are resolved. Constructors and unrelated
     validation/output calls do not become calculation-delegation edges.
+    Unresolved receivers with an inventory member name require inspection.
     """
     imports = {}
     for item in tree.body:
@@ -112,26 +114,42 @@ def resolved_calls(path, symbol, tree, nodes):
     receivers = {}
     if "." in symbol:
         receivers["self"] = (path, symbol.rsplit(".", 1)[0])
+
+    def constructed_type(value):
+        if isinstance(value, ast.Call) and isinstance(value.func, ast.Name):
+            return imports.get(value.func.id)
+        return None
+
     for item in ast.walk(node):
-        if isinstance(item, ast.Assign) and isinstance(item.value, ast.Call):
-            constructor = item.value.func
-            if isinstance(constructor, ast.Name) and constructor.id in imports:
-                for target in item.targets:
+        if isinstance(item, (ast.Assign, ast.AnnAssign)):
+            receiver = constructed_type(item.value)
+            if receiver is not None:
+                targets = item.targets if isinstance(item, ast.Assign) else [item.target]
+                for target in targets:
                     if isinstance(target, ast.Name):
-                        receivers[target.id] = imports[constructor.id]
+                        receivers[target.id] = receiver
     calls = set()
+    member_names = {member.rsplit(".", 1)[-1] for _, member in SYMBOLS}
     for item in ast.walk(node):
         if not isinstance(item, ast.Call):
             continue
         function = item.func
+        target = None
+        called_name = None
         if isinstance(function, ast.Name):
+            called_name = function.id
             target = imports.get(function.id, (path, function.id))
-        elif (isinstance(function, ast.Attribute) and isinstance(function.value, ast.Name)
-              and function.value.id in receivers):
-            target_path, receiver = receivers[function.value.id]
-            target = (target_path, f"{receiver}.{function.attr}")
-        else:
-            continue
+        elif isinstance(function, ast.Attribute):
+            called_name = function.attr
+            receiver = (receivers.get(function.value.id)
+                        if isinstance(function.value, ast.Name)
+                        else constructed_type(function.value))
+            if receiver is not None:
+                target_path, receiver_name = receiver
+                target = (target_path, f"{receiver_name}.{function.attr}")
+        assert target in SYMBOLS or called_name not in member_names, (
+            f"unresolved member call: {symbol}:{called_name}"
+        )
         if target in SYMBOLS:
             calls.add(target)
     return calls
@@ -172,7 +190,9 @@ def test_pipelay_symbols_resolve_without_import(document):
                     and isinstance(statements[0].value.value, str)):
                 del statements[0]
         assert row["body_sha256"] == hashlib.sha256(
-            ast.dump(body, include_attributes=False).encode()
+            # Reference: Python 3.11 ast.dump, include_attributes=False.
+            ast.dump(body, include_attributes=False,
+                     **({"show_empty": True} if sys.version_info >= (3, 13) else {})).encode()
         ).hexdigest()
 
 
@@ -197,3 +217,49 @@ def test_missing_or_misclassified_member_is_detected(document, mutation):
         row["delegates_to"] = [{"path": ANALYSIS, "symbol": "calculate_stinger_radius"}]
     with pytest.raises(AssertionError):
         validate_inventory(changed)
+
+
+def test_body_digest_requests_reference_empty_fields(document, monkeypatch):
+    """Future AST dumps must retain the Python 3.11 empty-field representation."""
+    original_dump = ast.dump
+    runtime_version = sys.version_info
+
+    def reference_dump(node, **kwargs):
+        assert kwargs.pop("show_empty", None) is True
+        if runtime_version >= (3, 13):
+            kwargs["show_empty"] = True
+        return original_dump(node, **kwargs)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(sys, "version_info", (3, 13))
+        patch.setattr(ast, "dump", reference_dump)
+        test_pipelay_symbols_resolve_without_import(document)
+
+
+@pytest.mark.parametrize("body", [
+    "cfg: JLayConfig = JLayConfig()\n    cfg.calculate_sagbend()",
+    "JLayConfig().calculate_sagbend()",
+])
+def test_additional_constructor_bindings_resolve(body):
+    """Alternative constructor syntax still exposes the delegation edge."""
+    tree = ast.parse(
+        "from digitalmodel.orcaflex.pipelay_analysis import JLayConfig\n"
+        f"def _reel_result():\n    {body}\n"
+    )
+    assert resolved_calls(WORKFLOW, "_reel_result", tree,
+                          {"_reel_result": tree.body[1]}) == {
+        (ANALYSIS, "JLayConfig.calculate_sagbend"),
+    }
+
+
+@pytest.mark.parametrize("body", [
+    "analysis.calculate_stinger_radius()",
+    "with context() as cfg:\n        cfg.calculate_sagbend()",
+    "for cfg in configurations:\n        cfg.calculate_sagbend()",
+])
+def test_unresolved_member_call_is_rejected(body):
+    """Unknown receivers cannot silently preserve an independent classification."""
+    tree = ast.parse(f"def _reel_result():\n    {body}\n")
+    with pytest.raises(AssertionError, match="unresolved member call"):
+        resolved_calls(WORKFLOW, "_reel_result", tree,
+                       {"_reel_result": tree.body[0]})

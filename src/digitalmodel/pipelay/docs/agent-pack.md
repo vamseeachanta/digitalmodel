@@ -24,7 +24,7 @@ Source: [workflow.py](../workflow.py), [validation.py](../validation.py).
 
 | Revision | Date | Change and reason |
 |---|---|---|
-| 1 | 2026-10-18 | Analytical screening audit and historical map inventory were recorded. |
+| 1 | 2026-10-18 | Analytical screening [audit #2745](../../../../../../issues/2745) and historical map inventory were recorded. |
 | 2 | 2026-10-28 | The current map discussion distinguishes local calculations from delegates; the historical inventory is retained for traceability. |
 
 ## 2. Inputs and outputs

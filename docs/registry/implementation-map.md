@@ -32,7 +32,7 @@ Tracked files were enumerated with `git ls-files`. Independent searches used alg
 
 The original snapshot has 13 families and 2348 entries; 2228 entries lie outside the first module recorded for each family. Seed verification: 19 confirmed, 1 different, 1 absent and 2 moved. Search found 1959 entries outside the original seed paths.
 
-Six [supplemental engineering families](implementation-map-families.md) add 59 members, bringing the map to 19 families and 2407 entries. Their per-family `inventory_scope` records the source revision and exact files inspected; the original snapshot revision, search counts and groups above are retained. All six additions have partial coverage and explicit engineering limits. Their 27 unresolved name matches are excluded from implementation counts.
+Six [supplemental engineering families](implementation-map-families.md) add 59 members. Revision 4 reported 19 families and 2407 entries; that superseded total is corrected by the canonical row count below. Their per-family `inventory_scope` records the source revision and exact files inspected; the original snapshot revision, search counts and groups above are retained. All six additions have partial coverage and explicit engineering limits. Their 27 unresolved name matches are excluded from implementation counts.
 
 | Supplemental family id | Members | Scope |
 | --- | ---: | --- |
