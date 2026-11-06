@@ -1,6 +1,3 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -159,7 +156,10 @@ def test_report_rebuild_is_deterministic(tmp_path):
     assert sorted(path.name for path in first.iterdir()) == sorted(ARTIFACTS)
     assert sorted(path.name for path in second.iterdir()) == sorted(ARTIFACTS)
     for name in ARTIFACTS:
-        assert (first / name).read_bytes() == (second / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (first / name).read_bytes() == (second / name).read_bytes() == (REPORT / name).read_bytes(), (
+            "Rebuild with PYTHONPATH=src uv run --no-project --with pytest python "
+            'docs/reports/modules/pipe_capacity/build_report.py --output-dir "$TMPDIR/pipe-capacity-report"'
+        )
         assert str(ROOT).encode() not in (first / name).read_bytes()
         assert str(tmp_path).encode() not in (first / name).read_bytes()
     assert {path for path in tmp_path.rglob("*") if path.is_file()} == {
@@ -210,18 +210,76 @@ def test_scope_limits_and_report_pointers(builder):
         for part in source["symbol"].split("."):
             node = next(child for child in node.body if getattr(child, "name", None) == part)
         assert (node.lineno, node.end_lineno) == (source["start_line"], source["end_line"])
+        if source["id"] == "api-collapse-inverse":
+            body = node.body[1:] if ast.get_docstring(node) is not None else node.body
+            assert len(body) == 1 and isinstance(body[0], ast.Raise)
+            assert isinstance(body[0].exc, ast.Call)
+            assert isinstance(body[0].exc.func, ast.Name)
+            assert body[0].exc.func.id == "NotImplementedError"
         lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
         snippet = "".join(lines[source["start_line"] - 1:source["end_line"]])
         assert hashlib.sha256(snippet.encode()).hexdigest() == source["sha256"]
         node = ast.parse(snippet if not snippet.startswith(" ") else "class Context:\n" + snippet)
         assert node.body
-        assert source["implementation"] == "IMPLEMENTED"
+        expected_implementation = (
+            "NOT_IMPLEMENTED" if source["id"] == "api-collapse-inverse" else "IMPLEMENTED"
+        )
+        assert source["implementation"] == expected_implementation
+        row = page.find(f'.//tr[@id="method-{source["id"]}"]')
+        assert row.findall("td")[2].text == expected_implementation
         assert source["qualification"] in {"INDEPENDENTLY_CHECKED", "NOT_EVALUATED"}
     assert all(method["qualification"] == "NOT_EVALUATED" for method in sources["methods"]
                if method["id"] != "common-section")
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert changes["revisions"][0]["date"] == "2026-10-28"
     assert changes["revisions"][0]["changes"]
+
+
+def test_parallel_collapse_placeholders_are_explicit_findings(builder):
+    """Both unqualified parallel inverses stay visible in the method map."""
+    parallel_paths = (
+        "src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py",
+        "src/digitalmodel/asset_integrity/custom/PipeCapacity.py",
+    )
+    symbol = "evaluate_collapse_minimum_thickness_API_STD_2RD"
+    for path in parallel_paths:
+        tree = ast.parse((ROOT / path).read_text(encoding="utf-8"))
+        definition = next(node for node in ast.walk(tree)
+                          if isinstance(node, ast.FunctionDef) and node.name == symbol)
+        assert any(isinstance(node, ast.Return) and isinstance(node.value, ast.Constant)
+                   and node.value.value == 100 for node in ast.walk(definition))
+    source = next(item for item in builder.source_record()["methods"]
+                  if item["id"] == "common-capacity")
+    page = ET.parse(REPORT / "report.html").getroot()
+    row = page.find('.//tr[@id="method-common-capacity"]')
+    displayed_evidence = row.findall("td")[1].text
+    for evidence in (source["evidence"], displayed_evidence):
+        for required in (
+            *parallel_paths, symbol,
+            "return 100", "placeholder", "not a thickness result", "#3323",
+        ):
+            assert required in evidence
+    assert source["qualification"] == "NOT_EVALUATED"
+
+
+def test_report_writes_explicit_utf8_and_lf(builder, tmp_path, monkeypatch):
+    """Every report output chooses UTF-8 and LF on all operating systems."""
+    original_write = Path.write_text
+    written = []
+
+    def checked_write(path, data, *, encoding=None, newline=None):
+        assert encoding == "utf-8"
+        assert newline == "\n"
+        written.append(path.name)
+        return original_write(path, data, encoding=encoding, newline=newline)
+
+    monkeypatch.setattr(Path, "write_text", checked_write)
+    builder.write_report(tmp_path)
+    assert sorted(written) == sorted(ARTIFACTS)
+    for name in ARTIFACTS:
+        data = (tmp_path / name).read_bytes()
+        assert b"\r\n" not in data
+        assert data.decode("utf-8")
 
 
 def test_safe_html_and_json(builder):

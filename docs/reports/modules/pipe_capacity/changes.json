@@ -18,6 +18,15 @@
         "Rebuilt source citations after the guard change and documented when rebuilding is required.",
         "Named the rounded embedded JSON as a display record to make its precision explicit."
       ]
+    },
+    {
+      "revision": "2",
+      "date": "2026-11-06",
+      "changes": [
+        "Marked the raising collapse inverse NOT_IMPLEMENTED to match its behavior.",
+        "Recorded both remaining parallel collapse placeholders for follow-up under #3323; neither establishes a thickness result.",
+        "Corrected source licence headers and rebuilt source records with explicit UTF-8 and LF output."
+      ]
     }
   ]
 }

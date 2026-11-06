@@ -1,6 +1,3 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -19,7 +16,7 @@ from digitalmodel.structural.pipe_capacity.common.PipeSizing import PipeSizing
 
 ROOT = Path(__file__).resolve().parents[4]
 PACKAGE = "src/digitalmodel/structural/pipe_capacity/"
-REVISION = "1"
+REVISION = "2"
 # Fixed publication date; no runtime clock or output-directory metadata is used.
 DATE = "2026-11-06"
 REBUILD = (
@@ -38,12 +35,20 @@ CHANGES = {
             "Retained explicit capacity exclusions and the existing standalone example without alteration.",
         ],
     }, {
-        "revision": REVISION,
-        "date": DATE,
+        "revision": "1",
+        "date": "2026-11-06",
         "changes": [
             "Rejected the unfinished collapse inverse and unsupported external pressure selectors explicitly.",
             "Rebuilt source citations after the guard change and documented when rebuilding is required.",
             "Named the rounded embedded JSON as a display record to make its precision explicit.",
+        ],
+    }, {
+        "revision": REVISION,
+        "date": DATE,
+        "changes": [
+            "Marked the raising collapse inverse NOT_IMPLEMENTED to match its behavior.",
+            "Recorded both remaining parallel collapse placeholders for follow-up under #3323; neither establishes a thickness result.",
+            "Corrected source licence headers and rebuilt source records with explicit UTF-8 and LF output.",
         ],
     }],
 }
@@ -206,7 +211,12 @@ METHODS = (
         'common-capacity',
         'common/PipeCapacity.py',
         'PipeCapacity',
-        'Parallel common capacity implementation tested by the existing common suite; regression is not independent physical evidence.',
+        'Finding: evaluate_collapse_minimum_thickness_API_STD_2RD in '
+        'src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py and '
+        'src/digitalmodel/asset_integrity/custom/PipeCapacity.py still uses '
+        'return 100 as a placeholder, not a thickness result. The report excludes both copies '
+        'from its numerical evidence; an implemented inverse and independent checks remain pending under #3323. '
+        'Existing common-suite regression is not independent physical evidence.',
     ),
     (
         'api-tr',
@@ -249,12 +259,12 @@ def source_record():
             "id": identifier, "path": path, "symbol": symbol,
             "start_line": node.lineno, "end_line": node.end_lineno,
             "sha256": hashlib.sha256(snippet.encode("utf-8")).hexdigest(),
-            "implementation": "IMPLEMENTED",
+            "implementation": "NOT_IMPLEMENTED" if identifier == "api-collapse-inverse" else "IMPLEMENTED",
             "qualification": "INDEPENDENTLY_CHECKED" if identifier == "common-section" else "NOT_EVALUATED",
             "evidence": evidence,
         })
     return {
-        "basis": "Repository-source review; no external standard was consulted. Implementation means a definition exists, not that it is complete or correct.",
+        "basis": "Repository-source review; no external standard was consulted. IMPLEMENTED means a definition exists, not that it is complete or correct. NOT_IMPLEMENTED identifies the inverse that only raises NotImplementedError.",
         "independent_basis": "Synthetic concentric annulus; polar integrals in report section polar-integrals and the independent test oracle.",
         "qualification_scope": "Common annulus geometry at the stated synthetic inputs only.",
         "methods": methods,
@@ -387,13 +397,16 @@ NOT_EVALUATED. The parent issue remains open for broader numerical qualification
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
 <tbody><tr><td>0</td><td>2026-10-28</td><td>Initial bounded module report to separate source evidence,
 independent geometry checks and unevaluated capacity methods.</td></tr>
-<tr><td>{REVISION}</td><td>{DATE}</td><td>Rejected unfinished collapse inversion, rebuilt source citations
-and clarified embedded display precision.</td></tr></tbody></table></div>
+<tr><td>1</td><td>2026-11-06</td><td>Rejected unfinished collapse inversion, rebuilt source citations
+and clarified embedded display precision.</td></tr>
+<tr><td>{REVISION}</td><td>{DATE}</td><td>Marked the raising inverse NOT_IMPLEMENTED, recorded both
+parallel placeholders for follow-up and corrected source headers and text output.</td></tr></tbody></table></div>
 <section id="section-2"><h2>2. Introduction and Method Map</h2>
 <p>The public router calls PipeComponents, which selects custom implementations. The report calls only
 common.PipeSizing.pipe_section_properties directly. A check of that method does not qualify the custom
 copy, the router, other sizing paths or standards-specific calculations.</p>
-<p>IMPLEMENTED means a source definition exists, including incomplete methods. INDEPENDENTLY_CHECKED
+<p>IMPLEMENTED means a source definition exists, including incomplete methods. NOT_IMPLEMENTED identifies
+the unfinished collapse inverse that only raises NotImplementedError. INDEPENDENTLY_CHECKED
 is limited to the stated synthetic geometry. NOT_EVALUATED means no numerical qualification is supplied
 by this report. Code labels for standards identify intended attribution; authoritative editions,
 clause text and suitability for a design have not been checked.</p>
@@ -462,7 +475,11 @@ provide independent pressure, collapse, material or standards qualification.</p>
 <table><thead><tr><th>Assessment</th><th>Status</th></tr></thead><tbody id="scope-limits">{limits}</tbody>
 <caption>Table 3. Explicit exclusions from this report.</caption></table>
 <p>Geometry alone establishes no allowable pressure, utilisation, code compliance or fitness for service.
-No licensed solver is imported or queried. No standards table, factor or production engineering behaviour is changed.</p>
+No licensed solver is imported or queried. No standards table or factor is changed. The custom
+API STD 2RD-2013 external-pressure route raises NotImplementedError at the unfinished collapse inverse
+before publishing that route\'s result; unsupported external-pressure selectors raise ValueError.
+Results from evaluations completed earlier in the same call (earlier rows, earlier code entries or the
+outer pipe) may already exist in the configuration when the unfinished inverse raises.</p>
 <p>The method map records incomplete inverses, implicit defaults, parallel implementations, fixed load terms
 and legacy units concerns as source findings. Their presence is not a numerical evaluation or an accepted design basis.</p></section>
 <section id="section-8"><h2>8. Recommendations</h2>
@@ -509,7 +526,7 @@ def write_report(output_dir):
     changes = json_text(CHANGES)
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, text in (("report.html", page), ("sources.json", sources), ("changes.json", changes)):
-        (output_dir / name).write_text(text, encoding="utf-8")
+        (output_dir / name).write_text(text, encoding="utf-8", newline="\n")
 
 
 def main():

@@ -1,5 +1,5 @@
 {
-  "basis": "Repository-source review; no external standard was consulted. Implementation means a definition exists, not that it is complete or correct.",
+  "basis": "Repository-source review; no external standard was consulted. IMPLEMENTED means a definition exists, not that it is complete or correct. NOT_IMPLEMENTED identifies the inverse that only raises NotImplementedError.",
   "independent_basis": "Synthetic concentric annulus; polar integrals in report section polar-integrals and the independent test oracle.",
   "qualification_scope": "Common annulus geometry at the stated synthetic inputs only.",
   "methods": [
@@ -153,7 +153,7 @@
       "start_line": 867,
       "end_line": 871,
       "sha256": "02bba4402736a319dc5dd973ef2b004058f3503d405947207432e18c25bbc30a",
-      "implementation": "IMPLEMENTED",
+      "implementation": "NOT_IMPLEMENTED",
       "qualification": "NOT_EVALUATED",
       "evidence": "Incomplete inverse raises NotImplementedError; the external-pressure route cannot publish a placeholder thickness."
     },
@@ -287,7 +287,7 @@
       "sha256": "eadae4867e7d52612ca89956780f5bdc912ce838c53d8932c4a84da6da9e1a56",
       "implementation": "IMPLEMENTED",
       "qualification": "NOT_EVALUATED",
-      "evidence": "Parallel common capacity implementation tested by the existing common suite; regression is not independent physical evidence."
+      "evidence": "Finding: evaluate_collapse_minimum_thickness_API_STD_2RD in src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py and src/digitalmodel/asset_integrity/custom/PipeCapacity.py still uses return 100 as a placeholder, not a thickness result. The report excludes both copies from its numerical evidence; an implemented inverse and independent checks remain pending under #3323. Existing common-suite regression is not independent physical evidence."
     },
     {
       "id": "api-tr",
