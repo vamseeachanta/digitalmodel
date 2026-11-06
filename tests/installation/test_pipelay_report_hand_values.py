@@ -73,6 +73,6 @@ def test_stress_documentation_executes_consistent_unit_examples():
     """
     result = doctest.testmod(stress)
     assert result.failed == 0
-    assert result.attempted >= 2
+    assert result.attempted == 4
     assert "N/mm^2" in stress.__doc__
     assert "N/m^2" in stress.__doc__

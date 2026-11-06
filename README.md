@@ -13,9 +13,6 @@ Engineering calculation library for offshore, subsea, and marine analysis. Singl
 
 ## Why this exists — the engineering ↔ asset circle
 
-The [pipelay stress and integrity module report](docs/reports/modules/installation_pipelay/README.md)
-provides synthetic worked values, a reproducible builder and method qualification limits.
-
 `digitalmodel` and `worldenergydata` are two halves of one loop.
 
 - **digitalmodel** holds the engineering analysis code: mooring, riser, fitness-for-service, hydrodynamics, structural, tubulars and installation.
@@ -157,6 +154,10 @@ Current Tier 1 priorities:
 - [docs/registry/module-routing.yaml](docs/registry/module-routing.yaml) -- Canonical machine-readable module routing registry
 - [CHANGELOG.md](CHANGELOG.md) -- Release history
 - [Demonstration pack retirement](docs/maintenance/demo-pack-retirement.md) -- Regression scope, report compatibility and a worked scan example
+
+### Module reports
+
+- [Pipelay stress and integrity analysis](docs/reports/modules/installation_pipelay/README.md) — Synthetic worked values, reproducible builder and method qualification limits.
 
 ## CLI Tools
 

@@ -8,5 +8,10 @@
     "change": "Input provenance is corrected to locally selected illustrative arithmetic controls because no external input specification is identified; maintainer acceptance of this basis remains pending and the inputs and calculated results are unchanged.",
     "date": "2026-10-28",
     "revision": "B"
+  },
+  {
+    "change": "Output validation protects unrelated checkout files and symlink targets; the function inventory explicitly excludes module constants and exported comment downloads retain their object URL until a later task.",
+    "date": "2026-11-06",
+    "revision": "C"
   }
 ]

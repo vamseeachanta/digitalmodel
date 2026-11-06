@@ -21,6 +21,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 DESTINATION = ROOT / "docs/reports/modules/installation_pipelay"
+DELIVERABLES = ("index.html", "changes.json", "manifest.json", "README.md")
 SCRIPT = "scripts/reports/build_installation_pipelay_module_report.py"
 SOURCES = [
     SCRIPT,
@@ -60,6 +61,11 @@ CHANGES = [{
               "controls because no external input specification is identified; "
               "maintainer acceptance of this basis remains pending and the "
               "inputs and calculated results are unchanged.",
+}, {
+    "revision": "C", "date": "2026-11-06",
+    "change": "Output validation protects unrelated checkout files and symlink targets; "
+              "the function inventory explicitly excludes module constants and exported "
+              "comment downloads retain their object URL until a later task.",
 }]
 
 
@@ -234,6 +240,9 @@ introduce no standard-derived criteria. The route calculation balances F/R = μw
 records a source review; INDEPENDENTLY_CHECKED records only the independent synthetic arithmetic
 in this report. Neither establishes physical qualification. The returned immutable records
 SmysCheck and CrushingCheck hold stress and coating results respectively [S2, S3].</p>
+<p>Module constants are outside this function inventory. Their standard-derived defaults
+are NOT_EVALUATED; adopting them requires the governing edition, clause and an approved
+installation criterion. No default value is reproduced or qualified here [S2, S3].</p>
 <div class="table-wrap"><table><thead><tr><th>Public function</th><th>Review</th><th>Arithmetic status</th>
 <th>Limits</th><th>Evidence needed for qualification</th></tr></thead><tbody>{methods}</tbody></table></div>
 <p>Table M. Complete public-method inventory, dimensional findings and outstanding evidence [S2, S3, S4].</p>
@@ -304,7 +313,7 @@ document.getElementById('save-notes').addEventListener('click', async () => {{
     }} else {{
       const url = URL.createObjectURL(new Blob([text], {{type:'text/plain'}}));
       const link = document.createElement('a'); link.href = url; link.download = 'comments.txt';
-      link.click(); URL.revokeObjectURL(url);
+      link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }}
     document.getElementById('save-status').textContent = 'Comments exported; retain beside report.';
   }} catch (error) {{
@@ -347,8 +356,19 @@ the summary; engineering comments can be exported beside the report.
 '''
 
 
+def validated_destination(output_dir: Path) -> Path:
+    """Reject unrelated checkout outputs and linked targets before calculation."""
+    destination = Path(output_dir).resolve()
+    if destination.is_relative_to(ROOT) and destination != DESTINATION:
+        raise ValueError("Report output inside checkout must use the named report directory")
+    if any((destination / name).is_symlink() for name in DELIVERABLES):
+        raise ValueError("Report output target must not be a symlink")
+    return destination
+
+
 def build(output_dir: Path, scratch: Path) -> dict[str, Any]:
     """Stage external temporary files, then write only the named deliverables."""
+    destination = validated_destination(output_dir)
     scratch = external_scratch(scratch)
     page = render(scratch)
     artifacts = {"index.html": page, "changes.json": json_text(CHANGES), "README.md": README}
@@ -368,7 +388,7 @@ def build(output_dir: Path, scratch: Path) -> dict[str, Any]:
         staging = Path(temporary)
         for name, content in artifacts.items():
             (staging / name).write_bytes(content.encode("utf-8"))
-        destination = Path(output_dir).resolve()
+        validated_destination(destination)
         destination.mkdir(parents=True, exist_ok=True)
         for name in artifacts:
             (destination / name).write_bytes((staging / name).read_bytes())

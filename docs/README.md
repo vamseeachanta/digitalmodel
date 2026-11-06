@@ -4,9 +4,6 @@ This is the canonical documentation entry point for digitalmodel issue routing.
 Use it with the repo entry surfaces before changing source, tests, docs, or
 routing registries.
 
-The [pipelay stress and integrity analysis](reports/modules/installation_pipelay/index.html)
-documents the pure calculation methods, independent synthetic examples and unresolved qualification evidence.
-
 ## Required Routing Surfaces
 
 | Surface | Role |
@@ -64,6 +61,10 @@ Program workflow mappings are indexed at this entry point and in the common work
 Raw inventory surfaces are discovery aids only. Broad generated indexes, historic
 reports, logs, cached outputs, and large extracted inventories can help locate
 candidate files, but they do not replace the curated routing surfaces above.
+
+## Module reports
+
+- [Pipelay stress and integrity analysis](reports/modules/installation_pipelay/index.html) — Pure calculation methods, independent synthetic examples and unresolved qualification evidence.
 
 ## Knowledge pack review evidence
 

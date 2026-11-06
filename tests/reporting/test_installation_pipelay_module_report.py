@@ -14,6 +14,7 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -216,3 +217,76 @@ def test_checkout_scratch_is_rejected_before_writes(tmp_path):
     assert not (tmp_path / "output").exists()
     assert before == {name: hashlib.sha256((REPORT / name).read_bytes()).hexdigest()
                       for name in DELIVERABLES}
+
+
+@pytest.fixture
+def disposable_builder(tmp_path):
+    """Exercise output protection without risking the real checkout."""
+    checkout = tmp_path / "checkout"
+    for path in builder().SOURCES:
+        target = checkout / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / path, target)
+    spec = importlib.util.spec_from_file_location("disposable_report", checkout / SCRIPT.relative_to(ROOT))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("location", ["root", "source", "alias"])
+def test_checkout_output_is_rejected_before_calculation(disposable_builder, tmp_path, monkeypatch, location):
+    build = disposable_builder
+    protected = build.ROOT / "README.md"
+    protected.write_bytes(b"unrelated checkout content\n")
+    alias = tmp_path / "checkout-alias"
+    alias.symlink_to(build.ROOT, target_is_directory=True)
+    output = {"root": build.ROOT, "source": build.ROOT / "src/digitalmodel/installation/pipelay",
+              "alias": alias}[location]
+    calculated = []
+    monkeypatch.setattr(build, "render", lambda _: calculated.append(True) or "unexpected")
+    with pytest.raises(ValueError, match="output inside checkout"):
+        build.build(output, tmp_path / "scratch")
+    assert protected.read_bytes() == b"unrelated checkout content\n"
+    assert not calculated
+    assert not (output / "index.html").exists()
+    assert not (tmp_path / "scratch").exists()
+
+
+@pytest.mark.parametrize("name", sorted(DELIVERABLES))
+@pytest.mark.parametrize("existing", [True, False])
+def test_output_symlink_is_rejected_before_any_write(disposable_builder, tmp_path, monkeypatch, name, existing):
+    build = disposable_builder
+    output = tmp_path / "report"
+    output.mkdir()
+    protected = tmp_path / "unrelated.txt"
+    if existing:
+        protected.write_bytes(b"unrelated content\n")
+    for other in DELIVERABLES - {name}:
+        (output / other).write_bytes(b"previous report\n")
+    (output / name).symlink_to(protected)
+    calculated = []
+    monkeypatch.setattr(build, "render", lambda _: calculated.append(True) or "unexpected")
+    with pytest.raises(ValueError, match="symlink"):
+        build.build(output, tmp_path / "scratch")
+    assert (output / name).is_symlink()
+    if existing:
+        assert protected.read_bytes() == b"unrelated content\n"
+    else:
+        assert not protected.exists()
+    assert all((output / other).read_bytes() == b"previous report\n"
+               for other in DELIVERABLES - {name})
+    assert not calculated
+    assert not (tmp_path / "scratch").exists()
+
+
+def test_named_checkout_report_destination_is_allowed(disposable_builder, tmp_path):
+    build = disposable_builder
+    build.build(build.DESTINATION, tmp_path / "scratch")
+    assert {path.name for path in build.DESTINATION.iterdir()} == DELIVERABLES
+
+
+def test_constant_inventory_scope_and_download_cleanup(tmp_path):
+    page = builder().render(tmp_path / "scratch")
+    assert "Module constants are outside this function inventory" in page
+    assert "setTimeout(() => URL.revokeObjectURL(url), 1000)" in page
+    assert "link.click(); URL.revokeObjectURL(url)" not in page
