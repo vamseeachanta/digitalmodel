@@ -170,7 +170,7 @@ def test_builder_import_leaves_no_bytecode(monkeypatch, tmp_path, broken):
     report.mkdir()
     source = 'raise RuntimeError("synthetic import failure")' if broken else (
         REPORT / "build_report.py").read_text(encoding="utf-8")
-    (report / "build_report.py").write_text(source, encoding="utf-8")
+    (report / "build_report.py").write_text(source, encoding="utf-8", newline="\n")
     monkeypatch.setattr(sys, "dont_write_bytecode", False)
     monkeypatch.setitem(globals(), "REPORT", report)
     if broken:
@@ -354,7 +354,9 @@ def assert_source_bindings(sources, root):
         assert source["binding"] in {"required", "inventory"}
         path = root / source["path"]
         if sha256(path.read_bytes()).hexdigest() != source["sha256"]:
-            assert source["binding"] == "inventory", f"Calculation evidence changed: {source['path']}"
+            assert source["binding"] == "inventory", (
+                f"Calculation evidence changed: {source['path']}; rebuild with PYTHONPATH=src python "
+                'docs/reports/modules/hull_library/build_report.py --output-dir "$TMPDIR/hull-report"')
             stale.append(source["path"])
     return stale
 
@@ -366,33 +368,96 @@ def mask_inventory_digests(data, sources):
     return data
 
 
-def test_inventory_drift_is_advisory(builder, tmp_path, monkeypatch):
+@pytest.mark.parametrize("style_only", [False, True])
+def test_inventory_drift_is_advisory(builder, tmp_path, monkeypatch, style_only):
     sources = builder.source_record()
     for source in sources["sources"]:
         path = tmp_path / source["path"]
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes((ROOT / source["path"]).read_bytes())
-    inventory = next(s for s in sources["sources"] if s["binding"] == "inventory")
+    inventory = next(s for s in sources["sources"] if (
+        s["path"] == builder.EXEMPLAR if style_only else s["binding"] == "inventory"))
     required = next(s for s in sources["sources"] if s["binding"] == "required")
-    (tmp_path / inventory["path"]).write_text("synthetic inventory edit", encoding="utf-8")
+    edited = "synthetic inventory edit"
+    if style_only:
+        original = (tmp_path / inventory["path"]).read_text(encoding="utf-8")
+        edited = original.replace("</body>", "<p>synthetic inventory edit</p></body>")
+        assert edited != original
+    (tmp_path / inventory["path"]).write_text(edited, encoding="utf-8", newline="\n")
     assert assert_source_bindings(sources, tmp_path) == [inventory["path"]]
     original_page = builder.build(builder.calculate()).encode("utf-8")
     changed = copy.deepcopy(sources)
     next(s for s in changed["sources"] if s["path"] == inventory["path"])["sha256"] = "0" * 64
+    if style_only:
+        monkeypatch.setattr(builder, "ROOT", tmp_path)
+        changed = builder.source_record()
     monkeypatch.setattr(builder, "source_record", lambda: changed)
     changed_page = builder.build(builder.calculate()).encode("utf-8")
     assert original_page != changed_page
     assert mask_inventory_digests(original_page, sources) == mask_inventory_digests(changed_page, changed)
-    (tmp_path / required["path"]).write_text("synthetic calculation edit", encoding="utf-8")
+    (tmp_path / required["path"]).write_text("synthetic calculation edit", encoding="utf-8", newline="\n")
     with pytest.raises(AssertionError, match="Calculation evidence changed"):
         assert_source_bindings(sources, tmp_path)
 
 
 def test_report_files_are_visible_to_git():
-    paths = [str((REPORT / name).relative_to(ROOT)) for name in DELIVERABLES | {"README.md", "build_report.py"}]
+    environment = {k: v for k, v in os.environ.items()
+                   if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+    checkout = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=ROOT, env=environment,
+                              capture_output=True, text=True, encoding="utf-8", timeout=10)
+    if checkout.returncode or Path(checkout.stdout.strip()).resolve() != ROOT.resolve():
+        pytest.skip("Git checkout matching the report root is required")
+    paths = [(REPORT / name).relative_to(ROOT).as_posix() for name in DELIVERABLES | {"README.md", "build_report.py"}]
     result = subprocess.run(["git", "check-ignore", "--no-index", *paths], cwd=ROOT,
-                            capture_output=True, text=True, timeout=10)
+                            env=environment, capture_output=True, text=True, encoding="utf-8", timeout=10)
     assert result.returncode == 1, result.stdout + result.stderr
+
+
+def test_report_retention_rules_stay_with_report_rules():
+    text = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    start, end = (f"# {boundary} shared module-report retention rules" for boundary in ("BEGIN", "END"))
+    assert text.count(start) == text.count(end) == 1
+    # New exceptions follow unchanged report rules so the common-base merge
+    # can retain them independently of the shared module-block consolidation.
+    group = text.split(start)[1].split("# Project-Specific: Agent/AI Runtime")[0]
+    directory = "/docs/reports/modules/hull_library/"
+    assert group.index(end) < group.index(f"!{directory}")
+    for rule in (f"!{directory}", f"{directory}*", *(
+            f"!{directory}{name}" for name in DELIVERABLES | {"README.md", "build_report.py"})):
+        assert group.splitlines().count(rule) == text.splitlines().count(rule) == 1
+
+
+def test_git_visibility_ignores_inherited_repository_bindings(tmp_path, monkeypatch):
+    foreign = tmp_path / "unrelated"
+    foreign.mkdir()
+    environment = {k: v for k, v in os.environ.items()
+                   if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+    subprocess.run(["git", "init", "--quiet", str(foreign)], cwd=tmp_path, env=environment,
+                   check=True, capture_output=True, timeout=10)
+    (foreign / ".gitignore").write_text("*\n", encoding="utf-8", newline="\n")
+    before = {p.relative_to(foreign).as_posix(): sha256(p.read_bytes()).hexdigest()
+              for p in foreign.rglob("*") if p.is_file()}
+    monkeypatch.setenv("GIT_DIR", str(foreign / ".git"))
+    monkeypatch.setenv("GIT_COMMON_DIR", str(foreign / ".git"))
+    monkeypatch.setenv("GIT_WORK_TREE", str(foreign))
+    test_report_files_are_visible_to_git()
+    assert before == {p.relative_to(foreign).as_posix(): sha256(p.read_bytes()).hexdigest()
+                      for p in foreign.rglob("*") if p.is_file()}
+
+
+@pytest.mark.parametrize("parent_checkout", [False, True])
+def test_git_visibility_requires_matching_checkout(tmp_path, monkeypatch, parent_checkout):
+    environment = {k: v for k, v in os.environ.items()
+                   if k not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+    if parent_checkout:
+        subprocess.run(["git", "init", "--quiet", str(tmp_path)], cwd=tmp_path, env=environment,
+                       check=True, capture_output=True, timeout=10)
+    exported = tmp_path / "exported"
+    exported.mkdir()
+    monkeypatch.setitem(globals(), "ROOT", exported)
+    monkeypatch.setitem(globals(), "REPORT", exported / "docs/reports/modules/hull_library")
+    with pytest.raises(pytest.skip.Exception, match="Git checkout"):
+        test_report_files_are_visible_to_git()
 
 
 def test_source_map_covers_public_exports(builder):

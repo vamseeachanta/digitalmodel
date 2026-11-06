@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parents[4]
 PACKAGE = "src/digitalmodel/hydrodynamics/hull_library"
 EXAMPLE = f"{PACKAGE}/docs/worked-panel-scaling.md"
 EXEMPLAR = "docs/reports/pipeline-ffs-assessment.html"
-REVISION = "01"
+REVISION = "02"
 DATE = "2026-11-06"  # Document issue date; never an execution timestamp.
 REBUILD = ('PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR="$TMPDIR/matplotlib" '
            'XDG_CACHE_HOME="$TMPDIR/xdg-cache" uv run --no-project --python "$(command -v python3)" python '
@@ -39,9 +39,9 @@ CHANGES = {
     "report": "hull-library-panel-scaling", "revision": REVISION, "date": DATE,
     "issue": "3317",
     "changes": [
-        "Prevented report-test imports from writing bytecode and removed environment-dependent text assertions.",
-        "Preserved full-precision embedded calculations and exposed normal, length and difference precision in the table.",
-        "Separated calculation evidence from advisory inventory digests and made the report discoverable to documentation and Git.",
+        "Consolidated report retention rules and placed hull exceptions beside them to remove the ignore-file conflict.",
+        "Made the style exemplar advisory evidence so unrelated report text cannot invalidate calculation sources.",
+        "Isolated Git visibility checks from inherited repository bindings and identified export-only copies explicitly.",
     ],
 }
 PREVIOUS_ISSUES = [{
@@ -50,9 +50,16 @@ PREVIOUS_ISSUES = [{
         "Added an interface evidence map and synthetic panel analysis to separate implementation from numerical qualification.",
         "Bound visible results to fresh scaling calculations, independent geometry and reproducible source records.",
     ],
+}, {
+    "revision": "01", "date": "2026-11-06",
+    "changes": [
+        "Prevented report-test imports from writing bytecode and removed environment-dependent text assertions.",
+        "Preserved full-precision embedded calculations and exposed normal, length and difference precision in the table.",
+        "Separated calculation evidence from advisory inventory digests and made the report discoverable to documentation and Git.",
+    ],
 }]
 REQUIRED_SOURCES = {
-    f"{PACKAGE}/mesh_scaler.py", EXAMPLE, EXEMPLAR,
+    f"{PACKAGE}/mesh_scaler.py", EXAMPLE,
     "src/digitalmodel/hydrodynamics/bemrosetta/models/mesh_models.py",
     "tests/hydrodynamics/hull_library/test_documented_panel_scaling.py",
     "tests/hydrodynamics/hull_library/test_mesh_scaler.py",
@@ -159,7 +166,7 @@ def method_map() -> list[dict]:
 def source_record() -> dict:
     """Bind repository source bytes; public or measured response data are absent."""
     paths = {row["path"] for row in method_map()} | REQUIRED_SOURCES | {
-        f"{PACKAGE}/__init__.py", f"{PACKAGE}/docs/agent-pack.md",
+        f"{PACKAGE}/__init__.py", f"{PACKAGE}/docs/agent-pack.md", EXEMPLAR,
     }
     return {"report": CHANGES["report"], "revision": REVISION,
             "data_basis": "Synthetic assumptions only; no response datasets are consumed.",
@@ -322,8 +329,9 @@ production behavior is unchanged. See {link(f'{PACKAGE}/mesh_scaler.py', 'scalin
 {link(f'{PACKAGE}/docs/agent-pack.md', 'module evidence and known limits')}.</p></section>
 <section id="section-9"><h2>9. References</h2><p>Sources are repository-relative and hash-bound in sources.json.
 The example is synthetic; implementation references are not independent physical observations.</p>
-<p>Required bindings cover the executed calculation sources, worked example, style source, tests and builder.
-Inventory-only digests describe the inspected interfaces at issue time; later drift is an advisory staleness notice,
+<p>Required bindings cover the executed calculation sources, worked example, tests and builder.
+The style exemplar is inventory evidence: its body is not used in the calculation, and only its style block is rendered.
+Inventory-only digests describe the inspected interfaces and style exemplar at issue time; later drift is an advisory staleness notice,
 not a calculation failure. Deterministic rebuild comparisons disregard only inventory digest changes.</p>{source_table}</section>
 <section id="section-10"><h2>10. Appendix</h2>
 <h3>Rebuild</h3><p>From the repository root, with its Python dependencies active and supplied scratch storage:</p>

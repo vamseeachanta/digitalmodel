@@ -6,8 +6,9 @@ generation and response lookup are documented as interfaces; their physical
 qualification remains NOT_EVALUATED.
 
 [Source records](sources.json) bind repository evidence by SHA-256. Required
-bindings cover executed calculation sources, the worked example, style source,
-tests and builder. Inventory-only source drift is reported as advisory staleness;
+bindings cover executed calculation sources, the worked example, tests and
+builder. The style exemplar is inventory evidence; only its style block is
+rendered. Inventory-only source drift is reported as advisory staleness;
 rebuild comparisons disregard only those inventory digests. All required
 bindings continue to fail on drift.
 [Change records](changes.json) describe the report revision.

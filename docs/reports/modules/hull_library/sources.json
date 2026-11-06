@@ -1,11 +1,11 @@
 {
   "report": "hull-library-panel-scaling",
-  "revision": "01",
+  "revision": "02",
   "data_basis": "Synthetic assumptions only; no response datasets are consumed.",
   "sources": [
     {
       "path": "docs/reports/modules/hull_library/build_report.py",
-      "sha256": "16a7f0da64348162352daba4c3675d0c7b056dcc39f7c8989e458e7582b310d4",
+      "sha256": "3f31218f1d782f3b83488233abd224bf0f1563f06c42b5692f334f3f5719be29",
       "binding": "required",
       "basis": "repository implementation or documentation; not physical qualification",
       "locator": "public interfaces and report evidence"
@@ -13,7 +13,7 @@
     {
       "path": "docs/reports/pipeline-ffs-assessment.html",
       "sha256": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f",
-      "binding": "required",
+      "binding": "inventory",
       "basis": "repository implementation or documentation; not physical qualification",
       "locator": "public interfaces and report evidence"
     },
@@ -187,7 +187,7 @@
     },
     {
       "path": "tests/hydrodynamics/hull_library/test_module_report.py",
-      "sha256": "a35ae60a5ccfa2db20f7f6c6198e288332ceaea18891421308abbce07a38a3da",
+      "sha256": "f0acb7019eb43ac3f69b33083339a77a129efa2ecaf55a70b195dbcc21f19848",
       "binding": "required",
       "basis": "repository implementation or documentation; not physical qualification",
       "locator": "public interfaces and report evidence"
