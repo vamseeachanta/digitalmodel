@@ -194,6 +194,74 @@ class TestCfgRouterGeometryValidation:
         assert summary["result"] == result
 
 
+class TestRemainingIndirectGeometryValidation:
+    """Exercise geometry rejection through the remaining capacity routes."""
+
+    def test_workflow_invalid_diameter(self, pile_capacity_cfg, tmp_path):
+        from copy import deepcopy
+
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        params = pile_capacity_cfg["pile_capacity"]
+        params["pile"]["diameter_m"] = 0.0
+        cfg = {"geotechnical": {
+            "calculation": "pile_axial_capacity", "pile_axial_capacity": params,
+        }}
+        before = deepcopy(cfg)
+
+        with pytest.raises(ValueError, match=r"^D must be finite and positive$"):
+            GeotechnicalWorkflow().router(cfg)
+
+        assert cfg == before
+        assert list(tmp_path.iterdir()) == []
+
+    def test_workflow_valid_capacity(self, pile_capacity_cfg, tmp_path):
+        import json
+
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        cfg = {"geotechnical": {
+            "calculation": "pile_axial_capacity",
+            "pile_axial_capacity": pile_capacity_cfg["pile_capacity"],
+        }}
+        routed = GeotechnicalWorkflow().router(cfg)
+        result = routed["geotechnical"]["pile_axial_capacity"]["result"]
+        # Synthetic nominal arithmetic above: Qs=120*pi, Qp=280*pi, Qt=400*pi kN.
+        assert result["skin_friction_kn"] == pytest.approx(120.0 * math.pi)
+        assert result["end_bearing_kn"] == pytest.approx(280.0 * math.pi)
+        assert result["total_capacity_kn"] == pytest.approx(400.0 * math.pi)
+        summary = json.loads(
+            (tmp_path / "geotechnical_summary.json").read_text(encoding="utf-8")
+        )
+        assert summary["result"] == result
+
+    def test_parametric_invalid_diameter(self):
+        from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+        point = {
+            "diameter_m": 0.0, "embedded_length_m": 3.0,
+            "Su_kpa": 40.0, "sigma_v_kpa": 40.0, "Nc": SYNTHETIC_NC,
+        }
+        before = point.copy()
+
+        with pytest.raises(ValueError, match=r"^D must be finite and positive$"):
+            RESPONSE_FUNCS["pile_capacity"](point)
+
+        assert point == before
+
+    def test_parametric_valid_capacity(self):
+        from digitalmodel.parametric.generate import RESPONSE_FUNCS
+
+        point = {
+            "diameter_m": 2.0, "embedded_length_m": 3.0,
+            "Su_kpa": 40.0, "sigma_v_kpa": 40.0, "Nc": SYNTHETIC_NC,
+        }
+        before = point.copy()
+        # Synthetic nominal arithmetic above: Qt=(120+280)*pi=400*pi kN.
+        assert RESPONSE_FUNCS["pile_capacity"](point) == pytest.approx(400.0 * math.pi)
+        assert point == before
+
+
 class TestPileCapacityResultDataclass:
     """PileCapacityResult must expose expected fields."""
 
