@@ -26,6 +26,43 @@ M_STEEL = 3.0
 # ── stress_intensity_factor ───────────────────────────────────────────
 
 class TestStressIntensityFactor:
+    def test_scalar_zero_crack_size_returns_float(self):
+        result = stress_intensity_factor(100, 0)
+        assert isinstance(result, float)
+        assert result == 0
+
+    def test_broadcast_stress_geometry_and_zero_crack_size(self):
+        stress = np.array([[0.0], [100.0]])
+        depth = np.array([0.0, 0.001, 0.005])
+        factor = np.array([1.0, 1.12, 1.2])
+        result = stress_intensity_factor(stress, depth, Y=factor)
+        expected = factor * stress * np.sqrt(math.pi * depth)
+        np.testing.assert_allclose(result, expected)
+        assert result.shape == (2, 3)
+
+    @pytest.mark.parametrize("field", ["stress_range", "crack_size", "Y"])
+    @pytest.mark.parametrize("value", [[-1.0, 1.0], [float("nan"), 1.0], [float("inf"), 1.0], [True, False], [True, 0.5], [1, True], np.array(["2026-01-01"], dtype="datetime64[D]"), np.array([-1.0, 1.0]), np.array([float("nan"), 1.0]), np.array([float("inf"), 1.0])])
+    def test_invalid_broadcast_inputs_rejected(self, field, value):
+        inputs = dict(stress_range=100, crack_size=0.001, Y=1.12)
+        with pytest.raises(ValueError):
+            stress_intensity_factor(**(inputs | {field: value}))
+
+    def test_masked_input_is_rejected(self):
+        with pytest.raises(ValueError, match="masked"):
+            stress_intensity_factor(100, np.ma.array([0.001, 0.005], mask=[False, True]))
+
+    def test_zero_geometry_array_element_is_rejected(self):
+        with pytest.raises(ValueError):
+            stress_intensity_factor(100, 0.001, Y=np.array([1.0, 0.0]))
+
+    @pytest.mark.parametrize("geometry", ["surface", "embedded"])
+    def test_overridden_geometry_ignores_supplied_factor_shape(self, geometry):
+        depth = np.array([0.001, 0.005])
+        result = stress_intensity_factor(100, depth, geometry=geometry, Y=np.ones(3))
+        expected = stress_intensity_factor(100, depth, geometry=geometry)
+        np.testing.assert_allclose(result, expected)
+        assert result.shape == (2,)
+
     def test_through_thickness_default(self):
         """DeltaK = 1.12 * stress * sqrt(pi * a) for default geometry."""
         stress = 100.0  # MPa

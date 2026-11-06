@@ -63,6 +63,50 @@ def options():
     )
 
 
+def test_threshold_arrival_preserves_finite_assessment_and_interval():
+    # MIT Fatigue (2001), Eq. (2), synthetic K=10-1000a, C=1e-11, m=3:
+    # N=(1/25-1/81)/(2000*C)=1,382,716; /1e6=1.382716 yr; /2=0.691358 yr.
+    inputs = options() | dict(
+        law=GrowthLaw(1e-11, 3, 5, 0, 1, "Synthetic threshold-arrival fixture"),
+        delta_k=lambda a: 10 - 1000 * a,
+        cycles_per_year=1_000_000,
+        critical_depth_mm=5,
+        wall_thickness_mm=10,
+        critical_depth_basis="Synthetic depth limit",
+    )
+    result = assess_crack_life(**inputs)
+    assert result.growth.status == "LIMIT_REACHED"
+    assert result.growth.life_cycles == pytest.approx(1_382_716, rel=2e-6)
+    assert result.inspection.remaining_life_years == pytest.approx(1.382716, rel=2e-6)
+    assert result.inspection.next_inspection_interval_years == pytest.approx(0.691358, rel=2e-6)
+
+
+def test_router_serializes_finite_threshold_arrival(monkeypatch, tmp_path):
+    # Inject only the synthetic decreasing K solution; the real assessment,
+    # growth integration, inspection policy and serialization remain exercised.
+    monkeypatch.setattr(
+        "digitalmodel.fatigue.crack_growth.stress_intensity_factor",
+        lambda stress_range, depth, **kwargs: 10 - 1000 * depth,
+    )
+    inputs = options()
+    inputs.pop("delta_k")
+    inputs.update(
+        law=dict(coefficient=1e-11, exponent=3, threshold=5, stress_ratio=0,
+                 walker_exponent=1, basis="Synthetic threshold-arrival fixture"),
+        stress_range_mpa=100, geometry_factor=1, cycles_per_year=1_000_000,
+        critical_depth_mm=5, wall_thickness_mm=10,
+        critical_depth_basis="Synthetic depth limit",
+    )
+    result = router({"inspection_planning": {
+        "crack_growth": inputs, "outputs": {"directory": tmp_path.as_posix()},
+    }})["inspection_planning"]
+    saved = json.loads(Path(result["summary_json"]).read_text(encoding="utf-8"))
+    for payload in (result, saved):
+        assert payload["crack_assessment"]["growth"]["status"] == "LIMIT_REACHED"
+        assert payload["result"]["remaining_life_years"] == pytest.approx(1.382716, rel=2e-6)
+        assert payload["result"]["next_inspection_interval_years"] == pytest.approx(0.691358, rel=2e-6)
+
+
 def test_assessment_limit_and_wall_use_first_event():
     """K=10 gives 1e-8 m/cycle; 1 to 3 mm => 200000 cycles=2 yr."""
     result = assess_crack_life(
@@ -198,7 +242,7 @@ def test_invalid_inspection_policy_rejected(overrides):
 def test_arrest_matches_zero_corrosion_interval_semantics():
     """Null life and half-life, capped interval, under unchanged loading only."""
     plan = plan_crack_inspection(
-        growth(threshold=10),
+        growth(threshold=11),
         cycles_per_year=100_000,
         code_max_interval_years=3,
         life_divisor=2,

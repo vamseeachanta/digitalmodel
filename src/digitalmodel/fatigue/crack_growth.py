@@ -20,6 +20,27 @@ import pandas as pd
 from .threshold_growth import GrowthLaw, integrate_growth, validate_scalar
 
 
+def _sif_array(value, name):
+    """Validate finite arrays while rejecting mixed-list boolean inputs."""
+    if np.ma.isMaskedArray(value):
+        raise ValueError(f"{name} must not contain masked values")
+    if isinstance(value, np.ndarray) and value.dtype.kind in "iuf":
+        with np.errstate(over="raise", invalid="raise"):
+            try:
+                result = np.asarray(value, dtype=float)
+            except (OverflowError, FloatingPointError) as exc:
+                raise ValueError(f"{name} is outside finite range") from exc
+    else:
+        raw = np.asarray(value, dtype=object)
+        result = np.fromiter(
+            (validate_scalar(item, name) for item in raw.flat),
+            dtype=float, count=raw.size,
+        ).reshape(raw.shape)
+    if not np.all(np.isfinite(result)):
+        raise ValueError(f"{name} must contain only finite values")
+    return result
+
+
 def stress_intensity_factor(stress_range, crack_size, geometry="through_thickness", Y=1.12):
     """Compute stress intensity factor range DeltaK.
 
@@ -27,31 +48,29 @@ def stress_intensity_factor(stress_range, crack_size, geometry="through_thicknes
 
     Parameters
     ----------
-    stress_range : float
+    stress_range : float or array-like
         Applied stress range Delta_sigma (MPa).
     crack_size : float or array-like
-        Crack half-length *a* (m).
+        Non-negative crack half-length *a* (m); zero returns zero DeltaK.
     geometry : str
         Geometry type: 'through_thickness', 'surface', or 'embedded'.
         Adjusts the geometry correction factor Y.
-    Y : float
+    Y : float or array-like
         Explicit geometry correction factor. Used when geometry='through_thickness'.
-        For 'surface' and 'embedded', Y is overridden by standard values.
+        For 'surface' and 'embedded', Y is validated, then its values and
+        shape are ignored in favor of the selected geometry factor.
+        Otherwise the numeric inputs follow NumPy broadcasting rules.
 
     Returns
     -------
     float or ndarray
         Stress intensity factor range DeltaK (MPa*sqrt(m)).
     """
-    stress_range = validate_scalar(stress_range, "stress_range")
-    Y = validate_scalar(Y, "Y")
-    raw_sizes = np.asarray(crack_size, dtype=object)
-    crack_size = np.asarray(
-        [validate_scalar(value, "crack_size") for value in raw_sizes.flat],
-        dtype=float,
-    ).reshape(raw_sizes.shape)
-    if stress_range < 0 or Y <= 0 or np.any(crack_size <= 0):
-        raise ValueError("stress_range must be non-negative; crack_size and Y positive")
+    stress_range = _sif_array(stress_range, "stress_range")
+    Y = _sif_array(Y, "Y")
+    crack_size = _sif_array(crack_size, "crack_size")
+    if np.any(stress_range < 0) or np.any(Y <= 0) or np.any(crack_size < 0):
+        raise ValueError("stress_range and crack_size must be non-negative; Y positive")
 
     if geometry == "through_thickness":
         y_factor = Y  # user-supplied or default 1.12

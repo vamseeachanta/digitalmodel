@@ -68,12 +68,20 @@ class GrowthLaw:
             raise ValueError("material calibration basis is required")
 
     def rate(self, delta_k: float) -> float:
-        """Return da/dN [m/cycle]; equality at threshold means no growth."""
+        """Return stationary da/dN [m/cycle]; threshold equality gives zero.
+
+        Integration to a positive threshold endpoint uses the finite
+        propagating-side limit, rather than this stationary endpoint value.
+        """
         delta_k = validate_scalar(delta_k, "DeltaK")
         if delta_k < 0:
             raise ValueError("DeltaK must be finite and non-negative")
         if delta_k <= self.threshold:
             return 0.0
+        return self._propagation_rate(delta_k)
+
+    def _propagation_rate(self, delta_k: float) -> float:
+        """Evaluate the positive branch, including its threshold limit."""
         # AFGROW Handbook 5.1.2 Eq. (5.1.3): C*[(1-R)^gamma*Kmax]^m.
         # Kmax=DeltaK/(1-R), hence the equivalent range below.
         equivalent = delta_k / (1 - self.stress_ratio) ** (1 - self.walker_exponent)
@@ -190,6 +198,15 @@ def integrate_growth(
     The Simpson /15 estimate assumes a smooth reciprocal growth rate;
     finite samples cannot certify arbitrary callables, exclude unsampled
     threshold dips or singularities, or bound their true integral error.
+    For continuous DeltaK, arrival exactly at a positive threshold at limit_m
+    uses the finite propagating-side rate. Positive threshold equality at
+    an initial or interior sample raises ValueError: an isolated touch and
+    a threshold plateau require explicit resolution before planning an
+    interval. Equality comparisons are exact; below-threshold values are
+    never promoted to growth. No automatic continuation through a touch is
+    established. Unvisited features remain outside the sampling guarantee.
+    All nodes in a sample batch are evaluated before an arrest decision;
+    an otherwise unreachable equality in that batch can also raise.
     Arrest returns no finite life/error and only fully traversed initial
     panels; no fabricated limiting-depth endpoint is included.
     Already at/above the limit returns zero life. No load-sequence effects,
@@ -214,7 +231,14 @@ def _integrate_panels(law, delta_k, initial_m, limit_m, steps, relative, absolut
     dk = delta_k if callable(delta_k) else lambda _: delta_k
 
     def inverse_rate(depth):
-        rate = law.rate(dk(depth))
+        value = validate_scalar(dk(depth), "DeltaK")
+        rate = law.rate(value)
+        if value == law.threshold and law.threshold > 0:
+            if depth != limit_m:
+                raise ValueError(
+                    "initial or interior threshold equality requires explicit resolution"
+                )
+            rate = law._propagation_rate(value)
         if rate == 0:
             return None
         inverse = 1 / rate

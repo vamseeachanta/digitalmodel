@@ -67,9 +67,9 @@ def test_walker_correction_independent_arithmetic():
     assert result.life_cycles == pytest.approx(50_000.0)
 
 
-@pytest.mark.parametrize("delta_k", [0.0, 4.0, 5.0])
+@pytest.mark.parametrize("delta_k", [0.0, 4.0])
 def test_arrest_has_no_fabricated_endpoint(delta_k):
-    """Synthetic threshold=5: DeltaK <= threshold means zero propagation."""
+    """Synthetic threshold=5: below-threshold DeltaK means zero propagation."""
     result = integrate_growth(
         law(threshold=5.0),
         delta_k,
@@ -85,6 +85,90 @@ def test_arrest_has_no_fabricated_endpoint(delta_k):
 def test_threshold_is_raw_range_at_service_ratio():
     """Raw 4 is below threshold 5 even though Walker's equivalent is 8."""
     assert law(threshold=5, stress_ratio=0.75, walker_exponent=0.5).rate(4) == 0
+
+
+@pytest.mark.parametrize("steps", [1, 4, 100])
+def test_positive_threshold_arrival_has_finite_life(steps):
+    # MIT Fatigue (2001), Eq. (2), integrated with synthetic K=10-1000a:
+    # N=(1/25-1/81)/(2000*1e-11)=1,382,716 cycles to a=0.005 m.
+    result = integrate_growth(
+        law(threshold=5), lambda a: 10 - 1000 * a,
+        initial_m=0.001, limit_m=0.005, steps=steps,
+    )
+    assert result.status == "LIMIT_REACHED"
+    assert result.life_cycles == pytest.approx(1_382_716, rel=2e-6)
+    assert result.history[-1].depth_m == 0.005
+    assert result.history[-1].cycles == result.life_cycles
+
+
+@pytest.mark.parametrize("fraction", [0.125, 0.25, 0.5, 0.75])
+def test_interior_threshold_equality_requires_explicit_resolution(fraction):
+    # An isolated touch and an unresolved threshold plateau must never both
+    # silently become an infinite life and the maximum inspection interval.
+    touch = 0.001 + 0.004 * fraction
+    with pytest.raises(ValueError, match="interior threshold equality"):
+        integrate_growth(
+            law(threshold=5, exponent=1), lambda a: 5 + 1000 * abs(a - touch),
+            initial_m=0.001, limit_m=0.005, steps=1,
+        )
+
+
+def test_arrival_at_interior_threshold_plateau_requires_resolution():
+    with pytest.raises(ValueError, match="interior threshold equality"):
+        integrate_growth(
+            law(threshold=5), lambda a: max(5, 10 - 1000 * a),
+            initial_m=0.001, limit_m=0.006, steps=5,
+        )
+
+
+def test_threshold_arrival_uses_walker_limiting_rate():
+    # AFGROW 5.1.2 Eq. (5.1.3): R=.75, gamma=.5 doubles equivalent K;
+    # with m=3, N=(1/25-1/81)/(2000*1e-11*8)=172,839.5 cycles.
+    result = integrate_growth(
+        law(threshold=5, stress_ratio=0.75, walker_exponent=0.5),
+        lambda a: 10 - 1000 * a, initial_m=0.001, limit_m=0.005, steps=4,
+    )
+    assert result.life_cycles == pytest.approx(172_839.5, rel=2e-6)
+
+
+@pytest.mark.parametrize("delta_k", [math.nextafter(5, 0), 5, math.nextafter(5, math.inf)])
+def test_stationary_threshold_comparison_remains_exact(delta_k):
+    if delta_k == 5:
+        with pytest.raises(ValueError, match="threshold equality"):
+            integrate_growth(
+                law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=1,
+            )
+        return
+    result = integrate_growth(
+        law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=1,
+    )
+    assert result.status == ("ARRESTED" if delta_k <= 5 else "LIMIT_REACHED")
+
+
+def test_threshold_at_initial_depth_requires_resolution():
+    with pytest.raises(ValueError, match="threshold equality"):
+        integrate_growth(
+            law(threshold=5), lambda a: 5 + 1000 * (a - 0.001),
+            initial_m=0.001, limit_m=0.005, steps=1,
+        )
+
+
+@pytest.mark.parametrize("direction", [0.0, None, math.inf])
+def test_endpoint_threshold_comparison_remains_exact(direction):
+    def delta_k(depth):
+        if depth == 0.005 and direction is not None:
+            return math.nextafter(5, direction)
+        return 10 - 1000 * depth
+
+    result = integrate_growth(
+        law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=4,
+    )
+    if direction == 0:
+        assert result.status == "ARRESTED"
+        assert result.life_cycles is None
+    else:
+        assert result.status == "LIMIT_REACHED"
+        assert result.life_cycles == pytest.approx(1_382_716, rel=2e-6)
 
 
 def test_arrest_inside_interval_preserves_only_reached_depth():
