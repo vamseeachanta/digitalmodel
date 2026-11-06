@@ -10,6 +10,7 @@ from __future__ import annotations
 from copy import deepcopy
 from decimal import Decimal
 from pathlib import Path
+import re
 
 from digitalmodel.ansys.analysis_records import (
     decimal_text, nonempty, require_fields, verify_reference,
@@ -23,6 +24,7 @@ SOURCE_FIELDS = frozenset({"document", "edition", "clause"})
 SOURCE_PLACEHOLDERS = frozenset({
     "tbd", "n/a", "na", "-", "unknown", "x", "none", "not applicable",
     "not available", "unspecified", "unverified", "?",
+    "tba", "pending", "to be confirmed", "see note",
 })
 
 
@@ -33,7 +35,8 @@ def _validate_source(source: dict) -> None:
         raise ValueError("unknown acceptance source fields")
     for field in SOURCE_FIELDS:
         value = nonempty(source[field], "acceptance source " + field)
-        if value.strip().casefold() in SOURCE_PLACEHOLDERS:
+        normalized = re.sub(r"[\W_]+$", "", value.strip().casefold())
+        if not normalized or normalized in SOURCE_PLACEHOLDERS:
             raise ValueError("placeholder acceptance source " + field)
 
 
@@ -90,13 +93,20 @@ def qualify_response_criteria(entry: dict, response: dict, intended_use: str,
     requirements = entry.get("acceptance_requirements")
     if not isinstance(requirements, dict):
         raise ValueError("acceptance criteria requirements required")
-    required = requirements.get(intended_use)
-    if (not isinstance(required, list) or not required
-            or any(not isinstance(name, str) for name in required)
-            or len(set(required)) != len(required)
-            or set(required) - SUPPORTED_CRITERIA
-            or not {"equilibrium", "convergence"}.issubset(required)):
+    intended_uses = entry.get("intended_uses")
+    if (not isinstance(intended_uses, list) or not intended_uses
+            or any(not isinstance(use, str) or not use.strip() for use in intended_uses)
+            or set(requirements) != set(intended_uses)
+            or intended_use not in requirements):
         raise ValueError("invalid intended-use acceptance criteria requirements")
+    for required in requirements.values():
+        if (not isinstance(required, list) or not required
+                or any(not isinstance(name, str) for name in required)
+                or len(set(required)) != len(required)
+                or set(required) - SUPPORTED_CRITERIA
+                or not {"equilibrium", "convergence"}.issubset(required)):
+            raise ValueError("invalid intended-use acceptance criteria requirements")
+    required = requirements[intended_use]
     criteria = entry.get("acceptance_criteria", {})
     results = evaluate_criteria(criteria, resolver)
     if any(results[name] != "PASS" for name in required) or "FAIL" in results.values():

@@ -102,7 +102,11 @@ def test_structured_source_accepts(criteria):
 
 
 @pytest.mark.parametrize("field", ["document", "edition", "clause"])
-@pytest.mark.parametrize("value", ["TBD", " N/A ", "-", "UNKNOWN", "x", "", None])
+@pytest.mark.parametrize("value", [
+    "TBD", " N/A ", "-", "UNKNOWN", "x", "", None,
+    "TBD.", "TBA", "pending", "to be confirmed", "see note",
+    " tBd... ", "N/A!", "Pending?", "To Be Confirmed.", "See Note:", "TBD…", "See Note;\t!",
+])
 def test_source_fields_refuse_placeholders(criteria, field, value):
     matrix, resolver = criteria
     for item in matrix.values():
@@ -157,7 +161,7 @@ def test_demand_only_refuses_supplied_strength_failure(criteria):
 
     matrix, resolver = criteria
     matrix["strength"]["limit"] = "12"
-    entry = {"acceptance_criteria": matrix,
+    entry = {"acceptance_criteria": matrix, "intended_uses": ["demand-only"],
              "acceptance_requirements": {"demand-only": ["equilibrium", "convergence"]}}
     response = {"definition": "test scalar", "unit": "MPa", "value": "12.5"}
     with pytest.raises(ValueError, match="acceptance criteria"):
@@ -168,7 +172,7 @@ def test_null_response_value_raises_validation_error(criteria):
     from digitalmodel.ansys.analysis_criteria import qualify_response_criteria
 
     matrix, resolver = criteria
-    entry = {"acceptance_criteria": matrix,
+    entry = {"acceptance_criteria": matrix, "intended_uses": ["strength-use"],
              "acceptance_requirements": {"strength-use": list(matrix)}}
     response = {"definition": "test scalar", "unit": "MPa", "value": None}
     with pytest.raises(ValueError, match="response"):
@@ -180,8 +184,16 @@ def test_demand_only_retains_explicit_unobserved_strength(criteria):
 
     matrix, resolver = criteria
     matrix["strength"]["observed"] = None
-    entry = {"acceptance_criteria": matrix,
+    entry = {"acceptance_criteria": matrix, "intended_uses": ["demand-only"],
              "acceptance_requirements": {"demand-only": ["equilibrium", "convergence"]}}
     response = {"definition": "test scalar", "unit": "MPa", "value": "12.5"}
     result = qualify_response_criteria(entry, response, "demand-only", resolver)
     assert result["strength"]["status"] == "NOT_EVALUATED"
+
+
+@pytest.mark.parametrize("value", ["TBD appendix", "Pending methods", "X-ray method"])
+def test_source_placeholder_prefix_with_substantive_text_is_not_rejected(criteria, value):
+    """Lexical validation does not determine source adequacy."""
+    matrix, resolver = criteria
+    matrix["strength"]["source"]["document"] = value
+    assert evaluate_criteria(matrix, resolver)["strength"] == "PASS"

@@ -144,3 +144,37 @@ def test_requirements_cannot_be_absent_or_weaken_numerical_checks(protocol, requ
     authority.update(verification_reference=ref, revisions={"r1": package["package_hash"]})
     with pytest.raises(ValueError, match="acceptance criteria"):
         lookup(package, query(), resolver, ledger=ledger, authority=authority)
+
+
+@pytest.mark.parametrize("intended_uses,design_policy", [
+    (["screening", "design"], "strength"),
+    (["screening", "design"], ["equilibrium", "strength"]),
+    (["screening", "design"], []),
+    (["screening", "design"], ["equilibrium", "convergence", "convergence"]),
+    (["screening", "design"], ["equilibrium", "convergence", "unknown"]),
+    (["screening", "design"], ["equilibrium", "convergence", {}]),
+    (["screening", "design"], None),
+    (["screening"], ["equilibrium", "convergence"]),
+])
+def test_lookup_refuses_invalid_nonqueried_policy(protocol, intended_uses, design_policy):
+    _, resolver, _, _, _ = protocol
+    register = json.loads(resolver["register"].read_bytes())
+    entry = register["entries"]["case-1:stress"]
+    entry["intended_uses"] = intended_uses
+    if design_policy is not None:
+        entry["acceptance_requirements"]["design"] = design_policy
+    resolver["register"].write_text(json.dumps(register), encoding="utf-8", newline="\n")
+    resolver, package, ledger, authority = rebind(protocol, entry["acceptance_criteria"])
+    with pytest.raises(ValueError, match="acceptance criteria requirements"):
+        lookup(package, query(), resolver, ledger=ledger, authority=authority)
+
+
+def test_lookup_accepts_complete_policy_for_multiple_uses(protocol):
+    _, resolver, _, _, _ = protocol
+    register = json.loads(resolver["register"].read_bytes())
+    entry = register["entries"]["case-1:stress"]
+    entry["intended_uses"].append("design")
+    entry["acceptance_requirements"]["design"] = ["equilibrium", "convergence"]
+    resolver["register"].write_text(json.dumps(register), encoding="utf-8", newline="\n")
+    resolver, package, ledger, authority = rebind(protocol, entry["acceptance_criteria"])
+    assert lookup(package, query(), resolver, ledger=ledger, authority=authority)["qualified"]
