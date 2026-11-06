@@ -22,13 +22,21 @@ Comparison contract (also in the schema description):
   - A numeric result needs a finite int or float (a boolean is rejected); a
     boolean result needs a boolean; a string result needs an equal string.
   - abs tolerance t:     |got - expected| <= t
-    rel_pct tolerance r: |got - expected| <= r / 100 * |expected|; when the
-    expected value is 0 the comparison is exact.
-    Both bounds are inclusive, with a floating allowance of
-    1e-9 * max(1, |expected|).
+    rel_pct tolerance r: |got - expected| <= r / 100 * |expected|
+    Both bounds are inclusive. When both values are integers the comparison
+    is exact integer arithmetic. Otherwise a floating allowance of
+    1e-9 * |expected| is added for binary representation; it is zero when the
+    expected value is 0, so a zero reference with any tolerance r is exact.
   - Outside tolerance: DRIFT on a live basis, MISMATCH on a fixed basis.
-  - Grade: FAIL if any MISMATCH or ERROR; else PARTIAL if any DRIFT or
-    NOT_EVALUATED; else PASS.
+  - Grade: FAIL if any MISMATCH or ERROR, a reader-file structural error, or
+    an unexpected exception from compute() (even after every value was
+    filled); else PARTIAL if any DRIFT or NOT_EVALUATED; else PASS.
+  - Revision (rebuild mode): --revision candidate (default) uses the code and
+    repository inputs of the checkout; --revision pinned reads them from
+    code.commit through git (repo_file()). The record states which.
+  - The run record is always written: to --out, or to a new file under
+    <temp>/report-evals-runs/. It is bound to the bytes of the files it graded;
+    --check-record reports a changed or missing file as stale.
   - ``--compare FILE`` (prompt-level eval) grades only results whose scope is
     "both" (the default). Unknown or duplicate ids in the reader file make the
     grade FAIL; an empty file grades PARTIAL.
@@ -125,6 +133,24 @@ def git_blob(repo: Path, commit: str, path: str) -> bytes | None:
         return out.stdout if out.returncode == 0 else None
     except (OSError, subprocess.SubprocessError):
         return None
+
+
+def repo_file(args: argparse.Namespace, rel: str) -> Path:
+    """Path of a repository file at the selected revision.
+
+    candidate: the file in the checkout (args.repo_root). pinned: the blob at
+    code.commit, written under <temp>/report-evals-pinned/<commit>/ with the
+    same relative path, so scripts that load files beside them still work.
+    """
+    if getattr(args, "revision", "candidate") != "pinned":
+        return Path(args.repo_root) / rel
+    blob = git_blob(Path(args.repo_root), args.pinned_commit, rel)
+    if blob is None:
+        raise FileNotFoundError(f"{rel} at {args.pinned_commit[:12]} is not readable from {args.repo_root}")
+    dest = Path(tempfile.gettempdir()) / "report-evals-pinned" / args.pinned_commit[:12] / rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(blob)
+    return dest
 
 
 def guard(ids: list[str], values: dict, notes: dict, fn: Callable[[], None]) -> None:
@@ -279,7 +305,9 @@ def compare_one(expected: dict[str, Any], got: Any) -> tuple[str, str]:
             bound = float(tol["abs"])
         else:
             bound = float(tol["rel_pct"]) / 100.0 * abs(float(want))
-        ok = abs(diff) <= bound + 1e-9 * max(1.0, abs(float(want)))
+        both_int = isinstance(want, int) and isinstance(got, int)
+        allowance = 0.0 if both_int else 1e-9 * abs(float(want))  # float representation only
+        ok = abs(got - want if both_int else diff) <= bound + allowance
         text = f"{diff:+.6g} ({diff / abs(float(want)) * 100:+.3g} %)" if want else f"{diff:+.6g}"
     else:
         if not isinstance(got, str):
@@ -362,6 +390,9 @@ def reader_values(path: Path, known: set[str]) -> tuple[dict[str, Any], list[str
             errors.append(f"reader results[{i}] needs id and value")
             continue
         rid = item["id"]
+        if not isinstance(rid, str):
+            errors.append(f"reader results[{i}] id must be a string")
+            continue
         if rid in values:
             errors.append(f"reader file repeats id {rid}")
         elif rid not in known:
@@ -370,8 +401,9 @@ def reader_values(path: Path, known: set[str]) -> tuple[dict[str, Any], list[str
     return values, errors
 
 
-def artifacts(folder: Path, names: tuple[str, ...]) -> dict[str, str]:
-    return {name: sha256_text(folder / name) for name in names if (folder / name).exists()}
+def artifacts(folder: Path, names: tuple[str, ...]) -> dict[str, str | None]:
+    """LF-normalized SHA-256 of each named file; None for a file that does not exist."""
+    return {name: sha256_text(folder / name) if (folder / name).is_file() else None for name in names}
 
 
 def check_record(folder: Path, record_path: Path) -> list[str]:
@@ -382,9 +414,12 @@ def check_record(folder: Path, record_path: Path) -> list[str]:
         return [f"run record unreadable: {exc}"]
     names = PROMPT_ARTIFACTS if record.get("mode", "").startswith("prompt") else REBUILD_ARTIFACTS
     bound = record.get("artifacts", {})
-    problems = [f"{n} not bound in the record" for n in names if n not in bound]
-    problems += [f"{n} changed since the run" for n, digest in artifacts(folder, names).items()
-                 if n in bound and bound[n] != digest]
+    problems = [f"{n} not bound in the record" for n in names if not bound.get(n)]
+    for name, digest in artifacts(folder, names).items():
+        if digest is None:
+            problems.append(f"{name} is missing")
+        elif bound.get(name) and bound[name] != digest:
+            problems.append(f"{name} changed since the run")
     return problems
 
 
@@ -395,7 +430,12 @@ def main(results_path: Path,
     folder = Path(results_path).resolve().parent
     doc = json.loads(Path(results_path).read_text(encoding="utf-8"))
     ap = argparse.ArgumentParser(description=f"Eval for {doc['report']['title']}")
-    ap.add_argument("--out", type=Path, help="write the run record (JSON) here")
+    ap.add_argument("--out", type=Path,
+                    help="write the run record (JSON) here; default: a new file under "
+                         "<temp>/report-evals-runs/ named by report, mode and time")
+    ap.add_argument("--revision", choices=("candidate", "pinned"), default="candidate",
+                    help="candidate: code and repository inputs of this checkout; "
+                         "pinned: code and repository inputs read from code.commit")
     ap.add_argument("--compare", type=Path,
                     help="grade a reader's results file instead of rebuilding")
     ap.add_argument("--validate-only", action="store_true",
@@ -405,6 +445,7 @@ def main(results_path: Path,
     if add_args:
         add_args(ap)
     args = ap.parse_args(argv)
+    args.pinned_commit = doc["code"]["commit"]
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except AttributeError:
@@ -442,19 +483,23 @@ def main(results_path: Path,
         mode = "rebuild"
         graded = doc["results"]
         names = REBUILD_ARTIFACTS
+        context["revision"] = args.revision
         try:
             compute(args, values, notes, context)
         except Exception as exc:  # noqa: BLE001 (record the failure, keep finished values)
-            context["compute_error"] = "".join(traceback.format_exception_only(type(exc), exc)).strip()
+            message = "".join(traceback.format_exception_only(type(exc), exc)).strip()
+            context["compute_error"] = message
+            # An unexpected failure fails the run even if every value was already filled.
+            structural.append(f"compute() raised: {message}"[:300])
             for r in graded:
                 if r["id"] not in values and r["id"] not in notes:
                     values[r["id"]] = exc
     if "repo_root" in context:  # keep the folder name only, not the local path
         context["repo_root"] = Path(context["repo_root"]).name
     head = context.get("repo_head")
-    if head and "code_mode" not in context:
-        # historical: the code ran at the pinned commit; candidate: at another revision.
-        context["code_mode"] = ("historical" if head == doc["code"]["commit"]
+    if mode == "rebuild" and "code_mode" not in context:
+        # historical: code and repository inputs at the pinned commit; candidate: another revision.
+        context["code_mode"] = ("historical" if args.revision == "pinned" or head == doc["code"]["commit"]
                                 else "candidate")
     rows = evaluate(graded, values, notes)
     verdict = grade(rows, structural)
@@ -474,7 +519,9 @@ def main(results_path: Path,
         "errors": structural,
         "results": rows,
     }
-    if args.out:
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(record, indent=1, default=str) + "\n", encoding="utf-8")
+    out = args.out or (Path(tempfile.gettempdir()) / "report-evals-runs" /
+                       f"{doc['report']['id']}-{mode}-{started.replace(':', '')}.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(record, indent=1, default=str) + "\n", encoding="utf-8")
+    print(f"run record: {scrub(str(out))}")
     return EXIT[verdict]

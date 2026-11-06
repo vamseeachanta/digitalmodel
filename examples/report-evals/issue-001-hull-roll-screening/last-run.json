@@ -2,20 +2,21 @@
  "schema_version": "1.0",
  "report_id": "issue-001-hull-roll-screening",
  "mode": "rebuild",
- "started_utc": "2026-11-06T16:07:20Z",
- "finished_utc": "2026-11-06T16:07:22Z",
+ "started_utc": "2026-11-06T16:55:59Z",
+ "finished_utc": "2026-11-06T16:56:01Z",
  "grade": "PASS",
  "pinned_commit": "8d08ea24198dcb99217df82325688a331f8aefce",
  "artifacts": {
   "results.json": "5dc4cfa727f1894c168a9603223d5552789ab419971861fba9f4227d1e16202f",
-  "eval.py": "4eacaf17c0318a8ef4148dd02dfc8fbde6e7c7e4cb2b57165aaa8c65981e3335",
-  "../evalkit.py": "44d2d922196abedc55bf807d2f757f7230bc455b4846a42f9ce083825e420f59"
+  "eval.py": "5cb0633cfa1f7004b5b479ef4a8f4be941a5e1a6ecf0388bb2d6897fc8dda024",
+  "../evalkit.py": "f8aa831c8f1da6977b8502d5246e34079c2f1246277539ea910df0dfbebc5fa5"
  },
  "python": "3.12.10",
  "platform": "Windows",
  "context": {
+  "revision": "candidate",
   "repo_root": "dm-evals",
-  "repo_head": "a725fe4ff98de48da20d74e8626dc00a1e70407e",
+  "repo_head": "5f503e1aee79ed2914e3ff2da26bb73dcff71a5b",
   "sha256": {
    "scripts/capabilities/build_generic_hull_screening.py": "ae325a7f24b2aac91ca81d1729023e38f575f0cba95f6f476cc785e0f46b293c",
    "src/digitalmodel/hydrodynamics/utube_tank.py": "17e535267435fde2573da70042c9d53f5980da5b0bcefcebb1c26792148987cf",

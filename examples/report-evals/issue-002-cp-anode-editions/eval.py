@@ -105,7 +105,8 @@ def _pipe(results: dict) -> tuple[int, float, float]:
             float(results["current_densities_A_m2"]["mean_current_density_A_m2"]))
 
 
-def anode_results(repo_root: Path, values: dict, notes: dict, context: dict) -> None:
+def anode_results(args, values: dict, notes: dict, context: dict) -> None:
+    repo_root = args.repo_root
     yaml, run_cp = _engine()
     import digitalmodel
     package = Path(digitalmodel.__file__).resolve()
@@ -113,7 +114,16 @@ def anode_results(repo_root: Path, values: dict, notes: dict, context: dict) -> 
         context["digitalmodel_file"] = package.relative_to(Path(repo_root).resolve()).as_posix()
     except ValueError:  # installed from another folder than the clone being graded
         context["digitalmodel_file"] = "outside the clone: " + package.parent.name
-    fixture_dir = repo_root / FIXTURES
+    package_head = evalkit.git_head(package.parent)
+    context["digitalmodel_head"] = package_head
+    if args.revision == "pinned" and package_head != args.pinned_commit:
+        # The engine is the installed package; a historical run needs it installed at the pin.
+        raise ImportError(f"--revision pinned needs digitalmodel installed from a checkout of "
+                          f"{args.pinned_commit[:12]} (installed: {str(package_head)[:12]})")
+    names = ["pipeline", *B401_STRUCTURES.values()]
+    fixture_dir = evalkit.repo_file(args, f"{FIXTURES}/{names[0]}.yml").parent
+    for name in names[1:]:
+        evalkit.repo_file(args, f"{FIXTURES}/{name}.yml")  # selected revision of each input file
     run = lambda *a, **k: _run(yaml, run_cp, fixture_dir, *a, **k)  # noqa: E731
 
     pipe = {ed: run("pipeline", ed) for ed in F103_EDITIONS}
@@ -205,7 +215,7 @@ def compute(args, values, notes, context):
 
     def run_anodes():
         try:
-            anode_results(args.repo_root, values, notes, context)
+            anode_results(args, values, notes, context)
         except ImportError as exc:
             for rid in anodes:
                 notes.setdefault(rid, f"digitalmodel not importable ({exc}); install it, see PROMPT.md")

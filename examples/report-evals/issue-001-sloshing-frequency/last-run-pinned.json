@@ -1,0 +1,209 @@
+{
+ "schema_version": "1.0",
+ "report_id": "issue-001-sloshing-frequency",
+ "mode": "rebuild",
+ "started_utc": "2026-11-06T16:56:04Z",
+ "finished_utc": "2026-11-06T16:56:05Z",
+ "grade": "PASS",
+ "pinned_commit": "705857af62385a4567c96be99a129cdff3051a52",
+ "artifacts": {
+  "results.json": "a14b293c187e842dc42e2b497d60b74da9bb599eca6ac9ab649d99c1652f2f1e",
+  "eval.py": "d3d726fc3f21c76b831b7bc6bbce48189d7f195dc82b0f96eeea9e7264455046",
+  "../evalkit.py": "f8aa831c8f1da6977b8502d5246e34079c2f1246277539ea910df0dfbebc5fa5"
+ },
+ "python": "3.12.10",
+ "platform": "Windows",
+ "context": {
+  "revision": "pinned",
+  "repo_root": "dm-evals",
+  "repo_head": "5f503e1aee79ed2914e3ff2da26bb73dcff71a5b",
+  "sha256": {
+   "docs/api/structural/sloshing-cfd-benchmark.json": "46acb0c2afb37bf4f6bc9a7b6f8b85736f854791cf3af8a1b5ee2fed9e71e1d3",
+   "docs/api/cfd/sloshing-convergence.json": "c36a4f50ff67da9ddd8054f8beae6e25e760ea0289af8b3d6ef10c99ac0b66db"
+  },
+  "code_mode": "historical"
+ },
+ "errors": [],
+ "results": [
+  {
+   "id": "omega1_linear_hl15",
+   "expected": 1.1746,
+   "got": 1.1746,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "omega1_cfd_hl15",
+   "expected": 1.1779,
+   "got": 1.1779,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "error_pct_hl15",
+   "expected": 0.28,
+   "got": 0.28,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "omega1_linear_hl30",
+   "expected": 1.521,
+   "got": 1.521,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "omega1_cfd_hl30",
+   "expected": 1.5164,
+   "got": 1.5164,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "error_pct_hl30",
+   "expected": 0.3,
+   "got": 0.3,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "omega1_linear_hl50",
+   "expected": 1.6974,
+   "got": 1.6974,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "omega1_cfd_hl50",
+   "expected": 1.6974,
+   "got": 1.6974,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "error_pct_hl50",
+   "expected": 0.0,
+   "got": 0.0,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0",
+   "note": ""
+  },
+  {
+   "id": "omega1_linear_hl70",
+   "expected": 1.7508,
+   "got": 1.7508,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "omega1_cfd_hl70",
+   "expected": 1.7508,
+   "got": 1.7508,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "error_pct_hl70",
+   "expected": 0.0,
+   "got": 0.0,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0",
+   "note": ""
+  },
+  {
+   "id": "max_error_pct_all_fills",
+   "expected": 0.3,
+   "got": 0.3,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "freq_linear_hz_l1_hl30",
+   "expected": 0.758054,
+   "got": 0.758054,
+   "unit": "Hz",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "finest_mesh_error_pct",
+   "expected": 0.296,
+   "got": 0.296,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "richardson_order",
+   "expected": 0.191,
+   "got": 0.191,
+   "unit": "-",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "richardson_freq_hz",
+   "expected": 0.756556,
+   "got": 0.756556,
+   "unit": "Hz",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "gci_fine_pct",
+   "expected": 0.1239,
+   "got": 0.1239,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  }
+ ]
+}

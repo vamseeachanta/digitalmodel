@@ -13,7 +13,7 @@ This README, `evalkit.py` and `results.schema.json` are the same, byte for byte,
 | `results.json` | The key results of the report: value, unit, period, source, method, repository and pinned commit, tolerance, basis (fixed or live), scope and limits. Also the inputs, the missing data and what the work cannot do. It follows `results.schema.json`, served at https://www.aceengineer.com/assets/data/report-evals/results.schema.json. |
 | `eval.py` | Rebuilds the key results from public code and data and compares them with `results.json`. With `--compare my-results.json` it grades a reader's own results instead. |
 | `PROMPT.md` | The run-it-yourself prompt for an AI assistant. It names its inputs, asks the reader for missing data, and says what it cannot do. |
-| `last-run.json` | The record of the last rebuild run. It is bound to the bytes of `results.json`, `eval.py` and `evalkit.py` that it graded. |
+| `last-run.json` | The record of the last rebuild run with the default revision; `last-run-pinned.json`, where present, is the record of a `--revision pinned` run. Each is bound to the bytes of `results.json`, `eval.py` and `evalkit.py` that it graded. |
 
 `evalkit.py` holds the shared code. It uses only the Python standard library.
 
@@ -30,14 +30,17 @@ This README, `evalkit.py` and `results.schema.json` are the same, byte for byte,
 ## Run
 
 ```text
-python <folder>/eval.py                          # rebuild and compare
-python <folder>/eval.py --out run.json           # also write the run record
+python <folder>/eval.py                          # rebuild from this checkout and compare
+python <folder>/eval.py --revision pinned        # rebuild from code.commit (historical reproduction)
+python <folder>/eval.py --out run.json           # choose where the run record goes
 python <folder>/eval.py --compare my-results.json
 python <folder>/eval.py --validate-only          # schema and grading rules; no network, no report code
 python <folder>/eval.py --check-record <folder>/last-run.json
 ```
 
-Exit code 0 is PASS, 2 is PARTIAL and 1 is FAIL. `--check-record` fails when the record is not bound to the current files.
+Exit code 0 is PASS, 2 is PARTIAL and 1 is FAIL. Every run writes a record: to `--out`, or else to a new file under `<temp>/report-evals-runs/`. `--check-record` fails when a file the record is bound to has changed or is missing.
+
+`--revision candidate` (the default, except where a folder states otherwise) uses the code and repository inputs of the checkout. `--revision pinned` reads them from `code.commit` through git. Code that is an installed package (digitalmodel) must be installed from a checkout of `code.commit` for a pinned run. A folder may also commit `last-run-pinned.json`, the record of a pinned run.
 
 ## Grades
 
@@ -48,6 +51,6 @@ Each result gets one status:
 - `NOT_EVALUATED`: no value (missing reader data, a source that cannot be reached, an optional package not installed).
 - `ERROR`: the check raised an error. Other checks of the same run still grade, and the run record is still written.
 
-Tolerance: `abs` t passes when |got - expected| <= t; `rel_pct` r passes when |got - expected| <= r/100 x |expected|, and is exact when the expected value is 0. Both bounds are inclusive.
+Tolerance: `abs` t passes when |got - expected| <= t; `rel_pct` r passes when |got - expected| <= r/100 x |expected|. Both bounds are inclusive. Two integers compare exactly; otherwise an allowance of 1e-9 x |expected| covers binary representation, so a zero reference is exact.
 
-The report grade is FAIL when any result is MISMATCH or ERROR, PARTIAL when any result is DRIFT or NOT_EVALUATED, and PASS otherwise. In `--compare` mode only results with scope `both` are graded; a reader file with an unknown or repeated id grades FAIL.
+The report grade is FAIL when any result is MISMATCH or ERROR, or when the rebuild raised an unexpected error, PARTIAL when any result is DRIFT or NOT_EVALUATED, and PASS otherwise. In `--compare` mode only results with scope `both` are graded; a reader file with an unknown or repeated id grades FAIL.

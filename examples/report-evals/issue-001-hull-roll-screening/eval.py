@@ -33,8 +33,9 @@ def add_args(ap):
     ap.add_argument("--archive", type=Path, help="data file to check instead of the committed one")
 
 
-def _load_builder(root: Path):
-    spec = importlib.util.spec_from_file_location("_hull_screening_builder", root / BUILDER)
+def _load_builder(builder: Path):
+    """Load the builder; it loads the U-tube model from its own clone root (parents[2])."""
+    spec = importlib.util.spec_from_file_location("_hull_screening_builder", builder)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
@@ -98,9 +99,10 @@ def archive_check(cases: list[dict], archive: dict, notes: dict) -> int:
 
 def compute(args, values, notes, context):
     root = args.repo_root
+    files = {p: evalkit.repo_file(args, p) for p in (BUILDER, MODEL, ARCHIVE)}  # selected revision
     context.update(repo_root=str(root), repo_head=evalkit.git_head(root),
-                   sha256={p: evalkit.sha256_file(root / p) for p in (BUILDER, MODEL, ARCHIVE)})
-    record = _load_builder(root).compute()
+                   sha256={p: evalkit.sha256_text(f) for p, f in files.items()})
+    record = _load_builder(files[BUILDER]).compute()
     cases = record["cases"]
 
     def case(period, damping, alpha):
@@ -116,7 +118,7 @@ def compute(args, values, notes, context):
     values["long_period_penalty_60s_alpha020"] = round(case(18.0, 0.02, 0.20)["long_period_penalty_percent"], 1)
     # Slow-forcing limit 1/(1 - alpha), quoted on the page for alpha 0.20.
     values["slow_forcing_limit_alpha020"] = round((1 / (1 - 0.20) - 1) * 100, 1)
-    archive = json.loads((args.archive or root / ARCHIVE).read_text(encoding="utf-8"))
+    archive = json.loads((args.archive or files[ARCHIVE]).read_text(encoding="utf-8"))
     values["archive_cases_reproduced"] = archive_check(cases, archive, notes)
 
 

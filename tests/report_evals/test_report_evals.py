@@ -10,6 +10,7 @@ import copy
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -56,8 +57,11 @@ def test_results_json_passes_jsonschema(folder):
 
 @pytest.mark.parametrize("folder", ALL)
 def test_last_run_is_bound_to_current_files(folder):
-    out = _run(folder, "--check-record", str(EVALS / folder / "last-run.json"))
-    assert out.returncode == 0, out.stdout
+    records = sorted((EVALS / folder).glob("last-run*.json"))
+    assert records, "no run record committed"
+    for record in records:
+        out = _run(folder, "--check-record", str(record))
+        assert out.returncode == 0, (record.name, out.stdout)
 
 
 @pytest.mark.parametrize("mutate, expected", [
@@ -93,6 +97,10 @@ def test_comparison_contract():
     assert kit.compare_one(live, 202.1)[0] == "DRIFT"
     assert kit.compare_one(zero, 0)[0] == "MATCH"            # zero reference is exact
     assert kit.compare_one(zero, 0.001)[0] == "MISMATCH"
+    assert kit.compare_one(zero, 5e-10)[0] == "MISMATCH"     # no floating allowance at zero
+    big = {"value": 1_000_000_000, "tolerance": {"abs": 0}, "basis": "fixed"}
+    assert kit.compare_one(big, 1_000_000_000)[0] == "MATCH"
+    assert kit.compare_one(big, 1_000_000_001)[0] == "MISMATCH"  # integers compare exactly
     assert kit.compare_one(fixed, True)[0] == "MISMATCH"     # boolean for a number
     assert kit.compare_one(flag, 1)[0] == "MISMATCH"         # number for a boolean
     assert kit.compare_one(fixed, float("nan"))[0] == "MISMATCH"
@@ -118,6 +126,61 @@ def test_compare_mode(tmp_path):
     assert _run(folder, "--compare", _reader(tmp_path, "dup.json", dup)).returncode == 1
     extra = full + [{"id": "not_a_result", "value": 1}]
     assert _run(folder, "--compare", _reader(tmp_path, "extra.json", extra)).returncode == 1
+    out = tmp_path / "odd.json"
+    odd = _run(folder, "--compare", _reader(tmp_path, "odd-id.json", [{"id": [], "value": 1}]), "--out", str(out))
+    assert odd.returncode == 1 and json.loads(out.read_text(encoding="utf-8"))["grade"] == "FAIL"
+
+
+def _demo_folder(tmp_path):
+    work = tmp_path / "evals" / "demo"
+    work.mkdir(parents=True)
+    (tmp_path / "evals" / "results.schema.json").write_text(json.dumps(_schema()), encoding="utf-8")
+    (tmp_path / "evals" / "evalkit.py").write_text((EVALS / "evalkit.py").read_text(encoding="utf-8"),
+                                                   encoding="utf-8")
+    (work / "results.json").write_text(json.dumps(_manifest(ALL[0])), encoding="utf-8")
+    (work / "eval.py").write_text("# demo\n", encoding="utf-8")
+    (work / "PROMPT.md").write_text("demo\n", encoding="utf-8")
+    return work
+
+
+def test_failure_after_final_value_fails_the_run(tmp_path):
+    """compute() that fills every value and then raises must not grade PASS."""
+    kit = _kit()
+    work = _demo_folder(tmp_path)
+    results = _manifest(ALL[0])["results"]
+
+    def compute(args, values, notes, context):
+        for r in results:
+            values[r["id"]] = r["value"]
+        raise ValueError("failure after final value")
+
+    out = tmp_path / "run.json"
+    assert kit.main(work / "results.json", compute, argv=["--out", str(out)]) == 1
+    record = json.loads(out.read_text(encoding="utf-8"))
+    assert record["grade"] == "FAIL" and any("failure after final value" in e for e in record["errors"])
+    assert {r["status"] for r in record["results"]} == {"MATCH"}
+
+
+def test_record_written_without_out(tmp_path):
+    kit = _kit()
+    work = _demo_folder(tmp_path)
+    runs = Path(tempfile.gettempdir()) / "report-evals-runs"
+    before = set(runs.glob("*.json")) if runs.exists() else set()
+    kit.main(work / "results.json", lambda args, values, notes, context: None, argv=[])
+    assert set(runs.glob("*.json")) - before
+
+
+@pytest.mark.parametrize("mode, removed", [("rebuild", "eval.py"), ("prompt-level", "PROMPT.md"),
+                                          ("rebuild", "../evalkit.py")])
+def test_missing_bound_file_makes_record_stale(tmp_path, mode, removed):
+    kit = _kit()
+    work = _demo_folder(tmp_path)
+    names = kit.PROMPT_ARTIFACTS if mode == "prompt-level" else kit.REBUILD_ARTIFACTS
+    record = tmp_path / "record.json"
+    record.write_text(json.dumps({"mode": mode, "artifacts": kit.artifacts(work, names)}), encoding="utf-8")
+    assert kit.check_record(work, record) == []
+    (work / removed).unlink()
+    assert any("missing" in p for p in kit.check_record(work, record))
 
 
 def test_failed_compute_still_writes_record(tmp_path):
@@ -144,8 +207,10 @@ OFFLINE = ["issue-001-hull-roll-screening", "issue-001-sloshing-frequency"]
 
 
 @pytest.mark.parametrize("folder", OFFLINE)
-def test_offline_eval_passes(folder):
-    out = _run(folder)
+@pytest.mark.parametrize("revision", ["candidate", "pinned"])
+def test_offline_eval_passes(folder, revision):
+    """Candidate regression (this checkout) and historical reproduction (code.commit) both pass."""
+    out = _run(folder, "--revision", revision)
     assert out.returncode == 0 and "GRADE: PASS" in out.stdout, out.stdout + out.stderr
 
 

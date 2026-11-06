@@ -44,9 +44,10 @@ def omega_linear(h_over_l: float) -> float:
 
 def compute(args, values, notes, context):
     root = args.repo_root
+    files = {p: evalkit.repo_file(args, p) for p in (BENCHMARK, CONVERGENCE)}  # selected revision
     context.update(repo_root=str(root), repo_head=evalkit.git_head(root),
-                   sha256={p: evalkit.sha256_file(root / p) for p in (BENCHMARK, CONVERGENCE)})
-    bench = json.loads((root / BENCHMARK).read_text(encoding="utf-8"))
+                   sha256={p: evalkit.sha256_text(f) for p, f in files.items()})
+    bench = json.loads(files[BENCHMARK].read_text(encoding="utf-8"))
     g = float(bench["meta"]["g"])
     errors = []
     for p in bench["free_decay"]["points"]:
@@ -64,7 +65,7 @@ def compute(args, values, notes, context):
         errors.append(err)
     values["max_error_pct_all_fills"] = round(max(errors), 2)
 
-    conv = json.loads((root / CONVERGENCE).read_text(encoding="utf-8"))
+    conv = json.loads(files[CONVERGENCE].read_text(encoding="utf-8"))
     # L = 1 m, h/L = 0.30 (convergence case).
     f_lin = math.sqrt(g * math.pi * math.tanh(math.pi * 0.30)) / (2 * math.pi)
     values["freq_linear_hz_l1_hl30"] = round(f_lin, 6)
