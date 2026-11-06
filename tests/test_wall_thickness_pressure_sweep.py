@@ -1,15 +1,17 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Absolute-pressure sweep coverage and plot/export traceability."""
 
 import csv
+import hashlib
 import json
 from collections import Counter
 
 import plotly.graph_objects as go
 import pytest
 
+from digitalmodel.structural.analysis import wall_thickness_mt_report as report
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     PipeGeometry,
@@ -113,11 +115,13 @@ def test_every_condition_pressure_curve_matches_exports(
     assert "4th Edition" not in html
 
 
-def test_absolute_pressure_uses_independent_force_balance():
-    """Split a unit-length cylinder: 2*t*sigma_h = (pi-pe)*d_i.
+def test_absolute_pressure_retains_net_pressure_on_bore_approximation():
+    """Distinguish the retained approximation from cylinder force balance.
 
     With d_i=0.2 m, t=0.01 m, pi=7 MPa and pe=2 MPa:
-    sigma_h = (7-2)*0.2/(2*0.01) = 50 MPa, independently by hand.
+    the bore approximation gives (7-2)*0.2/(2*0.01) = 50 MPa.
+    Cylinder balance gives (7*0.2-2*0.22)/(2*0.01) = 48 MPa.
+    The approximation exceeds force balance by pe = 2 MPa.
     """
     cases = _compute_pressure_sensitivity(
         A=0.01, Z=0.001, d_i=0.2, t=0.01, pe=2e6,
@@ -127,15 +131,21 @@ def test_absolute_pressure_uses_independent_force_balance():
     )
     assert cases[0]["pi_MPa"] == 7.0
     assert cases[0]["sigma_h_MPa"] == pytest.approx(50.0)
+    force_balance_mpa = (7.0 * 0.2 - 2.0 * 0.22) / (2 * 0.01)
+    assert force_balance_mpa == pytest.approx(48.0)
+    assert cases[0]["sigma_h_MPa"] - force_balance_mpa == pytest.approx(2.0)
 
 
 def test_default_pressures_are_stated_and_assumed(pipe, figures, tmp_path):
     geometry, material = pipe
     output = tmp_path / "default.html"
-    generate_mt_report(geometry, material, 0.0, 0.0, output_path=str(output))
+    html = generate_mt_report(geometry, material, 30e6, 0.0, output_path=str(output))
     manifest = json.loads(output.with_suffix(".pressure-sweep.json").read_text())
     assert [p["pressure_mpa"] for p in manifest["working_pressures"]] == [0.0, 10.0, 20.0]
     assert all(p.basis == "ASSUMED" for p in DEFAULT_WORKING_PRESSURES)
+    assert "may not bracket the design pressure" in html
+    assert "net-pressure-on-bore approximation" in html
+    assert "exceeds cylinder force balance by the external pressure" in html
 
 
 def test_batch_writes_one_report_and_exports_per_supported_code(
@@ -212,3 +222,92 @@ def test_unsupported_envelope_code_is_rejected(pipe, tmp_path):
             output_path=str(tmp_path / "unsupported.html"),
         )
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("entries", [[0.0, 10.0], [WorkingPressure(5.0), 10.0]])
+def test_non_working_pressure_entries_are_rejected(pipe, tmp_path, entries):
+    geometry, material = pipe
+    with pytest.raises(ValueError, match="WorkingPressure"):
+        generate_mt_report(
+            geometry, material, 3e6, 1e6, working_pressures=entries,
+            output_path=str(tmp_path / "invalid.html"),
+        )
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.fixture
+def synthetic_f101_review(tmp_path, monkeypatch):
+    """Complete software-only evidence, without engineering approval."""
+    implementation = tmp_path / "strategy.py"
+    implementation.write_text("# Synthetic implementation for gate tests.\n")
+    path = tmp_path / "review.json"
+    monkeypatch.setattr(report, "F101_COMBINED_FORM_REVIEW", path)
+    monkeypatch.setattr(report, "F101_COMBINED_FORM_IMPLEMENTATION", implementation)
+    record = {
+        "schema_version": 1, "code": "DNV-ST-F101", "status": "passed",
+        "agreement": True, "review_date": "2026-10-15",
+        "reason": "Synthetic evidence for label rendering only.",
+        "form": {
+            "id": "f101-root-sum-square",
+            "implementation": (
+                "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py"
+            ),
+            "symbol": "DnvStF101Strategy._check_combined_loading",
+            "reviewed_revision": "0" * 40,
+            "sha256": hashlib.sha256(implementation.read_bytes()).hexdigest(),
+            "expression": "synthetic", "wall_basis": "synthetic",
+            "normalisation": "synthetic", "domain": "synthetic",
+            "terms": {key: "synthetic" for key in ("m", "n", "q")},
+        },
+        "source": {
+            "title": "Synthetic", "series": "Synthetic", "publisher": "Synthetic",
+            "locator": "Synthetic", "url": "https://example.org/synthetic",
+            "scope": "Software tests only", "year": 2026, "pages": [1],
+            "access": {
+                "retrieved_utc": "2026-10-15T00:00:00Z", "http_status": 200,
+                "sha256": "0" * 64,
+            },
+        },
+        "comparison_points": [
+            {"id": key, "reason": "Synthetic", "agreement": True}
+            for key in (
+                "single-load-limits", "mixed-moment-tension",
+                "pressure-coupling", "report-envelope",
+            )
+        ],
+    }
+    return path, record
+
+
+@pytest.mark.parametrize("state", ["passed", "failed", "missing", "malformed", "stale"])
+def test_f101_gate_controls_all_charts_and_sweep_manifest(
+    pipe, figures, tmp_path, synthetic_f101_review, state,
+):
+    path, record = synthetic_f101_review
+    if state == "failed":
+        record["status"] = "failed"
+        record["agreement"] = False
+    elif state == "stale":
+        record["form"]["sha256"] = "0" * 64
+    if state == "malformed":
+        path.write_text("{")
+    elif state != "missing":
+        path.write_text(json.dumps(record))
+    geometry, material = pipe
+    output = tmp_path / "f101.html"
+    html = generate_mt_report(
+        geometry, material, 3e6, 1e6, code=DesignCode.DNV_ST_F101,
+        working_pressures=[WorkingPressure(5.0)], output_path=str(output),
+    )
+    manifest = json.loads(output.with_suffix(".pressure-sweep.json").read_text())
+    assert manifest["limitations"].count(report.F101_SCREENING_LABEL) == 1
+    label = report.F101_SIMPLIFIED_FORM_LABEL
+    assert (label in manifest["limitations"]) == (state != "passed")
+    notices = html.split('<p class="f101-envelope-limitation">')[1:]
+    assert len(notices) == 3
+    for notice in notices:
+        paragraph = notice.split("</p>", 1)[0]
+        assert paragraph.count(report.F101_SCREENING_LABEL) == 1
+        assert paragraph.count(label) == (0 if state == "passed" else 1)
+    # The only other occurrence is in the embedded manifest, not a fourth notice.
+    assert html.count(label) == (0 if state == "passed" else 4)

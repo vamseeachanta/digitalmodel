@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 # ABOUTME: Multi-code pipeline/riser wall thickness M-T interaction HTML report generator
 # ABOUTME: Supports API RP 1111, API RP 2RD, API STD 2RD with per-code conditions and envelopes
@@ -28,6 +28,8 @@ import math
 import logging
 import csv
 import json
+import hashlib
+from datetime import date, datetime
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
@@ -44,6 +46,112 @@ from digitalmodel.structural.analysis.wall_thickness import (
 from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
 
 logger = logging.getLogger(__name__)
+
+F101_COMBINED_FORM_REVIEW = (
+    Path(__file__).resolve().parents[4]
+    / "docs/domains/structural/reviews/f101-combined-form-review.json"
+)
+F101_COMBINED_FORM_IMPLEMENTATION = (
+    Path(__file__).with_name("wall_thickness_codes") / "dnv_st_f101.py"
+)
+F101_SIMPLIFIED_FORM_LABEL = "simplified form; not checked against the standard's text"
+F101_SCREENING_LABEL = (
+    "Screening envelope from the moment-tension report; not reconciled with the code strategy"
+)
+
+
+def _review_text_fields(record: object, fields: Tuple[str, ...]) -> bool:
+    """Require nonblank evidence text in a review object."""
+    return isinstance(record, dict) and all(
+        isinstance(record.get(field), str) and record[field].strip()
+        for field in fields
+    )
+
+
+def _review_hex_digest(value: object, length: int) -> bool:
+    """Recognise the lowercase hexadecimal digests stored in review records."""
+    return (
+        isinstance(value, str) and len(value) == length
+        and all(char in "0123456789abcdef" for char in value)
+    )
+
+
+def _f101_review_evidence_passed(record: object) -> bool:
+    """Check evidence completeness and consistency, not engineering equivalence."""
+    if not isinstance(record, dict) or not _review_text_fields(record, ("review_date", "reason")):
+        return False
+    if (
+        type(record.get("schema_version")) is not int
+        or record["schema_version"] != 1
+        or record.get("code") != "DNV-ST-F101"
+        or record.get("status") != "passed"
+        or record.get("agreement") is not True
+    ):
+        return False
+    form = record.get("form")
+    if not _review_text_fields(form, (
+        "expression", "wall_basis", "normalisation", "domain",
+    )):
+        return False
+    if (
+        form.get("id") != "f101-root-sum-square"
+        or form.get("implementation") != (
+            "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py"
+        )
+        or form.get("symbol") != "DnvStF101Strategy._check_combined_loading"
+        or not _review_hex_digest(form.get("reviewed_revision"), 40)
+        or not _review_hex_digest(form.get("sha256"), 64)
+        or not _review_text_fields(form.get("terms"), ("m", "n", "q"))
+    ):
+        return False
+    source = record.get("source")
+    if not _review_text_fields(source, (
+        "title", "series", "publisher", "locator", "url", "scope",
+    )):
+        return False
+    pages = source.get("pages")
+    access = source.get("access")
+    if (
+        type(source.get("year")) is not int or source["year"] <= 0
+        or not isinstance(pages, list) or not pages
+        or not all(type(page) is int and page > 0 for page in pages)
+        or not _review_text_fields(access, ("retrieved_utc",))
+    ):
+        return False
+    if access.get("http_status") != 200 or not _review_hex_digest(access.get("sha256"), 64):
+        return False
+    try:
+        date.fromisoformat(record["review_date"])
+        retrieved = datetime.fromisoformat(access["retrieved_utc"].replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if retrieved.utcoffset() is None:
+        return False
+    points = record.get("comparison_points")
+    if not isinstance(points, list) or not points:
+        return False
+    if not all(
+        _review_text_fields(point, ("id", "reason")) and point.get("agreement") is True
+        for point in points
+    ):
+        return False
+    identifiers = [point["id"] for point in points]
+    required = {"single-load-limits", "mixed-moment-tension", "pressure-coupling", "report-envelope"}
+    return len(set(identifiers)) == len(identifiers) and required.issubset(identifiers)
+
+
+def _f101_combined_form_label() -> str:
+    """Retain the limitation without consistent evidence for the current strategy."""
+    try:
+        record = json.loads(F101_COMBINED_FORM_REVIEW.read_text(encoding="utf-8"))
+        if _f101_review_evidence_passed(record):
+            digest = hashlib.sha256(F101_COMBINED_FORM_IMPLEMENTATION.read_bytes()).hexdigest()
+            if digest == record["form"]["sha256"]:
+                return ""
+    except (OSError, ValueError, UnicodeError):
+        pass
+    return F101_SIMPLIFIED_FORM_LABEL
+
 
 # API RP 1111 operating conditions with design factors.
 # Designed as a replaceable data structure so other codes (DNV, PD 8010)
@@ -101,16 +209,15 @@ class WorkingPressure:
 
 
 DEFAULT_WORKING_PRESSURES = tuple(WorkingPressure(p) for p in (0.0, 10.0, 20.0))
-PRESSURE_SWEEP_LIMITATION = (
-    "Screening envelope from the moment-tension report; "
-    "not reconciled with the code strategy"
-)
+PRESSURE_SWEEP_LIMITATION = F101_SCREENING_LABEL
 
 
 def _validate_working_pressures(working_pressures):
     pressures = tuple(
         DEFAULT_WORKING_PRESSURES if working_pressures is None else working_pressures
     )
+    if any(not isinstance(p, WorkingPressure) for p in pressures):
+        raise ValueError("Working pressures must contain only WorkingPressure instances")
     if not pressures or len({p.pressure_mpa for p in pressures}) != len(pressures):
         raise ValueError("Working pressures must be non-empty and unique")
     return pressures
@@ -142,6 +249,7 @@ def generate_mt_report(
         edition: Optional edition year (e.g. 2015 for API RP 1111 4th Ed).
         working_pressures: Absolute internal pressures in MPa with their basis.
             Defaults to 0, 10 and 20 MPa, each ASSUMED. Every condition is swept.
+            These defaults may not bracket the report's design pressure.
             File output includes pressure-sweep CSV and JSON sidecars.
 
     Returns:
@@ -262,6 +370,16 @@ def generate_mt_report(
     pressure_chart_html = _build_pressure_sensitivity_chart(
         pressure_manifest,
     )
+
+    if code == DesignCode.DNV_ST_F101:
+        limitation = _f101_combined_form_label()
+        notice = f'<p class="f101-envelope-limitation">{F101_SCREENING_LABEL}'
+        if limitation:
+            notice += f"; {limitation}"
+        notice += ".</p>"
+        contour_html = notice + contour_html
+        envelope_html = notice + envelope_html
+        pressure_chart_html = notice + pressure_chart_html
 
     # Build full HTML
     html = _build_html(
@@ -607,10 +725,11 @@ def _compute_pressure_sensitivity(
 ) -> List[Dict]:
     """Compute screening capacity limits at stated internal pressures.
 
-    The existing hoop approximation follows force balance on a longitudinal
-    cut through a unit-length cylinder: pressure force is (pi-pe)*d_i and
-    the two wall ligaments carry 2*t*sigma_h, hence
-    sigma_h = (pi-pe)*d_i/(2*t). No code criterion is introduced here.
+    Retain the existing net-pressure-on-bore approximation used by the baseline
+    report: sigma_h = (pi-pe)*d_i/(2*t). Cylinder force balance instead gives
+    sigma_h = (pi*d_i-pe*D)/(2*t), where D=d_i+2*t. The approximation exceeds
+    force balance by pe for nonzero external pressure. No code criterion is
+    introduced here.
     """
     results = []
     for pressure in _validate_working_pressures(working_pressures):
@@ -654,7 +773,9 @@ def _pressure_sweep_manifest(sensitivity: List[Dict], code: DesignCode, pe: floa
     rows = []
     limitations = [PRESSURE_SWEEP_LIMITATION]
     if code == DesignCode.DNV_ST_F101:
-        limitations.append("simplified form; not checked against the standard's text")
+        limitation = _f101_combined_form_label()
+        if limitation:
+            limitations.append(limitation)
     for case_index, case in enumerate(sensitivity):
         for condition_index, (condition, (tensions, moments)) in enumerate(
             case["envelopes"].items()
@@ -1162,6 +1283,12 @@ def _build_html(
 
     code_label = code.value + edition_label
 
+    combined_check_subject = (
+        "The report's screening calculation"
+        if code == DesignCode.DNV_ST_F101
+        else f"The {code_label} combined check"
+    )
+
     # Pressure check rows — build dynamically from available results
     pressure_rows = ""
     check_configs = {
@@ -1499,15 +1626,20 @@ def _build_html(
                 Absolute internal working pressures are stated in MPa, on the same
                 datum as external pressure. Each pressure has a source basis or is
                 labelled ASSUMED. Every report condition is shown on nominal wall.
+                The default pressures may not bracket the design pressure.
                 The report conditions are screening labels; pressure checks use one
                 fixed factor set for each route, without condition-dependent factors.
+            </p>
+            <p>
+                Hoop stress uses the net-pressure-on-bore approximation,
+                &sigma;<sub>h</sub> = (p<sub>i</sub> &minus; p<sub>e</sub>)d<sub>i</sub>/(2t);
+                it exceeds cylinder force balance by the external pressure.
             </p>
             <p><strong>{PRESSURE_SWEEP_LIMITATION}.</strong>
                 These curves are the result of our implementation and do not establish
                 code compliance. The screening model also retains its existing
                 numerical search limits at pressures beyond its feasible range.
             </p>
-            <p>{"simplified form; not checked against the standard's text" if code == DesignCode.DNV_ST_F101 else ""}</p>
             {ps_table_html}
             <div class="chart-container">
                 {pressure_chart_html if pressure_chart_html else ""}
@@ -1518,7 +1650,7 @@ def _build_html(
         <div class="card">
             <h2>3. Combined Loading &mdash; Von Mises Interaction</h2>
             <p>
-                The {code_label} combined check evaluates the Von Mises equivalent stress:
+                {combined_check_subject} evaluates the Von Mises equivalent stress:
                 &sigma;<sub>vm</sub> = &radic;(&sigma;<sub>L</sub>&sup2;
                 &minus; &sigma;<sub>L</sub>&middot;&sigma;<sub>h</sub>
                 + &sigma;<sub>h</sub>&sup2;) &le; f<sub>d</sub>&middot;SMYS

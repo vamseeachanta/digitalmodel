@@ -411,6 +411,8 @@ jobs:
           command = gates[os.environ["GATE_NAME"]]["command"]
           if os.environ["GATE_NAME"] == "tests-subsea":
               command += " tests/riser_fatigue/"
+          if os.environ["GATE_NAME"] == "tests-asset-integrity":
+              command += " tests/test_wall_thickness_pressure_sweep.py"
           print(command)
           PY
           )
