@@ -13,6 +13,7 @@ semantics marked `NOT_EVALUATED`. No native readback or analysis occurred.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-19 | Add sourced diagnostic categories and a current-input comparison so representation candidates can be reviewed individually without waiving compatibility. |
+| 2 | 2026-11-06 | Compare exact decoded numeric values, restrict line presentation candidates to index zero, and derive blocking totals from recorded decisions; regenerate the report without changing its 56 blocking rows. |
 
 ## Scope and method
 
@@ -29,14 +30,18 @@ establish that assignment order has no effect in OrcaFlex. Missing-member hashes
 and their disclosed container limitations are retained.
 
 For finite integer/float pairs of different types, the diagnostic equation is
-`D(a) = D(b)`, where `D(x) = Decimal(str(x))`. The Python 3.11
+`D(a) = D(b)`, where `D(x) = Decimal(x)`. The Python 3.11
 [Decimal constructor documentation](https://docs.python.org/3.11/library/decimal.html#decimal.Decimal)
-states that decimal string construction preserves the supplied digits without
-context rounding. This is exact equality of decoded decimal spellings, with no
+states that a decoded float is converted losslessly to its exact decimal value,
+without context rounding. This is exact equality of decoded numeric values, with no
 acceptance tolerance. Integers are never converted to binary float. Booleans,
 numeric strings and non-finite floats do not enter this category. Original YAML
 numeric lexemes are not retained; precision already lost during decoding cannot
 be recovered by classification.
+
+The line presentation inventory is restricted to `/Lines/0/ContactPen`,
+`/Lines/0/DrawNodesAsDiscs` and `/Lines/0/DrawShadedNodesAsSpheres`.
+Missing keys at later line indices remain other missing data.
 
 ## Category decisions and sources
 
@@ -96,10 +101,15 @@ The report binds the current reference SHA-256
 and source specification SHA-256
 `1fa7c6879eca05511a330dfd042fec39cdf21ba65f0f82b1653810b464d43be6`,
 plus all six generated/input file digests. Its own SHA-256 is
-`675a40c2468fd01d2f9e171b4770bcb7c3306c0f1878c80a0b44a697800af650`.
+`f620600bc1a1c0c011dcb52e9f2321290d8ed2263949e3e9ef556d2797d9e3aa`.
 The reference byte digest differs from the historical report recorded with
 issue #2104; this is a current-tree measurement, not a byte-for-byte replay of
 that archived run. The historical report is retained.
+
+Regeneration on 2026-11-06 preserves the recorded reference, specification and
+six generated/input digests, every difference row and all category counts.
+This evidence applies to this branch's generator. Regeneration after integration
+with main and a completed hosted smoke run remain outstanding.
 
 Reproduce using a fresh output directory outside the checkout:
 
@@ -116,10 +126,17 @@ Synthetic tests use independent hand calculations in their docstrings:
 differs by its written final digit. These tests cover genuine value changes,
 large integers, boolean/integer separation, non-finite values, matching and
 opposite boolean spellings, null versus absence, exact presentation paths and
-preservation of strict blocking. The report test hand-counts six synthetic
-differences across the categories. The packaging test also reproduces the
+preservation of strict blocking. Large-integer tests distinguish rounded float
+spellings from exact decoded values in both directions. The report test hand-counts six synthetic
+differences across the categories. A synthetic policy test counts blocking rows
+from the serialized category decisions; a missing decision is rejected. Every
+production category remains blocking. The packaging test also reproduces the
 committed classified report; this is a reproducibility check, not an independent
 physical benchmark. No coefficients or engineering acceptance limits are added.
+
+The reference and specification have no checkout line-ending attributes binding
+their raw-byte digests. A checkout that translates their line endings can fail
+the reproducibility check; cross-platform byte reproducibility is not established.
 
 Report schema version 3 adds categories, counts, blocking counts and evidence
 decisions; consumers requiring version 2 need to account for these additions.

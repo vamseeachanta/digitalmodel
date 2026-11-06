@@ -40,23 +40,23 @@ def _difference_category(reference, candidate, path, kind):
             path in {"/General/DefaultViewAzimuth", "/General/DefaultViewCentre",
                      "/General/DefaultViewElevation", "/General/DefaultViewMode",
                      "/General/DefaultViewSize"}
-            or (len(parts) == 4 and parts[1] == "Lines" and parts[2].isascii()
-                and parts[2].isdecimal() and parts[3] in {
+            or (len(parts) == 4 and parts[1] == "Lines" and parts[2] == "0"
+                and parts[3] in {
                     "ContactPen", "DrawNodesAsDiscs", "DrawShadedNodesAsSpheres"})
         ):
             return "presentation_key_candidate"
         return "missing_data"
     # YAML 1.1 type definitions (2005-01-18), int.html and float.html at
     # https://yaml.org/type/ distinguish integer and approximate real tags.
-    # Python 3.11 Decimal constructor: string conversion is exact and unaffected
+    # Python 3.11 Decimal constructor: float conversion is lossless and unaffected
     # by context precision (https://docs.python.org/3.11/library/decimal.html).
-    # Compare decoded decimal spellings exactly, without a guessed tolerance or
+    # Compare decoded numeric values exactly, without a guessed tolerance or
     # converting an integer to binary float. Original YAML lexemes are not kept.
     if (type(reference) in (int, float) and type(candidate) in (int, float)
             and type(reference) is not type(candidate)
             and all(type(value) is int or math.isfinite(value)
                     for value in (reference, candidate))
-            and Decimal(str(reference)) == Decimal(str(candidate))):
+            and Decimal(reference) == Decimal(candidate)):
         return "equal_decimal_numeric"
     # YAML 1.1 bool (2005-01-18), https://yaml.org/type/bool.html, lists Yes/No
     # spellings. A decoded string remains a different type; only matching
@@ -81,7 +81,7 @@ def _category_decisions():
             "YAML 1.1 int/float definitions (2005-01-18): https://yaml.org/type/int.html; "
             "https://yaml.org/type/float.html. Python 3.11 Decimal constructor: "
             "https://docs.python.org/3.11/library/decimal.html. Exact equality of decoded "
-            "decimal spellings is diagnostic only; YAML tags remain distinct.",
+            "numeric values is diagnostic only; YAML tags remain distinct.",
             "Field-specific OrcaFlex documentation or reviewed version-bound readback "
             "establishing whether integer and float input tags have identical effects.",
         ),
@@ -230,15 +230,17 @@ def _reference_report(root, manifest):
     reference = read_yaml(REFERENCE)
     generated = _generated_sections(root / "bundle")
     differences = list(_differences(reference, generated))
+    decisions = _category_decisions()
     report = {"schema_version": 3,
               "missing_member_hash_rule": _missing_member_hash_rule(),
               "reference_sha256": digest(REFERENCE), "source_sha256": manifest["source"]["sha256"],
               "input_files": manifest["files"], "reference_compatible": not differences,
               "difference_count": len(differences), "differences": differences,
-              "blocking_difference_count": len(differences),
+              "blocking_difference_count": sum(
+                  1 for item in differences if decisions[item["category"]]["blocking"]),
               "category_counts": dict(sorted(Counter(
                   item["category"] for item in differences).items())),
-              "category_decisions": _category_decisions(),
+              "category_decisions": decisions,
               "comparison": "Strict YAML (duplicate keys and aliases refused) with presence-aware "
                             "missing-member hashes; under a mapping-key parent, a missing non-empty "
                             "mapping recurses to descendant rows without a container row, so an absent "
@@ -250,7 +252,8 @@ def _reference_report(root, manifest):
                             "All strict differences remain blocking and each category's "
                             "OrcaFlex semantics is NOT_EVALUATED.",
               "native_verified": False, "engineering_parity": False}
-    (root / "reference-differences.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    (root / "reference-differences.json").write_text(
+        json.dumps(report, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
 def prepare_bundle(output_root: Path) -> Path:
@@ -273,7 +276,7 @@ def prepare_bundle(output_root: Path) -> Path:
                     "master": "bundle/master.yml", "files": files, "contract": contract,
                     "python_hash_seed": "0", "outputs": dict(OUTPUTS)}
         path = root / "manifest.json"
-        path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
         verify_manifest(path)
         _reference_report(root, manifest)
         return path
@@ -287,7 +290,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    print(prepare_bundle(args.output))
+    print(prepare_bundle(args.output).as_posix())
 
 
 if __name__ == "__main__":

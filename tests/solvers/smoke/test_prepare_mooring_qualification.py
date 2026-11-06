@@ -1,7 +1,7 @@
 """Offline qualification packaging preserves inputs and reports reference differences."""
 import importlib.util
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import sys
 
 import pytest
@@ -42,10 +42,10 @@ def packaging(monkeypatch):
 
 def test_existing_output_is_rejected_without_changes(packaging, tmp_path):
     marker = tmp_path / "keep.txt"
-    marker.write_text("original")
+    marker.write_text("original", encoding="utf-8", newline="\n")
     with pytest.raises((ValueError, FileExistsError)):
         packaging.prepare_bundle(tmp_path)
-    assert marker.read_text() == "original"
+    assert marker.read_text(encoding="utf-8") == "original"
     assert list(tmp_path.iterdir()) == [marker]
 
 
@@ -63,6 +63,8 @@ def test_seed_required_before_writing(packaging, tmp_path, monkeypatch, seed):
 def test_complete_bundle_and_reference_differences(packaging, tmp_path):
     original = packaging.SOURCE.read_bytes()
     manifest_path = packaging.prepare_bundle(tmp_path / "output")
+    assert manifest_path.read_bytes().endswith(b"\n")
+    assert b"\r\n" not in manifest_path.read_bytes()
     data = verify_manifest(manifest_path)
     root = data["_root"]
     assert (root / "source/spec.yml").read_bytes() == original
@@ -72,7 +74,7 @@ def test_complete_bundle_and_reference_differences(packaging, tmp_path):
     assert actual | {"source/spec.yml"} == listed
     assert [x["path"] for x in data["files"]] == sorted(listed)
     assert data["master"] == "bundle/master.yml"
-    differences = json.loads((root / "reference-differences.json").read_text())
+    differences = json.loads((root / "reference-differences.json").read_text(encoding="utf-8"))
     assert differences["reference_sha256"]
     assert differences["difference_count"] == len(differences["differences"])
     assert differences["difference_count"] > 0
@@ -91,15 +93,19 @@ def test_complete_bundle_and_reference_differences(packaging, tmp_path):
     # row. This checks reproducibility, not an independent physical benchmark;
     # arithmetic and classification expectations are tested separately below.
     recorded = SCRIPT.parents[1] / "docs/benchmarks/mooring_buoy/reference-classification.json"
-    assert differences == json.loads(recorded.read_text(encoding="utf-8"))
+    assert differences == json.loads(recorded.read_text(encoding="utf-8")), (
+        "Rebuild with PYTHONPATH=src PYTHONHASHSEED=0 python "
+        "scripts/prepare_mooring_qualification.py --output <fresh-output-directory> "
+        "and inspect reference-differences.json before updating the recorded report."
+    )
 
 
 def test_existing_file_is_rejected(packaging, tmp_path):
     output = tmp_path / "file"
-    output.write_text("preserve")
+    output.write_text("preserve", encoding="utf-8", newline="\n")
     with pytest.raises(FileExistsError):
         packaging.prepare_bundle(output)
-    assert output.read_text() == "preserve"
+    assert output.read_text(encoding="utf-8") == "preserve"
 
 
 def test_failed_generation_removes_only_owned_output(packaging, tmp_path, monkeypatch):
@@ -108,12 +114,12 @@ def test_failed_generation_removes_only_owned_output(packaging, tmp_path, monkey
 
     monkeypatch.setattr(packaging.ModularModelGenerator, "generate", fail)
     neighbor = tmp_path / "neighbor"
-    neighbor.write_text("preserve")
+    neighbor.write_text("preserve", encoding="utf-8", newline="\n")
     output = tmp_path / "output"
     with pytest.raises(ValueError, match="injected"):
         packaging.prepare_bundle(output)
     assert not output.exists()
-    assert neighbor.read_text() == "preserve"
+    assert neighbor.read_text(encoding="utf-8") == "preserve"
 
 
 def test_reference_diff_preserves_nested_missing_and_typed_values(packaging):
@@ -227,9 +233,9 @@ def test_missing_mapping_key_with_list_hashes_whole_value(packaging):
 def _bundle(tmp_path, master, includes):
     bundle = tmp_path / "bundle"
     bundle.mkdir()
-    (bundle / "master.yml").write_text(master, encoding="utf-8")
+    (bundle / "master.yml").write_text(master, encoding="utf-8", newline="\n")
     for name, text in includes.items():
-        (bundle / name).write_text(text, encoding="utf-8")
+        (bundle / name).write_text(text, encoding="utf-8", newline="\n")
     return bundle
 
 
@@ -253,7 +259,7 @@ def test_generated_sections_merge_explicit_include_records(packaging, tmp_path):
     ("- includefile: ../a.yml\n", {}),
 ])
 def test_generated_sections_refuse_ambiguous_includes(packaging, tmp_path, master, includes):
-    (tmp_path / "a.yml").write_text("General: {}\n", encoding="utf-8")
+    (tmp_path / "a.yml").write_text("General: {}\n", encoding="utf-8", newline="\n")
     bundle = _bundle(tmp_path, master, includes)
     with pytest.raises(ValueError):
         packaging._generated_sections(bundle)
@@ -265,6 +271,10 @@ def test_generated_sections_refuse_ambiguous_includes(packaging, tmp_path, maste
     (0, -0.0, "equal_decimal_numeric"),
     (10**20, 1e20, "equal_decimal_numeric"),
     (10**20 + 1, 1e20, "value_or_type"),
+    (10**23, 1e23, "value_or_type"),
+    (1e23, 10**23, "value_or_type"),
+    (99999999999999991611392, 1e23, "equal_decimal_numeric"),
+    (1e23, 99999999999999991611392, "equal_decimal_numeric"),
     (4, 5.0, "value_or_type"),
     (4.0, 4.000000000000001, "value_or_type"),
     (True, 1, "value_or_type"),
@@ -291,6 +301,10 @@ def test_scalar_diagnostics_preserve_strict_differences(
     """Independent checks: 40/10 = 4; 0 = -0; 10**20 = 1e20;
     10**20 + 1 differs by one; 5 - 4 = 1; the decimal spellings
     4.000000000000001 and 4.0 differ by 0.000000000000001.
+    Binary64 spacing below 10**23 is 2**24 = 16777216: the midpoint
+    rounds to the even significand, 5960464477539062 * 16777216
+    = 99999999999999991611392. The decoded values differ by 8388608
+    when compared without converting the integer to float.
     These are diagnostic equalities, with no acceptance tolerance.
     Booleans and nulls follow YAML 1.1 type definitions (2005-01-18),
     https://yaml.org/type/bool.html and https://yaml.org/type/null.html;
@@ -339,6 +353,27 @@ def test_presentation_value_change_is_not_a_missing_key_candidate(packaging):
     assert difference["category"] == "value_or_type"
 
 
+@pytest.mark.parametrize("key", [
+    "ContactPen", "DrawNodesAsDiscs", "DrawShadedNodesAsSpheres",
+])
+@pytest.mark.parametrize("index", [0, 1])
+@pytest.mark.parametrize("reverse", [False, True])
+def test_line_presentation_candidates_match_index_zero_inventory(
+        packaging, key, index, reverse):
+    """Synthetic inventory check: only the three index-zero keys are listed."""
+    reference = {"Lines": [{} for _ in range(index + 1)]}
+    candidate = {"Lines": [{} for _ in range(index + 1)]}
+    reference["Lines"][index][key] = True
+    if reverse:
+        reference, candidate = candidate, reference
+    difference, = list(packaging._differences(reference, candidate))
+    assert difference["path"] == f"/Lines/{index}/{key}"
+    expected = "presentation_key_candidate" if index == 0 else "missing_data"
+    assert difference["category"] == expected
+    assert difference["reference_present"] is not reverse
+    assert difference["candidate_present"] is reverse
+
+
 @pytest.mark.parametrize("reference,candidate", [(4, 4), (4.0, 4.0), ("Yes", "Yes")])
 def test_identical_scalars_do_not_create_diagnostics(packaging, reference, candidate):
     """Reflexive equality of literal fixtures needs no normalization."""
@@ -359,7 +394,9 @@ def test_diagnostic_report_does_not_waive_representation_candidates(
     monkeypatch.setattr(packaging, "read_yaml", lambda path: reference)
     monkeypatch.setattr(packaging, "_generated_sections", lambda path: candidate)
     packaging._reference_report(tmp_path, {"source": {"sha256": "synthetic"}, "files": []})
-    report = json.loads((tmp_path / "reference-differences.json").read_text())
+    assert (tmp_path / "reference-differences.json").read_bytes().endswith(b"\n")
+    assert b"\r\n" not in (tmp_path / "reference-differences.json").read_bytes()
+    report = json.loads((tmp_path / "reference-differences.json").read_text(encoding="utf-8"))
     assert report["schema_version"] == 3
     assert report["difference_count"] == report["blocking_difference_count"] == 6
     assert report["category_counts"] == {
@@ -374,3 +411,45 @@ def test_diagnostic_report_does_not_waive_representation_candidates(
         assert decision["blocking"] is True
         assert decision["basis"]
         assert decision["required_evidence"]
+
+
+@pytest.mark.parametrize("numeric_blocking,expected", [(True, 3), (False, 2)])
+def test_report_blocking_count_uses_recorded_category_decisions(
+        packaging, tmp_path, monkeypatch, numeric_blocking, expected):
+    """Synthetic policy: three rows; excluding only the numeric row leaves two.
+    The production policy is checked separately to keep every category blocking.
+    """
+    decisions = packaging._category_decisions()
+    decisions["equal_decimal_numeric"]["blocking"] = numeric_blocking
+    monkeypatch.setattr(packaging, "_category_decisions", lambda: decisions)
+    monkeypatch.setattr(packaging, "read_yaml", lambda path: {
+        "number": 4, "flag": True, "changed": 4,
+    })
+    monkeypatch.setattr(packaging, "_generated_sections", lambda path: {
+        "number": 4.0, "flag": "Yes", "changed": 5,
+    })
+    packaging._reference_report(tmp_path, {"source": {"sha256": "synthetic"}, "files": []})
+    report = json.loads((tmp_path / "reference-differences.json").read_text(encoding="utf-8"))
+    assert report["difference_count"] == 3
+    assert report["blocking_difference_count"] == expected
+    assert report["category_decisions"] == decisions
+    assert report["reference_compatible"] is False
+
+
+def test_report_refuses_missing_category_decision(packaging, tmp_path, monkeypatch):
+    """An unrecorded decision cannot silently count as a non-blocking row."""
+    monkeypatch.setattr(packaging, "_category_decisions", lambda: {})
+    monkeypatch.setattr(packaging, "read_yaml", lambda path: {"number": 4})
+    monkeypatch.setattr(packaging, "_generated_sections", lambda path: {"number": 4.0})
+    with pytest.raises(KeyError, match="equal_decimal_numeric"):
+        packaging._reference_report(tmp_path, {"source": {"sha256": "synthetic"}, "files": []})
+    assert not (tmp_path / "reference-differences.json").exists()
+
+
+def test_cli_prints_forward_slash_manifest_path(packaging, tmp_path, monkeypatch, capsys):
+    """A synthetic Windows path remains portable in the CLI diagnostic."""
+    monkeypatch.setattr(sys, "argv", [str(SCRIPT), "--output", str(tmp_path)])
+    monkeypatch.setattr(packaging, "prepare_bundle", lambda path: PureWindowsPath(
+        "output", "manifest.json"))
+    packaging.main()
+    assert capsys.readouterr().out == "output/manifest.json\n"

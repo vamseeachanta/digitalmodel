@@ -485,7 +485,7 @@
     "equal_decimal_numeric": {
       "semantic_status": "NOT_EVALUATED",
       "blocking": true,
-      "basis": "YAML 1.1 int/float definitions (2005-01-18): https://yaml.org/type/int.html; https://yaml.org/type/float.html. Python 3.11 Decimal constructor: https://docs.python.org/3.11/library/decimal.html. Exact equality of decoded decimal spellings is diagnostic only; YAML tags remain distinct.",
+      "basis": "YAML 1.1 int/float definitions (2005-01-18): https://yaml.org/type/int.html; https://yaml.org/type/float.html. Python 3.11 Decimal constructor: https://docs.python.org/3.11/library/decimal.html. Exact equality of decoded numeric values is diagnostic only; YAML tags remain distinct.",
       "required_evidence": "Field-specific OrcaFlex documentation or reviewed version-bound readback establishing whether integer and float input tags have identical effects."
     },
     "boolean_spelling": {
