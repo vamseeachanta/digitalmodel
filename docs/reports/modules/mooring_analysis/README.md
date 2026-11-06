@@ -9,22 +9,23 @@ The pinned-end example uses a separate solver; the legacy dynamic port is exclud
 
 The [builder](build_report.py) produces the self-contained page and the adjacent
 [change record](changes.json) and [source record](sources.json). Source digests
-pin repository evidence. The
+pin only the calculation, models, independent geometry tests and builder.
+Other files are references without gating digests. The
 [report tests](../../../../tests/subsea/mooring_analysis/test_module_report.py)
 check independent hand arithmetic, visible values and units, controlled result
 mutations, safe escaping and deterministic rebuilds. Reproducibility does not
 establish physical validation.
 
-From the repository root, with `TMPDIR` set to supplied scratch storage and a
-prepared scratch interpreter containing NumPy and PyYAML, rebuild with:
+From the repository root, use a Python environment with NumPy and PyYAML
+installed. Replace `<output-directory>` with the chosen destination:
 
 ```bash
-PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 uv run --no-project --python "$TMPDIR/venv/bin/python" python docs/reports/modules/mooring_analysis/build_report.py --output-dir "$TMPDIR/mooring-report"
+PYTHONPATH=src python docs/reports/modules/mooring_analysis/build_report.py --output-dir <output-directory>
 ```
 
 The explicit destination receives only `report.html`, `changes.json` and
-`sources.json`. The builder writes no intermediate files. Keep dependency caches
-in the supplied cache storage. After source changes, rebuild and compare all
+`sources.json`. The builder writes no intermediate files. After calculation or
+oracle source changes, rebuild and compare all
 three artifacts before replacing the committed outputs. Repository links require
 the repository tree; the displayed analysis has no external resource dependency.
 

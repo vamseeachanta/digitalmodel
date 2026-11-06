@@ -271,16 +271,18 @@ def test_scope_limits_and_report_pointers():
     for source in sources["sources"]:
         path = ROOT / source["path"]
         assert path.is_file()
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == source["sha256"], (
-            f"Source digest changed; rebuild with: {builder.REBUILD}"
-        )
+        if source["role"] == "calculation dependency":
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == source["sha256"], (
+                f"Source digest changed; rebuild with: {builder.REBUILD}"
+            )
+        else:
+            assert source["role"] == "reference only" and "sha256" not in source
     record = builder.calculate()
     assert json.loads(page.records["calculation-record"]) == record
     assert json.loads(page.records["change-record"]) == json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert json.loads(page.records["source-record"]) == sources
-    bound = record["agreement_bound_percent"]
-    assert bound >= max(record["difference"].values())
-    assert bound - max(record["difference"].values()) < 0.1
+    maximum = max(record["difference"].values())
+    assert f"maximum absolute relative difference is {maximum:.1e}%" in visible
     index = (REPORT / "README.md").read_text(encoding="utf-8")
     assert "[report](report.html)" in index
     pointer = ROOT / "src/digitalmodel/subsea/mooring_analysis/README.md"
@@ -306,3 +308,45 @@ def test_report_escapes_html_and_embedded_json():
     assert not page.resources
     assert payload in " ".join(page.visible)
     assert json.loads(page.records["calculation-record"])["inputs"]["mass_equivalent"]["basis"] == payload
+
+
+def test_only_calculation_sources_have_gating_digests(tmp_path, monkeypatch):
+    """Unrelated reference edits must not change the reproducible source record."""
+    builder = load_builder()
+    gated = {"case-a", "catenary", "models", "builder"}
+    before = builder.source_record()
+    assert {item["id"] for item in before["sources"] if "sha256" in item} == gated
+    for key, (name, _) in builder.SOURCE_PATHS.items():
+        target = tmp_path / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / name).read_bytes())
+        if key not in gated:
+            target.write_text("Reference-only edit; not a calculation input.\n")
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    assert builder.source_record() == before
+    # The calculation gate must still detect a changed dependency.
+    target = tmp_path / builder.SOURCE_PATHS["catenary"][0]
+    target.write_bytes(target.read_bytes() + b"\n# Calculation source changed.\n")
+    assert builder.source_record() != before
+
+
+@pytest.mark.parametrize("maximum", [0.0, 1.2e-14, 0.1, 10.0])
+def test_summary_displays_informative_maximum_difference(maximum):
+    """Roundoff-scale agreement must not be presented as sitting at the limit."""
+    builder = load_builder()
+    record = builder.calculate()
+    record["difference"] = dict.fromkeys(record["difference"], maximum)
+    visible = " ".join(Page(builder.build(record)).visible)
+    assert f"maximum absolute relative difference is {maximum:.1e}%" in visible
+    assert "carried-forward 0.1% numerical criterion" in visible
+    verdict = "met" if maximum <= 0.1 else "exceeded"
+    assert f"Numerical agreement criterion {verdict}" in visible
+
+
+def test_derived_input_is_distinguished_from_solver_results():
+    """Weight conversion is builder arithmetic, not a CatenaryResult field."""
+    builder = load_builder()
+    page = builder.build(builder.calculate())
+    assert "weight_per_length (derived input)" in page
+    assert "Calculated value and unit" in page
+    assert "Module result and unit" not in page

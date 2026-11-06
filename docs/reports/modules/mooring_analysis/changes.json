@@ -1,10 +1,10 @@
 {
   "report": "mooring-touchdown-catenary",
-  "revision": "01",
-  "date": "2026-10-28",
+  "revision": "02",
+  "date": "2026-11-06",
   "changes": [
-    "Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.",
-    "Added the textbook equation basis and retained the first issue in the revision history."
+    "Restricted gating digests to calculation and oracle dependencies, so reference-only edits do not invalidate the report.",
+    "Displayed the maximum relative difference in scientific notation, identified the derived weight input and documented a generic rebuild command."
   ],
   "history": [
     {
@@ -14,6 +14,15 @@
       "changes": [
         "Added a synthetic touchdown example with independent geometry and force balance, so numerical agreement is distinguished from design acceptance.",
         "Added a source-linked method map, explicit qualification gaps and a reproducible report builder with visible-value checks."
+      ]
+    },
+    {
+      "report": "mooring-touchdown-catenary",
+      "revision": "01",
+      "date": "2026-10-28",
+      "changes": [
+        "Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.",
+        "Added the textbook equation basis and retained the first issue in the revision history."
       ]
     }
   ]

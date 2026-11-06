@@ -2,7 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Build the bounded touchdown catenary report into an explicit directory.
 
-Run the scratch-only rebuild command in the adjacent README from the repo root.
+Run the rebuild command in the adjacent README from the repository root.
 Only CatenaryAnalyzer.solve_catenary is calculated; other routes are documented.
 """
 
@@ -19,16 +19,15 @@ from digitalmodel.subsea.mooring_analysis.catenary import CatenaryAnalyzer
 from digitalmodel.subsea.mooring_analysis.models import LineType, MooringLineProperties
 
 ROOT = Path(__file__).resolve().parents[4]
-REVISION, DATE = "01", "2026-10-28"  # Fixed issue revision, never runtime metadata.
+REVISION, DATE = "02", "2026-11-06"  # Fixed issue revision, never runtime metadata.
 CASE = "tests/subsea/mooring_analysis/test_catenary_geometry.py"
 PACKAGE = "src/digitalmodel/subsea/mooring_analysis/"
 TESTS = "tests/subsea/mooring_analysis/"
 HERE = "docs/reports/modules/mooring_analysis/"
 REBUILD = (
-    'PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 uv run --no-project '
-    '--python "$TMPDIR/venv/bin/python" python '
+    'PYTHONPATH=src python '
     'docs/reports/modules/mooring_analysis/build_report.py '
-    '--output-dir "$TMPDIR/mooring-report"'
+    '--output-dir <output-directory>'
 )
 FIRST_ISSUE = {
     "report": "mooring-touchdown-catenary",
@@ -39,15 +38,24 @@ FIRST_ISSUE = {
         "Added a source-linked method map, explicit qualification gaps and a reproducible report builder with visible-value checks.",
     ],
 }
+SECOND_ISSUE = {
+    "report": FIRST_ISSUE["report"],
+    "revision": "01",
+    "date": "2026-10-28",
+    "changes": [
+        "Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.",
+        "Added the textbook equation basis and retained the first issue in the revision history.",
+    ],
+}
 CHANGES = {
     "report": FIRST_ISSUE["report"],
     "revision": REVISION,
     "date": DATE,
     "changes": [
-        "Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.",
-        "Added the textbook equation basis and retained the first issue in the revision history.",
+        "Restricted gating digests to calculation and oracle dependencies, so reference-only edits do not invalidate the report.",
+        "Displayed the maximum relative difference in scientific notation, identified the derived weight input and documented a generic rebuild command.",
     ],
-    "history": [FIRST_ISSUE],
+    "history": [FIRST_ISSUE, SECOND_ISSUE],
 }
 # These are repository evidence, not a second material dataset or standards copy.
 SOURCE_PATHS = {
@@ -63,6 +71,9 @@ SOURCE_PATHS = {
     "report-tests": (TESTS + "test_module_report.py", "Independent oracle, visible-result mutations, escaping and rebuild checks"),
     "builder": (HERE + "build_report.py", "Calculation and rendering implementation"),
 }
+# Reference-only files document interfaces and context; their bytes do not
+# determine Case A arithmetic or its independent oracle.
+DIGEST_SOURCES = {"case-a", "catenary", "models", "builder"}
 UNITS = {
     "weight_per_length": "kN/m", "horizontal_tension": "kN",
     "vertical_height": "m", "catenary_parameter": "m", "arc_length": "m",
@@ -125,22 +136,22 @@ def calculate() -> dict:
         grounded_length=500 - 100 * math.sqrt(3),
     )
     difference = {key: abs(values[key] - expected[key]) / abs(expected[key]) * 100 for key in UNITS}
-    # Round the unrounded maximum UP to a tenth of a percent for a true bound.
-    bound = math.ceil(max(difference.values()) * 10) / 10
     return {
         "inputs": inputs,
         "computed": {key: quantity(values[key], unit, EQUATIONS[key]) for key, unit in UNITS.items()},
         "independent": {key: quantity(expected[key], unit, EQUATIONS[key]) for key, unit in UNITS.items()},
-        "difference": difference, "agreement_bound_percent": bound,
+        "difference": difference,
         "criterion_percent": 0.1,  # CASE: issue 2561 numerical agreement only.
     }
 
 
 def source_record() -> dict:
-    """Pin source bytes without embedding checkout locations or access times."""
+    """Pin calculation dependencies and list other sources as references only."""
     return {"sources": [
         {"id": key, "path": path, "locator": locator,
-         "sha256": hashlib.sha256((ROOT / path).read_bytes()).hexdigest()}
+         **({"role": "calculation dependency",
+             "sha256": hashlib.sha256((ROOT / path).read_bytes()).hexdigest()}
+            if key in DIGEST_SOURCES else {"role": "reference only"})}
         for key, (path, locator) in SOURCE_PATHS.items()
     ]}
 
@@ -209,22 +220,25 @@ def build(record: dict) -> str:
          html.escape(item["basis"]) + "; " + ("unused positive placeholder" if key in {"diameter", "mbl", "ea", "drag_coeff"} else "Case A arithmetic input")]
         for key, item in record["inputs"].items()
     ], "Table 2. Synthetic inputs; the chain enumeration selects no material-library properties.")
-    results = table(["Quantity", "Module result and unit", "Independent result and unit", "Absolute relative difference (%)", "Equation / source"], [
-        [html.escape(key), numeric(record, "computed", key), numeric(record, "independent", key),
+    results = table(["Quantity", "Calculated value and unit", "Independent result and unit", "Absolute relative difference (%)", "Equation / source"], [
+        [html.escape(key) + (" (derived input)" if key == "weight_per_length" else " (module result)"),
+         numeric(record, "computed", key), numeric(record, "independent", key),
          numeric(record, "difference", key), html.escape(EQUATIONS[key]) + "; " + link("case-a", "Case A")]
         for key in UNITS
     ], "Table 3. Computed results compared with integrated identities. Comparisons are displayed to one decimal place; tests retain unrounded values.")
     max_difference = max(record["difference"].values())
     verdict = ("Numerical agreement criterion met" if max_difference <= record["criterion_percent"]
                else "Numerical agreement criterion exceeded")
-    comparison = (f'{verdict}: differences are within {record["agreement_bound_percent"]:.1f}% '
+    comparison = (f'{verdict}: maximum absolute relative difference is {max_difference:.1e}% '
                   f'against the carried-forward {record["criterion_percent"]:.1f}% numerical criterion. '
-                  'The bound is rounded upward from unrounded relative differences; it is not design acceptance.')
+                  'The displayed maximum is rounded to two significant figures; the criterion uses unrounded differences. '
+                  'This is not design acceptance.')
     sources = source_record()
     references = table(["Source", "Repository evidence", "Use"], [
-        [html.escape(source["id"]), link(source["id"]), html.escape(source["locator"])]
+        [html.escape(source["id"]), link(source["id"]),
+         html.escape(source["locator"]) + "; " + html.escape(source["role"])]
         for source in sources["sources"]
-    ], "Table 4. Repository sources are pinned by SHA-256 in the embedded and adjacent source record.")
+    ], "Table 4. Only calculation and oracle dependencies are pinned by SHA-256; other sources are references without gating digests.")
     sections = [
         f'<p>This mooring analysis documents one synthetic, uniform touchdown catenary. {html.escape(comparison)}</p>'
         '<p>No full-module, standards-compliance or solver-qualification claim is made. The result supplies an arithmetic control and a documented way forward.</p>'
@@ -285,7 +299,8 @@ def build(record: dict) -> str:
         'mooring-analysis generate-model is a placeholder; mooring-analysis list-materials lists the library. '
         'The Python designer routes through analyze_line_tension and intact/damaged condition checks. No exporter or commercial tool is executed.</p>'
         + link("cli", "CLI source") + '; ' + link("entry-point", "Installed command declaration")
-        + '<p>From the repository root, use the prepared scratch interpreter with the module dependencies. '
+        + '<p>From the repository root, use a Python environment with NumPy and PyYAML installed. '
+        'Replace &lt;output-directory&gt; with the chosen destination. '
         'The explicit destination receives only report.html, changes.json and sources.json; no intermediate files are written by the builder.</p>'
         f'<pre><code>{html.escape(REBUILD)}</code></pre>'
         '<p>JSON calculation, source and change records below are embedded for offline inspection. '
