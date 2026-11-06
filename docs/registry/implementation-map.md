@@ -11,6 +11,7 @@ The map lists implementations of method families for module knowledge packs. Its
 | 3 | 2026-10-16 | Source coordinates and counts were refreshed after source updates; the removed lid fallback, contradictory rejections and visible drift diagnostics were corrected. |
 | 4 | 2026-10-23 | Six supplemental engineering families were added with bounded source lists, member roles and explicit qualification limits. |
 | 5 | 2026-10-28 | Bounded pipelay calculation and delegation classifications were reconciled while retaining historical searches and unrelated rows. |
+| 6 | 2026-11-06 | The superseded summary total, bounded search-name filters and historical audit reference were clarified; inventory membership and source evidence were retained. |
 
 Tracked files were enumerated with `git ls-files`. Independent searches used algorithm signals, vocabulary and characteristic constants or keys. Python bodies were checked with `ast`; non-Python tables were checked at their data lines. Binary files, files over one MiB, lock files and generated output folders were excluded as recorded in `searched`.
 
