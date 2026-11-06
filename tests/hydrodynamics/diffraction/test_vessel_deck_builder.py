@@ -72,6 +72,8 @@ def test_build_deck_parametric(tmp_path):
     deck = res.deck_path.read_text()
     assert "UnitsSystem: SI" in deck
     assert MESH_FILE in deck
+    assert res.mesh_path.read_text().splitlines()[2].split() == ["0", "1"]
+    assert yaml.safe_load(deck)["Bodies"][0]["BodyMeshSymmetry"] == "xz plane"
     # manifest carries provenance + swap instructions
     man = json.loads((res.deck_path.parent / "manifest.json").read_text())
     assert man["mesh"]["kind"] == "parametric"
@@ -83,7 +85,10 @@ def test_build_deck_placeholder_for_semisub(tmp_path):
     assert res is not None
     assert res.mesh_kind == "placeholder"
     assert res.n_panels is None
-    # deck references the mesh-to-supply path; no gdf written
+    # The canonical spec records the missing mesh; no native deck is valid.
+    assert res.spec_path.is_file()
+    assert not res.deck_path.exists()
+    assert any("native deck not generated" in note for note in res.notes)
     man = json.loads((res.deck_path.parent / "manifest.json").read_text())
     assert man["mesh"]["file"] == PLACEHOLDER_MESH
     assert not (res.deck_path.parent / MESH_FILE).exists()

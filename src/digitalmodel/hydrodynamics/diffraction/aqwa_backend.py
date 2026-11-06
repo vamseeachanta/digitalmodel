@@ -38,6 +38,10 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     VesselInertia,
 )
 
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import (
+    buoyancy_preflight, expand_sector, read_gdf_panels, validate_symmetry,
+)
+
 
 # ---------------------------------------------------------------------------
 # Mesh data container
@@ -51,6 +55,7 @@ class ParsedMesh:
     vertices: np.ndarray  # (N, 3) array of node coordinates
     panels: np.ndarray  # (M, 4) array of panel vertex indices
     name: str = ""
+    symmetry_flags: tuple[int, int] = (0, 0)  # WAMIT v7.4, section 6.1.
 
     @property
     def n_vertices(self) -> int:
@@ -206,17 +211,18 @@ class AQWABackend:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self._spec_dir = Path(spec_dir) if spec_dir else None
+        self._spec_dir = Path(spec_dir) if spec_dir is not None else spec._source_dir
         self._mesh_cache.clear()
+        self.preflight_reports = buoyancy_preflight(spec, self._spec_dir)
 
         all_cards = self._assemble_all_decks(spec)
         file_name = self._make_filename(spec)
         output_path = output_dir / file_name
 
         # AQWA on Windows expects CRLF line endings
-        # Use newline='' to prevent Python from adding extra line conversion
+        # Use newline='\n' to preserve the explicit native CRLF content.
         content = "\r\n".join(all_cards) + "\r\n"
-        with open(output_path, "w", newline="") as f:
+        with open(output_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(content)
         write_matrix_provenance(spec, output_dir, "aqwa")
         return output_path
@@ -247,8 +253,9 @@ class AQWABackend:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self._spec_dir = Path(spec_dir) if spec_dir else None
+        self._spec_dir = Path(spec_dir) if spec_dir is not None else spec._source_dir
         self._mesh_cache.clear()
+        self.preflight_reports = buoyancy_preflight(spec, self._spec_dir)
 
         deck_builders = self._ordered_deck_builders(spec)
         header = self._workbench_header()
@@ -259,7 +266,7 @@ class AQWABackend:
             # deck file so concatenating modular outputs reproduces the
             # single-file output byte-for-byte (after whitespace strip).
             file_cards = header + cards if idx == 0 else cards
-            file_path.write_text("\n".join(file_cards) + "\n")
+            file_path.write_text("\n".join(file_cards) + "\n", encoding="utf-8", newline="\n")
 
         write_matrix_provenance(spec, output_dir, "aqwa")
         return output_dir
@@ -346,13 +353,25 @@ class AQWABackend:
         return mesh
 
     def _load_body_mesh(self, geometry: VesselGeometry) -> Optional[ParsedMesh]:
-        """Verify a full xz body before emitting its compact nonnegative half.
+        """Validate the declared sector and prepare AQWA body panels.
+
+        Xz cuts emit the nonnegative-y half with SYMX. Other declared cuts
+        are reflected to a full body before emission.
 
         Classification, mirror matching and centreline snapping use the same
         tolerance: max(1e-8 m, 2e-6 times the longitudinal mesh extent).
         The cached source coordinates remain unchanged.
         """
         mesh = self._load_mesh(geometry.mesh_file)
+        if mesh is None and Path(geometry.mesh_file).suffix.lower() == ".gdf":
+            raise ValueError(
+                f"GDF symmetry for spec symmetry {geometry.symmetry!r} "
+                "requires a loaded and verified GDF mesh"
+            )
+        if mesh is not None:
+            validate_symmetry(mesh.symmetry_flags, geometry.symmetry, mesh.vertices)
+            expanded = expand_sector(mesh)
+            mesh = ParsedMesh(expanded.vertices, expanded.panels, name=mesh.name)
         if geometry.symmetry != "xz":
             return mesh
         if mesh is None:
@@ -434,83 +453,21 @@ class AQWABackend:
         - Line 4: NPAN (number of panels)
         - Lines 5+: 4 vertices per panel (X Y Z for each vertex)
         """
-        with open(file_path, "r") as f:
-            lines = [
-                line.strip()
-                for line in f.readlines()
-                if line.strip() and not line.strip().startswith("#")
-            ]
-
-        def _starts_numeric(line: str) -> bool:
-            try:
-                float(line.split()[0])
-            except (ValueError, IndexError):
-                return False
-            return True
-
-        line_idx = 0
-
-        # Optional non-comment title line.
-        if line_idx < len(lines) and not _starts_numeric(lines[line_idx]):
-            line_idx += 1
-
-        # Read ULEN/GRAV and symmetry lines.
-        if line_idx + 2 >= len(lines):
-            raise ValueError(f"{file_path}: incomplete GDF header")
-        line_idx += 2
-
-        # Read number of panels (NPAN).
-        try:
-            npan = int(lines[line_idx].split()[0])
-        except (ValueError, IndexError) as exc:
-            raise ValueError(f"{file_path}: invalid panel count") from exc
-        if npan <= 0:
-            raise ValueError(
-                f"{file_path}: panel count must be greater than zero; got {npan}"
-            )
-        line_idx += 1
+        symmetry_flags, panel_coordinates = read_gdf_panels(file_path)
 
         # Read panel vertices (4 vertices per panel)
         vertices: list[tuple[float, float, float]] = []
         panels: list[list[int]] = []
         vertex_map: dict[tuple[float, float, float], int] = {}
 
-        for panel_number in range(1, npan + 1):
+        for panel_number, coordinates in enumerate(panel_coordinates, 1):
             panel_vertices: list[int] = []
-            for vertex_slot in range(1, 5):
-                if line_idx >= len(lines):
-                    raise ValueError(
-                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
-                        "missing coordinate record"
-                    )
-                line = lines[line_idx].strip()
-                parts = line.split()
-                if len(parts) < 3:
-                    raise ValueError(
-                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
-                        "expected three coordinates"
-                    )
-                try:
-                    vertex = (
-                        float(parts[0]),
-                        float(parts[1]),
-                        float(parts[2]),
-                    )
-                except ValueError as exc:
-                    raise ValueError(
-                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
-                        "coordinates must be numeric"
-                    ) from exc
-                if not all(np.isfinite(value) for value in vertex):
-                    raise ValueError(
-                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
-                        "coordinates must be finite"
-                    )
+            for point in coordinates:
+                vertex = tuple(point)
                 if vertex not in vertex_map:
                     vertex_map[vertex] = len(vertices)
                     vertices.append(vertex)
                 panel_vertices.append(vertex_map[vertex])
-                line_idx += 1
 
             unique_count = len(set(panel_vertices))
             repeated_positions = [
@@ -526,7 +483,7 @@ class AQWABackend:
             )
             if unique_count != 4 and not is_triangle:
                 raise ValueError(
-                    f"{file_path}: panel {panel_number}: expected four unique "
+                    f"{file_path.name}: panel {panel_number}: expected four unique "
                     "vertices or a triangle with a cyclic-adjacent repeated vertex"
                 )
             panels.append(panel_vertices)
@@ -535,6 +492,7 @@ class AQWABackend:
             vertices=np.array(vertices, dtype=np.float64),
             panels=np.array(panels, dtype=np.int32),
             name=file_path.stem,
+            symmetry_flags=symmetry_flags,
         )
 
     # -----------------------------------------------------------------

@@ -159,7 +159,7 @@ class DeckResult:
 
     vessel: str
     form: str
-    deck_path: Path  # OrcaWave-native deck (.yml)
+    deck_path: Path  # intended native deck path; absent for a placeholder
     spec_path: Path  # canonical DiffractionSpec (spec.yml) — batch-runner input
     mesh_path: Optional[Path]
     mesh_kind: str  # "parametric" | "placeholder"
@@ -284,6 +284,7 @@ def build_deck(
     mesh_path: Optional[Path] = None
     n_panels: Optional[int] = None
     column_mesh = None
+    mesh_symmetry = "none"
     if form == "column_pontoon":
         try:
             # The generic screening geometry uses the specified coarse 4.0 m
@@ -314,6 +315,7 @@ def build_deck(
             profile, MeshGeneratorConfig(target_panels=target_panels)
         )
         mesh_path = export_gdf(mesh, deck_dir / MESH_FILE)
+        mesh_symmetry = "xz" if mesh.symmetry_plane == "y" else "none"
         n_panels = len(mesh.panels)
         mesh_file = MESH_FILE
         mesh_kind = "parametric"
@@ -336,7 +338,7 @@ def build_deck(
         vessel=VesselSpec(
             name=deck_name,
             type=deck_type,
-            geometry=VesselGeometry(mesh_file=mesh_file),
+            geometry=VesselGeometry(mesh_file=mesh_file, symmetry=mesh_symmetry),
             inertia=inertia,
         ),
         environment=EnvironmentSpec(water_depth=water_depth),
@@ -350,7 +352,14 @@ def build_deck(
     # consumes (DiffractionSpec.from_yaml); the OrcaWave-native deck alongside
     # it is for direct opening in OrcaWave.
     spec_path = spec.to_yaml(deck_dir / "spec.yml")
-    deck_path = OrcaWaveBackend().generate_single(spec, deck_dir)
+    spec._source_dir = deck_dir.resolve()
+    if mesh_kind == "placeholder":
+        # Keep the canonical spec for completing the missing geometry. The
+        # intended native deck path is returned but no unverified deck is written.
+        deck_path = deck_dir / f"{deck_name}.yml"
+        notes.append("native deck not generated: supply and verify the missing mesh")
+    else:
+        deck_path = OrcaWaveBackend().generate_single(spec, deck_dir)
 
     manifest = {
         "vessel": deck_name if column_mesh is not None else record.name,
