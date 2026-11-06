@@ -13,5 +13,10 @@
     "revision": "C",
     "date": "2026-11-06",
     "change": "Made the JavaScript download check optional when Node.js is unavailable and refreshed source and artifact digests so Python-only test environments remain usable."
+  },
+  {
+    "revision": "D",
+    "date": "2026-11-06",
+    "change": "Disclosed the Node.js dependency of the JavaScript download-handler check in the limitations and README, with rendered-output regressions and refreshed digests so conditional coverage is visible outside the revision history."
   }
 ]

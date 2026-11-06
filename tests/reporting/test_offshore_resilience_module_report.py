@@ -241,6 +241,18 @@ def test_report_sections_inventory_and_limitations():
         assert row["limitation"]
 
 
+@pytest.mark.parametrize("document", ["limitations", "readme"])
+def test_download_handler_check_dependency_is_disclosed(document):
+    """Readers can identify conditional JavaScript coverage outside history."""
+    build = builder()
+    if document == "limitations":
+        page = build.render(build.calculate())
+        content = page.split('<h2 id="s7">', 1)[1].split('<h2 id="s8">', 1)[0]
+    else:
+        content = build.readme()
+    assert "The JavaScript download-handler check executes only where Node.js is available." in content
+
+
 def test_display_uses_returned_values():
     """Mutation probes establish wiring; their numbers are synthetic controls."""
     build = builder()
