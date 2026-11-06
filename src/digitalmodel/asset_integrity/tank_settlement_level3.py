@@ -386,12 +386,18 @@ def main(argv=None):
     if any(path.exists() or path.is_symlink() for path in outputs):
         parser.error(existing_message)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    for path, contents in outputs.items():
-        try:
+    created = []
+    try:
+        for path, contents in outputs.items():
             with path.open("x", encoding="utf-8", newline="\n") as stream:
+                created.append(path)
                 stream.write(contents)
-        except FileExistsError:
+    except OSError as error:
+        for path in reversed(created):
+            path.unlink()
+        if isinstance(error, FileExistsError):
             parser.error(existing_message)
+        parser.error(f"Could not write output files: {error}")
     print(result["status"])
     return 0
 

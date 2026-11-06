@@ -8,8 +8,10 @@ import os
 import shlex
 import subprocess
 import sys
+from contextlib import contextmanager
 from html.parser import HTMLParser
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -183,6 +185,73 @@ def test_cli_refuses_existing_outputs(tmp_path, capsys, existing_name):
     assert "Output files already exist" in capsys.readouterr().err
     assert existing.read_bytes() == before
     assert {path.name for path in tmp_path.iterdir()} == {existing_name}
+
+
+@pytest.mark.parametrize("error_type", [FileExistsError, PermissionError, OSError])
+def test_cli_removes_handoff_when_report_open_fails(tmp_path, monkeypatch, capsys, error_type):
+    original_open = Path.open
+
+    def failing_open(path, mode="r", *args, **kwargs):
+        if path.name == "report.html" and mode == "x":
+            assert (tmp_path / "handoff.json").exists()
+            raise error_type("Injected report open failure")
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", failing_open)
+    with pytest.raises(SystemExit) as exc_info:
+        main([EXAMPLE.as_posix(), "--output-dir", tmp_path.as_posix()])
+    assert exc_info.value.code == 2
+    assert "handoff_required" not in capsys.readouterr().out
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("output_name", ["handoff.json", "report.html"])
+@pytest.mark.parametrize("failure_stage", ["write", "close"])
+def test_cli_removes_partial_outputs(tmp_path, monkeypatch, output_name, failure_stage):
+    original_open = Path.open
+
+    @contextmanager
+    def failing_output(path, mode, **kwargs):
+        with original_open(path, mode, **kwargs) as stream:
+            def write(contents):
+                if failure_stage == "write":
+                    stream.write(contents[:10])
+                    raise OSError("Injected partial write failure")
+                return stream.write(contents)
+
+            yield SimpleNamespace(write=write)
+        if failure_stage == "close":
+            raise OSError("Injected close failure")
+
+    def failing_open(path, mode="r", *args, **kwargs):
+        if path.name == output_name and mode == "x":
+            return failing_output(path, mode, **kwargs)
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", failing_open)
+    with pytest.raises(SystemExit) as exc_info:
+        main([EXAMPLE.as_posix(), "--output-dir", tmp_path.as_posix()])
+    assert exc_info.value.code == 2
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_cli_preserves_report_created_after_precheck(tmp_path, monkeypatch, capsys):
+    original_open = Path.open
+    report = tmp_path / "report.html"
+
+    def racing_open(path, mode="r", *args, **kwargs):
+        if path == report and mode == "x":
+            with original_open(report, "w", encoding="utf-8") as stream:
+                stream.write("Concurrent calculation evidence\n")
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", racing_open)
+    with pytest.raises(SystemExit) as exc_info:
+        main([EXAMPLE.as_posix(), "--output-dir", tmp_path.as_posix()])
+    assert exc_info.value.code == 2
+    assert "Output files already exist" in capsys.readouterr().err
+    assert report.read_text(encoding="utf-8") == "Concurrent calculation evidence\n"
+    assert {path.name for path in tmp_path.iterdir()} == {"report.html"}
 
 
 def test_digest_changes_without_mutating_inputs(settings):
