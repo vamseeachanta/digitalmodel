@@ -16,7 +16,8 @@
 <body>
 <h1>Reproducible capability dataset exports</h1>
 <p>The exporter projects committed explorer sidecars into grouped Hugging Face configs.
-Six additional configs cover 658 observations. Export fidelity is checked independently
+Seven further configs cover 251 observations across casing design, analytical sloshing
+and synthetic dynacard troubleshooting. Export fidelity is checked independently
 of engineering qualification, which remains <code>NOT_EVALUATED</code>.
 No dataset is uploaded and no explorer is switched to an unverified remote endpoint.</p>
 
@@ -24,19 +25,28 @@ No dataset is uploaded and no explorer is switched to an unverified remote endpo
 <table>
   <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
   <tbody><tr><td>1</td><td>2026-10-19</td><td>Explicit projections, offline bundles, and readback checks are added to extend reproducible dataset coverage.</td></tr>
-  <tr><td>2</td><td>2026-10-19</td><td>Portable locator fixtures, LF-normalized provenance, build-platform metadata, and explicit knots column names remove checkout and unit ambiguity.</td></tr></tbody>
+  <tr><td>2</td><td>2026-10-19</td><td>Portable locator fixtures, LF-normalized provenance, build-platform metadata, and explicit knots column names remove checkout and unit ambiguity.</td></tr>
+  <tr><td>3</td><td>2026-10-22</td><td>Seven casing, analytical sloshing and synthetic dynacard projections extend coverage; explicit load units, ratio definitions and selected source sections prevent ambiguous interpretation.</td></tr></tbody>
 </table>
 <p class="caption">Table 1. Revision record.</p>
 
 <h2>Method and source basis</h2>
 <p><code>scripts/hf/build_capability_datasets.py</code> renames leaf fields and retains
 every facet as a column. Values are copied without recalculation or additional rounding.
-The bundle command reads each source once and normalizes CRLF line endings to LF:
+The bundle command reads each distinct source once, shares that snapshot across its
+configs, and normalizes CRLF line endings to LF:
 the retained JSON, recorded source digest, and projected rows share that snapshot.
 Generator, projection, and packager digests also use LF-normalized text, so text
 checkout conversion does not change their identities. SHA-256 digests identify the
 retained source and output bytes. The manifest records the build system and architecture;
 full byte verification includes that platform metadata.</p>
+<p>For mixed analytical/CFD sloshing sidecars, only <code>meta</code> and
+<code>shapes</code> are selected before checking or projecting. Unselected CFD,
+forced-response, SDOF and research sections are never staged. The manifest's
+<code>source_sha256</code> identifies the complete original LF-normalized input;
+<code>retained_source_sha256</code> identifies the retained bytes, and
+<code>retained_source_sections</code> declares the selection (null means the complete
+source is retained). Selecting sections does not alter any observation value.</p>
 <p>The bundle contains a dataset card, <code>manifest.json</code>,
 <code>&lt;config&gt;/train.jsonl</code>, and <code>sources/&lt;config&gt;.json</code>.
 Config names and column names form the website registry contract. Source metadata is
@@ -63,6 +73,13 @@ limit is introduced by this export.</p>
 <tr><td>hydro</td><td>viv</td><td>75</td><td>capabilities/build_viv_explorer.py</td></tr>
 <tr><td>well</td><td>pore_pressure</td><td>19</td><td>capabilities/build_pore_pressure_explorer.py</td></tr>
 <tr><td>field-development</td><td>field_economics</td><td>45</td><td>capabilities/build_field_economics_explorer.py</td></tr>
+<tr><td>well</td><td>casing_profiles</td><td>61</td><td>capabilities/build_casing_design_explorer.py</td></tr>
+<tr><td>well</td><td>casing_products</td><td>8</td><td>capabilities/build_casing_design_explorer.py</td></tr>
+<tr><td>well</td><td>casing_checks</td><td>32</td><td>capabilities/build_casing_design_explorer.py</td></tr>
+<tr><td>hydro</td><td>sloshing_curves</td><td>90</td><td>capabilities/build_sloshing_explorer.py</td></tr>
+<tr><td>hydro</td><td>sloshing_lookup</td><td>28</td><td>capabilities/build_sloshing_explorer.py</td></tr>
+<tr><td>artificial-lift</td><td>dynacard_cases</td><td>8</td><td>capabilities/build_dynacard_troubleshooting.py</td></tr>
+<tr><td>artificial-lift</td><td>dynacard_differential</td><td>24</td><td>capabilities/build_dynacard_troubleshooting.py</td></tr>
 <tr><td>corrosion (existing)</td><td>cathodic_protection</td><td>112</td><td>capabilities/build_cathodic_protection_explorer.py</td></tr>
 <tr><td>corrosion (existing)</td><td>galvanic_compatibility</td><td>768</td><td>corrosion/build_galvanic_explorer.py</td></tr>
 <tr><td>integrity (existing)</td><td>wall_thickness</td><td>369</td><td>capabilities/build_wall_thickness_explorer.py</td></tr>
@@ -82,12 +99,33 @@ sidecars; they do not establish independent engineering qualification.</p>
 <tr><td>viv</td><td>member, current_speed_m_s, reduced_velocity, status, safety_factor</td></tr>
 <tr><td>pore_pressure</td><td>depth_ft, overburden_ppg, eaton_ppg, bowers_ppg, pore_pressure_ppg, mud_weight_ppg</td></tr>
 <tr><td>field_economics</td><td>capex_musd, oil_price_usd_bbl, npv_musd, payback_years</td></tr>
+<tr><td>casing_profiles</td><td>depth_ft, tubing_leak_internal_psi, frac_internal_psi, external_psi, tubing_leak_net_psi, frac_net_psi</td></tr>
+<tr><td>casing_products</td><td>label, grade, od_in, weight_ppf, wall_in, id_in, d_over_t, burst_psi, collapse_psi, body_yield_lbf, collapse_regime, passes_all, max_frac_surface_pressure_psi</td></tr>
+<tr><td>casing_checks</td><td>product, mode, load_case, rating, max_load, load_unit, min_design_factor, governing_depth_ft, required_design_factor, passes</td></tr>
+<tr><td>sloshing_curves</td><td>shape, characteristic_length, depth_over_characteristic_length, dimensionless_frequency</td></tr>
+<tr><td>sloshing_lookup</td><td>shape, span_m, span_definition, depth_ratio, depth_ratio_definition, period_s</td></tr>
+<tr><td>dynacard_cases</td><td>mode, seed, classification, confidence, severity, model_version, n_points, fluid_load_lbf, peak_load_lbf, min_load_lbf, card_area_in_lbf, area_vs_healthy_pct</td></tr>
+<tr><td>dynacard_differential</td><td>case_mode, candidate_rank, candidate_mode, probability</td></tr>
 </tbody>
 </table>
 <p class="caption">Table 3. Units follow the generators' input DTOs and output fields.
 The suffix <code>knots</code> denotes speed in knots; <code>kn</code> denotes force in kN.
 MUSD denotes millions of USD; bopd denotes oil barrels per day; ppg denotes pounds
 per gallon (US). Froude number, reduced velocity, and safety factor are dimensionless.</p>
+<p>Casing <code>load_unit</code> applies to both <code>rating</code> and
+<code>max_load</code>: tension uses lbf, burst/collapse/triaxial use psi. These units
+follow the four check functions in <code>src/digitalmodel/well/tubulars/casing_design.py</code>.
+Design factors are dimensionless. Unequal profile lengths and unknown check units fail
+before bundle creation; failed source checks remain false.</p>
+<p>The sloshing master curve always uses depth divided by characteristic length:
+length for rectangles, diameter for cylinders and width for ovals. The dimensional
+lookup instead uses depth/height for ovals. This distinction follows
+<code>build_sloshing_explorer.py::_norm_curve</code> and <code>_lookup_table</code>;
+the source oval curve label alone does not describe its coordinate. Each lookup row
+carries its depth-ratio definition and span basis. CFD and damping are excluded.
+Dynacard loads use lbf and areas use inch·lbf; confidence and probability are
+dimensionless source outputs. Candidate rank is the one-based source-list position,
+so ranking survives table sorting. No probability is recalibrated.</p>
 
 <h2>Worked example: IPR export</h2>
 <p>Input: <a href="../api/structural/ipr-explorer.json">the committed IPR sidecar</a>.
@@ -109,12 +147,44 @@ five source values. The dataset card declares config <code>ipr</code>, split
 expected bundle and compares every file and byte; changed source, changed rows,
 missing files, and extra files cause failure without modifying the bundle.</p>
 
+<h2>Worked example: casing export</h2>
+<p>Input: <a href="../api/well/casing-design-explorer.json">the committed casing sidecar</a>.
+Method: transpose the pressure arrays by depth, copy each product's geometry and
+ratings, and unpivot each product's checks with an explicit load unit. No pressure,
+rating or design factor is recalculated. Source basis:
+<code>build_casing_design_explorer.py::build_profiles</code> and <code>build_study</code>.</p>
+<p>Independent hand counts from those generator declarations:
+<code>61 depths + 8 products + (8 products × 4 check modes) = 101 rows</code> across
+the three new configs. The existing pore-pressure config remains present in the group.
+The first profile row copies depth 0 ft, tubing-leak internal pressure 7300 psi,
+frac internal pressure 9000 psi, and external pressure 0 psi from the source arrays.
+The corresponding net pressures retain 7300 psi and 9000 psi.</p>
+<pre>python -m scripts.hf.capability_bundle \
+  --dataset digitalmodel-well --license mit --out "$OUTPUT_DIR"
+python -m scripts.hf.capability_bundle \
+  --dataset digitalmodel-well --license mit --out "$OUTPUT_DIR" --verify</pre>
+<p>Answer: <code>casing_profiles/train.jsonl</code> has 61 rows,
+<code>casing_products/train.jsonl</code> has 8, and
+<code>casing_checks/train.jsonl</code> has 32. Their configs retain the existing
+<code>train</code> split convention. Use a distinct new output directory for each group.
+The same commands with <code>digitalmodel-hydro</code> produce 90 analytical curve
+rows and 28 lookup rows alongside the existing hydro configs. With
+<code>digitalmodel-artificial-lift</code> they produce 8 synthetic-case rows and
+24 differential rows alongside IPR. Tests document independent hand projections
+using arbitrary inputs; these are transport checks, not engineering validation.</p>
+
 <h2>Limits and remaining work</h2>
 <p>All new configs contain synthetic screening observations. Original source rounding
 and statuses are retained; model assumptions are not independently requalified.
 The field-economics sidecar summary and generator reservoir input differ, so that
 config carries an explicit source-consistency limitation. Missing engineering evidence
 does not become valid input merely because export succeeds.</p>
+<p>Casing ratings are a selected study, not a complete product catalog. Sloshing
+curves use linear theory and equivalent-rectangle approximations where the source
+generator declares them; no CFD accuracy or design-load claim is made. Dynacard
+exports cover only the synthetic case summaries and candidates in the sidecar, not
+the field-card library, controller settings, intervention advice or card coordinates.
+Classifier confidence does not establish field diagnostic accuracy.</p>
 <p>The integrity dataset requires its full generated tension/moment input and fails
 before output if it is unavailable. No existing config is silently dropped.
 Riser release publication remains separately owned. Remaining capabilities require
