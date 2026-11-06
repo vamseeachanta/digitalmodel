@@ -8,5 +8,10 @@
     "revision": "B",
     "date": "2026-11-02",
     "change": "Source bindings are refreshed for the chart documentation and limited to the layout files actually read, removing an unrelated report builder dependency; synthetic inputs and calculated values are unchanged."
+  },
+  {
+    "revision": "C",
+    "date": "2026-11-06",
+    "change": "The unrelated-builder registration guard and regeneration diagnostics are strengthened, static-source freshness requirements are documented, and source bindings are refreshed; synthetic inputs and calculated values are unchanged."
   }
 ]

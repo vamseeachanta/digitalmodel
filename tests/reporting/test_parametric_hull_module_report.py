@@ -25,6 +25,12 @@ SCRIPT = REPORT / "build_report.py"
 # Independent derivation in sources.json, hand-calculation and numerical-control:
 # phi(U*t,t) = -(omega-k*U*cos(beta))*t; k=omega**2/g in deep water.
 RTOL = ATOL = 1e-12  # Roundoff bounds specified for this synthetic case.
+REBUILD_COMMAND = (
+    "uv run --no-project --with numpy python "
+    "docs/reports/modules/parametric_hull_analysis/build_report.py "
+    '--scratch "$TMPDIR/hull-calc" '
+    "--output docs/reports/modules/parametric_hull_analysis"
+)
 
 
 def builder():
@@ -168,7 +174,7 @@ def cli_build(destination):
     subprocess.run(
         [sys.executable, str(SCRIPT), "--scratch", str(destination / "scratch"),
          "--output", str(destination / "output")], cwd=ROOT,
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True, text=True, encoding="utf-8",
     )
     return destination / "output"
 
@@ -180,7 +186,9 @@ def test_rebuild_is_deterministic(tmp_path):
     assert {p.name for p in first.iterdir()} == {"index.html", "changes.json", "sources.json"}
     for name in ("index.html", "changes.json", "sources.json"):
         assert (first / name).read_bytes() == (second / name).read_bytes()
-        assert (first / name).read_bytes() == (REPORT / name).read_bytes(), "Rebuild the delivered report"
+        assert (first / name).read_bytes() == (REPORT / name).read_bytes(), (
+            f"{name}: stale delivery; regenerate with {REBUILD_COMMAND}"
+        )
     data = payload((first / "index.html").read_text(encoding="utf-8"))
     required = {str(SCRIPT.relative_to(ROOT).as_posix()),
                 "src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py",
@@ -188,22 +196,23 @@ def test_rebuild_is_deterministic(tmp_path):
                 "docs/api/_assets/brand.css"}
     assert required <= set(data["source_sha256"])
     for relative, digest in data["source_sha256"].items():
-        assert digest == hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
+        assert digest == hashlib.sha256((ROOT / relative).read_bytes()).hexdigest(), (
+            f"{relative}: stale source digest; regenerate with {REBUILD_COMMAND}"
+        )
 
 
-def test_unrelated_report_builder_is_not_read(tmp_path, monkeypatch):
-    """Unrelated report edits or removal must not invalidate this delivery."""
+def test_unrelated_report_builder_is_not_registered():
+    """Check source registration independently of the file-reading API used."""
     build = builder()
-    expected = build.render(tmp_path / "before")
-    read_bytes = Path.read_bytes
-    unrelated = ROOT / "scripts/reports/build_vessel_seakeeping_module_report.py"
-
-    def reject_unrelated(path):
-        assert path != unrelated, "Unrelated report builder must not be read"
-        return read_bytes(path)
-
-    monkeypatch.setattr(Path, "read_bytes", reject_unrelated)
-    assert build.render(tmp_path / "after") == expected
+    unrelated = "scripts/reports/build_vessel_seakeeping_module_report.py"
+    sources = json.loads((REPORT / "sources.json").read_text(encoding="utf-8"))
+    registered = {path for entry in sources.values() for path in entry.get("paths", [])}
+    registered.update(entry["path"] for entry in sources.values() if "path" in entry)
+    digests = build.source_digests()
+    assert unrelated not in registered, "Unrelated report builder must not be registered"
+    assert unrelated not in digests, "Unrelated report builder must not be bound"
+    method = "src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py"
+    assert method in registered and method in digests
 
 
 @pytest.mark.parametrize("field", ["k", "moving", "stationary", "reference", "difference_moving"])

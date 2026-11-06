@@ -40,6 +40,14 @@ For explicit delivery regeneration, use the same command with
 separate external scratch and output paths and never overwrite the delivery.
 Previous revision rows in `changes.json` shall be preserved on reissue.
 
+The strict rebuild check binds every file listed in `sources.json`, including
+the routes, delegates and tests inspected only as a static inventory. Those
+digests record the bytes observed when the report is built; they do not establish
+execution or physical qualification of those routes. Any edit to a registered
+file, including a docstring-only change, requires explicit delivery regeneration
+with the command above. The generator, source register, revision record, executed
+method and layout files also require regeneration when changed.
+
 The existing tests need NumPy, pandas, pydantic, matplotlib, SciPy and xarray in
 the active environment; the report builder needs only NumPy. Keep the test
 environment and plotting cache in the supplied external scratch location.

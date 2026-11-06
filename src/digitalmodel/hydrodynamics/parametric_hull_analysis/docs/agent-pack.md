@@ -51,7 +51,7 @@ Input defaults describe code behavior, not approved design values or licensed-st
 
 The body builder assumes center of mass `(L/2, 0, -T/2)` in metres and requests all DOFs; this is an assigned mass-center model, not an independently established equilibrium. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/sweep.py:L247-L263]
 
-The encounter formula uses angular frequency in rad/s, speed in m/s and headings in radians. At the recorded code revision the docstring reversed the heading labels; resolved by #3745, which aligns the docstring with the existing tests: zero is following seas and pi is head seas. Numerical behavior is unchanged. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L105-L148] [tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py:L108-L139]
+The encounter formula uses angular frequency in rad/s, speed in m/s and headings in radians. At the recorded code revision the docstring reversed the heading labels. The current docstring assigns zero to following seas and pi to head seas; `test_heading_docstring_matches_existing_contract` checks those labels against the unchanged direction contract. Numerical behavior is unchanged. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L111-L114] [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L136-L137] [tests/hydrodynamics/parametric_hull_analysis/test_forward_speed.py:L108-L139]
 
 UNVERIFIED: complete GDF coordinate-origin, RAO phase/sign and rotational-amplitude conventions across the upstream exporters and database; issue pending (1).
 
@@ -119,7 +119,7 @@ Check count: G0 = 3, G1 = 1, G2 = 0, G3 = 0, G4 = 6, G5 = 2; 12 checks total; C0
 
 Before an actual sweep is accepted, retain the AQG r0 G4 mesh, mass/buoyancy, centres, waterline, normals and irregular-frequency records and G5 fingerprinted appendix; these records are not generated or checked by the sweep's shown solve/store sequence. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/sweep.py:L108-L173]
 
-Post-pin resolution check for #3745: `tests/reporting/test_parametric_hull_module_report.py::test_heading_docstring_matches_existing_contract` requires the corrected zero/following and pi/head labels and rejects the former convention attribution. This supplements the historical checks above without changing their recorded revision or counts.
+Post-pin docstring check: `tests/reporting/test_parametric_hull_module_report.py::test_heading_docstring_matches_existing_contract` requires the corrected zero/following and pi/head labels and rejects the former convention attribution. The corrected docstring is at `forward_speed.py:L111-L114` and `L136-L137`. This supplements the historical checks above without changing their recorded revision or counts.
 
 ## 6. Known failure modes and pitfalls
 
@@ -196,7 +196,7 @@ Rows include intentional fallbacks and unit assumptions; a regression test that 
 | Insufficient contour grid returns a message without force contours. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/charts.py:L315-L322] | no detection check exists | issue pending (3); observed at code pin, 2026-10-18 |
 | Contour aggregates depths with max if no depth filter is supplied, despite first-depth wording. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/charts.py:L305-L307] | no detection check exists | issue pending (3); observed at code pin, 2026-10-18 |
 | Angular frequency, depth and gravity assume stated SI units with no dimensional validation. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L30-L63] | C01 / C03 cover ordinary input only | issue pending (1); observed at code pin, 2026-10-18 |
-| Historical heading/sign description conflict at the code pin. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L105-L148] | Post-pin docstring resolution check in section 5 | Resolved by #3745; direction labels now match the unchanged formula and direction tests. |
+| Historical heading/sign description conflict at the code pin. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L105-L148] | `test_heading_docstring_matches_existing_contract` in section 5 | The current docstring labels at `forward_speed.py:L111-L114` and `L136-L137` match the unchanged formula and direction tests. |
 | Fixed six-DOF indices and array units; unused normalization length. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/forward_speed.py:L269-L338] | C04 covers zero-speed identity only | issue pending (1); observed at code pin, 2026-10-18 |
 | Declared N output has force-per-length dimensions under documented SI arguments; yaw inherits this concern. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/shallow_water.py:L245-L254] | no detection check exists | issue pending (1); observed at code pin, 2026-10-18 |
 | Speed interpreted as knots, unlike suction function m/s. [src/digitalmodel/hydrodynamics/parametric_hull_analysis/shallow_water.py:L300-L317] | no detection check exists | issue pending (1); observed at code pin, 2026-10-18 |
