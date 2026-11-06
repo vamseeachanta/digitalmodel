@@ -17,8 +17,8 @@ does not establish which equilibrium is reachable. No extrapolation is made.
 Triggers (all limits are required inputs, not standard-derived constants):
 * Penetration strictly outside every interpolated interval.
 * K = delta load / delta penetration drops by at least the supplied fraction
-  from the greatest finite loading stiffness since the last unload or upward
-  movement. Loading secants start at the last resolved loading anchor; small
+  from the greatest finite loading stiffness since the last reversal beyond
+  the supplied tolerances. Loading secants start at the last resolved anchor; small
   load increases accumulate until their net change exceeds the supplied
   constant-load tolerance and their net penetration change is positive.
   The warning is armed below a supplied local peak's load through that peak's
@@ -34,10 +34,19 @@ sampling cadence and site-specific trigger qualification remain external inputs.
 The maximum loading-secant reference remains sensitive to noise and unresolved
 transitions; it is not a filtered or fixed-window stiffness estimate.
 Sub-tolerance loading, holds and unresolved zero-depth loading preserve both
-anchor and reference. Hold creep contributes to the next loading secant and
-can reduce its stiffness. Any measured unload or upward movement resets both;
-load jitter or depth noise can therefore reset the comparison. The next finite
-secant establishes a new reference, which may represent reloading stiffness.
+anchor and reference. A reversal resets both only when load falls more than
+constant_load_tolerance_kn below the anchor load, or penetration falls more than
+upward_movement_tolerance_m below the anchor depth. Equality preserves them.
+Small dips accumulate against the anchor rather than resetting at each reading;
+an adjacent upward movement that stays within the anchor limit also preserves them.
+Hold creep contributes to the next loading secant. For creep c, unchanged soil
+stiffness K equal to the reference and a following load step L above tolerance,
+the apparent drop is c*K/(L+c*K). At a drop limit f, steps L <= c*K*(1-f)/f
+trigger: for f = 0.5, the threshold is creep times K, including equality.
+A large load step over a tiny positive depth increment can inflate the maximum
+reference and make a later normal secant appear softened. The reversal tolerances
+do not filter loading stiffness or qualify a hold. The next finite secant after
+a reset establishes a new reference, which may represent reloading stiffness.
 No hold duration or sensor-noise filter is inferred. Without an earlier finite
 loading secant, the stiffness-drop comparison is unavailable until one is measured.
 
@@ -137,6 +146,7 @@ class MonitoringCriteria:
     stiffness_drop_fraction: float
     rapid_penetration_rate_m_s: float
     constant_load_tolerance_kn: float
+    upward_movement_tolerance_m: float
 
     def __post_init__(self) -> None:
         """Validate explicitly supplied nonnegative limits and drop fraction."""
@@ -317,9 +327,12 @@ class PenetrationMonitor:
         return stiffness, depth_change / duration
 
     def _loading_reversed(self, sample: Measurement) -> bool:
-        return self._previous is not None and (
-            sample.load_kn < self._previous.load_kn
-            or sample.penetration_m < self._previous.penetration_m
+        anchor = self._loading_anchor
+        return anchor is not None and (
+            Fraction(str(anchor.load_kn)) - Fraction(str(sample.load_kn))
+            > Fraction(str(self.criteria.constant_load_tolerance_kn))
+            or Fraction(str(anchor.penetration_m)) - Fraction(str(sample.penetration_m))
+            > Fraction(str(self.criteria.upward_movement_tolerance_m))
         )
 
     def _advance_loading(self, sample: Measurement, stiffness: Fraction | None) -> None:

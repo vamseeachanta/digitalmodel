@@ -49,7 +49,7 @@ def synthetic_inputs() -> tuple[tuple[PredictionPoint, ...], MonitoringCriteria,
         (0, 0, 0, 0.5), (1, 100, 0.5, 1.5), (2, 160, 1.5, 2.5),
         (3, 180, 2.5, 3.5), (4, 140, 3.5, 4.5), (5, 220, 4.5, 5.5),
     ))
-    criteria = MonitoringCriteria(0.5, 0.015, 1)
+    criteria = MonitoringCriteria(0.5, 0.015, 1, 0.002)
     record = tuple(Measurement(*row) for row in (
         (0, 0, 0), (10, 100, 1), (20, 140, 2), (30, 150, 2.1),
         (40, 150, 2.3), (50, 150, 2.6), (60, 150, 2.6),
@@ -135,6 +135,7 @@ def run_example(output: str | Path) -> None:
             'stiffness_drop_fraction': [0.3, 0.7],
             'rapid_penetration_rate_m_s': [0.005, 0.03],
             'constant_load_tolerance_kn': [0, 2],
+            'upward_movement_tolerance_m': [0, 0.005],
         },
         'unpublished_input_ranges': unpublished_input_ranges(),
         'limitations': [
