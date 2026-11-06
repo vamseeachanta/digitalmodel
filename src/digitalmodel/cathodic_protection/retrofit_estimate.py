@@ -1,9 +1,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
-
 """Published-jacket retrofit estimate using the existing B401 anode checks.
 
 Source: Xu (2023), Study on Implementation and Optimization of Cathodic
@@ -28,7 +25,6 @@ from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection.anode_sizing import (
     AnodeType,
     calculate_anode_resistance,
-    governing_case,
 )
 from digitalmodel.cathodic_protection.engine_adapter import (
     _b401_anode_geometry,
@@ -137,7 +133,7 @@ def _anode_checks(
     current: Mapping[str, float], requirements: Mapping[str, Any],
     design_life: float, outputs: Mapping[str, float],
 ) -> dict[str, Any]:
-    """Size the added-anode estimate without rounding demand or output."""
+    """Size an anode estimate without rounding demand or output; retain ties."""
     mass = kernel.anode_mass(
         current["mean"], design_life,
         requirements["electrochemical_capacity_Ah_kg"],
@@ -154,7 +150,9 @@ def _anode_checks(
         "count_by_final_current_estimate": n_final,
         "additional_anodes_estimate": required,
         "governing_check_estimate": (
-            governing_case(n_mass, n_initial, n_final) if required else "none"
+            "=".join(name for name, count in (
+                ("mass", n_mass), ("initial", n_initial), ("final", n_final),
+            ) if count == required) if required else "none"
         ),
     }
 
@@ -243,6 +241,11 @@ def estimate_published_jacket_retrofit(
     depletion, the date the retrofit is needed by, confirmation after
     installation. The estimate credits no installed-count surplus against
     the added demand and retains the full assumed life for that demand.
+    A separate whole-structure re-size includes the unchanged connected
+    allowance and compares the total requirement with the installed count.
+    The CSV presents incremental sizing, with that comparison in its basis.
+    Coated-seawater and buried-steel densities are assumed unchanged;
+    Table 3 supplies bare-seawater densities only.
     """
     if phase_order not in ("initial_mean_final", "initial_final_mean"):
         raise ValueError("phase_order must explicitly identify the Table 3 mapping")
@@ -312,6 +315,23 @@ def estimate_published_jacket_retrofit(
     total_checks = _anode_checks(pooled, requirements, result["design_life_years"], outputs)
     count = total_checks["additional_anodes_estimate"]
     zones[DEEP_ZONE]["assigned_anodes_estimate"] = count
+    # Unlike incremental sizing, this comparison retains the signed change
+    # across the complete structure and includes the connected allowance once.
+    whole_current = {
+        p: demand[f"total_{p}_A"] + sum(
+            z["extra_current_A_estimate"][p] for z in zones.values()
+        ) for p in PHASES
+    }
+    whole_checks = _anode_checks(
+        whole_current, requirements, result["design_life_years"], outputs,
+    )
+    whole_required = whole_checks.pop("additional_anodes_estimate")
+    installed = verification["anode_count"]
+    whole_shortfall = max(whole_required - installed, 0)
+    unchanged_density_note = (
+        "Coated-seawater and buried-steel densities assumed unchanged; "
+        "Table 3 gives bare-seawater zones only."
+    )
     return {
         "status": "ESTIMATE",
         "edition": result["edition"],
@@ -321,7 +341,12 @@ def estimate_published_jacket_retrofit(
             "Estimate assumed, based on previous experience: "
             "life 25 years; capacity 2000 Ah/kg; utilisation 0.90; nominal "
             "323.4 kg interpreted as net alloy; symmetric-trapezoid perimeter "
-            "radius independent of mass; similar-shape depletion at fixed length."
+            "radius independent of mass; similar-shape depletion at fixed length. "
+            f"{unchanged_density_note} "
+            "Chart presents incremental sizing without installed-surplus credit; "
+            f"whole-structure re-size {whole_required} anodes "
+            f"({whole_checks['governing_check_estimate']} governed), "
+            f"{whole_shortfall} beyond {installed} installed."
         ),
         "phase_order": phase_order,
         "phase_order_basis": (
@@ -330,6 +355,7 @@ def estimate_published_jacket_retrofit(
             "Estimate assumed initial / final / mean; Table 3 printed initial / maintain / late."
         ),
         "assumptions": [
+            f"The estimate assumes: {unchanged_density_note}",
             "The estimate uses the declared assumed basis, based on previous experience.",
             "The estimate uses the installed anode type and size for the proposed additions.",
             "The estimate uses a symmetric-trapezoid section perimeter and similar-shape depletion at fixed length.",
@@ -348,6 +374,14 @@ def estimate_published_jacket_retrofit(
             "required_anodes": verification["recommended_anode_count"],
             "installed_anodes": verification["anode_count"],
             "governing_check": verification["governing_case"],
+        },
+        "whole_structure_estimate": {
+            "label": "Whole-structure re-size estimate including unchanged connected allowance",
+            "current_A_estimate": whole_current,
+            **whole_checks,
+            "required_anodes_estimate": whole_required,
+            "installed_anodes": installed,
+            "shortfall_anodes_estimate": whole_shortfall,
         },
         "unchanged_connected_allowance_A": result["connected_current_allowance_A"],
         "zones": zones,

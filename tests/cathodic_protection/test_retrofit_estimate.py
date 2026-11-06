@@ -1,9 +1,6 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
-
 """Independent checks of the published-jacket retrofit estimate.
 
 Published inputs: Xu (2023), Study on Implementation and Optimization of
@@ -28,7 +25,7 @@ from digitalmodel.cathodic_protection.retrofit_estimate import (
 )
 
 INPUT = Path(__file__).parents[1] / "fixtures/cathodic_protection/workflow_inputs/published_jacket_84m.yml"
-CHART = Path(__file__).parents[2] / "docs/domains/cathodic_protection/reports/published-jacket-84m/retrofit-estimate.csv"
+CHART = Path(__file__).parents[2] / "docs/domains/cathodic_protection/charts/published-jacket-84m/retrofit-estimate.csv"
 
 
 @pytest.fixture
@@ -185,13 +182,20 @@ def test_only_deep_zone_receives_pooled_anodes_estimate(design):
 
 
 def test_unaffected_zones_and_connected_allowance_have_no_shortfall_estimate(design):
-    """Table 3 changes bare seawater only; Table 2 well allowance stays 9*2 A."""
+    """Assume unchanged coated/buried densities; Table 2 allowance stays 9*2 A."""
     result = estimate(design)
     for name in ("coated-seawater", "buried-steel"):
         zone = result["zones"][name]
         assert zone["extra_current_A_estimate"] == {"initial": 0, "mean": 0, "final": 0}
         assert zone["anodes_estimate"]["additional_anodes_estimate"] == 0
     assert result["unchanged_connected_allowance_A"] == 18
+    note = (
+        "Coated-seawater and buried-steel densities assumed unchanged; "
+        "Table 3 gives bare-seawater zones only."
+    )
+    assert any(note in entry for entry in result["assumptions"])
+    for row in csv.DictReader(io.StringIO(retrofit_estimate_csv(result))):
+        assert note in row["declared_assumed_basis"]
 
 
 def test_phase_mapping_is_explicit_and_source_headings_retained(design):
@@ -383,3 +387,76 @@ def test_explicit_declared_defaults_and_reordered_zones_remain_supported(design)
     result = estimate(design)
     assert result["total_estimate"]["anodes_estimate"]["additional_anodes_estimate"] == 78
     assert design == original
+
+
+def test_chart_is_outside_generator_owned_report_directory():
+    """The report rebuild owns its artifact set; the chart is a separate output."""
+    report = Path(__file__).parents[2] / "docs/domains/cathodic_protection/reports/published-jacket-84m"
+    assert not CHART.is_relative_to(report)
+    assert CHART.is_file()
+    assert not (report / "retrofit-estimate.csv").exists()
+
+
+@pytest.mark.parametrize("order", ["initial_mean_final", "initial_final_mean"])
+def test_whole_structure_resize_is_distinct_from_incremental_estimate(design, order):
+    """Size all subtropical demand, including the unchanged 18 A allowance.
+
+    Printed mapping hand totals: 2688.285+389.276 A initial,
+    1452.450+194.638 A mean, 1892.052+194.638 A final.
+    The counts are 620/615/583 by mass/initial/final; 620-569 = 51.
+    The swapped sensitivity changes mean/final by 621.182/-231.906 A.
+    """
+    result = estimate(design, order)
+    whole = result["whole_structure_estimate"]
+    mean_delta, final_delta = (
+        (194.638, 194.638) if order == "initial_mean_final" else (621.182, -231.906)
+    )
+    currents = {
+        "initial": 2688.285 + 389.276,
+        "mean": 1452.450 + mean_delta,
+        "final": 1892.052 + final_delta,
+    }
+    initial, final = hand_outputs()
+    counts = (
+        math.ceil(currents["mean"] * 25 * 8760 / (2000 * .90 * 323.4)),
+        math.ceil(currents["initial"] / initial),
+        math.ceil(currents["final"] / final),
+    )
+    assert whole["current_A_estimate"] == pytest.approx(currents)
+    assert tuple(whole[f"count_by_{name}_estimate"] for name in (
+        "mass", "initial_current", "final_current",
+    )) == counts
+    assert whole["required_anodes_estimate"] == max(counts)
+    assert whole["installed_anodes"] == 569
+    assert whole["shortfall_anodes_estimate"] == max(counts) - 569
+    assert whole["governing_check_estimate"] == "mass"
+    assert "additional_anodes_estimate" not in whole
+    if order == "initial_mean_final":
+        assert counts == (620, 615, 583)
+        assert whole["shortfall_anodes_estimate"] == 51
+        assert result["total_estimate"]["anodes_estimate"]["additional_anodes_estimate"] == 78
+    for row in csv.DictReader(io.StringIO(retrofit_estimate_csv(result))):
+        assert "Chart presents incremental sizing without installed-surplus credit" in row["declared_assumed_basis"]
+        assert f"whole-structure re-size {max(counts)} anodes" in row["declared_assumed_basis"]
+        assert f"{max(counts) - 569} beyond 569 installed" in row["declared_assumed_basis"]
+
+
+def test_upper_zone_tied_governing_checks_are_explicit(design):
+    """ceil(37.268*25*8760/(2000*.90*323.4)) and ceil(74.536/I) both give 15."""
+    result = estimate(design)
+    checks = result["zones"]["upper-bare-seawater"]["anodes_estimate"]
+    assert math.ceil(37.268 * 25 * 8760 / (2000 * .90 * 323.4)) == 15
+    assert math.ceil(74.536 / hand_outputs()[0]) == 15
+    assert checks["governing_check_estimate"] == "mass=initial"
+    rows = {row["zone"]: row for row in csv.DictReader(io.StringIO(retrofit_estimate_csv(result)))}
+    assert rows["upper-bare-seawater"]["governing_check_estimate"] == "mass=initial"
+
+
+@pytest.mark.parametrize("relative", [
+    "src/digitalmodel/cathodic_protection/retrofit_estimate.py",
+    "tests/cathodic_protection/test_retrofit_estimate.py",
+])
+def test_single_license_header(relative):
+    lines = (Path(__file__).parents[2] / relative).read_text(encoding="utf-8").splitlines()
+    assert sum(line.startswith(("# Copyright", "# # Copyright")) for line in lines) == 1
+    assert sum(line.startswith(("# Licensed", "# # Licensed")) for line in lines) == 1
