@@ -387,6 +387,22 @@ def test_raising_builder_keeps_previous_and_removes_temporary_root(disk_refresh_
     assert sorted(path.name for path in root.iterdir()) == ids
 
 
+def test_later_build_error_reports_earlier_validation_failure(
+    disk_refresh_builds, capsys,
+):
+    root, ids, originals, roots, _ = disk_refresh_builds(
+        [{"passes": False}, RuntimeError("build failed")])
+    with pytest.raises(RuntimeError, match="build failed"):
+        refresh.main(["--apply"])
+    output = capsys.readouterr().out
+    assert "workflow-0 regenerated but failed validation gate" in output
+    assert "exit status 2" not in output
+    for wid in ids:
+        assert _file_digests(root / wid) == originals[wid]
+    assert all(not path.exists() for path in roots)
+    assert sorted(path.name for path in root.iterdir()) == ids
+
+
 def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     disk_refresh_builds, capsys,
 ):
@@ -429,11 +445,14 @@ def test_closing_block_lists_each_failed_workflow(disk_refresh_builds, capsys):
         assert _file_digests(root / wid) == originals[wid]
 
 
-@pytest.mark.parametrize("failure", ["before-backup", "after-backup", "install"])
+@pytest.mark.parametrize("failure", ["before-backup", "after-backup", "install",
+                                      "after-install"])
 @pytest.mark.parametrize("error_type", [OSError, KeyboardInterrupt])
 def test_interrupted_install_restores_previous_atlas(
     disk_refresh_builds, monkeypatch, failure, error_type,
 ):
+    from digitalmodel.parametric.atlas import Atlas
+
     root, ids, originals, roots, _ = disk_refresh_builds([{"passes": True}])
     destination = root / ids[0]
     rename = Path.rename
@@ -446,16 +465,58 @@ def test_interrupted_install_restores_previous_atlas(
             if failure == "after-backup":
                 raise error_type("backup interrupted")
             return result
-        if source.name == "replacement" and failure == "install":
-            raise error_type("install interrupted")
+        if source.name == "replacement":
+            if failure == "install":
+                raise error_type("install interrupted")
+            result = rename(source, target)
+            if failure == "after-install":
+                raise error_type("install interrupted")
+            return result
         return rename(source, target)
 
     monkeypatch.setattr(Path, "rename", failing_rename)
     with pytest.raises(error_type, match="interrupted"):
         refresh.main(["--apply"])
-    assert _file_digests(destination) == originals[ids[0]]
+    if failure == "after-install":
+        assert Atlas.load(root, ids[0]).provenance["content_fingerprint"] == "current"
+        installed = _file_digests(destination)
+        for name, digest in originals[ids[0]].items():
+            if name != "default.txt":
+                assert installed[name] == digest
+    else:
+        assert _file_digests(destination) == originals[ids[0]]
     assert not roots[0].exists()
     assert sorted(path.name for path in root.iterdir()) == ids
+
+
+@pytest.mark.parametrize("error_type", [OSError, KeyboardInterrupt])
+def test_failed_restore_keeps_backup_and_reports_it_on_next_run(
+    disk_refresh_builds, monkeypatch, capsys, error_type,
+):
+    root, ids, originals, roots, _ = disk_refresh_builds([{"passes": True}])
+    destination = root / ids[0]
+    rename = Path.rename
+
+    def failing_rename(source, target):
+        if source.name == "replacement":
+            raise error_type("install interrupted")
+        if source.name == "previous":
+            raise OSError("restore failed")
+        return rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", failing_rename)
+    with pytest.raises(OSError, match="restore failed"):
+        refresh.main(["--apply"])
+    temporary = roots[0].parent
+    assert temporary.name.startswith(".refresh-")
+    assert not destination.exists()
+    assert _file_digests(temporary / "previous") == originals[ids[0]]
+    retained = _file_digests(temporary)
+    capsys.readouterr()
+    assert refresh.main([]) == 1
+    assert capsys.readouterr().out.splitlines()[0] == (
+        f"WARNING: leftover refresh directory: {temporary.name}")
+    assert _file_digests(temporary) == retained
 
 
 def test_refresh_reports_leftover_temporary_folders_at_start(
