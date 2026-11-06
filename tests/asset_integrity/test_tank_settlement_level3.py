@@ -172,6 +172,19 @@ def test_cli_and_registry(tmp_path):
     assert "handoff_required" in completed.stdout
 
 
+@pytest.mark.parametrize("existing_name", ["handoff.json", "report.html"])
+def test_cli_refuses_existing_outputs(tmp_path, capsys, existing_name):
+    existing = tmp_path / existing_name
+    existing.write_text("Existing calculation evidence\n", encoding="utf-8", newline="\n")
+    before = existing.read_bytes()
+    with pytest.raises(SystemExit) as exc_info:
+        main([EXAMPLE.as_posix(), "--output-dir", tmp_path.as_posix()])
+    assert exc_info.value.code == 2
+    assert "Output files already exist" in capsys.readouterr().err
+    assert existing.read_bytes() == before
+    assert {path.name for path in tmp_path.iterdir()} == {existing_name}
+
+
 def test_digest_changes_without_mutating_inputs(settings):
     before = copy.deepcopy(settings)
     first = prepare_assessment(settings)
@@ -322,11 +335,12 @@ def test_report_numeric_anchors(settings):
     tables.feed(prepare_assessment(settings)["report_html"])
     rows = dict(tables.rows)
     # W=2.496*pi*7800*10=611630.3905 N; p=800*10*8=64000 Pa;
-    # u(0)=-0.010+0.002=-0.008 m; the displayed results use three significant figures.
-    assert float(rows["self_weight_n"]) == pytest.approx(611630.3905, rel=0.001)
-    assert float(rows["bottom_pressure_pa"]) == pytest.approx(64000)
+    # u(0)=-0.010+0.002=-0.008 m; loads are displayed to one decimal place.
+    assert float(rows["self_weight_n"]) == pytest.approx(611630.3905, abs=0.05)
+    assert float(rows["bottom_pressure_pa"]) == pytest.approx(64000, abs=0.05)
     assert float(rows["0"]) == pytest.approx(-0.008)
-    assert rows["self_weight_n"] == "6.12e+05"
+    assert rows["self_weight_n"] == "611630.4"
+    assert rows["bottom_pressure_pa"] == "64000.0"
 
 
 def test_report_derived_inventory_precision(settings):
@@ -336,7 +350,29 @@ def test_report_derived_inventory_precision(settings):
     tables = ReportTables()
     tables.feed(prepare_assessment(settings)["report_html"])
     rows = dict(tables.rows)
-    # p(5.1)=800*9.81*(8-5.1)=22759.2 Pa, displayed to three significant figures.
-    assert rows["courses[1].pressure_top_pa"] == "2.28e+04"
-    assert float(rows["courses[1].pressure_top_pa"]) == pytest.approx(22759.2, rel=0.002)
+    # p(5.1)=800*9.81*(8-5.1)=22759.2 Pa, displayed to one decimal place.
+    assert rows["courses[1].pressure_top_pa"] == "22759.2"
+    assert float(rows["courses[1].pressure_top_pa"]) == pytest.approx(22759.2, abs=0.05)
+    assert rows["courses[1].z_bottom_m"] == "0.000"
+    assert rows["courses[1].z_top_m"] == "5.100"
+    assert rows["courses[2].z_bottom_m"] == "5.100"
     assert rows["gravity_m_s2"] == "9.81"
+
+
+def test_report_derived_lengths_use_fixed_decimals(settings):
+    settings["geometry"]["radius_m"] = 30.48
+    settings["geometry"]["annular_ring"]["width_m"] = 0.6096
+    settings["geometry"]["courses"] = [
+        {"height_m": 2.438, "thickness_m": 0.0254, "material_ref": "synthetic steel"}
+        for _ in range(5)]
+    tables = ReportTables()
+    tables.feed(prepare_assessment(settings)["report_html"])
+    rows = dict(tables.rows)
+    # Inner radius = 30.48 - 0.6096 = 29.8704 m; top = 5 * 2.438 = 12.190 m.
+    assert rows["bottom_inner_radius_m"] == "29.870"
+    assert float(rows["bottom_inner_radius_m"]) == pytest.approx(29.8704, abs=0.0005)
+    assert rows["courses[5].z_top_m"] == "12.190"
+    assert float(rows["courses[5].z_top_m"]) == pytest.approx(12.190, abs=0.0005)
+    assert rows["courses[1].height_m"] == "2.438"
+    assert rows["courses[1].thickness_m"] == "0.0254"
+    assert rows["annular_ring.width_m"] == "0.6096"

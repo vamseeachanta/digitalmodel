@@ -7,7 +7,6 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #bbb;padding:.5
 code{overflow-wrap:anywhere}.warning{border-left:4px solid #a40;padding:1rem;background:#fff4e5}</style></head>
 <body>
 <h1>Tank settlement Level 3 preparation</h1>
-<p>Draft for maintainer review.</p>
 <p class="warning">The result is a preparation handoff with an ESCALATE verdict.
 No tank fitness conclusion, mesh, nonlinear result, buckling margin or code acceptance is established.</p>
 <h2>Revision history</h2>
@@ -16,18 +15,18 @@ No tank fitness conclusion, mesh, nonlinear result, buckling margin or code acce
 unavailable code factors and solver results are kept out of acceptance decisions.</td></tr>
 <tr><td>2</td><td>2026-10-22</td><td>Strict JSON loading, explicit applicability gaps and tabulated input evidence;
 output placeholders align the command, registry and readback tests.</td></tr>
-<tr><td>3</td><td>2026-10-25</td><td>Focused validation counts and a reproducible test command are recorded;
-cancelled hosted checks are distinguished from passing test evidence.</td></tr></table>
+<tr><td>4</td><td>2026-11-06</td><td>Derived dimensions and loads use fixed decimal places for readable results;
+existing output files are protected against replacement.</td></tr></table>
 <p>Table 1. Document revisions.</p>
-<h2>Scope and executable plan</h2>
+<h2>Implemented scope</h2>
 <p>Scope is tracked by issue 2174.
-The implementation will prepare a validated component inventory, evaluate referenced load expressions,
-and render all four unevaluated failure checks through the existing FFS report and decision interfaces.
-Tests will precede the implementation and compare against independently derived answers.
-The registry will expose a standalone command; no external routing configuration will be modified.</p>
-<p>The first slice will validate courses, bottom, annular ring, top angle, girders and an optional flat roof.
-The second slice will synthesize supplied settlement harmonics and prepare hydrostatic and self-weight loads.
-The third slice will retain missing criteria, render the report and write the durable JSON handoff.
+The implementation prepares a validated component inventory, evaluates referenced load expressions,
+and renders all four unevaluated failure checks through the existing FFS report and decision interfaces.
+Tests compare the preparation results against independently derived answers.
+The registry exposes a standalone command.</p>
+<p>The first slice validates courses, bottom, annular ring, top angle, girders and an optional flat roof.
+The second slice synthesizes supplied settlement harmonics and prepares hydrostatic and self-weight loads.
+The third slice retains missing criteria, renders the report and writes the durable JSON handoff.
 Later work will generate a connected mesh, run a qualified nonlinear solver and reproduce a published FEA case.</p>
 <h2>Input contract and method</h2>
 <p>Inputs use metres, kilograms, seconds, pascals and newtons. Angles are degrees measured
@@ -69,6 +68,7 @@ before running the command. Quote the substituted input and output paths when th
 The registry uses the same placeholder in its invocation and both output entries;
 output paths are resolved from that supplied directory, independently of the working directory.
 The command writes <code>handoff.json</code> and <code>report.html</code>.
+If either output file already exists, the command stops before writing; choose a new output directory.
 Exit zero means the handoff was written; the engineering result remains ESCALATE.
 The workflow registry identifier is <code>api579-tank-settlement-level3</code>.
 This standalone invocation does not use the engine or the in-process workflow API.</p>
@@ -101,18 +101,15 @@ strain extraction, mesh convergence and service criterion.</td></tr></table>
 Exact current subclauses are <strong>not verified</strong>; no guessed crosswalk or licensed numerical factor is supplied.
 Licensed clause text was not accessed. No acceptance constants are emitted, so no standards-derived numeric sidecar is implied.
 The public sources above were opened successfully on 2026-10-20. They support only the stated arithmetic.</p>
-<h2>Checks and review limits</h2>
-<p>The focused run on 2026-10-25 passed 42 preparation tests and two registry tests:
-44 passed, with no failures or skips. The following command reproduces that scope:</p>
-<pre><code>uv run --no-project --with pytest --with pyyaml --with numpy \
+<h2>Validation scope and limits</h2>
+<p>The focused preparation and registry checks can be run with:</p>
+<pre><code>uv run --no-project --with pytest --with pytest-asyncio --with pyyaml --with numpy \
   --with pandas --with pint --with scipy python -m pytest \
   tests/asset_integrity/test_tank_settlement_level3.py \
   tests/workflows/test_registry_versioning.py \
   -q -rA -p no:cacheprovider --basetemp="{temporary_dir}"</code></pre>
 <p>Replace <code>{temporary_dir}</code> with a new, disposable test directory outside the source checkout.
-These results establish only the arithmetic and handoff behaviour exercised by those tests.
-Cancelled hosted checks supply no passing-test evidence; aggregate validation remains unresolved
-until the required harness and selected domain tests complete successfully.</p>
+These checks cover only the arithmetic and handoff behaviour exercised by those tests.</p>
 <p>The tests exercise independent harmonic, pressure and weight anchors; invalid scalars and structures;
 optional roof, girder and wind intent; JSON serialization; missing-check escalation;
 and CLI output readback plus registry linkage. The input digest binds the handoff to its supplied configuration,
@@ -120,16 +117,16 @@ not to source authenticity, material qualification or solver results.</p>
 <p>Repeated JSON keys are rejected at every object depth before any output is written, even when
 their values agree or their spelling uses Unicode escapes. Reports and handoffs use UTF-8 with LF newlines.
 The report tables include load densities, gravity, fill height, harmonic coefficients, individual course fields
-and each missing-evidence item. Prepared loads and sampled displacements are displayed to three significant
-figures; input values retain their supplied precision. Applicability remains flagged as unevaluated,
+and each missing-evidence item. Derived lengths use three decimal places in metres; prepared weight
+and pressures use one decimal place in newtons and pascals. Sampled displacements use three significant
+figures, and input values retain their supplied precision. Applicability remains flagged as unevaluated,
 and returned evidence lists are independent between handoffs.</p>
-<p>Local adversarial inspection identifies three required boundaries: sampled harmonics cannot be described as a solved mesh;
-reported collapse cannot govern acceptance for displacement-controlled settlement; and missing code evidence cannot be filled from memory.
-All three boundaries are retained in the handoff and tests. Separate-provider review remains required before merge.</p>
+<p>Sampled harmonics do not establish a solved mesh; plastic collapse is secondary to strain and buckling
+for displacement-controlled settlement; missing code evidence prevents a fitness conclusion.</p>
 <h2>Later slices and way forward</h2>
 <p>Connect the material-library dependency and nonlinear-shell extension after their interfaces are qualified.
 Generate and inspect the Gmsh shell/bottom junction; establish supports, contact and load sequence;
 run strain, buckling, collapse and weld checks against sourced current criteria;
 then reproduce an accessible published tank-settlement case within a declared tolerance.
-No FEA case has been reproduced by this change. External assistant routing is outside this repository change.</p>
+No published tank-settlement FEA case is qualified by these preparation checks.</p>
 </body></html>

@@ -319,19 +319,22 @@ def _report(result):
     inventory = _table_rows(result["model_recipe"])
     for key, value in inventory.items():
         if key == "bottom_inner_radius_m" or key.endswith((
-                ".z_bottom_m", ".z_top_m", ".pressure_bottom_pa", ".pressure_top_pa")):
-            inventory[key] = format(value, ".3g")
+                ".z_bottom_m", ".z_top_m")):
+            inventory[key] = format(value, ".3f")
+        elif key.endswith((".pressure_bottom_pa", ".pressure_top_pa")):
+            inventory[key] = format(value, ".1f")
     sections = {
         "Revision history": {
             "1, 2026-10-20": "Initial preparation and explicit missing evidence",
-            "2, 2026-10-22": "Input load basis, harmonics and evidence tabulated for traceability"},
+            "2, 2026-10-22": "Input load basis, harmonics and evidence tabulated for traceability",
+            "3, 2026-11-06": "Fixed decimal places retain derived dimensions and load detail"},
         "Input basis": {"basis": result["input"]["basis"],
                         "input_sha256": result["input_sha256"]},
         "Component inventory (SI)": inventory,
         "Load basis (SI)": result["input"]["loads"],
         "Settlement basis (SI)": result["input"]["settlement"],
         "Applicability": result["decision"]["applicability"],
-        "Preparation (SI)": {key: format(result["loads"][key], ".3g")
+        "Preparation (SI)": {key: format(result["loads"][key], ".1f")
                              for key in ("self_weight_n", "bottom_pressure_pa")},
         "Settlement samples (degrees, metres)": {
             str(sample["angle_deg"]): format(sample["uz_m"], ".3g")
@@ -351,7 +354,8 @@ def _report(result):
             "Wind, support contact, load sequence and junction compatibility remain NOT_EVALUATED.",
             "Material references are unverified identifiers, not a material-library qualification.",
             "2007 clause pointers are issue requirements; current subclause equivalence is unverified.",
-            "Prepared loads and sampled displacements are displayed to three significant figures; "
+            "Derived lengths use three decimal places in metres; prepared weight and pressures "
+            "use one decimal place in newtons and pascals. Sampled displacements use three significant figures; "
             "input values retain their supplied precision in the tables and JSON handoff.",
         ])
 
@@ -374,11 +378,20 @@ def main(argv=None):
     args = parser.parse_args(argv)
     result = prepare_assessment(json.loads(
         args.input.read_text(encoding="utf-8"), object_pairs_hook=_unique_object))
+    outputs = {
+        args.output_dir / "handoff.json": json.dumps(result, indent=2, allow_nan=False) + "\n",
+        args.output_dir / "report.html": result["report_html"],
+    }
+    existing_message = "Output files already exist; choose a new output directory"
+    if any(path.exists() or path.is_symlink() for path in outputs):
+        parser.error(existing_message)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "handoff.json").write_text(
-        json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
-    (args.output_dir / "report.html").write_text(
-        result["report_html"], encoding="utf-8", newline="\n")
+    for path, contents in outputs.items():
+        try:
+            with path.open("x", encoding="utf-8", newline="\n") as stream:
+                stream.write(contents)
+        except FileExistsError:
+            parser.error(existing_message)
     print(result["status"])
     return 0
 
