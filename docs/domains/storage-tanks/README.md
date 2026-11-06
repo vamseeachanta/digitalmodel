@@ -15,6 +15,8 @@ checks metadata; it does not authenticate a numeric value or approve a design.
 
 ## Worked examples
 
+- [Internal floating roof tank losses](ifrt.html): public AP-42 routine emissions,
+  seal/deck comparisons and a normal vent capacity comparison with explicit design inputs.
 - [Tank shell analysis](one-foot-worked-example.html): a 30 m diameter tank,
   18 m liquid level, eight equal courses, specific gravity 1.0 and 1.5 mm CA.
 - [Pressure vessel shell analysis](pressure-vessel-example.html): shell and head

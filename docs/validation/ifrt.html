@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Internal floating roof calculation verification</title>
+<style>body{max-width:960px;margin:3rem auto;padding:0 1rem;font:16px/1.6 system-ui}table{border-collapse:collapse;width:100%}td,th{padding:.5rem;border-bottom:1px solid #ccc;text-align:left}code{overflow-wrap:anywhere}pre{white-space:pre-wrap;background:#f3f5f7;padding:1rem}</style>
+<h1>Internal floating roof calculation verification</h1>
+<p>Date: 2026-11-02. Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/3812">internal floating roof routine-loss calculations</a>,
+the synthetic example and the independent normal vent comparison. No measured or client data are used.</p>
+<p>The baseline annual result is 3,487 kg/year, matching the independent hand calculation.
+Components are rim 1,957, fittings 697.2, seams 805.1 and withdrawal 26.84 kg/year. Unit tests use numerical tolerances;
+rounded documentation values are not substituted into the calculation.</p>
+<h2>Verification evidence</h2>
+<ul>
+<li>TDD: the initial IFRT test collection failed because the module did not exist. The subsequent
+pressure-margin retention test failed before that output was implemented.</li>
+<li>Final related-folder run: <strong>247 passed</strong>, including all 38 IFRT cases,
+the complete existing code-check folder and the fire-safety folder.</li>
+<li>Ruff check and format check passed for the module, tests and runnable example.
+The engineering-register checker passed for the three changed Markdown files.</li>
+<li>The example JSON was executed and read back. Baseline masses, seal/deck comparisons,
+normal duties of 1,750/2,000 Nm³/h, capacity margins of 250/200 Nm³/h and pressure/vacuum
+margins of 0.3/0.1 kPa matched their independent arithmetic.</li>
+<li>Published reference (added 2026-11-03): the calculation reproduces EPA AP-42 Chapter 7.1 (June 2026),
+Example 4, a 70 ft welded-deck internal floating roof tank storing RVP 13 gasoline. Published answers are
+withdrawal 136.5, rim seal 231.8, deck fittings 3,961.9, deck seams 0 and total 4,330.2 lb/year.
+Withdrawal loss matches to 0.1 lb/year. The published example rounds P* to 0.178 before use; with the
+unrounded P* of 0.17773 the rim-seal and fitting losses are 0.15 % lower, and with P* = 0.178 they match
+the published values to 0.1 lb/year. The test is <code>test_reproduces_published_ap42_example_4_ifrt</code>;
+the IFRT test file now holds 39 cases.</li>
+<li>A wheel was built with <code>uv build --no-sources --wheel</code>, unpacked into an isolated
+directory, and imported from that directory. The complete worked example returned
+3,487 kg/year with both bundled source records resolving. No scratch files were present in the wheel.</li>
+</ul>
+<p>Test command: <code>PYTHONPATH=src uv run python -m pytest tests/code_checks tests/fire_safety -q</code>.</p>
+<h2>Local defect review</h2>
+<p>At plan stage, the review targeted method applicability, public-source boundaries, gallon/barrel conversions,
+seam geometry, column versus leg treatment and unsupported API qualification. The resulting design kept
+P/V-only tanks outside the routine-loss method and required cited vent factors and thermal duties.</p>
+<p>At code stage, equations and selected coefficients were checked against the public EPA document,
+including rendered seam/withdrawal equation pages and table footnotes. The review targeted the squared
+vapor-pressure denominator, the absence of an extra π/4 in the seam equation, net throughput,
+zero-vapor-pressure clingage, citation failures even at zero fitting count and missing packaged sources.</p>
+<p>The pressure-boundary test exposed subtraction-order roundoff. Pressure and connected loss are now
+summed before comparison with the tank limit, so an entered equality passes the stated criterion.
+Related tests initially used a newer Plotly version than the repository pin; the project version restored
+the committed report fixtures without changing those fixtures.</p>
+<table><thead><tr><th>Frozen artifact</th><th>SHA-256</th></tr></thead><tbody>
+<tr><td>docs/plans/ifrt.html</td><td><code>fc3483a91d579e1d1873f35ad4e4ddecce2fe4d62f40f7b998e185eb191741b2</code></td></tr>
+<tr><td>src/digitalmodel/code_checks/storage_tanks/ifrt.py</td><td><code>03235c1f4256dcfac8619ee6acbb5e981e3464ed9896968473c322e6f3db5811</code></td></tr>
+<tr><td>tests/code_checks/test_ifrt.py</td><td><code>31fd80735ca9bb40ddfbadbe60788446e90c14f72312e5b210f8c90f7e76fcd8</code></td></tr>
+<tr><td>examples/code_checks/ifrt_example.py</td><td><code>f10081d272bdf4f041bf650c79f89114344321c352c0b3dffd27f2db93be8d03</code></td></tr>
+</tbody><caption style="caption-side:bottom;text-align:left">Table 1. Artifact bytes after formatting and verification.</caption></table>
+<h2>Limits and remaining scope</h2>
+<p>Only routine afloat emissions are calculated. Roof landing/cleaning losses, roof and leg structural design,
+API 650 circulation/opening design, emergency relief, flashing, blanketing failures and certified vent selection
+are not evaluated. Vent factors, thermal loads and curve points in the example remain synthetic;
+a passing entered comparison does not establish API 2000 compliance or tank protection.</p>
+<p>The external explorer entry and floating-roof FFS catalog expansion remain follow-ups.</p>
+<p>Sources: <a href="https://www.epa.gov/system/files/documents/2026-08/c7s1_2026.pdf">EPA AP-42 Chapter 7.1 (June 2026)</a>,
+<a href="https://api.org/~/media/files/publications/whats%20new/2000%20e7%20pa.pdf">API 2000 public seventh-edition scope and contents</a>,
+and <a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8">NIST SP 811, Appendix B.8</a>.</p>
+</html>
