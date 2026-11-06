@@ -83,7 +83,7 @@
     "unreviewed_report_count": 36
   },
   "observations": {
-    "observed_at": "2026-10-25T01:31:50.079551+00:00",
+    "observed_at": "2026-11-06T09:51:17Z",
     "reports": [
       {
         "capability": "CFD calm-water resistance",
@@ -282,6 +282,11 @@
         "change": "Re-observe the synthetic pipeline and diffraction record presence and refresh four changed source digests; retain all qualification limits. Refresh tracked report discovery to include the pipelay module page.",
         "date": "2026-11-06",
         "revision": "1"
+      },
+      {
+        "change": "Record the current observation time and source revision after checking retained source digests and report discovery; preserve existing judgments and qualification limits. Main integration and a subsequent inventory rebuild remain outstanding.",
+        "date": "2026-11-06",
+        "revision": "2"
       }
     ],
     "scope_roots": [
@@ -290,7 +295,7 @@
       "docs/reports",
       "docs/subsea/cross_sections"
     ],
-    "source_revision": "44b88d703865cd5489ec95bf2a32ab750ce72dcf"
+    "source_revision": "fdd6245c36445a187bc521d00a3e6d290ceb0511"
   },
   "reports": [
     {
@@ -481,5 +486,5 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "44b88d703865cd5489ec95bf2a32ab750ce72dcf"
+  "source_revision": "fdd6245c36445a187bc521d00a3e6d290ceb0511"
 }

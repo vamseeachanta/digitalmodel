@@ -290,3 +290,29 @@ def test_constant_inventory_scope_and_download_cleanup(tmp_path):
     assert "Module constants are outside this function inventory" in page
     assert "setTimeout(() => URL.revokeObjectURL(url), 1000)" in page
     assert "link.click(); URL.revokeObjectURL(url)" not in page
+
+
+@pytest.mark.parametrize("name", ["comments.txt", "scratch.json", "nested/comments.txt"])
+def test_unpublished_report_files_stay_ignored(name):
+    """Keep exported comments and scratch files out of the published report."""
+    path = (REPORT / name).relative_to(ROOT).as_posix()
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--stdin"], cwd=ROOT,
+        input=path + "\n", capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [path]
+
+
+@pytest.mark.parametrize("path", [
+    *(f"docs/reports/modules/installation_pipelay/{name}" for name in sorted(DELIVERABLES)),
+    "scripts/reports/build_installation_pipelay_module_report.py",
+])
+def test_published_report_files_remain_trackable(path):
+    """Retain exactly the named report deliverables and their builder."""
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--stdin"], cwd=ROOT,
+        input=path + "\n", capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 1, result.stderr
+    assert not result.stdout
