@@ -30,6 +30,7 @@ Strength Standard for Container Ships / hull-girder ultimate), UR S34.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 CODE_REFERENCE = "IACS UR S11 / S11A"
 
@@ -282,6 +283,33 @@ class SectionModulusCheck:
 def bending_stress_mpa(moment_kn_m: float, section_modulus_m3: float) -> float:
     """Hull-girder bending stress (MPa) for a moment (kN·m) and Z (m^3)."""
     return abs(moment_kn_m) / (section_modulus_m3 * _KNM_PER_MPA_M3)
+
+
+def required_section_modulus_m3(
+    moment_kn_m: float, allowable_stress_mpa: float,
+) -> float:
+    """Size an elastic bending section modulus from a caller-supplied allowable.
+
+    From ``M = sigma * Z``, ``Z[m^3] = abs(M[kN*m]) / sigma[MPa] / 1e3``:
+    the SI prefixes give ``1 kN*m = 1e3 N*m`` and ``1 MPa = 1e6 N/m^2``,
+    so ``(kN*m) / MPa = 1e-3 m^3``. Signed moments use their magnitude;
+    a zero moment returns zero after both inputs have been validated.
+
+    This is elastic bending sizing only. The caller selects the allowable;
+    no class-rule minimum, empirical factor, buckling, ultimate strength or
+    combined-load verdict is supplied.
+
+    Raises:
+        ValueError: If either input is boolean or non-finite, or the allowable
+            stress is nonpositive.
+    """
+    if isinstance(moment_kn_m, bool) or not isfinite(moment_kn_m):
+        raise ValueError("moment_kn_m must be finite and not boolean")
+    if (isinstance(allowable_stress_mpa, bool)
+            or not isfinite(allowable_stress_mpa)
+            or allowable_stress_mpa <= 0.0):
+        raise ValueError("allowable_stress_mpa must be positive and finite, not boolean")
+    return abs(moment_kn_m) / allowable_stress_mpa / _KNM_PER_MPA_M3
 
 
 def section_modulus_check(

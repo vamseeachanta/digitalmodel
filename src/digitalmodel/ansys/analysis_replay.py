@@ -3,10 +3,10 @@ from copy import deepcopy
 from decimal import Decimal, InvalidOperation
 import re
 
-from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes, parse_json, nonempty, verify_reference
+from digitalmodel.ansys.analysis_records import canonical_bytes, decimal_text, digest_bytes, parse_json, nonempty, verify_reference
 from digitalmodel.ansys.analysis_evidence import build_package, validate_package
 from digitalmodel.ansys.analysis_replay_inputs import (
-    CASE_ID, REFERENCE_HASH, load_replay_inputs, opaque_reference, validate_mapping, observed_reference_hash, verify_original_artifacts,
+    CASE_ID, REFERENCE_HASH, load_replay_inputs, validate_mapping, observed_reference_hash, verify_original_artifacts,
 )
 from digitalmodel.ansys.cylinder_benchmark import build_case
 from digitalmodel.ansys.cylinder_criteria import EXPECTED_KEYS, evaluate_attempt, evaluate_canary
@@ -23,10 +23,16 @@ def canonical_measurement(raw):
         raise ValueError('invalid measured decimal') from error
     if not value.is_finite() or abs(value.as_tuple().exponent) > 128 or len(value.as_tuple().digits) > 64:
         raise ValueError('measured decimal exceeds exact bounds')
-    result = '0' if value.is_zero() else format(value, 'f')
-    if '.' in result:
-        result = result.rstrip('0').rstrip('.')
-    if Decimal(result) != value:
+    # Source: analysis_records.decimal_text (revision 6476218e) defines the
+    # package ASCII grammar and adjusted-exponent bounds. Replay retains its
+    # narrower raw precision checks above, and must also be package-readable.
+    result = decimal_text(raw)
+    canonical = Decimal(result)
+    # Source: this function's 64-digit coefficient bound (revision 6476218e).
+    # Positive exponents can expand a short coefficient beyond that bound.
+    if len(canonical.as_tuple().digits) > 64:
+        raise ValueError('canonical measured decimal exceeds exact bounds')
+    if canonical != value:
         raise ValueError('numeric normalization changed value')
     return result
 

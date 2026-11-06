@@ -29,7 +29,7 @@ The project currently has 80+ DOS batch files that limit cross-platform developm
 - `4Delete_Env.bat` - Update for uv environment cleanup
 
 #### Analysis Execution (Tests and docs directories)
-- `pipe_py_ecs.bat` - Multiple Python script executions
+- `pipe_py_riser-sys-a.bat` - Multiple Python script executions
 - `RunAll.bat` - Batch Python script processing
 - `aqwa_anl_raos_*.bat` - ANSYS/AQWA analysis runs
 

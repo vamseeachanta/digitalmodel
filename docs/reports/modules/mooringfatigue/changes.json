@@ -1,10 +1,10 @@
 {
   "report": "Mooring fatigue module analysis",
-  "revision": "B",
-  "date": "2026-10-22",
+  "revision": "C",
+  "date": "2026-11-06",
   "changes": [
-    "Component evaluation is withheld because the demonstration uses a welded-joint curve.",
-    "Runtime curve parameters and independent numerical checkpoints make the calculation auditable.",
-    "Calculation hashes, chart positions and comment size checks are corrected for reproducibility."
+    "The report is rebuilt against the current calculation sources without changing the example results.",
+    "Report observations distinguish software evidence from component qualification.",
+    "Text encoding and the direction and upper bound of intercept comparisons are explicit."
   ]
 }

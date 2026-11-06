@@ -52,6 +52,7 @@ from pydantic import BaseModel, Field, model_validator
 __all__ = [
     "RHO_SEAWATER",
     "G_STANDARD",
+    "BALLAST_VCG_DRAFT_FRACTION",
     "FloaterArchetype",
     "TurbineTopside",
     "FloaterProperties",
@@ -69,6 +70,8 @@ RHO_SEAWATER = 1025.0  # kg/m^3, standard seawater density
 G_STANDARD = 9.80665  # m/s^2
 
 _KG_PER_TONNE = 1000.0
+# Inherited screening assumption; no standard-derived ballast position is implied.
+BALLAST_VCG_DRAFT_FRACTION = 0.05
 
 
 class FloaterArchetype(str, Enum):
@@ -253,7 +256,7 @@ def _assemble(
     # Combined CG: steel at hull centroid, ballast assumed at the keel-adjacent
     # base (conservative-low, typical of floating-wind solid/water ballast),
     # topside high above the keel.
-    ballast_cg_m = 0.05 * draft_m
+    ballast_cg_m = BALLAST_VCG_DRAFT_FRACTION * draft_m
     cg_moment = (
         steel_mass_t * kg_hull_m
         + ballast_mass_t * ballast_cg_m

@@ -1,0 +1,59 @@
+{
+  "description": "Synthetic offline smoke example; no physical solve or native acceptance is established.",
+  "basis": {
+    "criteria": "docs/plans/2026-09-10-issue-2082-orcaflex-smoke.html, Bounded design: one thread per model, at least two finite samples, completed dynamics and independent simulation readback.",
+    "values": "Chosen synthetic inputs; expected counts and extrema are independent hand calculations written in test_orcaflex_smoke_example.py.",
+    "ownership": "Workflow validation example; these values are not qualified engineering inputs."
+  },
+  "cases": {
+    "minimum_history": {
+      "static_tension_kN": 10.0,
+      "dynamic_tension_kN": [0.0, 2.0],
+      "reloaded_dynamic_tension_kN": [0.0, 2.0],
+      "expected": {
+        "ok": true,
+        "static_tension_kN": 10.0,
+        "dynamic_samples": 2,
+        "dynamic_tension_kN": [0.0, 2.0],
+        "reloaded_dynamic_samples": 2,
+        "reloaded_dynamic_tension_kN": [0.0, 2.0],
+        "thread_counts_observed": {
+          "solve": 1,
+          "data_reader": 1,
+          "simulation_reader": 1
+        },
+        "simulation_complete": true,
+        "saved_sim_reloaded": true,
+        "reloaded_simulation_complete": true
+      }
+    },
+    "zero_tension": {
+      "static_tension_kN": 0.0,
+      "dynamic_tension_kN": [0.0, 0.0],
+      "reloaded_dynamic_tension_kN": [0.0, 0.0],
+      "expected": {
+        "ok": true,
+        "static_tension_kN": 0.0,
+        "dynamic_samples": 2,
+        "dynamic_tension_kN": [0.0, 0.0],
+        "reloaded_dynamic_samples": 2,
+        "reloaded_dynamic_tension_kN": [0.0, 0.0],
+        "static_finite": true,
+        "dynamic_finite": true,
+        "reloaded_dynamic_finite": true
+      }
+    },
+    "short_readback": {
+      "static_tension_kN": 10.0,
+      "dynamic_tension_kN": [0.0, 2.0],
+      "reloaded_dynamic_tension_kN": [0.0],
+      "expected": {
+        "ok": false,
+        "stage": "load_simulation",
+        "dynamic_samples": 2,
+        "saved_sim_reloaded": true,
+        "error": "ValueError: dynamic history requires at least two samples"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+basename: hull_wastage_screen
+hull_wastage_screen:
+  rule_family: csr
+  output_dir: results
+  limits:
+    # Explicit synthetic selection, not a class-approved design basis.
+    # Method: IACS CSR BC&OT July 2025 Pt 1 Ch 13 Sec 2 [2.1.3].
+    reserve_mm: 0.5
+    source: Synthetic selected limit; method CSR BC&OT July 2025 Ch13 Sec2
+  elements:
+    - id: plate
+      # Synthetic hand calculation: 12 - 3 - 1 = 8 mm renewal;
+      # 8.4 - 0.1 = 8.3 mm lower bound, inside the selected reserve band.
+      as_built_mm: 12.0
+      corrosion_mm: 3.0
+      voluntary_mm: 1.0
+      measured_mm: 8.4
+      uncertainty_mm: 0.1

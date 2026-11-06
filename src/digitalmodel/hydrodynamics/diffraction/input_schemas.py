@@ -22,14 +22,17 @@ Example usage:
 from __future__ import annotations
 
 from enum import Enum
+import math
 from pathlib import Path
 import warnings
-from typing import Any, Literal, Optional
+from typing import Annotated, Any, Literal, Optional
 
 import numpy as np
 from pydantic import (
     BaseModel,
+    BeforeValidator,
     Field,
+    FiniteFloat,
     PrivateAttr,
     field_validator,
     model_serializer,
@@ -280,12 +283,20 @@ class VesselSpec(BaseModel):
     inertia: VesselInertia
     external_stiffness: Optional[list[list[float]]] = Field(
         None,
-        description="6x6 external stiffness matrix",
+        description="Symmetric 6x6 external stiffness; SI force N, length m, angle rad",
     )
     external_damping: Optional[list[list[float]]] = Field(
         None,
-        description="6x6 external damping matrix",
+        description="Symmetric 6x6 external damping; SI force N, length m, time s, angle rad",
     )
+    external_stiffness_units: Optional[Literal["SI"]] = None
+    external_damping_units: Optional[Literal["SI"]] = None
+    external_stiffness_reference_point: Optional[
+        Literal["body_origin", "centre_of_mass"]
+    ] = None
+    external_damping_reference_point: Optional[
+        Literal["body_origin", "centre_of_mass"]
+    ] = None
     fixed_dofs: Optional[list[str]] = Field(
         None,
         description=(
@@ -296,6 +307,29 @@ class VesselSpec(BaseModel):
         None,
         description="Control surface mesh for mean drift loads",
     )
+
+    @model_validator(mode="after")
+    def check_external_matrix_contract(self) -> VesselSpec:
+        """Require complete metadata; do not infer units or a matrix origin."""
+        for kind in ("stiffness", "damping"):
+            matrix = getattr(self, f"external_{kind}")
+            units = getattr(self, f"external_{kind}_units")
+            point = getattr(self, f"external_{kind}_reference_point")
+            if matrix is not None and (units is None or point is None):
+                raise ValueError(
+                    f"external_{kind} requires units and reference_point"
+                )
+            if matrix is None and (units is not None or point is not None):
+                raise ValueError(f"external_{kind} metadata requires a matrix")
+            if matrix is not None:
+                if len(matrix) != 6 or any(len(row) != 6 for row in matrix):
+                    raise ValueError(f"external_{kind} must be 6x6")
+                if not all(math.isfinite(x) for row in matrix for x in row):
+                    raise ValueError(f"external_{kind} must contain finite values")
+                if any(matrix[i][j] != matrix[j][i]
+                       for i in range(6) for j in range(i)):
+                    raise ValueError(f"external_{kind} must be symmetric")
+        return self
 
 
 class EnvironmentSpec(BaseModel):
@@ -729,6 +763,18 @@ class SolverOptions(BaseModel):
         )
 
 
+def _reject_boolean_field_point_coordinate(value: Any) -> Any:
+    """Reject booleans before float coercion can treat them as coordinates."""
+    if isinstance(value, (bool, np.bool_)):
+        raise ValueError("Field point coordinates must not be booleans")
+    return value
+
+
+_FieldPointCoordinate = Annotated[
+    FiniteFloat, BeforeValidator(_reject_boolean_field_point_coordinate)
+]
+
+
 class FieldPointSpec(BaseModel):
     """Named group of field points for wave elevation/pressure output (#501).
 
@@ -738,10 +784,12 @@ class FieldPointSpec(BaseModel):
     """
 
     name: str
-    points: list[tuple[float, float, float]] = Field(
+    points: list[
+        tuple[_FieldPointCoordinate, _FieldPointCoordinate, _FieldPointCoordinate]
+    ] = Field(
         ...,
         min_length=1,
-        description="Field point coordinates [(x, y, z), ...]",
+        description="Finite field point coordinates [(x, y, z), ...]; no booleans",
     )
     detect_inside_bodies: bool = True
 
@@ -1067,7 +1115,7 @@ class DiffractionSpec(BaseModel):
         """Load spec from a YAML file."""
         import yaml
 
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = yaml.safe_load(f)
         spec = cls.model_validate(data)
         spec._source_dir = Path(path).resolve().parent
@@ -1079,7 +1127,7 @@ class DiffractionSpec(BaseModel):
 
         path = Path(path)
         data = self.model_dump(mode="json", exclude_none=True)
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
             yaml.dump(data, f, default_flow_style=False, sort_keys=False)
         return path
 

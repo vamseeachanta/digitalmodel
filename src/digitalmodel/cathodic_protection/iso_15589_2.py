@@ -14,6 +14,9 @@ from __future__ import annotations
 import math
 
 from digitalmodel.cathodic_protection import _kernels as kernel
+from digitalmodel.cathodic_protection.reference_electrodes import (
+    ReferenceElectrode, convert_potential,
+)
 
 # ---------------------------------------------------------------------------
 # Protection potentials vs Ag/AgCl (§5.2)
@@ -205,7 +208,11 @@ def anode_mass_requirement(
     return kernel.anode_mass(I_mean_A, T_design_years, E_capacity, u_f)
 
 
-def check_protection_potential(measured_V_AgAgCl: float) -> dict:
+def check_protection_potential(
+    measured_V_AgAgCl: float, *,
+    reference_electrode: ReferenceElectrode | str = "Ag/AgCl/seawater",
+    zinc_potential_she_V: float | None = None,
+) -> dict:
     """Evaluate measured potential against ISO 15589-2 §5.2 criteria.
 
     Protection is adequate when the potential is between -0.800 V
@@ -215,7 +222,8 @@ def check_protection_potential(measured_V_AgAgCl: float) -> dict:
     Parameters
     ----------
     measured_V_AgAgCl : float
-        Measured potential [V vs Ag/AgCl].
+        Measured potential [V]. The legacy parameter name is retained;
+        reference_electrode supplies its actual basis (default seawater).
 
     Returns
     -------
@@ -223,13 +231,20 @@ def check_protection_potential(measured_V_AgAgCl: float) -> dict:
         {"pass": bool, "potential": float, "criterion_min": float,
          "criterion_max": float}
     """
-    is_protected = (
-        measured_V_AgAgCl <= PROTECTION_POTENTIAL_MIN
-        and measured_V_AgAgCl >= PROTECTION_POTENTIAL_MAX
+    options = {"zinc_potential_she_V": zinc_potential_she_V}
+    criterion_min = convert_potential(
+        PROTECTION_POTENTIAL_MIN, "Ag/AgCl/seawater", reference_electrode, **options,
     )
+    criterion_max = convert_potential(
+        PROTECTION_POTENTIAL_MAX, "Ag/AgCl/seawater", reference_electrode, **options,
+    )
+    if not math.isfinite(measured_V_AgAgCl):
+        raise ValueError("measured potential must be finite volts")
+    is_protected = criterion_max <= measured_V_AgAgCl <= criterion_min
     return {
         "pass": is_protected,
         "potential": measured_V_AgAgCl,
-        "criterion_min": PROTECTION_POTENTIAL_MIN,
-        "criterion_max": PROTECTION_POTENTIAL_MAX,
+        "criterion_min": criterion_min,
+        "criterion_max": criterion_max,
+        "reference_electrode": ReferenceElectrode(reference_electrode).value,
     }

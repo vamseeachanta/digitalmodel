@@ -20,7 +20,7 @@ def _number(value: Any, name: str, minimum: float | None = None) -> float:
     return float(value)
 
 
-def _line(value: Any, name: str) -> list[list[float]]:
+def _line(value: Any, name: str, *, increasing_x: bool = True) -> list[list[float]]:
     if not isinstance(value, (list, tuple)) or len(value) < 2:
         raise ValueError(f"{name} needs at least two points")
     points = []
@@ -28,7 +28,9 @@ def _line(value: Any, name: str) -> list[list[float]]:
         if not isinstance(point, (list, tuple)) or len(point) != 2:
             raise ValueError(f"{name} points need x and elevation")
         points.append([_number(v, name) for v in point])
-    if any(a[0] >= b[0] for a, b in zip(points, points[1:])):
+    if any(a == b for a, b in zip(points, points[1:])):
+        raise ValueError(f"{name} cannot contain zero-length segments")
+    if increasing_x and any(a[0] >= b[0] for a, b in zip(points, points[1:])):
         raise ValueError(f"{name} x coordinates must increase strictly")
     return points
 
@@ -122,21 +124,27 @@ def _strength_datums(layers: list[dict[str, Any]], bottom: float) -> None:
 
 
 def _seepage(profile: dict[str, Any]) -> None:
-    seep = profile.get("seepage")
-    if seep is None:
+    if "seepage" not in profile:
         return
+    seep = profile["seepage"]
+    if not isinstance(seep, dict):
+        raise ValueError("seepage must be a mapping")
     if set(seep) - {"element_size_m", "heads_m"}:
         raise ValueError("unsupported seepage fields")
     if _number(seep.get("element_size_m"), "element_size_m", 0) == 0:
         raise ValueError("element_size_m must be positive")
     heads = seep.get("heads_m", [])
+    if not isinstance(heads, (list, tuple)):
+        raise ValueError("seepage heads_m must be a sequence")
     if not 2 <= len(heads) <= 5:
         raise ValueError("seepage needs two to five head boundaries")
     for head in heads:
-        if set(head) != {"head_m", "boundary_m"}:
+        if not isinstance(head, dict) or set(head) != {"head_m", "boundary_m"}:
             raise ValueError("head boundary needs head_m and boundary_m")
         _number(head["head_m"], "head_m")
-        head["boundary_m"] = _line(head["boundary_m"], "boundary_m")
+        # xslope v1.0.3 fileio.py _read_seep_bc_sheet: head coordinates are
+        # polylines, including vertical model sides, rather than y(x) surfaces.
+        head["boundary_m"] = _line(head["boundary_m"], "boundary_m", increasing_x=False)
     if any("permeability_m_s" not in layer for layer in profile["layers"]):
         raise ValueError("seepage needs permeability_m_s for every layer")
 
@@ -147,6 +155,10 @@ def validate_profile(profile: dict[str, Any]) -> dict[str, Any]:
     Coordinates are metres, weights kN/m³, strengths kPa, angles degrees,
     conductivity m/s and the pseudo-static horizontal coefficient dimensionless.
     Each layer starts at its top boundary; the first starts at ground level.
+    Positive undrained strength gradients (kPa/m) require an explicit
+    reference_elevation_m in the same elevation system as the geometry.
+    Validation neither computes a factor of safety nor infers soil properties.
+    See docs/examples/slope-profile-preflight.md for executable synthetic inputs.
     """
     data = deepcopy(profile)
     allowed = {"units", "ground_surface_m", "bottom_elevation_m", "layers",

@@ -139,6 +139,32 @@ def input_provenance(identifier: str, inputs: dict) -> Provenance:
     )
 
 
+def nominal_limit_hover(figure: dict, limits: dict[str, list[float]]) -> dict:
+    """Pair requirement points with nominal walls, including negative margins.
+
+    Nominal minus required is a geometric margin, not a code acceptance rule.
+    Repeated course-boundary heights retain their own selected plate values.
+    """
+    traces = {trace["name"]: trace for trace in figure["data"]}
+    for name, nominal in limits.items():
+        if name not in traces:
+            raise ValueError(f"Missing requirement series: {name}")
+        trace = traces[name]
+        if len(nominal) != len(trace["y"]):
+            raise ValueError("nominal limits must match requirement points")
+        for value in nominal:
+            validate_number("nominal limit", value)
+        trace["customdata"] = [
+            [wall, wall - required] for wall, required in zip(nominal, trace["y"])
+        ]
+        trace["hovertemplate"] = (
+            "%{fullData.name}<br>Coordinate: %{x}<br>Required: %{y:.3f} mm"
+            "<br>Nominal wall: %{customdata[0]:.3f} mm"
+            "<br>Margin: %{customdata[1]:.3f} mm<extra></extra>"
+        )
+    return figure
+
+
 def revision_section(document: DocumentMeta) -> Section:
     return Section(
         key="revision-history",

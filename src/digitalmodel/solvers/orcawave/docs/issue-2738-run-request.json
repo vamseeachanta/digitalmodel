@@ -1,0 +1,47 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2738",
+  "status": "HOLD_FOR_SOFTWARE_VERIFICATION_AND_QUALIFIED_BASIS",
+  "purpose": "Qualify native import and output evidence after offline gates pass; not authorization to launch.",
+  "offline_gate": {
+    "command": "python -m pytest tests/solvers/orcawave/diffraction -q -p no:cacheprovider --basetemp <new-approved-scratch-directory>",
+    "licensed_minutes": 0,
+    "citation": "Issue 2738: no solver invocation is needed for the reproduced regressions.",
+    "acceptance": "G0-GEOMETRY refuses missing requested input; G4-CLOSURE has no false closure label for the open triangle; G5-STATE has no failed or uncomputed successful check."
+  },
+  "native_follow_up": [
+    {
+      "program": "OrcaWave",
+      "input": "examples/workflows/orcawave-diffraction-solve/input.yml",
+      "spec": "examples/workflows/orcawave-diffraction-solve/spec.yml",
+      "mesh": "examples/workflows/orcawave-diffraction-solve/unit_box.gdf",
+      "command_after_release": "python -m digitalmodel examples/workflows/orcawave-diffraction-solve/input.yml",
+      "expected_outputs": "Configured results directory with CSV RAOs, added mass and damping, plus retained native model/result and validation messages.",
+      "source": "Existing input.yml execution instructions and spec.yml outputs section; this canonical example does not exercise the legacy orchestrator."
+    },
+    {
+      "program": "AQWA",
+      "input": "examples/workflows/aqwa-diffraction-deck-prep/input.yml",
+      "spec": "examples/workflows/aqwa-diffraction-deck-prep/spec.yml",
+      "mesh": "examples/workflows/aqwa-diffraction-deck-prep/sample_box.gdf",
+      "preparation_command_after_release": "python -m digitalmodel examples/workflows/aqwa-diffraction-deck-prep/input.yml",
+      "native_command": "REQUIRED_INPUT: solver manager supplies the installed-version command for the prepared deck.",
+      "expected_outputs": "Prepared input deck, native validation messages and native hydrodynamic result evidence.",
+      "source": "Existing input.yml is convert_spec only; no licensed solve command is specified there."
+    }
+  ],
+  "estimated_native_licensed_minutes": "NOT_EVALUATED: solver manager must estimate from the target version and approved mesh; no measured runtime is available.",
+  "aqg_style_band": {
+    "G0": "Exact software-contract assertions, no engineering error band.",
+    "G1": "Zero model-load and validation errors, as specified in agent-pack.md section 5, G1-OW. Target version must be recorded.",
+    "G4": "NOT_EVALUATED: qualified common physics basis and signed numerical criteria are required before comparing solver outputs.",
+    "G5": "Retain input/output SHA-256 digests, source units, conventions, program versions, executed commands, native messages and signed dispositions.",
+    "source": "src/digitalmodel/solvers/orcawave/docs/agent-pack.md section 5; no underlying licensed-standard claim is made."
+  },
+  "retention": "Retain exact approved input decks, meshes, native output, exported arrays, compact metrics and digest manifest in the authorized run store; publish only generic reviewed evidence.",
+  "release_requirements": [
+    "Run the offline regression suite successfully and obtain code review.",
+    "Resolve the remaining software catalogue independently of licensed execution.",
+    "Approve target versions, units, conventions, compatible cross-solver inputs and numerical criteria.",
+    "Supply the AQWA native command and estimated licensed minutes before scheduling."
+  ]
+}

@@ -12,6 +12,8 @@ Provides functions for:
 Reference: BS 7910:2019, Section 8 — Assessment of flaws by fracture mechanics.
 """
 
+import math
+
 import numpy as np
 import pandas as pd
 
@@ -57,13 +59,13 @@ def stress_intensity_factor(stress_range, crack_size, geometry="through_thicknes
     return float(delta_k) if delta_k.ndim == 0 else delta_k
 
 
-def paris_law_life(C, m, delta_K, a_initial, a_critical, da_step=None):
+def paris_law_life(C, m, delta_K, a_initial, a_critical, da_step=None, *, threshold=0.0):
     """Integrate Paris' law from initial to critical crack size.
 
-    Uses constant-DeltaK integration when *delta_K* is a scalar (useful
-    for quick estimates).  For a full stress-dependent analysis, pass
-    *delta_K* as a callable ``delta_K(a)`` that returns DeltaK for a
-    given crack size.
+    Each sampled interval delegates to the threshold-aware ``growth_life``
+    API used by FE screening. Constant and piecewise-linear DeltaK are
+    integrated analytically; a callable is approximated linearly at the
+    supplied depth increments. This does not qualify near-threshold behaviour.
 
     Parameters
     ----------
@@ -81,21 +83,41 @@ def paris_law_life(C, m, delta_K, a_initial, a_critical, da_step=None):
     da_step : float, optional
         Crack increment per integration step (m).  Default is
         ``(a_critical - a_initial) / 1000``.
+    threshold : float, optional
+        Nonnegative DeltaK cutoff (MPa*sqrt(m)); equality arrests growth.
 
     Returns
     -------
     cycles_to_failure : float
-        Total cycles N from a_initial to a_critical.
+        Total cycles N from a_initial to a_critical. Arrival exactly at the
+        threshold endpoint is finite if its integral converges; arrest before
+        a_critical or a divergent integral returns infinity.
     history : pd.DataFrame
         Columns: crack_size (m), cycles (cumulative N), da_dN (m/cycle).
+        On arrest, ends at the actual arrest depth with zero growth rate;
+        cumulative cycles are infinite only for a divergent integral.
     """
+    from digitalmodel.asset_integrity.assessment.fe_crack_growth import growth_life, scalar
+
+    try:
+        a_initial = scalar(a_initial, "a_initial", positive=True)
+    except ValueError as error:
+        raise ValueError("a_initial must be positive and finite.") from error
+    a_critical = scalar(a_critical, "a_critical", positive=True)
     if a_initial >= a_critical:
         raise ValueError("a_initial must be less than a_critical.")
-    if a_initial <= 0:
-        raise ValueError("a_initial must be positive.")
 
     if da_step is None:
         da_step = (a_critical - a_initial) / 1000.0
+    da_step = scalar(da_step, "da_step", positive=True)
+    law = dict(
+        c=C,
+        m=m,
+        threshold=threshold,
+        e_ratio=1.0,
+        threshold_rule="unchanged",
+        basis="Caller-supplied Paris parameters",
+    )
 
     # Make delta_K callable if scalar
     if callable(delta_K):
@@ -108,26 +130,37 @@ def paris_law_life(C, m, delta_K, a_initial, a_critical, da_step=None):
     a = a_initial
     N = 0.0
     records = []
+    dk = _dk_func(a)
 
     while a < a_critical:
-        dk = _dk_func(a)
-        if dk <= 0:
-            break
-        da_dN = C * dk ** m
-        if da_dN <= 0:
-            break
-
-        # cycles for this step
-        step = min(da_step, a_critical - a)
-        dN = step / da_dN
-        records.append({"crack_size": a, "cycles": N, "da_dN": da_dN})
-
-        N += dN
-        a += step
+        end = min(a + da_step, a_critical)
+        if end <= a:
+            raise ValueError("da_step cannot advance the crack depth")
+        dk_end = _dk_func(end)
+        segment = growth_life([[a, dk], [end, dk_end]], law)
+        records.append({
+            "crack_size": a, "cycles": N,
+            "da_dN": C * dk**m if dk > threshold else 0.0,
+        })
+        if segment["status"] == "ARRESTED":
+            elapsed = segment["cycles_to_arrest"]
+            arrest_cycles = math.inf if elapsed is None else N + elapsed
+            if segment["arrest_a_m"] > a:
+                records.append({
+                    "crack_size": segment["arrest_a_m"],
+                    "cycles": arrest_cycles, "da_dN": 0.0,
+                })
+            target_cycles = (
+                arrest_cycles
+                if end == a_critical and segment["cycles"] is not None
+                else math.inf
+            )
+            return target_cycles, pd.DataFrame(records)
+        N += segment["cycles"]
+        a, dk = end, dk_end
 
     # Final point at critical size
-    dk_final = _dk_func(a_critical)
-    da_dN_final = C * dk_final ** m if dk_final > 0 else np.inf
+    da_dN_final = C * dk**m
     records.append({"crack_size": a_critical, "cycles": N, "da_dN": da_dN_final})
 
     history = pd.DataFrame(records)

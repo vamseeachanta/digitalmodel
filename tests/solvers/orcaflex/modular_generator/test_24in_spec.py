@@ -95,6 +95,26 @@ class TestMetadata:
 class TestEnvironment:
     """Validate environmental parameters."""
 
+    @pytest.mark.parametrize("spec_name", ["spec.yml", "spec_qa.yml"])
+    def test_current_profile_ends_at_bottom(self, spec_name):
+        """Both examples end at 8 m and preserve the shallower points.
+
+        Linear interpolation of the original (6 m, 0.39) and (15 m, 0.33)
+        gives 0.39 + (0.33 - 0.39) * (8 - 6) / (15 - 6) at the bottom.
+        Rounded to the original two decimal places, the factor is 0.38.
+        This corrects example inputs without qualifying environmental data.
+        """
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import (
+            ProjectInputSpec,
+        )
+
+        data = yaml.safe_load((SPEC_DIR / spec_name).read_text(encoding="utf-8"))
+        expected = [[0.0, 0.46], [6.0, 0.39], [8.0, 0.38]]
+        assert data["environment"]["current"]["profile"] == expected
+        spec = ProjectInputSpec.model_validate(data)
+        assert spec.environment.current.profile == expected
+        assert spec.model_dump()["environment"]["current"]["profile"] == expected
+
     def test_water_depth(self, validated_spec_24in):
         """Water depth is 8 m."""
         assert validated_spec_24in.environment.water.depth == pytest.approx(8)

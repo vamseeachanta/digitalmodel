@@ -2,8 +2,8 @@
 # ABOUTME: Fitness-For-Service (FFS) decision layer (corroded pipe + plate + sufficiency).
 """Fitness-For-Service (FFS) decision-layer showcase.
 
-A single self-contained HTML dashboard (Plotly inlined, works offline) that
-demonstrates the validated FFS modules in :mod:`digitalmodel`:
+An HTML dashboard with Plotly inlined and shared styling from the adjacent
+documentation assets. It demonstrates the FFS implementations in :mod:`digitalmodel`:
 
 * a **corroded-pipe acceptability explorer** -- pick a pipe preset and a
   remaining-strength method (ASME B31G, Modified B31G, RSTRENG effective-area,
@@ -15,7 +15,7 @@ demonstrates the validated FFS modules in :mod:`digitalmodel`:
 * a **plate metal-loss FFS** chart (buckling utilisation vs metal loss for an
   AH36 ship plate), and a **Level-3 escalation** callout.
 
-Every number comes from the validated modules; nothing is re-implemented here.
+Every number comes from the library modules; nothing is re-implemented here.
 This is a *field-screening* aid, not a replacement for detailed analysis.
 
 Run:
@@ -33,6 +33,7 @@ import pandas as pd
 from plotly.offline import get_plotlyjs
 
 from digitalmodel.asset_integrity.corroded_pipe import (
+    ASME_B318_CLASS1_DESIGN_FACTOR,
     SMYS_PSI,
     b31g_original,
     b31g_original_allowable_length,
@@ -56,8 +57,8 @@ from digitalmodel.structural.structural_analysis.plate_metal_loss_ffs import (
     max_acceptable_loss,
 )
 
-OUT_DIR = Path(__file__).resolve().parent / "output"
-HTML_PATH = OUT_DIR / "ffs_showcase.html"
+OUT_DIR = Path(__file__).resolve().parents[3] / "docs" / "api" / "ffs"
+HTML_PATH = OUT_DIR / "ffs-showcase.html"
 
 COLORS = {
     "navy": "#1a365d", "orange": "#ed8936", "green": "#38a169",
@@ -67,14 +68,13 @@ COLORS = {
 # Pipe presets: (label, OD in, wt in, API 5L grade). MAOP for the acceptance
 # window is the B31.8/Barlow design pressure 0.72 * (2 * SMYS * t / D).
 PRESETS = [
-    ("20in x 0.500in X52", 20.0, 0.500, "X52"),
-    ("30in x 0.375in X52", 30.0, 0.375, "X52"),
-    ("24in x 0.500in X65", 24.0, 0.500, "X65"),
+    ("Representative 20in x 0.500in X52", 20.0, 0.500, "X52"),
+    ("Representative 30in x 0.375in X52", 30.0, 0.375, "X52"),
+    ("Representative 24in x 0.500in X65", 24.0, 0.500, "X65"),
 ]
 METHODS = ["B31G", "Modified B31G", "RSTRENG", "DNV-RP-F101"]
 
-DESIGN_FACTOR = 0.72  # B31.8 class-1 / DNV usage factor for the MAOP datum
-SAFETY_FACTOR = 1.39  # B31G safe-pressure safety factor
+DESIGN_FACTOR = ASME_B318_CLASS1_DESIGN_FACTOR
 
 
 def _maop_psi(D: float, t: float, smys: float) -> float:
@@ -96,7 +96,8 @@ def _safe_pressure(method: str, D: float, t: float, d: float, L: float,
             D, t, [0.0, Lc], [d, d], smys).safe_pressure_psi
     if method == "DNV-RP-F101":
         return dnv_f101_single_defect(
-            D, t, d, L, smts, usage_factor=DESIGN_FACTOR).allowable_pressure_psi
+            D, t, d, L, smts,
+            operational_usage_factor=DESIGN_FACTOR).allowable_pressure_psi
     raise ValueError(f"unknown method {method!r}")
 
 
@@ -233,7 +234,7 @@ def _build_plate() -> dict:
 
 
 def build_showcase_data() -> dict:
-    """Precompute all showcase data from the validated FFS modules."""
+    """Precompute all showcase data from the FFS implementations."""
     return {
         "corroded": _build_corroded_grids(),
         "sufficiency": _build_sufficiency(),
@@ -258,7 +259,7 @@ def main() -> None:
     print(f"plate AH36     : max acceptable loss {pl['max_loss_mm']} mm "
           f"({pl['max_loss_pct']}%), limited_by={pl['limited_by']}")
     print(f"HTML  -> {HTML_PATH}  "
-          f"({HTML_PATH.stat().st_size/1_048_576:.2f} MB, self-contained)")
+          f"({HTML_PATH.stat().st_size/1_048_576:.2f} MB, Plotly inlined)")
 
 
 # ---------------------------------------------------------------------------
@@ -309,16 +310,17 @@ def _render_html(data: dict) -> str:
     plate_json = json.dumps(data["plate"])
     suf_section = _sufficiency_html(data["sufficiency"], c)
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Fitness-For-Service — Decision Layer Showcase</title>
+<link rel="stylesheet" href="../_assets/brand.css">
 <script>{plotly_js}</script>
 <style>
   :root {{
-    --navy:{c['navy']}; --orange:{c['orange']}; --green:{c['green']};
-    --red:{c['red']}; --text:{c['text']}; --muted:{c['muted']};
+    --orange:{c['orange']}; --green:{c['green']};
+    --red:{c['red']}; --text:{c['text']};
   }}
   * {{ box-sizing:border-box; }}
   body {{ margin:0; font-family:Inter,-apple-system,Segoe UI,Roboto,sans-serif;
@@ -372,21 +374,42 @@ def _render_html(data: dict) -> str:
 </style>
 </head>
 <body>
+<div class="wrap">
+  <div class="panel callout" role="alert">
+    <b>DNV-RP-F101 safe pressures were corrected on 2026-10-20 to apply the Part B modelling factor (F = F1·F2); independent verification is pending; do not use them for decisions.</b>
+  </div>
+</div>
 <header>
   <h1>Fitness-For-Service — Decision Layer Showcase</h1>
   <div class="sub">Remaining-strength acceptability for corroded pipe (ASME B31G,
     Modified B31G, RSTRENG effective-area, DNV-RP-F101), field measurement
     sufficiency, and plate metal-loss buckling FFS (DNV-RP-C201). A field-screening
     aid — <b>not a replacement for detailed analysis</b>.</div>
-  <div class="badge">Interactive · validated digitalmodel modules · click the chart to probe a defect</div>
+  <div class="badge">Interactive · implementation checks · click the chart to probe a defect</div>
+  <p class="sub">Level 1/2 implementation checks are not edition-matched to API 579 Part 5.
+    See the <a href="../../domains/asset-integrity/ffs-validation-record-2026-06-27.md"
+      style="color:inherit">validation record and limitations</a>.</p>
 </header>
 
 <div class="wrap">
 
   <div class="panel">
+    <h2>Revision history</h2>
+    <table class="tbl">
+      <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+      <tbody><tr><td>1</td><td>2026-10-20</td><td>Correct the Part B pressure input,
+        mark representative examples and qualify implementation checks. Retain the
+        decision-use notice pending verification.</td></tr>
+      <tr><td>2</td><td>2026-10-20</td><td>Clarify the warning to state the corrected
+        Part B basis; retain the decision-use restriction pending independent
+        verification.</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
     <h2>Corroded-pipe acceptability explorer</h2>
     <div class="controls">
-      <div class="ctrl"><label>Pipe preset</label><select id="preset"></select></div>
+      <div class="ctrl"><label>Representative pipe preset</label><select id="preset"></select></div>
       <div class="ctrl"><label>Remaining-strength method</label><select id="method"></select></div>
       <div class="ctrl" id="presetinfo" style="font-size:13px;color:var(--muted);max-width:330px;line-height:1.5"></div>
     </div>
@@ -407,10 +430,10 @@ def _render_html(data: dict) -> str:
   {suf_section}
 
   <div class="panel">
-    <h2>Plate metal-loss FFS — AH36 ship plate (buckling)</h2>
+    <h2>Representative AH36 plate — metal-loss FFS (buckling)</h2>
     <p class="meta">2400 × 800 × 16 mm AH36 plate field under longitudinal
-      &sigma;<sub>x</sub> = 150 MPa. Buckling utilisation re-run on the validated
-      DNV-RP-C201 solver as wall is thinned by metal loss.</p>
+      &sigma;<sub>x</sub> = 150 MPa. Buckling utilisation re-run on the
+      DNV-RP-C201 implementation as wall is thinned by metal loss.</p>
     <div id="plate" style="width:100%;height:420px;"></div>
   </div>
 
@@ -437,7 +460,7 @@ def _render_html(data: dict) -> str:
 </div>
 
 <footer>
-  Generated by <b>digitalmodel</b> · validated FFS modules
+  Generated by <b>digitalmodel</b> · FFS implementation checks
   (API 579-1/ASME B31G/DNV-RP-F101/DNV-RP-C201) ·
   field-screening aid, not a substitute for detailed analysis.
 </footer>

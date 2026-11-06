@@ -1,0 +1,16 @@
+Synthetic parser demonstration; no engineering result is represented.
+Format basis: ModesFind.m (2009), sentinel and counted-row parsing.
+All counts and identifiers are invented for the hand-worked example.
+
+the number of modes above cutoff is: 1
+These modes are:
+5
+
+Mode No.   No. of Nodes   Length Ratio
+--------------------------------------
+5 1 0.1
+
+mode number: 5
+node number      Cl       Fn/Fvo
+--------------------------------
+2 0.1 1.0

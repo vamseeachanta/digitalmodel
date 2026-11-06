@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Abscissa policy numeric domains</title>
+</head>
+<body>
+<main>
+  <h1>Abscissa policy numeric domains</h1>
+  <h2>Summary</h2>
+  <p><code>AbscissaConfig</code> validates each numeric field at construction,
+  before checking custom justification. Invalid values raise a field-specific
+  <code>ValueError</code>. Boolean thresholds are rejected even though Python
+  treats booleans as integers. Existing numeric defaults remain unchanged.</p>
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>1</td><td>2026-10-20</td><td>Document numeric domains and a
+    synthetic example to distinguish truth values from thresholds.</td></tr></tbody>
+  </table>
+  <p>Table 1. Initial documentation issue.</p>
+
+  <h2>Domains and their basis</h2>
+  <p>The domain definitions follow the interval operations in
+  <a href="../../../src/digitalmodel/hydrodynamics/diffraction/benchmark_abscissa.py">benchmark_abscissa.py</a>:
+  <code>_validated_abscissa</code>, <code>build_evaluation_grid</code>,
+  <code>_check_source_gap</code> and <code>assess_sampling</code>.</p>
+  <table>
+    <thead><tr><th>Field</th><th>Domain</th><th>Derivation</th></tr></thead>
+    <tbody>
+      <tr><td><code>min_samples</code></td><td>Integer at least 2</td>
+      <td>Two endpoints are required to define an interval; fractional counts
+      and floating-point counts are excluded.</td></tr>
+      <tr><td><code>min_coverage</code></td><td><code>None</code> or finite real
+      in (0, 1]</td><td>Coverage = shared span / smaller source span. Positive
+      overlap cannot exceed the smaller span. <code>None</code> requires one
+      complete source domain within the other.</td></tr>
+      <tr><td><code>max_relative_gap</code></td><td>Finite real greater than 0</td>
+      <td>Relative gap = positive frequency difference / positive lower
+      frequency. No finite upper cap is imposed by this domain.</td></tr>
+    </tbody>
+  </table>
+  <p>Table 2. Numeric domains; booleans are excluded from every field.</p>
+  <p>The <a href="https://docs.python.org/3/library/stdtypes.html#boolean-type-bool">Python 3
+  Library Reference, Built-in Types, Boolean Type</a> documents boolean
+  inheritance from integers. Explicit rejection prevents a configuration flag
+  from silently becoming a numeric threshold. Supported NumPy real and integer
+  scalar values retain their types; strings and arrays are not coerced.</p>
+
+  <h2>Worked example: inputs, method and answer</h2>
+  <p>The example is synthetic. The coarse frequencies are
+  [1, 1.25, 1.5, 1.75, 2] rad/s; the dense frequencies are 1 + k/8 rad/s
+  for integer k from 0 through 8. The declared policy is
+  <code>min_samples=2, min_coverage=1.0, max_relative_gap=0.25</code>, with
+  custom justification recording these illustrative inputs.</p>
+  <p>Hand calculation: coverage = (2 − 1)/(2 − 1) = 1. The largest coarse
+  relative gap is (1.25 − 1)/1 = 0.25; the largest dense gap is
+  (1.125 − 1)/1 = 0.125. Both are at or below the declared 0.25 bound.
+  The method selects the coarser grid in the shared interval. The answer is
+  [1, 1.25, 1.5, 1.75, 2] rad/s.</p>
+  <p>Run the
+  <a href="../../../examples/hydrodynamics/diffraction/abscissa_policy.py">example script</a>
+  from the repository root:</p>
+  <pre><code>PYTHONPATH=src python examples/hydrodynamics/diffraction/abscissa_policy.py</code></pre>
+  <p>The script also demonstrates rejection of <code>True</code> for each
+  real-valued threshold. Integer <code>1</code> remains a valid threshold.
+  Domain rejection occurs before matrix alignment can consume a malformed policy.</p>
+
+  <h2>Checks and limits</h2>
+  <p>Regression tests exercise boolean rejection with and without custom
+  justification, nonfinite and unsupported values, supported numeric scalars,
+  caller rejection and the independently calculated example. These checks
+  establish configuration validation. They do not establish physical adequacy
+  of a sampling policy; no solver execution or tolerance change is involved.
+  Other nested policy classes remain outside this change.</p>
+</main>
+</body>
+</html>

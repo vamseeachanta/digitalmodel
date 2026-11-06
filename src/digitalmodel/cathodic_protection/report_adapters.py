@@ -1900,6 +1900,13 @@ def anode_design_report(cfg: Mapping[str, Any]) -> ReportSpec:
         _b401_report_additions(inputs, results, sections)
         if calc_type == KEY_B401 else []
     )
+    sensitivity = _mapping(cfg.get("report")).get("sensitivity")
+    if "sensitivity" in _mapping(cfg.get("report")):
+        from digitalmodel.cathodic_protection.report_sensitivity import sensitivity_section
+
+        if calc_type != KEY_B401:
+            raise ValueError("sensitivity reporting requires DNV_RP_B401_offshore")
+        sections.insert(len(sections) - 1, sensitivity_section(sensitivity))
     return ReportSpec(
         verification_presentation=calc_type == KEY_B401 and any(section.key == "summary" for section in sections),
         document=document,

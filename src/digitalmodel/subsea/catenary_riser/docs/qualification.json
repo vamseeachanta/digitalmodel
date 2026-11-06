@@ -1,0 +1,666 @@
+{
+  "status": "DRAFT",
+  "basis": "engineering-basis.md E1-E5; route-qualification.md",
+  "claims": [
+    {
+      "claim": "`SimpleCatenaryAnalyzer.analyze_riser`: incorrect height argument and uncited minimum removed",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_route_qualification.py::test_modern_vertex_and_distributions",
+        "test_audit_regressions.py::test_geometry_inverse_and_exhaustion"
+      ]
+    },
+    {
+      "claim": "`SimpleCatenaryAnalyzer.analyze_riser().top_angle`: convention corrected",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_route_qualification.py::test_modern_vertex_and_distributions",
+        "test_audit_regressions.py::test_geometry_inverse_and_exhaustion"
+      ]
+    },
+    {
+      "claim": "`BuoyancyModule.buoyancy_force_per_length`: riser displaced area was counted twice",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_audit_regressions.py::test_annular_module_and_both_callers"
+      ]
+    },
+    {
+      "claim": "`CatenaryCalculator.calculate` and `catenaryEquation`: force route returned S in m\u00b2, chord-based H and extra gravity",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_route_qualification.py::test_legacy_vertex_overlap",
+        "test_audit_regressions.py::test_legacy_infeasible_force"
+      ]
+    },
+    {
+      "claim": "`_status_of`, `FatigueResult.status`: invalid values formerly appeared PASS",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_audit_regressions.py::test_invalid_report_values_never_pass",
+        "test_report_evidence.py::test_marginal_band_remains_a_report_convention"
+      ]
+    },
+    {
+      "claim": "`legacy.orcaflexModel.build_model` / `WriteOrcaflexModel`: missing type-data resources",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Export requires enabled Extreme or Fatigue analysis, an active SCR or SLWR riser and at least one load. Inactive branches raise before output. Missing type data raises FileNotFoundError; a partial SLWR file is not a usable model. Native evidence remains separate. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_inactive_export_refuses_before_output",
+        "test_audit_pack.py::test_export_build_fails_for_missing_type_data"
+      ],
+      "input_contract": "Export requires enabled Extreme or Fatigue analysis, an active SCR or SLWR riser and at least one load. Inactive branches raise before output. Missing type data raises FileNotFoundError; a partial SLWR file is not a usable model. Native evidence remains separate."
+    },
+    {
+      "claim": "`cli.py:108`: Simple CLI catches all exceptions, prints an error and exits; this is an explicit failure, not a silent success [src/digitalmodel/subsea/catenary_riser/cli.py:L110-L112]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output",
+        "test_input_conditioning.py::test_cli_invalid_geometry_never_writes"
+      ],
+      "input_contract": "ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result."
+    },
+    {
+      "claim": "`cli.py:165`: Weight CLI catches all exceptions and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L164-L166]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output",
+        "test_input_conditioning.py::test_cli_invalid_geometry_never_writes"
+      ],
+      "input_contract": "ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result."
+    },
+    {
+      "claim": "`cli.py:224`: Lazy-wave quarantine exception is converted to a CLI error [src/digitalmodel/subsea/catenary_riser/cli.py:L222-L223]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output",
+        "test_input_conditioning.py::test_cli_invalid_geometry_never_writes"
+      ],
+      "input_contract": "ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result."
+    },
+    {
+      "claim": "`cli.py:251`: Outer lazy-wave CLI catches every exception and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L249-L251]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output",
+        "test_input_conditioning.py::test_cli_invalid_geometry_never_writes"
+      ],
+      "input_contract": "ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result."
+    },
+    {
+      "claim": "`models.py:159`: Steel-weight gravity is fixed inside a property [src/digitalmodel/subsea/catenary_riser/models.py:L214-L214]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
+      ],
+      "input_contract": "All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid."
+    },
+    {
+      "claim": "`models.py:168`: Coating gravity is fixed; missing or false-valued inputs give zero coating weight [src/digitalmodel/subsea/catenary_riser/models.py:L223-L224]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
+      ],
+      "input_contract": "All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid."
+    },
+    {
+      "claim": "`models.py:174`: Contents-weight gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L229-L229]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
+      ],
+      "input_contract": "All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid."
+    },
+    {
+      "claim": "`models.py:179`: Displaced-fluid buoyancy gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L234-L234]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
+      ],
+      "input_contract": "All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid."
+    },
+    {
+      "claim": "`models.py:238`: Buoyancy material gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L303-L303]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. The module adds only annular foam, coating and displaced-fluid contributions using explicit gravity; no disk fallback is permitted. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_coated_module_gravity_hand_balance",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
+      ],
+      "input_contract": "The module adds only annular foam, coating and displaced-fluid contributions using explicit gravity; no disk fallback is permitted."
+    },
+    {
+      "claim": "`models.py:243`: Buoyancy coating gravity is fixed; absent coating gives zero [src/digitalmodel/subsea/catenary_riser/models.py:L308-L310]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. The module adds only annular foam, coating and displaced-fluid contributions using explicit gravity; no disk fallback is permitted. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_coated_module_gravity_hand_balance",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
+      ],
+      "input_contract": "The module adds only annular foam, coating and displaced-fluid contributions using explicit gravity; no disk fallback is permitted."
+    },
+    {
+      "claim": "`models.py:248`: Displaced module-fluid gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L313-L313]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. The module adds only annular foam, coating and displaced-fluid contributions using explicit gravity; no disk fallback is permitted. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_coated_module_gravity_hand_balance",
+        "test_input_conditioning.py::test_absent_or_zero_density_coating_weight"
+      ],
+      "input_contract": "The module adds only annular foam, coating and displaced-fluid contributions using explicit gravity; no disk fallback is permitted."
+    },
+    {
+      "claim": "`models.py:293`: Duplicate module names overwrite profile entries; bare_riser overwrites a module with that name [src/digitalmodel/subsea/catenary_riser/models.py:L375-L377]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Module names are unique and cannot be bare_riser. Intervals cannot overlap or exceed riser length; diameter exceeds coated riser diameter. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_module_gravity_and_duplicate_keys"
+      ],
+      "input_contract": "Module names are unique and cannot be bare_riser. Intervals cannot overlap or exceed riser length; diameter exceeds coated riser diameter."
+    },
+    {
+      "claim": "`models.py:433`: Water resolves to seawater and empty resolves to air [src/digitalmodel/subsea/catenary_riser/models.py:L516-L521]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. water aliases seawater and empty aliases air, case-insensitively. Preset densities remain unqualified; these aliases do not mean freshwater or vacuum. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_fluid_aliases_preserve_preset_identity"
+      ],
+      "input_contract": "water aliases seawater and empty aliases air, case-insensitively. Preset densities remain unqualified; these aliases do not mean freshwater or vacuum."
+    },
+    {
+      "claim": "`effective_weight.py:19`: Constructor gravity is stored, while calculate reads property weights with fixed gravity [src/digitalmodel/subsea/catenary_riser/effective_weight.py:L24-L28]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. No override uses configuration gravity; a positive finite explicit override scales all components without mutating configuration. No native model or engineering acceptance is established.",
+      "input_contract": "No override uses configuration gravity; a positive finite explicit override scales all components without mutating configuration.",
+      "tests": [
+        "test_input_conditioning.py::test_configured_gravity_and_calculator_override",
+        "test_input_defaults.py::test_analyzer_gravity_ranges"
+      ]
+    },
+    {
+      "claim": "`simple_catenary.py:33`: Constructor gravity is stored; configuration properties supply weight [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L38-L47]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. No override uses configuration gravity; explicit positive finite acceleration sets effective weight without mutating the source configuration. No native model or engineering acceptance is established.",
+      "input_contract": "No override uses configuration gravity; explicit positive finite acceleration sets effective weight without mutating the source configuration.",
+      "tests": [
+        "test_input_defaults.py::test_simple_configured_gravity_and_default_override_hand_case",
+        "test_input_defaults.py::test_analyzer_gravity_ranges"
+      ]
+    },
+    {
+      "claim": "`simple_catenary.py:275`: False-valued limit arguments are omitted and an empty limit set passes [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L289-L302]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`lazy_wave.py:29`: Gravity constructor default is retained but analyze is quarantined [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L29-L32]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Compatibility gravity remains 9.81 m/s2; explicit gravity is positive and finite. analyze always raises NotImplementedError. No native model or engineering acceptance is established.",
+      "input_contract": "Compatibility gravity remains 9.81 m/s2; explicit gravity is positive and finite. analyze always raises NotImplementedError.",
+      "tests": [
+        "test_input_defaults.py::test_analyzer_gravity_ranges",
+        "test_lazy_wave_quarantine.py::test_analyzer_refuses_rather_than_fabricating"
+      ]
+    },
+    {
+      "claim": "`lazy_wave.py:57`: Unreachable former implementation retains depth/offset defaults, tension fractions, bend angles and clipped utilization; no live solution reaches them [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L57-L171]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Former geometry and force defaults remain unreachable: analyze returns no geometry for any buoyancy configuration. No hardcoded value is qualified. No native model or engineering acceptance is established.",
+      "input_contract": "Former geometry and force defaults remain unreachable: analyze returns no geometry for any buoyancy configuration. No hardcoded value is qualified.",
+      "tests": [
+        "test_lazy_wave_quarantine.py::test_buoyancy_invariance_is_no_longer_reachable"
+      ]
+    },
+    {
+      "claim": "`lazy_wave.py:193`: Buoyancy estimate has a fixed multiplier and divides by depth without a range check [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L193-L196]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. The uncited factor-of-two arch estimate is quarantined for all inputs, including zero depth; it returns no force. No native model or engineering acceptance is established.",
+      "input_contract": "The uncited factor-of-two arch estimate is quarantined for all inputs, including zero depth; it returns no force.",
+      "tests": [
+        "test_input_defaults.py::test_uncited_arch_estimate_is_quarantined"
+      ]
+    },
+    {
+      "claim": "`legacy/catenaryRiserSummary.py:39`: Missing update argument falls back to defaults [src/digitalmodel/subsea/catenary_riser/legacy/catenaryRiserSummary.py:L39-L43]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Only an omitted YAML argument selects the default. A supplied argument is one nonempty YAML path; filename stems preserve embedded dots. Malformed input raises; imports perform no I/O. No native model or engineering acceptance is established.",
+      "input_contract": "Only an omitted YAML argument selects the default. A supplied argument is one nonempty YAML path; filename stems preserve embedded dots. Malformed input raises; imports perform no I/O.",
+      "tests": [
+        "test_input_defaults.py::test_legacy_configuration_selection",
+        "test_input_defaults.py::test_invalid_legacy_argument_never_selects_default"
+      ]
+    },
+    {
+      "claim": "`legacy/catenaryRiserSummary.py:47`: Filename extraction failure falls back to the default filename [src/digitalmodel/subsea/catenary_riser/legacy/catenaryRiserSummary.py:L47-L50]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Only an omitted YAML argument selects the default. A supplied argument is one nonempty YAML path; filename stems preserve embedded dots. Malformed input raises; imports perform no I/O. No native model or engineering acceptance is established.",
+      "input_contract": "Only an omitted YAML argument selects the default. A supplied argument is one nonempty YAML path; filename stems preserve embedded dots. Malformed input raises; imports perform no I/O.",
+      "tests": [
+        "test_input_defaults.py::test_legacy_configuration_selection",
+        "test_input_defaults.py::test_invalid_legacy_argument_never_selects_default"
+      ]
+    },
+    {
+      "claim": "`legacy/getFatigueLoading.py:28`: Bin counter starts at zero and nonpositive sea-state cells are omitted [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L28-L32]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Finite nonnegative numeric bin weights are preserved without normalization; only zero bins are omitted. Hs [m] and Tp [s] are positive numbers; rounded Tp stays positive. Locale strings are refused. Seeds are nonnegative integers, one per positive bin; no truncation or caller mutation occurs. No native model or engineering acceptance is established.",
+      "input_contract": "Finite nonnegative numeric bin weights are preserved without normalization; only zero bins are omitted. Hs [m] and Tp [s] are positive numbers; rounded Tp stays positive. Locale strings are refused. Seeds are nonnegative integers, one per positive bin; no truncation or caller mutation occurs.",
+      "tests": [
+        "test_input_defaults.py::test_fatigue_positive_bins_and_numeric_units",
+        "test_input_defaults.py::test_fatigue_invalid_inputs_fail_without_mutation",
+        "test_input_defaults.py::test_fatigue_empty_bins_and_seed_exhaustion"
+      ]
+    },
+    {
+      "claim": "`legacy/getFatigueLoading.py:43`: External sea-state height is converted with float, without locale normalization [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L43-L45]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Finite nonnegative numeric bin weights are preserved without normalization; only zero bins are omitted. Hs [m] and Tp [s] are positive numbers; rounded Tp stays positive. Locale strings are refused. Seeds are nonnegative integers, one per positive bin; no truncation or caller mutation occurs. No native model or engineering acceptance is established.",
+      "input_contract": "Finite nonnegative numeric bin weights are preserved without normalization; only zero bins are omitted. Hs [m] and Tp [s] are positive numbers; rounded Tp stays positive. Locale strings are refused. Seeds are nonnegative integers, one per positive bin; no truncation or caller mutation occurs.",
+      "tests": [
+        "test_input_defaults.py::test_fatigue_positive_bins_and_numeric_units",
+        "test_input_defaults.py::test_fatigue_invalid_inputs_fail_without_mutation",
+        "test_input_defaults.py::test_fatigue_empty_bins_and_seed_exhaustion"
+      ]
+    },
+    {
+      "claim": "`legacy/getFatigueLoading.py:46`: Period is converted with float, without locale normalization [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L46-L48]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Finite nonnegative numeric bin weights are preserved without normalization; only zero bins are omitted. Hs [m] and Tp [s] are positive numbers; rounded Tp stays positive. Locale strings are refused. Seeds are nonnegative integers, one per positive bin; no truncation or caller mutation occurs. No native model or engineering acceptance is established.",
+      "input_contract": "Finite nonnegative numeric bin weights are preserved without normalization; only zero bins are omitted. Hs [m] and Tp [s] are positive numbers; rounded Tp stays positive. Locale strings are refused. Seeds are nonnegative integers, one per positive bin; no truncation or caller mutation occurs.",
+      "tests": [
+        "test_input_defaults.py::test_fatigue_positive_bins_and_numeric_units",
+        "test_input_defaults.py::test_fatigue_invalid_inputs_fail_without_mutation",
+        "test_input_defaults.py::test_fatigue_empty_bins_and_seed_exhaustion"
+      ]
+    },
+    {
+      "claim": "`legacy/getFatigueLoading.py:49`: Seed is converted with int [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L49-L51]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Finite nonnegative numeric bin weights are preserved without normalization; only zero bins are omitted. Hs [m] and Tp [s] are positive numbers; rounded Tp stays positive. Locale strings are refused. Seeds are nonnegative integers, one per positive bin; no truncation or caller mutation occurs. No native model or engineering acceptance is established.",
+      "input_contract": "Finite nonnegative numeric bin weights are preserved without normalization; only zero bins are omitted. Hs [m] and Tp [s] are positive numbers; rounded Tp stays positive. Locale strings are refused. Seeds are nonnegative integers, one per positive bin; no truncation or caller mutation occurs.",
+      "tests": [
+        "test_input_defaults.py::test_fatigue_positive_bins_and_numeric_units",
+        "test_input_defaults.py::test_fatigue_invalid_inputs_fail_without_mutation",
+        "test_input_defaults.py::test_fatigue_empty_bins_and_seed_exhaustion"
+      ]
+    },
+    {
+      "claim": "`legacy/getFatigueLoading.py:142`: Any argument-processing failure switches to defaults [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L142-L146]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Only an omitted YAML argument selects the default. A supplied argument is one nonempty YAML path; filename stems preserve embedded dots. Malformed input raises; imports perform no I/O. No native model or engineering acceptance is established.",
+      "input_contract": "Only an omitted YAML argument selects the default. A supplied argument is one nonempty YAML path; filename stems preserve embedded dots. Malformed input raises; imports perform no I/O.",
+      "tests": [
+        "test_input_defaults.py::test_legacy_configuration_selection",
+        "test_input_defaults.py::test_invalid_legacy_argument_never_selects_default"
+      ]
+    },
+    {
+      "claim": "`legacy/getFatigueLoading.py:150`: Any filename-processing failure switches to the default name [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L150-L153]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Only an omitted YAML argument selects the default. A supplied argument is one nonempty YAML path; filename stems preserve embedded dots. Malformed input raises; imports perform no I/O. No native model or engineering acceptance is established.",
+      "input_contract": "Only an omitted YAML argument selects the default. A supplied argument is one nonempty YAML path; filename stems preserve embedded dots. Malformed input raises; imports perform no I/O.",
+      "tests": [
+        "test_input_defaults.py::test_legacy_configuration_selection",
+        "test_input_defaults.py::test_invalid_legacy_argument_never_selects_default"
+      ]
+    },
+    {
+      "claim": "`legacy/catenary.py:26`: Missing or unsupported calculation returns the input configuration unchanged [src/digitalmodel/subsea/catenary_riser/legacy/catenary.py:L26-L37]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. A configuration dictionary selects exactly catenary or catenary_riser, directly or through meta. Missing and unsupported calculation names raise ValueError. No native model or engineering acceptance is established.",
+      "input_contract": "A configuration dictionary selects exactly catenary or catenary_riser, directly or through meta. Missing and unsupported calculation names raise ValueError.",
+      "tests": [
+        "test_input_defaults.py::test_router_refuses_missing_or_unsupported_calculation"
+      ]
+    },
+    {
+      "claim": "`legacy/catenaryMethods.py:209`: Plot coordinate shift starts at zero [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L203-L203]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Plot coordinates start at hangoff x=0, z=-HangoffBelowMeanSeaLevel [m], z upward. No native-axis qualification is implied. Tests suppress plotting callbacks and check numerical coordinates. No native model or engineering acceptance is established.",
+      "input_contract": "Plot coordinates start at hangoff x=0, z=-HangoffBelowMeanSeaLevel [m], z upward. No native-axis qualification is implied. Tests suppress plotting callbacks and check numerical coordinates.",
+      "tests": [
+        "test_input_defaults.py::test_legacy_plot_origin_is_hangoff"
+      ]
+    },
+    {
+      "claim": "`legacy/catenaryMethods.py:316`: Simple plot coordinate shift starts at zero [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L310-L310]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Plot coordinates start at hangoff x=0, z=-HangoffBelowMeanSeaLevel [m], z upward. No native-axis qualification is implied. Tests suppress plotting callbacks and check numerical coordinates. No native model or engineering acceptance is established.",
+      "input_contract": "Plot coordinates start at hangoff x=0, z=-HangoffBelowMeanSeaLevel [m], z upward. No native-axis qualification is implied. Tests suppress plotting callbacks and check numerical coordinates.",
+      "tests": [
+        "test_input_defaults.py::test_legacy_plot_origin_is_hangoff"
+      ]
+    },
+    {
+      "claim": "`legacy/catenaryMethods.py:389`: Buoyancy calculation converts weight using fixed gravity [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L383-L383]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Supply exactly one nonnegative Thickness [inch] or BuoyancyFactor. Required gravity is positive. Uplift is factor times reference bare weight; the same uplift reduces actual bare weight. Densities are SI, foam density is below water density, and coverage is percent in (0,100]. No native model or engineering acceptance is established.",
+      "input_contract": "Supply exactly one nonnegative Thickness [inch] or BuoyancyFactor. Required gravity is positive. Uplift is factor times reference bare weight; the same uplift reduces actual bare weight. Densities are SI, foam density is below water density, and coverage is percent in (0,100].",
+      "tests": [
+        "test_input_defaults.py::test_legacy_buoyancy_balance_uses_factor_and_gravity",
+        "test_input_defaults.py::test_legacy_buoyancy_thickness_branch",
+        "test_input_defaults.py::test_legacy_buoyancy_ranges"
+      ]
+    },
+    {
+      "claim": "`legacy/catenaryMethods.py:452`: External declination is truncated with int [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L446-L446]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. The integer selects an exclusive upper grid bound, not a truncated input angle. Samples start at 0.01 degree and preserve fractional angles; reported coordinates use three decimals. Mesh validity remains unqualified. No native model or engineering acceptance is established.",
+      "input_contract": "The integer selects an exclusive upper grid bound, not a truncated input angle. Samples start at 0.01 degree and preserve fractional angles; reported coordinates use three decimals. Mesh validity remains unqualified.",
+      "tests": [
+        "test_input_defaults.py::test_legacy_declination_grid_preserves_fractional_angles"
+      ]
+    },
+    {
+      "claim": "`legacy/pipeProperties.py:73`: Equivalent-pipe calculations apply inch-to-metre area conversion and configured gravity; input unit agreement is assumed [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L73-L181]",
+      "status": "TESTED",
+      "reason": "Offline package-function contract only. Areas are inch squared, densities kg/m3, acceleration m/s2, strake mass kg/m and strake weight N/m. Exact inch conversion is applied once; units are declared, never inferred. Inputs are finite and nonnegative; gravity is positive. No native model or engineering acceptance is established.",
+      "tests": [
+        "test_input_conditioning.py::test_legacy_inch_areas_and_configured_gravity",
+        "test_input_defaults.py::test_legacy_section_ranges",
+        "test_input_defaults.py::test_legacy_equivalent_pipe_rejects_invalid_gravity",
+        "test_input_defaults.py::test_legacy_equivalent_pipe_unit_branches"
+      ],
+      "input_contract": "Areas are inch squared, densities kg/m3, acceleration m/s2, strake mass kg/m and strake weight N/m. Exact inch conversion is applied once; units are declared, never inferred. Component areas and densities are finite and nonnegative; gravity is positive. Bare, strake and buoyancy weight branches have separate hand checks; strake additions retain caller SI units."
+    },
+    {
+      "claim": "`report.py:69`: Classification uses a fixed marginal-utilization fraction [src/digitalmodel/subsea/catenary_riser/report.py:L73-L85]",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_marginal_band_remains_a_report_convention"
+      ]
+    },
+    {
+      "claim": "`report.py:147`: Provenance defaults permit empty revision, run and timestamp fields [src/digitalmodel/subsea/catenary_riser/report.py:L151-L157]",
+      "status": "TESTED",
+      "reason": "Default revision, run identity and timestamp remain empty and are reported missing; neither renderer supplies calculation evidence. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_report_defaults_preserve_missing_evidence",
+        "test_report_evidence.py::test_required_provenance_is_not_inferred"
+      ]
+    },
+    {
+      "claim": "`report.py:190`: Missing strength or fatigue results return None [src/digitalmodel/subsea/catenary_riser/report.py:L219-L229]",
+      "status": "TESTED",
+      "reason": "The empty report explicitly returns None for both strength and fatigue roll-ups. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"
+      ]
+    },
+    {
+      "claim": "`report.py:213`: No result statuses produces N/A, not a numeric zero [src/digitalmodel/subsea/catenary_riser/report.py:L257-L259]",
+      "status": "TESTED",
+      "reason": "The empty report explicitly returns N/A for overall status. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"
+      ]
+    },
+    {
+      "claim": "`report.py:227`: Missing strength_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L273-L276]",
+      "status": "TESTED",
+      "reason": "Dictionary coercion explicitly preserves a missing strength group as an empty list and rendering flags partial evidence. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
+      ]
+    },
+    {
+      "claim": "`report.py:231`: Missing fatigue_results becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L277-L280]",
+      "status": "TESTED",
+      "reason": "Dictionary coercion explicitly preserves a missing fatigue group as an empty list and rendering flags partial evidence. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
+      ]
+    },
+    {
+      "claim": "`report.py:235`: Missing code_checks becomes an empty list [src/digitalmodel/subsea/catenary_riser/report.py:L281-L284]",
+      "status": "TESTED",
+      "reason": "Dictionary coercion explicitly preserves a missing code-check group as an empty list and rendering flags partial evidence. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
+      ]
+    },
+    {
+      "claim": "`report.py:345`: Any report-builder import failure is swallowed [src/digitalmodel/subsea/catenary_riser/report.py:L391-L392]",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_builder_import_failure_and_fallback_leave_import_path_unchanged"
+      ]
+    },
+    {
+      "claim": "`report.py:356`: Fallback import failure or absent builder returns None [src/digitalmodel/subsea/catenary_riser/report.py:L406-L408]",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_builder_import_failure_and_fallback_leave_import_path_unchanged"
+      ]
+    },
+    {
+      "claim": "`report.py` (`render_html`): Builder incompatibility selects explicitly marked fallback HTML [src/digitalmodel/subsea/catenary_riser/report.py:L708-L743]",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_report_qualification.py::test_incompatible_builder_selects_fallback_in_written_output"
+      ]
+    },
+    {
+      "claim": "Legacy lazy-wave vertical force adds horizontal force, issue #2044. [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L155-L169]",
+      "status": "NOT_EVALUATED",
+      "reason": "NOT_EVALUATED here: the strict expected failures retain the independently tracked vertical-force defect; no force correction is included."
+    },
+    {
+      "claim": "Conflicting historical reference answers, issue #2050. [tests/fixtures/test_vectors/mooring_risers/mooring_catenary_solver.yaml:L105-L140]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "Distinct catenary routes require broader qualification; #2756 (related #1811).",
+      "status": "NOT_EVALUATED",
+      "reason": "A vertex overlap regression establishes only its stated boundary condition. General elastic routes, arbitrary end conditions and native export transformations lack broader qualification evidence."
+    },
+    {
+      "claim": "README presents a working lazy-wave example despite quarantine. [src/digitalmodel/subsea/catenary_riser/README.md:L117-L137] [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L57-L74]",
+      "status": "TESTED",
+      "reason": "The README example explicitly records quarantine and contains no analyze call; the analyzer itself raises rather than returning fabricated geometry. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_route_qualification.py::test_readme_example_preserves_lazy_wave_quarantine",
+        "test_lazy_wave_quarantine.py::test_analyzer_refuses_rather_than_fabricating"
+      ]
+    },
+    {
+      "claim": "`legacy/catenary_riser.py:144` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L144-L144]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/catenary_riser.py:152` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L152-L152]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/catenary_riser.py:95` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L95-L95]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:13` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L16-L16]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:170` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L173-L173]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:228` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L231-L231]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:277` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L280-L280]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:279` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L282-L282]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:287` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L290-L290]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:389` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L392-L392]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:401` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L404-L404]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:402` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L405-L405]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:512` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L515-L515]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:513` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L516-L516]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:1125` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1128-L1128]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:1132` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1135-L1135]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:420` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L423-L423]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:573` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L576-L576]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:579` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L582-L582]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:620` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L623-L623]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:625` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L628-L628]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:626` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L629-L629]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:431` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L434-L434]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/catenaryMethods.py:65` [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L59-L62]",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_input_conditioning.py::test_legacy_no_branch_is_loud"
+      ]
+    },
+    {
+      "claim": "`legacy/pipeProperties.py:184` [src/digitalmodel/subsea/catenary_riser/legacy/pipeProperties.py:L184-L185]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:518` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L521-L522]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:522` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L525-L526]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:1203` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1206-L1207]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:1207` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1210-L1211]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    },
+    {
+      "claim": "`report.py:155` [src/digitalmodel/subsea/catenary_riser/report.py:L159-L161]",
+      "status": "TESTED",
+      "reason": "Missing calculation time is explicitly retained as an empty default and reported missing; revision history is independently required. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_report_defaults_preserve_missing_evidence"
+      ]
+    },
+    {
+      "claim": "`report.py` (`_status_span`) [src/digitalmodel/subsea/catenary_riser/report.py:L542-L549]",
+      "status": "TESTED",
+      "reason": "The unknown-style branch explicitly returns the supplied status text without a styled span. No broader native or engineering qualification is inferred.",
+      "tests": [
+        "test_report_evidence.py::test_no_groups_plain_dictionary_and_unknown_style"
+      ]
+    },
+    {
+      "claim": "`legacy/orcaflexModel.py:1222` [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L1225-L1298]",
+      "status": "TESTED",
+      "reason": "The named package-output regressions cover this observation only. No broader native or engineering certification is inferred.",
+      "tests": [
+        "test_input_conditioning.py::test_inactive_export_refuses_before_output"
+      ]
+    },
+    {
+      "claim": "`legacy/catenary_riser.py:32` [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L32-L167]",
+      "status": "NOT_EVALUATED",
+      "reason": "Historical alternate-input behavior remains unqualified; no native evidence or governing acceptance basis is supplied."
+    }
+  ]
+}

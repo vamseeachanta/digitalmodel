@@ -20,10 +20,27 @@ def _key(entry: dict) -> tuple:
     return entry["case"], entry["variant"]
 
 
+def _finite_fingerprint(fp) -> bool:
+    """Require a nonempty mapping of finite scalars or nonempty flat lists."""
+    if not isinstance(fp, dict) or not fp:
+        return False
+    for value in fp.values():
+        values = value if isinstance(value, list) else [value]
+        if not values or not all(
+            isinstance(v, (int, float)) and not isinstance(v, bool)
+            and math.isfinite(v) for v in values
+        ):
+            return False
+    return True
+
+
 def _matches(new: dict, base: dict, rel: float, ab: float) -> bool:
-    if new.keys() != base.keys():
+    if (not _finite_fingerprint(new) or not _finite_fingerprint(base)
+            or new.keys() != base.keys()):
         return False
     for key in base:
+        if isinstance(new[key], list) != isinstance(base[key], list):
+            return False
         xs = new[key] if isinstance(new[key], list) else [new[key]]
         ys = base[key] if isinstance(base[key], list) else [base[key]]
         if len(xs) != len(ys) or not all(
@@ -50,7 +67,8 @@ def differing_keys(new: dict, base: dict) -> list:
 
 def fingerprint_status(new: dict, base: dict) -> str:
     """FAILED, INPUT_CHANGED, MATCH, VERSION_CHANGED or MISMATCH for two entries."""
-    if (not new.get("n_ok") or not new.get("fingerprint")
+    if (not new.get("n_ok") or not _finite_fingerprint(new.get("fingerprint"))
+            or not _finite_fingerprint(base.get("fingerprint"))
             or not new.get("fingerprint_consistent", True)
             or not new.get("complete", True)):
         return "FAILED"
@@ -70,11 +88,25 @@ def compare(new: dict, base: dict, slower_ratio: float = SLOWER_RATIO) -> dict:
             f"pack version {new.get('pack_version')} cannot be compared with "
             f"baseline pack version {base.get('pack_version')}"
         )
+    if not base["results"]:
+        raise ValueError("empty baseline cannot establish agreement")
+    indices = []
+    for name, receipt in (("baseline", base), ("new", new)):
+        index = {}
+        for entry in receipt["results"]:
+            key = _key(entry)
+            if key in index:
+                raise ValueError(f"duplicate case/variant identity in {name}: {key}")
+            index[key] = entry
+        indices.append(index)
+    baseline, found = indices
+    surplus = found.keys() - baseline.keys()
+    if surplus:
+        raise ValueError(f"entry membership differs: surplus case/variant identities {surplus}")
     ineligible = [_key(e) for e in base["results"] if not e.get("baseline_eligible")]
     if ineligible:
         raise ValueError(f"baseline entries are not baseline-eligible: {ineligible}")
 
-    found = {_key(e): e for e in new["results"]}
     rows = []
     for b in base["results"]:
         n = found.get(_key(b))

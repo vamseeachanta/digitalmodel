@@ -182,6 +182,17 @@ def test_source_pins(result):
         assert hashlib.sha256(payload).hexdigest() == source["sha256_lf"]
 
 
+def test_committed_calculation_source_pins():
+    manifest = json.loads(
+        (ROOT / "docs/reports/pipeline-ffs-assessment.manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert manifest["calculation_sources_sha256_lf"] == {
+        name: builder.digest(ROOT / name) for name in builder.CALCULATION_SOURCES
+    }
+
+
 def test_every_result_matches_existing_methods(result):
     from digitalmodel.asset_integrity.assessment.measurement_sufficiency import MeasurementSufficiency
 

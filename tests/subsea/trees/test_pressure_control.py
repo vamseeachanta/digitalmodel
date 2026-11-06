@@ -5,6 +5,7 @@
 
 import importlib
 import math
+from itertools import permutations
 
 import pytest
 
@@ -27,6 +28,55 @@ def test_liquid_valve_losses_add_in_series():
     assert core().valve_pressure_drop(0, 0, 1) == 0
     with pytest.raises(ValueError, match="closed"):
         core().valve_pressure_drop(1, 0, 1)
+
+
+# Synthetic hydraulic similarity fixtures for issue #2003; no equipment data.
+# Independent hand calculation using SG*(Q/Cv)^2, in US gpm and psi:
+# SG=0.75, Q=24, Cv=(6, 12, 24) gives losses (12, 3, 0.75) psi,
+# hence 12+3+0.75=15.75 psi in any series order. At Q=0 all losses
+# are zero, including the closed Cv=0 valve (the existing shutoff convention).
+@pytest.mark.parametrize("flow_gpm, valve_cvs, expected_losses", [
+    (24, (6, 12, 24), (12, 3, 0.75)),
+    (0, (0, 6, 12), (0, 0, 0)),
+])
+def test_series_valve_loss_is_permutation_invariant(
+    flow_gpm, valve_cvs, expected_losses,
+):
+    """Unequal valve coefficients retain the hand-calculated series loss."""
+    specific_gravity = 0.75  # Synthetic specific gravity worked above.
+    for cv, expected in zip(valve_cvs, expected_losses):
+        assert core().valve_pressure_drop(flow_gpm, cv, specific_gravity) == expected
+    expected_total = sum(expected_losses)  # Sum independent hand calculations.
+    for ordered_cvs in permutations(valve_cvs):
+        assert core().series_pressure_drop(
+            flow_gpm, ordered_cvs, specific_gravity,
+        ) == expected_total
+
+
+# Positive synthetic scale factors probe reduction and enlargement:
+# k=0.25, 2, 8; SG*((k*Q)/(k*Cv))^2 = SG*(Q/Cv)^2 for Cv>0.
+# The zero-flow, closed-valve case retains zero loss under every scale.
+@pytest.mark.parametrize("scale", [0.25, 2, 8])
+@pytest.mark.parametrize("flow_gpm, valve_cvs, expected_losses", [
+    (24, (6, 12, 24), (12, 3, 0.75)),
+    (0, (0, 6, 12), (0, 0, 0)),
+])
+def test_parallel_scaling_of_flow_and_cv_preserves_drop(
+    flow_gpm, valve_cvs, expected_losses, scale,
+):
+    """Scaling the flow and every Cv together preserves each loss and its sum."""
+    specific_gravity = 0.75  # Synthetic specific gravity worked above.
+    scaled_flow = scale * flow_gpm
+    scaled_cvs = tuple(scale * cv for cv in valve_cvs)
+    for cv, expected in zip(scaled_cvs, expected_losses):
+        assert core().valve_pressure_drop(scaled_flow, cv, specific_gravity) == expected
+    expected_total = sum(expected_losses)  # Sum independent hand calculations.
+    assert core().series_pressure_drop(
+        flow_gpm, valve_cvs, specific_gravity,
+    ) == expected_total
+    assert core().series_pressure_drop(
+        scaled_flow, scaled_cvs, specific_gravity,
+    ) == expected_total
 
 
 def test_liquid_choke_distinguishes_subcritical_and_choked_flow():

@@ -9,12 +9,14 @@ import copy
 import csv
 import importlib.util
 import json
+import math
 import os
 import re
 import shutil
 import subprocess
 from html.parser import HTMLParser
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -30,22 +32,18 @@ BUILDER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BUILDER)
 
 
-def test_report_ignore_exceptions_survive_shared_module_rules(tmp_path):
-    """Keep report sources visible when another module adds a parent rule."""
-    rules = Path("docs/reports/modules/.gitignore")
-    target = tmp_path / rules
-    target.parent.mkdir(parents=True)
-    target.write_bytes((ROOT / rules).read_bytes())
+def test_report_ignore_exceptions_follow_shared_module_rules(tmp_path):
+    """Retain only selected outputs through the consolidated root rules."""
     shared_rules = (
-        "\n/docs/reports/modules/*\n"
-        "!/docs/reports/modules/reference/\n"
+        "\n!/docs/reports/modules/reference/\n"
         "!/docs/reports/modules/reference/report.html\n"
     )
     (tmp_path / ".gitignore").write_text(
-        (ROOT / ".gitignore").read_text() + shared_rules, encoding="utf-8"
+        (ROOT / ".gitignore").read_text(encoding="utf-8") + shared_rules,
+        encoding="utf-8", newline="\n"
     )
     prefix = "docs/reports/modules/"
-    retained = [".gitignore", "mooringfatigue/report.html",
+    retained = ["mooringfatigue/report.html",
                 "mooringfatigue/changes.json", "reference/report.html"]
     ignored = ["mooringfatigue/calculation.csv", "mooringfatigue/extra.html",
                "unrelated/report.html"]
@@ -107,19 +105,26 @@ class Document(HTMLParser):
 
 def fresh_facts(tmp_path):
     """Read public inputs and returned CSVs independently of the builder."""
-    cfg = yaml.safe_load(BUILDER.EXAMPLE.read_text())
+    cfg = yaml.safe_load(BUILDER.EXAMPLE.read_text(encoding="utf-8"))
     inputs = copy.deepcopy(cfg["mooring_fatigue"])
     cfg["mooring_fatigue"]["output_dir"] = str(tmp_path)
     result = router(cfg)["mooring_fatigue"]
-    with Path(result["results_csv"]).open() as stream:
+    with Path(result["results_csv"]).open(encoding="utf-8", newline="") as stream:
         bins = list(csv.DictReader(stream))
     return inputs, result, bins
 
 
 def test_rebuild_and_all_worked_example_numbers(tmp_path):
     page, changes = BUILDER.build(tmp_path / "build")
-    assert page == REPORT.read_text()
-    assert changes == json.loads(REPORT.with_name("changes.json").read_text())
+    rebuild = (
+        "Rebuild with PYTHONPATH=src python "
+        "scripts/reporting/build_mooring_fatigue_module_report.py "
+        "--work-dir <temporary-calculation-folder>"
+    )
+    assert page == REPORT.read_text(encoding="utf-8"), rebuild
+    assert changes == json.loads(
+        REPORT.with_name("changes.json").read_text(encoding="utf-8")
+    ), rebuild
     inputs, result, bins = fresh_facts(tmp_path / "independent")
     expected = {
         "design_life": result["design_life_years"],
@@ -172,9 +177,9 @@ def test_equations_against_independent_bin_calculation(tmp_path):
 
 
 def test_house_style_structure_and_public_text():
-    page = REPORT.read_text()
+    page = REPORT.read_text(encoding="utf-8")
     doc = Document(page)
-    exemplar = BUILDER.EXEMPLAR.read_text()
+    exemplar = BUILDER.EXEMPLAR.read_text(encoding="utf-8")
     assert re.search(r"<style>.*?</style>", exemplar, re.S).group() in page
     assert '<body class="hs-doc">' in page
     assert len(doc.headings) == 10
@@ -194,7 +199,7 @@ def test_house_style_structure_and_public_text():
 
 @pytest.mark.parametrize("material", ["POLYESTER", "UNKNOWN"])
 def test_material_rejection_is_documented(tmp_path, material):
-    cfg = yaml.safe_load(BUILDER.EXAMPLE.read_text())
+    cfg = yaml.safe_load(BUILDER.EXAMPLE.read_text(encoding="utf-8"))
     cfg["mooring_fatigue"]["output_dir"] = str(tmp_path)
     cfg["mooring_fatigue"]["lines"][0]["material"] = material
     with pytest.raises(ValueError, match="out of scope|unsupported material"):
@@ -202,7 +207,7 @@ def test_material_rejection_is_documented(tmp_path, material):
 
 
 def test_failed_screening_has_documented_action(tmp_path):
-    cfg = yaml.safe_load(BUILDER.EXAMPLE.read_text())
+    cfg = yaml.safe_load(BUILDER.EXAMPLE.read_text(encoding="utf-8"))
     cfg["mooring_fatigue"]["output_dir"] = str(tmp_path)
     for line in cfg["mooring_fatigue"]["lines"]:
         for row in line["tension_range_bins"]:
@@ -212,7 +217,7 @@ def test_failed_screening_has_documented_action(tmp_path):
     assert result["governing_dff_margin"] < 1
     original = BUILDER.EXAMPLE
     changed = tmp_path / "failing.yml"
-    changed.write_text(yaml.safe_dump(cfg), encoding="utf-8")
+    changed.write_text(yaml.safe_dump(cfg), encoding="utf-8", newline="\n")
     try:
         BUILDER.EXAMPLE = changed
         page, _ = BUILDER.build(tmp_path / "rendered")
@@ -244,7 +249,10 @@ def test_basis_is_portable_and_limited_to_calculation_sources(tmp_path, monkeypa
     else:
         name = "fatigue/spectral_fatigue.py" if change == "unrelated" else "mooring_fatigue/workflow.py"
         path = checkout / "src/digitalmodel" / name
-        path.write_text(path.read_text() + "\n# Source change.\n", encoding="utf-8")
+        path.write_text(
+            path.read_text(encoding="utf-8") + "\n# Source change.\n",
+            encoding="utf-8", newline="\n"
+        )
     changed_page, _ = BUILDER.build(tmp_path / "changed")
     assert (changed_page == lf_page) == (change != "calculation")
 
@@ -256,6 +264,9 @@ def test_independent_headline_oracle(tmp_path):
     these expectations do not call the curve helper or read generated HTML.
     """
     _, result, bins = fresh_facts(tmp_path)
+    # Hand totals from sum(n_i / N_i): 0.00228233 and 0.0170378.
+    # Governing life: 25 / 0.0170378 = 1467.32 years.
+    # Governing margin: 1 / (3 * 0.0170378) = 19.564.
     expected_damage = [2.28233e-3, 1.70378e-2]
     for line, expected in zip(result["lines"], expected_damage, strict=True):
         assert line["total_damage"] == pytest.approx(expected, rel=3e-6)
@@ -276,6 +287,34 @@ def test_component_basis_and_curve_parameters_are_explicit(tmp_path):
     assert page.count("Component status: NOT_EVALUATED") == 2
     assert "Knee cycles" in page and "Knee stress range" in page
     assert "Continuous knee anchoring" in page and "0.2 %" in page
+
+
+@pytest.mark.parametrize("reduction, description", [
+    (0.5, "reduces damage by less than 0.6 %"),
+    (75.0, "reduces damage by less than 75.1 %"),
+    (-0.5, "increases damage by less than 0.6 %"),
+    (0.0, "does not change damage"),
+])
+def test_intercept_comparison_has_a_strict_bound_and_direction(
+    tmp_path, monkeypatch, reduction, description
+):
+    """Keep the stated comparison true at exact display increments and zero."""
+    curve = BUILDER.get_sn_curve("D", "seawater_cp")
+    anchored = math.log10(curve.ND) + curve.k_2 * math.log10(curve.SD)
+    intercept = anchored + math.log10(1 - reduction / 100)
+    monkeypatch.setattr(BUILDER, "BILINEAR", {"D": SimpleNamespace(log_a2=intercept)})
+    page, _ = BUILDER.build(tmp_path)
+    assert "anchoring " + description + " relative to" in page
+
+
+def test_comment_controls_require_node_in_ci(monkeypatch):
+    """Reject a CI run that cannot execute the comment-control assertions."""
+    monkeypatch.setenv("CI", "true")
+    monkeypatch.setattr(shutil, "which", lambda _: None)
+    with pytest.raises((pytest.fail.Exception, pytest.skip.Exception)) as stopped:
+        test_comment_roundtrip_and_chart_interaction("roundtrip")
+    assert stopped.type is pytest.fail.Exception
+    assert "Node is required" in str(stopped.value)
 
 
 @pytest.mark.parametrize("check", ["governing", "scale", "draft"])
@@ -302,7 +341,7 @@ def test_governing_required_life_and_chart_scale(tmp_path, monkeypatch, check):
         assert len(set(coordinates)) == 4
         assert all(90 < value < 740 for value in coordinates)
     else:
-        assert "Draft for review" in page
+        assert "Draft for maintainer review" in page
         assert "Draft for client review" not in page
 
 
@@ -311,6 +350,8 @@ def test_comment_roundtrip_and_chart_interaction(size_case):
     """Exercise the embedded controls without a browser or external packages."""
     node = shutil.which("node")
     if node is None:
+        if os.environ.get("CI"):
+            pytest.fail("Node is required for comment-control checks in CI")
         pytest.skip("Node is unavailable for the optional interface check")
     harness = r"""
 const assert = require('node:assert/strict');

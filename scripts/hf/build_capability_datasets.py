@@ -82,11 +82,26 @@ def cathodic_protection_rows(doc: dict | None = None) -> list[dict]:
     return out
 
 
-def wall_thickness_3d_rows(doc: dict | None = None) -> list[dict]:
+def wall_thickness_3d_rows(
+    doc: dict | Path | None = None, *, source: Path | None = None
+) -> list[dict]:
     """The (t, T, M) study from build_wall_thickness_3d.py — already tidy, so this only
-    reads it. 354,609 rows: 191 MB as JSON, ~1 MB as parquet, which is why the JSON is
-    gitignored and only the published dataset is durable (#1915)."""
-    doc = _load("structural/wall-thickness-3d.json") if doc is None else doc
+    reads it. The full JSON study is gitignored; generate it separately and supply
+    its path before preparing the dataset for publication (#1915)."""
+    if isinstance(doc, Path):
+        if source is not None:
+            raise ValueError("provide only one study input")
+        source, doc = doc, None
+    if doc is not None:
+        if source is not None:
+            raise ValueError("provide only one study input")
+        return doc["rows"]
+    doc = (
+        json.loads(source.read_text(encoding="utf-8"))
+        if source is not None else _load("structural/wall-thickness-3d.json")
+    )
+    if len(doc["rows"]) != doc["meta"]["grid"]["row_count"]:
+        raise ValueError("full wall-thickness study row count does not match metadata")
     return doc["rows"]
 
 
@@ -226,6 +241,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(_REPO / "docs" / "api" / "_datasets"),
                     help="directory to write <dataset>/<table>.json into")
+    ap.add_argument("--wall-thickness-source", type=Path,
+                    help="explicit generated full-grid study outside the repository")
     args = ap.parse_args()
     out_root = Path(args.out)
 
@@ -233,7 +250,10 @@ def main() -> None:
         d = out_root / dataset
         d.mkdir(parents=True, exist_ok=True)
         for name, fn in tables.items():
-            rows = fn()
+            rows = (
+                wall_thickness_3d_rows(args.wall_thickness_source)
+                if fn is wall_thickness_3d_rows else fn()
+            )
             (d / f"{name}.json").write_text(
                 json.dumps(rows, indent=1) + "\n", encoding="utf-8")
             cols = len(rows[0]) if rows else 0

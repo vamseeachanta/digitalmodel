@@ -38,12 +38,12 @@ SECTIONS = (
 )
 CHANGES = {
     "report": "Mooring fatigue module analysis",
-    "revision": "B",
-    "date": "2026-10-22",
+    "revision": "C",
+    "date": "2026-11-06",
     "changes": [
-        "Component evaluation is withheld because the demonstration uses a welded-joint curve.",
-        "Runtime curve parameters and independent numerical checkpoints make the calculation auditable.",
-        "Calculation hashes, chart positions and comment size checks are corrected for reproducibility.",
+        "The report is rebuilt against the current calculation sources without changing the example results.",
+        "Report observations distinguish software evidence from component qualification.",
+        "Text encoding and the direction and upper bound of intercept comparisons are explicit.",
     ],
 }
 
@@ -190,8 +190,13 @@ def build(work_dir: Path) -> tuple[str, dict]:
     tabulated_intercept = BILINEAR[inputs["sn_curve"]["curve"]].log_a2
     anchored_intercept = math.log10(curve.ND) + curve.k_2 * math.log10(curve.SD)
     damage_reduction = 100 * (1 - 10 ** (tabulated_intercept - anchored_intercept))
-    # Round the stated bound upward so the comparison remains true.
-    reduction_bound = math.ceil(damage_reduction * 10) / 10
+    # Keep "less than" strict at exact tenths, allowing for floating-point noise.
+    reduction_bound = math.ceil(abs(damage_reduction) * 10 + 1e-9) / 10
+    if damage_reduction == 0:
+        intercept_comparison = "does not change damage"
+    else:
+        direction = "reduces" if damage_reduction > 0 else "increases"
+        intercept_comparison = f"{direction} damage by less than {reduction_bound:.1f} %"
     demonstration_status = (
         "Current demonstration status: PASS. The screening criterion is met."
         if result["screening_status"] == "pass" else
@@ -264,7 +269,8 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
     change_items = ''.join(f'<li>{html.escape(item)}</li>' for item in CHANGES["changes"])
     revision = table(("Revision", "Date", "What changed and why"), [
         ("A", "2026-10-22", "The metallic-line workflow is documented to distinguish a reproducible screening calculation from a component assessment."),
-        ("B", CHANGES["date"], "The welded-joint curve limitation, numerical evidence and reproducibility controls are clarified before component evaluation.")
+        ("B", "2026-10-22", "The welded-joint curve limitation, numerical evidence and reproducibility controls are clarified before component evaluation."),
+        ("C", CHANGES["date"], "The report is rebuilt against current calculation sources and comparison wording is corrected to retain its stated bound.")
     ], "Revision history")
     sections = [f"""
 <p>The mooring fatigue module is a metallic-line fatigue screening tool. Analysis is performed to determine cumulative fatigue damage under the documented public loading example, and the key results are summarized below.</p>
@@ -313,7 +319,7 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
 <p>Nominal stress range is calculated as Δσ = ΔT / A with force and area expressed in consistent units. A tension in kilonewtons is converted to newtons before division by area in square millimetres; the resulting stress is in megapascals. No additional stress concentration or thickness correction is applied in this route. {source(2)}</p>
 <p>The helper represents the selected welded-joint curve by N = Nₖ(Δσ / Sₖ)<sup>−m</sup>. Here N is allowable cycles, Nₖ is the knee cycle count, Sₖ is the knee stress range, and m is the applicable segment slope. The below-knee segment is anchored continuously at the knee. Both segments remain finite; an endurance cut-off is not applied. The stored curve source and the helper implementation are distinguished in the reference record. {source(3)} {source(4)}</p>
 {table(('Runtime parameter', 'Value', 'Unit'), curve_rows, 'Runtime curve parameters observed from the installed helper; method source: DNV-RP-C203 (2011), Table 2-2 D, CP.')}
-<p>Continuous knee anchoring gives a slightly different below-knee intercept from the rounded software table record. For this example, all stresses are below the knee; anchoring reduces damage by less than {reduction_bound:.1f} % relative to using that record directly. These are software observations, not a transcription of publication coefficients. {source(2)} {source(3)}</p>
+<p>Continuous knee anchoring gives a slightly different below-knee intercept from the rounded software table record. For this example, all stresses are below the knee; anchoring {intercept_comparison} relative to using that record directly. These are software observations, not a transcription of publication coefficients. {source(2)} {source(3)}</p>
 <p>Miner damage is calculated as D = Σ(nᵢ / Nᵢ), where nᵢ is applied cycles and Nᵢ is allowable cycles for bin i. Fatigue life is calculated as L = T / D, required life as Lᵣ = T × F, and screening margin as M = L / Lᵣ. T is the supplied design life and F is the supplied design fatigue factor. The decision M ≥ unity is equivalent to D ≤ the reciprocal of F. These are the implemented equations, conditional on the assumed lifetime exposure. {source(2)}</p>
 <h3>Inputs, execution and outputs</h3>
 <p>The documented command-line entry calls the engine with an input configuration. The same mooring workflow is called directly for the example calculation in this report. Required settings are positive design life, positive design fatigue factor, and a non-empty list of metallic lines with non-empty cycle bins. For tension bins, effective area is required. Curve and environment are selected explicitly here. {source(1)} {source(2)}</p>
@@ -412,7 +418,7 @@ The criterion is derived from the example design fatigue factor of {n('dff')}; i
 <title>{TITLE}</title>
 {style}
 </head><body class="hs-doc">
-<header><h1>{TITLE}</h1><p>Draft for review</p><p>Revision {CHANGES['revision']} | {CHANGES['date']}</p></header>
+<header><h1>{TITLE}</h1><p>Draft for maintainer review</p><p>Revision {CHANGES['revision']} | {CHANGES['date']}</p></header>
 <div class="layout"><nav aria-label="Contents"><ol>{nav}<li><a href="#appendices">Appendices</a></li>
 <li><a href="#comment-panel">Document comments</a></li></ol></nav><main>
 <details id="change-panel"><summary>Engineering changes since the previous revision</summary><ul>{change_items}</ul>

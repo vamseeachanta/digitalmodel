@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elastic tubular demands</title>
+<style>
+body { max-width: 64rem; margin: 2rem auto; padding: 0 1rem;
+       font: 1rem/1.6 system-ui, sans-serif; color: #1c2936; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: .5rem; border: 1px solid #bdc9d2; }
+code, pre { background: #eef3f6; } pre { padding: 1rem; overflow-x: auto; }
+a { color: #155b92; }
+</style>
+<main>
+<h1>Elastic tubular demands</h1>
+<p>The interface calculates elastic tubular normal stresses and compares them
+with supplied, citation-validated allowables. Nine tracked check records are
+returned. With no allowables, all nine remain <code>NOT_EVALUATED</code>.
+API RP 2A compliance and spreadsheet equivalence are not established.
+API allowable and interaction implementation remains open on #1643; qualified
+sources are required before that scope can be completed.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>0</td><td>2026-10-19</td><td>A sourced calculation interface was added
+to expose missing design evidence.</td></tr>
+<tr><td>1</td><td>2026-10-19</td><td>The interface was named for elastic demands,
+load units made explicit, the compression and bending gap added, and both
+references retained to avoid overstating code coverage.</td></tr></table>
+<p>Table 1. Calculation revision history.</p>
+<h2>Plan-lite</h2>
+<ol>
+<li>Slice 1 will implement annular geometry and axial and bending demands in
+<code>src/digitalmodel/subsea/structural_checks/api_rp2a.py</code>.</li>
+<li>Slice 2 will return all nine tracked check records. Only axial and bending
+comparisons with explicit cited allowables will be evaluated.</li>
+<li>Slice 3 will add independent hand-calculation tests in
+<code>tests/subsea/structural_checks/test_api_rp2a.py</code>, this document and
+<code>examples/subsea/api_rp2a_tubular.py</code>. A package initializer will
+export the interface.</li>
+<li>Area and inertia will follow circular integration; axial and bending stress
+will follow the MIT teaching notes linked below.</li>
+<li>Tests will cover geometry, signed loads, zero load, equality at a supplied
+limit, failed limits, unavailable evidence, invalid numbers and citation errors.</li>
+<li>Workbook reconstruction, API allowable equations, material lookup, shear,
+hydrostatic capacity and combined interactions will await qualified sources.</li>
+</ol>
+<h2>Plan review</h2>
+<p>Defect-hunting review identified unsupported standard coefficients, edition
+ambiguity, pressure end-load double counting, and false aggregate passes as
+blocking design risks. The interface introduces no standard coefficients,
+records requested locators as unverified, and keeps incomplete aggregate
+results unevaluated. Cross-provider review remains a maintainer checkpoint;
+no second-provider review is represented by this local review.</p>
+<h2>Inputs and method</h2>
+<p>The interface is
+<code>digitalmodel.subsea.structural_checks.elastic_tubular_demands</code>. Dimensions use
+mm and stresses and pressure MPa. Required keyword tags <code>force_unit</code>
+(<code>N</code> or <code>kN</code>, for axial and shear forces) and
+<code>moment_unit</code> (<code>N mm</code> or <code>kN m</code>) select load units.
+Omitting a tag or supplying an unsupported unit raises an error. Results store
+loads normalized to N and N mm. For example, 500 kN m is converted to
+500,000,000 N mm before calculating stress. Axial force is positive
+in tension and negative in compression. Bending moment is the signed resultant
+about any centroidal axis of the circular tube; its magnitude determines peak
+elastic stress. Pressure is nonnegative external gauge pressure. Shear force is
+signed. Wall thickness satisfies 0 &lt; t &lt; D/2.</p>
+<p>For inner diameter d = D − 2t, direct circular integration gives
+A = π(D² − d²)/4 and I = π(D⁴ − d⁴)/64. With Z = I/(D/2), normal demand
+is σ = N/A and peak bending demand is σ<sub>b</sub> = |M|/Z. Geometry factors
+follow integration; no standard coefficient is introduced. Axial force is the
+effective section force supplied by the caller. Pressure end thrust is not
+calculated or added. Yield strength is a required positive input that bounds
+supplied elastic allowables; no API 5L grade or allowable is selected from it.</p>
+<table>
+<tr><th>Check</th><th>Demand (MPa)</th><th>Capacity basis</th></tr>
+<tr><td>Axial tension</td><td>max(N/A, 0)</td><td>Supplied cited allowable</td></tr>
+<tr><td>Axial compression</td><td>max(−N/A, 0)</td><td>Supplied cited allowable;
+slenderness and buckling applicability require separate qualification</td></tr>
+<tr><td>Bending</td><td>|M|/Z</td><td>Supplied cited allowable;
+section applicability requires separate qualification</td></tr>
+<tr><td>Shear</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
+<tr><td>Hydrostatic pressure</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
+<tr><td>Compression + bending (§3.3.1, unverified)</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
+<tr><td>Tension + bending</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
+<tr><td>Tension + hydrostatic</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
+<tr><td>Compression + hydrostatic</td><td>Not established</td><td>NOT_EVALUATED</td></tr>
+</table>
+<p>Table 2. Supported elastic demands and unresolved code capacities.</p>
+<p>Each result records calculated stress, allowable stress, unity ratio, a
+three-state disposition, a nullable pass/fail value, reference and reason.
+Missing stress or capacity is <code>None</code>, distinct from a true zero.
+For a supplied allowable, unity is demand/allowable and the comparison passes
+when demand ≤ allowable. A failed comparison makes the aggregate
+<code>FAIL</code>. Otherwise any missing check makes it
+<code>NOT_EVALUATED</code>, with <code>passes=None</code>. The maximum unity
+ratio describes evaluated checks only and cannot establish full acceptance.
+Aggregate <code>PASS</code> is unreachable from this callable: shear, pressure
+and four interactions always remain unevaluated, even at zero load with all
+three supported allowables supplied. The generic result reducer retains a
+PASS branch for independently assembled, fully evaluated records.</p>
+<h2>Supplied allowables and citation sidecars</h2>
+<p>The optional <code>allowables</code> mapping accepts
+<code>axial_tension</code>, <code>axial_compression</code> and
+<code>bending</code> keys. Each value is a
+<code>digitalmodel.citations.schema.CitedValue</code> with positive finite value,
+units <code>MPa</code> and a <code>Citation</code>. A supplied allowable greater
+than yield strength raises an error; this elastic guard does not derive a code
+capacity. Citations are validated against
+their wiki source through the existing resolver, or the explicit
+<code>citation_root</code>. A missing page or mismatched source identity raises
+<code>CitationResolutionError</code>, including when the demand is zero.</p>
+<p>Each evaluated record retains the unverified requested API locator alongside
+the supplied source identity, revision and section. The result also carries
+complete citations separately from the numeric check records. Generic cited
+sources are permitted because the interface claims elastic demands and supplied
+comparisons only; citation validation does not turn them into API allowables.
+Citation identity validation does not establish the supplied allowable's
+correctness, clause applicability, effective length, buckling qualification,
+load combination or code edition. Those require engineering review. The unit
+tests use an explicitly illustrative source fixture, not a qualified API source.</p>
+<h2>Worked example</h2>
+<p>The example inputs are invented to permit independent arithmetic; they are
+not an issued design or material data. D = 10 mm, t = 1.000 mm and supplied
+yield strength = 100 MPa. For N = 90π N and M = 369π/2 N mm, with no pressure
+or shear:</p>
+<ol>
+<li>d = 8 mm; A = 9π mm²; I = 369π/4 mm⁴; Z = 369π/20 mm³.</li>
+<li>σ = 90π/(9π) = 10 MPa.</li>
+<li>σ<sub>b</sub> = (369π/2)/(369π/20) = 10 MPa.</li>
+<li>No allowable is supplied, so acceptance remains NOT_EVALUATED.</li>
+</ol>
+<pre>PYTHONPATH=src python examples/subsea/api_rp2a_tubular.py</pre>
+<p>The JSON output includes area 28.274 mm², second moment 289.812 mm⁴,
+section modulus 57.962 mm³ and both demands 10 MPa. The aggregate remains
+NOT_EVALUATED. An independent compression vector uses D = 6 mm, t = 1.000 mm,
+N = −100π N and M = −325π/2 N mm: A = 5π mm² and Z = 65π/12 mm³,
+giving compression 20 MPa and bending 30 MPa.</p>
+<h2>Validation and artifact review</h2>
+<p>The tests were written before implementation. The initial run failed because
+the package was absent. Hand calculations supply expected stresses and geometry;
+illustrative allowables supply the comparison boundaries. Artifact review found
+that malformed allowable containers could be converted silently and missing
+citation objects could raise an incidental error. Regression tests reproduced
+those defects before validation was added. Tests also cover invalid finite
+domains, floating-point overflow, incomplete aggregate disposition and the
+executable example. Regression tests require explicit load tags, compare an
+independent kN m vector with its N mm equivalent, reject conversion overflow
+and allowables above yield strength, retain both references, and include the
+compression plus bending evidence gap.</p>
+<h2>Known limits and way forward</h2>
+<p>The source workbook and its input/output vectors were not found in this
+checkout. The standards catalog and domain index were unavailable in the
+adjacent workspace, and no authoritative API clause text was available for this
+implementation. Requested clause locators are recorded as unverified; an edition
+is not inferred from existing code. The existing jacket/topside package is not
+used as an authoritative source or altered by this module.</p>
+<p>Further work requires an authorized workbook copy and versioned digest,
+cell/formula mapping with an extraction tool, two or three verified workbook
+vectors, and eligible API RP 2A and API 5L source records. Qualified capacity
+and interaction equations, applicability checks and resolved Citation sidecars
+can then replace the corresponding NOT_EVALUATED records. Hydrostatic stress
+alone cannot establish collapse capacity. This module performs no licensed
+solver calls and introduces no new runtime dependency.</p>
+<h2>Sources</h2>
+<ul>
+<li><a href="https://web.mit.edu/course/3/3.11/www/modules/ss.pdf">MIT,
+Stress-Strain Curves (2001)</a>, Engineering Stress-Strain Curves, equation 1:
+engineering normal stress equals force divided by original area.</li>
+<li><a href="https://web.mit.edu/course/3/3.11/www/modules/bstress.pdf">MIT,
+Stresses in Beams (2000)</a>, Normal Stresses, equations 4 and 7:
+second moment of area and elastic bending stress.</li>
+</ul>
+<p>Both source PDFs were opened successfully on 2026-10-19. Only equations are
+implemented; no source document is redistributed.</p>
+</main>
+</html>
