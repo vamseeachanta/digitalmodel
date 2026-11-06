@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Render only reviewed forecast series; no solver imports or recomputation.
 
@@ -17,8 +17,8 @@ LABEL = 'SIMULATED DEMO, not connected offshore'
 CRITERIA = ('Acceptance criteria are provisional demonstration assumptions; '
             'engineering applicability is unresolved.')
 NUMERICAL_BASIS: dict = {
-    'revision': 3,
-    'status': 'assumed, based on previous experience',
+    'revision': 4,
+    'status': 'provisional; no basis recorded',
     'kN_per_Te': 9.81,
     'conversion_convention': (
         '9.81 kN/Te is a rounded demonstration convention. The exact reference conversion '
@@ -31,8 +31,10 @@ NUMERICAL_BASIS: dict = {
     'load_limits_Te': {'Master-link load-path proxy: TopRigging End B': 17.7,
                        'Sling2 End B tension': 10.89},
     'load_limit_sources': {
-        'Master-link load-path proxy: TopRigging End B': 'assumed, based on previous experience',
-        'Sling2 End B tension': 'assumed, based on previous experience',
+        'Master-link load-path proxy: TopRigging End B':
+            'Retained reviewed demonstration input for the master-link proxy; original derivation is unverified.',
+        'Sling2 End B tension':
+            'Retained reviewed demonstration input for the sling; original derivation is unverified.',
     },
     'forecast_settings': {
         'method': 'History-only ridge autoregression; fixed order 40, ridge 0.001',
@@ -154,8 +156,15 @@ def digest(raw: bytes) -> str:
 def chart(channel: dict, now: float) -> str:
     """Render the reviewed history and forecast with shared axis scaling."""
     history, forecast = channel['history'], channel['forecast']
-    assert history['times'][-1] == now
-    assert forecast['times'][0] > now
+    for series in (history, forecast):
+        if not series['times'] or not series['values']:
+            raise ValueError('Series must contain times and values')
+        if len(series['times']) != len(series['values']):
+            raise ValueError('Series times and values must have equal lengths')
+    if history['times'][-1] != now:
+        raise ValueError('History must end at NOW')
+    if not forecast['times'][0] > now:
+        raise ValueError('Forecast must start after NOW')
     values = history['values'] + forecast['values']
     limit = channel.get('assumed_limit')
     if limit is not None:
@@ -173,7 +182,6 @@ def chart(channel: dict, now: float) -> str:
 
     elements = []
     for series, color in ((history, '#173e56'), (forecast, '#147fac')):
-        assert len(series['times']) == len(series['values'])
         points = ' '.join(f'{x(t):.3f},{y(v):.3f}' for t, v in zip(series['times'], series['values']))
         elements.append(f'<polyline points="{points}" fill="none" stroke="{color}" stroke-width="2"/>')
     if limit is not None:
@@ -212,8 +220,10 @@ def render(payload: dict, config: dict) -> str:
                 e = source['exceedance']
                 channel['exceedance'] = {k: e[k] for k in ('window_probability', 'alert_probability',
                                                          'alert', 'status', 'calibration_windows', 'horizon_s')}
-                assert e['alert_probability'] == config['exceedance']['alert_probability']
-                assert e['horizon_s'] == channel['forecast']['times'][-1] - frame['now_s']
+                if e['alert_probability'] != config['exceedance']['alert_probability']:
+                    raise ValueError('Alert cutoff differs from the configuration')
+                if e['horizon_s'] != channel['forecast']['times'][-1] - frame['now_s']:
+                    raise ValueError('Forecast horizon differs from the exceedance horizon')
                 figures.append('<p>Provisional exceedance probability: '
                                f'{e["window_probability"]:.3f}; alert threshold: {e["alert_probability"]:.3f}; '
                                f'alert: {str(e["alert"]).lower()}. '
@@ -258,6 +268,7 @@ or operational risk calibration is established by this demonstration.</p>
 <tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>
 <tr><td>2</td><td>2026-10-21</td><td>Load sources, forecast settings and window counts are stated consistently; retained provenance is identified.</td></tr>
 <tr><td>3</td><td>2026-10-21</td><td>Each alert is explained using a checked peak margin; the rounded load conversion is distinguished from its exact reference.</td></tr>
+<tr><td>4</td><td>2026-11-06</td><td>Unsupported provenance claims are removed; original limit derivations and the alert-cutoff basis remain unverified.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
 {numerical_basis_html()}{''.join(sections)}
 <footer>Only the selected history-only forecast series are retained. No live sensor connection,

@@ -24,6 +24,7 @@ or operational risk calibration is established by this demonstration.</p>
 <tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>
 <tr><td>2</td><td>2026-10-21</td><td>Load sources, forecast settings and window counts are stated consistently; retained provenance is identified.</td></tr>
 <tr><td>3</td><td>2026-10-21</td><td>Each alert is explained using a checked peak margin; the rounded load conversion is distinguished from its exact reference.</td></tr>
+<tr><td>4</td><td>2026-11-06</td><td>Unsupported provenance claims are removed; original limit derivations and the alert-cutoff basis remain unverified.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
 <section><h2>Numerical basis and assumptions</h2>
 <p>The source of each load limit is stated below. These are provisional demonstration
@@ -32,9 +33,9 @@ settings; no component capacity or operational acceptance is established.</p>
 Te denotes the tonne-force equivalent used by this demonstration.</p>
 <p>9.81 kN/Te is a rounded demonstration convention. The exact reference conversion is 9.806 65 kN/Te, derived from standard gravity: BIPM, 3rd CGPM (1901), Declaration 2, Declaration on the unit of mass and on the definition of weight; conventional value of standard gravity. The rounded conversion increases the load limits by less than 0.1 %. The published demonstration limits and series are retained.</p>
 <table><thead><tr><th>Load channel</th><th>Assumed limit (Te)</th><th>Converted limit (kN)</th><th>Source</th></tr></thead>
-<tbody><tr><td>Master-link load-path proxy: TopRigging End B</td><td>17.700</td><td>173.637</td><td>assumed, based on previous experience</td></tr><tr><td>Sling2 End B tension</td><td>10.890</td><td>106.831</td><td>assumed, based on previous experience</td></tr></tbody></table><p>Table 2. Assumed loads and their conversion.</p>
+<tbody><tr><td>Master-link load-path proxy: TopRigging End B</td><td>17.700</td><td>173.637</td><td>Retained reviewed demonstration input for the master-link proxy; original derivation is unverified.</td></tr><tr><td>Sling2 End B tension</td><td>10.890</td><td>106.831</td><td>Retained reviewed demonstration input for the sling; original derivation is unverified.</td></tr></tbody></table><p>Table 2. Assumed loads and their conversion.</p>
 <p>The alert cutoff is 20.0%, also written as 0.200;
-it is assumed, based on previous experience.
+it is provisional; no basis recorded.
 For each complete calibration window, its joint error trajectory is added to the current forecast.
 The window exceeds the load limit only if its maximum is strictly greater than the limit.
 The empirical probability is the number of exceeding windows divided by the window count;

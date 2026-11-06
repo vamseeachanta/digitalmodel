@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Public forecast artifact disclosure and integrity contract."""
 import hashlib
@@ -7,6 +7,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from copy import deepcopy
 from decimal import Decimal
 from html.parser import HTMLParser
@@ -53,7 +54,7 @@ def test_manifest_integrity():
 def test_numerical_basis_explains_published_limits_and_alerts():
     text = PAGE.read_text(encoding='utf-8')
     basis = json.loads(PAGE.with_suffix('.manifest.json').read_text())['numerical_basis']
-    assert basis['status'] == 'assumed, based on previous experience'
+    assert basis['status'] == 'provisional; no basis recorded'
     conversion = Decimal(str(basis['kN_per_Te']))
     assert conversion == Decimal('9.81')
     loads = basis['load_limits_Te']
@@ -71,7 +72,8 @@ def test_numerical_basis_explains_published_limits_and_alerts():
             alert = channel['exceedance']
             assert Decimal(str(alert['alert_probability'])) == cutoff
             assert alert['alert'] is (Decimal(str(alert['window_probability'])) >= cutoff)
-    assert 'assumed, based on previous experience' in text
+    assert basis['status'] in text
+    assert 'assumed, based on previous experience' not in text
     assert 'Calibration error trajectories are not published' in text
     assert 'Revision history' in text
 
@@ -148,9 +150,65 @@ def test_load_sources_have_one_consistent_declaration():
     basis = builder.NUMERICAL_BASIS
     for label, limit in basis['load_limits_Te'].items():
         source = basis['load_limit_sources'][label]
-        assert source == 'assumed, based on previous experience'
+        assert 'original derivation is unverified' in source
         assert (f'<td>{limit:.3f}</td><td>{limit * 9.81:.3f}</td>'
                 f'<td>{source}</td>') in text
+
+
+def test_revision_four_records_provenance_correction_without_rewriting_history():
+    text = PAGE.read_text(encoding='utf-8')
+    assert builder.NUMERICAL_BASIS['revision'] == 4
+    assert '<tr><td>3</td><td>2026-10-21</td>' in text
+    assert '<tr><td>4</td><td>2026-11-06</td>' in text
+    assert 'Unsupported provenance claims are removed' in text
+
+
+@pytest.mark.parametrize('optimized', [False, True], ids=['normal', 'optimized'])
+@pytest.mark.parametrize(('fault', 'message'), [
+    ('history_end', 'History must end at NOW'),
+    ('forecast_start', 'Forecast must start after NOW'),
+    ('history_length', 'Series times and values must have equal lengths'),
+    ('forecast_length', 'Series times and values must have equal lengths'),
+    ('empty_history', 'Series must contain times and values'),
+    ('empty_forecast', 'Series must contain times and values'),
+    ('alert_cutoff', 'Alert cutoff differs from the configuration'),
+    ('horizon', 'Forecast horizon differs from the exceedance horizon'),
+])
+def test_input_integrity_checks_survive_optimization(tmp_path, fault, message, optimized):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    frame = scenario['frames'][0]
+    channel = frame['channels'][0]
+    if fault == 'history_end':
+        channel['history']['times'][-1] -= 0.5
+    elif fault == 'forecast_start':
+        channel['forecast']['times'][0] = frame['now_s']
+    elif fault in {'history_length', 'forecast_length'}:
+        channel[fault.removesuffix('_length')]['values'].pop()
+    elif fault in {'empty_history', 'empty_forecast'}:
+        channel[fault.removeprefix('empty_')] = {'times': [], 'values': []}
+    else:
+        # A channel without a load limit reaches the render-level checks.
+        channel['exceedance'] = deepcopy(frame['channels'][1]['exceedance'])
+        channel['exceedance']['alert_probability' if fault == 'alert_cutoff' else 'horizon_s'] += 1
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    request = tmp_path / 'request.json'
+    request.write_text(json.dumps({'payload': {'demo': {'scenarios': [scenario]}},
+                                  'config': config}), encoding='utf-8')
+    command = [sys.executable, *(['-O'] if optimized else []), '-c', '''
+import json
+import sys
+from scripts.capabilities import build_installation_forecast_page as builder
+request = json.loads(open(sys.argv[1], encoding='utf-8').read())
+try:
+    builder.render(request['payload'], request['config'])
+except ValueError as error:
+    if str(error) != sys.argv[2]:
+        raise
+else:
+    raise RuntimeError('Malformed forecast input was accepted')
+''', str(request), message]
+    result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
 
 
 def test_forecast_settings_explain_calibration_counts():
