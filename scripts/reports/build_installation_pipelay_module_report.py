@@ -82,6 +82,12 @@ CHANGES = [{
               "directory-junction deliverables are rejected before calculation or writes; "
               "textbook clauses identify the arithmetic basis and regression tests "
               "and source digests are refreshed, with calculated results unchanged.",
+}, {
+    "revision": "G", "date": "2026-11-06",
+    "change": "Methodology statements are bound directly to the cited textbook clauses "
+              "and the source-digest description is limited to repository sources; "
+              "regression tests and source digests are refreshed without changing "
+              "the inputs or calculated results.",
 }]
 
 
@@ -247,11 +253,12 @@ of that demonstration basis. They are not qualified design inputs [S1].</p>
 <tbody>{input_rows}</tbody></table></div><p>Table D. Complete synthetic design data with units and sources.</p>
 <h2 id="s4">4. Analysis Methodology</h2>
 <p>Small-curvature outer-fibre strain is OD/(2R), and elastic bending stress is E times that
-strain. Axial stress is force divided by steel area; the demonstrated tensile outer-fibre stress
+strain [S6]. Axial stress is force divided by steel area [S7]; the demonstrated tensile outer-fibre stress
 is their sum. The supplied fraction times supplied strength is the arithmetic threshold.
 Utilisation is total stress divided by that threshold; percent strength is total divided by
 strength times the percent conversion [S1, S2, S4]. These geometric and ratio identities
-introduce no standard-derived criteria. The route calculation balances F/R = μw [S1, S3, S4].</p>
+introduce no standard-derived criteria. The route calculation balances F/R = μw [S8].
+Its supplied inputs and independent arithmetic are recorded in S1, S3 and S4.</p>
 <p>Every public function in the two source modules is inventoried below. DIMENSIONALLY_REVIEWED
 records a source review; INDEPENDENTLY_CHECKED records only the independent synthetic arithmetic
 in this report. Neither establishes physical qualification. The returned immutable records
@@ -319,7 +326,7 @@ with tension per radius balanced by the supplied friction coefficient times
 submerged weight per length. This derivation assumes a flexible line, uniform
 conditions and fully mobilised lateral friction; a pipeline design criterion
 is not established by these textbook relations.</li></ol>
-<p>The exact source editions are bound by the following SHA-256 digests. The manifest hashes
+<p>The repository sources are bound by the following SHA-256 digests. The manifest hashes
 all source dependencies and the other delivered artifacts; its own bytes are checked by deterministic
 rebuild. The canonical report palette is inlined from the existing brand stylesheet. No licensed
 numerical content is copied; no standard-compliance conclusion is made.</p><ol>{sources}</ol>

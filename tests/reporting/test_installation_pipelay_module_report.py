@@ -101,6 +101,9 @@ def test_worked_values_match_hand_calculation(tmp_path):
         assert row["source"] == source
         assert build.result_row(name, row) in page
     assert data["qualification"] == "ARITHMETIC_ONLY"
+    methodology = page.split('<h2 id="s4">', 1)[1].split('<h2 id="s5">', 1)[0]
+    for reference in ("S6", "S7", "S8"):
+        assert f"[{reference}]" in methodology
     assert re.findall(r'<h2 id="s\d+">\d+\. (.*?)</h2>', page) == SECTIONS
     assert re.search(
         r'<h2 id="s1">[^<]+</h2>\s*<p>[^<]+</p>\s*<h3>Revision history</h3>',

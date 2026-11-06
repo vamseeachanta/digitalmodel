@@ -28,5 +28,10 @@
     "change": "Scratch paths equal to or inside the resolved output directory and directory-junction deliverables are rejected before calculation or writes; textbook clauses identify the arithmetic basis and regression tests and source digests are refreshed, with calculated results unchanged.",
     "date": "2026-11-06",
     "revision": "F"
+  },
+  {
+    "change": "Methodology statements are bound directly to the cited textbook clauses and the source-digest description is limited to repository sources; regression tests and source digests are refreshed without changing the inputs or calculated results.",
+    "date": "2026-11-06",
+    "revision": "G"
   }
 ]
