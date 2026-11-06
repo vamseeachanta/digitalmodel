@@ -10,6 +10,7 @@ metadata establishes neither a dynamic MBR clause nor a design factor.
 | --- | --- | --- |
 | 1 | 2026-11-05 | Correct cable editions and scope and distinguish public metadata from engineering requirements. |
 | 2 | 2026-11-06 | Record resolver merge order and pending acceptance of archived citation sidecars. |
+| 3 | 2026-11-06 | Explain the frozen mooring docstring and the follow-up required to correct it. |
 
 ## Publisher metadata
 
@@ -31,6 +32,11 @@ attribution of dynamic MBR and fatigue clauses were unsupported.
 `mooring_design_fowt.py` emits `DNV-ST-0359`, revision `2025-12`, section
 `Scope (public product page)`. Its note states the public-source limits and
 the caller-supplied MBR basis. No numerical calculation changes.
+
+The `mooring_design.py` docstring retains its historical RP-0360 reference
+because the mooring screening run record pins that file's digest. Correcting
+the docstring remains a follow-up for #3286 with the next re-pinning of that
+record; the companion module currently emits ST-0359 as described above.
 
 A configured wiki requires
 `wikis/engineering-standards/wiki/standards/dnv-st-0359.md` with matching
