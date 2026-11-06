@@ -281,6 +281,8 @@ def build(base_path, request_path, output):
     inertia = base["vessel"]["inertia"]
     if inertia.get("mode", "explicit") != "explicit":
         raise ValueError("DF2 requires explicit mass")
+    if "centre_of_gravity" not in inertia:
+        raise ValueError("DF2 requires explicit centre_of_gravity")
     environment = base["environment"]
     # Use the EnvironmentSpec default when gravity is omitted.
     gravity = number(environment.get("gravity", 9.80665))
@@ -290,7 +292,9 @@ def build(base_path, request_path, output):
     df2 = {}
     for level, mesh in meshes.items():
         mesh_geometry.check_symmetry(mesh, geometry.get("symmetry", "none"))
-        df2[level] = check_df2_buoyancy(mesh, inertia["mass"], rho)
+        df2[level] = check_df2_buoyancy(
+            mesh, inertia["mass"], rho, centre_of_gravity=inertia["centre_of_gravity"]
+        )
         if df2[level]["decision"] != "PASS":
             raise ValueError(f"DF2 {level}: {df2[level]['decision']}; no case issued")
         if digest(mesh.read_bytes()) != expected_digests[level]:

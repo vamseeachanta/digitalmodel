@@ -35,7 +35,7 @@ def inputs(tmp_path):
                 "mesh_format": "gdf",
                 "symmetry": "none",
             },
-            "inertia": {"mass": 119052930, "centre_of_gravity": [0, 0, 0]},
+            "inertia": {"mass": 119052930, "centre_of_gravity": [115.5, 0, -5.5]},
         },
         "environment": {"water_depth": 1000.0, "water_density": 1025},
         "frequencies": {"input_type": "frequency", "values": [0.2, 0.5]},
@@ -496,6 +496,57 @@ def test_mass_mismatch_blocks_all_cases(inputs):
     assert not inputs[2].exists()
 
 
+@pytest.mark.parametrize(
+    "centre",
+    [
+        "omitted",
+        None,
+        [],
+        [115.5, 0],
+        [115.5, 0, -5.5, 0],
+        [float("nan"), 0, 0],
+        [115.5, float("inf"), 0],
+        [True, 0, 0],
+    ],
+)
+def test_missing_or_invalid_centre_of_gravity_blocks_all_cases(inputs, centre):
+    inertia = inputs[3]["vessel"]["inertia"]
+    if centre == "omitted":
+        inertia.pop("centre_of_gravity")
+    else:
+        inertia["centre_of_gravity"] = centre
+    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    with pytest.raises(ValueError, match="centre_of_gravity|DF2"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("centre", [[0, 0, 0], [115.5, 1, -5.5]])
+def test_horizontal_loading_imbalance_blocks_all_cases(inputs, centre):
+    inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = centre
+    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    with pytest.raises(ValueError, match="DF2"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+def test_balanced_translated_hull_can_issue(inputs):
+    for level in campaign.LEVELS:
+        panels = campaign.mesh_geometry.panels_for_level(level)
+        panels[:, :, :2] += [10, 0.1]
+        (inputs[0].parent / f"{level}.gdf").write_bytes(
+            campaign.mesh_geometry.encode_gdf(panels)
+        )
+    refresh_mesh_reference(inputs)
+    inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = [125.5, 0.1, -5.5]
+    inputs[0].write_text(yaml.safe_dump(inputs[3]))
+    manifest = prepare(inputs)
+    assert len(manifest["cases"]) == 12
+    for report in manifest["df2"].values():
+        assert report["decision"] == "PASS"
+        assert report["centre_of_buoyancy_m"] == pytest.approx([125.5, 0.1, -5.5])
+
+
 def test_coarse_replaces_original_half_mesh(inputs):
     # The old base mesh is retained as provenance, never forced into the ladder.
     inputs[3]["vessel"]["geometry"]["mesh_file"] = "old.gdf"
@@ -572,7 +623,7 @@ def test_asymptotic_ceiling_follows_integrated_waterplane(
     for level in campaign.LEVELS:
         panels = campaign.mesh_geometry.panels_for_level(level)
         # Preserve displacement and mass while changing waterplane and draft.
-        panels[:, :, 0] /= draft_scale
+        panels[:, :, 0] = (panels[:, :, 0] - 115.5) / draft_scale + 115.5
         panels[:, :, 2] *= draft_scale
         (inputs[0].parent / f"{level}.gdf").write_bytes(
             campaign.mesh_geometry.encode_gdf(panels)
@@ -594,7 +645,7 @@ def test_asymptotic_ceiling_follows_integrated_waterplane(
 
 def test_asymptotic_ceiling_checks_every_mesh_level(inputs):
     panels = campaign.mesh_geometry.panels_for_level("fine")
-    panels[:, :, 0] /= 4
+    panels[:, :, 0] = (panels[:, :, 0] - 115.5) / 4 + 115.5
     panels[:, :, 2] *= 4
     (inputs[0].parent / "fine.gdf").write_bytes(
         campaign.mesh_geometry.encode_gdf(panels)

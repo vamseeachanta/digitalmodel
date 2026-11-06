@@ -29,7 +29,9 @@ def test_full_mesh_geometry_and_determinism(level, tmp_path):
     assert parsed["gravity"] == 9.80665
     target = dict(coarse=1464, medium=2928, fine=5856)[level]
     assert abs(len(parsed["panels"]) - target) / target < 0.05
-    report = mesh.check_df2_buoyancy(path, 119052930)
+    report = mesh.check_df2_buoyancy(
+        path, 119052930, centre_of_gravity=[115.5, 0, -5.5]
+    )
     assert report["decision"] == "PASS"
     assert report["volume_m3"] == pytest.approx(116149.2, rel=1e-8)
     assert report["waterplane_area_m2"] == pytest.approx(116149.2 / 11)
@@ -60,7 +62,9 @@ def test_half_mesh_fails_without_implicit_reflection(tmp_path):
     half = panels[np.min(panels[:, :, 1], axis=1) >= -1e-9]
     path = tmp_path / "half.gdf"
     path.write_bytes(mesh.encode_gdf(half, symmetry=(0, 1)))
-    report = mesh.check_df2_buoyancy(path, 119052930)
+    report = mesh.check_df2_buoyancy(
+        path, 119052930, centre_of_gravity=[115.5, 0, -5.5]
+    )
     assert report["decision"] == "FAIL"
     assert report["volume_m3"] == pytest.approx(58074.6)
     assert report["waterplane_area_m2"] == pytest.approx(116149.2 / 22)
@@ -89,10 +93,44 @@ def test_equal_volume_buoyancy_requires_transverse_centring(
     panels[:, :, 1] = panels[:, :, 1] * beam_scale + offset
     path = tmp_path / "offset.gdf"
     path.write_bytes(mesh.encode_gdf(panels))
-    report = mesh.check_df2_buoyancy(path, 119052930 * beam_scale)
+    report = mesh.check_df2_buoyancy(
+        path, 119052930 * beam_scale, centre_of_gravity=[115.5, 0, -5.5]
+    )
     assert report["relative_error"] < 1e-8
     assert report["centre_of_buoyancy_m"][1] == pytest.approx(offset, abs=1e-8)
     assert report["decision"] == decision
+
+
+@pytest.mark.parametrize(
+    "centre,decision",
+    [
+        ([0, 0, 0], "FAIL"),
+        ([115.5, 1, -5.5], "FAIL"),
+        ([115.7, 0.04, -5.5], "PASS"),
+        ([115.74, 0, -5.5], "FAIL"),
+        ([115.5, 0.05, -5.5], "FAIL"),
+        ([115.5, 0, 0], "PASS"),
+    ],
+)
+def test_df2_compares_horizontal_buoyancy_with_loading(tmp_path, centre, decision):
+    path = tmp_path / "full.gdf"
+    path.write_bytes(mesh.gdf_bytes("coarse"))
+    report = mesh.check_df2_buoyancy(path, 119052930, centre_of_gravity=centre)
+    assert report["relative_error"] < 1e-8
+    assert report["decision"] == decision
+    assert report["centre_of_gravity_m"] == centre
+    assert report["horizontal_tolerance_m"] == pytest.approx([0.231, 0.049])
+    assert report["horizontal_offset_m"] == pytest.approx(
+        [abs(115.5 - centre[0]), abs(centre[1])], abs=1e-8
+    )
+
+
+def test_df2_requires_loading_centre(tmp_path):
+    path = tmp_path / "full.gdf"
+    path.write_bytes(mesh.gdf_bytes("coarse"))
+    report = mesh.check_df2_buoyancy(path, 119052930)
+    assert report["decision"] == "NOT_EVALUATED"
+    assert "centre_of_gravity" in report["reason"]
 
 
 @pytest.mark.parametrize(
@@ -122,7 +160,9 @@ def test_unusable_mesh_is_not_evaluated(tmp_path, fault):
         panels[0, 0, 0] = np.nan
     path = tmp_path / "invalid.gdf"
     path.write_bytes(mesh.encode_gdf(panels) if fault != "bad_header" else b"invalid")
-    report = mesh.check_df2_buoyancy(path, 119052930)
+    report = mesh.check_df2_buoyancy(
+        path, 119052930, centre_of_gravity=[115.5, 0, -5.5]
+    )
     assert report["decision"] == "NOT_EVALUATED"
     assert report["reason"]
 
@@ -141,7 +181,9 @@ def test_invalid_df2_parameters(tmp_path, mass, rho, tolerance):
     path = tmp_path / "valid.gdf"
     path.write_bytes(mesh.gdf_bytes("coarse"))
     assert (
-        mesh.check_df2_buoyancy(path, mass, rho, tolerance)["decision"]
+        mesh.check_df2_buoyancy(
+            path, mass, rho, tolerance, centre_of_gravity=[115.5, 0, -5.5]
+        )["decision"]
         == "NOT_EVALUATED"
     )
 
@@ -154,7 +196,12 @@ def test_nonunit_ulen_is_rejected_without_scaling_vertices(tmp_path, ulen):
     path.write_text("\n".join(lines) + "\n")
     with pytest.raises(ValueError, match="ULEN.*1.0"):
         mesh.read_gdf(path)
-    assert mesh.check_df2_buoyancy(path, 119052930)["decision"] == "NOT_EVALUATED"
+    assert (
+        mesh.check_df2_buoyancy(path, 119052930, centre_of_gravity=[115.5, 0, -5.5])[
+            "decision"
+        ]
+        == "NOT_EVALUATED"
+    )
 
 
 def test_analytic_box_uses_dimensional_vertices(tmp_path):
@@ -171,7 +218,7 @@ def test_analytic_box_uses_dimensional_vertices(tmp_path):
     )
     path = tmp_path / "box.gdf"
     path.write_bytes(mesh.encode_gdf(panels))
-    report = mesh.check_df2_buoyancy(path, 4100)
+    report = mesh.check_df2_buoyancy(path, 4100, centre_of_gravity=[1, 0, -0.5])
     assert report["decision"] == "PASS"
     assert report["volume_m3"] == pytest.approx(4)
     assert report["waterplane_area_m2"] == pytest.approx(4)

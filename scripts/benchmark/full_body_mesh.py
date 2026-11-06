@@ -198,13 +198,17 @@ def _integrate(parsed):
     return volume, float(area), centre.tolist()
 
 
-def check_df2_buoyancy(mesh, mass_kg, rho=1025, tolerance=0.01):
-    """Check mass balance and transverse buoyancy within 0.001 of mesh beam.
+def check_df2_buoyancy(
+    mesh, mass_kg, rho=1025, tolerance=0.01, *, centre_of_gravity=None
+):
+    """Check mass balance and horizontal buoyancy alignment with loading.
 
-    The 0.01 mass residual and 0.001 transverse beam fraction are supplied
+    The 0.01 mass residual and 0.001 length/beam offset fractions are supplied
     investigation criteria, not independently verified standard limits. The
     default density is assumed, based on previous experience. The run request
-    records these limits in its geometry and loading basis.
+    records these limits in its geometry and loading basis. Buoyancy and gravity
+    centres use the same mesh coordinates in metres; vertical separation is
+    allowed. This gate does not establish stability or physical qualification.
     Gravity cancels in the force ratio. Symmetry flags allow planar closure
     for integration but never multiply volume. No weight report is inferred.
     """
@@ -226,19 +230,37 @@ def check_df2_buoyancy(mesh, mass_kg, rho=1025, tolerance=0.01):
             raise ValueError(
                 "positive finite mass, density and tolerance below one required"
             )
+        if (
+            not isinstance(centre_of_gravity, (list, tuple))
+            or len(centre_of_gravity) != 3
+            or any(
+                isinstance(v, bool)
+                or not isinstance(v, (int, float))
+                or not np.isfinite(v)
+                for v in centre_of_gravity
+            )
+        ):
+            raise ValueError(
+                "centre_of_gravity requires three finite metre coordinates"
+            )
         parsed = read_gdf(mesh)
         volume, area, centre = _integrate(parsed)
-        beam = float(np.ptp(parsed["panels"][:, :, 1]))
+        extents = np.ptp(parsed["panels"][:, :, :2], axis=(0, 1))
+        offsets = np.abs(np.array(centre[:2]) - centre_of_gravity[:2])
+        horizontal_limits = 0.001 * extents
         error = abs(rho * volume - mass_kg) / mass_kg
         result.update(
             decision=(
                 "PASS"
-                if error <= tolerance and abs(centre[1]) <= 0.001 * beam
+                if error <= tolerance and np.all(offsets <= horizontal_limits)
                 else "FAIL"
             ),
             volume_m3=volume,
             waterplane_area_m2=area,
             centre_of_buoyancy_m=centre,
+            centre_of_gravity_m=list(centre_of_gravity),
+            horizontal_offset_m=offsets.tolist(),
+            horizontal_tolerance_m=horizontal_limits.tolist(),
             relative_error=error,
         )
     except (ValueError, OSError, TypeError, OverflowError) as exc:
@@ -279,7 +301,9 @@ def generate(output):
                 raise ValueError("existing mesh digest mismatch")
         else:
             path.write_bytes(data)
-        report = check_df2_buoyancy(path, MASS)
+        report = check_df2_buoyancy(
+            path, MASS, centre_of_gravity=[LENGTH / 2, 0, -DRAFT / 2]
+        )
         if report["decision"] != "PASS":
             raise ValueError("generated mesh fails DF2")
         manifest["meshes"][level] = dict(

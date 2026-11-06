@@ -23,6 +23,7 @@ and physical qualification are not established; no solver is run by these tools.
 <tr><td>0</td><td>2026-10-15</td><td>Prepared the matched mesh/removal campaign and export checks to investigate reported low-frequency motion.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Added reconstructed full-body geometry, buoyancy and symmetry gates, proposed sampling and pilot order because the original mesh represented half the body.</td></tr>
 <tr><td>2</td><td>2026-10-24</td><td>Required complete preparation evidence and justification for each heading, enforced the corrected natural-frequency bound, and marked unverified geometry inputs as assumptions.</td></tr>
+<tr><td>3</td><td>2026-11-06</td><td>Required horizontal buoyancy alignment with the supplied centre of gravity before preparation and clarified the constructed mass-balance result.</td></tr>
 </tbody>
 <caption>Retained issue history.</caption>
 </table>
@@ -49,9 +50,17 @@ Generated meshes remain in the controlled run package; the repository retains th
 <p>The generator resumes only when existing bytes match its deterministic digests and refuses different bytes.
 Copy the manifest beside the request and retain the meshes under the base-spec directory. The geometry-only
 DF2 check integrates the supplied panels without applying symmetry reflection. It returns volume, waterplane
-area, centre of buoyancy and |rho × V − M|/M; gravity cancels from this force ratio. All three full-body levels
-pass the supplied 1.0 % mass-residual criterion and transverse buoyancy within 0.001 of mesh beam.
-These are supplied investigation criteria, not independently verified standard limits. Digest agreement
+area, centre of buoyancy and |rho × V − M|/M; gravity cancels from this force ratio. The generated full-body levels
+pass the supplied 1.0 % mass-residual criterion by construction: end breadth is derived from displacement
+and mass equals density times that displacement. This PASS confirms only integration and closure;
+it is not evidence that the reconstructed hull matches an independently established displacement.
+The mass check also applies to externally supplied meshes. Horizontal alignment requires
+|x_B − x_G| ≤ 0.001 × mesh length and |y_B − y_G| ≤ 0.001 × mesh beam, measured from panel extents.
+The centre of gravity must be supplied as three finite metre coordinates in the same frame as the mesh;
+vertical separation is allowed. Missing or invalid coordinates return NOT_EVALUATED, and an exceeded
+horizontal limit returns FAIL even with matching displacement. The generated geometry passes these
+limits with the assumed CoG above. These are supplied investigation criteria, not independently verified
+standard limits, and do not establish stability. Digest agreement
 establishes reproducibility, not source validity. The half-body negative control has volume 58,074.6 m3, half the waterplane,
 an off-centre buoyancy location and 50.0 % mass residual, and returns FAIL. Missing, nonfinite, open,
 duplicated or reversed surfaces return NOT_EVALUATED. This does not qualify all hydrostatic or mesh gates.</p>
@@ -70,7 +79,8 @@ Within <code>criteria.asymptotic_max_rad_s</code>, <code>heave_natural_frequency
 requires a positive finite corrected frequency, and <code>heading_justification</code> requires an object
 mapping each requested heading in degrees to a nonblank evidence reference or rationale. Numeric heading
 identity is used; missing, duplicate or unrequested headings are refused. Omitted fields cannot bypass the gate.</p>
-<p>Before writing any specification the campaign checks header symmetry against the spec and requires DF2 PASS
+<p>Before writing any specification the campaign requires explicit <code>inertia.centre_of_gravity</code>,
+checks header symmetry against the spec and requires DF2 PASS
 at every mesh level. ISX maps to the yz plane and ISY to the xz plane. A nonzero flag with symmetry none,
 a zero flag with declared symmetry, or a different plane is refused. This is a campaign-specific consistency
 contract. It does not change backend symmetry optimization semantics.</p>
