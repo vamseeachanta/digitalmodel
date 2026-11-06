@@ -1,8 +1,5 @@
 # digitalmodel
 
-[Offshore resilience module analysis](docs/reports/modules/offshore_resilience/index.html):
-computed synthetic facility and checklist examples with explicit qualification limits.
-
 > *Everyday complex engineering — made deterministically simple.*
 
 > digitalmodel is an engineering calculation library: physical-world analysis mapped clause by clause to
@@ -151,6 +148,7 @@ Current Tier 1 priorities:
 ## Documentation
 
 - [docs/README.md](docs/README.md) -- Canonical documentation entry point and common issue routing
+- [Offshore resilience module analysis](docs/reports/modules/offshore_resilience/index.html): draft for maintainer review; synthetic facility and checklist examples with explicit qualification limits.
 - [ROADMAP.md](ROADMAP.md) -- Development priorities and tech debt
 - [docs/vision/CALCULATIONS-VISION.md](docs/vision/CALCULATIONS-VISION.md) -- Ecosystem vision, current state, gap register
 - [docs/maps/digitalmodel-operator-map.md](docs/maps/digitalmodel-operator-map.md) -- Canonical repo-wide operator map for source, tests, docs, and issue routing

@@ -1,12 +1,8 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
 """Report arithmetic, display wiring and exact-byte delivery for issue 3308."""
 
-import ast
 import copy
 import hashlib
 import importlib.util
@@ -18,6 +14,7 @@ import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -26,8 +23,50 @@ SCRIPT = ROOT / "scripts/reports/build_offshore_resilience_module_report.py"
 REPORT = ROOT / "docs/reports/modules/offshore_resilience"
 DELIVERABLES = {"index.html", "changes.json", "manifest.json", "README.md"}
 MODULES = ("minimum_facility", "installation_checklist", "lifecycle_planning", "structural_health")
-# Basis: issue 3308; absolute roundoff allowance for a single binary64 division.
+# Absolute roundoff allowance for a single binary64 division; not a design limit.
 RATIO_ABS_TOLERANCE = 1e-15
+REBUILD_COMMAND = (
+    "PYTHONPATH=src uv run --no-sync python "
+    "scripts/reports/build_offshore_resilience_module_report.py"
+)
+EXPECTED_INTERFACES = {
+    "minimum_facility": {
+        "InstallationMethod", "BseePlatformClass", "MinimumFacilityPlatform",
+        "MinimumFacilityPlatform.__post_init__", "MinimumFacilityPlatform.total_weight_tonnes",
+        "MinimumFacilityPlatform.crane_installable", "MinimumFacilityPlatform.water_depth_midpoint_ft",
+        "ModularCostComparison", "ModularCostComparison.__post_init__",
+        "ModularCostComparison.net_savings_usd", "ModularCostComparison.savings_fraction",
+        "classify_bsee_platform", "lifecycle_value_index",
+    },
+    "installation_checklist": {
+        "ChecklistStatus", "HammerType", "FoundationType", "ChecklistItem", "ChecklistItem.set_value",
+        "InstallationChecklist", "InstallationChecklist.pass_count", "InstallationChecklist.fail_count",
+        "InstallationChecklist.pending_count", "InstallationChecklist.completion_ratio",
+        "InstallationChecklist.is_complete", "InstallationChecklist.summary",
+        "build_structure_checklist", "build_wind_foundation_checklist",
+    },
+    "lifecycle_planning": {
+        "DecomFlagSeverity", "PipelineLayout", "DecomFlag", "decom_flags_for_design_choices",
+        "score_tieback_accommodation", "marginal_field_lifecycle_score",
+    },
+    "structural_health": {
+        "AlertSeverity", "MeasurementType", "AssetType", "StructuralHealthRecord",
+        "StructuralHealthRecord.__post_init__", "SensorConfig", "SensorConfig.__post_init__",
+        "SensorTemplate", "build_sensor_template", "AlertThresholdConfig", "build_alert_thresholds",
+    },
+}
+EXPECTED_HAND_CHECKED = {
+    "minimum_facility.MinimumFacilityPlatform.total_weight_tonnes",
+    "minimum_facility.MinimumFacilityPlatform.crane_installable",
+    "minimum_facility.MinimumFacilityPlatform.water_depth_midpoint_ft",
+    "installation_checklist.ChecklistItem.set_value",
+    "installation_checklist.InstallationChecklist.pass_count",
+    "installation_checklist.InstallationChecklist.fail_count",
+    "installation_checklist.InstallationChecklist.pending_count",
+    "installation_checklist.InstallationChecklist.completion_ratio",
+    "installation_checklist.InstallationChecklist.is_complete",
+    "installation_checklist.InstallationChecklist.summary",
+}
 
 
 def builder():
@@ -136,8 +175,8 @@ def test_rebuild_is_deterministic(tmp_path):
     for output in (first, second):
         assert {path.name for path in output.iterdir()} == DELIVERABLES
     for name in DELIVERABLES:
-        assert (first / name).read_bytes() == (second / name).read_bytes()
-        assert (first / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (first / name).read_bytes() == (second / name).read_bytes(), REBUILD_COMMAND
+        assert (first / name).read_bytes() == (REPORT / name).read_bytes(), REBUILD_COMMAND
 
 
 def test_cli_manifest_matches_written_files(tmp_path):
@@ -149,7 +188,7 @@ def test_cli_manifest_matches_written_files(tmp_path):
     subprocess.run(
         [sys.executable, str(SCRIPT), "--scratch", str(tmp_path / "cli-scratch"),
          "--output-dir", str(output)], cwd=ROOT, env=environment, check=True,
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8",
     )
     manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
     assert set(manifest["artifacts"]) == DELIVERABLES - {"manifest.json"}
@@ -159,11 +198,11 @@ def test_cli_manifest_matches_written_files(tmp_path):
     required.update(f"src/digitalmodel/structural/offshore_resilience/{name}.py" for name in MODULES)
     assert set(manifest["sources"]) == required
     for name, digest in manifest["artifacts"].items():
-        assert hashlib.sha256((output / name).read_bytes()).hexdigest() == digest
+        assert hashlib.sha256((output / name).read_bytes()).hexdigest() == digest, REBUILD_COMMAND
     for name, digest in manifest["sources"].items():
         assert not Path(name).is_absolute()
-        assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest
-    assert (output / "manifest.json").read_bytes() == (REPORT / "manifest.json").read_bytes()
+        assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest, REBUILD_COMMAND
+    assert (output / "manifest.json").read_bytes() == (REPORT / "manifest.json").read_bytes(), REBUILD_COMMAND
 
 
 def test_report_sections_inventory_and_limitations():
@@ -185,18 +224,17 @@ def test_report_sections_inventory_and_limitations():
     assert "allowed interval [2, 4] m" in page
     assert "1e-15" in page
     inventory = {row["method"]: row for row in build.method_inventory()}
-    for name in MODULES:
-        tree = ast.parse((ROOT / f"src/digitalmodel/structural/offshore_resilience/{name}.py").read_text())
-        for node in tree.body:
-            if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and not node.name.startswith("_"):
-                assert f"{name}.{node.name}" in inventory
-                if isinstance(node, ast.ClassDef):
-                    for method in node.body:
-                        if isinstance(method, ast.FunctionDef) and (
-                            not method.name.startswith("_") or method.name == "__post_init__"
-                        ):
-                            assert f"{name}.{node.name}.{method.name}" in inventory
+    assert set(inventory) == {
+        f"{module}.{name}" for module, names in EXPECTED_INTERFACES.items() for name in names
+    }
+    for start, end in (("s2", "s3"), ("s6", "s7")):
+        section = page.split(f'<h2 id="{start}">', 1)[1].split(f'<h2 id="{end}">', 1)[0]
+        assert "Module-level constants are excluded" in section
     assert any(row["status"] == "NOT_EVALUATED" for row in inventory.values())
+    assert {name for name, row in inventory.items()
+            if row["status"] == "HAND_CHECKED_SYNTHETIC"} == EXPECTED_HAND_CHECKED
+    assert all(row["status"] == "NOT_EVALUATED"
+               for name, row in inventory.items() if name not in EXPECTED_HAND_CHECKED)
     for row in inventory.values():
         assert row["method"] in page
         assert row["status"] in page
@@ -231,16 +269,71 @@ def test_summary_binds_returned_results_to_supplied_criteria():
     assert "final passed fraction is 3/3 (100.0%)" in summary
 
 
-def test_scratch_must_resolve_outside_checkout(tmp_path):
+@pytest.mark.parametrize("provide_scratch", [False, True])
+def test_cli_needs_no_scratch_files(tmp_path, provide_scratch):
+    """Rebuild without scratch; a legacy option remains inert for compatibility."""
+    output = tmp_path / "output"
+    scratch = tmp_path / "unused-scratch"
+    command = [sys.executable, str(SCRIPT), "--output-dir", str(output)]
+    if provide_scratch:
+        command.extend(["--scratch", str(scratch)])
+    environment = {key: value for key, value in os.environ.items() if key not in {
+        "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR",
+    }}
+    subprocess.run(command, cwd=ROOT, env=environment, check=True,
+                   capture_output=True, text=True, encoding="utf-8")
+    assert not scratch.exists()
+    assert {path.name for path in output.iterdir()} == DELIVERABLES
+    assert "--scratch" not in (output / "README.md").read_text(encoding="utf-8")
+
+
+def test_input_basis_identifies_local_controls_pending_acceptance():
     build = builder()
-    for scratch in (ROOT, ROOT / "forbidden-scratch"):
-        with pytest.raises(ValueError, match="outside the checkout"):
-            build.build(scratch, tmp_path / "never-written")
-    link = tmp_path / "scratch-link"
-    link.symlink_to(ROOT, target_is_directory=True)
-    with pytest.raises(ValueError, match="outside the checkout"):
-        build.build(link, tmp_path / "never-written")
-    assert not (tmp_path / "never-written").exists()
+    page = build.render(build.calculate())
+    reference = page.split("<p>[S1] ", 1)[1].split("</p>", 1)[0]
+    assert "Locally selected illustrative controls" in reference
+    assert "defined in" in reference and "build_offshore_resilience_module_report.py" in reference
+    assert "pending maintainer acceptance" in reference
+    assert "Issue 3308 synthetic arithmetic specification" not in page
+    assert "locally selected illustrative controls" in build.readme()
+
+
+def test_hand_qualification_is_bound_to_the_source_module():
+    """A same-named interface in another module shall not inherit qualification."""
+    build = builder()
+    assert build.method_assessment("installation_checklist", "InstallationChecklist.summary")[0] == "HAND_CHECKED_SYNTHETIC"
+    assert build.method_assessment("lifecycle_planning", "InstallationChecklist.summary")[0] == "NOT_EVALUATED"
+
+
+def test_review_note_download_defers_object_url_cleanup():
+    """Execute the rendered handler; cleanup shall occur after the click task."""
+    build = builder()
+    script = build.render(build.calculate()).split("<script>", 1)[1].split("</script>", 1)[0]
+    harness = """
+const assert = require('node:assert/strict');
+const tasks = [], events = [], notes = {value: 'Synthetic review note'}, status = {};
+let handler;
+global.document = {
+  getElementById(id) {
+    if (id === 'save-notes') return {addEventListener: (_, fn) => {handler = fn;}};
+    return id === 'notes' ? notes : status;
+  },
+  createElement: () => ({click() {events.push('click');}})
+};
+global.URL = {createObjectURL: () => 'blob:synthetic',
+              revokeObjectURL: () => {events.push('revoke');}};
+global.setTimeout = (fn) => {tasks.push(fn);};
+"""
+    checks = """
+handler();
+assert.deepEqual(events, ['click']);
+assert.equal(tasks.length, 1);
+tasks[0]();
+assert.deepEqual(events, ['click', 'revoke']);
+assert.match(status.textContent, /Download requested/);
+"""
+    subprocess.run(["node", "-"], input=harness + script + checks, check=True,
+                   capture_output=True, text=True, encoding="utf-8")
 
 
 def test_output_cannot_overwrite_unrelated_checkout_files(tmp_path, monkeypatch):
@@ -305,3 +398,50 @@ def test_output_file_symlinks_are_rejected_before_any_write(
         source: hashlib.sha256((checkout / source).read_bytes()).hexdigest()
         for source in build.SOURCES
     }
+
+
+@pytest.mark.parametrize("name", sorted(DELIVERABLES))
+def test_output_reparse_points_are_rejected_before_any_write(tmp_path, monkeypatch, name):
+    """Synthetic Windows stat attributes exercise junction/reparse rejection."""
+    build = builder()
+    output = tmp_path / "output"
+    output.mkdir()
+    for artifact in DELIVERABLES:
+        (output / artifact).write_bytes(b"Preserved artifact\n")
+    before = {artifact: (output / artifact).read_bytes() for artifact in DELIVERABLES}
+    original_lstat = Path.lstat
+
+    def reparse_lstat(path, *args, **kwargs):
+        result = original_lstat(path, *args, **kwargs)
+        if path == output / name:
+            return SimpleNamespace(st_mode=result.st_mode, st_file_attributes=0x400,
+                                   st_nlink=result.st_nlink)
+        return result
+
+    monkeypatch.setattr(Path, "lstat", reparse_lstat)
+    with pytest.raises(ValueError, match="symlinks or reparse points"):
+        build.build(tmp_path / "scratch", output)
+    assert before == {artifact: (output / artifact).read_bytes() for artifact in DELIVERABLES}
+
+
+@pytest.mark.parametrize("name", sorted(DELIVERABLES))
+@pytest.mark.parametrize("kind", ["hardlink", "directory"])
+def test_output_aliases_and_non_regular_targets_are_rejected(tmp_path, name, kind):
+    """A pre-existing target shall neither alias another file nor be a directory."""
+    build = builder()
+    output = tmp_path / "output"
+    output.mkdir()
+    unrelated = tmp_path / "unrelated.txt"
+    unrelated.write_bytes(b"Preserved unrelated content\n")
+    for artifact in DELIVERABLES - {name}:
+        (output / artifact).write_bytes(b"Preserved artifact\n")
+    if kind == "hardlink":
+        (output / name).hardlink_to(unrelated)
+    else:
+        (output / name).mkdir()
+    before = {artifact: (output / artifact).read_bytes() for artifact in DELIVERABLES - {name}}
+    with pytest.raises(ValueError, match="single-link regular files"):
+        build.build(tmp_path / "scratch", output)
+    assert unrelated.read_bytes() == b"Preserved unrelated content\n"
+    assert before == {artifact: (output / artifact).read_bytes()
+                      for artifact in DELIVERABLES - {name}}

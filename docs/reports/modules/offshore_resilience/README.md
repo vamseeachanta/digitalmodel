@@ -1,9 +1,14 @@
 # Offshore resilience module analysis
 
+Draft for maintainer review.
+
 [Read the computed module analysis](index.html).
 
-The synthetic basis is issue 3308: combined mass by addition, depth midpoint
-by averaging and supplied-interval checklist states by independent enumeration.
+The inputs are locally selected illustrative controls defined in
+`scripts/reports/build_offshore_resilience_module_report.py`, pending maintainer
+acceptance. Issue 3308 specifies deliverables, not numerical inputs. Combined
+mass is checked by addition, depth midpoint by averaging and checklist states
+by independent enumeration. The report cites the arithmetic textbook basis.
 Constructor controls are synthetic, not a physical design basis. The completion
 ratio measures passed checks, not the fraction entered. Engineering criteria
 for regulatory screening, costs, sensors and lifecycle decisions remain
@@ -12,13 +17,13 @@ NOT_EVALUATED; the report identifies the missing sources and decisions.
 Rebuild from the repository root with the source import path enabled:
 
 ```bash
-PYTHONPATH=src uv run --no-sync python scripts/reports/build_offshore_resilience_module_report.py --scratch "$TMPDIR/offshore-resilience-build"
+PYTHONPATH=src uv run --no-sync python scripts/reports/build_offshore_resilience_module_report.py
 ```
 
-The scratch argument shall resolve outside the checkout.
 The `--output-dir` option selects an independent output directory; by default the four
 deliverables are written beside this README. No intermediate files are needed.
 Inside the checkout, only the named report directory is permitted as output.
+Concurrent output replacement is not supported; use an exclusive output directory.
 The calculation uses the Python standard library and the source package only.
 
 `index.html` contains the calculated results and public-interface inventory.

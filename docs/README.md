@@ -29,10 +29,12 @@ New and materially revised engineering analysis deliverables shall follow the [p
 | Infrastructure, configs, or workflow routing | `src/digitalmodel/infrastructure/`, `src/digitalmodel/workflows/`, or `src/digitalmodel/data_systems/` | matching tests plus integration tests | domain docs and this routing entry point |
 | Documentation/indexing maintenance | `docs/README.md`, `docs/domains/README.md`, operator map, and registry | `tests/docs/test_digitalmodel_routing_contract.py` | this file |
 
-## Operational runbooks
+## Module reports
 
 - [Offshore resilience module analysis](reports/modules/offshore_resilience/index.html):
-  computed synthetic facility and checklist examples, public-method inventory and qualification limits.
+  draft for maintainer review; synthetic facility and checklist examples, public-method inventory and qualification limits.
+
+## Operational runbooks
 
 - [Codex exec standard input in automation](runbooks/codex-exec-stdin.md):
   disconnect inherited input when supplying only a prompt argument, or supply

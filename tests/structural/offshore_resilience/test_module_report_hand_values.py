@@ -1,12 +1,10 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Independent arithmetic basis from issue 3308, synthetic examples only.
+"""Independent arithmetic for locally selected illustrative controls.
 
 Expected results are hand addition, an interval average and state enumeration.
+The builder defines the inputs, pending maintainer acceptance of that basis.
 Constructor controls are synthetic software controls, not a design basis.
 """
 

@@ -1,13 +1,10 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
 """Build the offshore resilience module analysis from synthetic public calls.
 
-Basis S1: issue 3308 synthetic arithmetic specification. No engineering default
-is qualified by this report. Scratch shall resolve outside the checkout.
+Basis S1: locally selected illustrative controls defined below, pending
+maintainer acceptance. No engineering default is qualified by this report.
 """
 
 import argparse
@@ -15,6 +12,7 @@ import ast
 import hashlib
 import html
 import json
+import stat
 from dataclasses import asdict, replace
 from pathlib import Path
 from typing import Any
@@ -44,11 +42,14 @@ SOURCES = (
 CHANGES = [{
     "revision": "A", "date": "2026-10-28",
     "change": "Initial module inventory and computed synthetic weight, midpoint and checklist examples, so arithmetic behavior can be assessed without adopting unqualified engineering criteria.",
+}, {
+    "revision": "B", "date": "2026-11-06",
+    "change": "Corrected illustrative input provenance and interface qualification, removed the unused scratch requirement and duplicate licence headers, moved draft navigation links, rejected aliased and nonregular output targets before writing, deferred review-note URL cleanup, and refreshed source and artifact digests so the report basis and rebuild instructions are explicit.",
 }]
 
-# S1 specifies the arithmetic inputs and both capacity cases. The other fields
-# are explicit synthetic constructor controls selected for software execution;
-# no physical design life, slot requirement or installation method is inferred.
+# S1 consists of locally selected illustrative controls defined here, pending
+# maintainer acceptance. All fields, intervals and capacity cases are synthetic;
+# no engineering criterion, physical design life or installation method is inferred.
 FACILITY_INPUTS: Payload = {
     "platform_type": "wellhead", "topsides_weight_tonnes": 120,
     "jacket_weight_tonnes": 80, "water_depth_range_ft": (100, 300),
@@ -57,7 +58,7 @@ FACILITY_INPUTS: Payload = {
     "design_life_years": 1, "expansion_capability": False,
 }
 CAPACITIES_TONNES = (200, 199)  # S1 inclusive comparison and failing control.
-INTERVAL_M = (2, 4)  # S1 supplied synthetic interval; no operational criterion.
+INTERVAL_M = (2, 4)  # S1 locally selected interval; no operational criterion.
 MIXED_VALUES_M = (2, 5, None)  # S1 lower bound, outside interval, not entered.
 ALL_PASS_VALUES_M = (2, 3, 4)  # S1 within-interval controls, including both bounds.
 
@@ -109,16 +110,20 @@ def calculate() -> Payload:
 def method_assessment(module: str, name: str) -> tuple[str, str]:
     """Restrict hand qualification to the arithmetic actually exercised."""
     hand_checked = {
-        "MinimumFacilityPlatform.total_weight_tonnes",
-        "MinimumFacilityPlatform.crane_installable",
-        "MinimumFacilityPlatform.water_depth_midpoint_ft",
-        "ChecklistItem.set_value", "InstallationChecklist.pass_count",
-        "InstallationChecklist.fail_count", "InstallationChecklist.pending_count",
-        "InstallationChecklist.completion_ratio", "InstallationChecklist.is_complete",
-        "InstallationChecklist.summary",
+        "minimum_facility": {
+            "MinimumFacilityPlatform.total_weight_tonnes",
+            "MinimumFacilityPlatform.crane_installable",
+            "MinimumFacilityPlatform.water_depth_midpoint_ft",
+        },
+        "installation_checklist": {
+            "ChecklistItem.set_value", "InstallationChecklist.pass_count",
+            "InstallationChecklist.fail_count", "InstallationChecklist.pending_count",
+            "InstallationChecklist.completion_ratio", "InstallationChecklist.is_complete",
+            "InstallationChecklist.summary",
+        },
     }
-    if name in hand_checked:
-        return "HAND_CHECKED_SYNTHETIC", "S1 hand arithmetic and enumeration only; engineering applicability is NOT_EVALUATED."
+    if name in hand_checked.get(module, set()):
+        return "HAND_CHECKED_SYNTHETIC", "S1 illustrative controls and S6 independent arithmetic only; engineering applicability is NOT_EVALUATED."
     limitations = {
         "minimum_facility": "Regulatory category criteria, cost basis and lifecycle scoring calibration are missing. Weight, capacity and control-field domain validation is incomplete; invalid and non-finite inputs are unqualified.",
         "installation_checklist": "Factory intervals lack an approved installation basis. Direct items do not validate interval ordering or finiteness; empty-checklist semantics and manual status mutation are unqualified.",
@@ -230,7 +235,7 @@ def render(data: Payload) -> str:
     capacity_rows = "".join(
         f'<tr><td>Crane comparison at {row["capacity_tonnes"]} t</td>'
         + cell(f'crane-{row["capacity_tonnes"]}', "PASS" if row["crane_installable"] else "FAIL")
-        + f'<td>t</td><td>{facility["total_weight_tonnes"]} ≤ {row["capacity_tonnes"]}</td>'
+        + f'<td>dimensionless</td><td>{facility["total_weight_tonnes"]} t ≤ {row["capacity_tonnes"]} t</td>'
         '<td>[S1, S2]</td></tr>' for row in facility["crane_cases"]
     )
     inventory = "".join(
@@ -287,28 +292,29 @@ textarea {{ width:100%; box-sizing:border-box; }} button {{ padding:.6rem; }}
 @media print {{ main {{ padding:0; }} button,textarea {{ display:none; }} }}
 </style></head><body class="hs-doc"><main>
 <h1>Offshore resilience module analysis</h1>
+<p>Draft for maintainer review.</p>
 <p>Revision {revision} · {date} · Synthetic arithmetic only [S1]</p>
 <h2 id="s1">1. Executive Summary</h2>
 <p>{summary}</p>
 <p>The facility weight, depth midpoint, inclusive capacity comparison and checklist state arithmetic are calculated through public functions [S2, S3]. The worked results below are checked against independent addition, averaging and enumeration [S1, S6]. No operational approval or regulatory qualification is established.</p>
 <h3 id="revision-history">Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>{revisions}</tbody></table>
-<p>Revision history. Each issued revision retains its earlier rows.</p>
+<p>Revision history. Each revision retains its earlier rows.</p>
 <h2 id="s2">2. Scope and Objectives</h2>
-<p>The scope is the public interfaces of minimum_facility, installation_checklist, lifecycle_planning and structural_health. The method inventory records arithmetic evidence and unresolved qualification separately. The calculations exercise explicitly supplied synthetic inputs; the checklist factories, classification helper, cost comparison and lifecycle and sensor defaults are not used to select criteria.</p>
+<p>The scope is the public classes, synchronous functions and methods of minimum_facility, installation_checklist, lifecycle_planning and structural_health. Module-level constants are excluded, including VALID_PLATFORM_TYPES; imported names and delegated helper modules are also excluded. The method inventory records arithmetic evidence and unresolved qualification separately. The calculations exercise explicitly supplied synthetic inputs; the checklist factories, classification helper, cost comparison and lifecycle and sensor defaults are not used to select criteria.</p>
 <h2 id="s3">3. Design Data</h2>
 <p>All inputs are synthetic [S1]. Constructor controls permit software execution and carry no engineering design basis. No client, measured or operational data are used. Readiness is limited to this arithmetic demonstration.</p>
 <table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Basis and intended use</th></tr></thead><tbody>{data_rows}</tbody></table>
 <p>Facility input register. Supporting steel is supplied through jacket_weight_tonnes [S2].</p>
 <p>The directly constructed checklist items share the supplied allowed interval [{lower}, {upper}] m. Mixed entries are {mixed_values} m; NOT_ENTERED means pending, not zero [S1]. The later entries are within the same interval. No factory default is substituted.</p>
 <h2 id="s4">4. Methodology</h2>
-<p>The independent hand basis is addition for combined mass, the arithmetic average of the two depth endpoints for the midpoint, and inclusive comparison for crane capacity [S1]. These are arithmetic definitions, not lifting-design equations. No unit conversion is required.</p>
-<p>The interval predicate is lower ≤ entered value ≤ upper. Each item is enumerated as pass, fail or pending. completion_ratio measures passed checks, not the fraction entered: passed count divided by total count. is_complete requires no failed or pending items for this nonempty example [S1, S3].</p>
+<p>The independent hand basis is addition for combined mass and the arithmetic average of the two depth endpoints for the midpoint [S8]. Inclusive comparisons for crane capacity and the checklist interval are source behavior [S2, S3]; the locally selected inputs are defined by [S1]. Engineering applicability remains NOT_EVALUATED. No unit conversion is required.</p>
+<p>The interval predicate is lower ≤ entered value ≤ upper [S3]. Each item is enumerated as pass, fail or pending. completion_ratio measures passed checks, not the fraction entered: passed count divided by total count [S3]; the arithmetic ratio is supported by [S8]. is_complete requires no failed or pending items for this nonempty example [S1, S3].</p>
 <p>Integer counts and exactly representable integer-valued results are checked by exact comparison. The hand test permits an absolute dimensionless roundoff allowance of 1e-15 for the mixed-state ratio only [S6]; this is a test allowance for floating-point division, not an engineering tolerance. Display percentages are rounded to one decimal place; decisions use returned values before rounding.</p>
 <h2 id="s5">5. Detailed Results</h2>
 <table><thead><tr><th>Quantity</th><th>Returned result</th><th>Unit</th><th>Independent hand operation or criterion</th><th>Source</th></tr></thead><tbody>
-<tr><td>Combined weight</td>{weight_cell}<td>t</td><td>{topsides} + {steel}</td><td>[S1, S2]</td></tr>
-<tr><td>Depth midpoint</td>{midpoint_cell}<td>ft</td><td>({depth_lower} + {depth_upper}) / 2</td><td>[S1, S2]</td></tr>
+<tr><td>Combined weight</td>{weight_cell}<td>t</td><td>{topsides} + {steel}</td><td>[S1, S2, S8]</td></tr>
+<tr><td>Depth midpoint</td>{midpoint_cell}<td>ft</td><td>({depth_lower} + {depth_upper}) / 2</td><td>[S1, S2, S8]</td></tr>
 {capacity_rows}</tbody></table>
 <p>Facility arithmetic. PASS and FAIL refer solely to the supplied inclusive mass comparison. Lift radius, dynamic effects, rigging, crane charts, load factors and structural capacity are absent; installation feasibility is NOT_EVALUATED.</p>
 <table><thead><tr><th>State</th><th>Total (count)</th><th>Pass (count)</th><th>Fail (count)</th><th>Pending (count)</th><th>Passed fraction (%)</th><th>is_complete</th><th>Source</th></tr></thead><tbody>{summaries}</tbody></table>
@@ -318,18 +324,20 @@ textarea {{ width:100%; box-sizing:border-box; }} button {{ padding:.6rem; }}
 <h2 id="s6">6. Key Findings</h2>
 <p>The specified arithmetic agrees with independent hand calculations in the committed tests [S6]. This establishes the demonstrated software behavior only. Existing tests exercise additional branches; their passing status does not supply missing engineering criteria.</p>
 <table><thead><tr><th>Public interface</th><th>Qualification status</th><th>Review limitation or missing criterion</th><th>Source</th></tr></thead><tbody>{inventory}</tbody></table>
-<p>Public method inventory from the four source modules. Class entries cover construction or enum interfaces; explicit post-initialization validators are retained. HAND_CHECKED_SYNTHETIC is restricted to the displayed cases. NOT_EVALUATED means engineering qualification is not established, not a failed operational assessment [S2–S6].</p>
+<p>Public class, synchronous function and method inventory from the four source modules. Module-level constants are excluded, including VALID_PLATFORM_TYPES; imported names and delegated helper modules are also excluded. Class entries cover construction or enum interfaces; explicit post-initialization validators are retained. HAND_CHECKED_SYNTHETIC is restricted to the displayed cases. NOT_EVALUATED means engineering qualification is not established, not a failed operational assessment [S2–S6].</p>
 <h2 id="s7">7. Limitations and Not Covered</h2>
 <p>Regulatory classification: NOT_EVALUATED. The approximate screening boundaries have no verified governing edition, clause, jurisdiction or applicability assessment in this analysis. The existing implementation is not used as a regulatory source.</p>
 <p>Commercial cost and installation weather assumptions: NOT_EVALUATED. Dated quotations, scope, cost basis and an approved installation method and weather analysis are missing. No replacement cost or weather criterion is selected.</p>
 <p>Sensor and alert defaults: NOT_EVALUATED. Calibrated sensor evidence, channel units, sampling requirements, fatigue budget and approved alarm criteria are missing. Template helper contents and real monitoring responses are outside this review.</p>
 <p>Lifecycle defaults: NOT_EVALUATED. Approved scoring scales, weights, tieback criteria and jurisdiction-specific decommissioning decisions are missing. Recommendations returned by those methods are not adopted here.</p>
 <p>Input validation is incomplete in the reviewed source: non-finite facility inputs, direct-item interval ordering, nonnegative tieback slot counts, timezone awareness and positive alert design life require separate regressions before qualification. Empty checklist semantics are not established by the nonempty examples. These are inspection findings, not executed invalid-input campaigns. No source module is changed.</p>
+<p>The builder preflights existing output targets, including aliases and nonregular files. Concurrent output replacement is not supported; a rebuild requires exclusive access to its output directory. Native Windows junction behavior has not been exercised by this report.</p>
 <h2 id="s8">8. Recommendations</h2>
 <p>The way forward is to obtain the missing approved criteria and engineering evidence for each NOT_EVALUATED method, then add independent cases before assigning an operational or regulatory disposition. The input-validation gaps require bounded failing regressions before source fixes. No replacement default, rating or commercial assumption is proposed. The originating issue remains open while methods are unqualified.</p>
 <h2 id="s9">9. References and Appendices</h2>
-<p>[S1] Issue 3308 synthetic arithmetic specification and the explicit constructor controls committed in this builder. All numerical example inputs originate here; no licensed values are reproduced.</p>
+<p>[S1] Locally selected illustrative controls defined in <code>scripts/reports/build_offshore_resilience_module_report.py</code>: FACILITY_INPUTS, CAPACITIES_TONNES, INTERVAL_M, MIXED_VALUES_M and ALL_PASS_VALUES_M. This input basis is pending maintainer acceptance. Issue 3308 specifies deliverables, not these numerical inputs. The controls demonstrate software arithmetic only; engineering applicability is NOT_EVALUATED.</p>
 <p>[S2] minimum_facility.py: public facility properties and constructor. [S3] installation_checklist.py: direct item evaluation and checklist summary properties. [S4] lifecycle_planning.py and [S5] structural_health.py: interface inspection only. [S6] test_module_report_hand_values.py: independent arithmetic. [S7] test_offshore_resilience_module_report.py: payload, display, rebuild and digest checks.</p>
+<p>[S8] OpenStax, <em>Prealgebra</em>, second edition: section <a href="https://openstax.org/books/prealgebra-2e/pages/1-2-add-whole-numbers">1.2, Add Whole Numbers</a>; section <a href="https://openstax.org/books/prealgebra-2e/pages/5-5-averages-and-probability">5.5, Averages and Probability</a>; section <a href="https://openstax.org/books/prealgebra-2e/pages/5-6-ratios-and-rate">5.6, Ratios and Rate</a>; section <a href="https://openstax.org/books/prealgebra-2e/pages/6-1-understand-percent">6.1, Understand Percent</a>. These references support arithmetic operations, not the locally selected inputs or engineering acceptance.</p>
 <p>The source register below identifies exact source bytes. The manifest binds those sources and the index, changes and README artifacts by SHA-256. It excludes its own hash to avoid self-reference; complete rebuild comparison covers manifest.json itself. No execution timestamp, absolute path or scratch identifier enters a deliverable.</p>
 <ol>{sources}</ol>
 <details id="changes-panel"><summary>Engineering changes</summary><p>{change}</p></details>
@@ -342,7 +350,7 @@ document.getElementById('save-notes').addEventListener('click', () => {{
   const blob = new Blob([document.getElementById('notes').value], {{type:'text/plain'}});
   const url = URL.createObjectURL(blob), link = document.createElement('a');
   link.href = url; link.download = 'review-notes.txt'; link.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
   document.getElementById('save-status').textContent = 'Download requested; confirm the notes file is present.';
 }});
 </script></body></html>
@@ -353,10 +361,15 @@ def readme() -> str:
     """Document the exact retained outputs and their limited intended use."""
     return """# Offshore resilience module analysis
 
+Draft for maintainer review.
+
 [Read the computed module analysis](index.html).
 
-The synthetic basis is issue 3308: combined mass by addition, depth midpoint
-by averaging and supplied-interval checklist states by independent enumeration.
+The inputs are locally selected illustrative controls defined in
+`scripts/reports/build_offshore_resilience_module_report.py`, pending maintainer
+acceptance. Issue 3308 specifies deliverables, not numerical inputs. Combined
+mass is checked by addition, depth midpoint by averaging and checklist states
+by independent enumeration. The report cites the arithmetic textbook basis.
 Constructor controls are synthetic, not a physical design basis. The completion
 ratio measures passed checks, not the fraction entered. Engineering criteria
 for regulatory screening, costs, sensors and lifecycle decisions remain
@@ -365,13 +378,13 @@ NOT_EVALUATED; the report identifies the missing sources and decisions.
 Rebuild from the repository root with the source import path enabled:
 
 ```bash
-PYTHONPATH=src uv run --no-sync python scripts/reports/build_offshore_resilience_module_report.py --scratch "$TMPDIR/offshore-resilience-build"
+PYTHONPATH=src uv run --no-sync python scripts/reports/build_offshore_resilience_module_report.py
 ```
 
-The scratch argument shall resolve outside the checkout.
 The `--output-dir` option selects an independent output directory; by default the four
 deliverables are written beside this README. No intermediate files are needed.
 Inside the checkout, only the named report directory is permitted as output.
+Concurrent output replacement is not supported; use an exclusive output directory.
 The calculation uses the Python standard library and the source package only.
 
 `index.html` contains the calculated results and public-interface inventory.
@@ -388,17 +401,23 @@ Passing arithmetic cases do not establish operational approval.
 """
 
 
-def build(scratch: Path, output_dir: Path = DESTINATION) -> None:
+def build(scratch: Path | None = None, output_dir: Path = DESTINATION) -> None:
     """Write deterministic UTF-8/LF artifacts and their exact-byte manifest."""
-    scratch = Path(scratch).resolve()
-    if scratch == ROOT or ROOT in scratch.parents:
-        raise ValueError("Calculation scratch must be outside the checkout")
+    # The legacy scratch argument is retained for compatibility; no files use it.
     output_dir = Path(output_dir).resolve()
     if (output_dir == ROOT or ROOT in output_dir.parents) and output_dir != DESTINATION:
         raise ValueError("Output inside the checkout must be the named report directory")
     for name in ("index.html", "changes.json", "README.md", "manifest.json"):
-        if (output_dir / name).is_symlink():
-            raise ValueError("Output targets must not be symlinks")
+        try:
+            metadata = (output_dir / name).lstat()
+        except FileNotFoundError:
+            continue  # A missing target is a new output, not an input fallback.
+        if stat.S_ISLNK(metadata.st_mode) or (
+            getattr(metadata, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+        ):
+            raise ValueError("Output targets must not be symlinks or reparse points")
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise ValueError("Output targets must be single-link regular files")
     outputs = {"index.html": render(calculate()),
                "changes.json": json.dumps(CHANGES, indent=2) + "\n",
                "README.md": readme()}
@@ -419,9 +438,10 @@ def build(scratch: Path, output_dir: Path = DESTINATION) -> None:
 
 
 def main() -> None:
-    """Accept explicit scratch and optional report destination arguments."""
+    """Accept an optional report destination and the legacy scratch option."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--scratch", required=True, type=Path)
+    parser.add_argument("--scratch", type=Path,
+                        help="Compatibility option; no scratch files are produced")
     parser.add_argument("--output-dir", type=Path, default=DESTINATION)
     args = parser.parse_args()
     build(args.scratch, args.output_dir)
