@@ -14,6 +14,15 @@
 
 ## 1. Purpose and scope
 
+Current calculation note (2026-11-06): the Hz crossing-rate and Dirlik
+irregularity-factor corrections supersede the dependency-defect and healthy-keel
+statements in this historical snapshot. Both example locations now fail
+screening; the splash zone governs. The current registry assertions are in
+`tests/workflows/test_durable_workflows.py::test_workflow_registry[spectral-fatigue]`.
+Independent coefficient regressions and remaining qualification limits are
+recorded in [the frequency-unit method note](../../../../docs/domains/fatigue/spectral-frequency-units.md).
+The original pinned observations below are retained as historical evidence.
+
 `router` evaluates supplied stress PSDs at each location, occurrence-weights annual damage, selects the smallest life margin, writes detail and summary CSVs, and replaces the input settings with result metadata. [src/digitalmodel/spectral_fatigue/workflow.py:L37-L76] [src/digitalmodel/spectral_fatigue/workflow.py:L88-L127]
 
 The engine dispatches the `spectral_fatigue` basename to this router; the registry marks the module `development` and the durable workflow `offline`. [src/digitalmodel/engine.py:L340-L345] [docs/registry/module-routing.yaml:L646-L651] [docs/registry/workflows.yaml:L169-L178]

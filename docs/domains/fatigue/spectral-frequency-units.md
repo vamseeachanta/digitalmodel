@@ -3,14 +3,16 @@
 The `fatigue.spectral_fatigue` API uses Hz moments of a one-sided stress PSD.
 Removing its extra angular-to-cyclic conversion corrects the rates and damage
 from Hz inputs. The structural API retains angular moments. This note qualifies
-frequency units and synthetic narrow-band arithmetic; historical results and
-broad-band estimator accuracy remain unqualified.
+frequency units, synthetic narrow-band arithmetic and the Dirlik coefficient
+definition. Broad-band regression covers a rectangular spectrum; historical
+results and general broad-band estimator accuracy remain unqualified.
 
 ## Revision history
 
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-28 | Define both moment contracts, record independent arithmetic tests and identify stored-result consumers after correcting cyclic rates. |
+| 2 | 2026-11-06 | Correct the Dirlik irregularity coefficients, add independent damage regressions, regenerate the spectral atlas and clarify example verdicts and publication provenance. |
 
 ## Moment and rate contracts
 
@@ -74,6 +76,28 @@ retain the existing API definition of a year: `365.25*24*3600` seconds.
 All numbers in these probes are synthetic choices or the displayed hand
 calculations, rather than material properties or engineering acceptance factors.
 
+## Dirlik coefficient regression
+
+Dirlik's mixture coefficients use the irregularity factor
+`gamma=M_2/sqrt(M_0*M_4)`, rather than the spectral width
+`epsilon=sqrt(1-gamma**2)`. The reported `bandwidth_parameter` remains epsilon;
+Wirsching-Light retains its own width-based correction. The coefficient and
+range-damage expressions follow equations (8) and (9) of
+[Metals 11 (2021), 1333](https://doi.org/10.3390/met11091333).
+The publisher's [open PDF](https://mdpi-res.com/d_attachment/metals/metals-11-01333/article_deploy/metals-11-01333.pdf)
+was read on 2026-11-06; its equations and Table 1 support this regression basis.
+
+Tests compare Dirlik with the Rayleigh narrow-band limit on the rectangle
+above, using both exact and integrated moments. Broad-band tests use the
+unit-area rectangle on [1,5], normalized to unit variance and unit angular
+second moment before conversion to Hz. The absolute expectations come from
+independent substitution into equations (8) and (9), documented in
+`tests/fatigue/test_benasciutti_tovo.py`; that file separately checks the Table 1
+damage ratios at slopes 3, 5 and 7. The new tests exercise the production
+Dirlik estimator against those expectations, so an independent denominator
+can no longer conceal its coefficient defect. This verifies the formula for
+these inputs and does not qualify all broad-band spectra.
+
 ## Constructor and consumer inventory
 
 Repository Python constructors and imports were inspected before changing the
@@ -101,12 +125,13 @@ rate formulas. The findings are:
   required in either workflow.
 - Stored-result consumers include the spectral and RAO workflow result folders
   and registry tests in
-  `tests/workflows/test_durable_workflows.py`. The two defect-dependent detail
-  pass assertions now expect failure, as anticipated in the existing
+  `tests/workflows/test_durable_workflows.py`. The direct-PSD keel assertion
+  now expects failure, as recorded in the current notes in
   `spectral_fatigue/docs/agent-pack.md` and `rao_spectral_fatigue/docs/agent-pack.md`
-  method notes. The changed
-  assertions were checked by evaluating each detail in memory without the
-  engine or output writes. Reports built from those outputs inherit their
+  method notes. Both direct-PSD locations fail screening with the corrected Hz
+  rates. Correcting the Dirlik coefficients restores a passing keel verdict in
+  the RAO example, so that assertion now expects a pass; its splash zone still
+  fails. Both examples are governed by the splash zone. Reports built from those outputs inherit their
   basis. A unit fix alone does not qualify a screening status. The separate
   `report_pack` example uses the legacy FATG path and is unaffected.
 - `parametric/generate.py::_spectral_fatigue_annual_damage` already converts wave
@@ -121,6 +146,13 @@ rate formulas. The findings are:
   verify the retained source and artifact digests, and exercise the shipped
   query with output readback. Earlier atlas versions remain available by ID;
   their results and separate report outputs require recalculation before reuse.
+  Manifest `code_version` and inventory `recorded_code_version` identify the
+  build-time HEAD, which precedes publication and can have uncommitted source
+  changes. They do not identify the commit containing the generated atlas.
+  Publication is resolved by matching the recorded source and artifact digests
+  against reachable commits (`first-matching-artifact-publication`), including
+  after a squash merge. Retained source bytes reconstruct the content
+  fingerprint; changing fingerprinted files requires another atlas build.
 - The independent `structural/spectral_fatigue.py` helper and structural
   `frequency_domain.py` consumers (`analysis.py`, `scatter_fatigue.py`) retain
   their existing contracts; agreement of their damage estimators is not claimed.
@@ -128,9 +160,10 @@ rate formulas. The findings are:
 ## Remaining evidence gaps
 
 Frequency-unit tests do not qualify empirical broad-band corrections. Their
-scale invariance is checked separately; their coefficients and formulas are
-unchanged. In particular, the existing Dirlik use of the bandwidth parameter
-in its mixture coefficients requires independent assessment. The structural
+scale invariance is checked separately. The Dirlik irregularity substitution
+is corrected and checked against the narrow-band limit and independent
+rectangular-spectrum arithmetic; other coefficient guards and empirical
+assumptions remain unchanged. The structural
 narrow-band estimator also uses a representative range rather than the Rayleigh
 range integral tested here, so only its frequency convention is cross-checked.
 

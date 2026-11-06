@@ -15,6 +15,15 @@ Repository citations resolve at the code revision above; implementation-map cita
 
 ## 1. Purpose and scope
 
+Current calculation note (2026-11-06): the Hz crossing-rate and Dirlik
+irregularity-factor corrections supersede the dependency-defect and healthy-keel
+statements in this historical snapshot. The example keel joint passes
+screening while the splash zone fails and governs. The current registry assertions are in
+`tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-spectral-fatigue]`.
+Independent coefficient regressions and remaining qualification limits are
+recorded in [the frequency-unit method note](../../../../docs/domains/fatigue/spectral-frequency-units.md).
+The original pinned observations below are retained as historical evidence.
+
 `router` converts a stress RAO and parametric wave spectra into stress PSDs, delegates damage evaluation to `spectral_fatigue.router`, and copies the result and screening status back into the input configuration. [src/digitalmodel/rao_spectral_fatigue/workflow.py:L34-L81]
 
 The transfer uses a real non-negative scalar RAO, linear interpolation and squared amplitude; it contains no complex phase, coordinate transformation or directional combination. [src/digitalmodel/rao_spectral_fatigue/workflow.py:L116-L143]

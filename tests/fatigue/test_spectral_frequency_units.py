@@ -186,6 +186,47 @@ def test_dimensionless_corrections_preserve_frequency_scaling(method):
     )
 
 
+@pytest.mark.parametrize("integrated", [False, True])
+def test_dirlik_rectangular_narrow_band_limit(integrated):
+    """A near-monochromatic rectangle must tend to the Rayleigh damage.
+
+    The [0.99, 1.01] Hz rectangle has irregularity approaching one and width
+    approaching zero. A relative limit tolerance of 0.02% checks convergence,
+    rather than a design acceptance criterion. Keep the reported width distinct
+    from the irregularity used in the mixture coefficients.
+    """
+    exact, _, frequency, psd = _rectangle(SCALES[0])
+    moments = compute_spectral_moments(frequency, psd) if integrated else _hz_moments(exact)
+    result = dirlik_damage(moments, 3, 0)
+    reference = narrow_band_damage(moments, 3, 0)
+    assert result.damage_rate / reference.damage_rate == pytest.approx(1, rel=2e-4)
+    assert result.bandwidth_parameter == moments.bandwidth_parameter
+
+
+@pytest.mark.parametrize("slope, expected", [
+    (3, 4.3274607691640465),
+    (5, 84.04310693166342),
+    (7, 2331.7809483219658),
+])
+def test_dirlik_independent_broad_band_rectangle(slope, expected):
+    """Independent Eq. (9) arithmetic for the Table 1, c=5 rectangle.
+
+    Metals 11 (2021), 1333, https://doi.org/10.3390/met11091333, Eqs. (8)-(9).
+    Reuse the independently calculated Dirlik denominators documented in
+    test_benasciutti_tovo.py, without using the BT2 implementation as an oracle.
+    Unit-area PSD on [1,5], scaled to m0=m2_angular=A=1, gives
+    alpha1=3/sqrt(31/3), gamma=(31/3)/sqrt(781/5), xm=alpha1*gamma.
+    Substitution into the exponential/Rayleigh mixture yields these constants;
+    1e-12 is a relative arithmetic tolerance. Convert angular moments to Hz.
+    """
+    moments = SpectralMoments(
+        m0=1, m1=3 * math.sqrt(3 / 31) / math.tau,
+        m2=1 / math.tau**2, m4=(781 / 5) * (3 / 31)**2 / math.tau**4,
+    )
+    result = dirlik_damage(moments, slope, 0)
+    assert result.damage_rate == pytest.approx(expected, rel=1e-12)
+
+
 def test_committed_spectral_atlas_matches_recomputed_hz_damage(tmp_path):
     """A refreshed fingerprint alone must not preserve the superseded grid."""
     from digitalmodel.parametric.atlas import Atlas
