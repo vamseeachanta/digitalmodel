@@ -304,13 +304,28 @@ def test_calm_water_and_invalid_physical_inputs():
 
 
 @pytest.mark.parametrize(
-    "bottom,depth,buoyancy", [(0, 4, 0), (-4, 2, 800), (-2, 4, 800), (1, 4, 0)]
+    "bottom,depth,tide,buoyancy,status",
+    [
+        (0, 4, 0, 0, "calm"),
+        (-4, 2, 0, 800, "calm_deck_submerged"),
+        (-2, 4, 0, 800, "calm"),
+        (1, 4, 0, 0, "calm"),
+        (-2, 2, 0, 800, "calm_deck_submerged"),
+        (-1, 2, 1, 800, "calm_deck_submerged"),
+        (-1, 2, 2, 800, "calm_deck_submerged"),
+        (-1, 2, 0.5, 600, "calm"),
+        (-4, 2, -3, 400, "calm"),
+    ],
 )
 def test_calm_status_is_consistent_at_waterline_and_for_submerged_deck(
-    bottom, depth, buoyancy
+    bottom, depth, tide, buoyancy, status
 ):
-    result = load_case(wave_height_m=0, hull=api().HullGeometry(10, 4, depth, bottom))
-    assert result.hull_status == "calm"
+    result = load_case(
+        wave_height_m=0,
+        tide_level_m=tide,
+        hull=api().HullGeometry(10, 4, depth, bottom),
+    )
+    assert result.hull_status == status
     assert result.hull_horizontal_amplitude_kn == result.hull_vertical_amplitude_kn == 0
     assert result.leg_peak_kn == 0
     assert result.buoyancy_kn == buoyancy

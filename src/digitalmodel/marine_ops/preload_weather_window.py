@@ -226,6 +226,7 @@ class SwellLoads:
     The sum of three leg peaks is an arithmetic upper bound, not a simultaneous
     global action. Leg spacing, wave phase and leg/hull phase are not supplied.
     Hull vertical amplitude is dynamic pressure, separate from static buoyancy.
+    Calm water retains a calm_deck_submerged flag for nonpositive deck freeboard.
     """
 
     water_depth_m: float
@@ -373,7 +374,9 @@ def swell_loads(
     horizontal: float | None
     vertical: float | None
     if wave_height_m == 0:
-        horizontal, vertical, status = 0.0, 0.0, "calm"
+        freeboard = hull.bottom_elevation_m + hull.depth_m - tide_level_m
+        status = "calm_deck_submerged" if freeboard <= 0 else "calm"
+        horizontal, vertical = 0.0, 0.0
     else:
         horizontal, vertical, status = _hull_forces(
             hull, depth, draft, tide_level_m, amplitude, k, density_kg_m3 * gravity_m_s2

@@ -13,6 +13,7 @@ followed by nonlinear hydrodynamic and foundation assessment where required.
 | --- | --- | --- |
 | 1 | 2026-10-28 | Add persistent-window counts, explicit missing-data bounds and tide-dependent load screening to support preload planning. |
 | 2 | 2026-11-06 | Count observed exceedances as known failures despite gaps or record-end truncation, distinguish calm water and identify contact at the assumed elevated limit. |
+| 3 | 2026-11-06 | Retain a submerged-deck flag at zero wave height so calm water cannot hide nonpositive deck freeboard. |
 
 Table 1. Document issue history.
 
@@ -133,9 +134,11 @@ force are separate outputs and are not added as concurrent maxima. A dry hull
 returns zero only above the regular-wave crest. Intermittent bottom contact or
 deck wetting returns unavailable hull forces, retaining the contact flag and leg
 screen. Such cases require an impact/nonlinear model rather than a zero load.
-At zero wave height the status is `calm` for every hull position; oscillatory
-forces are zero, while static draft and buoyancy are retained. The calm status
-does not establish freeboard adequacy or installation acceptance.
+At zero wave height, deck freeboard is hull-bottom elevation plus hull depth
+minus tide level. Nonpositive freeboard returns `calm_deck_submerged`, including
+a deck exactly at still water; positive freeboard returns `calm`. Both statuses
+retain zero oscillatory forces and static draft and buoyancy. Neither status
+establishes installation acceptance.
 
 At the assumed hull-elevated state limit Hs = 1.5 m and H/Hs = 1.8, the regular
 wave crest is 1.35 m above still water. The hull bottom at +1.0 m has gaps of
