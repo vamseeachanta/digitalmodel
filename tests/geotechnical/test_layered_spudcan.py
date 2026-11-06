@@ -1,6 +1,3 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Independent hand calculations for layered circular-footing mechanisms.
@@ -106,7 +103,9 @@ def test_squeezing_is_bounded_and_transmitted_through_upper_clay():
     curve = penetration_curve(profile, Spudcan(10), [0, 1, 3, 4.9, 5, 10], preload_kn=8000)
     assert point(curve, 0).pressure_kpa == pytest.approx(93.4)
     assert point(curve, 3).pressure_kpa == pytest.approx(70.1)
+    assert point(curve, 3).branch == 'clay_squeezing'
     assert point(curve, 4.9).pressure_kpa == pytest.approx(190.2)
+    assert point(curve, 4.9).branch == 'lower_layer_support'
     assert point(curve, 5).pressure_kpa == pytest.approx(190.2)
     assert curve.maximum.pressure_kpa == pytest.approx(190.2)
     assert curve.peak.pressure_kpa == pytest.approx(93.4)
@@ -302,8 +301,9 @@ def test_invalid_preload(preload):
         penetration_curve(LayeredProfile((clay(0, 20, 20),)), Spudcan(10), [0, 10], preload_kn=preload)
 
 
-def test_example_outputs_are_portable_offline_and_replayable(tmp_path):
-    path = Path('examples/domains/geotechnical/jackup_layered_penetration.py')
+def test_example_outputs_are_portable_offline_and_replayable(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    path = Path(__file__).resolve().parents[2] / 'examples/domains/geotechnical/jackup_layered_penetration.py'
     spec = importlib.util.spec_from_file_location('layered_example', path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -337,6 +337,22 @@ def test_example_outputs_are_portable_offline_and_replayable(tmp_path):
         assert summary['peak']['load_kn'] == pytest.approx(expected_peak)
         assert summary['punch_through_flag'] is expected_flag
         assert summary['standards'][0]['clause'] == 'TO CONFIRM'
+
+
+@pytest.mark.parametrize('name', ['stiff_over_soft', 'sand_over_soft', 'uniform_soft'])
+@pytest.mark.parametrize('bound', [0, 1])
+def test_example_offset_range_stays_within_investigated_profile(name, bound):
+    root = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location(
+        'layered_example', root / 'examples/domains/geotechnical/jackup_layered_penetration.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    source = root / 'examples/data/jackup_layered_penetration' / f'{name}.json'
+    payload = json.loads(source.read_text(encoding='utf-8'))
+    payload['spudcan']['tip_to_bearing_m'] = payload['parameter_ranges']['spudcan.tip_to_bearing_m'][bound]
+    profile, spudcan, depths, preload = module.from_input(payload)
+    curve = penetration_curve(profile, spudcan, depths, preload_kn=preload)
+    assert max(p.depth_m for p in curve.points) <= profile.layers[-1].bottom_m
 
 
 def test_preload_support_is_separate_from_capacity_loss_flag():

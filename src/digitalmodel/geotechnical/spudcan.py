@@ -1,6 +1,3 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
-
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Illustrative spudcan screening using open research, with SI inputs.
@@ -562,8 +559,10 @@ class _LayeredResistance:
             punching = lower + 3 * strength * (layer.bottom_m - depth) / self.spudcan.diameter_m
             return min(general, punching), 'clay_punching' if punching < general else 'clay_general_shear'
         squeezing = self.squeeze(index, depth)
-        return min(lower, max(general, squeezing)), (
-            'clay_squeezing' if squeezing > general and lower > general else 'clay_general_shear')
+        if squeezing >= lower:
+            return lower, 'lower_layer_support'
+        return max(general, squeezing), (
+            'clay_squeezing' if squeezing > general else 'clay_general_shear')
 
     def point(self, depth: float) -> PenetrationPoint:
         """Evaluate at a bearing-plane depth and publish a tip-referenced point."""
