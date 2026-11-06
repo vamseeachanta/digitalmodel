@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from digitalmodel.data.hydrostatic import read_pressure_csv, write_hydrostatic_csv
-from digitalmodel.data_models.pipe_section import PipeSection
+from digitalmodel.data_models.pipe_section import AnnulusSection
 from digitalmodel.data_systems.data.catalog import CatalogEntry, DataCatalog
 from digitalmodel.hydrodynamics.well_datasets.shear_flow_loader import (
     vorticity_from_velocity,
@@ -32,8 +32,9 @@ def run_example(output_dir: Path) -> dict[str, float]:
 
     # OpenStax Precalculus 2e (2021), §5.1: subtract pi*r² for radii 2 and 1.
     section_file = output_dir / "section.json"
-    section_file.write_text(PipeSection(4, 2).to_json(), encoding="utf-8")
-    section = PipeSection.from_json(section_file.read_text(encoding="utf-8"))
+    geometry = AnnulusSection(outer_diameter_m=4, inner_diameter_m=2)
+    section_file.write_text(geometry.to_json(), encoding="utf-8")
+    section = AnnulusSection.from_json(section_file.read_text(encoding="utf-8"))
 
     # OpenStax University Physics Vol. 1 (2016), §14.1, Eq. 14.3: F=p*A.
     # Chosen parallel panels: 20000*3 + 50000*2 = 160000 N.

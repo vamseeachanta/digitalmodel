@@ -18,6 +18,8 @@ def test_loaded_linear_field_has_hand_derived_vorticity(monkeypatch, dx, dy):
     dv/dx-du/dy = 5-3 = 2 s^-1 everywhere, including boundaries. Unequal
     spacings expose an axis swap or an assumption of unit spacing. The
     integers are synthetic field coefficients, not empirical constants.
+    The injected sample already uses the adapter's (component, y, x) order;
+    comparison with its injected curl checks transport, not upstream layout.
     """
     x, y = np.meshgrid(np.arange(4) * dx, np.arange(3) * dy)
     velocity = np.stack((3 * y + 2 * x + 7, 5 * x - 4 * y - 1))

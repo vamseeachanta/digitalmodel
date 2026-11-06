@@ -96,6 +96,18 @@ class ShearFlowLoader:
         * ``"velocity"`` — ``np.ndarray`` of shape ``(2, H, W)`` (u, v components)
         * ``"vorticity"`` — ``np.ndarray`` of shape ``(1, H, W)``
 
+        The required local convention is components (u, v), rows along y and
+        columns along x: velocity (2, y, x), vorticity (1, y, x). This matches
+        ``vorticity_from_velocity``. Field extraction preserves the supplied
+        axis order; it does not infer or transpose spatial coordinates.
+
+        Source for the upstream distinction: The Well file-format specification,
+        https://polymathic-ai.org/the_well/data_format/, lists spatial axes in
+        ``dimensions/@spatial_dims`` order (its 2-D example uses x, y), with
+        vector components last. Raw upstream arrays must be normalized to the
+        local convention before use here. Synthetic adapter tests establish
+        this local contract only; live WellDataset layout is not validated.
+
         The method does not trigger a full dataset download; it iterates
         only the requested number of steps using the dataset's streaming
         interface.

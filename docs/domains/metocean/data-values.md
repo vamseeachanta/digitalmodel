@@ -11,6 +11,7 @@ and data-interface behavior; they do not qualify a measured dataset or a design.
 | --- | --- | --- |
 | 0 | 2026-10-21 | Added synthetic value checks and a worked example to cover missing engineering assertions. |
 | 1 | 2026-10-21 | Rejected boolean and non-real calculation inputs, moved the example test to the dependency-bearing suite, and made the full-circle citation explicit. |
+| 2 | 2026-11-06 | Renamed the annulus model, required named diameters, normalized real scalar inputs and documented the local spatial-axis convention to prevent ambiguous geometry or array interpretation. |
 
 ## Slice 1: pressure CSV retrieval
 
@@ -32,8 +33,13 @@ The CSV schema states SI units; it does not retain fluid-property provenance.
 
 ## Slice 2: serialized geometry and panel force
 
-`digitalmodel.data_models.pipe_section.PipeSection` requires both diameters in
-metres and supports JSON round trips. Material area is the difference of circle
+`digitalmodel.data_models.pipe_section.AnnulusSection` requires both diameters
+in metres as keyword arguments, for example
+`AnnulusSection(outer_diameter_m=4, inner_diameter_m=2)`. This distinguishes the
+bore diameter from the wall thickness accepted by the existing connector model.
+Real scalars, including NumPy integer and floating scalars, are normalized to
+Python floats for JSON round trips. Boolean, non-real, nonfinite and oversized
+inputs raise `ValueError`. Material area is the difference of circle
 areas, `A = pi*(Do - Di)*(Do + Di)/4`. The factor of four follows from diameter
 being twice radius. The sector-area equation `A = θ*r²/2`, with θ = 2π radians
 for a full circle, gives `A = pi*r²`, using
@@ -64,6 +70,14 @@ The chosen field is `u = 3*y + 2*x + 7`, `v = 5*x - 4*y - 1`, giving
 `omega_z = 5 - 3 = 2.0 s^-1`. Tests stream this analytic field through the
 loader with a local synthetic dataset substitute and then compute its curl.
 Existing positive, negative and zero curl retrieval tests remain in place.
+
+The loader's required local order is `(component, y, x)`; field extraction
+preserves the supplied axes. The upstream
+[The Well file-format specification](https://polymathic-ai.org/the_well/data_format/)
+lists spatial axes in `dimensions/@spatial_dims` order (the 2-D example uses
+`x, y`), with vector components last. Raw upstream fields require normalization
+to the local convention before use. Comparing a synthetic snapshot with its
+injected vorticity tests transport and arithmetic, not real-dataset axis order.
 
 Interior derivatives use centred difference quotients; boundary derivatives
 use one-sided quotients, without periodic wrapping. For an affine field,

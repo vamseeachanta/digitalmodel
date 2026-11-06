@@ -2,11 +2,15 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Hand-derived pipe area checks, including the JSON representation."""
 
+import json
 import math
+from fractions import Fraction
 
+import numpy as np
 import pytest
 
-from digitalmodel.data_models.pipe_section import PipeSection
+from digitalmodel.data_models import pipe_section
+from digitalmodel.data_models.pipe_section import AnnulusSection
 
 
 def test_pipe_area_after_serialization():
@@ -17,8 +21,8 @@ def test_pipe_area_after_serialization():
     circle areas gives (4-1)*pi = 3*pi m². JSON retains both input diameters;
     the reconstructed model must retain the independently derived area.
     """
-    section = PipeSection(outer_diameter_m=4, inner_diameter_m=2)
-    restored = PipeSection.from_json(section.to_json())
+    section = AnnulusSection(outer_diameter_m=4, inner_diameter_m=2)
+    restored = AnnulusSection.from_json(section.to_json())
     assert restored.outer_diameter_m == 4
     assert restored.inner_diameter_m == 2
     assert section.area_m2 == 3 * math.pi
@@ -27,7 +31,7 @@ def test_pipe_area_after_serialization():
 
 def test_solid_circle_is_supported():
     """The same circle formula gives pi m² for chosen radius 1 m, no bore."""
-    assert PipeSection(outer_diameter_m=2, inner_diameter_m=0).area_m2 == math.pi
+    assert AnnulusSection(outer_diameter_m=2, inner_diameter_m=0).area_m2 == math.pi
 
 
 @pytest.mark.parametrize(
@@ -42,16 +46,51 @@ def test_solid_circle_is_supported():
         (4, float("nan")),
         (True, 0),
         ("4", 2),
+        (np.bool_(True), 0),
+        (4, np.bool_(False)),
+        pytest.param(10**400, 1, id="outer-overflow"),
+        pytest.param(4, 10**400, id="inner-overflow"),
     ],
 )
 def test_invalid_geometry_is_rejected(outer, inner):
     """A material annulus requires finite Do > Di >= 0; booleans lack units."""
     with pytest.raises(ValueError):
-        PipeSection(outer, inner)
+        AnnulusSection(outer_diameter_m=outer, inner_diameter_m=inner)
 
 
 @pytest.mark.parametrize("payload", ['{"outer_diameter_m":4}', "[]", "null"])
 def test_incomplete_serialization_is_rejected(payload):
     """Both diameters are required; no implicit geometry is reconstructed."""
     with pytest.raises(ValueError):
-        PipeSection.from_json(payload)
+        AnnulusSection.from_json(payload)
+
+
+def test_section_has_unambiguous_name():
+    """Diameter-based geometry must not shadow the wall-thickness model."""
+    assert AnnulusSection.__name__ == "AnnulusSection"
+    assert not hasattr(pipe_section, "PipeSection")
+
+
+def test_section_requires_keyword_arguments():
+    """A second positional value must not silently mean bore or thickness."""
+    with pytest.raises(TypeError):
+        AnnulusSection(0.3, 0.02)
+
+
+@pytest.mark.parametrize("field", ["outer_diameter_m", "inner_diameter_m"])
+def test_serialized_overflow_is_rejected(field):
+    """Oversized JSON integers use the same ValueError contract as geometry."""
+    data = {"outer_diameter_m": 4, "inner_diameter_m": 2}
+    data[field] = 10**400
+    with pytest.raises(ValueError, match="finite"):
+        AnnulusSection.from_json(json.dumps(data))
+
+
+@pytest.mark.parametrize("scalar", [np.int64, np.float32, np.float64, Fraction])
+def test_real_scalar_geometry_round_trip(scalar):
+    """Real table scalars retain the hand-derived 3*pi area through JSON."""
+    section = AnnulusSection(outer_diameter_m=scalar(4), inner_diameter_m=scalar(2))
+    restored = AnnulusSection.from_json(section.to_json())
+    assert restored.outer_diameter_m == 4
+    assert restored.inner_diameter_m == 2
+    assert restored.area_m2 == 3 * math.pi
