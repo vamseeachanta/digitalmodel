@@ -86,6 +86,69 @@ def builder():
     return runpy.run_path(str(BUILDER))
 
 
+def test_module_report_has_reasoned_output_ownership():
+    from scripts import check_generated_html as checker
+
+    relative = BUILDER.relative_to(ROOT).as_posix()
+    reason = checker.DISCOVERY_FALSE_POSITIVES[relative]
+    for name in ("index.html", "changes.json"):
+        assert (REPORT / name).relative_to(ROOT).as_posix() in reason
+    assert "test_module_report.py" in reason
+    assert checker.validate_registry(ROOT) == []
+
+
+@pytest.mark.parametrize("unit", ["m", "inch"])
+def test_fixture_inventory_rejects_non_mm_outer_diameter(monkeypatch, unit):
+    module = builder()
+    report = build_report_model()
+    fixture = next(item for item in report.fixtures if item.definition.radial_layers)
+    fixture.definition.radial_layers[-1].outer_diameter.unit = unit
+    monkeypatch.setitem(module["calculate"].__globals__, "build_report_model", lambda: report)
+    with pytest.raises(ValueError, match="millimetres"):
+        module["calculate"]()
+
+
+@pytest.mark.parametrize("value,expected", [
+    (0.0525 * math.pi, "0.1649"), (0.0625 * math.pi, "0.1963"),
+    (0.0009515625 * math.pi, "0.002989"),
+])
+def test_report_numbers_retain_four_significant_figures(value, expected):
+    assert builder()["format_number"](value) == expected
+
+
+def test_report_writes_explicit_lf_newlines(tmp_path, monkeypatch):
+    written_newlines = []
+    original = Path.write_text
+
+    def record_write(path, text, **kwargs):
+        written_newlines.append(kwargs.get("newline"))
+        return original(path, text, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", record_write)
+    builder()["build"](tmp_path)
+    assert written_newlines == ["\n", "\n"]
+    assert all(b"\r\n" not in path.read_bytes() for path in tmp_path.iterdir())
+
+
+def test_module_retention_preserves_existing_main_reports():
+    retained = (
+        "gis/report.html", "passing_ship/build_worked_example.py",
+        "pipe_capacity/build_worked_example.py", "riserfatigue/report.html",
+        "vesselseakeeping/index.html", "cross_sections/index.html",
+        "cross_sections/changes.json",
+    )
+    for relative in retained:
+        path = "docs/reports/modules/" + relative
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", "-q", path], cwd=ROOT,
+        )
+        assert result.returncode == 1, path
+    assert subprocess.run(
+        ["git", "check-ignore", "--no-index", "-q",
+         "docs/reports/modules/cross_sections/scratch.html"], cwd=ROOT,
+    ).returncode == 0
+
+
 class Bindings(HTMLParser):
     def __init__(self):
         super().__init__()
@@ -181,7 +244,7 @@ def test_rebuild_matches_committed_artifacts_and_is_repeatable(tmp_path):
         relative = str((REPORT / name).relative_to(ROOT))
         assert subprocess.run(["git", "check-ignore", "-q", relative], cwd=ROOT).returncode == 1
     changes = json.loads(first["changes.json"])
-    assert changes["revision"] == 0
+    assert changes["revision"] == 1
     assert changes["changes"]
 
 

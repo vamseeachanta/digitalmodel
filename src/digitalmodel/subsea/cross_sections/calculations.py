@@ -12,7 +12,9 @@ from dataclasses import dataclass
 import math
 from typing import Literal
 
-from digitalmodel.subsea.cross_sections.schema import RadialLayer
+from pydantic import BaseModel, ConfigDict, Field
+
+from digitalmodel.subsea.cross_sections.schema import Provenance, RadialLayer
 
 
 @dataclass(frozen=True)
@@ -72,8 +74,22 @@ def _stack_diameters(layers: Sequence[RadialLayer]) -> list[tuple[float, float]]
     for previous, current in zip(diameters, diameters[1:]):
         # Exact shared boundaries in metres; no physical gap tolerance is assumed.
         if previous[1] != current[0]:
-            raise ValueError("radial layers must be contiguous and ordered without gaps or overlaps")
+            raise ValueError(
+                "radial layers must be contiguous and ordered without gaps or overlaps; "
+                "thickness-derived boundaries must match neighbouring diameters bit-for-bit"
+            )
     return diameters
+
+
+def _annular_geometry(layer: RadialLayer) -> tuple[float, float, float]:
+    """Return validated SI diameters and finite positive material area."""
+    inner, outer = _diameters(layer)
+    # OpenStax, Prealgebra 2e (2020), §9.5: A=pi*r² and d=2r.
+    # Subtract concentric circle areas: pi*(OD-ID)*(OD+ID)/4.
+    # https://openstax.org/books/prealgebra-2e/pages/9-5-solve-geometry-applications-circles-and-irregular-figures
+    area = math.pi * (outer - inner) * (outer + inner) / 4
+    _positive(area, "area")
+    return inner, outer, area
 
 
 def calculate_annular_layer(layer: RadialLayer) -> AnnularLayerProperties:
@@ -85,11 +101,7 @@ def calculate_annular_layer(layer: RadialLayer) -> AnnularLayerProperties:
     """
     if layer.density is None:
         raise ValueError("density is required to calculate mass per length")
-    inner, outer = _diameters(layer)
-    # OpenStax, Prealgebra 2e (2020), §9.5: A=pi*r² and d=2r.
-    # Subtract concentric circle areas: pi*(OD-ID)*(OD+ID)/4.
-    # https://openstax.org/books/prealgebra-2e/pages/9-5-solve-geometry-applications-circles-and-irregular-figures
-    area = math.pi * (outer - inner) * (outer + inner) / 4
+    _, _, area = _annular_geometry(layer)
     # OpenStax, University Physics Volume 1 (2016), §14.1, Eq. 14.1:
     # rho=m/V; for a uniform prismatic layer V=A*L, hence m/L=rho*A.
     # https://openstax.org/books/university-physics-volume-1/pages/14-1-fluids-density-and-pressure
@@ -131,41 +143,125 @@ def calculate_radial_section(
     return RadialSectionProperties(properties, outer, mass, displaced, weight)
 
 
-def calculate_elastic_section(
-    layers: Sequence[RadialLayer], *, youngs_moduli_pa: Sequence[float],
-) -> ElasticSectionProperties:
-    """Calculate centroidal I, geometric Z, EA and EI; require every layer's E.
+class BondedAxialLayer(BaseModel):
+    """Geometry paired with a caller-supplied isotropic Young's modulus.
 
-    Density is unnecessary for stiffness. Z is a geometric property of the
-    complete material section, not a composite stress or strength calculation.
-    All layers are concentric and assumed bonded; slip and ovalisation are
-    outside this small-strain, linear, common-curvature model.
+    Geometry provenance is stored on ``layer``. Modulus provenance and the
+    literal unit ``Pa`` are independently required; no material lookup or
+    implicit unit conversion is performed. Density is unnecessary.
     """
-    diameters = _stack_diameters(layers)
-    if len(youngs_moduli_pa) != len(layers):
-        raise ValueError("one Young's modulus is required per layer")
-    areas, moments = [], []
-    for (inner, outer), modulus in zip(diameters, youngs_moduli_pa, strict=True):
-        _positive(modulus, "Young's modulus")
-        area = math.pi * (outer - inner) * (outer + inner) / 4
+
+    model_config = ConfigDict(extra="forbid")
+
+    layer: RadialLayer
+    youngs_modulus_pa: float = Field(gt=0, allow_inf_nan=False)
+    modulus_unit: Literal["Pa"]
+    modulus_provenance: Provenance
+
+
+@dataclass(frozen=True)
+class BondedAxialProperties:
+    """Axial rigidity EA in N, material area in m² and equivalent modulus in Pa.
+
+    ``equivalent_modulus_pa`` is sum(E_i*A_i)/sum(A_i), excluding the bore.
+    ``axial_stiffness_n`` is force per unit axial strain, not EA/L in N/m.
+    """
+
+    axial_stiffness_n: float
+    area_m2: float
+    equivalent_modulus_pa: float
+
+
+def bonded_axial_stiffness(layers: Sequence[BondedAxialLayer]) -> BondedAxialProperties:
+    """Calculate elementary equal-strain axial rigidity of fully bonded layers.
+
+    Layers are concentric, isotropic, homogeneous and linearly elastic under
+    uniform axial strain. Sort complete geometry/modulus pairs by inner
+    diameter; neighbouring diameters must match exactly in metres. Gaps and
+    overlaps are rejected without a geometric tolerance. A bore or solid core
+    is allowed. At least two independent dimensions and geometry provenance
+    are required per layer, as enforced by RadialLayer. Every modulus must be
+    finite, positive, explicitly in Pa and supplied with its own provenance.
+
+    From stress = E*strain and force = stress*area (OpenStax, University
+    Physics Volume 1, 2016, section 12.3), common strain and additive forces
+    give EA = sum(E_i*A_i). This is an elementary parallel-load derivation:
+    https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus
+
+    Unbonded flexible pipes, anisotropy, bond strength, Poisson constraints,
+    bending, failure and DNV-F202 qualification are outside this model.
+    """
+    if not layers:
+        raise ValueError("at least one bonded layer is required")
+    sections = []
+    for item in layers:
+        # Validate a snapshot: callers may have mutated nested schema models.
+        item = BondedAxialLayer.model_validate(item.model_dump())
+        inner, outer, area = _annular_geometry(item.layer)
+        rigidity = item.youngs_modulus_pa * area
+        if not math.isfinite(rigidity) or rigidity <= 0:
+            raise ValueError("layer axial stiffness must be finite and positive")
+        sections.append((inner, outer, area, rigidity))
+    sections.sort(key=lambda section: section[0])
+    for previous, current in zip(sections, sections[1:]):
+        if current[0] != previous[1]:
+            raise ValueError(
+                "bonded layers must be contiguous without gaps or overlaps; "
+                "thickness-derived boundaries must match neighbouring diameters bit-for-bit"
+            )
+    try:
+        area = math.fsum(section[2] for section in sections)
+        stiffness = math.fsum(section[3] for section in sections)
+    except OverflowError as exc:
+        raise ValueError("total area and axial stiffness must be finite and positive") from exc
+    equivalent_modulus = stiffness / area
+    if not all(
+        math.isfinite(value) and value > 0
+        for value in (area, stiffness, equivalent_modulus)
+    ):
+        raise ValueError("area, axial stiffness and modulus must be finite and positive")
+    return BondedAxialProperties(stiffness, area, equivalent_modulus)
+
+
+def calculate_elastic_section(
+    layers: Sequence[BondedAxialLayer],
+) -> ElasticSectionProperties:
+    """Calculate centroidal I, geometric Z, EA and EI from documented moduli.
+
+    Use the bonded axial input contract: each geometry/modulus pair requires
+    an explicit Pa unit and separate modulus provenance. Complete pairs are
+    sorted by inner diameter. Density is unnecessary. Z is geometric, not a
+    composite stress or strength calculation. Slip and ovalisation are outside
+    this small-strain, linear, common-curvature model.
+    """
+    axial = bonded_axial_stiffness(layers)
+    # Revalidate snapshots, retaining each modulus with its own geometry.
+    items = [BondedAxialLayer.model_validate(item.model_dump()) for item in layers]
+    items.sort(key=lambda item: _diameters(item.layer)[0])
+    moments, bending = [], []
+    for item in items:
+        inner, outer, area = _annular_geometry(item.layer)
         # Engineering Statics: Open and Interactive, §10.2.4, Eq. 10.2.10,
         # undated public edition accessed 2026-10-22:
         # I_circle=pi*r^4/4. Subtraction gives I_annulus=pi*(OD^4-ID^4)/64.
         # https://engineeringstatics.org/MOI-common-shapes.html#MOI-circles
         # Factoring the fourth-power difference avoids thin-wall cancellation.
         moment = area * (outer * outer + inner * inner) / 16
-        _positive(area, "area")
         _positive(moment, "second moment")
-        areas.append(area)
         moments.append(moment)
+        bending.append(item.youngs_modulus_pa * moment)
     # OpenStax University Physics Volume 1 (2016), §12.3: sigma=E*epsilon.
-    # Integrating N=int(sigma dA), M=int(y*sigma dA) with epsilon=epsilon0+k*y
-    # gives EA=sum(E_i*A_i), EI=sum(E_i*I_i). Geometric Z=I/c, c=OD/2.
+    # Integrating M=int(y*sigma dA) with epsilon=epsilon0+k*y gives EI=sum(E_i*I_i).
+    # Geometric Z=I/c, c=OD/2. EA comes directly from bonded_axial_stiffness.
     # https://openstax.org/books/university-physics-volume-1/pages/12-3-stress-strain-and-elastic-modulus
+    try:
+        inertia = math.fsum(moments)
+        rigidity = math.fsum(bending)
+    except OverflowError as exc:
+        raise ValueError("second moment and bending stiffness must be finite and positive") from exc
     result = ElasticSectionProperties(
-        sum(areas), sum(moments), sum(moments) / (diameters[-1][1] / 2),
-        sum(e * a for e, a in zip(youngs_moduli_pa, areas, strict=True)),
-        sum(e * i for e, i in zip(youngs_moduli_pa, moments, strict=True)),
+        axial.area_m2, inertia, inertia / (_diameters(items[-1].layer)[1] / 2),
+        axial.axial_stiffness_n, rigidity,
     )
     for name, value in vars(result).items():
         _positive(value, name)

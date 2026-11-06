@@ -17,6 +17,7 @@ from pathlib import Path
 import re
 
 from digitalmodel.subsea.cross_sections.calculations import (
+    BondedAxialLayer,
     calculate_elastic_section,
     calculate_radial_section,
 )
@@ -31,7 +32,7 @@ from digitalmodel.subsea.cross_sections.visualization import render_cross_sectio
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "docs/reports/modules/cross_sections"
-DATE = "2026-10-22"
+DATE = "2026-11-06"
 SOURCES = {
     "area": ("OpenStax Prealgebra 2e (2020), §9.5, circle area",
              "https://openstax.org/books/prealgebra-2e/pages/9-5-solve-geometry-applications-circles-and-irregular-figures"),
@@ -49,13 +50,15 @@ SOURCES = {
            "https://www.bipm.org/documents/20126/41483022/SI-Brochure-9.pdf"),
 }
 CHANGES = {
-    "document": "cross-section-module-analysis", "revision": 0, "date": DATE,
+    "document": "cross-section-module-analysis", "revision": 1, "date": DATE,
     "changes": [
         "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
         "Separate assumed example inputs from public material reference values.",
         "Record fixture geometry and missing material data without assuming results.",
         "Correct empty report selection and preserve the open bore in radial figures.",
         "Avoid comparing packed-component diameter magnitudes in incompatible units.",
+        "Require explicit Pa units and separate provenance for each bonded modulus.",
+        "Preserve four significant figures, validate fixture units and write LF artifacts.",
     ],
 }
 
@@ -95,7 +98,16 @@ def calculate() -> dict:
     environment = dict(water_density_kg_m3=1000, gravity_m_s2=10)
     sealed = calculate_radial_section(definition.radial_layers, **environment, bore_condition="sealed")
     flooded = calculate_radial_section(definition.radial_layers, **environment, bore_condition="flooded")
-    elastic = calculate_elastic_section(definition.radial_layers, youngs_moduli_pa=moduli)
+    bonded = [BondedAxialLayer(
+        layer=layer, youngs_modulus_pa=modulus, modulus_unit="Pa",
+        modulus_provenance=Provenance(
+            source_id="worked-modulus-" + layer.name,
+            source_type="project_assumption",
+            citation=SOURCES["elasticity"][0] if layer.role == "steel" else None,
+            note="Steel reference value; other moduli assumed, based on previous experience.",
+        ),
+    ) for layer, modulus in zip(definition.radial_layers, moduli, strict=True)]
+    elastic = calculate_elastic_section(bonded)
     results = asdict(elastic) | {
         key: value for key, value in asdict(sealed).items() if key != "layers"
     }
@@ -104,6 +116,8 @@ def calculate() -> dict:
     for fixture in build_report_model().fixtures:
         item = fixture.definition
         outer = item.radial_layers[-1].derived_outer_diameter if item.radial_layers else None
+        if outer is not None and outer.unit != "mm":
+            raise ValueError("fixture inventory outer diameters must use millimetres")
         inventory.append({
             "id": item.id, "family": item.family,
             "outer_mm": outer.value if outer else None,
@@ -118,8 +132,8 @@ def calculate() -> dict:
 
 
 def format_number(value: float) -> str:
-    """Use one decimal place, switching to scientific notation for small values."""
-    return f"{value:.1e}" if value != 0 and abs(value) < 0.1 else f"{value:,.1f}"
+    """Retain four significant figures in computed quantities."""
+    return f"{value:.4g}"
 
 
 def table(headers: list[str], rows: list[list[str]]) -> str:
@@ -197,7 +211,10 @@ and insulation example gives {number('mass_per_length_kg_m')} kg/m dry mass and
 {number('submerged_weight_n_m')} N/m sealed submerged weight. These are arithmetic
 results under declared assumptions; no design acceptance is established.</p></section>
 <section id="revision"><h2>Revision history</h2>
-{table(['Revision', 'Date', 'What changed and why'], [['0', DATE, 'Initial issue: document computed section properties and distinguish missing fixture material data.']])}
+{table(['Revision', 'Date', 'What changed and why'], [
+    ['0', '2026-10-22', 'Initial issue: document computed section properties and distinguish missing fixture material data.'],
+    ['1', DATE, 'Require documented moduli, check inventory units and preserve numerical and file precision.'],
+])}
 </section>
 <section id="inputs"><h2>Inputs</h2>
 <p>All calculation geometry is in metres, density in kg/m³, gravity in m/s² and modulus
@@ -258,7 +275,9 @@ PYTHONPATH=src python scripts/reporting/build_cross_sections_module_report.py --
 <p>Concentric, homogeneous, contiguous layers only. The calculation API requires exact shared
 boundaries in metres; the fixture schema's existing input-consistency tolerance is not a
 physical gap allowance. Radial geometry must satisfy 0 ≤ ID &lt; OD. Every mass layer needs
-a density; every stiffness layer needs E. No material property is inferred from its name.</p>
+a density; every stiffness layer needs E with an explicit Pa unit and separate modulus
+provenance. Thickness-derived boundaries must match neighbouring diameters bit-for-bit;
+rounding them explicitly is the caller's responsibility. No material property is inferred from its name.</p>
 <p>The bonded elastic model excludes slip, ovalisation, plasticity and temperature dependence.
 Sealed buoyancy excludes bore contents mass; flooded buoyancy assumes free water access.
 Negative submerged weight means upward force. Geometric section modulus does not establish
@@ -296,7 +315,7 @@ def build(output_dir: Path = OUTPUT, *, check: bool = False) -> None:
         return
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, text in artifacts.items():
-        (output_dir / name).write_text(text, encoding="utf-8")
+        (output_dir / name).write_text(text, encoding="utf-8", newline="\n")
 
 
 def main() -> None:

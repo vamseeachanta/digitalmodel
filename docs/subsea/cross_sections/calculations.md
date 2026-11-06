@@ -10,7 +10,8 @@ PYTHONPATH=src python scripts/reporting/build_cross_sections_module_report.py
 
 The calculation interface accepts metres, kg/m³, m/s² and Pa. Density is required
 for mass; water density, gravity and bore condition are required for submerged
-weight; one Young's modulus per material layer is required for stiffness. No
+weight; one Young's modulus per material layer, its explicit Pa unit and separate
+modulus provenance are required for stiffness. No
 material property is inferred from a material name. Geometry in the fixture
 schema can use other supported units, but calculations reject it until the caller
 explicitly converts to metres. The package does not use `digitalmodel.units`.
@@ -54,15 +55,23 @@ These arithmetic references are checked in `test_section_values.py`.
 `calculate_radial_section(layers, water_density_kg_m3=..., gravity_m_s2=...,
 bore_condition=...)` returns per-layer area and mass, total dry mass, outer
 diameter, displaced area and downward-positive submerged weight. Layers must be
-ordered and have exactly shared boundaries in metres. A sealed bore is empty
+ordered and have exactly shared boundaries in metres. Thickness-derived boundaries
+must match neighbouring diameters bit-for-bit; any explicit rounding belongs to
+the caller. This is an input contract, with no physical gap allowance. A sealed bore is empty
 and displaces its complete envelope. A freely flooded bore displaces only the
 material area. Contents mass is excluded from both conventions.
 
-`calculate_elastic_section(layers, youngs_moduli_pa=[...])` returns material area,
+`calculate_elastic_section(layers)` accepts `BondedAxialLayer` geometry/modulus
+pairs and returns material area,
 centroidal second moment, geometric section modulus, EA and EI. It assumes
 perfect bonding, common axial strain and common curvature. Density is unnecessary
 for these elastic properties. Geometric section modulus alone cannot establish
-stress distribution or capacity in dissimilar materials.
+stress distribution or capacity in dissimilar materials. Each pair requires
+`layer`, `youngs_modulus_pa`, `modulus_unit="Pa"` and `modulus_provenance`.
+Complete pairs are sorted by inner diameter. `bonded_axial_stiffness(layers)`
+uses the same input contract and supplies the elastic result's EA and material
+area directly; its equivalent modulus excludes the bore. Bare modulus arrays
+are rejected, so the two APIs cannot diverge on unit or provenance requirements.
 
 The representative packaged fixtures preserve native units and provenance when
 round-tripped through YAML and JSON. They lack complete material properties:

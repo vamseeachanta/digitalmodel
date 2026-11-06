@@ -31,6 +31,12 @@ from pathlib import Path
 
 
 DISCOVERY_FALSE_POSITIVES = {
+    "scripts/reporting/build_cross_sections_module_report.py": (
+        "renders docs/reports/modules/cross_sections/index.html and "
+        "docs/reports/modules/cross_sections/changes.json, not docs/api pages; "
+        "tests/subsea/cross_sections/test_module_report.py verifies byte "
+        "reproduction, stale-output detection and independent worked values"
+    ),
     "scripts/attestation_manifest.py": (
         "writes a caller-selected attestation summary, not committed docs/api pages"
     ),

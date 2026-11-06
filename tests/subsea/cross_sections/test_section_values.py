@@ -36,6 +36,75 @@ def stack():
     return [layer(0.2, 0.3), layer(0.3, 0.4, 1000), layer(0.4, 0.5, 100)]
 
 
+def bonded_layers(layers, moduli):
+    """Pair synthetic moduli with explicit units and separate source records."""
+    return [calc.BondedAxialLayer(
+        layer=item, youngs_modulus_pa=modulus, modulus_unit="Pa",
+        modulus_provenance=Provenance(
+            source_id="hand-arithmetic-modulus", source_type="project_assumption",
+        ),
+    ) for item, modulus in zip(layers, moduli, strict=True)]
+
+
+def test_elastic_and_axial_paths_share_ea_and_pair_ordering():
+    items = bonded_layers(stack(), [2e11, 1e9, 1e6])
+    axial = calc.bonded_axial_stiffness(items)
+    elastic = calc.calculate_elastic_section(items)
+    assert elastic.axial_stiffness_n == axial.axial_stiffness_n
+    assert elastic.area_m2 == axial.area_m2
+    assert axial.axial_stiffness_n == pytest.approx(2517522500 * math.pi, rel=1e-12)
+    assert calc.calculate_elastic_section(items[::-1]) == elastic
+    assert calc.bonded_axial_stiffness(items[::-1]) == axial
+
+
+def test_elastic_rejects_the_bare_modulus_interface():
+    with pytest.raises(TypeError):
+        calc.calculate_elastic_section(stack(), youngs_moduli_pa=[2e11, 1e9, 1e6])
+
+
+@pytest.mark.parametrize("field", ["youngs_modulus_pa", "modulus_unit", "modulus_provenance"])
+def test_bonded_modulus_inputs_are_required(field):
+    data = bonded_layers([layer(0, 2)], [4])[0].model_dump()
+    del data[field]
+    with pytest.raises(ValueError):
+        calc.BondedAxialLayer.model_validate(data)
+
+
+@pytest.mark.parametrize("unit", ["MPa", "GPa", "", "N"])
+def test_bonded_modulus_units_are_explicit(unit):
+    data = bonded_layers([layer(0, 2)], [4])[0].model_dump()
+    data["modulus_unit"] = unit
+    with pytest.raises(ValueError):
+        calc.BondedAxialLayer.model_validate(data)
+
+
+@pytest.mark.parametrize("field", ["youngs_modulus_pa", "modulus_provenance"])
+def test_elastic_revalidates_mutated_modulus_inputs(field):
+    item = bonded_layers([layer(0, 2)], [4])[0]
+    if field == "youngs_modulus_pa":
+        item.youngs_modulus_pa = math.nan
+    else:
+        item.modulus_provenance.source_id = " "
+    with pytest.raises(ValueError):
+        calc.calculate_elastic_section([item])
+
+
+def test_thickness_derived_boundary_error_explains_exact_comparison():
+    first = layer(0.1, 0.106)
+    first.outer_diameter = None
+    first.thickness = UnitValue(value=0.003, unit="m")
+    items = [first, layer(0.106, 0.12)]
+    assert first.derived_outer_diameter.value != items[1].inner_diameter.value
+    with pytest.raises(ValueError, match="bit-for-bit"):
+        calc.calculate_radial_section(
+            items, water_density_kg_m3=1000, gravity_m_s2=10, bore_condition="sealed",
+        )
+    paired = bonded_layers(items, [4, 5])
+    for calculate in (calc.calculate_elastic_section, calc.bonded_axial_stiffness):
+        with pytest.raises(ValueError, match="bit-for-bit"):
+            calculate(paired)
+
+
 def test_pipe_example_area_and_mass():
     """OD=.2731, ID=.2461 m: (OD-ID)(OD+ID)/4=.0035046 m².
 
@@ -129,7 +198,7 @@ def test_elastic_composite_closed_forms():
     EI/pi=20312500+273437.5+576.5625=20586514.0625 N m².
     Perfect bonding and common curvature/strain are assumed.
     """
-    result = calc.calculate_elastic_section(stack(), youngs_moduli_pa=[2e11, 1e9, 1e6])
+    result = calc.calculate_elastic_section(bonded_layers(stack(), [2e11, 1e9, 1e6]))
     assert result.area_m2 == pytest.approx(0.0525 * math.pi, rel=1e-12)
     assert result.second_moment_m4 == pytest.approx(0.0009515625 * math.pi, rel=1e-12)
     assert result.section_modulus_m3 == pytest.approx(0.00380625 * math.pi, rel=1e-12)
@@ -139,18 +208,18 @@ def test_elastic_composite_closed_forms():
 
 def test_solid_circle_elastic_properties():
     """OD=2 m: A=pi, I=pi/4, Z=pi/4; synthetic E=4 Pa gives EA=4pi, EI=pi."""
-    result = calc.calculate_elastic_section([layer(0, 2)], youngs_moduli_pa=[4])
+    result = calc.calculate_elastic_section(bonded_layers([layer(0, 2)], [4]))
     assert result.second_moment_m4 == pytest.approx(math.pi / 4, rel=1e-12)
     assert result.section_modulus_m3 == pytest.approx(math.pi / 4, rel=1e-12)
     assert result.axial_stiffness_n == pytest.approx(4 * math.pi, rel=1e-12)
     assert result.bending_stiffness_n_m2 == pytest.approx(math.pi, rel=1e-12)
 
 
-@pytest.mark.parametrize("moduli", [[], [1], [1, 2, 0], [1, 2, -1],
+@pytest.mark.parametrize("moduli", [[None, 1, 2], [1, None, 2], [1, 2, 0], [1, 2, -1],
                                      [1, 2, math.inf], [1, 2, math.nan]])
 def test_modulus_required_for_every_layer(moduli):
     with pytest.raises(ValueError):
-        calc.calculate_elastic_section(stack(), youngs_moduli_pa=moduli)
+        calc.calculate_elastic_section(bonded_layers(stack(), moduli))
 
 
 def test_si_contract_and_explicit_round_trip():
@@ -175,14 +244,14 @@ def test_si_contract_and_explicit_round_trip():
 def test_elastic_unrepresentable_geometry(scale):
     """Synthetic scales put area or I outside binary64 range, not near a design limit."""
     with pytest.raises(ValueError, match="finite and positive"):
-        calc.calculate_elastic_section([layer(scale, 2 * scale)], youngs_moduli_pa=[1])
+        calc.calculate_elastic_section(bonded_layers([layer(scale, 2 * scale)], [1]))
 
 
 def test_stiffness_does_not_need_density():
     """OD=2 m, E=4 Pa: EI=pi even when no mass property is available."""
     item = layer(0, 2)
     item.density = None
-    assert calc.calculate_elastic_section([item], youngs_moduli_pa=[4]).bending_stiffness_n_m2 == pytest.approx(math.pi)
+    assert calc.calculate_elastic_section(bonded_layers([item], [4])).bending_stiffness_n_m2 == pytest.approx(math.pi)
     with pytest.raises(ValueError, match="density is required"):
         calc.calculate_radial_section([item], water_density_kg_m3=1, gravity_m_s2=1, bore_condition="sealed")
 
@@ -191,7 +260,7 @@ def test_calculation_rejects_mutated_geometry():
     item = layer(0, 2)
     item.outer_diameter.value = math.nan
     with pytest.raises(ValueError, match="finite"):
-        calc.calculate_elastic_section([item], youngs_moduli_pa=[1])
+        calc.calculate_elastic_section(bonded_layers([item], [1]))
 
 
 def test_buoyancy_rejects_unrepresentable_environment_result():
