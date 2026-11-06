@@ -68,7 +68,7 @@
       "path": "docs/reports/modules/mooring_analysis/build_report.py",
       "locator": "Calculation and rendering implementation",
       "role": "calculation dependency",
-      "sha256": "d0428e4b443f60fb27356aa5daef21d0840cef04bf9507597bd5aabbdf472766"
+      "sha256": "42ed53c53d36a67a6192e535d5427e1b88dee2efe34c13277a9015d46366813e"
     }
   ]
 }
