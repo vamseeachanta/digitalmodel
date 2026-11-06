@@ -36,4 +36,5 @@ The independent hand checks are in
 `tests/structural/offshore_resilience/test_module_report_hand_values.py`.
 The rebuild, payload, display and digest checks are in
 `tests/reporting/test_offshore_resilience_module_report.py`.
+The JavaScript download-handler check executes only where Node.js is available.
 Passing arithmetic cases do not establish operational approval.

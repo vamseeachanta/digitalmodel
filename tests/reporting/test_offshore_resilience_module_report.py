@@ -305,6 +305,21 @@ def test_hand_qualification_is_bound_to_the_source_module():
     assert build.method_assessment("lifecycle_planning", "InstallationChecklist.summary")[0] == "NOT_EVALUATED"
 
 
+@pytest.mark.parametrize("document", ["report", "readme"])
+def test_download_handler_dependency_is_disclosed_as_limitation(document):
+    """Disclose the optional check in current limitations, outside revision history."""
+    build = builder()
+    if document == "report":
+        page = build.render(build.calculate())
+        content = page.split('<h2 id="s7">', 1)[1].split('<h2 id="s8">', 1)[0]
+    else:
+        content = build.readme()
+    assert (
+        "The JavaScript download-handler check executes only where Node.js is available."
+        in content
+    )
+
+
 @pytest.mark.skipif(
     shutil.which("node") is None,
     reason="Node.js is unavailable; the JavaScript download check requires Node.js",

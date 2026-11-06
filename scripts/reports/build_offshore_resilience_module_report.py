@@ -48,6 +48,9 @@ CHANGES = [{
 }, {
     "revision": "C", "date": "2026-11-06",
     "change": "Made the JavaScript download check optional when Node.js is unavailable and refreshed source and artifact digests so Python-only test environments remain usable.",
+}, {
+    "revision": "D", "date": "2026-11-06",
+    "change": "Disclosed the Node.js dependency of the download-handler check in the report limitations and README, added wording regressions, and refreshed source and artifact digests so test coverage limits are explicit.",
 }]
 
 # S1 consists of locally selected illustrative controls defined here, pending
@@ -329,6 +332,7 @@ textarea {{ width:100%; box-sizing:border-box; }} button {{ padding:.6rem; }}
 <table><thead><tr><th>Public interface</th><th>Qualification status</th><th>Review limitation or missing criterion</th><th>Source</th></tr></thead><tbody>{inventory}</tbody></table>
 <p>Public class, synchronous function and method inventory from the four source modules. Module-level constants are excluded, including VALID_PLATFORM_TYPES; imported names and delegated helper modules are also excluded. Class entries cover construction or enum interfaces; explicit post-initialization validators are retained. HAND_CHECKED_SYNTHETIC is restricted to the displayed cases. NOT_EVALUATED means engineering qualification is not established, not a failed operational assessment [S2–S6].</p>
 <h2 id="s7">7. Limitations and Not Covered</h2>
+<p>The JavaScript download-handler check executes only where Node.js is available.</p>
 <p>Regulatory classification: NOT_EVALUATED. The approximate screening boundaries have no verified governing edition, clause, jurisdiction or applicability assessment in this analysis. The existing implementation is not used as a regulatory source.</p>
 <p>Commercial cost and installation weather assumptions: NOT_EVALUATED. Dated quotations, scope, cost basis and an approved installation method and weather analysis are missing. No replacement cost or weather criterion is selected.</p>
 <p>Sensor and alert defaults: NOT_EVALUATED. Calibrated sensor evidence, channel units, sampling requirements, fatigue budget and approved alarm criteria are missing. Template helper contents and real monitoring responses are outside this review.</p>
@@ -400,6 +404,7 @@ The independent hand checks are in
 `tests/structural/offshore_resilience/test_module_report_hand_values.py`.
 The rebuild, payload, display and digest checks are in
 `tests/reporting/test_offshore_resilience_module_report.py`.
+The JavaScript download-handler check executes only where Node.js is available.
 Passing arithmetic cases do not establish operational approval.
 """
 
