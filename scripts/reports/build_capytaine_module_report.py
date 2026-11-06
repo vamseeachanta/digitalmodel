@@ -50,6 +50,11 @@ CHANGES = [{
     "change": "Scratch becomes optional for in-memory calculations; palette decoding, "
               "report controls and deferred method observations are clarified without "
               "extending native qualification.",
+}, {
+    "revision": "C", "date": "2026-11-06",
+    "change": "Windows symlink privilege errors and UTF-8 palette consumption are "
+              "covered by explicit regressions; report source digests are refreshed. "
+              "Native qualification remains NOT_EVALUATED.",
 }]
 # H1 and H2 above are the complete synthetic input authority; no measured data.
 INPUTS: JsonObject = {

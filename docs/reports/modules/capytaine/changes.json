@@ -8,5 +8,10 @@
     "change": "Scratch becomes optional for in-memory calculations; palette decoding, report controls and deferred method observations are clarified without extending native qualification.",
     "date": "2026-11-06",
     "revision": "B"
+  },
+  {
+    "change": "Windows symlink privilege errors and UTF-8 palette consumption are covered by explicit regressions; report source digests are refreshed. Native qualification remains NOT_EVALUATED.",
+    "date": "2026-11-06",
+    "revision": "C"
   }
 ]

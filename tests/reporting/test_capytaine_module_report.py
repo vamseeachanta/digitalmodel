@@ -157,7 +157,8 @@ def test_scratch_cannot_resolve_inside_checkout(builder, tmp_path, alias):
         try:
             link.symlink_to(ROOT, target_is_directory=True)
         except OSError as exc:
-            if exc.errno not in (errno.EPERM, errno.EACCES, errno.ENOSYS, errno.ENOTSUP):
+            if (exc.errno not in (errno.EPERM, errno.EACCES, errno.ENOSYS, errno.ENOTSUP)
+                    and getattr(exc, "winerror", None) != 1314):
                 raise
             pytest.skip("Directory symlink creation is unavailable or not permitted")
         scratch = link / "uncreated-report-scratch"
@@ -257,20 +258,48 @@ def test_report_build_needs_no_scratch(builder, tmp_path):
 
 def test_palette_is_read_as_utf8(builder, monkeypatch):
     read_text = Path.read_text
+    palette_reads = []
 
     def require_utf8(path, *args, **kwargs):
         if path == ROOT / "docs/api/_assets/brand.css":
+            palette_reads.append(path)
             assert kwargs.get("encoding") == "utf-8"
         return read_text(path, *args, **kwargs)
 
     monkeypatch.setattr(Path, "read_text", require_utf8)
-    assert "<style>" in builder.render(builder.calculate())
+    page = builder.render(builder.calculate())
+    assert palette_reads == [ROOT / "docs/api/_assets/brand.css"]
+    assert "--edge:" in page
 
 
-def test_alias_without_symlink_privilege_skips(builder, monkeypatch, tmp_path):
+@pytest.mark.parametrize("platform", ["posix", "windows"])
+def test_alias_without_symlink_privilege_skips(builder, monkeypatch, tmp_path, platform):
+    if platform == "windows":
+        error = OSError(None, "Directory symlink creation is not permitted", None, 1314)
+        if sys.platform != "win32":
+            # Reproduce CPython's Windows mapping when this test runs elsewhere.
+            error.errno = errno.EINVAL
+            error.winerror = 1314
+        assert error.errno == errno.EINVAL
+        assert error.winerror == 1314
+    else:
+        error = OSError(errno.EPERM, "Directory symlink creation is not permitted")
+
     def denied_symlink(*args, **kwargs):
-        raise OSError(errno.EPERM, "Directory symlink creation is not permitted")
+        raise error
 
     monkeypatch.setattr(Path, "symlink_to", denied_symlink)
     with pytest.raises(pytest.skip.Exception, match="symlink"):
         test_scratch_cannot_resolve_inside_checkout(builder, tmp_path, alias=True)
+
+
+def test_alias_unrelated_symlink_error_is_propagated(builder, monkeypatch, tmp_path):
+    error = OSError(errno.EINVAL, "Invalid symlink request")
+
+    def invalid_symlink(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(Path, "symlink_to", invalid_symlink)
+    with pytest.raises(OSError) as raised:
+        test_scratch_cannot_resolve_inside_checkout(builder, tmp_path, alias=True)
+    assert raised.value is error
