@@ -9,6 +9,7 @@ arctangents below are hand-derived, never obtained from another solver.
 The absolute tolerance permits double-precision arithmetic only.
 """
 
+import errno
 import hashlib
 import importlib.util
 import json
@@ -26,15 +27,6 @@ ROOT = Path(__file__).resolve().parents[2]
 BUILDER = ROOT / "scripts/reports/build_capytaine_module_report.py"
 REPORT = ROOT / "docs/reports/modules/capytaine"
 DELIVERABLES = {"index.html", "changes.json", "manifest.json", "README.md"}
-
-
-def assert_standard_header_only(before, after, license_text):
-    """Prove required hook normalization changes only the standard header."""
-    original = license_text.rstrip(b"\n") + b"\n"
-    standard = b"\n".join(b"# " + line for line in license_text.splitlines()) + b"\n"
-    assert before.startswith(original)
-    assert after.startswith(standard)
-    assert before[len(original):].lstrip(b"\n") == after[len(standard):].lstrip(b"\n")
 
 
 @pytest.fixture
@@ -121,14 +113,16 @@ def test_rebuild_is_deterministic(builder, tmp_path):
     assert {p.name for p in (outputs[0] / "report").iterdir()} == DELIVERABLES
 
 
-def test_cli_manifest_matches_written_files(tmp_path):
+@pytest.mark.parametrize("supply_scratch", [False, True])
+def test_cli_manifest_matches_written_files(tmp_path, supply_scratch):
     output = tmp_path / "report"
     env = os.environ.copy()
     # Child commands must not inherit repository bindings from a caller.
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
         env.pop(name, None)
+    scratch_args = ["--scratch", str(tmp_path / "scratch")] if supply_scratch else []
     result = subprocess.run(
-        [sys.executable, str(BUILDER), "--scratch", str(tmp_path / "scratch"),
+        [sys.executable, str(BUILDER), *scratch_args,
          "--output-dir", str(output)], cwd=ROOT, env=env,
         capture_output=True, text=True, check=False,
     )
@@ -160,7 +154,12 @@ def test_scratch_cannot_resolve_inside_checkout(builder, tmp_path, alias):
     scratch = ROOT / "uncreated-report-scratch"
     if alias:
         link = tmp_path / "checkout-alias"
-        link.symlink_to(ROOT, target_is_directory=True)
+        try:
+            link.symlink_to(ROOT, target_is_directory=True)
+        except OSError as exc:
+            if exc.errno not in (errno.EPERM, errno.EACCES, errno.ENOSYS, errno.ENOTSUP):
+                raise
+            pytest.skip("Directory symlink creation is unavailable or not permitted")
         scratch = link / "uncreated-report-scratch"
     assert not scratch.exists()
     with pytest.raises(ValueError, match="outside the checkout"):
@@ -201,7 +200,8 @@ def test_visible_results_follow_public_calculation(builder, monkeypatch):
     assert "7.2" in text
     assert all(case["status"] == "FAIL" for case in data["checks"])
     assert data["evidence"]["manual_rao"]["status"] == "FAIL"
-    assert "PASS for the named synthetic controls" not in text
+    assert "The manual response method is FAIL" in text
+    assert "The manual response method is PASS" not in text
 
 
 @pytest.mark.parametrize("damage", [
@@ -247,3 +247,30 @@ def test_incomplete_or_mislabeled_response_cannot_be_qualified(builder, monkeypa
     with pytest.raises(ValueError, match="response contract"):
         builder.calculate()
     assert json.dumps(builder.INPUTS, sort_keys=True) == before
+
+
+def test_report_build_needs_no_scratch(builder, tmp_path):
+    builder.build_report(output_dir=tmp_path / "report")
+    assert {path.name for path in tmp_path.iterdir()} == {"report"}
+    assert {path.name for path in (tmp_path / "report").iterdir()} == DELIVERABLES
+
+
+def test_palette_is_read_as_utf8(builder, monkeypatch):
+    read_text = Path.read_text
+
+    def require_utf8(path, *args, **kwargs):
+        if path == ROOT / "docs/api/_assets/brand.css":
+            assert kwargs.get("encoding") == "utf-8"
+        return read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", require_utf8)
+    assert "<style>" in builder.render(builder.calculate())
+
+
+def test_alias_without_symlink_privilege_skips(builder, monkeypatch, tmp_path):
+    def denied_symlink(*args, **kwargs):
+        raise OSError(errno.EPERM, "Directory symlink creation is not permitted")
+
+    monkeypatch.setattr(Path, "symlink_to", denied_symlink)
+    with pytest.raises(pytest.skip.Exception, match="symlink"):
+        test_scratch_cannot_resolve_inside_checkout(builder, tmp_path, alias=True)

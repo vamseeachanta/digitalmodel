@@ -3,5 +3,10 @@
     "change": "The manual harmonic-response controls, public method review and reproducible report are added to distinguish algebra evidence from unperformed native accuracy and convergence checks.",
     "date": "2026-10-28",
     "revision": "A"
+  },
+  {
+    "change": "Scratch becomes optional for in-memory calculations; palette decoding, report controls and deferred method observations are clarified without extending native qualification.",
+    "date": "2026-11-06",
+    "revision": "B"
   }
 ]

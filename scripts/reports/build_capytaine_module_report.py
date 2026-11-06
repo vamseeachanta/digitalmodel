@@ -45,6 +45,11 @@ CHANGES = [{
     "change": "The manual harmonic-response controls, public method review and "
               "reproducible report are added to distinguish algebra evidence "
               "from unperformed native accuracy and convergence checks.",
+}, {
+    "revision": "B", "date": "2026-11-06",
+    "change": "Scratch becomes optional for in-memory calculations; palette decoding, "
+              "report controls and deferred method observations are clarified without "
+              "extending native qualification.",
 }]
 # H1 and H2 above are the complete synthetic input authority; no measured data.
 INPUTS: JsonObject = {
@@ -262,7 +267,7 @@ def render(data: JsonObject) -> str:
     input_rows[1] = ("heading", "[0, pi]", "rad", "H1; pi is the half-turn definition")
     design = _table(("Quantity", "Supplied value", "Unit", "Source"), input_rows,
                     "Single-degree synthetic design data; coefficients are supplied controls.")
-    brand = re.sub(r"/\*.*?\*/", "", (ROOT / "docs/api/_assets/brand.css").read_text(), flags=re.S)
+    brand = re.sub(r"/\*.*?\*/", "", (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8"), flags=re.S)
     source_items = "".join(f"<li><code>{html.escape(path)}</code></li>" for path in SOURCES)
     payload = json.dumps(data, sort_keys=True, allow_nan=False).replace("<", "\\u003c")
     page = f'''<!DOCTYPE html>
@@ -317,7 +322,9 @@ unknown Green-function names fall back to a default; configured hydrostatic stif
 native input validation does not establish rejection of all nonfinite inputs; and hydrostatic failures may leave partial results.
 Delegated response ordering and normalization need readback. Added-mass tables and coefficient plots can pair stored frequency order positionally with periods.
 Rotational plot labels require angular-unit confirmation. The manual singular-system fallback does not enforce a residual or condition criterion [solver.py, rao.py, results.py].
-These observations are not independently reproduced defects fixed by this report.</p></section>
+These observations are deferred: Green-function selection, hydrostatic stiffness consumption,
+label-based added-mass and plot pairing, and a singular-fallback residual criterion require separate
+regressions and implementation changes. This report does not fix those methods or close the remaining review scope.</p></section>
 <section><h2 id="s7">7. Recommendations</h2>
 <p>The next qualification step should obtain the public benchmark source described in the evidence table, including its geometry, fluid conditions,
 coordinate definitions, coefficient normalization and published numerical values. Native readback should then compare matching coordinates
@@ -337,9 +344,10 @@ No measured data or licensed-publication values are used. The authoritative inpu
 <p><code>manifest.json</code> records SHA-256 source and artifact digests. The manifest excludes its own digest to avoid self-reference;
 the rebuild test compares all deliverables, including the manifest, byte for byte. Exact machine-readable values are embedded below;
 visible values are rounded for presentation and comparisons use unrounded values.</p>
-<p>Rebuild: <code>PYTHONPATH=src python scripts/reports/build_capytaine_module_report.py --scratch "$TMPDIR/capytaine-work"</code>.
-The optional <code>--output-dir</code> selects an external delivery directory. Scratch is resolved outside the checkout;
-the calculations remain in memory. No runtime timestamp or environment path enters the artifacts.</p></section>
+<p>Rebuild: <code>PYTHONPATH=src python scripts/reports/build_capytaine_module_report.py</code>.
+The optional <code>--output-dir</code> selects an external delivery directory. Calculations remain in memory.
+The optional <code>--scratch</code> is retained for compatibility; when supplied its path is validated,
+but no scratch directory or intermediate file is created. No runtime timestamp or environment path enters the artifacts.</p></section>
 <section><h2 id="s10">10. Acronyms and Review Notes</h2>
 <p>BEM means boundary element method; DOF means degree of freedom; RAO means response amplitude operator.
 PASS denotes only agreement with the stated synthetic criterion. NOT_EVALUATED means the evidence needed to calculate or accept that method's result is absent.
@@ -355,15 +363,17 @@ def _json_bytes(value: Any) -> bytes:
     return (json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
 
 
-def build_report(*, scratch: str | Path, output_dir: str | Path = DESTINATION) -> JsonObject:
+def build_report(*, scratch: str | Path | None = None, output_dir: str | Path = DESTINATION) -> JsonObject:
     """Validate destinations before writing the four deterministic deliverables."""
-    scratch, output = Path(scratch).resolve(), Path(output_dir).resolve()
-    if scratch == ROOT or ROOT in scratch.parents:
-        raise ValueError("Calculation scratch must be outside the checkout")
+    output = Path(output_dir).resolve()
+    if scratch is not None:
+        scratch = Path(scratch).resolve()
+        if scratch == ROOT or ROOT in scratch.parents:
+            raise ValueError("Calculation scratch must be outside the checkout")
+        if scratch == output or scratch in output.parents or output in scratch.parents:
+            raise ValueError("Scratch and output must be separate directories without nesting")
     if (output == ROOT or ROOT in output.parents) and output != DESTINATION:
         raise ValueError("Output inside the checkout must be the designated report directory")
-    if scratch == output or scratch in output.parents or output in scratch.parents:
-        raise ValueError("Scratch and output must be separate directories without nesting")
     for name in ("index.html", "changes.json", "README.md", "manifest.json"):
         if (output / name).is_symlink():
             raise ValueError("Report deliverables must not be symbolic links")
@@ -377,17 +387,23 @@ def build_report(*, scratch: str | Path, output_dir: str | Path = DESTINATION) -
             "The single-degree and existing coupled force-balance checks qualify only manual algebra. "
             "Native solve, mesh convergence, physical accuracy, delegated RAO and NetCDF remain NOT_EVALUATED.\n\n"
             "Rebuild from the repository root with NumPy, SciPy and xarray available:\n\n"
-            "```sh\nPYTHONPATH=src python scripts/reports/build_capytaine_module_report.py "
-            '--scratch "$TMPDIR/capytaine-work"\n```\n\n'
-            "Scratch must resolve outside the checkout. Use `--output-dir` for an external copy; "
-            "in-checkout output is limited to this report directory. Calculations run in memory; "
-            "no intermediate file is saved in the checkout. The optional native solver is not required.\n\n"
+            "```sh\nPYTHONPATH=src python scripts/reports/build_capytaine_module_report.py\n```\n\n"
+            "Use `--output-dir` for an external copy; in-checkout output is limited to this report directory. "
+            "Calculations run in memory. The optional `--scratch` is retained for compatibility: "
+            "if supplied it must resolve outside the checkout and must not overlap the output. "
+            "No scratch directory or intermediate file is created. The optional native solver is not required.\n\n"
             "The dimensional response is in m for force in N; no wave-amplitude normalization is supplied. "
             "Phase uses deg, heading uses rad and omega uses rad/s. Inputs and hand derivations are "
             "committed in the builder and independent tests, as identified by the report source register.\n\n"
             "`manifest.json` binds the builder, local method and test sources, palette and the other "
             "three report files using SHA-256. Its own digest is excluded to avoid self-reference. "
-            "The deterministic rebuild test checks all four exact deliverable byte streams.\n\n"
+            "The deterministic rebuild test checks all four exact deliverable byte streams. "
+            "The shared palette is read as UTF-8; a change to `docs/api/_assets/brand.css` requires "
+            "regenerating this report and its manifest before the deterministic checks can pass.\n\n"
+            "Deferred method changes: explicit Green-function selection, consumption of configured "
+            "hydrostatic stiffness, label-based added-mass and plot pairing, and a residual criterion "
+            "for singular response fallback. These require separate regressions and fixes; "
+            "this report does not close the remaining module review scope.\n\n"
             "Run the report controls:\n\n```sh\nPYTHONPATH=src python -m pytest "
             "tests/reporting/test_capytaine_module_report.py\n```\n"
         ).encode("utf-8"),
@@ -400,7 +416,6 @@ def build_report(*, scratch: str | Path, output_dir: str | Path = DESTINATION) -
         "artifacts": {name: hashlib.sha256(content).hexdigest() for name, content in artifacts.items()},
     }
     artifacts["manifest.json"] = _json_bytes(manifest)
-    scratch.mkdir(parents=True, exist_ok=True)
     output.mkdir(parents=True, exist_ok=True)
     for name, content in artifacts.items():
         (output / name).write_bytes(content)
@@ -408,9 +423,10 @@ def build_report(*, scratch: str | Path, output_dir: str | Path = DESTINATION) -
 
 
 def main() -> None:
-    """Accept explicit scratch and optional report destination paths."""
+    """Accept an optional report destination and compatibility scratch path."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--scratch", required=True, type=Path)
+    parser.add_argument("--scratch", type=Path,
+                        help="Optional compatibility path; validated but never written")
     parser.add_argument("--output-dir", type=Path, default=DESTINATION)
     args = parser.parse_args()
     build_report(scratch=args.scratch, output_dir=args.output_dir)
