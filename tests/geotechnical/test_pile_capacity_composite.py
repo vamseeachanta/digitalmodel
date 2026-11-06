@@ -262,6 +262,52 @@ class TestRemainingIndirectGeometryValidation:
         assert point == before
 
 
+class TestLayeredConfigurationSchema:
+    """Layer thicknesses define embedment for both configuration routes."""
+
+    @pytest.mark.parametrize("route", ["pile_capacity", "geotechnical"])
+    @pytest.mark.parametrize(
+        "embedded_length", [None, math.nan, 30.0],
+        ids=["omitted", "nonfinite", "inconsistent"],
+    )
+    def test_layer_total_defines_embedment(
+        self, pile_capacity_cfg, tmp_path, route, embedded_length
+    ):
+        import json
+
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        params = pile_capacity_cfg["pile_capacity"]
+        if embedded_length is None:
+            params["pile"].pop("embedded_length_m")
+        else:
+            params["pile"]["embedded_length_m"] = embedded_length
+        params["soil_layers"] = [
+            {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
+            for _ in range(3)
+        ]
+        if route == "pile_capacity":
+            routed = PileCapacityWorkflow().router(pile_capacity_cfg)
+            payload = routed["pile_capacity"]
+        else:
+            cfg = {"geotechnical": {
+                "calculation": "pile_axial_capacity", "pile_axial_capacity": params,
+            }}
+            routed = GeotechnicalWorkflow().router(cfg)
+            payload = routed["geotechnical"]["pile_axial_capacity"]
+
+        # Synthetic layers total 9 m: Qs=20*2*pi*9, Qp=7*40*pi kN.
+        result = payload["result"]
+        assert result["skin_friction_kn"] == pytest.approx(360.0 * math.pi)
+        assert result["end_bearing_kn"] == pytest.approx(280.0 * math.pi)
+        assert result["total_capacity_kn"] == pytest.approx(640.0 * math.pi)
+        summary = json.loads(
+            (tmp_path / payload["summary_json"]).read_text(encoding="utf-8")
+        )
+        assert summary["result"] == result
+
+
 class TestPileCapacityResultDataclass:
     """PileCapacityResult must expose expected fields."""
 
