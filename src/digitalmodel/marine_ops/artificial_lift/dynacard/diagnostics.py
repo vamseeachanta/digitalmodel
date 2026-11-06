@@ -164,9 +164,8 @@ class PumpDiagnostics:
         Returns:
             DiagnosticResult with classification, confidence, and differential.
         """
-        # The shipped model is trained on unsmoothed pump cards. Do not feed
-        # it a polynomial-filtered card that has lost diagnostic morphology.
-        # Older results and other solvers retain their explicit input path.
+        # A populated diagnostic card represents an explicit solver opt-in.
+        # Default workflows, older results and other solvers use downhole_card.
         card = results.diagnostic_card or results.downhole_card
         if card is None:
             return DiagnosticResult(
@@ -255,7 +254,7 @@ class PumpDiagnostics:
             return None
 
         try:
-            with open(_MODEL_PATH) as f:
+            with open(_MODEL_PATH, encoding="utf-8") as f:
                 model = json.load(f)
             # Convert scaling arrays to numpy
             model["scaling"] = {

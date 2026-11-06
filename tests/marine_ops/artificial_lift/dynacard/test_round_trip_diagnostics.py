@@ -23,10 +23,12 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.solver im
     EverittJenningsSolver,
     RodString,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.feature_extraction import FeatureExtractor
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     AnalysisResults,
     CardData,
     DynacardAnalysisContext,
+    DiagnosticResult,
     PumpProperties,
     RodSection,
 )
@@ -71,16 +73,16 @@ def test_round_trip_preserves_input_label(mode, seed):
     pump = ALL_GENERATORS[mode](seed=seed)
     ctx = context_for(pump)
     ctx.surface_card = surface_card_from_pump_card(pump, ctx)
-    results = EverittJenningsContextSolver(ctx).solve()
+    results = EverittJenningsContextSolver(ctx, use_diagnostic_card=True).solve()
     assert PumpDiagnostics().classify_with_context(results).classification == mode
 
 
-def test_calculation_card_is_unchanged_and_diagnostic_card_survives_serialization():
+def test_calculation_wrappers_agree_and_diagnostic_card_survives_serialization():
     """Wrappers agree on calculation inputs; both cards survive serialization."""
     pump = ALL_GENERATORS["SAND_ABRASION"](seed=0)
     ctx = context_for(pump)
     ctx.surface_card = surface_card_from_pump_card(pump, ctx)
-    results = EverittJenningsContextSolver(ctx).solve()
+    results = EverittJenningsContextSolver(ctx, use_diagnostic_card=True).solve()
     assert results.downhole_card == solve_downhole_card(ctx, n_nodes=200)
     restored = AnalysisResults.model_validate_json(results.model_dump_json())
     assert restored.diagnostic_card == results.diagnostic_card
@@ -161,7 +163,7 @@ def test_consistent_diagnostic_strain_recovers_the_supplied_pump_load():
     pump = ALL_GENERATORS["DELAYED_TV_CLOSURE"](seed=42)
     ctx = context_for(pump)
     ctx.surface_card = surface_card_from_pump_card(pump, ctx)
-    results = EverittJenningsContextSolver(ctx).solve()
+    results = EverittJenningsContextSolver(ctx, use_diagnostic_card=True).solve()
     tolerance = np.sqrt(np.finfo(float).eps) * max(np.abs(pump.load))
     expected = np.array(pump.load)
     expected[-1] = expected[0]
@@ -181,55 +183,70 @@ def test_closed_input_label_survives_the_known_calibration_limit():
     ctx = context_for(pump)
     ctx.surface_card = surface_card_from_pump_card(pump, ctx)
     closed = CardData(position=pump.position, load=pump.load[:-1] + pump.load[:1])
-    results = EverittJenningsContextSolver(ctx).solve()
+    results = EverittJenningsContextSolver(ctx, use_diagnostic_card=True).solve()
     assert (
         PumpDiagnostics().classify_with_context(results).classification
         == PumpDiagnostics.classify_card(closed)
     )
 
 
-def test_context_without_diagnostic_card_retains_explicit_card_behavior():
-    """Older stored results and comparison solvers still use downhole_card."""
-    pump = ALL_GENERATORS["ROD_PARTING"](seed=0)
-    results = AnalysisResults(downhole_card=pump)
-    assert PumpDiagnostics().classify_with_context(results).classification == "ROD_PARTING"
-
-
-def test_explicit_diagnostic_card_is_used_even_without_calculation_card():
-    """Classification uses the disclosed diagnostic input, not a placeholder."""
+@pytest.mark.parametrize("card_field", ["downhole_card", "diagnostic_card"])
+def test_explicit_card_reaches_the_real_feature_extractor(card_field, monkeypatch):
+    """Observe routing without pinning a synthetic classifier prediction."""
     pump = ALL_GENERATORS["SAND_ABRASION"](seed=0)
-    results = AnalysisResults(diagnostic_card=pump)
-    assert PumpDiagnostics().classify_with_context(results).classification == "SAND_ABRASION"
+    results = AnalysisResults(**{card_field: pump})
+    observed = []
+    extract = FeatureExtractor.extract_classifier_vector
+
+    def capture(card, *args, **kwargs):
+        observed.append(card)
+        return extract(card, *args, **kwargs)
+
+    monkeypatch.setattr(FeatureExtractor, "extract_classifier_vector", capture)
+    PumpDiagnostics().classify_with_context(results)
+    assert observed == [getattr(results, card_field)]
 
 
-def test_rod_parting_is_failure_and_precedes_warning(tmp_path):
-    """Independent ordering: FAILURE_CLASSIFICATIONS contains ROD_PARTING;
-    STATUS_RANK assigns failure greater rank than warning (field_health.py).
+def test_failure_precedes_warning_through_public_router(tmp_path, monkeypatch):
+    """Controlled labels check status mapping and ordering, not field accuracy.
+
+    Both inputs use the same NORMAL generator; the classifier double supplies
+    one failure label and one warning label independently of card morphology.
     """
+    labels = {"SYNTHETIC_WARNING": "BENT_BARREL", "SYNTHETIC_FAILURE": "ROD_PARTING"}
+
+    def controlled_classification(self, results):
+        return DiagnosticResult(classification=labels[results.ctx.api14], confidence=1.0)
+
+    monkeypatch.setattr(PumpDiagnostics, "classify_with_context", controlled_classification)
     settings = {
+        "output_dir": tmp_path.as_posix(),
         "well_defaults": {
             "rod": {"diameter": 1.0, "length": 5000.0},
             "pump": {"diameter": 1.75, "depth": 5000.0},
             "spm": 10.0,
         },
         "wells": [
-            {"api14": mode, "synthetic_card": {"mode": mode, "seed": 0}}
-            for mode in ("BENT_BARREL", "ROD_PARTING")
+            {"api14": key, "synthetic_card": {"mode": "NORMAL", "seed": 0}}
+            for key in labels
         ],
     }
-    rows = field_health.run_field_troubleshooter(settings)
-    by_label = {row["api14"]: row for row in rows}
-    assert by_label["ROD_PARTING"]["health_status"] == "failure"
-    assert by_label["BENT_BARREL"]["health_status"] == "warning"
-    summary = field_health._field_summary(
-        rows, tmp_path / "wells.csv", tmp_path / "summary.json", settings,
-    )
-    assert summary["worst_wells"][0]["diagnostic_classification"] == "ROD_PARTING"
-    assert summary["screening_status"] == "fail"
+    output = field_health.router({"artificial_lift_field_health": settings})
+    summary = output["artificial_lift_field_health"]
+    assert [row["health_status"] for row in summary["worst_wells"]] == [
+        "failure", "warning",
+    ]
+    assert summary["screening_status"] == output["screening_status"] == "fail"
+    for path in output["outputs"].values():
+        assert Path(path).resolve().is_relative_to(tmp_path.resolve())
+        assert Path(path).is_file()
 
 
-def test_report_plots_the_card_used_for_classification(tmp_path, monkeypatch):
-    """The plotting boundary receives diagnostic data and discloses its basis."""
+@pytest.mark.parametrize("use_diagnostic_card", [False, True])
+def test_report_plots_the_card_used_for_classification(
+    tmp_path, monkeypatch, use_diagnostic_card,
+):
+    """The plotting boundary receives the selected card and matching disclosure."""
     plotted = []
 
     def capture(self, card, *args):
@@ -237,19 +254,93 @@ def test_report_plots_the_card_used_for_classification(tmp_path, monkeypatch):
         return "<svg></svg>"
 
     monkeypatch.setattr(DiagnosticAnnotator, "render", capture)
-    cfg = {
-        "synthetic_card": {"mode": "SAND_ABRASION", "seed": 0},
-        "well": {
-            "api14": "SYNTHETIC",
-            "rod": {"diameter": 1.0, "length": 5000.0},
-            "pump": {"diameter": 1.75, "depth": 5000.0},
-            "spm": 10.0,
-        },
+    pump = ALL_GENERATORS["SAND_ABRASION"](seed=0)
+    ctx = context_for(pump)
+    ctx.surface_card = surface_card_from_pump_card(pump, ctx)
+    workflow = DynacardWorkflow(ctx)
+    if use_diagnostic_card:
+        # Explicit solver selection; configuration-driven runs retain defaults.
+        workflow.solver = EverittJenningsContextSolver(ctx, use_diagnostic_card=True)
+    output = workflow.router({
         "report": {"html": True},
-        "Analysis": {"result_folder": str(tmp_path)},
+        "Analysis": {"result_folder": tmp_path.as_posix()},
+    })
+    selected = "diagnostic_card" if use_diagnostic_card else "downhole_card"
+    assert plotted[0].model_dump() == output["results"][selected]
+    html = Path(output["outputs"]["html_report"]).read_text(encoding="utf-8")
+    assert ("unsmoothed solver strain card" in html) is use_diagnostic_card
+    if use_diagnostic_card:
+        assert "field accuracy: NOT_EVALUATED" in html
+    else:
+        assert output["results"]["diagnostic_card"] is None
+
+
+@pytest.mark.parametrize("options", [{}, {"use_diagnostic_card": False}])
+def test_context_solver_defaults_to_filtered_classification(options):
+    pump = ALL_GENERATORS["SAND_ABRASION"](seed=0)
+    ctx = context_for(pump)
+    ctx.surface_card = surface_card_from_pump_card(pump, ctx)
+    results = EverittJenningsContextSolver(ctx, **options).solve()
+    assert results.diagnostic_card is None
+    assert (
+        PumpDiagnostics().classify_with_context(results).classification
+        == PumpDiagnostics.classify_card(results.downhole_card)
+    )
+
+
+def test_full_workflow_defaults_to_filtered_classification():
+    pump = ALL_GENERATORS["SAND_ABRASION"](seed=0)
+    ctx = context_for(pump)
+    ctx.surface_card = surface_card_from_pump_card(pump, ctx)
+    results = DynacardWorkflow(ctx).run_full_analysis()
+    assert results.diagnostic_card is None
+    expected = PumpDiagnostics.classify_card(results.downhole_card)
+    assert results.diagnostic_message.startswith(f"Classification: {expected}.")
+
+
+@pytest.mark.parametrize("invalid", [None, 0, 1, "true", np.bool_(True)])
+def test_diagnostic_option_requires_a_boolean_at_construction(invalid):
+    ctx = context_for(ALL_GENERATORS["NORMAL"](seed=0))
+    with pytest.raises(ValueError, match="use_diagnostic_card must be a boolean"):
+        EverittJenningsContextSolver(ctx, use_diagnostic_card=invalid)
+
+
+@pytest.mark.parametrize("invalid", [None, 0, 1, "true", np.bool_(True)])
+def test_diagnostic_option_requires_a_boolean_after_mutation(invalid):
+    solver = EverittJenningsContextSolver(
+        context_for(ALL_GENERATORS["NORMAL"](seed=0)),
+    )
+    solver.use_diagnostic_card = invalid
+    with pytest.raises(ValueError, match="use_diagnostic_card must be a boolean"):
+        solver.solve()
+
+
+def test_disabling_diagnostic_option_clears_previous_card():
+    pump = ALL_GENERATORS["SAND_ABRASION"](seed=0)
+    ctx = context_for(pump)
+    ctx.surface_card = surface_card_from_pump_card(pump, ctx)
+    solver = EverittJenningsContextSolver(ctx, use_diagnostic_card=True)
+    assert solver.solve().diagnostic_card is not None
+    solver.use_diagnostic_card = False
+    assert solver.solve().diagnostic_card is None
+
+
+def test_filtered_seed_zero_predictions_at_the_stored_model():
+    """Pin the lost labels, not only the retained count; no field claim follows."""
+    lost = {}
+    for mode, generate in ALL_GENERATORS.items():
+        pump = generate(seed=0)
+        ctx = context_for(pump)
+        ctx.surface_card = surface_card_from_pump_card(pump, ctx)
+        results = EverittJenningsContextSolver(ctx).solve()
+        assert results.diagnostic_card is None
+        label = PumpDiagnostics().classify_with_context(results).classification
+        if label != mode:
+            lost[mode] = label
+    assert lost == {
+        "VALVE_LEAK_SV": "NORMAL",
+        "DELAYED_TV_CLOSURE": "VALVE_LEAK_TV",
+        "SAND_ABRASION": "BENT_BARREL",
+        "EXCESSIVE_VIBRATION": "NORMAL",
     }
-    output = DynacardWorkflow().router(cfg)
-    assert plotted[0].model_dump() == output["results"]["diagnostic_card"]
-    html = Path(output["outputs"]["html_report"]).read_text()
-    assert "unsmoothed solver strain card" in html
-    assert "field accuracy: NOT_EVALUATED" in html
+    assert len(ALL_GENERATORS) - len(lost) == 16

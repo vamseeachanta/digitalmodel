@@ -177,11 +177,16 @@ from digitalmodel.marine_ops.artificial_lift.dynacard import (
 
 ## Diagnostic round trip
 
-The default context solver retains two outputs from a single displacement solve:
+The context solver uses the historical smoothed `downhole_card` for calculation
+and classification by default. Workflow, field-health and configuration-driven
+runs retain this filtered path. The Python solver constructor provides an
+explicit `use_diagnostic_card=True` option for synthetic investigations:
 
 - `downhole_card`: the historical smoothed card used for engineering calculations.
-- `diagnostic_card`: unsmoothed strain load used by `classify_with_context` and
-  the diagnostic report plot. Both cards are serialized in `AnalysisResults`.
+- `diagnostic_card`: unsmoothed strain load populated only when the option is
+  enabled, used by `classify_with_context` and the diagnostic report plot.
+  Both cards are serialized in `AnalysisResults`; the default diagnostic card
+  is `None`. This option is not exposed through workflow configuration.
 
 The classifier is trained on raw generated pump cards. Smoothing its input
 removes oscillations and valve-closure detail used by that classifier. The
@@ -227,20 +232,36 @@ for mode, generate in ALL_GENERATORS.items():
         pump=PumpProperties(diameter=1.75, depth=5000.0), spm=10.0,
     )
     ctx.surface_card = surface_card_from_pump_card(pump, ctx)
-    result = EverittJenningsContextSolver(ctx).solve()
+    result = EverittJenningsContextSolver(ctx, use_diagnostic_card=True).solve()
     label = PumpDiagnostics().classify_with_context(result).classification
     retained += label == mode
     print(mode, label)
 print(f"Labels retained: {retained}/{len(ALL_GENERATORS)}")
 ```
 
-Answer: all 20 supplied labels are recovered at this geometry and seed,
-including `ROD_PARTING`. The field-health mapping assigns that label `failure`,
-which precedes a `BENT_BARREL` warning in the worst-wells ordering. The former
-smoothed-card classification retains 16 of these 20 labels at the same inputs.
-These are synthetic label-retention counts, not field accuracy.
+Answer: all 20 supplied labels are recovered at this geometry and seed with
+the option enabled. The default smoothed-card classification retains 16 of
+these 20 labels. The four lost labels are `VALVE_LEAK_SV` (classified `NORMAL`),
+`DELAYED_TV_CLOSURE` (`VALVE_LEAK_TV`), `SAND_ABRASION` (`BENT_BARREL`) and
+`EXCESSIVE_VIBRATION` (`NORMAL`); a regression test pins these predictions.
+These results use the stored 19-feature classifier, whose serialized model
+version is `1.0`, following the retraining in issue #1884. The 12-of-20 result
+in issue #1885 predates that retraining. These are synthetic label-retention
+counts; classifier field accuracy is **NOT_EVALUATED**. The worked example
+and filtered-label regression are checked with NumPy 1.26.4 and SciPy 1.17.1;
+the filtered predictions also agree with SciPy 1.11.4.
 
-At seeds zero, seven and forty-two, 59 of 60 supplied labels are recovered.
+This example uses a forward model that is the exact discrete inverse of the
+solve: both use 200 spatial nodes, the same damping and the same fluid/tubing
+defaults. Its retention counts do not establish performance with a different
+grid, uncertain properties or measurement noise. In particular, recovery of
+`ROD_PARTING` does not resolve the generator's disjoint load-range objection:
+the classifier can distinguish a generator parameter rather than a physical
+card property. Severity-ordering tests therefore check failure above warning
+with controlled classifications, without qualifying that synthetic diagnosis.
+
+With the option enabled at seeds zero, seven and forty-two, 59 of 60 supplied
+labels are recovered.
 The remaining `DELAYED_TV_CLOSURE` example at seed forty-two becomes
 `VALVE_LEAK_TV` even when the raw generated card is merely closed, before any
 solver is run. A strict expected-failure test preserves the desired supplied
@@ -250,8 +271,11 @@ unresolved. No alternative diagnosis is qualified by this example.
 
 Classifier field accuracy is **NOT_EVALUATED**. Labelled real-card evidence is
 still required under [the field-validation issue](https://github.com/vamseeachanta/digitalmodel/issues/1864).
-Unsmoothing also preserves measurement noise; no noise acceptance limit or field
-reliability is established. `classify_card(card)` classifies exactly the card
-provided; callers that need the diagnostic path should use the context solver
-and `classify_with_context`. Older stored results and comparison solvers without
-a diagnostic card retain their existing explicit downhole-card path.
+Unsmoothing also preserves measurement noise; noise acceptance is
+**NOT_EVALUATED**, and field reliability is not established. The diagnostic
+path therefore remains opt-in. `classify_card(card)` classifies exactly the
+card provided; callers selecting the diagnostic path use
+`EverittJenningsContextSolver(ctx, use_diagnostic_card=True)` followed by
+`classify_with_context`. Older stored results and comparison solvers without
+a diagnostic card retain their explicit downhole-card path. Default report
+disclosures retain their existing behavior and do not qualify field accuracy.
