@@ -456,27 +456,29 @@ def test_interrupted_install_restores_previous_atlas(
     root, ids, originals, roots, _ = disk_refresh_builds([{"passes": True}])
     destination = root / ids[0]
     rename = Path.rename
+    interruption = error_type("rename interrupted")
 
     def failing_rename(source, target):
         if source == destination:
             if failure == "before-backup":
-                raise error_type("backup interrupted")
+                raise interruption
             result = rename(source, target)
             if failure == "after-backup":
-                raise error_type("backup interrupted")
+                raise interruption
             return result
         if source.name == "replacement":
             if failure == "install":
-                raise error_type("install interrupted")
+                raise interruption
             result = rename(source, target)
             if failure == "after-install":
-                raise error_type("install interrupted")
+                raise interruption
             return result
         return rename(source, target)
 
     monkeypatch.setattr(Path, "rename", failing_rename)
-    with pytest.raises(error_type, match="interrupted"):
+    with pytest.raises(error_type, match="interrupted") as caught:
         refresh.main(["--apply"])
+    assert caught.value is interruption
     if failure == "after-install":
         assert Atlas.load(root, ids[0]).provenance["content_fingerprint"] == "current"
         installed = _file_digests(destination)
