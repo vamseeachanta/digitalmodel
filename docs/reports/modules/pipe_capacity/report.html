@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pipe capacity module analysis: bounded section geometry</title>
+<style>
+:root { color-scheme: light; font-family: system-ui, sans-serif; color: #172c38; background: #f4f6f7; }
+body { max-width: 100rem; margin: auto; padding: 1.5rem; line-height: 1.6; }
+header, main, nav { background: white; padding: 1.5rem; border: 1px solid #cbd5dc; }
+.layout { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: 1rem; margin-top: 1rem; }
+nav { align-self: start; } section { margin-bottom: 2rem; } h1,h2,h3 { line-height: 1.3; }
+a { color: #005a76; overflow-wrap: anywhere; } table { border-collapse: collapse; width: 100%; }
+th,td { border: 1px solid #cbd5dc; padding: .5rem; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+th { background: #edf3f5; } caption { caption-side: bottom; text-align: left; padding: .5rem; }
+.table-wrap { overflow-x: auto; } pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+details { padding: 1rem; background: #edf3f5; } svg { max-width: 24rem; }
+@media (max-width: 65rem) { .layout { grid-template-columns: minmax(0, 1fr); } }
+@media print { nav { display: none; } .layout { display: block; } body { padding: 0; } }
+</style></head><body class="hs-doc">
+<header><h1>Pipe capacity module analysis: bounded section geometry</h1>
+<p>Draft for maintainer review. Revision 0 · 2026-10-28</p></header>
+<div class="layout"><nav aria-label="Contents"><ol><li><a href="#section-1">Summary</a></li><li><a href="#section-2">Introduction and Method Map</a></li><li><a href="#section-3">Data Basis</a></li><li><a href="#section-4">Theory and Equations</a></li><li><a href="#section-5">Worked Example</a></li><li><a href="#section-6">Validation Evidence</a></li><li><a href="#section-7">Limits of Use</a></li><li><a href="#section-8">Recommendations</a></li><li><a href="#section-9">References</a></li><li><a href="#section-10">Appendix</a></li></ol></nav><main>
+<section id="section-1"><h2>1. Summary</h2>
+<p>The module provides sizing and code-selected capacity routes. This report maps their implementation evidence
+and checks only the common annular section geometry against independent polar integrals.
+The chosen dimensions are geometric probes, not realistic pipe dimensions or code allowables.</p>
+<p>Pressure containment, collapse, combined loading, material strength and code compliance remain
+NOT_EVALUATED. The parent issue remains open for broader numerical qualification.</p></section>
+<div id="revision-history"><h3>Revision history</h3>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-28</td><td>Initial bounded module report to separate source evidence,
+independent geometry checks and unevaluated capacity methods.</td></tr></tbody></table></div>
+<section id="section-2"><h2>2. Introduction and Method Map</h2>
+<p>The public router calls PipeComponents, which selects custom implementations. The report calls only
+common.PipeSizing.pipe_section_properties directly. A check of that method does not qualify the custom
+copy, the router, other sizing paths or standards-specific calculations.</p>
+<p>IMPLEMENTED means a source definition exists, including incomplete methods. INDEPENDENTLY_CHECKED
+is limited to the stated synthetic geometry. NOT_EVALUATED means no numerical qualification is supplied
+by this report. Code labels for standards identify intended attribution; authoritative editions,
+clause text and suitability for a design have not been checked.</p>
+<div class="table-wrap"><table><thead><tr><th>Exact source and entry point</th><th>Method and evidence</th>
+<th>Implementation</th><th>Qualification in this report</th></tr></thead><tbody><tr id="method-router"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/pipe_capacity.py#L13-L17">src/digitalmodel/structural/pipe_capacity/pipe_capacity.py:13-17 (PipeCapacity.router)</a></td><td>Public dispatch mutates and returns cfg through PipeComponents.evaluate_pipe_capacity.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-components"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/common/pipe_components.py#L44-L156">src/digitalmodel/structural/pipe_capacity/common/pipe_components.py:44-156 (PipeComponents.evaluate_pipe_capacity)</a></td><td>Constructs custom sizing, material and capacity objects; inserts defaults when mappings are missing.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-load-dispatch"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L286-L313">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:286-313 (PipeCapacity.evaluate_load_conditions)</a></td><td>Iterates design rows and code selectors for internal pressure, external pressure and propagation.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-common-section"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/common/PipeSizing.py#L42-L69">src/digitalmodel/structural/pipe_capacity/common/PipeSizing.py:42-69 (PipeSizing.pipe_section_properties)</a></td><td>Common annulus geometry only: disk contributions, area and second moments independently checked for this probe.</td><td>IMPLEMENTED</td><td>INDEPENDENTLY_CHECKED</td></tr>
+<tr id="method-custom-section"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeSizing.py#L42-L69">src/digitalmodel/structural/pipe_capacity/custom/PipeSizing.py:42-69 (PipeSizing.pipe_section_properties)</a></td><td>Router-selected custom annulus implementation; separate from the common method exercised here.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-other-sizing"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/PipeSizing.py#L38-L59">src/digitalmodel/structural/pipe_capacity/PipeSizing.py:38-59 (PipeSizing.pipe_section_properties)</a></td><td>Additional top-level sizing implementation; no equivalence claim across copies.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-section-stiffness"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/common/PipeSizing.py#L71-L112">src/digitalmodel/structural/pipe_capacity/common/PipeSizing.py:71-112 (PipeSizing.get_fea_properties)</a></td><td>Adds stiffness and mass using material mappings; no material properties are supplied in this report.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-system-sizing"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeSizing.py#L114-L144">src/digitalmodel/structural/pipe_capacity/custom/PipeSizing.py:114-144 (PipeSizing.system_properties)</a></td><td>Equivalent pipe and submerged-weight assembly; outside the single-annulus probe.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-material"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/MaterialProperties.py#L13-L21">src/digitalmodel/structural/pipe_capacity/custom/MaterialProperties.py:13-21 (MaterialProperties.evaluate_material_properties)</a></td><td>Material-selection and derating route; material strength remains unevaluated.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-internal-selectors"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L496-L548">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:496-548 (PipeCapacity.internal_pressure_specification_code_based_evaluation)</a></td><td>ASME B31, API STD 2RD, API RP 1111, API RP 16Q, CFR and DNV selector branches; attribution is not compliance evidence.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-external-selectors"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L816-L839">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:816-839 (PipeCapacity.external_pressure_specification_code_based_evaluation)</a></td><td>External-pressure dispatch includes API STD 2RD, API TR 5C3 and DNV routes.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-propagation-selectors"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L875-L898">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:875-898 (PipeCapacity.collapse_propagation_specification_code_based_evaluation)</a></td><td>Propagation dispatch includes API RP 1111, API STD 2RD and DNV routes.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-api-burst"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L550-L570">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:550-570 (PipeCapacity.evaluate_burst_pressure_API_STD_2RD)</a></td><td>API STD 2RD-2013 pressure method; numerical and edition qualification not attempted.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-api-collapse-inverse"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L861-L873">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:861-873 (PipeCapacity.evaluate_collapse_minimum_thickness_API_STD_2RD)</a></td><td>Finding: marked incomplete and returns a placeholder; must not be used as a qualified thickness inverse.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-api-rp-burst"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L572-L613">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:572-613 (PipeCapacity.evaluate_burst_pressure_API_RP_1111)</a></td><td>API RP 1111-2009 pressure method and a separate inverse; no pressure formula qualification here.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-asme-burst"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L709-L752">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:709-752 (PipeCapacity.evaluate_burst_pressure_modified_burlow_equation)</a></td><td>Modified Barlow branch selected by ASME B31; edition and design factors need independent acceptance.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-dnv-wall"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L38-L273">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:38-273 (DNVWallThickness)</a></td><td>Shared DNV wall-thickness object supplies containment, collapse and propagation; edition-specific factors remain unverified.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-f201-combined"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F201/dnv_os_f201_lrfd_wsd.py#L175-L201">src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F201/dnv_os_f201_lrfd_wsd.py:175-201 (combined_loading_internal_overpressure)</a></td><td>Standalone DNV-OS-F201 internal-overpressure interaction; not the pressure-selector route and not exercised here.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-f201-external"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F201/dnv_os_f201_lrfd_wsd.py#L204-L230">src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F201/dnv_os_f201_lrfd_wsd.py:204-230 (combined_loading_external_overpressure)</a></td><td>Standalone DNV-OS-F201 external-overpressure interaction; no combined-load qualification.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-f101-legacy"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py#L153-L175">src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:153-175 (DNVOSF101Pipe.pressureContainmentResistance)</a></td><td>Finding: legacy containment overwrites its method name with its scalar output; exclude from numerical references.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-f101-collapse"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py#L216-L246">src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:216-246 (DNVOSF101Pipe.collapse)</a></td><td>Separate legacy F101 collapse route; its source comment names Local Buckling - Collapse Check.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-api-legacy-burst"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/API_STD_2RD/APISTD2RDMethods.py#L12-L26">src/digitalmodel/structural/pipe_capacity/custom/API_STD_2RD/APISTD2RDMethods.py:12-26 (APISTD2RDBurst)</a></td><td>Separate API burst calculation; not established as equivalent to the routed method.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-api-legacy-collapse"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/API_STD_2RD/APISTD2RDMethods.py#L93-L107">src/digitalmodel/structural/pipe_capacity/custom/API_STD_2RD/APISTD2RDMethods.py:93-107 (APISTD2RDCollapse)</a></td><td>Separate API collapse calculation; not independently qualified here.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-api-legacy-interaction"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/API_STD_2RD/APISTD2RDMethods.py#L209-L272">src/digitalmodel/structural/pipe_capacity/custom/API_STD_2RD/APISTD2RDMethods.py:209-272 (APISTD2RDMethod1Utilization)</a></td><td>Separate API interaction calculation; not independently qualified here.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-asme-legacy"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/ASMEMethods.py#L160-L193">src/digitalmodel/structural/pipe_capacity/custom/ASMEMethods.py:160-193 (ASMEB318LogitudinalStress)</a></td><td>Finding: standalone ASME longitudinal calculation fixes load terms internally; supplied-load qualification is needed.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-common-capacity"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py#L10-L658">src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py:10-658 (PipeCapacity)</a></td><td>Parallel common capacity implementation tested by the existing common suite; regression is not independent physical evidence.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-api-tr"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L1203-L1263">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:1203-1263 (API_TR_5C3)</a></td><td>API TR 5C3 external-pressure and interpolation route; bounds, units and overrides need qualification.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-cfr"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L1421-L1479">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:1421-1479 (CFR_30_Part_250)</a></td><td>CFR pressure/thickness calculations; regulatory currency and application have not been evaluated.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-von-mises"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L1266-L1418">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:1266-1418 (VonMises_Pipe)</a></td><td>Finding: stress and interpolation route has mixed force/pressure treatment requiring a separate units review.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr>
+<tr id="method-api-16q"><td><a href="../../../../src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py#L1182-L1200">src/digitalmodel/structural/pipe_capacity/custom/PipeCapacity.py:1182-1200 (API_RP_16Q)</a></td><td>API RP 16Q-2017 pressure interface delegates to VonMises_Pipe; not a qualified combined-loading result.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED</td></tr></tbody>
+<caption>Table 1. Method evidence, including correctness findings requiring separate assessment.</caption></table></div></section>
+<section id="section-3"><h2>3. Data Basis</h2>
+<div id="input-basis"><p>All numerical geometry inputs are defined synthetic values: outside diameter Do = 4.0 m,
+inside diameter Di = 2.0 m, hence outer radius Ro = 2.0 m and inner radius Ri = 1.0 m.
+These are arithmetic probes of a concentric annulus about its centroid. No service input is assumed.</p></div>
+<p>The method is unit agnostic: consistent input lengths are interpreted as metres here, with no conversion.
+Area units are m^2 and all second-moment units are m^4. No material, pressure, corrosion, manufacturing,
+temperature, density, design factor or loading mapping is supplied.</p>
+<pre>{"Outer_Pipe": {"Geometry": {"Nominal_OD": 4.0, "Nominal_ID": 2.0}}}</pre>
+<p>The dimensional input definition is the source for these constants; the independent integrals supply
+all equation coefficients. Dates and revision identifiers are document metadata, not engineering inputs.</p></section>
+<section id="section-4"><h2>4. Theory and Equations</h2>
+<div id="polar-integrals"><p>Let x = r cos(theta), y = r sin(theta), and dA = r dr dtheta,
+with Ri &lt;= r &lt;= Ro and angle from zero to 2*pi. The angular integral of unity is 2*pi;
+the angular integral of sin(theta)^2 or cos(theta)^2 is pi.</p>
+<pre>A = 2*pi * [r^2/2]_1^2 = 3*pi m^2
+Ix = Iy = pi * [r^4/4]_1^2 = 15*pi/4 m^4
+J = 2*pi * [r^4/4]_1^2 = 15*pi/2 m^4 = Ix + Iy
+I denotes either centroidal diametral moment, Ix or Iy.
+Disk controls: Ao,Ai = 2*pi*[r^2/2]_0^R;
+Io,Ii = pi*[r^4/4]_0^R; Jo,Ji = 2*pi*[r^4/4]_0^R.
+R is Ro for the outer disk and Ri for the inner disk.</pre>
+<p>The radial antiderivatives follow integration of r and r^3. Substituting R = D/2 yields the module's
+diameter expressions: A = pi*(Do^2 - Di^2)/4, I = pi*(Do^4 - Di^4)/64,
+J = pi*(Do^4 - Di^4)/32. The test oracle uses the evaluated polar integrals directly.</p></div>
+<figure><svg viewBox="0 0 300 250" role="img" aria-labelledby="annulus-title">
+<title id="annulus-title">Concentric annulus and centroidal axes; schematic</title>
+<circle cx="130" cy="125" r="90" fill="#d6e6ec" stroke="#172c38" />
+<circle cx="130" cy="125" r="45" fill="white" stroke="#172c38" />
+<path d="M20 125 H245 M130 20 V230" fill="none" stroke="#172c38" stroke-dasharray="4 4" />
+<path d="M130 125 L194 61 M130 125 H175" fill="none" stroke="#005a76" />
+<text x="184" y="74">Ro</text><text x="148" y="118">Ri</text>
+<text x="248" y="130">x</text><text x="137" y="24">y</text></svg>
+<figcaption>Figure 1. Synthetic cross-section with radii and centroidal axes; no physical validation is implied.</figcaption></figure></section>
+<section id="section-5"><h2>5. Worked Example</h2>
+<p>The builder calls the existing common sizing method. Every value in the calculation column comes from
+that call or its geometry inputs; Ix and Iy alias I by symmetry. The independent column uses the polar integrals.
+All quantities, including disk contributions, are compared unrounded in the tests.</p>
+<div class="table-wrap"><table><thead><tr><th>Quantity</th><th>Calculation</th><th>Independent</th>
+<th>Unit</th><th>Absolute difference (same unit)</th><th>Relative difference</th><th>Equation / input source</th></tr></thead>
+<tbody id="example-values"><tr data-quantity="Nominal_OD"><th scope="row">Nominal_OD</th><td class="value">4.0</td><td class="reference">4.0</td><td class="unit">m</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#input-basis">Do: defined synthetic outside diameter</a></td></tr><tr data-quantity="Nominal_ID"><th scope="row">Nominal_ID</th><td class="value">2.0</td><td class="reference">2.0</td><td class="unit">m</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#input-basis">Di: defined synthetic inside diameter</a></td></tr><tr data-quantity="Ro"><th scope="row">Ro</th><td class="value">2.0</td><td class="reference">2.0</td><td class="unit">m</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#input-basis">Ro = Do/2</a></td></tr><tr data-quantity="Ri"><th scope="row">Ri</th><td class="value">1.0</td><td class="reference">1.0</td><td class="unit">m</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#input-basis">Ri = Di/2</a></td></tr><tr data-quantity="Ao"><th scope="row">Ao</th><td class="value">12.6</td><td class="reference">12.6</td><td class="unit">m^2</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">Ao = 2*pi*[r^2/2]_0^Ro</a></td></tr><tr data-quantity="Ai"><th scope="row">Ai</th><td class="value">3.1</td><td class="reference">3.1</td><td class="unit">m^2</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">Ai = 2*pi*[r^2/2]_0^Ri</a></td></tr><tr data-quantity="Io"><th scope="row">Io</th><td class="value">12.6</td><td class="reference">12.6</td><td class="unit">m^4</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">Io = pi*[r^4/4]_0^Ro</a></td></tr><tr data-quantity="Ii"><th scope="row">Ii</th><td class="value">0.8</td><td class="reference">0.8</td><td class="unit">m^4</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">Ii = pi*[r^4/4]_0^Ri</a></td></tr><tr data-quantity="Jo"><th scope="row">Jo</th><td class="value">25.1</td><td class="reference">25.1</td><td class="unit">m^4</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">Jo = 2*pi*[r^4/4]_0^Ro</a></td></tr><tr data-quantity="Ji"><th scope="row">Ji</th><td class="value">1.6</td><td class="reference">1.6</td><td class="unit">m^4</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">Ji = 2*pi*[r^4/4]_0^Ri</a></td></tr><tr data-quantity="A"><th scope="row">A</th><td class="value">9.4</td><td class="reference">9.4</td><td class="unit">m^2</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">A = 2*pi*[r^2/2]_Ri^Ro</a></td></tr><tr data-quantity="I"><th scope="row">I</th><td class="value">11.8</td><td class="reference">11.8</td><td class="unit">m^4</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">I = Ix = Iy = pi*[r^4/4]_Ri^Ro</a></td></tr><tr data-quantity="Ix"><th scope="row">Ix</th><td class="value">11.8</td><td class="reference">11.8</td><td class="unit">m^4</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">Ix = pi*[r^4/4]_Ri^Ro</a></td></tr><tr data-quantity="Iy"><th scope="row">Iy</th><td class="value">11.8</td><td class="reference">11.8</td><td class="unit">m^4</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">Iy = Ix by circular symmetry</a></td></tr><tr data-quantity="J"><th scope="row">J</th><td class="value">23.6</td><td class="reference">23.6</td><td class="unit">m^4</td><td class="difference">0.0</td><td class="relative">0.0%</td><td class="binding"><a href="#polar-integrals">J = 2*pi*[r^4/4]_Ri^Ro = Ix + Iy</a></td></tr></tbody>
+<caption>Table 2. Synthetic inputs, derived radii and calculated section properties; one decimal place.</caption></table></div>
+<p>Differences are computed before rounding. A displayed zero is a rounding result, not proof of exact equality.
+All displayed comparisons use one decimal place or 0.1% increments. The embedded calculation record uses the
+same display precision; the builder's calculate function returns unrounded values.</p></section>
+<section id="section-6"><h2>6. Validation Evidence</h2>
+<p>The new report suite checks independent unrounded geometry and units, J = Ix + Iy, each visible result
+against both the oracle and a fresh module call, and a controlled area mutation that must change visible output.
+It also checks isolated deterministic rebuilds, source resolution, escaped HTML/JSON, import safety and output confinement.
+Reproducibility is not physical validation.</p>
+<p>The numerical tolerance is derived specifically for this probe: at most eight rounded steps per expression
+path, sixteen across the module and reference paths, including representation of pi. Integer powers and binary
+scale factors are exact for these inputs. With binary64 epsilon = 2^-52, use gamma(16) =
+16*epsilon/(1 - 16*epsilon); the relative budget is gamma(16)*5/3. The subtraction amplification
+for area is (Ro^2 + Ri^2)/(Ro^2 - Ri^2) = 5/3; for fourth powers it is 17/15, which is smaller.
+Using epsilon rather than half epsilon overbounds individual rounding steps. No engineering tolerance is inferred.</p>
+<p>The existing standalone example suite preserves its separate command and output contract. The common
+capacity suite covers regression behaviour of a parallel implementation; passing those assertions does not
+provide independent pressure, collapse, material or standards qualification.</p></section>
+<section id="section-7"><h2>7. Limits of Use</h2>
+<table><thead><tr><th>Assessment</th><th>Status</th></tr></thead><tbody id="scope-limits"><tr><th scope="row">pressure containment</th><td>NOT_EVALUATED</td></tr>
+<tr><th scope="row">collapse</th><td>NOT_EVALUATED</td></tr>
+<tr><th scope="row">combined loading</th><td>NOT_EVALUATED</td></tr>
+<tr><th scope="row">material strength</th><td>NOT_EVALUATED</td></tr>
+<tr><th scope="row">code compliance</th><td>NOT_EVALUATED</td></tr></tbody>
+<caption>Table 3. Explicit exclusions from this report.</caption></table>
+<p>Geometry alone establishes no allowable pressure, utilisation, code compliance or fitness for service.
+No licensed solver is imported or queried. No standards table, factor or production engineering behaviour is changed.</p>
+<p>The method map records incomplete inverses, implicit defaults, parallel implementations, fixed load terms
+and legacy units concerns as source findings. Their presence is not a numerical evaluation or an accepted design basis.</p></section>
+<section id="section-8"><h2>8. Recommendations</h2>
+<p>Before service use, select a single dispatch path and intended standard edition; establish geometry units,
+material certification, dimensional allowances, load envelopes, temperature and explicit design factors.
+Replace or exclude incomplete inverses before using thickness recommendations. Review fixed loads, pressure/force
+conversions, interpolation bounds and material defaults against documented input contracts.</p>
+<p>Then obtain independent references for pressure, collapse and interaction, derive case-specific tolerances,
+test boundaries and failed cases, and review edition-specific clause applicability. Qualify each sizing copy
+and the complete router separately. Keep the parent issue open until that broader evidence is reviewed.</p></section>
+<section id="section-9"><h2>9. References</h2>
+<p><a href="#polar-integrals">Independent polar-coordinate derivation</a> supplies the geometric oracle.
+<a href="sources.json">Source record</a> contains relative paths, exact symbols, line ranges and SHA-256 digests
+of the reviewed definitions. No external source or licensed standard was consulted for this report.</p>
+<ul><li><a href="../../../../src/digitalmodel/structural/pipe_capacity/docs/agent-pack.md">Module knowledge pack</a>: broader inventory and existing qualification gaps.</li>
+<li><a href="../../../../examples/workflows/pipe-capacity/input.yml">Existing routed workflow input</a>: separate engineering example, not evaluated here.</li>
+<li><a href="../../../../tests/structural/pipe_capacity/test_module_report.py">Report tests and independent oracle</a>.</li>
+<li><a href="../../../../tests/structural/pipe_capacity/test_worked_example.py">Standalone example checks</a>.</li>
+<li><a href="../../../../tests/structural/pipe_capacity/test_pipe_capacity_common.py">Common capacity regression checks</a>.</li>
+<li><a href="build_worked_example.py">Unchanged standalone example builder</a>.</li></ul></section>
+<section id="section-10"><h2>10. Appendix</h2>
+<h3>Rebuild and output contract</h3><pre>PYTHONPATH=src uv run --no-project --with pytest python docs/reports/modules/pipe_capacity/build_report.py --output-dir &quot;$TMPDIR/pipe-capacity-report&quot;</pre>
+<p>Supply writable scratch storage through TMPDIR. The builder writes only report.html, sources.json and
+changes.json in the explicit output directory. All intermediate data stays in memory. The generated page has
+no external resources, absolute paths or runtime timestamps. Relative repository links resolve beside this report;
+an isolated exported page retains all narrative, equations, results and styling without fetching linked files.</p>
+<p>The builder requires the standard library and the existing common sizing class. An already prepared
+interpreter can run the command without uv; preparing pytest through uv may require network access.</p>
+<details id="engineering-changes" open="open"><summary>Engineering changes</summary>
+<ul><li>Added a source-linked method map to distinguish implementation from numerical qualification.</li><li>Added synthetic annulus integrals, computed results and parsed-output checks with reproducible records.</li><li>Retained explicit capacity exclusions and the existing standalone example without alteration.</li></ul><p><a href="changes.json">Change record</a> · <a href="build_report.py">Report builder</a>
+· <a href="README.md">Report index and reproduction instructions</a></p></details>
+<h3>Calculation record</h3><p>The embedded JSON records display-precision quantities, units and equation bindings.
+Full-precision numerical evidence is checked through calculate(), not reconstructed from rounded text.</p>
+<script type="application/json" id="calculation-record">{
+  "Nominal_OD": {
+    "value": 4.0,
+    "reference": 4.0,
+    "unit": "m",
+    "equation": "Do: defined synthetic outside diameter",
+    "basis": "synthetic"
+  },
+  "Nominal_ID": {
+    "value": 2.0,
+    "reference": 2.0,
+    "unit": "m",
+    "equation": "Di: defined synthetic inside diameter",
+    "basis": "synthetic"
+  },
+  "Ro": {
+    "value": 2.0,
+    "reference": 2.0,
+    "unit": "m",
+    "equation": "Ro = Do/2",
+    "basis": "synthetic"
+  },
+  "Ri": {
+    "value": 1.0,
+    "reference": 1.0,
+    "unit": "m",
+    "equation": "Ri = Di/2",
+    "basis": "synthetic"
+  },
+  "Ao": {
+    "value": 12.6,
+    "reference": 12.6,
+    "unit": "m^2",
+    "equation": "Ao = 2*pi*[r^2/2]_0^Ro",
+    "basis": "polar-integrals"
+  },
+  "Ai": {
+    "value": 3.1,
+    "reference": 3.1,
+    "unit": "m^2",
+    "equation": "Ai = 2*pi*[r^2/2]_0^Ri",
+    "basis": "polar-integrals"
+  },
+  "Io": {
+    "value": 12.6,
+    "reference": 12.6,
+    "unit": "m^4",
+    "equation": "Io = pi*[r^4/4]_0^Ro",
+    "basis": "polar-integrals"
+  },
+  "Ii": {
+    "value": 0.8,
+    "reference": 0.8,
+    "unit": "m^4",
+    "equation": "Ii = pi*[r^4/4]_0^Ri",
+    "basis": "polar-integrals"
+  },
+  "Jo": {
+    "value": 25.1,
+    "reference": 25.1,
+    "unit": "m^4",
+    "equation": "Jo = 2*pi*[r^4/4]_0^Ro",
+    "basis": "polar-integrals"
+  },
+  "Ji": {
+    "value": 1.6,
+    "reference": 1.6,
+    "unit": "m^4",
+    "equation": "Ji = 2*pi*[r^4/4]_0^Ri",
+    "basis": "polar-integrals"
+  },
+  "A": {
+    "value": 9.4,
+    "reference": 9.4,
+    "unit": "m^2",
+    "equation": "A = 2*pi*[r^2/2]_Ri^Ro",
+    "basis": "polar-integrals"
+  },
+  "I": {
+    "value": 11.8,
+    "reference": 11.8,
+    "unit": "m^4",
+    "equation": "I = Ix = Iy = pi*[r^4/4]_Ri^Ro",
+    "basis": "polar-integrals"
+  },
+  "Ix": {
+    "value": 11.8,
+    "reference": 11.8,
+    "unit": "m^4",
+    "equation": "Ix = pi*[r^4/4]_Ri^Ro",
+    "basis": "polar-integrals"
+  },
+  "Iy": {
+    "value": 11.8,
+    "reference": 11.8,
+    "unit": "m^4",
+    "equation": "Iy = Ix by circular symmetry",
+    "basis": "polar-integrals"
+  },
+  "J": {
+    "value": 23.6,
+    "reference": 23.6,
+    "unit": "m^4",
+    "equation": "J = 2*pi*[r^4/4]_Ri^Ro = Ix + Iy",
+    "basis": "polar-integrals"
+  }
+}
+</script>
+</section></main></div></body></html>
