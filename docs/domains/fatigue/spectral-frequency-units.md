@@ -3,14 +3,16 @@
 The `fatigue.spectral_fatigue` API uses Hz moments of a one-sided stress PSD.
 Removing its extra angular-to-cyclic conversion corrects the rates and damage
 from Hz inputs. The structural API retains angular moments. This note qualifies
-frequency units and synthetic narrow-band arithmetic; historical results and
-broad-band estimator accuracy remain unqualified.
+frequency units, synthetic narrow-band arithmetic and the Dirlik irregularity
+coefficients against independent broad-band arithmetic. Historical results and
+general broad-band estimator accuracy remain unqualified.
 
 ## Revision history
 
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-28 | Define both moment contracts, record independent arithmetic tests and identify stored-result consumers after correcting cyclic rates. |
+| 2 | 2026-11-06 | Correct Dirlik irregularity coefficients, add independent limiting and broad-band regressions, refresh the atlas and clarify its publication basis. |
 
 ## Moment and rate contracts
 
@@ -29,10 +31,11 @@ and retains this division. Its `lambda1` and `lambda2` are angular frequencies.
 The moment objects from these APIs must not be interchanged.
 
 Direct angular inputs to the Hz model require explicit conversion:
-`M_k = m_k_angular/(2*pi)**k`. Within the Hz API, both rates and every damage
-rate using them increase by `2*pi` relative to the previous implementation for
-unchanged Hz moments; annual damage follows the same factor. Equivalent ranges
-and dimensionless corrections retain their existing definitions. The `duration`
+`M_k = m_k_angular/(2*pi)**k`. For the frequency-unit correction alone,
+both rates and every damage rate using them increase by `2*pi` for unchanged Hz moments; annual damage
+follows the same factor. The subsequent Dirlik coefficient correction also
+changes its dimensionless mixture, so its combined damage change is not a
+uniform `2*pi` factor. Equivalent ranges and dimensionless corrections retain their existing definitions. The `duration`
 argument remains accepted and does not change rate fields; accumulated damage
 is `damage_rate * exposure_seconds`.
 
@@ -102,12 +105,14 @@ rate formulas. The findings are:
 - Stored-result consumers include the spectral and RAO workflow result folders
   and registry tests in
   `tests/workflows/test_durable_workflows.py`. The two defect-dependent detail
-  pass assertions now expect failure, as anticipated in the existing
+  pass assertions were rechecked after both corrections. Both direct-PSD
+  example locations fail; the RAO example has a passing keel joint (margin
+  7.6) and a failing splash zone (margin 0.9). These outcomes are recorded in
+  the updated
   `spectral_fatigue/docs/agent-pack.md` and `rao_spectral_fatigue/docs/agent-pack.md`
-  method notes. The changed
-  assertions were checked by evaluating each detail in memory without the
-  engine or output writes. Reports built from those outputs inherit their
-  basis. A unit fix alone does not qualify a screening status. The separate
+  dependency notes. The registry regressions exercise the engine and CSV
+  outputs in a temporary source copy, keeping generated results external.
+  Reports built from those outputs inherit their basis. A unit fix alone does not qualify a screening status. The separate
   `report_pack` example uses the legacy FATG path and is unaffected.
 - `parametric/generate.py::_spectral_fatigue_annual_damage` already converts wave
   spectra to Hz. Its response feeds `atlases/spectral_fatigue`,
@@ -125,12 +130,44 @@ rate formulas. The findings are:
   `frequency_domain.py` consumers (`analysis.py`, `scatter_fatigue.py`) retain
   their existing contracts; agreement of their damage estimators is not claimed.
 
+## Dirlik coefficients and independent evidence
+
+Dirlik's mixture uses `gamma = M_2/sqrt(M_0*M_4)`, the irregularity factor,
+in `D1`, `R`, `D2` and `Q`. The spectral width `sqrt(1-gamma**2)` remains
+reported as bandwidth and remains the Wirsching-Light input; it cannot replace
+`gamma` in the Dirlik mixture. The narrow-band limit has `gamma` tending to
+one and width tending to zero.
+
+[Metals 11 (2021), 1333](https://doi.org/10.3390/met11091333), Equations (8)-(9)
+and Table 1, supplies the coefficient convention and a band-limited PSD
+benchmark. The publisher's [open PDF](https://mdpi-res.com/d_attachment/metals/metals-11-01333/article_deploy/metals-11-01333.pdf)
+was read for this correction. The existing independent hand calculations in
+`tests/fatigue/test_benasciutti_tovo.py` now anchor production Dirlik damage
+for slopes 3, 5 and 7, in addition to testing the published BT/Dirlik ratios.
+A unit-area rectangular PSD on `[1-h,1+h]` Hz gives exact moments
+`M0=M1=1`, `M2=1+h**2/3`, `M4=1+2*h**2+h**4/5`.
+The Dirlik/narrow-band damage ratio converges to one as `h` decreases through
+0.1, 0.01 and 0.001, with a numerical probe tolerance of 0.1 % at 0.01.
+All six new regressions fail with the spectral-width substitution.
+
+The regenerated atlas contains 60 grid points and 14 holdout points; its maximum
+holdout interpolation error is 0.2 % against the configured 10.0 % threshold.
+These interpolation figures concern the implemented response, not empirical
+accuracy against measured fatigue. No historical atlas files are overwritten.
+
+The manifest's `code_version` and the provenance record's `recorded_code_version`
+are the build-time HEAD, which can precede publication of the generated files
+and need not contain working-tree source changes. Publication is resolved by
+digest: `first-matching-artifact-publication` finds the first reachable commit
+whose source bytes and atlas artifacts match every recorded digest. The content
+fingerprint binds the numerical source basis; `code_version` alone does not.
+After integration with main, rerun the drift gate and regenerate if that basis
+changes, then rerun the grid, shipped-query and retained-provenance regressions.
+
 ## Remaining evidence gaps
 
-Frequency-unit tests do not qualify empirical broad-band corrections. Their
-scale invariance is checked separately; their coefficients and formulas are
-unchanged. In particular, the existing Dirlik use of the bandwidth parameter
-in its mixture coefficients requires independent assessment. The structural
+These checks qualify the coefficient substitution and bounded analytical
+benchmarks, rather than general empirical broad-band accuracy. The structural
 narrow-band estimator also uses a representative range rather than the Rayleigh
 range integral tested here, so only its frequency convention is cross-checked.
 
@@ -141,4 +178,5 @@ atlas remains a screening model; its interpolation check does not qualify the
 Dirlik estimator or its fixed stress gain for a design application. S-N tables
 are unchanged, no design factors are selected and no solver is run. The lesson
 from this change is to pair dimensionless correction tests with independent
-absolute-rate anchors at every frequency-unit boundary.
+absolute-rate anchors at every frequency-unit boundary. Narrow-band limit
+regressions also distinguish irregularity from its complementary spectral width.

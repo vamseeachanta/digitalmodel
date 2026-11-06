@@ -257,3 +257,26 @@ def test_current_spectral_atlas_has_retained_provenance():
     history.verify_artifacts(record, root)
     fingerprint = history.verify_sources(record, history.archive_reader(root))
     assert fingerprint == atlas.provenance["content_fingerprint"]
+
+
+@pytest.mark.parametrize("slope", [3, 5, 7])
+def test_dirlik_converges_to_narrow_band_rectangular_psd(slope):
+    """Unit-area PSD on [1-h, 1+h] Hz tends to a single spectral line.
+
+    Exact integrated monomials give m0=m1=1, m2=1+h²/3 and
+    m4=1+2*h²+h⁴/5. At the line, the range PDF is Rayleigh, so
+    Dirlik/NB tends to one. Require decreasing error over two decades
+    and agreement to 0.1 percent at h=0.01 (a numerical probe tolerance).
+    This limit distinguishes irregularity near one from width near zero.
+    """
+    errors = []
+    for width in (0.1, 0.01, 0.001):
+        moments = SpectralMoments(
+            m0=1, m1=1, m2=1 + width**2 / 3,
+            m4=1 + 2 * width**2 + width**4 / 5,
+        )
+        ratio = (dirlik_damage(moments, slope, 0).damage_rate
+                 / narrow_band_damage(moments, slope, 0).damage_rate)
+        errors.append(abs(ratio - 1))
+    assert errors[0] > errors[1] > errors[2]
+    assert errors[1] < 0.001

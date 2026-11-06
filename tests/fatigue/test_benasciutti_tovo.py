@@ -14,6 +14,7 @@ import pytest
 from digitalmodel.fatigue.spectral_fatigue import (
     SpectralMoments,
     benasciutti_tovo_damage,
+    dirlik_damage,
     narrow_band_damage,
 )
 
@@ -210,3 +211,19 @@ def test_independent_narrowband_anchor():
     assert narrow_band_damage(moments, 3, 0).damage_rate == pytest.approx(
         6 * math.sqrt(2 / math.pi), rel=1e-12,
     )
+
+
+@pytest.mark.parametrize("slope, expected", [
+    (3, 4.3274607691640465),
+    (5, 84.04310693166342),
+    (7, 2331.7809483219658),
+])
+def test_dirlik_independent_broadband_damage(slope, expected):
+    """Eq. (8)-(9), c=5: use the hand calculations documented above.
+
+    The publisher's open PDF confirms Table 1 and the alpha2 coefficient
+    convention. These absolute anchors are independent of production Dirlik.
+    Relative tolerance 1e-12 checks arithmetic, not estimator accuracy.
+    """
+    actual = dirlik_damage(rectangular_moments(), slope, 0)
+    assert actual.damage_rate == pytest.approx(expected, rel=1e-12)

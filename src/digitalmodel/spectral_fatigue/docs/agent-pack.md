@@ -12,6 +12,23 @@
 | Status | DRAFT |
 | Implementation-map revision | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, data revision `270c8759c374b67a7f032953e7fcdb14e0224461` |
 
+## Current dependency correction
+
+The pinned observations below describe their recorded source revision. The
+current dependency uses Hz crossing rates and the irregularity factor in
+Dirlik's mixture coefficients. Both shipped example locations now fail
+screening; the splash-zone location governs. The healthy-keel claim and the
+rate/Dirlik defects recorded at the pin are superseded by this correction.
+See `docs/domains/fatigue/spectral-frequency-units.md` for the source contract,
+independent narrow-band and broad-band regressions, and remaining limits.
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 1 | 2026-10-19 | Record the pinned workflow basis and dependency gaps. |
+| 2 | 2026-11-06 | Add the corrected dependency and example verdicts while retaining the pinned evidence below. |
+
 ## 1. Purpose and scope
 
 `router` evaluates supplied stress PSDs at each location, occurrence-weights annual damage, selects the smallest life margin, writes detail and summary CSVs, and replaces the input settings with result metadata. [src/digitalmodel/spectral_fatigue/workflow.py:L37-L76] [src/digitalmodel/spectral_fatigue/workflow.py:L88-L127]

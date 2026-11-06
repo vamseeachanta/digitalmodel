@@ -13,6 +13,24 @@
 
 Repository citations resolve at the code revision above; implementation-map citations in section 9 resolve at the separately named map revision.
 
+## Current dependency correction
+
+The pinned observations below describe their recorded source revision. The
+current dependency uses Hz crossing rates and the irregularity factor in
+Dirlik's mixture coefficients. The shipped RAO example now has a passing
+keel joint (margin 7.6) and a failing splash zone (margin 0.9), which governs.
+The rate-only correction made both locations fail; the coefficient correction
+restores the keel pass. The rate/Dirlik defects at the pin are superseded.
+See `docs/domains/fatigue/spectral-frequency-units.md` for the source contract,
+independent narrow-band and broad-band regressions, and remaining limits.
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 1 | 2026-10-18 | Record the pinned workflow basis and dependency gaps. |
+| 2 | 2026-11-06 | Add the corrected dependency and example verdicts while retaining the pinned evidence below. |
+
 ## 1. Purpose and scope
 
 `router` converts a stress RAO and parametric wave spectra into stress PSDs, delegates damage evaluation to `spectral_fatigue.router`, and copies the result and screening status back into the input configuration. [src/digitalmodel/rao_spectral_fatigue/workflow.py:L34-L81]

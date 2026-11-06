@@ -6,7 +6,7 @@ The stress response PSD is formed by the standard linear transfer relation `S_st
 
 This generalises the fixed-gain screening already baked into the spectral-fatigue atlas (`parametric.generate` maps the wave spectrum to stress with a constant `stress_gain_MPa_per_m`); here the gain is the frequency-dependent RAO.
 
-Each location reports per-location fatigue life and the workflow reports a top-level `screening_status` (pass/fail vs design life × DFF) with the governing location. The example keeps a riser keel joint healthy and drives the splash-zone hot spot to a fatigue-governed failure.
+Each location reports per-location fatigue life and the workflow reports a top-level `screening_status` (pass/fail vs design life × DFF) with the governing location. With the corrected Hz crossing rates and Dirlik irregularity coefficients, the keel joint passes screening (margin 7.6) and the splash-zone hot spot fails (margin 0.9), governing the example.
 
 The stress RAOs in `input.yml` are **illustrative** — a real project supplies its own `H(f)` from a coupled hydrodynamic + structural model.
 

@@ -2951,6 +2951,86 @@
         "atlases/spectral_fatigue/692aaf26f51c/surrogate.json": "60675399c626d8cb8e31904ecb87f566bcc3740cc1c9b38c1aeea9ea425e9faa",
         "atlases/spectral_fatigue/692aaf26f51c/validation.json": "58672d7df8b679a91c394918872923d1663c0fc4eb8b6b65f4a0c0b3420ace64"
       }
+    },
+    {
+      "manifest": "atlases/spectral_fatigue/cebf7823125c/manifest.yaml",
+      "workflow_id": "spectral-fatigue",
+      "recorded_code_version": "132de597d",
+      "source_publication": "first-matching-artifact-publication",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "cebf7823125c0496255093b4df0be519c7e2113b5e008a6c3284954fe2dd8848",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "log_log",
+          "response": "annual_damage",
+          "axes": [
+            {
+              "name": "Hs",
+              "scale": "log",
+              "grid": [
+                1.0,
+                2.0,
+                3.0,
+                4.5,
+                6.0,
+                8.0
+              ]
+            },
+            {
+              "name": "Tp",
+              "scale": "linear",
+              "grid": [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                16
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {
+          "gamma": 3.3,
+          "stress_gain_MPa_per_m": 20.0,
+          "sn_slope": 3.0,
+          "sn_intercept": 12.164
+        },
+        "standards": [
+          {
+            "id": "DNV-RP-C203",
+            "edition": "2021-09"
+          },
+          {
+            "id": "DNV-RP-C205",
+            "edition": "2021-09"
+          }
+        ],
+        "input": "examples/workflows/spectral-fatigue/input.yml",
+        "response_sources": [
+          "src/digitalmodel/fatigue/spectral_fatigue.py",
+          "src/digitalmodel/hydrodynamics/wave_spectra.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "4dcaf1f00813cb8567341d0ae07fc4d7c9ea8101e5d0f543570b9bd6848b3680",
+        "src/digitalmodel/parametric/refresh.py": "24f4aeb7888fe4d994151f38412574e14eb72a0a8d828c84a711ccd403c731fb",
+        "src/digitalmodel/parametric/generate.py": "7d957b173df23131682559714a2ab12b0f6670b97ef11cbbaebcaa2c8e1f2e24",
+        "examples/workflows/spectral-fatigue/input.yml": "21dc2b6fb560c05baa6809b93902a195e8d8664af2d7f34a8c9e1300637b8960",
+        "src/digitalmodel/fatigue/spectral_fatigue.py": "54ed89f3797398a419bb25ebbc6870de767b1c834bd76a0f7e319b88fc6654d3",
+        "src/digitalmodel/hydrodynamics/wave_spectra.py": "5229f65a8d04826c0b5726e0113a8dc1bdfbd18396169748977a96a2300e0290"
+      },
+      "artifacts": {
+        "atlases/spectral_fatigue/cebf7823125c/manifest.yaml": "b2bd35990912130f2b82e5a38a2ee3159c30edfae000f7ab565ee979664993d5",
+        "atlases/spectral_fatigue/cebf7823125c/grid.parquet": "6d56da14eb0ee7332e70531e7eb3151a9e92b307a07a1cf4933b61740cc1bfcf",
+        "atlases/spectral_fatigue/cebf7823125c/surrogate.json": "9bea1455e6e52c93adecf5770a1d42b1a0f24e8f384be4d7e10c01ba54032f89",
+        "atlases/spectral_fatigue/cebf7823125c/validation.json": "8fbf2555c34dd4e9cc2c116c7a4dfdc5245a5229ccb47afccc36c9d6865b6c6b"
+      }
     }
   ]
 }

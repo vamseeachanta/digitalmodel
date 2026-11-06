@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """
 Frequency-Domain (Spectral) Fatigue Analysis
 =============================================
@@ -299,14 +301,15 @@ def dirlik_damage(
     A = 10.0 ** sn_intercept
 
     xm = m1 / m0 * math.sqrt(m2 / m4)
-    eps = moments.bandwidth_parameter
+    gamma = moments.irregularity_factor
 
-    # Dirlik parameters
-    D1 = 2.0 * (xm - eps ** 2) / (1.0 + eps ** 2)
-    R = (eps - xm - D1 ** 2) / max(1.0 - eps - D1 + D1 ** 2, 1e-12)
-    D2 = (1.0 - eps - D1 + D1 ** 2) / max(1.0 - R, 1e-12)
+    # Metals 11 (2021), 1333, Eq. (8): alpha2 is the irregularity
+    # factor m2/sqrt(m0*m4), not the spectral width sqrt(1-alpha2**2).
+    D1 = 2.0 * (xm - gamma ** 2) / (1.0 + gamma ** 2)
+    R = (gamma - xm - D1 ** 2) / max(1.0 - gamma - D1 + D1 ** 2, 1e-12)
+    D2 = (1.0 - gamma - D1 + D1 ** 2) / max(1.0 - R, 1e-12)
     D3 = 1.0 - D1 - D2
-    Q = 1.25 * (eps - D3 - D2 * R) / max(D1, 1e-12)
+    Q = 1.25 * (gamma - D3 - D2 * R) / max(D1, 1e-12)
 
     # Ensure physical parameters
     D1 = max(D1, 0.0)
@@ -337,7 +340,7 @@ def dirlik_damage(
         damage_per_year=damage_rate * 365.25 * 24 * 3600,
         equivalent_stress_range=round(s_eq, 3),
         method="Dirlik (1985)",
-        bandwidth_parameter=eps,
+        bandwidth_parameter=moments.bandwidth_parameter,
         peak_rate=nu_p,
     )
 
