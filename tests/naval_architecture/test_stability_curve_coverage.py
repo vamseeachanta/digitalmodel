@@ -11,9 +11,20 @@ import math
 
 import pytest
 
+from digitalmodel.naval_architecture.damage_stability_screening import (
+    _first_down_crossing,
+    _positive_net_area_m_rad,
+    damage_gz_analysis,
+)
 from digitalmodel.naval_architecture.vessel_stability_screening import (
+    Citation,
+    CraneHeelingCase,
     GZCurve,
+    LiftingCriteria,
+    _net_area_m_rad,
+    equilibrium_heel_deg,
     imo_intact_criteria,
+    lifting_check,
     max_kg_screening,
 )
 from digitalmodel.vessel_stability_screening.workflow import router
@@ -56,6 +67,87 @@ def test_intact_criteria_accept_exact_governing_endpoint(cap_deg):
 def test_gz_lookup_rejects_uncovered_or_nonfinite_angle(angle):
     with pytest.raises(ValueError, match="tabulated GZ range|must be finite"):
         _curve().gz_at(angle)
+
+
+@pytest.mark.parametrize(
+    "angle", (math.nextafter(0.0, -math.inf), math.nextafter(40.0, math.inf))
+)
+def test_gz_lookup_rejects_even_one_ulp_outside_table(angle):
+    with pytest.raises(ValueError, match="outside tabulated GZ range"):
+        _curve().gz_at(angle)
+
+
+def test_lifting_net_area_uses_exact_tabulated_endpoint():
+    case = CraneHeelingCase("synthetic", heeling_moment_t_m=0.1)
+    area = _net_area_m_rad(_curve(), case, 1.0, 10.7296, 40.0)
+    # Integral: pi/180 * (40**2 - 10.7296**2)/20
+    # - 0.1 * (sin(40 deg) - sin(10.7296 deg)) = 1.2501371449.
+    assert area == pytest.approx(1.2501371449, abs=1e-8)
+
+
+def test_damage_down_crossing_uses_exact_tabulated_endpoint():
+    assert _first_down_crossing(_curve().gz_at, 10.7296, 40.0, 400) is None
+
+
+def test_damage_positive_area_uses_exact_tabulated_endpoint():
+    area = _positive_net_area_m_rad(_curve().gz_at, 10.7296, 40.0)
+    # Integral of heel/10: pi/180 * (40**2 - 10.7296**2)/20.
+    assert area == pytest.approx(1.2957984833, abs=1e-10)
+
+
+@pytest.mark.parametrize("steps", (400, 2000))
+def test_damage_analysis_accepts_exact_governing_endpoint(steps):
+    analysis = damage_gz_analysis(
+        _curve(), 1.0, static_heel_deg=10.7296, limit_angle_deg=40.0,
+        steps=steps,
+    )
+    assert analysis.equilibrium_heel_deg == 10.7296
+    assert analysis.range_end_deg == 40.0
+    # Range: 40 - 10.7296 = 29.2704 deg; area is the hand integral above.
+    assert analysis.range_beyond_equilibrium_deg == pytest.approx(29.2704)
+    assert analysis.residual_area_m_rad == pytest.approx(1.2957984833, abs=1e-10)
+
+
+def _lifting_inputs():
+    return (
+        CraneHeelingCase("synthetic", heeling_moment_t_m=1.092),
+        LiftingCriteria(
+            max_equilibrium_heel_deg=20.0,
+            residual_area_ratio_min=1.0,
+            citation=Citation("synthetic", "2026", "arithmetic fixture"),
+        ),
+    )
+
+
+def test_lifting_accepts_exact_governing_endpoint_with_hand_areas():
+    case, criteria = _lifting_inputs()
+    result = lifting_check(_curve(), case, 1.0, criteria)
+    # Solve heel/10 = 1.092*cos(heel): heel = 10.7291005951 deg.
+    assert equilibrium_heel_deg(_curve(), case, 1.0) == pytest.approx(
+        10.7291005951, abs=1e-4
+    )
+    assert result.equilibrium_heel_deg == pytest.approx(10.7291005951, abs=1e-4)
+    assert result.residual_range_to_deg == 40.0
+    # Integral: pi/180 * (40**2 - heel**2)/20
+    # - 1.092*(sin(40 deg) - sin(heel)); heeling area = 1.092*sin(heel).
+    assert result.residual_area_m_rad == pytest.approx(0.79717667, abs=1e-6)
+    assert result.heeling_area_m_rad == pytest.approx(0.20329290, abs=2e-6)
+    assert result.passed
+
+
+def test_max_kg_with_lifting_accepts_exact_governing_endpoint():
+    case, criteria = _lifting_inputs()
+    limits = max_kg_screening(
+        [0.0, 10.0, 40.0], [0.0, 1.0, 4.0], 5.0, 1.0,
+        lifting_case=case, lifting=criteria,
+    )
+    by_key = {limit.key: limit for limit in limits}
+    # GZ at 20 deg interpolates the corrected 10- and 40-deg ordinates.
+    # KG = (2 - 1.092*cos(20 deg))/((2*sin(10 deg) + sin(40 deg))/3).
+    assert by_key["lifting_equilibrium_heel"].kg_limit_m == pytest.approx(
+        2.9508274828, abs=1e-4
+    )
+    assert not by_key["lifting_equilibrium_heel"].limited_by_km
 
 
 @pytest.mark.parametrize(

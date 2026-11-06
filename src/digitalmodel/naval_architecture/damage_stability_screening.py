@@ -398,7 +398,7 @@ def _first_down_crossing(net, from_deg: float, to_deg: float, steps: int) -> flo
     """First heel after ``from_deg`` where the net arm drops below 0."""
     prev = from_deg
     for i in range(1, steps + 1):
-        phi = from_deg + (to_deg - from_deg) * i / steps
+        phi = to_deg if i == steps else from_deg + (to_deg - from_deg) * i / steps
         if net(phi) < 0.0:
             lo, hi = prev, phi  # net >= 0 at lo, < 0 at hi
             for _ in range(60):
@@ -422,7 +422,7 @@ def _positive_net_area_m_rad(
     prev_phi = from_deg
     prev_v = max(net(from_deg), 0.0)
     for i in range(1, steps + 1):
-        phi = from_deg + (to_deg - from_deg) * i / steps
+        phi = to_deg if i == steps else from_deg + (to_deg - from_deg) * i / steps
         v = max(net(phi), 0.0)
         total += 0.5 * (prev_v + v) * math.radians(phi - prev_phi)
         prev_phi, prev_v = phi, v

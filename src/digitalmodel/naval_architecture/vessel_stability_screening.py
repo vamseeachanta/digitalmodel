@@ -869,7 +869,7 @@ def _net_area_m_rad(
         curve.gz_at(from_deg) - case.heeling_arm_m(displacement_t, from_deg), 0.0
     )
     for i in range(1, steps + 1):
-        phi = from_deg + (to_deg - from_deg) * i / steps
+        phi = to_deg if i == steps else from_deg + (to_deg - from_deg) * i / steps
         v = max(curve.gz_at(phi) - case.heeling_arm_m(displacement_t, phi), 0.0)
         total += 0.5 * (prev_v + v) * math.radians(phi - prev_phi)
         prev_phi, prev_v = phi, v
