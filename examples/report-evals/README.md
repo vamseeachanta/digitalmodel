@@ -38,7 +38,7 @@ python <folder>/eval.py --validate-only          # schema and grading rules; no 
 python <folder>/eval.py --check-record <folder>/last-run.json
 ```
 
-Exit code 0 is PASS, 2 is PARTIAL and 1 is FAIL. Every run writes a record: to `--out`, or else to a new file under `<temp>/report-evals-runs/`. `--check-record` fails when a file the record is bound to has changed or is missing.
+Exit code 0 is PASS, 2 is PARTIAL and 1 is FAIL. Every run writes a record: to `--out`, or else to a new, uniquely named file under `<temp>/report-evals-runs/` that is never replaced. `--check-record` fails when a file the record is bound to has changed or is missing.
 
 `--revision candidate` (the default, except where a folder states otherwise) uses the code and repository inputs of the checkout. `--revision pinned` reads them from `code.commit` through git. Code that is an installed package (digitalmodel) must be installed from a checkout of `code.commit` for a pinned run. A folder may also commit `last-run-pinned.json`, the record of a pinned run.
 
@@ -53,4 +53,4 @@ Each result gets one status:
 
 Tolerance: `abs` t passes when |got - expected| <= t; `rel_pct` r passes when |got - expected| <= r/100 x |expected|. Both bounds are inclusive. Two integers compare exactly; otherwise an allowance of 1e-9 x |expected| covers binary representation, so a zero reference is exact.
 
-The report grade is FAIL when any result is MISMATCH or ERROR, or when the rebuild raised an unexpected error, PARTIAL when any result is DRIFT or NOT_EVALUATED, and PASS otherwise. In `--compare` mode only results with scope `both` are graded; a reader file with an unknown or repeated id grades FAIL.
+The report grade is FAIL when any result is MISMATCH or ERROR, or when the rebuild raised an unexpected error, PARTIAL when any result is DRIFT or NOT_EVALUATED, and PASS otherwise. Scope `both` (default) is graded in every mode, `rebuild` only when the eval rebuilds, and `pinned` only in a `--revision pinned` rebuild. A reader file with an unknown or repeated id grades FAIL.

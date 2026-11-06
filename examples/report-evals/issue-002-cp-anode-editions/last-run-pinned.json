@@ -2,21 +2,21 @@
  "schema_version": "1.0",
  "report_id": "issue-002-cp-anode-editions",
  "mode": "rebuild",
- "started_utc": "2026-11-06T16:56:07Z",
- "finished_utc": "2026-11-06T16:56:10Z",
+ "started_utc": "2026-11-06T17:51:14Z",
+ "finished_utc": "2026-11-06T17:51:16Z",
  "grade": "PASS",
  "pinned_commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
  "artifacts": {
   "results.json": "aef2bcb94bac6cf03a12c6e2ecd80f21c6ff55cfc01bc89d0f5049986a35502c",
-  "eval.py": "b11586e416262d93c7400f918482683971c745ac741a0ba8f63102316f6dc3b2",
-  "../evalkit.py": "f8aa831c8f1da6977b8502d5246e34079c2f1246277539ea910df0dfbebc5fa5"
+  "eval.py": "6386fbc4fcbadc9b1926404521c174218ffca902f2d35048b080b24f1627ceef",
+  "../evalkit.py": "789f47d4db0316b02cf262fcfc82333b0929bcec91e1537868ab43762845c0a2"
  },
  "python": "3.11.15",
  "platform": "Windows",
  "context": {
   "revision": "pinned",
   "repo_root": "dm-evals",
-  "repo_head": "5f503e1aee79ed2914e3ff2da26bb73dcff71a5b",
+  "repo_head": "2417416f7d8e70e2173605ca48ab416cdda3d413",
   "digitalmodel_file": "outside the clone: digitalmodel",
   "digitalmodel_head": "09089a121a16069c4b657d1a320a630a23ab1dd5",
   "pipeline_mass_kg": {

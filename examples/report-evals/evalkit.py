@@ -26,7 +26,8 @@ Comparison contract (also in the schema description):
     Both bounds are inclusive. When both values are integers the comparison
     is exact integer arithmetic. Otherwise a floating allowance of
     1e-9 * |expected| is added for binary representation; it is zero when the
-    expected value is 0, so a zero reference with any tolerance r is exact.
+    expected value is 0, so a zero reference is exact under a relative
+    tolerance or an absolute tolerance of 0.
   - Outside tolerance: DRIFT on a live basis, MISMATCH on a fixed basis.
   - Grade: FAIL if any MISMATCH or ERROR, a reader-file structural error, or
     an unexpected exception from compute() (even after every value was
@@ -34,9 +35,12 @@ Comparison contract (also in the schema description):
   - Revision (rebuild mode): --revision candidate (default) uses the code and
     repository inputs of the checkout; --revision pinned reads them from
     code.commit through git (repo_file()). The record states which.
-  - The run record is always written: to --out, or to a new file under
-    <temp>/report-evals-runs/. It is bound to the bytes of the files it graded;
+  - The run record is always written: to --out, or to a new, uniquely named
+    file under <temp>/report-evals-runs/ (created exclusively, never replaced).
+    It is bound to the bytes of the files it graded;
     --check-record reports a changed or missing file as stale.
+  - Scope: "both" (default) is graded in every mode; "rebuild" only when the
+    eval rebuilds; "pinned" only in a --revision pinned rebuild.
   - ``--compare FILE`` (prompt-level eval) grades only results whose scope is
     "both" (the default). Unknown or duplicate ids in the reader file make the
     grade FAIL; an empty file grades PARTIAL.
@@ -48,6 +52,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import platform
 import subprocess
 import sys
@@ -119,14 +124,18 @@ def git_head(path: Path) -> str | None:
         return None
 
 
-def git_blob(repo: Path, commit: str, path: str) -> bytes | None:
-    """Bytes of path at commit in the clone repo, fetching the commit if needed."""
+def git_blob(repo: Path, commit: str, path: str, fetch: bool = True) -> bytes | None:
+    """Bytes of path at commit in the clone repo, or None if the object is not available.
+
+    With fetch=True a missing commit is fetched from origin once; with
+    fetch=False (offline runs) no network access is attempted.
+    """
     def show():
         return subprocess.run(["git", "-C", str(repo), "show", f"{commit}:{path}"],
                               capture_output=True, timeout=300)
     try:
         out = show()
-        if out.returncode != 0:
+        if out.returncode != 0 and fetch:
             subprocess.run(["git", "-C", str(repo), "fetch", "-q", "origin", commit],
                            capture_output=True, timeout=600)
             out = show()
@@ -144,7 +153,8 @@ def repo_file(args: argparse.Namespace, rel: str) -> Path:
     """
     if getattr(args, "revision", "candidate") != "pinned":
         return Path(args.repo_root) / rel
-    blob = git_blob(Path(args.repo_root), args.pinned_commit, rel)
+    blob = git_blob(Path(args.repo_root), args.pinned_commit, rel,
+                    fetch=not getattr(args, "offline", False))
     if blob is None:
         raise FileNotFoundError(f"{rel} at {args.pinned_commit[:12]} is not readable from {args.repo_root}")
     dest = Path(tempfile.gettempdir()) / "report-evals-pinned" / args.pinned_commit[:12] / rel
@@ -275,8 +285,8 @@ def validate(doc: dict[str, Any], schema: dict | None = None) -> list[str]:
             errors.append(f"results[{i}] value must be a number, string or boolean")
         if r.get("basis") not in ("fixed", "live"):
             errors.append(f"results[{i}] basis must be fixed or live")
-        if r.get("scope", "both") not in ("both", "rebuild"):
-            errors.append(f"results[{i}] scope must be both or rebuild")
+        if r.get("scope", "both") not in ("both", "rebuild", "pinned"):
+            errors.append(f"results[{i}] scope must be both, rebuild or pinned")
         if not r.get("limits"):
             errors.append(f"results[{i}] limits must list at least one limit")
         commit = str(r.get("commit", ""))
@@ -481,7 +491,9 @@ def main(results_path: Path,
         names = PROMPT_ARTIFACTS
     else:
         mode = "rebuild"
-        graded = doc["results"]
+        # scope pinned: graded only in a pinned rebuild (for example code identity with the pin)
+        graded = [r for r in doc["results"]
+                  if r.get("scope", "both") != "pinned" or args.revision == "pinned"]
         names = REBUILD_ARTIFACTS
         context["revision"] = args.revision
         try:
@@ -519,9 +531,18 @@ def main(results_path: Path,
         "errors": structural,
         "results": rows,
     }
-    out = args.out or (Path(tempfile.gettempdir()) / "report-evals-runs" /
-                       f"{doc['report']['id']}-{mode}-{started.replace(':', '')}.json")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(record, indent=1, default=str) + "\n", encoding="utf-8")
+    text = json.dumps(record, indent=1, default=str) + "\n"
+    if args.out:  # an explicit destination is replaced on purpose
+        out = args.out
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(text, encoding="utf-8")
+    else:  # a new, uniquely named file for every run, created exclusively
+        runs = Path(tempfile.gettempdir()) / "report-evals-runs"
+        runs.mkdir(parents=True, exist_ok=True)
+        tag = f"{doc['report']['id']}-{mode}-{context.get('revision', 'reader')}-{started.replace(':', '')}-"
+        handle, name = tempfile.mkstemp(prefix=tag, suffix=".json", dir=runs)
+        with os.fdopen(handle, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        out = Path(name)
     print(f"run record: {scrub(str(out))}")
     return EXIT[verdict]

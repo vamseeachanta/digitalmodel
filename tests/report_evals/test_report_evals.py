@@ -7,6 +7,7 @@ scheduled report-eval job runs it.
 from __future__ import annotations
 
 import copy
+import importlib.util
 import json
 import subprocess
 import sys
@@ -203,6 +204,49 @@ def test_failed_compute_still_writes_record(tmp_path):
     assert {r["status"] for r in record["results"][1:]} == {"ERROR"}
 
 
+def test_same_second_runs_keep_both_records(tmp_path, monkeypatch):
+    """Two runs started in the same second write two records; neither replaces the other."""
+    kit = _kit()
+    work = _demo_folder(tmp_path)
+    monkeypatch.setattr(kit, "utc_now", lambda: "2026-11-06T12:00:00Z")
+    results = _manifest(ALL[0])["results"]
+
+    def failing(args, values, notes, context):
+        raise ValueError("first run fails")
+
+    def passing(args, values, notes, context):
+        for r in results:
+            values[r["id"]] = r["value"]
+
+    runs = Path(tempfile.gettempdir()) / "report-evals-runs"
+    before = set(runs.glob("*.json")) if runs.exists() else set()
+    assert kit.main(work / "results.json", failing, argv=[]) == 1
+    kit.main(work / "results.json", passing, argv=[])
+    new = set(runs.glob("*.json")) - before
+    grades = sorted(json.loads(p.read_text(encoding="utf-8"))["grade"] for p in new)
+    assert len(new) == 2 and grades[0] == "FAIL", grades
+
+
+def test_offline_blob_lookup_never_fetches(tmp_path, monkeypatch):
+    """A pinned blob missing from the clone is unavailable offline; git fetch is not run."""
+    kit = _kit()
+    calls = []
+    real_run = kit.subprocess.run
+
+    def recording_run(cmd, *args, **kwargs):
+        calls.append(cmd)
+        return real_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr(kit.subprocess, "run", recording_run)
+    assert kit.git_blob(EVALS.parents[1], "0" * 40, "README.md", fetch=False) is None
+    assert calls and not any("fetch" in c for c in calls)
+    args = type("Args", (), {"repo_root": EVALS.parents[1], "pinned_commit": "0" * 40,
+                             "revision": "pinned", "offline": True})()
+    with pytest.raises(FileNotFoundError):
+        kit.repo_file(args, "README.md")
+    assert not any("fetch" in c for c in calls)
+
+
 OFFLINE = ["issue-001-hull-roll-screening", "issue-001-sloshing-frequency"]
 
 
@@ -228,3 +272,30 @@ def test_hull_archive_needs_one_to_one_cases(tmp_path, edit):
     path.write_text(json.dumps(archive), encoding="utf-8")
     out = _run(folder, "--archive", str(path))
     assert out.returncode == 1 and "MISMATCH" in out.stdout, out.stdout
+
+
+def _cp_module():
+    sys.path.insert(0, str(EVALS))
+    spec = importlib.util.spec_from_file_location("_cp_eval", EVALS / "issue-002-cp-anode-editions" / "eval.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_cp_package_must_match_revision(tmp_path):
+    """The imported digitalmodel must come from the graded checkout (candidate) or the pin (pinned)."""
+    module = _cp_module()
+    checkout = tmp_path / "checkout"
+    inside = checkout / "src" / "digitalmodel" / "__init__.py"
+    outside = tmp_path / "other" / "src" / "digitalmodel" / "__init__.py"
+    pin = "0" * 40
+
+    def args(revision):
+        return type("Args", (), {"repo_root": checkout, "revision": revision, "pinned_commit": pin})()
+
+    module.check_package(args("candidate"), inside, "1" * 40)
+    with pytest.raises(ImportError):
+        module.check_package(args("candidate"), outside, pin)  # historical package in a candidate run
+    module.check_package(args("pinned"), outside, pin)
+    with pytest.raises(ImportError):
+        module.check_package(args("pinned"), inside, "1" * 40)
