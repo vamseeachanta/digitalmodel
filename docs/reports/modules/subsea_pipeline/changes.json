@@ -18,5 +18,10 @@
     "change": "Output aliases are validated by their resolved destination, and external directories must be empty or contain only recognised report deliverables before replacement. Link tests handle unavailable privileges, and the change panel displays the latest revision.",
     "date": "2026-11-06",
     "revision": "D"
+  },
+  {
+    "change": "Recognised report files with cloud placeholder metadata can be rebuilt while symbolic links and directory junctions remain rejected. Scratch containment uses the resolved checkout root so checkout aliases retain the same restriction.",
+    "date": "2026-11-06",
+    "revision": "E"
   }
 ]

@@ -45,6 +45,11 @@ CHANGES = [
         "date": "2026-11-06",
         "change": "Output aliases are validated by their resolved destination, and external directories must be empty or contain only recognised report deliverables before replacement. Link tests handle unavailable privileges, and the change panel displays the latest revision.",
     },
+    {
+        "revision": "E",
+        "date": "2026-11-06",
+        "change": "Recognised report files with cloud placeholder metadata can be rebuilt while symbolic links and directory junctions remain rejected. Scratch containment uses the resolved checkout root so checkout aliases retain the same restriction.",
+    },
 ]
 
 # Synthetic inputs from bases A, B and C in the module docstring, respectively.
@@ -490,8 +495,9 @@ Use `--output-dir "$REPORT_OUTPUT"` for a separate destination. The builder writ
 only `index.html`, `changes.json`, `manifest.json` and `README.md`. Inside the
 checkout, only `docs/reports/modules/subsea_pipeline` is permitted. Output aliases
 are checked by their resolved destination. Each deliverable target must not be a
-symbolic link or reparse point, including a directory junction. Outside the
-canonical report directory, an existing output directory must be empty or contain
+symbolic link or directory junction. Cloud placeholder reparse tags are permitted
+for recognised report deliverables. Outside the canonical report directory, an
+existing output directory must be empty or contain
 only the four deliverable names as regular files, including a `manifest.json`
 object with `"algorithm": "sha256"`. Unrelated files and unrecognised reports are
 preserved by rejecting the destination before calculation or writing. No intermediate
@@ -524,13 +530,18 @@ unevaluated engineering methods.
 
 
 def _is_link(path):
-    """Recognize symbolic links and Windows reparse points, including junctions."""
+    """Recognize symbolic links and junctions without rejecting cloud files."""
     try:
         metadata = path.lstat()
     except FileNotFoundError:
         return False
-    return stat.S_ISLNK(metadata.st_mode) or bool(
-        getattr(metadata, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+    # Windows tag values are needed when tests run on platforms without them.
+    link_tags = (
+        getattr(stat, "IO_REPARSE_TAG_SYMLINK", 0xA000000C),
+        getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", 0xA0000003),
+    )
+    return stat.S_ISLNK(metadata.st_mode) or (
+        getattr(metadata, "st_reparse_tag", 0) in link_tags
     )
 
 
@@ -574,7 +585,7 @@ def build_report(*, scratch=None, output_dir=DESTINATION):
     """Write only the declared deliverables, with no intermediate checkout files."""
     if scratch is not None:
         scratch = Path(scratch).resolve()
-        if scratch == ROOT or ROOT in scratch.parents:
+        if scratch.is_relative_to(ROOT.resolve()):
             raise ValueError("Calculation scratch must be outside the checkout")
     output_dir = _validate_output_directory(output_dir)
     payload = build_payload()

@@ -196,9 +196,14 @@ def test_link_creation_without_privilege_skips(tmp_path, monkeypatch):
         test_linked_deliverable_is_rejected_without_writes(tmp_path, "README.md", False)
 
 
+@pytest.mark.parametrize(
+    "reparse_tag", [0xA000000C, 0xA0000003], ids=["symlink", "junction"]
+)
 @pytest.mark.parametrize("target_name", ["output", "README.md"])
-def test_output_reparse_metadata_preserves_target_guard(tmp_path, monkeypatch, target_name):
-    """Allow directory placeholders while rejecting reparse deliverable targets."""
+def test_output_reparse_metadata_preserves_target_guard(
+    tmp_path, monkeypatch, target_name, reparse_tag
+):
+    """Allow resolved directories while rejecting linked deliverable targets."""
     output = tmp_path / "output"
     output.mkdir()
     target = output if target_name == "output" else output / target_name
@@ -212,6 +217,7 @@ def test_output_reparse_metadata_preserves_target_guard(tmp_path, monkeypatch, t
             return SimpleNamespace(
                 st_mode=result.st_mode,
                 st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                st_reparse_tag=reparse_tag,
             )
         return result
 
@@ -223,6 +229,36 @@ def test_output_reparse_metadata_preserves_target_guard(tmp_path, monkeypatch, t
         with pytest.raises(ValueError, match="[Ll]ink"):
             builder().build_report(output_dir=output)
         assert {path.name for path in output.iterdir()} == {target_name}
+
+
+@pytest.mark.parametrize("name", sorted(DELIVERABLES))
+@pytest.mark.parametrize(
+    "reparse_tag", [0x9000001A, 0x9000301A], ids=["cloud", "cloud-variant"]
+)
+def test_cloud_placeholder_deliverable_can_be_rebuilt(
+    tmp_path, monkeypatch, name, reparse_tag
+):
+    """Cloud placeholder metadata must permit rebuilding a recognised report."""
+    build = builder()
+    output = tmp_path / "output"
+    build.build_report(output_dir=output)
+    before = _checkout_bytes(output)
+    original = Path.lstat
+
+    def placeholder_metadata(path, *args, **kwargs):
+        result = original(path, *args, **kwargs)
+        if path == output / name:
+            return SimpleNamespace(
+                st_mode=result.st_mode,
+                st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                st_reparse_tag=reparse_tag,
+            )
+        return result
+
+    monkeypatch.setattr(Path, "lstat", placeholder_metadata)
+    build.build_report(output_dir=output)
+    assert _checkout_bytes(output) == before
+    assert set(before) == DELIVERABLES
 
 
 def test_canonical_report_destination_is_allowed(isolated_checkout):
@@ -397,7 +433,7 @@ def test_rebuild_is_deterministic(tmp_path):
     )
     assert payload == build.build_payload()
     changes = json.loads((first / "changes.json").read_text(encoding="utf-8"))
-    assert len(changes) == 4
+    assert len(changes) == 5
     assert set(changes[0]) == {"revision", "date", "change"}
     for change in changes:
         for value in change.values():
@@ -503,6 +539,30 @@ def test_scratch_inside_checkout_is_rejected_before_writes(tmp_path, scratch):
     with pytest.raises(ValueError, match="outside the checkout"):
         builder().build_report(scratch=ROOT / scratch, output_dir=tmp_path / "out")
     assert not (tmp_path / "out").exists()
+
+
+@pytest.mark.parametrize("relative", [".", "nested", "../external-scratch"])
+def test_scratch_containment_resolves_checkout_alias(
+    isolated_checkout, tmp_path, monkeypatch, relative
+):
+    """A checkout alias must preserve scratch rejection and external access."""
+    build = isolated_checkout
+    checkout = build.ROOT
+    before = _checkout_bytes(checkout)
+    alias = tmp_path / "checkout-alias"
+    _symlink_or_skip(alias, checkout, target_is_directory=True)
+    monkeypatch.setattr(build, "ROOT", alias)
+    monkeypatch.setattr(build, "PACKAGE", alias / "src/digitalmodel/subsea/pipeline")
+    output = tmp_path / "output"
+    if relative == "../external-scratch":
+        build.build_report(scratch=alias / relative, output_dir=output)
+        assert {path.name for path in output.iterdir()} == DELIVERABLES
+        assert not (tmp_path / "external-scratch").exists()
+    else:
+        with pytest.raises(ValueError, match="outside the checkout"):
+            build.build_report(scratch=alias / relative, output_dir=output)
+        assert not output.exists()
+    assert _checkout_bytes(checkout) == before
 
 
 @pytest.mark.parametrize(
