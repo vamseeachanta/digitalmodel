@@ -12,7 +12,8 @@ def route_conventions() -> list[dict[str, str]]:
     """
     common = {
         "units": "m, N, N/m, degrees",
-        "axes": "x toward hang-off; z upward; static, phase inapplicable",
+        "axes": "x toward hang-off; z upward",
+        "phase": "NOT_APPLICABLE; static calculation",
         "origin": "horizontal-tangent touchdown vertex",
         "force_sign": "positive tension magnitude; positive weight downward",
         "angle": "top from vertical; touchdown/distribution from horizontal",
@@ -24,7 +25,11 @@ def route_conventions() -> list[dict[str, str]]:
         routes.append(dict(common, route=name))
     for name in ("legacy_force", "legacy_angle"):
         routes.append(dict(
-            common, route=name, angle="q from vertical; no distribution returned",
+            common, route=name, angle=(
+                "not returned; q is retained input only when F, w and d are supplied"
+                if name == "legacy_force"
+                else "q input from vertical; no distribution returned"
+            ),
             evidence="test_route_qualification.py::test_legacy_vertex_overlap",
         ))
     routes.append(dict(
@@ -32,11 +37,27 @@ def route_conventions() -> list[dict[str, str]]:
         axes="no geometry returned", origin="no geometry returned",
         evidence="test_lazy_wave_quarantine.py::test_analyzer_refuses_rather_than_fabricating",
     ))
+    # Native exports cannot inherit a static analytical frame or SI force units.
+    routes.append({
+        "route": "legacy_exports",
+        "status": "NOT_EVALUATED",
+        "units": "NOT_EVALUATED; target model unit system required",
+        "origin": "NOT_EVALUATED; export-specific connection datums",
+        "axes": "NOT_EVALUATED; connection frames require native evidence",
+        "phase": "NOT_EVALUATED; embedded RAO conventions require provenance",
+        "angle": "NOT_EVALUATED; native end orientations require separate evidence",
+        "force_sign": "NOT_EVALUATED; native result conventions require separate evidence",
+        "evidence": "docs/qualification.json; missing type data and native evidence",
+    })
     routes.append(dict(
-        common, route="legacy_exports", status="NOT_EVALUATED",
-        origin="export-specific; no shared global datum qualified",
-        axes="export-specific; native axes and phase require separate evidence",
-        evidence="docs/qualification.json; missing type data and native evidence",
+        common, route="legacy_simple_plot", units="m",
+        origin="X=0 at hang-off; Y=0 at mean sea level",
+        axes="X toward touchdown; Y upward",
+        angle="not returned", force_sign="not returned",
+        evidence=(
+            "test_route_qualification.py::test_legacy_simple_plot_matches_modern_vertex_frame; "
+            "requires legacy_angle result with BendRadius; legacy_force output raises KeyError"
+        ),
     ))
     routes.append(dict(
         common, route="installation_sections",

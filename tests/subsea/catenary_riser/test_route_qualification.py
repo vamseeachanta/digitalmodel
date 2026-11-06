@@ -76,9 +76,13 @@ def test_legacy_vertex_overlap(route, control):
 
 def test_route_inventory_has_output_evidence():
     routes = route_conventions()
-    assert len(routes) == 8
-    assert all(r["units"] == "m, N, N/m, degrees" for r in routes)
+    assert len(routes) == 9
+    analytical = [r for r in routes if r["route"].startswith("simple_")
+                  or r["route"] in {"legacy_force", "legacy_angle", "installation_sections"}]
+    assert all(r["units"] == "m, N, N/m, degrees" for r in analytical)
     assert all(r["evidence"] and r["origin"] and r["force_sign"] for r in routes)
+    assert all("phase" in r for r in routes)
+    assert all(set(r) == set(routes[0]) for r in routes)
     assert {r["status"] for r in routes} == {"TESTED", "QUARANTINED", "NOT_EVALUATED"}
 
 
@@ -108,12 +112,12 @@ def test_nearly_horizontal_span_does_not_lose_the_height(unit_riser):
 def test_every_section_six_claim_has_a_disposition():
     root = Path(__file__).resolve().parents[3]
     docs = root / "src/digitalmodel/subsea/catenary_riser/docs"
-    section = (docs / "agent-pack.md").read_text().split("## 6.")[1].split("## 7.")[0]
+    section = (docs / "agent-pack.md").read_text(encoding="utf-8").split("## 6.")[1].split("## 7.")[0]
     claims = [line.split("|")[1].strip() for line in section.splitlines()
               if line.startswith("| `") or line.startswith("| Legacy ")
               or line.startswith("| Conflicting ") or line.startswith("| Distinct ")
               or line.startswith("| README ")]
-    records = json.loads((docs / "qualification.json").read_text())["claims"]
+    records = json.loads((docs / "qualification.json").read_text(encoding="utf-8"))["claims"]
     assert claims
     assert [r["claim"] for r in records] == claims
     assert all(r["status"] in {"TESTED", "NOT_EVALUATED"} for r in records)
@@ -123,7 +127,7 @@ def test_every_section_six_claim_has_a_disposition():
     for record in records:
         for node in record.get("tests", []):
             file, *names = node.split("::")
-            source = ast.parse((root / "tests/subsea/catenary_riser" / file).read_text())
+            source = ast.parse((root / "tests/subsea/catenary_riser" / file).read_text(encoding="utf-8"))
             for name in names:
                 source = next(n for n in source.body
                               if isinstance(n, (ast.FunctionDef, ast.ClassDef)) and n.name == name)
@@ -141,7 +145,7 @@ def test_qualification_cites_direct_behavioral_evidence(claim_prefix, node):
     """Protect audited bindings; AST name resolution alone is not coverage."""
     root = Path(__file__).resolve().parents[3]
     path = root / "src/digitalmodel/subsea/catenary_riser/docs/qualification.json"
-    records = json.loads(path.read_text())["claims"]
+    records = json.loads(path.read_text(encoding="utf-8"))["claims"]
     record, = [r for r in records if r["claim"].startswith(claim_prefix)]
     assert record["status"] == "TESTED"
     assert node in record["tests"]
@@ -150,7 +154,7 @@ def test_qualification_cites_direct_behavioral_evidence(claim_prefix, node):
 def test_broader_route_qualification_is_not_inferred_from_vertex_overlap():
     root = Path(__file__).resolve().parents[3]
     path = root / "src/digitalmodel/subsea/catenary_riser/docs/qualification.json"
-    records = json.loads(path.read_text())["claims"]
+    records = json.loads(path.read_text(encoding="utf-8"))["claims"]
     record, = [r for r in records if r["claim"].startswith("Distinct catenary routes")]
     assert record["status"] == "NOT_EVALUATED"
     assert "tests" not in record
@@ -158,8 +162,129 @@ def test_broader_route_qualification_is_not_inferred_from_vertex_overlap():
 
 def test_readme_example_preserves_lazy_wave_quarantine():
     root = Path(__file__).resolve().parents[3]
-    readme = (root / "src/digitalmodel/subsea/catenary_riser/README.md").read_text()
+    readme = (root / "src/digitalmodel/subsea/catenary_riser/README.md").read_text(encoding="utf-8")
     assert "LazyWaveAnalyzer.analyze remains quarantined and raises NotImplementedError" in readme
     example = readme.split("```python\n", 1)[1].split("```", 1)[0]
     calls = [n for n in ast.walk(ast.parse(example)) if isinstance(n, ast.Call)]
     assert not any(isinstance(n.func, ast.Attribute) and n.func.attr == "analyze" for n in calls)
+
+
+def test_native_export_conventions_do_not_inherit_analytical_claims():
+    """No native units, datum, phase or force convention has been qualified."""
+    record, = [r for r in route_conventions() if r["route"] == "legacy_exports"]
+    assert record["status"] == "NOT_EVALUATED"
+    for field in ("units", "axes", "origin", "angle", "force_sign", "phase"):
+        assert record[field].startswith("NOT_EVALUATED"), field
+
+
+@pytest.mark.parametrize("route", ["calculator", "methods"])
+@pytest.mark.parametrize("q", [None, 10])
+def test_legacy_force_metadata_does_not_promise_an_angle(route, q):
+    data = {"F": 50, "w": 10, "d": 2}
+    if q is not None:
+        data["q"] = q
+    if route == "calculator":
+        result = CatenaryCalculator().calculate(data)
+    else:
+        from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import catenaryEquation
+        result = catenaryEquation(data)
+    assert result["THorizontal"] == pytest.approx(30)
+    # Hand balance: H=50-10*2=30, a=3, S=sqrt(2*(2+2*3))=4, X=3*ln(3).
+    assert result["S"] == pytest.approx(4)
+    assert result["X"] == pytest.approx(3 * math.log(3))
+    if q is None:
+        assert "q" not in result
+    else:
+        assert result["q"] == 10
+    record, = [r for r in route_conventions() if r["route"] == "legacy_force"]
+    assert record["angle"] == "not returned; q is retained input only when F, w and d are supplied"
+    assert record["phase"] == "NOT_APPLICABLE; static calculation"
+
+
+@pytest.mark.parametrize("control", [{"horizontal_tension": 30}, {"top_tension": 50}, {}])
+@pytest.mark.parametrize("hangoff_depth", [0, 5])
+def test_legacy_simple_plot_matches_modern_vertex_frame(unit_riser, monkeypatch, control, hangoff_depth):
+    """Three hand points establish reflection, vertical datum and metre scale.
+
+    For a=3, cosh(ln(3)/2)=2/sqrt(3). The midspan elevation above
+    touchdown is 2*sqrt(3)-3 m, independently of either package route.
+    """
+    from digitalmodel.subsea.catenary_riser.legacy import catenaryMethods as module
+    plots = []
+    monkeypatch.setattr(module, "genericPlot", plots.append)
+    result = SimpleCatenaryAnalyzer().analyze_riser(unit_riser, **control)
+    legacy = CatenaryCalculator().calculate({"d": 2, "q": result.top_angle})
+    data = {"catenaryResult": legacy,
+            "commonDefinition": {"HangoffBelowMeanSeaLevel": hangoff_depth},
+            "Analysis": {"result_folder": "", "file_name": "unused"}}
+    module.simple_catenary_plot(data, spacing=2)
+    assert len(plots) == 1
+    assert plots[0]["ylabel"] == "Elevation relative to mean sea level [m]"
+    points = data["catenaryResult"]["PlotData"]
+    assert points["X"] == pytest.approx([0, 1.5 * math.log(3), 3 * math.log(3)])
+    assert points["Y"] == pytest.approx([
+        -hangoff_depth, 2 * math.sqrt(3) - 5 - hangoff_depth, -2 - hangoff_depth,
+    ])
+    # Reflect horizontal direction and translate the MSL ordinate to the vertex.
+    vertex_x = [result.horizontal_offset - x for x in points["X"]]
+    vertex_z = [y + hangoff_depth + result.water_depth for y in points["Y"]]
+    assert vertex_x == pytest.approx([3 * math.log(3), 1.5 * math.log(3), 0])
+    assert vertex_z == pytest.approx([2, 2 * math.sqrt(3) - 3, 0])
+    record, = [r for r in route_conventions() if r["route"] == "legacy_simple_plot"]
+    assert record["units"] == "m"
+    assert record["origin"] == "X=0 at hang-off; Y=0 at mean sea level"
+    assert record["phase"] == "NOT_APPLICABLE; static calculation"
+
+
+@pytest.mark.parametrize("label,expected", [
+    (None, "Distance from seabed [m]"),
+    ("Elevation relative to mean sea level [m]", "Elevation relative to mean sea level [m]"),
+])
+def test_generic_plot_uses_requested_datum_and_preserves_default(label, expected):
+    import matplotlib.pyplot as plt
+    from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import genericPlot
+
+    data = {"X": [0, 1], "Y": [-5, -7], "label": None, "SaveAndShow": False}
+    if label is not None:
+        data["ylabel"] = label
+    figure, axes = plt.subplots()
+    try:
+        genericPlot(data)
+        assert axes.get_ylabel() == expected
+    finally:
+        plt.close(figure)
+
+
+def test_simple_plot_metadata_records_angle_input_precondition():
+    record, = [r for r in route_conventions() if r["route"] == "legacy_simple_plot"]
+    assert "requires legacy_angle result with BendRadius" in record["evidence"]
+    assert "legacy_force output raises KeyError" in record["evidence"]
+
+
+@pytest.mark.parametrize("route", ["calculator", "methods"])
+def test_simple_plot_refuses_force_output_before_plotting(route, monkeypatch, tmp_path):
+    from digitalmodel.subsea.catenary_riser.legacy import catenaryMethods as module
+
+    data = {"F": 50, "w": 10, "d": 2}
+    if route == "calculator":
+        result = CatenaryCalculator().calculate(data)
+    else:
+        result = module.catenaryEquation(data)
+    plots = []
+    monkeypatch.setattr(module, "genericPlot", plots.append)
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(KeyError, match="BendRadius"):
+        module.simple_catenary_plot({
+            "catenaryResult": result,
+            "commonDefinition": {"HangoffBelowMeanSeaLevel": 5},
+            "Analysis": {"result_folder": "", "file_name": "unused"},
+        }, spacing=2)
+    assert plots == []
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_legacy_force_without_weight_retains_open_dispatch_defect():
+    from digitalmodel.subsea.catenary_riser.legacy.catenaryMethods import catenaryEquation
+
+    with pytest.raises(KeyError, match="w"):
+        catenaryEquation({"F": 50, "d": 2, "q": 10, "X": None})
