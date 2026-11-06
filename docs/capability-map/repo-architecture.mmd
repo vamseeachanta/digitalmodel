@@ -45,6 +45,16 @@ flowchart LR
     p6 --> pages
     p7["docs/api/cfd/floating-body-decay-verification.html<br/>external input or non-reproducible copy"]
     p7 --> pages
+    p55["docs/api/cfd/generic-hull-roll-screening.html<br/>registered generator"]
+    p55 --> pages
+    sp55["scripts/capabilities/build_generic_hull_screening.py<br/>direct calculation import not established"]
+    sp55 --> p55
+    ip55_0["src/digitalmodel/hydrodynamics/utube_tank.py<br/>registered input"]
+    ip55_0 --> sp55
+    ap55_0["docs/api/cfd/data/generic_hull_roll_screening.json<br/>committed"]
+    sp55 --> ap55_0
+    ap55_1["tests/hydrodynamics/test_generic_hull_screening.py<br/>committed"]
+    sp55 --> ap55_1
     p8["docs/api/cfd/index.html<br/>inline, no generator"]
     p8 --> pages
     p9["docs/api/cfd/kcs-calm-water-resistance-verification.html<br/>external input or non-reproducible copy"]
@@ -145,6 +155,18 @@ flowchart LR
     licenses -.-> p29
     p30["docs/api/hydro/rudder-maneuvering-explorer.html<br/>inline, no generator"]
     p30 --> pages
+    p56["docs/api/hydro/self-elevating-monitoring.html<br/>registered generator"]
+    p56 --> pages
+    sp56["scripts/capabilities/build_self_elevating_monitoring.py<br/>src/digitalmodel/marine_ops/self_elevating_monitoring.py"]
+    sp56 --> p56
+    ip56_0["pyproject.toml<br/>registered input"]
+    ip56_0 --> sp56
+    ip56_1["scripts/capabilities/build_self_elevating_monitoring.py<br/>registered input"]
+    ip56_1 --> sp56
+    ip56_2["scripts/capabilities/self_elevating_monitoring.html.template<br/>registered input"]
+    ip56_2 --> sp56
+    ip56_3["src/digitalmodel/marine_ops/self_elevating_monitoring.py<br/>registered input"]
+    ip56_3 --> sp56
     p31["docs/api/hydro/short-horizon-motion-forecast.html<br/>inline, no generator"]
     p31 --> pages
     p32["docs/api/hydro/unit-box-benchmark/benchmark_amplitude.html<br/>external input or non-reproducible copy"]
@@ -164,6 +186,8 @@ flowchart LR
     licenses -.-> p36
   end
   subgraph g_installation["installation"]
+    p57["docs/api/installation/installation-forecast.html<br/>external input or non-reproducible copy"]
+    p57 --> pages
     p37["docs/api/installation/installation-heading-explorer.html<br/>registered generator"]
     p37 --> pages
     sp37["scripts/capabilities/build_installation_heading_explorer.py<br/>direct calculation import not established"]
@@ -349,4 +373,4 @@ flowchart LR
   classDef gap fill:#fff1d6,stroke:#875800,color:#191919
   classDef licensed fill:#fce4e4,stroke:#9c2020,color:#191919
   class licenses licensed
-  class p1,p2,p4,p5,p6,p7,p8,p9,p10,p12,p14,p15,p16,p17,p18,p19,p23,p24,p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p38,p39,p51 gap
+  class p1,p2,p4,p5,p6,p7,p8,p9,p10,p12,p14,p15,p16,p17,p18,p19,p23,p24,p27,p28,p29,p30,p31,p32,p33,p34,p35,p36,p38,p39,p51,p57 gap

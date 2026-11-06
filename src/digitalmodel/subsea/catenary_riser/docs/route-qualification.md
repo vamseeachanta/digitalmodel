@@ -16,6 +16,8 @@ qualify native exports, elasticity, bending, fatigue, current or dynamics.
 | --- | --- | --- |
 | DRAFT 1 | 2026-10-22 | Establish route contracts, input checks, screening and evidence gaps for independent review. |
 | DRAFT 2 | 2026-10-25 | Bind qualification observations to direct behavioral assertions and retain broader route gaps. |
+| DRAFT 3 | 2026-11-05 | Separate unqualified native conventions from analytical metadata and test the legacy simple-plot datum. |
+| DRAFT 4 | 2026-11-06 | Align the simple-plot axis label with its sea-level datum, state its angle-route input requirement and limit coverage claims to the tested inputs. |
 
 ## Sources and applicability
 
@@ -47,7 +49,8 @@ or density is an acceptance limit in the new utility.
 ## Coordinate and units convention inventory
 
 `qualification.route_conventions()` exposes this inventory as package output.
-All analytical routes use metres, newtons, newtons per metre and degrees.
+Analytical geometry and force routes use metres, newtons, newtons per metre and
+degrees. The legacy simple plot returns metre coordinates only.
 Static calculations have no phase variable. Tensions are positive magnitudes;
 the vertical resultant is positive upward along the line from touchdown to top,
 and positive effective weight acts downward.
@@ -57,10 +60,11 @@ and positive effective weight acts downward.
 | `simple_H` | Vertex `(0,0)`; x toward top, z upward | Top from vertical; touchdown and distribution from horizontal | `test_route_qualification::test_modern_vertex_and_distributions` |
 | `simple_top_tension` | Same vertex; force governs span | Same | Same parameterised test |
 | `simple_span` | Same vertex; offset is suspended span, excluding any grounded tail | Same | Same parameterised test; `test_audit_regressions::test_geometry_inverse_and_exhaustion` |
-| `legacy_force` | Implied vertex; `d` is positive height; `F` is total top tension and `w` already N/m | No angle output | `test_route_qualification::test_legacy_vertex_overlap`, both legacy callers |
+| `legacy_force` | Implied vertex; `d` is positive height; `F` is total top tension and `w` already N/m | No calculated angle; any supplied `q` is retained input when `F`, `w` and `d` are supplied | `test_route_qualification::test_legacy_vertex_overlap`, both legacy callers; retention and non-use of `q` checked by `test_legacy_force_metadata_does_not_promise_an_angle` |
 | `legacy_angle` | Implied vertex; `BendRadius=a`; `b=1/a` only on the force route | `q` from vertical | Same test, both legacy callers |
 | `lazy_wave_analyzer` | No coordinates returned | No angle returned | QUARANTINED; `test_lazy_wave_quarantine` |
-| `legacy_exports` | Export-specific origin/axes; no common global transformation qualified | Export-specific | NOT_EVALUATED; missing type data and native evidence |
+| `legacy_exports` | Export-specific origin/axes; no common global transformation qualified | NOT_EVALUATED | NOT_EVALUATED for units, force signs and phase as well; missing type data and native evidence |
+| `legacy_simple_plot` | X=0 at hang-off, positive toward touchdown; Y=0 at mean sea level, positive upward | No angle output; requires `legacy_angle` result with `BendRadius`; unmodified `legacy_force` output raises `KeyError` | `test_route_qualification::test_legacy_simple_plot_matches_modern_vertex_frame`; coordinate output and requested axis label; `test_generic_plot_uses_requested_datum_and_preserves_default` checks the plotting helper's axis label; `test_simple_plot_refuses_force_output_before_plotting` checks the input boundary |
 | `installation_sections` | Vertex `(0,0)`; x toward top, z upward; `touchdown_point=(-span,-depth)` is displacement **from hang-off** | Top from vertical | `test_installation_planning::test_piecewise_hand_case` |
 
 The general elastic boundary-value catenary solver, legacy plotting coordinates
@@ -72,6 +76,96 @@ conditions. The modern simple solver rejects ambiguous force inputs, floating
 uniform lines and infeasible geometry; force solutions that exceed available
 length retain `converged=False`. A supplied force may change the requested span,
 which remains an explicit warning. The CLI refuses unconverged output.
+
+## Bounded convention reconciliation
+
+For the simple horizontal-tangent catenary, let the modern suspended span be
+`span`, the rise from touchdown to hang-off be `d`, and the supplied hang-off
+depth below mean sea level be `h`. The legacy `simple_catenary_plot` frame is
+related to the modern vertex frame by:
+
+```text
+X_plot = span - x_vertex
+Y_plot = z_vertex - d - h
+```
+
+The inverse has `x_vertex = span - X_plot` and
+`z_vertex = Y_plot + d + h`. Modern coordinates advance from touchdown toward
+hang-off; plot points advance from hang-off toward touchdown. At hang-off the
+plot coordinate is `(0, -h)`; at touchdown it is `(span, -d-h)`. These are
+geometric translations and a horizontal reflection, without a force or phase
+transformation. The top angle remains measured from vertical; the returned
+angle distribution remains measured from horizontal.
+
+The package-output regression uses horizontal-force, top-force and span controls
+in the modern analyzer to supply the angle to the legacy angle route. That
+route supplies the plot input, including `BendRadius`; unmodified legacy
+force-route output lacks that field and raises `KeyError` before plotting.
+The plot receives two distinct inputs, one per hang-off depth; the modern
+control variants do not establish three plot input routes.
+Three independent hand points for `a=3 m` and
+`d=2 m` establish the reflection, ordinate offset and metre scale, including
+an interior ordinate derived from `cosh(ln(3)/2)=2/sqrt(3)`. The plotting callback
+is replaced in the coordinate test to inspect the returned arrays and the
+requested mean-sea-level elevation label. A separate test reads the real
+plotting helper's axis label and checks its unchanged seabed default for the
+lazy-wave callers. No saved image or native model is produced.
+
+`route_conventions()` records static phase as `NOT_APPLICABLE`. Native exports
+receive explicit `NOT_EVALUATED` fields for units, axes, origin, angles, force
+signs and phase; they inherit no analytical defaults. This records missing
+evidence rather than choosing a native convention. The legacy force route
+returns `S`, `X`, `THorizontal` and `b`; it does not calculate `q`. A `q` already
+present in its input dictionary remains input metadata when `F`, `w` and `d`
+are supplied; a missing weight does not establish a valid force-route input.
+
+### Readiness and discovery boundaries
+
+The [historical test report](../../../../../docs/domains/catenary/catenary_test_results.md)
+refers to the separate general catenary solver and earlier repository paths.
+Its readiness statement and pass counts do not qualify this simple analyzer or
+its exports. The current package tests establish the bounded contracts listed
+above. The [module registry](../../../../../docs/registry/module-routing.yaml)
+routes discovery to the knowledge pack; domain maturity does not supply
+numerical evidence. The [workflow registry](../../../../../docs/registry/workflows.yaml)
+describes an angle-based geometry route, not a native statics result.
+Knowledge-pack sections 6 and 10 retain historical observations and discoveries;
+only a direct behavioral assertion can qualify a discovered function. This
+reconciliation does not clear the remaining inventory.
+
+### Standards and review record
+
+The following records reconcile existing repository labels, without selecting
+a governing design code or claiming inspection of licensed clause text.
+
+| Reference | Edition and clause record | Applicability / disposition |
+| --- | --- | --- |
+| DNV-OS-F201, Dynamic Risers | Report sample names 2010; a governing edition and clause are not established | NOT_EVALUATED for the simple solver and native exports |
+| API RP 1111, Design, Construction, Operation, and Maintenance of Offshore Hydrocarbon Pipelines | README names the reference without edition or clause | NOT_EVALUATED; no riser applicability inferred from the label |
+| API 5L | Material presets do not identify an edition or table | NOT_EVALUATED; presets do not establish design acceptance |
+| DNVGL-RP-C203 | April 2016, section 2.2, equation (2.2.1), as recorded in [engineering-basis.md](engineering-basis.md), E5 | Historical fatigue-report criterion only; no static catenary or native qualification inferred |
+
+Table 1. Existing standard labels and the limits of their recorded evidence.
+
+Review responsibility is assigned to the documentation and engineering
+maintainers, with riser and mooring engineering review required for clearance.
+The record remains **DRAFT** until a maintainer records the applicable edition,
+clause citation, evidence and disposition for every open item below. Role
+assignment is not evidence that a reviewer has accepted or completed the work.
+
+| Open item | Responsible maintainer | Evidence needed for clearance | Status |
+| --- | --- | --- | --- |
+| Governing standards | Engineering maintainer | Applicable editions and clause citations checked against accessible authoritative text | OPEN |
+| Native export coordinates and units | Riser and mooring engineering maintainer | Qualified type data, connection-frame transformation and target-version load/statics comparison | OPEN |
+| RAO phase and motion conventions | Riser and mooring engineering maintainer | Dataset provenance, axes/origins, phase signs and target-version comparison | OPEN |
+| Historical readiness and section-10 discoveries | Documentation maintainer | Claim-to-function-to-assertion review of the remaining inventory | OPEN |
+| Legacy force dispatch without weight and dependent sweep | Engineering maintainer | `catenaryEquation` selects its force branch on `F` alone, while the calculator requires `F`, `w` and `d`; with `F` and `q` but no `w`, the wrapper raises `KeyError` after the angle calculation. `gethorizontalDistanceHangofftoTDPrange` supplies that incomplete input and cannot complete. `test_legacy_force_without_weight_retains_open_dispatch_defect` records the wrapper failure; clearance requires corrected dispatch and a completing sweep regression. | OPEN |
+| Final clearance | Documentation and engineering maintainers | Recorded independent review and disposition of the open evidence | DRAFT |
+
+Table 2. Remaining review record for #2755; no approval is recorded.
+
+Lesson: an unevaluated route requires explicit unknown conventions; inheriting
+analytical defaults overstates its evidence.
 
 ## Governing method
 
@@ -173,15 +267,19 @@ Every historical section-6 row has a disposition in `qualification.json`, checke
 against the pack. TESTED records name package regressions; NOT_EVALUATED records
 carry a reason. Historical line numbers identify the original observation, while
 function names and updated links locate current code. The old inventory is retained
-so omissions are visible. Unqualified native exports, empirical legacy buoyancy
-sizing, RAO conventions, material presets and fatigue-input preprocessing require
-separate evidence. The legacy lazy-wave vertical-force defect is left to #2044.
+so omissions are visible. Native exports, RAO conventions, material presets and
+fatigue-spectrum applicability require separate evidence. Annular buoyancy sizing
+and numeric fatigue-bin conditioning have the bounded offline contracts in
+[input-conditioning.html](input-conditioning.html). The legacy lazy-wave
+vertical-force defect is left to #2044.
 
 ### Qualification evidence audit
 
 All 36 previously TESTED observations are checked against their named assertions.
-The revised inventory contains 35 TESTED and 51 NOT_EVALUATED observations out of
-86 historical observations. The broader-route observation remains NOT_EVALUATED:
+That audit recorded 35 TESTED and 51 NOT_EVALUATED observations. The subsequent
+input/default qualification records 53 TESTED and 33 NOT_EVALUATED observations
+out of 86 historical observations, including 33 explicit
+[input contracts](input-conditioning.html). The broader-route observation remains NOT_EVALUATED:
 a vertex overlap case cannot qualify arbitrary endpoints, elastic routes or
 native coordinate transformations. These counts describe evidence dispositions,
 not engineering acceptance or branch coverage.

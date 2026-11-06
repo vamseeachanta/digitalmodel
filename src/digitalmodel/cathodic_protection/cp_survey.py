@@ -23,6 +23,10 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from digitalmodel.cathodic_protection.reference_electrodes import (
+    ReferenceElectrode, convert_potential,
+)
+
 
 # Protection criteria
 PROTECTION_POTENTIAL_CSE: float = -0.850  # V vs Cu/CuSO4
@@ -35,15 +39,19 @@ class CISSurveyPoint(BaseModel):
 
     distance_m: float = Field(..., description="Distance along pipeline [m]")
     on_potential_V: float = Field(
-        ..., description="ON (energized) potential [V vs CSE]"
+        ..., description="ON potential [V vs survey reference electrode; default CSE]"
     )
     off_potential_V: Optional[float] = Field(
-        None, description="OFF (instant-off) potential [V vs CSE]"
+        None, description="OFF potential [V vs survey reference electrode; default CSE]"
     )
 
 
 class CISAnalysisResult(BaseModel):
     """Result of CIS data analysis."""
+
+    reference_electrode: ReferenceElectrode = ReferenceElectrode.CSE
+    protection_criterion_V: float = PROTECTION_POTENTIAL_CSE
+    overprotection_limit_V: float = OVERPROTECTION_LIMIT_CSE
 
     total_points: int = Field(..., description="Total survey points analyzed")
     protected_points: int = Field(
@@ -259,8 +267,12 @@ def classify_acvg_indication(
 def analyze_cis_survey(
     survey_points: list[CISSurveyPoint],
     use_off_potential: bool = True,
-    protection_criterion_V: float = PROTECTION_POTENTIAL_CSE,
-    overprotection_limit_V: float = OVERPROTECTION_LIMIT_CSE,
+    protection_criterion_V: float | None = None,
+    overprotection_limit_V: float | None = None,
+    *,
+    reference_electrode: ReferenceElectrode | str = "CSE",
+    zinc_potential_she_V: float | None = None,
+    temperature_c: float = 25.0,
 ) -> CISAnalysisResult:
     """Analyze close-interval survey data for protection compliance.
 
@@ -274,17 +286,47 @@ def analyze_cis_survey(
     use_off_potential : bool
         Use OFF (instant-off) potentials if available (default True).
     protection_criterion_V : float
-        Protection potential criterion [V vs CSE].
+        Explicit criterion in the survey electrode [V]. If omitted, the
+        existing CSE default is converted using the cited shared utility.
     overprotection_limit_V : float
-        Overprotection limit [V vs CSE].
+        Explicit limit in the survey electrode [V]; omitted CSE default is converted.
+    reference_electrode : ReferenceElectrode or str
+        Electrode used for all readings and returned statistics; default CSE.
+        Offsets use the 25 deg C conditions in reference_electrodes.py.
+    temperature_c : float
+        Reference conversion temperature [deg C]. Only 25.0 is supported,
+        including when native criteria are supplied; no correction is inferred.
 
     Returns
     -------
     CISAnalysisResult
         Survey analysis statistics and deficiency locations.
     """
+    reference_electrode = ReferenceElectrode(reference_electrode)
+    options = {"zinc_potential_she_V": zinc_potential_she_V, "temperature_c": temperature_c}
+    protection_criterion_V = convert_potential(
+        PROTECTION_POTENTIAL_CSE if protection_criterion_V is None else protection_criterion_V,
+        "CSE" if protection_criterion_V is None else reference_electrode,
+        reference_electrode, **options,
+    )
+    overprotection_limit_V = convert_potential(
+        OVERPROTECTION_LIMIT_CSE if overprotection_limit_V is None else overprotection_limit_V,
+        "CSE" if overprotection_limit_V is None else reference_electrode,
+        reference_electrode, **options,
+    )
+    if overprotection_limit_V >= protection_criterion_V:
+        raise ValueError("overprotection limit must be below protection criterion")
+    basis = dict(reference_electrode=reference_electrode,
+                 protection_criterion_V=protection_criterion_V,
+                 overprotection_limit_V=overprotection_limit_V)
+    for point in survey_points:
+        if not math.isfinite(point.on_potential_V) or (
+            point.off_potential_V is not None and not math.isfinite(point.off_potential_V)
+        ):
+            raise ValueError("survey potentials must be finite volts")
     if not survey_points:
         return CISAnalysisResult(
+            **basis,
             total_points=0,
             protected_points=0,
             underprotected_points=0,
@@ -322,6 +364,7 @@ def analyze_cis_survey(
     protection_pct = (protected + overprotected) / total * 100.0 if total > 0 else 0.0
 
     return CISAnalysisResult(
+        **basis,
         total_points=total,
         protected_points=protected,
         underprotected_points=underprotected,

@@ -1309,6 +1309,17 @@ workflows:
       kind: in_memory
       key: api579_pitting_screen
 
+  - id: api579-coverage-screen
+    basename: api579_coverage_screen
+    title: API 579 Parts 8, 11, 13 and 14 evidence intake (NOT_EVALUATED)
+    input: examples/workflows/api579-coverage-screen/input.yml
+    outputs: []
+    test: tests/asset_integrity/test_api579_coverage.py::test_router_and_committed_example
+    runtime: offline
+    result:
+      kind: in_memory
+      key: api579_coverage_screen
+
   - id: api579-dent-screen
     basename: api579_dent_screen
     title: Offline api579-dent-screen geometric screening and FFS report

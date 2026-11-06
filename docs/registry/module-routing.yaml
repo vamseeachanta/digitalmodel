@@ -98,6 +98,7 @@ modules:
     key_tests: [tests/citations/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#citations
   - module: corrosion
+    agent_pack: src/digitalmodel/corrosion/docs/agent-pack.md
     entry_point: src/digitalmodel/corrosion/
     maturity: development
     owner_wiki: docs/domains/README.md
@@ -259,6 +260,10 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/hydrostatics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrostatics
+    submodules:
+      hydrostatics:
+        agent_pack: src/digitalmodel/hydrostatics/docs/agent-pack.md
+        qa_family: EC
   - module: dynmoor_mooring
     entry_point: src/digitalmodel/dynmoor_mooring/
     maturity: development
@@ -266,11 +271,18 @@ modules:
     key_tests: [tests/subsea/mooring_analysis/test_dynmoor.py, tests/subsea/mooring_analysis/test_dynmoor_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#dynmoor_mooring
   - module: foam_system
+    agent_pack: src/digitalmodel/foam_system/docs/agent-pack.md
     entry_point: src/digitalmodel/foam_system/
     maturity: development
     owner_wiki: docs/domains/fire_safety/foam-system-sizing.md
     key_tests: [tests/fire_safety/test_foam_system_sizing.py, tests/fire_safety/test_foam_criteria_library.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#foam_system
+  - module: technical_safety
+    entry_point: src/digitalmodel/technical_safety/
+    maturity: development
+    owner_wiki: docs/domains/fire_safety/technical-safety-screens.html
+    key_tests: [tests/technical_safety/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#technical_safety
   - module: mooring_resilience
     entry_point: src/digitalmodel/mooring_resilience/
     submodules:
@@ -371,6 +383,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/process_diagrams/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#process_diagrams
+  - module: process_piping
+    entry_point: src/digitalmodel/process_piping/
+    maturity: beta
+    owner_wiki: docs/domains/process-piping/index.html
+    key_tests: [tests/process_piping/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#process_piping
   - module: production_chemistry
     entry_point: src/digitalmodel/production_chemistry/
     maturity: development
@@ -399,12 +417,20 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#reservoir
   - module: residual
     entry_point: src/digitalmodel/residual/
+    submodules:
+      residual:
+        agent_pack: src/digitalmodel/residual/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/residual/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#residual
   - module: seismic
     entry_point: src/digitalmodel/seismic/
+    submodules:
+      readers:
+        agent_pack: src/digitalmodel/seismic/readers/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/seismic/]
@@ -496,6 +522,9 @@ modules:
       top_level:
         agent_pack: src/digitalmodel/structural/docs/agent-pack.md
         qa_family: EC
+      offshore_container:
+        agent_pack: src/digitalmodel/structural/offshore_container/docs/agent-pack.md
+        qa_family: EC
       plate_capacity:
         agent_pack: src/digitalmodel/structural/plate_capacity/docs/agent-pack.md
         qa_family: EC
@@ -544,6 +573,9 @@ modules:
         qa_family: MR
       hipps:
         agent_pack: src/digitalmodel/subsea/hipps/docs/agent-pack.md
+        qa_family: EC
+      rov:
+        agent_pack: src/digitalmodel/subsea/rov/docs/agent-pack.md
         qa_family: EC
       on_bottom_stability:
         agent_pack: src/digitalmodel/subsea/on_bottom_stability/docs/agent-pack.md
@@ -668,6 +700,7 @@ modules:
         agent_pack: src/digitalmodel/installation/jumper_installation/docs/agent-pack.md
         qa_family: IN
   - module: lifting_lug
+    agent_pack: src/digitalmodel/lifting_lug/docs/agent-pack.md
     entry_point: src/digitalmodel/lifting_lug/
     maturity: development
     owner_wiki: docs/domains/README.md
@@ -699,6 +732,10 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/parametrics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#parametrics
+    submodules:
+      parametrics:
+        agent_pack: src/digitalmodel/parametrics/docs/agent-pack.md
+        qa_family: EC
   - module: pipelay
     entry_point: src/digitalmodel/pipelay/
     maturity: development
@@ -847,6 +884,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#materials
   - module: tug
     entry_point: src/digitalmodel/tug/
+    submodules:
+      tug:
+        agent_pack: src/digitalmodel/tug/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/README.md
     key_tests: [tests/tug/]
@@ -869,3 +910,15 @@ modules:
     owner_wiki: src/digitalmodel/riser_study/README.md
     key_tests: [tests/subsea/riser_study/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_study
+  - module: riser_bom
+    entry_point: src/digitalmodel/riser_bom/
+    maturity: development
+    owner_wiki: docs/domains/risers/bom-costing.html
+    key_tests: [tests/riser_bom/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_bom
+  - module: riser_results
+    entry_point: src/digitalmodel/riser_results/
+    maturity: development
+    owner_wiki: docs/domains/risers/results-exchange/README.md
+    key_tests: [tests/riser_results/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_results

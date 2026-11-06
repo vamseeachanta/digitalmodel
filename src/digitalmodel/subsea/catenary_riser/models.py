@@ -10,12 +10,14 @@ lazy wave configurations, buoyancy modules, and results per DNV-OS-F201 and API 
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict
 from enum import Enum
+from numbers import Real
 import numpy as np
 
 
 def _range(name, value, *, positive=False):
     """Validate finite geometric/property inputs; bounds are definitions."""
-    if not np.isfinite(value) or (value <= 0 if positive else value < 0):
+    if (isinstance(value, (bool, np.bool_)) or not isinstance(value, Real)
+            or not np.isfinite(value) or (value <= 0 if positive else value < 0)):
         bound = "positive" if positive else "nonnegative"
         raise ValueError(f"{name} must be finite and {bound}")
 
@@ -270,6 +272,8 @@ class BuoyancyModule:
     outer_coating_density: Optional[float] = None  # kg/m³
 
     def __post_init__(self):
+        if not isinstance(self.name, str) or not self.name.strip():
+            raise ValueError("module name must be a nonempty string")
         for name in ("length", "outer_diameter"):
             _range(name, getattr(self, name), positive=True)
         for name in ("buoyancy_material_density", "start_length"):

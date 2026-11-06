@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
@@ -254,7 +255,7 @@ def test_apply_no_stale_atlas_status_pin(stub_refresh_builds, capsys):
     assert "all atlases current" in capsys.readouterr().out
 
 
-def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
+def test_apply_missing_passes_key_keeps_previous_atlas(stub_refresh_builds, tmp_path, capsys):
     """A missing passes key fails validation and preserves the previous atlas."""
     ids, built = stub_refresh_builds([{}])
     previous = tmp_path / f"atlas-{ids[0]}"
@@ -265,7 +266,8 @@ def test_apply_missing_passes_key_pin(stub_refresh_builds, tmp_path, capsys):
     assert refresh.main(["--apply"]) == 2
     assert built == ids
     output = capsys.readouterr().out
-    assert "atlas-workflow-0/rebuilt/validation.json missing key 'passes'" in output
+    assert "WARNING: workflow-0 missing key 'passes'; failed validation gate" in output
+    assert "rebuilt/validation.json" not in output
     assert _file_digests(previous) == before
 
 
@@ -308,12 +310,13 @@ def disk_refresh_builds(monkeypatch, tmp_path):
             record = validations[ids.index(wid)]
             atlas = Atlas(wid, "old" if same_id else "new", "linear", "value", [],
                           pd.DataFrame({"value": [1.0]}),
-                          {} if isinstance(record, Exception) else record,
+                          record if isinstance(record, dict) else {},
                           {"content_fingerprint": "current"})
             atlas.save(destination)
             assert sorted(p.parent.name for p in root.glob("*/default.txt")) == ids
             if isinstance(record, Exception):
                 raise record
+            atlas.validation = record
             return atlas
 
         monkeypatch.setattr(build, "build_atlas_from_registry", stub_build)
@@ -384,6 +387,22 @@ def test_raising_builder_keeps_previous_and_removes_temporary_root(disk_refresh_
     assert sorted(path.name for path in root.iterdir()) == ids
 
 
+def test_later_build_error_reports_earlier_validation_failure(
+    disk_refresh_builds, capsys,
+):
+    root, ids, originals, roots, _ = disk_refresh_builds(
+        [{"passes": False}, RuntimeError("build failed")])
+    with pytest.raises(RuntimeError, match="build failed"):
+        refresh.main(["--apply"])
+    output = capsys.readouterr().out
+    assert "workflow-0 regenerated but failed validation gate" in output
+    assert "exit status 2" not in output
+    for wid in ids:
+        assert _file_digests(root / wid) == originals[wid]
+    assert all(not path.exists() for path in roots)
+    assert sorted(path.name for path in root.iterdir()) == ids
+
+
 def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     disk_refresh_builds, capsys,
 ):
@@ -391,8 +410,7 @@ def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     assert refresh.main(["--apply"]) == 2
     lines = capsys.readouterr().out.splitlines()
     assert lines[-2] == (
-        "  WARNING: workflow-0 workflow-0/new/validation.json "
-        "missing key 'passes'; failed validation gate")
+        "  WARNING: workflow-0 missing key 'passes'; failed validation gate")
     assert lines[-1] == (
         "1 rebuilt computed atlas(es) failed validation; "
         "previous version of each kept; exit status 2")
@@ -400,3 +418,192 @@ def test_malformed_rebuild_keeps_previous_and_removes_temporary_root(
     assert roots[0] != root
     assert not roots[0].exists()
     assert sorted(path.name for path in root.iterdir()) == ids
+
+
+@pytest.mark.parametrize("record", [None, 1, False, "passes", ["passes"], []])
+def test_non_mapping_validation_keeps_previous_atlas(disk_refresh_builds, capsys, record):
+    root, ids, originals, roots, _ = disk_refresh_builds([record])
+    assert refresh.main(["--apply"]) == 2
+    assert _file_digests(root / ids[0]) == originals[ids[0]]
+    assert not roots[0].exists()
+    assert "WARNING: workflow-0 validation record is not a mapping" in capsys.readouterr().out
+
+
+def test_closing_block_lists_each_failed_workflow(disk_refresh_builds, capsys):
+    root, ids, originals, _, _ = disk_refresh_builds([{}, {"passes": False}])
+    assert refresh.main(["--apply"]) == 2
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[-3:] == [
+        "  WARNING: workflow-0 missing key 'passes'; failed validation gate",
+        "  WARNING: workflow-1 regenerated but failed validation gate",
+        "2 rebuilt computed atlas(es) failed validation; "
+        "previous version of each kept; exit status 2",
+    ]
+    assert not any("WARNING:" in line for line in lines[:-3])
+    assert not any("validation.json" in line for line in lines)
+    for wid in ids:
+        assert _file_digests(root / wid) == originals[wid]
+
+
+@pytest.mark.parametrize("failure", ["before-backup", "after-backup", "install",
+                                      "after-install"])
+@pytest.mark.parametrize("error_type", [OSError, KeyboardInterrupt])
+def test_interrupted_install_restores_previous_atlas(
+    disk_refresh_builds, monkeypatch, failure, error_type,
+):
+    from digitalmodel.parametric.atlas import Atlas
+
+    root, ids, originals, roots, _ = disk_refresh_builds([{"passes": True}])
+    destination = root / ids[0]
+    rename = Path.rename
+    interruption = error_type("rename interrupted")
+
+    def failing_rename(source, target):
+        if source == destination:
+            if failure == "before-backup":
+                raise interruption
+            result = rename(source, target)
+            if failure == "after-backup":
+                raise interruption
+            return result
+        if source.name == "replacement":
+            if failure == "install":
+                raise interruption
+            result = rename(source, target)
+            if failure == "after-install":
+                raise interruption
+            return result
+        return rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", failing_rename)
+    with pytest.raises(error_type, match="interrupted") as caught:
+        refresh.main(["--apply"])
+    assert caught.value is interruption
+    if failure == "after-install":
+        assert Atlas.load(root, ids[0]).provenance["content_fingerprint"] == "current"
+        installed = _file_digests(destination)
+        for name, digest in originals[ids[0]].items():
+            if name != "default.txt":
+                assert installed[name] == digest
+    else:
+        assert _file_digests(destination) == originals[ids[0]]
+    assert not roots[0].exists()
+    assert sorted(path.name for path in root.iterdir()) == ids
+
+
+@pytest.mark.parametrize("error_type", [OSError, KeyboardInterrupt])
+def test_failed_restore_keeps_backup_and_reports_it_on_next_run(
+    disk_refresh_builds, monkeypatch, capsys, error_type,
+):
+    root, ids, originals, roots, _ = disk_refresh_builds([{"passes": True}])
+    destination = root / ids[0]
+    rename = Path.rename
+
+    def failing_rename(source, target):
+        if source.name == "replacement":
+            raise error_type("install interrupted")
+        if source.name == "previous":
+            raise OSError("restore failed")
+        return rename(source, target)
+
+    monkeypatch.setattr(Path, "rename", failing_rename)
+    with pytest.raises(OSError, match="restore failed"):
+        refresh.main(["--apply"])
+    temporary = roots[0].parent
+    assert temporary.name.startswith(".refresh-")
+    assert not destination.exists()
+    assert _file_digests(temporary / "previous") == originals[ids[0]]
+    retained = _file_digests(temporary)
+    capsys.readouterr()
+    assert refresh.main([]) == 1
+    assert capsys.readouterr().out.splitlines()[0] == (
+        f"WARNING: leftover refresh directory: {temporary.name}")
+    assert _file_digests(temporary) == retained
+
+
+def test_refresh_reports_leftover_temporary_folders_at_start(
+    stub_refresh_builds, tmp_path, capsys,
+):
+    stub_refresh_builds([])
+    leftover = tmp_path / ".refresh-interrupted"
+    leftover.mkdir()
+    (leftover / "evidence.txt").write_text("preserved", encoding="utf-8")
+    (tmp_path / ".refresh-ordinary-file").write_text("unrelated", encoding="utf-8")
+    assert refresh.main([]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == "WARNING: leftover refresh directory: .refresh-interrupted"
+    assert ".refresh-ordinary-file" not in "\n".join(lines)
+    assert (leftover / "evidence.txt").read_text(encoding="utf-8") == "preserved"
+
+
+def test_refresh_temporary_folders_are_ignored():
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "atlases/.refresh-interrupted/previous/default.txt"],
+        cwd=refresh.REPO_ROOT, capture_output=True, text=True,
+    )
+    assert result.returncode == 0
+
+
+def test_parametric_tests_have_a_hosted_job():
+    import yaml
+
+    workflow = yaml.safe_load(
+        (refresh.REPO_ROOT / ".github/workflows/parametric-atlas-drift.yml").read_text(
+            encoding="utf-8",
+        )
+    )
+    job = workflow["jobs"]["parametric-tests"]
+    assert job["runs-on"] == "ubuntu-latest"
+    assert "if" not in job
+    checkout = job["steps"][0]
+    assert checkout["uses"] == "actions/checkout@v4"
+    assert checkout["with"]["fetch-depth"] == 0
+    assert "if" not in checkout
+    drift_steps = workflow["jobs"]["atlas-drift"]["steps"]
+    for key in ("repository", "ref"):
+        assert checkout["with"][key] == drift_steps[0]["with"][key]
+    assert job["steps"][1] == drift_steps[1]
+    commands = "\n".join(step.get("run", "") for step in job["steps"])
+    assert "python -m pytest tests/parametric/" in commands
+
+
+def test_parametric_tests_retain_canonical_default_branch():
+    import yaml
+
+    workflow = yaml.safe_load(
+        (refresh.REPO_ROOT / ".github/workflows/parametric-atlas-drift.yml").read_text(
+            encoding="utf-8",
+        )
+    )
+    steps = workflow["jobs"]["parametric-tests"]["steps"]
+    history_steps = [
+        step for step in steps if "DEFAULT_REPOSITORY_URL" in step.get("env", {})
+    ]
+    assert len(history_steps) == 1
+    history_step = history_steps[0]
+    assert "if" not in history_step
+    assert history_step["shell"] == "bash"
+    assert history_step["env"] == {
+        "DEFAULT_BRANCH": "${{ github.event.repository.default_branch }}",
+        "DEFAULT_REPOSITORY_URL": "${{ github.event.repository.clone_url }}",
+    }
+    command = history_step["run"]
+    assert 'git fetch --no-tags "$DEFAULT_REPOSITORY_URL"' in command
+    assert '"+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"' in command
+    assert "--depth" not in command
+    first_fetch = command.index("git fetch ")
+    for setting in ("gc.auto 0", "maintenance.auto false"):
+        assert command.index(f"git config {setting}") < first_fetch
+    merge_step = next(step for step in steps if step.get("id") == "build_merge")
+    assert steps.index(merge_step) == 1
+    assert steps.index(merge_step) < steps.index(history_step)
+
+
+def test_fatigue_atlases_track_the_deterministic_power_module():
+    """PR 3803 review round 3: allowable cycles and SD are computed through
+    fatigue._deterministic, so a change to it must mark both atlases stale."""
+    rel = "src/digitalmodel/fatigue/_deterministic.py"
+    for basename in ("mooring_fatigue", "riser_fatigue"):
+        assert rel in refresh.SOURCE_FILES[basename], basename

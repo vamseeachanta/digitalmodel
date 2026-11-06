@@ -873,8 +873,8 @@ Each numbered record below identifies one map implementation by its symbol and t
 | 48 | `<module>` | [docs/registry/implementation-map.yaml:L931-L941] |
 | 49 | `demonstrate_usage` | [docs/registry/implementation-map.yaml:L942-L953] |
 | 50 | `<module>` | [docs/registry/implementation-map.yaml:L954-L964] |
-| 51 | `FPSOMooringFullWorkflow._baseline_span` | [docs/registry/implementation-map.yaml:L965-L976] |
-| 52 | `FPSOMooringFullWorkflow._line_tensions` | [docs/registry/implementation-map.yaml:L977-L988] |
+| 51 | `FPSOMooringFullWorkflow._baseline_span` | [docs/registry/implementation-map.yaml:L965-L978] |
+| 52 | `FPSOMooringFullWorkflow._line_tensions` | [docs/registry/implementation-map.yaml:L979-L992] |
 | 53 | `solve_catenary` | [docs/registry/implementation-map.yaml:L989-L1002] |
 | 54 | `MooringLineDesign.estimate_catenary` | [docs/registry/implementation-map.yaml:L1003-L1018] |
 | 55 | `JLayConfig.calculate_sagbend` | [docs/registry/implementation-map.yaml:L1019-L1030] |
@@ -1103,9 +1103,9 @@ Each numbered record below identifies one map implementation by its symbol and t
 | 133 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` / `VIVFatigueAnalysisComponents.get_shear7_x_by_L_from_elevation_above_mudline` | [docs/registry/implementation-map.yaml:L3556-L3565] |
 | 134 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` / `VIVFatigueAnalysisComponents.get_elevation_from_end_A_from_elevation_above_mudline` | [docs/registry/implementation-map.yaml:L3566-L3575] |
 | 135 | `_write_tensions_csv` | [docs/registry/implementation-map.yaml:L3576-L3585] |
-| 136 | `FPSOMooringFullWorkflow._line_state` | [docs/registry/implementation-map.yaml:L3586-L3597] |
-| 137 | `FPSOMooringFullWorkflow._solve_line` | [docs/registry/implementation-map.yaml:L3598-L3607] |
-| 138 | `FPSOMooringFullWorkflow._result` | [docs/registry/implementation-map.yaml:L3608-L3617] |
+| 136 | `FPSOMooringFullWorkflow._line_state` | [docs/registry/implementation-map.yaml:L3578-L3589] |
+| 137 | `FPSOMooringFullWorkflow._solve_line` | [docs/registry/implementation-map.yaml:L3590-L3599] |
+| 138 | `FPSOMooringFullWorkflow._result` | [docs/registry/implementation-map.yaml:L3600-L3609] |
 | 139 | `solve_catenary` | [docs/registry/implementation-map.yaml:L3618-L3627] |
 | 140 | `JLayConfig.calculate_sagbend` | [docs/registry/implementation-map.yaml:L3628-L3637] |
 | 141 | `SCRDesignInput.calculate_geometry` | [docs/registry/implementation-map.yaml:L3638-L3647] |
@@ -1771,7 +1771,7 @@ Each numbered record below identifies one map implementation by its symbol and t
 | 51 | `analyze_excel_file` | [docs/registry/implementation-map.yaml:L14214-L14225] |
 | 52 | `PerformanceProfiler.profile_wave_spectrum` | [docs/registry/implementation-map.yaml:L14226-L14237] |
 | 53 | `PerformanceProfiler.profile_wave_spectrum.run_spectrum` | [docs/registry/implementation-map.yaml:L14238-L14249] |
-| 54 | `FPSOMooringFullWorkflow._wave_spectrum` | [docs/registry/implementation-map.yaml:L14250-L14261] |
+| 54 | `FPSOMooringFullWorkflow._wave_spectrum` | [docs/registry/implementation-map.yaml:L14218-L14231] |
 | 55 | `operation_envelope` | [docs/registry/implementation-map.yaml:L14262-L14275] |
 | 56 | `_significant_response` | [docs/registry/implementation-map.yaml:L14276-L14287] |
 | 57 | `synthesize_directional_forecast` | [docs/registry/implementation-map.yaml:L14288-L14301] |
@@ -1938,8 +1938,8 @@ Each numbered record below identifies one map implementation by its symbol and t
 | 72 | `OCIMFDatabase.get_coefficients` | [docs/registry/implementation-map.yaml:L16127-L16136] |
 | 73 | `EnvironmentalForces.calculate_total_forces` | [docs/registry/implementation-map.yaml:L16137-L16146] |
 | 74 | `create_sample_database` | [docs/registry/implementation-map.yaml:L16147-L16156] |
-| 75 | `FPSOMooringFullWorkflow._environmental_forces` | [docs/registry/implementation-map.yaml:L16157-L16168] |
-| 76 | `FPSOMooringFullWorkflow._ocimf_database_path` | [docs/registry/implementation-map.yaml:L16169-L16178] |
+| 75 | `FPSOMooringFullWorkflow._environmental_forces` | [docs/registry/implementation-map.yaml:L16127-L16139] |
+| 76 | `FPSOMooringFullWorkflow._ocimf_database` | [docs/registry/implementation-map.yaml:L16140-L16149] |
 | 77 | `_resolve_arrow_direction_in_body_frame` | [docs/registry/implementation-map.yaml:L16179-L16188] |
 | 78 | `polar_force_overlay` | [docs/registry/implementation-map.yaml:L16189-L16198] |
 | 79 | `threshold_speed_for_steerage` | [docs/registry/implementation-map.yaml:L16199-L16208] |

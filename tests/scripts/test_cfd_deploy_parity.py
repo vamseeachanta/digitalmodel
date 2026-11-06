@@ -66,10 +66,15 @@ sys.exit(subprocess.call([os.environ["REAL_RSYNC"], *args]))
 """)
     for command in (ssh, rsync):
         command.chmod(0o755)
+    # deploy_lane.sh fails closed unless TMPDIR names its scratch directory;
+    # hosted CI runners do not export TMPDIR, so the fixture supplies one.
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
     env.update(
         PATH=f"{commands}:{env['PATH']}",
         REMOTE=str(remote),
         REAL_RSYNC=shutil.which("rsync"),
+        TMPDIR=str(scratch),
     )
     return repo, remote, env, tree
 

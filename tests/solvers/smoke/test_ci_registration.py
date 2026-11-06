@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Keep this new test directory in the explicit solver-smoke CI invocation."""
 
 import importlib.util
@@ -5,6 +8,7 @@ from pathlib import Path
 import shlex
 import sys
 
+import pytest
 import yaml
 
 
@@ -30,3 +34,67 @@ def test_touched_source_and_new_test_paths_select_smoke(monkeypatch):
                     "tests/solvers/smoke/test_orcaflex_probe_contract.py"]:
         selected = detector.touched_domains([changed], domains)
         assert "solver-smoke" in {domain.name for domain in selected}
+
+
+@pytest.mark.parametrize("event", ["push", "pull_request"])
+def test_public_mesh_changes_trigger_gmsh_workflow(event):
+    workflow_path = ".github/workflows/gmsh-meshing-tests.yml"
+    workflow = yaml.safe_load((ROOT / workflow_path).read_text())
+    # PyYAML's YAML 1.1 loader treats the Actions key "on" as True.
+    events = workflow.get("on", workflow.get(True))
+    mesh_test = "tests/hydrodynamics/test_oc4_public_mesh.py"
+    registration_test = "tests/solvers/smoke/test_ci_registration.py"
+    example = "examples/hydrodynamics/oc4-semisub/**"
+    assert {mesh_test, registration_test, example} <= set(events[event]["paths"])
+
+
+def test_public_mesh_tests_execute_with_locked_gmsh_and_runtime():
+    workflow = yaml.safe_load(
+        (ROOT / ".github/workflows/gmsh-meshing-tests.yml").read_text()
+    )
+    mesh_test = "tests/hydrodynamics/test_oc4_public_mesh.py"
+    registration_test = "tests/solvers/smoke/test_ci_registration.py"
+    steps = workflow["jobs"]["focused-tests"]["steps"]
+    commands = [
+        shlex.split(step["run"].replace("\\\n", " ")) for step in steps if "run" in step
+    ]
+    test_commands = [args for args in commands if "pytest" in args]
+    assert any({mesh_test, registration_test} <= set(args) for args in test_commands)
+    assert any("libglu1-mesa" in args for args in commands)
+    assert any(
+        args[:2] == ["uv", "sync"]
+        and "--frozen" in args
+        and "cfd" in args
+        and "test" in args
+        for args in commands
+    )
+    assert any(
+        "--frozen" in args and "cfd" in args and "test" in args and mesh_test in args
+        for args in test_commands
+    )
+
+
+def test_extended_band_regressions_are_selected_and_executed():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/gmsh-meshing-tests.yml").read_text())
+    events = workflow.get("on", workflow.get(True))
+    paths = {"tests/hydrodynamics/test_oc4_extended_band.py",
+             "tests/hydrodynamics/test_oc4_complex_export.py"}
+    for event in ("push", "pull_request"):
+        assert paths <= set(events[event]["paths"])
+    commands = [shlex.split(step["run"].replace("\\\n", " "))
+                for step in workflow["jobs"]["focused-tests"]["steps"] if "run" in step]
+    assert any("pytest" in args and paths <= set(args) for args in commands)
+
+
+def test_staged_band_and_tail_regressions_are_selected_and_executed():
+    workflow = yaml.safe_load((ROOT / ".github/workflows/gmsh-meshing-tests.yml").read_text())
+    paths = {"tests/hydrodynamics/test_oc4_staged_band.py",
+             "tests/hydrodynamics/test_oc4_tail_bound.py",
+             "tests/hydrodynamics/test_oc4_damage_tail.py",
+             "tests/hydrodynamics/test_oc4_retained_measurements.py"}
+    events = workflow.get("on", workflow.get(True))
+    for event in ("push", "pull_request"):
+        assert paths <= set(events[event]["paths"])
+    commands = [shlex.split(step["run"].replace("\\\n", " "))
+                for step in workflow["jobs"]["focused-tests"]["steps"] if "run" in step]
+    assert any("pytest" in args and paths <= set(args) for args in commands)

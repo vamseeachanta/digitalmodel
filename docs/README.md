@@ -52,6 +52,7 @@ reviewed, and intended for repeat use:
 - [Common analysis workflow](standards/engineering-analysis-workflow.html)
 - [ANSYS analysis workflow](domains/ansys/analysis-workflow.html)
 - [AQWA analysis workflow](domains/aqwa/analysis-workflow.html)
+- [Welded-padeye parametric demand analysis](domains/lifting/welded-padeye.html) — offline demands, exact lookup and worked example; historical reproduction remains unverified
 - focused tests that validate these surfaces
 
 The criteria and workflow definitions are documentation surfaces; the module routing registry remains unchanged. The existing documentation-routing tests remain applicable to their original contracts and do not establish criteria adoption or automated workflow enforcement.
@@ -67,6 +68,10 @@ candidate files, but they do not replace the curated routing surfaces above.
 - [Pipelay stress and integrity analysis](reports/modules/installation_pipelay/index.html) — Pure calculation methods, independent synthetic examples and unresolved qualification evidence.
 
 ## Knowledge pack review evidence
+
+Use the [Python source locator convention](standards/python-source-locators.md)
+for citations in pack prose and tables. It documents formatter-stable inline
+code and the existing document-scoped citation check.
 
 The [pipelay review and clearance index](registry/pipelay-review-clearance.json)
 links durable lesson entries, review responsibilities and C01–C07 evidence to

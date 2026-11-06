@@ -98,7 +98,8 @@ class ComprehensiveBenchmark:
                         datasets['xlarge'].append(str(sim_file))
         
         # Also check runtime test directory for real production files
-        runtime_dir = Path("D:/1522/ctr7/orcaflex/rev_a08/runtime_test")
+        # (under DIGITALMODEL_PRIVATE_DATA; skipped when absent)
+        runtime_dir = Path(os.environ.get("DIGITALMODEL_PRIVATE_DATA", "<project_data>")) / "ctr7" / "orcaflex" / "rev_a08" / "runtime_test"
         if runtime_dir.exists():
             for sim_file in runtime_dir.glob("*.sim"):
                 size_mb = sim_file.stat().st_size / 1e6

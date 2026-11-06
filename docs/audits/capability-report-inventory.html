@@ -13,11 +13,11 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody>
 <tr><td>0</td><td>2026-10-25</td><td>Initial reviewed subset separates accessible records, indicative examples and unresolved evidence so report improvements can be prioritized.</td></tr>
-<tr><td>1</td><td>2026-11-06</td><td>Re-observe the synthetic pipeline and diffraction record presence and refresh four changed source digests; retain all qualification limits. Refresh tracked report discovery to include the pipelay module page.</td></tr>
-<tr><td>2</td><td>2026-11-06</td><td>Record the current observation time and source revision after checking retained source digests and report discovery; preserve existing judgments and qualification limits. Main integration and a subsequent inventory rebuild remain outstanding.</td></tr>
+<tr><td>1</td><td>2026-11-05</td><td>Refresh the pipeline manifest observation after calculation sources changed; retain synthetic scope and qualification limits.</td></tr>
+<tr><td>2</td><td>2026-11-06</td><td>Discover the retained pipelay stress and integrity analysis; preserve the reviewed subset, source observations and qualification limits.</td></tr>
 </tbody></table>
 <h2>Scope and method</h2>
-<p>Observation time: 2026-11-06T09:51:17Z. Source revision: <code>fdd6245c36445a187bc521d00a3e6d290ceb0511</code>.</p>
+<p>Observation time: 2026-11-06T16:55:04Z. Source revision: <code>e30d22a67ff5a5e6149015748e5932f8145a1f9d</code>.</p>
 <p>Discovery roots: docs/benchmarks, docs/domains/openfoam, docs/reports, docs/subsea/cross_sections.</p>
 <p>41 tracked HTML pages were enumerated; 36 are outside the reviewed subset. Supporting pages are included in discovery. This is not a complete repository census.</p>
 <p>Only tracked, public paths are eligible. No report producer or solver runs. Audit outputs are excluded from discovery and source hashes. The JSON observations block preserves judgments, criteria, observation time and source digests. Regeneration refuses stale source digests. Links assume publication in docs/audits; an output directory elsewhere is staging only. There is no generated timestamp to exclude.</p>
@@ -110,19 +110,19 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 <p>Report source: <a href="../reports/pipeline-ffs-assessment.html">docs/reports/pipeline-ffs-assessment.html</a>. Generator: <a href="../../scripts/reporting/build_pipeline_ffs_report.py">scripts/reporting/build_pipeline_ffs_report.py</a>.</p>
 <p>Test sources (execution not asserted): <a href="../../tests/asset_integrity/test_pipeline_ffs_assessment.py">tests/asset_integrity/test_pipeline_ffs_assessment.py</a>.</p>
 <p>Criterion: Record-retention criterion only: an accessible result sidecar, explicit scenario inputs and decision assumptions, and source digests. No operating-asset or engineering-accuracy criterion is assessed.</p>
-<p>Observation: The sidecar contains synthetic assessment outputs, input and calculation-source digest fields, and a report digest. Its stated intended use excludes actual operating-asset qualification. RETAINED refers only to accessible records.</p>
+<p>Observation: The sidecar contains synthetic assessment outputs, input and calculation-source digest fields, and a report digest. Its stated intended use excludes actual operating-asset qualification. RETAINED refers only to accessible records. The refreshed manifest records updated calculation-source digests; evidence status and qualification are unchanged.</p>
 <p>Evidence references:</p><ul>
 <li>criterion: <a href="../../examples/workflows/pipeline-ffs-assessment/assumptions.yml">examples/workflows/pipeline-ffs-assessment/assumptions.yml</a></li>
 <li>criterion: <a href="../../examples/workflows/pipeline-ffs-assessment/input.yml">examples/workflows/pipeline-ffs-assessment/input.yml</a></li>
 <li>result: <a href="../reports/pipeline-ffs-assessment.manifest.json">docs/reports/pipeline-ffs-assessment.manifest.json</a></li>
 </ul><p>Limitations:</p><ul>
 <li>The example uses synthetic inputs and assumed decision and remaining-life routes.</li>
-<li>Embedded calculation-source digest fields were located but not independently revalidated by this inventory.</li>
+<li>Calculation-source digests identify implementation content, not independent numerical or engineering validation.</li>
 <li>Listed tests were inspected as sources, not executed; no numerical agreement or engineering accuracy is asserted.</li>
 <li>The scenario assumptions are declared criteria, not independent validation references.</li>
 </ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
 <li><a href="../reports/pipeline-ffs-assessment.html">docs/reports/pipeline-ffs-assessment.html</a>: <code>488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f</code></li>
-<li><a href="../reports/pipeline-ffs-assessment.manifest.json">docs/reports/pipeline-ffs-assessment.manifest.json</a>: <code>a661abec53d3552ec20879fb1bf22fe037c7dc3594c1014924f87151a2c4ea54</code></li>
+<li><a href="../reports/pipeline-ffs-assessment.manifest.json">docs/reports/pipeline-ffs-assessment.manifest.json</a>: <code>d94c2fe29c609fd5fe565f05496e7c8fe50069575525108d5c2e78511c917a4c</code></li>
 <li><a href="../../examples/workflows/pipeline-ffs-assessment/assumptions.yml">examples/workflows/pipeline-ffs-assessment/assumptions.yml</a>: <code>f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952</code></li>
 <li><a href="../../examples/workflows/pipeline-ffs-assessment/input.yml">examples/workflows/pipeline-ffs-assessment/input.yml</a>: <code>af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b</code></li>
 <li><a href="../../scripts/reporting/build_pipeline_ffs_report.py">scripts/reporting/build_pipeline_ffs_report.py</a>: <code>194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578</code></li>

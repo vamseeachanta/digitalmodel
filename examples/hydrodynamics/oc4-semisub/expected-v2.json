@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "case": {
+    "depth_m": 1500,
+    "interior_lid": true,
+    "density_kg_m3": 1025,
+    "gravity_m_s2": 9.80665,
+    "frequency_specification": "input-specification-v2.json",
+    "deck_headings_deg": [
+      -180,
+      -135,
+      -90,
+      -45,
+      0,
+      45,
+      90,
+      135,
+      180
+    ]
+  },
+  "mass_properties": {
+    "mass_kg": 13473000,
+    "centre_of_mass_m": [
+      0,
+      0,
+      -13.46
+    ],
+    "inertia_about_com_kg_m2": [
+      [
+        6827000000,
+        0,
+        0
+      ],
+      [
+        0,
+        6827000000,
+        0
+      ],
+      [
+        0,
+        0,
+        12260000000
+      ]
+    ],
+    "basis": "Supplied historical platform basis, unchanged; system suitability unverified"
+  },
+  "historical_failures": {
+    "DF5.2": "FAIL",
+    "DF5.3": "FAIL"
+  },
+  "historical_criteria": "Not supplied; original records and acceptance criteria remain governing",
+  "native_acceptance": "OPEN",
+  "reference_lid": "Separate checked mesh; native automatic lid requires readback"
+}

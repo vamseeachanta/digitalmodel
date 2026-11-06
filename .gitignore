@@ -19,6 +19,7 @@
 /requirements-*.txt
 
 # Prevent temporary files in root
+/atlases/.refresh-*/
 /tmp*
 /temp*
 /*.tmp
@@ -640,3 +641,4 @@ docs/reports/abstracted-hulls/*
 /scripts/reports/*
 !/scripts/reports/build_installation_pipelay_module_report.py
 !/scripts/reports/build_vessel_seakeeping_module_report.py
+!/docs/reports/

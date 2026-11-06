@@ -115,6 +115,59 @@ class TestS12Qualification(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.builder.build_report(self.spec)
 
+    def test_changed_source_metadata_is_rejected(self):
+        for field, value in (
+            ("document", "Different source"),
+            ("url", "https://example.org/later-edition.pdf"),
+            ("pdf_pages", 47),
+            ("pdf_pages", 46.0),
+        ):
+            with self.subTest(field=field, value=value):
+                changed = copy.deepcopy(self.spec)
+                changed["source_document"][field] = value
+                with self.assertRaisesRegex(ValueError, "S12 source metadata"):
+                    self.builder.build_report(changed)
+        for field in ("document", "url", "pdf_pages"):
+            with self.subTest(missing=field):
+                changed = copy.deepcopy(self.spec)
+                del changed["source_document"][field]
+                with self.assertRaisesRegex(ValueError, "S12 source metadata"):
+                    self.builder.build_report(changed)
+
+    def test_changed_citation_locations_are_rejected(self):
+        for key in ("tsa", "mass_output", "resistance", "depletion", "utilisation"):
+            for field, original in self.spec["citations"][key].items():
+                values = ("Later-edition locator",) if isinstance(original, str) else (
+                    original + 1, float(original), str(original), None,
+                )
+                for value in values:
+                    with self.subTest(citation=key, field=field, value=value):
+                        changed = copy.deepcopy(self.spec)
+                        changed["citations"][key][field] = value
+                        with self.assertRaisesRegex(ValueError, "S12 citation metadata"):
+                            self.builder.build_report(changed)
+
+    def test_incomplete_or_extended_citation_records_are_rejected(self):
+        for field in self.spec["citations"]["mass_output"]:
+            with self.subTest(missing=field):
+                changed = copy.deepcopy(self.spec)
+                del changed["citations"]["mass_output"][field]
+                with self.assertRaises(ValueError):
+                    self.builder.build_report(changed)
+        changed = copy.deepcopy(self.spec)
+        changed["citations"]["tsa"]["qualification_status"] = "PASS"
+        with self.assertRaisesRegex(ValueError, "S12 citation metadata"):
+            self.builder.build_report(changed)
+
+    def test_malformed_reference_sections_are_rejected(self):
+        for section in ("source_document", "proposed_route", "citations"):
+            for value in (None, [], "unbound reference"):
+                with self.subTest(section=section, value=value):
+                    changed = copy.deepcopy(self.spec)
+                    changed[section] = value
+                    with self.assertRaisesRegex(ValueError, "S12 reference section"):
+                        self.builder.build_report(changed)
+
     def test_report_is_detached_from_the_specification(self):
         original = copy.deepcopy(self.spec)
         report = self.builder.build_report(self.spec)

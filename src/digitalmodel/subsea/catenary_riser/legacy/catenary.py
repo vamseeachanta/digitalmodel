@@ -3,7 +3,6 @@
 from typing import Dict, Any
 
 from digitalmodel.subsea.catenary_riser.legacy.catenary_equation import CatenaryCalculator
-from digitalmodel.subsea.catenary_riser.legacy.catenary_riser import catenary_riser
 
 catenary_calculator = CatenaryCalculator()
 
@@ -23,15 +22,21 @@ class Catenary:
         Args:
             cfg (Dict[str, Any], optional): Configuration dictionary
         """
-        calculation = cfg.get(
-            "calculation", cfg.get("meta", {}).get("calculation", None)
-        )
-        if not calculation:
-            return cfg
+        if not isinstance(cfg, dict):
+            raise ValueError("calculation requires a configuration dictionary")
+        calculation = cfg.get("calculation")
+        if calculation is None:
+            metadata = cfg.get("meta", {})
+            if not isinstance(metadata, dict):
+                raise ValueError("calculation metadata must be a dictionary")
+            calculation = metadata.get("calculation")
+        if calculation not in ("catenary", "catenary_riser"):
+            raise ValueError("calculation must be catenary or catenary_riser")
 
         if calculation == "catenary":
             cfg = catenary_calculator.calculate(cfg)
-        elif "catenary_riser" in calculation:
+        elif calculation == "catenary_riser":
+            from .catenary_riser import catenary_riser
             cfg = catenary_riser(cfg)
 
         return cfg

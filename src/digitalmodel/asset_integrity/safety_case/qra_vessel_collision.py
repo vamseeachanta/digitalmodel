@@ -14,6 +14,10 @@ It also supplies no mooring response at this integration boundary. Interaction
 force is not impact force or collision energy; even finite nonzero loads cannot
 fill missing collision inputs. No force-to-fatality coefficient is invented.
 
+An optional technical_safety ShipImpactResult retains the independently
+calculated kinetic-energy screen and its cited comparator. It does not supply
+collision probability, absorbed structural energy, damage or fatalities.
+
 The caller supplies annual transits, probability of a collision conditional
 on one counted transit, mean fatalities conditional on a collision, and the
 bases for all three. Traffic geometry, causation, avoidance and exposure belong
@@ -32,6 +36,8 @@ from dataclasses import dataclass
 from typing import Annotated, Mapping
 
 from pydantic import BaseModel, ConfigDict, Field
+
+from digitalmodel.technical_safety.accidental_loads import ShipImpactResult
 
 from .mah_register import MajorAccidentHazard, NonNegative, Text
 
@@ -70,6 +76,7 @@ class VesselCollisionResult:
     inputs: VesselCollisionInputs
     interaction_forces: PassingShipForceEvidence | None
     missing_inputs: tuple[str, ...]
+    impact_screen: ShipImpactResult | None = None
 
 
 def assess_vessel_collision(
@@ -80,6 +87,7 @@ def assess_vessel_collision(
     barriers: tuple[str, ...],
     responsible_roles: tuple[str, ...],
     passing_ship_forces: Mapping[str, float] | None = None,
+    impact_screen: ShipImpactResult | None = None,
 ) -> VesselCollisionResult:
     """Calculate scenario frequency and expected fatalities, retaining provenance.
 
@@ -91,6 +99,8 @@ def assess_vessel_collision(
     one string. A MAHRegister CSV round-trip preserves that text but cannot
     reconstruct the separate bases; retain result.inputs for their structure.
     """
+    if impact_screen is not None and not isinstance(impact_screen, ShipImpactResult):
+        raise TypeError("impact_screen must be a ShipImpactResult")
     missing = tuple(
         field
         for field in ("collision_probability_per_transit", "fatalities_per_collision")
@@ -116,4 +126,4 @@ def assess_vessel_collision(
         if passing_ship_forces is not None
         else None
     )
-    return VesselCollisionResult(hazard, inputs, forces, missing)
+    return VesselCollisionResult(hazard, inputs, forces, missing, impact_screen)

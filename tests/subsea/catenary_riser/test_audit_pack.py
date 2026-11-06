@@ -126,7 +126,7 @@ def test_pack_line_anchors_resolve_at_head():
 
 @pytest.mark.parametrize("symptom,symbol", [
     ("Unrecognized status has empty styling", "_status_span"),
-    ("Any builder incompatibility silently selects fallback HTML", "render_html"),
+    ("Builder incompatibility selects explicitly marked fallback HTML", "render_html"),
 ])
 def test_report_behavior_anchors_start_at_named_function(symptom, symbol):
     pack = (PACKAGE / "docs/agent-pack.md").read_text()
