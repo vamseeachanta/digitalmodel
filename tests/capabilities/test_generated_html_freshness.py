@@ -242,6 +242,20 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     }
 
 
+def test_pipelay_report_has_scoped_ownership(monkeypatch) -> None:
+    """Classify the module report while retaining producer discovery enforcement."""
+    script = "scripts/reports/build_installation_pipelay_module_report.py"
+    reason = checker.DISCOVERY_FALSE_POSITIVES.get(script, "")
+    assert "docs/reports/modules/installation_pipelay" in reason
+    assert "tests/reporting/test_installation_pipelay_module_report.py" in reason
+    assert script in checker.discover_candidate_generators(checker.REPO)
+
+    monkeypatch.delitem(checker.DISCOVERY_FALSE_POSITIVES, script)
+    assert checker.validate_registry(checker.REPO) == [
+        f"unregistered candidate generator(s): {script}"
+    ]
+
+
 def test_surface_crack_report_has_scoped_ownership(monkeypatch) -> None:
     """Classify the domain report while keeping producer discovery enforced."""
     script = "scripts/studies/surface_crack_verdict.py"
