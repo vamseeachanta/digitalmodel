@@ -1,10 +1,10 @@
 {
   "report": "mooring-touchdown-catenary",
-  "revision": "02",
+  "revision": "03",
   "date": "2026-11-06",
   "changes": [
-    "Restricted gating digests to calculation and oracle dependencies, so reference-only edits do not invalidate the report.",
-    "Displayed the maximum relative difference in scientific notation, identified the derived weight input and documented a generic rebuild command."
+    "Clarified the pinned set as the Case A regression, calculation sources and builder; the report oracle remains reference only, correcting the description in revision 02.",
+    "Preserved two decimal places for the derived weight input so the displayed conversion retains 9.81 kN/m."
   ],
   "history": [
     {
@@ -23,6 +23,15 @@
       "changes": [
         "Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.",
         "Added the textbook equation basis and retained the first issue in the revision history."
+      ]
+    },
+    {
+      "report": "mooring-touchdown-catenary",
+      "revision": "02",
+      "date": "2026-11-06",
+      "changes": [
+        "Restricted gating digests to calculation and oracle dependencies, so reference-only edits do not invalidate the report.",
+        "Displayed the maximum relative difference in scientific notation, identified the derived weight input and documented a generic rebuild command."
       ]
     }
   ]

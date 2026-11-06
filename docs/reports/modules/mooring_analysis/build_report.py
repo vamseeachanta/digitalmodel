@@ -19,7 +19,7 @@ from digitalmodel.subsea.mooring_analysis.catenary import CatenaryAnalyzer
 from digitalmodel.subsea.mooring_analysis.models import LineType, MooringLineProperties
 
 ROOT = Path(__file__).resolve().parents[4]
-REVISION, DATE = "02", "2026-11-06"  # Fixed issue revision, never runtime metadata.
+REVISION, DATE = "03", "2026-11-06"  # Fixed issue revision, never runtime metadata.
 CASE = "tests/subsea/mooring_analysis/test_catenary_geometry.py"
 PACKAGE = "src/digitalmodel/subsea/mooring_analysis/"
 TESTS = "tests/subsea/mooring_analysis/"
@@ -47,15 +47,24 @@ SECOND_ISSUE = {
         "Added the textbook equation basis and retained the first issue in the revision history.",
     ],
 }
+THIRD_ISSUE = {
+    "report": FIRST_ISSUE["report"],
+    "revision": "02",
+    "date": "2026-11-06",
+    "changes": [
+        "Restricted gating digests to calculation and oracle dependencies, so reference-only edits do not invalidate the report.",
+        "Displayed the maximum relative difference in scientific notation, identified the derived weight input and documented a generic rebuild command.",
+    ],
+}
 CHANGES = {
     "report": FIRST_ISSUE["report"],
     "revision": REVISION,
     "date": DATE,
     "changes": [
-        "Restricted gating digests to calculation and oracle dependencies, so reference-only edits do not invalidate the report.",
-        "Displayed the maximum relative difference in scientific notation, identified the derived weight input and documented a generic rebuild command.",
+        "Clarified the pinned set as the Case A regression, calculation sources and builder; the report oracle remains reference only, correcting the description in revision 02.",
+        "Preserved two decimal places for the derived weight input so the displayed conversion retains 9.81 kN/m.",
     ],
-    "history": [FIRST_ISSUE, SECOND_ISSUE],
+    "history": [FIRST_ISSUE, SECOND_ISSUE, THIRD_ISSUE],
 }
 # These are repository evidence, not a second material dataset or standards copy.
 SOURCE_PATHS = {
@@ -184,7 +193,7 @@ def numeric(record, group, key) -> str:
         item = quantity(record[group][key], "%", "abs(computed-independent)/abs(independent)*100")
     else:
         item = record[group][key]
-    digits = 2 if key == "gravity" else 1  # Preserve declared input precision.
+    digits = 2 if group != "difference" and key in {"gravity", "weight_per_length"} else 1
     attrs = {"data-value": f"{group}.{key}", "data-unit": item["unit"],
              "data-source": item["source"], "data-equation": item["equation"]}
     attributes = " ".join(f'{k}="{html.escape(v, quote=True)}"' for k, v in attrs.items())
@@ -225,7 +234,7 @@ def build(record: dict) -> str:
          numeric(record, "computed", key), numeric(record, "independent", key),
          numeric(record, "difference", key), html.escape(EQUATIONS[key]) + "; " + link("case-a", "Case A")]
         for key in UNITS
-    ], "Table 3. Computed results compared with integrated identities. Comparisons are displayed to one decimal place; tests retain unrounded values.")
+    ], "Table 3. Computed results compared with integrated identities. The derived weight is displayed to two decimal places; other results and all differences use one decimal place. Tests retain unrounded values.")
     max_difference = max(record["difference"].values())
     verdict = ("Numerical agreement criterion met" if max_difference <= record["criterion_percent"]
                else "Numerical agreement criterion exceeded")
@@ -238,7 +247,7 @@ def build(record: dict) -> str:
         [html.escape(source["id"]), link(source["id"]),
          html.escape(source["locator"]) + "; " + html.escape(source["role"])]
         for source in sources["sources"]
-    ], "Table 4. Only calculation and oracle dependencies are pinned by SHA-256; other sources are references without gating digests.")
+    ], "Table 4. Only the Case A regression, calculation sources and builder are pinned by SHA-256; other sources are references without gating digests.")
     sections = [
         f'<p>This mooring analysis documents one synthetic, uniform touchdown catenary. {html.escape(comparison)}</p>'
         '<p>No full-module, standards-compliance or solver-qualification claim is made. The result supplies an arithmetic control and a documented way forward.</p>'

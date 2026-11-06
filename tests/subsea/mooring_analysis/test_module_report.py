@@ -163,7 +163,7 @@ def assert_visible(page, record, fresh):
             binding = f"{group}.{key}"
             expected_bindings.add(binding)
             attrs, visible = page.numbers[binding]
-            digits = 2 if key == "gravity" else 1  # Preserve declared input g.
+            digits = 2 if key in {"gravity", "weight_per_length"} else 1
             assert attrs["data-unit"] == unit
             assert attrs["data-source"] == "case-a"
             assert visible == f"{record[group][key]['value']:.{digits}f} {unit}"
@@ -350,3 +350,34 @@ def test_derived_input_is_distinguished_from_solver_results():
     assert "weight_per_length (derived input)" in page
     assert "Calculated value and unit" in page
     assert "Module result and unit" not in page
+
+
+@pytest.mark.parametrize("version", ["rebuilt", "committed"])
+def test_digest_caption_names_the_pinned_sources(version):
+    """Describe the pinned Case A test without claiming to pin this oracle."""
+    builder = load_builder()
+    text = (builder.build(builder.calculate()) if version == "rebuilt"
+            else (REPORT / "report.html").read_text(encoding="utf-8"))
+    visible = " ".join(Page(text).visible)
+    assert (
+        "Only the Case A regression, calculation sources and builder are pinned by SHA-256"
+        in visible
+    )
+    assert "Only calculation and oracle dependencies are pinned" not in visible
+    changes = (builder.CHANGES if version == "rebuilt"
+               else json.loads((REPORT / "changes.json").read_text(encoding="utf-8")))
+    assert "Case A regression, calculation sources and builder" in " ".join(changes["changes"])
+
+
+@pytest.mark.parametrize("version", ["rebuilt", "committed"])
+def test_derived_weight_preserves_conversion_precision(version):
+    """Keep the declared 9.81 kN/m conversion visible in both result columns."""
+    builder = load_builder()
+    text = (builder.build(builder.calculate()) if version == "rebuilt"
+            else (REPORT / "report.html").read_text(encoding="utf-8"))
+    page = Page(text)
+    for group in ("computed", "independent"):
+        attrs, value = page.numbers[f"{group}.weight_per_length"]
+        assert attrs["data-unit"] == "kN/m"
+        assert value == "9.81 kN/m"
+    assert page.numbers["difference.weight_per_length"][1] == "0.0 %"
