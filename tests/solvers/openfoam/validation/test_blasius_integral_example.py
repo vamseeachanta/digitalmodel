@@ -74,10 +74,25 @@ def test_reference_case_ceiling_accepted(compare_coefficients):
     assert result["re_l"] == 10000.0
 
 
-@pytest.mark.parametrize("re_l", [math.nextafter(10000.0, math.inf), 100000.0])
+@pytest.mark.parametrize("re_l", [10000.0 * (1.0 + 2.0e-12), 100000.0])
 def test_above_reference_range_rejected(compare_coefficients, re_l):
     with pytest.raises(ValueError, match="re_l exceeds the example limit of 10000"):
         compare_coefficients(re_l, 1.0, 1.0)
+
+
+def test_reference_boundary_accepts_roundoff(compare_coefficients):
+    result = compare_coefficients(math.nextafter(10000.0, math.inf), 1.0, 1.0)
+    assert result["re_l"] == math.nextafter(10000.0, math.inf)
+
+
+def test_reference_boundary_in_feet(compare_coefficients):
+    # Synthetic SI inputs converted consistently to feet; roundoff puts Re_L
+    # just above 10000. Conversion inputs are explicit regression fixtures.
+    feet = compare_coefficients(
+        3.2808398950131235, 0.32808398950131235, 1.0763910416709722e-4
+    )
+    si = compare_coefficients(1.0, 0.1, 1.0e-5)
+    assert feet == pytest.approx(si)
 
 
 def test_blasius_example_units(compare_coefficients):

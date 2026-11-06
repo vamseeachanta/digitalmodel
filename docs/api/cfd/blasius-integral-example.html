@@ -30,7 +30,10 @@
     <tbody><tr><td>1</td><td>2026-10-27</td><td>Added the analytical integral and
     unit example to distinguish local friction from the plate mean.</td></tr>
     <tr><td>2</td><td>2026-11-06</td><td>Documented input and applicability
-    checks, numerical quadrature tests and the source location.</td></tr></tbody>
+    checks, numerical quadrature tests and the source location.</td></tr>
+    <tr><td>3</td><td>2026-11-06</td><td>Allowed unit-conversion roundoff
+    at the reference-case ceiling and clarified that the chosen value is not
+    an analytical applicability limit.</td></tr></tbody>
   </table>
 
   <h2>Basis and coefficient definition</h2>
@@ -41,10 +44,13 @@
   That coefficient is retained without fitting. The example assumes steady,
   incompressible laminar flow with uniform free-stream speed, constant
   kinematic viscosity and zero pressure gradient.</p>
-  <p>The accepted range is <code>0 &lt; Re_L &lt;= 10000</code>, capped at
-  the repository's <code>FlatPlateConfig</code> laminar reference case in
+  <p>The chosen reference-case ceiling is <code>Re_L=10000</code>, taken from
+  the default target in the repository's <code>FlatPlateConfig</code> in
   <code>src/digitalmodel/solvers/openfoam/validation/flat_plate.py</code>.
-  This is a conservative example limit, not a general transition criterion.
+  The comparison accepts up to <code>10000*(1+1e-12)</code> to allow
+  floating-point roundoff when converting consistent units. This reference-case
+  value is not an applicability or transition limit of the analytical law;
+  laminar-flow validity must be assessed separately for other cases.
   All three inputs and the computed Reynolds number must be finite and positive;
   the example raises <code>ValueError</code> outside those limits.</p>
   <p>Here <code>Re_x = U*x/nu</code> and
@@ -100,7 +106,7 @@ Plate coefficient from helper = 1.328e-02
 integral / Cf(L) = 2.0</pre>
   <p>The companion tests numerically integrate the local power law with
   <code>x=t^2</code> to remove its endpoint singularity, check
-  the hand calculation, repeat the calculation in centimetres and execute
+  the hand calculation, repeat the calculation in centimetres and feet, and execute
   the saved example. The existing helper's constants are not imported as
   expected values. Rejection tests cover invalid inputs, an unrepresentable
   Reynolds number and values above the reference-case limit.</p>

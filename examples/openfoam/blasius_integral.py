@@ -22,8 +22,10 @@ def compare_coefficients(
     plate length in m and kinematic viscosity in m^2/s. The Reynolds number
     and both coefficients are dimensionless. The flow is assumed steady,
     incompressible, laminar and at zero pressure gradient on one plate face.
-    This example accepts 0 < Re_L <= 10000, capped at the repository's
-    FlatPlateConfig reference case; this is not a general transition criterion.
+    The reference-case ceiling is Re_L=10000, taken from the repository's
+    FlatPlateConfig default. A relative tolerance of 1e-12 allows floating-point
+    roundoff from consistent unit conversions. This chosen reference-case value
+    is not an applicability or transition limit of the analytical law.
 
     Args:
         velocity: Uniform free-stream speed in length units per time unit.
@@ -48,7 +50,7 @@ def compare_coefficients(
     re_l = velocity * length / kinematic_viscosity
     if not math.isfinite(re_l) or re_l <= 0.0:
         raise ValueError("re_l must be finite and positive")
-    if re_l > 10000.0:
+    if re_l > 10000.0 * (1.0 + 1.0e-12):
         raise ValueError("re_l exceeds the example limit of 10000")
     cf_at_l = 0.664 / math.sqrt(re_l)  # Local law from the cited SU2 tutorial.
     # Cf(x) = Cf(L)*sqrt(L/x). Its improper integral divided by L is
