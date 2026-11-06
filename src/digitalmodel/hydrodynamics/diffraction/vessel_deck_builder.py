@@ -160,7 +160,7 @@ class DeckResult:
 
     vessel: str
     form: str
-    deck_path: Path  # intended native deck path; absent for a placeholder
+    deck_path: Path  # intended destination; does not establish current output
     spec_path: Path  # canonical DiffractionSpec (spec.yml) — batch-runner input
     mesh_path: Optional[Path]
     mesh_kind: str  # "parametric" | "placeholder"
@@ -267,6 +267,11 @@ def build_deck(
     mesh/spec. Writes ``<out_dir>/<vessel_id>/{hull.gdf, spec.yml, <name>.yml,
     manifest.json}`` (``spec.yml`` = canonical DiffractionSpec, ``<name>.yml`` =
     OrcaWave-native deck).
+
+    Placeholders write the spec and manifest only, with ``deck: null`` and an
+    explanatory note. ``DeckResult.deck_path`` retains the intended destination
+    for compatibility; ``mesh_kind`` and the manifest identify current output.
+    Existing files at that destination are preserved.
     """
     dims = record.canonical_dimensions()
     loa = dims.get("loa") or dims.get("lbp")
@@ -384,7 +389,7 @@ def build_deck(
         "water_depth": water_depth,
         "periods_s": periods or DEFAULT_PERIODS,
         "headings_deg": headings or DEFAULT_HEADINGS,
-        "deck": deck_path.name,
+        "deck": None if mesh_kind == "placeholder" else deck_path.name,
         "spec": spec_path.name,
         "notes": notes,
         "preflight_reports": preflight_reports,
@@ -393,7 +398,9 @@ def build_deck(
     if column_mesh is not None:
         manifest["source_record_id"] = manifest.pop("vessel_id")
         manifest["geometry_basis"] = "assumed proportions"
-    (deck_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    (deck_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2), encoding="utf-8", newline="\n"
+    )
 
     return DeckResult(
         vessel=deck_name if column_mesh is not None else record.name,

@@ -158,7 +158,13 @@ def read_gdf_mesh(file_path: Path):
 
 
 def validate_symmetry(flags, declared, vertices=None, panels=None):
-    """Require the spec and the stored sector to describe the same cuts."""
+    """Require the spec and the stored sector to describe the same cuts.
+
+    When provided, ``vertices`` is modified in place: coordinates within the
+    cut-plane tolerance are snapped to zero, including before a later validation
+    error. Validate a disposable array when the original coordinates are needed.
+    Pass the validated array (or a copy made afterwards) to ``expand_sector``.
+    """
     declared = getattr(declared, "value", declared)
     if flags != FLAGS[declared]:
         raise ValueError(
@@ -192,7 +198,12 @@ def validate_symmetry(flags, declared, vertices=None, panels=None):
 
 
 def expand_sector(mesh):
-    """Reflect each declared cut, reversing winding to preserve outward normals."""
+    """Reflect each declared cut, reversing winding to preserve outward normals.
+
+    ``mesh.vertices`` must first pass ``validate_symmetry`` with the same flags
+    and panels. That function snaps cut-plane nodes in place; expansion relies
+    on those snapped coordinates for exact welding and does not snap them here.
+    """
     if not any(mesh.symmetry_flags):
         return SimpleNamespace(vertices=mesh.vertices, panels=mesh.panels)
     vertices = mesh.vertices.copy()
@@ -284,5 +295,7 @@ def buoyancy_preflight(spec, spec_dir=None):
 def write_preflight_reports(reports, output_dir):
     """Persist evaluated and unevaluated screens next to generated inputs."""
     path = Path(output_dir) / "preflight_reports.json"
-    path.write_text(json.dumps(reports, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(reports, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     return path
