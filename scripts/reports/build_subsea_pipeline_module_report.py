@@ -50,6 +50,11 @@ CHANGES = [
         "date": "2026-11-06",
         "change": "Recognised report files with cloud placeholder metadata can be rebuilt while symbolic links and directory junctions remain rejected. Scratch containment uses the resolved checkout root so checkout aliases retain the same restriction.",
     },
+    {
+        "revision": "F",
+        "date": "2026-11-06",
+        "change": "Deliverable protection rejects every name-surrogate reparse tag, including WSL symbolic links, while retaining cloud placeholder rebuilds. Inventory evidence now covers public async functions and methods as well as synchronous declarations.",
+    },
 ]
 
 # Synthetic inputs from bases A, B and C in the module docstring, respectively.
@@ -495,7 +500,8 @@ Use `--output-dir "$REPORT_OUTPUT"` for a separate destination. The builder writ
 only `index.html`, `changes.json`, `manifest.json` and `README.md`. Inside the
 checkout, only `docs/reports/modules/subsea_pipeline` is permitted. Output aliases
 are checked by their resolved destination. Each deliverable target must not be a
-symbolic link or directory junction. Cloud placeholder reparse tags are permitted
+symbolic link, directory junction or other name-surrogate reparse point, including
+WSL symbolic links. Cloud placeholder reparse tags are permitted
 for recognised report deliverables. Outside the canonical report directory, an
 existing output directory must be empty or contain
 only the four deliverable names as regular files, including a `manifest.json`
@@ -535,13 +541,9 @@ def _is_link(path):
         metadata = path.lstat()
     except FileNotFoundError:
         return False
-    # Windows tag values are needed when tests run on platforms without them.
-    link_tags = (
-        getattr(stat, "IO_REPARSE_TAG_SYMLINK", 0xA000000C),
-        getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", 0xA0000003),
-    )
-    return stat.S_ISLNK(metadata.st_mode) or (
-        getattr(metadata, "st_reparse_tag", 0) in link_tags
+    # The Windows name-surrogate bit includes junctions and WSL symbolic links.
+    return stat.S_ISLNK(metadata.st_mode) or bool(
+        getattr(metadata, "st_reparse_tag", 0) & 0x20000000
     )
 
 

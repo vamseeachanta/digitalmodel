@@ -197,7 +197,9 @@ def test_link_creation_without_privilege_skips(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "reparse_tag", [0xA000000C, 0xA0000003], ids=["symlink", "junction"]
+    "reparse_tag",
+    [0xA000000C, 0xA0000003, 0xA000001D],
+    ids=["symlink", "junction", "wsl-symlink"],
 )
 @pytest.mark.parametrize("target_name", ["output", "README.md"])
 def test_output_reparse_metadata_preserves_target_guard(
@@ -433,7 +435,7 @@ def test_rebuild_is_deterministic(tmp_path):
     )
     assert payload == build.build_payload()
     changes = json.loads((first / "changes.json").read_text(encoding="utf-8"))
-    assert len(changes) == 5
+    assert len(changes) == 6
     assert set(changes[0]) == {"revision", "date", "change"}
     for change in changes:
         for value in change.values():
@@ -471,19 +473,39 @@ def test_cli_manifest_matches_written_files(tmp_path):
         )
 
 
-def test_inventory_covers_public_methods_without_transferring_qualification():
+@pytest.mark.parametrize("include_async", [False, True], ids=["current", "with-async"])
+def test_inventory_covers_public_methods_without_transferring_qualification(
+    monkeypatch, include_async
+):
     """Every public declaration has a locator; engineering methods stay unevaluated."""
+    if include_async:
+        original = Path.read_text
+        target = ROOT / "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py"
+
+        def with_async_declarations(path, *args, **kwargs):
+            text = original(path, *args, **kwargs)
+            if path == target:
+                text += (
+                    "\nasync def untested_async_function():\n    pass\n"
+                    "\nclass UntestedAsyncClass:\n"
+                    "    async def untested_async_method(self):\n        pass\n"
+                )
+            return text
+
+        monkeypatch.setattr(Path, "read_text", with_async_declarations)
     inventory = builder().build_payload()["methods"]
     expected = set()
     for source in (ROOT / "src/digitalmodel/subsea/pipeline").rglob("*.py"):
         path = source.relative_to(ROOT).as_posix()
         for node in ast.parse(source.read_text(encoding="utf-8")).body:
-            if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
+            if isinstance(
+                node, (ast.FunctionDef, ast.AsyncFunctionDef)
+            ) and not node.name.startswith("_"):
                 expected.add((path, node.name))
             if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
                 for method in node.body:
                     if isinstance(
-                        method, ast.FunctionDef
+                        method, (ast.FunctionDef, ast.AsyncFunctionDef)
                     ) and not method.name.startswith("_"):
                         expected.add((path, f"{node.name}.{method.name}"))
     assert {(row["path"], row["symbol"]) for row in inventory} == expected

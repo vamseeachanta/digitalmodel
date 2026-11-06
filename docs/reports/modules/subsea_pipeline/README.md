@@ -19,7 +19,8 @@ Use `--output-dir "$REPORT_OUTPUT"` for a separate destination. The builder writ
 only `index.html`, `changes.json`, `manifest.json` and `README.md`. Inside the
 checkout, only `docs/reports/modules/subsea_pipeline` is permitted. Output aliases
 are checked by their resolved destination. Each deliverable target must not be a
-symbolic link or directory junction. Cloud placeholder reparse tags are permitted
+symbolic link, directory junction or other name-surrogate reparse point, including
+WSL symbolic links. Cloud placeholder reparse tags are permitted
 for recognised report deliverables. Outside the canonical report directory, an
 existing output directory must be empty or contain
 only the four deliverable names as regular files, including a `manifest.json`

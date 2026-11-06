@@ -23,5 +23,10 @@
     "change": "Recognised report files with cloud placeholder metadata can be rebuilt while symbolic links and directory junctions remain rejected. Scratch containment uses the resolved checkout root so checkout aliases retain the same restriction.",
     "date": "2026-11-06",
     "revision": "E"
+  },
+  {
+    "change": "Deliverable protection rejects every name-surrogate reparse tag, including WSL symbolic links, while retaining cloud placeholder rebuilds. Inventory evidence now covers public async functions and methods as well as synchronous declarations.",
+    "date": "2026-11-06",
+    "revision": "F"
   }
 ]
