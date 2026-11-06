@@ -13,6 +13,7 @@ general broad-band estimator accuracy remain unqualified.
 | --- | --- | --- |
 | 1 | 2026-10-28 | Define both moment contracts, record independent arithmetic tests and identify stored-result consumers after correcting cyclic rates. |
 | 2 | 2026-11-06 | Correct Dirlik irregularity coefficients, add independent limiting and broad-band regressions, refresh the atlas and clarify its publication basis. |
+| 3 | 2026-11-06 | Mark the retained intermediate atlas as superseded and record the structural Dirlik evidence gap and follow-up criteria. |
 
 ## Moment and rate contracts
 
@@ -155,6 +156,23 @@ holdout interpolation error is 0.2 % against the configured 10.0 % threshold.
 These interpolation figures concern the implemented response, not empirical
 accuracy against measured fatigue. No historical atlas files are overwritten.
 
+### Superseded retained basis
+
+The provenance record for atlas `692aaf26f51c` is **superseded for calculation
+use** by `cebf7823125c`. The intermediate atlas used spectral width in place
+of the irregularity factor in Dirlik's coefficients; it therefore retains
+known-defective damage predictions. Its files and record are retained for
+traceability, and the atlas remains loadable by explicit ID. The default
+pointer selects `cebf7823125c`.
+
+The historical record's `VERIFIED` status certifies reconstruction of its source
+fingerprint and artifact digests, not the estimator's engineering validity.
+It does not override this superseded disposition. Predictions from
+`692aaf26f51c` shall be recalculated with the corrected coefficient basis and
+independently reviewed before reuse; loading the retained ID does not perform
+that recalculation. The corrected default also requires a drift check after
+integration because the registry and refresh module are fingerprinted sources.
+
 The manifest's `code_version` and the provenance record's `recorded_code_version`
 are the build-time HEAD, which can precede publication of the generated files
 and need not contain working-tree source changes. Publication is resolved by
@@ -180,3 +198,16 @@ are unchanged, no design factors are selected and no solver is run. The lesson
 from this change is to pair dimensionless correction tests with independent
 absolute-rate anchors at every frequency-unit boundary. Narrow-band limit
 regressions also distinguish irregularity from its complementary spectral width.
+
+### Structural Dirlik follow-up
+
+`structural/fatigue/frequency_domain.py::DirlikMethod` retains a separate
+coefficient defect: its mixture uses `q` and expressions for `R1` and `D2`
+that differ from Equations (8)-(9) cited above. Its damage predictions remain
+unqualified by the spectral API correction. Follow-up issue pending: the
+structural coefficient correction will require independent narrow-band-limit
+and converted angular `c=5` rectangular-PSD anchors for slopes 3, 5 and 7,
+matching the acceptance cases in `tests/fatigue/test_spectral_frequency_units.py`
+and `tests/fatigue/test_benasciutti_tovo.py`. The structural angular-moment
+contract will be preserved. The existing structural tests do not establish
+agreement with these independent Dirlik anchors.
