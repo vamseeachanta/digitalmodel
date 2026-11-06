@@ -99,7 +99,7 @@ SOURCE_FILES = (
 
 
 def load_config(path: Path = CONFIG_PATH) -> dict[str, Any]:
-    return yaml.safe_load(Path(path).read_text())
+    return yaml.safe_load(Path(path).read_text(encoding="utf-8"))
 
 
 def _tokens(cfg: dict[str, Any]) -> list[str]:

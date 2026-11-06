@@ -185,7 +185,8 @@ def test_normalization_preserves_inputs_and_numeric_cache_values(tmp_path, basis
     assert atlases[0].atlas_id == atlases[1].atlas_id
     pd.testing.assert_frame_equal(atlases[0].grid, atlases[1].grid, check_exact=True)
     assert atlases[0].validation == atlases[1].validation
-    retained = Atlas.load(oa.REPO_ROOT / "atlases", oa.BASENAME)
+    retained = Atlas.load(oa.REPO_ROOT / "atlases", oa.BASENAME, "bcc370f46b9c")
+    assert retained.atlas_id == "bcc370f46b9c"
     for atlas, config, root, raw_snapshot in zip(atlases, configs, roots, before):
         pd.testing.assert_frame_equal(atlas.grid, retained.grid, check_exact=True)
         # Operability boundary is the existing governing-utilisation <= 1 contract.
@@ -195,3 +196,36 @@ def test_normalization_preserves_inputs_and_numeric_cache_values(tmp_path, basis
         assert {rel: (root / rel).read_bytes() for rel in TEXT_INPUTS} == raw_snapshot
     assert original == snapshot
     assert {rel: (oa.REPO_ROOT / rel).read_bytes() for rel in TEXT_INPUTS} == texts
+
+
+@pytest.mark.parametrize("newline", [b"\n", b"\r\n"])
+def test_load_config_uses_utf8_under_legacy_default(tmp_path, basis, monkeypatch, newline):
+    texts, _, snapshot = basis
+    config = tmp_path / "config.yml"
+    text = texts[CONFIG_REL] + "# café Δ 深度\n".encode("utf-8")
+    config.write_bytes(text.replace(b"\n", newline))
+    read_text = Path.read_text
+
+    def legacy_read_text(path, encoding=None, errors=None):
+        return read_text(path, encoding=encoding or "ascii", errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", legacy_read_text)
+    assert oa.load_config(config) == snapshot
+
+
+@pytest.mark.parametrize("failure", ["missing", "unreadable", "invalid-utf8"])
+def test_load_config_refuses_unavailable_text(tmp_path, monkeypatch, failure):
+    config = tmp_path / "config.yml"
+    if failure == "unreadable":
+        read_text = Path.read_text
+
+        def guarded_read(path, *args, **kwargs):
+            if path == config:
+                raise PermissionError("config text is unreadable")
+            return read_text(path, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "read_text", guarded_read)
+    elif failure == "invalid-utf8":
+        config.write_bytes(b"\xff")
+    with pytest.raises((OSError, UnicodeError)):
+        oa.load_config(config)

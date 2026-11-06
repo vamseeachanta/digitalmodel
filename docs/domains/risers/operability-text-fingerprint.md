@@ -9,6 +9,7 @@ The accepted replacement cache preserves every grid value and node classificatio
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-28 | Define newline normalization and record cache acceptance for #2761. |
+| 1 | 2026-11-06 | Read config as UTF-8, pin the numerical reference explicitly, and refresh source identity. |
 
 ## Text basis
 
@@ -20,6 +21,9 @@ For each file the canonical bytes are exactly:
 ```python
 raw.decode("utf-8").replace("\r\n", "\n").encode("utf-8")
 ```
+
+Engineering config loading also specifies UTF-8, including under a legacy default
+encoding. Missing, unreadable and invalid UTF-8 configs raise.
 
 Source digests use these bytes. The existing sorted-JSON basis retains the
 canonical config text, parsed standard-edition metadata, source digests and atlas
@@ -39,17 +43,19 @@ use the existing governing-utilisation boundary at unity.
 The unchanged held-out interpolation gate in `build_atlas` passes: maximum
 relative error is 8.8% against the existing 10.0% threshold. These percentages
 are rounded for display; acceptance uses the unrounded values. The existing
-serializer writes the accepted `7c23a1e69c2e` cache and updates `default.txt`.
-Both earlier cache directories remain present.
+serializer writes the accepted `23ba42ddbb40` cache and updates `default.txt`.
+The source identity changes because config loading is part of the declared source
+basis. All three earlier cache directories remain present, including
+`7c23a1e69c2e`; explicit-version tests retain every published version.
 
 The generated files under `atlases/drilling_riser_operability/` are:
 
 | Path | Git filter attribute |
 | --- | --- |
-| `7c23a1e69c2e/grid.parquet` | unspecified |
-| `7c23a1e69c2e/manifest.yaml` | unspecified |
-| `7c23a1e69c2e/surrogate.json` | unspecified |
-| `7c23a1e69c2e/validation.json` | unspecified |
+| `23ba42ddbb40/grid.parquet` | unspecified |
+| `23ba42ddbb40/manifest.yaml` | unspecified |
+| `23ba42ddbb40/surrogate.json` | unspecified |
+| `23ba42ddbb40/validation.json` | unspecified |
 | `default.txt` | unspecified |
 
 No LFS-tracked file changes. The build input digest, serialized output digests
@@ -65,16 +71,24 @@ canonical-byte oracle checks the fingerprint. Semantic input changes, source
 tokens and standard editions invalidate identity; whitespace and equivalent
 numeric spelling remain distinguishable. Missing and unreadable inputs refuse
 verification. LF and CRLF rebuilds have exactly equal numerical arrays and
-validation records, and agree exactly with the retained cache.
+validation records, and agree exactly with the explicitly selected
+`bcc370f46b9c` cache, independently of the default pointer.
 
 Before the change, the two existing atlas test files collected 12 tests:
 11 passed, one failed, none skipped. The failure was the unchanged Parquet byte
 identity assertion; the numerical arrays were equal. No node or interpolation
 failure occurred, and no tolerance was adjusted.
 
-After the accepted cache update, the same two files and the new text-fingerprint
+At the initial cache update, the same two files and the new text-fingerprint
 file collect 73 tests: 73 pass, none fail, none skip. The original exact-node and
 byte-identity assertions pass unchanged. The new file contributes 61 tests.
+
+With explicit UTF-8 config loading, the same three files collect 78 tests:
+78 pass, none fail, none skip. The five added cases exercise LF and CRLF under
+a legacy default encoding, plus missing, unreadable and invalid UTF-8 configs.
+The numerical comparison explicitly loads `bcc370f46b9c`. The explorer and monitor
+tests bring focused coverage to 97 passing tests; all five published-version
+assertions also pass.
 
 Source-checkout tests do not establish installed-package source discovery.
 That lookup policy remains unresolved and fail-closed; #2761 remains open for it.
