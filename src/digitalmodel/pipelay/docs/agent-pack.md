@@ -4,7 +4,7 @@
 |---|---|
 | Module / repository | `pipelay` / `digitalmodel` |
 | Package | `src/digitalmodel/pipelay` |
-| Pack revision | 2, 2026-10-28 |
+| Pack revision | 3, 2026-11-06 |
 | Code scope | Source and tests in the same Git revision as this pack |
 | Status | DRAFT; independent clearance pending |
 
@@ -24,8 +24,9 @@ Source: [workflow.py](../workflow.py), [validation.py](../validation.py).
 
 | Revision | Date | Change and reason |
 |---|---|---|
-| 1 | 2026-10-18 | Analytical screening [audit #2745](../../../../../../issues/2745) and historical map inventory were recorded. |
+| 1 | 2026-10-18 | Analytical screening audit issue 2745 and historical map inventory were recorded. |
 | 2 | 2026-10-28 | The current map discussion distinguishes local calculations from delegates; the historical inventory is retained for traceability. |
+| 3 | 2026-11-06 | The audit reference restoration was recorded, and its rendering-dependent link was replaced with plain text. |
 
 ## 2. Inputs and outputs
 
