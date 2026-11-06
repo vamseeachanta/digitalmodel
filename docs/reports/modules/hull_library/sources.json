@@ -1,11 +1,11 @@
 {
   "report": "hull-library-panel-scaling",
-  "revision": "02",
+  "revision": "03",
   "data_basis": "Synthetic assumptions only; no response datasets are consumed.",
   "sources": [
     {
       "path": "docs/reports/modules/hull_library/build_report.py",
-      "sha256": "3f31218f1d782f3b83488233abd224bf0f1563f06c42b5692f334f3f5719be29",
+      "sha256": "ba0980af544dfc97fdb1685d68af22081be827676da16725f4d0b443e762b245",
       "binding": "required",
       "basis": "repository implementation or documentation; not physical qualification",
       "locator": "public interfaces and report evidence"
@@ -187,7 +187,7 @@
     },
     {
       "path": "tests/hydrodynamics/hull_library/test_module_report.py",
-      "sha256": "f0acb7019eb43ac3f69b33083339a77a129efa2ecaf55a70b195dbcc21f19848",
+      "sha256": "3704ba0d1a52743d6e8005ba512e10b01d6136e049bfaa042ce66921d17edb0e",
       "binding": "required",
       "basis": "repository implementation or documentation; not physical qualification",
       "locator": "public interfaces and report evidence"

@@ -30,7 +30,7 @@ ROOT = Path(__file__).resolve().parents[4]
 PACKAGE = "src/digitalmodel/hydrodynamics/hull_library"
 EXAMPLE = f"{PACKAGE}/docs/worked-panel-scaling.md"
 EXEMPLAR = "docs/reports/pipeline-ffs-assessment.html"
-REVISION = "02"
+REVISION = "03"
 DATE = "2026-11-06"  # Document issue date; never an execution timestamp.
 REBUILD = ('PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR="$TMPDIR/matplotlib" '
            'XDG_CACHE_HOME="$TMPDIR/xdg-cache" uv run --no-project --python "$(command -v python3)" python '
@@ -39,9 +39,9 @@ CHANGES = {
     "report": "hull-library-panel-scaling", "revision": REVISION, "date": DATE,
     "issue": "3317",
     "changes": [
-        "Consolidated report retention rules and placed hull exceptions beside them to remove the ignore-file conflict.",
-        "Made the style exemplar advisory evidence so unrelated report text cannot invalidate calculation sources.",
-        "Isolated Git visibility checks from inherited repository bindings and identified export-only copies explicitly.",
+        "Rejected unrelated checkout destinations and linked output targets before calculation or writing to preserve existing evidence.",
+        "Made inherited Git regression skips fail and identified absent documented-command tools before launch.",
+        "Declared the two mesh-validator findings untracked pending #3317 so their tracking status is explicit.",
     ],
 }
 PREVIOUS_ISSUES = [{
@@ -56,6 +56,13 @@ PREVIOUS_ISSUES = [{
         "Prevented report-test imports from writing bytecode and removed environment-dependent text assertions.",
         "Preserved full-precision embedded calculations and exposed normal, length and difference precision in the table.",
         "Separated calculation evidence from advisory inventory digests and made the report discoverable to documentation and Git.",
+    ],
+}, {
+    "revision": "02", "date": "2026-11-06",
+    "changes": [
+        "Consolidated report retention rules and placed hull exceptions beside them to remove the ignore-file conflict.",
+        "Made the style exemplar advisory evidence so unrelated report text cannot invalidate calculation sources.",
+        "Isolated Git visibility checks from inherited repository bindings and identified export-only copies explicitly.",
     ],
 }]
 REQUIRED_SOURCES = {
@@ -323,7 +330,9 @@ this worked computation. Existing tests of those interfaces are not adopted as n
 compare mesh properties against an independent geometry, and prescribe convergence and response acceptance criteria
 before any engineering response is adopted. Backend selection and solver qualification require separately routed work.</p>
 <p>Source-review findings: validate_scaled_mesh uses centroid-radial normal checks and an origin-relative draft estimate;
-these do not establish outward winding of a general hull. Shallow metadata copies do not promise nested independence after later edits.
+these do not establish outward winding of a general hull.
+These two validate_scaled_mesh findings remain untracked pending #3317.
+Shallow metadata copies do not promise nested independence after later edits.
 Dimensional nearest matching and response filtering do not establish physical suitability. These concerns are recorded for broader qualification;
 production behavior is unchanged. See {link(f'{PACKAGE}/mesh_scaler.py', 'scaling and validation interfaces')} and
 {link(f'{PACKAGE}/docs/agent-pack.md', 'module evidence and known limits')}.</p></section>
@@ -337,6 +346,8 @@ not a calculation failure. Deterministic rebuild comparisons disregard only inve
 <h3>Rebuild</h3><p>From the repository root, with its Python dependencies active and supplied scratch storage:</p>
 <pre><code>{html.escape(REBUILD)}</code></pre>
 <p>The explicit output directory receives only report.html, changes.json and sources.json. No intermediates are written.
+Within the checkout, only this report's directory is accepted. Other checkout destinations and symlinked output targets
+are rejected before calculation or writing. External scratch directories are accepted.
 The report is self-contained; source links resolve from its repository report directory. No network resources are loaded.</p>
 <h3>Engineering changes</h3><details id="engineering-changes"><summary>Changes in this revision</summary><ul>{change_panel}</ul></details>
 <p>Readiness: independent checking is limited to the synthetic panel. The broader module qualification remains open.</p></section>
@@ -347,6 +358,13 @@ The report is self-contained; source links resolve from its repository report di
 
 def write_report(output_dir: Path) -> None:
     """Write exactly the deliverables into an explicitly supplied directory."""
+    output_dir = output_dir.resolve()
+    checkout = ROOT.resolve()
+    if output_dir.is_relative_to(checkout) and output_dir != checkout / "docs/reports/modules/hull_library":
+        raise ValueError("Unsupported checkout destination; use the hull report directory or external scratch storage")
+    for name in ("report.html", "changes.json", "sources.json"):
+        if (output_dir / name).is_symlink():
+            raise ValueError(f"Output target is a symlink: {name}")
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "report.html").write_text(build(calculate()), encoding="utf-8", newline="\n")
     for name, value in (("changes.json", CHANGES), ("sources.json", source_record())):

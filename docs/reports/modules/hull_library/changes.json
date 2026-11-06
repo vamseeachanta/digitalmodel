@@ -1,11 +1,11 @@
 {
   "report": "hull-library-panel-scaling",
-  "revision": "02",
+  "revision": "03",
   "date": "2026-11-06",
   "issue": "3317",
   "changes": [
-    "Consolidated report retention rules and placed hull exceptions beside them to remove the ignore-file conflict.",
-    "Made the style exemplar advisory evidence so unrelated report text cannot invalidate calculation sources.",
-    "Isolated Git visibility checks from inherited repository bindings and identified export-only copies explicitly."
+    "Rejected unrelated checkout destinations and linked output targets before calculation or writing to preserve existing evidence.",
+    "Made inherited Git regression skips fail and identified absent documented-command tools before launch.",
+    "Declared the two mesh-validator findings untracked pending #3317 so their tracking status is explicit."
   ]
 }

@@ -11,6 +11,7 @@ import json
 import math
 import os
 import re
+import shutil
 import subprocess
 import sys
 from hashlib import sha256
@@ -297,7 +298,86 @@ def test_report_rebuild_is_deterministic(builder, tmp_path):
     assert not list(tmp_path.rglob("__pycache__"))
 
 
+@pytest.mark.parametrize("destination", [".", "docs/reports/modules/gis", "new-output",
+                                         "docs/reports/modules/hull_library/nested"])
+def test_report_rejects_other_checkout_destinations(builder, tmp_path, monkeypatch, destination):
+    checkout = tmp_path / "checkout"
+    unrelated = checkout / "docs/reports/modules/gis"
+    unrelated.mkdir(parents=True)
+    for name in DELIVERABLES:
+        (unrelated / name).write_bytes(b"unrelated report evidence\n")
+    before = {p.relative_to(checkout): p.read_bytes() for p in checkout.rglob("*") if p.is_file()}
+    monkeypatch.setattr(builder, "ROOT", checkout)
+
+    def unexpected_calculation():
+        pytest.fail("Calculation started before output validation")
+
+    monkeypatch.setattr(builder, "calculate", unexpected_calculation)
+    with pytest.raises(ValueError, match="checkout destination"):
+        builder.write_report(checkout / destination)
+    assert before == {p.relative_to(checkout): p.read_bytes() for p in checkout.rglob("*") if p.is_file()}
+    assert not (checkout / "new-output").exists()
+
+
+def test_report_rejects_linked_checkout_destination(builder, tmp_path, monkeypatch):
+    checkout = tmp_path / "checkout"
+    unrelated = checkout / "other-report"
+    unrelated.mkdir(parents=True)
+    (unrelated / "report.html").write_bytes(b"unrelated report evidence\n")
+    alias = tmp_path / "output-alias"
+    alias.symlink_to(unrelated, target_is_directory=True)
+    monkeypatch.setattr(builder, "ROOT", checkout)
+    with pytest.raises(ValueError, match="checkout destination"):
+        builder.write_report(alias)
+    assert (unrelated / "report.html").read_bytes() == b"unrelated report evidence\n"
+    assert {p.name for p in unrelated.iterdir()} == {"report.html"}
+
+
+@pytest.mark.parametrize("name", sorted(DELIVERABLES))
+@pytest.mark.parametrize("dangling", [False, True])
+def test_report_rejects_linked_targets_before_writing(builder, tmp_path, monkeypatch, name, dangling):
+    output = tmp_path / "output"
+    output.mkdir()
+    target = tmp_path / "unrelated-evidence"
+    if not dangling:
+        target.write_bytes(b"unrelated report evidence\n")
+    for other in DELIVERABLES - {name}:
+        (output / other).write_bytes(b"existing report evidence\n")
+    (output / name).symlink_to(target)
+    before = {p.name: p.read_bytes() for p in output.iterdir() if not p.is_symlink()}
+
+    def unexpected_calculation():
+        pytest.fail("Calculation started before output validation")
+
+    monkeypatch.setattr(builder, "calculate", unexpected_calculation)
+    with pytest.raises(ValueError, match="symlink"):
+        builder.write_report(output)
+    assert (output / name).is_symlink()
+    assert (output / name).readlink() == target
+    assert before == {p.name: p.read_bytes() for p in output.iterdir() if not p.is_symlink()}
+    assert target.exists() is not dangling
+    if not dangling:
+        assert target.read_bytes() == b"unrelated report evidence\n"
+
+
+def test_report_accepts_its_own_checkout_destination(builder, tmp_path, monkeypatch):
+    checkout = tmp_path / "checkout"
+    for source in builder.source_record()["sources"]:
+        path = checkout / source["path"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes((ROOT / source["path"]).read_bytes())
+    monkeypatch.setattr(builder, "ROOT", checkout)
+    output = checkout / "docs/reports/modules/hull_library"
+    builder.write_report(output)
+    assert DELIVERABLES <= {p.name for p in output.iterdir()}
+    data = json.loads("".join(Page((output / "report.html").read_text(encoding="utf-8")).scripts))
+    assert data["calculation"] == builder.calculate()
+
+
 def test_documented_rebuild_routes_import_caches_to_scratch(builder, tmp_path):
+    for tool in ("bash", "uv"):
+        if shutil.which(tool) is None:
+            pytest.skip(f"Documented rebuild requires {tool} on PATH")
     assert 'MPLCONFIGDIR="$TMPDIR/' in builder.REBUILD
     assert 'XDG_CACHE_HOME="$TMPDIR/' in builder.REBUILD
     environment = {k: v for k, v in os.environ.items()
@@ -307,6 +387,19 @@ def test_documented_rebuild_routes_import_caches_to_scratch(builder, tmp_path):
                    check=True, capture_output=True, timeout=60)
     assert {p.name for p in (tmp_path / "hull-report").iterdir()} == DELIVERABLES
     assert not list(REPORT.rglob("__pycache__"))
+
+
+@pytest.mark.parametrize("missing", ["bash", "uv"])
+def test_documented_rebuild_skips_missing_launch_tools(builder, tmp_path, monkeypatch, missing):
+    original = shutil.which
+    monkeypatch.setattr(shutil, "which", lambda name: None if name == missing else original(name))
+
+    def unexpected_launch(*args, **kwargs):
+        pytest.fail("Documented command launched with a missing tool")
+
+    monkeypatch.setattr(subprocess, "run", unexpected_launch)
+    with pytest.raises(pytest.skip.Exception, match=missing):
+        test_documented_rebuild_routes_import_caches_to_scratch(builder, tmp_path)
 
 
 def test_scope_limits_and_report_pointers(builder):
@@ -346,6 +439,14 @@ def test_scope_limits_and_report_pointers(builder):
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert changes["revision"] == builder.REVISION and changes["changes"]
     assert all(change in " ".join(page.visible) for change in changes["changes"])
+
+
+def test_validator_findings_state_tracking_status(builder):
+    page = Page(builder.build(builder.calculate()))
+    visible = " ".join(page.visible)
+    assert "centroid-radial normal checks" in visible
+    assert "origin-relative draft estimate" in visible
+    assert "These two validate_scaled_mesh findings remain untracked pending #3317." in visible
 
 
 def assert_source_bindings(sources, root):
@@ -440,7 +541,10 @@ def test_git_visibility_ignores_inherited_repository_bindings(tmp_path, monkeypa
     monkeypatch.setenv("GIT_DIR", str(foreign / ".git"))
     monkeypatch.setenv("GIT_COMMON_DIR", str(foreign / ".git"))
     monkeypatch.setenv("GIT_WORK_TREE", str(foreign))
-    test_report_files_are_visible_to_git()
+    try:
+        test_report_files_are_visible_to_git()
+    except pytest.skip.Exception:
+        pytest.fail("Inherited repository bindings must not skip the visibility check")
     assert before == {p.relative_to(foreign).as_posix(): sha256(p.read_bytes()).hexdigest()
                       for p in foreign.rglob("*") if p.is_file()}
 
