@@ -124,10 +124,14 @@ def _count(value: int, name: str) -> int:
 
 
 def criteria_source() -> dict:
-    """Pin section 5 bytes, including its heading and trailing blank lines."""
+    """Pin section 5 bytes after CRLF-to-LF normalization.
+
+    The heading and trailing blank lines are included. Only checkout line-ending
+    conversion is normalized; all other section content remains digest-bound.
+    """
     path = Path(__file__).resolve().parents[1] / SOURCE_DOCUMENT
     try:
-        lines = path.read_bytes().split(b"\n")
+        lines = path.read_bytes().replace(b"\r\n", b"\n").split(b"\n")
     except OSError as error:
         raise ValueError("criteria source is unavailable") from error
     starts = [i for i, line in enumerate(lines) if line == b"## 5. QA gates"]
@@ -479,6 +483,8 @@ class NativeRemoval:
     result_input_sha256: str | None = None
 
     def __post_init__(self):
+        if not isinstance(self.native_input, Artifact):
+            raise ValueError("native input must be an artifact")
         for name in ("program", "version", "reviewer_role", "setting_line"):
             _text(getattr(self, name), name)
         if self.program not in {"aqwa", "orcawave"}:
@@ -486,9 +492,11 @@ class NativeRemoval:
         line = self.setting_line.strip()
         if line.startswith(("#", "!", "//", ";")):
             raise ValueError("native setting cannot be a comment")
-        if line not in [
-            s.strip() for s in self.native_input.content.decode("utf-8").splitlines()
-        ]:
+        try:
+            native_text = self.native_input.content.decode("utf-8")
+        except UnicodeDecodeError as error:
+            raise ValueError("native input must be UTF-8 text") from error
+        if line not in [s.strip() for s in native_text.splitlines()]:
             raise ValueError(
                 "native setting must be a complete line in the supplied input"
             )

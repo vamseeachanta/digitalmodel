@@ -322,11 +322,11 @@ def test_commented_native_setting_is_rejected(line):
         proof(text=line, setting=line)
 
 
-def test_missing_source_fails_closed(monkeypatch, artifact):
+def test_digest_mismatch_fails_closed(monkeypatch, artifact):
     from digitalmodel.aqg import diffraction
 
     monkeypatch.setattr(diffraction, "SOURCE_DIGEST", "0" * 64)
-    with pytest.raises(ValueError, match="criteria source"):
+    with pytest.raises(ValueError, match="criteria source digest mismatch"):
         check_mass(100, 99, 1, artifact)
 
 
@@ -436,13 +436,43 @@ def criteria_document(monkeypatch):
         Path(diffraction.__file__).resolve().parents[1] / diffraction.SOURCE_DOCUMENT
     )
     read_bytes = Path.read_bytes
-    content = [source.read_bytes()]
+    content = [source.read_bytes().replace(b"\r\n", b"\n")]
 
     def read_source(path):
-        return content[0] if path == source else read_bytes(path)
+        if path == source:
+            if isinstance(content[0], OSError):
+                raise content[0]
+            return content[0]
+        return read_bytes(path)
 
     monkeypatch.setattr(Path, "read_bytes", read_source)
     return content
+
+
+def test_criteria_source_accepts_crlf_checkout(criteria_document):
+    from digitalmodel.aqg.diffraction import criteria_source
+
+    original = criteria_source()
+    criteria_document[0] = criteria_document[0].replace(b"\n", b"\r\n")
+    assert criteria_source() == original
+    assert assess([]).to_dict()["criteria_source"] == original
+
+
+def test_crlf_criteria_edit_still_fails_closed(criteria_document):
+    from digitalmodel.aqg.diffraction import criteria_source
+
+    criteria_document[0] = criteria_document[0].replace(
+        b"| G4.1a", b"| G4.1a changed", 1
+    ).replace(b"\n", b"\r\n")
+    with pytest.raises(ValueError, match="criteria source digest mismatch"):
+        criteria_source()
+
+
+def test_missing_source_fails_closed(criteria_document, artifact):
+    criteria_document[0] = FileNotFoundError("Synthetic missing criteria source")
+    with pytest.raises(ValueError, match="criteria source is unavailable") as error:
+        check_mass(100, 99, 1, artifact)
+    assert isinstance(error.value.__cause__, FileNotFoundError)
 
 
 def test_criteria_source_never_uses_locale_text_reads(monkeypatch):
@@ -525,6 +555,19 @@ def test_criteria_digest_sidecar_declares_section_scope():
 
 def surfaces(artifact):
     return (BodySurface("body-1", False, InteriorLid((1,), artifact, "reviewer")),)
+
+
+@pytest.mark.parametrize("native_input", [None, b"REMOVE YES", "REMOVE YES", object()])
+def test_native_input_requires_artifact(native_input):
+    with pytest.raises(ValueError, match="native input must be an artifact"):
+        NativeRemoval("aqwa", "version", native_input, "REMOVE YES", True, "reviewer")
+
+
+def test_native_input_requires_utf8():
+    native_input = Artifact("synthetic-deck", b"REMOVE YES\n\xff")
+    with pytest.raises(ValueError, match="native input must be UTF-8 text") as error:
+        NativeRemoval("aqwa", "version", native_input, "REMOVE YES", True, "reviewer")
+    assert isinstance(error.value.__cause__, UnicodeDecodeError)
 
 
 @pytest.mark.parametrize(

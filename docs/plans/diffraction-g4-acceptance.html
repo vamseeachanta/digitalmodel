@@ -22,7 +22,8 @@ abs(M − ρV)/M; panel aspect ratios with an explicit second-order waterline
 exception; wavelength resolution using caller-supplied shortest wavelength;
 and installed panel and memory limits. Criterion values will be cited to the
 knowledge-pack rows G4.1a and G4.4a–e. The source digest will be checked at calculation time.
-The pin will cover the exact LF bytes from the section-5 heading through the
+CRLF checkout line endings will be normalized to LF before locating and hashing
+the section. The pin will cover the resulting bytes from the section-5 heading through the
 line before the next level-2 heading, including trailing blank lines and excluding
 the next heading. Unrelated section edits will preserve API use; criteria edits
 and missing, duplicate or unterminated section boundaries will fail closed.
@@ -47,6 +48,7 @@ and test omitted rows, duplicate rows, invalid data, missing or disabled native
 settings, result/input linkage, unsupported exclusions, unqualified criteria,
 and content-digest readback. Source-integrity tests will accept edits before and
 after section 5, reject edits to every G4 row, reject invalid section boundaries,
+accept CRLF checkout conversion, reject malformed native input types and encodings,
 and require byte reads independent of locale text defaults. An import-boundary test will statically
 verify the offline dependency graph without attempting a licensed import.</p>
 <p>A runnable synthetic example will show inputs, method and the incomplete

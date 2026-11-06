@@ -9,11 +9,13 @@ Engineering acceptance is not established by this implementation.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-22</td><td>Added a complete evidence inventory and independent offline comparisons to prevent mesh screens being interpreted as G4 acceptance.</td></tr>
-<tr><td>2</td><td>2026-11-06</td><td>Restricted the source digest to section 5 so unrelated documentation edits preserve API use while criteria edits remain blocked.</td></tr></table>
+<tr><td>2</td><td>2026-11-06</td><td>Restricted the source digest to section 5 so unrelated documentation edits preserve API use while criteria edits remain blocked.</td></tr>
+<tr><td>3</td><td>2026-11-06</td><td>Normalized criteria checkout line endings and validated native input types and text encoding to keep source checks portable and input errors explicit.</td></tr></table>
 <h2>Source and qualification</h2>
 <p>The numeric QA criteria below are transcribed from the
 <a href="../../../src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md">diffraction knowledge pack</a>,
-revision 4, section 5 (AQG r0 section 8). SHA-256 covers the exact LF bytes from
+revision 4, section 5 (AQG r0 section 8). CRLF line endings are normalized to LF
+before section lookup and hashing. SHA-256 covers the resulting bytes from
 the <code>## 5. QA gates</code> heading through the line before the next level-2
 heading, including trailing blank lines; the next heading is excluded:
 <code>517a64c2cf3bc1c488200971ced3a6313aa473a9b718bc04db30320c88339a7e</code>.
@@ -92,6 +94,8 @@ as distinct programs.</p>
 <p><code>NativeRemoval</code> contains exact native input bytes, program version,
 an active setting line, its externally reviewed enabled/disabled/unknown interpretation,
 a reviewer role, and native-result readback linking the result to the input digest.
+The native input must be an <code>Artifact</code> containing UTF-8 text;
+an invalid type or text encoding raises <code>ValueError</code>.
 The complete setting line must occur in the input and cannot be a comment.
 Unknown interpretation, missing pair, missing result or missing linkage remains
 NOT_RUN; disabled removal fails; an input/result digest mismatch is rejected.
@@ -132,7 +136,8 @@ Response spikes are checked separately under G4.8e.</p>
 <p>The regression tests exercise boundary arithmetic, invalid inputs, exclusions,
 missing evidence, native-result linkage, aggregation, rejection of every G4 row
 edit and invalid section boundaries, acceptance of unrelated section edits,
-locale-independent source byte reads, source-digest failure,
+locale-independent source byte reads, CRLF checkout conversion, missing sources,
+source-digest failure, native input types and UTF-8 validation,
 JSON readback and the runnable example. A fresh Python subprocess checks that
 the offline API loads neither the hydrodynamics package nor a licensed interface.
 No solver is imported or executed. A complete receipt set still emits NOT_RUN
