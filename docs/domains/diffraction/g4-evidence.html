@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Diffraction G4 evidence record</title>
+<style>body{font-family:sans-serif;max-width:76rem;margin:2rem auto;line-height:1.5;padding:1rem}table{border-collapse:collapse;width:100%}td,th{border:1px solid #aaa;padding:.4rem;text-align:left}pre{white-space:pre-wrap;background:#eee;padding:1rem}caption{caption-side:bottom;text-align:left}</style></head>
+<body><main><h1>Diffraction G4 evidence record</h1>
+<p>The offline evidence API separates a mesh packaging screen from the complete
+G4 record. A packaging PASS or WARNING supplies no G4 row automatically.
+The record contains every required row, including missing evidence and unknown applicability.
+Engineering acceptance is not established by this implementation.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-22</td><td>Added a complete evidence inventory and independent offline comparisons to prevent mesh screens being interpreted as G4 acceptance.</td></tr></table>
+<h2>Source and qualification</h2>
+<p>The numeric QA criteria below are transcribed from the
+<a href="../../../src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md">diffraction knowledge pack</a>,
+revision 4, section 5 (AQG r0 section 8). The source is pinned by SHA-256:
+<code>0b997e73ea95ecdc41457535561687396693615680bdeb5b61e5eda48d655671</code>. The original AQG document and the licensed
+panel-size clause are not qualified. The internal transcription is not a
+citation to a checked licensed clause. Source absence or a digest mismatch
+raises an error at calculation time. Source qualification cannot be enabled by a caller flag.</p>
+<h2>Inputs, method and answer</h2>
+<p>The runnable example is <code>examples/aqg/diffraction_g4.py</code>.
+Its quantities are synthetic arithmetic examples, with SI units declared explicitly.
+They are not an engineering design basis or solver results.</p>
+<pre>PYTHONPATH=src python examples/aqg/diffraction_g4.py
+M = 100 kg; V = 99 m³; rho = 1 kg/m³
+Displaced mass = rho V = 99 kg
+Relative mass residual = abs(100 - 99) / 100 = 1.0 %
+G4.1a: PASS at the inclusive 1.0 % input-mass bound
+Panel aspect = 3; maximum dimension = 2 m; shortest wavelength = 12 m
+G4.4b: PASS at the ordinary aspect bound
+G4.4c: PASS because 2 m = 12 m / 6
+Record: 3 PASS rows, 23 NOT_RUN rows
+Engineering status: NOT_RUN</pre>
+<p>The legacy equilibrium screen normalizes against displaced mass and therefore
+rejects this example at the same supplied tolerance: 1/99 exceeds 1.0 %.
+Its documented behavior is preserved. The new API makes the G4 input-mass
+normalization explicit. The legacy aspect and uniformity defaults, mean-normal
+screen, packaging warning policy and comparison tiers are also preserved.</p>
+<h2>Evidence and status contract</h2>
+<p><code>digitalmodel.aqg.diffraction.assess</code> consumes criterion-specific
+<code>Check</code> records. The fixed inventory rejects duplicate and unknown IDs;
+generic mesh dictionaries are rejected. Each row includes applicability, fixed criterion,
+units, observations, evidence references and digests, and a reason. Input quantities
+are finite and domain checked; no unit conversion is performed. Inclusive comparisons
+use exact rational arithmetic on the canonical decimal representations of validated
+float inputs, without an added engineering tolerance. Serialized observations remain
+floats; pass/fail decisions use the unrounded rational values. Each caller shall
+reconcile input units, coordinate frames, load case and input/result identity.</p>
+<p><code>status</code> is FAIL when a row fails and otherwise NOT_RUN while source
+qualification is missing. <code>record_status</code> describes documentary
+completeness only: FAIL takes precedence, then NOT_RUN, then PASS. PASS in
+<code>record_status</code> is not engineering acceptance. An artifact digest proves
+byte identity, not correctness, source rights or review authority. The serialized
+source sidecar records the source revision, section, digest and qualification limitation.</p>
+<p><code>reviewed_check</code> records an external criterion-specific review with
+supporting artifacts, a reviewer role and a basis. Computed rows are reserved
+for their calculator APIs and cannot be replaced by generic reviews;
+assessment construction derives status from the complete fixed inventory. It does not authenticate that
+review or replace independent calculations. A manual exclusion is supported only
+for G4.1b with explicit <code>equilibrium_mode="free_floating"</code> and its
+supporting evidence. G4.7b is excluded only by a computed below-trigger comparison.
+Other uncertain applicability remains NOT_RUN. Native and independent hydrostatics,
+CoB/CoG/GM, waterline/draft, outward orientation, views and response checks require
+these external reviews; their absence remains visible.</p>
+<h2>Implemented numeric comparisons</h2>
+<p><code>check_mass</code> uses input mass as the denominator.
+<code>check_panels</code> evaluates every supplied longest-edge/shortest-edge
+ratio; the caller supplies the complete panel inventory and waterline classification.
+The waterline exception requires second-order work and a nonempty quality note.
+Wavelength is a required independently derived input; uniform element size does
+not establish it. <code>check_resources</code> requires a program/version-specific
+panel limit and source, plus a native memory estimate and the available-memory
+snapshot at the time of measurement. No universal panel or memory limit is assumed.</p>
+<h2>Irregular-frequency evidence</h2>
+<p><code>check_irregular_frequencies</code> requires the first irregular frequency
+in rad/s and its independent calculation artifact. No frequency estimate is guessed.
+A complete <code>BodySurface</code> inventory declares each body's treatment.
+At the lid trigger every body needs an <code>InteriorLid</code> with distinct panel IDs,
+artifact and reviewer role. Every body declaring the control-surface method also
+requires resolvable control-surface evidence, including below the lid trigger.
+Unknown body coverage or missing applicable surfaces remains NOT_RUN. Below the first irregular frequency, paired removal is
+NOT_APPLICABLE; at or above it the compared canonical program pair and native
+proofs are required. Only the canonical identifiers <code>aqwa</code> and
+<code>orcawave</code> are currently supported, so alternative aliases cannot count
+as distinct programs.</p>
+<p><code>NativeRemoval</code> contains exact native input bytes, program version,
+an active setting line, its externally reviewed enabled/disabled/unknown interpretation,
+a reviewer role, and native-result readback linking the result to the input digest.
+The complete setting line must occur in the input and cannot be a comment.
+Unknown interpretation, missing pair, missing result or missing linkage remains
+NOT_RUN; disabled removal fails; an input/result digest mismatch is rejected.
+The emitted record retains setting-line locators and digests. This is an evidence
+receipt, not a general native syntax parser. Active sections, includes, override
+semantics and successful removal remain matters for native readback and review.
+Response spikes are checked separately under G4.8e.</p>
+<h2>Required inventory</h2>
+<table><thead><tr><th>Row</th><th>Criterion and required evidence</th><th>Unit</th></tr></thead>
+<tbody><tr><td>G4.1a</td><td>abs(M-rho*V)/M &lt;= 0.01, input mass denominator</td><td>1</td></tr>
+<tr><td>G4.1b</td><td>restrained vertical residual &lt;= 0.01*M*g; common rho and g</td><td>N</td></tr>
+<tr><td>G4.2a</td><td>independent/native volume difference &lt;= 0.5%</td><td>m^3</td></tr>
+<tr><td>G4.2b</td><td>axis-volume spread/declared scale &lt;= 0.005</td><td>1</td></tr>
+<tr><td>G4.3a</td><td>CoB differences &lt;= 0.005*Lwl horizontally and 0.01*draft vertically</td><td>m</td></tr>
+<tr><td>G4.3b</td><td>mass-model CoG reconciled with equilibrium heel and trim</td><td>m</td></tr>
+<tr><td>G4.3c</td><td>both GM &gt; 0 and within 2.0% of independent values</td><td>m</td></tr>
+<tr><td>G4.4a</td><td>panel count &lt;= installed-version limit; retain limit source</td><td>count</td></tr>
+<tr><td>G4.4b</td><td>aspect &lt;= 3; &lt;= 5 only at second-order waterline with quality note</td><td>1</td></tr>
+<tr><td>G4.4c</td><td>maximum panel dimension &lt;= shortest wavelength/6</td><td>m</td></tr>
+<tr><td>G4.4d</td><td>no unresolved native overlap or gap errors</td><td>count</td></tr>
+<tr><td>G4.4e</td><td>native memory estimate &lt;= available memory</td><td>byte</td></tr>
+<tr><td>G4.5a</td><td>every wetted boundary top abs(z) &lt;= 0.001</td><td>m</td></tr>
+<tr><td>G4.5b</td><td>waterline loop endpoint degree = 2</td><td>count</td></tr>
+<tr><td>G4.5c</td><td>abs(mesh draft-design draft) &lt;= 0.01</td><td>m</td></tr>
+<tr><td>G4.5d</td><td>no prohibited above-water wetted panels; interior lid separate</td><td>count</td></tr>
+<tr><td>G4.6a</td><td>every panel outward, positive signed volume; reliable topology</td><td>m^3</td></tr>
+<tr><td>G4.6b</td><td>zero-area panels = 0</td><td>count</td></tr>
+<tr><td>G4.6c</td><td>no duplicate symmetry declarations; verify reconstructed body</td><td>count</td></tr>
+<tr><td>G4.7a</td><td>per-body lid at omega_max &gt;= 0.9*omega_i; resolve every control-surface body</td><td>rad/s</td></tr>
+<tr><td>G4.7b</td><td>paired enabled removal in native inputs when omega_max &gt;= omega_i</td><td>count</td></tr>
+<tr><td>G4.8a</td><td>isometric, waterline close-up and panel-type views with digests</td><td>count</td></tr>
+<tr><td>G4.8b</td><td>longest-period abs(heave-1) &lt;= 0.02; record finite-depth applicability</td><td>m/m</td></tr>
+<tr><td>G4.8c</td><td>diagonal damping &gt;= 0 in declared term units</td><td>declared term units</td></tr>
+<tr><td>G4.8d</td><td>added-mass normalized asymmetry &lt;= 2.0%; declare zero-term criterion</td><td>declared term units</td></tr>
+<tr><td>G4.8e</td><td>no unresolved spikes within +/-5.0% of estimated irregular frequency</td><td>rad/s</td></tr></tbody>
+<caption>Table 1. Fixed rows transcribed from knowledge pack revision 4, section 5; every row retains its own evidence status.</caption></table>
+<h2>Verification and limitations</h2>
+<p>The regression tests exercise boundary arithmetic, invalid inputs, exclusions,
+missing evidence, native-result linkage, aggregation, source-digest failure,
+JSON readback and the runnable example. A fresh Python subprocess checks that
+the offline API loads neither the hydrodynamics package nor a licensed interface.
+No solver is imported or executed. A complete receipt set still emits NOT_RUN
+as engineering status because original-source qualification is absent.</p>
+<p>The new API is deliberately separate from the eager legacy diffraction initializer.
+It does not change legacy callers or wire acceptance into packaging. Automatic native
+parsers, original-source qualification, solver execution and end-to-end report integration
+remain follow-up work. The inventory is not proof that the external checks were performed.</p>
+</main></body></html>
