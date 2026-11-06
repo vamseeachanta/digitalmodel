@@ -8,10 +8,11 @@ from html.parser import HTMLParser
 import importlib.util
 import json
 import math
+import os
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import numpy as np
 import pytest
@@ -240,15 +241,28 @@ def test_report_does_not_depend_on_another_generated_page(tmp_path, monkeypatch)
     assert not any(name.endswith(".html") for name in manifest["sources"])
 
 
-def test_retention_allows_only_the_named_report_files():
+@pytest.mark.parametrize("windows_paths", [False, True])
+def test_retention_allows_only_the_named_report_files(tmp_path, monkeypatch, windows_paths):
+    # An enclosing Git command must not redirect this checkout's ignore query.
+    monkeypatch.setenv("GIT_DIR", str(tmp_path / "unrelated-git-directory"))
+    monkeypatch.setenv("GIT_WORK_TREE", str(tmp_path / "unrelated-worktree"))
+    if windows_paths:
+        relative_to = Path.relative_to
+
+        def windows_relative(path, *args, **kwargs):
+            return PureWindowsPath(relative_to(path, *args, **kwargs))
+
+        monkeypatch.setattr(Path, "relative_to", windows_relative)
     build = builder()
-    retained = [str((REPORT / name).relative_to(ROOT)) for name in build.DELIVERABLES]
-    retained.append(str(SCRIPT.relative_to(ROOT)))
-    unwanted = str((REPORT / "unretained-output.json").relative_to(ROOT))
+    retained = [(REPORT / name).relative_to(ROOT).as_posix() for name in build.DELIVERABLES]
+    retained.append(SCRIPT.relative_to(ROOT).as_posix())
+    unwanted = (REPORT / "unretained-output.json").relative_to(ROOT).as_posix()
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE"}}
     result = subprocess.run(
         ["git", "check-ignore", "--no-index", "--stdin"],
         input="\n".join([*retained, unwanted]) + "\n", cwd=ROOT,
-        text=True, capture_output=True, check=False,
+        text=True, capture_output=True, check=False, env=env,
     )
     assert result.returncode == 0, result.stderr
     assert result.stdout.splitlines() == [unwanted]

@@ -20,6 +20,9 @@ units, below the 1e-12 absolute test tolerance. Adjacent binary64 rounding in bo
 directions is exercised by byte comparisons of all four deliverables. This bound
 applies to these synthetic controls. Root bracketing uses frequency-scaled
 binary64 tolerance, exercised at frequency scales of 1e-8, 1 and 1e8.
+Negative and zero bracket endpoints are covered at the same scales; only
+positive roots contribute periods. This arithmetic check does not qualify
+nonpositive frequencies for physical use.
 The inventory status ARITHMETIC_CONTROL: diagonal synthetic does not qualify
 added-mass interpolation, branch ordering or modal labelling.
 The dedicated layout is committed in the builder; only the canonical brand
@@ -35,3 +38,5 @@ Lesson: exact sampled roots require explicit retention as well as interval
 bracketing; the endpoint and exact-grid regressions preserve this requirement.
 Revision labels are derived from history, and generated pages are excluded from
 presentation dependencies to keep unrelated rebuilds from invalidating evidence.
+Bracket tolerances use endpoint magnitudes to stay positive, and retention
+queries use POSIX paths with inherited Git directory settings removed.

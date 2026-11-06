@@ -70,6 +70,19 @@ def test_between_grid_root_tolerance_scales_with_the_bracket(scale):
     np.testing.assert_allclose(actual, expected, rtol=1e-11, atol=0.)
 
 
+@pytest.mark.parametrize("scale", [1e-8, 1., 1e8])
+@pytest.mark.parametrize("grid", [np.arange(-6.5, 7., 1.), [-7., 0., 7.]])
+def test_nonpositive_brackets_preserve_positive_natural_roots(scale, grid):
+    """Negative roots are discarded; positive roots remain j*scale."""
+    omega = np.array(grid) * scale
+    actual = natural_periods(
+        omega, np.zeros((len(omega), 6, 6)), np.eye(6),
+        np.diag((np.arange(1., 7.) * scale) ** 2),
+    )
+    expected = [2 * math.pi / (j * scale) for j in range(1, 7)]
+    np.testing.assert_allclose(actual, expected, rtol=1e-11, atol=0.)
+
+
 def test_scalar_impedance_full_complex_vector():
     """Z=5-1²(2+1)-i*1*1=2-i; 2/Z=(4+2i)/5.
 
