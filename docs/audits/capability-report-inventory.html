@@ -8,17 +8,18 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 @media print{body{max-width:none}a{color:inherit}}</style></head><body>
 <h1>Capability report evidence inventory</h1>
 <h2>Summary</h2>
-<p>5 reviewed inventory records: RETAINED: 1; INDICATIVE: 2; MISSING: 1; UNKNOWN: 1.</p>
+<p>6 reviewed inventory records: RETAINED: 1; INDICATIVE: 3; MISSING: 1; UNKNOWN: 1.</p>
 <p>RETAINED requires an accessible result record, source digest and criterion. It does not establish engineering qualification. Tests listed here are source pointers; this inventory does not execute them or infer execution from a green check.</p>
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody>
 <tr><td>0</td><td>2026-10-25</td><td>Initial reviewed subset separates accessible records, indicative examples and unresolved evidence so report improvements can be prioritized.</td></tr>
 <tr><td>1</td><td>2026-11-05</td><td>Refresh the pipeline manifest observation after calculation sources changed; retain synthetic scope and qualification limits.</td></tr>
+<tr><td>2</td><td>2026-11-06</td><td>Add the reproducible mooring fatigue example as indicative software evidence while retaining unevaluated component statuses.</td></tr>
 </tbody></table>
 <h2>Scope and method</h2>
-<p>Observation time: 2026-11-05T02:34:44Z. Source revision: <code>69d72c8473f088151c07f2fc705d1a5228b98d60</code>.</p>
+<p>Observation time: 2026-11-06T15:37:23.549433Z. Source revision: <code>cccba5dbb5d7c77d64e783fd7099ed3e2b634dda</code>.</p>
 <p>Discovery roots: docs/benchmarks, docs/domains/openfoam, docs/reports, docs/subsea/cross_sections.</p>
-<p>40 tracked HTML pages were enumerated; 35 are outside the reviewed subset. Supporting pages are included in discovery. This is not a complete repository census.</p>
+<p>41 tracked HTML pages were enumerated; 35 are outside the reviewed subset. Supporting pages are included in discovery. This is not a complete repository census.</p>
 <p>Only tracked, public paths are eligible. No report producer or solver runs. Audit outputs are excluded from discovery and source hashes. The JSON observations block preserves judgments, criteria, observation time and source digests. Regeneration refuses stale source digests. Links assume publication in docs/audits; an output directory elsewhere is staging only. There is no generated timestamp to exclude.</p>
 <h2>Reviewed reports and proposed card links</h2>
 <section id="cfd-calm-water"><h3>CFD calm-water resistance</h3>
@@ -85,6 +86,27 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 <li><a href="../../tests/hydrodynamics/diffraction/test_unit_box_benchmark.py">tests/hydrodynamics/diffraction/test_unit_box_benchmark.py</a>: <code>0de9c11cf8db9e8fa4a156138b3d916f196cff98f36d01c34a66f9f241082e79</code></li>
 <li><a href="../../tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py">tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py</a>: <code>43c37403e9b52b2911459ffd2473fdb2dd49dcb449732388a5165bc19325ba55</code></li>
 </ul></details></section>
+<section id="mooring-fatigue"><h3>Metallic mooring fatigue screening</h3>
+<p>Evidence status: <strong>INDICATIVE</strong>; qualification: INDICATIVE.</p>
+<p>Report and proposed card target: <a href="../reports/modules/mooringfatigue/report.html">docs/reports/modules/mooringfatigue/report.html</a>.</p>
+<p>Report source: <a href="../reports/modules/mooringfatigue/report.html">docs/reports/modules/mooringfatigue/report.html</a>. Generator: <a href="../../scripts/reporting/build_mooring_fatigue_module_report.py">scripts/reporting/build_mooring_fatigue_module_report.py</a>.</p>
+<p>Test sources (execution not asserted): <a href="../../tests/reporting/test_mooring_fatigue_module_report.py">tests/reporting/test_mooring_fatigue_module_report.py</a>.</p>
+<p>Criterion: Software evidence requires deterministic report regeneration, explicit UTF-8 text I/O and independent arithmetic checkpoints; a physical component acceptance basis is not established.</p>
+<p>Observation: The public example exercises tension-to-stress conversion, Miner damage, life and margin. Its documented screening limit is the reciprocal of the input design fatigue factor.</p>
+<p>Evidence references:</p><ul>
+<li>criterion: <a href="../../examples/workflows/mooring-fatigue/README.md">examples/workflows/mooring-fatigue/README.md</a></li>
+<li>reference: <a href="../../examples/workflows/mooring-fatigue/input.yml">examples/workflows/mooring-fatigue/input.yml</a></li>
+</ul><p>Limitations:</p><ul>
+<li>Both chain and wire component statuses remain NOT_EVALUATED because the example uses a generic welded-joint curve and assumed lifetime cycle exposure.</li>
+<li>INDICATIVE denotes software evidence only; no measured-load or component-specific reference result is retained.</li>
+<li>Browser-specific file-dialog behaviour is not established by the Node-based interface tests.</li>
+</ul><details><summary>Reviewed source digests (SHA-256)</summary><ul>
+<li><a href="../reports/modules/mooringfatigue/report.html">docs/reports/modules/mooringfatigue/report.html</a>: <code>46cecc03e5749ebf19d038c0eb5ad065b97df7ceab5208367af4da820e3933ba</code></li>
+<li><a href="../../examples/workflows/mooring-fatigue/README.md">examples/workflows/mooring-fatigue/README.md</a>: <code>adfc5bd0eaff4fc8fec42679c91fcec3baa2256b3709eaabd796966c08ae42db</code></li>
+<li><a href="../../examples/workflows/mooring-fatigue/input.yml">examples/workflows/mooring-fatigue/input.yml</a>: <code>e707539680f132ac6d050199900a952dde34cdc1e85fb8cb84e10961a85a0351</code></li>
+<li><a href="../../scripts/reporting/build_mooring_fatigue_module_report.py">scripts/reporting/build_mooring_fatigue_module_report.py</a>: <code>e9d4e6e3760deec991e3e1a2994132809941b3e928e882ccf1acdaa94e01fe35</code></li>
+<li><a href="../../tests/reporting/test_mooring_fatigue_module_report.py">tests/reporting/test_mooring_fatigue_module_report.py</a>: <code>1381efdf457e0c04ff45e72216c0c7171f097bd15074049a95e0de4394327e5a</code></li>
+</ul></details></section>
 <section id="padeye-analysis"><h3>Lift point analysis</h3>
 <p>Evidence status: <strong>MISSING</strong>; qualification: INDICATIVE.</p>
 <p>Report and proposed card target: <a href="../reports/padeye-lift-point-analysis.html">docs/reports/padeye-lift-point-analysis.html</a>.</p>
@@ -130,6 +152,7 @@ code{overflow-wrap:anywhere}a{overflow-wrap:anywhere}section{margin:2rem 0}
 <h2>Evidence gaps and prioritized next actions</h2>
 <ol>
 <li>Priority 1; cfd-calm-water; qualification: Obtain an accessible matched experimental reference and primary geometry basis; complete the additional mesh and uncertainty review before stronger CFD claims.</li>
+<li>Priority 1; mooring-fatigue; qualification: Obtain component-specific curves, qualified cycle exposure and measured-load evidence before engineering acceptance.</li>
 <li>Priority 2; cross-section-report; unreviewed-evidence: Open and retain permitted public source evidence for fixture dimensions and preserve a report-specific execution record; keep schematic scope explicit.</li>
 <li>Priority 2; diffraction-report-pipeline; qualification: Keep the synthetic report-pipeline label; obtain retained independent solver outputs and justified physical comparison criteria for a program benchmarking analysis.</li>
 <li>Priority 2; padeye-analysis; missing-evidence: Run the report-specific tests and retain a digest-bound result record; resolve sourced allowables and outstanding lifting checks before qualification claims.</li>

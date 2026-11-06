@@ -52,7 +52,7 @@ def test_report_ignore_exceptions_follow_shared_module_rules(tmp_path):
     completed = subprocess.run(
         ["git", "-C", str(ROOT), "--work-tree", str(tmp_path),
          "check-ignore", "--no-index", "--stdin"],
-        input="\n".join(paths) + "\n", text=True, capture_output=True,
+        input="\n".join(paths) + "\n", text=True, encoding="utf-8", capture_output=True,
         check=False, env=env, timeout=10,
     )
     assert completed.returncode == 0, completed.stderr
@@ -289,6 +289,23 @@ def test_component_basis_and_curve_parameters_are_explicit(tmp_path):
     assert "Continuous knee anchoring" in page and "0.2 %" in page
 
 
+def test_inventory_retains_the_report_and_its_qualification_limits():
+    """Keep software evidence discoverable without upgrading component status."""
+    inventory = json.loads(
+        (ROOT / "docs/audits/capability-report-inventory.json").read_text(encoding="utf-8")
+    )
+    row = next(
+        (item for item in inventory["observations"]["reports"]
+         if item["id"] == "mooring-fatigue"), None
+    )
+    assert row is not None, "The capability inventory must review the mooring report"
+    assert row["report_path"] == REPORT.relative_to(ROOT).as_posix()
+    assert row["evidence_status"] == "INDICATIVE"
+    assert row["qualification"] == "INDICATIVE"
+    assert "NOT_EVALUATED" in " ".join(row["limitations"])
+    assert Path(__file__).relative_to(ROOT).as_posix() in row["test_paths"]
+
+
 @pytest.mark.parametrize("reduction, description", [
     (0.5, "reduces damage by less than 0.6 %"),
     (75.0, "reduces damage by less than 75.1 %"),
@@ -448,6 +465,6 @@ check().catch(error => {console.error(error.message); process.exitCode = 1;});
     completed = subprocess.run(
         [node], input="const UI_SOURCE = " + json.dumps(BUILDER.UI)
         + ";\nconst SIZE_CASE = " + json.dumps(size_case) + ";\n" + harness,
-        text=True, capture_output=True, check=False, timeout=30,
+        text=True, encoding="utf-8", capture_output=True, check=False, timeout=30,
     )
     assert completed.returncode == 0, completed.stderr
