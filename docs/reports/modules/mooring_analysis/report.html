@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mooring analysis: synthetic touchdown catenary</title>
+<style>
+:root{color-scheme:light;--ink:#182b36;--accent:#086d76}*{box-sizing:border-box}
+body{margin:0;color:var(--ink);background:#f5f4ee;font:16px/1.6 system-ui,sans-serif}
+header,main,nav,aside{max-width:1200px;margin:auto;padding:1.5rem 2rem}
+header{border-bottom:4px solid var(--accent)}h1{font-size:2.2rem;line-height:1.2}
+h2{color:var(--accent)}section{margin:2rem 0;padding:1rem;background:white;border-top:1px solid #bdcccd}
+a{color:#065d76;overflow-wrap:anywhere}nav ol{columns:2}td,th{padding:.65rem;text-align:left;vertical-align:top;border-bottom:1px solid #d4dddd}
+table{border-collapse:collapse;width:100%}caption{caption-side:bottom;text-align:left;font-size:.9rem;padding:.7rem}
+.table-wrap{overflow:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf3f3;padding:1rem}
+aside{background:#e6efed}:focus-visible{outline:3px solid var(--accent)}
+@media(max-width:650px){header,main,nav,aside{padding:1rem}nav ol{columns:1}}
+@media print{body{background:white}nav{display:none}section{break-inside:auto}}
+</style></head><body>
+<header><h1>Mooring analysis: synthetic touchdown catenary</h1><p>Revision 01 · 2026-10-28 · Draft for maintainer review</p></header>
+<nav aria-label="Contents"><ol><li><a href="#section-1">Summary</a></li><li><a href="#section-2">Introduction and method map</a></li><li><a href="#section-3">Data basis</a></li><li><a href="#section-4">Theory and equations</a></li><li><a href="#section-5">Worked example</a></li><li><a href="#section-6">Validation evidence</a></li><li><a href="#section-7">Limits of use</a></li><li><a href="#section-8">Way forward</a></li><li><a href="#section-9">References</a></li><li><a href="#section-10">Appendix and rebuild</a></li></ol></nav><main><section id="section-1"><h2>1. Summary</h2><p>This mooring analysis documents one synthetic, uniform touchdown catenary. Numerical agreement criterion met: differences are within 0.1% against the carried-forward 0.1% numerical criterion. The bound is rounded upward from unrounded relative differences; it is not design acceptance.</p><p>No full-module, standards-compliance or solver-qualification claim is made. The result supplies an arithmetic control and a documented way forward.</p><div id="revision-history"><h3>Revision history</h3><div class="table-wrap"><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>00</td><td>2026-10-28</td><td>Added a synthetic touchdown example with independent geometry and force balance, so numerical agreement is distinguished from design acceptance.; Added a source-linked method map, explicit qualification gaps and a reproducible report builder with visible-value checks.</td></tr><tr><td>01</td><td>2026-10-28</td><td>Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.; Added the textbook equation basis and retained the first issue in the revision history.</td></tr></tbody><caption>Revision history. Report issues and reasons for change.</caption></table></div></div></section><section id="section-2"><h2>2. Introduction and method map</h2><p>The public interfaces are inventoried below. A horizontal touchdown tangent governs this example; it is not a solution for two general suspended endpoints.</p><div class="table-wrap"><table><thead><tr><th scope="col">Method and source</th><th scope="col">Implemented</th><th scope="col">Independent evidence and disposition</th></tr></thead><tbody><tr><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/catenary.py">solve_catenary</a></td><td>Implemented: uniform positive-weight, inextensible touchdown line.</td><td>Independently checked: Case A only in this report.</td></tr><tr><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/catenary.py">solve_for_horizontal_tension</a></td><td>Implemented target-tension iteration.</td><td>Existing Case A inverse regression; not calculated by this report. Broader qualification: NOT_EVALUATED.</td></tr><tr><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/catenary.py">calculate_stiffness / check_touchdown</a></td><td>Implemented geometric/elastic expressions and touchdown search.</td><td>NOT_EVALUATED; the geometry example does not qualify these methods.</td></tr><tr><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/models.py">MooringLine.axial_stiffness</a></td><td>Implemented series axial compliance.</td><td><a href="../../../../tests/subsea/mooring_analysis/test_series_stiffness.py">Independent elongation regressions</a>; distinct from geometric catenary stiffness. Full stiffness qualification: NOT_EVALUATED.</td></tr><tr><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/designer.py">MooringDesigner</a></td><td>Implemented environmental, offset, intact/damaged and condition-dispatch screens.</td><td>Source inspection only; design-code compliance and equilibrium: NOT_EVALUATED.</td></tr><tr><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/cli.py">mooring-analysis CLI</a></td><td>Implemented catenary, design, material-list and model-export command routes.</td><td>Source inspection only; no command or exporter executed.</td></tr><tr><td><a href="../../../../tests/subsea/mooring_analysis/test_pinned_catenary_example.py">CatenarySolver pinned-end example</a></td><td>Separate general solver and independent pinned-end fixture.</td><td>Distinct endpoint/elasticity contract; not calculated or qualified here.</td></tr><tr><td>DYNMOOR legacy dynamic port</td><td>Excluded from report scope.</td><td>NOT_EVALUATED; no legacy-port or dynamic mooring qualification.</td></tr></tbody><caption>Table 1. Method evidence map; implementation is not qualification.</caption></table></div></section><section id="section-3"><h2>3. Data basis</h2><p>The weight_water API field is a submerged mass-equivalent in kg/m, not a supplied force in kN/m. The declared illustrative g=9.81 m/s² is used: w=q*g/1000=9.81 kN/m. The inputs are synthetic arithmetic choices, not recommended line properties. No measured or manufacturer data enter the calculation.</p><div class="table-wrap"><table><thead><tr><th scope="col">Input</th><th scope="col">Value and unit</th><th scope="col">Basis and use</th></tr></thead><tbody><tr><td>mass_equivalent</td><td><span data-value="inputs.mass_equivalent" data-unit="kg/m" data-source="case-a" data-equation="synthetic prescribed input">1000.0 kg/m</span></td><td>synthetic; Case A arithmetic input</td></tr><tr><td>gravity</td><td><span data-value="inputs.gravity" data-unit="m/s²" data-source="case-a" data-equation="synthetic prescribed input">9.81 m/s²</span></td><td>synthetic; Case A arithmetic input</td></tr><tr><td>total_length</td><td><span data-value="inputs.total_length" data-unit="m" data-source="case-a" data-equation="synthetic prescribed input">500.0 m</span></td><td>synthetic; Case A arithmetic input</td></tr><tr><td>vertical_height</td><td><span data-value="inputs.vertical_height" data-unit="m" data-source="case-a" data-equation="synthetic prescribed input">100.0 m</span></td><td>synthetic; Case A arithmetic input</td></tr><tr><td>horizontal_tension</td><td><span data-value="inputs.horizontal_tension" data-unit="kN" data-source="case-a" data-equation="synthetic prescribed input">981.0 kN</span></td><td>synthetic; Case A arithmetic input</td></tr><tr><td>diameter</td><td><span data-value="inputs.diameter" data-unit="mm" data-source="case-a" data-equation="synthetic prescribed input">1.0 mm</span></td><td>synthetic; unused positive placeholder</td></tr><tr><td>mbl</td><td><span data-value="inputs.mbl" data-unit="kN" data-source="case-a" data-equation="synthetic prescribed input">1.0 kN</span></td><td>synthetic; unused positive placeholder</td></tr><tr><td>ea</td><td><span data-value="inputs.ea" data-unit="kN" data-source="case-a" data-equation="synthetic prescribed input">1.0 kN</span></td><td>synthetic; unused positive placeholder</td></tr><tr><td>drag_coeff</td><td><span data-value="inputs.drag_coeff" data-unit="dimensionless" data-source="case-a" data-equation="synthetic prescribed input">1.0 dimensionless</span></td><td>synthetic; unused positive placeholder</td></tr></tbody><caption>Table 2. Synthetic inputs; the chain enumeration selects no material-library properties.</caption></table></div><p>Diameter, minimum breaking load, EA and drag coefficient are unused placeholders. Their positive values do not establish capacity or applicability. Grounded length exceeds zero for this case; no seabed friction is calculated.</p></section><section id="section-4"><h2>4. Theory and equations</h2><p>Integrating dz/dx=sinh(x/a) and ds/dx=cosh(x/a) from the horizontal tangent gives z=a*(cosh(x/a)−1), s=a*sinh(x/a), a=H/w. Eliminating x gives s²=z²+2az. For Case A, a=z=100 m, cosh(x/a)=2, so s=100*sqrt(3) m and x=100*ln(2+sqrt(3)) m. Force balance gives T_top=H+w*z=1962 kN, T_touchdown=H=981 kN and tan(theta)=sqrt(3), hence theta=60 degrees. The remaining grounded length is 500−100*sqrt(3) m. These identities are independently derived, rather than inferred from module outputs.</p><p>Textbook basis: Classical Mechanics, online revision 8 August 2022, section 18.3, Equation of the Catenary in Rectangular Coordinates, and Other Simple Relations, equations 18.3.2 to 18.3.9 (Physics LibreTexts page 7046). The coordinate translation is z=y-a. Unit conversion uses the exact SI kilo prefix; the prescribed gravity and numerical criterion come from synthetic Case A.</p><a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Synthetic input and numerical-criterion basis: existing Case A</a></section><section id="section-5"><h2>5. Worked example</h2><p>CatenaryAnalyzer.solve_catenary is called once with the declared height, length, mass-equivalent and horizontal tension. The following displayed quantities are bound to the calculation record, including unit and equation metadata.</p><div class="table-wrap"><table><thead><tr><th scope="col">Quantity</th><th scope="col">Module result and unit</th><th scope="col">Independent result and unit</th><th scope="col">Absolute relative difference (%)</th><th scope="col">Equation / source</th></tr></thead><tbody><tr><td>weight_per_length</td><td><span data-value="computed.weight_per_length" data-unit="kN/m" data-source="case-a" data-equation="w=q*g/1000 (N to kN, exact SI prefix)">9.8 kN/m</span></td><td><span data-value="independent.weight_per_length" data-unit="kN/m" data-source="case-a" data-equation="w=q*g/1000 (N to kN, exact SI prefix)">9.8 kN/m</span></td><td><span data-value="difference.weight_per_length" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>w=q*g/1000 (N to kN, exact SI prefix); <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>horizontal_tension</td><td><span data-value="computed.horizontal_tension" data-unit="kN" data-source="case-a" data-equation="H=prescribed horizontal component">981.0 kN</span></td><td><span data-value="independent.horizontal_tension" data-unit="kN" data-source="case-a" data-equation="H=prescribed horizontal component">981.0 kN</span></td><td><span data-value="difference.horizontal_tension" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>H=prescribed horizontal component; <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>vertical_height</td><td><span data-value="computed.vertical_height" data-unit="m" data-source="case-a" data-equation="z=prescribed vertical span above touchdown">100.0 m</span></td><td><span data-value="independent.vertical_height" data-unit="m" data-source="case-a" data-equation="z=prescribed vertical span above touchdown">100.0 m</span></td><td><span data-value="difference.vertical_height" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>z=prescribed vertical span above touchdown; <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>catenary_parameter</td><td><span data-value="computed.catenary_parameter" data-unit="m" data-source="case-a" data-equation="a=H/w">100.0 m</span></td><td><span data-value="independent.catenary_parameter" data-unit="m" data-source="case-a" data-equation="a=H/w">100.0 m</span></td><td><span data-value="difference.catenary_parameter" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>a=H/w; <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>arc_length</td><td><span data-value="computed.arc_length" data-unit="m" data-source="case-a" data-equation="s=sqrt(z*(z+2*a))=100*sqrt(3)">173.2 m</span></td><td><span data-value="independent.arc_length" data-unit="m" data-source="case-a" data-equation="s=sqrt(z*(z+2*a))=100*sqrt(3)">173.2 m</span></td><td><span data-value="difference.arc_length" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>s=sqrt(z*(z+2*a))=100*sqrt(3); <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>horizontal_distance</td><td><span data-value="computed.horizontal_distance" data-unit="m" data-source="case-a" data-equation="x=a*acosh(1+z/a)=100*ln(2+sqrt(3))">131.7 m</span></td><td><span data-value="independent.horizontal_distance" data-unit="m" data-source="case-a" data-equation="x=a*acosh(1+z/a)=100*ln(2+sqrt(3))">131.7 m</span></td><td><span data-value="difference.horizontal_distance" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>x=a*acosh(1+z/a)=100*ln(2+sqrt(3)); <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>fairlead_tension</td><td><span data-value="computed.fairlead_tension" data-unit="kN" data-source="case-a" data-equation="T_top=sqrt(H²+(w*s)²)=H+w*z">1962.0 kN</span></td><td><span data-value="independent.fairlead_tension" data-unit="kN" data-source="case-a" data-equation="T_top=sqrt(H²+(w*s)²)=H+w*z">1962.0 kN</span></td><td><span data-value="difference.fairlead_tension" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>T_top=sqrt(H²+(w*s)²)=H+w*z; <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>touchdown_tension</td><td><span data-value="computed.touchdown_tension" data-unit="kN" data-source="case-a" data-equation="T_touchdown=H (vertical component zero)">981.0 kN</span></td><td><span data-value="independent.touchdown_tension" data-unit="kN" data-source="case-a" data-equation="T_touchdown=H (vertical component zero)">981.0 kN</span></td><td><span data-value="difference.touchdown_tension" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>T_touchdown=H (vertical component zero); <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>fairlead_angle</td><td><span data-value="computed.fairlead_angle" data-unit="degrees" data-source="case-a" data-equation="theta=atan2(w*s,H)=60 degrees">60.0 degrees</span></td><td><span data-value="independent.fairlead_angle" data-unit="degrees" data-source="case-a" data-equation="theta=atan2(w*s,H)=60 degrees">60.0 degrees</span></td><td><span data-value="difference.fairlead_angle" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>theta=atan2(w*s,H)=60 degrees; <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr><tr><td>grounded_length</td><td><span data-value="computed.grounded_length" data-unit="m" data-source="case-a" data-equation="L_ground=L-s=500-100*sqrt(3) (L exceeds s)">326.8 m</span></td><td><span data-value="independent.grounded_length" data-unit="m" data-source="case-a" data-equation="L_ground=L-s=500-100*sqrt(3) (L exceeds s)">326.8 m</span></td><td><span data-value="difference.grounded_length" data-unit="%" data-source="case-a" data-equation="abs(computed-independent)/abs(independent)*100">0.0 %</span></td><td>L_ground=L-s=500-100*sqrt(3) (L exceeds s); <a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">Case A</a></td></tr></tbody><caption>Table 3. Computed results compared with integrated identities. Comparisons are displayed to one decimal place; tests retain unrounded values.</caption></table></div></section><section id="section-6"><h2>6. Validation evidence</h2><p>Numerical agreement criterion met: differences are within 0.1% against the carried-forward 0.1% numerical criterion. The bound is rounded upward from unrounded relative differences; it is not design acceptance.</p><p>The existing catenary geometry suite covers both closed-form cases, an explicit-height override, an inverse-tension check and buoyancy rejection. The series stiffness suite checks common-force elongation, splitting invariance and invalid segment guards. Those regressions do not establish geometric stiffness accuracy.</p><p>The report suite checks all unrounded quantities against hand arithmetic and a fresh module call; parsed HTML checks every visible value and unit. Controlled mutations of every solver result field must change visible results and the numerical disposition. Two isolated rebuilds compare every delivered output byte. Documented CLI routes are checked against registered commands and invoked with --help only; no command analysis is run. Reproducibility does not establish physical validation.</p><p>The roundoff budget is 256 binary64 spacings at unity: fewer than 32 elementary operations, a factor-two library-rounding margin and a factor-four conditioning allowance. The largest subtraction condition is (500+100*sqrt(3))/(500−100*sqrt(3)), below four for this Case A. It is a test precision allowance, independent of the carried-forward 0.1% numerical criterion.</p><a href="../../../../tests/subsea/mooring_analysis/test_module_report.py">Executable evidence</a></section><section id="section-7"><h2>7. Limits of use</h2><ul><li>Design-code compliance: NOT_EVALUATED. DNV-OS-E301 is named by the package; edition, governing clauses, load cases and acceptance mapping are not established here.</li><li>Actual line strength: NOT_EVALUATED. No qualified material or breaking-load data are supplied.</li><li>Stiffness qualification: NOT_EVALUATED. Neither tangent geometric stiffness nor physical elastic response is qualified by this example.</li><li>Environmental loading: NOT_EVALUATED. No environmental input, heading combination or system equilibrium is evaluated.</li><li>Dynamic mooring behavior: NOT_EVALUATED. No dynamic simulation or licensed solver is invoked; the DYNMOOR port is excluded.</li></ul><p>Source-inspection findings: solve_catenary clips negative grounded length and does not reject a suspended length exceeding total length; finite-input and vertical-span validation remain incomplete. check_touchdown retains height/coordinate expressions inconsistent with the corrected geometry route; calculate_stiffness uses a separate geometric expression without independent qualification here. The designer uses the first segment, applies a distance-ratio correction without an equilibrium residual, ignores yaw in that correction and has a broad fallback. Environmental forces are combined in one heading. These concerns are findings for further work, not fixes or qualification claims.</p><a href="../../../../src/digitalmodel/subsea/mooring_analysis/catenary.py">Analyzer evidence</a>; <a href="../../../../src/digitalmodel/subsea/mooring_analysis/designer.py">Designer evidence</a></section><section id="section-8"><h2>8. Way forward</h2><ol><li>Retain Case A as an arithmetic regression. Add independent boundary, finite-input, short-line and general-endpoint checks before extending applicability.</li><li>Reconcile touchdown-search geometry and derive tangent stiffness for the intended boundary conditions; compare with independent derivatives.</li><li>Establish qualified material properties, environmental cases, equilibrium criteria and the governing standard edition before assigning design acceptance.</li><li>Qualify the pinned-end route independently and obtain reviewed dynamic evidence separately. Keep the broader module-report issue open for numerical qualification.</li></ol></section><section id="section-9"><h2>9. References</h2><div class="table-wrap"><table><thead><tr><th scope="col">Source</th><th scope="col">Repository evidence</th><th scope="col">Use</th></tr></thead><tbody><tr><td>case-a</td><td><a href="../../../../tests/subsea/mooring_analysis/test_catenary_geometry.py">tests/subsea/mooring_analysis/test_catenary_geometry.py</a></td><td>test_vertical_span_closed_form: Case A; synthetic inputs and 0.1% numerical criterion</td></tr><tr><td>catenary</td><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/catenary.py">src/digitalmodel/subsea/mooring_analysis/catenary.py</a></td><td>CatenaryAnalyzer: current touchdown formulation and other methods</td></tr><tr><td>models</td><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/models.py">src/digitalmodel/subsea/mooring_analysis/models.py</a></td><td>MooringLineProperties, CatenaryResult and MooringLine.axial_stiffness</td></tr><tr><td>designer</td><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/designer.py">src/digitalmodel/subsea/mooring_analysis/designer.py</a></td><td>MooringDesigner: environmental, offset and condition screens</td></tr><tr><td>cli</td><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/cli.py">src/digitalmodel/subsea/mooring_analysis/cli.py</a></td><td>catenary_analysis, design_verification, generate_orcaflex_model</td></tr><tr><td>entry-point</td><td><a href="../../../../pyproject.toml">pyproject.toml</a></td><td>project.scripts: mooring-analysis</td></tr><tr><td>series-tests</td><td><a href="../../../../tests/subsea/mooring_analysis/test_series_stiffness.py">tests/subsea/mooring_analysis/test_series_stiffness.py</a></td><td>Independent series-elongation regressions; no geometric-stiffness qualification</td></tr><tr><td>pinned-tests</td><td><a href="../../../../tests/subsea/mooring_analysis/test_pinned_catenary_example.py">tests/subsea/mooring_analysis/test_pinned_catenary_example.py</a></td><td>Separate CatenarySolver pinned-end route; not calculated by this report</td></tr><tr><td>module-pack</td><td><a href="../../../../src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md">src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md</a></td><td>Discovery context; historical formulas require reconciliation with current catenary.py</td></tr><tr><td>report-tests</td><td><a href="../../../../tests/subsea/mooring_analysis/test_module_report.py">tests/subsea/mooring_analysis/test_module_report.py</a></td><td>Independent oracle, visible-result mutations, escaping and rebuild checks</td></tr><tr><td>builder</td><td><a href="../../../../docs/reports/modules/mooring_analysis/build_report.py">docs/reports/modules/mooring_analysis/build_report.py</a></td><td>Calculation and rendering implementation</td></tr></tbody><caption>Table 4. Repository sources are pinned by SHA-256 in the embedded and adjacent source record.</caption></table></div><p>The module pack is historical discovery evidence: its catenary equation descriptions and issue-pending entries are not current qualification. Current source and the closed-form regression govern this report. No licensed standard tables or numerical design factors are reproduced.</p></section><section id="section-10"><h2>10. Appendix and rebuild</h2><p>Source-inspected CLI routes: mooring-analysis catenary accepts mass per length and a horizontal or fairlead tension, then also calculates stiffness. It is therefore not executed by this report. mooring-analysis design builds a screening system, calculates environmental loads and analyzes conditions; the shared material object is mutated by its length assignment. mooring-analysis generate-model is a placeholder; mooring-analysis list-materials lists the library. The Python designer routes through analyze_line_tension and intact/damaged condition checks. No exporter or commercial tool is executed.</p><a href="../../../../src/digitalmodel/subsea/mooring_analysis/cli.py">CLI source</a>; <a href="../../../../pyproject.toml">Installed command declaration</a><p>From the repository root, use the prepared scratch interpreter with the module dependencies. The explicit destination receives only report.html, changes.json and sources.json; no intermediate files are written by the builder.</p><pre><code>PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 uv run --no-project --python &quot;$TMPDIR/venv/bin/python&quot; python docs/reports/modules/mooring_analysis/build_report.py --output-dir &quot;$TMPDIR/mooring-report&quot;</code></pre><p>JSON calculation, source and change records below are embedded for offline inspection. The page uses no external resources. Moving the page does not change its displayed analysis; repository links require the repository tree.</p></section></main>
+<aside id="change-panel"><h2>Change panel</h2><ul><li>Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.</li><li>Added the textbook equation basis and retained the first issue in the revision history.</li></ul></aside>
+<script type="application/json" id="calculation-record">{
+  "inputs": {
+    "mass_equivalent": {
+      "value": 1000.0,
+      "unit": "kg/m",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    },
+    "gravity": {
+      "value": 9.81,
+      "unit": "m/s²",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    },
+    "total_length": {
+      "value": 500.0,
+      "unit": "m",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    },
+    "vertical_height": {
+      "value": 100.0,
+      "unit": "m",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    },
+    "horizontal_tension": {
+      "value": 981.0,
+      "unit": "kN",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    },
+    "diameter": {
+      "value": 1.0,
+      "unit": "mm",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    },
+    "mbl": {
+      "value": 1.0,
+      "unit": "kN",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    },
+    "ea": {
+      "value": 1.0,
+      "unit": "kN",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    },
+    "drag_coeff": {
+      "value": 1.0,
+      "unit": "dimensionless",
+      "equation": "synthetic prescribed input",
+      "source": "case-a",
+      "basis": "synthetic"
+    }
+  },
+  "computed": {
+    "weight_per_length": {
+      "value": 9.81,
+      "unit": "kN/m",
+      "equation": "w=q*g/1000 (N to kN, exact SI prefix)",
+      "source": "case-a"
+    },
+    "horizontal_tension": {
+      "value": 981.0,
+      "unit": "kN",
+      "equation": "H=prescribed horizontal component",
+      "source": "case-a"
+    },
+    "vertical_height": {
+      "value": 100.0,
+      "unit": "m",
+      "equation": "z=prescribed vertical span above touchdown",
+      "source": "case-a"
+    },
+    "catenary_parameter": {
+      "value": 100.0,
+      "unit": "m",
+      "equation": "a=H/w",
+      "source": "case-a"
+    },
+    "arc_length": {
+      "value": 173.20508075688772,
+      "unit": "m",
+      "equation": "s=sqrt(z*(z+2*a))=100*sqrt(3)",
+      "source": "case-a"
+    },
+    "horizontal_distance": {
+      "value": 131.69578969248167,
+      "unit": "m",
+      "equation": "x=a*acosh(1+z/a)=100*ln(2+sqrt(3))",
+      "source": "case-a"
+    },
+    "fairlead_tension": {
+      "value": 1962.0,
+      "unit": "kN",
+      "equation": "T_top=sqrt(H²+(w*s)²)=H+w*z",
+      "source": "case-a"
+    },
+    "touchdown_tension": {
+      "value": 981.0,
+      "unit": "kN",
+      "equation": "T_touchdown=H (vertical component zero)",
+      "source": "case-a"
+    },
+    "fairlead_angle": {
+      "value": 59.99999999999999,
+      "unit": "degrees",
+      "equation": "theta=atan2(w*s,H)=60 degrees",
+      "source": "case-a"
+    },
+    "grounded_length": {
+      "value": 326.7949192431123,
+      "unit": "m",
+      "equation": "L_ground=L-s=500-100*sqrt(3) (L exceeds s)",
+      "source": "case-a"
+    }
+  },
+  "independent": {
+    "weight_per_length": {
+      "value": 9.81,
+      "unit": "kN/m",
+      "equation": "w=q*g/1000 (N to kN, exact SI prefix)",
+      "source": "case-a"
+    },
+    "horizontal_tension": {
+      "value": 981.0,
+      "unit": "kN",
+      "equation": "H=prescribed horizontal component",
+      "source": "case-a"
+    },
+    "vertical_height": {
+      "value": 100.0,
+      "unit": "m",
+      "equation": "z=prescribed vertical span above touchdown",
+      "source": "case-a"
+    },
+    "catenary_parameter": {
+      "value": 100.0,
+      "unit": "m",
+      "equation": "a=H/w",
+      "source": "case-a"
+    },
+    "arc_length": {
+      "value": 173.20508075688772,
+      "unit": "m",
+      "equation": "s=sqrt(z*(z+2*a))=100*sqrt(3)",
+      "source": "case-a"
+    },
+    "horizontal_distance": {
+      "value": 131.69578969248167,
+      "unit": "m",
+      "equation": "x=a*acosh(1+z/a)=100*ln(2+sqrt(3))",
+      "source": "case-a"
+    },
+    "fairlead_tension": {
+      "value": 1962.0,
+      "unit": "kN",
+      "equation": "T_top=sqrt(H²+(w*s)²)=H+w*z",
+      "source": "case-a"
+    },
+    "touchdown_tension": {
+      "value": 981.0,
+      "unit": "kN",
+      "equation": "T_touchdown=H (vertical component zero)",
+      "source": "case-a"
+    },
+    "fairlead_angle": {
+      "value": 60.0,
+      "unit": "degrees",
+      "equation": "theta=atan2(w*s,H)=60 degrees",
+      "source": "case-a"
+    },
+    "grounded_length": {
+      "value": 326.7949192431123,
+      "unit": "m",
+      "equation": "L_ground=L-s=500-100*sqrt(3) (L exceeds s)",
+      "source": "case-a"
+    }
+  },
+  "difference": {
+    "weight_per_length": 0.0,
+    "horizontal_tension": 0.0,
+    "vertical_height": 0.0,
+    "catenary_parameter": 0.0,
+    "arc_length": 0.0,
+    "horizontal_distance": 0.0,
+    "fairlead_tension": 0.0,
+    "touchdown_tension": 0.0,
+    "fairlead_angle": 1.1842378929335004e-14,
+    "grounded_length": 0.0
+  },
+  "agreement_bound_percent": 0.1,
+  "criterion_percent": 0.1
+}</script><script type="application/json" id="change-record">{
+  "report": "mooring-touchdown-catenary",
+  "revision": "01",
+  "date": "2026-10-28",
+  "changes": [
+    "Corrected the documented design command and added registered-route checks, so the appendix names commands that can be invoked.",
+    "Added the textbook equation basis and retained the first issue in the revision history."
+  ],
+  "history": [
+    {
+      "report": "mooring-touchdown-catenary",
+      "revision": "00",
+      "date": "2026-10-28",
+      "changes": [
+        "Added a synthetic touchdown example with independent geometry and force balance, so numerical agreement is distinguished from design acceptance.",
+        "Added a source-linked method map, explicit qualification gaps and a reproducible report builder with visible-value checks."
+      ]
+    }
+  ]
+}</script><script type="application/json" id="source-record">{
+  "sources": [
+    {
+      "id": "case-a",
+      "path": "tests/subsea/mooring_analysis/test_catenary_geometry.py",
+      "locator": "test_vertical_span_closed_form: Case A; synthetic inputs and 0.1% numerical criterion",
+      "sha256": "2a0e8996a27ed46da703c8e3dc3b783e8323a80c67d492fc09e1f8fc31221785"
+    },
+    {
+      "id": "catenary",
+      "path": "src/digitalmodel/subsea/mooring_analysis/catenary.py",
+      "locator": "CatenaryAnalyzer: current touchdown formulation and other methods",
+      "sha256": "74f0549c19b9aaae60619e021151ea3b3c68b1da957580a3c242a4ae5c0fcb1c"
+    },
+    {
+      "id": "models",
+      "path": "src/digitalmodel/subsea/mooring_analysis/models.py",
+      "locator": "MooringLineProperties, CatenaryResult and MooringLine.axial_stiffness",
+      "sha256": "6c907a2db26444337cbff8decf62f43a471c67ecc9b0dca12b52e72f2e6bce0e"
+    },
+    {
+      "id": "designer",
+      "path": "src/digitalmodel/subsea/mooring_analysis/designer.py",
+      "locator": "MooringDesigner: environmental, offset and condition screens",
+      "sha256": "83f3d23cc3dfb5a7be7d09a16970c2f8b763420043c6acaedb1b1f3f8f7ad6e5"
+    },
+    {
+      "id": "cli",
+      "path": "src/digitalmodel/subsea/mooring_analysis/cli.py",
+      "locator": "catenary_analysis, design_verification, generate_orcaflex_model",
+      "sha256": "f38b06edddf6dffe68173b329a9dc1f976bfb54c8c452691ecd8faab3dd94480"
+    },
+    {
+      "id": "entry-point",
+      "path": "pyproject.toml",
+      "locator": "project.scripts: mooring-analysis",
+      "sha256": "2059519a2334da4db9309059143bec2d3bd71b8985c182f3b9bb0bf79db5f1e8"
+    },
+    {
+      "id": "series-tests",
+      "path": "tests/subsea/mooring_analysis/test_series_stiffness.py",
+      "locator": "Independent series-elongation regressions; no geometric-stiffness qualification",
+      "sha256": "a36cb91be86518a22bd116d29e167326384b3c9963d1efc15e79b85fc99d5642"
+    },
+    {
+      "id": "pinned-tests",
+      "path": "tests/subsea/mooring_analysis/test_pinned_catenary_example.py",
+      "locator": "Separate CatenarySolver pinned-end route; not calculated by this report",
+      "sha256": "9d3b559d5e7dc7da85393c3b3c12a1d6f98fda46bdf31cd9de6ee44cb81ce5e8"
+    },
+    {
+      "id": "module-pack",
+      "path": "src/digitalmodel/subsea/mooring_analysis/docs/agent-pack.md",
+      "locator": "Discovery context; historical formulas require reconciliation with current catenary.py",
+      "sha256": "813896f4e8ad6ce6b8a94cdf35da9bfadf1b3c8973d3f50ca4837f925fae1601"
+    },
+    {
+      "id": "report-tests",
+      "path": "tests/subsea/mooring_analysis/test_module_report.py",
+      "locator": "Independent oracle, visible-result mutations, escaping and rebuild checks",
+      "sha256": "d4ea879b8769d5632b1d2e4d38be15d625e6d7680ecc18d8647869f40cb60eea"
+    },
+    {
+      "id": "builder",
+      "path": "docs/reports/modules/mooring_analysis/build_report.py",
+      "locator": "Calculation and rendering implementation",
+      "sha256": "723cd59b62b04a224e28295d4438772f1f3750f06682fd54f392154500a3d186"
+    }
+  ]
+}</script>
+</body></html>
