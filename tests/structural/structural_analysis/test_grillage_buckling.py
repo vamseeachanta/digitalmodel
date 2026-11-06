@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 # ABOUTME: Golden + property tests for the cross-stiffened grillage buckling
 # ABOUTME: solver (DNV-RP-C201 Sec. 7.3-7.4): orthotropic mode + governing pick.

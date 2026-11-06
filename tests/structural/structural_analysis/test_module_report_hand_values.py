@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Independent integrals and eigenfunction for the synthetic report basis.
 
@@ -33,7 +33,7 @@ def material():
 
 @pytest.mark.parametrize("sign, expected_mpa", [(1, 16), (-1, 4)])
 def test_rectangle_integrals_and_signed_stress(material, sign, expected_mpa):
-    """Integral z² dA = b h³/12; integral y² dA = h b³/12."""
+    """Independent term magnitudes; corner signs follow the module definition."""
     width, height = 0.2, 0.4  # Synthetic dimensions, m.
     area = width * height
     i_y = width * ((height / 2) ** 3 - (-height / 2) ** 3) / 3
@@ -44,7 +44,8 @@ def test_rectangle_integrals_and_signed_stress(material, sign, expected_mpa):
     actual = StressCalculator(material).beam_stress(
         800000, 16000, 8000, area, i_y, i_z, sign * 0.1, sign * 0.2,
     )
-    # N/A = 10 MPa; My*z/Iy = 3 MPa; Mz*y/Iz = 3 MPa.
+    # N/A = 10 MPa; |My*z/Iy| = 3 MPa; |Mz*y/Iz| = 3 MPa.
+    # Both positive terms are the module convention, not a right-hand-rule check.
     assert actual == pytest.approx(expected_mpa, rel=ROUNDING, abs=0)
 
 

@@ -7,7 +7,7 @@ default:
       output: true
 
 # DNV-RP-C201 parametric plate-buckling sweep. A SMALL explicit sweep (not the
-# 972-case default) keeps results.json compact + byte-stable for the reference
+# 648-case default) keeps results.json compact + byte-stable for the reference
 # golden. write_outputs runs with timestamp=None so meta.generated_at is omitted.
 buckling_parametric:
   sweep:
@@ -17,5 +17,5 @@ buckling_parametric:
     plate_lengths: [2400.0]
     load_cases:
       - [150.0, 0.0, 0.0]
-      - [120.0, 60.0, 0.0]
+      - [120.0, 0.0, 40.0]
     gamma_m: 1.15

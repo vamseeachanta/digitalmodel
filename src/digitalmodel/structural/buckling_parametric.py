@@ -63,9 +63,10 @@ class BucklingSweepConfig:
 # Default ship-plate sweep.
 #
 # Thicknesses 8..25 mm (typical hull plating), three stiffener spacings / plate
-# breadths, one representative transverse-frame span, and six load cases spanning
-# pure axial, axial+shear and biaxial states, across all three IACS marine
-# grades. Full factorial => 18 * 3 * 1 * 6 * 3 = 972 cases.
+# breadths, one representative transverse-frame span, and four supported load
+# cases spanning pure axial and axial+shear states, across all three IACS marine
+# grades. Full factorial => 18 * 3 * 1 * 4 * 3 = 648 cases.
+# Transverse stress remains unsupported and is rejected for explicit sweeps.
 # ---------------------------------------------------------------------------
 DEFAULT_SHIP_PLATE_SWEEP = BucklingSweepConfig(
     thicknesses=[float(t) for t in range(8, 26)],          # 8..25 mm, 1 mm step
@@ -76,8 +77,6 @@ DEFAULT_SHIP_PLATE_SWEEP = BucklingSweepConfig(
         (150.0, 0.0, 0.0),    # pure axial, high  (chart reference case)
         (200.0, 0.0, 0.0),    # pure axial, severe
         (120.0, 0.0, 40.0),   # axial + shear
-        (120.0, 60.0, 0.0),   # biaxial compression
-        (100.0, 50.0, 50.0),  # combined biaxial + shear
     ],
     grades=["Grade A", "AH36", "EH40"],
     gamma_m=1.15,
@@ -243,7 +242,7 @@ def write_outputs(
     # cases.csv
     csv_path = out_dir / "cases.csv"
     df = pd.DataFrame(rows)
-    df.to_csv(csv_path, index=False)
+    df.to_csv(csv_path, index=False, encoding="utf-8", lineterminator="\n")
 
     # Preserve first-seen grade order for stable, readable output.
     grades: list[str] = []
@@ -279,6 +278,6 @@ def write_outputs(
         payload["meta"]["generated_at"] = timestamp
 
     json_path = out_dir / "results.json"
-    json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    json_path.write_text(json.dumps(payload, indent=2), encoding="utf-8", newline="\n")
 
     return {"cases_csv": csv_path, "results_json": json_path}

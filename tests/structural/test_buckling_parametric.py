@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 # ABOUTME: Tests for the parametric ship-plate buckling sweep (digitalmodel.structural.buckling_parametric).
 # ABOUTME: Validates case counts, status/utilization consistency, JSON index round-trip, thickness monotonicity.
@@ -119,7 +119,7 @@ def test_write_outputs_files_and_keys(tiny_cfg, tmp_path):
     paths = write_outputs(rows, curves, tmp_path, gamma_m=tiny_cfg.gamma_m)
     assert paths["cases_csv"].exists()
     assert paths["results_json"].exists()
-    payload = json.loads(paths["results_json"].read_text())
+    payload = json.loads(paths["results_json"].read_text(encoding="utf-8"))
     assert set(payload.keys()) >= {"meta", "lookup", "index", "curves"}
     assert payload["meta"]["standard"] == "DNV-RP-C201"
     assert payload["meta"]["n_cases"] == len(rows)
@@ -130,7 +130,7 @@ def test_index_round_trip(tiny_cfg, tmp_path):
     rows = run_sweep(tiny_cfg)
     curves = utility_curves(tiny_cfg)
     paths = write_outputs(rows, curves, tmp_path)
-    payload = json.loads(paths["results_json"].read_text())
+    payload = json.loads(paths["results_json"].read_text(encoding="utf-8"))
     # Pick a known case and confirm its key maps to its utilization.
     r = rows[0]
     key = _index_key(r)
@@ -139,8 +139,18 @@ def test_index_round_trip(tiny_cfg, tmp_path):
     assert payload["index_status"][key] == r["status"]
 
 
-def test_default_sweep_counts_inputs_but_rejects_biaxial_results():
-    assert DEFAULT_SHIP_PLATE_SWEEP.n_cases() == 972
+def test_default_sweep_completes_every_supported_case():
+    # 18 thicknesses x 3 widths x 1 span x 4 supported loads x 3 grades.
+    assert DEFAULT_SHIP_PLATE_SWEEP.n_cases() == 648
     assert set(DEFAULT_SHIP_PLATE_SWEEP.grades) == {"Grade A", "AH36", "EH40"}
+    rows = run_sweep(DEFAULT_SHIP_PLATE_SWEEP)
+    assert len(rows) == 648
+    assert all(row["sigma_y"] == 0.0 for row in rows)
+    assert {row["status"] for row in rows} <= {"PASS", "FAIL"}
+    assert all(row["utilization"] > 0.0 for row in rows)
+
+
+def test_explicit_biaxial_sweep_is_rejected(tiny_cfg):
+    tiny_cfg.load_cases = [(120.0, 60.0, 0.0)]
     with pytest.raises(ValueError, match="sigma_y"):
-        run_sweep(DEFAULT_SHIP_PLATE_SWEEP)
+        run_sweep(tiny_cfg)

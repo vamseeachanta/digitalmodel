@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Build the structural analysis report from synthetic public-function inputs.
 
@@ -28,6 +28,12 @@ CHANGES = [{
               "method limits and reproducible report artifacts are added. "
               "Nonzero transverse plate stress is rejected because its effect "
               "was previously omitted from the returned utilization.",
+}, {
+    "revision": "B", "date": "2026-11-06",
+    "change": "The default sweep and registered example use supported axial "
+              "and shear loads so output remains available. The beam moment "
+              "sign definition and magnitude-only qualification are clarified; "
+              "the public-method inventory is guarded against source changes.",
 }]
 SOURCES = [
     "scripts/reports/build_structural_analysis_module_report.py",
@@ -43,6 +49,8 @@ SOURCES = [
     "tests/structural/structural_analysis/test_grillage_buckling.py",
     "src/digitalmodel/structural/buckling_parametric.py",
     "tests/structural/test_buckling_parametric.py",
+    "examples/workflows/buckling-parametric/input.yml",
+    "tests/workflows/test_durable_workflows.py",
     "tests/reporting/test_structural_analysis_module_report.py",
     "docs/api/_assets/brand.css",
 ]
@@ -67,7 +75,7 @@ def method_inventory() -> list[dict[str, str]]:
             ("max_shear", "MPa → MPa", "Half principal range; independent tensor cases remain outside this worked basis."),
         ]),
         ("StressCalculator", "stress_calculator.py", [
-            ("beam_stress", "N, N m, m², m⁴, m → MPa", "Linear centroidal principal-axis beam theory; prescribed moment signs and two corners only; no local stress or stability check."),
+            ("beam_stress", "N, N m, m², m⁴, m → MPa", "Linear centroidal principal-axis beam theory; bending-term magnitude only is independently checked; signs follow the module definition, not a qualified right-hand-rule convention; two corners only; no local stress or stability check."),
             ("shear_stress", "N, m³, m⁴, m → MPa", "VQ/(It); first moment, shear path and applicable section require independent evidence."),
             ("torsional_stress", "N m, m, m⁴ → MPa", "Tr/J requires circular elastic torsion; arbitrary noncircular and warping torsion are not established."),
             ("hoop_stress", "MPa, m, m → MPa", "Thin-cylinder membrane expression; thinness, geometry and pressure basis require confirmation."),
@@ -225,7 +233,7 @@ code{{overflow-wrap:anywhere}}.table-wrap{{overflow:auto}}.equation,details{{pad
 <h2 id="s1">1. Executive Summary</h2>
 <p>The synthetic rectangular beam and ideal pin-ended column are calculated through the public module functions. The beam stress is compared with section equilibrium and integrated section properties; the column load is compared with the sine-mode eigenvalue [A–C]. The calculated values and units are presented in the Detailed Results table.</p>
 <p>The beam stress is {data["beam"]["positive_corner_mpa"]:.1f} MPa at (+y, +z) and {data["beam"]["negative_corner_mpa"]:.1f} MPa at (−y, −z). The separate ideal pin-ended critical load is {data["column"]["load_n"]:.1f} N [A–C, E, F]. These values reproduce the independent mechanics expressions under the stated roundoff criterion [I]; design acceptance remains NOT_EVALUATED.</p>
-<p class="status">IDEAL_MECHANICS_CHECKED applies only to the two worked expressions and their stated cases. All source-unqualified code capacities are NOT_EVALUATED for design use. No standard buckling curve, reduction factor or combined-capacity rule is qualified by these examples [E–H].</p>
+<p class="status">IDEAL_MECHANICS_CHECKED applies only to the two worked expressions and their stated cases. Beam bending-term magnitudes are independently checked; the implemented moment signs are prescribed and are not independently qualified against the right-hand rule. All source-unqualified code capacities are NOT_EVALUATED for design use. No standard buckling curve, reduction factor or combined-capacity rule is qualified by these examples [E–H].</p>
 <h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>{history}</tbody>
 <caption>Revision history for the issued synthetic module analysis.</caption></table>
 <h2 id="s2">2. Introduction</h2>
@@ -235,13 +243,13 @@ code{{overflow-wrap:anywhere}}.table-wrap{{overflow:auto}}.equation,details{{pad
 <p>All dimensional values and material fields below are SYNTHETIC demonstration inputs [A]. They do not represent a physical component or a certified material. Only the elastic modulus enters the column example; no material property enters the beam stress calculation. Yield strength, ultimate strength, Poisson ratio and density are unused constructor fields.</p>
 <div class="table-wrap"><table><thead><tr><th>Input</th><th>Value</th><th>Unit</th><th>Source and qualification</th></tr></thead><tbody>{input_rows(data)}</tbody>
 <caption>Synthetic design data; unused material fields are identified explicitly [A].</caption></table></div>
-<p>The beam width lies along y and its height along z. Coordinates are centroidal principal axes. Positive axial force and the supplied positive moment contributions produce positive normal stress under the implemented algebraic convention. The opposite corner reverses both bending terms without reversing the axial term [B, E]. This is distinct from the compression-positive convention of the buckling and combined-loading APIs.</p>
+<p>The beam width lies along y and its height along z. Coordinates are centroidal principal axes. The positive M_z y/I_z term is the module's own sign definition, not a right-hand-rule result. The independent check covers this bending term's magnitude only; the signed corner checks reproduce the prescribed algebraic convention. The opposite corner reverses both bending terms without reversing the axial term [B, E]. This is distinct from the compression-positive convention of the buckling and combined-loading APIs.</p>
 <p>The column is straight, prismatic, elastic and ideally pin ended, without initial eccentricity or imperfection. Effective length is prescribed rather than calculated from a frame. Its synthetic section is separate from the beam rectangle [A, C].</p>
 <h2 id="s4">4. Analysis Methodology</h2>
 <h3>Independent beam basis</h3>
 <p>For width b and height h, integration over −b/2 ≤ y ≤ b/2 and −h/2 ≤ z ≤ h/2 gives the area and second moments [B]:</p>
 <div class="equation">A = ∫∫ dA = bh; I_y = ∫∫ z² dA = bh³/12; I_z = ∫∫ y² dA = hb³/12 [B].</div>
-<p>The denominator follows from ∫z² dz = z³/3 evaluated at the symmetric bounds, with the remaining width integration. Normal-force and moment equilibrium then give the stress field in the module's signed convention [B, E]:</p>
+<p>The denominator follows from ∫z² dz = z³/3 evaluated at the symmetric bounds, with the remaining width integration. Normal-force and moment equilibrium give the axial stress and bending-term magnitudes. The signed expression below uses the module's moment definitions; it does not derive a right-hand-rule sign for M_z [B, E]:</p>
 <div class="equation">σ(y,z) = N/A + M_y z/I_y + M_z y/I_z [B].</div>
 <p>SI geometry in metres with forces in newtons and moments in newton metres produces pascals, converted to MPa by division by 10⁶ [D]. An independent millimetre calculation uses N mm, mm² and mm⁴ and gives N/mm² = MPa. One metre equals 10³ millimetres; area and second moments therefore convert with the second and fourth powers, respectively [D]. Each term is isolated through a public beam call before the two corner calls [E, I].</p>
 <h3>Independent column basis</h3>
@@ -257,8 +265,8 @@ code{{overflow-wrap:anywhere}}.table-wrap{{overflow:auto}}.equation,details{{pad
 <caption>Worked numbers from public calculations with independent equilibrium and eigenfunction checks [A–C, I].</caption></table></div>
 <p>The beam has a uniform axial term and equal bending contributions at the positive corner. The opposite corner retains positive stress because the axial term exceeds the sum of the reversed bending terms [B]. No allowable stress or design utilization is calculated. The column load is a bifurcation eigenvalue for the ideal case; it is not compared with a factored design load [C].</p>
 <h2 id="s6">6. Key Findings</h2>
-<p>The worked functions reproduce the independent mechanics values within the roundoff-only criterion for the synthetic cases [I]. This establishes unit conversion and sign behavior at the stated points, plus inverse-square effective-length scaling. It does not establish general member design conformity.</p>
-<p>Review found that transverse plate stress sigma_y was accepted but omitted from utilization. The method now raises ValueError for nonzero sigma_y, and the regression demonstrates rejection before any utilization is returned [F, I]. This rejection also propagates through panel, grillage and parametric-sweep callers that pass nonzero transverse stress. The former biaxial grillage and default-sweep tests are changed to require rejection because their returned results omitted transverse plate interaction. The default sweep contains such unsupported cases and now raises; a supported load set or a qualified biaxial model is required before that sweep can complete. Existing zero-transverse-stress behavior is retained.</p>
+<p>The worked functions reproduce the independent mechanics values within the roundoff-only criterion for the synthetic cases [I]. This establishes unit conversion, bending-term magnitudes and reproduction of the prescribed module signs at the stated points, plus inverse-square effective-length scaling. Right-hand-rule sign qualification and general member design conformity remain NOT_EVALUATED.</p>
+<p>Review found that transverse plate stress sigma_y was accepted but omitted from utilization. The method now raises ValueError for nonzero sigma_y, and the regression demonstrates rejection before any utilization is returned [F, I]. This rejection also propagates through panel, grillage and custom parametric-sweep callers that pass nonzero transverse stress. The default sweep removes the two unsupported biaxial load cases and completes 648 cases using four axial or axial-plus-shear loads. The registered workflow example replaces its transverse load with an axial-plus-shear load and retains eight cases. These are software output checks, not design-code qualification. Existing zero-transverse-stress behavior is retained.</p>
 <h2 id="s7">7. Limitations and Not Covered</h2>
 <p>All code-derived plate resistance, column reduction and member capacities remain NOT_EVALUATED. Source editions, clause applicability, factors, section class, imperfections, residual stress, effective lengths and independent published capacity examples are absent. No numerical value from a licensed publication is reproduced or inferred.</p>
 <p>The plate elastic aspect-ratio expression is approximate and does not search longitudinal mode numbers. The combined plate calculation supports no nonzero transverse stress. The column reduction routine accepts an unknown curve by silently selecting its default. The existing simplified linear combined-capacity formula can cancel signed moment contributions and omits axial tension from interaction [F, G]. These unresolved methods are inventoried, not qualified or silently corrected.</p>
@@ -267,9 +275,9 @@ code{{overflow-wrap:anywhere}}.table-wrap{{overflow:auto}}.equation,details{{pad
 <p>The two worked cases may be used as reproducible software regression examples under the stated ideal assumptions. Before design use, the intended standard edition, clause titles, material certificates, section geometry, restraint/effective-length basis, load combinations and factor selection should be supplied and independently reviewed.</p>
 <p>Plate modal behavior and transverse interaction require a defined supported model before implementation. Unknown column curves and signed member interactions require explicit API contracts and independent failing examples before correction. Capacity comparisons should then use an independently published worked case with its governing criteria. The tracking issue remains open while these requested methods remain unqualified.</p>
 <h2 id="s9">9. References and Appendices</h2>
-<p>[A] The INPUTS mapping in the committed builder is the authoritative synthetic input record. Dataset identity: structural-analysis-synthetic; revision A; computational owner: digitalmodel. Readiness is limited to the ideal software examples; physical design readiness is unavailable. Source and artifact SHA-256 digests are retained in manifest.json. A changed input, implementation or criterion requires a rebuild and renewed review.</p>
-<p>[B] Independent rectangle and beam derivation in this report: direct integration of squared distances and axial/moment equilibrium. Geometry and force values are synthetic [A]; coefficients follow the shown integrals rather than a design standard.</p>
-<p>[C] Independent column derivation in this report: the homogeneous elastic beam-column differential equation and its pin-ended sine eigenfunction. The length-doubling comparison follows algebraically.</p>
+<p>[A] The INPUTS mapping in the committed builder is the authoritative synthetic input record. Dataset identity: structural-analysis-synthetic; revision A; authoritative repository: digitalmodel. Readiness is limited to the ideal software examples; physical design readiness is unavailable. Source and artifact SHA-256 digests are retained in manifest.json. A changed input, implementation or criterion requires a rebuild and renewed review.</p>
+<p>[B] Textbook basis: <cite>Mechanics of Materials in SI Units</cite>, tenth edition (2018), sections 1.4, Average Normal Stress in an Axially Loaded Bar; 6.4, The Flexure Formula; 6.5, Unsymmetric Bending; 8.2, State of Stress Caused by Combined Loadings; and Appendix A, Geometric Properties of an Area. Independent rectangle integration and axial/moment equilibrium are shown here. Geometry and forces are synthetic [A]; no textbook example values are reproduced. The positive M_z term remains the module definition, not a textbook sign claim.</p>
+<p>[C] Textbook basis: <cite>Mechanics of Materials in SI Units</cite>, tenth edition (2018), section 13.2, Ideal Column with Pin Supports. The homogeneous elastic beam-column equation, pin-ended sine eigenfunction and length-doubling comparison are independently derived here. Edition and section titles are confirmed by the <a href="https://www.pearson.com/nl/en_NL/higher-education/subject-catalogue/engineering/mechanics-of-material-hibbeler.html">publisher contents</a>; no licensed example values are reproduced.</p>
 <p>[D] SI prefix definitions: mega denotes 10⁶ and milli denotes 10⁻³. A pascal is N/m²; consequently N/mm² is MPa. Percent denotes one hundredth. These are unit identities, not empirical or code factors.</p>
 <p>[E] stress_calculator.py: StressCalculator; [F] buckling.py: PlateBucklingAnalyzer and ColumnBucklingAnalyzer; [G] capacity.py: MemberCapacityChecker; [H] models.py: StressState and geometry/material dataclasses; [I] the two hand-value/report test files and the existing buckling/capacity and structural unit tests. The exact repository sources are pinned by digest below. Standard labels in source code are identifiers, not independently verified citations or qualification evidence.</p>
 <details><summary>Exact source-byte register</summary><ul>{provenance}</ul></details>
@@ -301,13 +309,16 @@ No solver is used. Calculations are in memory; no intermediate files are written
 The builder rejects scratch inside the checkout before writing output.
 
 The synthetic input basis and qualification criteria are revision A, dated
-2026-10-28. `changes.json` records the revision cause. `manifest.json` binds source
+2026-10-28. Report revision B, dated 2026-11-06, clarifies the moment-sign limits
+and records the supported sweep and workflow loads. `changes.json` records each
+revision cause. `manifest.json` binds source
 bytes and the other three artifacts by SHA-256; it excludes its own recursive
 digest. Two independent builds are compared with the committed deliverables by
 `tests/reporting/test_structural_analysis_module_report.py`.
 
-IDEAL_MECHANICS_CHECKED covers the worked beam stress and ideal elastic column
-only. Design-code capacities, reduction curves and simplified combined loading
+IDEAL_MECHANICS_CHECKED covers the worked beam magnitudes, reproduction of the
+module's prescribed signs and ideal elastic column only. Right-hand-rule moment
+signs, design-code capacities, reduction curves and simplified combined loading
 remain NOT_EVALUATED. The issue remains open pending independent source and
 design qualification. See the report for the missing evidence and way forward.
 """

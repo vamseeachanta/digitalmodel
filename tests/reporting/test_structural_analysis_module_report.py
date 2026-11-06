@@ -1,8 +1,9 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Independently check every worked number and exact report rebuild bytes."""
 
+import ast
 import hashlib
 import importlib.util
 import json
@@ -21,6 +22,10 @@ REPORT = ROOT / "docs/reports/modules/structural_analysis"
 FILES = {"index.html", "changes.json", "manifest.json", "README.md"}
 # Roundoff allowance for the closed-form binary64 arithmetic, not model error.
 ROUNDING = 32 * sys.float_info.epsilon
+REBUILD = ('PYTHONPATH=src python scripts/reports/'
+           'build_structural_analysis_module_report.py '
+           '--scratch "$TMPDIR/structural-analysis"')
+METHOD_SOURCES = ("models.py", "stress_calculator.py", "buckling.py", "capacity.py")
 
 
 def builder():
@@ -40,6 +45,43 @@ def calculation(page):
     )
     assert match
     return json.loads(match[1])
+
+
+def public_methods(root):
+    """Read every public method directly from the four mechanics source files."""
+    expected = set()
+    for name in METHOD_SOURCES:
+        source = root / "src/digitalmodel/structural/structural_analysis" / name
+        tree = ast.parse(source.read_text(encoding="utf-8"), filename=name)
+        for cls in tree.body:
+            if isinstance(cls, ast.ClassDef) and not cls.name.startswith("_"):
+                expected.update(
+                    f"{cls.name}.{method.name}" for method in cls.body
+                    if isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and not method.name.startswith("_")
+                )
+    return expected
+
+
+def assert_inventory_matches_source(inventory, root):
+    """A new or renamed public method must invalidate a stale report inventory."""
+    assert {row["method"] for row in inventory} == public_methods(root)
+
+
+def assert_payload_close(actual, expected):
+    """Compare computed quantities numerically and retain exact metadata."""
+    if isinstance(expected, dict):
+        assert actual.keys() == expected.keys()
+        for key in expected:
+            assert_payload_close(actual[key], expected[key])
+    elif isinstance(expected, list):
+        assert len(actual) == len(expected)
+        for value, reference in zip(actual, expected):
+            assert_payload_close(value, reference)
+    elif isinstance(expected, (int, float)):
+        assert actual == pytest.approx(expected, rel=ROUNDING, abs=0), REBUILD
+    else:
+        assert actual == expected
 
 
 def test_beam_payload_matches_hand_equilibrium(tmp_path):
@@ -98,15 +140,33 @@ def test_column_payload_matches_eigenfunction(tmp_path):
 
 
 def test_rebuild_is_deterministic(tmp_path):
-    """Independent directories and delivered files must match exactly."""
+    """Retain exact deterministic output and numerical payload roundoff limits."""
     build = builder()
     first, second = tmp_path / "first", tmp_path / "second"
     build.build(tmp_path / "scratch-a", first)
     build.build(tmp_path / "scratch-b", second)
     assert {path.name for path in first.iterdir()} == FILES
     for name in FILES:
-        assert (first / name).read_bytes() == (second / name).read_bytes()
-        assert (first / name).read_bytes() == (REPORT / name).read_bytes()
+        assert (first / name).read_bytes() == (second / name).read_bytes(), REBUILD
+        if name == "index.html":
+            rebuilt = (first / name).read_text(encoding="utf-8")
+            committed = (REPORT / name).read_text(encoding="utf-8")
+            assert_payload_close(calculation(rebuilt), calculation(committed))
+            payload_pattern = r'(<script id="calculation" type="application/json">).*?(</script>)'
+            assert re.sub(payload_pattern, r'\1\2', rebuilt, flags=re.S) == re.sub(
+                payload_pattern, r'\1\2', committed, flags=re.S,
+            ), REBUILD
+        elif name == "manifest.json":
+            rebuilt = json.loads((first / name).read_text(encoding="utf-8"))
+            committed = json.loads((REPORT / name).read_text(encoding="utf-8"))
+            assert {key: value for key, value in rebuilt.items() if key != "artifacts"} == {
+                key: value for key, value in committed.items() if key != "artifacts"
+            }, REBUILD
+            assert rebuilt["artifacts"].keys() == committed["artifacts"].keys()
+            for artifact, digest in committed["artifacts"].items():
+                assert hashlib.sha256((REPORT / artifact).read_bytes()).hexdigest() == digest, REBUILD
+        else:
+            assert (first / name).read_bytes() == (REPORT / name).read_bytes(), REBUILD
 
 
 def test_cli_manifest_matches_written_files(tmp_path):
@@ -120,9 +180,9 @@ def test_cli_manifest_matches_written_files(tmp_path):
     subprocess.run(
         [sys.executable, str(SCRIPT), "--scratch", str(tmp_path / "scratch"),
          "--output-dir", str(destination)], cwd=ROOT, env=environment,
-        check=True, capture_output=True, text=True,
+        check=True, capture_output=True, text=True, encoding="utf-8",
     )
-    manifest = json.loads((destination / "manifest.json").read_text())
+    manifest = json.loads((destination / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["schema_version"] == 1
     assert manifest["basis"] == "SYNTHETIC"
     assert manifest["criteria_revision"] == "A"
@@ -130,11 +190,11 @@ def test_cli_manifest_matches_written_files(tmp_path):
     assert set(manifest["sources"]) == set(build.SOURCES)
     assert SCRIPT.relative_to(ROOT).as_posix() in manifest["sources"]
     for name, digest in manifest["artifacts"].items():
-        assert hashlib.sha256((destination / name).read_bytes()).hexdigest() == digest
+        assert hashlib.sha256((destination / name).read_bytes()).hexdigest() == digest, REBUILD
     for name, digest in manifest["sources"].items():
         assert not Path(name).is_absolute()
-        assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest
-    assert json.loads((destination / "changes.json").read_text()) == build.CHANGES
+        assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest, REBUILD
+    assert json.loads((destination / "changes.json").read_text(encoding="utf-8")) == build.CHANGES
 
 
 def test_sections_inventory_sources_and_qualification(tmp_path):
@@ -153,19 +213,8 @@ def test_sections_inventory_sources_and_qualification(tmp_path):
     assert 'id="changes-panel"' in page
     assert "simplified linear" in page and "NOT_EVALUATED" in page
     assert "IDEAL_MECHANICS_CHECKED" in page
-    expected_methods = {
-        "StressState": ["von_mises", "principal_stresses", "max_shear"],
-        "StressCalculator": ["beam_stress", "shear_stress", "torsional_stress",
-                             "hoop_stress", "longitudinal_stress"],
-        "PlateBucklingAnalyzer": ["elastic_buckling_stress", "reduced_slenderness",
-                                  "johnson_ostenfeld", "check_plate_buckling"],
-        "ColumnBucklingAnalyzer": ["euler_buckling_load", "slenderness_ratio",
-                                   "reduction_factor", "check_column_buckling"],
-        "MemberCapacityChecker": ["check_tension_member", "check_combined_loading"],
-    }
     inventory = calculation(page)["methods"]
-    expected_names = {f"{cls}.{name}" for cls, names in expected_methods.items() for name in names}
-    assert {row["method"] for row in inventory} == expected_names
+    assert_inventory_matches_source(inventory, ROOT)
     for row in inventory:
         status = ("IDEAL_MECHANICS_CHECKED" if row["method"] in {
             "StressCalculator.beam_stress", "ColumnBucklingAnalyzer.euler_buckling_load",
@@ -179,6 +228,37 @@ def test_sections_inventory_sources_and_qualification(tmp_path):
     assert "source-unqualified" in page
 
 
+@pytest.mark.parametrize("mutation", ["added", "renamed"])
+def test_inventory_guard_detects_public_method_changes(tmp_path, mutation):
+    """Source additions and renames cannot inherit a stale inventory silently."""
+    source_dir = "src/digitalmodel/structural/structural_analysis"
+    for name in METHOD_SOURCES:
+        destination = tmp_path / source_dir / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes((ROOT / source_dir / name).read_bytes())
+    source = tmp_path / source_dir / "stress_calculator.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    cls = next(node for node in tree.body if isinstance(node, ast.ClassDef))
+    if mutation == "added":
+        cls.body.append(ast.parse("def additional_public_method(self):\n    pass\n").body[0])
+    else:
+        next(method for method in cls.body if isinstance(method, ast.FunctionDef)
+             and method.name == "beam_stress").name = "renamed_beam_stress"
+    source.write_text(ast.unparse(tree), encoding="utf-8", newline="\n")
+    inventory = builder().method_inventory()
+    with pytest.raises(AssertionError):
+        assert_inventory_matches_source(inventory, tmp_path)
+
+
+def test_beam_sign_definition_is_limited_to_the_module(tmp_path):
+    """The beam check must not imply right-hand-rule sign qualification."""
+    page = builder().render(tmp_path)
+    basis = page[page.index('<h2 id="s3">'):page.index('<h2 id="s4">')]
+    assert "module's own sign definition" in basis
+    assert "magnitude only" in basis
+    assert "right-hand-rule" in basis
+
+
 def test_checkout_local_scratch_is_rejected_without_writes(tmp_path):
     """The CLI must validate scratch before creating its output directory."""
     build = builder()
@@ -189,3 +269,17 @@ def test_checkout_local_scratch_is_rejected_without_writes(tmp_path):
     assert not destination.exists()
     assert not (ROOT / "forbidden-scratch").exists()
     assert {name: (REPORT / name).read_bytes() for name in FILES} == before
+
+
+def test_only_named_report_deliverables_are_retained():
+    """Keep generated scratch ignored while retaining every named deliverable."""
+    environment = os.environ.copy()
+    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        environment.pop(key, None)
+    prefix = REPORT.relative_to(ROOT).as_posix()
+    for name in sorted(FILES | {"unexpected.txt"}):
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", "--quiet", f"{prefix}/{name}"],
+            cwd=ROOT, env=environment, capture_output=True, check=False,
+        )
+        assert result.returncode == (0 if name == "unexpected.txt" else 1)
