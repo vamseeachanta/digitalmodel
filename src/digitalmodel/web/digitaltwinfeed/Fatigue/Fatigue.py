@@ -4,32 +4,25 @@ Provides authenticated API endpoints for fatigue analysis data
 within the digitaltwinfeed application.
 """
 
-from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_password_for
+from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_verify_password
 import os
 
 from flask import Blueprint, abort, jsonify, make_response, request, url_for
-from flask_httpauth import HTTPBasicAuth
+from digitalmodel.web.authentication import UTF8BasicAuth
 from flask_restful import (Api, Resource, fields, marshal, marshal_with,
                            reqparse)
 
-auth = HTTPBasicAuth()
+auth = UTF8BasicAuth()
 
 AppName = os.path.basename(__file__).split('.')[0]
 AppBlueprint = Blueprint(AppName, __name__, template_folder='templates')
 api = Api(AppBlueprint)
 
 
-@auth.get_password
-def get_password(username):
-    """Retrieve the password for HTTP basic authentication.
-
-    Args:
-        username: The username to authenticate.
-
-    Returns:
-        The password string if username is valid, None otherwise.
-    """
-    return basic_auth_password_for(username)
+@auth.verify_password
+def verify_password(username, password):
+    """Verify live environment credentials using UTF-8 byte comparisons."""
+    return basic_auth_verify_password(username, password)
 
 
 @auth.error_handler

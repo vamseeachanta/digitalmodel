@@ -1,29 +1,30 @@
-"""Topology validation — SPOF detection and Uptime Institute tier classification."""
+"""Topology checks — identity-based SPOFs and a local tier heuristic."""
 
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from digitalmodel.power.datacenter.models import (
     PowerComponent,
     RedundancyScheme,
-    UPSModule,
-    STSModule,
 )
 from digitalmodel.power.datacenter.topology import DataCenterPowerPath
 
 
 @dataclass
 class TopologyValidator:
-    """Validate data center power topology for redundancy and fault tolerance.
+    """Inspect shared components and classify topology with local rules.
+
+    The model does not establish concurrent maintainability, fault tolerance
+    or compliance with Uptime Institute tier definitions.
 
     Attributes
     ----------
     paths : list[DataCenterPowerPath]
         All independent power distribution paths.
     redundancy_scheme : RedundancyScheme | None
-        Declared redundancy scheme (used for Tier IV classification).
+        Declared redundancy scheme (used only for local level 4).
     """
 
     paths: list[DataCenterPowerPath]
@@ -69,24 +70,38 @@ class TopologyValidator:
         ]
 
     def classify_tier(self) -> int:
-        """Classify topology per Uptime Institute tier standards.
+        """Compatibility alias for :meth:`classify_local_tier`.
 
-        Tier I   — Single path, no redundancy
-        Tier II  — Single path with redundant components (UPS)
-        Tier III — Multiple paths, concurrently maintainable (STS present)
-        Tier IV  — Fault tolerant, 2N+1 with STS on all paths
+        The returned integer is a local heuristic, not a certified Uptime tier.
+        """
+        return self.classify_local_tier()
+
+    def classify_local_tier(self) -> int:
+        """Return the historical local level, without certification equivalence.
+
+        Ordered local rules (issue 2749, item 1):
+        4: at least three paths, STS on all, no detected SPOFs, declared 2N+1.
+        3: at least two paths, any STS, no detected SPOFs.
+        2: any UPS.
+        1: otherwise, including an empty topology.
+
+        UPS presence does not prove redundant capacity. STS presence does not
+        prove concurrent maintainability. A two-path 2N system returns local 3
+        even with STS on both paths. Active-path state, capacity redundancy and
+        fault isolation are not evaluated; N/N+1 declarations do not alter the
+        rules. See docs/agent-pack.md, sections 3 and 6, for divergences.
 
         Returns
         -------
         int
-            Tier level (1–4).
+            Local heuristic level (1–4), not a certified tier.
         """
         any_ups = any(p.has_ups for p in self.paths)
         any_sts = any(p.has_sts for p in self.paths)
         all_sts = all(p.has_sts for p in self.paths)
         no_spofs = len(self.find_spofs()) == 0
 
-        # Tier IV: 2N+1, all paths have STS, no SPOFs
+        # Local level 4 (issue 2749 item 1); not a standards-derived threshold.
         if (
             self.path_count >= 3
             and all_sts
@@ -95,13 +110,13 @@ class TopologyValidator:
         ):
             return 4
 
-        # Tier III: multiple paths + STS + no SPOFs
+        # Local level 3: multiple paths + STS + no detected SPOFs.
         if self.path_count >= 2 and any_sts and no_spofs:
             return 3
 
-        # Tier II: UPS present (redundant component)
+        # Local level 2: UPS presence alone, without a redundancy count.
         if any_ups:
             return 2
 
-        # Tier I: basic
+        # Local level 1: fallback, including an empty topology.
         return 1

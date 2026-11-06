@@ -28,6 +28,7 @@ from digitalmodel.reporting.thickness import (
     ThicknessRow,
     input_provenance,
     limit_figure,
+    nominal_limit_hover,
     revision_section,
     thickness_table,
     validate_number,
@@ -131,6 +132,13 @@ def _figures(geometry, conditions, points, rows, mawp):
         y_label="Thickness [mm]",
         limit=0,
         limit_label="Physical lower bound",
+    )
+    nominal_limit_hover(
+        figure,
+        {
+            "Shell required including CA": [rows[0].nominal_mm] * len(pressures),
+            "Head required including CA": [rows[1].nominal_mm] * len(pressures),
+        },
     )
     figure["layout"]["shapes"].extend(
         [

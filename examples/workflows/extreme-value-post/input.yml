@@ -39,6 +39,11 @@ extreme_value_post:
   distributions: [gumbel, weibull]
   # Return periods in the same units as the block duration (here: years).
   return_periods: [10, 50, 100, 1000]
+  # Illustrative assumption: 25-year life, not a site-specific design input.
+  # Annual exceedances are independent with constant annual probability.
+  # Basis: USACE EM 1110-2-1415 (5 March 1993), paragraph 3-5, "Risk".
+  # See README.md for the reference and derivation.
+  design_life: 25
 
 outputs:
   directory: results/extreme_value_post

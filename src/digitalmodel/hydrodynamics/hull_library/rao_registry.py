@@ -138,17 +138,33 @@ class RaoRegistry:
         hull_id: str,
         solver: Optional[str] = None,
         draft_m: Optional[float] = None,
+        *,
+        loading_condition: Optional[str] = None,
+        benchmark_revision: Optional[str] = None,
     ) -> list[RaoReference]:
         """Look up RAO references for a hull.
 
         Optionally filter by solver and/or draft (+-0.5m tolerance).
         Newly registered revisions come first; identical repeats do not reorder.
         Legacy references remain discoverable but fail integrity checks on load.
+        Condition and revision filters match exact, case-sensitive metadata;
+        None omits that filter, while an empty string selects an empty label.
+        All supplied filters must match. Selection does not verify integrity.
         """
         entries = self._index.get(hull_id, [])
         results = []
         for entry in entries:
             if solver and entry.get("solver") != solver:
+                continue
+            if (
+                loading_condition is not None
+                and entry.get("loading_condition") != loading_condition
+            ):
+                continue
+            if (
+                benchmark_revision is not None
+                and entry.get("benchmark_revision") != benchmark_revision
+            ):
                 continue
             if draft_m is not None:
                 entry_draft = entry.get("draft_m", 0)

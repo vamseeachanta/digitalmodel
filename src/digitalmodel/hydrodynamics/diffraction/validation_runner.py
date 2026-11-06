@@ -122,6 +122,7 @@ def run_validation(
     *,
     enabled: bool = True,
     skip_reason: str | None = None,
+    equilibrium_inputs: dict[str, Any] | None = None,
 ) -> ValidationOutcome:
     """Validate diffraction results, returning a run-contract outcome.
 
@@ -136,6 +137,11 @@ def run_validation(
         enabled: When ``False`` validation is skipped regardless of *results*.
         skip_reason: Explanation attached to a ``SKIPPED`` outcome. Defaults to
             a sensible message based on why the skip occurred.
+        equilibrium_inputs: Optional mapping of equilibrium rule names to
+            explicit evidence and tolerances, as accepted by OutputValidator.
+            Missing rules remain NOT_EVALUATED in the equilibrium report;
+            any failed rule makes the run verdict FAIL. Evidence is not
+            inferred from results and is unused when validation is skipped.
 
     Returns:
         A :class:`ValidationOutcome`. The verdict is one of the five canonical
@@ -160,7 +166,9 @@ def run_validation(
         report_path = output_dir / f"{stem}_validation.json"
 
     try:
-        report = validate_results(results, output_file=report_path)
+        report = validate_results(
+            results, output_file=report_path, equilibrium_inputs=equilibrium_inputs
+        )
     except Exception as exc:  # noqa: BLE001 - any validator failure is ERROR
         return ValidationOutcome(
             verdict=VERDICT_ERROR,

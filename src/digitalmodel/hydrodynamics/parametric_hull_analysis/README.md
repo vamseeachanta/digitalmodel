@@ -1,5 +1,10 @@
 # Depth classification and shallow-water screening
 
+The [squat and under-keel clearance guide](squat.html) describes the
+unrestricted-channel Romisch estimate, explicit clearance budget, speed-grid API,
+citation requirements and synthetic worked example. Navigation remains
+`NOT_EVALUATED`; depth classification alone is not an acceptance criterion.
+
 `classify_depth(h, T)` uses the PIANC (1992) bands reported in [1, section 1]
 and independently in [2, Appendix A.1, p. 201]. Neither a PIANC Report 121
 clause nor DNV-RP-C205 is claimed as the depth-band source. The original

@@ -98,6 +98,24 @@ def test_matching_pairs_pass(tmp_path, backend_type, symmetry, flags):
 
 
 @pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("symmetry", ["none", "xz", "yz", "xz+yz"])
+@pytest.mark.parametrize("filename,mesh_format", [
+    ("absent.gdf", "gdf"), ("absent.mesh", "gdf"),
+    ("absent", "gdf"), ("absent.gdf", "auto"),
+])
+def test_missing_gdf_refuses_before_any_deck(
+    tmp_path, backend_type, mode, symmetry, filename, mesh_format
+):
+    spec = box_spec(tmp_path, symmetry=symmetry)
+    spec.vessel.geometry.mesh_file = filename
+    spec.vessel.geometry.mesh_format = type(spec.vessel.geometry.mesh_format)(mesh_format)
+    with pytest.raises(ValueError, match="symmetry.*GDF|GDF symmetry"):
+        generate(backend_type(), spec, tmp_path, mode)
+    assert not list((tmp_path / "output").glob("*"))
+
+
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
 @pytest.mark.parametrize("flags", ["2 0", "0 -1", "0.5 0", "0", "x y"])
 def test_invalid_flags_fail_closed(tmp_path, backend_type, flags):
     spec = box_spec(tmp_path, flags=flags)
@@ -372,10 +390,11 @@ def test_panel_annotation_cannot_hide_missing_coordinates(tmp_path, mode, backen
     assert not list((tmp_path / "output").glob("*"))
 
 
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
 @pytest.mark.parametrize("mode", ["single", "modular"])
 @pytest.mark.parametrize("extension", ["obj", "msh", "dat"])
 @pytest.mark.parametrize("symmetry", ["xz", "yz", "xz+yz"])
-def test_non_gdf_symmetry_refuses(tmp_path, mode, extension, symmetry):
+def test_non_gdf_symmetry_refuses(tmp_path, backend_type, mode, extension, symmetry):
     spec = box_spec(tmp_path)
     spec.vessel.geometry.mesh_file = f"box.{extension}"
     spec.vessel.geometry.mesh_format = type(spec.vessel.geometry.mesh_format)(
@@ -383,7 +402,7 @@ def test_non_gdf_symmetry_refuses(tmp_path, mode, extension, symmetry):
     )
     spec.vessel.geometry.symmetry = symmetry
     with pytest.raises(ValueError, match="symmetry.*GDF"):
-        generate(OrcaWaveBackend(), spec, tmp_path, mode)
+        generate(backend_type(), spec, tmp_path, mode)
     assert not list((tmp_path / "output").glob("*"))
 
 
@@ -393,13 +412,13 @@ def test_non_gdf_symmetry_refuses(tmp_path, mode, extension, symmetry):
 def test_cut_plane_panels_refuse(tmp_path, backend_type, mode, symmetry, flags, axis):
     spec = box_spec(tmp_path, symmetry, flags, partial=True)
     mesh = tmp_path / "box.gdf"
-    lines = mesh.read_text().splitlines()
+    lines = mesh.read_text(encoding="utf-8").splitlines()
     points = [[0, 0, -1], [1, 1, -1], [1, 1, 0], [0, 0, 0]]
     for point in points:
         point[axis] = 0
     lines[3] = str(int(lines[3]) + 1)
     lines += [" ".join(map(str, point)) for point in points]
-    mesh.write_text("\n".join(lines) + "\n", newline="\n")
+    mesh.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="cut plane"):
         generate(backend_type(), spec, tmp_path, mode)
     assert not list((tmp_path / "output").glob("*"))
@@ -412,14 +431,14 @@ def test_cut_rounding_snaps_before_df2(tmp_path, backend_type, symmetry, flags, 
     spec = box_spec(tmp_path, symmetry, flags, partial=True)
     spec.vessel.geometry.buoyancy_relative_tolerance = 0
     mesh = tmp_path / "box.gdf"
-    lines = mesh.read_text().splitlines()
+    lines = mesh.read_text(encoding="utf-8").splitlines()
     for i in range(4, len(lines)):
         point = list(map(float, lines[i].split()))
         for axis, flag in enumerate(map(int, flags.split())):
             if flag and point[axis] == 0:
                 point[axis] = offset
         lines[i] = " ".join(map(str, point))
-    mesh.write_text("\n".join(lines) + "\n", newline="\n")
+    mesh.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     backend = backend_type()
     generate(backend, spec, tmp_path)
     report = backend.preflight_reports[0]
@@ -437,9 +456,9 @@ def test_preflight_reports_initialised(backend_type):
 def test_bad_gdf_header_names_mesh(tmp_path, header, value):
     spec = box_spec(tmp_path)
     mesh = tmp_path / "box.gdf"
-    lines = mesh.read_text().splitlines()
+    lines = mesh.read_text(encoding="utf-8").splitlines()
     lines[header] = value
-    mesh.write_text("\n".join(lines) + "\n", newline="\n")
+    mesh.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="box[.]gdf"):
         generate(OrcaWaveBackend(), spec, tmp_path)
 
@@ -461,13 +480,13 @@ def test_preflight_visible_in_converter_and_runner(tmp_path, solver, evaluated):
     converter.convert(solver, output_dir=tmp_path / "converted")
     status = "PASS" if evaluated else "NOT_EVALUATED"
     assert converter.preflight_reports[solver][0]["status"] == status
-    saved = json.loads((tmp_path / "converted" / "preflight_reports.json").read_text())
+    saved = json.loads((tmp_path / "converted" / "preflight_reports.json").read_text(encoding="utf-8"))
     assert saved == converter.preflight_reports[solver]
     config_type, runner_type = (AQWARunConfig, AQWARunner) if solver == "aqwa" else (RunConfig, OrcaWaveRunner)
     runner = runner_type(config_type(output_dir=tmp_path / "run", dry_run=True))
     result = runner.prepare(spec, spec_path=spec_path)
     assert result.preflight_reports[0]["status"] == status
-    saved = json.loads((tmp_path / "run" / "preflight_reports.json").read_text())
+    saved = json.loads((tmp_path / "run" / "preflight_reports.json").read_text(encoding="utf-8"))
     assert saved == result.preflight_reports
 
 

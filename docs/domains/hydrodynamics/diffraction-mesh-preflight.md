@@ -10,6 +10,7 @@ symmetric while its full mesh still requires `symmetry: none`.
 | --- | --- | --- |
 | 1 | 2026-10-21 | Define matching stored-sector declarations and explicit buoyancy screening to prevent incomplete-body conversion. |
 | 2 | 2026-11-06 | Reject unchecked reflection and cut-plane panels, tolerate centreline rounding, and persist buoyancy evidence for inspection. |
+| 3 | 2026-11-06 | Require readable GDF inputs for every symmetry declaration and stage synthetic meshes in generation contract tests. |
 
 ## Inputs and method
 
@@ -24,6 +25,17 @@ defines the binary symmetry indices and the stored half or quarter surface:
 | One quadrant | 1 | 1 | `xz+yz` |
 
 A mismatch names both flags and the declared symmetry. Malformed flags refuse.
+Every GDF declaration, including `symmetry: none`, requires a readable mesh at
+generation time. Path-only generation with a missing GDF is unsupported; stage
+the mesh before generating either single or modular inputs. Missing or invalid
+GDFs refuse before native inputs are written. This requirement verifies stored
+symmetry and does not establish buoyancy qualification. Matrix and roundtrip
+controls stage synthetic GDFs without claiming a qualified hydrodynamic model.
+The AQWA mesh reader requires the `.gdf` suffix; a different or missing suffix
+does not exempt a declared GDF or a symmetry cut from verification.
+The external-matrix example is an input schema demonstration with a mesh
+reference, not a generation-ready model; supply a readable mesh before use.
+
 A declared cut with coordinates on both sides also refuses. Classification
 uses `max(1e-8 m, 2e-6 * longitudinal mesh extent)`; nodes within this tolerance
 are snapped to the cut plane in the validation copy before reflection and

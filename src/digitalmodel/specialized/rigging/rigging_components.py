@@ -76,9 +76,10 @@ class Slings:
 
     def get_twinpathslings(self, cfg=None):
         sling_data = self.sling_data["twinpathslings"]
-        sling = sling_data.loc[sling_data["part_number"] == cfg["part_number"]].to_dict(
-            "records"
-        )[0]
+        matches = sling_data.loc[sling_data["part_number"] == cfg["part_number"]]
+        if matches.empty:
+            raise ValueError(f"Unknown sling part number {cfg['part_number']!r}")
+        sling = matches.to_dict("records")[0]
         return sling
 
     def get_twinpathslings_model(self, sling=None):
@@ -167,9 +168,12 @@ class Shackles:
 
     def get_shackle_model(self, cfg=None):
         shackle_data = self.shackle_data[cfg["subcategory"]]
-        shackle = shackle_data.loc[
+        matches = shackle_data.loc[
             shackle_data["part_number"] == cfg["part_number"]
-        ].to_dict("records")[0]
+        ]
+        if matches.empty:
+            raise ValueError(f"Unknown shackle part number {cfg['part_number']!r}")
+        shackle = matches.to_dict("records")[0]
         # Coerce numpy scalars to plain Python so downstream summaries stay
         # deterministic and serialise cleanly to JSON/YAML.
         shackle = {key: _to_number(value) for key, value in shackle.items()}

@@ -8,6 +8,12 @@
 
 These use only the spec data, never the OrcaFlex solver, so they can serve as the
 reference side of a model-versus-hand comparison. SI units throughout.
+
+These are mechanics implementations, not verified API RP 16Q or ISO 13624-1
+requirements. ``hand_check_provenance()`` supplies the separate method inventory
+and missing standards evidence; numerical agreement alone establishes no
+standards compliance. Derivations and independent examples are recorded in
+``docs/domains/drilling_riser/hand-check-methods.html``.
 """
 
 from __future__ import annotations
@@ -19,8 +25,11 @@ from typing import Iterable, Sequence
 import numpy as np
 from scipy.linalg import eigh
 
+from .method_provenance import hand_check_provenance as hand_check_provenance
 from .spec import LineSection, RiserGlobalModelSpec
 
+# NIST, 2022 CODATA, "standard acceleration of gravity" (exact convention):
+# https://physics.nist.gov/cgi-bin/cuu/Value?gn ; not site-specific gravity.
 G = 9.80665
 
 
@@ -69,9 +78,10 @@ def tension_references(spec: RiserGlobalModelSpec) -> dict:
     riser = effective_tension_chain(spec.riser, top_z_m=z0, top_tension_n=top,
                                     rho_water=rho_w, rho_contents=rho_c)
     z_lfj = riser[-1]["bottom_z_m"]
-    # The stack carries no main-bore contents in the model convention (its fluid is in the mass).
+    # Drilling convention: stack fluid is included in mass_per_m_kg; no separate
+    # contents density, even for a positive bore (build.build_generic_spec; #2532).
     stack = effective_tension_chain(spec.stack, top_z_m=z_lfj, top_tension_n=riser[-1]["te_bottom_n"],
-                                    rho_water=rho_w, rho_contents=rho_c)
+                                    rho_water=rho_w, rho_contents=0.0)
     return {
         "riser_top_n": top,
         "riser_bottom_n": riser[-1]["te_bottom_n"],

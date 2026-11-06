@@ -30,8 +30,13 @@ def evidence_metadata(tmp_path, monkeypatch):
         "run = dict(id=99, event='push', head_branch='main', status='completed', head_sha='mainsha', "
         "head_repository=dict(full_name='example/repository'))\n"
         "jobs = [dict(name='tests-' + shard, run_id=99, head_sha='mainsha', status='completed', "
-        "conclusion='failure') for shard in ('sample', 'real')]\n"
-        "print(json.dumps(dict(jobs=jobs) if '/jobs?' in endpoint else run))\n"
+        "conclusion='failure', id=i) for i, shard in enumerate(('sample', 'real'), 7)]\n"
+        "if endpoint.endswith('/logs'):\n"
+        "    print('FAILED tests/test_fake.py::test_case_0 - assertion')\n"
+        "    print('FAILED tests/test_example.py::TestExample::test_once[a.b] - assertion')\n"
+        "    print('FAILED tests/test_example.py::TestExample::test_once[with space] - assertion')\n"
+        "else:\n"
+        "    print(json.dumps(dict(jobs=jobs) if '/jobs?' in endpoint else run))\n"
     )
     gh.chmod(0o755)
     monkeypatch.setenv("PATH", str(bin_path) + os.pathsep + os.environ["PATH"])
@@ -92,10 +97,8 @@ def child_environment(summary=None):
     return env
 
 
-def invoke(tmp_path, gate, signal=False, shard="sample", options=(), summary=None):
+def invoke(tmp_path, gate, shard="sample", options=(), summary=None):
     args = [sys.executable, str(SCRIPT), "--shard", shard, "--junit", "reports/junit-sample.xml", *options]
-    if signal:
-        args.append("--signal-retry")
     return subprocess.run(
         args + ["--", str(gate), "-m", "pytest", "tests/", "-q", "-p", "no:sugar", "-p", "no:randomly", "--tb=line", "-o", "junit_family=xunit2", "--junitxml=reports/junit-sample.xml"],
         cwd=tmp_path, text=True, capture_output=True, check=False,
@@ -157,18 +160,6 @@ def test_unproven_or_excess_failures_never_retry(tmp_path, count, mode):
     assert len(history(tmp_path)) == 1
 
 
-def test_signal_abort_then_pass(tmp_path):
-    result = invoke(tmp_path, fake_gate(tmp_path, first=134), signal=True)
-    assert result.returncode == 134
-    assert len(history(tmp_path)) == 2
-    assert json.loads((tmp_path / "reports/flaky-sample.json").read_text())["kind"] == "signal-exit"
-
-
-def test_signal_normal_failure_never_retries(tmp_path):
-    assert invoke(tmp_path, fake_gate(tmp_path), signal=True).returncode == 1
-    assert len(history(tmp_path)) == 1
-
-
 @pytest.mark.parametrize("mode", ["report", "enforce"])
 @pytest.mark.parametrize("code", [134, 139])
 def test_signal_abort_preserves_first_exit(tmp_path, mode, code):
@@ -181,6 +172,14 @@ def test_signal_abort_preserves_first_exit(tmp_path, mode, code):
     assert record["first_attempt_exit_code"] == code
     assert record["exit_code"] == code
     assert record["first_attempt_failed"] == {"tests/test_fake.py::test_case_0": "assert mismatch"}
+
+
+def test_signal_retry_enforce_stays_red(tmp_path):
+    gate = fake_gate(tmp_path, first=134, second=0)
+    result = invoke(tmp_path, gate, options=("--mode", "enforce", "--signal-retry"))
+    assert result.returncode == 2
+    assert "unrecognized arguments: --signal-retry" in result.stderr
+    assert not (tmp_path / "attempts.json").exists()
 
 
 def test_invoke_does_not_inherit_hosted_summary(tmp_path, monkeypatch):
@@ -225,7 +224,7 @@ def test_exit_five_is_unchanged(tmp_path):
 
 @pytest.mark.parametrize("code", [124, 137, 143])
 def test_timeout_or_termination_never_retries(tmp_path, code):
-    assert invoke(tmp_path, fake_gate(tmp_path, first=code), signal=True).returncode == code
+    assert invoke(tmp_path, fake_gate(tmp_path, first=code)).returncode == code
     assert len(history(tmp_path)) == 1
 
 
@@ -371,11 +370,6 @@ def test_stale_report_does_not_retry_or_change_exit(tmp_path):
     assert len(history(tmp_path)) == 1
 
 
-def test_contracts_signal_retry_is_also_denied(tmp_path):
-    assert invoke(tmp_path, fake_gate(tmp_path, first=139), shard="contracts", signal=True).returncode == 139
-    assert len(history(tmp_path)) == 1
-
-
 def test_contracts_signal_exit_never_retries(tmp_path):
     assert invoke(tmp_path, fake_gate(tmp_path, first=139), shard="contracts").returncode == 139
     assert len(history(tmp_path)) == 1
@@ -444,16 +438,6 @@ def test_recovery_extract_compare_publish_roundtrip(tmp_path, monkeypatch, regis
     assert json.loads(verdict.read_text())["shards"][0]["ids"][node] == ("FLAKY" if registered else "NEW")
     ci.publish(reports, "none", base)
     assert json.loads(base.read_text())["tests"] == {}
-
-
-def test_signal_retry_summary_preserves_both_exits(tmp_path):
-    summary = tmp_path / "summary.md"
-    result = invoke(tmp_path, fake_gate(tmp_path, first=139), signal=True, summary=summary)
-    assert result.returncode == 139
-    text = summary.read_text()
-    assert "signal exit 139" in text and "retry exit: 0" in text and "returned 139" in text
-    record = json.loads((tmp_path / "reports/flaky-sample.json").read_text())
-    assert record["first_attempt_exit_code"] == 139 and record["retry_exit_code"] == 0
 
 
 def test_wrapper_and_extractor_share_identity(tmp_path, monkeypatch):

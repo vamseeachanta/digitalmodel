@@ -23,6 +23,9 @@ interactive contour chart and envelope plot.
 
 import math
 import logging
+import json
+import hashlib
+from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -37,6 +40,112 @@ from digitalmodel.structural.analysis.wall_thickness import (
 from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
 
 logger = logging.getLogger(__name__)
+
+F101_COMBINED_FORM_REVIEW = (
+    Path(__file__).resolve().parents[4]
+    / "docs/domains/structural/reviews/f101-combined-form-review.json"
+)
+F101_COMBINED_FORM_IMPLEMENTATION = (
+    Path(__file__).with_name("wall_thickness_codes") / "dnv_st_f101.py"
+)
+F101_SIMPLIFIED_FORM_LABEL = "simplified form; not checked against the standard's text"
+F101_SCREENING_LABEL = (
+    "Screening envelope from the moment-tension report; not reconciled with the code strategy"
+)
+
+
+def _review_text_fields(record: object, fields: Tuple[str, ...]) -> bool:
+    """Require nonblank evidence text in a review object."""
+    return isinstance(record, dict) and all(
+        isinstance(record.get(field), str) and record[field].strip()
+        for field in fields
+    )
+
+
+def _review_hex_digest(value: object, length: int) -> bool:
+    """Recognise the lowercase hexadecimal digests stored in review records."""
+    return (
+        isinstance(value, str) and len(value) == length
+        and all(char in "0123456789abcdef" for char in value)
+    )
+
+
+def _f101_review_evidence_passed(record: object) -> bool:
+    """Check evidence completeness and consistency, not engineering equivalence."""
+    if not isinstance(record, dict) or not _review_text_fields(record, ("review_date", "reason")):
+        return False
+    if (
+        type(record.get("schema_version")) is not int
+        or record["schema_version"] != 1
+        or record.get("code") != "DNV-ST-F101"
+        or record.get("status") != "passed"
+        or record.get("agreement") is not True
+    ):
+        return False
+    form = record.get("form")
+    if not _review_text_fields(form, (
+        "expression", "wall_basis", "normalisation", "domain",
+    )):
+        return False
+    if (
+        form.get("id") != "f101-root-sum-square"
+        or form.get("implementation") != (
+            "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py"
+        )
+        or form.get("symbol") != "DnvStF101Strategy._check_combined_loading"
+        or not _review_hex_digest(form.get("reviewed_revision"), 40)
+        or not _review_hex_digest(form.get("sha256"), 64)
+        or not _review_text_fields(form.get("terms"), ("m", "n", "q"))
+    ):
+        return False
+    source = record.get("source")
+    if not _review_text_fields(source, (
+        "title", "series", "publisher", "locator", "url", "scope",
+    )):
+        return False
+    pages = source.get("pages")
+    access = source.get("access")
+    if (
+        type(source.get("year")) is not int or source["year"] <= 0
+        or not isinstance(pages, list) or not pages
+        or not all(type(page) is int and page > 0 for page in pages)
+        or not _review_text_fields(access, ("retrieved_utc",))
+    ):
+        return False
+    if access.get("http_status") != 200 or not _review_hex_digest(access.get("sha256"), 64):
+        return False
+    try:
+        date.fromisoformat(record["review_date"])
+        retrieved = datetime.fromisoformat(access["retrieved_utc"].replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if retrieved.utcoffset() is None:
+        return False
+    points = record.get("comparison_points")
+    if not isinstance(points, list) or not points:
+        return False
+    if not all(
+        _review_text_fields(point, ("id", "reason")) and point.get("agreement") is True
+        for point in points
+    ):
+        return False
+    identifiers = [point["id"] for point in points]
+    required = {"single-load-limits", "mixed-moment-tension", "pressure-coupling", "report-envelope"}
+    return len(set(identifiers)) == len(identifiers) and required.issubset(identifiers)
+
+
+def _f101_combined_form_label() -> str:
+    """Retain the limitation without consistent evidence for the current strategy."""
+    try:
+        record = json.loads(F101_COMBINED_FORM_REVIEW.read_text(encoding="utf-8"))
+        if _f101_review_evidence_passed(record):
+            digest = hashlib.sha256(F101_COMBINED_FORM_IMPLEMENTATION.read_bytes()).hexdigest()
+            if digest == record["form"]["sha256"]:
+                return ""
+    except (OSError, ValueError, UnicodeError):
+        pass
+    return F101_SIMPLIFIED_FORM_LABEL
+
 
 # API RP 1111 operating conditions with design factors.
 # Designed as a replaceable data structure so other codes (DNV, PD 8010)
@@ -213,6 +322,16 @@ def generate_mt_report(
     pressure_chart_html = _build_pressure_sensitivity_chart(
         pressure_sensitivity, T_y, M_p, internal_pressure, conditions,
     )
+
+    if code == DesignCode.DNV_ST_F101:
+        limitation = _f101_combined_form_label()
+        notice = f'<p class="f101-envelope-limitation">{F101_SCREENING_LABEL}'
+        if limitation:
+            notice += f"; {limitation}"
+        notice += ".</p>"
+        contour_html = notice + contour_html
+        envelope_html = notice + envelope_html
+        pressure_chart_html = notice + pressure_chart_html
 
     # Build full HTML
     html = _build_html(
@@ -1059,6 +1178,11 @@ def _build_html(
     p_net = pi - pe
 
     code_label = code.value + edition_label
+    combined_check_subject = (
+        "The report's screening calculation"
+        if code == DesignCode.DNV_ST_F101
+        else f"The {code_label} combined check"
+    )
 
     # Pressure check rows — build dynamically from available results
     pressure_rows = ""
@@ -1409,7 +1533,7 @@ def _build_html(
         <div class="card">
             <h2>3. Combined Loading &mdash; Von Mises Interaction</h2>
             <p>
-                The {code_label} combined check evaluates the Von Mises equivalent stress:
+                {combined_check_subject} evaluates the Von Mises equivalent stress:
                 &sigma;<sub>vm</sub> = &radic;(&sigma;<sub>L</sub>&sup2;
                 &minus; &sigma;<sub>L</sub>&middot;&sigma;<sub>h</sub>
                 + &sigma;<sub>h</sub>&sup2;) &le; f<sub>d</sub>&middot;SMYS

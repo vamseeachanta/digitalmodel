@@ -174,9 +174,24 @@ class TestSetup:
 @needs_mystran
 class TestIntegration:
 
-    def test_cbar_cantilever_matches_analytical(self, tmp_path):
-        """AC: CBAR tip deflection within 0.1% of PL^3/3EI (beam element is exact)."""
-        r = MystranChain(tmp_path).run_cantilever_bar_validation(n_elems=4)
+    @pytest.mark.parametrize(
+        "b,h,expected",
+        [(0.1, 0.1, 1 / 5250), (0.05, 0.1, 1 / 2625),
+         (0.1, 0.05, 4 / 2625)],
+        ids=["square", "tall", "wide"],
+    )
+    def test_cbar_cantilever_matches_analytical(self, tmp_path, b, h, expected):
+        """Native check; hand sums and sources: test_bar_validation.py.
+
+        The existing square-case criteria below are retained as regression
+        thresholds, not engineering acceptance limits.
+        """
+        r = MystranChain(tmp_path).run_cantilever_bar_validation(
+            n_elems=4, b=b, h=h,
+        )
+        assert r["exact"] == pytest.approx(expected)
+        # The existing 0.1% error criterion is a relative tolerance of 1e-3.
+        assert r["tip_displacement"] == pytest.approx(expected, rel=1e-3)
         assert r["error_pct"] < 0.1, r
         assert r["reaction_sum"]["t3"] == pytest.approx(-1000.0, rel=1e-6)
         assert abs(r["epsilon"]) < 1e-8

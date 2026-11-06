@@ -1,0 +1,49 @@
+# Generic demonstration only. Every numerical value in this file is
+# assumed, based on previous experience; no value is a design recommendation.
+# The basis mapping applies to every numerical leaf of its named group.
+# Equations: NASA, Drag Equation (public web edition, retrieved 2026-10-20);
+# Orcina, Links: Data (public web edition, retrieved 2026-10-20);
+# repository docs/domains/hydrodynamics/wang-passing-ship-forces.md (1975 method).
+basis:
+  moored: assumed, based on previous experience
+  passing: assumed, based on previous experience
+  depth_m: assumed, based on previous experience
+  water_density_kg_m3: assumed, based on previous experience
+  wind: assumed, based on previous experience
+  current: assumed, based on previous experience
+  lines: assumed, based on previous experience
+  fenders: assumed, based on previous experience
+  passages: assumed, based on previous experience
+  sampling: assumed, based on previous experience; sampling convergence not established
+  numerics: inherited numerical settings, docs/domains/hydrodynamics/wang-passing-ship-forces.md
+moored: {length_m: 100, beam_m: 20, draft_m: 5, midship_area_m2: 80, mass_t: 10000, yaw_inertia_t_m2: 8000000}
+passing: {length_m: 100, beam_m: 20, draft_m: 5, midship_area_m2: 80}
+depth_m: 30
+water_density_kg_m3: 1000
+wind: {density_kg_m3: 1.2, area_m2: 1000, coefficient: 1, velocity_m_s: [0, 10], application_m: [10, 0]}
+current: {density_kg_m3: 1000, area_m2: 200, coefficient: 1, velocity_m_s: [0, 1], application_m: [10, 0]}
+lines:
+  - {name: line_a, fairlead_m: [-40, -10, 0], anchor_m: [-60, -40, 0], unstretched_length_m: 35, ea_kn: 10000}
+  - {name: line_b, fairlead_m: [40, -10, 0], anchor_m: [60, -40, 0], unstretched_length_m: 35, ea_kn: 10000}
+fenders:
+  - name: fender_a
+    fairlead_m: [-30, -10, 0]
+    anchor_m: [-30, -12, 0]
+    length_force_kn: [[0, -2000], [1, -1000], [2, 0], [3, 0]]
+  - name: fender_b
+    fairlead_m: [30, -10, 0]
+    anchor_m: [30, -12, 0]
+    length_force_kn: [[0, -2000], [1, -1000], [2, 0], [3, 0]]
+passages:
+  - {speed_m_s: 1, separation_m: 100}
+  - {speed_m_s: 2, separation_m: 100}
+  - {speed_m_s: 2, separation_m: 150}
+sampling:
+  initial_stagger_m: -200
+  # Requested knots; histories are refined using the analysis time step.
+  times_s: [0, 50, 100, 150, 200, 250, 300, 350, 400]
+  time_step_s: 0.1
+numerics: {quadrature_nodes: 96, image_pairs: 10}
+# No acceptance limit is inferred from an assumed stiffness or force table.
+# Supply each object's allowable_kn and source before evaluating design criteria.
+criteria: {}

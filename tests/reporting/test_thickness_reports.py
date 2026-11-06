@@ -275,3 +275,93 @@ def test_shared_number_validator_accepts_zero_only_when_requested():
     validate_number("wall", 0, zero=True)
     with pytest.raises(ValueError):
         validate_number("wall", -1, zero=True)
+
+
+def test_tank_chart_hover_pairs_each_requirement_with_its_selected_plate():
+    """Independent test_one_foot arithmetic: 20-18.846=1.154 mm margin.
+
+    Course 7 has 6-5.616=0.384 mm design margin, before the floor governs.
+    This checks the course boundary pairing, where duplicate height knots occur.
+    """
+    spec = tank_report(
+        shell_result(), document("Tank shell analysis"),
+        water_unit_weight_kn_m3=9.8, pressure_source="Synthetic unit weight",
+    )
+    figure = next(b.plotly for b in blocks(spec, FigureBlock) if b.figure_id == "tank-thickness")
+    trace = figure["data"][0]
+    assert trace["customdata"][0] == pytest.approx([20, 1.154])
+    assert trace["customdata"][12] == pytest.approx([6, 0.384])
+    assert "Nominal wall: %{customdata[0]:.3f} mm" in trace["hovertemplate"]
+    assert "Margin: %{customdata[1]:.3f} mm" in trace["hovertemplate"]
+
+
+@pytest.mark.parametrize("wall,margin", [(10, -2), (11.96, -0.04)])
+def test_vessel_hover_exposes_negative_margin_at_design_pressure(wall, margin):
+    """UG-27 requires 12 mm; even a 0.040 mm shortfall remains visible."""
+    spec = vessel_spec(geometry=VesselGeometry(
+        inner_diameter_mm=200, wall_thickness_mm=wall, corrosion_allowance_mm=2,
+    ))
+    figure = blocks(spec, FigureBlock)[0].plotly
+    shell = figure["data"][0]
+    assert shell["customdata"][-1] == pytest.approx([wall, margin])
+    assert "Nominal wall: %{customdata[0]:.3f} mm" in shell["hovertemplate"]
+    assert "Margin: %{customdata[1]:.3f} mm" in shell["hovertemplate"]
+
+
+@pytest.mark.parametrize(
+    "field,citation_field,label,locator",
+    [
+        ("diameter_limit_m", "diameter_limit_citation", "Diameter limit", "API 650 5.6.3.1"),
+        ("minimum_nominal_mm", "minimum_nominal_citation", "Nominal floor", "API 650 5.6.1.1"),
+    ],
+)
+def test_missing_limit_values_remain_unqualified_in_report(
+    tmp_path, field, citation_field, label, locator,
+):
+    from digitalmodel.citations.schema import Citation
+
+    citation = Citation(
+        code_id="SYNTHETIC-TEST", publisher="synthetic", revision="test",
+        section="Synthetic metadata only", source_sibling="generic",
+        wiki_path="wikis/engineering/wiki/concepts/test.md",
+    )
+    path = tmp_path / citation.wiki_path
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "---\ncode_id: SYNTHETIC-TEST\npublisher: synthetic\nrevision: test\n---\n",
+        encoding="utf-8",
+    )
+    inputs = shell_result().inputs
+    basis = replace(inputs.basis, **{field: None, citation_field: citation})
+    result = design_shell(replace(inputs, basis=basis), wiki_root=tmp_path)
+    spec = tank_report(
+        result, document("Tank shell analysis"),
+        water_unit_weight_kn_m3=9.8, pressure_source="Synthetic unit weight",
+    )
+    evidence = next(b for b in blocks(spec, TableBlock) if b.title == "Source qualification")
+    assert [label, locator, "Unresolved", "NOT_EVALUATED"] in evidence.rows
+    assert result.citation_sidecar() == {"citations": []}
+    assert result.status == "NOT_EVALUATED"
+    assert any(f"{locator} " in gap for gap in result.not_evaluated)
+
+
+def test_tank_basis_lists_the_evidence_for_each_rule():
+    spec = tank_report(
+        shell_result(), document("Tank shell analysis"),
+        water_unit_weight_kn_m3=9.8, pressure_source="Synthetic unit weight",
+    )
+    evidence = next(b for b in blocks(spec, TableBlock) if b.title == "Source qualification")
+    assert len(evidence.rows) == 4
+    assert {row[0] for row in evidence.rows} == {
+        "Method coefficients", "Material allowables", "Diameter limit", "Nominal floor",
+    }
+    assert all("NOT_EVALUATED" in row for row in evidence.rows)
+
+
+@pytest.mark.parametrize("limits", [{"Unknown": [10]}, {"Required": [10, 12]}])
+def test_nominal_hover_rejects_unpaired_limits(limits):
+    from digitalmodel.reporting.thickness import nominal_limit_hover
+
+    figure = {"data": [{"name": "Required", "y": [12]}]}
+    with pytest.raises(ValueError):
+        nominal_limit_hover(figure, limits)

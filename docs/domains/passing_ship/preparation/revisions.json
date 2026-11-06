@@ -1,5 +1,5 @@
 {
-  "revision": "3",
+  "revision": "4",
   "history": [
     {
       "revision": "initial",
@@ -15,6 +15,11 @@
       "revision": "3",
       "date": "2026-10-15",
       "change": "Defined coefficient peaks and frozen comparison tolerances, identified the depth placeholder, and resized assumed mooring lines with static catenaries; fresh-build checks protect the generated outputs."
+    },
+    {
+      "revision": "4",
+      "date": "2026-10-20",
+      "change": "Added optional response inputs to the serialized specifications and refreshed schema provenance; these force preparation cases still contain no response solution."
     }
   ]
 }

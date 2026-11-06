@@ -40,18 +40,18 @@ sections:
 
 # --- GENERATED below this line by `python -m digitalmodel.asset_integrity.offering_catalog render`
 # --- from src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml (issue #2197). Do not edit by hand.
-# Format: engines.<section id>.<engine key>: {status, module?, workflow?, validation?, issue?}
+# Format: engines.<section id>.<engine key>: {status, module?, workflow?, validation?, issue?, caveat?}
 engines:
   ffs:
     ffs-metal-loss: {status: live, module: asset_integrity.assessment.ffs_coordinator, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md}
     api579-legacy: {status: workflow, module: asset_integrity.API579, workflow: api579-pipe-ffs-b314}
     corroded-pipe: {status: live, module: asset_integrity.corroded_pipe, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
     rstreng-2d: {status: live, module: asset_integrity.rstreng_2d, workflow: pipeline-corroded-defect-screen, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
-    dnv-f101: {status: live, module: asset_integrity.dnv_rp_f101, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181}
+    dnv-f101: {status: live, module: asset_integrity.dnv_rp_f101, workflow: pipeline-corroded-defect-screen, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181, caveat: 'workflow covers single-defect Part B safe working pressure (F1 x F2) only; interacting-defect method and PSF tables per #1094'}
     circumferential: {status: validated, module: asset_integrity.circumferential_defect, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181}
-    pitting: {status: workflow, module: asset_integrity.assessment.pitting, workflow: api579-pitting-screen, validation: docs/domains/asset-integrity/pitting-validation-2026-10-09.md, issue: 2182}
-    dents: {status: workflow, module: asset_integrity.dent_assessment, workflow: api579-dent-screen, validation: docs/domains/asset-integrity/dent-validation-2026-10-09.md, issue: 2182}
-    crack-fad: {status: engine, module: asset_integrity.assessment.crack_fad, issue: 2184}
+    pitting: {status: workflow, module: asset_integrity.assessment.pitting, workflow: api579-pitting-screen, validation: docs/domains/asset-integrity/pitting-validation-2026-10-09.md, issue: 2182, caveat: Part 6 charts not transcribed; equivalent-LTA bound}
+    dents: {status: workflow, module: asset_integrity.dent_assessment, workflow: api579-dent-screen, validation: docs/domains/asset-integrity/dent-validation-2026-10-09.md, issue: 2182, caveat: 'manual geometry; formula anchors only, published-case validation not established'}
+    crack-fad: {status: engine, module: asset_integrity.assessment.crack_fad, issue: 2184, caveat: 'BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175'}
     crack-growth: {status: engine, module: fatigue.crack_growth, issue: 2177}
     level3-handoff: {status: engine, module: asset_integrity.assessment.level3_escalation, issue: 2184}
     measurement-sufficiency: {status: engine, module: asset_integrity.assessment.measurement_sufficiency, workflow: ffs-metal-loss}
@@ -77,6 +77,7 @@ engines:
     calculix-nonlinear: {status: planned, issue: 2173}
     parts-3-7-10: {status: planned, issue: 1274}
     parts-8-11-13-14: {status: planned, issue: 2203}
+    api579-coverage-intake: {status: workflow, module: asset_integrity.api579_coverage, workflow: api579-coverage-screen, issue: 2203, caveat: evidence intake only; all engineering verdicts NOT_EVALUATED; published-example qualification pending}
     platform-damaged-member: {status: planned, issue: 2198}
     mooring-chain-degradation: {status: planned, issue: 2199}
     flexible-pipe-screen: {status: planned, issue: 2200}

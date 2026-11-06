@@ -7,7 +7,9 @@ Covers Type A surface extrapolation and Type B through-thickness linearisation.
 Issue: #1676 (P0 — fatigue expansion, hotspot stress)
 """
 
+import json
 import math
+from pathlib import Path
 import pytest
 import numpy as np
 
@@ -213,6 +215,130 @@ class TestThroughThicknessLinearisation:
         """Mismatched positions/stresses raises ValueError."""
         with pytest.raises(ValueError, match="equal length"):
             through_thickness_linearisation(20.0, [0, 10, 20], [100, 90])
+
+
+@pytest.fixture(scope="module")
+def linearisation_polynomials():
+    """Load synthetic profiles and their independent hand integrations."""
+    fixture = Path(__file__).with_name("through_thickness_polynomials.json")
+    return json.loads(fixture.read_text(encoding="utf-8"))
+
+
+class TestThroughThicknessPolynomials:
+    """Check signed components against the fixture's polynomial integrals.
+
+    The fixture derives the trapezoidal moment error and the rounding bound;
+    no extrapolation factors or fatigue design constants enter these cases.
+    The peak convention is the signed surface residual, not its magnitude.
+    """
+
+    signed_components = (
+        "membrane_stress", "bending_stress", "hotspot_stress", "peak_stress"
+    )
+
+    @pytest.mark.parametrize("profile_name", ["constant", "affine", "superposition"])
+    def test_independently_integrated_profile(
+        self, linearisation_polynomials, profile_name
+    ):
+        data = linearisation_polynomials
+        profile = data["profiles"][profile_name]
+        positions = np.asarray(data["positions_mm"])
+        stresses = profile["intercept_mpa"] + profile["slope_mpa_per_mm"] * positions
+        result = through_thickness_linearisation(
+            data["thickness_mm"], positions, stresses
+        )
+        expected = profile["integrated"]
+        rounding = data["rounding_bound_mpa"]
+        tolerance = profile["bending_quadrature_bound_mpa"] + rounding
+
+        assert result.membrane_stress == pytest.approx(
+            expected["membrane_mpa"], rel=0, abs=rounding
+        )
+        assert result.bending_stress == pytest.approx(
+            expected["bending_mpa"], rel=0, abs=tolerance
+        )
+        assert result.hotspot_stress == pytest.approx(
+            expected["surface_mpa"], rel=0, abs=tolerance
+        )
+        assert result.peak_stress == pytest.approx(
+            expected["peak_mpa"], rel=0, abs=tolerance
+        )
+        # Two rounded components reconstruct either physical surface.
+        assert result.membrane_stress - result.bending_stress == pytest.approx(
+            expected["root_mpa"], rel=0, abs=tolerance + rounding
+        )
+        assert result.hotspot_stress + result.peak_stress == pytest.approx(
+            expected["surface_mpa"], rel=0, abs=rounding + rounding
+        )
+        assert result.peak_stress == pytest.approx(
+            stresses[0] - result.hotspot_stress,
+            rel=0,
+            abs=rounding + rounding,
+        )
+        if profile_name == "constant":
+            assert result.bending_stress == 0.0
+            assert result.peak_stress == 0.0
+
+    @pytest.mark.parametrize("profile_name", ["constant", "affine", "superposition"])
+    def test_sign_reversal(self, linearisation_polynomials, profile_name):
+        """Negating stress negates every signed result, including the peak."""
+        data = linearisation_polynomials
+        profile = data["profiles"][profile_name]
+        positions = np.asarray(data["positions_mm"])
+        stresses = profile["intercept_mpa"] + profile["slope_mpa_per_mm"] * positions
+        positive = through_thickness_linearisation(
+            data["thickness_mm"], positions, stresses
+        )
+        negative = through_thickness_linearisation(
+            data["thickness_mm"], positions, -stresses
+        )
+        for component in self.signed_components:
+            assert getattr(negative, component) == pytest.approx(
+                -getattr(positive, component), rel=0, abs=data["rounding_bound_mpa"]
+            )
+
+    @pytest.mark.parametrize("profile_name", ["constant", "affine", "superposition"])
+    @pytest.mark.parametrize("thickness_scale", [0.25, 4.0], ids=["quarter", "quadruple"])
+    def test_thickness_rescaling(
+        self, linearisation_polynomials, profile_name, thickness_scale
+    ):
+        """Quarter/quadruple thickness preserves stress as a function of y/t."""
+        data = linearisation_polynomials
+        profile = data["profiles"][profile_name]
+        positions = np.asarray(data["positions_mm"])
+        stresses = profile["intercept_mpa"] + profile["slope_mpa_per_mm"] * positions
+        original = through_thickness_linearisation(
+            data["thickness_mm"], positions, stresses
+        )
+        scaled = through_thickness_linearisation(
+            data["thickness_mm"] * thickness_scale,
+            positions * thickness_scale,
+            stresses,
+        )
+        for component in self.signed_components:
+            assert getattr(scaled, component) == pytest.approx(
+                getattr(original, component), rel=0, abs=data["rounding_bound_mpa"]
+            )
+
+    def test_superposition(self, linearisation_polynomials):
+        """Linear integration makes the combined result the sum of its parts."""
+        data = linearisation_polynomials
+        positions = np.asarray(data["positions_mm"])
+        results = {}
+        for name, profile in data["profiles"].items():
+            stresses = profile["intercept_mpa"] + profile["slope_mpa_per_mm"] * positions
+            results[name] = through_thickness_linearisation(
+                data["thickness_mm"], positions, stresses
+            )
+        # The combined value and both summands each have one rounding error.
+        tolerance = sum(data["rounding_bound_mpa"] for _ in results)
+        for component in self.signed_components:
+            assert getattr(results["superposition"], component) == pytest.approx(
+                getattr(results["constant"], component)
+                + getattr(results["affine"], component),
+                rel=0,
+                abs=tolerance,
+            )
 
 
 # ── Test: Recommended read-out distances ────────────────────────────────────

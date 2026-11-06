@@ -1,0 +1,654 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Riser results exchange",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/fatigue"
+    },
+    {
+      "$ref": "#/$defs/strength"
+    }
+  ],
+  "$defs": {
+    "run": {
+      "type": "object",
+      "properties": {
+        "input_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        "result_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "data_basis": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "input_sha256",
+        "result_file",
+        "date"
+      ],
+      "additionalProperties": false
+    },
+    "thickness_correction": {
+      "type": "object",
+      "properties": {
+        "thickness_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "reference_thickness_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "exponent": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source_label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "thickness_mm",
+        "reference_thickness_mm",
+        "exponent",
+        "source_label"
+      ],
+      "additionalProperties": false
+    },
+    "sn_curve": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "m": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "log_a": {
+          "type": "number"
+        },
+        "thickness_correction": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/thickness_correction"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          ]
+        },
+        "reference_cycles": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "reference_range_MPa": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "endurance_limit_MPa": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "name",
+        "m",
+        "log_a"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "source"
+          ]
+        },
+        {
+          "required": [
+            "source_label"
+          ]
+        }
+      ]
+    },
+    "range_bin": {
+      "type": "object",
+      "properties": {
+        "stress_range_MPa": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cycles_per_year": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "stress_range_MPa",
+        "cycles_per_year"
+      ],
+      "additionalProperties": false
+    },
+    "hot_spot": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "enum": [
+            "touchdown",
+            "hang_off"
+          ]
+        },
+        "arc_length_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stress_range_MPa": {
+          "type": "number",
+          "minimum": 0
+        },
+        "range_histogram": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/range_bin"
+          },
+          "minItems": 1
+        },
+        "cycles_per_year": {
+          "type": "number",
+          "minimum": 0
+        },
+        "scf": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "name",
+        "arc_length_m",
+        "cycles_per_year",
+        "scf"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "stress_range_MPa"
+          ]
+        },
+        {
+          "required": [
+            "range_histogram"
+          ]
+        }
+      ]
+    },
+    "arc_point": {
+      "type": "object",
+      "properties": {
+        "arc_length_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stress_range_MPa": {
+          "type": "number",
+          "minimum": 0
+        },
+        "range_histogram": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/range_bin"
+          },
+          "minItems": 1
+        },
+        "cycles_per_year": {
+          "type": "number",
+          "minimum": 0
+        },
+        "scf": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "arc_length_m",
+        "cycles_per_year",
+        "scf"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "stress_range_MPa"
+          ]
+        },
+        {
+          "required": [
+            "range_histogram"
+          ]
+        }
+      ]
+    },
+    "fatigue": {
+      "type": "object",
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "pattern": "^R(08|10|12)-W[12]-(SCR|SLWR)$"
+        },
+        "sea_state": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "Hs_m": {
+              "type": "number",
+              "minimum": 0
+            },
+            "Tp_s": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "direction_deg": {
+              "type": "number"
+            },
+            "occurrence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "required": [
+            "id",
+            "Hs_m",
+            "Tp_s",
+            "direction_deg",
+            "occurrence"
+          ],
+          "additionalProperties": false
+        },
+        "hot_spots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hot_spot"
+          },
+          "minItems": 1
+        },
+        "sn_curve": {
+          "$ref": "#/$defs/sn_curve"
+        },
+        "damage_per_year": {
+          "type": "number",
+          "minimum": 0
+        },
+        "life_years": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "arc_distribution": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/arc_point"
+          },
+          "minItems": 1
+        },
+        "run": {
+          "$ref": "#/$defs/run"
+        }
+      },
+      "required": [
+        "case_id",
+        "sea_state",
+        "hot_spots",
+        "sn_curve",
+        "damage_per_year",
+        "run"
+      ],
+      "additionalProperties": false
+    },
+    "strength": {
+      "type": "object",
+      "properties": {
+        "case_id": {
+          "type": "string",
+          "pattern": "^R(08|10|12)-W[12]-(SCR|SLWR)$"
+        },
+        "software": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "name",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "load_case": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "wave": {
+              "type": "object"
+            },
+            "current": {
+              "type": "object"
+            },
+            "offset": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "id",
+            "wave",
+            "current",
+            "offset"
+          ],
+          "additionalProperties": false
+        },
+        "arc_length_m": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 1
+        },
+        "effective_tension_kN": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1
+        },
+        "bending_moment_kNm": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 1
+        },
+        "von_mises_utilisation": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          },
+          "minItems": 1
+        },
+        "utilisation_method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "utilisation_allowable": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_utilisation": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "arc_length_m": {
+              "type": "number",
+              "minimum": 0
+            },
+            "location": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "value",
+            "arc_length_m",
+            "location"
+          ],
+          "additionalProperties": false
+        },
+        "touchdown": {
+          "type": "object",
+          "properties": {
+            "arc_length_m": {
+              "type": "number",
+              "minimum": 0
+            },
+            "utilisation": {
+              "type": "number",
+              "minimum": 0
+            },
+            "stress_range_MPa": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "arc_length_m",
+            "utilisation",
+            "stress_range_MPa"
+          ],
+          "additionalProperties": false
+        },
+        "top_angle_deg": {
+          "type": "object",
+          "properties": {
+            "static": {
+              "type": "number"
+            },
+            "dynamic_min": {
+              "type": "number"
+            },
+            "dynamic_max": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "static",
+            "dynamic_min",
+            "dynamic_max"
+          ],
+          "additionalProperties": false
+        },
+        "hang_off_tension_kN": {
+          "type": "object",
+          "properties": {
+            "static": {
+              "type": "number"
+            },
+            "dynamic_max": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "static",
+            "dynamic_max"
+          ],
+          "additionalProperties": false
+        },
+        "run": {
+          "$ref": "#/$defs/run"
+        },
+        "method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowable": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "unit": {
+              "const": "MPa"
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "basis_label": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "value",
+            "unit",
+            "source"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "case_id",
+        "software",
+        "load_case",
+        "arc_length_m",
+        "effective_tension_kN",
+        "bending_moment_kNm",
+        "von_mises_utilisation",
+        "max_utilisation",
+        "touchdown",
+        "top_angle_deg",
+        "hang_off_tension_kN",
+        "run"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "method",
+            "allowable"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "utilisation_method"
+                ]
+              },
+              {
+                "required": [
+                  "utilisation_allowable"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "utilisation_method",
+            "utilisation_allowable"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "method"
+                ]
+              },
+              {
+                "required": [
+                  "allowable"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "g4_check": {
+      "type": "object",
+      "properties": {
+        "wall_delta_pct": {
+          "type": "number"
+        },
+        "tolerance_pct": {
+          "type": "number",
+          "minimum": 0
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        }
+      },
+      "required": [
+        "wall_delta_pct",
+        "tolerance_pct",
+        "source_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "g4_checks": {
+      "type": "object",
+      "properties": {
+        "comparison_cases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^R(08|10|12)-W[12]-(SCR|SLWR)$"
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "mesh_step": {
+          "$ref": "#/$defs/g4_check"
+        },
+        "half_hour": {
+          "$ref": "#/$defs/g4_check"
+        }
+      },
+      "required": [
+        "comparison_cases",
+        "mesh_step",
+        "half_hour"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

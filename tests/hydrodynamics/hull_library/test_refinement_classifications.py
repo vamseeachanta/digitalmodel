@@ -1,6 +1,7 @@
 """Synthetic classification regressions; dimensions follow the cutout tests."""
 
 from copy import deepcopy
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -10,7 +11,11 @@ from digitalmodel.hydrodynamics.hull_library.mesh_cutouts import (
     MoonpoolFootprint,
     cut_moonpool,
 )
-from digitalmodel.hydrodynamics.hull_library.mesh_refiner import refine_mesh
+from digitalmodel.hydrodynamics.hull_library.mesh_refiner import (
+    export_mesh_family,
+    generate_mesh_family,
+    refine_mesh,
+)
 from tests.hydrodynamics.hull_library.test_mesh_cutouts import box_mesh
 
 
@@ -156,3 +161,197 @@ def test_unclassified_quad_geometry_and_ordinary_metadata() -> None:
         [[0.25, 0.25, 0], [0.75, 0.25, 0], [0.75, 0.75, 0], [0.25, 0.75, 0]],
     )
     assert result.metadata == {**source.metadata, "refinement_levels": 1}
+
+
+@pytest.mark.parametrize("key", ["moonpool_wall", "moonpool_index"])
+def test_classified_family_rejects_coarsening(key: str) -> None:
+    """Known panel keys cannot survive an unmapped topology change.
+
+    Source: mesh_cutouts._assemble defines False and -1 for ordinary panels.
+    Even these classifications must survive, so key presence is sufficient.
+    The half-density request comes from generate_mesh_family's documented
+    factors; its coarsening backends have no parent classification mapping.
+    """
+    source = box_mesh()
+    source.metadata[key] = [False if key == "moonpool_wall" else -1] * source.n_panels
+    before = deepcopy(source.metadata)
+    with pytest.raises(ValueError, match="coarsen.*classifications"):
+        generate_mesh_family(source, factors=[0.5])
+    assert source.metadata == before
+
+
+@pytest.mark.parametrize("key", ["moonpool_wall", "moonpool_index"])
+@pytest.mark.parametrize("panel_count", [1, 4])
+@pytest.mark.parametrize("factor", [0.25, 0.5])
+def test_classified_family_allows_clamped_identity(
+    key: str, panel_count: int, factor: float
+) -> None:
+    """The four-panel target floor leaves one- and four-panel sources intact.
+
+    Source: coarsen_mesh returns its input when the target is no smaller than
+    the source. Panel order and every classification therefore stay unchanged.
+    """
+    box = box_mesh()
+    source = PanelMesh(
+        vertices=box.vertices,
+        panels=box.panels[:panel_count],
+        format_origin=box.format_origin,
+        symmetry_plane="y",
+        reference_point=[1.0, 2.0, 3.0],
+        metadata={
+            key: [True if key == "moonpool_wall" else 0] * panel_count,
+            "source": "synthetic",
+            "ordinary_list": ["unchanged"],
+        },
+    )
+    before = deepcopy(source.metadata)
+    (member,) = generate_mesh_family(source, factors=[factor])
+    for field in ("vertices", "panels", "normals", "panel_areas", "panel_centers"):
+        np.testing.assert_array_equal(getattr(member.mesh, field), getattr(source, field))
+    assert member.mesh.metadata == {**before, "density_factor": factor}
+    assert member.mesh.format_origin == source.format_origin
+    assert member.mesh.symmetry_plane == source.symmetry_plane
+    assert member.mesh.reference_point == source.reference_point
+    assert member.factor == factor
+    assert member.metrics.panel_count == panel_count
+    assert source.metadata == before
+
+
+@pytest.mark.parametrize("key", ["moonpool_wall", "moonpool_index"])
+@pytest.mark.parametrize(
+    "factor",
+    [0.25, 0.5, 1.0, float(np.nextafter(1.0, 0.0)), float(np.nextafter(1.0, 2.0))],
+)
+def test_classified_identity_members_isolate_mutations(key: str, factor: float) -> None:
+    """Classifications in repeated identities belong to each returned member.
+
+    Both the four-panel floor and the near-unity branch preserve panel order.
+    Mutating one member or its source must leave the other member unchanged.
+    """
+    box = box_mesh()
+    source = PanelMesh(
+        vertices=box.vertices,
+        panels=box.panels[:4],
+        metadata={
+            key: [True, False, True, False] if key == "moonpool_wall" else [0, -1, 1, -1]
+        },
+    )
+    before = deepcopy(source.metadata)
+    first, second = generate_mesh_family(source, factors=[factor, factor])
+    for member in (first, second):
+        assert member.mesh.metadata[key] == before[key]
+    first.mesh.metadata[key][0] = False if key == "moonpool_wall" else 2
+    assert source.metadata == before
+    assert second.mesh.metadata[key] == before[key]
+    source.metadata[key][1] = True if key == "moonpool_wall" else 3
+    assert first.mesh.metadata[key][1] == before[key][1]
+    assert second.mesh.metadata[key] == before[key]
+
+
+@pytest.mark.parametrize("key", ["moonpool_wall", "moonpool_index"])
+def test_classified_family_export_fails_before_writing(key: str, tmp_path: Path) -> None:
+    """GDFHandler.write has geometry and symmetry fields, no classification field.
+
+    A mixed family must fail before writing even its ordinary first member.
+    Source: generate_mesh_family documents factor 1 as the original mesh.
+    """
+    source = box_mesh()
+    family = generate_mesh_family(source, factors=[1.0])
+    classified = box_mesh()
+    classified.metadata[key] = (
+        [False if key == "moonpool_wall" else -1] * classified.n_panels
+    )
+    family.extend(generate_mesh_family(classified, factors=[1.0]))
+    output = tmp_path / "geometry"
+    with pytest.raises(ValueError, match="GDF.*classifications"):
+        export_mesh_family(family, output)
+    assert not output.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_empty_classifications_survive_repeated_refinement() -> None:
+    """Hand calculation: a point has no children with three unique vertices.
+
+    Source: mesh_refiner._subdivide_once's existing validity rule. After the
+    first pass removes every child, the second pass has no parents; both
+    classifications therefore remain empty without dropping cutout metadata.
+    """
+    source = PanelMesh(
+        vertices=np.zeros((1, 3)),
+        panels=np.zeros((1, 4), dtype=np.int32),
+        metadata={"moonpool_wall": [False], "moonpool_index": [-1], "cutouts": []},
+    )
+    result = refine_mesh(source, levels=2)
+    assert result.panels.shape == (0, 4)
+    assert result.metadata == {
+        "moonpool_wall": [],
+        "moonpool_index": [],
+        "cutouts": [],
+        "refinement_levels": 2,
+    }
+
+
+def test_classified_family_preserves_original_and_refined_members() -> None:
+    """Original values and four children per quad follow the documented factors.
+
+    Source: mesh_refiner.generate_mesh_family and _subdivide_once. The expected
+    metadata is a direct parent-to-child expansion, independent of geometry.
+    """
+    source = rectangular_cutout()
+    before = deepcopy(source.metadata)
+    original, refined = generate_mesh_family(source, factors=[1.0, 4.0])
+    for key in ("moonpool_wall", "moonpool_index"):
+        assert original.mesh.metadata[key] == before[key]
+        assert refined.mesh.metadata[key] == [v for v in before[key] for _ in range(4)]
+    for member in (original, refined):
+        assert member.mesh.metadata["cutouts"] == before["cutouts"]
+    assert source.metadata == before
+
+
+def test_partial_filter_keeps_each_retained_child_parent() -> None:
+    """Hand calculation under _subdivide_once's three-unique-vertex rule.
+
+    The first parent [A,A,A,B] uses unit-segment endpoints A=0 and B=1.
+    Its centre is 1/4 and nonzero midpoints are 1/2. Child vertex coordinates
+    are [0,0,1/4,1/2], [0,0,0,1/4], [1/4,0,0,1/2], [1/2,1/4,1/2,1].
+    Only the second child has fewer than three distinct vertices. The next
+    parent is a unit square retaining four children, so flags must have three
+    True entries followed by four False entries. Collinear children remain
+    valid under this existing index rule; no physical quality claim is made.
+    """
+    source = PanelMesh(
+        vertices=np.array([[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]], dtype=float),
+        panels=np.array([[0, 0, 0, 1], [0, 1, 2, 3]], dtype=np.int32),
+        metadata={"moonpool_wall": [True, False], "moonpool_index": [0, -1]},
+    )
+    result = refine_mesh(source)
+    assert result.n_panels == 3 + 4
+    assert result.metadata["moonpool_wall"] == [True] * 3 + [False] * 4
+    assert result.metadata["moonpool_index"] == [0] * 3 + [-1] * 4
+
+
+def test_ordinary_panel_length_metadata_does_not_block_family(tmp_path: Path) -> None:
+    """Sequence length alone does not establish the mesh_cutouts panel schema.
+
+    Source: generate_mesh_family's documented half/original/fourfold factors.
+    Ordinary metadata must not trigger classification guards at either API.
+    """
+    source = box_mesh()
+    source.metadata["ordinary_list"] = ["ordinary"] * source.n_panels
+    family = generate_mesh_family(source, factors=[0.5, 1.0, 4.0])
+    paths = export_mesh_family(family, tmp_path / "geometry")
+    assert len(paths) == len(family)
+    assert all(path.is_file() for path in paths)
+
+
+def test_classified_family_keeps_near_unity_identity_behavior() -> None:
+    """The next float below unity takes generate_mesh_family's identity branch.
+
+    Source: the existing factor comparison in generate_mesh_family. An identity
+    copy has the same panel order, so classifications require no new mapping.
+    """
+    source = rectangular_cutout()
+    (member,) = generate_mesh_family(source, factors=[float(np.nextafter(1.0, 0.0))])
+    np.testing.assert_array_equal(member.mesh.panels, source.panels)
+    for key in ("moonpool_wall", "moonpool_index", "cutouts"):
+        assert member.mesh.metadata[key] == source.metadata[key]

@@ -1,0 +1,11 @@
+# Constructed arithmetic limits, not engineering acceptance criteria.
+# Source for every value: README.md, Independent answer; 60/100=0.6,
+# curvature 0.2 times MBR 4 gives 0.8. No empirical limit is inferred.
+Mooring_1: {value: 100, unit: kN, source: 'Independent answer in README.md; constructed arithmetic limit only'}
+Mooring_2: {value: 100, unit: kN, source: 'Independent answer in README.md; constructed arithmetic limit only'}
+Mooring_3: {value: 100, unit: kN, source: 'Independent answer in README.md; constructed arithmetic limit only'}
+Mooring_4: {value: 100, unit: kN, source: 'Independent answer in README.md; constructed arithmetic limit only'}
+Mooring_5: {value: 100, unit: kN, source: 'Independent answer in README.md; constructed arithmetic limit only'}
+Mooring_6: {value: 100, unit: kN, source: 'Independent answer in README.md; constructed arithmetic limit only'}
+Hawser: {value: 100, unit: kN, source: 'Independent answer in README.md; constructed arithmetic limit only'}
+TransferHose: {value: 4, unit: m, source: 'Independent answer in README.md; constructed arithmetic limit only'}

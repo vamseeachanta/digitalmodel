@@ -22,6 +22,8 @@ Reference: DNV-RP-C205 §7.2, standard motion transfer approach.
 from __future__ import annotations
 
 import numpy as np
+
+from digitalmodel._jonswap import normalising_factor
 from .models import Vessel, CraneTipConfig
 
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
@@ -178,9 +180,12 @@ def _jonswap_spectrum(
 ) -> np.ndarray:
     """JONSWAP wave spectrum S(w) [m^2 s/rad].
 
-    S(w) = (alpha * g^2 / w^5) * exp(-5/4 * (wp/w)^4) * gamma^a
+    S(w) = C_gamma * (alpha * g^2 / w^5) * exp(-5/4 * (wp/w)^4) * gamma^a
 
-    Parametric form with alpha derived from Hs.
+    Parametric form with alpha derived from Hs. The full-spectrum energy
+    multiplier is independent of the supplied frequency grid; finite grids
+    retain their bandwidth loss. See docs/domains/installation/
+    jonswap-normalisation.md for the public source and numerical basis.
     """
     g = 9.80665
 
@@ -192,12 +197,14 @@ def _jonswap_spectrum(
 
     # Pierson-Moskowitz base
     alpha_pm = (5.0 / 16.0) * hs**2 * wp**4 / g**2
-    # Normalisation factor for gamma
-    C_gamma = 1.0 - 0.287 * np.log(gamma)
+    # SIMA JONSWAP Spectra sections 1-2 (accessed 2026-10-22):
+    # beta=1.25, sigma=0.07/0.09; Hs²/16 fixes the energy scale.
+    # Use the integrated shape instead of the approximate logarithmic fit.
+    C_gamma = normalising_factor(gamma)
 
     with np.errstate(divide="ignore", invalid="ignore"):
         S_pm = (alpha_pm * g**2 / omega**5) * np.exp(-1.25 * (wp / omega) ** 4)
-        S = (S_pm / C_gamma) * gamma**a
+        S = (S_pm * C_gamma) * gamma**a
 
     S = np.nan_to_num(S, nan=0.0, posinf=0.0, neginf=0.0)
     return S

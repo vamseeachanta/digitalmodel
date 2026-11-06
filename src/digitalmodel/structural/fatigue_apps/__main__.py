@@ -25,10 +25,15 @@ Examples:
 import argparse
 import sys
 import logging
+import os
 from pathlib import Path
 from typing import List, Optional
 import json
 import numpy as np
+
+# Default production data folder, under DIGITALMODEL_PRIVATE_DATA
+# (a placeholder when unset, so it is reported as not found).
+PRODUCTION_DATA_PATH = Path(os.environ.get("DIGITALMODEL_PRIVATE_DATA", "<project_data>")) / "ctr9" / "fatigue_wsp_method" / "07c_fatigue" / "csv"
 
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
@@ -212,7 +217,7 @@ def validate_inputs(args):
             errors.append(f"Input directory does not exist: {input_path}")
     elif not args.sample:
         # Check for default production path
-        prod_path = Path("D:/1522/ctr9/fatigue_wsp_method/07c_fatigue/csv")
+        prod_path = PRODUCTION_DATA_PATH
         if not prod_path.exists():
             errors.append("Production data path not found. Use --input-directory or --sample")
     
@@ -252,7 +257,7 @@ def run_analysis(args):
         data_path = args.input_directory
         logging.info(f"Using input directory: {data_path}")
     else:
-        data_path = "D:/1522/ctr9/fatigue_wsp_method/07c_fatigue/csv"
+        data_path = str(PRODUCTION_DATA_PATH)
         logging.info(f"Using production data: {data_path}")
     
     # Parse configurations

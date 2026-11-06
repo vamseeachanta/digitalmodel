@@ -1,0 +1,13 @@
+{
+  "dataset_id": "diffraction-matched-benchmark",
+  "revision": "r2",
+  "readiness_disposition": "UNVERIFIED",
+  "checks": {
+    "source_identity": "NOT_EVALUATED",
+    "manifest_identity": "NOT_EVALUATED",
+    "revision_identity": "NOT_EVALUATED",
+    "sha256_digest_agreement": "NOT_EVALUATED",
+    "independent_review": "NOT_EVALUATED",
+    "intended_use_eligibility": "NOT_EVALUATED"
+  }
+}

@@ -1,0 +1,11 @@
+# Synthetic input basis: README.md, "Synthetic input basis".
+# Illustrative authored values; no external model or solver results are used.
+General:
+  UnitsSystem: SI
+Environment:
+  WaterDepth: 42.0
+  WindSpeed: 0.0
+Groups:
+  Structure: {}
+  State:
+    Collapsed: []

@@ -22,6 +22,13 @@ Supported S-N curves:
     - DNV-RP-C203 curves: B1, B2, C, C1, D, E, F, F1, F3, W1, W3
     - Custom user-defined curves
 
+The built-in table contains air curves only; environment is metadata and
+changing its label does not select another environment's curve parameters.
+Positive ranges are extrapolated below the stored threshold without a cut-off.
+
+A capability inventory and executable worked example are provided in
+``docs/domains/ansys/fatigue-postprocessor.md``.
+
 All functions return APDL command text or computed fatigue results.
 No ANSYS installation required.
 """
@@ -30,9 +37,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
-from typing import Optional
 
-import numpy as np
 import pandas as pd
 
 

@@ -79,7 +79,16 @@ def test_gci_report_reads_cases_and_orders_fine_to_coarse(tmp_path):
             {"mesh": {"estimated_cells": int(1e6 * (0.0075 / h) ** 2),
                       "free_surface": {"in_plane_cell_size_m": h, "cells_per_wavelength": 1.35 / h}}}))
         write_coeffs(case / "postProcessing/forceCoeffs/0/coefficient.dat", [4.0e-3 + 2.0 * h ** 2] * 800)
-    rep = gc.gci_report([tmp_path / "c", tmp_path / "a", tmp_path / "b"])
+    from digitalmodel.solvers.openfoam.near_wall_acceptance import NearWallCriteria, WallMeasurement
+
+    # Synthetic acceptance inputs, not engineering recommendations.
+    criteria = NearWallCriteria(50, 0.2, 0.9, 0.05, "synthetic test basis")
+    measurement = WallMeasurement(40, 60, 9, 10, "hull", "synthetic test evidence")
+    rep = gc.gci_report(
+        [tmp_path / "c", tmp_path / "a", tmp_path / "b"],
+        near_wall_criteria=criteria,
+        near_wall_measurements={name: measurement for name in hs},
+    )
     assert [m["case"] for m in rep["meshes"]] == ["a", "b", "c"]
     assert rep["gci"]["p"] == pytest.approx(2.0, rel=1e-6)
     assert rep["gci"]["f_ext"] == pytest.approx(4.0e-3, rel=1e-6)

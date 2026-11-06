@@ -17,11 +17,12 @@ def test_status_defaults_agree() -> None:
     assert collected.replace("~", "$HOME", 1) == rendered
 
 
-def test_deployment_records_runtime_identity() -> None:
-    """Deployment provenance is evaluated on the deploying host."""
+def test_deployment_records_revision_and_parity() -> None:
+    """The deployment stamp identifies verified content without machine identity."""
     source = (ROOT / "scripts/cfd/deploy_lane.sh").read_text()
-    line = next(line for line in source.splitlines() if "scripts/cfd from" in line)
-    assert "$(hostname -s)" in line
+    line = next(line for line in source.splitlines() if ">> cfd/" in line)
+    assert "digitalmodel@$rev" in line
+    assert "parity=verified" in line
 
 
 def test_package_public_metadata_matches_main() -> None:

@@ -46,7 +46,13 @@ class StatisticalResult:
 
 @dataclass
 class RegressionResult:
-    """Container for regression analysis results"""
+    """Regression coefficients and inference on the retained observation pairs.
+
+    ``std_error`` is the residual standard deviation, sqrt(SSE/(n-2)),
+    rather than the standard error of the slope. Coefficient intervals use
+    their respective standard errors and Student's t with n-2 degrees of
+    freedom (NIST/SEMATECH e-Handbook, 2012, section 4.4.3.1).
+    """
     slope: float
     intercept: float
     r_squared: float
@@ -135,7 +141,7 @@ class StatisticalAnalysisService:
         confidence_level: float = 0.95
     ) -> RegressionResult:
         """
-        Perform linear regression with confidence intervals
+        Perform simple linear regression with two-sided Student intervals.
         
         Mathematical formula: y = mx + b
         Correlation coefficient: r = Σ(xi - x̄)(yi - ȳ) / √[Σ(xi - x̄)²Σ(yi - ȳ)²]
@@ -143,24 +149,68 @@ class StatisticalAnalysisService:
         Args:
             x_data: Independent variable data
             y_data: Dependent variable data
-            confidence_level: Confidence level for intervals
+            confidence_level: Confidence probability, convertible to float
             
         Returns:
-            RegressionResult object with comprehensive analysis
+            RegressionResult for the pairs retained after NaN removal.
+            Exactly zero residual variance gives collapsed coefficient
+            intervals. The slope p-value is zero for a nonzero slope in that
+            limit, and NaN for a zero slope (the statistic is then 0/0).
+            Constant retained responses give NaN for p_value and r_squared,
+            independently of floating-point fitting residuals. Intervals are
+            for coefficients only; mean-response and prediction intervals
+            are not returned.
+
+        Raises:
+            ValueError: Inputs are not observation vectors of equal length,
+                fewer than three valid pairs remain, retained values are not
+                finite, the predictor is constant, or confidence_level is
+                not convertible to a finite float strictly between zero and one.
+
+        Notes:
+            Inference assumes independent, normally distributed errors with
+            constant variance. A perfect synthetic fit does not establish
+            zero uncertainty in measured data. See docs/regression-uncertainty.md
+            for equations, sources and a worked example.
         """
         try:
             # Validate input
+            x_data = np.asarray(x_data, dtype=float)
+            y_data = np.asarray(y_data, dtype=float)
+            if x_data.ndim != 1 or y_data.ndim != 1:
+                raise ValueError("X and Y data must be one-dimensional")
+
             if len(x_data) != len(y_data):
                 raise ValueError("X and Y data must have the same length")
-            
-            if len(x_data) < 3:
-                raise ValueError("Need at least 3 data points for regression")
-            
+
+            # Student quantile domain: NIST e-Handbook (2012), section 1.3.6.7.2.
+            try:
+                confidence_level = float(confidence_level)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError(
+                    "confidence_level must be finite and between 0 and 1"
+                ) from exc
+            if not np.isfinite(confidence_level) or not 0 < confidence_level < 1:
+                raise ValueError("confidence_level must be finite and between 0 and 1")
+
             # Remove NaN values
             valid_indices = ~(np.isnan(x_data) | np.isnan(y_data))
             x_clean = x_data[valid_indices]
             y_clean = y_data[valid_indices]
-            
+
+            # NIST section 4.4.3.1: n-p > 0, with p=2 fitted coefficients.
+            n = len(x_clean)
+            if n < 3:
+                raise ValueError("Need at least 3 valid data points for regression")
+            if not (np.isfinite(x_clean).all() and np.isfinite(y_clean).all()):
+                raise ValueError("Retained X and Y data must be finite")
+            # SciPy 1.16.2 (2025), stats.linregress: identical x is not identifiable.
+            # https://github.com/scipy/scipy/blob/v1.16.2/scipy/stats/_stats_py.py
+            if np.all(x_clean == x_clean[0]):
+                raise ValueError("X data must contain at least two distinct values")
+
+            constant_response = np.all(y_clean == y_clean[0])
+
             # Perform regression
             model = LinearRegression()
             X_reshaped = x_clean.reshape(-1, 1)
@@ -169,10 +219,9 @@ class StatisticalAnalysisService:
             slope = model.coef_[0]
             intercept = model.intercept_
             y_pred = model.predict(X_reshaped)
-            r_squared = r2_score(y_clean, y_pred)
+            r_squared = np.nan if constant_response else r2_score(y_clean, y_pred)
             
             # Calculate statistics
-            n = len(x_clean)
             residuals = y_clean - y_pred
             # NIST/SEMATECH e-Handbook (2012), section 4.4.3.1:
             # residual variance = SSE/(n-p), p=2 (slope and intercept).
@@ -184,12 +233,21 @@ class StatisticalAnalysisService:
             x_mean = np.mean(x_clean)
             ss_xx = np.sum((x_clean - x_mean) ** 2)
             slope_se = std_error / np.sqrt(ss_xx)
-            t_stat = slope / slope_se
-            p_value = 2 * (1 - stats.t.cdf(abs(t_stat), n - 2))
-            
+            if constant_response:
+                p_value = np.nan
+            elif slope_se == 0:
+                # SSE=0: the Student tail limit is zero for a nonzero slope;
+                # the zero-slope statistic is 0/0, so inference is undefined.
+                p_value = 0.0 if slope != 0 else np.nan
+            else:
+                t_stat = slope / slope_se
+                # SciPy 1.16.2 (2025), _stats_py._get_pvalue: two-sided sf
+                # avoids cancellation in 1-cdf for small tail probabilities.
+                p_value = 2 * stats.t.sf(abs(t_stat), n - 2)
+
             # Calculate confidence intervals
             alpha = 1 - confidence_level
-            t_critical = stats.t.ppf(1 - alpha/2, n - 2)
+            t_critical = stats.t.isf(alpha/2, n - 2)
             
             slope_ci = (
                 slope - t_critical * slope_se,
