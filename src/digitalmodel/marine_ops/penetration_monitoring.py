@@ -17,21 +17,29 @@ does not establish which equilibrium is reachable. No extrapolation is made.
 Triggers (all limits are required inputs, not standard-derived constants):
 * Penetration strictly outside every interpolated interval.
 * K = delta load / delta penetration drops by at least the supplied fraction
-  from the greatest finite increment stiffness since the last hold, unload or
-  upward movement. Each load increment must exceed the constant-load tolerance.
+  from the greatest finite loading stiffness since the last unload or upward
+  movement. Loading secants start at the last resolved loading anchor; small
+  load increases accumulate until their net change exceeds the supplied
+  constant-load tolerance and their net penetration change is positive.
   The warning is armed below a supplied local peak's load through that peak's
   upper penetration bound, including depths beyond its nominal penetration.
+  A peak at or below the measured load is skipped even before its nominal
+  depth; the next eligible peak's nominal depth, or None, is reported.
 * Positive penetration rate strictly exceeds its limit while absolute load
   change is at most the supplied tolerance, over one sampling interval.
 Missing prediction coverage also requires a hold and reassessment. A curve with
 no local peak cannot establish the pre-peak stiffness trigger. Rate is a sampled
 average; a short transient between readings can be missed. Sensor uncertainty,
 sampling cadence and site-specific trigger qualification remain external inputs.
-The maximum-increment reference remains sensitive to noise and unresolved
+The maximum loading-secant reference remains sensitive to noise and unresolved
 transitions; it is not a filtered or fixed-window stiffness estimate.
-A positive loading step with no resolved depth change has no finite stiffness
-estimate and preserves the reference. Without an earlier finite increment,
-the stiffness-drop comparison remains unavailable until one is measured.
+Sub-tolerance loading, holds and unresolved zero-depth loading preserve both
+anchor and reference. Hold creep contributes to the next loading secant and
+can reduce its stiffness. Any measured unload or upward movement resets both;
+load jitter or depth noise can therefore reset the comparison. The next finite
+secant establishes a new reference, which may represent reloading stiffness.
+No hold duration or sensor-noise filter is inferred. Without an earlier finite
+loading secant, the stiffness-drop comparison is unavailable until one is measured.
 
 Alerts mark entry into a condition; active conditions are returned every time.
 Reassessment and Plan B actions remain latched after a condition clears. No
@@ -56,6 +64,7 @@ from fractions import Fraction
 from math import isfinite
 from numbers import Real
 from types import MappingProxyType
+from typing import cast
 
 
 class Trigger(str, Enum):
@@ -282,6 +291,7 @@ class PenetrationMonitor:
             if left.load_kn <= point.load_kn > right.load_kn
         )
         self._previous: Measurement | None = None
+        self._loading_anchor: Measurement | None = None
         self._reference_stiffness: Fraction | None = None
         self._active: tuple[Trigger, ...] = ()
         self._latched_actions: tuple[PlanBAction, ...] = ()
@@ -294,22 +304,31 @@ class PenetrationMonitor:
         if self._previous is None:
             return None, None
         previous = self._previous
-        load_change = Fraction(str(sample.load_kn)) - Fraction(str(previous.load_kn))
         depth_change = Fraction(str(sample.penetration_m)) - Fraction(str(previous.penetration_m))
         duration = Fraction(str(sample.elapsed_s)) - Fraction(str(previous.elapsed_s))
+        anchor = cast(Measurement, self._loading_anchor)
+        load_change = Fraction(str(sample.load_kn)) - Fraction(str(anchor.load_kn))
+        loading_depth = Fraction(str(sample.penetration_m)) - Fraction(str(anchor.penetration_m))
         stiffness = None
-        if load_change > Fraction(str(self.criteria.constant_load_tolerance_kn)) and depth_change > 0:
-            stiffness = load_change / depth_change
+        if (not self._loading_reversed(sample)
+                and load_change > Fraction(str(self.criteria.constant_load_tolerance_kn))
+                and loading_depth > 0):
+            stiffness = load_change / loading_depth
         return stiffness, depth_change / duration
 
-    def _next_reference(self, sample: Measurement, stiffness: Fraction | None) -> Fraction | None:
-        if stiffness is not None:
-            return max(stiffness, self._reference_stiffness or stiffness)
-        if self._previous is not None and sample.penetration_m == self._previous.penetration_m:
-            load_change = Fraction(str(sample.load_kn)) - Fraction(str(self._previous.load_kn))
-            if load_change > Fraction(str(self.criteria.constant_load_tolerance_kn)):
-                return self._reference_stiffness
-        return None
+    def _loading_reversed(self, sample: Measurement) -> bool:
+        return self._previous is not None and (
+            sample.load_kn < self._previous.load_kn
+            or sample.penetration_m < self._previous.penetration_m
+        )
+
+    def _advance_loading(self, sample: Measurement, stiffness: Fraction | None) -> None:
+        if self._previous is None or self._loading_reversed(sample):
+            self._loading_anchor = sample
+            self._reference_stiffness = None
+        elif stiffness is not None:
+            self._loading_anchor = sample
+            self._reference_stiffness = max(stiffness, self._reference_stiffness or stiffness)
 
     def update(self, sample: Measurement) -> MonitoringResult:
         """Validate before state changes, then flag this reading and new entries."""
@@ -327,7 +346,7 @@ class PenetrationMonitor:
         active = tuple(t for t in conditions if t is not None)
         alerts = _new_alerts(active, self._active)
         self._latched_actions = _latched_actions(self._latched_actions, active)
-        self._reference_stiffness = self._next_reference(sample, stiffness)
+        self._advance_loading(sample, stiffness)
         self._previous, self._active = sample, active
         return MonitoringResult(
             sample, tuple((float(a), float(b)) for a, b in intervals), len(intervals) > 1,

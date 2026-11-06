@@ -128,8 +128,9 @@ def test_stiffness_drop_remains_armed_deeper_than_nominal_peak(curve, criteria):
 @pytest.mark.parametrize('depths,loads', [
     ((0, 1, 2), (0, 100, 140)),
     ((0, 0.25, 0.75, 1.25, 1.75), (0, 25, 75, 110, 130)),
+    ((0, 0.5, 1, 1.02, 1.5, 2), (0, 50, 100, 100.8, 120, 140)),
 ])
-def test_bilinear_stiffness_drop_at_two_sampling_cadences(curve, criteria, depths, loads):
+def test_bilinear_stiffness_drop_at_three_sampling_cadences(curve, criteria, depths, loads):
     monitor = PenetrationMonitor(curve, criteria)
     results = [monitor.update(Measurement(i * 10, load, depth))
                for i, (load, depth) in enumerate(zip(loads, depths))]
@@ -137,6 +138,104 @@ def test_bilinear_stiffness_drop_at_two_sampling_cadences(curve, criteria, depth
     assert results[-1].stiffness_kn_m == 40
     assert results[-1].stiffness_drop_fraction == pytest.approx(0.6)
     assert Trigger.STIFFNESS_DROP in results[-1].active_triggers
+    assert all(Trigger.OUTSIDE_BAND not in r.active_triggers for r in results)
+    assert all(Trigger.RAPID_PENETRATION not in r.active_triggers for r in results)
+
+
+def test_slow_ramp_accumulates_sub_tolerance_loading_steps(curve, criteria):
+    monitor = PenetrationMonitor(curve, criteria)
+    depths = (0, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03, 0.0425, 0.055, 0.0675)
+    results = [monitor.update(Measurement(i * 10, i * 0.5, depth))
+               for i, depth in enumerate(depths)]
+    # Anchor secants: 1.5/0.015 = 100; 1.5/0.0375 = 40 kN/m.
+    assert results[2].stiffness_kn_m is None  # Exactly 1 kN is not loading.
+    assert results[3].stiffness_kn_m == 100
+    assert results[6].stiffness_kn_m == 100
+    assert results[-1].stiffness_kn_m == 40
+    assert results[-1].stiffness_drop_fraction == pytest.approx(0.6)
+    assert results[-1].active_triggers == (Trigger.STIFFNESS_DROP,)
+
+
+@pytest.mark.parametrize('tolerance,loads,expected', [
+    (1, (0, 1, 2), 100),
+    (0.3, (0, 0.1, 0.2, 0.3, 0.30000000000000004), 15.000000000000002),
+    (0, (0, 0.5, 1), 50),
+])
+def test_loading_anchor_uses_a_strict_decimal_tolerance(curve, criteria, tolerance, loads, expected):
+    monitor = PenetrationMonitor(curve, replace(criteria, constant_load_tolerance_kn=tolerance))
+    depth_step = 0.005 if tolerance == 0.3 else 0.01
+    results = [monitor.update(Measurement(i * 10, load, i * depth_step))
+               for i, load in enumerate(loads)]
+    # 2/0.02 = 100; just above 0.3/0.02 = 15; 0.5/0.01 = 50 kN/m.
+    assert results[-1].stiffness_kn_m == pytest.approx(expected)
+    if tolerance:
+        assert all(r.stiffness_kn_m is None for r in results[:-1])
+
+
+def test_small_load_reversals_reset_the_loading_reference(curve, criteria):
+    monitor = PenetrationMonitor(curve, criteria)
+    readings = ((0, 0), (100, 1), (100.8, 1.02), (100.4, 1.03), (120, 1.5))
+    results = [monitor.update(Measurement(i * 10, load, depth))
+               for i, (load, depth) in enumerate(readings)]
+    # Any measured unload resets: reloading K = 19.6/0.47, with no reference.
+    assert results[-1].stiffness_kn_m == pytest.approx(19.6 / 0.47)
+    assert results[-1].stiffness_drop_fraction is None
+    assert Trigger.STIFFNESS_DROP not in results[-1].active_triggers
+
+
+def test_repeated_unloads_reset_the_anchor(curve, criteria):
+    monitor = PenetrationMonitor(curve, criteria)
+    readings = ((0, 0), (100, 1), (99.5, 1), (99, 1), (98.5, 1), (108.5, 2))
+    results = [monitor.update(Measurement(i * 10, load, depth))
+               for i, (load, depth) in enumerate(readings)]
+    # Each unload resets; the last reset gives reloading K = 10/1 = 10 kN/m.
+    assert results[-1].stiffness_kn_m == 10
+    assert results[-1].stiffness_drop_fraction is None
+    assert Trigger.STIFFNESS_DROP not in results[-1].active_triggers
+
+
+def test_unloading_at_exact_tolerance_resets_the_reference(curve, criteria):
+    monitor = PenetrationMonitor(curve, criteria)
+    for sample in (Measurement(0, 0, 0), Measurement(10, 100, 1),
+                   Measurement(20, 99, 1)):
+        monitor.update(sample)
+    result = monitor.update(Measurement(30, 110, 2))
+    # Unload resets independently of the loading tolerance: K = 11/1.
+    assert result.stiffness_kn_m == 11
+    assert result.stiffness_drop_fraction is None
+    assert Trigger.STIFFNESS_DROP not in result.active_triggers
+
+
+def test_upward_movement_clears_pending_loading(curve, criteria):
+    monitor = PenetrationMonitor(curve, criteria)
+    for sample in (Measurement(0, 0, 0), Measurement(10, 100, 1),
+                   Measurement(20, 100.8, 1.2)):
+        monitor.update(sample)
+    interrupted = monitor.update(Measurement(30, 110, 1.1))
+    assert interrupted.stiffness_kn_m is None
+    assert interrupted.stiffness_drop_fraction is None
+    result = monitor.update(Measurement(40, 120, 2.1))
+    assert result.stiffness_kn_m == 10  # Reload K = (120-110)/(2.1-1.1).
+    assert result.stiffness_drop_fraction is None
+
+
+@pytest.mark.parametrize('rejected', [
+    Measurement(20, 0, 0), Measurement(25, float('nan'), 1.03),
+    Measurement(25, 101, -1), Measurement(25, True, 1.03),
+])
+def test_rejected_reading_preserves_pending_loading_and_adjacent_rate(curve, criteria, rejected):
+    monitor = PenetrationMonitor(curve, criteria)
+    for sample in (Measurement(0, 0, 0), Measurement(10, 100, 1),
+                   Measurement(20, 100.8, 1.02)):
+        monitor.update(sample)
+    with pytest.raises(ValueError):
+        monitor.update(rejected)
+    result = monitor.update(Measurement(30, 120, 1.5))
+    # Anchor K = 20/0.5 = 40; adjacent rate = (1.5-1.02)/10 = 0.048.
+    assert result.stiffness_kn_m == 40
+    assert result.stiffness_drop_fraction == pytest.approx(0.6)
+    assert result.penetration_rate_m_s == pytest.approx(0.048)
+    assert result.active_triggers == (Trigger.STIFFNESS_DROP,)
 
 
 def test_gradual_softening_is_compared_with_maximum_loading_stiffness(curve, criteria):
@@ -168,10 +267,9 @@ def test_stiffness_reference_tracks_a_new_loading_maximum(curve, criteria):
 
 
 @pytest.mark.parametrize('interruption', [
-    Measurement(20, 100, 1), Measurement(20, 101, 1.1),
     Measurement(20, 90, 1), Measurement(20, 110, 0.9),
 ])
-def test_hold_unload_or_upward_movement_resets_stiffness_reference(curve, criteria, interruption):
+def test_unload_or_upward_movement_resets_stiffness_reference(curve, criteria, interruption):
     monitor = PenetrationMonitor(curve, criteria)
     for sample in (Measurement(0, 0, 0), Measurement(10, 100, 1), interruption):
         monitor.update(sample)
@@ -201,8 +299,9 @@ def test_zero_depth_loading_step_preserves_finite_stiffness_reference(curve, cri
     assert stiff_step.stiffness_drop_fraction is None
     assert Trigger.STIFFNESS_DROP not in stiff_step.active_triggers
     result = monitor.update(Measurement(30, 140, 2))
-    # The unresolved stiff step retains Kref = 100; current K = 20 kN/m.
-    assert result.stiffness_drop_fraction == pytest.approx(0.8)
+    # The unresolved step retains the anchor: K = 40/1, Kref = 100 kN/m.
+    assert result.stiffness_kn_m == 40
+    assert result.stiffness_drop_fraction == pytest.approx(0.6)
     assert Trigger.STIFFNESS_DROP in result.active_triggers
 
 
@@ -211,10 +310,23 @@ def test_initial_zero_depth_loading_step_does_not_invent_finite_reference(curve,
     for sample in (Measurement(0, 0, 0), Measurement(10, 50, 0)):
         assert monitor.update(sample).stiffness_kn_m is None
     result = monitor.update(Measurement(20, 100, 1))
-    assert result.stiffness_kn_m == 50
+    assert result.stiffness_kn_m == 100  # Accumulated K = (100-0)/(1-0).
     assert result.stiffness_drop_fraction is None
     assert Trigger.STIFFNESS_DROP not in result.active_triggers
-    assert monitor.update(Measurement(30, 120, 2)).stiffness_drop_fraction == pytest.approx(0.6)
+    assert monitor.update(Measurement(30, 120, 2)).stiffness_drop_fraction == pytest.approx(0.8)
+
+
+def test_unresolved_depth_steps_accumulate_until_depth_increases(curve, criteria):
+    monitor = PenetrationMonitor(curve, replace(criteria, constant_load_tolerance_kn=0.5))
+    readings = ((0, 0), (3, 0.01), (4, 0.01), (5, 0.01), (6, 0.02))
+    results = [monitor.update(Measurement(i * 10, load, depth))
+               for i, (load, depth) in enumerate(readings)]
+    # Both resolved secants are 3/0.01 = 300 kN/m, with no stiffness loss.
+    assert results[1].stiffness_kn_m == 300
+    assert all(r.stiffness_kn_m is None for r in results[2:4])
+    assert results[-1].stiffness_kn_m == 300
+    assert results[-1].stiffness_drop_fraction == 0
+    assert Trigger.STIFFNESS_DROP not in results[-1].active_triggers
 
 
 @pytest.mark.parametrize('load,depth,armed', [
@@ -237,6 +349,15 @@ def test_stiffness_drop_is_not_claimed_after_peak(curve, criteria):
     result = monitor.update(Measurement(20, 170, 4.7))
     assert result.next_peak_penetration_m is None
     assert Trigger.STIFFNESS_DROP not in result.active_triggers
+
+
+@pytest.mark.parametrize('later_peak', [False, True])
+def test_peak_below_measured_load_is_skipped_even_before_its_depth(curve, criteria, later_peak):
+    if later_peak:
+        curve += (PredictionPoint(6, 200, 5.5, 6.5),)
+    result = PenetrationMonitor(curve, criteria).update(Measurement(0, 185, 2.8))
+    assert result.next_peak_penetration_m == (5 if later_peak else None)
+    assert result.active_triggers == (Trigger.OUTSIDE_BAND,)
 
 
 def test_no_peak_means_stiffness_warning_is_unavailable(curve, criteria):
@@ -273,12 +394,17 @@ def test_loading_and_upward_movement_are_not_constant_load_penetration(curve, cr
     assert Trigger.RAPID_PENETRATION not in monitor.update(sample).active_triggers
 
 
-def test_hold_breaks_the_stiffness_comparison(curve, criteria):
+@pytest.mark.parametrize('hold', [Measurement(20, 100, 1), Measurement(20, 101, 1.1),
+                                 Measurement(20, 100, 1.1)])
+def test_hold_preserves_the_stiffness_comparison(curve, criteria, hold):
     monitor = PenetrationMonitor(curve, criteria)
-    for sample in (Measurement(0, 0, 0), Measurement(10, 100, 1), Measurement(20, 100, 1)):
+    for sample in (Measurement(0, 0, 0), Measurement(10, 100, 1), hold):
         monitor.update(sample)
-    # A hold clears the loading reference; the next increment establishes it.
-    assert Trigger.STIFFNESS_DROP not in monitor.update(Measurement(30, 140, 2)).active_triggers
+    result = monitor.update(Measurement(30, 140, 2))
+    # A hold preserves the anchor: K = (140-100)/(2-1) = 40, drop = 0.6.
+    assert result.stiffness_kn_m == 40
+    assert result.stiffness_drop_fraction == pytest.approx(0.6)
+    assert Trigger.STIFFNESS_DROP in result.active_triggers
 
 
 def test_alert_events_are_edge_triggered_but_reassessment_stays_latched(curve, criteria):
@@ -346,8 +472,11 @@ def test_example_exports_one_entry_per_trigger_and_offline_plotly_json(tmp_path)
     root = Path(__file__).resolve().parents[2]
     example = runpy.run_path(str(root / 'examples/domains/geotechnical/jackup_penetration_monitoring.py'))
     example['run_example'](tmp_path)
-    payload = json.loads((tmp_path / 'penetration-monitoring.json').read_text())
-    figure = from_json((tmp_path / 'penetration-monitoring.plotly.json').read_text())
+    payload = json.loads((tmp_path / 'penetration-monitoring.json').read_text(encoding='utf-8'))
+    figure = from_json((tmp_path / 'penetration-monitoring.plotly.json').read_text(encoding='utf-8'))
+    for name in ('penetration-monitoring.json', 'penetration-monitoring.plotly.json'):
+        assert (tmp_path / name).read_bytes().endswith(b'\n')
+        assert b'\r\n' not in (tmp_path / name).read_bytes()
     # Synthetic sequence: K drops 100 -> 40 at 20 s; 0.2/10 > 0.015 m/s
     # at 40 s; 2.6 > 1 + (150-100)/(160-100) + 0.5 at 50 s.
     events = [(row['sample']['elapsed_s'], alert['trigger'])

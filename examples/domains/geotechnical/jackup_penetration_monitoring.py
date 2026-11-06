@@ -149,9 +149,10 @@ def run_example(output: str | Path) -> None:
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     (output / 'penetration-monitoring.json').write_text(
-        json.dumps(payload, indent=2, allow_nan=False) + '\n', encoding='utf-8')
-    make_figure(curve, record, results).write_json(
-        output / 'penetration-monitoring.plotly.json', pretty=True, remove_uids=True)
+        json.dumps(payload, indent=2, allow_nan=False) + '\n', encoding='utf-8', newline='\n')
+    (output / 'penetration-monitoring.plotly.json').write_text(
+        make_figure(curve, record, results).to_json(pretty=True, remove_uids=True) + '\n',
+        encoding='utf-8', newline='\n')
 
 
 if __name__ == '__main__':
