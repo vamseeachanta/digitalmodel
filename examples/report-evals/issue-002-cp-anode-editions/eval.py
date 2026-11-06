@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import statistics
 import sys
 import tempfile
@@ -107,7 +108,11 @@ def _pipe(results: dict) -> tuple[int, float, float]:
 def anode_results(repo_root: Path, values: dict, notes: dict, context: dict) -> None:
     yaml, run_cp = _engine()
     import digitalmodel
-    context["digitalmodel_file"] = str(Path(digitalmodel.__file__).resolve())
+    package = Path(digitalmodel.__file__).resolve()
+    try:
+        context["digitalmodel_file"] = package.relative_to(Path(repo_root).resolve()).as_posix()
+    except ValueError:  # installed from another folder than the clone being graded
+        context["digitalmodel_file"] = "outside the clone: " + package.parent.name
     fixture_dir = repo_root / FIXTURES
     run = lambda *a, **k: _run(yaml, run_cp, fixture_dir, *a, **k)  # noqa: E731
 
@@ -163,25 +168,23 @@ def _standing_counts(rows: list[dict], year_of) -> dict:
     }
 
 
-def platform_results(cache: Path, skip_live: bool, values: dict, notes: dict, context: dict) -> None:
-    # Published copy: the CSV under Figure 4 lists the standing structures of the counted file.
+def published_counts(cache: Path, values: dict, context: dict) -> None:
+    """Figure 4 counts from the published CSV (the standing structures of the counted copy)."""
     pub = evalkit.fetch(FIG4_CSV_URL, cache / "energy-fig4-platforms-standing.csv")
     context["fig4_csv"] = pub
     rows = list(csv.DictReader(open(pub["path"], encoding="utf-8")))
     c = _standing_counts(rows, lambda r: int(r["year"]) if r["year"].strip() else None)
     for k, v in c.items():
         values[f"fig4_published_{k}"] = v
-    if skip_live:
-        for k in c:
-            notes[f"fig4_today_{k}"] = "--skip-live"
-        notes["bsee_structures_today"] = "--skip-live"
-        return
+
+
+def live_counts(cache: Path, values: dict, notes: dict, context: dict) -> None:
+    """Figure 4 counts from the BSEE file of the run date (live source)."""
     raw = evalkit.fetch(BSEE_URL, cache / "PlatStrucRawData.zip")
     context["bsee_platform_file"] = raw
     with zipfile.ZipFile(raw["path"]) as z:
         text = z.read(BSEE_MEMBER).decode("latin-1")
     allrows = list(csv.DictReader(io.StringIO(text)))
-    values["bsee_structures_today"] = len(allrows)
     # Counting rule (article, data note): no REMOVAL_DATE recorded = still standing;
     # installation year = year of INSTALL_DATE (MM/DD/YYYY); fixed jacket = STRUC_TYPE_CODE FIXED.
     standing = [{"type": r["STRUC_TYPE_CODE"].strip(), "date": r["INSTALL_DATE"].strip()}
@@ -189,21 +192,30 @@ def platform_results(cache: Path, skip_live: bool, values: dict, notes: dict, co
     c = _standing_counts(standing, lambda r: int(r["date"].split("/")[-1]) if r["date"] else None)
     for k, v in c.items():
         values[f"fig4_today_{k}"] = v
+    values["bsee_structures_today"] = len(allrows)
     notes["fig4_today_standing"] = f"BSEE file sha256 {raw['sha256'][:12]}..., retrieved {raw['retrieved_utc']}"
 
 
-def compute(args):
-    values, notes = {}, {}
-    context = {"repo_root": str(args.repo_root), "repo_head": evalkit.git_head(args.repo_root)}
-    try:
-        anode_results(args.repo_root, values, notes, context)
-    except ImportError as exc:
-        context["anode_runs"] = f"not run: {exc} (install digitalmodel, see PROMPT.md)"
-    try:
-        platform_results(args.cache, args.skip_live, values, notes, context)
-    except OSError as exc:
-        context["platform_counts"] = f"download failed: {exc}"
-    return values, notes, context
+def compute(args, values, notes, context):
+    ids = [r["id"] for r in json.loads((HERE / "results.json").read_text(encoding="utf-8"))["results"]]
+    published = [i for i in ids if i.startswith("fig4_published_")]
+    live = [i for i in ids if i.startswith("fig4_today_") or i == "bsee_structures_today"]
+    anodes = [i for i in ids if i not in published and i not in live]
+    context.update(repo_root=str(args.repo_root), repo_head=evalkit.git_head(args.repo_root))
+
+    def run_anodes():
+        try:
+            anode_results(args.repo_root, values, notes, context)
+        except ImportError as exc:
+            for rid in anodes:
+                notes.setdefault(rid, f"digitalmodel not importable ({exc}); install it, see PROMPT.md")
+    evalkit.guard(anodes, values, notes, run_anodes)
+    evalkit.guard(published, values, notes, lambda: published_counts(args.cache, values, context))
+    if args.skip_live:
+        for rid in live:
+            notes[rid] = "--skip-live"
+    else:
+        evalkit.guard(live, values, notes, lambda: live_counts(args.cache, values, notes, context))
 
 
 if __name__ == "__main__":

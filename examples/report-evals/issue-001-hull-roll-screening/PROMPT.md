@@ -35,7 +35,10 @@ Steps:
    rewrites the study page.
 3. From record["cases"], read reduction_percent, tank_peak_period_s and
    long_period_penalty_percent for each roll period, damping and alpha.
-4. Compare the 20 cases with docs/api/cfd/data/generic_hull_roll_screening.json.
+4. Compare the 20 cases (2 roll periods x 2 damping ratios x 5 alphas) one to one
+   with docs/api/cfd/data/generic_hull_roll_screening.json: no case missing or
+   repeated, and for each case the reduction, the bare and tank peak RAO, the 60 s
+   penalty and the two peak periods (stored to 0.0001 s). Report how many match.
 
 Expected key results (from the article and the study page):
 - 18 s hull roll period, alpha 0.05: peak roll reduction 46.1 % at 2 % hull damping

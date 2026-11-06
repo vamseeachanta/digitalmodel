@@ -18,8 +18,7 @@
    "scripts/capabilities/build_generic_hull_screening.py",
    "src/digitalmodel/hydrodynamics/utube_tank.py",
    "docs/api/cfd/data/generic_hull_roll_screening.json",
-   "tests/hydrodynamics/test_generic_hull_screening.py",
-   "examples/report-evals/issue-001-hull-roll-screening/eval.py"
+   "tests/hydrodynamics/test_generic_hull_screening.py"
   ],
   "python": "3.10 or later, standard library only",
   "install": "none: clone the repository; no package install is needed"
@@ -63,7 +62,8 @@
   "prompt": "examples/report-evals/issue-001-hull-roll-screening/PROMPT.md",
   "cadence": "weekly",
   "runtime_s": 5,
-  "network": false
+  "network": false,
+  "ref": "main"
  },
  "results": [
   {
@@ -74,7 +74,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -95,7 +95,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -116,7 +116,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -137,7 +137,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -158,7 +158,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -179,7 +179,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -200,7 +200,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -221,7 +221,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -242,7 +242,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -263,7 +263,7 @@
    "unit": "%",
    "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -284,7 +284,7 @@
    "unit": "s",
    "period": "one regular-wave sweep",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -304,7 +304,7 @@
    "unit": "%",
    "period": "60 s forcing period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -324,7 +324,7 @@
    "unit": "%",
    "period": "60 s forcing period",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {
@@ -357,13 +357,13 @@
   },
   {
    "id": "archive_cases_reproduced",
-   "label": "Cases of the committed data file reproduced by a fresh run (of 20)",
+   "label": "Declared cases (2 roll periods x 2 damping ratios x 5 alphas) reproduced one to one by a fresh run, six quantities each",
    "page_ref": "Study page Table A.1",
    "value": 20,
    "unit": "cases",
    "period": "all 20 cases of Table A.1",
    "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
-   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute(); relative difference at most 1e-8",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py archive_check() (on main): no duplicate or missing case; reduction, bare and tank peak RAO and 60 s penalty within 1e-9 relative; peak periods equal at 0.0001 s",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
    "tolerance": {

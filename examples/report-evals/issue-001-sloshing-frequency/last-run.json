@@ -2,25 +2,34 @@
  "schema_version": "1.0",
  "report_id": "issue-001-sloshing-frequency",
  "mode": "rebuild",
- "started_utc": "2026-11-06T15:23:07Z",
- "finished_utc": "2026-11-06T15:23:07Z",
+ "started_utc": "2026-11-06T16:07:23Z",
+ "finished_utc": "2026-11-06T16:07:23Z",
  "grade": "PASS",
+ "pinned_commit": "705857af62385a4567c96be99a129cdff3051a52",
+ "artifacts": {
+  "results.json": "a14b293c187e842dc42e2b497d60b74da9bb599eca6ac9ab649d99c1652f2f1e",
+  "eval.py": "f15b97e4aeac08299f2c883e57b3fdc514a394987741f7d1e1a1e404cfee8599",
+  "../evalkit.py": "44d2d922196abedc55bf807d2f757f7230bc455b4846a42f9ce083825e420f59"
+ },
  "python": "3.12.10",
  "platform": "Windows",
  "context": {
   "repo_root": "dm-evals",
-  "repo_head": "60cd9733d30340608c3538e559a5e04494dcb619",
+  "repo_head": "a725fe4ff98de48da20d74e8626dc00a1e70407e",
   "sha256": {
    "docs/api/structural/sloshing-cfd-benchmark.json": "46acb0c2afb37bf4f6bc9a7b6f8b85736f854791cf3af8a1b5ee2fed9e71e1d3",
    "docs/api/cfd/sloshing-convergence.json": "c36a4f50ff67da9ddd8054f8beae6e25e760ea0289af8b3d6ef10c99ac0b66db"
-  }
+  },
+  "code_mode": "candidate"
  },
+ "errors": [],
  "results": [
   {
    "id": "omega1_linear_hl15",
    "expected": 1.1746,
    "got": 1.1746,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -30,6 +39,7 @@
    "expected": 1.1779,
    "got": 1.1779,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -39,6 +49,7 @@
    "expected": 0.28,
    "got": 0.28,
    "unit": "%",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -48,6 +59,7 @@
    "expected": 1.521,
    "got": 1.521,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -57,6 +69,7 @@
    "expected": 1.5164,
    "got": 1.5164,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -66,6 +79,7 @@
    "expected": 0.3,
    "got": 0.3,
    "unit": "%",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -75,6 +89,7 @@
    "expected": 1.6974,
    "got": 1.6974,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -84,6 +99,7 @@
    "expected": 1.6974,
    "got": 1.6974,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -93,6 +109,7 @@
    "expected": 0.0,
    "got": 0.0,
    "unit": "%",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0",
    "note": ""
@@ -102,6 +119,7 @@
    "expected": 1.7508,
    "got": 1.7508,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -111,6 +129,7 @@
    "expected": 1.7508,
    "got": 1.7508,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -120,6 +139,7 @@
    "expected": 0.0,
    "got": 0.0,
    "unit": "%",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0",
    "note": ""
@@ -129,6 +149,7 @@
    "expected": 0.3,
    "got": 0.3,
    "unit": "%",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -138,6 +159,7 @@
    "expected": 0.758054,
    "got": 0.758054,
    "unit": "Hz",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -147,6 +169,7 @@
    "expected": 0.296,
    "got": 0.296,
    "unit": "%",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -156,6 +179,7 @@
    "expected": 0.191,
    "got": 0.191,
    "unit": "-",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -165,6 +189,7 @@
    "expected": 0.756556,
    "got": 0.756556,
    "unit": "Hz",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""
@@ -174,6 +199,7 @@
    "expected": 0.1239,
    "got": 0.1239,
    "unit": "%",
+   "basis": "fixed",
    "status": "MATCH",
    "difference": "+0 (+0 %)",
    "note": ""

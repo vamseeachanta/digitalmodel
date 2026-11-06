@@ -13,11 +13,10 @@
   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
   "paths": [
    "src/digitalmodel/cathodic_protection",
-   "tests/fixtures/cathodic_protection/workflow_inputs",
-   "examples/report-evals/issue-002-cp-anode-editions/eval.py"
+   "tests/fixtures/cathodic_protection/workflow_inputs"
   ],
-  "python": "3.11",
-  "install": "git clone --filter=blob:none https://github.com/vamseeachanta/digitalmodel && cd digitalmodel && git checkout 09089a121a16069c4b657d1a320a630a23ab1dd5 && uv venv --python 3.11 && uv pip install --no-sources -e ."
+  "python": "3.11; Python 3.13 and later cannot build some pinned packages (numpy<2, lxml 4.9.3, h5py 3.10.0)",
+  "install": "Needs git and uv. git clone --filter=blob:none https://github.com/vamseeachanta/digitalmodel && cd digitalmodel && git checkout 09089a121a16069c4b657d1a320a630a23ab1dd5 && uv venv --python 3.11 && uv pip install --no-sources -e .; then run every Python step with the environment's interpreter (.venv/bin/python, or .venv\\Scripts\\python on Windows)"
  },
  "inputs": [
   {
@@ -99,7 +98,8 @@
   "prompt": "examples/report-evals/issue-002-cp-anode-editions/PROMPT.md",
   "cadence": "weekly",
   "runtime_s": 60,
-  "network": true
+  "network": true,
+  "ref": "main"
  },
  "results": [
   {
@@ -110,7 +110,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -130,7 +130,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -150,7 +150,7 @@
    "unit": "%",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -169,7 +169,7 @@
    "unit": "anodes",
    "period": "library design life of the case file",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); B401 recommended_anode_count, summed over anode families",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -189,7 +189,7 @@
    "unit": "anodes",
    "period": "library design life of the case file",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); B401 recommended_anode_count, summed over anode families",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -209,7 +209,7 @@
    "unit": "anodes",
    "period": "library design life of the case file",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); B401 recommended_anode_count, summed over anode families",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -229,7 +229,7 @@
    "unit": "anodes",
    "period": "library design life of the case file",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); B401 recommended_anode_count, summed over anode families",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -249,7 +249,7 @@
    "unit": "anodes",
    "period": "library design life of the case file",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); B401 recommended_anode_count, summed over anode families",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -269,7 +269,7 @@
    "unit": "anodes",
    "period": "library design life of the case file",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); B401 recommended_anode_count, summed over anode families",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -289,7 +289,7 @@
    "unit": "anodes",
    "period": "10-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -308,7 +308,7 @@
    "unit": "kg",
    "period": "10-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -327,7 +327,7 @@
    "unit": "anodes",
    "period": "10-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -346,7 +346,7 @@
    "unit": "kg",
    "period": "10-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -365,7 +365,7 @@
    "unit": "anodes",
    "period": "15-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -384,7 +384,7 @@
    "unit": "kg",
    "period": "15-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -403,7 +403,7 @@
    "unit": "anodes",
    "period": "15-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -422,7 +422,7 @@
    "unit": "kg",
    "period": "15-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -441,7 +441,7 @@
    "unit": "anodes",
    "period": "20-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -460,7 +460,7 @@
    "unit": "kg",
    "period": "20-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -479,7 +479,7 @@
    "unit": "anodes",
    "period": "20-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -498,7 +498,7 @@
    "unit": "kg",
    "period": "20-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -517,7 +517,7 @@
    "unit": "anodes",
    "period": "25-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -536,7 +536,7 @@
    "unit": "kg",
    "period": "25-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -555,7 +555,7 @@
    "unit": "anodes",
    "period": "25-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -574,7 +574,7 @@
    "unit": "kg",
    "period": "25-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -593,7 +593,7 @@
    "unit": "anodes",
    "period": "30-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -612,7 +612,7 @@
    "unit": "kg",
    "period": "30-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -631,7 +631,7 @@
    "unit": "anodes",
    "period": "30-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -650,7 +650,7 @@
    "unit": "kg",
    "period": "30-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -669,7 +669,7 @@
    "unit": "anodes",
    "period": "35-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -688,7 +688,7 @@
    "unit": "kg",
    "period": "35-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -707,7 +707,7 @@
    "unit": "anodes",
    "period": "35-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -726,7 +726,7 @@
    "unit": "kg",
    "period": "35-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -745,7 +745,7 @@
    "unit": "anodes",
    "period": "40-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -764,7 +764,7 @@
    "unit": "kg",
    "period": "40-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -783,7 +783,7 @@
    "unit": "anodes",
    "period": "40-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -802,7 +802,7 @@
    "unit": "kg",
    "period": "40-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); total_anode_mass_kg",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -821,7 +821,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -840,7 +840,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -860,7 +860,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -879,7 +879,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -899,7 +899,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -918,7 +918,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -938,7 +938,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -957,7 +957,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -977,7 +977,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -996,7 +996,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1016,7 +1016,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1035,7 +1035,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1055,7 +1055,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1074,7 +1074,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1094,7 +1094,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1113,7 +1113,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1133,7 +1133,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1152,7 +1152,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1172,7 +1172,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1191,7 +1191,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1211,7 +1211,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1230,7 +1230,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1250,7 +1250,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1269,7 +1269,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1289,7 +1289,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1308,7 +1308,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1328,7 +1328,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1347,7 +1347,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1367,7 +1367,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1386,7 +1386,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1406,7 +1406,7 @@
    "unit": "anodes",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); F103 results.anode_requirements.anode_count",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1425,7 +1425,7 @@
    "unit": "A/m2",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mean_current_density_A_m2",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1445,7 +1445,7 @@
    "unit": "-",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); coating_breakdown_factors.mean_factor",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); coating_breakdown_factors.mean_factor",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1464,7 +1464,7 @@
    "unit": "-",
    "period": "30-year design life",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); coating_breakdown_factors.mean_factor",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); coating_breakdown_factors.mean_factor",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1483,7 +1483,7 @@
    "unit": "%",
    "period": "30-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1503,7 +1503,7 @@
    "unit": "%",
    "period": "30-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1523,7 +1523,7 @@
    "unit": "%",
    "period": "30-year design life, fluid 60 C",
    "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results() (on main); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
    "tolerance": {
@@ -1542,7 +1542,7 @@
    "unit": "structures",
    "period": "BSEE file of 29 October 2026",
    "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1561,7 +1561,7 @@
    "unit": "structures",
    "period": "BSEE file of 29 October 2026",
    "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1580,7 +1580,7 @@
    "unit": "structures",
    "period": "BSEE file of 29 October 2026",
    "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1599,7 +1599,7 @@
    "unit": "structures",
    "period": "BSEE file of 29 October 2026",
    "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1618,7 +1618,7 @@
    "unit": "year",
    "period": "BSEE file of 29 October 2026",
    "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1631,13 +1631,13 @@
   },
   {
    "id": "fig4_today_standing",
-   "label": "Platform structures still standing, today's BSEE file",
+   "label": "Platform structures still standing: published value (1,301, counted copy of 29 October 2026), checked against the BSEE file of the run date",
    "page_ref": "Figure 4, data note",
    "value": 1301,
    "unit": "structures",
    "period": "BSEE file of the run date",
    "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1646,18 +1646,18 @@
    "basis": "live",
    "limits": [
     "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
-    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+    "Live source: the BSEE file is updated daily and the counted copy is not archived. On 6 November 2026 the file gave 1,294 standing, 975 fixed jackets, 844 before 1993 and 1,118 before 2005 (about -0.5 %), inside the 1 % band."
    ]
   },
   {
    "id": "fig4_today_fixed",
-   "label": "Of those, fixed jackets, today's BSEE file",
+   "label": "Of those, fixed jackets: published value (980, counted copy of 29 October 2026), checked against the BSEE file of the run date",
    "page_ref": "Figure 4, data note",
    "value": 980,
    "unit": "structures",
    "period": "BSEE file of the run date",
    "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1666,18 +1666,18 @@
    "basis": "live",
    "limits": [
     "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
-    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+    "Live source: the BSEE file is updated daily and the counted copy is not archived. On 6 November 2026 the file gave 1,294 standing, 975 fixed jackets, 844 before 1993 and 1,118 before 2005 (about -0.5 %), inside the 1 % band."
    ]
   },
   {
    "id": "fig4_today_before_1993",
-   "label": "Of those, installed before 1993, today's BSEE file",
+   "label": "Of those, installed before 1993: published value (849, counted copy of 29 October 2026), checked against the BSEE file of the run date",
    "page_ref": "Figure 4, data note",
    "value": 849,
    "unit": "structures",
    "period": "BSEE file of the run date",
    "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1686,18 +1686,18 @@
    "basis": "live",
    "limits": [
     "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
-    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+    "Live source: the BSEE file is updated daily and the counted copy is not archived. On 6 November 2026 the file gave 1,294 standing, 975 fixed jackets, 844 before 1993 and 1,118 before 2005 (about -0.5 %), inside the 1 % band."
    ]
   },
   {
    "id": "fig4_today_before_2005",
-   "label": "Of those, installed before 2005, today's BSEE file",
+   "label": "Of those, installed before 2005: published value (1,124, counted copy of 29 October 2026), checked against the BSEE file of the run date",
    "page_ref": "Figure 4, data note",
    "value": 1124,
    "unit": "structures",
    "period": "BSEE file of the run date",
    "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1706,18 +1706,18 @@
    "basis": "live",
    "limits": [
     "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
-    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+    "Live source: the BSEE file is updated daily and the counted copy is not archived. On 6 November 2026 the file gave 1,294 standing, 975 fixed jackets, 844 before 1993 and 1,118 before 2005 (about -0.5 %), inside the 1 % band."
    ]
   },
   {
    "id": "fig4_today_median_year",
-   "label": "Median installation year, today's BSEE file",
+   "label": "Median installation year: published value (1983, counted copy of 29 October 2026), checked against the BSEE file of the run date",
    "page_ref": "Figure 4, data note",
    "value": 1983,
    "unit": "year",
    "period": "BSEE file of the run date",
    "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {
@@ -1726,18 +1726,18 @@
    "basis": "live",
    "limits": [
     "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
-    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+    "Live source: the BSEE file is updated daily and the counted copy is not archived. On 6 November 2026 the file gave 1,294 standing, 975 fixed jackets, 844 before 1993 and 1,118 before 2005 (about -0.5 %), inside the 1 % band."
    ]
   },
   {
    "id": "bsee_structures_today",
-   "label": "Platform structures in the BSEE register, all",
+   "label": "Platform structures in the BSEE register, all: published value (7,091), checked against the BSEE file of the run date",
    "page_ref": "Data note",
    "value": 7091,
    "unit": "structures",
    "period": "BSEE file of the run date",
    "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
-   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rows of mv_platstruc_structures.txt",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py published_counts() and live_counts() (on main); rows of mv_platstruc_structures.txt",
    "repo": "https://github.com/vamseeachanta/aceengineer-website",
    "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
    "tolerance": {

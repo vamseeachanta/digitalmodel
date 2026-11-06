@@ -4,7 +4,7 @@ Article: https://www.aceengineer.com/newsletter/issue-002-energy-street/
 
 For decision makers: this prompt lets your team, or your AI assistant, repeat the study with public code and public data. If you would rather have it done for you, use the contact link on the article page.
 
-For practitioners: paste the block below into an AI assistant that can run Python and use the internet. It needs about 1 GB of disk and 10 minutes. The key results it must reach are in `results.json` next to this file. `eval.py` grades them.
+For practitioners: paste the block below into an AI assistant that can run Python and use the internet. It needs git, uv (https://docs.astral.sh/uv/) and Python 3.11. The key results it must reach are in `results.json` next to this file. `eval.py` grades them.
 
 ## Prompt (copy all of it)
 
@@ -26,11 +26,16 @@ Inputs (all public, no account needed):
   https://www.data.bsee.gov/Platform/Files/PlatStrucRawData.zip
 
 Steps:
-1. Use Python 3.11. Python 3.13 and later cannot build some pinned packages.
+1. You need git and uv (https://docs.astral.sh/uv/). Use Python 3.11; Python 3.13
+   and later cannot build some pinned packages (numpy<2, lxml 4.9.3, h5py 3.10.0).
    git clone --filter=blob:none https://github.com/vamseeachanta/digitalmodel
    cd digitalmodel && git checkout 09089a121a16069c4b657d1a320a630a23ab1dd5
    uv venv --python 3.11 && uv pip install --no-sources -e .
    (--no-sources makes uv take assetutilities from PyPI, not from a sibling folder.)
+   Then activate the environment (source .venv/bin/activate, or
+   .venv\Scripts\activate on Windows), or call .venv/bin/python
+   (.venv\Scripts\python on Windows) for every later Python step. A bare "python"
+   outside the environment does not have digitalmodel.
 2. For each structure file, set inputs.design_data.edition to each edition the code
    accepts: 2010 and 2019 for the pipeline (DNV-RP-F103); 2005, 2010, 2017 and 2021
    for the other five (DNV-RP-B401). Keep every other input as in the file. Run
@@ -46,9 +51,14 @@ Steps:
    40, 50, 60, 70 and 80 C at 30 years
    (inputs.pipeline.internal_fluid_temperature_C). Record the count, the mass and
    results.current_densities_A_m2.mean_current_density_A_m2.
-5. Count the published Figure 4 CSV: rows (structures still standing), rows of type
+5. For the 30-year pipeline runs at 60 C, read
+   results.coating_breakdown_factors.mean_factor on each edition. The anode mass is
+   proportional to mean breakdown factor x mean current density (article, Figure 2
+   caption). Give the change in anode mass from the 2019 breakdown factor alone, from
+   the 2019 current density alone, and from both.
+6. Count the published Figure 4 CSV: rows (structures still standing), rows of type
    FIXED, rows installed before 1993 and before 2005, and the median year.
-6. Count today's BSEE file the same way, from
+7. Count today's BSEE file the same way, from
    PlatStrucRawData/mv_platstruc_structures.txt: a structure with no REMOVAL_DATE is
    still standing; the year is the year of INSTALL_DATE; a fixed jacket has
    STRUC_TYPE_CODE FIXED.
@@ -57,6 +67,9 @@ Expected key results (from the article):
 - Pipeline: 9 bracelets on F103 2010, 34 on 2019 (+277.8 %).
 - Hybrid riser: 26 on B401 2005, 2010 and 2017; 25 on 2021.
 - 84.1 m jacket 575, 60 m wind jacket 424, monopile 48, manifold 64, on all four.
+- Mean coating breakdown factor 0.0145 (2010) and 0.045 (2019); anode mass +210.3 %
+  from the breakdown factor alone, +25.0 % from the current density alone, +287.9 %
+  from both.
 - Figure 4 CSV: 1,301 standing, 980 fixed jackets, 849 before 1993, 1,124 before
   2005, median year 1983.
 - Today's BSEE file gives a few fewer standing structures, because the file changes
@@ -84,14 +97,14 @@ python examples/report-evals/issue-002-cp-anode-editions/eval.py --compare my-re
 
 ## Check your answer
 
-From the clone, after `git checkout origin/main -- examples/report-evals`:
+From the clone, with the environment of step 1 active, after `git checkout origin/main -- examples/report-evals`:
 
 ```text
 python examples/report-evals/issue-002-cp-anode-editions/eval.py --compare my-results.json
 python examples/report-evals/issue-002-cp-anode-editions/eval.py
 ```
 
-The first line grades your own results. The second rebuilds every key result itself.
+The first line grades your own results; it needs only the standard library. The second rebuilds every key result itself and needs digitalmodel installed; outside the environment its anode results are NOT_EVALUATED.
 `PASS` means every key result is within its tolerance. `PARTIAL` means a result is missing or the live BSEE count has moved outside its 1 % band. `FAIL` means a result differs.
 
 ## Adapt it to your project

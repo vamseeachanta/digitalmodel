@@ -42,11 +42,10 @@ def omega_linear(h_over_l: float) -> float:
     return math.sqrt(math.pi * math.tanh(math.pi * h_over_l))
 
 
-def compute(args):
+def compute(args, values, notes, context):
     root = args.repo_root
-    values, notes = {}, {}
-    context = {"repo_root": str(root), "repo_head": evalkit.git_head(root),
-               "sha256": {p: evalkit.sha256_file(root / p) for p in (BENCHMARK, CONVERGENCE)}}
+    context.update(repo_root=str(root), repo_head=evalkit.git_head(root),
+                   sha256={p: evalkit.sha256_file(root / p) for p in (BENCHMARK, CONVERGENCE)})
     bench = json.loads((root / BENCHMARK).read_text(encoding="utf-8"))
     g = float(bench["meta"]["g"])
     errors = []
@@ -78,7 +77,6 @@ def compute(args):
     values["richardson_order"] = round(order, 3)
     values["richardson_freq_hz"] = round(f1 + (f1 - f2) / (2 ** order - 1), 6)
     values["gci_fine_pct"] = round(1.25 * abs((f1 - f2) / f1) / (2 ** order - 1) * 100, 4)
-    return values, notes, context
 
 
 if __name__ == "__main__":

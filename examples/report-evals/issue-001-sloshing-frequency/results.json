@@ -18,8 +18,7 @@
    "docs/api/structural/sloshing-cfd-benchmark.json",
    "docs/api/cfd/sloshing-convergence.json",
    "scripts/cfd/run_sloshing_benchmark.py",
-   "scripts/cfd/run_sloshing_convergence.py",
-   "examples/report-evals/issue-001-sloshing-frequency/eval.py"
+   "scripts/cfd/run_sloshing_convergence.py"
   ],
   "python": "3.10 or later, standard library only",
   "install": "none for the eval; OpenFOAM ESI v2312 (Linux) only to rerun the CFD"
@@ -66,7 +65,8 @@
   "prompt": "examples/report-evals/issue-001-sloshing-frequency/PROMPT.md",
   "cadence": "weekly",
   "runtime_s": 1,
-  "network": false
+  "network": false,
+  "ref": "main"
  },
  "results": [
   {
@@ -373,7 +373,7 @@
    "unit": "-",
    "period": "mesh study, h/L = 0.30",
    "source": "Archived OpenFOAM ESI v2312 mesh and timestep study, docs/api/cfd/sloshing-convergence.json",
-   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute(); Richardson extrapolation (Roache 1998)",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute() (on main); Richardson extrapolation (Roache 1998)",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "705857af62385a4567c96be99a129cdff3051a52",
    "tolerance": {
@@ -393,7 +393,7 @@
    "unit": "Hz",
    "period": "mesh study, h/L = 0.30",
    "source": "Archived OpenFOAM ESI v2312 mesh and timestep study, docs/api/cfd/sloshing-convergence.json",
-   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute(); Richardson extrapolation (Roache 1998)",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute() (on main); Richardson extrapolation (Roache 1998)",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "705857af62385a4567c96be99a129cdff3051a52",
    "tolerance": {
@@ -412,7 +412,7 @@
    "unit": "%",
    "period": "mesh study, h/L = 0.30",
    "source": "Archived OpenFOAM ESI v2312 mesh and timestep study, docs/api/cfd/sloshing-convergence.json",
-   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute(); GCI per ASME V&V 20-2009",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute() (on main); GCI per ASME V&V 20-2009",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
    "commit": "705857af62385a4567c96be99a129cdff3051a52",
    "tolerance": {
