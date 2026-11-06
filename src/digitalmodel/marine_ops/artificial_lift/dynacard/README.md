@@ -105,7 +105,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
 )
 
 fixture = Path("tests/marine_ops/artificial_lift/dynacard/testdata/plate_reference_cards.json")
-cards = json.loads(fixture.read_text())["cards"]
+cards = json.loads(fixture.read_text(encoding="utf-8"))["cards"]
 references = {
     name: prepare(entry["position"], entry["load"])
     for name, entry in cards.items()
@@ -318,17 +318,25 @@ for mode, generate in ALL_GENERATORS.items():
 print(f"Labels retained: {retained}/{len(ALL_GENERATORS)}")
 ```
 
-Answer: all 20 supplied labels are recovered at this geometry and seed with
-the option enabled. The default smoothed-card classification retains 16 of
-these 20 labels. The four lost labels are `VALVE_LEAK_SV` (classified `NORMAL`),
+Answer: 18 of 20 supplied labels are recovered at this geometry and seed with
+the option enabled. The current training policy excludes `TUBING_MOVEMENT`
+and `PLUNGER_UNDERTRAVEL`: their default signatures do not distinguish them
+from `NORMAL`. Both classify as `NORMAL` with diagnostic input. All 18 eligible
+labels are retained; the excluded cases remain explicit prediction controls.
+The default smoothed-card classification retains 14 of the 20 supplied labels.
+Its six lost labels are `TUBING_MOVEMENT` (classified `PARAFFIN_RESTRICTION`),
+`PLUNGER_UNDERTRAVEL` (`NORMAL`), `VALVE_LEAK_SV` (`NORMAL`),
 `DELAYED_TV_CLOSURE` (`VALVE_LEAK_TV`), `SAND_ABRASION` (`BENT_BARREL`) and
 `EXCESSIVE_VIBRATION` (`NORMAL`); a regression test pins these predictions.
 These results use the stored 19-feature classifier, whose serialized model
-version is `1.0`, following the retraining in issue #1884. The 12-of-20 result
-in issue #1885 predates that retraining. These are synthetic label-retention
+version is `1.0`, with the current `SYNTHETIC_LABEL_EXCLUSIONS` policy. The earlier
+16-of-20 filtered and 20-of-20 opt-in results used the previous training policy;
+the 12-of-20 result in issue #1885 predates the retraining in issue #1884.
+These are synthetic label-retention
 counts; classifier field accuracy is **NOT_EVALUATED**. The worked example
 and filtered-label regression are checked with NumPy 1.26.4 and SciPy 1.17.1;
-the filtered predictions also agree with SciPy 1.11.4.
+the earlier prediction set also agreed with SciPy 1.11.4. The current prediction
+set has not been checked with that older version.
 
 This example uses a forward model that is the exact discrete inverse of the
 solve: both use 200 spatial nodes, the same damping and the same fluid/tubing
@@ -339,9 +347,11 @@ the classifier can distinguish a generator parameter rather than a physical
 card property. Severity-ordering tests therefore check failure above warning
 with controlled classifications, without qualifying that synthetic diagnosis.
 
-With the option enabled at seeds zero, seven and forty-two, 59 of 60 supplied
-labels are recovered.
-The remaining `DELAYED_TV_CLOSURE` example at seed forty-two becomes
+With the option enabled at seeds zero, seven and forty-two, 53 of 60 supplied
+labels are recovered; all 53 are eligible cases, giving 53 of 54 eligible.
+The six excluded-label
+cases classify as `NORMAL` and are not counted as recovered supplied labels.
+The one eligible miss, `DELAYED_TV_CLOSURE` at seed forty-two, becomes
 `VALVE_LEAK_TV` even when the raw generated card is merely closed, before any
 solver is run. A strict expected-failure test preserves the desired supplied
 label; another test verifies that the solver retains the equivalent closed-input
