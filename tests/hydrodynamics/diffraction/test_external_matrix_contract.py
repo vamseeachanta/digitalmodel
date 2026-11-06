@@ -10,6 +10,17 @@ from pydantic import ValidationError
 from digitalmodel.hydrodynamics.diffraction.input_schemas import VesselSpec
 
 
+@pytest.fixture(autouse=True)
+def staged_mesh(tmp_path, monkeypatch):
+    """Stage a synthetic GDF; matrix checks do not qualify its buoyancy."""
+    (tmp_path / "synthetic.gdf").write_text(
+        "Synthetic panel\n1 9.81\n0 0\n1\n"
+        "0 0 -1\n1 0 -1\n1 1 -1\n0 1 -1\n",
+        encoding="utf-8", newline="\n",
+    )
+    monkeypatch.chdir(tmp_path)
+
+
 def vessel_data():
     """Return arbitrary synthetic geometry and inertia, without engineering defaults."""
     return {
@@ -235,6 +246,7 @@ def test_worked_example_and_full_matrix_blocks(tmp_path):
 
     example = Path(__file__).resolve().parents[3] / "examples/hydrodynamics/diffraction/external_matrices.yml"
     spec = DiffractionSpec.from_yaml(example)
+    spec.vessel.geometry.mesh_file = (tmp_path / "synthetic.gdf").as_posix()
     for kind in ("stiffness", "damping"):
         assert getattr(spec.vessel, f"external_{kind}") == matrix()
         values = [[1000 * (10 * (1 + i) if i == j else 1 + min(i, j))

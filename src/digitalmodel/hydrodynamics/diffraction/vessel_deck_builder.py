@@ -29,6 +29,7 @@ from typing import Optional
 
 import numpy as np
 
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import FLAGS, read_gdf_panels
 from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
     EnvironmentSpec,
@@ -159,7 +160,7 @@ class DeckResult:
 
     vessel: str
     form: str
-    deck_path: Path  # OrcaWave-native deck (.yml)
+    deck_path: Path  # intended destination; does not establish current output
     spec_path: Path  # canonical DiffractionSpec (spec.yml) — batch-runner input
     mesh_path: Optional[Path]
     mesh_kind: str  # "parametric" | "placeholder"
@@ -266,6 +267,11 @@ def build_deck(
     mesh/spec. Writes ``<out_dir>/<vessel_id>/{hull.gdf, spec.yml, <name>.yml,
     manifest.json}`` (``spec.yml`` = canonical DiffractionSpec, ``<name>.yml`` =
     OrcaWave-native deck).
+
+    Placeholders write the spec and manifest only, with ``deck: null`` and an
+    explanatory note. ``DeckResult.deck_path`` retains the intended destination
+    for compatibility; ``mesh_kind`` and the manifest identify current output.
+    Existing files at that destination are preserved.
     """
     dims = record.canonical_dimensions()
     loa = dims.get("loa") or dims.get("lbp")
@@ -284,6 +290,7 @@ def build_deck(
     mesh_path: Optional[Path] = None
     n_panels: Optional[int] = None
     column_mesh = None
+    mesh_symmetry = "none"
     if form == "column_pontoon":
         try:
             # The generic screening geometry uses the specified coarse 4.0 m
@@ -321,6 +328,10 @@ def build_deck(
             "parametric wall-sided mesh (first-pass screening; swap in a faired hull for design)"
         )
 
+    if mesh_path is not None:
+        flags, _ = read_gdf_panels(mesh_path)
+        mesh_symmetry = next(name for name, pair in FLAGS.items() if pair == flags)
+
     inertia, mass_basis, inertia_notes = _inertia_for(record, dims)
     if column_mesh is not None and mass_basis == "explicit":
         # Column-and-pontoon x=0 is amidships; the single-surface x=0 is aft.
@@ -336,7 +347,7 @@ def build_deck(
         vessel=VesselSpec(
             name=deck_name,
             type=deck_type,
-            geometry=VesselGeometry(mesh_file=mesh_file),
+            geometry=VesselGeometry(mesh_file=mesh_file, symmetry=mesh_symmetry),
             inertia=inertia,
         ),
         environment=EnvironmentSpec(water_depth=water_depth),
@@ -350,7 +361,22 @@ def build_deck(
     # consumes (DiffractionSpec.from_yaml); the OrcaWave-native deck alongside
     # it is for direct opening in OrcaWave.
     spec_path = spec.to_yaml(deck_dir / "spec.yml")
-    deck_path = OrcaWaveBackend().generate_single(spec, deck_dir)
+    spec._source_dir = deck_dir.resolve()
+    if mesh_kind == "placeholder":
+        # Keep the canonical spec for completing the missing geometry. The
+        # intended native deck path is returned but no unverified deck is written.
+        deck_path = deck_dir / f"{deck_name}.yml"
+        notes.append("native deck not generated: supply and verify the missing mesh")
+        preflight_reports = [{
+            "check": "DF2",
+            "body": spec.vessel.name,
+            "status": "NOT_EVALUATED",
+            "reason": "placeholder mesh; no native deck generated",
+        }]
+    else:
+        backend = OrcaWaveBackend()
+        deck_path = backend.generate_single(spec, deck_dir)
+        preflight_reports = backend.preflight_reports
 
     manifest = {
         "vessel": deck_name if column_mesh is not None else record.name,
@@ -368,15 +394,18 @@ def build_deck(
         "water_depth": water_depth,
         "periods_s": periods or DEFAULT_PERIODS,
         "headings_deg": headings or DEFAULT_HEADINGS,
-        "deck": deck_path.name,
+        "deck": None if mesh_kind == "placeholder" else deck_path.name,
         "spec": spec_path.name,
         "notes": notes,
+        "preflight_reports": preflight_reports,
         "provenance": "parametric prep from vessel_db; run on a licensed OrcaWave/AQWA machine",
     }
     if column_mesh is not None:
         manifest["source_record_id"] = manifest.pop("vessel_id")
         manifest["geometry_basis"] = "assumed proportions"
-    (deck_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    (deck_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2), encoding="utf-8", newline="\n"
+    )
 
     return DeckResult(
         vessel=deck_name if column_mesh is not None else record.name,

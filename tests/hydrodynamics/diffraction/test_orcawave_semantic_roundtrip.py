@@ -51,23 +51,29 @@ def _generate_orcawave_yml(spec: DiffractionSpec, tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def synthetic_spec() -> DiffractionSpec:
+def synthetic_spec(tmp_path: Path) -> DiffractionSpec:
     """Small offline input for value-level roundtrip coverage (#524).
 
     All inputs are synthetic assumptions: supplied mass 12500 kg, density
     1000 kg/m^3, infinite depth, zero centre of gravity, unit gyration radii
-    in metres, and headings 0, 90, 225 degrees. The mesh is a reference only;
-    the text backend does not need mesh contents for symmetry 'none'.
+    in metres, and headings 0, 90, 225 degrees. A readable synthetic GDF
+    supplies the full-body symmetry header; buoyancy is not qualified.
 
     One cycle is 2*pi radians, so omega = 2*pi/T. Choosing T = 8, 2, 4 s
     gives the unsorted, nonuniform explicit grid pi/4, pi, pi/2 rad/s.
     These integer periods are exact at the export precision.
     """
+    mesh = tmp_path / "mesh.gdf"
+    mesh.write_text(
+        "Synthetic panel\n1 9.81\n0 0\n1\n"
+        "0 0 -1\n1 0 -1\n1 1 -1\n0 1 -1\n",
+        encoding="utf-8", newline="\n",
+    )
     return DiffractionSpec.model_validate(
         {
             "vessel": {
                 "name": "body",
-                "geometry": {"mesh_file": "mesh.gdf", "mesh_format": "gdf"},
+                "geometry": {"mesh_file": mesh.as_posix(), "mesh_format": "gdf"},
                 "inertia": {
                     "mode": "explicit",
                     "mass": 12500.0,
@@ -302,6 +308,7 @@ class TestOrcaWaveReverseParserHardening:
         yml_path.write_text(
             "WaterDepth: 100\nWaterDensity: 1.025\nPeriodOrFrequency: [10.0]\nWaveHeading: [0.0]\nBodies: []\n",
             encoding="utf-8",
+            newline="\n",
         )
 
         with pytest.raises(ValueError, match="No bodies found"):
@@ -312,6 +319,7 @@ class TestOrcaWaveReverseParserHardening:
         yml_path.write_text(
             "WaterDepth: 100\nWaterDensity: 1.025\nWaveHeading: [0.0]\nBodies:\n  - BodyName: Hull\n    BodyMeshFileName: hull.gdf\n    BodyMeshFormat: Wamit gdf\n    BodyMeshSymmetry: None\n    BodyMeshLengthUnits: m\n    BodyMass: 1000.0\n    BodyCentreOfMass: [0.0, 0.0, 0.0]\n",
             encoding="utf-8",
+            newline="\n",
         )
 
         with pytest.raises(ValueError, match="No frequency data found"):
@@ -328,6 +336,7 @@ class TestOrcaWaveReverseParserHardening:
             "cog_z": -2.5,
         }
         free_spec = DiffractionSpec.model_validate(data)
+        free_spec._source_dir = original._source_dir
         yml_path = _generate_orcawave_yml(free_spec, tmp_path)
         parsed = OrcaWaveInputParser().parse(yml_path)
 
