@@ -2,7 +2,8 @@
 
 The layered API calculates an illustrative vertical reaction curve for a generic
 three-leg independent-leg jack-up. It retains clay punch-through, sand load
-spread, sand punching shear and bounded clay squeezing. The examples use
+spread, sand punching shear, bounded clay squeezing and the lower-layer support
+cap. The examples use
 assumption ranges; no measured regional profile or installation acceptance is
 claimed. The way forward is to replace those assumptions with an investigated
 soil profile and qualify the selected methods before engineering use.
@@ -12,6 +13,7 @@ soil profile and qualify the selected methods before engineering use.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 0 | 2026-10-28 | Added layered mechanism screening, explicit tip geometry and reproducible inputs to support subsequent sensitivity studies. |
+| 1 | 2026-11-06 | Documented the lower-layer support label and numerical event controls so exported mechanisms and screening semantics match the calculation. |
 
 ## Basis and public sources
 
@@ -69,6 +71,10 @@ soil transport, remoulding and changing failure mechanisms are not simulated.
   This uses equation 2 and its lower and upper general-shear bounds. As `h`
   tends to zero the bounded result tends to `qL`; no infinite pressure is
   emitted. Reusing 6.34 changes the onset relative to the paper's reference.
+  The exported mechanism is `lower_layer_support` when squeezing reaches or
+  exceeds `qL`, so deeper support caps the resistance. Below that cap the label
+  is `clay_squeezing` when squeezing exceeds general shear, otherwise
+  `clay_general_shear`.
 - **Sand load spread:** `qgross = (1 + 2 h/(D n))² (qL + q0)`, with horizontal
   to vertical spread `1:n`. This implements sand-paper equation 1 as written.
 - **Sand punching shear:**
@@ -114,6 +120,17 @@ the interval maximum. `post_peak_drop_kn` is the first peak-to-trough loss;
 and static upward crossings of the peak and preload reactions. A higher earlier
 capacity shields a later event from a smaller applied preload. Equality with a
 descending peak is treated as reaching it.
+
+Load comparisons for losses, tied maxima, preload reach and support crossings
+use a relative round-off tolerance of `1e-12`, with zero absolute tolerance.
+Loads are treated as equal when their difference is at most `1e-12` times the
+larger absolute load. These are numerical controls, not engineering loss limits.
+Near-equal lower samples retain the peak, so successive small decreases are
+compared against that peak and a cumulative decrease beyond the tolerance
+starts a loss event. During descent the lowest load is retained as the running
+trough; near-equal samples do not end descent, and recovery must rise beyond
+the tolerance relative to that trough. Near-equal support endpoints followed
+by descent do not count as upward support crossings.
 
 `punch_through_flag` is unresolved (`None`) when preload is omitted. With preload,
 it indicates that a descending peak is reached within the evaluated interval.
