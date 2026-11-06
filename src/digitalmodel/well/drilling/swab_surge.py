@@ -30,8 +30,10 @@ The mud's effective annular velocity from pipe motion uses Burkhardt's mud
 
 and converted to an equivalent mud-weight swing ``dEMW = dp / (0.052 * TVD)``.
 
-Closed-form screening tool (API RP 13D class). A transient surge model
-(acoustic / wave propagation) is a follow-up; this is the steady screening tier.
+Closed-form screening tool (API RP 13D class). The separate transient_pressure
+method adds a Joukowsky acoustic magnitude screen using an explicit wave speed
+and measured column length. It does not solve wave propagation or change the
+steady pressure, equivalent mud-weight or safe-trip-speed results.
 
 Units: diameters in inches, depth in feet, mud weight in ppg, PV in cp,
 YP in lbf/100 ft^2, trip speed in ft/min, pressure in psi.
@@ -181,6 +183,52 @@ class SwabSurge:
 
     def _demw(self, pressure_psi: float) -> float:
         return pressure_psi / (_PSI_PER_PPG_FT * self.tvd)
+
+    def transient_pressure(
+        self,
+        initial_trip_speed_ft_min: float,
+        final_trip_speed_ft_min: float,
+        *,
+        wave_speed_ft_s: float,
+        column_length_ft: float,
+        ramp_time_s: float = 0.0,
+    ) -> float:
+        """Acoustic pressure-change magnitude [psi] for a pipe-speed change.
+
+        Signed trip speeds distinguish reversals. The existing clinging and
+        displacement model maps the speed change to effective fluid velocity;
+        it remains an uncalibrated annular approximation. Wave speed and
+        measured acoustic path length are explicit inputs; TVD is not used.
+        The transient helper cites the public Joukowsky basis and documents
+        the approximate ramp attenuation. Reflections, cavitation and mud
+        compressibility changes are excluded. Pressure sign depends on the
+        boundary: this magnitude must not be interpreted as predicted BHP or
+        added automatically to steady pressure or safe-speed limits.
+        """
+        # Lazy imports keep the existing steady-only API independent of Pint.
+        from digitalmodel.units import Q_
+        from digitalmodel.well.completion.pump_down.transients import surge_pressure
+
+        values = (
+            initial_trip_speed_ft_min,
+            final_trip_speed_ft_min,
+            self.clinging_constant,
+        )
+        if not all(math.isfinite(v) for v in values) or self.clinging_constant < 0:
+            raise ValueError(
+                "trip speeds and clinging constant must be finite; clinging >= 0"
+            )
+        change = abs(initial_trip_speed_ft_min - final_trip_speed_ft_min) * (
+            self.clinging_constant + self.displacement_factor()
+        )
+        pressure = surge_pressure(
+            Q_(self.mud_weight, "ppg"),
+            Q_(wave_speed_ft_s, "ft/s"),
+            Q_(change, "ft/min"),
+            Q_(column_length_ft, "ft"),
+            Q_(ramp_time_s, "s"),
+        )
+        return float(pressure.to("psi").magnitude)
 
     def evaluate(self, trip_speed_ft_min: float) -> SwabSurgeResult:
         """Swab and surge equivalent mud weights at a tripping speed."""
