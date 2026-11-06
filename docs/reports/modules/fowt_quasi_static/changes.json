@@ -8,5 +8,10 @@
     "change": "Calculated report values are rounded to 12 decimal places before serialization to remove final-bit numerical differences within the test tolerances.",
     "date": "2026-10-28",
     "revision": "B"
+  },
+  {
+    "change": "Scale bracket accuracy with frequency, bound qualification to diagonal controls, derive revision labels from history and remove ambient encoding and generated-page dependencies.",
+    "date": "2026-11-06",
+    "revision": "C"
   }
 ]

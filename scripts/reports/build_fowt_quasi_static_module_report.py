@@ -21,6 +21,21 @@ ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "src/digitalmodel/marine_ops/fowt_quasi_static"
 DESTINATION = ROOT / "docs/reports/modules/fowt_quasi_static"
 DELIVERABLES = ("index.html", "changes.json", "manifest.json", "README.md")
+# Dedicated report layout; presentation does not depend on a generated page.
+LAYOUT = """
+.wrap{max-width:1000px;margin:auto;padding:2rem 1rem}
+header,section,details{background:var(--panel);border:1px solid var(--edge);
+  border-radius:var(--r);padding:1.25rem;margin-bottom:1.25rem}
+h1,h2,h3{color:var(--brand);line-height:1.2}
+table{border-collapse:collapse;width:100%;display:block;overflow-x:auto}
+th,td{border:1px solid var(--edge);padding:.5rem;text-align:left;vertical-align:top}
+th{background:var(--panel-2)}
+a{color:var(--brand)}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}
+button{font:inherit;padding:.5rem;background:var(--panel-2);color:var(--ink);
+  border:1px solid var(--edge);border-radius:var(--r);cursor:pointer}
+@media print{.wrap{max-width:none;padding:0}section{break-inside:avoid}}
+"""
 # [S1] Synthetic controls specified here; [H1] independently derives their answers.
 # Coordinates are unit-normalized modal coordinates, not a physical hull basis.
 INPUTS = {
@@ -38,7 +53,9 @@ INPUTS = {
 CHANGES = [{"revision": "A", "date": "2026-10-28", "change":
             "Initial synthetic methods analysis; sampled natural roots are retained and arithmetic evidence is separated from engineering acceptance."},
            {"revision": "B", "date": "2026-10-28", "change":
-            "Calculated report values are rounded to 12 decimal places before serialization to remove final-bit numerical differences within the test tolerances."}]
+            "Calculated report values are rounded to 12 decimal places before serialization to remove final-bit numerical differences within the test tolerances."},
+           {"revision": "C", "date": "2026-11-06", "change":
+            "Scale bracket accuracy with frequency, bound qualification to diagonal controls, derive revision labels from history and remove ambient encoding and generated-page dependencies."}]
 # Contracts are based on the bounded source review, not execution of a campaign.
 CONTRACTS = {
     "basis": ("Rigid mass and inertia assembly", "Supply attributed component masses, tensors and reference origins; tower density is piecewise linear."),
@@ -101,7 +118,7 @@ def inventory():
                 rows.append({"module": path.stem, "function": node.name,
                              "arguments": [arg.arg for arg in node.args.args + node.args.kwonlyargs],
                              "purpose": PURPOSES[node.name], "contract": f"{purpose}. {contract}",
-                             "status": "ARITHMETIC_QUALIFIED" if node.name in
+                             "status": "ARITHMETIC_CONTROL: diagonal synthetic" if node.name in
                              ("natural_periods", "response_operators") else "NOT_EVALUATED"})
     return rows
 
@@ -184,9 +201,7 @@ def response_row(mode, data):
 
 def render(data):
     """Render the established ten-section house layout with bounded claims."""
-    exemplar = (ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html").read_text()
-    layout = re.search(r"<style>(.*?)</style>", exemplar, re.S)[1]
-    brand = re.sub(r"/\*.*?\*/", "", (ROOT / "docs/api/_assets/brand.css").read_text(), flags=re.S)
+    brand = re.sub(r"/\*.*?\*/", "", (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8"), flags=re.S)
     sections = []
 
     def section(index, title, body):
@@ -211,10 +226,10 @@ def render(data):
         escape(json_text(INPUTS)) + '</pre></details>')
     methods = [row([r["module"] + '.' + r["function"], ', '.join(r["arguments"]),
                     r["purpose"], r["contract"], r["status"]]) for r in inventory()]
-    section(4, "Analysis Methodology", """<p>Natural roots solve det[K−ω²(M+A(ω))]=0. The implementation linearly interpolates added mass, sorts eigenbranches, retains the lowest positive root on each branch, and assigns modes by dominant mass-weighted participation. Sampled residuals within 32 binary64 epsilons of the eigenvalue/frequency-squared scale are treated as roots; adjacent intervals are excluded to prevent duplicate candidates [C1].</p>
+    section(4, "Analysis Methodology", """<p>Natural roots solve det[K−ω²(M+A(ω))]=0. The implementation linearly interpolates added mass, sorts eigenbranches, retains the lowest positive root on each branch, and assigns modes by dominant mass-weighted participation. Sampled residuals within 32 binary64 epsilons of the eigenvalue/frequency-squared scale are treated as roots; adjacent intervals are excluded to prevent duplicate candidates. Strict brackets use an absolute tolerance of four binary64 epsilons times the upper bracket frequency, plus the solver relative tolerance [C1].</p>
 <p>Modal crossings, multiple roots on a frequency-dependent branch and nearly degenerate mode labels remain unresolved. The search does not establish roots beyond the sampled band. Coupled-system coverage is retained in the existing analytical eigenvalue test [C3].</p>
 <p>The response convention is Z=K−ω²(M+A)−iω(B+Bextra), Zq=F. Extra damping is applied only to the implementation-selected components. This example sets it to zero and does not qualify that damping model [C1].</p>
-<p>The inventory status ARITHMETIC_QUALIFIED applies only to the controls shown here; every other method remains NOT_EVALUATED. Function arguments are listed in source order; defaults and return contracts remain in the source [C2].</p>""" + table(
+<p>The inventory status ARITHMETIC_CONTROL: diagonal synthetic identifies these specific controls. It does not qualify a whole function, added-mass interpolation, coupled branch ordering or modal labelling; every other method remains NOT_EVALUATED. Function arguments are listed in source order; defaults and return contracts remain in the source [C2].</p>""" + table(
         ("Public function", "Arguments", "Purpose", "Contract / review limit", "Example status"), methods))
     section(5, "Detailed Results", """<h3>Independent eigenvalue calculation [H1]</h3>
 <p>For j=1,…,6, det(K−ω²I)=∏(j²−ω²). The positive roots are ω=j rad/s and T=2π/j s. These follow by factoring the diagonal determinant independently of the numerical search. Both sampled endpoints and strictly bracketed roots are exercised [S1, C3].</p>""" + table(
@@ -225,7 +240,7 @@ def render(data):
         [response_row(i, data) for i in range(6)]))
     section(6, "Key Findings", """<p>Strict sign-change bracketing missed exact sampled roots. Explicit sampled-root candidates correct that defect while retaining the modal assignment step [C1, C3]. The diagonal response control establishes complex sign, amplitude and phase for this impedance convention.</p>
 <p>Calculated report values are rounded to 12 decimal places before scratch output, HTML serialization and artifact hashing. Rounding contributes at most 5e-13 in the stated normalized units, below the 1e-12 absolute test tolerance. Undefined phase remains null. This precision applies to these bounded synthetic controls; it does not change solver arithmetic or establish reproducibility for arbitrary inputs [S1, H1, H2, C3].</p>
-<p>Period tests use relative tolerance 1e-11 and absolute tolerance 1e-12 s, allowing the bracket solver's default absolute frequency tolerance and binary64 rounding over this bounded range. The diagonal impedance has condition number one; relative and absolute response tolerances of 1e-12 are conservative relative to binary64 rounding for this small solve. These are software-test tolerances, not engineering acceptance criteria [H1, H2, C3].</p>""")
+<p>Period tests use relative tolerance 1e-11 and absolute tolerance 1e-12 s, allowing the scaled bracket tolerance and binary64 rounding over this bounded range. Between-grid regressions also check relative period accuracy at frequency scales of 1e-8, 1 and 1e8 [C3]. The diagonal impedance has condition number one; relative and absolute response tolerances of 1e-12 are conservative relative to binary64 rounding for this small solve. These are software-test tolerances, not engineering acceptance criteria [H1, H2, C3].</p>""")
     section(7, "Limitations and Not Covered", '<ul>' + ''.join(
         f'<li>{escape(key)}: {value}</li>' for key, value in data["assessments"].items()) + """</ul>
 <p>No native BEM results, hull mesh, hydrostatic stiffness, mooring solution or campaign load cases are generated. The grounded catenary formula is inextensible; elastic seabed behaviour is delegated by the mooring workflow. Horizontal statics constrain draft and attitude. Finite-difference mooring tangents, geometry topology, spectral tails, symmetry projection, retained-coefficient digests and campaign convergence still require independent qualification [C2].</p>
@@ -238,12 +253,14 @@ def render(data):
 <li>C1: response.py, natural_periods and response_operators; implementation contract, not an independent oracle.</li>
 <li>C2: public-function source inventory in Analysis Methodology; exact source bytes are bound by manifest.json.</li>
 <li>C3: test_module_report_hand_values.py, test_response.py and test_fowt_quasi_static_module_report.py; arithmetic, coupling and rebuild evidence.</li>
-<li>L1: existing report layout and canonical brand palette, inlined from the sources named in manifest.json.</li></ul>
+<li>L1: dedicated layout committed in the report builder and canonical brand palette; both sources are bound in manifest.json.</li></ul>
 <p>No external numerical source or licensed publication is required for the algebraic controls. Manifest source digests bind inputs, implementation, tests and presentation assets. Artifact digests bind index.html, changes.json and README.md; manifest.json does not hash itself. Scratch paths, timestamps and runtime package versions are excluded from deterministic deliverables. Direct rebuild tests compare every deliverable byte and all displayed worked rows.</p>""")
     section(10, "Acronyms and Symbols", """<p>BEM: boundary element method. CG: centre of gravity. RAO: response amplitude operator. M: rigid mass. A: added mass. K: restoring stiffness. B: radiation damping. Z: complex impedance. F: generalized excitation. q: complex displacement. ω: angular frequency. T: natural period. I: identity matrix. i: imaginary unit. All example coordinates are normalized modal coordinates [S1].</p>""")
     changes = json.dumps(CHANGES, sort_keys=True).replace('<', '\\u003c')
     payload = json.dumps(data, sort_keys=True, allow_nan=False).replace('<', '\\u003c')
-    panel = '''<details id="changes-panel"><summary>Change panel</summary><p>Revision A: initial synthetic analysis and sampled-root correction.</p><p>Revision B: bounded numerical serialization for reproducible report bytes.</p><button id="save-changes" type="button">Save change record</button></details>
+    history = ''.join(f'<p>Revision {escape(c["revision"])}: {escape(c["change"])}</p>'
+                      for c in CHANGES)
+    panel = '<details id="changes-panel"><summary>Change panel</summary>' + history + '''<button id="save-changes" type="button">Save change record</button></details>
 <script>document.getElementById('save-changes').addEventListener('click', async () => {
 const text = document.getElementById('change-data').textContent;
 if ('showSaveFilePicker' in window) {
@@ -255,9 +272,9 @@ const link = document.createElement('a'); link.href=url; link.download='changes.
 }});</script>'''
     page = ('<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
-            '<title>Quasi-static floating wind module analysis</title><style>' + brand + '\n' + layout +
+            '<title>Quasi-static floating wind module analysis</title><style>' + brand + '\n' + LAYOUT +
             '</style></head><body class="hs-doc"><main class="wrap">'
-            '<header><h1>Quasi-static floating wind module analysis</h1><p>Synthetic arithmetic qualification · Revision A</p></header>' +
+            f'<header><h1>Quasi-static floating wind module analysis</h1><p>Synthetic arithmetic controls · Revision {escape(CHANGES[-1]["revision"])}</p></header>' +
             ''.join(sections) + panel + f'<script id="calculation" type="application/json">{payload}</script>' +
             f'<script id="change-data" type="application/json">{changes}</script></main></body></html>\n')
     return '\n'.join(line.rstrip() for line in page.splitlines()) + '\n'
@@ -285,7 +302,12 @@ Calculated report values are rounded to 12 decimal places before serialization
 and hashing. The maximum rounding contribution is 5e-13 in the stated normalized
 units, below the 1e-12 absolute test tolerance. Adjacent binary64 rounding in both
 directions is exercised by byte comparisons of all four deliverables. This bound
-applies to these synthetic controls, without changing the solver arithmetic.
+applies to these synthetic controls. Root bracketing uses frequency-scaled
+binary64 tolerance, exercised at frequency scales of 1e-8, 1 and 1e8.
+The inventory status ARITHMETIC_CONTROL: diagonal synthetic does not qualify
+added-mass interpolation, branch ordering or modal labelling.
+The dedicated layout is committed in the builder; only the canonical brand
+stylesheet is imported, with explicit UTF-8 reads.
 
 The positive natural roots follow from det(K−ω²I)=product(j²−ω²), giving T=2π/j.
 The scalar response follows from 2/(2−i)=(4+2i)/5. These independent calculations
@@ -295,6 +317,8 @@ Campaign convergence, mooring design acceptance and native BEM are NOT_EVALUATED
 
 Lesson: exact sampled roots require explicit retention as well as interval
 bracketing; the endpoint and exact-grid regressions preserve this requirement.
+Revision labels are derived from history, and generated pages are excluded from
+presentation dependencies to keep unrelated rebuilds from invalidating evidence.
 """
 
 
@@ -308,7 +332,6 @@ def build(scratch, output_dir):
                ROOT / "tests/marine_ops/fowt_quasi_static/test_module_report_hand_values.py",
                ROOT / "tests/marine_ops/fowt_quasi_static/test_response.py",
                ROOT / "tests/reporting/test_fowt_quasi_static_module_report.py",
-               ROOT / "docs/api/cfd/turbulent-flat-plate-verification.html",
                ROOT / "docs/api/_assets/brand.css"]
     manifest = {"sources": {p.relative_to(ROOT).as_posix(): sha256(p.read_bytes()).hexdigest()
                             for p in sorted(sources)},

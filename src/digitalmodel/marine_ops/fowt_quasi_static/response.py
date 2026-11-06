@@ -80,6 +80,8 @@ def natural_periods(omega: np.ndarray, added: np.ndarray, mass: np.ndarray,
     Sampled roots, including endpoints, are retained within binary64 roundoff
     (32 epsilon times the eigenvalue/frequency-squared scale). Intervals touching
     a sampled root are excluded from bracketing to avoid duplicate candidates.
+    Bracketed roots use an absolute tolerance of four binary64 epsilons times
+    the upper bracket frequency, plus the solver's relative tolerance.
     The lowest positive root of each branch is retained as before.
     """
     def modes(frequency: float) -> tuple:
@@ -103,7 +105,8 @@ def natural_periods(omega: np.ndarray, added: np.ndarray, mass: np.ndarray,
         for index, (left, right) in enumerate(zip(omega[:-1], omega[1:])):
             if (not sampled[index] and not sampled[index+1]
                     and residuals[index]*residuals[index+1] < 0):
-                candidate = brentq(characteristic, left, right)
+                candidate = brentq(characteristic, left, right,
+                                   xtol=4*np.finfo(float).eps*right)
                 if candidate > 0:
                     candidates.append(candidate)
         if not candidates:

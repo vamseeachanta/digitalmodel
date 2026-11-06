@@ -123,7 +123,7 @@ def test_cli_manifest_matches_written_files(tmp_path):
         [sys.executable, str(SCRIPT), "--scratch", str(tmp_path / "scratch"),
          "--output-dir", str(output)], cwd=ROOT, check=True, capture_output=True,
     )
-    manifest = json.loads((output / "manifest.json").read_text())
+    manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
     assert set(manifest["artifacts"]) == {"index.html", "changes.json", "README.md"}
     for name, digest in manifest["artifacts"].items():
         assert hashlib.sha256((output / name).read_bytes()).hexdigest() == digest
@@ -137,7 +137,7 @@ def test_every_displayed_worked_value_and_qualification(tmp_path):
     build = builder()
     data = build.calculate(tmp_path / "scratch")
     page = build.render(data)
-    assert page == (REPORT / "index.html").read_text()
+    assert page == (REPORT / "index.html").read_text(encoding="utf-8")
     assert len(re.findall(r'<h2 id="s\d+">', page)) == 10
     assert page.index('id="s1"') < page.index('id="revision-history"') < page.index('id="s2"')
     assert 'class="hs-doc"' in page and 'id="changes-panel"' in page
@@ -166,7 +166,8 @@ def test_every_displayed_worked_value_and_qualification(tmp_path):
     for name in ("campaign_convergence", "mooring_design_acceptance", "native_bem"):
         assert data["assessments"][name] == "NOT_EVALUATED"
         assert f'{name}: NOT_EVALUATED' in page
-    assert "ARITHMETIC_QUALIFIED" in page
+    assert "ARITHMETIC_CONTROL: diagonal synthetic" in page
+    assert "ARITHMETIC_QUALIFIED" not in page
     assert "condition number one" in page
     assert "undefined" in page
     assert "1e-11" in page and "1e-12" in page
@@ -178,7 +179,7 @@ def test_inventory_covers_every_public_function():
     actual = {(row["module"], row["function"]) for row in inventory}
     expected = set()
     for path in build.MODULE.glob("*.py"):
-        for node in ast.parse(path.read_text()).body:
+        for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
                 expected.add((path.stem, node.name))
     assert actual == expected
@@ -187,10 +188,67 @@ def test_inventory_covers_every_public_function():
     }
     for row in inventory:
         assert row["purpose"] and row["contract"]
-        if row["function"] not in ("natural_periods", "response_operators"):
+        if row["function"] in ("natural_periods", "response_operators"):
+            assert row["status"] == "ARITHMETIC_CONTROL: diagonal synthetic"
+        else:
             assert row["status"] == "NOT_EVALUATED"
 
 
 def test_scratch_must_be_outside_checkout():
     with pytest.raises(ValueError, match="outside"):
         builder().calculate(ROOT / "temporary-calculation")
+
+
+def test_header_and_change_panel_follow_latest_revision(tmp_path, monkeypatch):
+    build = builder()
+    latest = {"revision": "TEST", "date": "2026-11-06",
+              "change": "Synthetic revision for header and change panel regression."}
+    monkeypatch.setattr(build, "CHANGES", [*build.CHANGES, latest])
+    page = build.render(build.calculate(tmp_path / "scratch"))
+    header = re.search(r"<header>(.*?)</header>", page, re.S)[1]
+    panel = re.search(r'<details id="changes-panel">(.*?)</details>', page, re.S)[1]
+    assert "Revision TEST" in header
+    assert "Revision TEST" in panel and latest["change"] in panel
+
+
+def test_builder_reads_text_as_utf8(tmp_path, monkeypatch):
+    build = builder()
+    read_text = Path.read_text
+
+    def explicit_utf8(path, *args, **kwargs):
+        assert kwargs.get("encoding") == "utf-8", path.name
+        return read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", explicit_utf8)
+    page = build.render(build.calculate(tmp_path / "scratch"))
+    assert "ω" in page and "√" in page
+
+
+def test_report_does_not_depend_on_another_generated_page(tmp_path, monkeypatch):
+    build = builder()
+    read_text, read_bytes = Path.read_text, Path.read_bytes
+
+    def independent_read(method):
+        def read(path, *args, **kwargs):
+            assert path.suffix != ".html", "report generation read another HTML page"
+            return method(path, *args, **kwargs)
+        return read
+
+    monkeypatch.setattr(Path, "read_text", independent_read(read_text))
+    monkeypatch.setattr(Path, "read_bytes", independent_read(read_bytes))
+    manifest = build.build(tmp_path / "scratch", tmp_path / "output")
+    assert not any(name.endswith(".html") for name in manifest["sources"])
+
+
+def test_retention_allows_only_the_named_report_files():
+    build = builder()
+    retained = [str((REPORT / name).relative_to(ROOT)) for name in build.DELIVERABLES]
+    retained.append(str(SCRIPT.relative_to(ROOT)))
+    unwanted = str((REPORT / "unretained-output.json").relative_to(ROOT))
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "--stdin"],
+        input="\n".join([*retained, unwanted]) + "\n", cwd=ROOT,
+        text=True, capture_output=True, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [unwanted]

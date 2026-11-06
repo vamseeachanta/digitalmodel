@@ -5,12 +5,13 @@
 
 The six unit modal masses and squared integer stiffnesses are arithmetic
 controls, not design data. For each mode det(K-w²I)=0 gives w=j, j=1,...,6.
-Relative/absolute tolerances of 1e-11/1e-12 allow the bracket solver's default
-absolute frequency tolerance and binary64 roundoff in this small system.
+Relative/absolute tolerances of 1e-11/1e-12 allow frequency-scaled bracket
+accuracy and binary64 roundoff in this small system.
 """
 import math
 
 import numpy as np
+import pytest
 
 from digitalmodel.marine_ops.fowt_quasi_static.response import (
     natural_periods,
@@ -55,6 +56,18 @@ def test_sampled_root_tolerance_scales_with_the_eigenvalues():
     )
     expected = [2 * math.pi / (j * scale) for j in range(1, 7)]
     np.testing.assert_allclose(actual, expected, rtol=1e-11, atol=1e-12)
+
+
+@pytest.mark.parametrize("scale", [1e-8, 1., 1e8])
+def test_between_grid_root_tolerance_scales_with_the_bracket(scale):
+    """The factored determinant gives roots j*scale between grid samples."""
+    omega = np.arange(0.5, 7.0, 1.0) * scale
+    actual = natural_periods(
+        omega, np.zeros((len(omega), 6, 6)), np.eye(6),
+        np.diag((np.arange(1., 7.) * scale) ** 2),
+    )
+    expected = [2 * math.pi / (j * scale) for j in range(1, 7)]
+    np.testing.assert_allclose(actual, expected, rtol=1e-11, atol=0.)
 
 
 def test_scalar_impedance_full_complex_vector():
