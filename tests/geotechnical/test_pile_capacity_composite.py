@@ -287,6 +287,7 @@ class TestLayeredConfigurationSchema:
             {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
             for _ in range(3)
         ]
+        original_pile = params["pile"].copy()
         if route == "pile_capacity":
             routed = PileCapacityWorkflow().router(pile_capacity_cfg)
             payload = routed["pile_capacity"]
@@ -303,9 +304,30 @@ class TestLayeredConfigurationSchema:
         assert result["end_bearing_kn"] == pytest.approx(280.0 * math.pi)
         assert result["total_capacity_kn"] == pytest.approx(640.0 * math.pi)
         summary = json.loads(
-            (tmp_path / payload["summary_json"]).read_text(encoding="utf-8")
+            (tmp_path / payload["summary_json"]).read_text(encoding="utf-8"),
+            parse_constant=lambda value: pytest.fail(f"Nonfinite JSON value: {value}"),
         )
         assert summary["result"] == result
+        if route == "pile_capacity":
+            assert "embedded_length_m" not in payload["pile"]
+            assert "embedded_length_m" not in summary["pile"]
+        assert params["pile"] == original_pile
+
+    @pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+    def test_cfg_summary_rejects_nonfinite_design(
+        self, pile_capacity_cfg, tmp_path, value
+    ):
+        from copy import deepcopy
+
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+
+        pile_capacity_cfg["pile_capacity"]["design"] = {"factor_of_safety": value}
+        before = deepcopy(pile_capacity_cfg)
+        with pytest.raises(ValueError, match="Out of range float values"):
+            PileCapacityWorkflow().router(pile_capacity_cfg)
+
+        assert pile_capacity_cfg == before
+        assert list(tmp_path.iterdir()) == []
 
 
 class TestPileCapacityResultDataclass:

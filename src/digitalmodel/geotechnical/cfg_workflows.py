@@ -24,10 +24,11 @@ def _write_summary(
     default_filename: str,
     payload: dict[str, Any],
 ) -> Path:
+    summary_text = json.dumps(payload, indent=2, allow_nan=False)
     directory = _resolve_dir(cfg, output_cfg.get("directory", default_directory))
     directory.mkdir(parents=True, exist_ok=True)
     summary_path = directory / output_cfg.get("summary_json", default_filename)
-    summary_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    summary_path.write_text(summary_text, encoding="utf-8")
     cfg.setdefault("outputs", {})["directory"] = str(directory)
     cfg["outputs"]["summary_json"] = str(summary_path)
     return summary_path
@@ -159,6 +160,11 @@ class PileCapacityWorkflow:
             "standard": result.standard,
             "result": asdict(result),
         }
+        if workflow_cfg.get("soil_layers"):
+            payload["pile"] = {
+                key: value for key, value in pile.items()
+                if key != "embedded_length_m"
+            }
         payload["design"] = design
         payload["summary_json"] = str(
             _write_summary(

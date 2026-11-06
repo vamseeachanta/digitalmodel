@@ -11,6 +11,7 @@ compared with the layer total. Single-layer input requires a finite, positive
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-11-06 | State which input defines embedment so layered configurations have an explicit length basis. |
+| 2 | 2026-11-06 | Omit ignored embedment from layered summaries and reject nonfinite JSON values to keep output unambiguous and readable by strict parsers. |
 
 ## Configuration schema
 
@@ -36,13 +37,22 @@ router. Omitting `pile.embedded_length_m`, supplying a nonfinite value there,
 or supplying 30 m produces the same layered capacity. Omit that ignored field
 in layered configurations to keep the stated geometry unambiguous.
 
+`PileCapacityWorkflow` omits `pile.embedded_length_m` from the returned and
+written layered summary without changing the supplied input dictionary.
+Its summary writer rejects nonfinite JSON values before creating the output
+file. `GeotechnicalWorkflow` reports capacity results without echoing the
+pile input fields.
+
 ## Regression evidence and limits
 
 `TestLayeredConfigurationSchema` in
 `tests/geotechnical/test_pile_capacity_composite.py` exercises those three
 length cases through both routers and checks the returned capacity and JSON
 summary against synthetic hand calculations. Existing geometry regressions
-cover invalid diameter and layer thickness.
+cover invalid diameter and layer thickness. Layered summary checks use strict
+JSON decoding and confirm that ignored lengths are absent from the echoed
+pile fields. Additional cases reject nonfinite design factors before a summary
+is written.
 
 This schema records existing routing behavior. It introduces no length
 consistency check, soil-validation rule, empirical range or change to capacity
