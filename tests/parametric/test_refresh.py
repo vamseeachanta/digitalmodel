@@ -65,11 +65,11 @@ def test_committed_pile_atlas_matches_fresh_build(tmp_path, monkeypatch):
     actual = refresh.DEFAULT_ATLAS_ROOT / relative
     expected = tmp_path / relative
     for name in ("surrogate.json", "validation.json"):
-        assert json.loads((actual / name).read_text()) == json.loads(
-            (expected / name).read_text()
+        assert json.loads((actual / name).read_text(encoding="utf-8")) == json.loads(
+            (expected / name).read_text(encoding="utf-8")
         )
-    assert yaml.safe_load((actual / "manifest.yaml").read_text()) == yaml.safe_load(
-        (expected / "manifest.yaml").read_text()
+    assert yaml.safe_load((actual / "manifest.yaml").read_text(encoding="utf-8")) == yaml.safe_load(
+        (expected / "manifest.yaml").read_text(encoding="utf-8")
     )
     pd.testing.assert_frame_equal(committed.grid, fresh.grid)
 
@@ -82,7 +82,7 @@ def test_committed_pile_atlas_has_complete_provenance():
     atlas = Atlas.load(refresh.DEFAULT_ATLAS_ROOT, "pile_capacity")
     manifest = f"atlases/pile_capacity/{atlas.atlas_id}/manifest.yaml"
     inventory = json.loads(
-        (refresh.DEFAULT_ATLAS_ROOT / "historical-provenance.json").read_text()
+        (refresh.DEFAULT_ATLAS_ROOT / "historical-provenance.json").read_text(encoding="utf-8")
     )
     records = [row for row in inventory["atlases"] if row["manifest"] == manifest]
     assert len(records) == 1
