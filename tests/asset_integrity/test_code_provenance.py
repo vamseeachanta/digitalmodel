@@ -1,5 +1,8 @@
 # ABOUTME: Verifies every strength/capacity result carries its governing
 # ABOUTME: code_reference (issue #1092) and that it surfaces in the lookup JSON.
+import json
+from pathlib import Path
+
 import pandas as pd
 
 from digitalmodel import codes
@@ -136,6 +139,30 @@ def test_wall_thickness_code_reference():
         DesignFactors(), DesignCode.DNV_ST_F101,
     ).perform_analysis()
     assert result.code_reference == codes.DNV_ST_F101.label
+
+
+def test_b318_screening_does_not_relabel_other_consumers():
+    from digitalmodel.asset_integrity.dent_assessment import _CITATIONS
+
+    reference = codes.ASME_B31_8
+    assert reference.label == "ASME B31.8 (2020)"
+    result = WallThicknessAnalyzer(
+        PipeGeometry(outer_diameter=0.3239, wall_thickness=0.0127,
+                     corrosion_allowance=0.003),
+        PipeMaterial(grade="X65", smys=448e6, smts=531e6),
+        DesignLoads(internal_pressure=20e6, external_pressure=10e6),
+        DesignFactors(), DesignCode.ASME_B31_8,
+    ).perform_analysis()
+    assert result.code_reference == reference.label
+    assert any(item.startswith(f"{reference.label} Nonmandatory Appendix R")
+               for item in _CITATIONS)
+    root = Path(__file__).resolve().parents[2]
+    explorer = root / "docs/api/structural/wall-thickness-explorer"
+    data = json.loads(explorer.with_suffix(".json").read_text(encoding="utf-8"))
+    assert data["code_reference"]["ASME-B31.8"] == result.code_reference
+    page = explorer.with_suffix(".html").read_text(encoding="utf-8")
+    embedded, _ = json.JSONDecoder().raw_decode(page.split("const DATA = ", 1)[1])
+    assert embedded["code_reference"]["ASME-B31.8"] == result.code_reference
 
 
 # --- lookup / dashboard serialization ---------------------------------------

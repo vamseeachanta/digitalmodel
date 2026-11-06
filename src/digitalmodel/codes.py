@@ -53,6 +53,10 @@ DNV_RP_F101 = CodeReference(
 # ---------------------------------------------------------------------------
 # Fitness-for-service
 # ---------------------------------------------------------------------------
+# Basis: asset_integrity/assessment/level1_screener.py cites B31.8-2022.
+# Kept separate from the existing wall-thickness and dent reference below.
+ASME_B31_8_SCREENING = CodeReference(
+    "ASME B31.8", "2022", "Gas Transmission Piping")
 # Basis: asset_integrity/assessment/level2_engine.py cites 2021.
 # This records the implementation citation, not edition-matched qualification.
 API_579 = CodeReference(
@@ -86,8 +90,8 @@ PD_8010_2 = CodeReference(
 ISO_13623 = CodeReference("ISO 13623", "2017", "Pipeline transportation systems")
 ASME_B31_4 = CodeReference(
     "ASME B31.4", "2019", "Pipeline Transportation Systems for Liquids")
-# Basis: asset_integrity/assessment/level1_screener.py cites B31.8-2022.
-ASME_B31_8 = CodeReference("ASME B31.8", "2022", "Gas Transmission Piping")
+# Retain the existing design label; edition-matched qualification is unresolved.
+ASME_B31_8 = CodeReference("ASME B31.8", "2020", "Gas Transmission Piping")
 
 # ---------------------------------------------------------------------------
 # Material standards
