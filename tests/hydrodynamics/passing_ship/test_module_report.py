@@ -357,20 +357,57 @@ def test_build_rejects_linked_output_directory(builder, tmp_path):
     retained = tmp_path / "retained"
     retained.mkdir()
     output = tmp_path / "output"
-    output.symlink_to(retained, target_is_directory=True)
+    try:
+        output.symlink_to(retained, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks not available")
     with pytest.raises(ValueError, match="links"):
         builder.build(output)
     assert list(retained.iterdir()) == []
 
 
-def test_build_rejects_junction_output(builder, tmp_path, monkeypatch):
+def test_link_test_skips_when_symlinks_unavailable(builder, tmp_path, monkeypatch):
+    def unavailable(*args, **kwargs):
+        raise OSError("symlinks not available")
+
+    monkeypatch.setattr(Path, "symlink_to", unavailable)
+    with pytest.raises(pytest.skip.Exception, match="symlinks not available"):
+        test_build_rejects_linked_output_directory(builder, tmp_path)
+
+
+@pytest.mark.parametrize("tag", [0xA0000003, 0xA000000C])
+def test_build_rejects_junction_output(builder, tmp_path, monkeypatch, tag):
     output = tmp_path / "output"
     output.mkdir()
     # The platform link query is isolated here; report generation remains real.
     original = Path.lstat
     junction = SimpleNamespace(st_mode=stat.S_IFDIR,
-                               st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT)
+                               st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                               st_reparse_tag=tag)
     monkeypatch.setattr(Path, "lstat", lambda path: junction if path == output else original(path))
     with pytest.raises(ValueError, match="links"):
         builder.build(output)
     assert list(output.iterdir()) == []
+
+
+@pytest.mark.parametrize("name", [None, "report.html", "changes.json", "sources.json"])
+def test_build_allows_nonlink_reparse_targets(builder, tmp_path, monkeypatch, name):
+    output = tmp_path / "output"
+    output.mkdir()
+    target = output if name is None else output / name
+    if name is not None:
+        target.write_text("", encoding="utf-8", newline="\n")
+    original = Path.lstat
+
+    def cloud_stat(path):
+        actual = original(path)
+        if path == target:
+            return SimpleNamespace(st_mode=actual.st_mode,
+                                   st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                                   st_reparse_tag=0x9000001A)
+        return actual
+
+    monkeypatch.setattr(Path, "lstat", cloud_stat)
+    result = builder.build(output)
+    assert result.read_text(encoding="utf-8") == builder.render(builder.calculate())
+    assert {path.name for path in output.iterdir()} == ARTIFACTS

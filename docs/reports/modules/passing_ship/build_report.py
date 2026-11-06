@@ -358,7 +358,10 @@ def build(output_dir: Path) -> Path:
                 "sources.json": json_text(SOURCES)}
     for target in [output_dir, *(output_dir / name for name in contents)]:
         if target.is_symlink() or (target.exists() and
-                getattr(target.lstat(), "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+                getattr(target.lstat(), "st_reparse_tag", 0) in {
+                    getattr(stat, "IO_REPARSE_TAG_SYMLINK", 0xA000000C),
+                    getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", 0xA0000003),
+                }):
             raise ValueError("Report targets must not be links")
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, content in contents.items():
