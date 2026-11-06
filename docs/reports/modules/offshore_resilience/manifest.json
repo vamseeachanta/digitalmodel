@@ -2,17 +2,17 @@
   "schema_version": 1,
   "digest_convention": "SHA-256 of exact UTF-8/LF bytes; manifest excludes its own digest to avoid self-reference.",
   "sources": {
-    "scripts/reports/build_offshore_resilience_module_report.py": "1b3e5c2cf2ce554f3a5e0746e11d88c5cd9df7712f8895082eff1b129d915d1c",
+    "scripts/reports/build_offshore_resilience_module_report.py": "ab2bf7c0097aa3bdd83c8185ece7d5cbae9e8deddeed6b3e66ba8949268b50ac",
     "src/digitalmodel/structural/offshore_resilience/minimum_facility.py": "341a2b5a6a67f2831ff2b735d6efdf1733a0b97a9685f6c445f9a605f127f948",
     "src/digitalmodel/structural/offshore_resilience/installation_checklist.py": "a0a6c1ea78c22fa21612e1d12406d997722387853d5628f9b2f8f3dbe1204456",
     "src/digitalmodel/structural/offshore_resilience/lifecycle_planning.py": "fb68f09f4dcc1622f376d40c8a29ade8316e71826faefff241f102db3f3ed9cf",
     "src/digitalmodel/structural/offshore_resilience/structural_health.py": "25a1a3d2f2ebe1e53a078c39159f179382a002a0ab7dd87452414d7ebff66c7a",
     "tests/structural/offshore_resilience/test_module_report_hand_values.py": "d4e58039873dceb969a3283f9ffcf23b87f285fe220cf447b07073867f7da921",
-    "tests/reporting/test_offshore_resilience_module_report.py": "f1ddda71080e52f30b4451b64d940662bcfe9fcde4d119703bffc493e8c30eb9"
+    "tests/reporting/test_offshore_resilience_module_report.py": "4609937417ef560ff51229a1c47280cc2962f942e08028b6b52df65322c96281"
   },
   "artifacts": {
-    "index.html": "79db2e58589eebfd8e928fbb5fa50c230e5ee3df756d943cc45da9db838941de",
-    "changes.json": "8064385ab9b0df3dab9949e2729b3b6f715ba4f10b1c8c88b595f5604045e1e1",
+    "index.html": "7d84a2866375d77d0ad793eb5a500989fe70e71b94011a890e5581e07fa28c08",
+    "changes.json": "9bfac56d3986ca9f54d8aeaa32e72529db9c8608da8e26778eb8b9582c0be827",
     "README.md": "bd90dd0bbebfebeac390472c33aa25ab0b88563f1d171e679a23c1047985d55b"
   }
 }

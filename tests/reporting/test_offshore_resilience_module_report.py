@@ -305,6 +305,10 @@ def test_hand_qualification_is_bound_to_the_source_module():
     assert build.method_assessment("lifecycle_planning", "InstallationChecklist.summary")[0] == "NOT_EVALUATED"
 
 
+@pytest.mark.skipif(
+    shutil.which("node") is None,
+    reason="Node.js is unavailable; the JavaScript download check requires Node.js",
+)
 def test_review_note_download_defers_object_url_cleanup():
     """Execute the rendered handler; cleanup shall occur after the click task."""
     build = builder()

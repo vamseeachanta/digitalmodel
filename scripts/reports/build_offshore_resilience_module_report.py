@@ -45,6 +45,9 @@ CHANGES = [{
 }, {
     "revision": "B", "date": "2026-11-06",
     "change": "Corrected illustrative input provenance and interface qualification, removed the unused scratch requirement and duplicate licence headers, moved draft navigation links, rejected aliased and nonregular output targets before writing, deferred review-note URL cleanup, and refreshed source and artifact digests so the report basis and rebuild instructions are explicit.",
+}, {
+    "revision": "C", "date": "2026-11-06",
+    "change": "Made the JavaScript download check optional when Node.js is unavailable and refreshed source and artifact digests so Python-only test environments remain usable.",
 }]
 
 # S1 consists of locally selected illustrative controls defined here, pending
