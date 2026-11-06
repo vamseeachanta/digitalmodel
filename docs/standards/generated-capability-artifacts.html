@@ -18,7 +18,9 @@
     <tbody><tr><td>1</td><td>2026-10-19</td><td>Document sidecar freshness and the
     pressure-only projection to prevent stale data from passing the HTML check.</td></tr>
     <tr><td>2</td><td>2026-10-24</td><td>Require omitted checks to be zero and
-    non-governing, and state the Linux and LF requirement for byte comparison.</td></tr></tbody>
+    non-governing, and state the Linux and LF requirement for byte comparison.</td></tr>
+    <tr><td>3</td><td>2026-11-06</td><td>Reject missing or exhausted corrected
+    combined capacity and explain the separate sidecar registration contract.</td></tr></tbody>
   </table>
   <p>Table 1. Documentation revision history.</p>
 
@@ -28,6 +30,12 @@
   their existing scope. Sidecars participate in output removal, successful-output
   validation and byte comparison. A copied sidecar is removed before execution,
   so a producer that stops writing it cannot pass using stale bytes.</p>
+  <p>At this revision, <code>Generator.outputs</code> supplies the HTML-only
+  page census and brand guard. <code>Generator.sidecars</code> adds data to all
+  freshness operations without classifying JSON as HTML. A checker that instead
+  registers JSON directly in <code>outputs</code> needs an HTML filter before
+  those page-only checks; the two conventions cannot be combined without
+  reconciling those consumers.</p>
   <pre><code>uv run python scripts/check_generated_html.py --check</code></pre>
   <p>The command copies inputs into a temporary shadow tree and leaves the
   source checkout unchanged. The existing documentation workflow runs it for
@@ -35,11 +43,15 @@
   are declared by the repository; an isolated test environment needs the same
   generator dependencies. A nonzero result identifies regeneration errors or
   the relative paths with byte differences.</p>
-  <p>The shadow includes package version metadata for source-only imports.
+  <p>The shadow copies <code>pyproject.toml</code> once as shared package version
+  metadata for source-only imports, rather than requiring every generator to
+  declare it in <code>inputs</code>. A per-generator metadata convention must
+  preserve that import requirement for every affected producer.
   Generator child processes discard inherited Git repository bindings so their
   working directory, rather than a caller's Git environment, selects the tree.</p>
   <p>The regeneration contract is supported on Linux with LF line endings in
-  the checkout. Generators use platform-native newlines: Windows regeneration
+  the checkout. The wall-thickness exporter writes UTF-8 with LF explicitly;
+  other generators can use platform-native newlines: Windows regeneration
   can produce CRLF bytes that differ from committed LF bytes, and a CRLF
   checkout differs from Linux output. Newline-only drift can have an empty text
   diff because the diagnostic splits text into lines. Run this byte comparison
@@ -66,6 +78,12 @@
   <p>Export fails if any omitted <code>combined</code> value is not exactly zero
   or if <code>combined</code> governs the result. The value is checked before
   rounding, so a small nonzero value cannot be hidden by the projection.</p>
+  <p>Omission also requires a finite, positive <code>f_d_corrected</code> from
+  the combined-check details. Zero utilization alone does not establish remaining
+  capacity when tension and bending are unloaded. Missing, invalid, non-finite
+  or non-positive corrected capacity therefore stops export with a stated error.
+  A strategy without a <code>combined</code> check needs no such metadata.
+  The projection tests exercise each rejection and both valid cases.</p>
   <p>Independent projection example: input checks
   <code>{"burst":0.5,"combined_loading":0.25,"combined":0.0}</code> become
   <code>{"burst":0.5,"combined_loading":0.25}</code>. The largest utilization

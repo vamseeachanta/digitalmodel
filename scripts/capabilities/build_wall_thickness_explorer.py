@@ -16,6 +16,7 @@ Run:
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 from digitalmodel.structural.analysis.wall_thickness import (
@@ -73,6 +74,17 @@ def _run(wall_m: float, code: DesignCode) -> dict:
         raise ValueError(
             "Pressure-only export may omit combined only when zero and non-governing"
         )
+    if "combined" in res.checks:
+        corrected = res.details.get("combined", {}).get("f_d_corrected")
+        if (
+            not isinstance(corrected, (int, float))
+            or isinstance(corrected, bool)
+            or not math.isfinite(corrected)
+            or corrected <= 0.0
+        ):
+            raise ValueError(
+                "Pressure-only export requires finite positive combined f_d_corrected"
+            )
     checks = {k: round(float(v), 4) for k, v in res.checks.items() if k != "combined"}
     return {
         "max_util": round(float(res.max_utilisation), 4),
@@ -245,12 +257,13 @@ def main() -> None:
     _OUT_DIR.mkdir(parents=True, exist_ok=True)
     study = build_study()
     (_OUT_DIR / "wall-thickness-explorer.json").write_text(
-        json.dumps(study, indent=2) + "\n", encoding="utf-8")
+        json.dumps(study, indent=2) + "\n", encoding="utf-8", newline="\n")
     html = _HTML.replace("{data}", json.dumps(study, separators=(",", ":")))
     html = html.replace("__DATA_LIMITS__", study["data_limits"])
-    (_OUT_DIR / "wall-thickness-explorer.html").write_text(html, encoding="utf-8")
+    (_OUT_DIR / "wall-thickness-explorer.html").write_text(
+        html, encoding="utf-8", newline="\n")
     n = sum(1 for c in study["series"] for _ in study["series"][c])
-    print(f"wrote {(_OUT_DIR / 'wall-thickness-explorer.html').relative_to(_REPO)} "
+    print(f"wrote {(_OUT_DIR / 'wall-thickness-explorer.html').relative_to(_REPO).as_posix()} "
           f"({len(study['series'])} codes, {n} points)")
 
 
