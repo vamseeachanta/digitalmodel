@@ -12,6 +12,7 @@ row count. An upload can succeed while viewer readiness remains unestablished.
 | --- | --- | --- |
 | 1 | 2026-10-19 | Document the publication gate, reproducible example and remaining qualification limits. |
 | 2 | 2026-10-24 | Reject boolean validation numbers and malformed viewer rows; cover publication guards and maintain card history here to avoid stale generated revisions. |
+| 3 | 2026-11-06 | Isolate mocked publication tests from the optional upload dependency, preserve private visibility, retry malformed viewer payloads and report the validation margin. |
 
 The generated dataset card refers to this history rather than repeating a fixed
 revision number and publication date.
@@ -27,7 +28,7 @@ uses the existing credential store; tokens shall not be printed or committed.
 uv run --no-project --with pandas --with pyarrow --with pyyaml \
   python scripts/hf/publish_atlas_explorer.py --dry-run
 uv run --no-project --with pytest --with pandas --with pyarrow --with pyyaml \
-  --with huggingface_hub python -m pytest tests/scripts/test_publish_atlas_explorer.py -q -o addopts='' \
+  python -m pytest tests/scripts/test_publish_atlas_explorer.py -q -o addopts='' \
   -p no:cacheprovider --basetemp "$TMPDIR/hf-tests"
 ```
 
@@ -35,6 +36,9 @@ The dry run performs no network writes. Remove `--dry-run` and include
 `--with huggingface_hub` to publish the existing projection. Temporary readback
 files use `TMPDIR`; parquet and card payloads are otherwise held in memory.
 A concurrent dataset update is rejected through the commit's expected parent.
+Existing private repositories are refused without changing their visibility.
+Publication tests mock the upload operation constructor and API calls, so the
+optional upload dependency is required only for publication.
 
 ## Worked example: integrity gate
 
@@ -49,11 +53,13 @@ that every declared point occurs exactly once and that the response is finite
 and nonnegative. Both rows pass. Replacing one damage value with infinity,
 removing a point, or duplicating a point blocks publication. A viewer response
 with the wrong damage, total count or sample length blocks readiness.
-Missing or malformed row records follow the same bounded retry path and end with
+Missing or malformed row records, non-object payloads and non-list rows follow
+the same bounded retry path and end with
 `viewer NOT_READY` if the response remains invalid.
 
 Interpolation acceptance uses the error and threshold already recorded by the
-source manifest. This demonstrates preservation of the source validation claim;
+source manifest, and the card displays both values beside the PASS statement.
+This demonstrates preservation of the source validation claim;
 it does not independently reproduce the underlying physical calculation.
 Boolean error or threshold values are rejected rather than interpreted as numbers.
 

@@ -3,7 +3,9 @@
 import importlib.util
 import io
 import json
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pandas as pd
@@ -133,6 +135,16 @@ def test_card_discloses_citation_gap_and_hashes(atlas):
     assert "docs/hf-atlas-publishing.md" in card
 
 
+def test_card_reports_manifest_validation_margin(atlas):
+    root, folder, _, manifest = atlas
+    manifest["validation"].update(max_rel_error=0.1, threshold=0.2)
+    (folder / "manifest.yaml").write_text(yaml.safe_dump(manifest))
+    entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
+    card = publisher.build_card([entry])
+    assert "Interpolation validation: PASS" in card
+    assert "max_rel_error = 0.1 (threshold 0.2)" in card
+
+
 def test_citation_sidecar_survives_card(atlas):
     root, folder, _, manifest = atlas
     sidecar = {
@@ -148,7 +160,17 @@ def test_citation_sidecar_survives_card(atlas):
     assert json.dumps(sidecar, sort_keys=True) in publisher.build_card([entry])
 
 
-def test_publish_is_atomic_and_pins_remote_readback(atlas):
+@pytest.fixture
+def hub_commit_operation(monkeypatch):
+    """Supply only the upload operation constructor; all API calls stay mocked."""
+    monkeypatch.setitem(
+        sys.modules,
+        "huggingface_hub",
+        SimpleNamespace(CommitOperationAdd=lambda **kwargs: kwargs),
+    )
+
+
+def test_publish_is_atomic_and_pins_remote_readback(atlas, hub_commit_operation):
     root, _, _, _ = atlas
     entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
     api = Mock()
@@ -162,9 +184,7 @@ def test_publish_is_atomic_and_pins_remote_readback(atlas):
         path.write_bytes(content)
     revision = publisher.publish_entries(api, "test/dataset", [entry])
     assert revision == "published-revision"
-    api.update_repo_settings.assert_called_once_with(
-        repo_id="test/dataset", repo_type="dataset", private=False
-    )
+    api.update_repo_settings.assert_not_called()
     assert api.create_commit.call_count == 1
     assert api.create_commit.call_args.kwargs["parent_commit"] == (
         api.repo_info.return_value.sha
@@ -173,18 +193,19 @@ def test_publish_is_atomic_and_pins_remote_readback(atlas):
         assert call.kwargs["revision"] == revision
 
 
-def test_private_remote_blocks_publication(atlas):
+def test_private_remote_blocks_publication(atlas, hub_commit_operation):
     root, _, _, _ = atlas
     entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
     api = Mock()
     api.repo_info.return_value.private = True
     with pytest.raises(ValueError, match="private"):
         publisher.publish_entries(api, "test/dataset", [entry])
+    api.update_repo_settings.assert_not_called()
     api.create_commit.assert_not_called()
     api.hf_hub_download.assert_not_called()
 
 
-def test_remote_digest_mismatch_blocks_success(atlas):
+def test_remote_digest_mismatch_blocks_success(atlas, hub_commit_operation):
     root, folder, _, _ = atlas
     entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
     api = Mock()
@@ -250,6 +271,24 @@ def test_malformed_viewer_row_exhausts_retries(atlas, monkeypatch, row):
     with pytest.raises(RuntimeError, match="viewer NOT_READY") as error:
         publisher.verify_viewer("test/dataset", [entry], attempts=2, delay=1)
     assert isinstance(error.value.__cause__, ValueError)
+    assert request.call_count == 2
+    sleep.assert_called_once_with(1)
+
+
+@pytest.mark.parametrize("payload", [None, {"num_rows_total": 2, "rows": 5}])
+def test_malformed_viewer_payload_exhausts_retries(atlas, monkeypatch, payload):
+    root, _, _, _ = atlas
+    entry = publisher.prepare_entry(root, "mooring_fatigue", "mooring_fatigue")
+    request = Mock(
+        side_effect=lambda *args, **kwargs: io.BytesIO(json.dumps(payload).encode())
+    )
+    sleep = Mock()
+    monkeypatch.setattr(publisher, "urlopen", request)
+    monkeypatch.setattr(publisher.time, "sleep", sleep)
+    with pytest.raises(RuntimeError, match="viewer NOT_READY") as error:
+        publisher.verify_viewer("test/dataset", [entry], attempts=2, delay=1)
+    assert isinstance(error.value.__cause__, ValueError)
+    assert "rows" in str(error.value.__cause__)
     assert request.call_count == 2
     sleep.assert_called_once_with(1)
 

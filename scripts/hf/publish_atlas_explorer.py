@@ -178,13 +178,16 @@ def card_section(entry):
     name, frame, manifest = entry["name"], entry["frame"], entry["manifest"]
     provenance = manifest.get("provenance") or {}
     citations = provenance.get("citations")
+    validation = manifest["validation"]
     lines = [
         f"## {name}",
         "",
         f"Rows: {len(frame)}; response: `{manifest['response']}`.",
         f"Columns: {', '.join(frame.columns)}.",
         f"Standards declared by source: {std_str(manifest)}.",
-        "Interpolation validation: PASS against the source manifest's tolerance "
+        "Interpolation validation: PASS; "
+        f"{validation['metric']} = {validation['max_rel_error']} "
+        f"(threshold {validation['threshold']}) "
         "(a surrogate check, not independent physical validation).",
         "",
     ]
@@ -220,7 +223,6 @@ def publish_entries(api, repo_id, entries):
 
     files = publication_files(entries)
     api.create_repo(repo_id, repo_type="dataset", private=False, exist_ok=True)
-    api.update_repo_settings(repo_id=repo_id, repo_type="dataset", private=False)
     info = api.repo_info(repo_id=repo_id, repo_type="dataset")
     if info.private:
         raise ValueError("remote visibility remains private")
@@ -254,7 +256,11 @@ def publish_entries(api, repo_id, entries):
 def validate_rows(entry, payload):
     """Compare the viewer sample with the frozen local grid, including row count."""
     frame = entry["frame"]
-    rows = payload.get("rows") or []
+    if not isinstance(payload, dict):
+        raise ValueError("rows payload must be an object")
+    rows = payload.get("rows")
+    if not isinstance(rows, list):
+        raise ValueError("rows must be a list")
     if payload.get("num_rows_total") != len(frame) or len(rows) != min(len(frame), 100):
         raise ValueError("rows count differs from source")
     try:
