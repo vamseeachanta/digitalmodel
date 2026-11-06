@@ -80,3 +80,28 @@ def test_joint_zero_demand_is_arithmetic_only():
     assert result.applied_vp == 0.0
     assert result.unity_check == 0.0
     assert result.joint_type is JointType.T_Y
+
+
+@pytest.mark.xfail(
+    strict=True, raises=AssertionError,
+    reason="#3307: tension interaction still uses compression buckling capacity",
+)
+def test_tension_interaction_reduces_to_axial_tension():
+    """Pure tension must not inherit compression buckling dependence (#3307)."""
+    section = TubularSection(12.0, 0.5, 40.0, 28_000.0, 1200.0)
+    checks = member_checks(section, MemberLoads(fa=1.0, fb=0.0, Cm=1.0, is_tension=True))
+    assert checks["combined"].unity_check == pytest.approx(
+        checks["axial_tension"].unity_check, rel=1e-12, abs=0,
+    )
+
+
+@pytest.mark.xfail(
+    strict=True, raises=AssertionError,
+    reason="#3307: an empty workflow still reports PASS",
+)
+def test_empty_model_does_not_pass():
+    """An empty model cannot establish a passing member or joint check (#3307)."""
+    from digitalmodel.structural.jacket_topside.workflow import JacketChecksWorkflow
+
+    result = JacketChecksWorkflow().router({"jacket_checks": {"members": [], "joints": []}})
+    assert result["jacket_checks"]["overall_status"] != "PASS"

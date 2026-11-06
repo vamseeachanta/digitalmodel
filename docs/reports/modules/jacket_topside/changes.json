@@ -8,5 +8,10 @@
     "change": "Expose escaped calculation JSON and format wall thicknesses to three decimals while retaining finer input precision.",
     "date": "2026-10-28",
     "revision": "B"
+  },
+  {
+    "change": "Disclose candidate defects with strict expected-failure regressions, bind displayed annulus values to table rows and use the shared stylesheet.",
+    "date": "2026-11-06",
+    "revision": "C"
   }
 ]

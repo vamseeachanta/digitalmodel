@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -198,12 +199,73 @@ def test_unqualified_capacity_is_not_presented_as_validated(tmp_path):
     assert page.index("Revision history") < summary_end
     for text in ("23*pi/4", "6095*pi/64", "6095*pi/384", "sqrt(265)/4"):
         assert text in page
-    for key, row in data["annulus"].items():
-        assert f'{row["value"]:.1f}' in page
+    rows = AnnulusTable(page).rows
+    assert len(rows) == len(data["annulus"])
+    assert {row[0]: row[2] for row in rows} == {
+        key: f'{row["value"]:.1f}' for key, row in data["annulus"].items()
+    }
     for item in build.SOURCES:
         assert item in page
     assert ("/" + "home/") not in page and ("/" + "mnt/") not in page
     assert data == build.calculate(tmp_path / "second-scratch")
+
+
+class AnnulusTable(HTMLParser):
+    """Collect cells only from the table headed by the annulus properties."""
+
+    def __init__(self, page):
+        super().__init__()
+        self.rows = []
+        self.table = []
+        self.row = []
+        self.cell = None
+        self.feed(page)
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "table":
+            self.table = []
+        elif tag == "tr":
+            self.row = []
+        elif tag in ("td", "th"):
+            self.cell = ""
+
+    def handle_data(self, data):
+        if self.cell is not None:
+            self.cell += data
+
+    def handle_endtag(self, tag):
+        if tag in ("td", "th") and self.cell is not None:
+            self.row.append(self.cell.strip())
+            self.cell = None
+        elif tag == "tr":
+            self.table.append(self.row)
+        elif tag == "table" and self.table and self.table[0] == [
+            "Property", "Independent exact expression", "Computed value", "Unit", "Sources"
+        ]:
+            self.rows.extend(self.table[1:])
+
+
+def test_report_uses_shared_style_and_discloses_candidate_defects(tmp_path):
+    page = builder().render(tmp_path / "scratch")
+    assert '<body class="hs-doc">' in page
+    assert 'href="../../../api/_assets/brand.css"' in page
+    assert "Candidate defects were found and left unchanged" in page
+    assert "test_tension_interaction_reduces_to_axial_tension" in page
+    assert "test_empty_model_does_not_pass" in page
+
+
+def test_only_named_report_deliverables_are_trackable():
+    extra = "docs/reports/modules/jacket_topside/unretained-output.json"
+    result = subprocess.run(
+        ["git", "check-ignore", "--no-index", "-q", extra], cwd=ROOT, check=False,
+    )
+    assert result.returncode == 0
+    for path in [*(REPORT / name for name in DELIVERABLES), SCRIPT]:
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", "-q", str(path.relative_to(ROOT))],
+            cwd=ROOT, check=False,
+        )
+        assert result.returncode == 1
 
 
 def run_cli(directory):
@@ -272,5 +334,7 @@ def test_display_tracks_computed_results(tmp_path, monkeypatch):
 
     monkeypatch.setattr(build, "calculate", changed)
     page = build.render(tmp_path / "scratch")
-    assert "1234.5" in page
+    assert {row[0]: row[2] for row in AnnulusTable(page).rows}[
+        "cross_sectional_area"
+    ] == "1234.5"
     assert payload(page)["annulus"]["cross_sectional_area"]["value"] == 1234.5

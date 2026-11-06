@@ -25,6 +25,11 @@ CHANGES = [{
     "date": "2026-10-28",
     "change": "Expose escaped calculation JSON and format wall thicknesses "
               "to three decimals while retaining finer input precision.",
+}, {
+    "revision": "C",
+    "date": "2026-11-06",
+    "change": "Disclose candidate defects with strict expected-failure regressions, "
+              "bind displayed annulus values to table rows and use the shared stylesheet.",
 }]
 SOURCE_ITEMS = [
     ("src/digitalmodel/structural/jacket_topside/docs/worked-tubular-section-geometry.md",
@@ -57,6 +62,8 @@ SOURCE_ITEMS = [
      "Existing corrosion arithmetic, escalation, strict JSON and campaign tests."),
     ("src/digitalmodel/structural/jacket_topside/__init__.py",
      "Public exports of member and joint data structures and functions."),
+    ("docs/api/_assets/brand.css",
+     "Canonical shared palette and document styling; linked by the report."),
 ]
 SOURCES = [path for path, _ in SOURCE_ITEMS]
 
@@ -296,16 +303,17 @@ def render(scratch):
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jacket and topside module analysis</title>
+<link rel="stylesheet" href="../../../api/_assets/brand.css">
 <style>
-:root {{color-scheme:light; font-family:system-ui,sans-serif; color:#172b46; background:#f3f6fa}}
-body {{margin:0}} main {{max-width:1100px; margin:auto; padding:2rem; background:white}}
-h1,h2,h3 {{line-height:1.3}} p,li {{line-height:1.6}} h2 {{border-bottom:2px solid #bfd4e7; padding-bottom:.5rem}}
+:root {{color-scheme:light; font-family:system-ui,sans-serif}}
+body {{margin:0}} main {{max-width:1100px; margin:auto; padding:2rem; background:var(--panel)}}
+h1,h2,h3 {{line-height:1.3}} p,li {{line-height:1.6}} h2 {{border-bottom:2px solid var(--edge); padding-bottom:.5rem}}
 table {{border-collapse:collapse; width:100%; margin:1rem 0; font-size:.9rem}}
-th,td {{text-align:left; border:1px solid #bfd4e7; padding:.6rem; overflow-wrap:anywhere}}
-th {{background:#eaf1f8}} code {{overflow-wrap:anywhere}} .notice,details {{padding:1rem; background:#eaf1f8}}
-.scroll {{overflow-x:auto}} a {{color:#134c7d}} li {{margin-bottom:.7rem}}
+th,td {{text-align:left; border:1px solid var(--edge); padding:.6rem; overflow-wrap:anywhere}}
+th {{background:var(--panel-2)}} code {{overflow-wrap:anywhere}} .notice,details {{padding:1rem; background:var(--panel-2)}}
+.scroll {{overflow-x:auto}} a {{color:var(--brand)}} li {{margin-bottom:.7rem}}
 @media(max-width:600px) {{main {{padding:1rem}} table {{font-size:.8rem}}}}
-</style></head><body><main>
+</style></head><body class="hs-doc"><main>
 <header><h1>Jacket and topside module analysis</h1>
 <p>Structural tubular geometry, software limits and evidence required for capacity assessment.</p></header>
 <h2 id="s1">1. Executive Summary</h2>
@@ -372,15 +380,20 @@ unrounded values for reproducible comparisons. No nonzero capacity result is pre
 <h2 id="s6">6. Key Findings</h2>
 <p>Annulus properties and single-brace ratios have a transparent independent basis. A zero result at zero
 demand demonstrates arithmetic only; it cannot distinguish a correct allowable from any other positive allowable [1, 9].</p>
-<p>Review found no local correctness defect supported by the present independent cases. Production equations
-are preserved. Method limitations are recorded rather than converted into a standards-equation rewrite [3–7].</p>
+<p>Candidate defects were found and left unchanged: tension interaction uses compression buckling capacity,
+and an empty workflow reports PASS. Strict expected-failure regressions record both behaviours [9].
+Production equations are preserved pending independent nonzero qualification and intended-behaviour review [3, 5].</p>
 <h2 id="s7">7. Limitations and Not Covered</h2>
 <p><strong>Simplified bending treatment:</strong> the bending helper returns a fixed fraction of supplied yield
 strength without applying a diameter-to-wall branch. Its docstring discusses compactness but that discussion
 does not establish the implemented range. Nonzero bending capacity and interactions remain NOT_EVALUATED [3].</p>
 <p>The combined check calculates a compression-based interaction regardless of the tension flag; the flag
 selects only the standalone axial check in the orchestrator. Nonzero tension interaction therefore needs
-an independent basis and explicit intended-behaviour review [3].</p>
+an independent basis and explicit intended-behaviour review [3]. The strict regression
+<code>test_tension_interaction_reduces_to_axial_tension</code> in [9] fails because a pure-tension
+combined result differs from its standalone tension result; follow-up remains under #3307.</p>
+<p>The strict regression <code>test_empty_model_does_not_pass</code> in [9] fails because no member
+or joint checks still yield PASS. This candidate defect also remains under #3307.</p>
 <p>Joint classification is geometric and simplified. The chord-load factor description and implemented
 reduction differ in their stated dependencies. The applied shear routine and geometry-factor comments also
 need a reconciled angle convention. The perpendicular zero-demand case cannot resolve these questions [4].
