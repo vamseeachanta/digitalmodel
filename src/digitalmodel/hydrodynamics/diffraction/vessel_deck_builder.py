@@ -362,12 +362,17 @@ def build_deck(
     # it is for direct opening in OrcaWave.
     spec_path = spec.to_yaml(deck_dir / "spec.yml")
     spec._source_dir = deck_dir.resolve()
-    preflight_reports = []
     if mesh_kind == "placeholder":
         # Keep the canonical spec for completing the missing geometry. The
         # intended native deck path is returned but no unverified deck is written.
         deck_path = deck_dir / f"{deck_name}.yml"
         notes.append("native deck not generated: supply and verify the missing mesh")
+        preflight_reports = [{
+            "check": "DF2",
+            "body": spec.vessel.name,
+            "status": "NOT_EVALUATED",
+            "reason": "placeholder mesh; no native deck generated",
+        }]
     else:
         backend = OrcaWaveBackend()
         deck_path = backend.generate_single(spec, deck_dir)

@@ -92,6 +92,12 @@ def test_build_deck_placeholder_for_semisub(tmp_path):
     assert any("native deck not generated" in note for note in res.notes)
     man = json.loads((res.deck_path.parent / "manifest.json").read_text(encoding="utf-8"))
     assert man["deck"] is None
+    assert man["preflight_reports"] == [{
+        "check": "DF2",
+        "body": DiffractionSpec.from_yaml(res.spec_path).vessel.name,
+        "status": "NOT_EVALUATED",
+        "reason": "placeholder mesh; no native deck generated",
+    }]
     assert man["mesh"]["file"] == PLACEHOLDER_MESH
     assert not (res.deck_path.parent / MESH_FILE).exists()
 
@@ -109,6 +115,12 @@ def test_placeholder_manifest_does_not_advertise_stale_deck(tmp_path):
         (result.spec_path.parent / "manifest.json").read_text(encoding="utf-8")
     )
     assert manifest["deck"] is None
+    assert manifest["preflight_reports"] == [{
+        "check": "DF2",
+        "body": DiffractionSpec.from_yaml(result.spec_path).vessel.name,
+        "status": "NOT_EVALUATED",
+        "reason": "placeholder mesh; no native deck generated",
+    }]
     assert result.mesh_kind == "placeholder"
     assert any("native deck not generated" in note for note in result.notes)
     assert result.deck_path == old_deck

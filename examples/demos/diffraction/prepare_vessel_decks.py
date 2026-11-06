@@ -8,8 +8,9 @@
 
 Builds a representative cross-scope set of OrcaWave diffraction decks from the
 vessel database — one per hull form (FPSO, drillship, tanker, semisub, monohull
-crane vessel). Each deck = a parametric hull GDF (swappable) + an OrcaWave .yml
-+ a manifest. Run the solver on a licensed OrcaWave/AQWA machine.
+crane vessel). Generated decks contain a parametric hull GDF (swappable), an
+OrcaWave .yml and a manifest. Placeholder forms retain the specification and
+manifest only. Run the solver on a licensed OrcaWave/AQWA machine.
 
 Usage:
     cd digitalmodel
@@ -119,18 +120,20 @@ def main() -> None:
                 "vessel": res.vessel,
                 "form": res.form,
                 "deck_dir": res.deck_path.parent.name,
-                "deck": res.deck_path.name,
+                "deck": None if res.mesh_kind == "placeholder" else res.deck_path.name,
                 "mesh_kind": res.mesh_kind,
                 "n_panels": res.n_panels,
                 "mass_basis": res.mass_basis,
             }
         )
-    (args.out / "index.json").write_text(json.dumps(index, indent=2))
+    (args.out / "index.json").write_text(
+        json.dumps(index, indent=2), encoding="utf-8", newline="\n"
+    )
     print("-" * 78)
-    print(f"  {len(index)} decks written under {args.out}/  (index.json)")
+    print(f"  {len(index)} preparation records written under {args.out.as_posix()}/  (index.json)")
     print(
-        "  Run each <vessel>.yml on a licensed OrcaWave machine; swap hull.gdf for a "
-        "faired mesh\n  to upgrade from first-pass screening to design-grade."
+        "  Run only non-null deck entries in index.json on a licensed OrcaWave machine; "
+        "placeholder records require a supplied and verified mesh before generation."
     )
 
 
