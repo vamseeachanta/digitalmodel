@@ -6,6 +6,7 @@ standard → edition → module(s) → tests. The reference strings are defined 
 strength/FFS results carry as `code_reference` (issue #1092). This register is
 kept in sync with `codes.REGISTER` by
 `tests/asset_integrity/test_codes_register.py`.
+Citation-only entries are marked explicitly and are not stamped on results.
 
 > Kept current: when you add a `CodeReference` to `codes.py`, add its row here —
 > the consistency test fails otherwise.
@@ -15,9 +16,15 @@ kept in sync with `codes.REGISTER` by
 | Standard | Edition | Module(s) | Tests |
 |---|---|---|---|
 | ASME B31G | 2012 | `asset_integrity/corroded_pipe.py` | `test_corroded_pipe`, `test_code_provenance` |
-| DNV-RP-F101 | 2021 | `asset_integrity/dnv_rp_f101.py` | `test_dnv_rp_f101` |
+| DNV-RP-F101 | January 2015 | `asset_integrity/dnv_rp_f101.py` | `test_dnv_rp_f101` |
 | API 579-1/ASME FFS-1 | 2021 | `asset_integrity/assessment/*`, `structural_analysis/plate_metal_loss_ffs.py` | `test_ffs_*`, `test_code_provenance` |
 | BS 7910 | 2019 | `asset_integrity/common/fad.py` | `test_ffs_assessment` |
+| ASME B31.8 | 2022 | Citation record for `asset_integrity/assessment/level1_screener.py` (`ASME_B31_8_SCREENING`); not stamped on any result | `test_pipeline_ffs_assessment` |
+
+The B31.8 screening reference records the Level 1 implementation citation only;
+edition-matched standards qualification remains unestablished. It is not stamped
+on any result and does not change the shared design reference used by
+wall-thickness and dent assessments.
 
 ## Buckling / plated structures
 
@@ -39,7 +46,14 @@ kept in sync with `codes.REGISTER` by
 | PD 8010-2 | 2015 | `.../wall_thickness_codes/pd_8010_2.py` | `test_wall_thickness_codes` |
 | ISO 13623 | 2017 | `.../wall_thickness_codes/iso_13623.py` | `test_wall_thickness_codes` |
 | ASME B31.4 | 2019 | `.../wall_thickness_codes/asme_b31_4.py` | `test_wall_thickness_codes` |
-| ASME B31.8 | 2020 | `.../wall_thickness_codes/asme_b31_8.py` | `test_wall_thickness_codes` |
+| ASME B31.8 | 2020 | `.../wall_thickness_codes/asme_b31_8.py`, `asset_integrity/dent_assessment.py` (`ASME_B31_8`) | `test_wall_thickness_codes`, `test_code_provenance` |
+
+The shared B31.8 design label retains its existing 2020 value; its implemented
+edition remains unresolved. The wall-thickness strategy does not cite an
+edition. The wall-thickness explorer JSON and HTML are deliberately excluded
+from regeneration: both already carry this retained label, and no factor or
+numerical result changes. The provenance regression checks their B31.8 labels
+against an actual wall-thickness result and checks the dent citation separately.
 
 ### Riser label evidence and unresolved editions
 

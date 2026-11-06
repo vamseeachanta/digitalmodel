@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Engineering code references (standard + edition) carried in strength
 # ABOUTME: results so every capacity / FFS verdict states its governing code.
 """Governing-code references for strength and fitness-for-service methods.
@@ -6,8 +9,8 @@ Each strength/capacity result carries a ``code_reference`` string (the
 :attr:`CodeReference.label`) so the user or inspector sees the governing code and
 edition in the returned object — not only in the docstring.  This module is the
 single source of truth for those references; the codes register (issue #1093)
-enumerates the same objects so the documentation cannot drift from what the code
-actually stamps on results.
+enumerates the same objects. Citation-only entries are identified below and do
+not imply that a result carries their label.
 """
 from __future__ import annotations
 
@@ -43,12 +46,20 @@ class CodeReference:
 ASME_B31G = CodeReference(
     "ASME B31G", "2012",
     "Manual for Determining the Remaining Strength of Corroded Pipelines")
+# Basis: asset_integrity/dnv_rp_f101.py cites the January 2015 edition.
 DNV_RP_F101 = CodeReference(
-    "DNV-RP-F101", "2021", "Corroded Pipelines")
+    "DNV-RP-F101", "January 2015", "Corroded Pipelines")
 
 # ---------------------------------------------------------------------------
 # Fitness-for-service
 # ---------------------------------------------------------------------------
+# Basis: asset_integrity/assessment/level1_screener.py cites B31.8-2022.
+# Citation record only; not stamped on any result.
+# Kept separate from the existing wall-thickness and dent reference below.
+ASME_B31_8_SCREENING = CodeReference(
+    "ASME B31.8", "2022", "Gas Transmission Piping")
+# Basis: asset_integrity/assessment/level2_engine.py cites 2021.
+# This records the implementation citation, not edition-matched qualification.
 API_579 = CodeReference(
     "API 579-1/ASME FFS-1", "2021", "Fitness-For-Service")
 BS_7910 = CodeReference(
@@ -80,6 +91,7 @@ PD_8010_2 = CodeReference(
 ISO_13623 = CodeReference("ISO 13623", "2017", "Pipeline transportation systems")
 ASME_B31_4 = CodeReference(
     "ASME B31.4", "2019", "Pipeline Transportation Systems for Liquids")
+# Retain the existing design label; edition-matched qualification is unresolved.
 ASME_B31_8 = CodeReference("ASME B31.8", "2020", "Gas Transmission Piping")
 
 # ---------------------------------------------------------------------------

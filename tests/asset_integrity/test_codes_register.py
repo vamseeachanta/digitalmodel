@@ -1,5 +1,7 @@
 # ABOUTME: Keeps docs/domains/codes-register.md in sync with codes.REGISTER —
 # ABOUTME: every registered CodeReference standard must be documented.
+import io
+import tokenize
 from pathlib import Path
 
 from digitalmodel import codes
@@ -27,6 +29,24 @@ def test_register_is_nonempty_and_well_formed():
     assert codes.REGISTER
     assert all(isinstance(r, codes.CodeReference) for r in codes.REGISTER.values())
     assert all(r.standard for r in codes.REGISTER.values())
+
+
+def test_b318_screening_reference_remains_citation_only():
+    root = Path(__file__).resolve().parents[2]
+    package = root / "src" / "digitalmodel" / "asset_integrity"
+    assert (package / "assessment" / "level1_screener.py").is_file()
+    uses = []
+    for source in sorted(package.rglob("*.py")):
+        tokens = tokenize.generate_tokens(
+            io.StringIO(source.read_text(encoding="utf-8")).readline
+        )
+        uses.extend(
+            f"{source.relative_to(root)}:{token.start[0]}"
+            for token in tokens
+            if token.type == tokenize.NAME
+            and token.string == "ASME_B31_8_SCREENING"
+        )
+    assert not uses, f"Citation-only screening reference used by FFS code: {uses}"
 
 
 def test_session_codes_present():

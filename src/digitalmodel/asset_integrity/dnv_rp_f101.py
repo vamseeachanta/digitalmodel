@@ -47,7 +47,7 @@ metal-loss area over the total combined length (gaps included), not the maximum
 depth — and is then assessed as a single defect.
 
 Units are US customary throughout: lengths in inches, stresses and pressures in
-psi.  All formula constants follow DNV-RP-F101 (2015/2017) Sections 2 (PSF) and
+psi.  All formula constants follow DNV-RP-F101 (January 2015) Sections 2 (PSF) and
 3 (allowable-stress).  The default factors below are documented at their point
 of use; callers may override every factor.
 
