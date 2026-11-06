@@ -16,6 +16,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from digitalmodel import codes
 from digitalmodel.asset_integrity.pipeline_defect_screen import assess
 from digitalmodel.asset_integrity.assessment.ffs_coordinator import (
     FFSComponent, assess_component,
@@ -697,6 +698,28 @@ def test_summary_and_findings_follow_governing_criteria(tmp_path):
     assert "strength alone does not resolve measurement adequacy" in undersampled
     history = page.split('<div id="revision-history">')[1].split('</div>')[0]
     assert history.index('<caption>') < history.index('<thead>')
+
+
+@pytest.mark.parametrize("reference, edition", [
+    (codes.DNV_RP_F101, "January 2015"),
+    (codes.ASME_B31_8, "2022"),
+    (codes.API_579, "2021"),
+], ids=["dnv-rp-f101", "asme-b31-8", "api-579"])
+def test_workflow_code_editions_match_citations(tmp_path, reference, edition):
+    """Result labels, method sources and published citations share one basis."""
+    assert reference.edition == edition
+    assumptions = builder.load_yaml(ROOT / builder.WORKFLOW / "assumptions.yml")
+    pattern = rf"{re.escape(reference.standard)}, [^,\n]+, ([^;.\n<]+)"
+    assert re.findall(pattern, "\n".join(assumptions["method_sources"])) == [edition]
+    fresh = builder.build(ROOT, tmp_path)[0]
+    for report in (fresh, ROOT / PUBLISHED_REPORT,
+                   ROOT / "docs/reports/pipeline-ffs-assessment.html"):
+        page = report.read_text(encoding="utf-8")
+        references = page.split('<section id="section-9">')[1].split('</section>')[0]
+        assert re.findall(pattern, references) == [edition], report
+    register = (ROOT / "docs/domains/codes-register.md").read_text(encoding="utf-8")
+    row = rf"^\| {re.escape(reference.standard)} \| ([^|]+) \|"
+    assert [value.strip() for value in re.findall(row, register, re.MULTILINE)] == [edition]
 
 
 def test_dnv_reference_matches_documented_engine_basis(tmp_path):
