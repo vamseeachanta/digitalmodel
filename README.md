@@ -84,12 +84,53 @@ Other Linux distros / macOS / Windows: install equivalents of those packages or 
 pip install digitalmodel
 ```
 
-Requires Python 3.10+. See [pyproject.toml](pyproject.toml) for full dependency list.
+Requires Python 3.11+. See [pyproject.toml](pyproject.toml) for full dependency list.
+
+### Install from a public checkout
+
+From the repository root, install with public PyPI dependencies; no sibling
+repository is required:
+
+```bash
+uv venv --python 3.11
+uv pip install .
+```
+
+Python 3.11 is the reproduction target; the CI matrices cover 3.11 and 3.12.
+The declared minimum is 3.11, not a guarantee of wheels for every newer Python
+version (the current pinned dependency set fails to install on 3.14).
+
+Developers working on both packages can opt into the editable sibling **after**
+installing digitalmodel:
+
+```bash
+uv pip install -e ../assetutilities
+```
+
+This override applies to the current environment. A later `uv sync` will restore
+the public dependency selected by the project.
+
+### Reproduce the cathodic-protection edition study
+
+From a public checkout, one command installs digitalmodel in a uv-managed
+environment and runs the newsletter's F103 comparison:
+
+```bash
+uv run --no-project --python 3.11 --with . python examples/cathodic_protection/run_edition_study.py
+```
+
+The script holds the public 1,500 m pipeline inputs fixed and prints and checks
+**9 anodes (2010) versus 34 (2019)**, including mean current and required mass.
+It uses the package's cited tables; no downloaded standards or ecosystem setup
+is required. See the [edition selection and study basis](src/digitalmodel/cathodic_protection/README.md#edition-study)
+for inputs, allowed edition values and defaults. The post-clone skill setup
+below is optional development tooling and is not required for installation or
+this study.
 
 ### Post-clone skill pointers
 
 After cloning, run this one-time setup from the repository root. It requires
-Bash, Python 3.10+ and a `workspace-hub` sibling with the
+Bash, Python 3.11+ and a `workspace-hub` sibling with the
 `.claude/skills/_internal/{guidelines,meta,workflows}` directories:
 
 ```bash
