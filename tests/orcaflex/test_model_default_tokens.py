@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 
@@ -306,8 +309,9 @@ BASE_MODEL_VALUES = {
         'b0e67395c5cd39d96da189a9d6d41cfb58a290faccebb3b79cdbfd10a7d9d629',
     'tests/solvers/fea/test_data/mooring/C06 Discretised CALM buoy.yml':
         '663ee20b4d720aa4b1dd9292263f3bf3b3bc1ecf507e0baed460fa214db44784',
+    # The committed name-only cleanup retains all numerical model values.
     'tests/solvers/fea/test_data/pipelay/WD_30m.yml':
-        'f2d8370ac36c85294d1b405eec3dd991f852c1b08d73cf775d63754a38ee42fb',
+        '4bb90db84993ea3aae858426c95df484bd9e236c7ab4e8167f605f66ac11d8dd',
 }
 
 

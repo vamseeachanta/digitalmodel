@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Knowledge-pack audit: named package checks and explicit missing prerequisites."""
 import importlib
 import re
@@ -123,7 +126,7 @@ def test_pack_line_anchors_resolve_at_head():
 
 @pytest.mark.parametrize("symptom,symbol", [
     ("Unrecognized status has empty styling", "_status_span"),
-    ("Any builder incompatibility silently selects fallback HTML", "render_html"),
+    ("Builder incompatibility selects explicitly marked fallback HTML", "render_html"),
 ])
 def test_report_behavior_anchors_start_at_named_function(symptom, symbol):
     pack = (PACKAGE / "docs/agent-pack.md").read_text()
@@ -137,7 +140,7 @@ def test_report_behavior_anchors_start_at_named_function(symptom, symbol):
     assert f"`{symbol}`" in row
     if symbol == "render_html":
         assert "        except Exception:" in cited
-        assert "    return _render_fallback_html(d, sections, timestamp)" in cited
+        assert "    return _render_fallback_html(d, sections, timestamp) + marker" in cited
 
 
 def test_report_source_discovery_covers_whole_file():

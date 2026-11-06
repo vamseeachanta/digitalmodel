@@ -283,3 +283,105 @@ def test_example_input_yaml_parses_and_runs(tmp_path):
     out = router(cfg)
     cd = out["dual_gradient"]["result"]["casing_design"]
     assert cd["dual_gradient"]["n_strings"] < cd["conventional"]["n_strings"]
+
+
+# Hydrostatic reference: SLB Energy Glossary, "hydrostatic pressure",
+# drilling definition (undated web edition, accessed 2026-10-22):
+# https://glossary.slb.com/en/terms/h/hydrostatic_pressure
+# The opened source states 0.052 psi/(ppg*ft). All other values below are
+# specified synthetic inputs or arithmetic, not seawater/operating defaults.
+def _hand_window():
+    return DrillingWindow.from_gradients(
+        top_depth_ft=2_000.0, bottom_depth_ft=4_000.0,
+        pore_top_ppg=10.0, pore_bottom_ppg=12.0,
+        fracture_top_ppg=14.0, fracture_bottom_ppg=18.0,
+    )
+
+
+@pytest.mark.parametrize(
+    "depth, pore, fracture",
+    [(1_000, 10.0, 14.0), (2_000, 10.0, 14.0), (2_500, 10.5, 15.0),
+     (3_000, 11.0, 16.0), (4_000, 12.0, 18.0), (5_000, 12.0, 18.0)],
+)
+def test_window_hand_interpolation_and_endpoint_clamping(depth, pore, fracture):
+    """Linear interpolation is defined by fractional distance between points.
+
+    At 2500 ft, fraction = 500/2000 = 1/4: pore = 10 + 2/4 = 10.5 ppg;
+    fracture = 14 + 4/4 = 15 ppg. Midpoint values are 11 and 16 ppg.
+    Outside [2000, 4000] the endpoint is held, rather than extrapolated.
+    These dyadic hand values are exact; relative 1e-12 allows roundoff.
+    """
+    window = _hand_window()
+    assert window.td_ft == 4_000.0
+    assert window.pore_at(depth) == pytest.approx(pore, rel=1e-12)
+    assert window.fracture_at(depth) == pytest.approx(fracture, rel=1e-12)
+
+
+def _hand_screen():
+    return DualGradientScreen(
+        water_depth_ft=1_000.0, air_gap_ft=0.0, seawater_emw_ppg=8.0,
+        window=_hand_window(), kick_margin_ppg=0.5, fracture_margin_ppg=1.0,
+    )
+
+
+def test_pressure_point_from_two_hand_hydrostatic_columns():
+    """SLB conversion: conventional 16*2000*0.052 = 1664 psi.
+
+    Dual: upper 8*1000*0.052 = 416 psi, lower 16*1000*0.052 = 832 psi;
+    sum = 1248 psi, EMW = 1248/(2000*0.052) = 12 ppg.
+    Relative 1e-12 checks arithmetic using the published rounded conversion;
+    it does not compare against a higher-precision SI conversion.
+    """
+    screen = _hand_screen()
+    point = screen.pressure_point(2_000.0, 16.0).as_dict()
+    assert point == pytest.approx({
+        "depth_ft": 2_000.0, "pore_emw_ppg": 10.0, "fracture_emw_ppg": 14.0,
+        "emw_conventional_ppg": 16.0, "emw_dual_gradient_ppg": 12.0,
+        "bhp_conventional_psi": 1_664.0, "bhp_dual_gradient_psi": 1_248.0,
+    }, rel=1e-12)
+    assert screen.bhp_conventional(2_000, 16) == pytest.approx(1_664, rel=1e-12)
+    assert screen.bhp_dual_gradient(1_000, 16) == pytest.approx(416, rel=1e-12)
+
+
+def test_mud_weight_bounds_from_hand_pressure_balance():
+    """At 2000 ft the admissible EMW band is [10+.5, 14-1] = [10.5,13].
+
+    Upper-column density is specified as 8 ppg over half the depth.
+    Thus lower MW = 2*EMW - 8: bounds [13,18], width 5 ppg.
+    Conventional width = 13 - 10.5 = 2.5 ppg. Relative 1e-12 allows roundoff.
+    """
+    screen = _hand_screen()
+    assert screen.mud_weight_bounds("conventional", 2_000) == pytest.approx(
+        (10.5, 13.0), rel=1e-12,
+    )
+    assert screen.mud_weight_bounds("dual_gradient", 2_000) == pytest.approx(
+        (13.0, 18.0), rel=1e-12,
+    )
+    assert screen.available_window_ppg("conventional", 2_000) == pytest.approx(
+        2.5, rel=1e-12,
+    )
+    assert screen.available_window_ppg("dual_gradient", 2_000) == pytest.approx(
+        5.0, rel=1e-12,
+    )
+
+
+@pytest.mark.parametrize(
+    "mud, after, margin, dead", [(16.0, 12.0, 2.0, True),
+                                  (12.0, 10.0, 0.0, True),
+                                  (8.0, 8.0, -2.0, False)],
+)
+def test_riser_margin_fields_against_hand_density_balance(mud, after, margin, dead):
+    """Equal-length columns give EMW = (8 + mud)/2, margin = EMW - 10.
+
+    At mud 16, 12 and 8 ppg, after-loss EMW is 12, 10 and 8 ppg,
+    respectively; margins are +2, 0 and -2 ppg. Relative 1e-12 allows roundoff.
+    This checks the implemented static pore-pressure criterion only.
+    """
+    result = _hand_screen().riser_margin(mud, 2_000.0)
+    assert result.depth_ft == 2_000.0
+    assert result.mud_weight_ppg == mud
+    assert result.pore_emw_ppg == 10.0
+    assert result.emw_after_riser_loss_ppg == pytest.approx(after, rel=1e-12)
+    assert result.margin_ppg == pytest.approx(margin, rel=1e-12, abs=1e-12)
+    assert result.well_dead_after_loss is dead
+    assert result.as_dict()["margin_ppg"] == pytest.approx(margin, abs=1e-12)

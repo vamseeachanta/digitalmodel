@@ -379,12 +379,22 @@ class EnvironmentBuilder(BaseBuilder):
             train: Wave properties after spec overlays, or an extra raw train.
 
         Returns:
-            Existing values with selectors and gamma first, an explicit JONSWAP
-            selector when needed, and the remaining order retained.
+            Active gamma with selectors first, an explicit JONSWAP selector
+            when needed, and the remaining values and order retained.
         """
-        if (train.get("WaveType") in ("JONSWAP", "jonswap")
-                and "WaveGamma" in train and "WaveJONSWAPParameters" not in train):
-            train = dict(train, WaveJONSWAPParameters="Partially specified")
+        if train.get("WaveType") in ("JONSWAP", "jonswap"):
+            if train.get("WaveJONSWAPParameters") == "Automatic":
+                # Automatic parameters calculate gamma; inactive data cannot
+                # be assigned in text files. Filter a copy, including for extra
+                # raw trains, so later selector edits retain the source gamma.
+                # Orcina public help, online edition accessed 2026-10-19:
+                # Environment: Data for JONSWAP and ISSC spectra, spectral parameters
+                # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Environment%2CDataforJONSWAPandISSCspectra.htm
+                # Text data files, Ordering issues
+                # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Textdatafiles.htm
+                train = {key: value for key, value in train.items() if key != "WaveGamma"}
+            elif "WaveGamma" in train and "WaveJONSWAPParameters" not in train:
+                train = dict(train, WaveJONSWAPParameters="Partially specified")
         selectors = ("Name", "WaveType", "WaveJONSWAPParameters", "WaveGamma")
         ordered = {key: train[key] for key in selectors if key in train}
         ordered.update((key, value) for key, value in train.items() if key not in ordered)

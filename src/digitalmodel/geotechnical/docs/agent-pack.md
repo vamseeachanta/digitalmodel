@@ -11,9 +11,34 @@
 | Quality role | Engineering calculations quality manager |
 | Status | DRAFT; independent clearance pending |
 
+
+## Current scour qualification
+
+The current scour API replaces the former unqualified depth curves with explicit
+`NOT_EVALUATED` results. The pre-change scour entries in the dated audit tables
+below are historical observations, superseded by this section. No measured scour
+validation is established. See [the screening analysis and worked example](../../../../docs/domains/geotechnical-scour-screening.html).
+
+- `critical_current_velocity` uses FHWA-RD-03-052 (2005), chapter 5, equation 3
+  in SI. Grain diameter and water depth affect the threshold; a qualified
+  critical Shields parameter is required. `critical_sediment_motion` remains
+  a separate USACE stress/shear-velocity conversion.
+- Pipeline and monopile nonzero depths are `None`, with status and missing-basis
+  reasons. Zero-flow results are distinguished from missing calculations.
+- Armour compares its dimensionless velocity number with a supplied upper limit;
+  gravity, limit and nominal layer count have no defaults. A passing comparison
+  does not qualify the full protection design.
+- DNV-RP-F107 is not claimed as the governing scour calculation reference.
+  DNV-RP-0618 (2022), Rock scour protection for monopiles, is relevant to protection
+  design, but its licensed calculation clauses remain unverified.
+- Independent hand calculations, finite-input guards and direct workflow JSON
+  readback are exercised in `tests/geotechnical/test_scour_basis.py`. The engine
+  registry integration requires the runtime dependencies declared by the package.
+
+
 ## 1. Purpose and scope
 
-The package computes axial pile resistance in clay and sand, drag-anchor holding, suction-caisson resistance, pipeline and monopile scour, rock-armour thickness, shallow-foundation bearing/sliding resistance and liquefaction-triggering screening. [src/digitalmodel/geotechnical/piles.py:L107-L302] [src/digitalmodel/geotechnical/anchors.py:L61-L163] [src/digitalmodel/geotechnical/scour.py:L53-L224] [src/digitalmodel/geotechnical/mudmat.py:L96-L226] [src/digitalmodel/geotechnical/liquefaction.py:L101-L156]
+The package computes axial pile resistance in clay and sand, drag-anchor holding, suction-caisson resistance, pipeline and monopile sediment-motion screening and supplied-limit armour comparison (depth NOT_EVALUATED), shallow-foundation bearing/sliding resistance and liquefaction-triggering screening. [src/digitalmodel/geotechnical/piles.py:L107-L302] [src/digitalmodel/geotechnical/anchors.py:L61-L163] [src/digitalmodel/geotechnical/scour.py] [src/digitalmodel/geotechnical/mudmat.py:L96-L226] [src/digitalmodel/geotechnical/liquefaction.py:L101-L156]
 
 The database loader preserves printed source records, qualifiers, units and explicit reasons for unavailable numeric conversions; it does not select soil properties for a design. [src/digitalmodel/geotechnical/database.py:L69-L121] [src/digitalmodel/geotechnical/database.py:L154-L171]
 

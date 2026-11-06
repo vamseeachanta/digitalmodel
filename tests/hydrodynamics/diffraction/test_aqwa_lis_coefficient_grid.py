@@ -8,12 +8,16 @@ downstream converter padded the difference with zero matrices -- a hydrodynamic
 database reporting zero added mass and zero radiation damping above the twelfth
 frequency, returned as a complete result.
 
-Measured on a listing shipped in this repository: 43 frequencies against 10
-coefficient matrices.
+Measured on a multibody project listing: 43 frequencies against 10
+coefficient matrices. A synthetic listing with the same 43-frequency grid
+reproduces the check publicly. The project listing is kept out of this public
+repository; set DM_AQWA_MULTIBODY_LIS to its path to also run the tests that
+use it, otherwise they are skipped.
 """
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -23,14 +27,15 @@ from digitalmodel.hydrodynamics.diffraction.aqwa_lis_parser import (
 )
 
 REPO = Path(__file__).resolve().parents[3]
-MULTIBODY = (REPO / "docs" / "domains" / "orcaflex" / "aqwa" / "to_orcaflex"
-             / "multibody_test1" / "input"
-             / "AL_FST2F_FST1F_HWL_ANS2019R1.LIS")
+# Private project data: absent unless DM_AQWA_MULTIBODY_LIS points at it.
+_MULTIBODY_ENV = os.environ.get("DM_AQWA_MULTIBODY_LIS", "")
+MULTIBODY = Path(_MULTIBODY_ENV) if _MULTIBODY_ENV else None
 SHIP = (REPO / "docs" / "domains" / "aqwa" / "examples" / "03_dat"
         / "001_ship_raos" / "001_SHIP_RAOS.LIS")
 
 multibody_only = pytest.mark.skipif(
-    not MULTIBODY.exists(), reason="multibody listing absent")
+    not (MULTIBODY and MULTIBODY.is_file()),
+    reason="private multibody listing absent (set DM_AQWA_MULTIBODY_LIS)")
 ship_only = pytest.mark.skipif(not SHIP.exists(), reason="ship listing absent")
 
 
@@ -64,6 +69,18 @@ def _synthetic(tmp_path, rows: int):
 
 
 class TestLongGrids:
+    def test_the_grids_agree_on_a_43_frequency_listing(self, tmp_path):
+        """The size of the case that exposed it: 43 frequencies, which the
+        old window cut to about ten coefficient matrices."""
+        p = _synthetic(tmp_path, 43)
+        parser = AQWALISParser(str(p))
+        freqs, _periods = parser.extract_frequencies_and_periods()
+        added = parser.parse_added_mass_table()
+        damping = parser.parse_damping_table()
+        assert len(freqs) == 43
+        assert len(added) == len(freqs)
+        assert len(damping) == len(freqs)
+
     @pytest.mark.parametrize("rows", [8, 13, 40, 60])
     def test_both_tables_return_every_row(self, tmp_path, rows):
         """Twelve rows is roughly what the old 2,000-character window held."""

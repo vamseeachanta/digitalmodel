@@ -741,23 +741,7 @@ class TestValidatePolarData:
 class TestExtractTimeSeriesStats:
     """Tests for the extract_time_series_stats utility function.
 
-    NOTE: The source code uses np.trapz for time_rms, which was removed in
-    numpy >= 2.0 (replaced by np.trapezoid). Under numpy 2.x the try/except
-    in the source silently swallows the AttributeError for each column,
-    resulting in empty stats. Tests that need column stats must suppress
-    RuntimeWarning (from pytest filterwarnings=error) and monkeypatch np.trapz
-    if missing.
     """
-
-    @pytest.fixture(autouse=True)
-    def _patch_trapz(self):
-        """Shim np.trapz to np.trapezoid on numpy >= 2.0 so the source works."""
-        if not hasattr(np, "trapz") and hasattr(np, "trapezoid"):
-            np.trapz = np.trapezoid
-            yield
-            del np.trapz
-        else:
-            yield
 
     def test_basic_stats(self):
         df = _time_series_df(100)

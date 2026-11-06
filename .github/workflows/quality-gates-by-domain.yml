@@ -16,6 +16,8 @@ name: Quality Gates by Domain
 
 "on":
   pull_request:
+    # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: [main, develop]
   workflow_dispatch:
@@ -31,7 +33,7 @@ permissions:
 jobs:
   detect-domains:
     name: Detect touched test domains
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       has-domains: ${{ steps.detect.outputs.has_domains }}
@@ -44,7 +46,77 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -60,7 +132,7 @@ jobs:
         id: detect
         env:
           EVENT_NAME: ${{ github.event_name }}
-          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BASE_SHA: ${{ steps.build_merge.outputs.tip }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PUSH_BEFORE_SHA: ${{ github.event.before }}
           PUSH_AFTER_SHA: ${{ github.event.after }}
@@ -118,10 +190,81 @@ jobs:
   ci-harness-tests:
     name: CI harness and compliance tests
     needs: detect-domains
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -137,11 +280,14 @@ jobs:
         run: |
           uv run --no-sources --with-editable '.[test]' python -m pytest \
             tests/scripts/test_detect_touched_domains.py \
+            tests/scripts/test_select_family_tests.py \
+            tests/scripts/test_reporting_ci_registration.py \
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
             tests/scripts/test_ci_baseline.py \
             tests/scripts/test_run_shard.py \
             tests/contracts/test_flaky_register_schema.py \
+            tests/contracts/test_vba_credit.py \
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
@@ -165,6 +311,76 @@ jobs:
           # Citation checks read source and map revisions recorded in packs;
           # subsea also verifies a manifest pinned to an older commit.
           fetch-depth: 0
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -176,9 +392,23 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Set up Node for source locator formatter
+        if: matrix.domain == 'contracts'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Provision source locator formatter
+        if: matrix.domain == 'contracts'
+        run: |
+          npm install --prefix "$RUNNER_TEMP/source-locators-formatter" \
+            --cache "$RUNNER_TEMP/source-locators-npm-cache" \
+            --no-save --no-package-lock --no-audit --no-fund "prettier@4.0.0-alpha.8"
+          echo "SOURCE_LOCATORS_PRETTIER=$RUNNER_TEMP/source-locators-formatter/node_modules/.bin/prettier" >> "$GITHUB_ENV"
+
       - name: Install Gmsh runtime libraries
         if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+        run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
 
       - name: Create reports directory
         run: mkdir -p reports
@@ -194,7 +424,10 @@ jobs:
 
           with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
               gates = yaml.safe_load(handle)["gates"]
-          print(gates[os.environ["GATE_NAME"]]["command"])
+          command = gates[os.environ["GATE_NAME"]]["command"]
+          if os.environ["GATE_NAME"] == "tests-subsea":
+              command += " tests/riser_fatigue/"
+          print(command)
           PY
           )
           {
@@ -260,7 +493,7 @@ jobs:
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Report scope of this result
         # States what this check actually covered, so a green aggregate cannot be
@@ -303,8 +536,78 @@ jobs:
           fi
 
       - name: Checkout baseline tools
-        if: needs.detect-domains.outputs.has-domains == 'true'
         uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
 
       - name: Download domain results
         if: needs.detect-domains.outputs.has-domains == 'true'

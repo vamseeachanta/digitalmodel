@@ -6,14 +6,12 @@
 Solve a Collide "PE Problem of the Day" with the Claude API and record the worked
 solution back into the problem YAML.
 
-Design (ties into the two epics):
+Design:
   * This module is the *engine*. `solve_problem(problem) -> dict` does one Claude
     API call and returns a structured solution. It is intentionally transport-free.
-  * Epic B ("Deckhand-routed solver, Telegram transport") wraps this: a Deckhand
-    `solve <slug>` command runs on the Hermes gateway host, calls solve_problem(),
-    renders the Deckhand-letterhead brief, and replies to the Telegram channel with
-    the answer + brief link. The API call itself stays here so it is testable and
-    reusable regardless of transport.
+  * Deckhand retired 2026-10-18 (deckhand issue 599).
+    Render and publish the brief as documented in README.md, "Sharing the brief
+    as a link". The API call stays independent of delivery.
 
 Model: claude-opus-4-8 (per the claude-api skill — do not downgrade).
 Auth:  ANTHROPIC_API_KEY in the environment, or an `ant auth login` profile.
@@ -78,7 +76,7 @@ def build_prompt(problem: dict) -> str:
 def solve_problem(problem: dict, model: str = MODEL) -> dict:
     """One Claude API call -> validated structured solution dict.
 
-    This is the function Epic B's Deckhand command and Telegram router call.
+    Delivery is handled separately from this transport-free engine.
     """
     import anthropic  # imported lazily so render-only workflows need no SDK
 

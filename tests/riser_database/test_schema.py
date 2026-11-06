@@ -5,13 +5,24 @@ value-bearing column is a test failure by construction (exact column-set
 match), and free-text fields are shape-constrained so licensed values cannot
 ride past the column allowlist ([R2-B4]).
 """
+
 from __future__ import annotations
 
 import csv
+import hashlib
 import re
+import shutil
+from dataclasses import asdict
 from pathlib import Path
 
-from digitalmodel.riser_database.loader import DEFAULT_DB_ROOT
+import pytest
+import yaml
+
+from digitalmodel.riser_database.loader import (
+    DEFAULT_DB_ROOT,
+    RiserDatabase,
+    RiserDatabaseError,
+)
 
 CONFIG_CATALOG_COLUMNS = [
     "config_id",
@@ -54,9 +65,79 @@ _NUMERIC_TOKEN_RE = re.compile(r"\d+(?:\.\d+)?")
 
 
 def _read(table_file: str) -> tuple[list[str], list[dict]]:
-    with (DEFAULT_DB_ROOT / table_file).open(newline="") as fh:
-        reader = csv.DictReader(fh)
-        return list(reader.fieldnames or []), list(reader)
+    """Check the public rows returned after fingerprint and header validation."""
+    accessor = {
+        "config_catalog.csv": "configs",
+        "standards_crosswalk.csv": "crosswalk_rows",
+        "material_sn_scf_dff.csv": "materials",
+    }[table_file]
+    rows = [asdict(row) for row in getattr(RiserDatabase.load(), accessor)]
+    assert rows, f"{table_file}: schema checks require nonempty loaded rows"
+    return list(rows[0]), rows
+
+
+def test_loaded_public_table_counts():
+    """Assert package output against the public manifest at revision 6476218e.
+
+    Source: data/riser_database/manifest.yaml, tables.*.rows. Independent
+    inventory: configurations = five input files + twenty-two pipe files +
+    one lift reference = twenty-eight; the remaining CSVs contain five
+    crosswalk, three material, eighty-four stack-up and ten rig records
+    (excluding each header). These are inventory counts, not design limits.
+    """
+    db = RiserDatabase.load()
+    # Public manifest, revision 6476218e, tables.*.rows (see inventory above).
+    assert {
+        "config_catalog": len(db.configs),
+        "standards_crosswalk": len(db.crosswalk_rows),
+        "material_sn_scf_dff": len(db.materials),
+        "riser_stackup": len(db.stackups),
+        "rig_riser_interface": len(db.rigs),
+    } == {
+        "config_catalog": 28,
+        "standards_crosswalk": 5,
+        "material_sn_scf_dff": 3,
+        "riser_stackup": 84,
+        "rig_riser_interface": 10,
+    }
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        "config_catalog",
+        "standards_crosswalk",
+        "material_sn_scf_dff",
+        "riser_stackup",
+        "rig_riser_interface",
+    ],
+)
+def test_loaded_schema_rejects_added_column(tmp_path, table):
+    """The loader's exact-header contract rejects a re-fingerprinted table.
+
+    Source: loader.py::_load_table, expected_columns contract. A synthetic
+    extra column is outside every declared row schema, so the independent
+    expected outcome is a column-mismatch error for the modified table.
+    Updating only its digest isolates schema validation from integrity checks.
+    """
+    root = tmp_path / "riser_database"
+    shutil.copytree(DEFAULT_DB_ROOT, root)
+    table_path = root / f"{table}.csv"
+    with table_path.open(newline="") as fh:
+        records = list(csv.reader(fh))
+    with table_path.open("w", newline="") as fh:
+        csv.writer(fh).writerows([*record, "unexpected_column"] for record in records)
+    manifest_path = root / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text())
+    manifest["tables"][table]["sha256"] = hashlib.sha256(
+        table_path.read_bytes()
+    ).hexdigest()
+    manifest_path.write_text(yaml.safe_dump(manifest))
+
+    with pytest.raises(RiserDatabaseError) as exc:
+        RiserDatabase.load(root=root)
+    assert exc.value.table == table
+    assert "column mismatch" in exc.value.reason
 
 
 def test_config_catalog_columns_exact():

@@ -138,14 +138,44 @@ this J-lay/reel-lay repair.
 | 2026-10-16 | initial pack | Screening regression is distinct from installation qualification | initial pack revision |
 | 2026-10-18 | [2745](https://github.com/vamseeachanta/digitalmodel/issues/2745) | Formula invariants can pass incorrect physics; use independent anchors, force closure and fail-before-output checks | `test_audit_regressions.py`, `test_pack_gates.py`, screening-basis.md |
 
-Table 5. Shared lesson indexing remains tracked by [2767](https://github.com/vamseeachanta/digitalmodel/issues/2767).
+Table 5. Durable shared entries are `pipelay-screening-scope` and
+`pipelay-independent-anchors`, respectively, in the
+[review and clearance index](../../../../docs/registry/pipelay-review-clearance.json).
+The entries retain the findings and link their prevention to C01–C07 evidence.
+The index is discoverable from the shared documentation entry point.
 
 ## 8. Maintenance and review
 
-The maintainer will resolve design-basis scope and review responsibility.
-Independent clearance and an alternate-review assignment are not established;
-[2767](https://github.com/vamseeachanta/digitalmodel/issues/2767) tracks them.
-This draft does not grant installation clearance.
+The [review and clearance index](../../../../docs/registry/pipelay-review-clearance.json)
+records the responsibilities and evidence requirements under issue #2767.
+Responsibilities are defined by role; assignments remain `NOT_EVALUATED` until
+maintainer confirmation is retained. No personnel assignment is made here.
+
+| Responsibility | Required action | Current evidence |
+|---|---|---|
+| Maintainer | Confirm intended use, assign primary and alternate independent review, and dispose findings | Assignment confirmation pending |
+| Independent reviewer | Review the exact source, pack and index revision, check C01–C07 evidence and record findings and recommendation | Assignment and review pending |
+| Alternate reviewer | Provide the same independent review when the primary reviewer is unavailable or has a conflict; record activation | Assignment and activation pending |
+
+Review responsibility table. Role definitions do not establish assignments.
+
+Pack review requires the exact reviewed revision, assignment evidence,
+independent review reference, C01–C07 commands and outcomes with retained log
+and digest references, and a maintainer disposition of findings and unresolved
+qualification limits. A changed revision requires renewed review. The index
+lists exact function, output and executable assertion references for every
+check; its `NOT_EVALUATED` execution fields carry no run receipt. Passing the
+index tests establishes traceability only. Test outcomes are recorded with the
+change that runs them, rather than asserted by this static index.
+
+Pack review and native installation clearance are separate index records, both
+`NOT_EVALUATED`. Native clearance additionally requires separately authorized
+scope, sourced case inputs, retained native results at a recorded solver version,
+qualified criteria and benchmarks, independent review and maintainer disposition.
+Issues #2763–#2766 retain the input, provenance, benchmark and map qualification
+work; #2431 retains the native installation workflow. This slice adds no
+engineering equation, coefficient or acceptance limit. The pack remains DRAFT
+until independent review is recorded and does not grant installation clearance.
 
 ## 9. Dependencies and historical map inventory
 

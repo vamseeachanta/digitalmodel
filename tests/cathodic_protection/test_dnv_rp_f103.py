@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for the DNV-RP-F103 bracelet anode design module (issue #2211).
 
 The headline case is review Appendix A3, written from the Table A.1 row
@@ -114,7 +117,7 @@ class TestReviewAppendixA3:
             "dnv-rp-f103 2010 Table A.1",
             "dnv-rp-b401 2011 Table 10-8",
             "dnv-rp-b401 2011 Table 10-6",
-            "dnv-rp-b401 2011 Table 10-6 with Sec. 5 (structure-to-electrolyte potential criteria)",
+            "dnv-rp-b401 2011 Table 10-6 with Sec. 5.4.1 (design protective potential)",
         ]
         assert result.edition_used == "2010"
         assert result.standard == "DNV-RP-F103 (October 2010)"

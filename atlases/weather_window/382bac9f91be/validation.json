@@ -1,0 +1,106 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.048494961555920334,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 8,
+  "worst_samples": [
+    {
+      "point": {
+        "hs_limit_m": 2.25,
+        "required_window_hours": 36.0
+      },
+      "predicted": 13.5010795585088,
+      "actual": 12.876627979665056,
+      "rel_error": 0.048494961555920334,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 3.75,
+        "required_window_hours": 36.0
+      },
+      "predicted": 65.77760547835777,
+      "actual": 67.69757821447092,
+      "rel_error": 0.02836102541261575,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 2.75,
+        "required_window_hours": 36.0
+      },
+      "predicted": 27.176921671558958,
+      "actual": 26.540323384795336,
+      "rel_error": 0.023986078750205517,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 3.0,
+        "required_window_hours": 60.0
+      },
+      "predicted": 25.543030812371534,
+      "actual": 25.073445729769148,
+      "rel_error": 0.01872838251524631,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 3.25,
+        "required_window_hours": 36.0
+      },
+      "predicted": 47.378103877844005,
+      "actual": 46.87739229940447,
+      "rel_error": 0.01068130187877145,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 3.0,
+        "required_window_hours": 42.0
+      },
+      "predicted": 33.66048942949346,
+      "actual": 33.5039860907446,
+      "rel_error": 0.004671185641164539,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 3.0,
+        "required_window_hours": 18.0
+      },
+      "predicted": 49.54087859654108,
+      "actual": 49.31053991055284,
+      "rel_error": 0.004671185641164361,
+      "in_range": true
+    },
+    {
+      "point": {
+        "hs_limit_m": 3.0,
+        "required_window_hours": 30.0
+      },
+      "predicted": 40.83589377406462,
+      "actual": 40.64602862876359,
+      "rel_error": 0.0046711856411643235,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "": {
+      "hs_limit_m": [
+        0.048494961555920334,
+        0.023986078750205517,
+        0.01068130187877145,
+        0.02836102541261575
+      ],
+      "required_window_hours": [
+        0.004671185641164361,
+        0.0046711856411643235,
+        0.004671185641164539,
+        0.01872838251524631
+      ]
+    }
+  },
+  "densification_log": []
+}

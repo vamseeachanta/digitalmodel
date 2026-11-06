@@ -278,7 +278,7 @@
   {
     "id": "short-horizon-motion-forecast",
     "title": "Short-horizon motion forecast",
-    "summary": "Live vessel & structure motions from an onboard MMS / MRU, plus a phase-resolved wave forecast transferred through the asset RAO to predict the next few motions — a rolling go / no-go with lead time for crane lifts, walk-to-work gangways and helideck landings, bounded honestly by the predictable zone.",
+    "summary": "Illustrative synthetic sea and simplified analytic RAOs demonstrate a phase-resolved motion forecast and rolling go / no-go with lead time. Measured-motion input from MMS / MRU instruments is planned; the Python layer provides a synthetic stub and CSV reader.",
     "key_figure": null,
     "link": "docs/api/hydro/short-horizon-motion-forecast.html"
   },
@@ -368,6 +368,16 @@
       "label": "design codes"
     },
     "link": "docs/api/structural/wall-thickness-explorer.html"
+  },
+  {
+    "id": "wall-thickness-load-explorer",
+    "title": "Wall-thickness tension and bending explorer",
+    "summary": "Wall thickness, effective tension and bending moment swept across nine design codes. A fetched, bounded snapshot shows utilisation and governing check as a 3D surface with a 2D fallback. Inputs are assumed, based on previous experience; design qualification is not evaluated.",
+    "key_figure": {
+      "value": "9",
+      "label": "design codes"
+    },
+    "link": "docs/api/structural/wall-thickness-3d-explorer.html"
   },
   {
     "id": "sloshing-explorer",

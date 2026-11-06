@@ -1,0 +1,153 @@
+{
+  "module": "digitalmodel.pipelay",
+  "tracking_issue": "#2767",
+  "pack": "src/digitalmodel/pipelay/docs/agent-pack.md",
+  "pack_status": "DRAFT",
+  "repository_sources": [
+    "src/digitalmodel/pipelay/docs/agent-pack.md",
+    "src/digitalmodel/pipelay/docs/screening-basis.md"
+  ],
+  "basis": "Issue #2767; audit #2745 section 12; pack sections 5, 7 and 8; native scope #2431; provenance #2764; benchmarks #2765. No engineering equation, coefficient or acceptance limit is introduced.",
+  "responsibilities": {
+    "maintainer": {
+      "assignment_status": "NOT_EVALUATED",
+      "assignment_evidence": null,
+      "duties": [
+        "Confirm the screening design basis and intended use.",
+        "Record primary and alternate independent-review assignments with a durable revision-bound reference.",
+        "Retain the draft status until independent review and finding dispositions are recorded."
+      ]
+    },
+    "independent_reviewer": {
+      "assignment_status": "NOT_EVALUATED",
+      "assignment_evidence": null,
+      "duties": [
+        "Review the exact source, tests, pack and index revision independently of implementation.",
+        "Check sources, applicability, C01-C07 results and unresolved qualification limits.",
+        "Record the review scope, findings and clearance recommendation against that revision."
+      ]
+    },
+    "alternate_reviewer": {
+      "assignment_status": "NOT_EVALUATED",
+      "assignment_evidence": null,
+      "duties": [
+        "Provide independent review when the primary reviewer is unavailable or has a conflict.",
+        "Record activation and the same revision-bound evidence required of the primary reviewer."
+      ]
+    }
+  },
+  "lessons": [
+    {
+      "id": "pipelay-screening-scope",
+      "source_issue": "#2656",
+      "finding": "Analytical screening regression does not establish native installation qualification.",
+      "prevention": "Keep offline output checks separate from independent pack review and native installation clearance.",
+      "checks": ["C06", "C07"]
+    },
+    {
+      "id": "pipelay-independent-anchors",
+      "source_issue": "#2745",
+      "finding": "Formula invariants alone can pass incorrect physics.",
+      "prevention": "Use independent arithmetic anchors, equilibrium closure and fail-before-output assertions.",
+      "checks": ["C02", "C03", "C04", "C05"]
+    }
+  ],
+  "checks": {
+    "C01": {
+      "gate": "G0",
+      "functions": ["src/digitalmodel/pipelay/workflow.py::router"],
+      "outputs": ["ValueError for unsupported method"],
+      "tests": ["tests/pipelay/test_pack_gates.py::test_c01_router_rejects_unsupported_method"],
+      "assertion": "An unsupported method raises ValueError.",
+      "evidence_scope": "offline_regression",
+      "execution_status": "NOT_EVALUATED",
+      "execution_evidence": null
+    },
+    "C02": {
+      "gate": "G0",
+      "functions": ["src/digitalmodel/pipelay/workflow.py::router"],
+      "outputs": ["ValueError for unknown input key", "absence of summary output"],
+      "tests": ["tests/pipelay/test_pack_gates.py::test_c02_router_rejects_unknown_key"],
+      "assertion": "An unknown diameter key raises ValueError before any output file is written; input provenance is not established.",
+      "evidence_scope": "offline_regression",
+      "execution_status": "NOT_EVALUATED",
+      "execution_evidence": null
+    },
+    "C03": {
+      "gate": "G2",
+      "functions": ["src/digitalmodel/pipelay/workflow.py::run_jlay"],
+      "outputs": ["sagbend.catenary_parameter_m", "sagbend.sagbend_bending_strain", "top_tension_kN"],
+      "tests": ["tests/pipelay/test_pack_gates.py::test_c03_jlay_hand_check"],
+      "assertion": "J-lay geometry, strain and derived tension match the independent screening-basis arithmetic anchors.",
+      "evidence_scope": "offline_regression",
+      "execution_status": "NOT_EVALUATED",
+      "execution_evidence": null
+    },
+    "C04": {
+      "gate": "G2",
+      "functions": ["src/digitalmodel/pipelay/workflow.py::run_reel_lay"],
+      "outputs": ["residual_curvature_1_per_m", "residual_radius_m", "residual_bending_strain", "residual_out_of_straightness_m", "screening_status"],
+      "tests": ["tests/pipelay/test_pack_gates.py::test_c04_reel_residual_hand_check"],
+      "assertion": "Residual outputs match the independent screening-basis arithmetic anchors; a tight reel core fails the screen.",
+      "evidence_scope": "offline_regression",
+      "execution_status": "NOT_EVALUATED",
+      "execution_evidence": null
+    },
+    "C05": {
+      "gate": "G2",
+      "functions": ["src/digitalmodel/pipelay/workflow.py::run_jlay"],
+      "outputs": ["sagbend.sagbend_bending_strain", "sagbend.tension_closure_relative_error"],
+      "tests": ["tests/pipelay/test_pack_gates.py::test_c05_feasible_tension_trend"],
+      "assertion": "A feasible higher-tension case reduces strain and meets the existing screening-basis closure criterion.",
+      "evidence_scope": "offline_regression",
+      "execution_status": "NOT_EVALUATED",
+      "execution_evidence": null
+    },
+    "C06": {
+      "gate": "G5",
+      "functions": ["src/digitalmodel/pipelay/workflow.py::router", "src/digitalmodel/pipelay/workflow.py::_write_summary"],
+      "outputs": ["summary_json.method", "summary_json.screening_status", "absence of native_model and time_history"],
+      "tests": ["tests/pipelay/test_pack_gates.py::test_c06_summary_matches_router"],
+      "assertion": "Both method summaries match router results and contain no native-model or time-history outputs.",
+      "evidence_scope": "offline_regression",
+      "execution_status": "NOT_EVALUATED",
+      "execution_evidence": null
+    },
+    "C07": {
+      "gate": "G5",
+      "functions": ["src/digitalmodel/pipelay/workflow.py::router", "src/digitalmodel/pipelay/workflow.py::_write_summary"],
+      "outputs": ["strict summary JSON bytes", "input and output digest readback", "summary payload fields"],
+      "tests": ["tests/pipelay/test_audit_regressions.py::test_c07_summary_digest_readback"],
+      "assertion": "Both summaries reject non-finite tokens, match returned fields and retain matching input/output digests on reread; this is test evidence, not an issued provenance appendix.",
+      "evidence_scope": "offline_regression",
+      "execution_status": "NOT_EVALUATED",
+      "execution_evidence": null
+    }
+  },
+  "clearance": {
+    "pack_review": {
+      "status": "NOT_EVALUATED",
+      "scope": "Review of the analytical knowledge pack only; not installation clearance.",
+      "evidence": [],
+      "required_evidence": {
+        "revision": "Exact source, tests, pack and index revision reviewed; changed evidence requires renewed review.",
+        "assignments": "Durable maintainer confirmation of primary and alternate review responsibilities and independence.",
+        "independent_review": "Revision-bound independent review reference with scope, findings and recommendation.",
+        "check_results": "C01-C07 test node IDs, command, revision, outcomes, log reference and input/output digests for the reviewed cases; failures and unexecuted checks remain explicit.",
+        "disposition": "Maintainer disposition of each finding and unresolved qualification issue with the allowed use and exclusions."
+      }
+    },
+    "native_installation": {
+      "status": "NOT_EVALUATED",
+      "tracking_issue": "#2431",
+      "offline_regression_sufficient": false,
+      "evidence": [],
+      "required_evidence": {
+        "authorized_scope": "Separately authorized installation scope, sourced inputs and case matrix.",
+        "solver_evidence": "Native model and results at a recorded solver version, case identity and retained input/output digests, including applicable dynamics.",
+        "criteria": "Edition-qualified criteria and independent benchmarks with versioned tolerances, applicability and documented comparisons.",
+        "independent_review": "Independent review and maintainer disposition of the installation evidence and issued analysis."
+      }
+    }
+  }
+}

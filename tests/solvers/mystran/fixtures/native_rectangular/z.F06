@@ -1,0 +1,17 @@
+ MYSTRAN Version 19.0.0   JUN 28 2026
+ *INFORMATION: FOR INTERNAL SUBCASE NUMBER        1 EPSILON ERROR ESTIMATE            =  2.842171E-15 Based on U'*(K*U - P)/(U'*P)
+                                                       D I S P L A C E M E N T S
+                                              (in global coordinate system at each grid)
+           GRID     COORD      T1            T2            T3            R1            R2            R3
+                     SYS
+              1        0  0.0           0.0           0.0           0.0           0.0           0.0
+              2        0  0.0           0.0           3.273809E-05  0.0          -2.500000E-04  0.0
+              3        0  0.0           0.0           1.190476E-04  0.0          -4.285714E-04  0.0
+              4        0  0.0           0.0           2.410714E-04  0.0          -5.357143E-04  0.0
+              5        0  0.0           0.0           3.809524E-04  0.0          -5.714286E-04  0.0
+                                                          S P C   F O R C E S
+                                              (in global coordinate system at each grid)
+           GRID     COORD      T1            T2            T3            R1            R2            R3
+                     SYS
+              1        0  0.0           0.0          -1.000000E+03  0.0           1.000000E+03  0.0
+                                          * * * END OF JOB * * *

@@ -78,3 +78,31 @@ application track buries it.
 - The API 579-1 2016 licensed copy is FileOpen-protected; the Level 2 curve
   equation is to be confirmed by the owner in an authorised viewer (board card
   R01 on #2157).
+
+## Surface-crack solver spike recommendation — 2026-10-20
+
+For [issue 2178](https://github.com/vamseeachanta/digitalmodel/issues/2178), the
+[program benchmarking analysis](surface-crack-solver-analysis.html) and
+[receipt audit](surface-crack-solver-audit.json) extend the existing plate study
+without changing production assessment code. Three historical CalculiX runs have
+front comparisons; zero results are qualified for Level 3 use. The finest mesh
+has an 11.9 % maximum absolute front difference against the existing 5.0 % research
+comparator, which is a study choice rather than an API 579 acceptance limit.
+Original native outputs have not been revalidated by this audit. Historical mesh
+sizes, elapsed times and memory costs are retained with that limitation.
+
+The tested linear-element stress-extrapolation route should remain research-only.
+Code_Aster CALC_G should be investigated next: the public DocAster v18 U4.82.03
+sections 1 and 3 document energy-release calculations, local three-dimensional
+results and integration-domain controls. Documented capability does not establish
+accuracy. The same plate geometry, loading, material and front-angle convention
+will be needed, with native readback, integration-domain sensitivity and mesh
+refinement. Free-surface endpoint behavior will require separate interpretation.
+Sources and independent reference arithmetic are included in the linked analysis.
+
+Solver selection, native J accuracy and the licensed comparison remain
+NOT_EVALUATED. The linked work in
+[issue 2157](https://github.com/vamseeachanta/digitalmodel/issues/2157) uses a
+different geometry and will require a common benchmark basis before comparison.
+No go verdict or follow-on issue is issued. Independent review and native
+Code_Aster evidence remain open under issue 2178.

@@ -47,6 +47,8 @@ from digitalmodel.structural.fatigue import (
     rainflow_count
 )
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -236,7 +238,7 @@ def example_4_frequency_domain_analysis():
     print(f"PSD characteristics:")
     print(f"  Frequency range: {frequency[0]:.3f} to {frequency[-1]:.1f} Hz")
     print(f"  Peak frequency: {frequency[np.argmax(psd)]:.2f} Hz")
-    print(f"  RMS stress: {np.sqrt(np.trapz(psd, frequency)):.2f} MPa")
+    print(f"  RMS stress: {np.sqrt(_trapezoid(psd, frequency)):.2f} MPa")
     print(f"  Analysis duration: {duration:.0f} seconds")
     print()
 

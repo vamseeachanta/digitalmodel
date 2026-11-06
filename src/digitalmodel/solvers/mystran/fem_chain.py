@@ -332,10 +332,22 @@ class MystranChain:
         nu: float = 0.3,
         P: float = 1000.0,
     ) -> dict:
-        """CBAR cantilever with tip load in z; compares to ``PL^3/3EI``."""
+        """CBAR cantilever: x span, y width b, z height h, tip load in z.
+
+        Default dimensions, material properties and load are illustrative
+        assumptions. The Euler-Bernoulli reference uses PBAR I2 for this
+        orientation; see ``docs/cantilever-bar-example.md`` for the hand
+        calculation, sources and native-validation requirement.
+        """
         A = b * h
-        I1 = b * h ** 3 / 12.0  # bending about y (deflection in z)
-        I2 = h * b ** 3 / 12.0
+        # MYSTRAN User Manual (2026-07-01), sections 6.2.2.4 and 11.51:
+        # v=(0,1,0) sets local y; I1 is about z, I2 about y (z deflection).
+        # Rectangle integrals: Illinois Dynamics Reference, "Moments of
+        # inertia", area-moment warning (web edition); links in the example.
+        I1 = h * b ** 3 / 12.0
+        I2 = b * h ** 3 / 12.0
+        # Retained square-only estimate: NPTEL Solid Mechanics, chapter 9,
+        # table 9.1 (web edition). Torsion is unloaded and NOT_EVALUATED here.
         J = 0.141 * b * h ** 3
         stats = self.create_cantilever_bar_mesh(L, n_elems)
         self.setup_analysis(
@@ -353,7 +365,9 @@ class MystranChain:
         if not status["success"]:
             raise RuntimeError(f"mystran failed: {status['errors'] or status['message']}")
         res = self.extract_results("t3")
-        exact = self.cantilever_tip_deflection(P, L, E, I1)
+        # MIT 2.080J (2013), Problem Set 10 solutions, Problem 12-2, p. 8:
+        # Euler-Bernoulli tip deflection = P L^3 / (3 E I).
+        exact = self.cantilever_tip_deflection(P, L, E, I2)
         return {
             **res, **stats,
             "exact": exact,

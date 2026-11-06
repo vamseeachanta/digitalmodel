@@ -1,6 +1,8 @@
 """Envelope input and quadrature contracts; see docs/envelope-basis.md B1–B5."""
 import numpy as np
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 DOF_UNITS = dict(surge='m', sway='m', heave='m', roll='deg', pitch='deg', yaw='deg')
 MAX_EXTRAPOLATED_ENERGY = .01  # Response-moment screening tolerance, basis B4.
 
@@ -56,8 +58,7 @@ def validate_component(component, dof):
 
 
 def integrate(x, y):
-    trapezoid = np.trapezoid if hasattr(np, 'trapezoid') else np.trapz
-    return float(trapezoid(y, x))
+    return float(_trapezoid(y, x))
 
 
 def spectrum(spectra, hs, tp, gamma):

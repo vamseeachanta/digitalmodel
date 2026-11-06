@@ -267,7 +267,10 @@ def test_manifold_b401_sec7_loop() -> None:
     # I_initial = 850 * 0.250 * 0.02 = 4.25 A, I_final = 850 * 0.170 * 0.32 = 46.24 A,
     # M = 2233.8 kg -> 28 x 80 kg; R (rho 0.33, L 0.6, r 0.045) = 0.26055 ohm -> N_initial 5;
     # R_f (r_f = 0.045 sqrt(0.15)) = 0.34359 ohm -> N_final 64.
-    results = _run("manifold")["results"]
+    cfg = _load("manifold")
+    assert "depth_m" not in cfg["inputs"]["structure"]["zones"][0]
+    results = run_cathodic_protection(cfg)["results"]
+    assert results["current_densities_A_m2"]["submerged"]["depth_band"] == "0-30"
     demand = results["current_demand_A"]
     assert demand["total_initial_A"] == pytest.approx(4.25)
     assert demand["total_mean_A"] == pytest.approx(17.34)
@@ -280,6 +283,24 @@ def test_manifold_b401_sec7_loop() -> None:
     assert verification["recommended_anode_count"] == 64
     assert results["status"]["result"] == STATUS_FAIL
     assert results["status"]["governing_case"] == "final"
+
+
+@pytest.mark.parametrize(
+    ("edition", "citation"),
+    [
+        ("2005", "dnv-rp-b401 2011 Table 10-6 with Sec. 5.4.1 (design protective potential)"),
+        ("2010", "dnv-rp-b401 2011 Table 10-6 with Sec. 5.4.1 (design protective potential)"),
+        ("2017", "dnv-rp-b401 2017-06 Table A-6 with [5.4.1] (design protective potential)"),
+        ("2021", "dnv-rp-b401 2021-05 Table 8-6 with [2.4.2] (design protective potential)"),
+    ],
+)
+def test_manifold_design_potential_citation_follows_edition(edition: str, citation: str) -> None:
+    """The adapter retains the precise design clause in each edition's citation."""
+    cfg = _load("manifold")
+    cfg["inputs"]["design_data"]["edition"] = edition
+    results = run_cathodic_protection(cfg)["results"]
+    assert results["edition"] == edition
+    assert citation in results["citations"]
 
 
 def test_monopile_b401_sec7_loop() -> None:

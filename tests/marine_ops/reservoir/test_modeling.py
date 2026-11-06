@@ -17,10 +17,6 @@ import pytest
 import warnings
 from datetime import datetime, timedelta
 
-# NumPy 2.x removed np.trapz; restore it so the source code under test works.
-if not hasattr(np, "trapz"):
-    np.trapz = np.trapezoid
-
 from digitalmodel.marine_ops.reservoir.properties import (
     ReservoirProperties,
     RockProperties,

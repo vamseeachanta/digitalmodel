@@ -421,9 +421,9 @@ In-package rows: 9; full map inventory: 135 rows. [docs/registry/implementation-
 | 71 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `main` | `independent` | [docs/registry/implementation-map.yaml:L16114-L16126] |
 | 72 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `OCIMFDatabase.get_coefficients` | `copy` | [docs/registry/implementation-map.yaml:L16127-L16136] |
 | 73 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `EnvironmentalForces.calculate_total_forces` | `copy` | [docs/registry/implementation-map.yaml:L16137-L16146] |
-| 74 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `create_sample_database` | `copy` | [docs/registry/implementation-map.yaml:L16147-L16156] |
-| 75 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._environmental_forces` | `independent` | [docs/registry/implementation-map.yaml:L16157-L16168] |
-| 76 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._ocimf_database_path` | `independent` | [docs/registry/implementation-map.yaml:L16169-L16178] |
+| 74 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `create_sample_database` | `copy` | [docs/registry/implementation-map.yaml:L16117-L16126] |
+| 75 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._environmental_forces` | `independent` | [docs/registry/implementation-map.yaml:L16127-L16139] |
+| 76 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._ocimf_database` | `independent` | [docs/registry/implementation-map.yaml:L16140-L16149] |
 | 77 | `src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py` | `_resolve_arrow_direction_in_body_frame` | `independent` | [docs/registry/implementation-map.yaml:L16179-L16188] |
 | 78 | `src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py` | `polar_force_overlay` | `independent` | [docs/registry/implementation-map.yaml:L16189-L16198] |
 | 79 | `src/digitalmodel/naval_architecture/maneuvering_envelope.py` | `threshold_speed_for_steerage` | `independent` | [docs/registry/implementation-map.yaml:L16199-L16208] |

@@ -50,8 +50,9 @@ SOLVER=$(awk '/^application/ {gsub(/;/,"",$2); print $2; exit}' system/controlDi
 foamDictionary -entry startFrom -set latestTime system/controlDict >/dev/null
 foamDictionary -entry endTime -set "$END" system/controlDict >/dev/null
 # A pause is done with `stopAt writeNow` or `nextWrite`; left in place it stops the
-# resumed solver after one iteration and writes a false CONT_DONE (the primary lane,
-# 2026-09-06). Always resume with stopAt endTime.
+# resumed solver after one iteration. OpenFOAM v13 User Guide (2025),
+# section 4.4.2, Time control: always resume with stopAt endTime.
+# https://doc.cfd.direct/openfoam/user-guide-v13/controldict
 foamDictionary -entry stopAt -set endTime system/controlDict >/dev/null
 rm -f PAUSED
 STAMP=$(date -u +%FT%TZ)
@@ -59,13 +60,8 @@ STAMP=$(date -u +%FT%TZ)
 rm -f CONT_DONE CONT_FAILED
 LEDGER="$ROOT/$NAME.log"
 echo "=== $STAMP continue $NAME from $LATEST to $END on $RANKS ranks ($SOLVER)" >> "$LEDGER"
-setsid nohup bash -c "
-  echo \$\$ > run.pid
-  mpirun -np $RANKS ${DM_CFD_MPIRUN_FLAGS:-} $SOLVER -parallel > log.$SOLVER 2>&1 < /dev/null; rc=\$?
-  last=\$(grep -a '^Time = ' log.$SOLVER | tail -1 | awk '{print \$3}')
-  if [ \$rc -eq 0 ]; then echo \"\$(date -u +%FT%TZ) continued $NAME to Time=\$last rc=0\" | tee -a '$LEDGER' > CONT_DONE
-  else echo \"\$(date -u +%FT%TZ) $SOLVER rc=\$rc at Time=\$last\" | tee -a '$LEDGER' > CONT_FAILED; fi
-  rm -f run.pid
-" > continue.out 2>&1 < /dev/null & disown
+setsid nohup bash "$SCRIPT_DIR/lib/cfd_continue_worker.sh" \
+  "$SOLVER" "$RANKS" "$END" "$LEDGER" "$NAME" \
+  > continue.out 2>&1 < /dev/null & disown
 sleep 2
 echo "continue_case: $NAME from $LATEST to $END on $RANKS ranks, pid $(cat run.pid 2>/dev/null), markers CONT_DONE | CONT_FAILED, ledger $LEDGER"

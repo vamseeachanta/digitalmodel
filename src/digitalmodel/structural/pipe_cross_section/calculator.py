@@ -50,6 +50,14 @@ class PipeCrossSection:
     - Concrete weight coating (CWC)
     - Insulation layers
 
+    The legacy kg/m weight properties report mass per length or mass
+    equivalent; kN/m properties report force per length. Dry mass includes
+    layer material only, excluding internal contents. Displacement uses the
+    full exterior circle for a fully immersed pipe with a sealed empty bore.
+    These geometry and weight calculations do not establish code capacity.
+    See docs/examples/circular-section-weight-buoyancy.md for a synthetic
+    worked example with an independent hand calculation and unit definitions.
+
     Example:
         >>> pipe = PipeCrossSection(
         ...     steel_od_mm=609.6,

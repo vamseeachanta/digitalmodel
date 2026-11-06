@@ -185,7 +185,7 @@ calculations:
     detail: |
       10-element B31 cantilever beam, fixed at root (all 6 DOFs constrained),
       concentrated load P = 1000 N applied at tip node in Y-direction.
-      ccx v2.21 on dev-secondary. Beam section: RECT 0.1 × 0.1 m, orientation (0,0,1).
+      ccx v2.21 on a 32-core workstation. Beam section: RECT 0.1 × 0.1 m, orientation (0,0,1).
       ccx expanded beam nodes at tip (nodes 92-95) all report dy = 1.9116 × 10⁻⁴ m.
     code_clause: "CalculiX User Manual v2.21, §6.2.10"
     intermediate_results:
@@ -274,10 +274,10 @@ validation:
   benchmark_source: "Euler-Bernoulli beam theory — Gere & Timoshenko, Mechanics of Materials, 4th Ed."
 
 verification:
-  checker: "ccx v2.21 (dev-secondary)"
+  checker: "ccx v2.21 (32-core workstation)"
   date: "2026-03-22"
   method: |
-    Independent numerical verification using CalculiX ccx v2.21 on dev-secondary.
+    Independent numerical verification using CalculiX ccx v2.21 on a 32-core workstation.
     10-element B31 cantilever beam with tip load P = 1000 N.
     ccx result (dy = 1.9116e-04 m) compared against hand-calculated
     Euler-Bernoulli result (δ = 1.9048e-04 m). Error: 0.35%.
@@ -296,7 +296,7 @@ conclusions:
     All 10 new tests pass. All 27 existing CalculiX tests pass (no regression).
   governing_check: "Tip deflection error < 1% → 0.35% achieved — PASS"
   recommendations:
-    - "Install ccx on dev-primary for CI integration testing"
+    - "Install ccx on the CI workstation for integration testing"
     - "Extend to B32 quadratic beam integration test (currently type-mapping only)"
     - "Add frame/multi-member validation when WRK-1360 geometry data is available (WRK-1364)"
     - "Consider mesh convergence study as a separate validation case"

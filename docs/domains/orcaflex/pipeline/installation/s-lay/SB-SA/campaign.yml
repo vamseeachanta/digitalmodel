@@ -11,11 +11,11 @@
 
 base:
   metadata:
-    name: "prpp_sb_sa_10in"
-    description: "10-inch SB-SA pipeline S-lay installation from Eclipse"
+    name: "prja_sb_sa_10in"
+    description: "10-inch SB-SA pipeline S-lay installation from VesselA"
     structure: pipeline
     operation: installation/s-lay
-    project: "PRPP"
+    project: "PRJA"
 
   environment:
     water:
@@ -61,7 +61,7 @@ base:
 
   equipment:
     vessel:
-      name: "Eclipse"
+      name: "VesselA"
       properties:
         loa: 130
         beam: 28
