@@ -155,7 +155,7 @@
       "title": "Repository report presentation pattern",
       "path": "docs/reports/pipeline-ffs-assessment.html",
       "symbols": [],
-      "use": "Inline report style only"
+      "use": "Presentation pattern copied into the builder; no build-time dependency"
     }
   ]
 }

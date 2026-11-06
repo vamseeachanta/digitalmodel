@@ -11,8 +11,11 @@ from fractions import Fraction
 from html.parser import HTMLParser
 from pathlib import Path
 import re
+import shutil
+import stat
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -210,7 +213,7 @@ def rebuild(output, cwd):
     subprocess.run(
         [sys.executable, str(REPORT / "build_report.py"), "--output-dir", str(output)],
         cwd=cwd, env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"),
-        capture_output=True, text=True, check=True,
+        capture_output=True, text=True, encoding="utf-8", check=True,
     )
     assert {path.name for path in output.iterdir()} == ARTIFACTS
     return {name: (output / name).read_bytes() for name in ARTIFACTS}
@@ -220,7 +223,10 @@ def test_report_rebuild_is_deterministic(tmp_path):
     first = rebuild(tmp_path / "first", tmp_path)
     second = rebuild(tmp_path / "other" / "second", tmp_path)
     assert first == second
-    assert first == {name: (REPORT / name).read_bytes() for name in ARTIFACTS}
+    assert first == {name: (REPORT / name).read_bytes() for name in ARTIFACTS}, (
+        "Rebuild: PYTHONPATH=src uv run --no-project --with pytest python "
+        'docs/reports/modules/passing_ship/build_report.py --output-dir "$TMPDIR/passing-ship-report"'
+    )
     assert {path.name for path in tmp_path.iterdir()} == {"first", "other"}
     for content in first.values():
         assert str(tmp_path).encode() not in content
@@ -252,23 +258,31 @@ def test_scope_limits_and_report_pointers(builder):
         else:
             assert not re.match(r"(?:[a-z]+:|/)", link)
             assert (REPORT / link).is_file(), link
-    sources = json.loads((REPORT / "sources.json").read_text())["sources"]
+    sources = json.loads((REPORT / "sources.json").read_text(encoding="utf-8"))["sources"]
     assert {s["id"] for s in sources} <= set(page.ids)
     for source in sources:
         path = ROOT / source["path"]
         assert path.is_file()
         assert f"../../../../{source['path']}" in page.links
         if path.suffix == ".py":
-            names = {node.name for node in ast.walk(ast.parse(path.read_text()))
+            names = {node.name for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
                      if isinstance(node, (ast.FunctionDef, ast.ClassDef))}
             assert set(source["symbols"]) <= names
-    changes = json.loads((REPORT / "changes.json").read_text())
+    changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert changes == builder.CHANGES
     assert all(change in visible for change in changes["changes"])
-    assert "[Module report](report.html)" in (REPORT / "README.md").read_text()
-    assert "../../../../docs/reports/modules/passing_ship/report.html" in (PACKAGE / "README.md").read_text()
+    assert "[Module report](report.html)" in (REPORT / "README.md").read_text(encoding="utf-8")
+    assert "../../../../docs/reports/modules/passing_ship/report.html" in (PACKAGE / "README.md").read_text(encoding="utf-8")
+    # An exported source tree still exercises every content check above.
+    git_env = {key: value for key, value in os.environ.items()
+               if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
+    checkout = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=ROOT,
+                              env=git_env, capture_output=True, text=True, encoding="utf-8")
+    if checkout.returncode != 0 or Path(checkout.stdout.strip()).resolve() != ROOT.resolve():
+        return  # Ignore rules apply only to this repository's Git work tree.
     for name in ARTIFACTS | {"build_report.py", ".gitignore"}:
-        result = subprocess.run(["git", "check-ignore", "-q", "--", str((REPORT / name).relative_to(ROOT))], cwd=ROOT)
+        result = subprocess.run(["git", "check-ignore", "-q", "--", (REPORT / name).relative_to(ROOT).as_posix()],
+                                cwd=ROOT, env=git_env, capture_output=True)
         assert result.returncode == 1, f"Required deliverable is ignored: {name}"
 
 
@@ -284,3 +298,79 @@ def test_html_and_json_escaping(builder):
                          content, re.S)[1]
     assert "<" not in embedded and ">" not in embedded and "&" not in embedded
     assert json.loads(embedded) == record
+
+
+def test_reference_usage_is_rendered_once(builder):
+    content = builder.render(builder.calculate())
+    for source in builder.SOURCES["sources"]:
+        entry = re.search(rf'<li id="{source["id"]}">(.*?)</li>', content, re.S)[1]
+        visible = "".join(Page(entry).visible)
+        assert visible.count(source["use"]) == 1, source["id"]
+
+
+def test_render_style_is_independent_of_exemplar(builder, tmp_path, monkeypatch):
+    record = builder.calculate()
+    expected = builder.render(record)
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    assert builder.render(record) == expected
+
+
+def test_report_describes_structure_and_limits(builder):
+    content = builder.render(builder.calculate())
+    assert "<title>Passing-ship structure and limits report:" in content
+    summary = re.search(r'<section id="section-1">(.*?)</section>', content, re.S)[1]
+    assert "structure and limits only" in " ".join(Page(summary).visible)
+
+
+def test_text_io_is_explicit():
+    for path in (REPORT / "build_report.py", Path(__file__)):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+                continue
+            if node.func.attr not in {"read_text", "write_text", "open"}:
+                continue
+            keywords = {item.arg: item.value for item in node.keywords}
+            assert "encoding" in keywords, f"{path.name}:{node.lineno}: encoding required"
+            assert ast.literal_eval(keywords["encoding"]) == "utf-8"
+            if node.func.attr == "write_text":
+                assert "newline" in keywords, f"{path.name}:{node.lineno}: newline required"
+                assert ast.literal_eval(keywords["newline"]) == "\n"
+
+
+def test_report_pointers_work_outside_git(builder, tmp_path, monkeypatch):
+    exported = tmp_path / "exported"
+    paths = {source["path"] for source in builder.SOURCES["sources"]}
+    paths.update(path.relative_to(ROOT).as_posix() for path in REPORT.iterdir() if path.is_file())
+    paths.add((PACKAGE / "README.md").relative_to(ROOT).as_posix())
+    for name in paths:
+        target = exported / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / name, target)
+    monkeypatch.setattr(sys.modules[__name__], "ROOT", exported)
+    monkeypatch.setattr(sys.modules[__name__], "REPORT", exported / "docs/reports/modules/passing_ship")
+    monkeypatch.setattr(sys.modules[__name__], "PACKAGE", exported / "src/digitalmodel/hydrodynamics/passing_ship")
+    test_scope_limits_and_report_pointers(builder)
+
+
+def test_build_rejects_linked_output_directory(builder, tmp_path):
+    retained = tmp_path / "retained"
+    retained.mkdir()
+    output = tmp_path / "output"
+    output.symlink_to(retained, target_is_directory=True)
+    with pytest.raises(ValueError, match="links"):
+        builder.build(output)
+    assert list(retained.iterdir()) == []
+
+
+def test_build_rejects_junction_output(builder, tmp_path, monkeypatch):
+    output = tmp_path / "output"
+    output.mkdir()
+    # The platform link query is isolated here; report generation remains real.
+    original = Path.lstat
+    junction = SimpleNamespace(st_mode=stat.S_IFDIR,
+                               st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT)
+    monkeypatch.setattr(Path, "lstat", lambda path: junction if path == output else original(path))
+    with pytest.raises(ValueError, match="links"):
+        builder.build(output)
+    assert list(output.iterdir()) == []

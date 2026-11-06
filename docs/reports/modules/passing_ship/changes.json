@@ -1,10 +1,12 @@
 {
   "report": "passing-ship-section-analysis",
-  "revision": "00",
-  "date": "2026-10-28",
+  "revision": "01",
+  "date": "2026-11-06",
   "changes": [
     "Added the module method map and synthetic section analysis to distinguish implementation from independent evidence.",
     "Bound visible results to shipped section helpers and recorded physical-force qualification as NOT_EVALUATED.",
-    "Preserved the standalone example and added isolated deterministic rebuild and calculation-mutation checks."
+    "Preserved the standalone example and added isolated deterministic rebuild and calculation-mutation checks.",
+    "Clarified the structure-and-limits scope, removed duplicate references and made report styling independent of other reports.",
+    "Made text encoding and line endings explicit and limited ignore-rule checks to Git work trees."
   ]
 }

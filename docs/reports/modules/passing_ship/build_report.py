@@ -10,15 +10,35 @@ import html
 import importlib.util
 import json
 from pathlib import Path
-import re
+import stat
 import sys
 
 
 ROOT = Path(__file__).resolve().parents[4]
-REVISION = "00"
-DATE = "2026-10-28"  # Fixed issue date, not a build timestamp.
+REVISION = "01"
+DATE = "2026-11-06"  # Fixed issue date, not a build timestamp.
 PACKAGE = "src/digitalmodel/hydrodynamics/passing_ship/"
 EXEMPLAR = "docs/reports/pipeline-ffs-assessment.html"
+# Presentation snapshot; rebuilding does not read the exemplar.
+STYLE = """
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+"""
 REBUILD = ('PYTHONPATH=src uv run --no-project --with pytest python '
            'docs/reports/modules/passing_ship/build_report.py '
            '--output-dir "$TMPDIR/passing-ship-report"')
@@ -33,6 +53,8 @@ CHANGES = {
         "Added the module method map and synthetic section analysis to distinguish implementation from independent evidence.",
         "Bound visible results to shipped section helpers and recorded physical-force qualification as NOT_EVALUATED.",
         "Preserved the standalone example and added isolated deterministic rebuild and calculation-mutation checks.",
+        "Clarified the structure-and-limits scope, removed duplicate references and made report styling independent of other reports.",
+        "Made text encoding and line endings explicit and limited ignore-rule checks to Git work trees.",
     ],
 }
 
@@ -90,7 +112,7 @@ SOURCES = {"sources": [
            ["test_worked_values_match_independent_calculation", "test_visible_values_follow_computed_results",
             "test_report_rebuild_is_deterministic", "test_scope_limits_and_report_pointers"],
            "Independent oracle, visible readback, mutation and reproduction checks"),
-    source("source-style", "Repository report presentation pattern", EXEMPLAR, [], "Inline report style only"),
+    source("source-style", "Repository report presentation pattern", EXEMPLAR, [], "Presentation pattern copied into the builder; no build-time dependency"),
 ]}
 
 
@@ -171,7 +193,8 @@ def render(record: dict) -> str:
     nav = "".join(f'<li><a href="#section-{i}">{title}</a></li>'
                   for i, title in enumerate(titles, 1))
     revisions = table(["Revision", "Date", "What changed and why"], [
-        [REVISION, DATE, "First module report: bounded synthetic section evidence and explicit deferred qualification."]],
+        ["00", "2026-10-28", "First module report: bounded synthetic section evidence and explicit deferred qualification."],
+        [REVISION, DATE, "Clarified scope and reference text, removed the external style dependency and made portability checks explicit."]],
         "Revision history")
     changes = "".join(f"<li>{html.escape(item)}</li>" for item in CHANGES["changes"])
     inputs = table(["Input", "Value", "Unit", "Basis"], [
@@ -206,24 +229,24 @@ def render(record: dict) -> str:
         "Table 4. Deferred engineering evidence.")
     references = "".join(
         f'<li id="{html.escape(s["id"])}"><a href="../../../../{html.escape(s["path"])}">'
-        f'{html.escape(s["title"])}</a>: {html.escape(", ".join(s["symbols"]) or s["use"])}. '
-        f'{html.escape(s["use"])}</li>' for s in SOURCES["sources"])
-    exemplar = (ROOT / EXEMPLAR).read_text(encoding="utf-8")
-    style = re.search(r"<style>(.*?)</style>", exemplar, re.S)[1]
+        f'{html.escape(s["title"])}</a>: '
+        + (f'{html.escape(", ".join(s["symbols"]))}. ' if s["symbols"] else "")
+        + f'{html.escape(s["use"])}</li>' for s in SOURCES["sources"])
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Passing-ship module analysis: synthetic section and qualification limits</title>
-<style>{style}
+<title>Passing-ship structure and limits report: synthetic section</title>
+<style>{STYLE}
 pre{{white-space:pre-wrap;overflow-wrap:anywhere}}code{{overflow-wrap:anywhere}}
 :focus-visible{{outline:3px solid var(--report-accent);outline-offset:3px}}
 </style></head>
 <body class="hs-doc"><header>
-<h1>Passing-ship module analysis: synthetic section and qualification limits</h1>
+<h1>Passing-ship structure and limits report: synthetic section</h1>
 <p>Draft for maintainer review</p><p>Revision {REVISION} · {DATE}</p></header>
 <div class="layout"><nav aria-label="Contents"><ol>{nav}</ol></nav><main>
 <section id="section-1"><h2>1. Executive Summary</h2>
-<p>The section-shape helpers are checked against an independent synthetic quadratic.
+<p>This report covers structure and limits only; force, kernel and depth paths are not evaluated.
+The section-shape helpers are checked against an independent synthetic quadratic.
 The report provides a source-linked module map and reproducible section results.
 Physical-force qualification is NOT_EVALUATED; the parent issue remains open for broader numerical qualification.</p>
 <p>The solution for this bounded example is the normalized parabola H1 and its interior derivative.
@@ -333,12 +356,13 @@ def build(output_dir: Path) -> Path:
     """Write exactly the report and its deterministic source/change records."""
     contents = {"report.html": render(calculate()), "changes.json": json_text(CHANGES),
                 "sources.json": json_text(SOURCES)}
+    for target in [output_dir, *(output_dir / name for name in contents)]:
+        if target.is_symlink() or (target.exists() and
+                getattr(target.lstat(), "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+            raise ValueError("Report targets must not be links")
     output_dir.mkdir(parents=True, exist_ok=True)
-    for name in contents:
-        if (output_dir / name).is_symlink():
-            raise ValueError("Report targets must not be symbolic links")
     for name, content in contents.items():
-        (output_dir / name).write_text(content, encoding="utf-8")
+        (output_dir / name).write_text(content, encoding="utf-8", newline="\n")
     return output_dir / "report.html"
 
 

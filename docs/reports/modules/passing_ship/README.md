@@ -82,12 +82,12 @@ PYTHONPATH=src uv run --no-project --with pytest python -m pytest tests/hydrodyn
 S is not a physical area or force. No physical area scale, density, speed,
 separation or depth is supplied, and no force in N or moment in N m is computed.
 The example supplies no calibration or external coefficient table and makes no
-full-module qualification claim. Physical-force evidence, full reports and
-shared indexes remain follow-up work requiring separate review.
+full-module qualification claim. Physical-force evidence and a force-qualified
+report remain follow-up work requiring separate review.
 
 ## Module report index
 
-[Module report](report.html): the ten-section passing-ship module analysis adds
+[Module report](report.html): the ten-section structure and limits report adds
 a source-linked method map, H1 controls, computed section results, an engineering
 change panel and explicit limits. The existing standalone builder and example
 above retain their command and output contract. The parent issue remains open
