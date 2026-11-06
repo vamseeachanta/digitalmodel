@@ -11,6 +11,7 @@ confirmation against the cited editions remain open.
 | Revision | Date | What changed and why |
 |---|---|---|
 | 1 | 2026-11-05 | Add the input contract, synthetic hand example and limits for bottom-up seats and static section kick tolerance. |
+| 2 | 2026-11-06 | Correct section-length-limited acceptance, reject intervals without a selected shoe, and preserve the stated trip margin across each section. |
 
 ## Inputs and selection
 
@@ -31,8 +32,10 @@ crossings are used; a shallow strong layer does not hide a deeper weak layer.
 The new shoe becomes the next section bottom. Selection stops when the entire
 remaining fracture interval to the profile top meets the threshold, including
 equality. A bottom window below the requirement or lack of upward progress
-raises `ValueError`. A nonmonotone pore profile that would underbalance any
-part of a section with its bottom-based MW also raises `ValueError`.
+raises `ValueError`. A nonmonotone pore profile that would leave less than the
+stated trip margin anywhere in a section with its bottom-based MW also raises
+`ValueError`. The check includes internal knots and the interpolated shoe
+boundary; equality with the full trip margin is permitted.
 The computational limit `max_sections` defaults to 100 intervals and accepts a
 positive integer override. It bounds near-parallel profiles that can approach a
 fixed depth without reaching the top. Exceeding it raises `ValueError` and
@@ -43,6 +46,9 @@ contains shoe and bottom TVD, MW, required fracture EMW, fracture EMW at the sho
 and the governing criterion. `seat_depths_ft` includes only seats governed by
 `fracture_gradient`. The terminal `profile_top` interval is retained for
 inspection; shallow strings governed by other criteria remain unspecified.
+`kick_tolerance` rejects this terminal interval with `ValueError`, whether the
+profile top is at surface or below it, because its boundary is not a selected
+casing seat. Only sections governed by `fracture_gradient` can be checked.
 
 ## Example
 
@@ -116,22 +122,40 @@ volume (bbl) = height * annular capacity
 A nonpositive height reports `no tolerance`, zero height and zero volume, and
 fails even when minimum acceptable volume is zero. Cancellation at the
 zero-volume intensity boundary is treated as zero within a numerical tolerance
-of one billionth of a foot times ppg. Positive height with insufficient volume
-reports `below minimum volume`; meeting the volume threshold reports
-`acceptable`. These outcomes refer only to this static calculation.
+of one billionth of a foot times ppg. When the bubble remains below the shoe,
+positive height with insufficient volume reports `below minimum volume`;
+meeting the volume threshold reports `acceptable`. These outcomes refer only
+to this static calculation.
 
-The bubble is limited to the open section length `B - S`, and
-`limited_by_section_length` records when that limit governs. Capacity above the
-shoe requires additional casing geometry and is not evaluated. A terminal
-interval at surface has zero shoe pressure margin; a terminal interval whose
-profile top is below surface assumes a shoe at that boundary only for the
-calculation and does not establish a shallow casing design.
+When the calculated height reaches or exceeds the open section length `B - S`,
+the returned height is capped at that length and `limited_by_section_length`
+is true. The returned `volume_bbl` is then a **lower bound**, rather than a
+maximum influx volume. Status is `open section length governs` and `passes`
+is true for the stated static shoe-pressure criterion, including when that
+lower bound is below the minimum volume. With the open section full of influx,
+shoe pressure is `0.052 * [(MW + design KI) * B - rho * (B - S)]` and remains
+unchanged as further bubble volume enters the casing above the shoe. The
+section-length condition means this pressure is at or below shoe fracture
+pressure; the static model therefore imposes no finite shoe-pressure volume
+limit. Equality at the shoe is included, consistently with the volume
+acceptance boundary.
+
+For example, a shoe at 11900.0 ft, bottom at 12000.0 ft, shoe fracture EMW
+16.0 ppg, MW 15.5 ppg, influx density 2.0 ppg, zero design kick intensity,
+8.5 in hole and 5.0 in pipe give a capped height of 100.0 ft and a lower-bound
+volume of 4.6 bbl. Shoe pressure is 9661.6 psi against fracture pressure
+9900.8 psi, leaving 239.2 psi margin even after the bubble reaches the shoe.
+A minimum of 10.0 bbl therefore passes this static criterion. This does not
+establish a total influx capacity, casing geometry above the shoe, another
+pressure limit, gas expansion or operational acceptance.
 
 ## Verification and source limits
 
 The regression tests use the synthetic hand example, multiple fracture troughs,
-TD interpolation, invalid inputs, acceptance boundaries, and the open-section
-bubble limit. Independent unit geometry checks compare the rounded oilfield
+TD interpolation, invalid inputs, acceptance boundaries, the open-section
+bubble limit and its lower-bound verdict, terminal-interval rejection, and
+trip-margin preservation at knots and interpolated shoes. Independent unit
+geometry checks compare the rounded oilfield
 conversions with 12 inches per foot, 231 cubic inches per United States gallon and
 42 gallons per barrel. These dimensional checks do not confirm a textbook
 edition or a well-integrity requirement.

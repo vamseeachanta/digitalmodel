@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Bottom-up casing seats and a static, vertical-well kick-tolerance screen.
 
@@ -161,8 +161,8 @@ def select_casing_seats(
     MW is pore(bottom) + trip margin. The full fracture suffix must satisfy the
     threshold, including internal troughs. Selection stops when that suffix
     reaches the profile top. A bottom window that cannot hold the required
-    weight, a zero-length interval, or an interval underbalanced at an internal
-    pore peak raises ValueError rather than returning a feasible programme.
+    weight, a zero-length interval, or an interval losing any stated trip margin
+    at a pore peak raises ValueError rather than returning a feasible programme.
     The computational limit ``max_sections`` bounds profiles that approach a
     fixed depth without reaching the top; it is not an engineering criterion.
     """
@@ -185,9 +185,13 @@ def select_casing_seats(
         shoe = _shallowest_shoe(profile, bottom, required)
         if bottom - shoe <= 1e-8:
             raise ValueError("selection cannot make upward progress")
-        if any(shoe <= d <= bottom and profile.pore_at(d) > mud
-               for d in profile.depths_ft) or profile.pore_at(shoe) > mud:
-            raise ValueError("bottom-based mud weight underbalances a pore peak")
+        if any(shoe <= d <= bottom and profile.pore_at(d) + trip_margin_ppg > mud
+               for d in profile.depths_ft) or (
+                   profile.pore_at(shoe) + trip_margin_ppg > mud
+               ):
+            raise ValueError(
+                "bottom-based mud weight cannot retain trip margin at a pore peak"
+            )
         criterion: Literal["fracture_gradient", "profile_top"] = (
             "profile_top" if shoe == profile.depths_ft[0] else "fracture_gradient"
         )
@@ -205,7 +209,13 @@ def select_casing_seats(
 
 @dataclass(frozen=True)
 class KickTolerance:
-    """Static single-bubble capacity and explicit design-volume acceptance."""
+    """Static single-bubble capacity and explicit design-volume acceptance.
+
+    When ``limited_by_section_length`` is true, ``volume_bbl`` is a lower bound
+    and ``influx_height_ft`` is the filled open-section length. ``passes`` then
+    applies only to the static shoe-pressure criterion, which imposes no finite
+    volume limit once the bubble reaches the shoe.
+    """
 
     section: CasingSection
     influx_density_ppg: float
@@ -221,7 +231,10 @@ class KickTolerance:
     influx_height_ft: float
     volume_bbl: float
     limited_by_section_length: bool
-    status: Literal["no tolerance", "below minimum volume", "acceptable"]
+    status: Literal[
+        "no tolerance", "below minimum volume", "acceptable",
+        "open section length governs",
+    ]
     passes: bool
 
 
@@ -241,9 +254,13 @@ def kick_tolerance(
     KI is the excess formation EMW over the section MW, not over pore EMW.
     H = (shoe * (FG_shoe - MW) - bottom * KI) / (MW - rho_influx).
     A nonpositive numerator gives no tolerance, even if minimum volume is zero.
-    H is capped at bottom - shoe: beyond that the bubble enters the casing and
-    the single open-hole geometry no longer applies. The cap is reported.
+    Only a selected casing seat can be checked. H is capped at bottom - shoe;
+    once the bubble reaches the shoe, pressure below it remains unchanged as
+    further volume enters the casing. The reported volume is then a lower bound
+    and the static shoe-pressure criterion passes for any finite minimum volume.
     """
+    if section.criterion != "fracture_gradient":
+        raise ValueError("kick tolerance requires a selected casing seat")
     _nonnegative(section.shoe_ft, "shoe depth")
     _positive(section.bottom_ft, "bottom depth")
     if section.shoe_ft >= section.bottom_ft:
@@ -270,15 +287,19 @@ def kick_tolerance(
         available = 0.0
     height = max(0.0, available / (section.mud_weight_ppg - influx_density_ppg))
     length = section.bottom_ft - section.shoe_ft
-    limited = height > length
+    limited = height >= length
     height = min(height, length)
     capacity = (hole_diameter_in ** 2 - pipe_diameter_in ** 2) / (
         ANNULAR_CAPACITY_DIVISOR
     )
     volume = height * capacity
-    passes = height > 0.0 and volume >= minimum_volume_bbl
-    status: Literal["no tolerance", "below minimum volume", "acceptable"] = (
+    passes = height > 0.0 and (limited or volume >= minimum_volume_bbl)
+    status: Literal[
+        "no tolerance", "below minimum volume", "acceptable",
+        "open section length governs",
+    ] = (
         "no tolerance" if height == 0.0 else
+        "open section length governs" if limited else
         "acceptable" if passes else "below minimum volume"
     )
     return KickTolerance(

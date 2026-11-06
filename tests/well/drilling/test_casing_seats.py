@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Synthetic hand checks for the vertical, static screen in issue #3842."""
 
@@ -106,15 +106,19 @@ def test_zero_height_boundary_and_volume_acceptance_are_distinct():
     assert tolerance(minimum_volume_bbl=below.volume_bbl).passes
 
 
-def test_terminal_surface_interval_has_no_shoe_pressure_margin():
-    result = tolerance(selection().sections[-1])
-    assert result.shoe_margin_psi == 0.0
-    assert result.status == "no tolerance"
+@pytest.mark.parametrize("top_ft", [0.0, 1000.0])
+def test_terminal_interval_without_a_selected_shoe_is_rejected(top_ft):
+    terminal = selection(profile(depths_ft=(top_ft, 6000.0, 12000.0))).sections[-1]
+    assert terminal.criterion == "profile_top"
+    with pytest.raises(ValueError, match="selected casing seat"):
+        tolerance(terminal)
 
 
 def test_all_selected_sections_can_be_checked_independently():
-    checks = [tolerance(section) for section in selection().sections]
-    assert len(checks) == 3
+    design = selection()
+    checks = [tolerance(section) for section in design.sections
+              if section.criterion == "fracture_gradient"]
+    assert len(checks) == len(design.seat_depths_ft) == 2
     assert checks[1].zero_volume_kick_intensity_ppg == pytest.approx(15 / 88)
 
 
@@ -214,6 +218,30 @@ def test_nonmonotone_pore_profile_cannot_silently_underbalance_a_section():
         selection(p)
 
 
+@pytest.mark.parametrize("peak_ppg", [10.1, 10.3, 10.5])
+def test_internal_pore_peak_cannot_erode_the_stated_trip_margin(peak_ppg):
+    # MW = 10.0 + 0.5 = 10.5; a 10.3 peak leaves only 0.2 ppg.
+    p = profile(pore_ppg=(9.0, peak_ppg, 10.0))
+    with pytest.raises(ValueError, match="trip margin"):
+        selection(p)
+
+
+def test_internal_pore_peak_may_equal_bottom_pore_with_full_trip_margin():
+    p = profile(pore_ppg=(9.0, 10.0, 10.0))
+    result = selection(p)
+    assert len(result.sections) == 1
+    assert result.sections[0].mud_weight_ppg == 10.5
+    assert result.sections[0].mud_weight_ppg - p.pore_at(6000.0) == 0.5
+
+
+def test_interpolated_shoe_boundary_cannot_erode_the_trip_margin():
+    p = profile(pore_ppg=(9.8, 9.0, 10.0))
+    # The first shoe is at 4166.7 ft; the next is at 2907.4 ft, where
+    # pore = 9.412 ppg exceeds pore(4166.7) = 9.244 ppg and erodes the margin.
+    with pytest.raises(ValueError, match="trip margin"):
+        selection(p, kick_margin_ppg=3.0)
+
+
 def test_near_parallel_profiles_stop_at_explicit_computation_limit():
     p = profile(
         depths_ft=(0.0, 12000.0),
@@ -257,18 +285,65 @@ def test_invalid_kick_inputs_are_rejected(overrides):
     {"bottom_ft": math.inf},
     {"mud_weight_ppg": 0.0},
     {"fracture_at_shoe_ppg": math.nan},
+    {"criterion": "unrecognised"},
 ])
 def test_invalid_manual_sections_are_rejected(overrides):
     with pytest.raises(ValueError):
         tolerance(replace(selection().sections[0], **overrides))
 
 
-def test_bubble_height_is_limited_to_the_open_section():
+@pytest.mark.parametrize("minimum_bbl", [0.0, 4.0, 10.0, 1000000.0])
+def test_bubble_height_is_limited_to_the_open_section(minimum_bbl):
     section = replace(selection().sections[0], shoe_ft=11900.0)
-    result = tolerance(section)
+    result = tolerance(section, minimum_volume_bbl=minimum_bbl)
     assert result.influx_height_ft == 100.0
     assert result.limited_by_section_length
     assert result.volume_bbl == pytest.approx(100 * 47.25 / 1029.4)
+    assert result.status == "open section length governs"
+    assert result.passes
+    # With the bubble filling 100 ft below the shoe, independent arithmetic:
+    # P_form = 0.052 * 15.5 * 12000; P_shoe = P_form - 0.052 * 2 * 100.
+    # P_frac = 0.052 * 16 * 11900; margin = 9900.8 - 9661.6 = 239.2 psi.
+    pressure_at_shoe = 0.052 * (
+        section.mud_weight_ppg * section.bottom_ft
+        - result.influx_density_ppg * result.influx_height_ft
+    )
+    fracture_pressure = 0.052 * section.fracture_at_shoe_ppg * section.shoe_ft
+    assert pressure_at_shoe == pytest.approx(9661.6)
+    assert fracture_pressure == pytest.approx(9900.8)
+    assert fracture_pressure - pressure_at_shoe == pytest.approx(239.2)
+
+
+def test_bubble_reaching_the_shoe_exactly_also_reports_a_lower_bound():
+    section = replace(selection().sections[0], shoe_ft=100.0, bottom_ft=200.0)
+    # H = 100 * (16 - 15.5) / (15.5 - 15) = 100 ft = B - S.
+    result = tolerance(section, influx_density_ppg=15.0)
+    assert result.influx_height_ft == 100.0
+    assert result.volume_bbl < result.minimum_volume_bbl
+    assert result.limited_by_section_length
+    assert result.status == "open section length governs"
+    assert result.passes
+
+
+def test_positive_kick_intensity_can_also_fill_the_open_section():
+    section = replace(selection().sections[0], shoe_ft=11900.0)
+    result = tolerance(section, design_kick_intensity_ppg=0.1)
+    # 5950 - 12000 * 0.1 = 4750 ft*ppg > 100 * 13.5 = 1350 ft*ppg.
+    assert result.volume_bbl < result.minimum_volume_bbl
+    assert result.limited_by_section_length
+    assert result.status == "open section length governs"
+    assert result.passes
+
+
+def test_short_section_still_fails_when_pressure_limits_height_below_shoe():
+    section = replace(selection().sections[0], shoe_ft=11900.0)
+    result = tolerance(section, design_kick_intensity_ppg=0.4)
+    # H = (5950 - 12000 * 0.4) / 13.5 = 85.2 ft, below B - S = 100 ft.
+    assert result.influx_height_ft == pytest.approx(85.2, abs=0.05)
+    assert not result.limited_by_section_length
+    assert result.volume_bbl < result.minimum_volume_bbl
+    assert result.status == "below minimum volume"
+    assert not result.passes
 
 
 def test_overweight_mud_reports_no_tolerance():
