@@ -155,12 +155,20 @@ def test_load_sources_have_one_consistent_declaration():
                 f'<td>{source}</td>') in text
 
 
-def test_revision_four_records_provenance_correction_without_rewriting_history():
+def test_revision_four_preserves_published_history_and_appends_one_row():
     text = PAGE.read_text(encoding='utf-8')
     assert builder.NUMERICAL_BASIS['revision'] == 4
-    assert '<tr><td>3</td><td>2026-10-21</td>' in text
-    assert '<tr><td>4</td><td>2026-11-06</td>' in text
-    assert 'Unsupported provenance claims are removed' in text
+    table = re.search(r'<h2>Revision history</h2>.*?<tbody>(.*?)</tbody>', text, re.S).group(1)
+    rows = re.findall(r'<tr>.*?</tr>', table, re.S)
+    published_rows = [
+        '<tr><td>0</td><td>2026-10-20</td><td>Selected simulated forecast traces and provisional alerts are published for demonstration.</td></tr>',
+        '<tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>',
+        '<tr><td>2</td><td>2026-10-20</td><td>Limit sources, forecast settings and empirical window counts are clarified without changing the retained series.</td></tr>',
+        '<tr><td>3</td><td>2026-10-21</td><td>Unsupported basis claims are removed, the conversion source is cited, and calibration arithmetic and alert explanations are derived from their inputs.</td></tr>',
+    ]
+    assert rows[:4] == published_rows
+    assert len(rows) == len(published_rows) + 1
+    assert rows[4].startswith('<tr><td>4</td><td>2026-11-06</td>')
 
 
 @pytest.mark.parametrize('optimized', [False, True], ids=['normal', 'optimized'])
@@ -207,6 +215,41 @@ except ValueError as error:
 else:
     raise RuntimeError('Malformed forecast input was accepted')
 ''', str(request), message]
+    result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize('optimized', [False, True], ids=['normal', 'optimized'])
+def test_written_page_integrity_check_survives_optimization(tmp_path, optimized):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    config_raw = json.dumps(config).encode('utf-8')
+    payload = {'demo': {'scenarios': [scenario]},
+               'provenance': {'demo_config': {'sha256': hashlib.sha256(config_raw).hexdigest()}}}
+    for name, raw in (('payload', json.dumps(payload).encode('utf-8')), ('config', config_raw),
+                      ('terms', b'["reserved-example-term"]')):
+        (tmp_path / name).write_bytes(raw)
+    command = [sys.executable, *(['-O'] if optimized else []), '-c', '''
+import sys
+from pathlib import Path
+from unittest.mock import patch
+from scripts.capabilities import build_installation_forecast_page as builder
+root = Path(sys.argv[1])
+output = root / 'forecast.html'
+write_bytes = Path.write_bytes
+
+def corrupt_page(path, data):
+    return write_bytes(path, data + b'corrupted' if path == output else data)
+
+with patch.object(Path, 'write_bytes', corrupt_page):
+    try:
+        builder.build(root / 'payload', root / 'config', output, root / 'terms')
+    except ValueError as error:
+        if str(error) != 'Written page differs from the rendered bytes':
+            raise
+    else:
+        raise RuntimeError('Corrupted written page was accepted')
+''', str(tmp_path)]
     result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
 

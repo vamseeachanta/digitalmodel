@@ -266,9 +266,9 @@ or operational risk calibration is established by this demonstration.</p>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
 <tr><td>0</td><td>2026-10-20</td><td>Selected simulated forecast traces and provisional alerts are published for demonstration.</td></tr>
 <tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>
-<tr><td>2</td><td>2026-10-21</td><td>Load sources, forecast settings and window counts are stated consistently; retained provenance is identified.</td></tr>
-<tr><td>3</td><td>2026-10-21</td><td>Each alert is explained using a checked peak margin; the rounded load conversion is distinguished from its exact reference.</td></tr>
-<tr><td>4</td><td>2026-11-06</td><td>Unsupported provenance claims are removed; original limit derivations and the alert-cutoff basis remain unverified.</td></tr>
+<tr><td>2</td><td>2026-10-20</td><td>Limit sources, forecast settings and empirical window counts are clarified without changing the retained series.</td></tr>
+<tr><td>3</td><td>2026-10-21</td><td>Unsupported basis claims are removed, the conversion source is cited, and calibration arithmetic and alert explanations are derived from their inputs.</td></tr>
+<tr><td>4</td><td>2026-11-06</td><td>Published revision history is preserved; input and written-page integrity checks remain active under optimized Python.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
 {numerical_basis_html()}{''.join(sections)}
 <footer>Only the selected history-only forecast series are retained. No live sensor connection,
@@ -311,7 +311,8 @@ def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) 
         raise ValueError('Manifest sanitization scan failed')
     output.write_bytes(encoded)
     output.with_suffix('.manifest.json').write_bytes(manifest_raw)
-    assert output.read_bytes() == encoded
+    if output.read_bytes() != encoded:
+        raise ValueError('Written page differs from the rendered bytes')
 
 
 if __name__ == '__main__':
