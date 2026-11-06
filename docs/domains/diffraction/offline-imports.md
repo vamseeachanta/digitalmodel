@@ -11,6 +11,7 @@ it changes no hydrodynamic equations, coefficients or acceptance limits.
 | --- | --- | --- |
 | Initial | 2026-10-20 | Defer interface imports so offline test collection can run without licensed software. |
 | 1 | 2026-10-24 | Document missing-interface flags and defer CLI detection until command execution so help and collection stay offline. |
+| 2 | 2026-11-06 | Derive flags from usable exports, cache optional resolutions and preserve command converter mocks. |
 
 ## Import contract
 
@@ -37,8 +38,13 @@ Explicit access to `OrcaWaveConverter`, `convert_orcawave_results`,
 read. Without `OrcFxAPI`, all three flags now return `False` rather than the
 previous `True`, so `convert-orcawave`, `compare` and `plot-raos` report the
 missing dependency before conversion. Optional solver exports retain a `None`
-fallback if importing the dependency raises `ImportError`. Direct converter submodule imports retain
-their normal missing-dependency errors. Import errors other than `ImportError`
+fallback if importing the dependency raises `ImportError`. `ORCAWAVE_AVAILABLE`
+requires the converter export, and `TEST_UTILITIES_AVAILABLE` requires the data
+extractor export; an importable interface alone does not make either flag true.
+Solver export resolutions, including `None`, are cached on first access for the
+process lifetime. Restart the process after changing installed dependencies.
+Direct converter submodule imports retain their normal missing-dependency
+errors. Import errors other than `ImportError`
 are propagated. A wildcard import requests licensed exports too; offline callers
 should import the named helpers they need. `dir()` lists exports without loading
 the interface.
@@ -91,14 +97,18 @@ It also checks report and result-extraction helpers and the worked example.
 Additional fresh-process tests cover CLI imports, help and collection, the
 missing-interface flags and six export fallbacks, and propagation of converter
 errors other than `ImportError`. Missing-interface tests let discovery return no
-module; a separate command-resolution test uses a converter test double.
+module; a separate command-resolution test exercises the specialized CLI test's
+converter patch target. Explicit-resolution fixtures cover an importable
+interface with an unavailable converter or data extractor, dependency messages
+for conversion commands and batch processing, and cached optional exports.
+These fixtures are separate from the rejecting numerical checks.
 Run it with:
 
 ```bash
 PYTHONPATH=src python -m pytest tests/hydrodynamics/test_diffraction_import_boundary.py -q -rA -p no:cacheprovider
 ```
 
-The draft pull request records the base revision, content digests and node
+The pull request records the base revision, content digests and node
 results for the tested uncommitted tree. Licensed execution remains untested;
 existing converter tests use their established test doubles separately from
 the offline regression. Independent review and a licensed execution check

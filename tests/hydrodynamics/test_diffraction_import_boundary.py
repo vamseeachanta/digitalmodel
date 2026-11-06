@@ -283,16 +283,19 @@ def test_cli_missing_interface_fails_at_command_time(tmp_path):
         model = Path({str(tmp_path / "model.sim")!r})
         model.write_text("test input")
         runner = CliRunner()
+        resolved_attempts = None
         for command in (
             ["convert-orcawave", str(model)],
             ["compare", str(model.parent), str(model), "test"],
             ["plot-raos", str(model)],
         ):
-            attempts.clear()
             result = runner.invoke(cli, command + ["--water-depth", "100"])
             assert result.exit_code == 1, result.output
             assert "OrcFxAPI not available" in result.output
             assert attempts and set(attempts) == {{"OrcFxAPI"}}
+            if resolved_attempts is None:
+                resolved_attempts = attempts.copy()
+            assert attempts == resolved_attempts
         assert not any(name.split(".")[0] in roots for name in sys.modules)
     """,
         tmp_path,
@@ -306,14 +309,25 @@ def test_cli_resolves_converter_when_commands_run(tmp_path):
         f"""
         import importlib
         from pathlib import Path
-        from unittest.mock import MagicMock
+        import ast
+        from unittest.mock import MagicMock, patch
         from click.testing import CliRunner
         from digitalmodel.hydrodynamics import diffraction as package
 
         cli_module = importlib.import_module(package.__name__ + ".cli")
         package.ORCAWAVE_AVAILABLE = True
-        package.OrcaWaveConverter = MagicMock(
-            side_effect=RuntimeError("converter reached")
+        # Exercise the patch target actually declared by the interface-only test.
+        tree = ast.parse(Path("tests/specialized/cli/test_diffraction_cli.py").read_text())
+        conversion = next(
+            node for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "test_basic_orcawave_conversion"
+        )
+        target = next(
+            decorator.args[0].value for decorator in conversion.decorator_list
+            if isinstance(decorator, ast.Call)
+            and isinstance(decorator.func, ast.Name)
+            and decorator.func.id == "patch"
         )
         cli_module.AQWAConverter = MagicMock()
         model = Path({str(tmp_path / "model.sim")!r})
@@ -324,11 +338,128 @@ def test_cli_resolves_converter_when_commands_run(tmp_path):
             ["compare", str(model.parent), str(model), "test"],
             ["plot-raos", str(model)],
         ):
-            package.OrcaWaveConverter.reset_mock()
-            result = runner.invoke(cli_module.cli, command + ["--water-depth", "100"])
-            assert result.exit_code == 1, result.output
-            assert "converter reached" in result.output
-            package.OrcaWaveConverter.assert_called_once()
+            with patch(target, side_effect=RuntimeError("converter reached")) as converter:
+                result = runner.invoke(cli_module.cli, command + ["--water-depth", "100"])
+                assert result.exit_code == 1, result.output
+                assert "converter reached" in result.output
+                converter.assert_called_once()
+        assert attempts and set(attempts) == {{"OrcFxAPI"}}
+    """,
+        tmp_path,
+        guard=_MISSING_INTERFACE,
+    )
+
+
+@pytest.mark.parametrize(
+    "unavailable, converter_available, utilities_available",
+    [
+        ("orcawave_converter", False, True),
+        ("orcawave_data_extraction", True, False),
+        (None, True, True),
+    ],
+)
+def test_flags_reflect_resolved_exports(
+    unavailable, converter_available, utilities_available, tmp_path,
+):
+    """Explicit resolution uses import fixtures; offline numerical checks do not."""
+    _run_guarded(
+        f"""
+        import importlib.machinery
+        from pathlib import Path
+        from click.testing import CliRunner
+        from digitalmodel.hydrodynamics import diffraction as package
+        from digitalmodel.hydrodynamics.diffraction import result_extractor, solver
+        from digitalmodel.hydrodynamics.diffraction.batch_processor import BatchProcessor
+        from digitalmodel.hydrodynamics.diffraction.cli import cli
+
+        assert attempts == []
+
+        class OptionalDependencyFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
+            def find_spec(self, fullname, path=None, target=None):
+                if fullname == solver.__name__ + "." + str({unavailable!r}):
+                    raise ImportError("optional converter dependency unavailable")
+                if fullname == "OrcFxAPI" or fullname in {{
+                    solver.__name__ + ".orcawave_converter",
+                    solver.__name__ + ".orcawave_data_extraction",
+                }}:
+                    return importlib.machinery.ModuleSpec(fullname, self)
+                return None
+
+            def create_module(self, spec):
+                return None
+
+            def exec_module(self, module):
+                for name in solver._LICENSED_EXPORTS:
+                    setattr(module, name, object())
+
+        sys.meta_path.insert(0, OptionalDependencyFinder())
+        assert solver.OrcFxAPI is not None
+        assert package.ORCAWAVE_AVAILABLE is {converter_available!r}
+        assert package.TEST_UTILITIES_AVAILABLE is {utilities_available!r}
+        assert result_extractor.CONVERTER_AVAILABLE is {converter_available!r}
+        for name in ("OrcFxAPI", *solver._LICENSED_EXPORTS):
+            value = getattr(solver, name)
+            assert name in vars(solver)
+            assert vars(solver)[name] is value
+            assert getattr(solver, name) is value
+        if not {converter_available!r}:
+            model = Path({str(tmp_path / "model.sim")!r})
+            model.write_text("test input")
+            runner = CliRunner()
+            for command in (
+                ["convert-orcawave", str(model)],
+                ["compare", str(model.parent), str(model), "test"],
+                ["plot-raos", str(model)],
+            ):
+                result = runner.invoke(cli, command + ["--water-depth", "100"])
+                assert result.exit_code == 1, result.output
+                assert "OrcFxAPI not available" in result.output
+                assert "NoneType" not in result.output
+            try:
+                BatchProcessor([])._process_orcawave(None)
+            except ImportError as exc:
+                assert "OrcFxAPI required" in str(exc)
+            else:
+                raise AssertionError("batch conversion accepted an unavailable converter")
+    """,
+        tmp_path,
+    )
+
+
+@pytest.mark.parametrize(
+    "export",
+    [
+        "OrcFxAPI", "OrcaWaveConverter", "convert_orcawave_results",
+        "OrcaWaveDataExtractor", "extract_all_rao_data",
+        "extract_all_added_mass", "extract_all_damping",
+    ],
+)
+def test_solver_caches_unavailable_exports(export, tmp_path):
+    _run_guarded(
+        f"""
+        from digitalmodel.hydrodynamics import diffraction as package
+        from digitalmodel.hydrodynamics.diffraction import solver
+
+        requests = []
+        requested_module = (
+            "OrcFxAPI" if {export!r} == "OrcFxAPI"
+            else solver.__name__ + solver._LICENSED_EXPORTS[{export!r}]
+        )
+
+        class MissingDependencyFinder(importlib.abc.MetaPathFinder):
+            def find_spec(self, fullname, path=None, target=None):
+                if fullname == requested_module:
+                    requests.append(fullname)
+                    raise ImportError("optional dependency unavailable")
+                return None
+
+        sys.meta_path.insert(0, MissingDependencyFinder())
+        assert getattr(solver, {export!r}) is None
+        assert getattr(solver, {export!r}) is None
+        if {export!r} != "OrcFxAPI":
+            assert getattr(package, {export!r}) is None
+        assert requests == [requested_module], requests
+        assert {export!r} in vars(solver)
         assert attempts == []
     """,
         tmp_path,

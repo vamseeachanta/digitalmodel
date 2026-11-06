@@ -27,16 +27,20 @@ def __getattr__(name):
     """Resolve licensed exports only when requested (PEP 562, 2017)."""
     if name == "OrcFxAPI":
         try:
-            return import_module(name)
+            value = import_module(name)
         except ImportError:
-            return None
-    if name in _LICENSED_EXPORTS:
+            value = None
+    elif name in _LICENSED_EXPORTS:
         try:
             module = import_module(_LICENSED_EXPORTS[name], __name__)
         except ImportError:
-            return None
-        return getattr(module, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+            value = None
+        else:
+            value = getattr(module, name)
+    else:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    globals()[name] = value
+    return value
 
 
 def __dir__():

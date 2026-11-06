@@ -146,7 +146,7 @@ class TestConvertOrcaWaveCommand:
         not pytest.importorskip('OrcFxAPI', reason='OrcFxAPI not available'),
         reason="OrcaWave conversion requires OrcFxAPI"
     )
-    @patch('digitalmodel.hydrodynamics.diffraction.cli.OrcaWaveConverter')
+    @patch('digitalmodel.hydrodynamics.diffraction.OrcaWaveConverter')
     def test_basic_orcawave_conversion(self, mock_converter, cli_runner, tmp_path):
         """Test basic OrcaWave to OrcaFlex conversion"""
         mock_converter_instance = MagicMock()
