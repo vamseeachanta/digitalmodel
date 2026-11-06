@@ -7,7 +7,6 @@ import argparse
 import hashlib
 import html
 import json
-import re
 from fractions import Fraction
 from pathlib import Path
 
@@ -17,23 +16,51 @@ from digitalmodel.structural.fatigue.damage_accumulation import LinearDamageAccu
 from digitalmodel.structural.fatigue.sn_curves import PowerLawSNCurve
 
 ROOT = Path(__file__).resolve().parents[4]
-REVISION = "00"
-DATE = "2026-10-28"  # Fixed document issue date, never the rebuild time.
+REVISION = "01"
+DATE = "2026-11-06"  # Fixed document issue date, never the rebuild time.
 EXEMPLAR = "docs/reports/pipeline-ffs-assessment.html"
+# The original layout is retained locally so unrelated exemplar edits do not alter this report.
+STYLE = """
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+"""
 REBUILD = ('PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR="$TMPDIR/matplotlib" '
            'PYTHONPATH=src uv run --no-project --python "$FATIGUE_REPORT_PYTHON" '
            'python docs/reports/modules/fatigue/build_report.py '
            '--output-dir "$TMPDIR/fatigue-report"')
-CHANGES = {
+INITIAL_CHANGES = {
     "report": "fatigue-synthetic-arithmetic",
-    "revision": REVISION,
-    "date": DATE,
+    "revision": "00",
+    "date": "2026-10-28",
     "changes": [
         "Added an artificial power-law example to separate arithmetic checks from material qualification.",
         "Mapped implemented methods, counting refusals and unevaluated engineering uses so that numerical scope is explicit.",
         "Added deterministic source and change records, parsed numerical checks and module-local report pointers.",
     ],
 }
+CURRENT_CHANGES = {
+    "report": INITIAL_CHANGES["report"], "revision": REVISION, "date": DATE,
+    "changes": [
+        "Limited content pins to evaluated modules and report-owned evidence; normalized checkout line endings and retained the original layout locally.",
+        "Rejected missing or reordered contributions before pairing inputs; corrected allowable-life provenance and displayed small differences in scientific notation.",
+    ],
+}
+CHANGES = {**CURRENT_CHANGES, "revisions": [INITIAL_CHANGES, CURRENT_CHANGES]}
 
 
 def calculate() -> dict:
@@ -48,10 +75,16 @@ def calculate() -> dict:
     # The curve base class attaches unused generic properties for material=None.
     # Correction remains disabled; those defaults are not an example material basis.
     raw = LinearDamageAccumulation(mean_stress_correction=None).calculate_damage(cycles, curve)
-    levels = [{"range": float(row["stress_range"]), "mean": float(cycles.iloc[i]["mean"]),
-               "count": float(row["cycles_applied"]), "allowable": float(row["cycles_allowable"]),
-               "damage": float(row["damage_increment"])}
-              for i, row in enumerate(raw["damage_contributions"])]
+    contributions = raw["damage_contributions"]
+    if len(contributions) != len(cycles):
+        raise ValueError("Every synthetic input row must produce one damage contribution")
+    levels = []
+    for cycle, row in zip(cycles.itertuples(index=False), contributions):
+        if row["stress_range"] != cycle.range or row["cycles_applied"] != cycle.count:
+            raise ValueError("Damage contribution order must match synthetic input rows")
+        levels.append({"range": float(cycle.range), "mean": float(cycle.mean),
+                       "count": float(cycle.count), "allowable": float(row["cycles_allowable"]),
+                       "damage": float(row["damage_increment"])})
     units = {"basis.coefficient": "cycle*MPa^2", "basis.exponent": "dimensionless",
              "basis.fatigue_limit": "MPa", "basis.cutoff": "cycles",
              "total_damage": "dimensionless", "cycles_processed": "cycles"}
@@ -82,7 +115,7 @@ def independent_values() -> dict:
 
 
 def source_record() -> dict:
-    """Pin repository evidence by content, without embedding local locators."""
+    """Pin evaluated modules and owned evidence; retain inventory locators separately."""
     entries = [
         ("ref-curve", "Explicit power law and correction interfaces",
          "src/digitalmodel/structural/fatigue/sn_curves.py", ["PowerLawSNCurve", "get_allowable_cycles", "MeanStressCorrection"]),
@@ -110,9 +143,14 @@ def source_record() -> dict:
          "docs/reports/modules/fatigue/build_report.py", ["calculate", "independent_values"]),
         ("ref-layout", "Local report layout exemplar", EXEMPLAR, ["<style>"]),
     ]
-    files = [{"id": key, "title": title, "path": path, "symbols": symbols,
-              "sha256": hashlib.sha256((ROOT / path).read_bytes()).hexdigest()}
-             for key, title, path, symbols in entries]
+    pinned = {"ref-curve", "ref-damage", "ref-report-tests", "ref-builder"}
+    files = []
+    for key, title, path, symbols in entries:
+        source = {"id": key, "title": title, "path": path, "symbols": symbols}
+        if key in pinned:
+            canonical = (ROOT / path).read_bytes().decode("utf-8").replace("\r\n", "\n").encode("utf-8")
+            source["sha256"] = hashlib.sha256(canonical).hexdigest()
+        files.append(source)
     return {
         "report": CHANGES["report"], "revision": REVISION,
         "basis": {"id": "synthetic-basis", "classification": "synthetic",
@@ -126,6 +164,7 @@ def source_record() -> dict:
         "roundoff": {"id": "roundoff-budget", "relative_tolerance": "32 * 2**(-52)", "absolute_tolerance": "0",
                      "derivation": "Fewer than eight rounding stages; four epsilon per stage allows for reciprocal-square evaluation. Binary64 epsilon is the spacing above unity. Numerical regression budget only; no material uncertainty is represented."},
         "readiness": "Synthetic arithmetic only; engineering qualification NOT_EVALUATED",
+        "digest_scope": "Strict UTF-8 text, CRLF normalized to LF; all other content preserved",
         "files": files,
     }
 
@@ -167,7 +206,8 @@ def build(record: dict) -> str:
 
     def n(key):
         unit = html.escape(record["units"][key], quote=True)
-        source = "ref-damage" if key in oracle else "synthetic-basis"
+        source = ("ref-curve" if key.endswith(".allowable") else
+                  "ref-damage" if key in oracle else "synthetic-basis")
         return (f'<span data-value="{html.escape(key, quote=True)}" data-unit="{unit}" '
                 f'data-source="{source}">{lookup(record, key):.1f} {unit}</span>')
 
@@ -190,7 +230,7 @@ def build(record: dict) -> str:
         # Compute differences before rounding; no rounded comparison is an oracle.
         difference = abs(lookup(record, key) - float(expected)) / abs(float(expected)) * 100
         comparisons.append([html.escape(key), reference(key), n(key),
-                            f'<span data-difference="{key}">{difference:.1f} %</span>'])
+                            f'<span data-difference="{key}">{difference:.1e} %</span>'])
     result_table = table(["Quantity", "Exact derivation, displayed (unit shown)",
                           "Module result (unit shown)", "Absolute relative difference (%)"], comparisons,
                          "Table 2. Rational hand calculation compared with unrounded module results before display rounding.")
@@ -218,18 +258,18 @@ def build(record: dict) -> str:
         + ", ".join(f'<code>{html.escape(symbol)}</code>' for symbol in s["symbols"]) + ".</li>"
         for s in sources["files"])
     changes = "".join(f"<li>{html.escape(change)}</li>" for change in CHANGES["changes"])
-    revisions = table(["Revision", "Date", "What changed and why"], [[REVISION, DATE,
-        "First issue: added a synthetic counted-cycle example and method limits to bound arithmetic evidence."]],
+    revisions = table(["Revision", "Date", "What changed and why"], [["00", "2026-10-28",
+        "First issue: added a synthetic counted-cycle example and method limits to bound arithmetic evidence."],
+        [REVISION, DATE, "Corrected evidence scope, checkout portability, input pairing, source bindings and small-difference display."]],
         "Revision history. Each issue retains its original change record.")
     titles = ["Executive Summary", "Introduction", "Data Basis", "Theory and Equations", "Worked Example",
               "Validation Evidence", "Limits of Use", "Recommendations", "References", "Appendix"]
     navigation = "".join(f'<li>{ref(f"section-{i}", title)}</li>' for i, title in enumerate(titles, 1))
-    style = re.search(r"<style>(.*?)</style>", (ROOT / EXEMPLAR).read_text(encoding="utf-8"), re.S)[1]
     return f'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Structural fatigue module analysis: synthetic counted-cycle arithmetic</title>
-<style>{style}</style>
+<style>{STYLE}</style>
 <style>code,pre{{overflow-wrap:anywhere;white-space:pre-wrap}}details{{margin:20px 0;padding:12px;border:1px solid var(--line)}}:focus-visible{{outline:2px solid var(--report-accent)}}</style>
 </head><body class="hs-doc" id="fatigue-synthetic-arithmetic" data-revision="{REVISION}">
 <header><h1>Structural fatigue module analysis: synthetic counted-cycle arithmetic</h1>
@@ -276,7 +316,8 @@ The exact quotients and their rational sum are compared with module results in T
 </section>
 <section id="section-5"><h2>5. Worked Example</h2>
 <p>Counted rows are passed directly to the accumulator. No time series is counted and no standard curve factory is called.
-The comparison column is computed from unrounded differences; values and percentages are displayed to one decimal place.</p>
+The absolute relative difference in percent is computed from unrounded values and displayed in scientific notation
+with one decimal in the mantissa, so small nonzero differences remain visible. Other values use one decimal place.</p>
 {result_table}
 <p>The result supports the supplied arithmetic block only. No physical design acceptance or remaining-life estimate is assigned.</p>
 </section>
@@ -286,12 +327,14 @@ an independent hand calculation, then compare parsed visible quantities with tha
 Controlled changes to allowable lives, damage contributions, the total and the processed count exercise visible result bindings.</p>
 <p id="roundoff-budget">The numerical regression tolerance is relative 32 epsilon, with zero absolute tolerance;
 epsilon is the binary64 spacing above unity, expressed as 2^(-52).
+The relative fraction budget is approximately {32 * 2**(-52):.1e}, or {32 * 2**(-52) * 100:.1e} %;
+the tests enforce the unrounded budget.
 The positive-input path has fewer than eight rounding stages through reciprocal-square evaluation, multiplication,
 division, summation and oracle conversion. Four epsilon per stage allows for the power evaluation.
 This budget addresses roundoff for this example; it does not represent physical uncertainty.</p>
 <p>The {ref("ref-sn-tests", "existing S-N suite")} and {ref("ref-damage-tests", "existing accumulation suite")}
 provide regression coverage beyond this example; passing them does not independently qualify their standard data.
-Two isolated rebuilds and the delivered records are compared byte for byte.
+Two isolated rebuilds produce identical LF bytes. Delivered records are compared after CRLF checkout normalization.
 Reproducibility is not physical validation.</p>
 </section>
 <section id="section-7"><h2>7. Limits of Use</h2>
@@ -316,7 +359,9 @@ load basis and duration. These concerns are findings for broader qualification, 
 <p>The parent module-report scope remains open for these numerical qualifications.</p>
 </section>
 <section id="section-9"><h2>9. References</h2>
-<p>Source locators below are repository-relative and are pinned by SHA-256 in the embedded source record and sources.json.
+<p>Source locators below are repository-relative. The two evaluated modules and the report-owned builder and test
+are pinned by SHA-256 of UTF-8 text with CRLF normalized to LF in the embedded source record and sources.json.
+Other entries are unpinned inventory locators, not numerical evidence. The layout is retained in the builder.
 The page requires no network access or surrounding directory layout. No standard coefficient tables are reproduced.</p>
 <ol>{locators}</ol>
 </section>

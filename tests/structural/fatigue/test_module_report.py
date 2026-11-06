@@ -14,6 +14,7 @@ import sys
 from fractions import Fraction
 from html.parser import HTMLParser
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -25,6 +26,12 @@ from digitalmodel.structural.fatigue.sn_curves import PowerLawSNCurve
 ROOT = Path(__file__).resolve().parents[3]
 REPORT = ROOT / "docs/reports/modules/fatigue"
 OUTPUTS = ("report.html", "changes.json", "sources.json")
+PINNED_PATHS = {
+    "src/digitalmodel/structural/fatigue/sn_curves.py",
+    "src/digitalmodel/structural/fatigue/damage_accumulation.py",
+    "docs/reports/modules/fatigue/build_report.py",
+    "tests/structural/fatigue/test_module_report.py",
+}
 
 # Independent hand calculation, not a material or standard curve:
 # N*S^2 = 1,000,000 cycle*MPa^2; S=(10,20) MPa, n=(1000,500) cycles.
@@ -164,6 +171,10 @@ def test_displayed_values_and_units_match_oracle_and_fresh_call():
             assert visible == f"{float(expected):.1f} {unit}", key
             assert visible == f"{fresh[key]:.1f} {unit}", key
             assert attrs["data-source"] in page.ids
+            source = ("ref-curve" if key.endswith(".allowable") else
+                      "ref-damage" if key in {"total_damage", "cycles_processed"}
+                      or key.endswith(".damage") else "synthetic-basis")
+            assert attrs["data-source"] == source, key
     result_keys = {"levels.0.allowable", "levels.1.allowable", "levels.0.damage",
                    "levels.1.damage", "total_damage", "cycles_processed"}
     assert set(page.references) == set(page.differences) == result_keys
@@ -171,7 +182,7 @@ def test_displayed_values_and_units_match_oracle_and_fresh_call():
         expected, unit = ORACLE[key]
         assert [v for _, v in page.references[key]] == [f"{float(expected):.1f} {unit}"]
         difference = abs(fresh[key] - float(expected)) / abs(float(expected)) * 100
-        assert [v for _, v in page.differences[key]] == [f"{difference:.1f} %"]
+        assert [v for _, v in page.differences[key]] == [f"{difference:.1e} %"]
     assert not page.resources
     assert "url(" not in (REPORT / "report.html").read_text(encoding="utf-8")
 
@@ -204,24 +215,35 @@ def test_visible_values_follow_computed_results(monkeypatch, key, raw_key, index
     assert before.numbers[key] != after.numbers[key]
 
 
-def test_report_rebuild_is_deterministic(tmp_path):
+@pytest.mark.parametrize("checkout_crlf", [False, True], ids=["lf", "crlf"])
+def test_report_rebuild_is_deterministic(tmp_path, checkout_crlf):
     builder = load_builder()
     environment = dict(os.environ, PYTHONPATH=str(ROOT / "src"), PYTHONDONTWRITEBYTECODE="1")
     # No inherited Git binding may redirect a child launched in the repository.
     for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
         environment.pop(key, None)
     outputs = [tmp_path / "first", tmp_path / "different" / "second"]
+    checkout = tmp_path / "checkout"
+    checkout.mkdir()
+    for name in OUTPUTS:
+        data = (REPORT / name).read_bytes()
+        (checkout / name).write_bytes(data.replace(b"\n", b"\r\n") if checkout_crlf else data)
     for output in outputs:
         subprocess.run([sys.executable, str(REPORT / "build_report.py"),
                         "--output-dir", str(output)], cwd=tmp_path,
                        env=environment, check=True, capture_output=True, text=True)
         assert sorted(p.name for p in output.iterdir()) == sorted(OUTPUTS)
         for name in OUTPUTS:
-            assert (output / name).read_bytes() == (REPORT / name).read_bytes(), name
+            actual = (output / name).read_bytes().decode("utf-8").replace("\r\n", "\n")
+            expected = (checkout / name).read_bytes().decode("utf-8").replace("\r\n", "\n")
+            assert actual == expected, f"{name}: rebuild with {builder.REBUILD}"
             text = (output / name).read_text(encoding="utf-8")
             assert str(ROOT) not in text and str(tmp_path) not in text
             assert not re.search(r"/(?:home|mnt)/|file://|\d{2}:\d{2}:\d{2}", text)
     assert outputs[0].resolve() != outputs[1].resolve()
+    for name in OUTPUTS:
+        assert (outputs[0] / name).read_bytes() == (outputs[1] / name).read_bytes()
+        assert b"\r\n" not in (outputs[0] / name).read_bytes()
 
 
 def test_scope_limits_and_report_pointers():
@@ -249,12 +271,17 @@ def test_scope_limits_and_report_pointers():
     for source in sources["files"]:
         path = ROOT / source["path"]
         assert not Path(source["path"]).is_absolute() and path.is_file()
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == source["sha256"]
+        if "sha256" in source:
+            canonical = path.read_bytes().decode("utf-8").replace("\r\n", "\n").encode("utf-8")
+            assert hashlib.sha256(canonical).hexdigest() == source["sha256"], (
+                f'{source["path"]}: rebuild with {builder.REBUILD}')
         assert source["id"] in page.ids
         for symbol in source["symbols"]:
             assert symbol in path.read_text(encoding="utf-8")
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
-    assert changes["revision"] == "00" and changes["changes"]
+    assert changes["revision"] == "01" and changes["changes"]
+    assert [(row["revision"], row["date"]) for row in changes["revisions"]] == [
+        ("00", "2026-10-28"), ("01", "2026-11-06")]
     assert json.loads(page.scripts["change-record"]) == changes
     assert json.loads(page.scripts["source-record"]) == sources
     assert json.loads(page.scripts["calculation-record"]) == builder.rounded(builder.calculate())
@@ -278,3 +305,90 @@ def test_html_and_embedded_json_are_escaped(monkeypatch):
     assert hostile in " ".join(page.visible)
     assert json.loads(page.scripts["change-record"])["changes"][-1] == hostile
     assert json.loads(page.scripts["calculation-record"])["note"] == hostile
+
+
+def copy_source_tree(builder, destination):
+    """Copy only the builder's declared sources into disposable test storage."""
+    for source in builder.source_record()["files"]:
+        path = destination / source["path"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text((ROOT / source["path"]).read_text(encoding="utf-8"),
+                        encoding="utf-8", newline="\n")
+
+
+def test_source_pins_cover_owned_evidence_and_evaluated_modules():
+    sources = load_builder().source_record()
+    assert {source["path"] for source in sources["files"] if "sha256" in source} == PINNED_PATHS
+
+
+def test_inventory_edits_do_not_invalidate_calculation_evidence(tmp_path, monkeypatch):
+    builder = load_builder()
+    copy_source_tree(builder, tmp_path)
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    before = builder.source_record()
+    page = builder.build(builder.calculate())
+    for source in before["files"]:
+        if source["path"] not in PINNED_PATHS:
+            (tmp_path / source["path"]).write_text("Inventory content changed.\n",
+                                                 encoding="utf-8", newline="\n")
+    assert builder.source_record() == before
+    assert builder.build(builder.calculate()) == page
+
+
+@pytest.mark.parametrize("path", sorted(PINNED_PATHS))
+def test_pinned_content_changes_require_rebuild(tmp_path, monkeypatch, path):
+    builder = load_builder()
+    copy_source_tree(builder, tmp_path)
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    before = builder.source_record()
+    target = tmp_path / path
+    target.write_text(target.read_text(encoding="utf-8") + "\n# Evidence changed.\n",
+                      encoding="utf-8", newline="\n")
+    assert builder.source_record() != before
+
+
+def test_crlf_checkout_preserves_digests_and_rendering(tmp_path, monkeypatch):
+    builder = load_builder()
+    copy_source_tree(builder, tmp_path)
+    before = builder.source_record()
+    page = builder.build(builder.calculate())
+    for source in before["files"]:
+        path = tmp_path / source["path"]
+        path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+    monkeypatch.setattr(builder, "ROOT", tmp_path)
+    assert builder.source_record() == before
+    assert builder.build(builder.calculate()) == page
+
+
+@pytest.mark.parametrize("column,value", [("range", 0), ("count", 0), ("range", float("nan"))])
+def test_skipped_cycle_row_cannot_shift_mean_binding(monkeypatch, column, value):
+    builder = load_builder()
+    cycles = pd.DataFrame({"range": [10.0, 20.0], "mean": [11.0, 22.0], "count": [1000.0, 500.0]})
+    cycles.loc[0, column] = value
+    monkeypatch.setattr(builder, "pd", SimpleNamespace(DataFrame=lambda data: cycles))
+    with pytest.raises(ValueError, match="contribution"):
+        builder.calculate()
+
+
+def test_small_nonzero_difference_remains_visible():
+    builder = load_builder()
+    record = builder.calculate()
+    # (0.3000000000003 - 0.3) / 0.3 * 100 is approximately 1e-10 percent.
+    record["total_damage"] = 0.3000000000003
+    page = Page(builder.build(record))
+    text = page.differences["total_damage"][0][1]
+    assert float(text.removesuffix(" %")) == pytest.approx(1e-10, rel=0.01)
+
+
+def test_reordered_contributions_cannot_shift_mean_binding(monkeypatch):
+    builder = load_builder()
+    original = builder.LinearDamageAccumulation.calculate_damage
+
+    def reordered(self, *args, **kwargs):
+        result = original(self, *args, **kwargs)
+        result["damage_contributions"].reverse()
+        return result
+
+    monkeypatch.setattr(builder.LinearDamageAccumulation, "calculate_damage", reordered)
+    with pytest.raises(ValueError, match="contribution"):
+        builder.calculate()

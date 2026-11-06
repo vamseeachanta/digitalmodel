@@ -1,10 +1,30 @@
 {
   "report": "fatigue-synthetic-arithmetic",
-  "revision": "00",
-  "date": "2026-10-28",
+  "revision": "01",
+  "date": "2026-11-06",
   "changes": [
-    "Added an artificial power-law example to separate arithmetic checks from material qualification.",
-    "Mapped implemented methods, counting refusals and unevaluated engineering uses so that numerical scope is explicit.",
-    "Added deterministic source and change records, parsed numerical checks and module-local report pointers."
+    "Limited content pins to evaluated modules and report-owned evidence; normalized checkout line endings and retained the original layout locally.",
+    "Rejected missing or reordered contributions before pairing inputs; corrected allowable-life provenance and displayed small differences in scientific notation."
+  ],
+  "revisions": [
+    {
+      "report": "fatigue-synthetic-arithmetic",
+      "revision": "00",
+      "date": "2026-10-28",
+      "changes": [
+        "Added an artificial power-law example to separate arithmetic checks from material qualification.",
+        "Mapped implemented methods, counting refusals and unevaluated engineering uses so that numerical scope is explicit.",
+        "Added deterministic source and change records, parsed numerical checks and module-local report pointers."
+      ]
+    },
+    {
+      "report": "fatigue-synthetic-arithmetic",
+      "revision": "01",
+      "date": "2026-11-06",
+      "changes": [
+        "Limited content pins to evaluated modules and report-owned evidence; normalized checkout line endings and retained the original layout locally.",
+        "Rejected missing or reordered contributions before pairing inputs; corrected allowable-life provenance and displayed small differences in scientific notation."
+      ]
+    }
   ]
 }

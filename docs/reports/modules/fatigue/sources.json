@@ -1,6 +1,6 @@
 {
   "report": "fatigue-synthetic-arithmetic",
-  "revision": "00",
+  "revision": "01",
   "basis": {
     "id": "synthetic-basis",
     "classification": "synthetic",
@@ -34,6 +34,7 @@
     "derivation": "Fewer than eight rounding stages; four epsilon per stage allows for reciprocal-square evaluation. Binary64 epsilon is the spacing above unity. Numerical regression budget only; no material uncertainty is represented."
   },
   "readiness": "Synthetic arithmetic only; engineering qualification NOT_EVALUATED",
+  "digest_scope": "Strict UTF-8 text, CRLF normalized to LF; all other content preserved",
   "files": [
     {
       "id": "ref-curve",
@@ -63,8 +64,7 @@
       "symbols": [
         "RainflowCounter",
         "rainflow_count"
-      ],
-      "sha256": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b"
+      ]
     },
     {
       "id": "ref-analysis",
@@ -73,8 +73,7 @@
       "symbols": [
         "analyze_time_series",
         "refuse_damage_calculation"
-      ],
-      "sha256": "761d1c2efebb8dabaaece5354c59603fc99dc0ea6e2cd689ca0ec50e5366910f"
+      ]
     },
     {
       "id": "ref-contract",
@@ -84,8 +83,7 @@
         "COUNTING_PATHS",
         "ResidualPolicy",
         "refuse_damage_calculation"
-      ],
-      "sha256": "2d450f2e8e13564aee8e64ce5d92f8f83a5383b65136b3beec4e54ef4875dbbf"
+      ]
     },
     {
       "id": "ref-frequency",
@@ -94,8 +92,7 @@
       "symbols": [
         "calculate_damage_rate",
         "_calculate_spectral_moments"
-      ],
-      "sha256": "2acbe1aaa99f3178d57a5579502c9785329f8e2964d39fc9413a3cae58e86a93"
+      ]
     },
     {
       "id": "ref-examples",
@@ -104,8 +101,7 @@
       "symbols": [
         "ExampleResult",
         "LinearDamageAccumulation"
-      ],
-      "sha256": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a"
+      ]
     },
     {
       "id": "ref-pack",
@@ -113,8 +109,7 @@
       "path": "src/digitalmodel/structural/fatigue/docs/agent-pack.md",
       "symbols": [
         "Purpose and scope"
-      ],
-      "sha256": "a13e49ac98112feead2ad6a242fde7b1cedc2128da362f94dfc5b1df2181bc0d"
+      ]
     },
     {
       "id": "ref-sn-tests",
@@ -122,8 +117,7 @@
       "path": "tests/structural/fatigue/test_sn_curves.py",
       "symbols": [
         "PowerLawSNCurve"
-      ],
-      "sha256": "91e3d68972d4b6b7c7fc6c7d5d6106291969fea611c18c609422556d37606eac"
+      ]
     },
     {
       "id": "ref-damage-tests",
@@ -131,8 +125,7 @@
       "path": "tests/structural/fatigue/test_damage_accumulation.py",
       "symbols": [
         "LinearDamageAccumulation"
-      ],
-      "sha256": "b51cb391fbde2be027d86c3eda9a6abc44028e1d1320ad162044095d9cd246d9"
+      ]
     },
     {
       "id": "ref-report-tests",
@@ -142,7 +135,7 @@
         "test_worked_values_match_independent_calculation",
         "test_visible_values_follow_computed_results"
       ],
-      "sha256": "d9c5deb287e561825a9871d8f3dd37237f21b41c3521a064efac1c97106fbff8"
+      "sha256": "9dcc6de6687e0a24236342af3b2aded492e14b82e34d097702b5381b05dcbcfa"
     },
     {
       "id": "ref-builder",
@@ -152,7 +145,7 @@
         "calculate",
         "independent_values"
       ],
-      "sha256": "9b40caabb598bad1c0c878ac21115ee93d0a0463b324bea82e2c8a25b7a761db"
+      "sha256": "b631ee27ae56edab78429f19db4714fd9147ef89abeeb8b0797e3189d06ae58a"
     },
     {
       "id": "ref-layout",
@@ -160,8 +153,7 @@
       "path": "docs/reports/pipeline-ffs-assessment.html",
       "symbols": [
         "<style>"
-      ],
-      "sha256": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f"
+      ]
     }
   ]
 }
