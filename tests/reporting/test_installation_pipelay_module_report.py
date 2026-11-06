@@ -285,6 +285,100 @@ def test_named_checkout_report_destination_is_allowed(disposable_builder, tmp_pa
     assert {path.name for path in build.DESTINATION.iterdir()} == DELIVERABLES
 
 
+def test_parent_workspace_output_preserves_unrelated_readme(disposable_builder, tmp_path, monkeypatch):
+    build = disposable_builder
+    output = build.ROOT.parent
+    protected = output / "README.md"
+    protected.write_bytes(b"unrelated workspace content\n")
+    calculated = []
+    monkeypatch.setattr(build, "render", lambda _: calculated.append(True) or "unexpected")
+    with pytest.raises(ValueError, match="external report directory"):
+        build.build(output, tmp_path / "scratch")
+    assert protected.read_bytes() == b"unrelated workspace content\n"
+    assert not calculated
+    assert not (output / "index.html").exists()
+    assert not (tmp_path / "scratch").exists()
+
+
+@pytest.mark.parametrize("case", [
+    "readme-only", "invalid-json", "unknown-schema", "missing-schema", "list", "null",
+    "extra-file", "extra-directory", "deliverable-directory", "output-file",
+])
+def test_unrecognised_external_output_is_rejected(disposable_builder, tmp_path, monkeypatch, case):
+    build = disposable_builder
+    output = tmp_path / "external-report"
+    if case == "output-file":
+        output.write_bytes(b"unrelated file\n")
+        before = output.read_bytes()
+    else:
+        output.mkdir()
+        (output / "README.md").write_bytes(b"unrelated content\n")
+        manifest = output / "manifest.json"
+        manifest.write_text('{"schema": "installation-pipelay-report/1"}', encoding="utf-8")
+        if case == "readme-only":
+            # A missing manifest must not authorize replacing an existing README.
+            manifest.rename(tmp_path / "saved-manifest.json")
+        elif case in {"invalid-json", "unknown-schema", "missing-schema", "list", "null"}:
+            manifest.write_text({
+                "invalid-json": "{", "unknown-schema": '{"schema": "other-report/1"}',
+                "missing-schema": "{}", "list": "[]", "null": "null",
+            }[case], encoding="utf-8")
+        elif case == "extra-file":
+            (output / "comments.txt").write_bytes(b"unrelated comments\n")
+        elif case == "extra-directory":
+            (output / "notes").mkdir()
+        elif case == "deliverable-directory":
+            (output / "index.html").mkdir()
+        before = {path.name: path.read_bytes() if path.is_file() else None
+                  for path in output.iterdir()}
+    calculated = []
+    monkeypatch.setattr(build, "render", lambda _: calculated.append(True) or "unexpected")
+    with pytest.raises(ValueError, match="external report directory"):
+        build.build(output, tmp_path / "scratch")
+    if output.is_file():
+        assert output.read_bytes() == before
+    else:
+        assert {path.name: path.read_bytes() if path.is_file() else None
+                for path in output.iterdir()} == before
+    assert not calculated
+    assert not (tmp_path / "scratch").exists()
+
+
+@pytest.mark.parametrize("state", ["absent", "empty", "recognised"])
+def test_external_output_can_be_created_and_rebuilt(disposable_builder, tmp_path, state):
+    build = disposable_builder
+    output = tmp_path / "report"
+    if state != "absent":
+        output.mkdir()
+    if state == "recognised":
+        (output / "manifest.json").write_text(
+            '{"schema": "installation-pipelay-report/1"}', encoding="utf-8",
+        )
+    build.build(output, tmp_path / "scratch")
+    before = {path.name: path.read_bytes() for path in output.iterdir()}
+    assert set(before) == DELIVERABLES
+    build.build(output, tmp_path / "scratch")
+    assert {path.name: path.read_bytes() for path in output.iterdir()} == before
+
+
+def test_external_output_is_revalidated_before_publication(disposable_builder, tmp_path, monkeypatch):
+    build = disposable_builder
+    output = tmp_path / "report"
+    output.mkdir()
+    render = build.render
+
+    def create_unrelated_file(scratch):
+        page = render(scratch)
+        (output / "README.md").write_bytes(b"new unrelated content\n")
+        return page
+
+    monkeypatch.setattr(build, "render", create_unrelated_file)
+    with pytest.raises(ValueError, match="external report directory"):
+        build.build(output, tmp_path / "scratch")
+    assert {path.name for path in output.iterdir()} == {"README.md"}
+    assert (output / "README.md").read_bytes() == b"new unrelated content\n"
+
+
 def test_constant_inventory_scope_and_download_cleanup(tmp_path):
     page = builder().render(tmp_path / "scratch")
     assert "Module constants are outside this function inventory" in page

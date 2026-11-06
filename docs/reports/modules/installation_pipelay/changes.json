@@ -18,5 +18,10 @@
     "change": "Source digests are refreshed after retention tests were added and isolated from caller Git settings; calculated results are unchanged.",
     "date": "2026-11-06",
     "revision": "D"
+  },
+  {
+    "change": "External output directories must be absent, empty or contain only recognised report files, protecting unrelated workspace content before calculation and publication; regression tests and source digests are refreshed, with calculated results unchanged.",
+    "date": "2026-11-06",
+    "revision": "E"
   }
 ]

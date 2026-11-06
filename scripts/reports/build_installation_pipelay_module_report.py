@@ -70,6 +70,12 @@ CHANGES = [{
     "revision": "D", "date": "2026-11-06",
     "change": "Source digests are refreshed after retention tests were added and isolated "
               "from caller Git settings; calculated results are unchanged.",
+}, {
+    "revision": "E", "date": "2026-11-06",
+    "change": "External output directories must be absent, empty or contain only recognised "
+              "report files, protecting unrelated workspace content before calculation and "
+              "publication; regression tests and source digests are refreshed, with "
+              "calculated results unchanged.",
 }]
 
 
@@ -348,7 +354,10 @@ Rebuild from the repository root, with TMPDIR set to an external scratch directo
 PYTHONPATH=src uv run --no-project python {SCRIPT} --scratch "$TMPDIR/pipelay-report"
 ```
 
-Use `--output-dir` to publish into a separate directory. Temporary staging remains
+Use `--output-dir` to publish into a separate directory that is absent, empty,
+or contains only regular report deliverables and a manifest with schema
+`installation-pipelay-report/1`. Existing unrelated files are rejected before
+calculation and checked again before publication. Temporary staging remains
 outside the checkout. The four deliverables are `index.html`, `changes.json`,
 `manifest.json` and this README. The manifest hashes every source dependency and
 the other three deliverables; deterministic rebuild checks the manifest itself.
@@ -361,12 +370,26 @@ the summary; engineering comments can be exported beside the report.
 
 
 def validated_destination(output_dir: Path) -> Path:
-    """Reject unrelated checkout outputs and linked targets before calculation."""
+    """Reject unrelated checkout or external content and linked output targets."""
     destination = Path(output_dir).resolve()
     if destination.is_relative_to(ROOT) and destination != DESTINATION:
         raise ValueError("Report output inside checkout must use the named report directory")
     if any((destination / name).is_symlink() for name in DELIVERABLES):
         raise ValueError("Report output target must not be a symlink")
+    if destination != DESTINATION and destination.exists():
+        message = "Existing external report directory must be empty or contain only recognised report files"
+        if not destination.is_dir():
+            raise ValueError(message)
+        entries = list(destination.iterdir())
+        if entries:
+            if any(path.name not in DELIVERABLES or not path.is_file() for path in entries):
+                raise ValueError(message)
+            try:
+                manifest = json.loads((destination / "manifest.json").read_text(encoding="utf-8"))
+            except (OSError, UnicodeError, json.JSONDecodeError) as error:
+                raise ValueError(message) from error
+            if not isinstance(manifest, dict) or manifest.get("schema") != "installation-pipelay-report/1":
+                raise ValueError(message)
     return destination
 
 
