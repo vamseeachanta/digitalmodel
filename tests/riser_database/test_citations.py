@@ -17,7 +17,7 @@ import os
 import shutil
 import time
 import warnings
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
@@ -272,6 +272,30 @@ def test_pip_no_wiki_helper_warns_once_and_degrades(_no_wiki_anywhere):
         assert getters.riser_citations() == {}
 
 
+def test_helper_tracks_resolver_standalone_reason_prefix(
+    _no_wiki_anywhere, monkeypatch
+):
+    """Changing resolver wording shall preserve the standalone contract."""
+    from digitalmodel.citations import resolver
+
+    prefix = "synthetic_unconfigured:"
+    monkeypatch.setattr(resolver, "RESOLVER_UNCONFIGURED_PREFIX", prefix, raising=False)
+    with pytest.raises(CitationResolutionError) as exc:
+        resolver.resolve_wiki_base()
+    reason_matches = exc.value.reason.startswith(prefix)
+    assert reason_matches
+    with pytest.warns(RuntimeWarning, match="standalone mode"):
+        assert getters.riser_citations() == {}
+
+
+def test_resolver_diagnostic_paths_use_forward_slashes():
+    """Relative Windows paths retain portable separators in diagnostics."""
+    from digitalmodel.citations import resolver
+
+    path = PureWindowsPath("wiki") / "standards"
+    assert resolver._redact(path) == "wiki/standards"
+
+
 def test_helper_returns_cited_values_in_context():
     cited = getters.riser_citations(repo_root=_fixture_repo_root())
     assert set(cited) == {"dff", "scf", "f_wt", "f_bt", "von_mises_df"}
@@ -296,7 +320,7 @@ def test_helper_rejects_stale_configured_wiki(tmp_path, monkeypatch):
     )
     metadata = page.read_text(encoding="utf-8")
     metadata = metadata.replace('revision: "2021"', 'revision: "stale-test-revision"')
-    page.write_text(metadata, encoding="utf-8")
+    page.write_text(metadata, encoding="utf-8", newline="\n")
     monkeypatch.setenv("LLM_WIKI_PATH", str(root))
 
     with pytest.raises(CitationResolutionError) as exc:
@@ -331,7 +355,9 @@ def test_helper_preserves_configured_page_errors(
         / "standards" / filename
     )
     if failure == "frontmatter_missing":
-        page.write_text("Synthetic page without frontmatter.\n", encoding="utf-8")
+        page.write_text(
+            "Synthetic page without frontmatter.\n", encoding="utf-8", newline="\n"
+        )
     elif failure == "frontmatter_mismatch":
         lines = page.read_text(encoding="utf-8").splitlines()
         page.write_text(
@@ -340,6 +366,7 @@ def test_helper_preserves_configured_page_errors(
                 for line in lines
             ) + "\n",
             encoding="utf-8",
+            newline="\n",
         )
     repo_root = root if route == "explicit" else None
     if route == "environment":
@@ -365,7 +392,9 @@ def test_helper_rejects_invalid_configured_root(tmp_path, monkeypatch, route, ro
     if root_kind == "empty":
         root.mkdir()
     elif root_kind == "file":
-        root.write_text("Synthetic non-directory root.\n", encoding="utf-8")
+        root.write_text(
+            "Synthetic non-directory root.\n", encoding="utf-8", newline="\n"
+        )
     repo_root = root if route == "explicit" else None
     if route != "explicit":
         monkeypatch.setenv(route, str(root))
@@ -377,7 +406,19 @@ def test_helper_rejects_invalid_configured_root(tmp_path, monkeypatch, route, ro
     with pytest.raises(CitationResolutionError) as exc:
         getters.riser_citations(repo_root=repo_root)
 
-    assert not exc.value.reason.startswith("resolver_unconfigured:")
+    if route == "explicit":
+        assert exc.value.reason == "page_missing"
+        assert exc.value.code_id == "dnv-os-f201"
+    else:
+        if route == "DIGITALMODEL_REPO_ROOT":
+            expected = "digitalmodel_repo_root_invalid:"
+        elif root_kind == "missing":
+            expected = "llm_wiki_path_invalid:"
+        else:
+            expected = "llm_wiki_path_stale_clone:"
+        assert exc.value.reason.startswith(expected)
+        assert exc.value.code_id == "<resolver>"
+        assert root.as_posix() in exc.value.reason
 
 
 def test_standalone_warning_does_not_mask_later_configuration(
@@ -402,7 +443,7 @@ def test_standalone_warning_does_not_mask_later_configuration(
         page = root / "knowledge" / cited["von_mises_df"].citation.wiki_path
         text = page.read_text(encoding="utf-8")
         text = text.replace('revision: "2e-2013"', 'revision: "stale-test-revision"')
-        page.write_text(text, encoding="utf-8")
+        page.write_text(text, encoding="utf-8", newline="\n")
         with pytest.raises(CitationResolutionError) as exc:
             getters.riser_citations()
 

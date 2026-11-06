@@ -35,6 +35,7 @@ from typing import Final, Optional
 
 import yaml
 
+from digitalmodel.citations import resolver
 from digitalmodel.citations.schema import (
     Citation,
     CitationResolutionError,
@@ -388,7 +389,7 @@ def riser_citations(repo_root: Optional[Path] = None) -> dict:
         if (
             repo_root is not None
             or exc.code_id != "<resolver>"
-            or not exc.reason.startswith("resolver_unconfigured:")
+            or not exc.reason.startswith(resolver.RESOLVER_UNCONFIGURED_PREFIX)
         ):
             raise
         if not _CITATION_WARNED:

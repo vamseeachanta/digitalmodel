@@ -93,7 +93,8 @@ likewise carries no standards attribution (generic formula, project default).
 
 * **Layer A** (always runs, public CI included): regex structural checks —
   absolute paths, e-mail addresses, URLs — over every loaded public row and
-  the raw data files. Patterns are generic and public-safe.
+  the raw data files. Patterns are generic and contain no private identifiers
+  or licensed values.
 * **Layer B** (in-context): every public row matched against the PRIVATE
   workspace-hub `.legal-deny-list.yaml` with case/separator normalization.
   Skips loudly when workspace-hub is absent.
@@ -186,7 +187,9 @@ an empty band, never a guessed one.
 `from_component_counts`, or caller/wiki-side records via `from_records`) with
 fail-closed aggregates — notably `gross_submerged_weight_and_uplift()`, which
 REFUSES to degrade to net weight when a buoyed joint lacks uplift data
-(non-conservative for the factored 16Q split). `minimum_top_tension_16q`
+(net weight would understate the required tension by combining gross steel
+weight and buoyancy uplift before their separate factors are applied under
+API RP 16Q, 1st Ed. 1993, §3.3). `minimum_top_tension_16q`
 applies the tensioner-system factor N/(Rf·(N−n)) and fleet-angle allowance to
 a minimum slip-ring tension; `check_rig_capability` evaluates the demand
 against a `rig_riser_interface` row (wireline rigs count wires, direct-acting
