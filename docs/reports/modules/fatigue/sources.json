@@ -1,0 +1,167 @@
+{
+  "report": "fatigue-synthetic-arithmetic",
+  "revision": "00",
+  "basis": {
+    "id": "synthetic-basis",
+    "classification": "synthetic",
+    "description": "Artificial arithmetic example with no material identity or standard coefficient table.",
+    "equations": [
+      "N*S^2 = 1000000 cycle*MPa^2",
+      "N = A/S^m",
+      "d_i = n_i/N_i",
+      "D = sum(d_i)",
+      "C = sum(n_i)"
+    ],
+    "inputs": {
+      "A": "1000000 cycle*MPa^2",
+      "m": "2 dimensionless",
+      "ranges": "10,20 MPa",
+      "means": "0,0 MPa",
+      "counts": "1000,500 cycles",
+      "fatigue_limit": "0 MPa",
+      "cutoff": "20000 cycles"
+    },
+    "hand_derivation": {
+      "allowable": "1000000/100=10000; 1000000/400=2500 cycles",
+      "damage": "1000/10000=1/10; 500/2500=1/5; total=3/10 dimensionless",
+      "processed": "1000+500=1500 cycles"
+    }
+  },
+  "roundoff": {
+    "id": "roundoff-budget",
+    "relative_tolerance": "32 * 2**(-52)",
+    "absolute_tolerance": "0",
+    "derivation": "Fewer than eight rounding stages; four epsilon per stage allows for reciprocal-square evaluation. Binary64 epsilon is the spacing above unity. Numerical regression budget only; no material uncertainty is represented."
+  },
+  "readiness": "Synthetic arithmetic only; engineering qualification NOT_EVALUATED",
+  "files": [
+    {
+      "id": "ref-curve",
+      "title": "Explicit power law and correction interfaces",
+      "path": "src/digitalmodel/structural/fatigue/sn_curves.py",
+      "symbols": [
+        "PowerLawSNCurve",
+        "get_allowable_cycles",
+        "MeanStressCorrection"
+      ],
+      "sha256": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad"
+    },
+    {
+      "id": "ref-damage",
+      "title": "Counted-cycle accumulation and derived metrics",
+      "path": "src/digitalmodel/structural/fatigue/damage_accumulation.py",
+      "symbols": [
+        "LinearDamageAccumulation",
+        "calculate_damage"
+      ],
+      "sha256": "10cd7140036aa0a42511da1fa422ea171e862067ad7a8b3ac12f7bde5fcca568"
+    },
+    {
+      "id": "ref-rainflow",
+      "title": "Structural diagnostic counter",
+      "path": "src/digitalmodel/structural/fatigue/rainflow.py",
+      "symbols": [
+        "RainflowCounter",
+        "rainflow_count"
+      ],
+      "sha256": "df88d593a039423ffc49c9d4fb7ae82cbfe1c97835d61659d1049db66702b69b"
+    },
+    {
+      "id": "ref-analysis",
+      "title": "Time-series damage refusal",
+      "path": "src/digitalmodel/structural/fatigue/analysis.py",
+      "symbols": [
+        "analyze_time_series",
+        "refuse_damage_calculation"
+      ],
+      "sha256": "761d1c2efebb8dabaaece5354c59603fc99dc0ea6e2cd689ca0ec50e5366910f"
+    },
+    {
+      "id": "ref-contract",
+      "title": "Counting path registry and retained residual contract",
+      "path": "src/digitalmodel/fatigue/counting_contract.py",
+      "symbols": [
+        "COUNTING_PATHS",
+        "ResidualPolicy",
+        "refuse_damage_calculation"
+      ],
+      "sha256": "2d450f2e8e13564aee8e64ce5d92f8f83a5383b65136b3beec4e54ef4875dbbf"
+    },
+    {
+      "id": "ref-frequency",
+      "title": "Spectral methods and frequency convention",
+      "path": "src/digitalmodel/structural/fatigue/frequency_domain.py",
+      "symbols": [
+        "calculate_damage_rate",
+        "_calculate_spectral_moments"
+      ],
+      "sha256": "2acbe1aaa99f3178d57a5579502c9785329f8e2964d39fc9413a3cae58e86a93"
+    },
+    {
+      "id": "ref-examples",
+      "title": "Existing examples, preserved separately",
+      "path": "src/digitalmodel/structural/fatigue/worked_examples.py",
+      "symbols": [
+        "ExampleResult",
+        "LinearDamageAccumulation"
+      ],
+      "sha256": "b169385389ec5db52a255c1b078f4d55b3174b71128b8d63bd9cb4de8aa48e4a"
+    },
+    {
+      "id": "ref-pack",
+      "title": "Module knowledge pack; inventory rather than qualification",
+      "path": "src/digitalmodel/structural/fatigue/docs/agent-pack.md",
+      "symbols": [
+        "Purpose and scope"
+      ],
+      "sha256": "a13e49ac98112feead2ad6a242fde7b1cedc2128da362f94dfc5b1df2181bc0d"
+    },
+    {
+      "id": "ref-sn-tests",
+      "title": "Existing S-N regression suite",
+      "path": "tests/structural/fatigue/test_sn_curves.py",
+      "symbols": [
+        "PowerLawSNCurve"
+      ],
+      "sha256": "91e3d68972d4b6b7c7fc6c7d5d6106291969fea611c18c609422556d37606eac"
+    },
+    {
+      "id": "ref-damage-tests",
+      "title": "Existing damage regression suite",
+      "path": "tests/structural/fatigue/test_damage_accumulation.py",
+      "symbols": [
+        "LinearDamageAccumulation"
+      ],
+      "sha256": "b51cb391fbde2be027d86c3eda9a6abc44028e1d1320ad162044095d9cd246d9"
+    },
+    {
+      "id": "ref-report-tests",
+      "title": "Independent oracle, parsed values, mutation and rebuild checks",
+      "path": "tests/structural/fatigue/test_module_report.py",
+      "symbols": [
+        "test_worked_values_match_independent_calculation",
+        "test_visible_values_follow_computed_results"
+      ],
+      "sha256": "d9c5deb287e561825a9871d8f3dd37237f21b41c3521a064efac1c97106fbff8"
+    },
+    {
+      "id": "ref-builder",
+      "title": "Calculation and rendering bindings",
+      "path": "docs/reports/modules/fatigue/build_report.py",
+      "symbols": [
+        "calculate",
+        "independent_values"
+      ],
+      "sha256": "9b40caabb598bad1c0c878ac21115ee93d0a0463b324bea82e2c8a25b7a761db"
+    },
+    {
+      "id": "ref-layout",
+      "title": "Local report layout exemplar",
+      "path": "docs/reports/pipeline-ffs-assessment.html",
+      "symbols": [
+        "<style>"
+      ],
+      "sha256": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f"
+    }
+  ]
+}
