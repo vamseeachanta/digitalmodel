@@ -95,9 +95,17 @@ class FFSReport:
         }
         for heading, values in handoff["data_package"].items():
             sections[f"Handoff inputs: {heading}"] = values
+
+        def format_value(key, value):
+            if not isinstance(value, float):
+                return value
+            # Dimensions use mm precision; tolerances and ratios retain scale.
+            if str(key).endswith("_mm") and key not in {"tol_mm", "tolerance_mm"}:
+                return f"{value:.3f}"
+            return f"{value:.4g}"
+
         sections = {
-            heading: {key: f"{value:.3f}" if isinstance(value, float) else value
-                      for key, value in values.items()}
+            heading: {key: format_value(key, value) for key, value in values.items()}
             for heading, values in sections.items()
         }
         return FFSReport.generate_screening_html(

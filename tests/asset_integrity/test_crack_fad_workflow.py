@@ -232,6 +232,34 @@ def test_report_and_handoff_round_trip(tmp_path):
     json.dumps(result, allow_nan=False)
 
 
+def test_report_preserves_small_nonzero_values_and_dimension_precision(tmp_path):
+    """Saved report values retain the collapse case's small Kr and tolerance."""
+    cfg = case()
+    cfg["crack_assessment"].update(
+        c_mm=20.0, width_mm=100.0, sigma_m_mpa=400.0, k_mat=1e6,
+        tol_mm=1e-5, output_dir=str(tmp_path),
+    )
+    result = router(cfg)["crack_fad_level2_handoff"]
+    text = Path(result["report_path"]).read_text(encoding="utf-8")
+    kr = result["assessment"]["kr"]
+    assert 0 < kr < 0.0005
+    for key, expected in (
+        ("kr", kr),
+        ("tolerance_mm", 1e-5),
+        ("k_mat", 1e6),
+        ("lr", result["assessment"]["lr"]),
+    ):
+        rendered = re.findall(rf"<tr><td>{key}</td><td>([^<]+)</td></tr>", text)
+        assert rendered, key
+        for value in rendered:
+            assert value != "0.000"
+            assert float(value) == pytest.approx(expected, rel=5e-4)
+    for key, expected in (("a_mm", "5.000"), ("t_mm", "20.000")):
+        assert f"<tr><td>{key}</td><td>{expected}</td></tr>" in text
+    assert "<tr><td>sigma_b_mpa</td><td>0</td></tr>" in text
+    assert "<tr><td>acceptable</td><td>True</td></tr>" in text
+
+
 def test_round_trip_with_non_utf8_default(tmp_path, monkeypatch):
     read_text = Path.read_text
 
