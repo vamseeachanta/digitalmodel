@@ -2880,6 +2880,8 @@
       "algorithm": "legacy-raw-v1",
       "content_fingerprint": "692aaf26f51c6ecfeb7db6fae05972c2cc5d90d6015c1615f619d61bebbc2938",
       "status": "VERIFIED",
+      "superseded_by": "cebf7823125c",
+      "superseded_reason": "Dirlik coefficients used spectral width instead of the irregularity factor; damage predictions require recalculation.",
       "basis": {
         "spec": {
           "physics": "log_log",
