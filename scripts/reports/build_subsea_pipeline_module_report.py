@@ -40,6 +40,11 @@ CHANGES = [
         "date": "2026-11-06",
         "change": "Output validation rejects unrelated checkout destinations and linked targets before calculation or writing. The inventory rebuild test is named explicitly, and revision B is dated to its introducing commit.",
     },
+    {
+        "revision": "D",
+        "date": "2026-11-06",
+        "change": "Output aliases are validated by their resolved destination, and external directories must be empty or contain only recognised report deliverables before replacement. Link tests handle unavailable privileges, and the change panel displays the latest revision.",
+    },
 ]
 
 # Synthetic inputs from bases A, B and C in the module docstring, respectively.
@@ -421,7 +426,7 @@ code {{overflow-wrap:anywhere}} a {{color:#175f72}} nav a {{margin-right:1rem}}
 <p>The synthetic annulus, signed free thermal growth and caller-supplied pressure-factor products are checked against independent hand calculations. Geometry and growth are HAND_CALCULATION_CHECKED for these cases; pressure multiplication is ARITHMETIC_ONLY. Buckling, span acceptance and standard-derived pressure capacities remain NOT_EVALUATED. No engineering design is released by this report.</p>
 <h3>Revision history</h3>
 {history}
-<aside id="change-panel"><strong>Change panel</strong><p>The public calculation-package imports are repaired. The report adds reproducible examples and a source-bound inventory. Engineering factors, capacity formulas and production inputs are unchanged.</p><a href="changes.json">Machine-readable revision history</a></aside>
+<aside id="change-panel"><strong>Change panel</strong><p>{html.escape(CHANGES[-1]["change"])}</p><a href="changes.json">Machine-readable revision history</a></aside>
 <h2 id="s2">2. Introduction</h2>
 <p>The scope is the public Python functions and methods declared in <code>src/digitalmodel/subsea/pipeline/</code>. Each is located by static source parsing; private helpers, generated dataclass methods and imported aliases are outside the declaration inventory. The executed examples use only geometry, unrestrained thermal expansion and factor multiplication. Other workflows are inspected without execution.</p>
 <p>The inputs are deliberately synthetic and separately defined for each calculation. The annulus is not a pressure-design example. No material grade, soil, loading spectrum or operating acceptance criterion is inferred from these arithmetic inputs.</p>
@@ -483,9 +488,13 @@ PYTHONPATH=src python scripts/reports/build_subsea_pipeline_module_report.py
 
 Use `--output-dir "$REPORT_OUTPUT"` for a separate destination. The builder writes
 only `index.html`, `changes.json`, `manifest.json` and `README.md`. Inside the
-checkout, only `docs/reports/modules/subsea_pipeline` is permitted. Output paths
-and deliverable targets cannot traverse symbolic links or directory junctions.
-Invalid destinations are rejected before calculation or writing. No intermediate
+checkout, only `docs/reports/modules/subsea_pipeline` is permitted. Output aliases
+are checked by their resolved destination. Each deliverable target must not be a
+symbolic link or reparse point, including a directory junction. Outside the
+canonical report directory, an existing output directory must be empty or contain
+only the four deliverable names as regular files, including a `manifest.json`
+object with `"algorithm": "sha256"`. Unrelated files and unrecognised reports are
+preserved by rejecting the destination before calculation or writing. No intermediate
 calculation files are needed. `--scratch` is an optional reserved compatibility
 argument; it writes nothing and, when supplied, must resolve outside the checkout.
 The manifest hashes the three executed pipeline modules, unit support, the builder
@@ -526,21 +535,38 @@ def _is_link(path):
 
 
 def _validate_output_directory(output_dir):
-    """Reject unrelated checkout paths and links before any calculation or write."""
-    output_dir = Path(output_dir).absolute()
-    if any(_is_link(path) for path in (output_dir, *output_dir.parents)):
-        raise ValueError("Report output must not traverse links or junctions")
-    output_dir = output_dir.resolve()
+    """Protect checkout paths, linked targets and unrelated external files."""
+    output_dir = Path(output_dir).resolve()
     if (
         output_dir.is_relative_to(ROOT.resolve())
         and output_dir != DESTINATION.resolve()
     ):
         raise ValueError("Checkout output must be the module report directory")
-    for name in ("index.html", "changes.json", "manifest.json", "README.md"):
+    deliverables = {"index.html", "changes.json", "manifest.json", "README.md"}
+    for name in sorted(deliverables):
         if _is_link(output_dir / name):
             raise ValueError(
                 f"Report output target must not be a link or junction: {name}"
             )
+    if output_dir.exists():
+        if not output_dir.is_dir():
+            raise ValueError("Report output must be a directory")
+        if output_dir != DESTINATION.resolve():
+            entries = list(output_dir.iterdir())
+            if entries:
+                if any(
+                    entry.name not in deliverables or not entry.is_file()
+                    for entry in entries
+                ):
+                    raise ValueError("Report output contains unrelated files")
+                try:
+                    manifest = json.loads(
+                        (output_dir / "manifest.json").read_text(encoding="utf-8")
+                    )
+                except (OSError, UnicodeError, json.JSONDecodeError) as error:
+                    raise ValueError("Report output needs a recognised manifest") from error
+                if not isinstance(manifest, dict) or manifest.get("algorithm") != "sha256":
+                    raise ValueError("Report output needs a sha256 manifest")
     return output_dir
 
 

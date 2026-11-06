@@ -13,6 +13,7 @@ structure, SHA-256 coverage and output names follow the module report contract.
 
 import ast
 import hashlib
+import html
 import importlib.util
 import json
 import math
@@ -86,6 +87,14 @@ def _checkout_bytes(checkout):
     }
 
 
+def _symlink_or_skip(link, target, *, target_is_directory=False):
+    """Keep link regressions runnable on systems without link privileges."""
+    try:
+        link.symlink_to(target, target_is_directory=target_is_directory)
+    except OSError as error:
+        pytest.skip(f"Symbolic link creation is unavailable: {error}")
+
+
 @pytest.mark.parametrize("relative", [".", "src/digitalmodel/subsea/pipeline"])
 def test_checkout_output_is_rejected_without_changes(isolated_checkout, relative):
     """Reject checkout outputs before they can replace documentation or sources."""
@@ -105,7 +114,7 @@ def test_linked_deliverable_is_rejected_without_writes(tmp_path, name, dangling)
     target = tmp_path / "unrelated.txt"
     if not dangling:
         target.write_bytes(b"Unrelated retained bytes.\n")
-    (output / name).symlink_to(target)
+    _symlink_or_skip(output / name, target)
     with pytest.raises(ValueError, match="[Ll]ink"):
         builder().build_report(output_dir=output)
     assert {path.name for path in output.iterdir()} == {name}
@@ -117,23 +126,79 @@ def test_linked_deliverable_is_rejected_without_writes(tmp_path, name, dangling)
 
 
 @pytest.mark.parametrize("nested", [False, True])
-def test_linked_output_directory_is_rejected(tmp_path, nested):
-    """Reject directory links and linked ancestors without writing their targets."""
-    retained = tmp_path / "retained"
-    retained.mkdir()
-    (retained / "README.md").write_bytes(b"Retained documentation.\n")
+@pytest.mark.parametrize("inside_checkout", [False, True])
+def test_output_alias_uses_resolved_destination(
+    isolated_checkout, tmp_path, nested, inside_checkout
+):
+    """Allow outside aliases while protecting unrelated resolved checkout paths."""
+    build = isolated_checkout
+    retained = build.ROOT if inside_checkout else tmp_path / "retained"
+    retained.mkdir(exist_ok=True)
+    before = _checkout_bytes(retained)
     alias = tmp_path / "alias"
-    alias.symlink_to(retained, target_is_directory=True)
+    _symlink_or_skip(alias, retained, target_is_directory=True)
     output = alias / "nested" if nested else alias
-    with pytest.raises(ValueError, match="[Ll]ink"):
+    if inside_checkout:
+        with pytest.raises(ValueError, match="Checkout output"):
+            build.build_report(output_dir=output)
+        assert _checkout_bytes(retained) == before
+    else:
+        build.build_report(output_dir=output)
+        resolved_output = retained / "nested" if nested else retained
+        assert {path.name for path in resolved_output.iterdir()} == DELIVERABLES
+
+
+@pytest.mark.parametrize(
+    "contents",
+    [
+        {"README.md": b"Retained documentation.\n"},
+        {"other.txt": b"Unrelated data.\n", "manifest.json": b'{"algorithm":"sha256"}'},
+        {"manifest.json": b"not JSON"},
+        {"manifest.json": b"[]"},
+        {"manifest.json": b'{"algorithm":"md5"}'},
+        {"manifest.json": b"\xff"},
+    ],
+    ids=["unrelated-readme", "extra-file", "invalid-json", "non-object", "wrong-algorithm", "invalid-utf8"],
+)
+def test_unrelated_outside_output_is_rejected_without_writes(tmp_path, contents):
+    """Do not replace neighbouring documentation or an unrecognised report."""
+    output = tmp_path / "outside"
+    output.mkdir()
+    for name, content in contents.items():
+        (output / name).write_bytes(content)
+    before = _checkout_bytes(output)
+    with pytest.raises(ValueError, match="[Oo]utput"):
         builder().build_report(output_dir=output)
-    assert {path.name for path in retained.iterdir()} == {"README.md"}
-    assert (retained / "README.md").read_bytes() == b"Retained documentation.\n"
+    assert _checkout_bytes(output) == before
+
+
+@pytest.mark.parametrize("existing", [False, True])
+def test_outside_report_can_be_built_and_rebuilt(tmp_path, existing):
+    """Permit absent or empty destinations and later recognised report rebuilds."""
+    output = tmp_path / "outside"
+    if existing:
+        output.mkdir()
+    build = builder()
+    build.build_report(output_dir=output)
+    before = _checkout_bytes(output)
+    build.build_report(output_dir=output)
+    assert _checkout_bytes(output) == before
+    assert set(before) == DELIVERABLES
+
+
+def test_link_creation_without_privilege_skips(tmp_path, monkeypatch):
+    """Report missing link privileges as a skip rather than a test error."""
+    def denied(*args, **kwargs):
+        raise OSError("Symbolic link creation is unavailable")
+
+    monkeypatch.setattr(Path, "symlink_to", denied)
+    with pytest.raises(pytest.skip.Exception, match="[Ss]ymbolic link"):
+        test_linked_deliverable_is_rejected_without_writes(tmp_path, "README.md", False)
 
 
 @pytest.mark.parametrize("target_name", ["output", "README.md"])
-def test_output_reparse_points_are_rejected(tmp_path, monkeypatch, target_name):
-    """Treat Windows directory junction metadata as a link on every platform."""
+def test_output_reparse_metadata_preserves_target_guard(tmp_path, monkeypatch, target_name):
+    """Allow directory placeholders while rejecting reparse deliverable targets."""
     output = tmp_path / "output"
     output.mkdir()
     target = output if target_name == "output" else output / target_name
@@ -151,10 +216,13 @@ def test_output_reparse_points_are_rejected(tmp_path, monkeypatch, target_name):
         return result
 
     monkeypatch.setattr(Path, "lstat", reparse_metadata)
-    with pytest.raises(ValueError, match="[Ll]ink"):
+    if target == output:
         builder().build_report(output_dir=output)
-    expected = set() if target == output else {target_name}
-    assert {path.name for path in output.iterdir()} == expected
+        assert {path.name for path in output.iterdir()} == DELIVERABLES
+    else:
+        with pytest.raises(ValueError, match="[Ll]ink"):
+            builder().build_report(output_dir=output)
+        assert {path.name for path in output.iterdir()} == {target_name}
 
 
 def test_canonical_report_destination_is_allowed(isolated_checkout):
@@ -288,6 +356,9 @@ def test_rebuild_is_deterministic(tmp_path):
     first, second = tmp_path / "first", tmp_path / "second"
     build.build_report(scratch=tmp_path / "scratch-a", output_dir=first)
     build.build_report(scratch=tmp_path / "scratch-b", output_dir=second)
+    report = (first / "index.html").read_text(encoding="utf-8")
+    panel = report.split('<aside id="change-panel">', 1)[1].split("</aside>", 1)[0]
+    assert html.escape(build.CHANGES[-1]["change"]) in panel
     assert {path.name for path in first.iterdir()} == DELIVERABLES
     assert {path.name for path in second.iterdir()} == DELIVERABLES
     for name in DELIVERABLES:
@@ -300,7 +371,6 @@ def test_rebuild_is_deterministic(tmp_path):
     assert _assert_manifest(first) == _assert_manifest(second), (
         f"Rebuild with {REBUILD}"
     )
-    report = (first / "index.html").read_text(encoding="utf-8")
     assert re.findall(r'<h2 id="s\d+">(.*?)</h2>', report) == [
         "1. Executive Summary",
         "2. Introduction",
@@ -327,7 +397,7 @@ def test_rebuild_is_deterministic(tmp_path):
     )
     assert payload == build.build_payload()
     changes = json.loads((first / "changes.json").read_text(encoding="utf-8"))
-    assert len(changes) == 3
+    assert len(changes) == 4
     assert set(changes[0]) == {"revision", "date", "change"}
     for change in changes:
         for value in change.values():

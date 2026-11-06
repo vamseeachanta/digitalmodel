@@ -13,5 +13,10 @@
     "change": "Output validation rejects unrelated checkout destinations and linked targets before calculation or writing. The inventory rebuild test is named explicitly, and revision B is dated to its introducing commit.",
     "date": "2026-11-06",
     "revision": "C"
+  },
+  {
+    "change": "Output aliases are validated by their resolved destination, and external directories must be empty or contain only recognised report deliverables before replacement. Link tests handle unavailable privileges, and the change panel displays the latest revision.",
+    "date": "2026-11-06",
+    "revision": "D"
   }
 ]
