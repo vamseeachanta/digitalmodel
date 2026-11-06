@@ -24,6 +24,10 @@ CHANGES = [{
     "revision": "A",
     "date": "2026-10-28",
     "change": "Added a reproducible module analysis with independent geometry and caller-factor arithmetic to expose the evidence and unresolved method limits.",
+}, {
+    "revision": "B",
+    "date": "2026-11-06",
+    "change": "Use a non-symmetric sling triangle to distinguish angle conventions; clarify signed ratios and the stylesheet rebuild dependency.",
 }]
 SOURCES = (
     f"{PACKAGE}/__init__.py",
@@ -95,7 +99,7 @@ def calculate(scratch):
     )
     inputs = {
         "b_m": 0.2, "t_m": 0.05, "b_mm": 200.0, "t_mm": 50.0,
-        "length_m": 6.0, "width_m": 8.0, "lift_height_m": 5.0,
+        "length_m": 6.0, "width_m": 8.0, "lift_height_m": 12.0,
         "rating_kg": 1000.0, "fy_Pa": 200e6, "n_padeyes": 4,
         "padeye_area_m2": 0.02, "gravity_m_s2": G,
         "factors": asdict(factors),
@@ -258,7 +262,7 @@ A padeye receives only a scalar net-area stress check [API].</p></section>
 <section><h2 id="s3">3. Input basis</h2>
 <p>A1 is the synthetic sharp-cornered, concentric section in D1: outer side b and uniform wall t. A2 is the centred rectangle and link height in D2.
 All four attachments are at the plan corners. The origin is the plan centre at the attachment plane; x follows length, y follows width and z points upward.
-The sling angle v is measured from positive vertical toward a corner. Stress and returned ratios are unsigned scalar magnitudes; signed force equilibrium is not solved.</p>
+The sling angle v is measured from positive vertical toward a corner. Stress and returned ratios are signed results of the scalar equations and are meaningful only for positive inputs; signed force equilibrium is not solved.</p>
 <p>A3 consists of arbitrary mass, yield stress, net area and explicit factor inputs chosen only to exercise arithmetic.
 Every DesignFactors field is supplied. Synthetic factors are not prescribed by a standard and are not an accepted design basis.
 The unused angle and single-attachment fields are retained to expose their lack of effect.
@@ -298,10 +302,10 @@ The tare fraction is not requested by this citation wrapper. Caller overrides ar
 I = ∫ y² dA = (b⁴ − bi⁴)/12. Thus A = 0.2² − 0.1² = 0.03 m²,
 I = (0.2⁴ − 0.1⁴)/12 = 0.000125 m⁴ and Z = I/(b/2) = 0.00125 m³.
 The integral of y² over a centred rectangle gives the denominator; it is not a fitted coefficient [D1].</p>
-<p>D2 gives r = √((6/2)² + (8/2)²) = √(3² + 4²) = 5 m. Height is also 5 m,
-so tan(v) = r/h = 1 and v = π/4 rad. Both SI constructor routes are checked against the same integrals.</p>
+<p>D2 gives r = √((6/2)² + (8/2)²) = √(3² + 4²) = 5 m. Height is 12 m,
+so the sling length is 13 m, tan(v) = r/h = 5/12, cos(v) = 12/13 and v = arctan(5/12) rad. Both SI constructor routes are checked against the same integrals.</p>
 <p>A3 sets u = 0.5 and fy = 200 × 10⁶ Pa, hence σallow = 100 × 10⁶ Pa.
-With the explicit mass and factors in Results, Q = 400g N, RSL = 400g√2 N, H = 400g N,
+With the explicit mass and factors in Results, Q = 400g N, RSL = 400g × 13/12 N, H = 400g × 5/12 N,
 Fi = 1500g N, Mmax = 562.5g N m and FL = 1600g N. These coefficients follow solely from A3 substituted into Method.
 Independent assertions use these closed expressions and the D1 section integrals. They establish arithmetic, not a strength or acceptance basis.</p></section>
 <section><h2 id="s6">6. Checks</h2>
@@ -372,6 +376,11 @@ source evidence using SHA-256 over exact UTF-8 bytes with LF endings. The manife
 cannot bind itself; byte-rebuild tests compare it in full. No paths, run times or
 environment identities are serialized. The HTML contains inline CSS, SVG and
 escaped JSON; no network assets or executable scripts are needed to read it.
+
+The shared stylesheet docs/api/_assets/brand.css is inlined in index.html and
+included in the manifest's source hashes. After a stylesheet edit, regenerate
+all five deliverables and rerun the report tests even when calculation evidence
+is unchanged. This dependency binds presentation bytes as well as evidence.
 
 The tests separate normal API assertions against geometry integrals and explicit
 synthetic arithmetic from freshness checks. Negative controls reverse signs and

@@ -30,6 +30,11 @@ cannot bind itself; byte-rebuild tests compare it in full. No paths, run times o
 environment identities are serialized. The HTML contains inline CSS, SVG and
 escaped JSON; no network assets or executable scripts are needed to read it.
 
+The shared stylesheet docs/api/_assets/brand.css is inlined in index.html and
+included in the manifest's source hashes. After a stylesheet edit, regenerate
+all five deliverables and rerun the report tests even when calculation evidence
+is unchanged. This dependency binds presentation bytes as well as evidence.
+
 The tests separate normal API assertions against geometry integrals and explicit
 synthetic arithmetic from freshness checks. Negative controls reverse signs and
 change magnitudes even when report and builder agree. No physical acceptance,

@@ -56,8 +56,8 @@ def assert_geometry_and_allowable(data):
             rel=1e-12, abs=0,
         )
     # Centred 6 by 8 m rectangle: half-diagonal = sqrt(3²+4²) = 5 m.
-    # Height 5 m gives equal opposite/adjacent legs, hence pi/4 radians.
-    assert data["angle_rad"] == pytest.approx(math.pi / 4, rel=0, abs=1e-12)
+    # Height 12 m gives a 5:12:13 triangle: tan(v)=5/12, cos(v)=12/13.
+    assert data["angle_rad"] == pytest.approx(math.atan(5 / 12), rel=0, abs=1e-12)
     assert data["allowable_stress_Pa"] == pytest.approx(100e6, rel=1e-12, abs=0)
 
 
@@ -71,20 +71,20 @@ def assert_numerical_oracle(data):
     gravity = 9.80665
     # Explicit synthetic inputs: mass 1000 kg; four attachments; net area .02 m².
     # Per-attachment vertical load = (1.2*1000*g)/(4-1) = 400*g N.
-    # Equal triangle legs give tan(v)=1 and 1/cos(v)=sqrt(2).
+    # The 5:12:13 triangle gives tan(v)=5/12 and 1/cos(v)=13/12.
     # Fi=(1.6-.1)*1000*g=1500*g N. Each long rail gets half;
     # integrate uniform load on a simple span: Mmax=Fi*L/16=562.5*g N m.
-    top = (400 * gravity / (3 / 100)) / 100e6
+    top = (400 * gravity * (5 / 12) / (3 / 100)) / 100e6
     floor = (562.5 * gravity / (1 / 800)) / 100e6
-    pad = (400 * gravity * math.sqrt(2) / 0.02) / 100e6
+    pad = (400 * gravity * (13 / 12) / 0.02) / 100e6
     actual = dict(data["utilization"])
-    assert actual.pop("sling_angle_to_vertical_deg") == pytest.approx(45.0, rel=0, abs=1e-12)
+    assert actual.pop("sling_angle_to_vertical_deg") == pytest.approx(math.degrees(math.atan(5 / 12)), rel=0, abs=1e-12)
     assert actual == pytest.approx({
         "top_rail": top,
         "floor": floor,
         "pad_eye": pad,
         "governing": max(top, floor, pad),
-        "rsl_kN": 400 * gravity * math.sqrt(2) / 1000,
+        "rsl_kN": 400 * gravity * (13 / 12) / 1000,
         "FL_kN": 1600 * gravity / 1000,
     }, rel=1e-12, abs=0)
 
@@ -102,15 +102,44 @@ def test_section_sling_and_caller_factor_values_match_independent_geometry():
         }
     actual = {
         "sections": sections,
-        "angle_rad": sling_angle_to_vertical(6, 8, 5),
+        "angle_rad": sling_angle_to_vertical(6, 8, 12),
         "allowable_stress_Pa": allowable_stress(200e6, synthetic_factors()),
         "utilization": asdict(utilization(
-            length=6, width=8, lift_height=5, rating_kg=1000,
+            length=6, width=8, lift_height=12, rating_kg=1000,
             section=SHS(0.2, 0.05), fy=200e6, factors=synthetic_factors(),
             n_padeyes=4, padeye_area_m2=0.02,
         )),
     }
     assert_numerical_oracle(actual)
+
+
+@pytest.mark.parametrize("fault", ["complementary_angle", "sine_tension"])
+def test_sling_oracle_rejects_vertical_horizontal_swaps(tmp_path, fault):
+    """A non-symmetric triangle distinguishes each angle convention."""
+    data = builder().calculate(tmp_path / "scratch")
+    assert_numerical_oracle(data)
+    if fault == "complementary_angle":
+        data["angle_rad"] = math.pi / 2 - data["angle_rad"]
+        data["utilization"]["sling_angle_to_vertical_deg"] = (
+            90 - data["utilization"]["sling_angle_to_vertical_deg"]
+        )
+    else:
+        vertical = 400 * 9.80665
+        tension = vertical / math.sin(data["angle_rad"])
+        data["utilization"]["rsl_kN"] = tension / 1000
+        data["utilization"]["pad_eye"] = tension / 0.02 / 100e6
+    with pytest.raises(AssertionError):
+        assert_numerical_oracle(data)
+
+
+def test_report_states_signed_domain_and_stylesheet_coupling():
+    """Keep the report's domain and presentation dependency explicit."""
+    build = builder()
+    page = build.render(json.loads((REPORT / "results.json").read_text(encoding="utf-8")))
+    assert "signed results of the scalar equations" in page
+    assert "meaningful only for positive inputs" in page
+    assert "docs/api/_assets/brand.css" in build.readme()
+    assert "regenerate" in build.readme()
 
 
 def builder():
@@ -150,7 +179,7 @@ def test_report_values_have_independent_oracles():
     assert_numerical_oracle(data)
     assert data["inputs"] == {
         "b_m": 0.2, "t_m": 0.05, "b_mm": 200, "t_mm": 50,
-        "length_m": 6, "width_m": 8, "lift_height_m": 5,
+        "length_m": 6, "width_m": 8, "lift_height_m": 12,
         "rating_kg": 1000, "fy_Pa": 200e6, "n_padeyes": 4,
         "padeye_area_m2": 0.02, "gravity_m_s2": 9.80665,
         "factors": vars(synthetic_factors()),

@@ -1,6 +1,6 @@
 {
   "allowable_stress_Pa": 100000000.0,
-  "angle_rad": 0.7853981633974483,
+  "angle_rad": 0.3947911196997615,
   "evidence_class": "Synthetic geometry and caller-factor arithmetic; physical suitability NOT_EVALUATED",
   "inputs": {
     "b_m": 0.2,
@@ -16,7 +16,7 @@
     "fy_Pa": 200000000.0,
     "gravity_m_s2": 9.80665,
     "length_m": 6.0,
-    "lift_height_m": 5.0,
+    "lift_height_m": 12.0,
     "n_padeyes": 4,
     "padeye_area_m2": 0.02,
     "rating_kg": 1000.0,
@@ -79,9 +79,9 @@
     "FL_kN": 15.69064,
     "floor": 0.04412992499999999,
     "governing": 0.04412992499999999,
-    "pad_eye": 0.0027737394862892223,
-    "rsl_kN": 5.547478972578445,
-    "sling_angle_to_vertical_deg": 45.0,
-    "top_rail": 0.0013075533333333329
+    "pad_eye": 0.0021247741666666664,
+    "rsl_kN": 4.249548333333333,
+    "sling_angle_to_vertical_deg": 22.619864948040426,
+    "top_rail": 0.0005448138888888887
   }
 }
