@@ -23,7 +23,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import mkdtemp
 from typing import Any
 
 import yaml
@@ -323,8 +323,9 @@ def _rebuild_atlas(workflow_id: str) -> str | None:
     from digitalmodel.parametric.build import build_atlas_from_registry
 
     DEFAULT_ATLAS_ROOT.mkdir(parents=True, exist_ok=True)
-    with TemporaryDirectory(dir=DEFAULT_ATLAS_ROOT, prefix=".refresh-") as name:
-        temporary = Path(name)
+    temporary = Path(mkdtemp(dir=DEFAULT_ATLAS_ROOT, prefix=".refresh-"))
+    destination = None
+    try:
         atlas = build_atlas_from_registry(workflow_id, atlas_root=temporary / "build")
         if not isinstance(atlas.validation, Mapping):
             return "validation record is not a mapping; failed validation gate"
@@ -332,8 +333,13 @@ def _rebuild_atlas(workflow_id: str) -> str | None:
             return "missing key 'passes'; failed validation gate"
         if not atlas.validation["passes"]:
             return "regenerated but failed validation gate"
-        _swap_atlas(temporary / "build" / atlas.basename,
-                    DEFAULT_ATLAS_ROOT / atlas.basename, temporary)
+        destination = DEFAULT_ATLAS_ROOT / atlas.basename
+        _swap_atlas(temporary / "build" / atlas.basename, destination, temporary)
+    finally:
+        if not (temporary / "previous").exists() or (
+            destination is not None and destination.exists()
+        ):
+            shutil.rmtree(temporary)
     return None
 
 
@@ -371,11 +377,15 @@ def main(argv: list[str]) -> int:
               f"(operator); not auto-regenerated: {stale_libs}")
 
     if apply and stale_ids:
-        for wid in stale_ids:
-            print(f"refreshing {wid} ...")
-            reason = _rebuild_atlas(wid)
-            if reason is not None:
-                validation_failures.append((wid, reason))
+        try:
+            for wid in stale_ids:
+                print(f"refreshing {wid} ...")
+                reason = _rebuild_atlas(wid)
+                if reason is not None:
+                    validation_failures.append((wid, reason))
+        finally:
+            for wid, reason in validation_failures:
+                print(f"  WARNING: {wid} {reason}")
         stale_ids = []  # attempted; validation failures take precedence
 
     if not stale_ids and not stale_libs and not validation_failures:
@@ -384,8 +394,6 @@ def main(argv: list[str]) -> int:
     if stale_ids and not apply:
         print(f"\n{len(stale_ids)} stale computed atlas(es); run with --apply to regenerate")
     if validation_failures:
-        for wid, reason in validation_failures:
-            print(f"  WARNING: {wid} {reason}")
         print(f"{len(validation_failures)} rebuilt computed atlas(es) failed validation; "
               "previous version of each kept; exit status 2")
         return 2
