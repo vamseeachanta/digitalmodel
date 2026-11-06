@@ -479,7 +479,8 @@ no-cache = false
 pre = false
 
 [tool.uv.sources]
-assetutilities = { path = "../assetutilities", editable = true }
+# Public pin: PyPI assetutilities 0.1.0 lacks workflow_api; 0.1.1 is on GitHub only.
+assetutilities = { git = "https://github.com/vamseeachanta/assetutilities", rev = "a283574dd00d6050c480d487c3d6f1c89c3d00e8" }
 
 [tool.uv.workspace]
 members = []
