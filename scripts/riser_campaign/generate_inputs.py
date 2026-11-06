@@ -259,8 +259,14 @@ def _is_link(path: Path) -> bool:
 
 
 def _write(root: Path, relative: str, payload: bytes) -> dict[str, Any]:
-    path = root / relative
-    if any(_is_link(parent) for parent in [path, *path.parents]):
+    relative_path = Path(relative)
+    if relative_path.is_absolute() or ".." in relative_path.parts:
+        raise ValueError("output path must remain within the output root")
+    path = root / relative_path
+    descendants = [root]
+    for part in relative_path.parts:
+        descendants.append(descendants[-1] / part)
+    if any(_is_link(parent) for parent in descendants):
         raise ValueError("output symlink or junction is not permitted")
     digest = hashlib.sha256(payload).hexdigest()
     if path.exists():
@@ -295,9 +301,8 @@ def generate(manifest_path: Path | str, output_dir: Path | str) -> dict[str, Any
         from .frozen_scope import source_payloads
         frozen_payloads = source_payloads()
     validate_manifest(data, json.loads(schema_payload, object_pairs_hook=unique_object), basis_payload, frozen_payloads)
-    output = Path(output_dir).absolute()
-    if any(_is_link(parent) for parent in [output, *output.parents]):
-        raise ValueError("output symlink or junction is not permitted")
+    # Accept links in user-managed directories; guard generated descendants.
+    output = Path(output_dir).resolve()
     index = {"version": 1, "criteria_version": data["criteria_version"], "basis": "ASSUMED",
              "intended_use": data["intended_use"], "licensed_run_status": "NOT_RUN",
              "manifest_sha256": hashlib.sha256(manifest_payload).hexdigest(),

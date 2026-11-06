@@ -219,13 +219,47 @@ def test_generation_is_deterministic_and_resumable(tmp_path):
     assert damaged.read_text(encoding="utf-8") == "preserve unexpected existing data\n"
 
 
-def test_generation_rejects_symlink_output(tmp_path):
+def _directory_symlink(link, destination):
+    try:
+        link.symlink_to(destination, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("directory symlinks unavailable")
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_generation_accepts_resolved_output_links(tmp_path, nested):
     destination = tmp_path / "destination"
     destination.mkdir()
     link = tmp_path / "link"
-    link.symlink_to(destination, target_is_directory=True)
+    _directory_symlink(link, destination)
+    output = link / "nested" if nested else link
+    result = api().generate(CAMPAIGN / "manifest.json", output)
+    resolved = destination / "nested" if nested else destination
+    assert json.loads((resolved / "index.json").read_bytes()) == result
+
+
+@pytest.mark.parametrize("error", [OSError, NotImplementedError])
+def test_symlink_fixture_skips_when_creation_is_unavailable(tmp_path, monkeypatch, error):
+    def unavailable(*args, **kwargs):
+        raise error("directory symlinks unavailable")
+
+    monkeypatch.setattr(Path, "symlink_to", unavailable)
+    with pytest.raises(pytest.skip.Exception, match="directory symlinks unavailable"):
+        _directory_symlink(tmp_path / "link", tmp_path / "destination")
+
+
+@pytest.mark.parametrize("writer", [False, True])
+def test_output_rejects_symlinks_below_resolved_root(tmp_path, writer):
+    output, destination = tmp_path / "output", tmp_path / "destination"
+    output.mkdir()
+    destination.mkdir()
+    case_id = manifest()["cases"][0]["case_id"]
+    _directory_symlink(output / case_id, destination)
     with pytest.raises(ValueError, match="symlink"):
-        api().generate(CAMPAIGN / "manifest.json", link)
+        if writer:
+            api()._write(output, f"{case_id}/input.yml", b"input\n")
+        else:
+            api().generate(CAMPAIGN / "manifest.json", output)
     assert not list(destination.iterdir())
 
 
@@ -250,20 +284,21 @@ def test_original_inputs_use_named_normal_and_zero_axial_coefficients(tmp_path):
 
 def test_review_packet_records_original_axis_correction():
     packet = json.loads((ROOT / "docs/verification/riser-mesh-review.json").read_text(encoding="utf-8"))
-    correction = packet["original_coefficient_axis_correction"]
-    assert correction["inputs"] == packet["preservation"]["original_physical_model_matches"] == 288
+    correction = packet["historical_corrections"]["original_coefficient_axis_correction"]
+    assert correction["inputs"] == packet["preservation"]["original_input_byte_matches"] == 288
     assert correction["named_fields"] == {"Cdn": 1.2, "Cdz": 0, "Can": 1.0, "Caz": 0}
     assert correction["geometry_bytes"] == correction["all_other_model_fields"] == "IDENTICAL"
     assert correction["include_torsion"] == "No"
-    assert "original_input_byte_matches" not in packet["preservation"]
+    assert "original_physical_model_matches" not in packet["preservation"]
     assert "tests/riser_campaign/test_campaign.py" in {entry["path"] for entry in packet["source_files"]}
 
 
 @pytest.mark.parametrize("writer", [False, True])
 @pytest.mark.parametrize("junction_kind", ["native_api", "reparse_attribute"])
-def test_output_rejects_directory_junction_ancestors(tmp_path, monkeypatch, writer, junction_kind):
-    destination = tmp_path / "junction"
-    destination.mkdir()
+def test_output_rejects_directory_junctions_below_root(tmp_path, monkeypatch, writer, junction_kind):
+    output = tmp_path / "output"
+    destination = output / manifest()["cases"][0]["case_id"]
+    destination.mkdir(parents=True)
     if junction_kind == "native_api":
         monkeypatch.setattr(Path, "is_junction", lambda path: path == destination, raising=False)
     else:
@@ -282,9 +317,9 @@ def test_output_rejects_directory_junction_ancestors(tmp_path, monkeypatch, writ
         monkeypatch.setattr(Path, "lstat", reparse_stat)
     with pytest.raises(ValueError, match="symlink|junction"):
         if writer:
-            api()._write(destination, "nested/input.yml", b"input\n")
+            api()._write(output, f"{destination.name}/nested/input.yml", b"input\n")
         else:
-            api().generate(CAMPAIGN / "manifest.json", destination / "nested")
+            api().generate(CAMPAIGN / "manifest.json", output)
     assert not list(destination.iterdir())
 
 
@@ -475,3 +510,13 @@ def test_generation_reads_one_frozen_manifest_snapshot(tmp_path, monkeypatch):
     assert set(reads) == targets
     for name, filename in (("manifest", "manifest.json"), ("schema", "manifest.schema.json"), ("basis", "basis.md")):
         assert result[f"{name}_sha256"] == hashlib.sha256(original(CAMPAIGN / filename)).hexdigest()
+
+
+@pytest.mark.parametrize("absolute", [False, True])
+def test_output_writer_rejects_paths_outside_root(tmp_path, absolute):
+    root = tmp_path / "output"
+    escaped = tmp_path / "escape.yml"
+    relative = str(escaped) if absolute else "../escape.yml"
+    with pytest.raises(ValueError, match="within the output root"):
+        api()._write(root, relative, b"input\n")
+    assert not escaped.exists()

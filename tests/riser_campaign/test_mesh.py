@@ -225,7 +225,7 @@ def test_review_packet_binds_sources_and_exact_frozen_coverage():
     assert packet["status"] == "SOLVER_FREE_ONLY"
     assert packet["adjacent_element_ratio_limit"] == 2.0
     assert packet["native_qualification"] == "NOT_RUN"
-    correction = packet["coefficient_axis_correction"]
+    correction = packet["historical_corrections"]["coefficient_axis_correction"]
     assert correction["counted_mesh"] == correction["all_other_model_fields"] == "IDENTICAL"
     assert correction["include_torsion"] == "No"
     assert packet["case_order"] == [scope["case_id"] for scope in scopes()]
@@ -237,7 +237,12 @@ def test_review_packet_binds_sources_and_exact_frozen_coverage():
         "scripts/riser_campaign/audit_mesh.py", "tests/riser_campaign/test_mesh.py",
         "tests/riser_campaign/test_frozen_scope.py", "examples/riser-campaign/README.md", ".gitattributes",
     }
+    # Shared dependencies remain evidence for the full native-handoff audit.
+    # CI checks their behavior through the regenerated input digests below.
+    owned_prefixes = ("examples/riser-campaign/", "scripts/riser_campaign/", "tests/riser_campaign/")
     for entry in packet["source_files"]:
+        if not entry["path"].startswith(owned_prefixes):
+            continue
         payload = (root / entry["path"]).read_bytes()
         assert hashlib.sha256(payload).hexdigest() == entry["sha256"], entry["path"]
         assert len(payload) == entry["bytes"], entry["path"]
@@ -251,6 +256,37 @@ def test_review_packet_binds_sources_and_exact_frozen_coverage():
     assert all(row["unrounded_adjacent_ratio_pass"] for row in audits)
     assert all(row["maximum_adjacent_ratio_bound"] <= 2.0 for row in audits)
     assert all(row["physical_model_matches"] == 12 for row in audits)
+
+
+def test_review_packet_treats_shared_source_bytes_as_handoff_evidence(monkeypatch):
+    root = CAMPAIGN.parents[1]
+    packet = json.loads((root / "docs/verification/riser-mesh-review.json").read_bytes())
+    shared = {root / entry["path"] for entry in packet["source_files"]
+              if not entry["path"].startswith(("examples/riser-campaign/",
+                                             "scripts/riser_campaign/", "tests/riser_campaign/"))}
+    assert shared
+    read_bytes = Path.read_bytes
+
+    def refuse_shared_read(path):
+        if path in shared:
+            raise AssertionError("CI must check shared behavior through regeneration, not source bytes")
+        return read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", refuse_shared_read)
+    test_review_packet_binds_sources_and_exact_frozen_coverage()
+
+
+def test_review_packet_still_rejects_changed_campaign_source_bytes(monkeypatch):
+    source = CAMPAIGN.parents[1] / "scripts/riser_campaign/generate_inputs.py"
+    read_bytes = Path.read_bytes
+
+    def changed_source(path):
+        payload = read_bytes(path)
+        return payload + b"# changed campaign source\n" if path == source else payload
+
+    monkeypatch.setattr(Path, "read_bytes", changed_source)
+    with pytest.raises(AssertionError, match="scripts/riser_campaign/generate_inputs.py"):
+        test_review_packet_binds_sources_and_exact_frozen_coverage()
 
 
 @pytest.mark.parametrize("sections", [
@@ -350,3 +386,51 @@ def test_reviewed_geometry_refuses_modified_snapshot(tmp_path, monkeypatch):
     monkeypatch.setattr(writer, "CAMPAIGN", tmp_path)
     with pytest.raises(ValueError, match="snapshot digest mismatch"):
         writer.reviewed_geometries(manifest["frozen_tranche"], frozen.source_payloads())
+
+
+@pytest.mark.parametrize("reference_table", [COUNT_TABLE, "LineType, Length, TargetSegmentLength"])
+@pytest.mark.parametrize("mutation", ["none", "mesh", "mass"])
+def test_frozen_audit_accepts_unchanged_counted_reference(reference_table, mutation):
+    from scripts.riser_campaign.audit_mesh import _compare_frozen_models
+
+    original = {"Lines": [{reference_table: [["pipe", 10.0, 2]], "IncludeTorsion": "No"}],
+                "LineTypes": [{"Name": "pipe", "MassPerUnitLength": 1}]}
+    candidate = copy.deepcopy(original)
+    candidate["Lines"][0][COUNT_TABLE] = candidate["Lines"][0].pop(reference_table)
+    if mutation == "mesh":
+        candidate["Lines"][0][COUNT_TABLE][0][2] = 3
+    elif mutation == "mass":
+        candidate["LineTypes"][0]["MassPerUnitLength"] = 2
+    if mutation == "mass" or (mutation == "mesh" and reference_table == COUNT_TABLE):
+        with pytest.raises(ValueError, match="changed"):
+            _compare_frozen_models(original, candidate, False)
+    else:
+        before, after = _compare_frozen_models(original, candidate, False)
+        assert before == [["pipe", 10.0, 2]]
+        assert after == [["pipe", 10.0, 3 if mutation == "mesh" else 2]]
+
+
+@pytest.mark.parametrize("mutation", ["none", "mesh", "axial_drag", "mass", "torsion"])
+def test_frozen_audit_preserves_strict_coefficient_correction(mutation):
+    from scripts.riser_campaign.audit_mesh import _compare_frozen_models
+
+    original = {"Lines": [{COUNT_TABLE: [["pipe", 10.0, 2]], "IncludeTorsion": "No"}],
+                "LineTypes": [{"Cd": [1.2, 0.008], "Ca": [1.0, 0], "MassPerUnitLength": 1}]}
+    candidate = copy.deepcopy(original)
+    line_type = candidate["LineTypes"][0]
+    del line_type["Cd"], line_type["Ca"]
+    line_type.update(Cdn=1.2, Cdz=0.008, Can=1.0, Caz=0)
+    if mutation == "mesh":
+        candidate["Lines"][0][COUNT_TABLE][0][2] = 3
+    elif mutation == "axial_drag":
+        line_type["Cdz"] = 0
+    elif mutation == "mass":
+        line_type["MassPerUnitLength"] = 2
+    elif mutation == "torsion":
+        candidate["Lines"][0]["IncludeTorsion"] = "Yes"
+    if mutation == "none":
+        assert _compare_frozen_models(original, candidate, True) == (
+            [["pipe", 10.0, 2]], [["pipe", 10.0, 2]])
+    else:
+        with pytest.raises(ValueError, match="changed"):
+            _compare_frozen_models(original, candidate, True)

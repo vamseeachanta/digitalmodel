@@ -84,7 +84,9 @@ The output directory is mandatory. The generator validates the entire manifest
 and every geometry before writing inputs. The printed table lists every case,
 units, assumptions and input count, followed by the number of licensed runs
 (always zero). Identical existing files are read and reused without rewriting;
-a digest mismatch or symlink is rejected without replacing that file. An
+a digest mismatch or a link within the resolved output root is rejected without
+replacing that file. The user-supplied output directory is resolved once, so
+links in system or user-managed directories above that root are accepted. An
 interrupted generation can be resumed with the same manifest, code and output
 directory. Changed inputs require a new output directory. No output is deleted.
 
@@ -261,12 +263,20 @@ PYTHONPATH=src:. uv run python -m scripts.riser_campaign.audit_mesh \
 
 The audit checks reference source snapshots against Git, verifies each indexed
 file before comparing it and refuses unexpected physical changes or failing mesh
-ratios. Candidate source snapshots must match the current working bytes. The audit
+ratios. Candidate source snapshots must match the current working bytes, including
+shared dependencies. CI asserts retained source bytes only for campaign-owned
+paths in `examples/riser-campaign/`, `scripts/riser_campaign/` and
+`tests/riser_campaign/`; regeneration still checks every reviewed frozen input
+digest. Shared-source digests remain handoff evidence and are fully bound by
+this audit rather than by repository-wide CI byte assertions. The audit
 verifies the producing runtime record and binds its digest and versions; the
 runtime used for the audit is recorded separately. It preserves existing outputs and rejects a mismatching existing audit file.
 For the coefficient correction, the reference must contain the counted mesh and
-the old positional lists. Omit `--coefficient-axes` only for the earlier audit
-from target segment lengths to graded explicit counts.
+the old positional lists. Omit `--coefficient-axes` for the earlier audit from
+target segment lengths to graded explicit counts. To reissue evidence from an
+already counted reference with named coefficients, omit both correction flags;
+counted meshes and every physical field must then remain identical. Earlier
+coefficient corrections are retained separately as revision-bound history.
 
 The analytical reference uses the 1490 m hang-off separation and transforms
 ASB elevation to global z by subtracting the physical 1500 m water depth. The

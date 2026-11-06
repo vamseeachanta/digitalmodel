@@ -42,6 +42,23 @@ def _correct_coefficient_axes(model: dict[str, Any], axial_drag: float = 0.008) 
         line_type.update(expected)
 
 
+def _compare_frozen_models(old_model: dict[str, Any], new_model: dict[str, Any],
+                           coefficient_axes: bool) -> tuple[list, list]:
+    """Compare physical fields and preserve an already counted reference mesh."""
+    counted_reference = COUNT_TABLE in old_model["Lines"][0]
+    if coefficient_axes and not counted_reference:
+        raise ValueError("coefficient correction requires a counted reference mesh")
+    original_sections = old_model["Lines"][0].pop(COUNT_TABLE if counted_reference else TARGET_TABLE)
+    sections = new_model["Lines"][0].pop(COUNT_TABLE)
+    if counted_reference and original_sections != sections:
+        raise ValueError("counted reference mesh changed")
+    if coefficient_axes:
+        _correct_coefficient_axes(old_model)
+    if old_model != new_model:
+        raise ValueError("model field outside the permitted correction changed")
+    return original_sections, sections
+
+
 def _entry(root: Path, relative: str) -> dict[str, Any]:
     payload = (root / relative).read_bytes()
     return {"path": relative, "sha256": hashlib.sha256(payload).hexdigest(), "bytes": len(payload)}
@@ -168,14 +185,7 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
                 raise ValueError("frozen load metadata changed")
             old_model = yaml.safe_load(_verified(reference, old_input))
             new_model = yaml.safe_load(_verified(candidate, new_input))
-            original_sections = old_model["Lines"][0].pop(COUNT_TABLE if coefficient_axes else TARGET_TABLE)
-            sections = new_model["Lines"][0].pop(COUNT_TABLE)
-            if coefficient_axes:
-                if original_sections != sections:
-                    raise ValueError("counted mesh changed during coefficient correction")
-                _correct_coefficient_axes(old_model)
-            if old_model != new_model:
-                raise ValueError("model field outside the permitted correction changed")
+            original_sections, sections = _compare_frozen_models(old_model, new_model, coefficient_axes)
             statistics = mesh_statistics(sections)
             old_spans, new_spans = _material_spans(original_sections), _material_spans(sections)
             if len(old_spans) != len(new_spans) or any(
@@ -196,12 +206,10 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
     source_paths = [source["path"].removeprefix("source/") for source in after["code_sources"]]
     source_paths += ["scripts/riser_campaign/audit_mesh.py", "tests/riser_campaign/test_mesh.py",
                      "tests/riser_campaign/test_frozen_scope.py", "tests/riser_campaign/test_checkout.py",
-                     "examples/riser-campaign/README.md", ".gitattributes"]
-    if coefficient_axes:
-        source_paths += ["src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py",
-                         "src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py"]
-    if original_coefficient_axes:
-        source_paths += ["tests/riser_campaign/test_campaign.py"]
+                     "examples/riser-campaign/README.md", ".gitattributes",
+                     "src/digitalmodel/solvers/orcaflex/modular_generator/builders/linetype_builder.py",
+                     "src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py",
+                     "tests/riser_campaign/test_campaign.py"]
     for entry in after["code_sources"]:
         if _verified(candidate, entry) != (repo / entry["path"].removeprefix("source/")).read_bytes():
             raise ValueError("candidate source snapshot differs from the working source")
