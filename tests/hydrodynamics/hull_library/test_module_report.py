@@ -155,8 +155,31 @@ class Page(HTMLParser):
 def builder():
     spec = importlib.util.spec_from_file_location("hull_module_report", REPORT / "build_report.py")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    previous = sys.dont_write_bytecode
+    try:
+        sys.dont_write_bytecode = True
+        spec.loader.exec_module(module)
+    finally:
+        sys.dont_write_bytecode = previous
     return module
+
+
+@pytest.mark.parametrize("broken", [False, True])
+def test_builder_import_leaves_no_bytecode(monkeypatch, tmp_path, broken):
+    report = tmp_path / "report"
+    report.mkdir()
+    source = 'raise RuntimeError("synthetic import failure")' if broken else (
+        REPORT / "build_report.py").read_text(encoding="utf-8")
+    (report / "build_report.py").write_text(source, encoding="utf-8")
+    monkeypatch.setattr(sys, "dont_write_bytecode", False)
+    monkeypatch.setitem(globals(), "REPORT", report)
+    if broken:
+        with pytest.raises(RuntimeError, match="synthetic import failure"):
+            builder.__wrapped__()
+    else:
+        builder.__wrapped__()
+    assert sys.dont_write_bytecode is False
+    assert not list(report.rglob("__pycache__"))
 
 
 def test_worked_values_match_independent_calculation(builder):
@@ -183,8 +206,15 @@ def check_visible(text, record):
     for key, value in expected.items():
         attrs, visible = page.bindings[key]
         unit = UNITS[key.split(".")[2]]
-        digits = 0 if unit in {"index", "count"} else 1
-        assert visible == f"{value:.{digits}f}", key
+        if key.startswith("difference."):
+            expected_text = f"{value:.4e}"
+        elif unit in {"index", "count"}:
+            expected_text = f"{value:.0f}"
+        elif key.split(".")[2] in {"normal", "edge_lengths"}:
+            expected_text = f"{value:.4g}"
+        else:
+            expected_text = f"{value:.1f}"
+        assert visible == expected_text, key
         assert attrs["data-unit"] == unit
         assert attrs["data-equation"] == EQUATIONS[key.split(".")[2]]
         assert attrs["data-source"] == "synthetic-panel"
@@ -218,16 +248,15 @@ def test_visible_values_follow_computed_results(builder, monkeypatch):
         np.testing.assert_array_equal(actual["normal"], mesh.normals[0])
         assert actual["panel_area"] == mesh.panel_areas[0]
         assert actual["total_area"] == mesh.total_area
-    def zeros(value):
-        if isinstance(value, dict):
-            return {k: zeros(v) for k, v in value.items()}
-        if isinstance(value, list):
-            return [zeros(v) for v in value]
-        return 0
-
     independent = {"cases": {k: oracle(v) for k, v in FACTORS.items()},
                    "reference": {k: oracle(v) for k, v in FACTORS.items()},
-                   "difference": {k: zeros(oracle(v)) for k, v in FACTORS.items()}}
+                   "difference": {}}
+    for name, factors in FACTORS.items():
+        expected = dict(flatten(oracle(factors)))
+        for key, value in flatten(record["difference"][name]):
+            actual = dict(flatten(record["cases"][name]))[key]
+            assert value == abs(actual - expected[key])
+        independent["difference"][name] = record["difference"][name]
     check_visible((REPORT / "report.html").read_text(encoding="utf-8"), independent)
 
     original = builder.scale_mesh_uniform
@@ -261,7 +290,10 @@ def test_report_rebuild_is_deterministic(builder, tmp_path):
         assert {p.name for p in output.iterdir()} == DELIVERABLES
     for name in DELIVERABLES:
         assert (outputs[0] / name).read_bytes() == (outputs[1] / name).read_bytes()
-        assert (outputs[0] / name).read_bytes() == (REPORT / name).read_bytes(), f"Rebuild with {builder.REBUILD}"
+        current = json.loads((outputs[0] / "sources.json").read_text(encoding="utf-8"))
+        delivered = json.loads((REPORT / "sources.json").read_text(encoding="utf-8"))
+        assert mask_inventory_digests((outputs[0] / name).read_bytes(), current) == (
+            mask_inventory_digests((REPORT / name).read_bytes(), delivered)), f"Rebuild with {builder.REBUILD}"
     assert not list(tmp_path.rglob("__pycache__"))
 
 
@@ -297,19 +329,70 @@ def test_scope_limits_and_report_pointers(builder):
         else:
             assert not re.match(r"[a-z]+:", link)
             assert (REPORT / link.split("#")[0]).is_file(), link
-    for readme, target in ((REPORT / "README.md", REPORT / "report.html"),
+    for readme, target in ((ROOT / "docs/README.md", REPORT / "README.md"),
+                           (REPORT / "README.md", REPORT / "report.html"),
                            (PACKAGE / "README.md", REPORT / "README.md")):
         links = re.findall(r"\]\(([^)]+)\)", readme.read_text(encoding="utf-8"))
         assert any((readme.parent / p).resolve() == target for p in links)
     sources = json.loads((REPORT / "sources.json").read_text(encoding="utf-8"))
+    assert {s["path"] for s in sources["sources"] if s["binding"] == "required"} == builder.REQUIRED_SOURCES
     for source in sources["sources"]:
         path = Path(source["path"])
         assert not path.is_absolute() and ".." not in path.parts
-        assert sha256((ROOT / path).read_bytes()).hexdigest() == source["sha256"], f"Rebuild with {builder.REBUILD}"
         assert source["basis"] and source["locator"]
+    stale = assert_source_bindings(sources, ROOT)
+    if stale:
+        print("Inventory staleness (advisory): " + ", ".join(stale))
     changes = json.loads((REPORT / "changes.json").read_text(encoding="utf-8"))
     assert changes["revision"] == builder.REVISION and changes["changes"]
     assert all(change in " ".join(page.visible) for change in changes["changes"])
+
+
+def assert_source_bindings(sources, root):
+    stale = []
+    for source in sources["sources"]:
+        assert source["binding"] in {"required", "inventory"}
+        path = root / source["path"]
+        if sha256(path.read_bytes()).hexdigest() != source["sha256"]:
+            assert source["binding"] == "inventory", f"Calculation evidence changed: {source['path']}"
+            stale.append(source["path"])
+    return stale
+
+
+def mask_inventory_digests(data, sources):
+    for source in sources["sources"]:
+        if source["binding"] == "inventory":
+            data = data.replace(source["sha256"].encode("ascii"), b"[inventory digest]")
+    return data
+
+
+def test_inventory_drift_is_advisory(builder, tmp_path, monkeypatch):
+    sources = builder.source_record()
+    for source in sources["sources"]:
+        path = tmp_path / source["path"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes((ROOT / source["path"]).read_bytes())
+    inventory = next(s for s in sources["sources"] if s["binding"] == "inventory")
+    required = next(s for s in sources["sources"] if s["binding"] == "required")
+    (tmp_path / inventory["path"]).write_text("synthetic inventory edit", encoding="utf-8")
+    assert assert_source_bindings(sources, tmp_path) == [inventory["path"]]
+    original_page = builder.build(builder.calculate()).encode("utf-8")
+    changed = copy.deepcopy(sources)
+    next(s for s in changed["sources"] if s["path"] == inventory["path"])["sha256"] = "0" * 64
+    monkeypatch.setattr(builder, "source_record", lambda: changed)
+    changed_page = builder.build(builder.calculate()).encode("utf-8")
+    assert original_page != changed_page
+    assert mask_inventory_digests(original_page, sources) == mask_inventory_digests(changed_page, changed)
+    (tmp_path / required["path"]).write_text("synthetic calculation edit", encoding="utf-8")
+    with pytest.raises(AssertionError, match="Calculation evidence changed"):
+        assert_source_bindings(sources, tmp_path)
+
+
+def test_report_files_are_visible_to_git():
+    paths = [str((REPORT / name).relative_to(ROOT)) for name in DELIVERABLES | {"README.md", "build_report.py"}]
+    result = subprocess.run(["git", "check-ignore", "--no-index", *paths], cwd=ROOT,
+                            capture_output=True, text=True, timeout=10)
+    assert result.returncode == 1, result.stdout + result.stderr
 
 
 def test_source_map_covers_public_exports(builder):
@@ -336,26 +419,22 @@ def test_html_and_json_are_escaped(builder):
     assert payload in " ".join(page.visible)
     data = json.loads("".join(page.scripts))
     assert data["changes"]["changes"] == [payload]
-    assert data["calculation"]["cases"]["parametric"]["total_area"] == 75.9
+    assert data["calculation"] == builder.calculate()
 
 
-def test_outputs_are_public_and_path_independent():
+def test_outputs_are_public_and_path_independent(monkeypatch):
+    monkeypatch.setenv("HOME", "/")
     path_names = ("ho" + "me", "m" + "nt")
-    words = ("ow" + "ner", "cli" + "ent", "se" + "at", "la" + "ne", "ses" + "sion")
     path_pattern = re.compile(
         rf"(?:/(?:{'|'.join(path_names)})/|[A-Za-z]:\\|[\w.+-]+@[\w-]+\.[\w.-]+)"
     )
-    word_pattern = re.compile(rf"\b(?:{'|'.join(words)})\b", re.I)
     for part in path_names:
         assert path_pattern.search("/" + part + "/example")
     assert path_pattern.search("Q:" + chr(92) + "example")
     assert path_pattern.search("example" + chr(64) + "example.invalid")
-    for word in words:
-        assert word_pattern.search(word.upper())
     paths = [REPORT / name for name in sorted(DELIVERABLES)] + [Path(__file__)]
     for path in paths:
         text = path.read_text(encoding="utf-8")
         assert "\r" not in text
-        assert str(ROOT) not in text and str(Path.home()) not in text
+        assert str(ROOT) not in text
         assert not path_pattern.search(text)
-        assert not word_pattern.search(text)

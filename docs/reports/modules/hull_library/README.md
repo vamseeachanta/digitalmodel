@@ -5,7 +5,11 @@ in-memory scaling of a synthetic tilted rectangular panel. Hull forms, mesh
 generation and response lookup are documented as interfaces; their physical
 qualification remains NOT_EVALUATED.
 
-[Source records](sources.json) bind repository evidence by SHA-256.
+[Source records](sources.json) bind repository evidence by SHA-256. Required
+bindings cover executed calculation sources, the worked example, style source,
+tests and builder. Inventory-only source drift is reported as advisory staleness;
+rebuild comparisons disregard only those inventory digests. All required
+bindings continue to fail on drift.
 [Change records](changes.json) describe the report revision.
 The [existing standalone example](../../../../src/digitalmodel/hydrodynamics/hull_library/docs/worked-panel-scaling.md)
 retains its own executable contract and independent derivation.
@@ -21,6 +25,8 @@ The output directory receives `report.html`, `changes.json` and `sources.json`;
 no intermediate files are needed. The page embeds its styles and calculation
 record and loads no external resources. Source links resolve from the report's
 repository directory. Deterministic output does not establish physical validation.
+Embedded calculations retain full precision. Visible normals and edge lengths
+use four significant figures, and absolute differences use scientific notation.
 
 The [report tests](../../../../tests/hydrodynamics/hull_library/test_module_report.py)
 check unrounded hand calculations, every visible quantity and unit, calculation

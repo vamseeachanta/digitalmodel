@@ -1,10 +1,11 @@
 {
   "report": "hull-library-panel-scaling",
-  "revision": "00",
-  "date": "2026-10-28",
+  "revision": "01",
+  "date": "2026-11-06",
   "issue": "3317",
   "changes": [
-    "Added an interface evidence map and synthetic panel analysis to separate implementation from numerical qualification.",
-    "Bound visible results to fresh scaling calculations, independent geometry and reproducible source records."
+    "Prevented report-test imports from writing bytecode and removed environment-dependent text assertions.",
+    "Preserved full-precision embedded calculations and exposed normal, length and difference precision in the table.",
+    "Separated calculation evidence from advisory inventory digests and made the report discoverable to documentation and Git."
   ]
 }

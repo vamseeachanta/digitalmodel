@@ -30,8 +30,8 @@ ROOT = Path(__file__).resolve().parents[4]
 PACKAGE = "src/digitalmodel/hydrodynamics/hull_library"
 EXAMPLE = f"{PACKAGE}/docs/worked-panel-scaling.md"
 EXEMPLAR = "docs/reports/pipeline-ffs-assessment.html"
-REVISION = "00"
-DATE = "2026-10-28"  # Document issue date; never an execution timestamp.
+REVISION = "01"
+DATE = "2026-11-06"  # Document issue date; never an execution timestamp.
 REBUILD = ('PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 MPLCONFIGDIR="$TMPDIR/matplotlib" '
            'XDG_CACHE_HOME="$TMPDIR/xdg-cache" uv run --no-project --python "$(command -v python3)" python '
            'docs/reports/modules/hull_library/build_report.py --output-dir "$TMPDIR/hull-report"')
@@ -39,9 +39,25 @@ CHANGES = {
     "report": "hull-library-panel-scaling", "revision": REVISION, "date": DATE,
     "issue": "3317",
     "changes": [
+        "Prevented report-test imports from writing bytecode and removed environment-dependent text assertions.",
+        "Preserved full-precision embedded calculations and exposed normal, length and difference precision in the table.",
+        "Separated calculation evidence from advisory inventory digests and made the report discoverable to documentation and Git.",
+    ],
+}
+PREVIOUS_ISSUES = [{
+    "revision": "00", "date": "2026-10-28",
+    "changes": [
         "Added an interface evidence map and synthetic panel analysis to separate implementation from numerical qualification.",
         "Bound visible results to fresh scaling calculations, independent geometry and reproducible source records.",
     ],
+}]
+REQUIRED_SOURCES = {
+    f"{PACKAGE}/mesh_scaler.py", EXAMPLE, EXEMPLAR,
+    "src/digitalmodel/hydrodynamics/bemrosetta/models/mesh_models.py",
+    "tests/hydrodynamics/hull_library/test_documented_panel_scaling.py",
+    "tests/hydrodynamics/hull_library/test_mesh_scaler.py",
+    "tests/hydrodynamics/hull_library/test_module_report.py",
+    "docs/reports/modules/hull_library/build_report.py",
 }
 # All geometry and factors are synthetic assumptions from EXAMPLE, Inputs.
 # One model length unit is assigned one metre; this is not measured geometry.
@@ -142,17 +158,13 @@ def method_map() -> list[dict]:
 
 def source_record() -> dict:
     """Bind repository source bytes; public or measured response data are absent."""
-    paths = {row["path"] for row in method_map()} | {
-        f"{PACKAGE}/__init__.py", f"{PACKAGE}/docs/agent-pack.md", EXAMPLE, EXEMPLAR,
-        "src/digitalmodel/hydrodynamics/bemrosetta/models/mesh_models.py",
-        "tests/hydrodynamics/hull_library/test_documented_panel_scaling.py",
-        "tests/hydrodynamics/hull_library/test_mesh_scaler.py",
-        "tests/hydrodynamics/hull_library/test_module_report.py",
-        "docs/reports/modules/hull_library/build_report.py",
+    paths = {row["path"] for row in method_map()} | REQUIRED_SOURCES | {
+        f"{PACKAGE}/__init__.py", f"{PACKAGE}/docs/agent-pack.md",
     }
     return {"report": CHANGES["report"], "revision": REVISION,
             "data_basis": "Synthetic assumptions only; no response datasets are consumed.",
             "sources": [{"path": path, "sha256": sha256((ROOT / path).read_bytes()).hexdigest(),
+                         "binding": "required" if path in REQUIRED_SOURCES else "inventory",
                          "basis": "synthetic input and hand derivation" if path == EXAMPLE
                          else "repository implementation or documentation; not physical qualification",
                          "locator": "Inputs; Derivation; Tolerance basis" if path == EXAMPLE
@@ -166,15 +178,6 @@ def flatten(value, prefix=""):
             yield from flatten(child, f"{prefix}.{key}" if prefix else str(key))
     else:
         yield prefix, value
-
-
-def rounded(value):
-    """Embed at displayed precision; the calculation API retains full precision."""
-    if isinstance(value, dict):
-        return {k: rounded(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [rounded(v) for v in value]
-    return round(value, 1) if isinstance(value, float) else value
 
 
 def safe_json(value) -> str:
@@ -206,12 +209,13 @@ def quantities(record: dict) -> str:
     for key, computed in flatten(record["cases"]):
         metric = key.split(".")[1]
         unit, equation = record["units"][metric], EQUATIONS[metric]
-        digits = 0 if unit in {"index", "count"} else 1
         cells = [html.escape(key)]
         for group, value in (("cases", computed), ("reference", references[key]), ("difference", delta[key])):
+            precision = (".4e" if group == "difference" else ".0f" if unit in {"index", "count"}
+                         else ".4g" if metric in {"normal", "edge_lengths"} else ".1f")
             cells.append(f'<span data-value="{group}.{key}" '
                          f'data-unit="{html.escape(unit)}" data-equation="{equation}" '
-                         f'data-source="synthetic-panel">{value:.{digits}f}</span>')
+                         f'data-source="synthetic-panel">{value:{precision}}</span>')
         rows.append(cells + [html.escape(unit), f'<a href="#{equation}">{equation}</a>; '
                             '<a href="#synthetic-panel">synthetic basis</a>'])
     return table(["Case and quantity (zero-based component)", "Module result", "Hand calculation",
@@ -226,16 +230,18 @@ def build(record: dict, *, changes: dict | None = None) -> str:
               "Worked Example", "Validation Evidence", "Limits of Use", "Recommendations", "References", "Appendix"]
     style = re.search(r"<style>(.*?)</style>", (ROOT / EXEMPLAR).read_text(encoding="utf-8"), re.S)[1]
     nav = "".join(f'<li><a href="#section-{i}">{title}</a></li>' for i, title in enumerate(titles, 1))
-    revisions = table(["Revision", "Date", "What changed and why"], [[html.escape(changes["revision"]),
-                       html.escape(changes["date"]), html.escape(" ".join(changes["changes"]))]], "Revision history")
+    revisions = table(["Revision", "Date", "What changed and why"],
+                      [[html.escape(issue["revision"]), html.escape(issue["date"]),
+                        html.escape(" ".join(issue["changes"]))]
+                       for issue in [*PREVIOUS_ISSUES, changes]], "Revision history")
     methods = table(["Public interface", "Implementation", "Independent evidence in this report"],
                     [[link(row["path"], row["name"]), "IMPLEMENTED", row["checked"]]
                      for row in method_map()], "Table 2.1. Export inventory; implementation alone does not establish qualification.")
     limits = "".join(f"<li>{limit}: NOT_EVALUATED</li>" for limit in LIMITS)
     change_panel = "".join(f"<li>{html.escape(item)}</li>" for item in changes["changes"])
     sources = source_record()
-    source_table = table(["Source", "Use and locator", "SHA-256"], [[link(s["path"]),
-                         html.escape(s["basis"] + "; " + s["locator"]), f'<code>{s["sha256"]}</code>']
+    source_table = table(["Source", "Use and locator", "Binding", "SHA-256"], [[link(s["path"]),
+                         html.escape(s["basis"] + "; " + s["locator"]), s["binding"], f'<code>{s["sha256"]}</code>']
                          for s in sources["sources"]], "Table 9.1. Source-byte bindings; no external response dataset is used.")
     unchanged = "unchanged" if record["source_unchanged"] else "CHANGED: investigate source mutation"
     return f'''<!DOCTYPE html>
@@ -297,8 +303,9 @@ Two output directories are rebuilt and compared byte for byte with the delivered
 <p>{link('tests/hydrodynamics/hull_library/test_documented_panel_scaling.py', 'Existing documented example tests')}
 and {link('tests/hydrodynamics/hull_library/test_mesh_scaler.py', 'existing scaler tests')} remain separate regression coverage.
 The test definitions are evidence locators; live execution counts are reported with the change, rather than generated as an unobserved pass claim.</p>
-<p>Output comparisons use one decimal place; topology and counts remain integers. Embedded calculation data use the same
-display precision. Full-precision assertions use calculate() results before rendering. Rounded equality alone does not satisfy the numerical criterion.</p></section>
+<p>Normals and edge lengths use four significant figures; absolute differences use scientific notation.
+Other quantities use one decimal place; topology and counts remain integers. Embedded calculation data retain full precision.
+Full-precision assertions use calculate() results before rendering. Rounded equality alone does not satisfy the numerical criterion.</p></section>
 <section id="section-7"><h2>7. Limits of Use</h2><ul>{limits}</ul>
 <p>Geometric scaling does not scale hydrodynamic responses. Response frequency, heading, amplitude, phase, coordinate-frame
 and loading-condition conventions require independent evidence before reuse. No response values are obtained here.</p>
@@ -314,7 +321,10 @@ Dimensional nearest matching and response filtering do not establish physical su
 production behavior is unchanged. See {link(f'{PACKAGE}/mesh_scaler.py', 'scaling and validation interfaces')} and
 {link(f'{PACKAGE}/docs/agent-pack.md', 'module evidence and known limits')}.</p></section>
 <section id="section-9"><h2>9. References</h2><p>Sources are repository-relative and hash-bound in sources.json.
-The example is synthetic; implementation references are not independent physical observations.</p>{source_table}</section>
+The example is synthetic; implementation references are not independent physical observations.</p>
+<p>Required bindings cover the executed calculation sources, worked example, style source, tests and builder.
+Inventory-only digests describe the inspected interfaces at issue time; later drift is an advisory staleness notice,
+not a calculation failure. Deterministic rebuild comparisons disregard only inventory digest changes.</p>{source_table}</section>
 <section id="section-10"><h2>10. Appendix</h2>
 <h3>Rebuild</h3><p>From the repository root, with its Python dependencies active and supplied scratch storage:</p>
 <pre><code>{html.escape(REBUILD)}</code></pre>
@@ -322,7 +332,7 @@ The example is synthetic; implementation references are not independent physical
 The report is self-contained; source links resolve from its repository report directory. No network resources are loaded.</p>
 <h3>Engineering changes</h3><details id="engineering-changes"><summary>Changes in this revision</summary><ul>{change_panel}</ul></details>
 <p>Readiness: independent checking is limited to the synthetic panel. The broader module qualification remains open.</p></section>
-</main></div><script type="application/json" id="calculation-record">{safe_json({'calculation': rounded(record), 'changes': changes})}</script>
+</main></div><script type="application/json" id="calculation-record">{safe_json({'calculation': record, 'changes': changes})}</script>
 </body></html>
 '''
 

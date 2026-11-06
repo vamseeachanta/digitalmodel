@@ -636,3 +636,12 @@ docs/reports/modules/gis/*
 !/docs/reports/modules/riserfatigue/generate_report.py
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
+
+# Retain the bounded hull library report and its reproducible sources.
+!/docs/reports/modules/hull_library/
+/docs/reports/modules/hull_library/*
+!/docs/reports/modules/hull_library/README.md
+!/docs/reports/modules/hull_library/build_report.py
+!/docs/reports/modules/hull_library/report.html
+!/docs/reports/modules/hull_library/sources.json
+!/docs/reports/modules/hull_library/changes.json
