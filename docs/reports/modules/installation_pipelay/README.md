@@ -22,7 +22,9 @@ Use `--output-dir` to publish into a separate directory that is absent, empty,
 or contains only regular report deliverables and a manifest with schema
 `installation-pipelay-report/1`. Existing unrelated files are rejected before
 calculation and checked again before publication. Temporary staging remains
-outside the checkout. The four deliverables are `index.html`, `changes.json`,
+outside the checkout and outside the resolved output directory. Scratch paths
+equal to or inside the output directory are rejected before calculation or writes.
+The four deliverables are `index.html`, `changes.json`,
 `manifest.json` and this README. The manifest hashes every source dependency and
 the other three deliverables; deterministic rebuild checks the manifest itself.
 

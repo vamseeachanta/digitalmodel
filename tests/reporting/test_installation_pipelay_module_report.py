@@ -314,7 +314,8 @@ def test_unrecognised_external_output_is_rejected(disposable_builder, tmp_path, 
         output.mkdir()
         (output / "README.md").write_bytes(b"unrelated content\n")
         manifest = output / "manifest.json"
-        manifest.write_text('{"schema": "installation-pipelay-report/1"}', encoding="utf-8")
+        manifest.write_text('{"schema": "installation-pipelay-report/1"}',
+                            encoding="utf-8", newline="\n")
         if case == "readme-only":
             # A missing manifest must not authorize replacing an existing README.
             manifest.rename(tmp_path / "saved-manifest.json")
@@ -322,7 +323,7 @@ def test_unrecognised_external_output_is_rejected(disposable_builder, tmp_path, 
             manifest.write_text({
                 "invalid-json": "{", "unknown-schema": '{"schema": "other-report/1"}',
                 "missing-schema": "{}", "list": "[]", "null": "null",
-            }[case], encoding="utf-8")
+            }[case], encoding="utf-8", newline="\n")
         elif case == "extra-file":
             (output / "comments.txt").write_bytes(b"unrelated comments\n")
         elif case == "extra-directory":
@@ -352,13 +353,73 @@ def test_external_output_can_be_created_and_rebuilt(disposable_builder, tmp_path
         output.mkdir()
     if state == "recognised":
         (output / "manifest.json").write_text(
-            '{"schema": "installation-pipelay-report/1"}', encoding="utf-8",
+            '{"schema": "installation-pipelay-report/1"}', encoding="utf-8", newline="\n",
         )
     build.build(output, tmp_path / "scratch")
     before = {path.name: path.read_bytes() for path in output.iterdir()}
     assert set(before) == DELIVERABLES
     build.build(output, tmp_path / "scratch")
     assert {path.name: path.read_bytes() for path in output.iterdir()} == before
+
+
+@pytest.mark.parametrize("state", ["absent", "empty", "recognised"])
+@pytest.mark.parametrize("location", ["equal", "nested", "alias"])
+def test_scratch_inside_output_is_rejected_before_writes(
+    disposable_builder, tmp_path, monkeypatch, state, location,
+):
+    """Overlapping staging must preserve output bytes and create no directories."""
+    build = disposable_builder
+    output = tmp_path / "report"
+    if state != "absent":
+        output.mkdir()
+    if state == "recognised":
+        (output / "manifest.json").write_bytes(
+            b'{"schema": "installation-pipelay-report/1"}\n',
+        )
+    before = {path.name: path.read_bytes() for path in output.iterdir()} if output.exists() else None
+    scratch = output if location == "equal" else output / "scratch"
+    if location == "alias":
+        alias = tmp_path / "report-alias"
+        alias.symlink_to(output, target_is_directory=True)
+        scratch = alias / "scratch"
+    rendered = []
+    render = build.render
+
+    def record_render(path):
+        rendered.append(True)
+        return render(path)
+
+    monkeypatch.setattr(build, "render", record_render)
+    with pytest.raises(ValueError, match="scratch.*output"):
+        build.build(output, scratch)
+    assert not rendered
+    if before is None:
+        assert not output.exists()
+    else:
+        assert {path.name: path.read_bytes() for path in output.iterdir()} == before
+
+
+def test_deliverable_junction_is_rejected_before_calculation(
+    disposable_builder, tmp_path, monkeypatch,
+):
+    """Resolve directory links even when the symlink predicate does not identify them."""
+    build = disposable_builder
+    output = build.DESTINATION
+    output.mkdir(parents=True)
+    junction = output / "index.html"
+    target = tmp_path / "protected-content"
+    target.mkdir()
+    junction.symlink_to(target, target_is_directory=True)
+    protected = target / "retained.txt"
+    protected.write_bytes(b"unrelated content\n")
+    # Junctions resolve to their target without being reported as symlinks.
+    is_symlink = Path.is_symlink
+    monkeypatch.setattr(Path, "is_symlink", lambda path: path != junction and is_symlink(path))
+    with pytest.raises(ValueError, match="junction"):
+        build.build(output, tmp_path / "scratch")
+    assert protected.read_bytes() == b"unrelated content\n"
+    assert {path.name for path in output.iterdir()} == {"index.html"}
+    assert not (tmp_path / "scratch").exists()
 
 
 def test_external_output_is_revalidated_before_publication(disposable_builder, tmp_path, monkeypatch):
@@ -391,10 +452,10 @@ def retention_environment(request, tmp_path, monkeypatch):
     """Exercise retention rules independently of caller Git settings."""
     if request.param == "global-excludes":
         excludes = tmp_path / "global-excludes"
-        excludes.write_text("*.txt\n*.json\n*.html\n*.md\n*.py\n", encoding="utf-8")
+        excludes.write_text("*.txt\n*.json\n*.html\n*.md\n*.py\n", encoding="utf-8", newline="\n")
         config = tmp_path / "global-config"
         config.write_text(f'[core]\n\texcludesFile = "{excludes.as_posix()}"\n',
-                          encoding="utf-8")
+                          encoding="utf-8", newline="\n")
         monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
     elif request.param == "foreign-bindings":
         for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
@@ -407,7 +468,8 @@ def repository_ignore_pattern(path):
            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
     result = subprocess.run(
         ["git", "-c", "core.excludesFile=", "check-ignore", "-v", "--no-index", "--stdin"],
-        cwd=ROOT, env=env, input=path + "\n", capture_output=True, text=True, check=False,
+        cwd=ROOT, env=env, input=path + "\n", capture_output=True, text=True,
+        encoding="utf-8", check=False,
     )
     assert result.returncode == 0, result.stderr
     source, reported_path = result.stdout.rstrip("\n").split("\t")

@@ -76,6 +76,12 @@ CHANGES = [{
               "report files, protecting unrelated workspace content before calculation and "
               "publication; regression tests and source digests are refreshed, with "
               "calculated results unchanged.",
+}, {
+    "revision": "F", "date": "2026-11-06",
+    "change": "Scratch paths equal to or inside the resolved output directory and "
+              "directory-junction deliverables are rejected before calculation or writes; "
+              "textbook clauses identify the arithmetic basis and regression tests "
+              "and source digests are refreshed, with calculated results unchanged.",
 }]
 
 
@@ -297,7 +303,22 @@ no external input specification is identified.</li>
 <li id="S4">S4 — Independent hand-value test and dedicated report tests, listed below.
 The test docstrings derive the reference values and justify a binary64 roundoff tolerance.</li>
 <li id="S5">S5 — Existing stress, finite-input and integrity tests; the repair interpretation
-remains an explicit expected failure. Existing tests alone are not independent physical evidence.</li></ol>
+remains an explicit expected failure. Existing tests alone are not independent physical evidence.</li>
+<li id="S6">S6 — MIT, <cite>Modules in Mechanics of Materials</cite>,
+<cite>Stresses in Beams</cite>, 21 November 2000 edition, section Normal Stresses,
+equations (2) and (3): the small-curvature strain and linear-elastic bending-stress basis.
+The tensile outer-fibre magnitudes are used in the arithmetic example.</li>
+<li id="S7">S7 — OpenStax, <cite>University Physics Volume 1</cite>, 2016 edition,
+section 12.3, Stress, Strain, and Elastic Modulus: axial force per area and the
+linear stress-strain relation. The supplied strength fraction is an illustrative
+input [S1], not a textbook or standard acceptance factor.</li>
+<li id="S8">S8 — OpenStax, <cite>University Physics Volume 1</cite>, 2016 edition,
+sections 12.1, Conditions for Static Equilibrium, and 6.2, Friction.
+The route hand calculation applies force balance to a circular line element,
+with tension per radius balanced by the supplied friction coefficient times
+submerged weight per length. This derivation assumes a flexible line, uniform
+conditions and fully mobilised lateral friction; a pipeline design criterion
+is not established by these textbook relations.</li></ol>
 <p>The exact source editions are bound by the following SHA-256 digests. The manifest hashes
 all source dependencies and the other delivered artifacts; its own bytes are checked by deterministic
 rebuild. The canonical report palette is inlined from the existing brand stylesheet. No licensed
@@ -358,7 +379,9 @@ Use `--output-dir` to publish into a separate directory that is absent, empty,
 or contains only regular report deliverables and a manifest with schema
 `installation-pipelay-report/1`. Existing unrelated files are rejected before
 calculation and checked again before publication. Temporary staging remains
-outside the checkout. The four deliverables are `index.html`, `changes.json`,
+outside the checkout and outside the resolved output directory. Scratch paths
+equal to or inside the output directory are rejected before calculation or writes.
+The four deliverables are `index.html`, `changes.json`,
 `manifest.json` and this README. The manifest hashes every source dependency and
 the other three deliverables; deterministic rebuild checks the manifest itself.
 
@@ -374,8 +397,10 @@ def validated_destination(output_dir: Path) -> Path:
     destination = Path(output_dir).resolve()
     if destination.is_relative_to(ROOT) and destination != DESTINATION:
         raise ValueError("Report output inside checkout must use the named report directory")
-    if any((destination / name).is_symlink() for name in DELIVERABLES):
-        raise ValueError("Report output target must not be a symlink")
+    if any((destination / name).is_symlink()
+           or (destination / name).resolve() != destination / name
+           for name in DELIVERABLES):
+        raise ValueError("Report output target must not be a symlink or directory junction")
     if destination != DESTINATION and destination.exists():
         message = "Existing external report directory must be empty or contain only recognised report files"
         if not destination.is_dir():
@@ -397,6 +422,8 @@ def build(output_dir: Path, scratch: Path) -> dict[str, Any]:
     """Stage external temporary files, then write only the named deliverables."""
     destination = validated_destination(output_dir)
     scratch = external_scratch(scratch)
+    if scratch.is_relative_to(destination):
+        raise ValueError("Calculation scratch must be outside the report output directory")
     page = render(scratch)
     artifacts = {"index.html": page, "changes.json": json_text(CHANGES), "README.md": README}
     manifest = {

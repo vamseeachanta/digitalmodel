@@ -23,5 +23,10 @@
     "change": "External output directories must be absent, empty or contain only recognised report files, protecting unrelated workspace content before calculation and publication; regression tests and source digests are refreshed, with calculated results unchanged.",
     "date": "2026-11-06",
     "revision": "E"
+  },
+  {
+    "change": "Scratch paths equal to or inside the resolved output directory and directory-junction deliverables are rejected before calculation or writes; textbook clauses identify the arithmetic basis and regression tests and source digests are refreshed, with calculated results unchanged.",
+    "date": "2026-11-06",
+    "revision": "F"
   }
 ]
