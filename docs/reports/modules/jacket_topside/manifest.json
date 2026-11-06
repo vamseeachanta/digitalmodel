@@ -1,14 +1,14 @@
 {
   "algorithm": "sha256",
   "artifacts": {
-    "README.md": "172864c775b25d4ed1a10c7ab6286e466bbf4dc7c0137709d2f7237ce9c5f70e",
-    "changes.json": "41d5301a069bf9713a18363e4c49a34400e7a4df6291026d90c9669f11aeee25",
-    "index.html": "e13c46964948828a5c5341cfb00fd660131d835f977903c871d30de978531f6a"
+    "README.md": "ffdf91dceb593fe4deb0221ee996be2372c6a774f0bebc809cb74b95b2b0673e",
+    "changes.json": "37d41128b728683f63768d87bacff70a2d08e2477568bc67cf440c3a7e41fad0",
+    "index.html": "86ee745c9c8b0f41c470c5021498bb11a5797753a65f1d93e319243547888b91"
   },
   "manifest_policy": "Artifact map excludes itself to avoid a circular digest; source paths are repository-relative; no headers were replaced.",
   "sources": {
     "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
-    "scripts/reports/build_jacket_topside_module_report.py": "986d4cd70a2946a96906be0766220c71c72c0c566d773d00066a74e6f2088054",
+    "scripts/reports/build_jacket_topside_module_report.py": "7288e1752920254d3323d9ae60352df920a57ff2bbb28aa4ceabeeb967a687d2",
     "src/digitalmodel/structural/jacket_topside/__init__.py": "872c99a915acd8606670939735a9f3ae192c2616b7b5f8c646e2a0577cc7b1d5",
     "src/digitalmodel/structural/jacket_topside/damaged_member_screen.py": "9bce351e86d888a24c7d1da47191e59cae23b2472a96350c5d5d00ddd9254680",
     "src/digitalmodel/structural/jacket_topside/dented_axial_screen.py": "fa3a5d7dad4be98d8c7a43a86ba85b808baaf8b4bb8d8dc7ac394ea654a64c3e",
@@ -16,7 +16,7 @@
     "src/digitalmodel/structural/jacket_topside/joint_checks.py": "d534b80abd9c1c3ee2b0d5ea6c7d584d3874f59943fef3cb94ce6ebf6fb5b197",
     "src/digitalmodel/structural/jacket_topside/member_checks.py": "ee0bd62aa56e896285098bfdf0efd0bad083bd71786438aa6e072baced44bfa8",
     "src/digitalmodel/structural/jacket_topside/workflow.py": "a7aafc305d95277314929c48d2b0b54a33e876df18e214cc4763be64867e9212",
-    "tests/reporting/test_jacket_topside_module_report.py": "5988bfadc2354c46187d9065a790793f276615cf860ea35ddc2ad407c237fc7d",
+    "tests/reporting/test_jacket_topside_module_report.py": "98f493339435e70f30c8e2847da687316bee2ba865977974e148ea765b7a2a0a",
     "tests/structural/jacket_topside/test_damaged_member_screen.py": "f3a2d070b48712bc6ef0a4e990c590512f5aabef862103270ea05ccaf0fd03bc",
     "tests/structural/jacket_topside/test_dented_axial_screen.py": "4de5b956a5607567adb85f0578e7ea03356b82232ab8cdcc95c8d6c38ade89fa",
     "tests/structural/jacket_topside/test_documented_tubular_section_geometry.py": "782c4baf809819605452294b788bf540d7b9ae3b82bac54c6521c1442709e1ce",

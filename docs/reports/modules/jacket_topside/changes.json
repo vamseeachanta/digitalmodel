@@ -13,5 +13,10 @@
     "change": "Disclose candidate defects with strict expected-failure regressions, bind displayed annulus values to table rows and use the shared stylesheet.",
     "date": "2026-11-06",
     "revision": "C"
+  },
+  {
+    "change": "Embed the canonical shared stylesheet so the report retains its presentation when opened outside the repository tree.",
+    "date": "2026-11-06",
+    "revision": "D"
   }
 ]

@@ -248,7 +248,12 @@ class AnnulusTable(HTMLParser):
 def test_report_uses_shared_style_and_discloses_candidate_defects(tmp_path):
     page = builder().render(tmp_path / "scratch")
     assert '<body class="hs-doc">' in page
-    assert 'href="../../../api/_assets/brand.css"' in page
+    canonical = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
+    embedded = re.search(r'<style id="shared-brand">(.*?)</style>', page, re.S)
+    assert embedded is not None, "Standalone report must embed the shared stylesheet"
+    canonical = re.sub(r"/\*.*?\*/", "", canonical, flags=re.S)
+    assert embedded[1] == "\n".join(line.rstrip() for line in canonical.split("\n"))
+    assert '<link rel="stylesheet"' not in page
     assert "Candidate defects were found and left unchanged" in page
     assert "test_tension_interaction_reduces_to_axial_tension" in page
     assert "test_empty_model_does_not_pass" in page

@@ -5,7 +5,8 @@
 [Read the report](index.html) for independently derived annulus properties,
 single-brace joint ratios and zero-demand arithmetic. Nonzero member and joint
 capacities, damage acceptance and standards compliance remain `NOT_EVALUATED`.
-No design compliance is certified.
+No design compliance is certified. The HTML embeds the canonical shared stylesheet
+and can be opened outside the repository tree without a separate stylesheet.
 
 ## Revision history
 
@@ -14,6 +15,7 @@ No design compliance is certified.
 | A | 2026-10-28 | Initial module review and independent geometry calculation; capacity qualification gaps are retained to bound engineering use. |
 | B | 2026-10-28 | Expose escaped calculation JSON and format wall thicknesses to three decimals while retaining finer input precision. |
 | C | 2026-11-06 | Disclose candidate defects with strict expected-failure regressions, bind displayed annulus values to table rows and use the shared stylesheet. |
+| D | 2026-11-06 | Embed the canonical shared stylesheet so the report retains its presentation when opened outside the repository tree. |
 
 ## Rebuild
 

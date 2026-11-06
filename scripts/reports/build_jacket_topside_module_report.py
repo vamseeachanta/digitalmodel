@@ -11,6 +11,7 @@ import hashlib
 import html
 import json
 import math
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,6 +31,11 @@ CHANGES = [{
     "date": "2026-11-06",
     "change": "Disclose candidate defects with strict expected-failure regressions, "
               "bind displayed annulus values to table rows and use the shared stylesheet.",
+}, {
+    "revision": "D",
+    "date": "2026-11-06",
+    "change": "Embed the canonical shared stylesheet so the report retains its "
+              "presentation when opened outside the repository tree.",
 }]
 SOURCE_ITEMS = [
     ("src/digitalmodel/structural/jacket_topside/docs/worked-tubular-section-geometry.md",
@@ -63,7 +69,7 @@ SOURCE_ITEMS = [
     ("src/digitalmodel/structural/jacket_topside/__init__.py",
      "Public exports of member and joint data structures and functions."),
     ("docs/api/_assets/brand.css",
-     "Canonical shared palette and document styling; linked by the report."),
+     "Canonical shared palette and document styling; embedded in the standalone report."),
 ]
 SOURCES = [path for path, _ in SOURCE_ITEMS]
 
@@ -298,12 +304,17 @@ def render(scratch):
         f'{hashlib.sha256((ROOT / path).read_bytes()).hexdigest()}</li>'
         for path, description in SOURCE_ITEMS
     )
+    brand = re.sub(
+        r"/\*.*?\*/", "",
+        (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8"), flags=re.S,
+    )
+    brand = "\n".join(line.rstrip() for line in brand.split("\n"))
     payload = json_text(data).replace("<", "\\u003c")
     return f'''<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jacket and topside module analysis</title>
-<link rel="stylesheet" href="../../../api/_assets/brand.css">
+<style id="shared-brand">{brand}</style>
 <style>
 :root {{color-scheme:light; font-family:system-ui,sans-serif}}
 body {{margin:0}} main {{max-width:1100px; margin:auto; padding:2rem; background:var(--panel)}}
@@ -451,7 +462,8 @@ def readme_text():
 [Read the report](index.html) for independently derived annulus properties,
 single-brace joint ratios and zero-demand arithmetic. Nonzero member and joint
 capacities, damage acceptance and standards compliance remain `NOT_EVALUATED`.
-No design compliance is certified.
+No design compliance is certified. The HTML embeds the canonical shared stylesheet
+and can be opened outside the repository tree without a separate stylesheet.
 
 ## Revision history
 
