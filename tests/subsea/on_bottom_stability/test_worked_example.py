@@ -77,7 +77,7 @@ def test_example_load_utilisation_and_weight_root_by_independent_equations():
         inertia = 1025 * 2 * math.pi * 0.4308**2 * acceleration / 4
         lift = 1025 * 0.5 * 0.4308 * velocity**2 / 2
         required = 1.5 * (abs(drag + inertia) / 0.6 + lift)
-        assert row.static_case.horizontal_n_m == pytest.approx(drag + inertia)
+        assert row.static_case.horizontal_n_m == pytest.approx(abs(drag + inertia))
         assert row.static_case.lift_n_m == pytest.approx(lift)
         assert row.required_weight_n_m == pytest.approx(required, abs=1e-5)
         assert row.absolute_utilisation == pytest.approx(
@@ -135,10 +135,10 @@ def test_wave_height_and_current_sensitivity():
 def test_committed_report_is_reproducible_and_linked():
     report = example_report()
     target = ROOT / "docs/domains/subsea/pipeline/on-bottom-stability-analysis.md"
-    assert target.read_text() == report
+    assert target.read_text(encoding="utf-8") == report
     assert report == example_report()
     assert (
-        "on-bottom-stability-analysis.md" in (target.parent / "README.md").read_text()
+        "on-bottom-stability-analysis.md" in (target.parent / "README.md").read_text(encoding="utf-8")
     )
     assert "12 inch" in report and "NOT_EVALUATED" in report
     assert "assumed, based on previous experience" in report

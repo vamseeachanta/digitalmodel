@@ -11,6 +11,7 @@ Results are static arithmetic screens. Standard qualification and dynamic displa
 | Revision | Date | Change and reason |
 |---|---|---|
 | 0 | 2026-10-22 | Calculation issue with explicit input provenance |
+| 1 | 2026-11-06 | Align peak checks and report precision with supplied inputs |
 
 ## Sea-state inputs and sampled phase
 
@@ -29,50 +30,50 @@ Depth, Hs in m; periods in s; Uw in m/s; phase in radians.
 
 Forces and weight are N/m; friction and safety factor are dimensionless.
 
-| Case | Weight | Horizontal | Lift | Friction | Passive | Safety factor | Source |
-|---|---:|---:|---:|---:|---:|---:|---|
-| depth 20, Hs 2 | 1775.9 | 173.9 | 69.1 | 0.6 | 0.0 | 1.5 | assumed, based on previous experience; synthetic input basis |
-| depth 20, Hs 4 | 1775.9 | 513.7 | 239.5 | 0.6 | 0.0 | 1.5 | assumed, based on previous experience; synthetic input basis |
-| depth 50, Hs 2 | 1775.9 | 76.8 | 34.6 | 0.6 | 0.0 | 1.5 | assumed, based on previous experience; synthetic input basis |
-| depth 50, Hs 4 | 1775.9 | 183.0 | 82.6 | 0.6 | 0.0 | 1.5 | assumed, based on previous experience; synthetic input basis |
-| depth 100, Hs 2 | 1775.9 | 57.9 | 28.5 | 0.6 | 0.0 | 1.5 | assumed, based on previous experience; synthetic input basis |
-| depth 100, Hs 4 | 1775.9 | 89.2 | 41.5 | 0.6 | 0.0 | 1.5 | assumed, based on previous experience; synthetic input basis |
+| Case | Weight | Horizontal | Lift | Friction | Passive | Safety factor | Passive basis | Source |
+|---|---:|---:|---:|---:|---:|---:|---|---|
+| depth 20, Hs 2 | 1775.9 | 173.9 | 69.1 | 0.6 | 0.0 | 1.5 | no passive credit | assumed, based on previous experience; synthetic input basis |
+| depth 20, Hs 4 | 1775.9 | 513.7 | 239.5 | 0.6 | 0.0 | 1.5 | no passive credit | assumed, based on previous experience; synthetic input basis |
+| depth 50, Hs 2 | 1775.9 | 76.8 | 34.6 | 0.6 | 0.0 | 1.5 | no passive credit | assumed, based on previous experience; synthetic input basis |
+| depth 50, Hs 4 | 1775.9 | 183.0 | 82.6 | 0.6 | 0.0 | 1.5 | no passive credit | assumed, based on previous experience; synthetic input basis |
+| depth 100, Hs 2 | 1775.9 | 57.9 | 28.5 | 0.6 | 0.0 | 1.5 | no passive credit | assumed, based on previous experience; synthetic input basis |
+| depth 100, Hs 4 | 1775.9 | 89.2 | 41.5 | 0.6 | 0.0 | 1.5 | no passive credit | assumed, based on previous experience; synthetic input basis |
 
 ## Utilisation
 
-Ratios display one decimal place; verdicts use unrounded demand <= capacity.
+Ratios display three decimal places; verdicts use unrounded demand <= capacity.
 
 | Case | Lateral | Uplift | Governing | Arithmetic | Standard |
 |---|---:|---:|---|---|---|
-| depth 20, Hs 2 | 0.3 | 0.1 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 20, Hs 4 | 0.9 | 0.2 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 50, Hs 2 | 0.1 | 0.0 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 50, Hs 4 | 0.3 | 0.1 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 100, Hs 2 | 0.1 | 0.0 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 100, Hs 4 | 0.2 | 0.0 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 20, Hs 2 | 0.303 | 0.058 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 20, Hs 4 | 0.925 | 0.202 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 50, Hs 2 | 0.137 | 0.029 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 50, Hs 4 | 0.327 | 0.070 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 100, Hs 2 | 0.106 | 0.024 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 100, Hs 4 | 0.161 | 0.035 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
 
 ## Method and limits
 
-Equations A1–A4: module on-bottom-stability-analysis.md, independent force balance.
-Absolute uses gamma*(abs(H)+mu*L)/(mu*W), without passive credit.
-Passive balance uses gamma*abs(H)/(mu*(W-L)+FR); simplified sets FR=0.
+Equations A1/A4/A5: module on-bottom-stability-analysis.md, independent force balance.
+Absolute uses gamma*(H+mu*L)/(mu*W+FR) for nonnegative peak demands.
+Nonzero passive resistance requires initial_penetration or prior_loading provenance.
 Uplift uses gamma*L/W and bed contact requires W>L.
 Standard editions, clauses, safety-class factors and calibrated soil resistance are not qualified.
 No generalised displacement envelope or dynamic time history is calculated.
 Use reviewed factors and an applicable soil/dynamic assessment before design acceptance.
 
-## Fixed-phase design-weight comparison
+## Fixed-force design weights
 
-Required weight is the fixed-force A1 root in N/m. Change compares A3/A1 utilisations.
+Required weight is the fixed-force A1/A4 root in N/m; loads and diameter stay fixed.
 
-| Case | Required weight | Absolute | Simplified | Change (%) |
-|---|---:|---:|---:|---:|
-| depth 20, Hs 2 | 538.6 | 0.3 | 0.3 | -16.0 |
-| depth 20, Hs 4 | 1643.4 | 0.9 | 0.8 | -9.7 |
-| depth 50, Hs 2 | 244.0 | 0.1 | 0.1 | -19.7 |
-| depth 50, Hs 4 | 581.4 | 0.3 | 0.3 | -17.5 |
-| depth 100, Hs 2 | 187.5 | 0.1 | 0.1 | -21.5 |
-| depth 100, Hs 4 | 285.2 | 0.2 | 0.1 | -20.0 |
+| Case | Required weight | Absolute |
+|---|---:|---:|
+| depth 20, Hs 2 | 538.6 | 0.303 |
+| depth 20, Hs 4 | 1643.4 | 0.925 |
+| depth 50, Hs 2 | 244.0 | 0.137 |
+| depth 50, Hs 4 | 581.4 | 0.327 |
+| depth 100, Hs 2 | 187.5 | 0.106 |
+| depth 100, Hs 4 | 285.2 | 0.161 |
 
 ## Synthetic input basis
 
@@ -116,30 +117,28 @@ similar expressions to F109, but the claimed edition and clauses have not been
 verified against an openly readable standard. These equations therefore do not
 establish standard compliance.
 
-- **A1 — absolute force screen:** demand = gamma*(abs(H)+mu*L), capacity = mu*W;
-  utilisation is demand/capacity. Passive resistance is excluded. This is the
-  rearranged friction balance with the selected multiplier applied to both
-  horizontal demand and the friction loss associated with lift.
-- **A2 — supplied-passive balance:** demand = gamma*abs(H), capacity =
-  mu*(W-L)+FR. FR is a supplied resistance in N/m; no passive-soil equation is
-  implemented or validated here. The different placement of gamma is deliberate.
-- **A3 — simplified screen:** A2 with FR=0. The historical function named
-  generalized computes A2, which is a static force ratio, not the standard
-  generalised displacement envelope or a dynamic method.
+- **A1 — absolute force screen:** demand = gamma*(H+mu*L), capacity = mu*W+FR;
+  H and L are nonnegative peak demands. This follows the current canonical
+  absolute check's clause-map basis, with lift factored together with horizontal
+  demand. Nonzero FR requires explicit initial_penetration or prior_loading
+  provenance. No passive-soil equation is implemented or qualified here.
 - **A4 — uplift and contact:** uplift utilisation = gamma*L/W; require W>L for
   bed contact. An arithmetic pass means unrounded demand <= capacity and
   positive contact. Unity is this ratio definition, not an empirical factor.
-- **A5 — required fixed-geometry weight:** solve A1–A4 in a supplied bracket
-  by bisection, keeping the feasible endpoint. For mu>0 the A1 closed form is
-  W_required=max(gamma*(abs(H)/mu+L), gamma*L); A2 replaces its first term with
-  (gamma*abs(H)-FR)/mu+L; A3 sets FR=0. Contact is checked independently.
-  Coating design must rebuild diameter, buoyancy and hydrodynamics; this solver
-  does not convert additional submerged weight into a concrete thickness.
+- **A5 — required fixed-geometry weight:** solve A1/A4 in a supplied bracket
+  by bisection using the canonical absolute margin and retaining a feasible
+  endpoint. For mu>0, W_required=max(0, (gamma*(H+mu*L)-FR)/mu, gamma*L).
+  Contact is checked independently. A precision or iteration limit returns
+  the last feasible weight with converged=False. Coating design must rebuild
+  diameter, buoyancy and hydrodynamics; this is not a thickness solver.
 - **Hydrodynamics:** FD=rho*CD*D*U*abs(U)/2;
   FI=rho*CM*pi*D²*a/4; FL=rho*CL*D*U²/2. Drag and inertia retain direction;
   lift is defined by the supplied coefficient. For the deterministic screen,
   U=Uc+Uw*cos(theta) and a=-Uw*(2*pi/Tu)*sin(theta). Forces are evaluated at the
   same phase; independent maxima of drag, inertia and lift are never added.
+  The absolute value of the simultaneous horizontal resultant is constructed
+  explicitly as a synthetic demand before calling the peak-only assessment.
+  This phase screen does not establish standard extreme-cycle peaks.
 - **Weight:** concentric annulus area=pi*(OD²-ID²)/4;
   W=g*(sum(component masses)-rho_water*displaced area). Growth contributes both
   mass and displaced volume; its outer diameter also sets hydrodynamic demand.
@@ -147,19 +146,18 @@ establish standard compliance.
 Independent hand cases in the tests give FD=1600.0 N/m, FI=30*pi N/m and
 FL=400.0 N/m for the stated synthetic input ledger. A separate layered pipe
 gives W=153*pi/16 N/m at supplied gravity. The static case W=200.0, H=40.0,
-L=10.0, mu=0.5, FR=10.0 and gamma=2.0 gives design roots 180.0 N/m (A1),
-150.0 N/m (A2) and 170.0 N/m (A3). Every expected value is derived in the test
-docstring or independent ledger, without reading implementation constants.
+L=10.0, mu=0.5 and gamma=2.0 gives a root of 180.0 N/m without passive
+credit, or 160.0 N/m with qualified initial-state FR=10.0 N/m. Every expected
+value is derived in the test docstring or independent ledger, without reading implementation constants.
 
-## Comparison and interpretation
+## Interpretation
 
-At a fixed simultaneous force state with positive contact and L>0, A3 is less
-conservative than A1 when abs(H)<mu*(W-L); it is more conservative above that
-threshold. This follows directly by comparing the two positive ratios. The
-independent test uses threshold 95.0 N/m and horizontal forces 40.0 and
-100.0 N/m on opposite sides. Neither expression consistently bounds the other.
-Comparisons below use the **same phase**, chosen to maximize A1 demand; they
-do not claim that this phase also maximizes A2 or A3.
+The assessment exposes only the canonical absolute expression. The former
+passive-balance and simplified alternatives used unfactored lift and have been
+removed. The compatibility function named generalized now warns and delegates
+to the absolute check; it does not implement a displacement envelope.
+The six synthetic cases have no passive credit. Their deterministic
+phase demands validate arithmetic and do not qualify standard peak selection.
 
 ## Source register
 
@@ -203,4 +201,5 @@ The report is the exact text returned by
 `digitalmodel.subsea.on_bottom_stability.example.example_report()`.
 The reproducibility test compares that text with this committed file and checks
 the subsea documentation link. Report verdicts and governing-case selection use
-full precision; displayed values and percentages use one decimal place.
+full precision; dimensional values use one decimal place, dimensionless inputs
+retain their supplied precision and utilisation ratios use three decimals.

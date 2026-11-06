@@ -76,10 +76,10 @@ def test_layered_weight_including_concrete_and_growth():
 def test_single_coat_weight_both_surfaces():
     """Assumed D=1, bore=.8, coated OD=1.2, rho steel=8, coat=3,
     contents=water=1. Net mass/pi=.09*8+.11*3+.16-.36=.85.
-    Expected weight=.85*pi*9.80665 using the documented fixed legacy gravity
+    Expected weight=.85*pi*9.81 using the documented fixed legacy gravity
     (knowledge pack §2, canonical weight); no empirical coefficient is used.
     """
-    expected = 0.85 * math.pi * 9.80665
+    expected = 0.85 * math.pi * 9.81
     assert f109.submerged_weight_per_meter(1, 0.1, 8, 3, 0.1, 1, 1) == pytest.approx(
         expected
     )
@@ -88,20 +88,23 @@ def test_single_coat_weight_both_surfaces():
     ).ws_n_per_m == pytest.approx(expected)
 
 
-@pytest.mark.parametrize("horizontal", [40, -40])
-def test_coulomb_and_supplied_passive_resistance(horizontal):
-    """Assumed W=200, H=+/-40, L=10, mu=.5, FR=10, gamma=2.
+def test_coulomb_and_supplied_passive_resistance():
+    """Assumed W=200, H=40, L=10, mu=.5, FR=10, gamma=2.
 
-    Coulomb contact capacity=.5*(200-10)=95 N/m; with supplied passive
-    resistance, capacity=105. Demand=2*40=80, utilization=80/105.
-    This checks balance with an input resistance, not a soil calibration law.
+    Factored demand=2*(40+.5*10)=90; capacity=.5*200+10=110 N/m.
+    This checks a supplied initial-state resistance, not a soil calibration law.
     """
-    actual = f109.generalized_stability_check(200, horizontal, 10, 0.5, 10, 2)
-    assert actual.details["capacity"] == pytest.approx(105)
-    assert actual.utilisation == pytest.approx(80 / 105)
+    with pytest.warns(DeprecationWarning, match="static compatibility"):
+        actual = f109.generalized_stability_check(
+            200, 40, 10, .5, 10, 2, passive_resistance_basis="prior_loading"
+        )
+    assert actual.details["capacity"] == pytest.approx(110)
+    assert actual.utilisation == pytest.approx(90 / 110)
     assert actual.is_stable
 
 
 def test_negative_control_cannot_hide_uplift_behind_passive_resistance():
-    """Assumed W=10<L=20: contact is lost even if supplied FR=1000 N/m."""
-    assert not f109.generalized_stability_check(10, 1, 20, 0.5, 1000, 1).is_stable
+    """Assumed W=10<L=20: uplift fails even with initial-state FR=1000 N/m."""
+    assert not f109.absolute_stability_check(
+        10, 1, 20, .5, 1, F_R_N_m=1000, passive_resistance_basis="prior_loading"
+    ).is_stable

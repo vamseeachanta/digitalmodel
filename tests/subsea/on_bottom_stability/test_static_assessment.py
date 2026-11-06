@@ -2,10 +2,10 @@
 
 Basis: analysis equations A1–A4 (algebraic equilibrium, not qualified DNV
 clauses). Every coefficient and force below is a synthetic assumed input.
-Unless overridden W=200, abs(H)=40, L=10, mu=.5, FR=10, gamma=2, in SI.
+Unless overridden W=200, H=40, L=10, mu=.5, FR=0, gamma=2, in SI.
 Absolute demand=2*(40+.5*10)=90; capacity=.5*200=100; U=.9.
-Passive demand=80; capacity=.5*(200-10)+10=105; U=80/105.
-Simplified capacity=.5*(200-10)=95; U=80/95. Vertical U=20/200=.1.
+Passive demand=90; capacity=.5*200+10=110; U=90/110.
+Vertical U=20/200=.1; no unfactored-lift method is supported.
 The static ratio historically called generalized is not a dynamic envelope.
 """
 
@@ -30,7 +30,7 @@ def case(**changes):
             40,
             10,
             0.5,
-            10,
+            0,
             2,
             "assumed arithmetic inputs; analysis A1–A4",
         ),
@@ -42,8 +42,6 @@ def case(**changes):
     "method,expected",
     [
         ("absolute", 0.9),
-        ("passive_balance", 80 / 105),
-        ("simplified", 80 / 95),
     ],
 )
 def test_hand_calculated_envelopes(method, expected):
@@ -61,13 +59,10 @@ def test_hand_calculated_envelopes(method, expected):
     "method,weight",
     [
         ("absolute", 180),
-        ("passive_balance", 150),
-        ("simplified", 170),
     ],
 )
 def test_exact_unity_and_both_sides(method, weight):
-    """Solve A1–A3 by hand: absolute W=2*(40/.5+10)=180;
-    passive W=(2*40-10)/.5+10=150; simplified W=2*40/.5+10=170.
+    """Solve A1 by hand without passive credit: W=2*(40/.5+10)=180.
     Acceptance at unity is the chosen demand<=capacity definition (A4).
     """
     result = assess_static(case(weight_n_m=weight), method=method)
@@ -77,28 +72,32 @@ def test_exact_unity_and_both_sides(method, weight):
     assert assess_static(case(weight_n_m=weight + 1), method=method).arithmetic_pass
 
 
-@pytest.mark.parametrize("method", ["absolute", "passive_balance", "simplified"])
+@pytest.mark.parametrize("method", ["absolute"])
 def test_monotonic_weight_friction_force_and_direction(method):
     baseline = assess_static(case(), method=method).utilisation
     assert assess_static(case(weight_n_m=300), method=method).utilisation < baseline
     assert assess_static(case(friction=0.8), method=method).utilisation < baseline
     assert assess_static(case(horizontal_n_m=80), method=method).utilisation > baseline
-    assert (
-        assess_static(case(horizontal_n_m=-40), method=method).utilisation == baseline
-    )
+    with pytest.raises(ValueError):
+        case(horizontal_n_m=-40)
     assert assess_static(case(lift_n_m=20), method=method).utilisation > baseline
 
 
-def test_simplified_can_be_less_or_more_conservative_than_absolute():
-    """A1/A3: Us<Ua iff H<mu*(W-L), for L>0. Here threshold=95.
-    H=40 is below it; H=100 is above it. Neither method bounds the other.
-    """
-    for horizontal, less in [(40, True), (100, False)]:
-        c = case(horizontal_n_m=horizontal)
-        assert (
-            assess_static(c, method="simplified").utilisation
-            < assess_static(c, method="absolute").utilisation
-        ) is less
+def test_absolute_with_qualified_passive_resistance():
+    """Factored demand=90, capacity=100+10=110; root=(90-10)/.5=160."""
+    c = case(passive_n_m=10, passive_resistance_basis="initial_penetration")
+    result = assess_static(c, method="absolute")
+    assert result.lateral_utilisation == pytest.approx(90 / 110)
+    solution = solve_required_weight(
+        c, method="absolute", lower_n_m=0, upper_n_m=500, tolerance_n_m=1e-7
+    )
+    assert 160 <= solution.weight_n_m <= 160 + 1e-7
+
+
+@pytest.mark.parametrize("basis", [None, "motion_generated", ""])
+def test_passive_credit_requires_qualified_basis(basis):
+    with pytest.raises(ValueError, match="passive_resistance_basis"):
+        case(passive_n_m=10, passive_resistance_basis=basis)
 
 
 def test_uplift_is_separate_from_lateral_balance():
@@ -106,19 +105,19 @@ def test_uplift_is_separate_from_lateral_balance():
     even with an assumed passive force 1000. W<=L also loses contact.
     """
     result = assess_static(
-        case(weight_n_m=150, horizontal_n_m=0, lift_n_m=100, passive_n_m=1000),
-        method="passive_balance",
+        case(weight_n_m=150, horizontal_n_m=0, lift_n_m=100, passive_n_m=1000, passive_resistance_basis="prior_loading"),
+        method="absolute",
     )
     assert not result.arithmetic_pass
     assert result.governing_check == "uplift"
     lost = assess_static(
-        case(weight_n_m=10, lift_n_m=20, passive_n_m=1000), method="passive_balance"
+        case(weight_n_m=10, lift_n_m=20, passive_n_m=1000, passive_resistance_basis="prior_loading"), method="absolute"
     )
     assert not lost.arithmetic_pass
     assert lost.governing_check == "contact"
 
 
-@pytest.mark.parametrize("method", ["generalized", "dynamic", "", None])
+@pytest.mark.parametrize("method", ["generalized", "dynamic", "passive_balance", "simplified", "", None])
 def test_unimplemented_or_unknown_method_is_rejected(method):
     with pytest.raises(ValueError):
         assess_static(case(), method=method)
@@ -147,8 +146,6 @@ def test_invalid_static_case_rejected(field, value):
     "method,expected",
     [
         ("absolute", 180),
-        ("passive_balance", 150),
-        ("simplified", 170),
     ],
 )
 def test_weight_solver_against_hand_solvable_root(method, expected):
@@ -171,7 +168,7 @@ def test_weight_solver_uplift_root():
     """H=0, L=100, gamma=2 => W>=200, independently of passive credit."""
     result = solve_required_weight(
         case(horizontal_n_m=0, lift_n_m=100),
-        method="passive_balance",
+        method="absolute",
         lower_n_m=0,
         upper_n_m=500,
         tolerance_n_m=1e-7,
@@ -195,7 +192,10 @@ def test_solver_bracket_endpoints_failure_and_iteration_limit():
     limited = solve_required_weight(
         case(), lower_n_m=0, upper_n_m=500, max_iterations=1, **kwargs
     )
-    assert limited.status == "not_converged" and limited.weight_n_m is None
+    assert limited.status == "not_converged" and not limited.converged
+    assert limited.weight_n_m == limited.upper_n_m == 250
+    assert limited.residual_n_m >= 0
+    assert assess_static(case(weight_n_m=limited.weight_n_m), method="absolute").arithmetic_pass
 
 
 @pytest.mark.parametrize(
@@ -217,7 +217,7 @@ def test_invalid_solver_controls_rejected(changes):
 
 
 def test_report_contains_inputs_method_unrounded_governing_case_and_limits():
-    """W=180 is unity, W=179 fails though both display 1.0 at one decimal."""
+    """W=180 is unity and W=179 fails; selection uses unrounded ratios."""
     rows = [case(label="unity", weight_n_m=180), case(label="over", weight_n_m=179)]
     report = render_report(
         rows, method="absolute", report_date="2026-10-22", revision="0"
@@ -259,3 +259,26 @@ def test_report_reissue_preserves_earlier_revision_rows():
             revision="0",
             previous_revisions=history,
         )
+
+
+def test_precision_limit_retains_feasible_endpoint():
+    lower = math.nextafter(180.0, -math.inf)
+    result = solve_required_weight(
+        case(), method="absolute", lower_n_m=lower, upper_n_m=180,
+        tolerance_n_m=1e-20,
+    )
+    assert result.status == "precision_limit"
+    assert not result.converged
+    assert result.weight_n_m == result.upper_n_m == 180
+    assert result.residual_n_m == 0
+
+
+def test_report_preserves_dimensionless_inputs_and_near_unity_verdicts():
+    # With L=0, gamma=1.15, mu=.25, W=460, U=H/100.
+    rows = [case(label=label, weight_n_m=460, horizontal_n_m=h, lift_n_m=0,
+                 friction=.25, safety_factor=1.15)
+            for label, h in [("over", 104), ("under", 96)]]
+    report = render_report(rows, method="absolute", report_date="2026-11-06", revision="1")
+    assert "| 0.25 | 0.0 | 1.15 |" in report
+    assert "| over | 1.040 | 0.000 | lateral | ARITHMETIC_FAIL |" in report
+    assert "| under | 0.960 | 0.000 | lateral | ARITHMETIC_PASS |" in report

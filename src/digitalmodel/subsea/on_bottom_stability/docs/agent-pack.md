@@ -2,8 +2,10 @@
 
 Current API amendment: the historical inventory below is pinned to its stated
 revision. Coefficients and safety factors are now required scalar inputs.
-Directional stability uses horizontal magnitude, and passive resistance cannot
-mask lost bed contact. Current independent evidence and unresolved standard
+Current stability checks require nonnegative peak demands, factor lift and
+require initial-state provenance for passive credit. The generalized name is a
+deprecated absolute alias; the assessment exposes only the absolute method.
+Passive resistance cannot mask uplift or lost bed contact. Current independent evidence and unresolved standard
 claims are recorded in [validation-claims.md](validation-claims.md).
 
 | Header | Value |

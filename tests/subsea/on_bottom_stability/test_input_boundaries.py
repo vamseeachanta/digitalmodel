@@ -69,12 +69,12 @@ def test_nonphysical_stability_inputs_rejected(args):
         f109.absolute_stability_check(*args)
 
 
-def test_signed_horizontal_load_must_not_produce_negative_required_weight():
-    """Hand balance: gamma*abs(-40)/mu+L=2*40/.5+10=170 N/m."""
-    assert (
-        simplified.lateral_stability_check(200, -40, 10, 0.5, 2).required_weight_n_per_m
-        == 170
-    )
+def test_peak_checks_reject_signed_horizontal_demand():
+    for check, args in [(f109.absolute_stability_check, (200, -40, 10, .5, 2)),
+                        (f109.generalized_stability_check, (200, -40, 10, .5, 0, 2)),
+                        (simplified.lateral_stability_check, (200, -40, 10, .5, 2))]:
+        with pytest.raises(ValueError):
+            check(*args)
 
 
 @pytest.mark.parametrize(
@@ -116,3 +116,16 @@ def test_e305_available_weight_must_be_a_finite_number(weight):
 def test_absolute_rejects_lost_contact_even_with_a_small_supplied_factor():
     """Assumed W=10<L=20: no unrestrained static contact at any multiplier."""
     assert not f109.absolute_stability_check(10, 1, 20, 0.5, 0.1).is_stable
+
+
+@pytest.mark.parametrize("scalar_name", ["float32", "float64", "int64"])
+def test_numpy_real_scalars_match_builtin_numbers(scalar_name):
+    import numpy as np
+
+    scalar = getattr(np, scalar_name)
+    assert f109.hydrodynamic_force_per_meter(1000, scalar(1), scalar(2), 0, 1, 2) == 2000
+    assert f109.lift_force_per_meter(1000, scalar(1), scalar(2), 1) == 2000
+    assert math.isfinite(f109.submerged_weight_per_meter(scalar(1), .1, 8, 3, .1, 1, 1))
+    assert simplified.hydrodynamic_loads(scalar(1), scalar(2), 0, 1000, 1, 2, 1).drag_n_per_m == 2000
+    assert f109.absolute_stability_check(scalar(200), scalar(40), 10, .5, 2).is_stable
+    assert simplified.lateral_stability_check(scalar(200), scalar(40), 10, .5, 2).is_stable

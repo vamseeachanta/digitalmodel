@@ -262,7 +262,7 @@ class TestAbsoluteStability:
 class TestGeneralizedStability:
     """Verify generalized lateral stability per DNV-RP-F109 S4.3.2, Eq 4.5.
 
-    gamma_SC * F_H / (mu * (W_s - F_L) + F_R) <= 1.0
+    gamma_SC * (F_H + mu*F_L) / (mu*W_s + F_R) <= 1.0
     """
 
     def test_stable_with_soil_resistance(self):
@@ -273,10 +273,11 @@ class TestGeneralizedStability:
             F_L_N_m=100.0,
             mu_soil=0.6,
             F_R_N_m=300.0,
+            passive_resistance_basis="prior_loading",
             gamma_SC=GAMMA_SC_NORMAL,
         )
-        # gamma_SC * 200 / (0.6*(1000-100) + 300) = 1.1*200 / (540+300) = 220/840 = 0.2619
-        expected_util = GAMMA_SC_NORMAL * 200.0 / (0.6 * (1000.0 - 100.0) + 300.0)
+        # Factored demand = 1.1*(200+0.6*100) = 286; capacity = 900 N/m.
+        expected_util = GAMMA_SC_NORMAL * (200.0 + 0.6 * 100.0) / (0.6 * 1000.0 + 300.0)
         assert result.utilisation == pytest.approx(expected_util, rel=1e-6)
         assert result.is_stable is True
 
@@ -290,12 +291,12 @@ class TestGeneralizedStability:
             F_R_N_m=0.0,
             gamma_SC=GAMMA_SC_NORMAL,
         )
-        # gamma_SC * 500 / (0.6*(500-200) + 0) = 1.1*500 / 180 = 3.056
+        # Factored demand = 1.1*(500+0.6*200) = 682; capacity = 300 N/m.
         assert result.utilisation > 1.0
         assert result.is_stable is False
 
-    def test_zero_capacity_gives_infinite_utilisation(self):
-        """When capacity denominator is zero or negative, utilisation is infinite."""
+    def test_lift_equal_to_weight_fails_factored_peak_check(self):
+        """Factored lift and horizontal demand fail even at the contact boundary."""
         result = generalized_stability_check(
             W_s_N_m=100.0,
             F_H_N_m=100.0,
@@ -304,8 +305,8 @@ class TestGeneralizedStability:
             F_R_N_m=0.0,      # No passive resistance
             gamma_SC=GAMMA_SC_NORMAL,
         )
-        # denominator = 0.6*(100-100) + 0 = 0 -> infinite
-        assert result.utilisation == float("inf")
+        # Lateral demand=176; capacity=60 N/m; uplift also exceeds unity.
+        assert result.utilisation == pytest.approx(1.1 * (100 + .6 * 100) / (.6 * 100))
         assert result.is_stable is False
 
     def test_lift_exceeding_weight_is_unstable(self):

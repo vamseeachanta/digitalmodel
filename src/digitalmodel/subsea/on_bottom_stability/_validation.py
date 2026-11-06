@@ -1,14 +1,15 @@
 """Physical input domains shared by the scalar stability surfaces.
 
 Zero bounds below are geometric/sign definitions, not empirical standard limits.
-Signed velocity, acceleration and horizontal force are permitted explicitly.
+Signed velocity and acceleration are permitted; stability demands are peaks.
 """
 
 import math
+from numbers import Real
 
 
 def _number(name, value, *, positive=False, signed=False):
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    if isinstance(value, bool) or not isinstance(value, Real):
         raise ValueError(f"{name} must be a finite number")
     if not math.isfinite(value):
         raise ValueError(f"{name} must be finite")
@@ -46,7 +47,7 @@ def _geometry(od, wall, coat, steel, coating, contents, water):
 def _stability(weight, horizontal, lift, friction, passive, factor):
     # Buoyant weights remain finite signed results; assessment returns failure.
     _number("submerged weight", weight, signed=True)
-    _number("horizontal force", horizontal, signed=True)
+    _number("horizontal force", horizontal)
     _number("lift force", lift)
     _number("friction coefficient", friction)
     _number("passive resistance", passive)

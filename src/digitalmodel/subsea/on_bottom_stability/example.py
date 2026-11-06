@@ -33,7 +33,6 @@ class ExampleRow:
     static_case: StaticCase
     required_weight_n_m: float
     absolute_utilisation: float
-    simplified_utilisation: float
 
 
 @dataclass(frozen=True)
@@ -110,7 +109,7 @@ def build_example() -> WorkedExample:
             static = StaticCase(
                 f"depth {depth}, Hs {hs}",
                 weight.submerged_weight_n_m,
-                loads.drag_n_m + loads.inertia_n_m,
+                abs(loads.drag_n_m + loads.inertia_n_m),
                 loads.lift_n_m,
                 0.6,
                 0,
@@ -137,7 +136,6 @@ def build_example() -> WorkedExample:
                     static,
                     design.weight_n_m,
                     assess_static(static, method="absolute").utilisation,
-                    assess_static(static, method="simplified").utilisation,
                 )
             )
     return WorkedExample(pipe, weight, tuple(rows))
@@ -186,30 +184,28 @@ similar expressions to F109, but the claimed edition and clauses have not been
 verified against an openly readable standard. These equations therefore do not
 establish standard compliance.
 
-- **A1 — absolute force screen:** demand = gamma*(abs(H)+mu*L), capacity = mu*W;
-  utilisation is demand/capacity. Passive resistance is excluded. This is the
-  rearranged friction balance with the selected multiplier applied to both
-  horizontal demand and the friction loss associated with lift.
-- **A2 — supplied-passive balance:** demand = gamma*abs(H), capacity =
-  mu*(W-L)+FR. FR is a supplied resistance in N/m; no passive-soil equation is
-  implemented or validated here. The different placement of gamma is deliberate.
-- **A3 — simplified screen:** A2 with FR=0. The historical function named
-  generalized computes A2, which is a static force ratio, not the standard
-  generalised displacement envelope or a dynamic method.
+- **A1 — absolute force screen:** demand = gamma*(H+mu*L), capacity = mu*W+FR;
+  H and L are nonnegative peak demands. This follows the current canonical
+  absolute check's clause-map basis, with lift factored together with horizontal
+  demand. Nonzero FR requires explicit initial_penetration or prior_loading
+  provenance. No passive-soil equation is implemented or qualified here.
 - **A4 — uplift and contact:** uplift utilisation = gamma*L/W; require W>L for
   bed contact. An arithmetic pass means unrounded demand <= capacity and
   positive contact. Unity is this ratio definition, not an empirical factor.
-- **A5 — required fixed-geometry weight:** solve A1–A4 in a supplied bracket
-  by bisection, keeping the feasible endpoint. For mu>0 the A1 closed form is
-  W_required=max(gamma*(abs(H)/mu+L), gamma*L); A2 replaces its first term with
-  (gamma*abs(H)-FR)/mu+L; A3 sets FR=0. Contact is checked independently.
-  Coating design must rebuild diameter, buoyancy and hydrodynamics; this solver
-  does not convert additional submerged weight into a concrete thickness.
+- **A5 — required fixed-geometry weight:** solve A1/A4 in a supplied bracket
+  by bisection using the canonical absolute margin and retaining a feasible
+  endpoint. For mu>0, W_required=max(0, (gamma*(H+mu*L)-FR)/mu, gamma*L).
+  Contact is checked independently. A precision or iteration limit returns
+  the last feasible weight with converged=False. Coating design must rebuild
+  diameter, buoyancy and hydrodynamics; this is not a thickness solver.
 - **Hydrodynamics:** FD=rho*CD*D*U*abs(U)/2;
   FI=rho*CM*pi*D²*a/4; FL=rho*CL*D*U²/2. Drag and inertia retain direction;
   lift is defined by the supplied coefficient. For the deterministic screen,
   U=Uc+Uw*cos(theta) and a=-Uw*(2*pi/Tu)*sin(theta). Forces are evaluated at the
   same phase; independent maxima of drag, inertia and lift are never added.
+  The absolute value of the simultaneous horizontal resultant is constructed
+  explicitly as a synthetic demand before calling the peak-only assessment.
+  This phase screen does not establish standard extreme-cycle peaks.
 - **Weight:** concentric annulus area=pi*(OD²-ID²)/4;
   W=g*(sum(component masses)-rho_water*displaced area). Growth contributes both
   mass and displaced volume; its outer diameter also sets hydrodynamic demand.
@@ -217,19 +213,18 @@ establish standard compliance.
 Independent hand cases in the tests give FD=1600.0 N/m, FI=30*pi N/m and
 FL=400.0 N/m for the stated synthetic input ledger. A separate layered pipe
 gives W=153*pi/16 N/m at supplied gravity. The static case W=200.0, H=40.0,
-L=10.0, mu=0.5, FR=10.0 and gamma=2.0 gives design roots 180.0 N/m (A1),
-150.0 N/m (A2) and 170.0 N/m (A3). Every expected value is derived in the test
-docstring or independent ledger, without reading implementation constants.
+L=10.0, mu=0.5 and gamma=2.0 gives a root of 180.0 N/m without passive
+credit, or 160.0 N/m with qualified initial-state FR=10.0 N/m. Every expected
+value is derived in the test docstring or independent ledger, without reading implementation constants.
 
-## Comparison and interpretation
+## Interpretation
 
-At a fixed simultaneous force state with positive contact and L>0, A3 is less
-conservative than A1 when abs(H)<mu*(W-L); it is more conservative above that
-threshold. This follows directly by comparing the two positive ratios. The
-independent test uses threshold 95.0 N/m and horizontal forces 40.0 and
-100.0 N/m on opposite sides. Neither expression consistently bounds the other.
-Comparisons below use the **same phase**, chosen to maximize A1 demand; they
-do not claim that this phase also maximizes A2 or A3.
+The assessment exposes only the canonical absolute expression. The former
+passive-balance and simplified alternatives used unfactored lift and have been
+removed. The compatibility function named generalized now warns and delegates
+to the absolute check; it does not implement a displacement envelope.
+The six synthetic cases have no passive credit. Their deterministic
+phase demands validate arithmetic and do not qualify standard peak selection.
 
 ## Source register
 
@@ -273,7 +268,8 @@ The report is the exact text returned by
 `digitalmodel.subsea.on_bottom_stability.example.example_report()`.
 The reproducibility test compares that text with this committed file and checks
 the subsea documentation link. Report verdicts and governing-case selection use
-full precision; displayed values and percentages use one decimal place.
+full precision; dimensional values use one decimal place, dimensionless inputs
+retain their supplied precision and utilisation ratios use three decimals.
 """
 
 
@@ -283,8 +279,10 @@ def example_report() -> str:
     report = render_report(
         [row.static_case for row in example.rows],
         method="absolute",
-        report_date="2026-10-22",
-        revision="0",
+        report_date="2026-11-06",
+        revision="1",
+        previous_revisions=(("0", "2026-10-22",
+                             "Calculation issue with explicit input provenance"),),
     )
     report = report.replace(
         "Results are static arithmetic screens.",
@@ -318,17 +316,16 @@ def example_report() -> str:
     report = report.replace("## Inputs", "\n".join(sea) + "\n\n## Inputs", 1)
     comparison = [
         "",
-        "## Fixed-phase design-weight comparison",
+        "## Fixed-force design weights",
         "",
-        "Required weight is the fixed-force A1 root in N/m. Change compares A3/A1 utilisations.",
+        "Required weight is the fixed-force A1/A4 root in N/m; loads and diameter stay fixed.",
         "",
-        "| Case | Required weight | Absolute | Simplified | Change (%) |",
-        "|---|---:|---:|---:|---:|",
+        "| Case | Required weight | Absolute |",
+        "|---|---:|---:|",
     ]
     for row in example.rows:
-        change = (row.simplified_utilisation / row.absolute_utilisation - 1) * 100
         comparison.append(
             f"| {row.static_case.label} | {row.required_weight_n_m:.1f} | "
-            f"{row.absolute_utilisation:.1f} | {row.simplified_utilisation:.1f} | {change:.1f} |"
+            f"{row.absolute_utilisation:.3f} |"
         )
     return report + "\n".join(comparison) + "\n" + _BASIS
