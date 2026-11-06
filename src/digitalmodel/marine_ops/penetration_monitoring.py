@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Compare a single leg's preload readings with a supplied uncertain curve.
 
@@ -17,14 +17,21 @@ does not establish which equilibrium is reachable. No extrapolation is made.
 Triggers (all limits are required inputs, not standard-derived constants):
 * Penetration strictly outside every interpolated interval.
 * K = delta load / delta penetration drops by at least the supplied fraction
-  between two consecutive positive loading increments, before a supplied-curve
-  local peak. Each load increment must exceed the constant-load tolerance.
+  from the greatest finite increment stiffness since the last hold, unload or
+  upward movement. Each load increment must exceed the constant-load tolerance.
+  The warning is armed below a supplied local peak's load through that peak's
+  upper penetration bound, including depths beyond its nominal penetration.
 * Positive penetration rate strictly exceeds its limit while absolute load
   change is at most the supplied tolerance, over one sampling interval.
 Missing prediction coverage also requires a hold and reassessment. A curve with
 no local peak cannot establish the pre-peak stiffness trigger. Rate is a sampled
 average; a short transient between readings can be missed. Sensor uncertainty,
 sampling cadence and site-specific trigger qualification remain external inputs.
+The maximum-increment reference remains sensitive to noise and unresolved
+transitions; it is not a filtered or fixed-window stiffness estimate.
+A positive loading step with no resolved depth change has no finite stiffness
+estimate and preserves the reference. Without an earlier finite increment,
+the stiffness-drop comparison remains unavailable until one is measured.
 
 Alerts mark entry into a condition; active conditions are returned every time.
 Reassessment and Plan B actions remain latched after a condition clears. No
@@ -32,8 +39,8 @@ reading is certified as a safe fallback stage. Actions are advisory responses
 under an independently agreed procedure, not automatic equipment commands.
 
 Clause context only: SNAME T&R 5-5A, Rev 3 (2008), RP 6.2.6 (layered soils)
-and 8.3.5 (punch-through); ISO 19905-1:2023, 9.3.2 (leg penetration during
-preloading). No clause compliance or numerical trigger requirement is claimed.
+and 8.3.5 (punch-through); ISO 19905-1 (edition and leg-penetration clause:
+TO CONFIRM). No clause compliance or numerical trigger requirement is claimed.
 Public operational basis: Guidelines for the Selection and Operation of
 Jack-ups in the Marine Renewable Energy Industry, Issue 2 (2013), 18.5.7-18.5.10
 and 18.6.3: https://iadc.org/wp-content/uploads/2015/04/
@@ -222,10 +229,10 @@ def _band_trigger(intervals: tuple[tuple[Fraction, Fraction], ...], depth: Fract
     return None
 
 
-def _drop(current: Fraction | None, previous: Fraction | None) -> Fraction | None:
-    if current is None or previous is None:
+def _drop(current: Fraction | None, reference: Fraction | None) -> Fraction | None:
+    if current is None or reference is None:
         return None
-    return max(Fraction(0), 1 - current / previous)
+    return max(Fraction(0), 1 - current / reference)
 
 
 def _stiffness_trigger(drop: Fraction | None, peak: PredictionPoint | None,
@@ -275,13 +282,13 @@ class PenetrationMonitor:
             if left.load_kn <= point.load_kn > right.load_kn
         )
         self._previous: Measurement | None = None
-        self._previous_stiffness: Fraction | None = None
+        self._reference_stiffness: Fraction | None = None
         self._active: tuple[Trigger, ...] = ()
         self._latched_actions: tuple[PlanBAction, ...] = ()
 
     def _next_peak(self, sample: Measurement) -> PredictionPoint | None:
         return next((p for p in self._peaks
-                     if p.penetration_m > sample.penetration_m and p.load_kn >= sample.load_kn), None)
+                     if sample.penetration_m <= p.upper_penetration_m and sample.load_kn < p.load_kn), None)
 
     def _increments(self, sample: Measurement) -> tuple[Fraction | None, Fraction | None]:
         if self._previous is None:
@@ -295,6 +302,15 @@ class PenetrationMonitor:
             stiffness = load_change / depth_change
         return stiffness, depth_change / duration
 
+    def _next_reference(self, sample: Measurement, stiffness: Fraction | None) -> Fraction | None:
+        if stiffness is not None:
+            return max(stiffness, self._reference_stiffness or stiffness)
+        if self._previous is not None and sample.penetration_m == self._previous.penetration_m:
+            load_change = Fraction(str(sample.load_kn)) - Fraction(str(self._previous.load_kn))
+            if load_change > Fraction(str(self.criteria.constant_load_tolerance_kn)):
+                return self._reference_stiffness
+        return None
+
     def update(self, sample: Measurement) -> MonitoringResult:
         """Validate before state changes, then flag this reading and new entries."""
         _validate_values(sample)
@@ -302,7 +318,7 @@ class PenetrationMonitor:
         intervals = _intervals(self.curve, Fraction(str(sample.load_kn)))
         peak = self._next_peak(sample)
         stiffness, rate = self._increments(sample)
-        drop = _drop(stiffness, self._previous_stiffness)
+        drop = _drop(stiffness, self._reference_stiffness)
         conditions = (
             _band_trigger(intervals, Fraction(str(sample.penetration_m))),
             _stiffness_trigger(drop, peak, self.criteria),
@@ -311,7 +327,8 @@ class PenetrationMonitor:
         active = tuple(t for t in conditions if t is not None)
         alerts = _new_alerts(active, self._active)
         self._latched_actions = _latched_actions(self._latched_actions, active)
-        self._previous, self._previous_stiffness, self._active = sample, stiffness, active
+        self._reference_stiffness = self._next_reference(sample, stiffness)
+        self._previous, self._active = sample, active
         return MonitoringResult(
             sample, tuple((float(a), float(b)) for a, b in intervals), len(intervals) > 1,
             _float_or_none(stiffness), _float_or_none(drop), _float_or_none(rate),
