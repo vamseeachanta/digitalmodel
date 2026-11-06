@@ -12,6 +12,7 @@ followed by nonlinear hydrodynamic and foundation assessment where required.
 | Revision | Date | What changed and why |
 | --- | --- | --- |
 | 1 | 2026-10-28 | Add persistent-window counts, explicit missing-data bounds and tide-dependent load screening to support preload planning. |
+| 2 | 2026-11-06 | Count observed exceedances as known failures despite gaps or record-end truncation, distinguish calm water and identify contact at the assumed elevated limit. |
 
 Table 1. Document issue history.
 
@@ -51,10 +52,8 @@ The centring and offshore transfer are assumptions, based on previous experience
 the historical port ranges are not a present offshore prediction. A local tide
 datum, surge allowance and time history remain required for operational use.
 
-Air gap, draft, sea state, tide, ballast and single-leg/all-leg preload are not
-established by the dispatch-described source, referred to here only as **a 2026
-public industry article on preload draft**. The example retains each as an
-input range. No actual unit condition is inferred.
+Air gap, draft, sea state, tide, ballast and single-leg/all-leg preload remain
+unestablished input ranges. No actual unit condition is inferred.
 
 ## Persistence definition and controls
 
@@ -66,12 +65,19 @@ Timestamps must be aware, chronological, unique and cadence-aligned; they are
 converted to UTC. Windows cross month and year boundaries and are assigned to
 their starting month. Calendar-month statistics pool all supplied years.
 
-For each month let C denote starts with complete evidence, G wholly workable
-starts, and U starts containing missing data. The reported probability is G/C,
-conditional on complete evidence. Missing-data bounds are G/(C+U) and
-(G+U)/(C+U). Missing rows, `None` and NaN cannot earn working credit. A zero
-denominator returns `None`, distinct from a measured zero. Windows extending
-past the record end are censored and counted separately; no window is extrapolated.
+For each month let C denote starts with known outcomes (`complete_starts`),
+G wholly workable starts, and U unresolved starts containing missing data within
+the record. Any observed Hs or Tp exceedance determines failure and counts in C,
+even if another value or block is missing or the window extends past the record
+end. G requires every requested block to be present and within both limits.
+The reported probability is G/C, conditional on known outcomes. Missing-data
+bounds are G/(C+U) and (G+U)/(C+U). Missing rows, `None` and NaN cannot earn
+working credit. A zero denominator returns `None`, distinct from a measured zero.
+Only terminal windows without an observed exceedance are censored, excluded from
+both bounds and counted separately; no window is extrapolated.
+For example, four hourly blocks [exceedance, missing, good, good] with a 2 h
+duration give C = 2, G = 1, U = 1 and one censored start: G/C = 0.500 and
+bounds 0.333 to 0.667.
 There is no inference outside the first-to-last timestamp span. These are
 descriptive frequencies for a sampled start, not independent trials, confidence
 intervals, or the chance of finding at least one window in a month.
@@ -127,6 +133,17 @@ force are separate outputs and are not added as concurrent maxima. A dry hull
 returns zero only above the regular-wave crest. Intermittent bottom contact or
 deck wetting returns unavailable hull forces, retaining the contact flag and leg
 screen. Such cases require an impact/nonlinear model rather than a zero load.
+At zero wave height the status is `calm` for every hull position; oscillatory
+forces are zero, while static draft and buoyancy are retained. The calm status
+does not establish freeboard adequacy or installation acceptance.
+
+At the assumed hull-elevated state limit Hs = 1.5 m and H/Hs = 1.8, the regular
+wave crest is 1.35 m above still water. The hull bottom at +1.0 m has gaps of
+2.0, 1.0 and 0.0 m at tides −1.0, 0.0 and +1.0 m. Only the low-tide gap exceeds
+the crest; the mean- and high-tide cases report `intermittent_contact` and
+withhold hull forces. The results `open` list records this limitation. The
+hull-elevated weather frequencies therefore do not establish workable installation
+windows for this geometry.
 
 For the assumed stress case Hs = 4.0 m and H/Hs = 1.8, the regular-wave crest
 is 3.6 m above still water. At the assumed +1.0 m tide, its elevation is +4.6 m
@@ -171,7 +188,10 @@ For a supplied series, pass `--observations SERIES.json --sha256 EXPECTED`
 and optionally `--cadence-h HOURS`. A mismatched digest fails before calculation.
 The input object requires nonempty `source`, `version`, `dataset_id` and a
 `samples` array. Each row requires ISO 8601 `timestamp` with UTC offset, `hs_m`
-and `tp_s`; missing readings use JSON `null`. Units are metres and seconds.
+and `tp_s`; missing readings use JSON `null`. Numeric readings must be finite,
+with Hs nonnegative and Tp positive; booleans and strings are rejected. Invalid
+rows raise `ValueError` with the zero-based row index, without echoing input
+values. Units are metres and seconds.
 Source metadata is retained; a matching digest does not establish scientific
 qualification, source rights or site applicability. The outputs retain
 `qualified_for_installation: false` for both assumed and supplied data.

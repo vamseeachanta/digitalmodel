@@ -106,6 +106,34 @@ def assumed_series() -> tuple[WaveSample, ...]:
     return tuple(result)
 
 
+def _observation_sample(row: object, index: int) -> WaveSample:
+    if not isinstance(row, dict) or not all(
+        key in row for key in ("timestamp", "hs_m", "tp_s")
+    ):
+        raise ValueError(f"observation row {index} requires timestamp, hs_m and tp_s")
+    timestamp = row["timestamp"]
+    if not isinstance(timestamp, str):
+        raise ValueError(f"observation row {index} requires an ISO 8601 timestamp")
+    try:
+        instant = datetime.fromisoformat(timestamp)
+    except ValueError as exc:
+        raise ValueError(
+            f"observation row {index} requires an ISO 8601 timestamp"
+        ) from exc
+    if instant.tzinfo is None or instant.utcoffset() is None:
+        raise ValueError(f"observation row {index} requires a UTC offset")
+    for key in ("hs_m", "tp_s"):
+        value = row[key]
+        if value is not None and (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or (value <= 0 if key == "tp_s" else value < 0)
+        ):
+            raise ValueError(f"observation row {index} has invalid {key}")
+    return WaveSample(instant, row["hs_m"], row["tp_s"])
+
+
 def read_observations(
     path: Path, expected_sha256: str
 ) -> tuple[tuple[WaveSample, ...], dict]:
@@ -115,13 +143,15 @@ def read_observations(
     if digest != expected_sha256:
         raise ValueError("observation digest mismatch")
     payload = json.loads(raw)
+    if not isinstance(payload, dict):
+        raise ValueError("observations require a JSON object")
     for key in ("source", "version", "dataset_id"):
         if not isinstance(payload.get(key), str) or not payload[key].strip():
             raise ValueError(f"observations require {key}")
-    data = tuple(
-        WaveSample(datetime.fromisoformat(row["timestamp"]), row["hs_m"], row["tp_s"])
-        for row in payload["samples"]
-    )
+    rows = payload.get("samples")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("observations require a nonempty samples array")
+    data = tuple(_observation_sample(row, index) for index, row in enumerate(rows))
     return data, {
         "kind": "supplied_unqualified_series",
         "sha256": digest,
@@ -247,12 +277,12 @@ def run(
             "title": {"text": f"{title}: preload windows"},
             "xaxis": {"title": "UTC window start month"},
             "yaxis": {
-                "title": "Workable starts with complete data (%)",
+                "title": "Workable starts among known outcomes (%)",
                 "range": [0, 100],
             },
             "annotations": [
                 {
-                    "text": "Random sampled start; conditional on complete data. No installation acceptance.",
+                    "text": "Random sampled start; conditional on known outcomes. No installation acceptance.",
                     "xref": "paper",
                     "yref": "paper",
                     "x": 0,
@@ -311,6 +341,9 @@ def run(
             "Limit, duration, tide datum, geometry and coefficients require qualification.",
             "Ballast and preload mode remain input ranges; reactions are not calculated.",
             "Nonlinear waves, hull contact, diffraction and dynamic response remain unresolved.",
+            "The hull-elevated state limit (Hs 1.5 m, H/Hs 1.8) produces a 1.35 m crest, "
+            "above the 1.0 m and 0.0 m gaps at mean and high tide; hull forces are "
+            "withheld and weather frequencies do not establish workable installation windows.",
         ],
     }
     output.mkdir(parents=True, exist_ok=True)
@@ -322,7 +355,9 @@ def run(
         ("monthly_preload_windows.plotly.json", figure),
     ):
         (output / name).write_text(
-            json.dumps(payload, indent=2, allow_nan=False) + "\n"
+            json.dumps(payload, indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
+            newline="\n",
         )
     return result
 

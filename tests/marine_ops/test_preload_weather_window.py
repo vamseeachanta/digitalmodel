@@ -8,6 +8,7 @@ The test integrates incident linear-wave pressure and velocity analytically;
 these are mathematical checks, not published field validation.
 """
 
+import hashlib
 import importlib.util
 import json
 import math
@@ -63,7 +64,8 @@ def test_month_boundary_uses_following_month_and_missing_month_is_unavailable():
     assert len(result) == 12
     assert result[0].probability == 1  # Jan 23:00 -> Feb 01:00.
     assert result[1].probability == 0  # Feb 00:00 -> 02:00 contains a bad block.
-    assert result[1].censored_starts == 1
+    assert result[1].complete_starts == 2
+    assert result[1].censored_starts == 0
     assert result[2].probability is None
 
 
@@ -79,6 +81,45 @@ def test_missing_blocks_are_unknown_with_explicit_probability_bounds(missing):
     assert windows(samples([missing, missing]))[0].probability is None
 
 
+@pytest.mark.parametrize(
+    "heights,periods", [([2, None, 1, 1], None), ([1, None, 1, 1], [26, 12, 12, 12])]
+)
+def test_observed_exceedance_determines_failure_despite_missing_blocks(
+    heights, periods
+):
+    # B ? G G: C=2 (failure, success), G=1, U=1; terminal good is censored.
+    result = windows(samples(heights, periods=periods))[0]
+    assert (result.complete_starts, result.workable_starts) == (2, 1)
+    assert (result.unknown_starts, result.censored_starts) == (1, 1)
+    assert result.probability == pytest.approx(0.5)  # 1/2 known outcomes.
+    assert result.lower_probability == pytest.approx(1 / 3)  # 1/(2+1).
+    assert result.upper_probability == pytest.approx(2 / 3)  # (1+1)/(2+1).
+
+
+@pytest.mark.parametrize(
+    "heights,periods", [([2], [None]), ([None], [26]), ([None], [4])]
+)
+def test_exceedance_in_partially_missing_block_is_a_known_failure(heights, periods):
+    result = windows(samples(heights, periods=periods), duration=1)[0]
+    assert (result.complete_starts, result.workable_starts) == (1, 0)
+    assert (result.unknown_starts, result.censored_starts) == (0, 0)
+    assert (
+        result.probability == result.lower_probability == result.upper_probability == 0
+    )
+
+
+@pytest.mark.parametrize(
+    "heights,expected", [([1, 2], (2, 0)), ([None, 2], (2, 0)), ([1, 1], (1, 1))]
+)
+def test_terminal_exceedance_is_known_but_unresolved_terminal_start_is_censored(
+    heights, expected
+):
+    result = windows(samples(heights))[0]
+    assert (result.complete_starts, result.censored_starts) == expected
+    assert result.unknown_starts == 0
+    assert result.probability == (1 if heights == [1, 1] else 0)
+
+
 def test_absent_rows_cannot_bridge_a_gap_and_all_gap_starts_are_counted():
     data = samples([1, 1, 1, 1])
     result = windows((data[0], data[2], data[3]))[0]
@@ -91,8 +132,9 @@ def test_noninteger_duration_rounds_up_to_complete_observation_blocks():
     data = samples([1, 1, 2, 1])
     assert windows(data, duration=1)[0].probability == 3 / 4
     assert windows(data, duration=1.0000001)[0].probability == 1 / 3
-    assert windows(data, duration=8)[0].probability is None
-    assert windows(data, duration=8)[0].censored_starts == 4
+    assert windows(data, duration=8)[0].probability == 0
+    assert windows(data, duration=8)[0].complete_starts == 3
+    assert windows(data, duration=8)[0].censored_starts == 1
 
 
 def test_period_and_height_limits_are_inclusive_and_state_specific():
@@ -261,6 +303,19 @@ def test_calm_water_and_invalid_physical_inputs():
             load_case(**kwargs)
 
 
+@pytest.mark.parametrize(
+    "bottom,depth,buoyancy", [(0, 4, 0), (-4, 2, 800), (-2, 4, 800), (1, 4, 0)]
+)
+def test_calm_status_is_consistent_at_waterline_and_for_submerged_deck(
+    bottom, depth, buoyancy
+):
+    result = load_case(wave_height_m=0, hull=api().HullGeometry(10, 4, depth, bottom))
+    assert result.hull_status == "calm"
+    assert result.hull_horizontal_amplitude_kn == result.hull_vertical_amplitude_kn == 0
+    assert result.leg_peak_kn == 0
+    assert result.buoyancy_kn == buoyancy
+
+
 def test_example_writes_offline_plotly_json_and_labels_assumptions(tmp_path):
     example = (
         Path(__file__).resolve().parents[2]
@@ -269,8 +324,12 @@ def test_example_writes_offline_plotly_json_and_labels_assumptions(tmp_path):
     assert example.is_file(), "offline example is absent"
     namespace = runpy.run_path(str(example))
     namespace["run"](tmp_path)
-    result = json.loads((tmp_path / "preload_window_results.json").read_text())
-    figure = json.loads((tmp_path / "monthly_preload_windows.plotly.json").read_text())
+    result = json.loads(
+        (tmp_path / "preload_window_results.json").read_text(encoding="utf-8")
+    )
+    figure = json.loads(
+        (tmp_path / "monthly_preload_windows.plotly.json").read_text(encoding="utf-8")
+    )
     assert result["basis"]["kind"] == "assumed_scenario"
     assert result["criteria"]["hold_durations_h"][0] == 1  # Inherited hold floor.
     assert result["qualified_for_installation"] is False
@@ -279,6 +338,83 @@ def test_example_writes_offline_plotly_json_and_labels_assumptions(tmp_path):
     assert "ASSUMED" in figure["layout"]["title"]["text"]
     assert all("source" in item for item in result["source_register"])
     assert len(result["loads"]) == 12  # Two states * two wave cases * three tides.
+    elevated = {
+        row["tide_level_m"]: row["result"]
+        for row in result["loads"]
+        if row["state"] == "hull_elevated" and row["case"] == "state_limit"
+    }
+    assert elevated[-1]["hull_status"] == "dry"  # Gap 2 m > 1.35 m crest.
+    for tide in (0, 1):
+        assert elevated[tide]["hull_status"] == "intermittent_contact"
+        assert elevated[tide]["hull_horizontal_amplitude_kn"] is None
+        assert elevated[tide]["hull_vertical_amplitude_kn"] is None
+    assert any(
+        "state limit" in item and "mean and high tide" in item
+        for item in result["open"]
+    )
+    assert "known outcomes" in figure["layout"]["yaxis"]["title"]
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        None,
+        {"samples": None},
+        {"samples": {}},
+        {"samples": []},
+        {"samples": [None]},
+        {"samples": [{}]},
+        {"hs_m": "invalid"},
+        {"tp_s": "invalid"},
+        {"hs_m": True},
+        {"tp_s": []},
+        {"hs_m": -1},
+        {"tp_s": 0},
+        {"hs_m": math.inf},
+        {"tp_s": math.nan},
+        {"timestamp": 42},
+        {"timestamp": "invalid"},
+        {"timestamp": "2024-01-01T00:00:00"},
+    ],
+)
+def test_observation_schema_rejects_invalid_input_with_row_context(tmp_path, change):
+    namespace = runpy.run_path(
+        str(
+            Path(__file__).resolve().parents[2]
+            / "examples/domains/geotechnical/jackup_preload_window.py"
+        )
+    )
+    row = {"timestamp": "2024-01-01T00:00:00+00:00", "hs_m": 1, "tp_s": 12}
+    payload = {"source": "test-only", "version": "1", "dataset_id": "test-only"}
+    if change is None:
+        pass  # A missing samples field must fail before calculation.
+    elif "samples" in change:
+        payload.update(change)
+    else:
+        payload["samples"] = [row, dict(row, **change)]
+    source = tmp_path / "observations.json"
+    source.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+    message = "row 1" if change and "samples" not in change else "samples|row 0"
+    with pytest.raises(ValueError, match=message):
+        namespace["read_observations"](
+            source, hashlib.sha256(source.read_bytes()).hexdigest()
+        )
+
+
+@pytest.mark.parametrize("payload", [[], None, "invalid", 1])
+def test_observation_root_requires_an_object(tmp_path, payload):
+    namespace = runpy.run_path(
+        str(
+            Path(__file__).resolve().parents[2]
+            / "examples/domains/geotechnical/jackup_preload_window.py"
+        )
+    )
+    source = tmp_path / "observations.json"
+    source.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+    with pytest.raises(ValueError, match="object"):
+        namespace["read_observations"](
+            source, hashlib.sha256(source.read_bytes()).hexdigest()
+        )
 
 
 def test_supplied_series_requires_matching_digest(tmp_path):
@@ -300,7 +436,7 @@ def test_supplied_series_requires_matching_digest(tmp_path):
             {"timestamp": "2024-01-01T01:00:00+00:00", "hs_m": 1, "tp_s": 12},
         ],
     }
-    source.write_text(json.dumps(payload))
+    source.write_text(json.dumps(payload), encoding="utf-8", newline="\n")
     with pytest.raises(ValueError, match="digest"):
         namespace["read_observations"](source, "0" * 64)
     data, basis = namespace["read_observations"](

@@ -63,10 +63,11 @@ class SeaStateLimit:
 class MonthlyWindow:
     """Pooled calendar-month counts, attributed to the UTC start month.
 
-    Probability is conditional on complete data for a randomly sampled start,
-    not the chance of at least one window in a month. Bounds assign every unknown
-    start to failure/success respectively. Incomplete terminal windows are
-    censored, excluded from both bounds and counted separately.
+    Complete starts have known outcomes: an observed exceedance proves failure
+    even with missing or terminal blocks. Probability is conditional on those
+    known outcomes for a randomly sampled start, not the chance of at least one
+    window in a month. Bounds assign every unknown interior start to failure or
+    success. Terminal starts without an exceedance are censored and excluded.
     """
 
     month: int
@@ -94,13 +95,16 @@ def _sample_state(sample: WaveSample, limit: SeaStateLimit) -> tuple[int, int]:
             missing = True
         else:
             _finite(name, value, positive=name == "Tp")
-    if missing or sample.hs_m is None or sample.tp_s is None:
-        return 1, 0
-    good = (
-        sample.hs_m <= limit.max_hs_m
-        and limit.min_tp_s <= sample.tp_s <= limit.max_tp_s
+    failed = (
+        sample.hs_m is not None
+        and not math.isnan(sample.hs_m)
+        and sample.hs_m > limit.max_hs_m
+    ) or (
+        sample.tp_s is not None
+        and not math.isnan(sample.tp_s)
+        and not limit.min_tp_s <= sample.tp_s <= limit.max_tp_s
     )
-    return 0, int(not good)
+    return int(missing), int(failed)
 
 
 def _grid(
@@ -161,13 +165,15 @@ def monthly_windows(
     for index in range(len(states)):
         month = (origin + index * step).month - 1
         end = index + blocks
-        if end > len(states):
+        if bad[min(end, len(states))] > bad[index]:
+            counts[month][0] += 1  # An observed exceedance determines failure.
+        elif end > len(states):
             counts[month][3] += 1
         elif missing[end] > missing[index]:
             counts[month][2] += 1
         else:
             counts[month][0] += 1
-            counts[month][1] += int(bad[end] == bad[index])
+            counts[month][1] += 1
     results = []
     for month, (complete, good, unknown, censored) in enumerate(counts, 1):
         total = complete + unknown
@@ -364,11 +370,14 @@ def swell_loads(
     )
     peak = inertia if inertia >= 2 * drag else drag + inertia**2 / (4 * drag)
     draft = min(hull.depth_m, max(0.0, tide_level_m - hull.bottom_elevation_m))
-    horizontal, vertical, status = _hull_forces(
-        hull, depth, draft, tide_level_m, amplitude, k, density_kg_m3 * gravity_m_s2
-    )
+    horizontal: float | None
+    vertical: float | None
     if wave_height_m == 0:
-        horizontal, vertical = 0.0, 0.0
+        horizontal, vertical, status = 0.0, 0.0, "calm"
+    else:
+        horizontal, vertical, status = _hull_forces(
+            hull, depth, draft, tide_level_m, amplitude, k, density_kg_m3 * gravity_m_s2
+        )
     return SwellLoads(
         depth,
         draft,
