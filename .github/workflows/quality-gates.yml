@@ -133,6 +133,8 @@ jobs:
           uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
 
       - name: Check engineering register changes
+        # Manual dispatch scans only the selected commit against its first parent.
+        # Earlier commits on a feature branch are outside this scan.
         env:
           REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event_name == 'workflow_dispatch' && format('{0}^', github.sha) || github.event.before }}
         run: |
