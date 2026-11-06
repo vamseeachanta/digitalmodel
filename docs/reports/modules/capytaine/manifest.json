@@ -1,15 +1,15 @@
 {
   "artifacts": {
     "README.md": "21d8aeb41269a0afd5e97250ec48e9fbe2ba2cb10c7bd8b672e15dc3347d1cdb",
-    "changes.json": "6574d7c1ba5b4d30c95f1ef5a2998e7d8c341b49a12a03c6530ceb0e6b1bcfa7",
-    "index.html": "f5c01c4dccb7aee1c490f6c2409ff2382ae0c80c6cc9345e113e447c35299644"
+    "changes.json": "b02fc27a7b7e48c132dd8239a4266cf519a788636c2ee1a671ff38152f26c0f0",
+    "index.html": "5d89001cf4418969774dbacb24ffe5b8d51bc380687a2989f422cedc0bb7fc53"
   },
   "digest_convention": "SHA-256 over exact UTF-8/LF bytes; manifest self-digest is excluded to avoid self-reference. Rebuild checks include manifest bytes.",
   "generator": "scripts/reports/build_capytaine_module_report.py",
   "schema_version": 1,
   "sources": {
     "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
-    "scripts/reports/build_capytaine_module_report.py": "4bc621b1ea3205645f7660bc7b7660c9346074e6d9a5f33fd5a4ffe2c81d823a",
+    "scripts/reports/build_capytaine_module_report.py": "daf6bc22813638d7c24574763966d76522111ba0cedeafd10eb4e8d00c0ba4ff",
     "src/digitalmodel/hydrodynamics/capytaine/__init__.py": "03901c2bc43967bb4e974e1c81bb316d1e1a64d91039a6cd1c683464be146266",
     "src/digitalmodel/hydrodynamics/capytaine/lid.py": "1f78851ce9724df8ca3b34a5ce2241e6ca449581644f8d40486fcc79c060bd26",
     "src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py": "09b106066b5f87f2035a8e9691d0e22aa7d3f4456abada6a65d0c9760c223227",
@@ -21,6 +21,6 @@
     "tests/hydrodynamics/capytaine/test_rao_manual_input_contract.py": "d954392d602595cc4d13fdf6363c7443d57d438a063ef35b489b0b3f953fb32f",
     "tests/hydrodynamics/capytaine/test_rao_manual_sign.py": "75bc469f7cb132ae2105cb4a598293f9355f48312156cbc217a6de646a49d316",
     "tests/hydrodynamics/capytaine/test_result_coordinates.py": "99245a15dae2aae0eaeb620873b6271203687e7e60f16fc7d8a434913c31fd65",
-    "tests/reporting/test_capytaine_module_report.py": "ea31bfe3f96589fe5c854bd4f791f3600d60bf41fc153fa80de42d45b05b9144"
+    "tests/reporting/test_capytaine_module_report.py": "9a2ef2e8a94144df4d039e154a5e0a16df147d43adfbadbf60362a2f56be36a4"
   }
 }

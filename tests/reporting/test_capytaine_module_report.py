@@ -157,7 +157,8 @@ def test_scratch_cannot_resolve_inside_checkout(builder, tmp_path, alias):
         try:
             link.symlink_to(ROOT, target_is_directory=True)
         except OSError as exc:
-            if exc.errno not in (errno.EPERM, errno.EACCES, errno.ENOSYS, errno.ENOTSUP):
+            if (exc.errno not in (errno.EPERM, errno.EACCES, errno.ENOSYS, errno.ENOTSUP)
+                    and getattr(exc, "winerror", None) != 1314):
                 raise
             pytest.skip("Directory symlink creation is unavailable or not permitted")
         scratch = link / "uncreated-report-scratch"
@@ -257,18 +258,32 @@ def test_report_build_needs_no_scratch(builder, tmp_path):
 
 def test_palette_is_read_as_utf8(builder, monkeypatch):
     read_text = Path.read_text
+    palette_reads = []
 
     def require_utf8(path, *args, **kwargs):
         if path == ROOT / "docs/api/_assets/brand.css":
             assert kwargs.get("encoding") == "utf-8"
+            palette_reads.append(path)
         return read_text(path, *args, **kwargs)
 
     monkeypatch.setattr(Path, "read_text", require_utf8)
-    assert "<style>" in builder.render(builder.calculate())
+    page = builder.render(builder.calculate())
+    assert palette_reads == [ROOT / "docs/api/_assets/brand.css"]
+    style = re.search(r"<style>(.*?)</style>", page, re.S)
+    assert style is not None
+    assert re.search(r"--edge\s*:", style.group(1))
 
 
-def test_alias_without_symlink_privilege_skips(builder, monkeypatch, tmp_path):
+@pytest.mark.parametrize("error_kind", ["posix_permission", "windows_privilege"])
+def test_alias_without_symlink_privilege_skips(builder, monkeypatch, tmp_path, error_kind):
     def denied_symlink(*args, **kwargs):
+        if error_kind == "windows_privilege":
+            error = OSError(None, "Directory symlink creation is not permitted", None, 1314)
+            # Non-Windows interpreters ignore the Windows constructor argument.
+            if sys.platform != "win32":
+                error.errno = errno.EINVAL
+                error.winerror = 1314
+            raise error
         raise OSError(errno.EPERM, "Directory symlink creation is not permitted")
 
     monkeypatch.setattr(Path, "symlink_to", denied_symlink)
