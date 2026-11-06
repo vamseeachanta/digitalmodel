@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -229,7 +232,8 @@ def test_safe_html_and_json(builder):
     page = ET.fromstring(text)
     assert not page.findall(".//img")
     assert probe in " ".join(page.itertext())
-    embedded = json.loads(page.find(".//script[@id='calculation-record']").text)
+    assert page.find(".//script[@id='calculation-record']") is None
+    embedded = json.loads(page.find(".//script[@id='calculation-display-record']").text)
     assert set(embedded) == set(oracle())
     for key, (expected, unit) in oracle().items():
         assert embedded[key]["value"] == round(expected, 1)

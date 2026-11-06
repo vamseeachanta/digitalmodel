@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Custom pipe capacity calculation methods."""
 
 import logging
@@ -824,17 +827,20 @@ class PipeCapacity:
                 pipe_flag, specification_code, load_condition_index
             )
 
-        if "API TR 5C3-2018" in specification_code:
+        elif "API TR 5C3-2018" in specification_code:
             api_tr_5c3 = API_TR_5C3(self.cfg, pipe_flag, load_condition_index)
             pressure = api_tr_5c3.get_collapse_pressure()
             minimum_thickness = api_tr_5c3.get_collapse_minimum_thickness()
 
-        if _is_dnv_f101(specification_code) or _is_dnv_f201(specification_code):
+        elif _is_dnv_f101(specification_code) or _is_dnv_f201(specification_code):
             dnv = DNVWallThickness(
                 self.cfg, pipe_flag, load_condition_index, specification_code
             )
             pressure = dnv.get_collapse_pressure(thickness)
             minimum_thickness = dnv.get_collapse_minimum_thickness()
+
+        else:
+            raise ValueError("Unsupported external pressure code")
 
         return minimum_thickness, pressure
 
@@ -861,16 +867,8 @@ class PipeCapacity:
     def evaluate_collapse_minimum_thickness_API_STD_2RD(
         self, pipe_flag, specification_code, load_condition_index
     ):
-        d_over_t = (
-            self.cfg[pipe_flag]["Geometry"]["Nominal_OD"]
-            / self.cfg[pipe_flag]["Geometry"]["Design_WT"]
-        )
-        t_over_d = 1 / d_over_t
-        material = self.cfg[pipe_flag]["Material"]["Material"]
-        E = self.cfg["Material"][material]["E"]
-        Poissionsratio = self.cfg["Material"][material]["Poissionsratio"]
-        # TODO Calculation to be completed.
-        return 100
+        """Reject the unfinished inverse instead of returning a numeric placeholder."""
+        raise NotImplementedError("API STD 2RD collapse minimum thickness is not implemented")
 
     def collapse_propagation_specification_code_based_evaluation(
         self, load_condition_index, pipe_flag, specification_code, thickness

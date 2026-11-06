@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 Comprehensive unit tests for PipeCapacity.py
 
@@ -727,6 +730,40 @@ class TestInternalPressureCodeDispatch:
 
 
 class TestExternalPressureCodeDispatch:
+
+    @staticmethod
+    def api_collapse_config():
+        """Use synthetic inputs sufficient to reach the unfinished inverse."""
+        code = "API STD 2RD-2013"
+        cfg = _make_pipe_capacity_cfg_dnv(
+            load_condition="external_pressure", spec_code=code,
+        )
+        cfg["Outer_Pipe"]["Material"]["Material"] = "synthetic"
+        cfg["Material"] = {"synthetic": {"E": 2.97e7, "Poissionsratio": 0.3}}
+        cfg["DesignFactors"][code] = {"external_pressure": {"Fd": 0.67}}
+        return cfg
+
+    def test_api_collapse_inverse_rejects_unfinished_calculation(self):
+        pc = PipeCapacity(self.api_collapse_config())
+        with pytest.raises(NotImplementedError, match="collapse minimum thickness"):
+            pc.evaluate_collapse_minimum_thickness_API_STD_2RD(
+                "Outer_Pipe", "API STD 2RD-2013", 0,
+            )
+
+    def test_api_collapse_route_does_not_publish_placeholder(self):
+        cfg = self.api_collapse_config()
+        pc = PipeCapacity(cfg)
+        with pytest.raises(NotImplementedError, match="collapse minimum thickness"):
+            pc.evaluate_pipe_wall()
+        assert cfg["basename"] not in cfg
+
+    @pytest.mark.parametrize("code", ["", "unknown", "ASME B31.4"])
+    def test_unsupported_external_pressure_code_is_explicit(self, code):
+        pc = PipeCapacity({})
+        with pytest.raises(ValueError, match="Unsupported external pressure code"):
+            pc.external_pressure_specification_code_based_evaluation(
+                0, "Outer_Pipe", code, 0.625,
+            )
 
     def test_dnv_f101_dispatch(self):
         cfg = _make_pipe_capacity_cfg_dnv(

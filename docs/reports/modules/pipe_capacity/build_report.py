@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -16,9 +19,9 @@ from digitalmodel.structural.pipe_capacity.common.PipeSizing import PipeSizing
 
 ROOT = Path(__file__).resolve().parents[4]
 PACKAGE = "src/digitalmodel/structural/pipe_capacity/"
-REVISION = "0"
+REVISION = "1"
 # Fixed publication date; no runtime clock or output-directory metadata is used.
-DATE = "2026-10-28"
+DATE = "2026-11-06"
 REBUILD = (
     'PYTHONPATH=src uv run --no-project --with pytest python '
     'docs/reports/modules/pipe_capacity/build_report.py '
@@ -27,12 +30,20 @@ REBUILD = (
 CHANGES = {
     "report": "pipe-capacity-module-analysis",
     "revisions": [{
-        "revision": REVISION,
-        "date": DATE,
+        "revision": "0",
+        "date": "2026-10-28",
         "changes": [
             "Added a source-linked method map to distinguish implementation from numerical qualification.",
             "Added synthetic annulus integrals, computed results and parsed-output checks with reproducible records.",
             "Retained explicit capacity exclusions and the existing standalone example without alteration.",
+        ],
+    }, {
+        "revision": REVISION,
+        "date": DATE,
+        "changes": [
+            "Rejected the unfinished collapse inverse and unsupported external pressure selectors explicitly.",
+            "Rebuilt source citations after the guard change and documented when rebuilding is required.",
+            "Named the rounded embedded JSON as a display record to make its precision explicit.",
         ],
     }],
 }
@@ -123,7 +134,7 @@ METHODS = (
         'api-collapse-inverse',
         'custom/PipeCapacity.py',
         'PipeCapacity.evaluate_collapse_minimum_thickness_API_STD_2RD',
-        'Finding: marked incomplete and returns a placeholder; must not be used as a qualified thickness inverse.',
+        'Incomplete inverse raises NotImplementedError; the external-pressure route cannot publish a placeholder thickness.',
     ),
     (
         'api-rp-burst',
@@ -339,7 +350,7 @@ def build(record):
         f'<tr><th scope="row">{item}</th><td>NOT_EVALUATED</td></tr>'
         for item in ("pressure containment", "collapse", "combined loading", "material strength", "code compliance")
     )
-    changes = "".join(f"<li>{html.escape(item)}</li>" for item in CHANGES["revisions"][0]["changes"])
+    changes = "".join(f"<li>{html.escape(item)}</li>" for item in CHANGES["revisions"][-1]["changes"])
     titles = ("Summary", "Introduction and Method Map", "Data Basis", "Theory and Equations",
               "Worked Example", "Validation Evidence", "Limits of Use", "Recommendations",
               "References", "Appendix")
@@ -374,8 +385,10 @@ The chosen dimensions are geometric probes, not realistic pipe dimensions or cod
 NOT_EVALUATED. The parent issue remains open for broader numerical qualification.</p></section>
 <div id="revision-history"><h3>Revision history</h3>
 <table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
-<tbody><tr><td>{REVISION}</td><td>{DATE}</td><td>Initial bounded module report to separate source evidence,
-independent geometry checks and unevaluated capacity methods.</td></tr></tbody></table></div>
+<tbody><tr><td>0</td><td>2026-10-28</td><td>Initial bounded module report to separate source evidence,
+independent geometry checks and unevaluated capacity methods.</td></tr>
+<tr><td>{REVISION}</td><td>{DATE}</td><td>Rejected unfinished collapse inversion, rebuilt source citations
+and clarified embedded display precision.</td></tr></tbody></table></div>
 <section id="section-2"><h2>2. Introduction and Method Map</h2>
 <p>The public router calls PipeComponents, which selects custom implementations. The report calls only
 common.PipeSizing.pipe_section_properties directly. A check of that method does not qualify the custom
@@ -481,9 +494,9 @@ interpreter can run the command without uv; preparing pytest through uv may requ
 <details id="engineering-changes" open="open"><summary>Engineering changes</summary>
 <ul>{changes}</ul><p><a href="changes.json">Change record</a> · <a href="build_report.py">Report builder</a>
 · <a href="README.md">Report index and reproduction instructions</a></p></details>
-<h3>Calculation record</h3><p>The embedded JSON records display-precision quantities, units and equation bindings.
+<h3>Calculation display record</h3><p>The embedded JSON records display-precision quantities, units and equation bindings.
 Full-precision numerical evidence is checked through calculate(), not reconstructed from rounded text.</p>
-<script type="application/json" id="calculation-record">{embedded_json(display_record(record))}</script>
+<script type="application/json" id="calculation-display-record">{embedded_json(display_record(record))}</script>
 </section></main></div></body></html>
 '''
 

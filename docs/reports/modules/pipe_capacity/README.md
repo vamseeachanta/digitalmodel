@@ -14,6 +14,7 @@ remains open; no full-module qualification is claimed.
 | --- | --- | --- |
 | 0 | 2026-10-25 | Initial geometry example with independent integrals and a reproducible HTML builder. |
 | 1 | 2026-10-28 | Added bounded module reporting and source records without changing the standalone example. |
+| 2 | 2026-11-06 | Documented source rebuilds, explicit collapse rejection and rounded embedded display records. |
 
 ## Build and read
 
@@ -94,6 +95,17 @@ absolute paths. [Source records](sources.json) bind exact repository symbols,
 line ranges and source digests to evidence status. [Change records](changes.json)
 retain the revision reason and the page's engineering change panel.
 
+Any change to the listed production symbols, including a line inserted above a
+symbol that moves its recorded line range, requires rebuilding `sources.json`
+and `report.html` together with the command above. Copy all three generated
+artifacts into this directory, then run `test_module_report.py` to check the
+source bindings and byte-identical rebuilds. An unchanged symbol can therefore
+require a rebuild after surrounding source edits.
+
+The embedded JSON element `calculation-display-record` contains rounded display
+values. It is not a full-precision calculation record; unrounded results are
+available from the builder's `calculate()` function and checked separately.
+
 The new test suite is `tests/structural/pipe_capacity/test_module_report.py`.
 It checks all unrounded geometric properties against independent polar
 integrals, units, parsed visible values, controlled result mutation, deterministic
@@ -104,4 +116,7 @@ establish an engineering tolerance. Reproducibility is not physical validation.
 Pressure containment, collapse, combined loading, material strength and code
 compliance remain **NOT_EVALUATED**. The parent issue remains open for broader
 qualification; the public router's custom sizing path is not qualified by the
-common sizing call in this example. Production calculations are unchanged.
+common sizing call in this example. The unfinished custom collapse inverse now
+raises `NotImplementedError`; its external-pressure route cannot return the
+former numeric placeholder. Unsupported external-pressure code selectors raise
+`ValueError`. No replacement inverse or capacity qualification is supplied.

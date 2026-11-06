@@ -9,6 +9,15 @@
         "Added synthetic annulus integrals, computed results and parsed-output checks with reproducible records.",
         "Retained explicit capacity exclusions and the existing standalone example without alteration."
       ]
+    },
+    {
+      "revision": "1",
+      "date": "2026-11-06",
+      "changes": [
+        "Rejected the unfinished collapse inverse and unsupported external pressure selectors explicitly.",
+        "Rebuilt source citations after the guard change and documented when rebuilding is required.",
+        "Named the rounded embedded JSON as a display record to make its precision explicit."
+      ]
     }
   ]
 }
