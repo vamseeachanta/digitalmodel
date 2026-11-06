@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 # ABOUTME: Engineering code references (standard + edition) carried in strength
 # ABOUTME: results so every capacity / FFS verdict states its governing code.
@@ -9,8 +9,8 @@ Each strength/capacity result carries a ``code_reference`` string (the
 :attr:`CodeReference.label`) so the user or inspector sees the governing code and
 edition in the returned object — not only in the docstring.  This module is the
 single source of truth for those references; the codes register (issue #1093)
-enumerates the same objects so the documentation cannot drift from what the code
-actually stamps on results.
+enumerates the same objects. Citation-only entries are identified below and do
+not imply that a result carries their label.
 """
 from __future__ import annotations
 
@@ -54,6 +54,7 @@ DNV_RP_F101 = CodeReference(
 # Fitness-for-service
 # ---------------------------------------------------------------------------
 # Basis: asset_integrity/assessment/level1_screener.py cites B31.8-2022.
+# Citation record only; not stamped on any result.
 # Kept separate from the existing wall-thickness and dent reference below.
 ASME_B31_8_SCREENING = CodeReference(
     "ASME B31.8", "2022", "Gas Transmission Piping")
