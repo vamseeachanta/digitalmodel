@@ -26965,20 +26965,20 @@ families:
     symbol: alpha_method_capacity
     line: 36
     kind: function
-    what: Routes a single-layer clay pile calculation to shared pile kernels.
+    what: Validates single-layer pile geometry and delegates clay resistance to shared pile kernels.
     relation: delegate
     module: geotechnical/pile_capacity.py
-    file_sha256: ac5c6bdd979d21f56b8e2ff2dce05b566ed6c133ab61d4883b3634cd44d4d05a
-    body_sha256: cc81fc41ceed59a474dab383515c099806ec1bafb898a6af31b7d64b19b368b4
+    file_sha256: 7d9401d6392a97e5f3050e3e46774f42a04802515e9534d66be83179aa40f137
+    body_sha256: 93264e749e230b22cdfaaf05f33e6718c5391d94b64943e9dfaedc1c836073ee
   - path: src/digitalmodel/geotechnical/pile_capacity.py
     symbol: alpha_method_capacity_multilayer
-    line: 84
+    line: 92
     kind: function
-    what: Accumulates layer shaft contributions and tip bearing.
+    what: Validates diameter and layer thicknesses, then accumulates shaft and tip resistance.
     relation: delegate
     module: geotechnical/pile_capacity.py
-    file_sha256: ac5c6bdd979d21f56b8e2ff2dce05b566ed6c133ab61d4883b3634cd44d4d05a
-    body_sha256: 8259d5c4c84e7e2873c1908990bae8e5d39f3e156efc382e9006313e92dd57a2
+    file_sha256: 7d9401d6392a97e5f3050e3e46774f42a04802515e9534d66be83179aa40f137
+    body_sha256: 11e7507cf49b1f0fc8586e42ad39e1514940d4c4dda4c9a22db5840621385a94
   - path: src/digitalmodel/geotechnical/anchors.py
     symbol: drag_anchor_capacity
     line: 110
