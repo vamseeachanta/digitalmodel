@@ -1,19 +1,49 @@
 {
+  "envelope_pruned": {
+    "confidence": null,
+    "determinism": {
+      "result_hash": "7c4741c4c72228a1f0e45e4178d2986b156074b0cdbe65bbf8fdd1acccdc8f09"
+    },
+    "provenance": {
+      "code_version": {},
+      "input_hash": "5918964fe34138d6a2620488aab4bd9bf853b22d1d5d5df2c0d9246f64196349",
+      "standard_revisions": []
+    },
+    "result": {
+      "kind": "files",
+      "outputs": [
+        {
+          "basename": "cases.csv",
+          "sha256": "bd40292414e95df566167bd56882885d4857c7fe3972be12e47c81ca183a54ed",
+          "size": 923
+        },
+        {
+          "basename": "results.json",
+          "sha256": "b32df89968fa9a38be23d3a034b8c95df1761d4605a91487bf8f86117b4703e9",
+          "size": 5424
+        }
+      ]
+    },
+    "status": "ok",
+    "warnings": [],
+    "workflow_id": "buckling-parametric"
+  },
   "result": {
     "kind": "files",
     "outputs": [
       {
         "basename": "cases.csv",
-        "sha256": "b4112638edcf29365a08f3d62196ff87981d235d2279488c4815bb538e9be102",
-        "size": 924
+        "sha256": "bd40292414e95df566167bd56882885d4857c7fe3972be12e47c81ca183a54ed",
+        "size": 923
       },
       {
         "basename": "results.json",
-        "sha256": "7f248c60a07caca9b9527b436d3fdfa8869169db14e6ade6176dd071efad812c",
-        "size": 5426
+        "sha256": "b32df89968fa9a38be23d3a034b8c95df1761d4605a91487bf8f86117b4703e9",
+        "size": 5424
       }
     ]
   },
-  "result_hash": "8e59bb951a101a6b7383dd9898489c4b40f4785f8ea9a8c170175cad7f2e9734",
-  "standard_revisions": []
+  "result_hash": "7c4741c4c72228a1f0e45e4178d2986b156074b0cdbe65bbf8fdd1acccdc8f09",
+  "status": "ok",
+  "workflow_id": "buckling-parametric"
 }

@@ -34,6 +34,13 @@ CHANGES = [{
               "and shear loads so output remains available. The beam moment "
               "sign definition and magnitude-only qualification are clarified; "
               "the public-method inventory is guarded against source changes.",
+}, {
+    "revision": "C", "date": "2026-11-06",
+    "change": "Workflow reference hashes, test citations and retained demo "
+              "outputs are aligned with supported loads. Unsupported CLI "
+              "transverse stress gives an option error. Source bindings cover "
+              "the calculation and dedicated evidence; shared presentation "
+              "and registry files are referenced without byte bindings.",
 }]
 SOURCES = [
     "scripts/reports/build_structural_analysis_module_report.py",
@@ -42,7 +49,6 @@ SOURCES = [
     "src/digitalmodel/structural/structural_analysis/stress_calculator.py",
     "src/digitalmodel/structural/structural_analysis/buckling.py",
     "src/digitalmodel/structural/structural_analysis/capacity.py",
-    "src/digitalmodel/codes.py",
     "tests/structural/structural_analysis/test_buckling_capacity.py",
     "tests/structural/structural_analysis/test_structural_analysis_unit.py",
     "tests/structural/structural_analysis/test_module_report_hand_values.py",
@@ -50,9 +56,7 @@ SOURCES = [
     "src/digitalmodel/structural/buckling_parametric.py",
     "tests/structural/test_buckling_parametric.py",
     "examples/workflows/buckling-parametric/input.yml",
-    "tests/workflows/test_durable_workflows.py",
     "tests/reporting/test_structural_analysis_module_report.py",
-    "docs/api/_assets/brand.css",
 ]
 
 # [A] Synthetic demonstration inputs specified for this report, not measured data.
@@ -217,10 +221,10 @@ def render(scratch: str | Path) -> str:
     history = "".join(f'<tr><td>{row["revision"]}</td><td>{row["date"]}</td>'
                       f'<td>{html.escape(row["change"])}</td></tr>' for row in CHANGES)
     payload = json_text(data).replace("<", "\\u003c")
-    brand = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Structural analysis module analysis</title><style>{brand}
+<title>Structural analysis module analysis</title>
+<link rel="stylesheet" href="../../../api/_assets/brand.css"><style>
 body{{margin:0;background:var(--bg,#f5f7fa);color:var(--ink,#142838);font-family:system-ui,sans-serif;line-height:1.6}}
 main{{max-width:1100px;margin:auto;padding:2rem}}h1,h2,h3{{line-height:1.25}}h2{{margin-top:2.5rem}}
 table{{width:100%;border-collapse:collapse;font-size:.9rem}}td,th{{padding:.6rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--edge)}}
@@ -266,7 +270,7 @@ code{{overflow-wrap:anywhere}}.table-wrap{{overflow:auto}}.equation,details{{pad
 <p>The beam has a uniform axial term and equal bending contributions at the positive corner. The opposite corner retains positive stress because the axial term exceeds the sum of the reversed bending terms [B]. No allowable stress or design utilization is calculated. The column load is a bifurcation eigenvalue for the ideal case; it is not compared with a factored design load [C].</p>
 <h2 id="s6">6. Key Findings</h2>
 <p>The worked functions reproduce the independent mechanics values within the roundoff-only criterion for the synthetic cases [I]. This establishes unit conversion, bending-term magnitudes and reproduction of the prescribed module signs at the stated points, plus inverse-square effective-length scaling. Right-hand-rule sign qualification and general member design conformity remain NOT_EVALUATED.</p>
-<p>Review found that transverse plate stress sigma_y was accepted but omitted from utilization. The method now raises ValueError for nonzero sigma_y, and the regression demonstrates rejection before any utilization is returned [F, I]. This rejection also propagates through panel, grillage and custom parametric-sweep callers that pass nonzero transverse stress. The default sweep removes the two unsupported biaxial load cases and completes 648 cases using four axial or axial-plus-shear loads. The registered workflow example replaces its transverse load with an axial-plus-shear load and retains eight cases. These are software output checks, not design-code qualification. Existing zero-transverse-stress behavior is retained.</p>
+<p>Review found that transverse plate stress sigma_y was accepted but omitted from utilization. The method now raises ValueError for nonzero sigma_y, and the regression demonstrates rejection before any utilization is returned [F, I]. This rejection also propagates through panel, grillage and custom parametric-sweep callers that pass nonzero transverse stress. The default sweep removes the two unsupported biaxial load cases and completes 648 cases using four axial or axial-plus-shear loads. The registered workflow example replaces its transverse load with an axial-plus-shear load and retains eight cases; its workflow-API reference hashes and the 648-case retained demo outputs are regenerated. Removing unsupported loads from the default was chosen over emitting NOT_EVALUATED rows so every default row retains a computed utilization and the existing PASS/FAIL schema. Explicit custom biaxial sweeps still raise; no biaxial capacity is implied. These are software output checks, not design-code qualification. Existing zero-transverse-stress behavior is retained.</p>
 <h2 id="s7">7. Limitations and Not Covered</h2>
 <p>All code-derived plate resistance, column reduction and member capacities remain NOT_EVALUATED. Source editions, clause applicability, factors, section class, imperfections, residual stress, effective lengths and independent published capacity examples are absent. No numerical value from a licensed publication is reproduced or inferred.</p>
 <p>The plate elastic aspect-ratio expression is approximate and does not search longitudinal mode numbers. The combined plate calculation supports no nonzero transverse stress. The column reduction routine accepts an unknown curve by silently selecting its default. The existing simplified linear combined-capacity formula can cancel signed moment contributions and omits axial tension from interaction [F, G]. These unresolved methods are inventoried, not qualified or silently corrected.</p>
@@ -280,6 +284,7 @@ code{{overflow-wrap:anywhere}}.table-wrap{{overflow:auto}}.equation,details{{pad
 <p>[C] Textbook basis: <cite>Mechanics of Materials in SI Units</cite>, tenth edition (2018), section 13.2, Ideal Column with Pin Supports. The homogeneous elastic beam-column equation, pin-ended sine eigenfunction and length-doubling comparison are independently derived here. Edition and section titles are confirmed by the <a href="https://www.pearson.com/nl/en_NL/higher-education/subject-catalogue/engineering/mechanics-of-material-hibbeler.html">publisher contents</a>; no licensed example values are reproduced.</p>
 <p>[D] SI prefix definitions: mega denotes 10⁶ and milli denotes 10⁻³. A pascal is N/m²; consequently N/mm² is MPa. Percent denotes one hundredth. These are unit identities, not empirical or code factors.</p>
 <p>[E] stress_calculator.py: StressCalculator; [F] buckling.py: PlateBucklingAnalyzer and ColumnBucklingAnalyzer; [G] capacity.py: MemberCapacityChecker; [H] models.py: StressState and geometry/material dataclasses; [I] the two hand-value/report test files and the existing buckling/capacity and structural unit tests. The exact repository sources are pinned by digest below. Standard labels in source code are identifiers, not independently verified citations or qualification evidence.</p>
+<p>The registered workflow is cited as <code>tests/workflows/test_durable_workflows.py::test_workflow_registry[buckling-parametric]</code>; its shared registry bytes are outside the calculation basis. The linked shared stylesheet controls presentation only and is not byte-bound.</p>
 <details><summary>Exact source-byte register</summary><ul>{provenance}</ul></details>
 <p>Regenerate with <code>PYTHONPATH=src python scripts/reports/build_structural_analysis_module_report.py --scratch "$TMPDIR/structural-analysis"</code>. NumPy is required. Scratch must resolve outside the checkout; calculations are in memory and no intermediates are written. Use <code>--output-dir</code> for an independent delivery directory. The manifest hashes the three other deliverables and all listed sources; its own digest is intentionally excluded to avoid recursive hashing.</p>
 <details id="changes-panel"><summary>Engineering changes</summary><p>{html.escape(CHANGES[-1]["change"])}</p></details>
@@ -309,8 +314,9 @@ No solver is used. Calculations are in memory; no intermediate files are written
 The builder rejects scratch inside the checkout before writing output.
 
 The synthetic input basis and qualification criteria are revision A, dated
-2026-10-28. Report revision B, dated 2026-11-06, clarifies the moment-sign limits
-and records the supported sweep and workflow loads. `changes.json` records each
+2026-10-28. Report revision C, dated 2026-11-06, aligns downstream consumers
+with the supported sweep and workflow loads and narrows source-byte bindings.
+The shared stylesheet is linked for presentation; its bytes are not pinned. `changes.json` records each
 revision cause. `manifest.json` binds source
 bytes and the other three artifacts by SHA-256; it excludes its own recursive
 digest. Two independent builds are compared with the committed deliverables by

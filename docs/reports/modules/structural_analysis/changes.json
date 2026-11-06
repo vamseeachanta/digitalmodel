@@ -8,5 +8,10 @@
     "change": "The default sweep and registered example use supported axial and shear loads so output remains available. The beam moment sign definition and magnitude-only qualification are clarified; the public-method inventory is guarded against source changes.",
     "date": "2026-11-06",
     "revision": "B"
+  },
+  {
+    "change": "Workflow reference hashes, test citations and retained demo outputs are aligned with supported loads. Unsupported CLI transverse stress gives an option error. Source bindings cover the calculation and dedicated evidence; shared presentation and registry files are referenced without byte bindings.",
+    "date": "2026-11-06",
+    "revision": "C"
   }
 ]

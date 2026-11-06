@@ -283,3 +283,43 @@ def test_only_named_report_deliverables_are_retained():
             cwd=ROOT, env=environment, capture_output=True, check=False,
         )
         assert result.returncode == (0 if name == "unexpected.txt" else 1)
+
+
+@pytest.mark.parametrize("shared", [
+    "tests/workflows/test_durable_workflows.py",
+    "src/digitalmodel/codes.py",
+    "docs/api/_assets/brand.css",
+])
+def test_unrelated_shared_edits_do_not_change_report(tmp_path, monkeypatch, shared):
+    """Only calculation inputs and dedicated evidence belong in byte bindings."""
+    build = builder()
+    shadow = tmp_path / "source"
+    for name in set(build.SOURCES) | {shared}:
+        target = shadow / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / name).read_bytes())
+    monkeypatch.setattr(build, "ROOT", shadow)
+    before = build.render(tmp_path / "scratch")
+    with (shadow / shared).open("a", encoding="utf-8") as stream:
+        stream.write("\n/* unrelated presentation or registry edit */\n")
+    assert build.render(tmp_path / "scratch") == before
+    assert shared not in build.SOURCES
+
+
+def test_report_retention_has_one_shared_parent_block():
+    """Later broad exclusions must not override named module deliverables."""
+    lines = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    start = lines.index("# BEGIN shared module-report retention rules")
+    end = lines.index("# END shared module-report retention rules")
+    parent = "docs/reports/modules/"
+    opening = [i for i, line in enumerate(lines)
+               if line.removeprefix("!/").removeprefix("!") == parent
+               and line.startswith("!")]
+    exclusion = [i for i, line in enumerate(lines)
+                 if line.removeprefix("/") == parent + "*"]
+    assert len(opening) == len(exclusion) == 1
+    assert start < opening[0] < exclusion[0] < end
+    exceptions = [i for i, line in enumerate(lines)
+                  if line.startswith("!") and line[1:].removeprefix("/").startswith(parent)
+                  and i != opening[0]]
+    assert all(exclusion[0] < i < end for i in exceptions)

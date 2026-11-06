@@ -157,56 +157,6 @@ body {
 .status-fail { color: var(--clr-danger); font-weight: 700; }
 .status-marginal { color: var(--clr-warning); font-weight: 700; }
 
-/* ── Live Mode Teaser ───────────────────────────────────────── */
-.live-mode-teaser {
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
-    color: white;
-    padding: 2rem 2.5rem;
-    border-radius: 8px;
-    margin: 2rem 0;
-    position: relative;
-    overflow: hidden;
-}
-.live-mode-teaser::before {
-    content: 'LIVE';
-    position: absolute;
-    top: 1rem; right: 1.5rem;
-    background: var(--clr-danger);
-    color: white;
-    padding: 0.2rem 0.8rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    animation: pulse-live 2s infinite;
-}
-@keyframes pulse-live {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
-.live-mode-teaser h3 {
-    color: var(--clr-accent);
-    font-size: 1.15rem;
-    margin-bottom: 0.8rem;
-}
-.live-mode-teaser p {
-    color: rgba(255,255,255,0.85);
-    font-size: 0.95rem;
-    line-height: 1.7;
-}
-.live-mode-teaser .cta {
-    display: inline-block;
-    margin-top: 1rem;
-    background: var(--clr-accent);
-    color: white;
-    padding: 0.6rem 1.5rem;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-
 /* ── Footer ─────────────────────────────────────────────────── */
 .report-footer {
     border-top: 2px solid var(--clr-border);
@@ -227,7 +177,6 @@ body {
     .report-header { padding: 1.5rem 2rem; }
     .report-body { padding: 1rem 2rem; }
     .chart-container { break-inside: avoid; page-break-inside: avoid; }
-    .live-mode-teaser { break-inside: avoid; }
     .no-print { display: none !important; }
     @page { margin: 1.5cm; }
 }
@@ -238,9 +187,9 @@ body {
 <div class="report-header">
     <div class="brand">digitalmodel — Engineering Intelligence</div>
     <h1>Ship Hull Plate Buckling — Parametric Utility Curves</h1>
-    <div class="subtitle">Grade A / AH36 / EH40 unstiffened plate fields — 972 cases, DNV-RP-C201</div>
-    <div class="case-badge">972 parametric cases analysed overnight</div>
-    <div class="meta">Generated 2026-06-26 12:23 UTC · ship_plate_buckling</div>
+    <div class="subtitle">Grade A / AH36 / EH40 unstiffened plate fields — 648 cases, DNV-RP-C201</div>
+    <div class="case-badge">648 parametric cases analysed overnight</div>
+    <div class="meta">Generated 2026-11-06 22:44 UTC · ship_plate_buckling</div>
 </div>
 
 <div class="report-body">
@@ -249,7 +198,7 @@ body {
             <h2>Methodology</h2>
             
         <p>Each case checks an unstiffened rectangular plate field for in-plane
-        buckling under combined axial, transverse and shear stress, following
+        buckling under axial and shear stress with zero transverse stress, following
         <strong>DNV-RP-C201</strong> (Buckling Strength of Plated Structures).</p>
         <ul>
           <li><strong>Elastic buckling</strong>: classical plate theory,
@@ -273,10 +222,12 @@ body {
             <h3>Applicable Codes & Standards</h3><ul><li>DNV-RP-C201 (2010)</li><li>IACS UR W11 (hull steel grades)</li></ul>
         </div>
         
+<div class="section"><h2>Summary</h2><p>The supported default contains 648 cases with zero transverse stress. The dispositions are software screening results; independent design-code qualification is not established.</p></div>
+<div class="section"><h2>Revision history</h2><table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead><tbody><tr><td>A</td><td>2026-11-06</td><td>Regenerate 648 supported cases; remove unsupported transverse-load dispositions from the retained output.</td></tr></tbody></table></div>
 
         <div class="section">
             <h2>Assumptions & Limitations</h2>
-            <ul><li>Simply-supported plate field on four edges (no rotational restraint credited).</li><li>Uniform in-plane compression across the loaded edge; no lateral pressure.</li><li>Marine grades Grade A / AH36 / EH40 with E = 206 GPa, Poisson's ratio 0.3.</li><li>Effective width of attached plating equals the stiffener spacing — the stiffener itself is NOT modelled; this is unstiffened plate-field buckling only.</li><li>Material factor gamma_M = 1.15; results are preliminary screening estimates and require review by a qualified engineer.</li><li>Charts reference a 800 mm breadth x 2400 mm span plate under sigma_x=150, sigma_y=0, tau=0 MPa.</li></ul>
+            <ul><li>Simply-supported plate field on four edges (no rotational restraint credited).</li><li>Nonzero transverse stress is not implemented; custom biaxial sweeps raise an error.</li><li>Uniform in-plane compression across the loaded edge; no lateral pressure.</li><li>Marine grades Grade A / AH36 / EH40 with E = 206 GPa, Poisson's ratio 0.3.</li><li>Effective width of attached plating equals the stiffener spacing — the stiffener itself is NOT modelled; this is unstiffened plate-field buckling only.</li><li>Material factor gamma_M = 1.15; results are preliminary screening estimates and require review by a qualified engineer.</li><li>Charts reference a 800 mm breadth x 2400 mm span plate under sigma_x=150, sigma_y=0, tau=0 MPa.</li></ul>
         </div>
         
 

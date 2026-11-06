@@ -1,111 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Structural analysis module analysis</title><style>/* ===========================================================================
-   digitalmodel — canonical brand tokens  (SINGLE SOURCE OF TRUTH)
-   Ref: digitalmodel#1471 (epic) / #1472
-   ---------------------------------------------------------------------------
-   Do NOT hard-code these hex values in a page's own :root{}. Instead:
-       <link rel="stylesheet" href="../_assets/brand.css">
-   and consume the vars (var(--brand), var(--accent), ...). Change a brand
-   colour HERE, once, and every page follows. A CI guard (#1476) will fail
-   pages that redefine these tokens inline.
-
-   Canonical palette
-     brand      #0b3d91  (deep navy — primary brand)     dark: #84a9e8
-     accent     #0f8a7e  (teal — interactive chrome ONLY, not a data series)
-                                                          dark: #3fb6c9
-     status     go #12905a · caution #c07d12 · nogo #d8443f
-                dark: go #2fce8f · caution #f4b93a · nogo #ff6b6b
-     container  --wrap 1240px  (console width; use a narrower width for prose)
-
-   Page-specific data-series colours (e.g. per-DOF trace hues) belong in the
-   PAGE, not here — keep this file to brand identity + shared primitives.
-   =========================================================================== */
-
-:root{
-  /* surfaces */
-  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
-  /* text */
-  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
-  /* brand + accent (accent = interactive chrome, NOT a data-series colour) */
-  --brand:#0b3d91; --accent:#0f8a7e;
-  /* status */
-  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
-  /* shape + layout */
-  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
-  --r:12px; --wrap:1240px;
-}
-
-@media (prefers-color-scheme: dark){
-  :root{
-    --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
-    --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
-    --brand:#84a9e8; --accent:#3fb6c9;
-    --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
-    --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
-  }
-}
-
-/* explicit theme overrides win over the media default (toggle stamps data-theme) */
-:root[data-theme="light"]{
-  --ground:#eef3fa; --panel:#ffffff; --panel-2:#f3f6fc; --edge:#dbe4f0;
-  --ink:#13233f; --muted:#5b6b86; --faint:#8593ab; --grid:rgba(19,35,63,.09);
-  --brand:#0b3d91; --accent:#0f8a7e;
-  --go:#12905a; --caution:#c07d12; --nogo:#d8443f;
-  --shadow:0 1px 2px rgba(19,35,63,.06), 0 10px 26px rgba(19,35,63,.09);
-}
-:root[data-theme="dark"]{
-  --ground:#0b1826; --panel:#10222f; --panel-2:#16293733; --edge:rgba(120,160,190,.17);
-  --ink:#e6eef6; --muted:#93a8bd; --faint:#66809a; --grid:rgba(140,170,200,.12);
-  --brand:#84a9e8; --accent:#3fb6c9;
-  --go:#2fce8f; --caution:#f4b93a; --nogo:#ff6b6b;
-  --shadow:0 1px 0 rgba(255,255,255,.03), 0 12px 30px rgba(0,0,0,.4);
-}
-
-/* ---- back-compat aliases -------------------------------------------------
-   Legacy pages used different NAMES for the same brand roles. Aliasing them to
-   the canonical vars lets a migrated page drop its own :root and inherit brand
-   values (light/dark aware) unchanged. New pages: use the canonical names. #1474
-   NOTE: linking brand.css also enables dark-mode via @media; a light-only legacy
-   page should pin <html data-theme="light"> during migration unless it tokenises
-   every colour. */
-:root{
-  --navy:var(--brand);  --teal:var(--accent);
-  --line:var(--edge);   --soft:var(--panel-2);  --bg:var(--ground);
-  --mut:var(--muted);   --good:var(--go);  --warn:var(--caution);  --red:var(--nogo);
-}
-
-/* ---- shared primitives -------------------------------------------------- */
-*{box-sizing:border-box}
-body{
-  margin:0; background:var(--ground); color:var(--ink);
-  font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-  line-height:1.55; -webkit-font-smoothing:antialiased;
-}
-.mono{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
-.lbl{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:600}
-
-/* brand-home link: wrap a page's logo/kicker in <a class="brandmark" href="../capabilities/">
-   so the brand mark always routes back to the capabilities index */
-a.brandmark{text-decoration:none; color:inherit; display:inline-flex; align-items:center; border-radius:6px}
-a.brandmark:hover .lbl{color:var(--ink)}
-a.brandmark:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
-
-/* ---- accessibility baseline (#1475) --------------------------------------
-   Purely additive: every page that links brand.css gets a consistent, visible
-   keyboard-focus indicator (many pages strip the native ring via all:unset) and
-   a .sr-only helper for text alternatives. :where() keeps specificity 0 so a
-   page's own focus styles always win. No effect on the default (unfocused) render. */
-:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible{
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-.sr-only{
-  position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
-  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
-}
-
+<title>Structural analysis module analysis</title>
+<link rel="stylesheet" href="../../../api/_assets/brand.css"><style>
 body{margin:0;background:var(--bg,#f5f7fa);color:var(--ink,#142838);font-family:system-ui,sans-serif;line-height:1.6}
 main{max-width:1100px;margin:auto;padding:2rem}h1,h2,h3{line-height:1.25}h2{margin-top:2.5rem}
 table{width:100%;border-collapse:collapse;font-size:.9rem}td,th{padding:.6rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--edge)}
@@ -113,13 +9,13 @@ code{overflow-wrap:anywhere}.table-wrap{overflow:auto}.equation,details{padding:
 .status{border-left:4px solid var(--brand);padding-left:1rem}caption,figcaption{caption-side:bottom;text-align:left;padding:.6rem 0}
 @media print{main{padding:0}table{font-size:.75rem}h2{break-after:avoid}tr{break-inside:avoid}}
 </style></head><body class="hs-doc"><main>
-<header><p>Engineering mechanics · Synthetic worked basis · Revision B</p>
+<header><p>Engineering mechanics · Synthetic worked basis · Revision C</p>
 <h1>Structural analysis module analysis</h1><p>Buckling, capacity and stress routines: units, worked mechanics and limits of design use.</p></header>
 <h2 id="s1">1. Executive Summary</h2>
 <p>The synthetic rectangular beam and ideal pin-ended column are calculated through the public module functions. The beam stress is compared with section equilibrium and integrated section properties; the column load is compared with the sine-mode eigenvalue [A–C]. The calculated values and units are presented in the Detailed Results table.</p>
 <p>The beam stress is 16.0 MPa at (+y, +z) and 4.0 MPa at (−y, −z). The separate ideal pin-ended critical load is 493480.2 N [A–C, E, F]. These values reproduce the independent mechanics expressions under the stated roundoff criterion [I]; design acceptance remains NOT_EVALUATED.</p>
 <p class="status">IDEAL_MECHANICS_CHECKED applies only to the two worked expressions and their stated cases. Beam bending-term magnitudes are independently checked; the implemented moment signs are prescribed and are not independently qualified against the right-hand rule. All source-unqualified code capacities are NOT_EVALUATED for design use. No standard buckling curve, reduction factor or combined-capacity rule is qualified by these examples [E–H].</p>
-<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Independent synthetic beam and ideal-column calculations, units, method limits and reproducible report artifacts are added. Nonzero transverse plate stress is rejected because its effect was previously omitted from the returned utilization.</td></tr><tr><td>B</td><td>2026-11-06</td><td>The default sweep and registered example use supported axial and shear loads so output remains available. The beam moment sign definition and magnitude-only qualification are clarified; the public-method inventory is guarded against source changes.</td></tr></tbody>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Independent synthetic beam and ideal-column calculations, units, method limits and reproducible report artifacts are added. Nonzero transverse plate stress is rejected because its effect was previously omitted from the returned utilization.</td></tr><tr><td>B</td><td>2026-11-06</td><td>The default sweep and registered example use supported axial and shear loads so output remains available. The beam moment sign definition and magnitude-only qualification are clarified; the public-method inventory is guarded against source changes.</td></tr><tr><td>C</td><td>2026-11-06</td><td>Workflow reference hashes, test citations and retained demo outputs are aligned with supported loads. Unsupported CLI transverse stress gives an option error. Source bindings cover the calculation and dedicated evidence; shared presentation and registry files are referenced without byte bindings.</td></tr></tbody>
 <caption>Revision history for the issued synthetic module analysis.</caption></table>
 <h2 id="s2">2. Introduction</h2>
 <p>The review covers the public stress-state, stress-calculator, plate-buckling, column-buckling and member-capacity methods listed below [E–H]. Command-line wrappers, corrosion/metal-loss extensions, hull material tables and licensed solver workflows are outside the review. No solver is imported or executed by this builder.</p>
@@ -191,7 +87,7 @@ code{overflow-wrap:anywhere}.table-wrap{overflow:auto}.equation,details{padding:
 <p>The beam has a uniform axial term and equal bending contributions at the positive corner. The opposite corner retains positive stress because the axial term exceeds the sum of the reversed bending terms [B]. No allowable stress or design utilization is calculated. The column load is a bifurcation eigenvalue for the ideal case; it is not compared with a factored design load [C].</p>
 <h2 id="s6">6. Key Findings</h2>
 <p>The worked functions reproduce the independent mechanics values within the roundoff-only criterion for the synthetic cases [I]. This establishes unit conversion, bending-term magnitudes and reproduction of the prescribed module signs at the stated points, plus inverse-square effective-length scaling. Right-hand-rule sign qualification and general member design conformity remain NOT_EVALUATED.</p>
-<p>Review found that transverse plate stress sigma_y was accepted but omitted from utilization. The method now raises ValueError for nonzero sigma_y, and the regression demonstrates rejection before any utilization is returned [F, I]. This rejection also propagates through panel, grillage and custom parametric-sweep callers that pass nonzero transverse stress. The default sweep removes the two unsupported biaxial load cases and completes 648 cases using four axial or axial-plus-shear loads. The registered workflow example replaces its transverse load with an axial-plus-shear load and retains eight cases. These are software output checks, not design-code qualification. Existing zero-transverse-stress behavior is retained.</p>
+<p>Review found that transverse plate stress sigma_y was accepted but omitted from utilization. The method now raises ValueError for nonzero sigma_y, and the regression demonstrates rejection before any utilization is returned [F, I]. This rejection also propagates through panel, grillage and custom parametric-sweep callers that pass nonzero transverse stress. The default sweep removes the two unsupported biaxial load cases and completes 648 cases using four axial or axial-plus-shear loads. The registered workflow example replaces its transverse load with an axial-plus-shear load and retains eight cases; its workflow-API reference hashes and the 648-case retained demo outputs are regenerated. Removing unsupported loads from the default was chosen over emitting NOT_EVALUATED rows so every default row retains a computed utilization and the existing PASS/FAIL schema. Explicit custom biaxial sweeps still raise; no biaxial capacity is implied. These are software output checks, not design-code qualification. Existing zero-transverse-stress behavior is retained.</p>
 <h2 id="s7">7. Limitations and Not Covered</h2>
 <p>All code-derived plate resistance, column reduction and member capacities remain NOT_EVALUATED. Source editions, clause applicability, factors, section class, imperfections, residual stress, effective lengths and independent published capacity examples are absent. No numerical value from a licensed publication is reproduced or inferred.</p>
 <p>The plate elastic aspect-ratio expression is approximate and does not search longitudinal mode numbers. The combined plate calculation supports no nonzero transverse stress. The column reduction routine accepts an unknown curve by silently selecting its default. The existing simplified linear combined-capacity formula can cancel signed moment contributions and omits axial tension from interaction [F, G]. These unresolved methods are inventoried, not qualified or silently corrected.</p>
@@ -205,25 +101,23 @@ code{overflow-wrap:anywhere}.table-wrap{overflow:auto}.equation,details{padding:
 <p>[C] Textbook basis: <cite>Mechanics of Materials in SI Units</cite>, tenth edition (2018), section 13.2, Ideal Column with Pin Supports. The homogeneous elastic beam-column equation, pin-ended sine eigenfunction and length-doubling comparison are independently derived here. Edition and section titles are confirmed by the <a href="https://www.pearson.com/nl/en_NL/higher-education/subject-catalogue/engineering/mechanics-of-material-hibbeler.html">publisher contents</a>; no licensed example values are reproduced.</p>
 <p>[D] SI prefix definitions: mega denotes 10⁶ and milli denotes 10⁻³. A pascal is N/m²; consequently N/mm² is MPa. Percent denotes one hundredth. These are unit identities, not empirical or code factors.</p>
 <p>[E] stress_calculator.py: StressCalculator; [F] buckling.py: PlateBucklingAnalyzer and ColumnBucklingAnalyzer; [G] capacity.py: MemberCapacityChecker; [H] models.py: StressState and geometry/material dataclasses; [I] the two hand-value/report test files and the existing buckling/capacity and structural unit tests. The exact repository sources are pinned by digest below. Standard labels in source code are identifiers, not independently verified citations or qualification evidence.</p>
-<details><summary>Exact source-byte register</summary><ul><li><code>scripts/reports/build_structural_analysis_module_report.py</code>; SHA-256: d144c2d4605d6060ea86bed2e1dc654ba6eb0240a40bb584c53ce367205012a9</li>
+<p>The registered workflow is cited as <code>tests/workflows/test_durable_workflows.py::test_workflow_registry[buckling-parametric]</code>; its shared registry bytes are outside the calculation basis. The linked shared stylesheet controls presentation only and is not byte-bound.</p>
+<details><summary>Exact source-byte register</summary><ul><li><code>scripts/reports/build_structural_analysis_module_report.py</code>; SHA-256: 80d4d45a85677999e85fce082a9470a0b7e9e4ff578e18167db6556dc811d394</li>
 <li><code>src/digitalmodel/structural/structural_analysis/__init__.py</code>; SHA-256: ef3283fb44c2309252a92df3d7c935804d38eb1d0134b1bf16e9382b14b209c5</li>
 <li><code>src/digitalmodel/structural/structural_analysis/models.py</code>; SHA-256: 64eea0ba11ce592b4212723e4ef7905f654ffa98966a3b2617ad2c0a3e495c2e</li>
 <li><code>src/digitalmodel/structural/structural_analysis/stress_calculator.py</code>; SHA-256: 643438f6746021ae5d222148fe6c09d5556d15f8360f2972a14e57aea098c94b</li>
 <li><code>src/digitalmodel/structural/structural_analysis/buckling.py</code>; SHA-256: 1f2d965a30d1caddb451a799032c71f0d12334be5d9b8fc1e7029afe52f8e00c</li>
 <li><code>src/digitalmodel/structural/structural_analysis/capacity.py</code>; SHA-256: 47f00ff3cb79744360ebe97528f51232fd84e4285b66b4d19ac4719aa4be2ec1</li>
-<li><code>src/digitalmodel/codes.py</code>; SHA-256: 339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54</li>
 <li><code>tests/structural/structural_analysis/test_buckling_capacity.py</code>; SHA-256: c118b3ed37c6bdf2fa8a5ca697cf49e16ffb14115dfd33f92345673dd76e2df2</li>
 <li><code>tests/structural/structural_analysis/test_structural_analysis_unit.py</code>; SHA-256: e1cf77f9358e1b20a59202646f2386198feaa6b63f9753f7e50c7ac75ee549c4</li>
 <li><code>tests/structural/structural_analysis/test_module_report_hand_values.py</code>; SHA-256: eb95477847f1ad468cea8d373094e288371cb1b008795641cbdf1cd9680379fe</li>
 <li><code>tests/structural/structural_analysis/test_grillage_buckling.py</code>; SHA-256: d0663cf14555cb9ae2472b08e40f34d04e0f2e57cdbe8799a25359dd48ab8417</li>
 <li><code>src/digitalmodel/structural/buckling_parametric.py</code>; SHA-256: 97340aaa3c98d69ac9e3c4ea3383a0e9d3a5045e6059a6e5936a6f3729a53db0</li>
-<li><code>tests/structural/test_buckling_parametric.py</code>; SHA-256: 885915b994ef9607538ff7826edc8bb78f256a30e55345f1bf916ba1398b641c</li>
+<li><code>tests/structural/test_buckling_parametric.py</code>; SHA-256: 39e5931860049c6befb4c077f17a5973c8ef317e684011577c6747032f4dea2c</li>
 <li><code>examples/workflows/buckling-parametric/input.yml</code>; SHA-256: 5c2280b7189663ec5a3c581cdb600497afc0f885fa067c799d6903d6988c447f</li>
-<li><code>tests/workflows/test_durable_workflows.py</code>; SHA-256: 9285304d8a2188f762196412f3ee0ed1989c7e40291b772afcda4ed63c7866d4</li>
-<li><code>tests/reporting/test_structural_analysis_module_report.py</code>; SHA-256: f926bb4490795e235ca685b052c6862e506e367cc39b2aeb4cfe2fdb3111a0ad</li>
-<li><code>docs/api/_assets/brand.css</code>; SHA-256: a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a</li></ul></details>
+<li><code>tests/reporting/test_structural_analysis_module_report.py</code>; SHA-256: e9118b5974c66f06f16965330434afa549153f5a5f96a7b283e59f386585a87c</li></ul></details>
 <p>Regenerate with <code>PYTHONPATH=src python scripts/reports/build_structural_analysis_module_report.py --scratch "$TMPDIR/structural-analysis"</code>. NumPy is required. Scratch must resolve outside the checkout; calculations are in memory and no intermediates are written. Use <code>--output-dir</code> for an independent delivery directory. The manifest hashes the three other deliverables and all listed sources; its own digest is intentionally excluded to avoid recursive hashing.</p>
-<details id="changes-panel"><summary>Engineering changes</summary><p>The default sweep and registered example use supported axial and shear loads so output remains available. The beam moment sign definition and magnitude-only qualification are clarified; the public-method inventory is guarded against source changes.</p></details>
+<details id="changes-panel"><summary>Engineering changes</summary><p>Workflow reference hashes, test citations and retained demo outputs are aligned with supported loads. Unsupported CLI transverse stress gives an option error. Source bindings cover the calculation and dedicated evidence; shared presentation and registry files are referenced without byte bindings.</p></details>
 <h2 id="s10">10. Acronyms and Review Notes</h2>
 <p>SI: International System of Units. MPa: megapascal. API: application programming interface. E: elastic modulus; I: second moment of area; L: effective length; P: axial bifurcation load; N: applied axial force; M: bending moment. Unit 1 denotes a dimensionless value.</p>
 <p>Review status: independent design-code qualification is NOT_EVALUATED. Numerical assertions, deterministic rebuilds and digest checks establish only the explicitly tested software behavior. The way forward is the source and design-evidence assessment specified above.</p>

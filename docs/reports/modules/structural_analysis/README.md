@@ -14,8 +14,9 @@ No solver is used. Calculations are in memory; no intermediate files are written
 The builder rejects scratch inside the checkout before writing output.
 
 The synthetic input basis and qualification criteria are revision A, dated
-2026-10-28. Report revision B, dated 2026-11-06, clarifies the moment-sign limits
-and records the supported sweep and workflow loads. `changes.json` records each
+2026-10-28. Report revision C, dated 2026-11-06, aligns downstream consumers
+with the supported sweep and workflow loads and narrows source-byte bindings.
+The shared stylesheet is linked for presentation; its bytes are not pinned. `changes.json` records each
 revision cause. `manifest.json` binds source
 bytes and the other three artifacts by SHA-256; it excludes its own recursive
 digest. Two independent builds are compared with the committed deliverables by

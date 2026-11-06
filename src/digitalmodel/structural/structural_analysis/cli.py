@@ -101,13 +101,19 @@ def calculate_stress(sigma_x, sigma_y, sigma_z, tau_xy, tau_xz, tau_yz, material
 @click.option('--width', type=float, required=True, help='Plate width b (mm)')
 @click.option('--thickness', type=float, required=True, help='Plate thickness t (mm)')
 @click.option('--sigma-x', type=float, required=True, help='Compressive stress (MPa)')
-@click.option('--sigma-y', type=float, default=0.0, help='Transverse stress (MPa)')
+@click.option('--sigma-y', type=float, default=0.0, help='Transverse stress (MPa); only zero is supported')
 @click.option('--tau', type=float, default=0.0, help='Shear stress (MPa)')
 @click.option('--material', type=click.Choice(['S275', 'S355', 'S420']), default='S355')
 @click.option('--gamma-m', type=float, default=1.15, help='Material safety factor')
 @click.option('--output', '-o', type=click.Path(), help='Output file (JSON)')
 def check_plate_buckling(length, width, thickness, sigma_x, sigma_y, tau, material, gamma_m, output):
     """Check plate buckling per DNV-RP-C201"""
+
+    if sigma_y != 0.0:
+        raise click.BadParameter(
+            "Nonzero transverse stress is not implemented for plate buckling",
+            param_hint="'--sigma-y'",
+        )
 
     mat = MATERIALS[material]
     analyzer = PlateBucklingAnalyzer(mat)

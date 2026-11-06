@@ -11,8 +11,7 @@ builds an interactive Plotly management report with utility curves.
 
 Run::
 
-    cd /mnt/local-analysis/digitalmodel
-    timeout 300 .venv/bin/python examples/demos/structural/ship_plate_buckling_parametric.py
+    PYTHONPATH=src python examples/demos/structural/ship_plate_buckling_parametric.py
 """
 
 from __future__ import annotations
@@ -26,7 +25,7 @@ import plotly.graph_objects as go
 # --- Repo / report-builder imports -----------------------------------------
 HERE = Path(__file__).resolve().parent
 OUTPUT_DIR = HERE / "output"
-sys.path.insert(0, "/mnt/local-analysis/digitalmodel/examples/demos/gtm")
+sys.path.insert(0, str(HERE.parent / "gtm"))
 from report_template import GTMReportBuilder  # noqa: E402
 
 from digitalmodel.structural.buckling_parametric import (  # noqa: E402
@@ -196,13 +195,13 @@ def chart_interaction(grade="AH36", width=REFERENCE_WIDTH, length=REFERENCE_LENG
     return fig
 
 
-def main() -> None:
+def main(output_dir: Path = OUTPUT_DIR) -> None:
     cfg = DEFAULT_SHIP_PLATE_SWEEP
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     rows = run_sweep(cfg)
     curves = utility_curves(cfg)
-    paths = write_outputs(rows, curves, OUTPUT_DIR, gamma_m=cfg.gamma_m, timestamp=ts)
+    paths = write_outputs(rows, curves, output_dir, gamma_m=cfg.gamma_m, timestamp=ts)
 
     n_cases = len(rows)
     sx, sy, tau = REFERENCE_LOAD
@@ -226,7 +225,7 @@ def main() -> None:
     report.add_methodology(
         """
         <p>Each case checks an unstiffened rectangular plate field for in-plane
-        buckling under combined axial, transverse and shear stress, following
+        buckling under axial and shear stress with zero transverse stress, following
         <strong>DNV-RP-C201</strong> (Buckling Strength of Plated Structures).</p>
         <ul>
           <li><strong>Elastic buckling</strong>: classical plate theory,
@@ -250,9 +249,23 @@ def main() -> None:
         code_refs=["DNV-RP-C201 (2010)", "IACS UR W11 (hull steel grades)"],
     )
 
+    report.add_section(
+        "Summary",
+        f"<p>The supported default contains {n_cases} cases with zero transverse "
+        "stress. The dispositions are software screening results; independent "
+        "design-code qualification is not established.</p>",
+    )
+    report.add_section(
+        "Revision history",
+        "<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th>"
+        "</tr></thead><tbody><tr><td>A</td><td>2026-11-06</td>"
+        "<td>Regenerate 648 supported cases; remove unsupported transverse-load "
+        "dispositions from the retained output.</td></tr></tbody></table>",
+    )
     report.add_assumptions(
         [
             "Simply-supported plate field on four edges (no rotational restraint credited).",
+            "Nonzero transverse stress is not implemented; custom biaxial sweeps raise an error.",
             "Uniform in-plane compression across the loaded edge; no lateral pressure.",
             "Marine grades Grade A / AH36 / EH40 with E = 206 GPa, Poisson's ratio 0.3.",
             "Effective width of attached plating equals the stiffener spacing — the "
@@ -333,7 +346,7 @@ def main() -> None:
         """,
     )
 
-    out_html = OUTPUT_DIR / "ship_plate_buckling_report.html"
+    out_html = output_dir / "ship_plate_buckling_report.html"
     report.build(out_html)
 
     # --- Stdout summary -----------------------------------------------------
@@ -361,4 +374,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
+    main(output_dir=parser.parse_args().output_dir)

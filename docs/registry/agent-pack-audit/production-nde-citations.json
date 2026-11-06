@@ -927,7 +927,7 @@
         "pylife"
       ],
       "cited_node_ids": [
-        "tests/structural/test_buckling_parametric.py::test_default_sweep_case_count",
+        "tests/structural/test_buckling_parametric.py::test_default_sweep_completes_every_supported_case",
         "tests/structural/test_panel_buckling_parametric.py::test_n_cases_helper_matches_default",
         "tests/structural/test_panel_design_explorer.py::test_allowable_boundary_consistent",
         "tests/test_parametric_coordinator.py::TestCoordinatorCombined::test_combined_summary_has_both_domain_keys",

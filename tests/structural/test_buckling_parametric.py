@@ -154,3 +154,42 @@ def test_explicit_biaxial_sweep_is_rejected(tiny_cfg):
     tiny_cfg.load_cases = [(120.0, 60.0, 0.0)]
     with pytest.raises(ValueError, match="sigma_y"):
         run_sweep(tiny_cfg)
+
+
+
+def test_committed_plate_demo_matches_supported_default(tmp_path):
+    """Retained results, indices and CSV must come from the current sweep."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    output = root / "examples/demos/structural/output"
+    cfg = DEFAULT_SHIP_PLATE_SWEEP
+    fresh = write_outputs(run_sweep(cfg), utility_curves(cfg), tmp_path,
+                          gamma_m=cfg.gamma_m)
+    expected = json.loads(fresh["results_json"].read_text(encoding="utf-8"))
+    actual = json.loads((output / "results.json").read_text(encoding="utf-8"))
+    actual["meta"].pop("generated_at", None)
+    assert actual == expected
+    assert (output / "cases.csv").read_bytes() == fresh["cases_csv"].read_bytes()
+    page = (output / "ship_plate_buckling_report.html").read_text(encoding="utf-8")
+    assert "648 cases" in page
+    assert "Nonzero transverse stress is not implemented" in page
+
+
+def test_plate_demo_builds_outside_checkout(tmp_path):
+    """The documented producer must run from any checkout into job scratch."""
+    import importlib.util
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    script = root / "examples/demos/structural/ship_plate_buckling_parametric.py"
+    spec = importlib.util.spec_from_file_location("plate_demo", script)
+    demo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(demo)
+    demo.main(output_dir=tmp_path)
+    assert {path.name for path in tmp_path.iterdir()} == {
+        "cases.csv", "results.json", "ship_plate_buckling_report.html",
+    }
+    payload = json.loads((tmp_path / "results.json").read_text(encoding="utf-8"))
+    assert payload["meta"]["n_cases"] == 648
+    assert all(row["sigma_y"] == 0.0 for row in payload["lookup"])

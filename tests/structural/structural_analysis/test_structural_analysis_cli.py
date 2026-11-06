@@ -310,3 +310,19 @@ class TestCLIGeneral:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+@pytest.mark.parametrize("sigma_y", ["50", "-50"])
+def test_plate_cli_rejects_unsupported_transverse_stress(sigma_y):
+    """Unsupported transverse loading must be an option error before analysis."""
+    from click.testing import CliRunner
+    from digitalmodel.structural.structural_analysis.cli import cli
+
+    result = CliRunner().invoke(cli, [
+        "buckling-plate", "--length", "2000", "--width", "800",
+        "--thickness", "12", "--sigma-x", "100", "--sigma-y", sigma_y,
+    ])
+    assert result.exit_code == 2
+    assert "Invalid value for '--sigma-y'" in result.output
+    assert "Nonzero transverse stress is not implemented" in result.output
+    assert "Traceback" not in result.output

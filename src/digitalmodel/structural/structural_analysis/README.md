@@ -248,6 +248,8 @@ sf = STEEL_S420.yield_strength / vm
 ```
 
 ### Stiffened Panel Check
+
+Only zero transverse stress is supported. A nonzero `sigma_y` raises `ValueError`.
 ```python
 # Check panel between stiffeners
 plate = PlateGeometry(
@@ -260,7 +262,6 @@ analyzer = PlateBucklingAnalyzer(STEEL_S355)
 result = analyzer.check_plate_buckling(
     plate=plate,
     sigma_x=200,    # Compression
-    sigma_y=50,     # Transverse
     tau=40,         # Shear
     gamma_m=1.15
 )
