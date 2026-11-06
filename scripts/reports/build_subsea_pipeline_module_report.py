@@ -55,6 +55,11 @@ CHANGES = [
         "date": "2026-11-06",
         "change": "Deliverable protection rejects every name-surrogate reparse tag, including WSL symbolic links, while retaining cloud placeholder rebuilds. Inventory evidence now covers public async functions and methods as well as synchronous declarations.",
     },
+    {
+        "revision": "G",
+        "date": "2026-11-06",
+        "change": "Async inventory evidence requires its injection source to exist and explicitly checks that the synthetic function and method appear in both expected and collected declarations, preventing an empty exercise from passing.",
+    },
 ]
 
 # Synthetic inputs from bases A, B and C in the module docstring, respectively.

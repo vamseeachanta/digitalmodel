@@ -435,7 +435,7 @@ def test_rebuild_is_deterministic(tmp_path):
     )
     assert payload == build.build_payload()
     changes = json.loads((first / "changes.json").read_text(encoding="utf-8"))
-    assert len(changes) == 6
+    assert len(changes) == 7
     assert set(changes[0]) == {"revision", "date", "change"}
     for change in changes:
         for value in change.values():
@@ -481,6 +481,7 @@ def test_inventory_covers_public_methods_without_transferring_qualification(
     if include_async:
         original = Path.read_text
         target = ROOT / "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py"
+        assert target.is_file(), "The async inventory injection source is missing"
 
         def with_async_declarations(path, *args, **kwargs):
             text = original(path, *args, **kwargs)
@@ -508,7 +509,16 @@ def test_inventory_covers_public_methods_without_transferring_qualification(
                         method, (ast.FunctionDef, ast.AsyncFunctionDef)
                     ) and not method.name.startswith("_"):
                         expected.add((path, f"{node.name}.{method.name}"))
-    assert {(row["path"], row["symbol"]) for row in inventory} == expected
+    actual = {(row["path"], row["symbol"]) for row in inventory}
+    if include_async:
+        path = "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py"
+        for symbol in (
+            "untested_async_function",
+            "UntestedAsyncClass.untested_async_method",
+        ):
+            assert (path, symbol) in expected, f"Async expectation is missing: {symbol}"
+            assert (path, symbol) in actual, f"Async inventory entry is missing: {symbol}"
+    assert actual == expected
     assert all("line" not in row for row in inventory)
     assert {row["category"] for row in inventory} == {
         "geometry",
