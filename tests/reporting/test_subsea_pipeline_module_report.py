@@ -28,10 +28,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/reports/build_subsea_pipeline_module_report.py"
 REPORT = ROOT / "docs/reports/modules/subsea_pipeline"
 DELIVERABLES = {"index.html", "changes.json", "manifest.json", "README.md"}
-REBUILD = (
-    "PYTHONPATH=src python scripts/reports/build_subsea_pipeline_module_report.py "
-    '--scratch "$REPORT_SCRATCH"'
-)
+REBUILD = "PYTHONPATH=src python scripts/reports/build_subsea_pipeline_module_report.py"
 
 
 @pytest.fixture(params=["utf-8", "cp1252"], autouse=True)
@@ -156,17 +153,15 @@ def _assert_manifest(directory):
             f"Rebuild with {REBUILD}"
         )
     sources = set(manifest["sources"])
-    pipeline_sources = {
-        path.relative_to(ROOT).as_posix()
-        for path in (ROOT / "src/digitalmodel/subsea/pipeline").rglob("*.py")
-    }
-    assert pipeline_sources <= sources
-    assert {
+    assert sources == {
         SCRIPT.relative_to(ROOT).as_posix(),
+        "src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py",
+        "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+        "src/digitalmodel/subsea/pipeline/thermal_expansion.py",
+        "src/digitalmodel/units.py",
         "tests/subsea/pipeline/test_module_report_hand_values.py",
         "tests/reporting/test_subsea_pipeline_module_report.py",
-        "src/digitalmodel/units.py",
-    } <= sources
+    }
     for name, digest in manifest["sources"].items():
         assert not Path(name).is_absolute()
         assert digest == hashlib.sha256((ROOT / name).read_bytes()).hexdigest(), (
@@ -220,10 +215,11 @@ def test_rebuild_is_deterministic(tmp_path):
     )
     assert payload == build.build_payload()
     changes = json.loads((first / "changes.json").read_text(encoding="utf-8"))
-    assert len(changes) == 1
+    assert len(changes) == 2
     assert set(changes[0]) == {"revision", "date", "change"}
-    for value in changes[0].values():
-        assert value in summary
+    for change in changes:
+        for value in change.values():
+            assert value in summary
 
 
 def test_cli_manifest_matches_written_files(tmp_path):
@@ -239,8 +235,6 @@ def test_cli_manifest_matches_written_files(tmp_path):
         [
             sys.executable,
             str(SCRIPT),
-            "--scratch",
-            str(tmp_path / "cli-scratch"),
             "--output-dir",
             str(destination),
         ],
@@ -266,16 +260,17 @@ def test_inventory_covers_public_methods_without_transferring_qualification():
         path = source.relative_to(ROOT).as_posix()
         for node in ast.parse(source.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
-                expected.add((path, node.name, node.lineno))
+                expected.add((path, node.name))
             if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
                 for method in node.body:
                     if isinstance(
                         method, ast.FunctionDef
                     ) and not method.name.startswith("_"):
                         expected.add(
-                            (path, f"{node.name}.{method.name}", method.lineno)
+                            (path, f"{node.name}.{method.name}")
                         )
-    assert {(row["path"], row["symbol"], row["line"]) for row in inventory} == expected
+    assert {(row["path"], row["symbol"]) for row in inventory} == expected
+    assert all("line" not in row for row in inventory)
     assert {row["category"] for row in inventory} == {
         "geometry",
         "thermal strain",
@@ -284,6 +279,30 @@ def test_inventory_covers_public_methods_without_transferring_qualification():
         "pressure",
         "workflow",
     }
+    qualified = {
+        (row["path"], row["symbol"]): row["evaluation"]
+        for row in inventory
+        if row["evaluation"] != "NOT_EVALUATED"
+    }
+    prefix = "src/digitalmodel/subsea/pipeline/"
+    expected_qualified = {
+        (prefix + "calculations/pipe_properties.py", symbol): "HAND_CALCULATION_CHECKED"
+        for symbol in (
+            "calculate_section_properties",
+            "calculate_wall_thickness",
+            "calculate_diameter_from_thickness",
+            "calculate_geometric_properties",
+            "validate_pipe_geometry",
+        )
+    }
+    expected_qualified[
+        (prefix + "thermal_expansion.py", "free_thermal_expansion")
+    ] = "HAND_CALCULATION_CHECKED"
+    expected_qualified[
+        (prefix + "calculations/stress_calculations.py",
+         "APISTD2RDCalculations.calculate_design_pressures")
+    ] = "ARITHMETIC_ONLY"
+    assert qualified == expected_qualified
     for row in inventory:
         assert row["evidence_needed"]
         if row["category"] in {"buckling", "span", "workflow"}:
@@ -301,3 +320,62 @@ def test_scratch_inside_checkout_is_rejected_before_writes(tmp_path, scratch):
     with pytest.raises(ValueError, match="outside the checkout"):
         builder().build_report(scratch=ROOT / scratch, output_dir=tmp_path / "out")
     assert not (tmp_path / "out").exists()
+
+
+@pytest.mark.parametrize("relative, category", [
+    ("calculations/pipe_properties.py", "geometry"),
+    ("thermal_expansion.py", "thermal strain"),
+])
+def test_new_public_functions_do_not_inherit_qualification(tmp_path, monkeypatch, relative, category):
+    """Adding an untested public declaration cannot confer checked status."""
+    build = builder()
+    package = tmp_path / "package"
+    source = package / relative
+    source.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("def untested_function():\n    return 1\n", encoding="utf-8")
+    monkeypatch.setattr(build, "PACKAGE", package)
+    monkeypatch.setattr(build, "ROOT", tmp_path)
+    (row,) = build.method_inventory()
+    assert row["symbol"] == "untested_function"
+    assert row["category"] == category
+    assert row["evaluation"] == "NOT_EVALUATED"
+    # The same symbol name in another module has no evidence either.
+    assert build._qualification(
+        package / "other.py", "free_thermal_expansion", "workflow"
+    )[0] == "NOT_EVALUATED"
+
+
+def test_inventory_line_shifts_do_not_stale_report(monkeypatch):
+    """Whitespace in an unevaluated module cannot invalidate delivered bytes."""
+    build = builder()
+    before = build.build_payload()
+    sources = build.source_digests()
+    original = Path.read_text
+    target = build.PACKAGE / "free_span/span_allowable_length.py"
+
+    def shifted(path, *args, **kwargs):
+        text = original(path, *args, **kwargs)
+        return "# Inventory line shift\n" + text if path == target else text
+
+    monkeypatch.setattr(Path, "read_text", shifted)
+    after = build.build_payload()
+    assert after == before
+    assert build.source_digests() == sources
+    assert build.render(after, sources) == build.render(before, sources)
+
+
+def test_incidental_output_mislabel_and_layout_are_disclosed():
+    """Report the legacy key without treating two load categories as synonyms."""
+    build = builder()
+    page = build.render(build.build_payload(), build.source_digests())
+    assert "incidental (returned as accidental)" in page
+    for number, next_number in ((6, 7), (7, 8)):
+        section = page.split(f'<h2 id="s{number}">', 1)[1].split(
+            f'<h2 id="s{next_number}">', 1
+        )[0]
+        assert "incidentalPressure" in section
+        assert "accidental" in section
+        assert "distinct load categories" in section
+    assert "Layout choice" in page
+    assert "wide declaration inventory" in page
+    assert "reserved" in build._readme()

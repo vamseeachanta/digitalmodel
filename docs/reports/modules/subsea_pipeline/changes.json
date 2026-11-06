@@ -3,5 +3,10 @@
     "change": "Independent synthetic calculations and a public-method inventory are added to distinguish arithmetic checks from unresolved engineering qualification. Stale calculation-package imports are corrected so the public functions can be used.",
     "date": "2026-10-28",
     "revision": "A"
+  },
+  {
+    "change": "Qualification is restricted to tested symbols, the incidental-pressure output mislabel is disclosed, and provenance is limited to executed sources and dedicated evidence so unrelated source edits do not stale the report. The reserved scratch option becomes optional and the compact layout choice is explained.",
+    "date": "2026-11-05",
+    "revision": "B"
   }
 ]

@@ -28,7 +28,12 @@ CHANGES = [
         "revision": "A",
         "date": "2026-10-28",
         "change": "Independent synthetic calculations and a public-method inventory are added to distinguish arithmetic checks from unresolved engineering qualification. Stale calculation-package imports are corrected so the public functions can be used.",
-    }
+    },
+    {
+        "revision": "B",
+        "date": "2026-11-05",
+        "change": "Qualification is restricted to tested symbols, the incidental-pressure output mislabel is disclosed, and provenance is limited to executed sources and dedicated evidence so unrelated source edits do not stale the report. The reserved scratch option becomes optional and the compact layout choice is explained.",
+    },
 ]
 
 # Synthetic inputs from bases A, B and C in the module docstring, respectively.
@@ -49,19 +54,16 @@ GEOMETRY_UNITS = {
 
 
 def source_digests():
-    """Hash the inventory, executed functions, builder and independent tests."""
-    paths = [path.relative_to(ROOT).as_posix() for path in PACKAGE.rglob("*.py")]
-    paths.extend(
-        [
-            SCRIPT,
-            "src/digitalmodel/units.py",
-            "tests/subsea/pipeline/test_module_report_hand_values.py",
-            "tests/reporting/test_subsea_pipeline_module_report.py",
-            "tests/subsea/pipeline/test_pipe_geometry_finite_inputs.py",
-            "tests/subsea/pipeline/test_thermal_expansion.py",
-            "tests/subsea/pipeline/test_free_span_f105.py",
-        ]
-    )
+    """Hash executed sources and dedicated evidence, excluding inventory-only code."""
+    paths = [
+        "src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py",
+        "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py",
+        "src/digitalmodel/subsea/pipeline/thermal_expansion.py",
+        "src/digitalmodel/units.py",
+        SCRIPT,
+        "tests/subsea/pipeline/test_module_report_hand_values.py",
+        "tests/reporting/test_subsea_pipeline_module_report.py",
+    ]
     return {
         path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
         for path in sorted(paths)
@@ -89,8 +91,26 @@ def _category(path, symbol):
     return "workflow"
 
 
+# Evidence attaches to these exact declarations, never to a whole module.
+HAND_CHECKED = {
+    ("calculations/pipe_properties.py", symbol)
+    for symbol in (
+        "calculate_section_properties",
+        "calculate_wall_thickness",
+        "calculate_diameter_from_thickness",
+        "calculate_geometric_properties",
+        "validate_pipe_geometry",
+    )
+} | {("thermal_expansion.py", "free_thermal_expansion")}
+ARITHMETIC_CHECKED = (
+    "calculations/stress_calculations.py",
+    "APISTD2RDCalculations.calculate_design_pressures",
+)
+
+
 def _qualification(path, symbol, category):
-    if path.name == "pipe_properties.py":
+    identity = (path.relative_to(PACKAGE).as_posix(), symbol)
+    if identity in HAND_CHECKED and identity[0] == "calculations/pipe_properties.py":
         return (
             "HAND_CALCULATION_CHECKED",
             "A",
@@ -98,7 +118,7 @@ def _qualification(path, symbol, category):
                 "The consistent synthetic annulus only is checked; broader input validity and engineering use need separate evidence."
             ),
         )
-    if path.name == "thermal_expansion.py":
+    if identity in HAND_CHECKED and identity[0] == "thermal_expansion.py":
         return (
             "HAND_CALCULATION_CHECKED",
             "B",
@@ -106,7 +126,7 @@ def _qualification(path, symbol, category):
                 "Uniform free growth only is checked; restraint, soil response, buckling and walking need independent evidence."
             ),
         )
-    if symbol == "APISTD2RDCalculations.calculate_design_pressures":
+    if identity == ARITHMETIC_CHECKED:
         return (
             "ARITHMETIC_ONLY",
             "C",
@@ -115,6 +135,7 @@ def _qualification(path, symbol, category):
             ),
         )
     needed = {
+        "thermal strain": "Independent hand-value cases for this declaration and its input assumptions are needed.",
         "geometry": "Independent cases for composite sections, coatings, buoyancy and unit conventions are needed.",
         "buckling": "Independent restraint and soil-force cases, equation attribution, imperfection sensitivity and qualified mode factors are needed.",
         "span": "Independent frequency, onset, amplitude and fatigue cases with edition-specific boundary, sag, proximity and empirical-factor evidence are needed.",
@@ -134,22 +155,21 @@ def method_inventory():
             if isinstance(
                 node, (ast.FunctionDef, ast.AsyncFunctionDef)
             ) and not node.name.startswith("_"):
-                declarations.append((node.name, node.lineno))
+                declarations.append(node.name)
             if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
                 declarations.extend(
-                    (f"{node.name}.{method.name}", method.lineno)
+                    f"{node.name}.{method.name}"
                     for method in node.body
                     if isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef))
                     and not method.name.startswith("_")
                 )
-        for symbol, line in declarations:
+        for symbol in declarations:
             category = _category(path, symbol)
             evaluation, basis, needed = _qualification(path, symbol, category)
             rows.append(
                 {
                     "path": path.relative_to(ROOT).as_posix(),
                     "symbol": symbol,
-                    "line": line,
                     "category": category,
                     "evaluation": evaluation,
                     "basis": basis,
@@ -280,7 +300,7 @@ def render(payload, sources):
     }
     pressure_rows = [
         (
-            name,
+            "incidental (returned as accidental)" if name == "accidental" else name,
             f"{pressure['inputs']['base_capacity']:.1f}",
             f"{pressure['inputs']['factors'][factor_keys[name]]:.1f}",
             f"{value:.1f}",
@@ -291,7 +311,7 @@ def render(payload, sources):
     history = _table(
         ["Revision", "Date", "What changed and why"],
         [(row["revision"], row["date"], row["change"]) for row in CHANGES],
-        "Revision history. Initial issue of this module analysis.",
+        "Revision history. Issues of this module analysis.",
     )
     methods = _table(
         [
@@ -305,7 +325,7 @@ def render(payload, sources):
             (
                 row["category"],
                 row["symbol"],
-                f"{row['path']}:{row['line']}",
+                row["path"],
                 row["evaluation"],
                 f"{row['basis']}: {row['evidence_needed']}",
             )
@@ -316,7 +336,7 @@ def render(payload, sources):
     source_table = _table(
         ["Repository-relative source", "SHA-256"],
         sources.items(),
-        "Source digests. Exact reviewed calculation, inventory and regression-test bytes.",
+        "Source digests. Exact executed calculation, builder and dedicated evidence bytes.",
     )
     design_data = _table(
         ["Example", "Input", "Value", "Unit", "Source"],
@@ -415,21 +435,23 @@ code {{overflow-wrap:anywhere}} a {{color:#175f72}} nav a {{margin-right:1rem}}
 {products}
 <p>HAND_CALCULATION_CHECKED means agreement with the independent synthetic integral in the stated case. ARITHMETIC_ONLY means agreement with supplied multiplication. NOT_EVALUATED means the method is not qualified by this report; it does not mean a true zero or a passing design check.</p>
 <h2 id="s6">6. Key Findings</h2>
-<p>The available-dimension geometry routes recover the declared annulus. Heating and cooling retain their signed free-growth response. The factor API maps the supplied design, incidental and hydrostatic-test factors to their corresponding output products. Normal public imports now resolve the local calculation modules.</p>
+<p>The available-dimension geometry routes recover the declared annulus. Heating and cooling retain their signed free-growth response. The factor API returns the <code>incidentalPressure</code> product under the legacy key <code>accidental</code>. Incidental and accidental are distinct load categories; the label mismatch does not change the multiplication. Normal public imports now resolve the local calculation modules.</p>
 <p>The inventory does not transfer these results to engineering restraint, free-span or pressure-capacity methods. In particular, free thermal growth does not predict buckling or walking, and factor multiplication does not qualify its supplied capacity.</p>
 <h2 id="s7">7. Limitations and Not Covered</h2>
 <p>Buckling restraint, axial feed-in, imperfection response, soil friction, upheaval resistance and mode constants require separate independent cases. The legacy thermal-buckling route references helpers absent from its class; the legacy upheaval route contains an unfinished eigenvalue branch. Those workflows remain NOT_EVALUATED and are not executed or repaired here.</p>
 <p>Span frequency boundary, sag and seabed-proximity corrections, onset thresholds, VIV response, fatigue curves and allowable lengths need independent equation and factor evidence. Passing existing span regressions does not establish these sources. Collapse, burst, combined loading, derating and pressure-sizing routes require equation-specific and edition-specific evidence plus qualified material and corrosion inputs. No licensed solver is imported or run.</p>
+<p>The <code>incidentalPressure</code> product is returned as <code>accidental</code>; incidental and accidental are distinct load categories. The legacy API key is retained for compatibility, and its meaning must be resolved before engineering use.</p>
 <p>Geometry validation is checked for the consistent example, not certified for every invalid input. Composite geometry, reliability, installation and workflow declarations are inventoried without qualification. This report supplies neither a production design nor approval for service.</p>
 <h2 id="s8">8. Recommendations</h2>
 <p>The way forward is to obtain edition-specific equations and applicability limits for each engineering method, then independently worked cases for restraint, lateral and upheaval response, span frequency and empirical corrections, and pressure capacities. Material properties, corrosion basis, soil inputs, boundary conditions and acceptance criteria shall be supplied before a design conclusion can be calculated.</p>
 <p>Each unqualified route shall retain NOT_EVALUATED until its own evidence is reviewed. The tracking issue remains open while the requested engineering methods are unqualified. The present arithmetic examples can be rebuilt with the command in the accompanying README.</p>
 <h2 id="s9">9. References and Appendices</h2>
-<p>Bases A, B and C are the independent calculations written in this report and in <code>tests/subsea/pipeline/test_module_report_hand_values.py</code> and <code>tests/reporting/test_subsea_pipeline_module_report.py</code>. The synthetic inputs are committed in the builder source. Implementation locators identify code, not external equation evidence. No standard-derived numeric capacity or allowable is reproduced as qualified evidence.</p>
+<p>Bases A, B and C are the independent calculations written in this report and in <code>tests/subsea/pipeline/test_module_report_hand_values.py</code> and <code>tests/reporting/test_subsea_pipeline_module_report.py</code>. The synthetic inputs are committed in the builder source. Implementation locators identify declarations by repository-relative path and symbol, not by mutable line numbers or external equation evidence. The inventory describes the sources available at generation; added or removed declarations need a deliberate rebuild. Edits to unevaluated bodies and source line shifts do not invalidate the delivered report. No standard-derived numeric capacity or allowable is reproduced as qualified evidence.</p>
 {source_table}
 <p><a href="manifest.json">The digest manifest</a> binds source files and the other delivered artifacts. Its own digest is excluded to avoid self-reference; independent rebuilds compare the complete manifest bytes. Absolute paths, wall-clock build times and scratch locations are excluded from the output. Embedded JSON retains full calculation precision; visible result tables are rounded for reading.</p>
 <script id="calculation" type="application/json">{payload_json}</script>
 <h2 id="s10">10. Acronyms and Review Notes</h2>
+<p><strong>Layout choice.</strong> The ten headings follow the existing module-analysis structure. A compact self-contained stylesheet is retained for the wide declaration inventory and arithmetic tables, rather than the assessment template designed for a site-specific operating decision. This presentation choice adds no engineering qualification.</p>
 <p>OD: outside diameter; ID: inside diameter; VIV: vortex-induced vibration; MPa: megapascal; K: kelvin; SHA-256: artifact digest algorithm. The method inventory is a bounded source review and arithmetic assessment. Independent engineering qualification of the unevaluated methods remains pending.</p>
 </main></body></html>
 """
@@ -448,33 +470,43 @@ They do not qualify buckling, span factors or pressure capacities; these remain
 `NOT_EVALUATED` pending independent engineering evidence.
 
 Rebuild from the repository root in the existing scientific Python environment.
-Set `REPORT_SCRATCH` to an external temporary directory before running:
 
 ```bash
-PYTHONPATH=src python scripts/reports/build_subsea_pipeline_module_report.py --scratch "$REPORT_SCRATCH"
+PYTHONPATH=src python scripts/reports/build_subsea_pipeline_module_report.py
 ```
 
 Use `--output-dir "$REPORT_OUTPUT"` for a separate destination. The builder writes
 only `index.html`, `changes.json`, `manifest.json` and `README.md`. No intermediate
-calculation files are needed. Scratch must resolve outside the checkout.
-The manifest hashes all pipeline source files, executed unit support, the builder
-and regression sources, plus the other three deliverables. Its own digest is
+calculation files are needed. `--scratch` is an optional reserved compatibility
+argument; it writes nothing and, when supplied, must resolve outside the checkout.
+The manifest hashes the three executed pipeline modules, unit support, the builder
+and two dedicated test files, plus the other three deliverables. Its own digest is
 excluded to avoid self-reference; compare all four output files byte for byte
 between independent builds, including `manifest.json`.
 
-The public-method inventory lists repository-relative symbol and line locators
-with explicit case-limited qualification status. Input ownership resides in this
-repository's builder; these are synthetic arithmetic inputs, not measured data,
+The public-method inventory lists repository-relative paths and symbols without
+line numbers, with explicit case-limited qualification status. It describes the
+source declarations at generation, without a hard digest requirement on unevaluated
+modules. Added or removed declarations need a deliberate rebuild; unrelated body
+edits and line shifts do not invalidate delivered bytes.
+
+Layout choice: the ten headings follow the existing module-analysis structure.
+The compact self-contained stylesheet supports the wide declaration inventory
+and arithmetic tables; the assessment template addresses site-specific operating
+decisions instead. This presentation choice adds no engineering qualification.
+
+Input ownership resides in this repository's builder; these are synthetic arithmetic inputs, not measured data,
 material properties or code allowables. The issue remains open for the
 unevaluated engineering methods.
 """
 
 
-def build_report(*, scratch, output_dir=DESTINATION):
+def build_report(*, scratch=None, output_dir=DESTINATION):
     """Write only the declared deliverables, with no intermediate checkout files."""
-    scratch = Path(scratch).resolve()
-    if scratch == ROOT or ROOT in scratch.parents:
-        raise ValueError("Calculation scratch must be outside the checkout")
+    if scratch is not None:
+        scratch = Path(scratch).resolve()
+        if scratch == ROOT or ROOT in scratch.parents:
+            raise ValueError("Calculation scratch must be outside the checkout")
     output_dir = Path(output_dir).resolve()
     payload = build_payload()
     sources = source_digests()
@@ -500,9 +532,12 @@ def build_report(*, scratch, output_dir=DESTINATION):
 
 
 def main():
-    """Build the report with an explicit external scratch location."""
+    """Build the report, retaining an optional reserved scratch argument."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--scratch", required=True, type=Path)
+    parser.add_argument(
+        "--scratch", type=Path,
+        help="Reserved compatibility argument; no files are written there. Must be outside the checkout.",
+    )
     parser.add_argument("--output-dir", default=DESTINATION, type=Path)
     args = parser.parse_args()
     build_report(scratch=args.scratch, output_dir=args.output_dir)
