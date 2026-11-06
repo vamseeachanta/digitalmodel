@@ -21,6 +21,7 @@ investigation. They do not approve a treatment or establish well integrity.</p>
 <table>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-11-03</td><td>Remove unverified duration defaults and require scenario inputs to prevent unsupported estimates.</td></tr>
+<tr><td>2</td><td>2026-11-06</td><td>Rename the reference cost product as a unit-hire sensitivity to distinguish it from a total-job budget.</td></tr>
 </table>
 
 <h2>Method and access</h2>
@@ -68,6 +69,12 @@ Returned <code>duration_basis</code> and <code>duration_readiness</code> disting
 Caller-supplied durations are not independently verified; their source links
 contain only the retained rate citation. Neither status establishes an actual
 job estimate or suitability for economics without qualification.</p>
+<p><code>ReferenceEstimate.unit_hire_sensitivity_usd</code> is a USD band formed
+from duration [day] times unit-hire rate [USD/day] at the supplied bounds.
+It is not a derivative or a total-job budget. The former reference field
+<code>cost_usd</code> is removed; callers must use the new field name.
+The separate <code>screen_economics(cost_usd=...)</code> input still requires
+a qualified total-job cost band.</p>
 <p class="limit">Subsea total cost and duration bands require explicit project inputs.
 A transferable primary-source cost range for each subsea access class has not been
 established. Calling <code>reference_estimate</code> for RLWI, riser-based intervention

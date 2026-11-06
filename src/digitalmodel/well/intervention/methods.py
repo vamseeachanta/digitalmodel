@@ -160,7 +160,10 @@ def method_options(
 
 @dataclass(frozen=True)
 class ReferenceEstimate:
-    """Public reference ranges; cost is only unit day-rate times case duration.
+    """Public reference ranges with a unit-hire sensitivity band in USD.
+
+    unit_hire_sensitivity_usd evaluates duration [day] times rate [USD/day]
+    at the supplied bounds; it is not a derivative or a total-job cost.
 
     Duration cases and day-rate market are DIFFERENT contexts. The resulting
     product is a sensitivity envelope, not an observed cost range or a total
@@ -169,7 +172,7 @@ class ReferenceEstimate:
 
     duration_days: Band
     day_rate_usd: Band
-    cost_usd: Band
+    unit_hire_sensitivity_usd: Band
     sources: tuple[str, ...]
     limitations: str
     duration_basis: str

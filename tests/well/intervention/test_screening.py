@@ -95,13 +95,42 @@ def test_candidate_requires_strict_persistent_recent_shortfall():
     ]
     result = screen(points)
     assert result.candidate and result.shortfall_fraction == pytest.approx(0.3)
+    assert result.reason == "persistent_shortfall"
     assert result.predicted_bopd == 100
-    assert not screen([points[0], RatePoint(points[1].date, 80, "test")]).candidate
-    assert not screen(points[:1]).candidate
-    assert not screen([]).candidate
-    assert not screen([RatePoint(date(2023, 1, 1), 70, "test"), points[0]]).candidate
-    assert not screen([RatePoint(date(2023, 1, 1), 70, "test"), points[1]]).candidate
-    assert not screen([points[0], RatePoint(points[1].date, 0, "shut-in")]).candidate
+    cases = [
+        ([points[0], RatePoint(points[1].date, 80, "test")], "below_threshold"),
+        (points[:1], "insufficient_history"),
+        ([], "no_history"),
+        ([RatePoint(date(2023, 1, 1), 70, "test"), points[0]], "stale_history"),
+        ([RatePoint(date(2023, 1, 1), 70, "test"), points[1]], "history_gap"),
+        (
+            [points[0], RatePoint(points[1].date, 0, "shut-in")],
+            "zero_rate_requires_diagnosis",
+        ),
+    ]
+    for history, reason in cases:
+        result = screen(history)
+        assert result.candidate is False
+        assert result.reason == reason
+
+
+def test_zero_forecast_underflow_requires_diagnosis():
+    # Implementation boundary: exp(-1000 * 1 day) underflows to exactly zero.
+    start = date(2023, 1, 1)
+    observed = start + timedelta(days=1)
+    result = candidate_screen(
+        DeclineFit(100, 1000, 0, start, "synthetic underflow regression"),
+        [RatePoint(observed, 1, "synthetic positive measurement")],
+        shortfall_fraction=0.2,
+        consecutive_points=1,
+        as_of=observed,
+        max_age_days=1,
+        max_gap_days=1,
+    )
+    assert result.candidate is False
+    assert result.reason == "zero_forecast"
+    assert result.predicted_bopd == 0.0
+    assert result.shortfall_fraction is None
 
 
 def test_candidate_rejects_duplicate_unsorted_future_dates_and_missing_provenance():
@@ -195,11 +224,11 @@ def test_reference_bands_are_sourced_ranges_and_not_offshore_budgets():
         assert estimate.sources and "reference" in estimate.limitations.lower()
         assert estimate.duration_basis
         assert (
-            estimate.cost_usd.low
+            estimate.unit_hire_sensitivity_usd.low
             == estimate.duration_days.low * estimate.day_rate_usd.low
         )
         assert (
-            estimate.cost_usd.high
+            estimate.unit_hire_sensitivity_usd.high
             == estimate.duration_days.high * estimate.day_rate_usd.high
         )
     # Never silently assign an onshore unit day-rate to a subsea vessel.
@@ -237,7 +266,18 @@ def test_reference_endpoints_against_independent_literals(
     estimate = reference_estimate(method)
     assert estimate.duration_days == Band(*duration)
     assert estimate.day_rate_usd == Band(*day_rate)
-    assert estimate.cost_usd == Band(*cost)
+    assert estimate.unit_hire_sensitivity_usd == Band(*cost)
+
+
+def test_reference_serialization_distinguishes_sensitivity_from_job_cost():
+    from dataclasses import asdict
+
+    estimate = reference_estimate(Method.E_LINE)
+    assert not hasattr(estimate, "cost_usd")
+    fields = asdict(estimate)
+    assert "cost_usd" not in fields
+    # Same independent task/rate endpoints: 4*3500=14000; 7*8000=56000 USD.
+    assert fields["unit_hire_sensitivity_usd"] == {"low": 14000, "high": 56000}
 
 
 @pytest.mark.parametrize("method", [Method.SLICKLINE, Method.HWU])
@@ -274,7 +314,7 @@ def test_explicit_duration_propagates_scenario_readiness_and_hand_costs(method, 
     )
     assert estimate.duration_days == Band(2, 3)
     assert estimate.day_rate_usd == rate
-    assert estimate.cost_usd == cost
+    assert estimate.unit_hire_sensitivity_usd == cost
     assert estimate.duration_basis == "synthetic duration scenario"
     assert estimate.duration_readiness == "caller_supplied_scenario"
     assert "not independently verified" in estimate.limitations
@@ -370,7 +410,7 @@ def test_runnable_example_cli_uses_explicit_json(tmp_path):
     for key in ("uplift_bopd", "cost_usd", "duration_days"):
         params[key] = [params[key].low, params[key].high]
     scenario = tmp_path / "scenario.json"
-    scenario.write_text(json.dumps(params))
+    scenario.write_text(json.dumps(params), encoding="utf-8", newline="\n")
     result = subprocess.run(
         [sys.executable, example_module()["__file__"], "--scenario", str(scenario)],
         capture_output=True,
