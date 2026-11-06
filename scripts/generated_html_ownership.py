@@ -216,6 +216,9 @@ PAGE_EXCLUSIONS = {
 # than source-text heuristics alone, prevents new docs/api output from silently
 # bypassing ownership.
 MANUAL_PAGES = {
+    "docs/api/cfd/blasius-integral-example.html": (
+        "hand-maintained analytical formula example; no scripts producer"
+    ),
     "docs/api/cfd/kcs-calm-water-resistance-verification.html": (
         "emitted from a solved case by scripts/cfd/generate-kcs-verification.py; "
         "the solve output is not in the repo, so CI cannot regenerate it"

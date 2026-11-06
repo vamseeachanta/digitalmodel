@@ -172,11 +172,12 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     }
     # The solved-case verification page is counted as manual because its
     # solver output is unavailable for repository-only regeneration.
-    assert len(checker.MANUAL_PAGES) == 11
+    assert len(checker.MANUAL_PAGES) == 12
     assert set(checker.MANUAL_PAGES) == {
         'docs/api/buckling/ship-panel-buckling.html',
         'docs/api/buckling/ship-plate-buckling.html',
         'docs/api/capabilities/index.html',
+        'docs/api/cfd/blasius-integral-example.html',
         'docs/api/cfd/index.html',
         'docs/api/cfd/kcs-calm-water-resistance-verification.html',
         'docs/api/cfd/tank-sloshing-verification.html',

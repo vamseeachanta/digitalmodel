@@ -13,6 +13,7 @@ import runpy
 from pathlib import Path
 
 import pytest
+from scipy.integrate import quad
 
 from digitalmodel.solvers.openfoam.validation.flat_plate import blasius_plate_cd
 
@@ -27,14 +28,18 @@ def compare_coefficients():
 
 @pytest.mark.parametrize(
     ("velocity", "length", "nu"),
-    [(1.0, 0.1, 1.0e-5), (0.25, 0.4, 1.0e-5), (2.0, 0.5, 1.0e-5)],
+    [(1.0, 0.1, 1.0e-5), (0.25, 0.4, 1.0e-5), (0.02, 0.5, 1.0e-5)],
 )
 def test_blasius_integral_example(compare_coefficients, velocity, length, nu):
-    # Cf(x) = A*x**(-1/2); its antiderivative is 2*A*sqrt(x).
-    # The lower endpoint tends to zero even though Cf itself is singular.
-    # The factor 2 follows from the power rule, not a package constant.
-    amplitude = 0.664 * math.sqrt(nu / velocity)
-    integral = 2.0 * amplitude * math.sqrt(length) - 0.0
+    # Substitute x=t**2, dx=2*t*dt to remove the leading-edge singularity.
+    # Quad samples the regular transformed integrand inside the interval;
+    # neither Cf(0) nor the analytical antiderivative is evaluated.
+    def transformed_cf(t):
+        x = t * t
+        return 2.0 * t * (0.664 / math.sqrt(velocity * x / nu))
+
+    integral, error = quad(transformed_cf, 0.0, math.sqrt(length))
+    assert error < 1.0e-10
     mean_cf = integral / length
     cf_at_l = 0.664 / math.sqrt(velocity * length / nu)
     assert mean_cf == pytest.approx(2.0 * cf_at_l)
@@ -46,6 +51,33 @@ def test_blasius_integral_example(compare_coefficients, velocity, length, nu):
     assert result["plate_cd_helper"] == pytest.approx(mean_cf)
     # Check the public helper directly against the independent integral.
     assert blasius_plate_cd(velocity * length / nu) == pytest.approx(mean_cf)
+
+
+@pytest.mark.parametrize("argument", ["velocity", "length", "kinematic_viscosity"])
+@pytest.mark.parametrize("value", [0.0, -1.0, math.nan, math.inf, -math.inf])
+def test_invalid_inputs_rejected(compare_coefficients, argument, value):
+    inputs = dict(velocity=1.0, length=0.1, kinematic_viscosity=1.0e-5)
+    inputs[argument] = value
+    with pytest.raises(ValueError, match=argument + " must be finite and positive"):
+        compare_coefficients(**inputs)
+
+
+@pytest.mark.parametrize("velocity, length", [(1.0e308, 1.0e308), (1.0e-300, 1.0e-300)])
+def test_unrepresentable_reynolds_rejected(compare_coefficients, velocity, length):
+    with pytest.raises(ValueError, match="re_l must be finite and positive"):
+        compare_coefficients(velocity, length, 1.0e-5)
+
+
+def test_reference_case_ceiling_accepted(compare_coefficients):
+    # The repository's laminar reference case uses Re_L=10000.
+    result = compare_coefficients(10000.0, 1.0, 1.0)
+    assert result["re_l"] == 10000.0
+
+
+@pytest.mark.parametrize("re_l", [math.nextafter(10000.0, math.inf), 100000.0])
+def test_above_reference_range_rejected(compare_coefficients, re_l):
+    with pytest.raises(ValueError, match="re_l exceeds the example limit of 10000"):
+        compare_coefficients(re_l, 1.0, 1.0)
 
 
 def test_blasius_example_units(compare_coefficients):

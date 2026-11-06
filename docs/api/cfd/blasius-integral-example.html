@@ -19,7 +19,7 @@
   <h2>Summary</h2>
   <p>The analytical average of the local Blasius skin-friction coefficient
   over one plate face is twice its trailing-edge value. The
-  <a href="../../../examples/openfoam/blasius_integral.py">runnable example</a>
+  runnable example, <code>examples/openfoam/blasius_integral.py</code>,
   compares that integral with <code>blasius_plate_cd</code>. This checks the
   formulas; it supplies no CFD validation evidence.</p>
 
@@ -28,7 +28,9 @@
     <caption>Table 1. Changes to this example.</caption>
     <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
     <tbody><tr><td>1</td><td>2026-10-27</td><td>Added the analytical integral and
-    unit example to distinguish local friction from the plate mean.</td></tr></tbody>
+    unit example to distinguish local friction from the plate mean.</td></tr>
+    <tr><td>2</td><td>2026-11-06</td><td>Documented input and applicability
+    checks, numerical quadrature tests and the source location.</td></tr></tbody>
   </table>
 
   <h2>Basis and coefficient definition</h2>
@@ -39,6 +41,12 @@
   That coefficient is retained without fitting. The example assumes steady,
   incompressible laminar flow with uniform free-stream speed, constant
   kinematic viscosity and zero pressure gradient.</p>
+  <p>The accepted range is <code>0 &lt; Re_L &lt;= 10000</code>, capped at
+  the repository's <code>FlatPlateConfig</code> laminar reference case in
+  <code>src/digitalmodel/solvers/openfoam/validation/flat_plate.py</code>.
+  This is a conservative example limit, not a general transition criterion.
+  All three inputs and the computed Reynolds number must be finite and positive;
+  the example raises <code>ValueError</code> outside those limits.</p>
   <p>Here <code>Re_x = U*x/nu</code> and
   <code>Cf(x) = tau_w(x)/(rho*U^2/2)</code>. For constant span <code>b</code>,
   drag on one wetted face is <code>D = b*integral(tau_w(x) dx)</code>.
@@ -90,10 +98,12 @@ Cf(L) = 6.640e-03
 Plate mean from integral = 1.328e-02
 Plate coefficient from helper = 1.328e-02
 integral / Cf(L) = 2.0</pre>
-  <p>The companion tests independently integrate the local power law, check
+  <p>The companion tests numerically integrate the local power law with
+  <code>x=t^2</code> to remove its endpoint singularity, check
   the hand calculation, repeat the calculation in centimetres and execute
   the saved example. The existing helper's constants are not imported as
-  expected values.</p>
+  expected values. Rejection tests cover invalid inputs, an unrepresentable
+  Reynolds number and values above the reference-case limit.</p>
 
   <h2>Formula checks and remaining CFD validation</h2>
   <p>Agreement here establishes consistency of the rounded analytical laws
