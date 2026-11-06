@@ -12,6 +12,7 @@ and data-interface behavior; they do not qualify a measured dataset or a design.
 | 0 | 2026-10-21 | Added synthetic value checks and a worked example to cover missing engineering assertions. |
 | 1 | 2026-10-21 | Rejected boolean and non-real calculation inputs, moved the example test to the dependency-bearing suite, and made the full-circle citation explicit. |
 | 2 | 2026-11-06 | Renamed the annulus model, required named diameters, normalized real scalar inputs and documented the local spatial-axis convention to prevent ambiguous geometry or array interpretation. |
+| 3 | 2026-11-06 | Enforced matching snapshot shapes at extraction and specified the upstream axis permutation to prevent silent acceptance of incompatible layouts. |
 
 ## Slice 1: pressure CSV retrieval
 
@@ -71,13 +72,19 @@ The chosen field is `u = 3*y + 2*x + 7`, `v = 5*x - 4*y - 1`, giving
 loader with a local synthetic dataset substitute and then compute its curl.
 Existing positive, negative and zero curl retrieval tests remain in place.
 
-The loader's required local order is `(component, y, x)`; field extraction
-preserves the supplied axes. The upstream
+The loader requires velocity `(2, H, W)` and vorticity `(1, H, W)` on a matching
+nonempty grid in local `(component, y, x)` order. Extraction rejects other
+shapes with `ValueError` and preserves the supplied axes. The upstream
 [The Well file-format specification](https://polymathic-ai.org/the_well/data_format/)
 lists spatial axes in `dimensions/@spatial_dims` order (the 2-D example uses
-`x, y`), with vector components last. Raw upstream fields require normalization
-to the local convention before use. Comparing a synthetic snapshot with its
-injected vorticity tests transport and arithmetic, not real-dataset axis order.
+`x, y`), with vector components last. A dataset adapter must apply
+`transpose(2, 1, 0)` to each raw `(x, y, component)` snapshot before yielding
+it to the loader. Applying only `moveaxis(-1, 0)` leaves the spatial axes
+reversed. Tests reject a synthetic raw `(4, 3, 2)` velocity and verify the
+explicit permutation on a non-square grid with unequal spacings. Shape checks
+cannot identify swapped axes or coincident dimensions. Comparing a synthetic
+snapshot with its injected vorticity tests transport and arithmetic, not
+real-dataset axis order; live upstream compatibility remains unverified.
 
 Interior derivatives use centred difference quotients; boundary derivatives
 use one-sided quotients, without periodic wrapping. For an affine field,

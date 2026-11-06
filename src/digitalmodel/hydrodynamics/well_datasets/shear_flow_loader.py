@@ -98,15 +98,20 @@ class ShearFlowLoader:
 
         The required local convention is components (u, v), rows along y and
         columns along x: velocity (2, y, x), vorticity (1, y, x). This matches
-        ``vorticity_from_velocity``. Field extraction preserves the supplied
-        axis order; it does not infer or transpose spatial coordinates.
+        ``vorticity_from_velocity``. Field extraction requires these shapes
+        on a matching nonempty grid and preserves the supplied axis order;
+        it does not infer or transpose spatial coordinates.
 
         Source for the upstream distinction: The Well file-format specification,
         https://polymathic-ai.org/the_well/data_format/, lists spatial axes in
         ``dimensions/@spatial_dims`` order (its 2-D example uses x, y), with
-        vector components last. Raw upstream arrays must be normalized to the
-        local convention before use here. Synthetic adapter tests establish
-        this local contract only; live WellDataset layout is not validated.
+        vector components last. A dataset adapter must convert each raw
+        (x, y, component) snapshot with ``transpose(2, 1, 0)`` before yielding
+        it to this method; ``moveaxis(-1, 0)`` leaves x and y reversed.
+        Unadapted arrays outside the local shapes raise ``ValueError``.
+        Shapes alone cannot identify swapped axes or coincident dimensions.
+        Synthetic adapter tests establish this local contract only; live
+        WellDataset layout is not validated.
 
         The method does not trigger a full dataset download; it iterates
         only the requested number of steps using the dataset's streaming
@@ -127,6 +132,9 @@ class ShearFlowLoader:
         ImportError
             If ``the_well`` is not installed.  Install with
             ``pip install the_well``.
+        ValueError
+            If a snapshot does not have velocity (2, H, W) and matching
+            vorticity (1, H, W), with H and W positive.
         """
         if not WELL_AVAILABLE:
             raise ImportError(
@@ -172,9 +180,13 @@ class ShearFlowLoader:
 
     @staticmethod
     def _extract_fields(sample: Any) -> Dict[str, Any]:
-        """Extract velocity and vorticity arrays from a raw dataset sample."""
+        """Require local snapshot shapes without guessing spatial axis order."""
         velocity = _to_numpy(sample["velocity"])
         vorticity = _to_numpy(sample["vorticity"])
+        if velocity.ndim != 3 or velocity.shape[0] != 2 or min(velocity.shape[1:]) < 1:
+            raise ValueError("velocity shape must be (2, H, W), with H and W positive")
+        if vorticity.shape != (1, *velocity.shape[1:]):
+            raise ValueError("vorticity shape must be (1, H, W), matching velocity")
         return {"velocity": velocity, "vorticity": vorticity}
 
 

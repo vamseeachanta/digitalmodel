@@ -42,6 +42,51 @@ def test_irrotational_field_has_zero_curl():
     )
 
 
+@pytest.mark.parametrize("shape", [(4, 3, 2), (3, 4), (1, 3, 4), (2, 0, 4)])
+def test_stream_rejects_velocity_outside_local_layout(monkeypatch, shape):
+    """Raw (x, y, component) fields must not silently enter the local adapter."""
+    sample = {"velocity": np.zeros(shape), "vorticity": np.zeros((1, 3, 4))}
+    monkeypatch.setattr(flow, "WELL_AVAILABLE", True)
+    monkeypatch.setattr(flow.ShearFlowLoader, "_build_dataset", lambda self: [sample])
+    with pytest.raises(ValueError, match="velocity shape"):
+        flow.ShearFlowLoader().stream_sample(n_steps=1)
+
+
+@pytest.mark.parametrize("shape", [(4, 3, 1), (3, 4), (1, 4, 3), (2, 3, 4)])
+def test_stream_rejects_vorticity_outside_matching_layout(monkeypatch, shape):
+    """The scalar field must share the velocity grid with one leading component."""
+    sample = {"velocity": np.zeros((2, 3, 4)), "vorticity": np.zeros(shape)}
+    monkeypatch.setattr(flow, "WELL_AVAILABLE", True)
+    monkeypatch.setattr(flow.ShearFlowLoader, "_build_dataset", lambda self: [sample])
+    with pytest.raises(ValueError, match="vorticity shape"):
+        flow.ShearFlowLoader().stream_sample(n_steps=1)
+
+
+def test_explicit_upstream_transpose_preserves_coordinates(monkeypatch):
+    """A non-square (x, y, component) snapshot needs both axis permutations.
+
+    Chosen spacings dx=0.5 m, dy=2 m and u=3y+2x+7, v=5x-4y-1
+    give the independent curl 5-3=2 inverse seconds. Moving only the
+    component axis would leave x and y reversed.
+    """
+    x, y = np.meshgrid(np.arange(4) * 0.5, np.arange(3) * 2, indexing="ij")
+    raw_velocity = np.stack((3 * y + 2 * x + 7, 5 * x - 4 * y - 1), axis=-1)
+    raw_vorticity = np.full((4, 3, 1), 2.0)
+    sample = {
+        "velocity": raw_velocity.transpose(2, 1, 0),
+        "vorticity": raw_vorticity.transpose(2, 1, 0),
+    }
+    monkeypatch.setattr(flow, "WELL_AVAILABLE", True)
+    monkeypatch.setattr(flow.ShearFlowLoader, "_build_dataset", lambda self: [sample])
+    snapshot = flow.ShearFlowLoader().stream_sample(n_steps=1)[0]
+    assert snapshot["velocity"].shape == (2, 3, 4)
+    assert snapshot["vorticity"].shape == (1, 3, 4)
+    np.testing.assert_array_equal(
+        flow.vorticity_from_velocity(snapshot["velocity"], dx_m=0.5, dy_m=2),
+        np.full((1, 3, 4), 2.0),
+    )
+
+
 @pytest.mark.parametrize(
     "spacing",
     [
