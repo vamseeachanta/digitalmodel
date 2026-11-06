@@ -469,7 +469,7 @@ def _load_results(settings: dict[str, Any], config_dir: Path) -> dict[str, Any]:
         if fig_path.suffix.lower() not in FIGURE_SUFFIXES:
             raise ReportPackConfigError(
                 f"unsupported figure format {fig_path.suffix!r} "
-                f"(use png/jpg/svg/gif): {fig_path}"
+                f"(use png/jpg/svg/gif): {fig_path.as_posix()}"
             )
         figures.append(
             {
@@ -905,12 +905,18 @@ def _markdown_results(results: dict[str, Any], output_path: Path | None = None) 
         lines.append("")
         lines.append(f"Source: `{table['source']}`")
         lines.append("")
-    for figure in results["figures"]:
+    for index, figure in enumerate(results["figures"], start=1):
         path = figure["path"]
-        link = (
-            relative_artifact_path(path, output_path)
-            if output_path is not None else path.name
-        )
+        try:
+            link = (
+                relative_artifact_path(path, output_path)
+                if output_path is not None else path.name
+            )
+        except ValueError as exc:
+            raise ReportPackConfigError(
+                f"report_pack.results.figures[{index}] {figure['title']!r}: "
+                f"cannot link figure {path.as_posix()}: {exc}"
+            ) from exc
         lines.append(f"![{figure['title']}]({quote(link, safe='/')})")
         lines.append("")
     return lines

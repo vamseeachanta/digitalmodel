@@ -45,11 +45,11 @@ OUTPUTS = (
 
 
 @pytest.mark.parametrize("artifact,expected", [
-    ("reports/pages/analysis.html", "pages/analysis.html"),
-    ("exports/pages/analysis.html", "exports/pages/analysis.html"),
+    ("C:/repo/reports/pages/analysis.html", "reports/pages/analysis.html"),
+    ("D:/exports/pages/analysis.html", "D:/exports/pages/analysis.html"),
 ])
 def test_display_paths_use_forward_slashes(monkeypatch, artifact, expected):
-    root = SimpleNamespace(resolve=lambda: PureWindowsPath("reports"))
+    root = SimpleNamespace(resolve=lambda: PureWindowsPath("C:/repo"))
     path = SimpleNamespace(resolve=lambda: PureWindowsPath(artifact))
     monkeypatch.setattr(workflow, "REPO_ROOT", root)
     assert workflow._display_path(path) == expected
@@ -76,10 +76,26 @@ def test_incompatible_figure_roots_leave_no_outputs(tmp_path, monkeypatch):
         return original(artifact, document_dir)
 
     monkeypatch.setattr(paths.os.path, "relpath", incompatible_figure)
-    with pytest.raises(ValueError, match="incompatible roots"):
+    with pytest.raises(ValueError, match="incompatible roots") as caught:
         workflow.router(cfg)
+    assert isinstance(caught.value, workflow.ReportPackConfigError)
+    message = str(caught.value)
+    assert "report_pack.results.figures[1]" in message
+    assert "Fixture" in message
+    assert figure.as_posix() in message
+    assert isinstance(caught.value.__cause__, ValueError)
     assert not (tmp_path / "results.html.json").exists()
     assert sha256(figure.read_bytes()).digest() == before
+
+
+def test_unsupported_figure_error_uses_forward_slashes(monkeypatch):
+    figure = PureWindowsPath("D:/exports/figure.tiff")
+    monkeypatch.setattr(workflow, "_resolve_file", lambda *args: figure)
+    settings = {"results": {"figures": [{"title": "Fixture", "path": str(figure)}]}}
+    with pytest.raises(workflow.ReportPackConfigError, match="unsupported figure format") as caught:
+        workflow._load_results(settings, PureWindowsPath("C:/repo"))
+    assert figure.as_posix() in str(caught.value)
+    assert "\\" not in str(caught.value)
 
 
 @pytest.mark.parametrize("alias", ["symlink", "hardlink"])
