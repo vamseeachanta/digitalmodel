@@ -7,7 +7,8 @@ Equation locator: API 650, 5.6.3.2, as transcribed in public issue 2958
 (2026-10-19; edition not established). The issue is a task brief, not a
 qualified code source. Method coefficients, applicability limit (5.6.3.1),
 diameter-specific nominal floor (5.6.1.1) and material allowables are caller
-inputs: no unverified standard values or material tables are embedded here.
+inputs. Edition-pinned defaults checked against a public standard copy are
+available separately in ``defaults``; explicit caller inputs remain supported.
 
 Without resolved method, material AND applicability Citations, numbers are
 illustrative and code qualification is NOT_EVALUATED. Supplied Citations resolve fail-closed;
@@ -33,6 +34,9 @@ class MaterialAllowables:
     source: str
     citation: Citation | None = None
 
+    def validate_selected_plate(self, thickness_mm: float) -> None:
+        """Allow explicit callers to own material applicability checks."""
+
 
 @dataclass(frozen=True)
 class OneFootBasis:
@@ -55,6 +59,13 @@ class OneFootBasis:
     citation: Citation | None = None
     diameter_limit_citation: Citation | None = None
     minimum_nominal_citation: Citation | None = None
+
+    def nominal_floor_mm(self, course: int) -> float | None:
+        """Return the supplied nominal floor for a bottom-up course number."""
+        return self.minimum_nominal_mm
+
+    def validate_diameter(self, diameter_m: float) -> None:
+        """Allow explicit callers to own diameter-specific floor selection."""
 
 
 @dataclass(frozen=True)
@@ -125,6 +136,7 @@ def _validate(inputs: TankDesign) -> None:
     if not inputs.material.name.strip() or not inputs.material.source.strip():
         raise ValueError("material name and source are required")
     basis = inputs.basis
+    basis.validate_diameter(inputs.diameter_m)
     validate_number("coefficient", basis.coefficient)
     validate_number("head_offset_m", basis.head_offset_m, zero=True)
     if not basis.source.strip():
@@ -201,8 +213,9 @@ def _course(
         / material.test_mpa
     )
     cases = {"design": design, "hydrostatic test": test}
-    if basis.minimum_nominal_mm is not None:
-        cases["minimum nominal"] = basis.minimum_nominal_mm
+    floor = basis.nominal_floor_mm(index)
+    if floor is not None:
+        cases["minimum nominal"] = floor
     governing = max(cases, key=cases.get)
     required = cases[governing]
     selected = next(
@@ -210,6 +223,7 @@ def _course(
     )
     if selected is None:
         raise ValueError(f"No available plate meets course {index} requirement")
+    material.validate_selected_plate(selected)
     return CourseResult(
         index,
         bottom,
