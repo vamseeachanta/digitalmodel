@@ -369,6 +369,17 @@ class AQWABackend:
             or Path(geometry.mesh_file).suffix.lower() == ".gdf"
             or geometry.symmetry != "none"
         ):
+            mesh_path = self._resolve_mesh_path(geometry.mesh_file)
+            if (
+                geometry.mesh_format == "gdf"
+                and mesh_path.is_file()
+                and mesh_path.suffix.lower() != ".gdf"
+            ):
+                found_suffix = repr(mesh_path.suffix) if mesh_path.suffix else "no suffix"
+                raise ValueError(
+                    "AQWA requires a '.gdf' suffix for declared GDF mesh "
+                    f"{mesh_path.name!r}; found {found_suffix}"
+                )
             raise ValueError(
                 f"GDF symmetry for spec symmetry {geometry.symmetry!r} "
                 "requires a loaded and verified GDF mesh"

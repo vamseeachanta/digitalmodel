@@ -392,17 +392,81 @@ def test_panel_annotation_cannot_hide_missing_coordinates(tmp_path, mode, backen
 
 @pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
 @pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("readable", [False, True])
 @pytest.mark.parametrize("extension", ["obj", "msh", "dat"])
 @pytest.mark.parametrize("symmetry", ["xz", "yz", "xz+yz"])
-def test_non_gdf_symmetry_refuses(tmp_path, backend_type, mode, extension, symmetry):
+def test_non_gdf_symmetry_refuses(
+    tmp_path, backend_type, mode, readable, extension, symmetry
+):
     spec = box_spec(tmp_path)
     spec.vessel.geometry.mesh_file = f"box.{extension}"
+    if readable:
+        (tmp_path / spec.vessel.geometry.mesh_file).write_text(
+            "Synthetic non-GDF control\n", encoding="utf-8", newline="\n"
+        )
     spec.vessel.geometry.mesh_format = type(spec.vessel.geometry.mesh_format)(
         "aqwa_dat" if extension == "dat" else extension
     )
     spec.vessel.geometry.symmetry = symmetry
-    with pytest.raises(ValueError, match="symmetry.*GDF"):
+    with pytest.raises(ValueError, match="symmetry.*GDF") as error:
         generate(backend_type(), spec, tmp_path, mode)
+    assert ".gdf" not in str(error.value)
+    assert not list((tmp_path / "output").glob("*"))
+
+
+@pytest.mark.parametrize("backend_type", [AQWABackend, OrcaWaveBackend])
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("filename", ["box.gdf", "box.mesh", "box"])
+@pytest.mark.parametrize(
+    "symmetry,flags", [("none", "0 0"), ("xz", "0 1"), ("yz", "1 0"), ("xz+yz", "1 1")]
+)
+def test_readable_gdf_suffix_contract(
+    tmp_path, backend_type, mode, filename, symmetry, flags
+):
+    spec = box_spec(tmp_path, symmetry, flags, partial=True)
+    mesh = tmp_path / filename
+    mesh.write_bytes((tmp_path / "box.gdf").read_bytes())
+    spec.vessel.geometry.mesh_file = filename
+    spec.vessel.geometry.mesh_format = type(spec.vessel.geometry.mesh_format)("gdf")
+    backend = backend_type()
+    if backend_type is AQWABackend and mesh.suffix != ".gdf":
+        with pytest.raises(ValueError, match=r"requires.*[.]gdf.*suffix") as error:
+            generate(backend, spec, tmp_path, mode)
+        assert repr(filename) in str(error.value)
+        assert "GDF symmetry" not in str(error.value)
+        expected_suffix = "found '.mesh'" if mesh.suffix else "found no suffix"
+        assert expected_suffix in str(error.value)
+        assert not list((tmp_path / "output").glob("*"))
+        return
+
+    result = generate(backend, spec, tmp_path, mode)
+    assert result.exists()
+    if backend_type is OrcaWaveBackend:
+        body = yaml.safe_load(result.read_text(encoding="utf-8"))["Bodies"][0]
+        assert body["BodyMeshFormat"] == "Wamit gdf"
+        assert body["BodyMeshSymmetry"] == {
+            "none": "None", "xz": "xz plane", "yz": "yz plane", "xz+yz": "xz and yz planes"
+        }[symmetry]
+    else:
+        from tests.hydrodynamics.diffraction.test_aqwa_half_deck import _elements, _nodes
+
+        # Twelve box panels become six for the emitted xz half.
+        assert _nodes(backend.build_deck1(spec))
+        cards = backend.build_deck2(spec)
+        assert len(_elements(cards)) == (6 if symmetry == "xz" else 12)
+        assert any("SYMX" in line for line in cards) == (symmetry == "xz")
+
+
+@pytest.mark.parametrize("mode", ["single", "modular"])
+@pytest.mark.parametrize("filename", ["box.mesh", "box"])
+def test_non_gdf_suffix_directory_keeps_missing_mesh_diagnostic(tmp_path, mode, filename):
+    spec = box_spec(tmp_path)
+    (tmp_path / filename).mkdir()
+    spec.vessel.geometry.mesh_file = filename
+    spec.vessel.geometry.mesh_format = type(spec.vessel.geometry.mesh_format)("gdf")
+    with pytest.raises(ValueError, match="requires a loaded and verified GDF mesh") as error:
+        generate(AQWABackend(), spec, tmp_path, mode)
+    assert "suffix" not in str(error.value)
     assert not list((tmp_path / "output").glob("*"))
 
 

@@ -11,6 +11,7 @@ symmetric while its full mesh still requires `symmetry: none`.
 | 1 | 2026-10-21 | Define matching stored-sector declarations and explicit buoyancy screening to prevent incomplete-body conversion. |
 | 2 | 2026-11-06 | Reject unchecked reflection and cut-plane panels, tolerate centreline rounding, and persist buoyancy evidence for inspection. |
 | 3 | 2026-11-06 | Require readable GDF inputs for every symmetry declaration and stage synthetic meshes in generation contract tests. |
+| 4 | 2026-11-06 | Distinguish existing GDF suffix refusals from missing meshes and clarify the non-GDF symmetry rule for both backends. |
 
 ## Inputs and method
 
@@ -31,8 +32,12 @@ the mesh before generating either single or modular inputs. Missing or invalid
 GDFs refuse before native inputs are written. This requirement verifies stored
 symmetry and does not establish buoyancy qualification. Matrix and roundtrip
 controls stage synthetic GDFs without claiming a qualified hydrodynamic model.
-The AQWA mesh reader requires the `.gdf` suffix; a different or missing suffix
-does not exempt a declared GDF or a symmetry cut from verification.
+The AQWA mesh reader requires the `.gdf` suffix. An existing declared GDF with
+a different or missing suffix is refused with its filename and the suffix
+requirement, separately from a missing mesh. Supply a `.gdf` filename for AQWA.
+Readable-file controls exercise OrcaWave generation with an explicit GDF format
+and unrecognised or absent suffixes; native solver acceptance of those filenames
+is not established.
 The external-matrix example is an input schema demonstration with a mesh
 reference, not a generation-ready model; supply a readable mesh before use.
 
@@ -40,8 +45,11 @@ A declared cut with coordinates on both sides also refuses. Classification
 uses `max(1e-8 m, 2e-6 * longitudinal mesh extent)`; nodes within this tolerance
 are snapped to the cut plane in the validation copy before reflection and
 welding. Panels wholly on any declared cut plane refuse to prevent coincident
-reflections. Input files remain unchanged. OrcaWave accepts declared symmetry
-only for verified GDF sectors; OBJ, MSH and AQWA DAT require `symmetry: none`.
+reflections. Input files remain unchanged. Both backends refuse symmetry cuts
+without a verified GDF mesh. OBJ, MSH and AQWA DAT inputs with matching filename
+extensions require `symmetry: none`. AQWA selects its parser by suffix, so a
+`.gdf` file is checked as GDF even when another format is declared; OrcaWave
+refuses recognised format/suffix contradictions.
 
 [OrcaWave help, Bodies: Body mesh](https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Bodies.htm#BodyMesh)
 requires an explicit symmetry setting even when the format contains flags.
