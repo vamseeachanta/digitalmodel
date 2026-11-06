@@ -84,3 +84,43 @@ separation or depth is supplied, and no force in N or moment in N m is computed.
 The example supplies no calibration or external coefficient table and makes no
 full-module qualification claim. Physical-force evidence, full reports and
 shared indexes remain follow-up work requiring separate review.
+
+## Module report index
+
+[Module report](report.html): the ten-section passing-ship module analysis adds
+a source-linked method map, H1 controls, computed section results, an engineering
+change panel and explicit limits. The existing standalone builder and example
+above retain their command and output contract. The parent issue remains open
+for broader numerical qualification.
+
+The module report has its own [builder](build_report.py), [change record](changes.json)
+and [source record](sources.json). With NumPy and SciPy available in the active
+Python environment, rebuild from the repository root using an explicit scratch
+output directory:
+
+```sh
+PYTHONPATH=src uv run --no-project --with pytest python docs/reports/modules/passing_ship/build_report.py --output-dir "$TMPDIR/passing-ship-report"
+```
+
+The command creates only `report.html`, `changes.json` and `sources.json` in the
+supplied directory. All intermediate test and build output belongs in scratch
+storage. No runtime timestamp or output path enters the artifacts. The generated
+page embeds its presentation and calculation record and needs no external
+resources; repository-relative source links resolve in the delivered location.
+
+H1 above is also the report's input and equation basis. Each station value and
+slope, including the one-sided endpoint limits, is independently checked. For
+these integer, half and quarter inputs, the helper operations have exactly
+representable binary intermediates, so the roundoff budget and absolute/relative
+test tolerances are zero. This does not set a tolerance for force integration.
+Visible comparisons use one decimal place: the exact shape `3/4` displays as
+`0.8`, while the tests compare unrounded values. Reproducibility alone supplies
+no physical validation.
+
+The new [report regression](../../../../tests/hydrodynamics/passing_ship/test_module_report.py)
+checks every displayed quantity and unit against H1 and fresh helper calls,
+changes computed values to detect stale output, and compares two isolated
+rebuilds with the delivered files. It also checks source locators, revision
+placement, scope limits and the package pointer. Physical forces, force
+coefficients, separation/depth validity and full force-calculator qualification
+remain **NOT_EVALUATED**.
