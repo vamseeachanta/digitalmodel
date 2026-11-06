@@ -166,7 +166,10 @@ class PumpDiagnostics:
         """
         # A populated diagnostic card represents an explicit solver opt-in.
         # Default workflows, older results and other solvers use downhole_card.
-        card = results.diagnostic_card or results.downhole_card
+        card = (
+            results.diagnostic_card
+            if results.diagnostic_card is not None else results.downhole_card
+        )
         if card is None:
             return DiagnosticResult(
                 classification="NORMAL",

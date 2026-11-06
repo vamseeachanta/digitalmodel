@@ -199,8 +199,12 @@ class DynacardWorkflow:
         file_base = self._result_file_base(cfg)
         report_path = result_folder / f'{file_base}_diagnostic_report.html'
 
+        card = (
+            results.diagnostic_card
+            if results.diagnostic_card is not None else results.downhole_card
+        )
         svg = DiagnosticAnnotator().render(
-            results.diagnostic_card or results.downhole_card,
+            card,
             diag.classification,
             diag.confidence,
             diag.differential,

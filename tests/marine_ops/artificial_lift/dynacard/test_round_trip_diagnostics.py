@@ -135,7 +135,10 @@ def test_manufactured_calculation_samples(solver_options, expected_load):
         fluid_density=1.0,
         damping=np.zeros(2),
     )
-    np.testing.assert_allclose(result.load, expected_load, rtol=0, atol=1e-12)
+    # Savitzky-Golay's degree-five least-squares coefficient solve adds float64
+    # round-off. Use a relative allowance with margin over the measured error
+    # across SciPy versions; this is not an engineering acceptance tolerance.
+    np.testing.assert_allclose(result.load, expected_load, rtol=1e-11, atol=0)
     np.testing.assert_allclose(
         result.position, [-18, -23, -18, -22, -18, -18, -19, -18],
         rtol=0, atol=1e-12,
@@ -191,10 +194,16 @@ def test_closed_input_label_survives_the_known_calibration_limit():
 
 
 @pytest.mark.parametrize("card_field", ["downhole_card", "diagnostic_card"])
-def test_explicit_card_reaches_the_real_feature_extractor(card_field, monkeypatch):
+@pytest.mark.parametrize("falsey_card", [False, True])
+def test_explicit_card_reaches_the_real_feature_extractor(
+    card_field, falsey_card, monkeypatch,
+):
     """Observe routing without pinning a synthetic classifier prediction."""
+    if falsey_card:
+        monkeypatch.setattr(CardData, "__bool__", lambda self: False, raising=False)
     pump = ALL_GENERATORS["SAND_ABRASION"](seed=0)
-    results = AnalysisResults(**{card_field: pump})
+    results = AnalysisResults(downhole_card=ALL_GENERATORS["NORMAL"](seed=0))
+    setattr(results, card_field, pump)
     observed = []
     extract = FeatureExtractor.extract_classifier_vector
 
@@ -243,10 +252,13 @@ def test_failure_precedes_warning_through_public_router(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("use_diagnostic_card", [False, True])
+@pytest.mark.parametrize("falsey_card", [False, True])
 def test_report_plots_the_card_used_for_classification(
-    tmp_path, monkeypatch, use_diagnostic_card,
+    tmp_path, monkeypatch, use_diagnostic_card, falsey_card,
 ):
     """The plotting boundary receives the selected card and matching disclosure."""
+    if falsey_card:
+        monkeypatch.setattr(CardData, "__bool__", lambda self: False, raising=False)
     plotted = []
 
     def capture(self, card, *args):
