@@ -14,6 +14,7 @@ general broad-band estimator accuracy remain unqualified.
 | 1 | 2026-10-28 | Define both moment contracts, record independent arithmetic tests and identify stored-result consumers after correcting cyclic rates. |
 | 2 | 2026-11-06 | Correct Dirlik irregularity coefficients, add independent limiting and broad-band regressions, refresh the atlas and clarify its publication basis. |
 | 3 | 2026-11-06 | Mark the retained intermediate atlas as superseded and record the structural Dirlik evidence gap and follow-up criteria. |
+| 4 | 2026-11-06 | Guard both supersession fields with a regression and clarify that the loader does not enforce the advisory disposition. |
 
 ## Moment and rate contracts
 
@@ -164,6 +165,12 @@ of the irregularity factor in Dirlik's coefficients; it therefore retains
 known-defective damage predictions. Its files and record are retained for
 traceability, and the atlas remains loadable by explicit ID. The default
 pointer selects `cebf7823125c`.
+
+The `superseded_by` and `superseded_reason` fields are advisory metadata.
+The atlas loader and query path do not read these fields; loading an explicit
+ID does not emit a supersession warning or reject the retained basis.
+`test_superseded_spectral_atlas_records_advisory_disposition` guards both
+fields and the presence of the corrected successor's provenance record.
 
 The historical record's `VERIFIED` status certifies reconstruction of its source
 fingerprint and artifact digests, not the estimator's engineering validity.

@@ -259,6 +259,27 @@ def test_current_spectral_atlas_has_retained_provenance():
     assert fingerprint == atlas.provenance["content_fingerprint"]
 
 
+def test_superseded_spectral_atlas_records_advisory_disposition():
+    """Retained defective predictions must identify their corrected successor."""
+    import json
+
+    root = Path(__file__).resolve().parents[2]
+    inventory = json.loads(
+        (root / "atlases/historical-provenance.json").read_text(encoding="utf-8")
+    )
+    manifest = "atlases/spectral_fatigue/692aaf26f51c/manifest.yaml"
+    records = [row for row in inventory["atlases"] if row["manifest"] == manifest]
+    assert len(records) == 1
+    record = records[0]
+    assert record["superseded_by"] == "cebf7823125c"
+    assert record["superseded_reason"] == (
+        "Dirlik coefficients used spectral width instead of the irregularity factor; "
+        "damage predictions require recalculation."
+    )
+    successor = f"atlases/spectral_fatigue/{record['superseded_by']}/manifest.yaml"
+    assert sum(row["manifest"] == successor for row in inventory["atlases"]) == 1
+
+
 @pytest.mark.parametrize("slope", [3, 5, 7])
 def test_dirlik_converges_to_narrow_band_rectangular_psd(slope):
     """Unit-area PSD on [1-h, 1+h] Hz tends to a single spectral line.
