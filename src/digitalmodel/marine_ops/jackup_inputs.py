@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Digest-checked jack-up inputs and strict metocean client consumption."""
@@ -63,8 +66,9 @@ def query_public_inputs(noaa_client, era5_client, gebco_client, start_date, end_
 
     Clients must already be configured by the caller. This function reads no
     credentials and implements no automatic provider substitution. The existing
-    GEBCO client returns zero on parse failure; zero is rejected for this offshore
-    calculation. Returned sample maxima are not qualified design extremes.
+    GEBCO client rejects missing, malformed and nonfinite elevations; zero depth
+    is also rejected for this offshore calculation. Returned sample maxima are
+    not qualified design extremes.
     """
     if era5_client is None:
         raise ValueError('ERA5 input is unavailable; no automatic substitution is permitted')

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Research-only stress extrapolation; see the adjacent surface-crack spike note.
 
 No standard-derived acceptance calculation. All distances are mm, stress MPa,
@@ -11,7 +14,6 @@ from functools import lru_cache
 import json
 import math
 import os
-import resource
 import re
 import signal
 import shutil
@@ -83,6 +85,8 @@ def extrapolate_stress_k(radii_mm, sigma_yy_mpa):
 
 
 def _resource_limit():
+    import resource
+
     # Owner resource ceiling; one sequential process, not an engineering input.
     cap = 16*1024**3
     resource.setrlimit(resource.RLIMIT_AS, (cap, cap))

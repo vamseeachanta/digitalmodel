@@ -6,14 +6,16 @@ The generated PBAR and analytical reference use the same bending plane for
 `MystranChain.run_cantilever_bar_validation`: the span follows global x, the
 orientation vector follows global y, and the tip force follows global z.
 The reference displacement uses **I2**, the second moment about local y.
-Offline deck and arithmetic checks establish this pairing; native solver
-agreement remains NOT_EVALUATED until the integration cases are run.
+Native MYSTRAN 19.0.0 runs confirm both bending planes for the unequal section
+below. Each signed tip displacement agrees with its independent
+Euler-Bernoulli target within 0.1 %, against a 1.0 % regression criterion.
 
 ## Revision history
 
 | Revision | Date | What changed and why |
 |---|---|---|
 | 0 | 2026-10-21 | Rectangular-section inputs, hand calculation and deck checks are documented to expose an axis swap hidden by a square section. |
+| 1 | 2026-10-22 | Native two-plane results, input decks and parsed excerpts are recorded to confirm the unequal-section bending axes. |
 
 Table 1. Revision history.
 
@@ -104,15 +106,74 @@ relative rounding error of 5 × 10⁻⁸ with no absolute tolerance: half a unit
 the last significant place divided by the smallest leading digit. This is a
 serialization criterion, not an engineering acceptance limit.
 
-## Native validation and limits
+## Native run
+
+Two separate linear-static runs were completed on 2026-10-22 using the Table 2
+section, first with the 1000 N force along +y, then along +z. The z run calls
+`run_cantilever_bar_validation` itself; the y run uses `setup_analysis` with
+the same PBAR and orientation. The additional independent y target is:
+
+```text
+delta_y = P L³ / (3 E I1)
+        = 1000 / (3 × 210 × 10⁹ × (1/960000))
+        = 4/2625 m
+        ≈ 1.524 mm
+```
+
+The executable reports `MYSTRAN Version 19.0.0   JUN 28 2026`. It was built
+from the [public 19.0.0 source](https://github.com/MystranSolver/MYSTRANSolver/tree/19.0.0),
+commit `3a5913a904ee1adbda9fbcaf9c0a6af8e10f0f9f`, using GNU Fortran 13.3.0,
+CMake Release, SuperLU, METIS and system OpenBLAS. The release provides only
+a Windows executable. The build used four workers; the runs used one BLAS
+and OpenMP thread. No solver source or production module was changed.
+
+| Force plane | PBAR inertia | Hand target (mm) | Native tip (mm) | Relative error (%) | Criterion (%) |
+|---|---|---|---|---|---|
+| +y | I1 | 1.524 | 1.524 | 0.0 | < 1.0 |
+| +z | I2 | 0.381 | 0.381 | 0.0 | < 1.0 |
+
+Table 3. Signed tip agreement; errors use unrounded metre values and are displayed
+to one decimal place. Small nonzero errors remain in the machine-readable record.
+
+The y-to-z displacement ratio is 4.0. Each unloaded transverse displacement is
+zero in the F06 output. The constrained-root force is -1000 N in the loaded
+direction for each case. The epsilon estimates are below the existing test
+criterion of 10⁻⁸. Both full outputs contain the `END OF JOB` marker and no
+error or fatal diagnostics.
+
+The recorded input decks are
+[`y.bdf`](../../../../../tests/solvers/mystran/fixtures/native_rectangular/y.bdf)
+and [`z.bdf`](../../../../../tests/solvers/mystran/fixtures/native_rectangular/z.bdf).
+The corresponding compact
+[`y.F06`](../../../../../tests/solvers/mystran/fixtures/native_rectangular/y.F06)
+and [`z.F06`](../../../../../tests/solvers/mystran/fixtures/native_rectangular/z.F06)
+excerpts retain the version line, epsilon, all five displacement rows, root
+reaction and completion marker. A script selected these lines and removed
+trailing spaces; numeric tokens are unchanged. Other headers are omitted.
+
+The [manifest](../../../../../tests/solvers/mystran/fixtures/native_rectangular/manifest.json)
+records the source revision, executable digest, build configuration, assumed
+inputs and units, UTC completion times, unrounded agreement, original F06
+digests, selected line numbers and digests of the committed decks and excerpts.
+Full outputs and build logs are retained locally outside the repository;
+that retention does not establish backup or public availability.
+
+`tests/solvers/mystran/test_native_run.py` runs this same pair when `mystran`
+is on PATH or `MYSTRAN_EXE` names its executable. Otherwise the two live cases
+skip with an explicit reason. Three fixture-only cases require no solver:
+they regenerate both decks byte for byte, check artifact digests, parse the
+recorded F06 excerpts and recompute the stored agreement from the hand targets.
+
+## Native validation limits
 
 The parameterized native test
 `tests/solvers/mystran/test_fem_chain.py::TestIntegration::test_cbar_cantilever_matches_analytical`
 covers square, tall and wide sections. The existing square-case regression
 criteria are retained: tip-displacement error below 0.1 %, reaction-force
 relative error within 10⁻⁶, and absolute epsilon below 10⁻⁸. They are test
-criteria, not published engineering allowables. Native execution is NOT_RUN
-for this change; release confirmation of the rectangular case remains open.
+criteria, not published engineering allowables. The new two-plane runs satisfy
+the requested 1.0 % native rectangular confirmation. The older square, reversed
+section and solid-mesh native cases were not executed for this record.
 
 The PBAR shear factors are omitted. In MYSTRAN this gives zero transverse
 shear flexibility (User Manual section 11.51, remark 6), matching the

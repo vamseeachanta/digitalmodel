@@ -11,6 +11,8 @@ Worksheet scenario (generic):
     surface press. = seabed - rho*g*h  -> 73402415.65 Pa = 10646.13956 psi
 """
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -85,3 +87,54 @@ class TestSeabedPressure:
         assert seabed_pressure(rho, h) == pytest.approx(
             hydrostatic_pressure(rho, h), rel=1e-12
         )
+
+
+class TestPipelinePressureBasis:
+    """Independent arithmetic from the synthetic inputs in the basis note.
+
+    Source: docs/examples/pipeline-hydrostatic-pressure-basis.md, Synthetic
+    basis. A unit-area column has mass 1000 * 75 = 75000 kg and weight
+    75000 * 10 = 750000 N. Its head is 750000 Pa; adding the supplied
+    120000 Pa absolute surface pressure gives 870000 Pa absolute.
+    """
+
+    def test_synthetic_gauge_and_absolute_pressure(self):
+        # Inputs and exact expected values: synthetic basis cited above.
+        density, gravity, height, surface_pa = 1000.0, 10.0, 75.0, 120000.0
+        assert hydrostatic_pressure(density, height, gravity=gravity) == 750000.0
+        assert seabed_pressure(
+            density, height, surface_pressure=surface_pa, gravity=gravity
+        ) == 870000.0
+
+    @pytest.mark.parametrize(
+        "datum_shift_m",
+        [0.0, 250.0, -400.0],
+        ids=["original-datum", "raised-datum", "lowered-datum"],
+    )
+    def test_height_datum_invariance(self, datum_shift_m):
+        # Source: basis note, Datum convention; elevations increase upward.
+        top_m = 20.0 + datum_shift_m
+        bottom_m = -55.0 + datum_shift_m
+        height_m = top_m - bottom_m
+        assert height_m == 75.0
+        assert hydrostatic_pressure(1000.0, height_m, gravity=10.0) == 750000.0
+        assert seabed_pressure(
+            1000.0, height_m, surface_pressure=120000.0, gravity=10.0
+        ) == 870000.0
+
+    def test_documented_example_executes(self):
+        note = Path("docs/examples/pipeline-hydrostatic-pressure-basis.md")
+        text = (Path(__file__).resolve().parents[2] / note).read_text(
+            encoding="utf-8"
+        )
+        _, opening, remainder = text.partition("```python\n")
+        assert opening, "The executable pressure-basis example is missing"
+        snippet, closing, tail = remainder.partition("```")
+        assert closing, "The example fence is not closed"
+        assert "```python" not in tail, "Keep one executable basis example"
+        namespace = {"__name__": "__main__"}
+        exec(compile(snippet, note.as_posix(), "exec"), namespace)
+        # Expected values come from the unit-area hand calculation above.
+        assert namespace["height_m"] == 75.0
+        assert namespace["gauge_pa"] == 750000.0
+        assert namespace["absolute_pa"] == 870000.0

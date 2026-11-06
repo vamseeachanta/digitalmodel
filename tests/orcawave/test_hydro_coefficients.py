@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Tests for orcawave.hydro_coefficients module."""
 
 import os
@@ -20,6 +22,8 @@ from digitalmodel.orcawave.hydro_coefficients import (
     to_native_added_mass,
     to_native_damping,
 )
+from digitalmodel.orcawave.qa_gates import check_hydrodynamics
+from digitalmodel.orcawave.rao_processing import RAOTable
 
 
 def _make_matrix(freq: float, diag_val: float) -> HydroMatrix6x6:
@@ -57,12 +61,25 @@ class TestHydroMatrix6x6:
         m = _make_matrix(0.1, 50.0)
         assert m.frequency_rad_s == 0.1
 
-    def test_matrix_symmetry(self):
+    def test_asymmetric_added_mass_is_refused_by_gate(self):
+        """Reciprocity, sidecar C1/Q1; #2748 section 15.
+
+        Assumed A12=30, A21=0 and diagonal=200 give error 30/200=15%,
+        exceeding the declared pack tolerance of 2%. Raw input is retained
+        for diagnostics, then refused for use by check_hydrodynamics.
+        """
         vals = np.eye(6) * 200.0
-        vals[0, 1] = vals[1, 0] = 30.0
+        vals[0, 1] = 30.0
         m = HydroMatrix6x6(frequency_rad_s=0.5, values=vals.tolist())
-        arr = m.to_numpy()
-        np.testing.assert_allclose(arr, arr.T, atol=1e-10)
+        coefficients = HydroCoefficients(
+            added_mass=[m], radiation_damping=[_make_matrix(0.5, 1)]
+        )
+        heave = RAOTable(
+            dof="Heave", unit="m/m", periods=[30], headings_deg=[0],
+            amplitudes=[[1]], phases_deg=[[0]],
+        )
+        with pytest.raises(ValueError, match="asymmetry"):
+            check_hydrodynamics(coefficients, heave)
 
 
 class TestInterpolation:
@@ -120,10 +137,17 @@ class TestWAMITFormat:
     def test_wamit_damping_export(self):
         coeffs = _make_coefficients()
         text = to_native_damping(coeffs)
-        lines = [l for l in text.strip().splitlines() if l.strip()]
+        lines = [line for line in text.strip().splitlines() if line.strip()]
         assert len(lines) > 0
 
     def test_hydrostatic_restoring(self):
+        """C2, WAMIT 7.5 manual 3.1; assumed #2748 section 15 inputs.
+
+        C33=1025*9.81*3000=30165750;
+        C44=1025*9.81*10000*2=201105000;
+        C55=1025*9.81*10000*100=10055250000, in SI units.
+        rel=1e-12 is the issue acceptance, not an engineering tolerance.
+        """
         c = create_hydrostatic_restoring(
             displaced_volume_m3=10000.0,
             waterplane_area_m2=3000.0,
@@ -132,12 +156,10 @@ class TestWAMITFormat:
         )
         arr = np.array(c)
         assert arr.shape == (6, 6)
-        # Heave restoring > 0
-        assert arr[2, 2] > 0
-        # Roll restoring > 0
-        assert arr[3, 3] > 0
-        # Pitch restoring > 0
-        assert arr[4, 4] > 0
+        np.testing.assert_allclose(
+            np.diag(arr)[2:5], [30165750, 201105000, 10055250000],
+            rtol=1e-12, atol=0,
+        )
         # Surge restoring = 0
         assert arr[0, 0] == 0.0
 

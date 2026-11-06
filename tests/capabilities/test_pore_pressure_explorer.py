@@ -1,13 +1,29 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Regression checks for the synthetic pore-pressure explorer.
 
 Input basis: synthetic illustrative inputs defined in the builder, assumed
 and unsourced, based on previous experience rather than measured well data.
 Equation source: Eaton (1975), SPE 5544, sonic relation documented in
 src/digitalmodel/well/drilling/pore_pressure.py (Methods).
+
+Plan-lite:
+Check that the normal sonic trend gives normal pressure independently of
+synthetic overburden, and that a JSON round trip preserves null predictions
+and the missing-calibration status and reason. Run the focused suites with
+temporary output directed outside the repository:
+    PYTHONPATH=src uv run --no-project --with pytest --with PyYAML --with pandas
+        python -m pytest tests/capabilities/test_pore_pressure_explorer.py
+        tests/well/test_pore_pressure.py -q -rA -p no:cacheprovider
+The command is shown across lines for readability; join them when running.
+Synthetic, uncalibrated inputs do not qualify an engineering prediction.
 """
 
 import importlib.util
 import json
+import re
+from html import unescape
 from pathlib import Path
 
 import pytest
@@ -49,6 +65,81 @@ def test_normal_interval_uses_normal_pressure(builder, depth):
     point = next(p for p in builder.build_study()["series"] if p["z"] == depth)
     assert point["pp"] == 8.6
     assert point["mw"] == 8.9
+
+
+@pytest.mark.parametrize("overburden_ppg", [12.0, 16.5, 19.0])
+def test_on_trend_pressure_is_independent_of_synthetic_overburden(
+    builder, monkeypatch, overburden_ppg
+):
+    """Synthetic inputs for issue #2707, assumed, based on previous experience.
+
+    Depths are 5,000 through 8,000 ft at 500 ft spacing, including the
+    8,000 ft onset. Normal sonic is 170 - 0.004*z us/ft; observed sonic
+    equals normal throughout this interval. Each case holds overburden at
+    12.0, 16.5 or 19.0 ppg. Pn is independently declared as 8.6 ppg and
+    the illustrative mud margin is 0.3 ppg; no calibration is supplied.
+
+    The sonic relation cited in pore_pressure.py (Methods, SPE 5544) gives
+    observed/normal = 1, hence Pp = Sv - (Sv - Pn)*1**n = Pn for any n.
+    Thus every overburden case gives 8.6 ppg pressure and 8.6+0.3=8.9 ppg
+    mud indicator. Exact equality checks the builder's decimal output.
+    """
+    depths = [5000, 5500, 6000, 6500, 7000, 7500, 8000]
+    monkeypatch.setattr(builder, "_DEPTH", depths)
+    monkeypatch.setattr(builder, "_PN", 8.6)
+    monkeypatch.setattr(builder, "_KICK_MARGIN", 0.3)
+    monkeypatch.setattr(builder, "_overburden", lambda z: overburden_ppg)
+
+    study = builder.build_study()
+
+    assert study["meta"]["pn"] == 8.6
+    assert study["meta"]["kick_margin"] == 0.3
+    assert study["meta"]["governing_method"] == "eaton"
+    assert study["meta"]["bowers_status"] == "NOT_EVALUATED"
+    assert study["meta"]["bowers_reason"] == (
+        "No Bowers calibration is supplied for the synthetic trend."
+    )
+    assert study["meta"]["data_basis"] == "assumed, based on previous experience"
+    assert study["series"] == [
+        {"z": z, "sv": overburden_ppg, "eaton": 8.6, "bowers": None,
+         "pp": 8.6, "mw": 8.9}
+        for z in depths
+    ]
+
+
+def test_missing_calibration_survives_serialization(builder):
+    """Round-trip the synthetic study for issue #2707 without a calibration.
+
+    Inputs from build_pore_pressure_explorer.py are assumed, based on
+    previous experience: depths 5,000..14,000 ft every 500 ft; Sv rises
+    linearly from 16.5 to 19.0 ppg; Pn=8.6 ppg; margin=0.3 ppg; normal
+    sonic=170-0.004*z us/ft. Observed/normal is unity through the 8,000 ft
+    onset, then rises linearly to 1.35 at 14,000 ft. No calibration is given.
+
+    Using the sonic relation cited in pore_pressure.py (Methods, SPE 5544),
+    unity gives Pp=Sv-(Sv-Pn)=8.6 ppg and mud=8.6+0.3=8.9 ppg. At the
+    endpoint, Pp=19-(19-8.6)/1.35**3 rounds to 14.77 ppg and the mud
+    indicator rounds to 15.07 ppg. These are independent hand calculations.
+    """
+    study = builder.build_study()
+    encoded = json.dumps(study, allow_nan=False)
+    restored = json.loads(encoded)
+
+    assert restored == study
+    assert restored["meta"]["governing_method"] == "eaton"
+    assert restored["meta"]["bowers_status"] == "NOT_EVALUATED"
+    assert restored["meta"]["bowers_reason"] == (
+        "No Bowers calibration is supplied for the synthetic trend."
+    )
+    assert restored["meta"]["data_basis"] == "assumed, based on previous experience"
+    assert all(point["bowers"] is None for point in restored["series"])
+    assert all(point["pp"] == point["eaton"] for point in restored["series"])
+    normal_points = [point for point in restored["series"] if point["z"] <= 8000]
+    assert [(point["z"], point["pp"], point["mw"]) for point in normal_points] == [
+        (z, 8.6, 8.9) for z in [5000, 5500, 6000, 6500, 7000, 7500, 8000]
+    ]
+    endpoint = next(point for point in restored["series"] if point["z"] == 14000)
+    assert (endpoint["pp"], endpoint["mw"]) == (14.77, 15.07)
 
 
 def test_overpressure_ramp_retains_eaton_response(builder):
@@ -115,13 +206,62 @@ def test_committed_outputs_match_builder(builder, non_utf8_default):
     )
 
 
-def test_page_labels_band_as_illustrative(builder):
-    """The display supplies no evaluated fracture or stability boundary."""
+def test_page_does_not_draw_an_unsupported_window(builder):
+    """Overburden supplies no evaluated fracture or stability boundary."""
     page = builder._HTML
     assert 'Mud-weight indicator<b id="rM"' in page
-    assert "Shaded: illustrative band" in page
-    assert "assumed 0.3 ppg margin" in page
-    assert "no fracture or stability criterion is evaluated" in page
-    assert "safe band" not in page
-    assert "ceiling" not in page
+    assert 'id="win"' not in page
+    assert "win.style" not in page
+    assert ".win{" not in page
+    assert "Shaded:" not in page
+    assert re.search(r"\bsafe\b", page, re.IGNORECASE) is None
     assert "Min. mud weight" not in page
+
+
+@pytest.fixture
+def generated_explorer(builder, monkeypatch, tmp_path):
+    """Read actual generated files, keeping page disclosures separate from JSON."""
+    monkeypatch.setattr(builder, "_REPO", tmp_path)
+    monkeypatch.setattr(builder, "_OUT_DIR", tmp_path)
+    builder.main()
+    study = json.loads((tmp_path / "pore-pressure-explorer.json").read_text(encoding="utf-8"))
+    page = (tmp_path / "pore-pressure-explorer.html").read_text(encoding="utf-8")
+    visible = unescape(re.sub(r"<[^>]+>", " ", page.split("<script>", 1)[0]))
+    return study, page, " ".join(visible.split())
+
+
+def test_missing_fracture_ceiling_is_disclosed(generated_explorer):
+    """No supplied fracture gradient means no established window ceiling."""
+    study, _, visible = generated_explorer
+    assert study["meta"]["drilling_window_status"] == "NOT_EVALUATED"
+    assert "no fracture gradient" in study["meta"]["drilling_window_reason"].lower()
+    assert "NOT_EVALUATED" in visible
+    assert "no window ceiling is established" in visible.lower()
+    assert "no fracture gradient is supplied or calculated" in visible.lower()
+    assert "overburden is a vertical-stress reference" in visible.lower()
+    assert "assumed 0.3 ppg margin" in visible
+    assert "no mud-weight recommendation" in visible.lower()
+
+
+@pytest.mark.parametrize("exclusion", [
+    "collapse (shear failure)",
+    "weak bedding planes",
+    "natural fractures",
+    "chemical or time-dependent effects",
+])
+def test_window_exclusions_are_visible(generated_explorer, exclusion):
+    """Exclusions must appear to readers as well as in machine-readable output."""
+    study, _, visible = generated_explorer
+    assert exclusion in study["meta"]["not_covered"]
+    assert exclusion in visible
+
+
+def test_page_links_existing_stability_screen(generated_explorer):
+    """The screen link targets the local public workflow and states its limit."""
+    _, page, visible = generated_explorer
+    target = "examples/workflows/wellbore-stability/README.md"
+    assert (ROOT / target).is_file()
+    assert "NOT_VALIDATED" in (ROOT / target).read_text(encoding="utf-8")
+    assert f'href="https://github.com/vamseeachanta/digitalmodel/blob/main/{target}"' in page
+    assert "wellbore stability screen" in visible.lower()
+    assert "NOT_VALIDATED" in visible

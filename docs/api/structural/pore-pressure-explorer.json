@@ -8,7 +8,15 @@
     "governing_method": "eaton",
     "bowers_status": "NOT_EVALUATED",
     "bowers_reason": "No Bowers calibration is supplied for the synthetic trend.",
-    "data_basis": "assumed, based on previous experience"
+    "data_basis": "assumed, based on previous experience",
+    "drilling_window_status": "NOT_EVALUATED",
+    "drilling_window_reason": "No fracture gradient is supplied or calculated; no window ceiling is established.",
+    "not_covered": [
+      "collapse (shear failure)",
+      "weak bedding planes",
+      "natural fractures",
+      "chemical or time-dependent effects"
+    ]
   },
   "series": [
     {

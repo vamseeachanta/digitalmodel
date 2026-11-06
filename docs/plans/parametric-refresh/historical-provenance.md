@@ -14,6 +14,11 @@ qualification of the engineering methods or proof of a historical execution.
 | Initial | 2026-10-21 | Record historical source evidence and expose reconstruction gaps without changing numerical artifacts. |
 | 1 | 2026-10-21 | Check committed artifact bytes, report checkout drift, allow symlinked archive parents, and read indexes as UTF-8 for portable verification. |
 | 2 | 2026-10-21 | Distinguish configured checkout conversion from content edits, fail the audit on content drift, and reject archive directory junctions. |
+| 3 | 2026-10-24 | Permit changed pull-request entries to retain their own source snapshots and require merge commits to preserve that ancestry after merging. |
+| 4 | 2026-10-25 | Resolve CI heads from event evidence or validated local merges, isolate Git object reads, and describe merge-only integration and recovery. |
+| 5 | 2026-10-25 | Reject branch-only source retention unless live destination settings establish merge-only integration, preventing acceptance before a squash or rebase can orphan the source. |
+| 6 | 2026-10-25 | Bind CI ancestry and inventory comparisons to destination base evidence so a contributor fork's default ref cannot bypass integration policy. |
+| 3 | 2026-10-25 | Bind regenerated source and artifact bytes before publication, resolving the first matching committed publication without replacing historical entries. |
 
 ## Inventory and interpretation
 
@@ -117,6 +122,103 @@ drift list before using checkout artifacts as engineering inputs.
 
 ## Source archives and Git history requirements
 
+### Pull-request retention and merge method
+
+An open pull request may retain a source revision through its own head only for
+inventory entries that it introduces or changes. The verifier compares committed
+entries by manifest path against the inventory at the merge base with
+`--retained-ref` (default `origin/main`). A qualifying entry shall exactly match
+the committed entry at the pull-request head, and its source revision shall be
+an ancestor of that head. Unchanged entries still require default-branch
+ancestry. A branch-only source also requires live destination policy evidence:
+merge commits enabled, squash merging disabled and rebase merging disabled.
+Missing, invalid, unavailable or unsafe policy evidence rejects that exception.
+Sources already retained on the default branch require no policy request.
+All existing source, basis, fingerprint and artifact checks remain.
+
+For a local feature checkout, the head defaults to `HEAD`; `--pr-head` may name
+an explicit head contained in the checkout ancestry. In CI, `GITHUB_REF` of
+`refs/pull/<number>/head` or `refs/pull/<number>/merge` selects the full
+`pull_request.head.sha` from the UTF-8 event file at `GITHUB_EVENT_PATH`.
+That commit shall be available and contained in the checked revision's ancestry.
+An unreadable or malformed event fails closed. Without an event file setting,
+the verifier uses a locally available `refs/pull/<number>/head`. If that ref is
+absent under a CI merge ref, a two-parent local merge is accepted only when its
+first parent equals the resolved retained tip; its second parent supplies the
+pull-request head.
+This matches the detached local merge built by the domain quality workflow,
+which does not fetch a pull ref. The synthetic merge commit itself never
+substitutes for the head, and an explicit override shall resolve to the same
+authenticated head. Missing evidence fails closed; the verifier never fetches.
+Inherited object-directory overrides and Git replacement objects are ignored.
+
+CI retention decisions use the destination base before checking default-branch
+ancestry or comparing inventory entries. With an event file supplied,
+`pull_request.base.sha` shall be a full available commit contained in the checked
+revision; `base.ref` shall match the retained branch, and `base.repo.full_name`
+shall match `GITHUB_REPOSITORY`. That event base supplies both retention ancestry
+and the merge base used for inventory comparison. A fork's `origin/main` cannot
+substitute for it. A stale event base can reject newly retained evidence; it
+cannot silently qualify a fork-only source. Missing or invalid event base
+evidence rejects the check without falling back to another ref.
+
+Without an event file, CI requires a two-parent merge whose first parent equals
+the configured retained tip and an origin URL that identifies the trusted
+destination repository. Missing identity or merge evidence fails closed. Sources
+retained on an authenticated destination base still require no policy request.
+
+Branch-only source retention **requires an enforced merge-only integration
+policy**, rather than a manually selected merge method. Before accepting that
+exception, the verifier reads the destination repository's current settings
+from the GitHub repository API. Each policy field shall be an explicit Boolean:
+`allow_merge_commit: true`, `allow_squash_merge: false` and
+`allow_rebase_merge: false`. The response repository and default branch shall
+match the destination and retained branch. In CI, `GITHUB_REPOSITORY` identifies
+the destination and is cross-checked with the event's base repository when an
+event file is supplied; a contributor fork's origin cannot authorize integration.
+Local checks resolve the destination from a supported GitHub origin URL.
+
+The API request uses a ten-second timeout and an optional `GH_TOKEN` or
+`GITHUB_TOKEN`. Missing settings, insufficient access, rate limits and connection
+errors reject branch-only retention; they do not authorize an offline fallback.
+The [repository API](https://docs.github.com/en/rest/repos/repos#get-a-repository)
+requires read and write contents permissions to expose merge settings.
+Positive policy verification with the existing read-only workflow
+credential is therefore not established. No workflow permission or repository
+setting is changed by this verifier. Existing default-retained sources continue
+to verify offline. Enabling the exception requires separately authorized
+merge-only settings and policy-read access.
+
+A merge commit preserves the original authenticated source snapshots without a
+later index rewrite. Automatic repinning is not implemented: a replacement
+revision could contain different source bytes and would require full
+reconstruction before acceptance. Manual merge selection alone does not satisfy
+the policy gate. Later privileged policy changes or direct history rewrites are
+outside the evidence established by a policy read.
+
+After merging, verification on the default branch requires source ancestry in
+the retained default ref, even when the old feature or pull-request ref remains.
+A squash-merged orphan fails with a message identifying the missing retention
+and the merge-commit requirement. For recovery after squash or rebase,
+maintainers shall fetch `refs/pull/<number>/head` and merge that original head
+into `main` with a merge commit through the normal reviewed integration path.
+The recovered ancestry shall retain every indexed source revision; restoring
+a pull ref alone does not repair default-branch retention. No index revision
+or stored fingerprint is substituted. Maintainers shall rerun the inventory
+check against the updated default ref afterward. A retention error identifies
+the retained ref and resolved SHA; if that ref is stale, fetch it before retrying.
+
+Temporary-repository tests cover added, changed and unchanged entries,
+advancing default tips, detached CI merges without pull refs, invalid event
+heads, both merge styles, unrelated revisions and unchanged digest validation.
+Policy tests cover unsafe or incomplete settings, strict Boolean values,
+destination identity, fork origins, unavailable responses and offline handling
+of sources already retained on the default branch.
+The entry comparison uses the merge base with the authenticated head, rather
+than the latest retained inventory: a main-only metadata edit does not turn an
+untouched pull-request entry into a changed entry. No workflow or atlas is
+regenerated by this change.
+
 A Git checkout needs the indexed commits and blobs, their complete ancestry to
 the retained ref, and matching committed atlas files at `HEAD`. Artifact digests
 are checked against those committed blobs, so automatic LF-to-CRLF checkout
@@ -127,6 +229,31 @@ is insufficient. The verifier
 does not fetch, modify Git metadata or silently use current source files.
 Keep the index in retained history alongside the atlas artifacts. Its digests
 are trusted reviewable metadata, not signatures or an independent trust service.
+
+## Reviewed regeneration records
+
+A new computed atlas may be inventoried in the same change as its sources.
+Its index entry uses `source_publication: first-matching-artifact-publication`
+instead of `source_revision`, with the usual complete source map, basis,
+fingerprint and four artifact digests. Build the source map with
+`source_record(workflow_id, archive_reader(source_root))`, verify it with
+`verify_sources`, and record the exact generated artifact digests. Add a new
+entry; preserve every historical entry and artifact.
+
+The trusted record remains subject to review. Verification searches commits
+in `HEAD` ancestry that changed the manifest or its sources, oldest first, and accepts only
+a commit whose source bytes reconstruct the fingerprint and whose artifact
+bytes match every digest. Both selection fields together are rejected. Old
+records continue to require their pinned revision in `origin/main` ancestry.
+Regeneration records use the reviewed branch's retained `HEAD` ancestry so they
+can be checked before merge. The result reports the resolved full source
+revision; the manifest's original `code_version` is preserved.
+
+Before the sources and artifacts are committed, verification fails with
+`No committed publication matches regeneration evidence`. This is an expected
+pre-publication rejection, not permission to bypass verification. Re-run at the
+published head. As with historical records, digest reconstruction establishes
+source identity, not proof of numerical execution or engineering qualification.
 
 For a source archive, retain every file named in an entry's `sources` map at its
 repository-relative path, preserving exact bytes and line endings. The archive

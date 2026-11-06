@@ -54,17 +54,38 @@ class SensitivityResult:
     """Container for sensitivity analysis results"""
     parameter: str
     response: str
-    sensitivity_index: float
-    confidence_interval: Tuple[float, float]
-    p_value: float
-    effect_size: str  # 'negligible', 'small', 'medium', 'large'
-    ranking: int
+    sensitivity_index: Optional[float]
+    confidence_interval: Optional[Tuple[float, float]]
+    p_value: Optional[float]
+    effect_size: str  # 'negligible', 'small', 'medium', 'large', 'undefined'
+    ranking: Optional[int]
     method: str
     additional_metrics: Dict[str, Any]
+    status: str = 'ok'
+    undefined_reason: Optional[str] = None
 
 
 class SensitivityAnalysisService:
-    """Service for environmental sensitivity analysis of OrcaFlex results"""
+    """Service for environmental sensitivity analysis of OrcaFlex results.
+
+    Correlation and load-case regression require variation in both paired
+    arrays. Constant inputs produce ``status='undefined'`` and a reason
+    (``constant_parameter``, ``constant_response`` or ``both_constant``).
+    Undefined statistics, confidence intervals and rankings are ``None``;
+    effect size is ``'undefined'``. They are excluded from rankings, summaries
+    and recommendations rather than treated as zero sensitivity or evidence
+    of significance. Monte Carlo also uses reason ``insufficient_samples``.
+    Zero baselines make percentage normalization undefined, represented by
+    ``None``. Defined statistics have ``status='ok'`` and no undefined reason.
+    Load-case reasons ``zero_base_parameter`` and ``zero_base_response``
+    identify unavailable percentage normalization when variation exists.
+
+    Existing dictionary/list/dataclass response containers are retained.
+    ``dataclasses.asdict`` converts result objects for strict JSON encoding;
+    undefined numeric fields then serialize as JSON null rather than NaN.
+    Fisher correlation intervals are unavailable for at most three pairs;
+    exact unit correlations use the limiting interval at that boundary.
+    """
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -195,20 +216,27 @@ class SensitivityAnalysisService:
                         # Calculate percentage change from base case
                         if param in base_case_data:
                             base_value = base_case_data[param]
-                            percent_change = ((variation - base_value) / base_value) * 100
+                            percent_change = (
+                                ((variation - base_value) / base_value) * 100
+                                if base_value != 0 else None
+                            )
                             
                             # Estimate response change (simplified linear relationship)
                             # In practice, this would use actual simulation results
                             response_change = self._estimate_response_change(
                                 param, percent_change, metric, base_response
-                            )
+                            ) if percent_change is not None else None
                             
                             param_effects.append({
                                 'parameter_value': variation,
                                 'parameter_change_percent': percent_change,
-                                'response_value': base_response + response_change,
+                                'response_value': (base_response + response_change
+                                                   if response_change is not None else None),
                                 'response_change': response_change,
-                                'response_change_percent': (response_change / base_response) * 100
+                                'response_change_percent': (
+                                    (response_change / base_response) * 100
+                                    if base_response != 0 and response_change is not None else None
+                                )
                             })
                     
                     # Calculate sensitivity coefficient (dResponse/dParameter)
@@ -216,12 +244,17 @@ class SensitivityAnalysisService:
                         param_values = [effect['parameter_value'] for effect in param_effects]
                         response_values = [effect['response_value'] for effect in param_effects]
                         
-                        # Linear regression to estimate sensitivity
-                        slope, intercept, r_value, p_value, std_err = stats.linregress(
-                            param_values, response_values
-                        )
-                        
-                        sensitivity_coef = slope * (base_case_data.get(param, 1) / base_response)
+                        reason = ('zero_base_parameter' if base_case_data[param] == 0
+                                  else self._undefined_statistic_reason(param_values, response_values))
+                        if reason is None and base_response == 0:
+                            reason = 'zero_base_response'
+                        if reason is None:
+                            slope, intercept, r_value, p_value, std_err = stats.linregress(
+                                param_values, response_values
+                            )
+                            sensitivity_coef = slope * (base_case_data[param] / base_response)
+                        else:
+                            sensitivity_coef = r_value = p_value = std_err = None
                         
                         parameter_effects[param] = {
                             'effects': param_effects,
@@ -229,6 +262,8 @@ class SensitivityAnalysisService:
                             'correlation': r_value,
                             'p_value': p_value,
                             'std_error': std_err,
+                            'status': 'undefined' if reason else 'ok',
+                            'undefined_reason': reason,
                             'base_value': base_case_data.get(param, 0)
                         }
                 
@@ -420,30 +455,31 @@ class SensitivityAnalysisService:
                     if param not in parameter_df.columns:
                         continue
                     
-                    # Correlation-based sensitivity
-                    corr_coef, p_value = stats.pearsonr(
+                    reason = self._undefined_statistic_reason(
                         parameter_df[param], response_df[metric]
                     )
-                    
-                    # Rank-based sensitivity (Spearman)
-                    spearman_coef, spearman_p = stats.spearmanr(
-                        parameter_df[param], response_df[metric]
-                    )
-                    
-                    # Sobol-like indices using variance decomposition
-                    sobol_index = self._calculate_sobol_index(
-                        parameter_df[param], response_df[metric]
-                    )
-                    
-                    # Effect size classification
-                    effect_size = self._classify_effect_size(abs(corr_coef))
-                    
-                    # Confidence intervals
-                    conf_int = self._calculate_correlation_confidence_interval(
-                        corr_coef, len(response_samples), confidence_level
-                    )
+                    if reason is None:
+                        corr_coef, p_value = stats.pearsonr(
+                            parameter_df[param], response_df[metric]
+                        )
+                        spearman_coef, spearman_p = stats.spearmanr(
+                            parameter_df[param], response_df[metric]
+                        )
+                        sobol_index = self._calculate_sobol_index(
+                            parameter_df[param], response_df[metric]
+                        )
+                        effect_size = self._classify_effect_size(abs(corr_coef))
+                        conf_int = self._calculate_correlation_confidence_interval(
+                            corr_coef, len(response_samples), confidence_level
+                        )
+                    else:
+                        corr_coef = p_value = spearman_coef = spearman_p = None
+                        sobol_index = conf_int = None
+                        effect_size = 'undefined'
                     
                     metric_sensitivities[param] = {
+                        'status': 'undefined' if reason else 'ok',
+                        'undefined_reason': reason,
                         'correlation': corr_coef,
                         'p_value': p_value,
                         'spearman_correlation': spearman_coef,
@@ -455,11 +491,11 @@ class SensitivityAnalysisService:
                             'min': parameter_df[param].min(),
                             'max': parameter_df[param].max(),
                             'mean': parameter_df[param].mean(),
-                            'std': parameter_df[param].std()
+                            'std': parameter_df[param].std() if len(parameter_df) > 1 else None
                         },
                         'response_stats': {
                             'mean': response_df[metric].mean(),
-                            'std': response_df[metric].std(),
+                            'std': response_df[metric].std() if len(response_df) > 1 else None,
                             'min': response_df[metric].min(),
                             'max': response_df[metric].max()
                         }
@@ -467,7 +503,8 @@ class SensitivityAnalysisService:
                 
                 # Rank parameters by sensitivity
                 ranked_params = sorted(
-                    metric_sensitivities.items(),
+                    ((param, data) for param, data in metric_sensitivities.items()
+                     if data['correlation'] is not None),
                     key=lambda x: abs(x[1]['correlation']),
                     reverse=True
                 )
@@ -479,8 +516,11 @@ class SensitivityAnalysisService:
                     'most_sensitive_parameter': ranked_params[0][0] if ranked_params else None,
                     'response_statistics': {
                         'mean': response_df[metric].mean(),
-                        'std': response_df[metric].std(),
-                        'coefficient_of_variation': response_df[metric].std() / response_df[metric].mean()
+                        'std': response_df[metric].std() if len(response_df) > 1 else None,
+                        'coefficient_of_variation': (
+                            response_df[metric].std() / response_df[metric].mean()
+                            if len(response_df) > 1 and response_df[metric].mean() != 0 else None
+                        )
                     }
                 }
             
@@ -545,6 +585,27 @@ class SensitivityAnalysisService:
         
         return pd.DataFrame(analysis_rows)
     
+    @staticmethod
+    def _undefined_statistic_reason(parameter_values, response_values) -> Optional[str]:
+        """Check paired variation before calling regression or correlation.
+
+        Two pairs are the algebraic minimum for a slope or correlation.
+        Exact equality detects constants without a scale-dependent tolerance.
+        """
+        if len(parameter_values) < 2 or len(response_values) < 2:
+            return 'insufficient_samples'
+        x = np.asarray(parameter_values)
+        y = np.asarray(response_values)
+        constant_x = np.all(x == x[0])
+        constant_y = np.all(y == y[0])
+        if constant_x and constant_y:
+            return 'both_constant'
+        if constant_x:
+            return 'constant_parameter'
+        if constant_y:
+            return 'constant_response'
+        return None
+
     def _correlation_sensitivity(
         self,
         data: pd.DataFrame,
@@ -566,6 +627,26 @@ class SensitivityAnalysisService:
             response_data_valid = data.loc[valid_mask, response_metric]
             
             if len(param_data) < 3:
+                continue
+
+            reason = self._undefined_statistic_reason(param_data, response_data_valid)
+            if reason is not None:
+                results.append(SensitivityResult(
+                    parameter=param,
+                    response=response_metric,
+                    sensitivity_index=None,
+                    confidence_interval=None,
+                    p_value=None,
+                    effect_size='undefined',
+                    ranking=None,
+                    method='correlation',
+                    additional_metrics={
+                        'correlation_coefficient': None,
+                        'sample_size': len(param_data)
+                    },
+                    status='undefined',
+                    undefined_reason=reason
+                ))
                 continue
             
             # Calculate correlation
@@ -595,9 +676,11 @@ class SensitivityAnalysisService:
             results.append(result)
         
         # Sort and update rankings
-        results.sort(key=lambda x: x.sensitivity_index, reverse=True)
+        results.sort(key=lambda x: (x.sensitivity_index is not None,
+                                   x.sensitivity_index if x.sensitivity_index is not None else 0),
+                     reverse=True)
         for i, result in enumerate(results):
-            result.ranking = i + 1
+            result.ranking = i + 1 if result.sensitivity_index is not None else None
         
         return results
     
@@ -905,24 +988,30 @@ class SensitivityAnalysisService:
         correlation: float,
         n: int,
         confidence_level: float
-    ) -> Tuple[float, float]:
-        """Calculate confidence interval for correlation coefficient"""
-        try:
-            # Fisher z-transformation
-            z = 0.5 * np.log((1 + correlation) / (1 - correlation))
-            z_critical = stats.norm.ppf((1 + confidence_level) / 2)
-            se = 1 / np.sqrt(n - 3)
-            
-            z_lower = z - z_critical * se
-            z_upper = z + z_critical * se
-            
-            # Transform back
-            r_lower = (np.exp(2 * z_lower) - 1) / (np.exp(2 * z_lower) + 1)
-            r_upper = (np.exp(2 * z_upper) - 1) / (np.exp(2 * z_upper) + 1)
-            
-            return (r_lower, r_upper)
-        except:
-            return (correlation - 0.1, correlation + 0.1)  # Fallback
+    ) -> Optional[Tuple[float, float]]:
+        """Calculate a Fisher interval, or None when it is unavailable.
+
+        For bivariate normal pairs, Fisher's transform has approximate standard
+        error 1/sqrt(n-3) [1]. Three or fewer pairs have no finite real standard
+        error. This service returns None in that case, consistent with R's
+        four-pair minimum for reporting a Fisher interval [2]; SciPy instead
+        returns the full [-1, 1] range. At r=+/-1 the inverse transform tends to r.
+
+        References:
+            [1] SciPy, PearsonRResult.confidence_interval, method description:
+            https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats._result_classes.PearsonRResult.confidence_interval.html
+            [2] R stats, cor.test, Details:
+            https://stat.ethz.ch/R-manual/R-devel/library/stats/html/cor.test.html
+        """
+        if n <= 3 or not np.isfinite(correlation):
+            return None
+        if abs(correlation) == 1:
+            return (correlation, correlation)
+        z = np.arctanh(correlation)
+        z_critical = stats.norm.ppf((1 + confidence_level) / 2)
+        se = 1 / np.sqrt(n - 3)
+        return (float(np.tanh(z - z_critical * se)),
+                float(np.tanh(z + z_critical * se)))
     
     def _classify_effect_size(self, value: float) -> str:
         """Classify effect size based on magnitude"""
@@ -971,7 +1060,10 @@ class SensitivityAnalysisService:
         most_sensitive = None
         
         for param, effects in parameter_effects.items():
-            sensitivity = abs(effects.get('sensitivity_coefficient', 0))
+            coefficient = effects.get('sensitivity_coefficient', 0)
+            if coefficient is None:
+                continue
+            sensitivity = abs(coefficient)
             if sensitivity > max_sensitivity:
                 max_sensitivity = sensitivity
                 most_sensitive = param
@@ -983,6 +1075,7 @@ class SensitivityAnalysisService:
         sensitivities = [
             (param, abs(effects.get('sensitivity_coefficient', 0)))
             for param, effects in parameter_effects.items()
+            if effects.get('sensitivity_coefficient') is not None
         ]
         
         return sorted(sensitivities, key=lambda x: x[1], reverse=True)
@@ -998,6 +1091,8 @@ class SensitivityAnalysisService:
         
         # Find most/least sensitive parameters for each metric
         for metric, results in sensitivity_results.items():
+            if isinstance(results, list):
+                results = [r for r in results if r.sensitivity_index is not None]
             if isinstance(results, list) and results:
                 most_sensitive = results[0].parameter
                 least_sensitive = results[-1].parameter
@@ -1022,6 +1117,8 @@ class SensitivityAnalysisService:
         for metric, results in sensitivity_results.items():
             if isinstance(results, list):
                 for result in results:
+                    if result.sensitivity_index is None:
+                        continue
                     if result.parameter not in all_sensitivities:
                         all_sensitivities[result.parameter] = []
                     all_sensitivities[result.parameter].append(result.sensitivity_index)
@@ -1099,6 +1196,8 @@ class SensitivityAnalysisService:
             param_sensitivities = results.get('parameter_sensitivities', {})
             
             for param, data in param_sensitivities.items():
+                if data.get('correlation') is None:
+                    continue
                 correlation = abs(data.get('correlation', 0))
                 
                 if param not in parameter_scores:

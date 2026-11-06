@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Line pipe catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "database",
+    "units",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "database": {
+      "const": "line_pipe"
+    },
+    "units": {
+      "const": {
+        "od_m": "m",
+        "wt_m": "m",
+        "smys_mpa": "MPa",
+        "smts_mpa": "MPa"
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "citation_id",
+          "od_m",
+          "wt_m",
+          "grade",
+          "smys_mpa",
+          "smts_mpa"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "status": {
+            "enum": [
+              "cited",
+              "synthetic"
+            ]
+          },
+          "citation_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "od_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "wt_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "grade": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "smys_mpa": {
+            "$ref": "#/$defs/positive"
+          },
+          "smts_mpa": {
+            "$ref": "#/$defs/positive"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positive": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "publisher",
+        "url",
+        "catalogue_number",
+        "revision",
+        "date",
+        "page",
+        "table",
+        "source_class",
+        "reuse_terms"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://[^/\\s?#]+(?:[/?#]|$)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_number": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_class": {
+          "enum": [
+            "mill_catalogue",
+            "manufacturer_catalogue",
+            "public_paper",
+            "public_thesis",
+            "public_agency_report",
+            "own_design_basis",
+            "synthetic_fixture"
+          ]
+        },
+        "reuse_terms": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "catalogue_number": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "page": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "table": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "description": "A locator for the values in each referencing row; class declarations require independent source review."
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "citation_schema",
+        "citations"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "citation_schema": {
+          "const": "schema.json#/$defs/citation"
+        },
+        "citations": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/citation"
+          }
+        }
+      }
+    }
+  }
+}

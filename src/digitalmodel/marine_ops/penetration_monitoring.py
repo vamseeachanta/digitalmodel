@@ -39,6 +39,11 @@ constant_load_tolerance_kn below the anchor load, or penetration falls more than
 upward_movement_tolerance_m below the anchor depth. Equality preserves them.
 Small dips accumulate against the anchor rather than resetting at each reading;
 an adjacent upward movement that stays within the anchor limit also preserves them.
+After unresolved zero-depth loading, a large unload from an intervening maximum
+can preserve the reference while load remains within the anchor-relative limit.
+Likewise, an upward rebound after hold creep can preserve the reference while
+depth remains within the anchor-relative limit. Reversals are not measured from
+the greatest load or depth since the anchor; this sensitivity remains unresolved.
 Hold creep contributes to the next loading secant. For creep c, unchanged soil
 stiffness K equal to the reference and a following load step L above tolerance,
 the apparent drop is c*K/(L+c*K). At a drop limit f, steps L <= c*K*(1-f)/f

@@ -1,0 +1,36 @@
+atlas_id: 2629bee51367
+basename: riser_fatigue
+physics: log_log
+response: annual_damage
+axes:
+- name: scf
+  scale: linear
+  grid:
+  - 1.0
+  - 1.1
+  - 1.2
+  - 1.3
+  - 1.4
+- name: viv_stress_scale
+  scale: linear
+  grid:
+  - 0.8
+  - 1.0
+  - 1.2
+  - 1.4
+  - 1.6
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.010022546507429658
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: riser_fatigue
+  code_version: 27a3cdb16
+  standards:
+  - id: DNV-RP-C203
+    edition: 2021-09
+  response_kwargs: {}
+  workflow_id: riser-fatigue
+  content_fingerprint: 2629bee5136783b6134ad776648cbc3d2198460f9683d2b9d2a5e1bdaaf65bc4
+  input_template_sha256: e91b3ae6c0f1aa92cf73f854a5de7c6e88569b147a8da4cf9f4f9778a37a525a

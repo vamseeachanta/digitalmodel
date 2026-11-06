@@ -222,5 +222,5 @@ def write_padeye_inp(geom: PadeyeGeometry, path: Path | str) -> Path:
     """Write the generated APDL script to ``path`` and return it."""
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(generate_padeye_apdl(geom), encoding="utf-8")
+    out.write_text(generate_padeye_apdl(geom), encoding="utf-8", newline="\n")
     return out

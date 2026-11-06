@@ -1,0 +1,5 @@
+pyNastran 1.4.1
+le1_16x48.bdf: read_errors=0 unresolved_references=0 unsupported_cards=0 rejected_cards=0 grids=833 elements=768 PASS
+le1_32x96.bdf: read_errors=0 unresolved_references=0 unsupported_cards=0 rejected_cards=0 grids=3201 elements=3072 PASS
+le1_8x24.bdf: read_errors=0 unresolved_references=0 unsupported_cards=0 rejected_cards=0 grids=225 elements=192 PASS
+patch.bdf: read_errors=0 unresolved_references=0 unsupported_cards=0 rejected_cards=0 grids=8 elements=5 PASS

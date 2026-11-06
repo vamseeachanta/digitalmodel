@@ -143,7 +143,9 @@ class Pipeline(BaseModel):
 
     Attributes:
         name: Pipeline name/identifier for OrcaFlex (e.g., "30'' Line").
-        material: Material grade (e.g., X65, X70, API 5L).
+        material: Material grade label; API 5L qualification is not validated.
+            See docs/domains/orcaflex/generator-standards.md,
+            pipeline-grade-label (NOT_EVALUATED).
         dimensions: Cross-section dimensions.
         coatings: Coating system definition.
         segments: List of pipeline segments with varying properties.

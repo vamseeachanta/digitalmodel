@@ -10,6 +10,7 @@ outlet. This addresses #1979; it does not establish wall-force accuracy.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-19 | Align closed-wall topology and field conditions to prevent incompatible wall-function patches. |
+| Update | 2026-10-22 | Reject explicit wall functions on open generated patches before writing case files; document the override checks. |
 
 ## Method and sources
 
@@ -53,6 +54,25 @@ The same topology selects turbulence wall defaults. Explicit turbulence field
 conditions take precedence, so callers remain responsible for the compatibility
 of their custom conditions.
 
+The builder now checks effective overrides before creating or overwriting any
+case files. An explicit `kqRWallFunction`, `omegaWallFunction`,
+`epsilonWallFunction` or `nutkWallFunction` on a generated non-wall patch raises
+`ValueError` naming the patch, field, boundary condition and effective mesh type.
+The standalone turbulence writer performs the same check before writing any
+turbulence field. This enforces the documented mesh requirement without silently
+turning a requested open boundary into a wall. The [omegaWallFunction API][omega]
+describes wall treatment for specific dissipation rate and turbulent kinetic
+energy production. The preflight applies the same wall-only contract to this
+supported wall function.
+
+Validation follows serialization: the last override for a patch and field wins,
+including the effective `type` in `extra`. Only fields emitted by the selected
+turbulence model are checked. Laminar emits none; SST emits `k`, `omega` and
+`nut`; k-epsilon emits `k`, `epsilon` and `nut`; the existing Smagorinsky writer
+emits `k` and `nut`. Conditions on other patch names and custom wall-function
+types remain outside this check. It does not validate custom field dimensions,
+wall-law coefficients or mesh resolution.
+
 ## Worked example: close a sloshing outlet
 
 Inputs are the existing sloshing case defaults and an explicit `noSlip` outlet.
@@ -84,6 +104,41 @@ The `test_no_slip_overrides_drive_mesh_and_turbulence_together` regression
 executes this construction. The coupled-case regression also exercises the
 actual exchange mapper, preserving its inlet and atmospheric top vent.
 
+### Worked example: explicit wall-function override
+
+Starting with the same inputs, explicitly request the documented turbulent
+viscosity wall condition. Its initial value uses the existing internal field;
+no new physical value is supplied:
+
+```python
+case.boundary_conditions.append(
+    BoundaryCondition(
+        "outlet", BoundaryType.ZERO_GRADIENT, "nut",
+        value="$internalField", extra={"type": "nutkWallFunction"},
+    )
+)
+```
+
+Method: resolve the effective `U` condition first, then resolve the effective
+`nut` override, including `extra`. The answer is mesh type `wall` and a `0/nut`
+outlet entry containing `type nutkWallFunction; value $internalField;`.
+The initial `bc_type` is replaced by `extra["type"]` during serialization.
+
+Now replace the closure with an open velocity condition:
+
+```python
+case.boundary_conditions.append(
+    BoundaryCondition("outlet", BoundaryType.ZERO_GRADIENT, "U")
+)
+```
+
+The resulting mesh type is `patch`, so building this case raises `ValueError`
+before writing any files. Restore the no-slip closure to retain a wall, or
+replace the explicit turbulence override with a condition suitable for the
+intended open boundary. These are caller choices; the preflight does not make
+that physical decision. Regression tests execute both outcomes, including an
+invalid rebuild over an existing case whose files must remain unchanged.
+
 ## Verification and limits
 
 The regression suite covers SST, k-epsilon, the existing LES field set,
@@ -91,6 +146,9 @@ laminar omission of turbulence fields, each generated no-slip face, open outlets
 for every case type, repeated velocity overrides, explicit field overrides and
 unchanged mesh geometry. Assertions use the documented boundary types rather
 than values calculated by the implementation.
+The override regressions also cover rejection on open and symmetry patches,
+compatible wall overrides, repeated field and velocity overrides, and inactive
+turbulence fields. These tests establish generated-dictionary consistency only.
 
 Pre-existing turbulence initialization guesses are retained unchanged and are
 **assumed, based on previous experience**. They are solver seeds, not validated

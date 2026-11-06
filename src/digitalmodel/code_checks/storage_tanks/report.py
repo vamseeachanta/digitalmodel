@@ -33,7 +33,7 @@ def _courses(result: ShellResult) -> TableBlock:
             f"Course {c.course}",
             c.design_mm,
             c.test_mm,
-            result.inputs.basis.minimum_nominal_mm,
+            result.inputs.basis.nominal_floor_mm(c.course),
             c.required_mm,
             c.selected_mm,
             result.inputs.corrosion_allowance_mm,
@@ -101,9 +101,10 @@ def _thickness(result: ShellResult) -> FigureBlock:
         )
     }
     if result.inputs.basis.minimum_nominal_mm is not None:
-        series["Nominal floor"] = [result.inputs.basis.minimum_nominal_mm] * len(
-            heights
-        )
+        series["Nominal floor"] = [
+            result.inputs.basis.nominal_floor_mm(row.course)
+            for row in result.courses for _ in range(2)
+        ]
     figure = limit_figure(
         heights,
         series,
@@ -181,6 +182,12 @@ def _basis(result: ShellResult, unit_weight: float, pressure_source: str) -> Sec
             "Supplied plate catalogue",
         ],
     ]
+    bottom_floor = inputs.basis.nominal_floor_mm(1)
+    if bottom_floor != inputs.basis.minimum_nominal_mm:
+        entries.append([
+            "Lowest-course nominal floor", f"{bottom_floor:.3f}", "mm",
+            inputs.basis.source,
+        ])
     return Section(
         key="design-basis",
         title="Design basis",

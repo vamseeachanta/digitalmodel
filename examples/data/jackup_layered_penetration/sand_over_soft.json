@@ -1,0 +1,152 @@
+{
+  "basis": "assumed, based on previous experience",
+  "regional_context": "Illustrative offshore regional scenarios; no measured regional profile is asserted.",
+  "unit_type": "generic_three_leg_independent_leg_jackup",
+  "leg_count": 3,
+  "spudcan": {
+    "diameter_m": 12.0,
+    "tip_to_bearing_m": 1.5
+  },
+  "preload_kn": 30000.0,
+  "bearing_depth_grid_m": {
+    "start": 0.0,
+    "stop": 22.5,
+    "step": 0.25
+  },
+  "parameter_ranges": {
+    "leg_count": [
+      3,
+      3
+    ],
+    "spudcan.diameter_m": [
+      10,
+      16
+    ],
+    "spudcan.tip_to_bearing_m": [
+      0,
+      2.5
+    ],
+    "preload_kn": [
+      20000,
+      60000
+    ],
+    "bearing_depth_grid_m.start": [
+      0,
+      0
+    ],
+    "bearing_depth_grid_m.stop": [
+      22.5,
+      22.5
+    ],
+    "bearing_depth_grid_m.step": [
+      0.1,
+      0.5
+    ],
+    "profile.spread_ratio": [
+      3,
+      5
+    ],
+    "profile.layers.0.top_m": [
+      0.0,
+      0.0
+    ],
+    "profile.layers.0.bottom_m": [
+      3.0,
+      5.0
+    ],
+    "profile.layers.0.submerged_weight_kn_m3": [
+      8.0,
+      12.0
+    ],
+    "profile.layers.0.friction_deg": [
+      28,
+      36
+    ],
+    "profile.layers.1.top_m": [
+      3.0,
+      5.0
+    ],
+    "profile.layers.1.bottom_m": [
+      24.0,
+      24.0
+    ],
+    "profile.layers.1.submerged_weight_kn_m3": [
+      4.0,
+      8.0
+    ],
+    "profile.layers.1.su_kpa": [
+      10,
+      30
+    ],
+    "punching_comparison.coefficient": [
+      0.5,
+      3.0
+    ]
+  },
+  "sources": [
+    {
+      "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+      "year": 2015,
+      "equations": "1\u20133; 5 for the inherited circular clay reference",
+      "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+      "use": "Method equations and spread range only; no regional measurements adopted."
+    },
+    {
+      "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+      "year": 2015,
+      "equations": "2 and 6",
+      "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+      "use": "Clay mechanisms only; no regional measurements adopted."
+    }
+  ],
+  "standards": [
+    {
+      "document": "SNAME T&RB 5-5A",
+      "edition": "Rev 3 (2008)",
+      "clause": "TO CONFIRM"
+    },
+    {
+      "document": "ISO 19905-1",
+      "edition": "2012",
+      "clause": "TO CONFIRM"
+    }
+  ],
+  "limits": [
+    "All numerical scenario inputs and their ranges are assumptions, based on previous experience.",
+    "These scenarios are not a regional geotechnical investigation or a reconstruction of any event.",
+    "Each leg is evaluated independently under an assumed vertical preload reaction.",
+    "Circular clay factor 6.34 is retained; the weak-layer paper uses 6.05 for its surface reference.",
+    "Partial engagement, plug transport, remoulding, rate effects, buoyancy and dynamics are excluded.",
+    "Static resistance recovery does not predict a dynamic plunge or arrest depth.",
+    "A false punch-through flag does not establish installation acceptance."
+  ],
+  "name": "sand_over_soft",
+  "profile": {
+    "layers": [
+      {
+        "kind": "sand",
+        "top_m": 0.0,
+        "bottom_m": 4.0,
+        "submerged_weight_kn_m3": 10.0,
+        "friction_deg": 32.0
+      },
+      {
+        "kind": "clay",
+        "top_m": 4.0,
+        "bottom_m": 24.0,
+        "submerged_weight_kn_m3": 6.0,
+        "su_kpa": 20.0
+      }
+    ],
+    "sand_method": "load_spread",
+    "spread_ratio": 3.0
+  },
+  "punching_comparison": {
+    "coefficient": 1.5,
+    "basis": "assumed, based on previous experience",
+    "range": [
+      0.5,
+      3.0
+    ]
+  }
+}

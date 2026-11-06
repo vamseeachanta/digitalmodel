@@ -2,7 +2,8 @@ basename: cathodic_protection
 # Regression input for tests/cathodic_protection/test_engine_adapter.py (#2210).
 
 # Subsea manifold / structure — fully submerged sacrificial-anode CP per DNV-RP-B401 (2021).
-# Single deepwater submerged zone, standard paint, cold bottom water.
+# Single submerged zone; omitted depth selects the 0-30 m band.
+# Physical design depth is unspecified; this is a default-band regression.
 inputs:
   calculation_type: DNV_RP_B401_offshore
 
@@ -17,7 +18,7 @@ inputs:
         coating_category: III    # standard paint system
 
   environment:
-    seawater_temperature_C: 6.0  # deepwater bottom temperature
+    seawater_temperature_C: 6.0  # cold-water regression input
     seawater_resistivity_ohm_m: 0.33
 
   anode:

@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "criteria_version": "rectangular-bending-v1",
+  "max_error_pct": 1.0,
+  "source": {
+    "url": "https://github.com/MystranSolver/MYSTRANSolver/tree/19.0.0",
+    "commit": "3a5913a904ee1adbda9fbcaf9c0a6af8e10f0f9f",
+    "version_string": "MYSTRAN Version 19.0.0   JUN 28 2026",
+    "acquisition": "Source build; the release contains only a Windows binary."
+  },
+  "build": {
+    "platform": "Linux x86_64",
+    "compiler": "GNU Fortran 13.3.0",
+    "configuration": "Release; GIT_SUBMODULE=OFF after recursive source checkout",
+    "command": "cmake -S source -B build -DCMAKE_BUILD_TYPE=Release -DGIT_SUBMODULE=OFF; cmake --build build --parallel 4",
+    "libraries": [
+      "SuperLU (single-threaded)",
+      "METIS",
+      "GKlib",
+      "OpenBLAS (system BLAS/LAPACK)",
+      "ARPACK"
+    ],
+    "binary_sha256": "a4168bc6c319bf4cf5aafcd189d597495e7ebd23d3736f33dbb368877cc6f05c",
+    "threads": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1"
+    }
+  },
+  "inputs": {
+    "basis": "assumed, based on previous experience",
+    "length_m": 1.0,
+    "width_y_m": 0.05,
+    "height_z_m": 0.1,
+    "youngs_modulus_pa": 210000000000.0,
+    "poissons_ratio": 0.3,
+    "tip_force_n": 1000.0,
+    "bar_count": 4,
+    "orientation": [
+      0,
+      1,
+      0
+    ],
+    "shear_factors": "omitted; zero transverse shear flexibility"
+  },
+  "units": {
+    "tip": "m",
+    "expected": "m",
+    "error_pct": "%",
+    "force": "N"
+  },
+  "extraction": "Selected version, epsilon, displacement table through grid 5, SPC table through grid 1, and END OF JOB lines; trailing spaces removed; all numeric tokens unchanged. Other header lines omitted, no result values replaced. The version banner is sanitized to remove personal attribution while retaining the solver version and date.",
+  "retention": "Full outputs and build logs retained locally; only decks, excerpts and this manifest are repository fixtures. Local retention does not establish backup.",
+  "sha256": {
+    "y.F06": "001be2dc8047b653c17c4c112da412042220b1fe0f503f4e1b2530688f4eacfe",
+    "y.bdf": "5625daa377f3ab88f03087f2aba5896aa0dbf188b714971f6f51bb8c982f837a",
+    "z.F06": "0f71a8be04ff7c27af6f4b808cb4d769762b4faab8a2f121200b1b6a21f2c5ee",
+    "z.bdf": "f5bd6a322b490e3c37f654a960b7a5a14629e478a56eecef10cee1582f2323e5"
+  },
+  "cases": {
+    "y": {
+      "deck": "y.bdf",
+      "excerpt": "y.F06",
+      "force_direction": [
+        0,
+        1,
+        0
+      ],
+      "expected_m": 0.0015238095238095239,
+      "tip_m": 0.001523809,
+      "error_pct": 3.437499999613667e-05,
+      "epsilon": 4.98801e-15,
+      "reaction_n": -1000.0,
+      "full_f06_sha256": "51af295877e3330d5e5173e43840c63a1cc7e9eb2a724be2c46b3b767c41367f",
+      "full_f06_diagnostics": [],
+      "end_of_job": true,
+      "completed_at_utc": "2026-10-22T17:21:42.807575+00:00",
+      "source_line_numbers": [
+        3,
+        80,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        121,
+        122,
+        123,
+        124,
+        125,
+        165
+      ]
+    },
+    "z": {
+      "deck": "z.bdf",
+      "excerpt": "z.F06",
+      "force_direction": [
+        0,
+        0,
+        1
+      ],
+      "expected_m": 0.00038095238095238096,
+      "tip_m": 0.0003809524,
+      "error_pct": 5.000000003060282e-06,
+      "epsilon": 2.842171e-15,
+      "reaction_n": -1000.0,
+      "full_f06_sha256": "9880bb0c43bbe6807d19e88633635b746203cd99b581ac64215d24f21386e706",
+      "full_f06_diagnostics": [],
+      "end_of_job": true,
+      "completed_at_utc": "2026-10-22T17:21:42.829207+00:00",
+      "source_line_numbers": [
+        3,
+        80,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        121,
+        122,
+        123,
+        124,
+        125,
+        165
+      ]
+    }
+  }
+}

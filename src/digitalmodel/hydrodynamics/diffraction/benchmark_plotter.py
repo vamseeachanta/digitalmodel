@@ -198,10 +198,11 @@ class BenchmarkPlotter:
         damp_corr: list[list[float]],
         body_i_name: str,
         body_j_name: str,
+        **evidence,
     ) -> Path:
         """Render 6x6 correlation heatmaps for coupling matrices."""
         return _build_coupling_heatmap_html(
-            output_dir, am_corr, damp_corr, body_i_name, body_j_name,
+            output_dir, am_corr, damp_corr, body_i_name, body_j_name, **evidence,
         )
 
     def build_raw_rao_data_html(
@@ -320,8 +321,8 @@ class BenchmarkPlotter:
         return _build_summary_table(sections, mode)
 
     @staticmethod
-    def _render_6x6_matrix(corr_dict, labels):
-        return _render_6x6_matrix(corr_dict, labels)
+    def _render_6x6_matrix(corr_dict, labels, quality_dict=None):
+        return _render_6x6_matrix(corr_dict, labels, quality_dict)
 
     @staticmethod
     def _build_panel_scatter_html(panel_geometry_data, title="Panel Geometry",

@@ -195,6 +195,38 @@ def test_load_dip_beyond_tolerance_resets_the_loading_reference(curve, criteria)
     assert Trigger.STIFFNESS_DROP not in results[-1].active_triggers
 
 
+def test_unload_after_unresolved_loading_keeps_anchor_based_comparison(curve, criteria):
+    monitor = PenetrationMonitor(curve, criteria)
+    readings = ((0, 0), (100, 1), (130, 1), (101, 1), (120, 1.5))
+    results = [monitor.update(Measurement(i * 10, load, depth))
+               for i, (load, depth) in enumerate(readings)]
+    # Reference = 100/1 = 100 kN/m. The 29 kN unload stays above the
+    # retained 100 kN anchor minus 1 kN tolerance, despite the 130 kN reading.
+    assert results[2].stiffness_kn_m is None
+    assert results[3].stiffness_kn_m is None
+    # The next secant is (120-100)/(1.5-1) = 40; drop = 1-40/100 = 0.6.
+    assert results[-1].stiffness_kn_m == 40
+    assert results[-1].stiffness_drop_fraction == pytest.approx(0.6)
+    assert results[-1].active_triggers == (Trigger.STIFFNESS_DROP,)
+
+
+def test_rebound_after_hold_creep_keeps_anchor_based_comparison(curve, criteria):
+    monitor = PenetrationMonitor(curve, criteria)
+    readings = ((0, 0), (100, 1), (100, 1.5), (100, 1.2), (120, 1.6))
+    results = [monitor.update(Measurement(i * 10, load, depth))
+               for i, (load, depth) in enumerate(readings)]
+    # Reference = 100/1 = 100 kN/m. A 0.3 m rebound remains deeper than
+    # the retained 1 m anchor minus the supplied 0.002 m upward tolerance.
+    assert results[2].active_triggers == (Trigger.RAPID_PENETRATION,)
+    assert results[3].penetration_rate_m_s == pytest.approx(-0.03)
+    assert results[3].stiffness_kn_m is None
+    assert results[3].active_triggers == ()
+    # The next secant is (120-100)/(1.6-1) = 100/3; drop = 2/3.
+    assert results[-1].stiffness_kn_m == pytest.approx(100 / 3)
+    assert results[-1].stiffness_drop_fraction == pytest.approx(2 / 3)
+    assert results[-1].active_triggers == (Trigger.STIFFNESS_DROP,)
+
+
 @pytest.mark.parametrize('load,resets', [(99.701, False), (99.7, False), (99.699, True)])
 def test_unload_threshold_uses_decimal_anchor_difference(curve, criteria, load, resets):
     monitor = PenetrationMonitor(curve, replace(criteria, constant_load_tolerance_kn=0.3))
