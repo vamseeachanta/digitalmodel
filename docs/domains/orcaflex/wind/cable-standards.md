@@ -9,6 +9,7 @@ metadata establishes neither a dynamic MBR clause nor a design factor.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-11-05 | Correct cable editions and scope and distinguish public metadata from engineering requirements. |
+| 2 | 2026-11-06 | Record resolver merge order and pending acceptance of archived citation sidecars. |
 
 ## Publisher metadata
 
@@ -39,6 +40,11 @@ satisfy this dependency. The separately maintained wiki must provide the
 ST-0359 resolver page. An unconfigured installation retains the existing
 warning and empty-sidecar behaviour.
 
+The ST-0359 resolver page shall be published and its resolution validated in
+the separately maintained wiki before this correction is merged. This merge-order
+dependency remains a follow-up for #3286. An existing RP-0360 page alone does
+not allow the wind-cable workflow to run with a configured wiki.
+
 ## Archived atlas metadata
 
 Archived manifests and their recorded basis fields are immutable publication
@@ -63,6 +69,10 @@ calculations. Historical `basis.standards` and manifest `provenance.standards`
 remain records of the original, incorrect labels, rather than current
 publisher metadata. Consumers reading those raw fields must also consult the
 correction; automated application of correction notes is not implemented.
+
+Maintainer acceptance of this sidecar treatment against the requirement in
+#3286 to correct editions everywhere remains pending. The historical labels
+remain visible to consumers that read only the original metadata fields.
 
 ## What is not established
 

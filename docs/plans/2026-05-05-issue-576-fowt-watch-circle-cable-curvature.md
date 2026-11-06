@@ -37,7 +37,7 @@
 
 ## Open questions
 - **MBR source.** Should the manufacturer MBR ship as a hard-coded library entry (per cable type) or stay caller-supplied? Default: caller-supplied for v1 with a small reference-cable library in the fixture file; cable-property DB is a follow-up.
-- **Watch-circle envelope shape.** Is a circular envelope sufficient or do we need a polygon (offset varies with current heading)? Default: circular for v1; document polygon as follow-up.
+- **Watch-circle envelope shape.** Is a circular envelope sufficient, or is a polygon required (offset varies with current heading)? Default: circular for v1; document polygon as follow-up.
 - **Fatigue envelope source.** This module accepts `fatigue_envelope_m` as input; does the user want a future PR to compute it from a separately verified fatigue analysis basis? Flag as out-of-scope follow-up.
 
 ## Acceptance Criteria

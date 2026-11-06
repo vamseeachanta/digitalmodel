@@ -1,5 +1,5 @@
-# # Copyright (c) 2024 Digital Model Project
-# # Licensed under the MIT License. See LICENSE file for details.
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 
 """Regress publisher metadata and the scope of wind-farm cable citations.
 
@@ -30,6 +30,7 @@ def test_dynamic_wind_cable_cites_wind_power_standard_scope(tmp_path):
     page.write_text(
         "---\ncode_id: DNV-ST-0359\npublisher: DNV\nrevision: 2025-12\n---\n",
         encoding="utf-8",
+        newline="\n",
     )
     cable = DynamicCableConfig(
         suspended_length=250.0,
@@ -75,7 +76,9 @@ def test_current_fowt_atlas_uses_wind_cable_scope_reference():
 
 def test_historical_cable_metadata_has_explicit_correction():
     """Preserve hashed historical basis while recording corrected metadata."""
-    inventory = json.loads((ROOT / "atlases/historical-provenance.json").read_text())
+    inventory = json.loads(
+        (ROOT / "atlases/historical-provenance.json").read_text(encoding="utf-8")
+    )
     records = [r for r in inventory["atlases"] if r["workflow_id"] == "fowt-mooring"]
     assert records
     for record in records:
