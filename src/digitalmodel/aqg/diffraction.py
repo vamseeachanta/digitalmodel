@@ -27,7 +27,7 @@ from types import MappingProxyType
 from typing import Iterable, Mapping
 
 SOURCE_DOCUMENT = "hydrodynamics/diffraction/docs/agent-pack.md"
-SOURCE_DIGEST = "0b997e73ea95ecdc41457535561687396693615680bdeb5b61e5eda48d655671"
+SOURCE_DIGEST = "517a64c2cf3bc1c488200971ced3a6313aa473a9b718bc04db30320c88339a7e"
 
 # Each criterion below is transcribed from knowledge pack r4, section 5,
 # rows G4.1a-G4.8e (AQG r0 section 8). These are internal QA requirements,
@@ -124,12 +124,30 @@ def _count(value: int, name: str) -> int:
 
 
 def criteria_source() -> dict:
-    """Fail closed if the source transcription is absent or changed."""
+    """Pin section 5 bytes, including its heading and trailing blank lines."""
     path = Path(__file__).resolve().parents[1] / SOURCE_DOCUMENT
     try:
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        lines = path.read_bytes().split(b"\n")
     except OSError as error:
         raise ValueError("criteria source is unavailable") from error
+    starts = [i for i, line in enumerate(lines) if line == b"## 5. QA gates"]
+    if len(starts) != 1:
+        raise ValueError("criteria source requires exactly one section 5 heading")
+    start = starts[0]
+    end = next(
+        (
+            i
+            for i in range(start + 1, len(lines))
+            if lines[i].startswith((b"## ", b"##\t"))
+        ),
+        None,
+    )
+    if end is None:
+        raise ValueError(
+            "criteria source section 5 requires a following level-2 heading"
+        )
+    section = b"\n".join(lines[start:end]) + b"\n"
+    digest = hashlib.sha256(section).hexdigest()
     if digest != SOURCE_DIGEST:
         raise ValueError(
             "criteria source digest mismatch; review the criteria before use"
@@ -138,6 +156,7 @@ def criteria_source() -> dict:
         "document": SOURCE_DOCUMENT,
         "revision": "4",
         "section": "5; AQG r0 section 8",
+        "digest_scope": "section-5-bytes",
         "sha256": digest,
         "qualified": False,
         "limitation": "Original AQG source and licensed clause qualification are not established",

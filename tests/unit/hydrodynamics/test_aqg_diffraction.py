@@ -412,25 +412,115 @@ def test_incomplete_evidence_is_validated_before_serialization(artifact):
     assert row.to_dict()["evidence"] == [artifact.to_dict()]
 
 
-@pytest.mark.parametrize("default_encoding", ["utf-8", "cp1252"])
-def test_inventory_matches_the_pinned_source(monkeypatch, default_encoding):
+def test_inventory_matches_the_pinned_source():
     import re
     from digitalmodel.aqg.diffraction import criteria_source
 
-    # Emulate locale defaults independently of the installed system locales.
-    read_text = Path.read_text
-
-    def read_with_default_encoding(path, encoding=None, errors=None):
-        return read_text(path, encoding=encoding or default_encoding, errors=errors)
-
-    monkeypatch.setattr(Path, "read_text", read_with_default_encoding)
-
     root = Path(__file__).resolve().parents[3]
     source = root / "src/digitalmodel" / criteria_source()["document"]
-    expected = re.findall(
-        r"^\| (G4\.\d[a-z])\s*\|", source.read_text(encoding="utf-8"), re.MULTILINE
-    )
+    text = source.read_text(encoding="utf-8")
+    # An unrelated appendix may reference a G4 row without adding a criterion.
+    text += "\n## Unrelated appendix\n| G4.1a | Unrelated reference |\n"
+    section = text.split("## 5. QA gates\n", 1)[1]
+    section = re.split(r"^##[ \t]", section, maxsplit=1, flags=re.MULTILINE)[0]
+    expected = re.findall(r"^\| (G4\.\d[a-z])\s*\|", section, re.MULTILINE)
     assert tuple(c.check_id for c in assess([]).checks) == tuple(expected)
+
+
+@pytest.fixture
+def criteria_document(monkeypatch):
+    """Substitute source bytes without changing the repository document."""
+    from digitalmodel.aqg import diffraction
+
+    source = (
+        Path(diffraction.__file__).resolve().parents[1] / diffraction.SOURCE_DOCUMENT
+    )
+    read_bytes = Path.read_bytes
+    content = [source.read_bytes()]
+
+    def read_source(path):
+        return content[0] if path == source else read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", read_source)
+    return content
+
+
+def test_criteria_source_never_uses_locale_text_reads(monkeypatch):
+    from digitalmodel.aqg.diffraction import criteria_source
+
+    def reject_text_read(*args, **kwargs):
+        pytest.fail("Criteria integrity must use bytes rather than locale text reads")
+
+    monkeypatch.setattr(Path, "read_text", reject_text_read)
+    assert criteria_source()["qualified"] is False
+
+
+@pytest.mark.parametrize("position", ["before", "after"])
+def test_criteria_digest_ignores_other_sections(criteria_document, position):
+    from digitalmodel.aqg.diffraction import criteria_source
+
+    original = criteria_source()
+    if position == "before":
+        criteria_document[0] = b"Unrelated introduction edit.\n" + criteria_document[0]
+    else:
+        criteria_document[0] += b"\nUnrelated later-section edit.\n"
+    assert criteria_source() == original
+    assert assess([]).status == Status.NOT_RUN
+
+
+@pytest.mark.parametrize(
+    "check_id",
+    [
+        f"G4.{group}{letter}"
+        for group, letters in enumerate(
+            ("ab", "ab", "abc", "abcde", "abcd", "abc", "ab", "abcde"), 1
+        )
+        for letter in letters
+    ],
+)
+def test_criteria_digest_rejects_every_g4_row_edit(criteria_document, check_id):
+    from digitalmodel.aqg.diffraction import criteria_source
+
+    row = f"| {check_id}".encode("utf-8")
+    assert criteria_document[0].count(row) == 1
+    criteria_document[0] = criteria_document[0].replace(row, row + b" changed", 1)
+    with pytest.raises(ValueError, match="criteria source digest mismatch"):
+        criteria_source()
+
+
+@pytest.mark.parametrize(
+    "boundary", ["missing", "duplicate", "renamed", "unterminated", "early"]
+)
+def test_criteria_digest_rejects_invalid_section_bounds(criteria_document, boundary):
+    from digitalmodel.aqg.diffraction import criteria_source
+
+    heading = b"## 5. QA gates\n"
+    content = criteria_document[0]
+    if boundary == "missing":
+        content = content.replace(heading, b"", 1)
+    elif boundary == "duplicate":
+        content += b"\n" + heading
+    elif boundary == "renamed":
+        content = content.replace(heading, b"## 5. Different section\n", 1)
+    elif boundary == "unterminated":
+        content = content[: content.index(b"## 6. Known failure modes and pitfalls\n")]
+    else:
+        content = content.replace(heading, heading + b"## Unexpected section\n", 1)
+    criteria_document[0] = content
+    with pytest.raises(ValueError, match="criteria source"):
+        criteria_source()
+
+
+def test_criteria_digest_sidecar_declares_section_scope():
+    from digitalmodel.aqg.diffraction import criteria_source
+
+    source = criteria_source()
+    assert source["digest_scope"] == "section-5-bytes"
+    assert (
+        source["sha256"]
+        == "517a64c2cf3bc1c488200971ced3a6313aa473a9b718bc04db30320c88339a7e"
+    )
+    assert assess([]).to_dict()["criteria_source"] == source
 
 
 def surfaces(artifact):

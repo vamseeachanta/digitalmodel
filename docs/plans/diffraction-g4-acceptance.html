@@ -21,7 +21,12 @@ No majority score will apply; callers will not override sourced criteria.</p>
 abs(M − ρV)/M; panel aspect ratios with an explicit second-order waterline
 exception; wavelength resolution using caller-supplied shortest wavelength;
 and installed panel and memory limits. Criterion values will be cited to the
-knowledge-pack rows G4.1a and G4.4a–e. The source digest will be checked at calculation time.</p>
+knowledge-pack rows G4.1a and G4.4a–e. The source digest will be checked at calculation time.
+The pin will cover the exact LF bytes from the section-5 heading through the
+line before the next level-2 heading, including trailing blank lines and excluding
+the next heading. Unrelated section edits will preserve API use; criteria edits
+and missing, duplicate or unterminated section boundaries will fail closed.
+The serialized source sidecar will identify the section-only digest scope.</p>
 <h2>Slice 3</h2>
 <p>Inclusive comparisons will use exact rational arithmetic on validated decimal representations.
 The package will require each body and its control-surface applicability.
@@ -40,7 +45,9 @@ will distinguish input-mass normalization from displaced-mass normalization,
 exercise inclusive aspect/resolution boundaries and both frequency triggers,
 and test omitted rows, duplicate rows, invalid data, missing or disabled native
 settings, result/input linkage, unsupported exclusions, unqualified criteria,
-and content-digest readback. An import-boundary test will statically
+and content-digest readback. Source-integrity tests will accept edits before and
+after section 5, reject edits to every G4 row, reject invalid section boundaries,
+and require byte reads independent of locale text defaults. An import-boundary test will statically
 verify the offline dependency graph without attempting a licensed import.</p>
 <p>A runnable synthetic example will show inputs, method and the incomplete
 answer; an HTML guide will describe every row's evidence requirement.

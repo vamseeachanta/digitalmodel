@@ -8,12 +8,17 @@ The record contains every required row, including missing evidence and unknown a
 Engineering acceptance is not established by this implementation.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
-<tr><td>1</td><td>2026-10-22</td><td>Added a complete evidence inventory and independent offline comparisons to prevent mesh screens being interpreted as G4 acceptance.</td></tr></table>
+<tr><td>1</td><td>2026-10-22</td><td>Added a complete evidence inventory and independent offline comparisons to prevent mesh screens being interpreted as G4 acceptance.</td></tr>
+<tr><td>2</td><td>2026-11-06</td><td>Restricted the source digest to section 5 so unrelated documentation edits preserve API use while criteria edits remain blocked.</td></tr></table>
 <h2>Source and qualification</h2>
 <p>The numeric QA criteria below are transcribed from the
 <a href="../../../src/digitalmodel/hydrodynamics/diffraction/docs/agent-pack.md">diffraction knowledge pack</a>,
-revision 4, section 5 (AQG r0 section 8). The source is pinned by SHA-256:
-<code>0b997e73ea95ecdc41457535561687396693615680bdeb5b61e5eda48d655671</code>. The original AQG document and the licensed
+revision 4, section 5 (AQG r0 section 8). SHA-256 covers the exact LF bytes from
+the <code>## 5. QA gates</code> heading through the line before the next level-2
+heading, including trailing blank lines; the next heading is excluded:
+<code>517a64c2cf3bc1c488200971ced3a6313aa473a9b718bc04db30320c88339a7e</code>.
+Edits outside that section do not invalidate the criteria. A missing, duplicate or
+unterminated section is rejected. The original AQG document and the licensed
 panel-size clause are not qualified. The internal transcription is not a
 citation to a checked licensed clause. Source absence or a digest mismatch
 raises an error at calculation time. Source qualification cannot be enabled by a caller flag.</p>
@@ -51,7 +56,8 @@ qualification is missing. <code>record_status</code> describes documentary
 completeness only: FAIL takes precedence, then NOT_RUN, then PASS. PASS in
 <code>record_status</code> is not engineering acceptance. An artifact digest proves
 byte identity, not correctness, source rights or review authority. The serialized
-source sidecar records the source revision, section, digest and qualification limitation.</p>
+source sidecar records the source revision, section, digest, explicit
+<code>section-5-bytes</code> digest scope and qualification limitation.</p>
 <p><code>reviewed_check</code> records an external criterion-specific review with
 supporting artifacts, a reviewer role and a basis. Computed rows are reserved
 for their calculator APIs and cannot be replaced by generic reviews;
@@ -124,7 +130,9 @@ Response spikes are checked separately under G4.8e.</p>
 <caption>Table 1. Fixed rows transcribed from knowledge pack revision 4, section 5; every row retains its own evidence status.</caption></table>
 <h2>Verification and limitations</h2>
 <p>The regression tests exercise boundary arithmetic, invalid inputs, exclusions,
-missing evidence, native-result linkage, aggregation, source-digest failure,
+missing evidence, native-result linkage, aggregation, rejection of every G4 row
+edit and invalid section boundaries, acceptance of unrelated section edits,
+locale-independent source byte reads, source-digest failure,
 JSON readback and the runnable example. A fresh Python subprocess checks that
 the offline API loads neither the hydrodynamics package nor a licensed interface.
 No solver is imported or executed. A complete receipt set still emits NOT_RUN
