@@ -66,6 +66,10 @@ CHANGES = [{
     "change": "Output validation protects unrelated checkout files and symlink targets; "
               "the function inventory explicitly excludes module constants and exported "
               "comment downloads retain their object URL until a later task.",
+}, {
+    "revision": "D", "date": "2026-11-06",
+    "change": "Source digests are refreshed after retention tests were added and isolated "
+              "from caller Git settings; calculated results are unchanged.",
 }]
 
 

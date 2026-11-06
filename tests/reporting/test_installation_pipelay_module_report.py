@@ -292,27 +292,49 @@ def test_constant_inventory_scope_and_download_cleanup(tmp_path):
     assert "link.click(); URL.revokeObjectURL(url)" not in page
 
 
-@pytest.mark.parametrize("name", ["comments.txt", "scratch.json", "nested/comments.txt"])
-def test_unpublished_report_files_stay_ignored(name):
-    """Keep exported comments and scratch files out of the published report."""
-    path = (REPORT / name).relative_to(ROOT).as_posix()
+@pytest.fixture(params=["plain", "global-excludes", "foreign-bindings"])
+def retention_environment(request, tmp_path, monkeypatch):
+    """Exercise retention rules independently of caller Git settings."""
+    if request.param == "global-excludes":
+        excludes = tmp_path / "global-excludes"
+        excludes.write_text("*.txt\n*.json\n*.html\n*.md\n*.py\n", encoding="utf-8")
+        config = tmp_path / "global-config"
+        config.write_text(f'[core]\n\texcludesFile = "{excludes.as_posix()}"\n',
+                          encoding="utf-8")
+        monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
+    elif request.param == "foreign-bindings":
+        for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+            monkeypatch.setenv(key, str(tmp_path / "foreign-checkout"))
+
+
+def repository_ignore_pattern(path):
+    """Require the repository rule, rather than a caller's exclusion source."""
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"}}
     result = subprocess.run(
-        ["git", "check-ignore", "--no-index", "--stdin"], cwd=ROOT,
-        input=path + "\n", capture_output=True, text=True, check=False,
+        ["git", "-c", "core.excludesFile=", "check-ignore", "-v", "--no-index", "--stdin"],
+        cwd=ROOT, env=env, input=path + "\n", capture_output=True, text=True, check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert result.stdout.splitlines() == [path]
+    source, reported_path = result.stdout.rstrip("\n").split("\t")
+    source_name, line, pattern = source.split(":", 2)
+    assert source_name == ".gitignore"
+    assert line.isdecimal()
+    assert reported_path == path
+    return pattern
+
+
+@pytest.mark.parametrize("name", ["comments.txt", "scratch.json", "nested/comments.txt"])
+def test_unpublished_report_files_stay_ignored(name, retention_environment):
+    """Keep exported comments and scratch files out of the published report."""
+    path = (REPORT / name).relative_to(ROOT).as_posix()
+    assert repository_ignore_pattern(path) == "/docs/reports/modules/installation_pipelay/*"
 
 
 @pytest.mark.parametrize("path", [
     *(f"docs/reports/modules/installation_pipelay/{name}" for name in sorted(DELIVERABLES)),
     "scripts/reports/build_installation_pipelay_module_report.py",
 ])
-def test_published_report_files_remain_trackable(path):
+def test_published_report_files_remain_trackable(path, retention_environment):
     """Retain exactly the named report deliverables and their builder."""
-    result = subprocess.run(
-        ["git", "check-ignore", "--no-index", "--stdin"], cwd=ROOT,
-        input=path + "\n", capture_output=True, text=True, check=False,
-    )
-    assert result.returncode == 1, result.stderr
-    assert not result.stdout
+    assert repository_ignore_pattern(path) == "!/" + path
