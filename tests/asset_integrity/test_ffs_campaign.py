@@ -186,8 +186,30 @@ def test_each_engine_has_run_or_validation_link():
     parser = EvidenceParser()
     parser.feed((ROOT / "docs/api/ffs/ffs-readiness.html").read_text(encoding="utf-8"))
     assert len(parser.links) == 19
+    records = {
+        "Metal-loss coordinator (L1/L2, GML/LML, decision, report)":
+            {"ffs-validation-record-2026-06-27.md"},
+        "Measurement sufficiency": {"ffs-validation-record-2026-06-27.md"},
+        "Level 3 escalation handoff": {"level3-and-part9-program-2026-09-25.md"},
+        "Corroded pipe B31G / Mod B31G / RSTRENG":
+            {"b31g-validation-2026-06-27.md", "ffs-validation-record-2026-06-27.md"},
+        "RSTRENG 2D river-bottom": {"rstreng-2d-validation-2026-06-29.md"},
+        "DNV-RP-F101 single / PSF / interacting":
+            {"ffs-validation-record-2026-06-27.md"},
+        "Circumferential defect": {"circumferential-defect-validation-2026-06-29.md"},
+    }
+    page = ROOT / "docs/api/ffs/ffs-readiness.html"
     for engine, links in parser.links.items():
-        assert any("input.yml" in link or "validation" in link for link in links), engine
+        external = [link for link in links if not link.startswith("#")]
+        for link in external:
+            assert (page.parent / link.split("#")[0]).resolve().is_file(), (engine, link)
+        if engine in records:
+            assert records[engine] <= {Path(link).name for link in external}, engine
+        elif engine in {"RBI screening", "Composite repair selector", "Inspection planning"}:
+            assert any(link.endswith("input.yml") for link in external), engine
+        else:
+            # Missing historical evidence remains an explicit qualification gap.
+            assert any(link.startswith("#validation-gap-") for link in links), engine
 
 
 def test_worked_example_manifest_integrity():
@@ -321,3 +343,16 @@ def test_missing_component_record_keys_raise_value_error(campaign, key):
     del campaign["components"][0][key]
     with pytest.raises(ValueError, match=key):
         assess_campaign(campaign)
+
+
+@pytest.mark.parametrize("interval,display", [(3.96, "3.9"), (.04, "0.0"), (8.0, "8.0")])
+def test_report_intervals_never_exceed_computed_interval(campaign, interval, display):
+    """Synthetic caps 3.96 and .04 yr round down to 3.9 and 0.0 yr."""
+    campaign["rbi_policy"]["band_interval_cap_yr"]["LOW"] = interval
+    campaign["components"][1]["repair_context"]["repair_life_yr"] = 10
+    campaign["repair_policy"]["reinspection_fraction_of_repair_life"] = interval / 10
+    result = assess_campaign(campaign)
+    assert result["components"][0]["next_inspection_interval_yr"] == pytest.approx(interval)
+    assert f"<dt>Next inspection interval (yr)</dt><dd>{display}</dd>" in result["ffs_report"]
+    assert f"<dt>Reinspection interval (yr)</dt><dd>{display}</dd>" in result["ffs_report"]
+    assert float(display) <= interval

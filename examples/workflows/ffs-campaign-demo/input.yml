@@ -1,4 +1,4 @@
-# Synthetic inputs and policy: campaign-screening-validation.html, revision 0.
+# Synthetic inputs and policy: campaign-screening-validation.html, revision 1.
 # No policy number is asserted to be a standards acceptance limit.
 basename: ffs_campaign
 default:
@@ -8,7 +8,7 @@ default:
       output: true
 ffs_campaign:
   policy_basis: Synthetic demonstration policy v1; campaign-screening-validation.html
-    revision 0. All example values are illustrative inputs, not standard limits.
+    revision 1. All example values are illustrative inputs, not standard limits.
   rbi_policy:
     rsf_margin_edges:
     - 1.1

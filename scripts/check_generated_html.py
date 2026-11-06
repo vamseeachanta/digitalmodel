@@ -70,6 +70,16 @@ class Generator:
 
 
 GENERATORS = (
+    # The historical matrix is the source; the page adds explicit evidence links
+    # without upgrading readiness scores or qualification claims.
+    Generator(
+        "scripts/ffs/build_ffs_readiness.py",
+        ("docs/api/ffs/ffs-readiness.html",),
+        inputs=(
+            "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md",
+            "examples/workflows/api579-pipe-ffs-b314/input.yml",
+        ),
+    ),
     # The synthetic assessment and its digest manifest form one reproducible
     # deliverable. Explicit inputs keep the shadow build independent of cwd.
     Generator(

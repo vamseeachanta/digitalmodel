@@ -1744,6 +1744,17 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         report = (Path(cfg["Analysis"]["result_folder"]) / result["report_file"]).read_text(encoding="utf-8")
         assert "Method comparison" in report
         assert all(path in report for path in result["validation_records"])
+    elif workflow["id"] == "ffs-campaign-demo":
+        result = cfg["ffs_campaign"]["result"]
+        components = {row["component_id"]: row for row in result["components"]}
+        assert len(result["components"]) == 3
+        assert set(components) == {"repair-loss", "local-loss", "uniform-loss"}
+        assert [row["component_id"] for row in result["rank_register"]] == [
+            "repair-loss", "local-loss", "uniform-loss"
+        ]
+        assert components["uniform-loss"]["next_inspection_interval_yr"] == pytest.approx(8)
+        assert components["repair-loss"]["next_inspection_interval_yr"] == 0
+        assert components["local-loss"]["next_inspection_interval_yr"] is None
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
 

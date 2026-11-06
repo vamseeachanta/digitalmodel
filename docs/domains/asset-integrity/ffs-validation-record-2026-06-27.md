@@ -8,6 +8,26 @@ pinned by a golden test. The cross-cutting checks live in
 `tests/asset_integrity/test_ffs_validation.py`; per-module golden tests are
 cited per row.
 
+## Revision history
+
+| Revision | Date | Change and reason |
+|---|---|---|
+| 1 | 2026-11-06 | Shared RBI proxy band tolerance documented to make its direction explicit for all callers. |
+
+Table 1. Revision history.
+
+## RBI proxy boundary policy
+
+The shared `rbi_screening._band_descending` uses relative tolerance
+`1e-9 * abs(edge)`: `value >= edge - tolerance` receives the lower-numbered,
+less severe category. Thus a value just below the edge can enter the better
+category, for both strength-margin and remaining-life ratios in every caller.
+This is a floating-point boundary policy, not a standards acceptance limit.
+`tests/asset_integrity/test_ffs_campaign.py::test_proxy_band_edges_tolerate_roundoff`
+checks exact edges, roundoff offsets inside the tolerance, and offsets outside
+it for every strength-margin and life-ratio edge. Published-case API RP 580
+qualification remains NOT_EVALUATED.
+
 ## Validation summary
 
 **Part 5 qualification correction (2026-10-06, issue 2287):** the Level 1/2

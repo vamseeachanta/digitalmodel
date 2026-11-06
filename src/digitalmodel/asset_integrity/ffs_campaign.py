@@ -2,13 +2,14 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Offline inspection campaign composition; screening, never repair design.
 
-Method and synthetic policy basis: campaign-screening-validation.html, revision 0.
+Method and synthetic policy basis: campaign-screening-validation.html, revision 1.
 Existing coordinator physics and sufficiency thresholds are reused unchanged.
 No API RP 580 or ISO 24817 numerical limits are introduced by this adapter.
 """
 from __future__ import annotations
 
 from dataclasses import asdict, fields
+from decimal import Decimal, ROUND_FLOOR
 from html import escape
 import math
 from pathlib import Path
@@ -221,6 +222,8 @@ def _report(payload):
                 "<td>Campaign composition added to expose field and engineering actions.</td></tr>"
                 "<tr><td>1</td><td>2026-10-22</td><td>Inclusive risk boundaries and action "
                 "ranking corrected; named fields and verdict precedence clarify the report.</td></tr>"
+                "<tr><td>2</td><td>2026-11-06</td><td>Displayed inspection and repair review "
+                "intervals round down to avoid overstating the computed interval.</td></tr>"
                 "</table><p>Table 1. Revision history.</p>",
                 f"<p>Policy basis: {escape(payload['policy_basis'])}</p>"]
     for row in payload["components"]:
@@ -228,7 +231,8 @@ def _report(payload):
         values = {"Verdict": row["assessment"]["verdict"],
                   "Measurement sufficiency": row["sufficiency"]["status"],
                   "Risk score": row["rbi"]["risk_score"], "Risk band": row["rbi"]["risk_band"],
-                  "Next inspection interval (yr)": row["next_inspection_interval_yr"],
+                  "Next inspection interval (yr)": _display(
+                      row["next_inspection_interval_yr"], interval=True),
                   "Action": row["action"]}
         sections.append("<dl>" + "".join(f"<dt>{escape(k)}</dt><dd>{escape(_display(v))}</dd>"
                                          for k, v in values.items()) + "</dl>")
@@ -245,7 +249,8 @@ def _report(payload):
                     "sufficiency, RBI screening and inspection-planning engines are composed. "
                     "Remaining life = thickness allowance / corrosion rate; interval is the "
                     "minimum of half life, supplied code cap and supplied risk cap. "
-                    "Repair review interval = repair life times supplied review fraction.</p>")
+                    "Repair review interval = repair life times supplied review fraction. "
+                    "Displayed intervals round down to 0.1 yr; numeric results retain full precision.</p>")
     sections.extend(f"<p>{escape(item)}</p>" for item in payload["limitations"])
     sections.append("</body></html>\n")
     return "\n".join(sections)
@@ -261,14 +266,16 @@ def _named_fields(values):
         elif isinstance(value, list):
             rendered = escape(", ".join(_display(item) for item in value) or "None")
         else:
-            rendered = escape(_display(value))
+            rendered = escape(_display(value, interval=key == "reinspection_interval_yr"))
         entries.append(f"<dt>{escape(label)}</dt><dd>{rendered}</dd>")
     return "<dl>" + "".join(entries) + "</dl>"
 
 
-def _display(value):
+def _display(value, *, interval=False):
     if value is None:
         return "NOT_EVALUATED"
+    if interval:
+        return str(Decimal(str(value)).quantize(Decimal("0.1"), rounding=ROUND_FLOOR))
     return f"{value:.1f}" if isinstance(value, float) else str(value)
 
 

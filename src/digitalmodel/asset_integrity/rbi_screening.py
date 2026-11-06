@@ -11,6 +11,11 @@ factor is a **practice parameter** with a documented default in
 procedure. Defaults are engineering-practice values chosen for screening,
 not values claimed from API 581.
 
+Descending PoF proxy bands include a relative tolerance of ``1e-9 * abs(edge)``:
+``value >= edge - tolerance`` takes the lower-numbered (less severe) category.
+This admits values just below an edge to absorb floating-point roundoff and
+applies to every caller, for both strength-margin and remaining-life ratios.
+
 Pipeline (feeds the risk-prioritization phase of a 7-phase RBI cycle):
 
 1. **PoF proxy category (1-5)** from FFS outputs — the most conservative of

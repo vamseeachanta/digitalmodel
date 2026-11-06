@@ -5,6 +5,19 @@ from html import escape
 from pathlib import Path
 
 
+# Expand the source review's record abbreviations without changing its scores.
+HISTORICAL_RECORDS = {
+    "VR 2026-06-27": ("ffs-validation-record-2026-06-27.md",),
+    "VR (mention)": ("ffs-validation-record-2026-06-27.md",),
+    "design doc only": ("level3-and-part9-program-2026-09-25.md",),
+    "B31G-VR + VR": ("b31g-validation-2026-06-27.md",
+                     "ffs-validation-record-2026-06-27.md"),
+    "R2D-VR": ("../rstreng-2d-validation-2026-06-29.md",),
+    "VR (#1094 open findings)": ("ffs-validation-record-2026-06-27.md",),
+    "CIRC-VR": ("../circumferential-defect-validation-2026-06-29.md",),
+}
+
+
 def render_readiness(root: Path) -> str:
     """Retain all historical scores; expose qualification gaps without upgrades."""
     review = root / "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md"
@@ -31,6 +44,10 @@ def render_readiness(root: Path) -> str:
                 if fixture.exists():
                     evidence += (f'; <a href="../../../examples/workflows/'
                                  f'{escape(workflow_id)}/input.yml">Run input</a>')
+        if validation != "none":
+            for record in HISTORICAL_RECORDS[validation]:
+                evidence += (f'; <a href="../../domains/asset-integrity/{escape(record)}">'
+                             f'Historical record: {escape(Path(record).name)}</a>')
         if name not in campaign:
             anchor = f"validation-gap-{len(rows)}"
             evidence += f'; <a href="#{anchor}">Validation evidence status</a>'
@@ -48,7 +65,8 @@ def render_readiness(root: Path) -> str:
 <p>Summary: the complete historical engine matrix is reproduced below. Scores describe
 observed evidence at the review date, not current code compliance or release approval.</p>
 <h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
-<tr><td>0</td><td>2026-10-20</td><td>Historical matrix published with campaign evidence and explicit qualification gaps.</td></tr></table>
+<tr><td>0</td><td>2026-10-20</td><td>Historical matrix published with campaign evidence and explicit qualification gaps.</td></tr>
+<tr><td>1</td><td>2026-11-06</td><td>Historical record links added so qualification gaps cannot stand in for evidence.</td></tr></table>
 <p>Table 1. Revision history.</p>
 <p>R4: engine, tests, validation, registered workflow, example, report and page.
 R3: workflow and validation without a committed report or page.

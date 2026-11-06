@@ -96,8 +96,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 24
-    assert len(outputs) == 25  # the 36 capabilities/api envelope pages were removed
+    assert len(checker.GENERATORS) == 25
+    assert len(outputs) == 26  # the 36 capabilities/api envelope pages were removed
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 21
     assert len(checker.EXCLUDED_GENERATORS) == 9
@@ -429,3 +429,14 @@ def test_registry_reports_registered_script_syntax_error(
         f"  x {errors[0]}\n"
     )
     assert "Traceback" not in text
+
+
+def test_ffs_readiness_generator_owns_page_and_historical_input():
+    entries = [entry for entry in checker.GENERATORS
+               if entry.script == "scripts/ffs/build_ffs_readiness.py"]
+    assert len(entries) == 1
+    assert entries[0].outputs == ("docs/api/ffs/ffs-readiness.html",)
+    assert {
+        "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md",
+        "examples/workflows/api579-pipe-ffs-b314/input.yml",
+    } <= set(entries[0].inputs)

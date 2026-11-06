@@ -1,10 +1,10 @@
 <!doctype html><html lang='en'><meta charset='utf-8'>
 <title>FFS campaign analysis</title><body><h1>FFS campaign analysis</h1>
 <p>Summary: qualitative screening; engineering actions govern continued use.</p>
-<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr><tr><td>0</td><td>2026-10-20</td><td>Campaign composition added to expose field and engineering actions.</td></tr><tr><td>1</td><td>2026-10-22</td><td>Inclusive risk boundaries and action ranking corrected; named fields and verdict precedence clarify the report.</td></tr></table><p>Table 1. Revision history.</p>
-<p>Policy basis: Synthetic demonstration policy v1; campaign-screening-validation.html revision 0. All example values are illustrative inputs, not standard limits.</p>
+<h2>Revision history</h2><table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr><tr><td>0</td><td>2026-10-20</td><td>Campaign composition added to expose field and engineering actions.</td></tr><tr><td>1</td><td>2026-10-22</td><td>Inclusive risk boundaries and action ranking corrected; named fields and verdict precedence clarify the report.</td></tr><tr><td>2</td><td>2026-11-06</td><td>Displayed inspection and repair review intervals round down to avoid overstating the computed interval.</td></tr></table><p>Table 1. Revision history.</p>
+<p>Policy basis: Synthetic demonstration policy v1; campaign-screening-validation.html revision 1. All example values are illustrative inputs, not standard limits.</p>
 <h2>uniform-loss</h2>
-<dl><dt>Verdict</dt><dd>ACCEPT</dd><dt>Measurement sufficiency</dt><dd>SUFFICIENT</dd><dt>Risk score</dt><dd>4</dd><dt>Risk band</dt><dd>LOW</dd><dt>Next inspection interval (yr)</dt><dd>8</dd><dt>Action</dt><dd>PLANNED_INSPECTION</dd></dl>
+<dl><dt>Verdict</dt><dd>ACCEPT</dd><dt>Measurement sufficiency</dt><dd>SUFFICIENT</dd><dt>Risk score</dt><dd>4</dd><dt>Risk band</dt><dd>LOW</dd><dt>Next inspection interval (yr)</dt><dd>8.0</dd><dt>Action</dt><dd>PLANNED_INSPECTION</dd></dl>
 <p>Grid coverage and scatter are adequate and Level 1 passes with margin — the field measurements are sufficient to support the verdict.</p>
 <h2>repair-loss</h2>
 <dl><dt>Verdict</dt><dd>REPAIR</dd><dt>Measurement sufficiency</dt><dd>ESCALATE</dd><dt>Risk score</dt><dd>20</dd><dt>Risk band</dt><dd>HIGH</dd><dt>Next inspection interval (yr)</dt><dd>0.0</dd><dt>Action</dt><dd>ENGINEERING_ACTION_NOW</dd></dl>
@@ -16,7 +16,7 @@
 <p>Local flaw is resolved by only 1 grid cells; the critical (river-bottom) thickness profile is under-sampled.</p>
 <h3>Measurement action</h3><dl><dt>Action</dt><dd>densify_readings</dd><dt>Location</dt><dd>across and immediately around the flaw</dd><dt>Rationale</dt><dd>under-resolved local thickness profile</dd><dt>Count</dt><dd>4</dd></dl>
 <h2>RBI rank register</h2><ol><li>repair-loss: 20 (HIGH)</li><li>local-loss: 15 (MEDIUM-HIGH)</li><li>uniform-loss: 4 (LOW)</li></ol>
-<h2>Method and limits</h2><p>Existing FFS coordinator, measurement sufficiency, RBI screening and inspection-planning engines are composed. Remaining life = thickness allowance / corrosion rate; interval is the minimum of half life, supplied code cap and supplied risk cap. Repair review interval = repair life times supplied review fraction.</p>
+<h2>Method and limits</h2><p>Existing FFS coordinator, measurement sufficiency, RBI screening and inspection-planning engines are composed. Remaining life = thickness allowance / corrosion rate; interval is the minimum of half life, supplied code cap and supplied risk cap. Repair review interval = repair life times supplied review fraction. Displayed intervals round down to 0.1 yr; numeric results retain full precision.</p>
 <p>Synthetic demonstration; policy values are required inputs, not code limits.</p>
 <p>API RP 580 published-case validation: NOT_EVALUATED; qualitative ranking only.</p>
 <p>ISO 24817 / ASME PCC-2 category qualification: NOT_EVALUATED; A-E labels are internal selector labels, not standard repair categories.</p>

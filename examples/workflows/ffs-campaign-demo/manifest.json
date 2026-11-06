@@ -17,7 +17,7 @@
   "intended_use": "Offline software demonstration only; standards qualification NOT_EVALUATED",
   "freshness": "Regenerate report and digests when input or campaign code changes",
   "sha256": {
-    "input.yml": "fe7b00403ffd40889cebfeac0e92019d1cb774a43b72575d24ae42cd6b1f93f5",
-    "report.html": "71c56d489528bb2b4aeb710720c7ef600217bc816fb71cae9208afb11677e8b5"
+    "input.yml": "abe6d4e5857955100c6629a4810e0538c7a7f3e476a972c3c7d9018a43dc6a5e",
+    "report.html": "837b4245e3d83c80070db53daea60abb7953359261f72f63b00ce66a246d0292"
   }
 }
