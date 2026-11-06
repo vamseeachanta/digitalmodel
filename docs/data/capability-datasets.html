@@ -29,7 +29,8 @@ No dataset is uploaded and no explorer is switched to an unverified remote endpo
   <tbody><tr><td>1</td><td>2026-10-19</td><td>Explicit projections, offline bundles, and readback checks are added to extend reproducible dataset coverage.</td></tr>
   <tr><td>2</td><td>2026-10-19</td><td>Portable locator fixtures, LF-normalized provenance, build-platform metadata, and explicit knots column names remove checkout and unit ambiguity.</td></tr>
   <tr><td>3</td><td>2026-10-22</td><td>Seven casing, analytical sloshing and synthetic dynacard projections extend coverage; explicit load units, ratio definitions and selected source sections prevent ambiguous interpretation.</td></tr>
-  <tr><td>4</td><td>2026-11-06</td><td>Nested dynacard source selection makes declared exclusions apply to retained inputs; the sloshing definition column is named explicitly and both coverage additions are stated.</td></tr></tbody>
+  <tr><td>4</td><td>2026-11-06</td><td>Nested dynacard source selection makes declared exclusions apply to retained inputs; the sloshing definition column is named explicitly and both coverage additions are stated.</td></tr>
+  <tr><td>5</td><td>2026-11-06</td><td>Complete-source retention requires both selection fields to be null; fields-only filtering is documented without implying that the full input is retained.</td></tr></tbody>
 </table>
 <p class="caption">Table 1. Revision record.</p>
 
@@ -48,8 +49,9 @@ full byte verification includes that platform metadata.</p>
 forced-response, SDOF and research sections are never staged. The manifest's
 <code>source_sha256</code> identifies the complete original LF-normalized input;
 <code>retained_source_sha256</code> identifies the retained bytes, and
-<code>retained_source_sections</code> declares the selection (null means the complete
-source is retained). Dynacard sources retain only <code>cases</code>, filtered to
+<code>retained_source_sections</code> declares top-level section selection. The complete
+source is retained only when both <code>retained_source_sections</code> and
+<code>retained_source_fields</code> are null. Dynacard sources retain only <code>cases</code>, filtered to
 each config's projected inputs, including only the required metric or candidate keys.
 Settings, library metadata, intervention advice and card coordinates are never staged.
 <code>retained_source_fields</code> declares nested key selection: mappings select
