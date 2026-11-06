@@ -15,7 +15,7 @@ def test_relocated_standard_report_manifest_links_resolve(tmp_path):
     actual_manifest.parent.mkdir()
     (bundle / "analysis_manifest.json").symlink_to(actual_manifest)
     write_report(spec, bundle, "analysis", pdf="off")
-    manifest = json.loads(actual_manifest.read_text())
+    manifest = json.loads(actual_manifest.read_text(encoding="utf-8"))
     for kind, expected in {
         "html": bundle / "analysis.html",
         "citations": bundle / "analysis_citations.json",

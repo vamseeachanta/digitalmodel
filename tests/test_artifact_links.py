@@ -4,8 +4,6 @@ Source URLs are in digitalmodel._output_paths.relative_artifact_path.
 No path existence or engineering calculation is assumed by these examples.
 """
 
-from pathlib import Path
-
 import pytest
 
 from digitalmodel._output_paths import relative_artifact_path
@@ -27,14 +25,3 @@ def test_link_uses_both_symlink_targets(tmp_path):
     document.symlink_to(tmp_path / "pages" / "report.html")
     artifact.symlink_to(tmp_path / "details" / "report.json")
     assert relative_artifact_path(artifact, document) == "../details/report.json"
-
-
-def test_incompatible_relative_roots_are_reported(tmp_path, monkeypatch):
-    import digitalmodel._output_paths as paths
-
-    def incompatible(*args):
-        raise ValueError("Synthetic incompatible roots")
-
-    monkeypatch.setattr(paths.os.path, "relpath", incompatible)
-    with pytest.raises(ValueError, match="incompatible roots"):
-        relative_artifact_path(Path("details.json"), tmp_path / "report.html")

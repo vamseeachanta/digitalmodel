@@ -173,6 +173,12 @@ class ReportPack:
 
 
 def router(cfg: dict) -> dict:
+    """Write a report pack after validating destinations and relative links.
+
+    Figures on a different filesystem drive from the Markdown report are
+    rejected with ValueError before any output is written, including HTML
+    and manifests, even though HTML embeds those figures.
+    """
     pack = load_pack(cfg)
     settings = cfg["report_pack"]
     spec = build_report_spec(pack)
@@ -422,7 +428,7 @@ def _resolve_content(entry: dict[str, Any], config_dir: Path, label: str) -> str
         if not path.is_absolute():
             path = config_dir / path
         if not path.is_file():
-            raise ReportPackConfigError(f"{label}.content_file not found: {path}")
+            raise ReportPackConfigError(f"{label}.content_file not found: {path.as_posix()}")
         return path.read_text(encoding="utf-8").strip()
     raise ReportPackConfigError(f"{label} needs content or content_file")
 
@@ -442,7 +448,7 @@ def _load_results(settings: dict[str, Any], config_dir: Path) -> dict[str, Any]:
             rows = list(csv.reader(stream))
         units, rows = _table_units(entry, rows, label)
         if len(rows) < 2:
-            raise ReportPackConfigError(f"{label}.csv has no data rows: {csv_path}")
+            raise ReportPackConfigError(f"{label}.csv has no data rows: {csv_path.as_posix()}")
         tables.append(
             {
                 "title": title,
@@ -506,10 +512,10 @@ def _inline_svg(path: Path, label: str) -> str:
     text = path.read_text(encoding="utf-8")
     body = _SVG_PROLOG_RE.sub("", text, count=1).strip()
     if not body.startswith("<svg"):
-        raise ReportPackConfigError(f"{label}.path is not an SVG document: {path}")
+        raise ReportPackConfigError(f"{label}.path is not an SVG document: {path.as_posix()}")
     if "<script" in body.lower():
         raise ReportPackConfigError(
-            f"{label}.path: SVG figures must not contain scripts: {path}"
+            f"{label}.path: SVG figures must not contain scripts: {path.as_posix()}"
         )
     return body
 
@@ -519,7 +525,7 @@ def _resolve_file(value: Any, config_dir: Path, label: str) -> Path:
     if not path.is_absolute():
         path = config_dir / path
     if not path.is_file():
-        raise ReportPackConfigError(f"{label} not found: {path}")
+        raise ReportPackConfigError(f"{label} not found: {path.as_posix()}")
     return path
 
 
@@ -943,9 +949,9 @@ def _input_stem(cfg: dict) -> str:
 def _display_path(path: Path) -> str:
     resolved = path.resolve()
     try:
-        return str(resolved.relative_to(REPO_ROOT.resolve()))
+        return resolved.relative_to(REPO_ROOT.resolve()).as_posix()
     except ValueError:
-        return str(resolved)
+        return resolved.as_posix()
 
 
 def _write_json(path: Path, payload: Any) -> None:

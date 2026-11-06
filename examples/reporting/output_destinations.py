@@ -42,11 +42,11 @@ def run(root: Path) -> dict:
     inputs = root / "inputs"
     inputs.mkdir()
     figure = inputs / "figure.svg"
-    figure.write_text('<svg xmlns="http://www.w3.org/2000/svg"></svg>', encoding="utf-8")
+    figure.write_text('<svg xmlns="http://www.w3.org/2000/svg"></svg>', encoding="utf-8", newline="\n")
     before = sha256(figure.read_bytes()).digest()
     router(_config(root, "reports.html.json"))
     markdown = root / "reports.html.json" / "analysis_report.md"
-    figure_link = re.search(r"!\[Fixture\]\(([^)]+)\)", markdown.read_text()).group(1)
+    figure_link = re.search(r"!\[Fixture\]\(([^)]+)\)", markdown.read_text(encoding="utf-8")).group(1)
     assert figure_link == "../inputs/figure.svg"
     assert (markdown.parent / figure_link).resolve() == figure
 
