@@ -15,9 +15,14 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[4]
-REVISION = "01"
+REVISION = "02"
 DATE = "2026-11-06"  # Fixed issue date, not a build timestamp.
 PACKAGE = "src/digitalmodel/hydrodynamics/passing_ship/"
+# Windows link tags; numeric fallbacks allow the guard to be tested elsewhere.
+LINK_REPARSE_TAGS = {
+    getattr(stat, "IO_REPARSE_TAG_SYMLINK", 0xA000000C),
+    getattr(stat, "IO_REPARSE_TAG_MOUNT_POINT", 0xA0000003),
+}
 EXEMPLAR = "docs/reports/pipeline-ffs-assessment.html"
 # Presentation snapshot; rebuilding does not read the exemplar.
 STYLE = """
@@ -55,6 +60,7 @@ CHANGES = {
         "Preserved the standalone example and added isolated deterministic rebuild and calculation-mutation checks.",
         "Clarified the structure-and-limits scope, removed duplicate references and made report styling independent of other reports.",
         "Made text encoding and line endings explicit and limited ignore-rule checks to Git work trees.",
+        "Restricted output-link rejection to symbolic links and junctions; covered non-link reparse points and unavailable symlink privileges.",
     ],
 }
 
@@ -194,7 +200,8 @@ def render(record: dict) -> str:
                   for i, title in enumerate(titles, 1))
     revisions = table(["Revision", "Date", "What changed and why"], [
         ["00", "2026-10-28", "First module report: bounded synthetic section evidence and explicit deferred qualification."],
-        [REVISION, DATE, "Clarified scope and reference text, removed the external style dependency and made portability checks explicit."]],
+        ["01", "2026-11-06", "Clarified scope and reference text, removed the external style dependency and made portability checks explicit."],
+        [REVISION, DATE, "Narrowed link detection to symbolic links and junctions and covered unavailable symlink privileges."]],
         "Revision history")
     changes = "".join(f"<li>{html.escape(item)}</li>" for item in CHANGES["changes"])
     inputs = table(["Input", "Value", "Unit", "Basis"], [
@@ -358,7 +365,7 @@ def build(output_dir: Path) -> Path:
                 "sources.json": json_text(SOURCES)}
     for target in [output_dir, *(output_dir / name for name in contents)]:
         if target.is_symlink() or (target.exists() and
-                getattr(target.lstat(), "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT):
+                getattr(target.lstat(), "st_reparse_tag", 0) in LINK_REPARSE_TAGS):
             raise ValueError("Report targets must not be links")
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, content in contents.items():

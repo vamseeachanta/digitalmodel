@@ -26,7 +26,7 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere}code{overflow-wrap:anywhere}
 </style></head>
 <body class="hs-doc"><header>
 <h1>Passing-ship structure and limits report: synthetic section</h1>
-<p>Draft for maintainer review</p><p>Revision 01 · 2026-11-06</p></header>
+<p>Draft for maintainer review</p><p>Revision 02 · 2026-11-06</p></header>
 <div class="layout"><nav aria-label="Contents"><ol><li><a href="#section-1">Executive Summary</a></li><li><a href="#section-2">Introduction</a></li><li><a href="#section-3">Data Basis</a></li><li><a href="#section-4">Theory and Equations</a></li><li><a href="#section-5">Worked Example</a></li><li><a href="#section-6">Validation Evidence</a></li><li><a href="#section-7">Limits of Use</a></li><li><a href="#section-8">Recommendations</a></li><li><a href="#section-9">References</a></li><li><a href="#section-10">Appendix</a></li></ol></nav><main>
 <section id="section-1"><h2>1. Executive Summary</h2>
 <p>This report covers structure and limits only; force, kernel and depth paths are not evaluated.
@@ -36,7 +36,7 @@ Physical-force qualification is NOT_EVALUATED; the parent issue remains open for
 <p>The solution for this bounded example is the normalized parabola H1 and its interior derivative.
 The way forward is to reconcile force conventions, obtain independent numeric references and establish an applicability envelope before using forces.</p>
 </section>
-<div id="revision-history"><h3>Revision history</h3><div class="table-wrap"><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>00</td><td>2026-10-28</td><td>First module report: bounded synthetic section evidence and explicit deferred qualification.</td></tr><tr><td>01</td><td>2026-11-06</td><td>Clarified scope and reference text, removed the external style dependency and made portability checks explicit.</td></tr></tbody><caption>Revision history</caption></table></div></div>
+<div id="revision-history"><h3>Revision history</h3><div class="table-wrap"><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>00</td><td>2026-10-28</td><td>First module report: bounded synthetic section evidence and explicit deferred qualification.</td></tr><tr><td>01</td><td>2026-11-06</td><td>Clarified scope and reference text, removed the external style dependency and made portability checks explicit.</td></tr><tr><td>02</td><td>2026-11-06</td><td>Narrowed link detection to symbolic links and junctions and covered unavailable symlink privileges.</td></tr></tbody><caption>Revision history</caption></table></div></div>
 <section id="section-2"><h2>2. Introduction</h2>
 <p>The package exposes configuration, force calculation, batch processing, histories and plotting interfaces.
 This report calls only <code>s1_function</code> and <code>ds1_dx</code>, loaded directly from the shipped source.
@@ -128,7 +128,7 @@ dS/dx: slope in m^-1. Force interfaces use SI force N and moment N m; neither is
 <p>The builder writes only report.html, changes.json and sources.json in the explicit output directory.
 All content is embedded; file links are repository-relative source locators. There are no output-directory paths,
 runtime timestamps, external resources or import-time outputs. The standalone example CLI and output remain separate.</p>
-<details id="engineering-changes"><summary>Engineering changes</summary><ul><li>Added the module method map and synthetic section analysis to distinguish implementation from independent evidence.</li><li>Bound visible results to shipped section helpers and recorded physical-force qualification as NOT_EVALUATED.</li><li>Preserved the standalone example and added isolated deterministic rebuild and calculation-mutation checks.</li><li>Clarified the structure-and-limits scope, removed duplicate references and made report styling independent of other reports.</li><li>Made text encoding and line endings explicit and limited ignore-rule checks to Git work trees.</li></ul></details>
+<details id="engineering-changes"><summary>Engineering changes</summary><ul><li>Added the module method map and synthetic section analysis to distinguish implementation from independent evidence.</li><li>Bound visible results to shipped section helpers and recorded physical-force qualification as NOT_EVALUATED.</li><li>Preserved the standalone example and added isolated deterministic rebuild and calculation-mutation checks.</li><li>Clarified the structure-and-limits scope, removed duplicate references and made report styling independent of other reports.</li><li>Made text encoding and line endings explicit and limited ignore-rule checks to Git work trees.</li><li>Restricted output-link rejection to symbolic links and junctions; covered non-link reparse points and unavailable symlink privileges.</li></ul></details>
 </section>
 </main></div>
 <script type="application/json" id="calculation-record">{

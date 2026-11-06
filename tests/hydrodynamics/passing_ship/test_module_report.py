@@ -357,20 +357,60 @@ def test_build_rejects_linked_output_directory(builder, tmp_path):
     retained = tmp_path / "retained"
     retained.mkdir()
     output = tmp_path / "output"
-    output.symlink_to(retained, target_is_directory=True)
+    try:
+        output.symlink_to(retained, target_is_directory=True)
+    except OSError:
+        pytest.skip("symlinks not available")
     with pytest.raises(ValueError, match="links"):
         builder.build(output)
     assert list(retained.iterdir()) == []
 
 
-def test_build_rejects_junction_output(builder, tmp_path, monkeypatch):
+def test_link_test_handles_missing_symlink_privilege(builder, tmp_path, monkeypatch):
+    def unavailable(*args, **kwargs):
+        raise OSError("symlinks unavailable")
+
+    monkeypatch.setattr(Path, "symlink_to", unavailable)
+    with pytest.raises(pytest.skip.Exception, match="symlinks not available"):
+        test_build_rejects_linked_output_directory(builder, tmp_path)
+
+
+@pytest.mark.parametrize("tag", [0xA000000C, 0xA0000003], ids=["symlink", "junction"])
+@pytest.mark.parametrize("target_file", [False, True])
+def test_build_rejects_junction_output(builder, tmp_path, monkeypatch, tag, target_file):
     output = tmp_path / "output"
     output.mkdir()
+    target = output / "report.html" if target_file else output
+    if target_file:
+        target.write_text("retained", encoding="utf-8", newline="\n")
     # The platform link query is isolated here; report generation remains real.
     original = Path.lstat
-    junction = SimpleNamespace(st_mode=stat.S_IFDIR,
-                               st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT)
-    monkeypatch.setattr(Path, "lstat", lambda path: junction if path == output else original(path))
+    junction = SimpleNamespace(st_mode=original(target).st_mode,
+                               st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                               st_reparse_tag=tag)
+    monkeypatch.setattr(Path, "lstat", lambda path: junction if path == target else original(path))
     with pytest.raises(ValueError, match="links"):
         builder.build(output)
-    assert list(output.iterdir()) == []
+    if target_file:
+        assert target.read_text(encoding="utf-8") == "retained"
+        assert {path.name for path in output.iterdir()} == {"report.html"}
+    else:
+        assert list(output.iterdir()) == []
+
+
+@pytest.mark.parametrize("target_file", [False, True])
+def test_build_accepts_non_link_reparse_point(builder, tmp_path, monkeypatch, target_file):
+    output = tmp_path / "output"
+    output.mkdir()
+    target = output / "report.html" if target_file else output
+    if target_file:
+        target.touch()
+    original = Path.lstat
+    # Synthetic non-link tag: the attribute bit alone does not identify a link.
+    ordinary = SimpleNamespace(st_mode=original(target).st_mode,
+                               st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+                               st_reparse_tag=1)
+    monkeypatch.setattr(Path, "lstat", lambda path: ordinary if path == target else original(path))
+    assert builder.build(output) == output / "report.html"
+    assert {path.name for path in output.iterdir()} == ARTIFACTS
+    assert (output / "report.html").read_text(encoding="utf-8") == builder.render(builder.calculate())
