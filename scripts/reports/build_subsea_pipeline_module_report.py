@@ -18,6 +18,7 @@ import hashlib
 import html
 import json
 from pathlib import Path
+import stat
 
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = ROOT / "src/digitalmodel/subsea/pipeline"
@@ -31,8 +32,13 @@ CHANGES = [
     },
     {
         "revision": "B",
-        "date": "2026-11-05",
+        "date": "2026-11-06",
         "change": "Qualification is restricted to tested symbols, the incidental-pressure output mislabel is disclosed, and provenance is limited to executed sources and dedicated evidence so unrelated source edits do not stale the report. The reserved scratch option becomes optional and the compact layout choice is explained.",
+    },
+    {
+        "revision": "C",
+        "date": "2026-11-06",
+        "change": "Output validation rejects unrelated checkout destinations and linked targets before calculation or writing. The inventory rebuild test is named explicitly, and revision B is dated to its introducing commit.",
     },
 ]
 
@@ -476,7 +482,10 @@ PYTHONPATH=src python scripts/reports/build_subsea_pipeline_module_report.py
 ```
 
 Use `--output-dir "$REPORT_OUTPUT"` for a separate destination. The builder writes
-only `index.html`, `changes.json`, `manifest.json` and `README.md`. No intermediate
+only `index.html`, `changes.json`, `manifest.json` and `README.md`. Inside the
+checkout, only `docs/reports/modules/subsea_pipeline` is permitted. Output paths
+and deliverable targets cannot traverse symbolic links or directory junctions.
+Invalid destinations are rejected before calculation or writing. No intermediate
 calculation files are needed. `--scratch` is an optional reserved compatibility
 argument; it writes nothing and, when supplied, must resolve outside the checkout.
 The manifest hashes the three executed pipeline modules, unit support, the builder
@@ -489,6 +498,10 @@ line numbers, with explicit case-limited qualification status. It describes the
 source declarations at generation, without a hard digest requirement on unevaluated
 modules. Added or removed declarations need a deliberate rebuild; unrelated body
 edits and line shifts do not invalidate delivered bytes.
+Adding, removing or renaming a public declaration makes
+`tests/reporting/test_subsea_pipeline_module_report.py::test_rebuild_is_deterministic`
+fail because the rebuilt inventory differs from the committed HTML. This coupling
+is retained deliberately; run the rebuild command above after such a change.
 
 Layout choice: the ten headings follow the existing module-analysis structure.
 The compact self-contained stylesheet supports the wide declaration inventory
@@ -501,13 +514,43 @@ unevaluated engineering methods.
 """
 
 
+def _is_link(path):
+    """Recognize symbolic links and Windows reparse points, including junctions."""
+    try:
+        metadata = path.lstat()
+    except FileNotFoundError:
+        return False
+    return stat.S_ISLNK(metadata.st_mode) or bool(
+        getattr(metadata, "st_file_attributes", 0) & stat.FILE_ATTRIBUTE_REPARSE_POINT
+    )
+
+
+def _validate_output_directory(output_dir):
+    """Reject unrelated checkout paths and links before any calculation or write."""
+    output_dir = Path(output_dir).absolute()
+    if any(_is_link(path) for path in (output_dir, *output_dir.parents)):
+        raise ValueError("Report output must not traverse links or junctions")
+    output_dir = output_dir.resolve()
+    if (
+        output_dir.is_relative_to(ROOT.resolve())
+        and output_dir != DESTINATION.resolve()
+    ):
+        raise ValueError("Checkout output must be the module report directory")
+    for name in ("index.html", "changes.json", "manifest.json", "README.md"):
+        if _is_link(output_dir / name):
+            raise ValueError(
+                f"Report output target must not be a link or junction: {name}"
+            )
+    return output_dir
+
+
 def build_report(*, scratch=None, output_dir=DESTINATION):
     """Write only the declared deliverables, with no intermediate checkout files."""
     if scratch is not None:
         scratch = Path(scratch).resolve()
         if scratch == ROOT or ROOT in scratch.parents:
             raise ValueError("Calculation scratch must be outside the checkout")
-    output_dir = Path(output_dir).resolve()
+    output_dir = _validate_output_directory(output_dir)
     payload = build_payload()
     sources = source_digests()
     files = {
@@ -527,7 +570,7 @@ def build_report(*, scratch=None, output_dir=DESTINATION):
     files["manifest.json"] = _json(manifest)
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, content in files.items():
-        (output_dir / name).write_bytes(content.encode("utf-8"))
+        (output_dir / name).write_text(content, encoding="utf-8", newline="\n")
     return manifest
 
 
@@ -535,7 +578,8 @@ def main():
     """Build the report, retaining an optional reserved scratch argument."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--scratch", type=Path,
+        "--scratch",
+        type=Path,
         help="Reserved compatibility argument; no files are written there. Must be outside the checkout.",
     )
     parser.add_argument("--output-dir", default=DESTINATION, type=Path)

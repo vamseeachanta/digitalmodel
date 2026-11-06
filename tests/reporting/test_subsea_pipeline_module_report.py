@@ -19,8 +19,10 @@ import math
 import os
 from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -53,6 +55,116 @@ def builder():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+@pytest.fixture
+def isolated_checkout(tmp_path, monkeypatch):
+    """Confine destructive regressions to copied sources and disposable metadata."""
+    build = builder()
+    checkout = tmp_path / "checkout"
+    for relative in build.source_digests():
+        target = checkout / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / relative).read_bytes())
+    (checkout / "README.md").write_bytes(b"Unrelated checkout documentation.\n")
+    (checkout / ".git").mkdir()
+    (checkout / ".git/HEAD").write_bytes(b"ref: refs/heads/example\n")
+    monkeypatch.setattr(build, "ROOT", checkout)
+    monkeypatch.setattr(build, "PACKAGE", checkout / "src/digitalmodel/subsea/pipeline")
+    monkeypatch.setattr(
+        build, "DESTINATION", checkout / "docs/reports/modules/subsea_pipeline"
+    )
+    return build
+
+
+def _checkout_bytes(checkout):
+    """Snapshot all fixture files, including the caller's Git metadata."""
+    return {
+        path.relative_to(checkout).as_posix(): path.read_bytes()
+        for path in checkout.rglob("*")
+        if path.is_file()
+    }
+
+
+@pytest.mark.parametrize("relative", [".", "src/digitalmodel/subsea/pipeline"])
+def test_checkout_output_is_rejected_without_changes(isolated_checkout, relative):
+    """Reject checkout outputs before they can replace documentation or sources."""
+    build = isolated_checkout
+    before = _checkout_bytes(build.ROOT)
+    with pytest.raises(ValueError, match="[Oo]utput"):
+        build.build_report(output_dir=build.ROOT / relative)
+    assert _checkout_bytes(build.ROOT) == before
+
+
+@pytest.mark.parametrize("name", sorted(DELIVERABLES))
+@pytest.mark.parametrize("dangling", [False, True])
+def test_linked_deliverable_is_rejected_without_writes(tmp_path, name, dangling):
+    """Reject every existing or dangling output link before any deliverable write."""
+    output = tmp_path / "output"
+    output.mkdir()
+    target = tmp_path / "unrelated.txt"
+    if not dangling:
+        target.write_bytes(b"Unrelated retained bytes.\n")
+    (output / name).symlink_to(target)
+    with pytest.raises(ValueError, match="[Ll]ink"):
+        builder().build_report(output_dir=output)
+    assert {path.name for path in output.iterdir()} == {name}
+    assert (output / name).is_symlink()
+    if dangling:
+        assert not target.exists()
+    else:
+        assert target.read_bytes() == b"Unrelated retained bytes.\n"
+
+
+@pytest.mark.parametrize("nested", [False, True])
+def test_linked_output_directory_is_rejected(tmp_path, nested):
+    """Reject directory links and linked ancestors without writing their targets."""
+    retained = tmp_path / "retained"
+    retained.mkdir()
+    (retained / "README.md").write_bytes(b"Retained documentation.\n")
+    alias = tmp_path / "alias"
+    alias.symlink_to(retained, target_is_directory=True)
+    output = alias / "nested" if nested else alias
+    with pytest.raises(ValueError, match="[Ll]ink"):
+        builder().build_report(output_dir=output)
+    assert {path.name for path in retained.iterdir()} == {"README.md"}
+    assert (retained / "README.md").read_bytes() == b"Retained documentation.\n"
+
+
+@pytest.mark.parametrize("target_name", ["output", "README.md"])
+def test_output_reparse_points_are_rejected(tmp_path, monkeypatch, target_name):
+    """Treat Windows directory junction metadata as a link on every platform."""
+    output = tmp_path / "output"
+    output.mkdir()
+    target = output if target_name == "output" else output / target_name
+    if target != output:
+        target.mkdir()
+    original = Path.lstat
+
+    def reparse_metadata(path, *args, **kwargs):
+        result = original(path, *args, **kwargs)
+        if path == target:
+            return SimpleNamespace(
+                st_mode=result.st_mode,
+                st_file_attributes=stat.FILE_ATTRIBUTE_REPARSE_POINT,
+            )
+        return result
+
+    monkeypatch.setattr(Path, "lstat", reparse_metadata)
+    with pytest.raises(ValueError, match="[Ll]ink"):
+        builder().build_report(output_dir=output)
+    expected = set() if target == output else {target_name}
+    assert {path.name for path in output.iterdir()} == expected
+
+
+def test_canonical_report_destination_is_allowed(isolated_checkout):
+    """Keep the documented in-checkout destination available for regeneration."""
+    build = isolated_checkout
+    before = _checkout_bytes(build.ROOT)
+    build.build_report(output_dir=build.DESTINATION)
+    assert {path.name for path in build.DESTINATION.iterdir()} == DELIVERABLES
+    for name, content in before.items():
+        assert (build.ROOT / name).read_bytes() == content
 
 
 def test_annulus_payload_matches_integrals():
@@ -215,7 +327,7 @@ def test_rebuild_is_deterministic(tmp_path):
     )
     assert payload == build.build_payload()
     changes = json.loads((first / "changes.json").read_text(encoding="utf-8"))
-    assert len(changes) == 2
+    assert len(changes) == 3
     assert set(changes[0]) == {"revision", "date", "change"}
     for change in changes:
         for value in change.values():
@@ -243,6 +355,7 @@ def test_cli_manifest_matches_written_files(tmp_path):
         check=True,
         capture_output=True,
         text=True,
+        encoding="utf-8",
     )
     _assert_manifest(destination)
     assert {path.name for path in destination.iterdir()} == DELIVERABLES
@@ -266,9 +379,7 @@ def test_inventory_covers_public_methods_without_transferring_qualification():
                     if isinstance(
                         method, ast.FunctionDef
                     ) and not method.name.startswith("_"):
-                        expected.add(
-                            (path, f"{node.name}.{method.name}")
-                        )
+                        expected.add((path, f"{node.name}.{method.name}"))
     assert {(row["path"], row["symbol"]) for row in inventory} == expected
     assert all("line" not in row for row in inventory)
     assert {row["category"] for row in inventory} == {
@@ -295,12 +406,14 @@ def test_inventory_covers_public_methods_without_transferring_qualification():
             "validate_pipe_geometry",
         )
     }
+    expected_qualified[(prefix + "thermal_expansion.py", "free_thermal_expansion")] = (
+        "HAND_CALCULATION_CHECKED"
+    )
     expected_qualified[
-        (prefix + "thermal_expansion.py", "free_thermal_expansion")
-    ] = "HAND_CALCULATION_CHECKED"
-    expected_qualified[
-        (prefix + "calculations/stress_calculations.py",
-         "APISTD2RDCalculations.calculate_design_pressures")
+        (
+            prefix + "calculations/stress_calculations.py",
+            "APISTD2RDCalculations.calculate_design_pressures",
+        )
     ] = "ARITHMETIC_ONLY"
     assert qualified == expected_qualified
     for row in inventory:
@@ -322,17 +435,24 @@ def test_scratch_inside_checkout_is_rejected_before_writes(tmp_path, scratch):
     assert not (tmp_path / "out").exists()
 
 
-@pytest.mark.parametrize("relative, category", [
-    ("calculations/pipe_properties.py", "geometry"),
-    ("thermal_expansion.py", "thermal strain"),
-])
-def test_new_public_functions_do_not_inherit_qualification(tmp_path, monkeypatch, relative, category):
+@pytest.mark.parametrize(
+    "relative, category",
+    [
+        ("calculations/pipe_properties.py", "geometry"),
+        ("thermal_expansion.py", "thermal strain"),
+    ],
+)
+def test_new_public_functions_do_not_inherit_qualification(
+    tmp_path, monkeypatch, relative, category
+):
     """Adding an untested public declaration cannot confer checked status."""
     build = builder()
     package = tmp_path / "package"
     source = package / relative
     source.parent.mkdir(parents=True, exist_ok=True)
-    source.write_text("def untested_function():\n    return 1\n", encoding="utf-8")
+    source.write_text(
+        "def untested_function():\n    return 1\n", encoding="utf-8", newline="\n"
+    )
     monkeypatch.setattr(build, "PACKAGE", package)
     monkeypatch.setattr(build, "ROOT", tmp_path)
     (row,) = build.method_inventory()
@@ -340,9 +460,12 @@ def test_new_public_functions_do_not_inherit_qualification(tmp_path, monkeypatch
     assert row["category"] == category
     assert row["evaluation"] == "NOT_EVALUATED"
     # The same symbol name in another module has no evidence either.
-    assert build._qualification(
-        package / "other.py", "free_thermal_expansion", "workflow"
-    )[0] == "NOT_EVALUATED"
+    assert (
+        build._qualification(
+            package / "other.py", "free_thermal_expansion", "workflow"
+        )[0]
+        == "NOT_EVALUATED"
+    )
 
 
 def test_inventory_line_shifts_do_not_stale_report(monkeypatch):

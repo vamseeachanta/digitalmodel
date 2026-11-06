@@ -1,18 +1,18 @@
 {
   "algorithm": "sha256",
   "artifacts": {
-    "README.md": "460ce18305e606ee8f6d614463dddb8e93b680d92631ce415f0af934536e645a",
-    "changes.json": "5f277319992754afdada100048ff0baba2da0e35713aa23faf11e4b5e46d4ec2",
-    "index.html": "fe614f19505b967e33a0cab2fd55cbb19662b1d2f73b48b5996e7314639faa0e"
+    "README.md": "79f406f382e845871575acf99bc78069167cedcbfb600749ea5195af4819d860",
+    "changes.json": "c9ada97d193fefff3e0e693e271737682b9557e29313f31415b8a7d68685b7ed",
+    "index.html": "78b18c3adbac5c239de2219cabf5b079f316dc21949dab28960ca1b3865534e7"
   },
   "self_digest": "Excluded to avoid a self-referential digest; compare manifest.json bytes externally.",
   "sources": {
-    "scripts/reports/build_subsea_pipeline_module_report.py": "6c982c3dc4de48e86d51a3ae1930c485af0b96e68578192e72c3c56a585cbaf2",
+    "scripts/reports/build_subsea_pipeline_module_report.py": "036603340602c416927f8686125ecbd2546dbaddef31a6f83912ff351a33ba04",
     "src/digitalmodel/subsea/pipeline/calculations/pipe_properties.py": "6388e61f662d7b87495ce773cf9553230d06fb66cfbdd92830b7a129a1751fdc",
     "src/digitalmodel/subsea/pipeline/calculations/stress_calculations.py": "3a086996cb8554ca5c8251ddc770e8ca6d917992765a6b7789a24e7806d3875e",
     "src/digitalmodel/subsea/pipeline/thermal_expansion.py": "3628ac26e1485bce830405b72559e02f533e6a9d7a9dfeba00e0c3ad2bba6f2d",
     "src/digitalmodel/units.py": "3e4a1cfdd4c1032f30526e9866d65d3e09728acbf28b3e86c470c566af153c90",
-    "tests/reporting/test_subsea_pipeline_module_report.py": "40c58fbd5750cad8696159d0954a110abd3f469763bba272b5e19997b67331ad",
+    "tests/reporting/test_subsea_pipeline_module_report.py": "84b8310a1704a1908ca9d9bbf7da98a9b8e8120bfffdca6f03d3e81e74dde236",
     "tests/subsea/pipeline/test_module_report_hand_values.py": "38c97f7e8efbf74c0b53d390cfd0b993d328c51c8bd43d54af20e52effcbb441"
   }
 }

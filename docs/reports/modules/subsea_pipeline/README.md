@@ -16,7 +16,10 @@ PYTHONPATH=src python scripts/reports/build_subsea_pipeline_module_report.py
 ```
 
 Use `--output-dir "$REPORT_OUTPUT"` for a separate destination. The builder writes
-only `index.html`, `changes.json`, `manifest.json` and `README.md`. No intermediate
+only `index.html`, `changes.json`, `manifest.json` and `README.md`. Inside the
+checkout, only `docs/reports/modules/subsea_pipeline` is permitted. Output paths
+and deliverable targets cannot traverse symbolic links or directory junctions.
+Invalid destinations are rejected before calculation or writing. No intermediate
 calculation files are needed. `--scratch` is an optional reserved compatibility
 argument; it writes nothing and, when supplied, must resolve outside the checkout.
 The manifest hashes the three executed pipeline modules, unit support, the builder
@@ -29,6 +32,10 @@ line numbers, with explicit case-limited qualification status. It describes the
 source declarations at generation, without a hard digest requirement on unevaluated
 modules. Added or removed declarations need a deliberate rebuild; unrelated body
 edits and line shifts do not invalidate delivered bytes.
+Adding, removing or renaming a public declaration makes
+`tests/reporting/test_subsea_pipeline_module_report.py::test_rebuild_is_deterministic`
+fail because the rebuilt inventory differs from the committed HTML. This coupling
+is retained deliberately; run the rebuild command above after such a change.
 
 Layout choice: the ten headings follow the existing module-analysis structure.
 The compact self-contained stylesheet supports the wide declaration inventory

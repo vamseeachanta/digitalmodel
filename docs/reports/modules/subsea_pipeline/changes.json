@@ -6,7 +6,12 @@
   },
   {
     "change": "Qualification is restricted to tested symbols, the incidental-pressure output mislabel is disclosed, and provenance is limited to executed sources and dedicated evidence so unrelated source edits do not stale the report. The reserved scratch option becomes optional and the compact layout choice is explained.",
-    "date": "2026-11-05",
+    "date": "2026-11-06",
     "revision": "B"
+  },
+  {
+    "change": "Output validation rejects unrelated checkout destinations and linked targets before calculation or writing. The inventory rebuild test is named explicitly, and revision B is dated to its introducing commit.",
+    "date": "2026-11-06",
+    "revision": "C"
   }
 ]
