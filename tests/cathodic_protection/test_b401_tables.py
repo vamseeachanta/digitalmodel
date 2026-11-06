@@ -657,13 +657,14 @@ def test_utilisation_checker_rejects_unchanged_value_with_mutated_metadata(
 @pytest.mark.parametrize(
     ("edition", "section"),
     [
-        ("2005", "Sec. 5 (structure-to-electrolyte potential criteria)"),
-        ("2010", "Sec. 5 (structure-to-electrolyte potential criteria)"),
-        ("2017", "[5.4] (design protective potential)"),
+        ("2005", "Sec. 5.4.1 (design protective potential)"),
+        ("2010", "Sec. 5.4.1 (design protective potential)"),
+        ("2017", "[5.4.1] (design protective potential)"),
         ("2021", "[2.4.2] (design protective potential)"),
     ],
 )
 def test_protection_potential(edition, section):
+    # B401 2021 [2.4.1] defines the criterion; [2.4.2] defines the design value.
     result = tbl.protection_potential(edition=edition)
     assert result.value == pytest.approx(-0.80)
     assert result.units.startswith("V")
@@ -682,7 +683,15 @@ def test_design_driving_voltage_seawater(edition, material, expected):
     result = tbl.design_driving_voltage(material, edition=edition)
     assert result.value == pytest.approx(expected)
     assert result.units == "V"
-    assert result.citation.section.startswith(EDITION_FIXTURES[edition][3] + "6 with ")
+    clause = {
+        "2005": "Sec. 5.4.1",
+        "2010": "Sec. 5.4.1",
+        "2017": "[5.4.1]",
+        "2021": "[2.4.2]",
+    }[edition]
+    assert result.citation.section == (
+        f"{EDITION_FIXTURES[edition][3]}6 with {clause} (design protective potential)"
+    )
 
 
 def test_design_driving_voltage_sediment_uses_sediment_potential():
