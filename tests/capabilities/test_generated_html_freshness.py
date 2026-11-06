@@ -439,4 +439,6 @@ def test_ffs_readiness_generator_owns_page_and_historical_input():
     assert {
         "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md",
         "examples/workflows/api579-pipe-ffs-b314/input.yml",
+        "examples/workflows/ffs-metal-loss/input.yml",
+        "examples/workflows/ffs-campaign-demo/input.yml",
     } <= set(entries[0].inputs)

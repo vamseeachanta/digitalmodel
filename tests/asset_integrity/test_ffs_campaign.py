@@ -5,6 +5,7 @@
 import copy
 import json
 from pathlib import Path
+import posixpath
 
 import pytest
 import yaml
@@ -202,6 +203,7 @@ def test_each_engine_has_run_or_validation_link():
     for engine, links in parser.links.items():
         external = [link for link in links if not link.startswith("#")]
         for link in external:
+            assert posixpath.normpath(link) == link, (engine, link)
             assert (page.parent / link.split("#")[0]).resolve().is_file(), (engine, link)
         if engine in records:
             assert records[engine] <= {Path(link).name for link in external}, engine
@@ -210,6 +212,30 @@ def test_each_engine_has_run_or_validation_link():
         else:
             # Missing historical evidence remains an explicit qualification gap.
             assert any(link.startswith("#validation-gap-") for link in links), engine
+
+
+def test_readiness_distinguishes_design_record():
+    from scripts.ffs.build_ffs_readiness import render_readiness
+
+    page = render_readiness(ROOT)
+    assert "Design record: level3-and-part9-program-2026-09-25.md" in page
+    assert "Historical record: level3-and-part9-program-2026-09-25.md" not in page
+
+
+def test_readiness_unknown_historical_label_has_explicit_error(tmp_path):
+    from scripts.ffs.build_ffs_readiness import render_readiness
+
+    relative = "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md"
+    review = tmp_path / relative
+    review.parent.mkdir(parents=True)
+    review.write_text(
+        (ROOT / relative).read_text(encoding="utf-8").replace(
+            "R2D-VR", "unrecognized historical evidence"
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="Unknown historical validation label: unrecognized historical evidence"):
+        render_readiness(tmp_path)
 
 
 def test_worked_example_manifest_integrity():

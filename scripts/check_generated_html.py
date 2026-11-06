@@ -78,6 +78,8 @@ GENERATORS = (
         inputs=(
             "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md",
             "examples/workflows/api579-pipe-ffs-b314/input.yml",
+            "examples/workflows/ffs-metal-loss/input.yml",
+            "examples/workflows/ffs-campaign-demo/input.yml",
         ),
     ),
     # The synthetic assessment and its digest manifest form one reproducible
