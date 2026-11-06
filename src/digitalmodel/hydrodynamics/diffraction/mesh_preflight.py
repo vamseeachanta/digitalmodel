@@ -5,6 +5,7 @@ https://www.wamit.com/manualv7.4/wamit_v74manualch6.html
 ISX/ISY are binary x=0/y=0 cuts, not full-body geometric properties.
 """
 
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -60,13 +61,20 @@ def read_gdf_panels(file_path: Path) -> tuple[tuple[int, int], np.ndarray]:
                     lines = lines[1:]
     if len(lines) < 3:
         raise ValueError(f"{file_path.name}: incomplete GDF header")
-    flags = parse_symmetry_flags(lines[1])
+    try:
+        flags = parse_symmetry_flags(lines[1])
+    except ValueError as exc:
+        raise ValueError(f"{file_path.name}: {exc}") from exc
     try:
         panel_count = int(lines[2].split()[0])
     except (ValueError, IndexError) as exc:
-        raise ValueError("Invalid GDF panel count: expected a positive integer") from exc
+        raise ValueError(
+            f"{file_path.name}: Invalid GDF panel count: expected a positive integer"
+        ) from exc
     if panel_count <= 0:
-        raise ValueError("Invalid GDF panel count: expected a positive integer")
+        raise ValueError(
+            f"{file_path.name}: Invalid GDF panel count: expected a positive integer"
+        )
     return flags, _gdf_coordinates(lines[3:], panel_count, file_path.name)
 
 
@@ -79,7 +87,7 @@ def _gdf_coordinates(lines: list[str], panel_count: int, name: str) -> np.ndarra
         if marker and (
             len(tokens) % 12 or annotation.strip() != str(len(tokens) // 12)
         ):
-            raise ValueError("Invalid GDF coordinates: invalid panel annotation")
+            raise ValueError(f"{name}: Invalid GDF coordinates: invalid panel annotation")
     expected = 12 * panel_count
     if len(tokens) != expected:
         context = f"{name}: panel {len(tokens) // 12 + 1}, vertex {len(tokens) % 12 // 3 + 1}"
@@ -105,7 +113,51 @@ def _gdf_coordinates(lines: list[str], panel_count: int, name: str) -> np.ndarra
     return values.reshape(panel_count, 4, 3)
 
 
-def validate_symmetry(flags, declared, vertices=None):
+def read_gdf_mesh(file_path: Path):
+    """Build a solver-neutral welded mesh, preserving cyclic triangle checks."""
+    symmetry_flags, panel_coordinates = read_gdf_panels(file_path)
+    # Read panel vertices (4 vertices per panel)
+    vertices: list[tuple[float, float, float]] = []
+    panels: list[list[int]] = []
+    vertex_map: dict[tuple[float, float, float], int] = {}
+
+    for panel_number, coordinates in enumerate(panel_coordinates, 1):
+        panel_vertices: list[int] = []
+        for point in coordinates:
+            vertex = tuple(point)
+            if vertex not in vertex_map:
+                vertex_map[vertex] = len(vertices)
+                vertices.append(vertex)
+            panel_vertices.append(vertex_map[vertex])
+
+        unique_count = len(set(panel_vertices))
+        repeated_positions = [
+            index
+            for index, node in enumerate(panel_vertices)
+            if panel_vertices.count(node) == 2
+        ]
+        is_triangle = unique_count == 3 and repeated_positions in (
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [0, 3],
+        )
+        if unique_count != 4 and not is_triangle:
+            raise ValueError(
+                f"{file_path.name}: panel {panel_number}: expected four unique "
+                "vertices or a triangle with a cyclic-adjacent repeated vertex"
+            )
+        panels.append(panel_vertices)
+
+    return SimpleNamespace(
+        vertices=np.array(vertices, dtype=np.float64),
+        panels=np.array(panels, dtype=np.int32),
+        name=file_path.stem,
+        symmetry_flags=symmetry_flags,
+    )
+
+
+def validate_symmetry(flags, declared, vertices=None, panels=None):
     """Require the spec and the stored sector to describe the same cuts."""
     declared = getattr(declared, "value", declared)
     if flags != FLAGS[declared]:
@@ -115,9 +167,23 @@ def validate_symmetry(flags, declared, vertices=None):
             f"ISY={FLAGS[declared][1]}"
         )
     if vertices is not None:
+        # Shared body-relative centreline tolerance, in mesh metre units.
+        tolerance = max(1e-8, 2e-6 * float(np.ptp(vertices[:, 0])))
         for axis, flag in enumerate(flags):
+            if not flag:
+                continue
             coordinates = vertices[:, axis]
-            if flag and np.any(coordinates < 0) and np.any(coordinates > 0):
+            on_plane = np.abs(coordinates) <= tolerance
+            coordinates[on_plane] = 0.0
+            if panels is not None:
+                plane_panels = np.flatnonzero(on_plane[panels].all(axis=1))
+                if len(plane_panels):
+                    numbers = ", ".join(str(int(i) + 1) for i in plane_panels)
+                    raise ValueError(
+                        f"GDF symmetry {declared!r} forbids panels in the "
+                        f"{'xy'[axis]}=0 cut plane: {numbers}"
+                    )
+            if np.any(coordinates < -tolerance) and np.any(coordinates > tolerance):
                 raise ValueError(
                     f"GDF symmetry ISX={flags[0]}, ISY={flags[1]}, "
                     f"spec symmetry {declared!r}: panels occupy both sides "
@@ -137,7 +203,7 @@ def expand_sector(mesh):
             reflected[:, axis] *= -1
             panels = np.concatenate([panels, panels[:, ::-1] + len(vertices)])
             vertices = np.concatenate([vertices, reflected])
-    # Exact welding matches the repository GDF reader, without a new tolerance.
+    # Cut nodes were snapped by validate_symmetry before exact welding.
     vertices, inverse = np.unique(vertices, axis=0, return_inverse=True)
     return SimpleNamespace(vertices=vertices, panels=inverse[panels])
 
@@ -153,13 +219,11 @@ def buoyancy_preflight(spec, spec_dir=None):
     Gravity cancels in the weight/buoyancy ratio. No acceptance limit is assumed.
     This screen applies only to upright, metre-unit wetted meshes at z=0.
     """
-    from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
-
     reports = []
     for body in spec.get_bodies():
         geometry = body.vessel.geometry
         tolerance = geometry.buoyancy_relative_tolerance
-        report = {"check": "DF2", "status": "NOT_EVALUATED"}
+        report = {"check": "DF2", "body": body.vessel.name, "status": "NOT_EVALUATED"}
         reason = None
         if tolerance is None:
             reason = "buoyancy_relative_tolerance is required for DF2 evaluation"
@@ -180,8 +244,10 @@ def buoyancy_preflight(spec, spec_dir=None):
             if path.suffix.lower() != ".gdf":
                 reason = "DF2 supports GDF geometry only"
             else:
-                mesh = AQWABackend()._parse_gdf(path)
-                validate_symmetry(mesh.symmetry_flags, geometry.symmetry, mesh.vertices)
+                mesh = read_gdf_mesh(path)
+                validate_symmetry(
+                    mesh.symmetry_flags, geometry.symmetry, mesh.vertices, mesh.panels
+                )
                 full = expand_sector(mesh)
                 orientation = orientation_report(full)
                 if not orientation.ok:
@@ -198,9 +264,13 @@ def buoyancy_preflight(spec, spec_dir=None):
                     )
                     if issues:
                         raise ValueError("DF2: " + "; ".join(issues))
+                    displaced_mass = spec.environment.water_density * orientation.volume
                     report.update(
                         status="PASS",
                         volume_m3=orientation.volume,
+                        mass_kg=body.vessel.inertia.mass,
+                        displaced_mass_kg=displaced_mass,
+                        residual_kg=body.vessel.inertia.mass - displaced_mass,
                         relative_tolerance=tolerance,
                     )
         if reason:
@@ -209,3 +279,10 @@ def buoyancy_preflight(spec, spec_dir=None):
             report["reason"] = reason
         reports.append(report)
     return reports
+
+
+def write_preflight_reports(reports, output_dir):
+    """Persist evaluated and unevaluated screens next to generated inputs."""
+    path = Path(output_dir) / "preflight_reports.json"
+    path.write_text(json.dumps(reports, indent=2) + "\n", encoding="utf-8")
+    return path

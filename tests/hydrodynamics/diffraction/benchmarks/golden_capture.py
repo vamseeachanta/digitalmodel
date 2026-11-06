@@ -49,6 +49,8 @@ def expected_refusal(spec_path: Path) -> str | None:
     """Missing geometry is refused; matching stored sectors use their goldens."""
     if spec_path.parent.parent.name != "L00_validation_wamit":
         return None
+    # Retain the earlier 2.7 golden as a historical emission reference only.
+    # Its absent mesh prevents comparison; restoring evidence must precede reuse.
     if spec_path.parent.name in {"2.1", "2.2", "2.3", "2.6", "2.7", "2.8", "2.9", "3.1", "3.2"}:
         return "Cannot verify GDF symmetry"
     return None

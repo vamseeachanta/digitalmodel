@@ -63,6 +63,7 @@ from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
     iter_mesh_references,
     package_spec_meshes,
 )
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import write_preflight_reports
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     ADDED_MASS_UNITS,
@@ -220,6 +221,7 @@ class RunResult:
     modular_files: list[Path] = field(default_factory=list)
     output_dir: Path | None = None
     mesh_files: list[Path] = field(default_factory=list)
+    preflight_reports: list[dict] = field(default_factory=list)
     log_file: Path | None = None
     stdout: str = ""
     stderr: str = ""
@@ -411,6 +413,10 @@ class OrcaWaveRunner:
             spec_to_generate, output_dir
         )
         self._result.input_file = input_file
+        self._result.preflight_reports = [
+            dict(report) for report in self._backend.preflight_reports
+        ]
+        write_preflight_reports(self._result.preflight_reports, output_dir)
         self._result.modular_files = modular_files
 
         # Validate mesh references

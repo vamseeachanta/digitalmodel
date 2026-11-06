@@ -164,3 +164,28 @@ def test_explicit_cog_defaults_land_amidships_at_keel(tmp_path):
     )
     # the keel-datum VCG gap is still flagged for the user
     assert any("VCG unknown" in n for n in res.notes)
+
+
+@pytest.mark.parametrize("symmetry,flags", [("none", "0 0"), ("xz", "0 1"), ("yz", "1 0"), ("xz+yz", "1 1")])
+@pytest.mark.parametrize("vessel_type", ["barge", "drilling semi-submersible"])
+def test_exported_flags_determine_declaration(tmp_path, monkeypatch, symmetry, flags, vessel_type):
+    from digitalmodel.hydrodynamics.diffraction import vessel_deck_builder as builder
+    from tests.hydrodynamics.diffraction.test_mesh_preflight import box_spec
+
+    box_spec(tmp_path, symmetry, flags, partial=True)
+    contents = (tmp_path / "box.gdf").read_text()
+
+    def export_with_flags(mesh, path):
+        path.write_text(contents)
+        return path
+
+    monkeypatch.setattr(builder, "export_gdf", export_with_flags)
+    result = builder.build_deck(
+        _rec("synthetic", vessel_type, loa=80, beam=70, draft=20),
+        tmp_path, target_panels=20,
+    )
+    spec = DiffractionSpec.from_yaml(result.spec_path)
+    assert spec.vessel.geometry.symmetry == symmetry
+    assert result.deck_path.exists()
+    manifest = json.loads((result.deck_path.parent / "manifest.json").read_text())
+    assert manifest["preflight_reports"][0]["status"] == "NOT_EVALUATED"

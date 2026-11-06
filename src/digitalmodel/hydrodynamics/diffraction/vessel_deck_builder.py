@@ -29,6 +29,7 @@ from typing import Optional
 
 import numpy as np
 
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import FLAGS, read_gdf_panels
 from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     DiffractionSpec,
     EnvironmentSpec,
@@ -315,13 +316,16 @@ def build_deck(
             profile, MeshGeneratorConfig(target_panels=target_panels)
         )
         mesh_path = export_gdf(mesh, deck_dir / MESH_FILE)
-        mesh_symmetry = "xz" if mesh.symmetry_plane == "y" else "none"
         n_panels = len(mesh.panels)
         mesh_file = MESH_FILE
         mesh_kind = "parametric"
         notes.append(
             "parametric wall-sided mesh (first-pass screening; swap in a faired hull for design)"
         )
+
+    if mesh_path is not None:
+        flags, _ = read_gdf_panels(mesh_path)
+        mesh_symmetry = next(name for name, pair in FLAGS.items() if pair == flags)
 
     inertia, mass_basis, inertia_notes = _inertia_for(record, dims)
     if column_mesh is not None and mass_basis == "explicit":
@@ -353,13 +357,16 @@ def build_deck(
     # it is for direct opening in OrcaWave.
     spec_path = spec.to_yaml(deck_dir / "spec.yml")
     spec._source_dir = deck_dir.resolve()
+    preflight_reports = []
     if mesh_kind == "placeholder":
         # Keep the canonical spec for completing the missing geometry. The
         # intended native deck path is returned but no unverified deck is written.
         deck_path = deck_dir / f"{deck_name}.yml"
         notes.append("native deck not generated: supply and verify the missing mesh")
     else:
-        deck_path = OrcaWaveBackend().generate_single(spec, deck_dir)
+        backend = OrcaWaveBackend()
+        deck_path = backend.generate_single(spec, deck_dir)
+        preflight_reports = backend.preflight_reports
 
     manifest = {
         "vessel": deck_name if column_mesh is not None else record.name,
@@ -380,6 +387,7 @@ def build_deck(
         "deck": deck_path.name,
         "spec": spec_path.name,
         "notes": notes,
+        "preflight_reports": preflight_reports,
         "provenance": "parametric prep from vessel_db; run on a licensed OrcaWave/AQWA machine",
     }
     if column_mesh is not None:

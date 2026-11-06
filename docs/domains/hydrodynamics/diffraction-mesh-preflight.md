@@ -9,6 +9,7 @@ symmetric while its full mesh still requires `symmetry: none`.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-21 | Define matching stored-sector declarations and explicit buoyancy screening to prevent incomplete-body conversion. |
+| 2 | 2026-11-06 | Reject unchecked reflection and cut-plane panels, tolerate centreline rounding, and persist buoyancy evidence for inspection. |
 
 ## Inputs and method
 
@@ -23,8 +24,12 @@ defines the binary symmetry indices and the stored half or quarter surface:
 | One quadrant | 1 | 1 | `xz+yz` |
 
 A mismatch names both flags and the declared symmetry. Malformed flags refuse.
-A declared cut with coordinates on both sides also refuses; cut coordinates
-must be exactly on the plane or on one side. Input files remain unchanged.
+A declared cut with coordinates on both sides also refuses. Classification
+uses `max(1e-8 m, 2e-6 * longitudinal mesh extent)`; nodes within this tolerance
+are snapped to the cut plane in the validation copy before reflection and
+welding. Panels wholly on any declared cut plane refuse to prevent coincident
+reflections. Input files remain unchanged. OrcaWave accepts declared symmetry
+only for verified GDF sectors; OBJ, MSH and AQWA DAT require `symmetry: none`.
 
 [OrcaWave help, Bodies: Body mesh](https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Bodies.htm#BodyMesh)
 requires an explicit symmetry setting even when the format contains flags.
@@ -36,7 +41,17 @@ The optional `vessel.geometry.buoyancy_relative_tolerance` enables the DF2
 free-flotation screen. Supply a traced criterion appropriate to the body;
 there is no implicit acceptance limit. Without it, the backend's
 `preflight_reports` explicitly records `NOT_EVALUATED` with the missing input.
+Runner results carry `preflight_reports`; converters retain the records by
+solver in `preflight_reports[solver]` while preserving their path return value.
+Both write `preflight_reports.json` beside generated inputs, including
+`NOT_EVALUATED` records. The deck builder includes the same records in its
+manifest. Each record identifies the body. A `PASS` record also carries
+`mass_kg`, `displaced_mass_kg`, signed `residual_kg` (mass minus displaced mass),
+volume and the supplied tolerance.
+
 Generation alone therefore does not establish buoyancy qualification.
+#3121 item 3 remains partly met until the maintainers choose a documented
+acceptance criterion or require one before run submission.
 
 The screen reuses `mesh_orientation.orientation_report` and
 `equilibrium_checks.check_mass_displacement`. The former documents the

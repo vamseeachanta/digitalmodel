@@ -24,6 +24,7 @@ import math
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import yaml
 
 from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
@@ -273,15 +274,22 @@ def _check_full_gdf(geom: Any, spec: DiffractionSpec) -> None:
     """Fail closed for every GDF declaration, including symmetry none."""
     path = Path(geom.mesh_file)
     if geom.mesh_format.value != "gdf" and path.suffix.lower() != ".gdf":
+        if geom.symmetry != "none":
+            raise ValueError(
+                f"Mesh {path.name!r}: symmetry requires verified GDF geometry"
+            )
         return
     if not path.is_absolute() and spec._source_dir is not None:
         path = spec._source_dir / path
     try:
         flags, panels = read_gdf_panels(path)
-        validate_symmetry(flags, geom.symmetry, panels.reshape(-1, 3))
-    except OSError as exc:
+        validate_symmetry(
+            flags, geom.symmetry, panels.reshape(-1, 3),
+            np.arange(panels.size // 3).reshape(-1, 4),
+        )
+    except (OSError, ValueError) as exc:
         raise ValueError(
-            f"Cannot verify GDF symmetry for mesh {Path(geom.mesh_file).name!r}"
+            f"Cannot verify GDF symmetry for mesh {path.name!r}: {exc}"
         ) from exc
 
 
@@ -777,6 +785,9 @@ class OrcaWaveBackend:
         backend = OrcaWaveBackend()
         path = backend.generate_single(spec, Path("output/"))
     """
+
+    def __init__(self) -> None:
+        self.preflight_reports: list[dict] = []
 
     def generate_single(
         self,

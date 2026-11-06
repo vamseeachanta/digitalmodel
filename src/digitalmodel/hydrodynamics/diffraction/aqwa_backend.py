@@ -33,7 +33,7 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
 )
 
 from digitalmodel.hydrodynamics.diffraction.mesh_preflight import (
-    buoyancy_preflight, expand_sector, read_gdf_panels, validate_symmetry,
+    buoyancy_preflight, expand_sector, read_gdf_mesh, validate_symmetry,
 )
 
 
@@ -174,6 +174,7 @@ class AQWABackend:
         """Initialize the mesh cache and relative-path context."""
         self._spec_dir: Optional[Path] = None
         self._mesh_cache: dict[str, ParsedMesh] = {}
+        self.preflight_reports: list[dict] = []
 
     # -----------------------------------------------------------------
     # Public entry points
@@ -259,7 +260,7 @@ class AQWABackend:
             # deck file so concatenating modular outputs reproduces the
             # single-file output byte-for-byte (after whitespace strip).
             file_cards = header + cards if idx == 0 else cards
-            file_path.write_text("\n".join(file_cards) + "\n", encoding="utf-8", newline="\n")
+            file_path.write_text("\r\n".join(file_cards) + "\r\n", encoding="utf-8", newline="\n")
 
         return output_dir
 
@@ -361,7 +362,12 @@ class AQWABackend:
                 "requires a loaded and verified GDF mesh"
             )
         if mesh is not None:
-            validate_symmetry(mesh.symmetry_flags, geometry.symmetry, mesh.vertices)
+            mesh = ParsedMesh(
+                mesh.vertices.copy(), mesh.panels, mesh.name, mesh.symmetry_flags
+            )
+            validate_symmetry(
+                mesh.symmetry_flags, geometry.symmetry, mesh.vertices, mesh.panels
+            )
             expanded = expand_sector(mesh)
             mesh = ParsedMesh(expanded.vertices, expanded.panels, name=mesh.name)
         if geometry.symmetry != "xz":
@@ -445,47 +451,8 @@ class AQWABackend:
         - Line 4: NPAN (number of panels)
         - Lines 5+: 4 vertices per panel (X Y Z for each vertex)
         """
-        symmetry_flags, panel_coordinates = read_gdf_panels(file_path)
-
-        # Read panel vertices (4 vertices per panel)
-        vertices: list[tuple[float, float, float]] = []
-        panels: list[list[int]] = []
-        vertex_map: dict[tuple[float, float, float], int] = {}
-
-        for panel_number, coordinates in enumerate(panel_coordinates, 1):
-            panel_vertices: list[int] = []
-            for point in coordinates:
-                vertex = tuple(point)
-                if vertex not in vertex_map:
-                    vertex_map[vertex] = len(vertices)
-                    vertices.append(vertex)
-                panel_vertices.append(vertex_map[vertex])
-
-            unique_count = len(set(panel_vertices))
-            repeated_positions = [
-                index
-                for index, node in enumerate(panel_vertices)
-                if panel_vertices.count(node) == 2
-            ]
-            is_triangle = unique_count == 3 and repeated_positions in (
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [0, 3],
-            )
-            if unique_count != 4 and not is_triangle:
-                raise ValueError(
-                    f"{file_path.name}: panel {panel_number}: expected four unique "
-                    "vertices or a triangle with a cyclic-adjacent repeated vertex"
-                )
-            panels.append(panel_vertices)
-
-        return ParsedMesh(
-            vertices=np.array(vertices, dtype=np.float64),
-            panels=np.array(panels, dtype=np.int32),
-            name=file_path.stem,
-            symmetry_flags=symmetry_flags,
-        )
+        mesh = read_gdf_mesh(file_path)
+        return ParsedMesh(mesh.vertices, mesh.panels, mesh.name, mesh.symmetry_flags)
 
     # -----------------------------------------------------------------
     # Deck 0 — JOB control
