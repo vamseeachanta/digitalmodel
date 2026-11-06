@@ -8,5 +8,10 @@
     "change": "Use a non-symmetric sling triangle to distinguish angle conventions; clarify signed ratios and the stylesheet rebuild dependency.",
     "date": "2026-11-06",
     "revision": "B"
+  },
+  {
+    "change": "Restrict report destinations to preserve unrelated checkout and external files; retain the calculation evidence unchanged.",
+    "date": "2026-11-06",
+    "revision": "C"
   }
 ]

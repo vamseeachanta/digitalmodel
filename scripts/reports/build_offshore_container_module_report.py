@@ -4,7 +4,8 @@
 """Build a bounded offshore-container analysis using normal public API imports.
 
 Both --scratch and --output-dir are required. Scratch must be outside the
-checkout. The output directory receives only the small deterministic delivery.
+checkout. Output inside the checkout is limited to the retained report folder.
+External output must contain only regular delivery files.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 REVIEWED_REVISION = "09089a121a16069c4b657d1a320a630a23ab1dd5"
 PACKAGE = "src/digitalmodel/structural/offshore_container"
+DELIVERABLES = {"index.html", "results.json", "changes.json", "manifest.json", "README.md"}
 CHANGES = [{
     "revision": "A",
     "date": "2026-10-28",
@@ -28,6 +30,10 @@ CHANGES = [{
     "revision": "B",
     "date": "2026-11-06",
     "change": "Use a non-symmetric sling triangle to distinguish angle conventions; clarify signed ratios and the stylesheet rebuild dependency.",
+}, {
+    "revision": "C",
+    "date": "2026-11-06",
+    "change": "Restrict report destinations to preserve unrelated checkout and external files; retain the calculation evidence unchanged.",
 }]
 SOURCES = (
     f"{PACKAGE}/__init__.py",
@@ -362,6 +368,10 @@ PYTHONPATH=src python scripts/reports/build_offshore_container_module_report.py 
 ```
 
 Both arguments are required. Scratch is rejected if it is inside the checkout.
+Output inside the checkout is accepted only at docs/reports/modules/offshore_container.
+An external output directory must be empty or contain only the five deliverable
+names listed below. Existing deliverables must be regular files, with no symlinks
+or directories. Resolved paths are checked before calculation or output writes.
 Only final deliverables belong in this folder; intermediate calculation evidence
 is written to scratch. Run the report tests with an external pytest base:
 
@@ -391,11 +401,23 @@ parameter-range qualification or standards-compliance claim follows from them.
 
 def build(scratch, output_dir):
     """Write only final deliverables to the destination and bind their bytes."""
-    data = calculate(scratch)
     output = Path(output_dir).resolve()
+    checkout = ROOT.resolve()
+    retained = (checkout / "docs/reports/modules/offshore_container").resolve()
+    if (output == checkout or checkout in output.parents) and output != retained:
+        raise ValueError("Output inside the checkout must be the retained report directory")
     scratch = Path(scratch).resolve()
     if output == scratch or output in scratch.parents or scratch in output.parents:
         raise ValueError("Scratch and output must be separate directories")
+    if output.exists():
+        if not output.is_dir():
+            raise ValueError("Output must be a directory")
+        entries = list(output.iterdir())
+        if any(path.name not in DELIVERABLES for path in entries):
+            raise ValueError("Output contains unrelated entries")
+        if any(path.is_symlink() or not path.is_file() for path in entries):
+            raise ValueError("Existing deliverables must be regular files")
+    data = calculate(scratch)
     output.mkdir(parents=True, exist_ok=True)
     outputs = {"index.html": render(data), "results.json": json_text(data),
                "changes.json": json_text(CHANGES), "README.md": readme()}

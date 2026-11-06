@@ -331,3 +331,83 @@ def test_report_escapes_text_and_embedded_json(tmp_path):
         r'<script id="calculation" type="application/json">(.*?)</script>', page, re.S,
     )[1])
     assert embedded["open_findings"][0]["finding"] == unsafe
+
+
+@pytest.fixture
+def isolated_builder(tmp_path, monkeypatch):
+    """Exercise destinations in a copied checkout without risking source files."""
+    build = builder()
+    checkout = tmp_path / "checkout"
+    for name in build.SOURCES:
+        target = checkout / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / name, target)
+    monkeypatch.setattr(build, "ROOT", checkout)
+    return build
+
+
+@pytest.mark.parametrize("destination", [".", "docs", "new-directory"])
+def test_build_rejects_other_checkout_destinations(tmp_path, isolated_builder, destination):
+    build = isolated_builder
+    output = build.ROOT / destination
+    original = {p.relative_to(build.ROOT): p.read_bytes()
+                for p in build.ROOT.rglob("*") if p.is_file()}
+    with pytest.raises(ValueError, match="Output.*checkout"):
+        build.build(tmp_path / "scratch", output)
+    assert {p.relative_to(build.ROOT): p.read_bytes()
+            for p in build.ROOT.rglob("*") if p.is_file()} == original
+    if destination == "new-directory":
+        assert not output.exists()
+
+
+@pytest.mark.parametrize("entry", ["notes.txt", "other-directory"])
+def test_build_rejects_unrelated_external_contents(tmp_path, isolated_builder, entry):
+    output = tmp_path / "external"
+    output.mkdir()
+    (output / "README.md").write_text("Existing documentation\n", encoding="utf-8")
+    unrelated = output / entry
+    if entry == "other-directory":
+        unrelated.mkdir()
+    else:
+        unrelated.write_text("Keep this content\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="unrelated"):
+        isolated_builder.build(tmp_path / "scratch", output)
+    assert (output / "README.md").read_text() == "Existing documentation\n"
+    assert {p.name for p in output.iterdir()} == {"README.md", entry}
+
+
+def test_build_resolves_checkout_alias_before_validation(tmp_path, isolated_builder):
+    alias = tmp_path / "alias"
+    alias.symlink_to(isolated_builder.ROOT, target_is_directory=True)
+    with pytest.raises(ValueError, match="Output.*checkout"):
+        isolated_builder.build(tmp_path / "scratch", alias)
+    assert not (isolated_builder.ROOT / "README.md").exists()
+
+
+@pytest.mark.parametrize("kind", ["symlink", "directory"])
+def test_build_rejects_nonregular_deliverables(tmp_path, isolated_builder, kind):
+    output = tmp_path / "external"
+    output.mkdir()
+    protected = tmp_path / "protected.md"
+    protected.write_text("Keep this content\n", encoding="utf-8")
+    target = output / "README.md"
+    if kind == "symlink":
+        target.symlink_to(protected)
+    else:
+        target.mkdir()
+    with pytest.raises(ValueError, match="regular files"):
+        isolated_builder.build(tmp_path / "scratch", output)
+    assert protected.read_text() == "Keep this content\n"
+    assert {p.name for p in output.iterdir()} == {"README.md"}
+
+
+@pytest.mark.parametrize("destination", ["external", "retained"])
+def test_build_can_refresh_only_delivery_files(tmp_path, isolated_builder, destination):
+    build = isolated_builder
+    output = (tmp_path / "external" if destination == "external" else
+              build.ROOT / "docs/reports/modules/offshore_container")
+    build.build(tmp_path / "scratch", output)
+    first = {p.name: p.read_bytes() for p in output.iterdir()}
+    assert set(first) == DELIVERABLES
+    build.build(tmp_path / "scratch", output)
+    assert {p.name: p.read_bytes() for p in output.iterdir()} == first

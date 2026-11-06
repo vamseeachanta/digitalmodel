@@ -1,8 +1,8 @@
 {
   "artifacts": {
-    "README.md": "4bf8e7743d1f6d6d11d444eaecfb7fdc8770995e593804d293382265c26fd1ea",
-    "changes.json": "bbff584f72b47411fe020633331352d3570ebd43e2e3eeecfa51c917b44a663c",
-    "index.html": "6f46069f14b75371e0846d143dc22cb5018dff517e95491a0d1f1d399411a639",
+    "README.md": "0b1e5d9e050f8b7b985e574b7158bd6f7fd9f10c7090325e0e33fdcf8881b922",
+    "changes.json": "24665b29a7064638293313abbb5be96afa75681066272716efbeec9bf1c034b9",
+    "index.html": "8552644a8b0ee07b83da5932d745a4a3df279f256d3cd582981c5252cc021056",
     "results.json": "9027ddd58c4d9f3fadcf1006433d1ecd8d1c1b15ca00d1905ed59bde74b7d4d6"
   },
   "digest_convention": "SHA-256 over exact bytes; manifest self-binding excluded; full bytes checked by rebuild test.",
@@ -10,12 +10,12 @@
   "schema_version": 1,
   "sources": {
     "docs/api/_assets/brand.css": "a3d37e4e0461834c487833a3531f7e480e6248f001795e578601f812defc223a",
-    "scripts/reports/build_offshore_container_module_report.py": "ade08d4fb5322119983351462fd80b9f285ac2b55fd903ff342d9305f80b3cd6",
+    "scripts/reports/build_offshore_container_module_report.py": "28de27c7a38260b108e484f6d5f0f52383895d59d5141ff5c4949cb43b3f3b6a",
     "src/digitalmodel/citations/registry.py": "f0aa345fa6d9eaad1b97b3f18ec7682796c60b98e318d19da0537ce354da51ac",
     "src/digitalmodel/citations/schema.py": "5cb1da984b9e993579f4a2d1e77a053330461628f4953f90fe31d3c395e48e70",
     "src/digitalmodel/structural/offshore_container/__init__.py": "8ea341c8d0e128e67ae6fb8ab8437274da8b2bbc3e868b38e21b419af245fd9c",
     "src/digitalmodel/structural/offshore_container/dnv_2_7_1.py": "c056a3ad3b6ed4dc17948e7ae48b6a2bd72a4bf406d8e946127fb9cb6cbdb8f6",
     "src/digitalmodel/structural/offshore_container/docs/worked-shs-sling-geometry.md": "1de8ab5d56cebd513a23f3fa95fddd3bc4145f28115fca3feeeffc77c8d5585b",
-    "tests/reporting/test_offshore_container_module_report.py": "6968cec3f99829cd9a0b613331439770b70aaf26067279fb57272ffa51b3efb9"
+    "tests/reporting/test_offshore_container_module_report.py": "2a1e5bc6150447187a7bb7b138c10c484d9c45c9252b9a0abf03809f1725e536"
   }
 }

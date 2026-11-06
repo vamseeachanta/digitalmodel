@@ -91,7 +91,7 @@ th,.eq{background:var(--panel-2)}caption,figcaption{text-align:left;color:var(--
 The independently derived section and sling example is reproduced: A = 0.03 m², I = 0.000125 m⁴,
 Z = 0.00125 m³ and v = 22.6° [D1/D2].
 An explicitly synthetic usage scalar gives 1e+08 Pa [A3]. These are arithmetic checks, not accepted design factors or a resistance assessment.</p>
-<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Added a reproducible module analysis with independent geometry and caller-factor arithmetic to expose the evidence and unresolved method limits.</td></tr><tr><td>B</td><td>2026-11-06</td><td>Use a non-symmetric sling triangle to distinguish angle conventions; clarify signed ratios and the stylesheet rebuild dependency.</td></tr></tbody></table>
+<h3>Revision history</h3><table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody><tr><td>A</td><td>2026-10-28</td><td>Added a reproducible module analysis with independent geometry and caller-factor arithmetic to expose the evidence and unresolved method limits.</td></tr><tr><td>B</td><td>2026-11-06</td><td>Use a non-symmetric sling triangle to distinguish angle conventions; clarify signed ratios and the stylesheet rebuild dependency.</td></tr><tr><td>C</td><td>2026-11-06</td><td>Restrict report destinations to preserve unrelated checkout and external files; retain the calculation evidence unchanged.</td></tr></tbody></table>
 <details id="changes-panel"><summary>Change evidence</summary><p>The revision row is generated from <a href="changes.json">changes.json</a>.
 Machine-readable calculation evidence is in <a href="results.json">results.json</a>; <a href="manifest.json">manifest.json</a> binds source and delivered bytes.
 The <a href="README.md">rebuild instructions</a> explain the evidence boundary.</p></details></section>
@@ -287,6 +287,11 @@ the rebuild test compares its complete bytes. Source revision describes the revi
     "change": "Use a non-symmetric sling triangle to distinguish angle conventions; clarify signed ratios and the stylesheet rebuild dependency.",
     "date": "2026-11-06",
     "revision": "B"
+  },
+  {
+    "change": "Restrict report destinations to preserve unrelated checkout and external files; retain the calculation evidence unchanged.",
+    "date": "2026-11-06",
+    "revision": "C"
   }
 ]
 </script>

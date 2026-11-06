@@ -15,6 +15,10 @@ PYTHONPATH=src python scripts/reports/build_offshore_container_module_report.py 
 ```
 
 Both arguments are required. Scratch is rejected if it is inside the checkout.
+Output inside the checkout is accepted only at docs/reports/modules/offshore_container.
+An external output directory must be empty or contain only the five deliverable
+names listed below. Existing deliverables must be regular files, with no symlinks
+or directories. Resolved paths are checked before calculation or output writes.
 Only final deliverables belong in this folder; intermediate calculation evidence
 is written to scratch. Run the report tests with an external pytest base:
 
