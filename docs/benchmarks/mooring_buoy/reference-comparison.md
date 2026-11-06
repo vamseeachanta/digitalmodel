@@ -14,6 +14,7 @@ semantics marked `NOT_EVALUATED`. No native readback or analysis occurred.
 | --- | --- | --- |
 | 1 | 2026-10-19 | Add sourced diagnostic categories and a current-input comparison so representation candidates can be reviewed individually without waiving compatibility. |
 | 2 | 2026-11-06 | Compare exact decoded numeric values, restrict line presentation candidates to index zero, and derive blocking totals from recorded decisions; regenerate the report without changing its 56 blocking rows. |
+| 3 | 2026-11-06 | Track the unresolved input line-ending contract in issue #3888 so cross-platform byte reproducibility has explicit acceptance criteria. |
 
 ## Scope and method
 
@@ -137,6 +138,8 @@ physical benchmark. No coefficients or engineering acceptance limits are added.
 The reference and specification have no checkout line-ending attributes binding
 their raw-byte digests. A checkout that translates their line endings can fail
 the reproducibility check; cross-platform byte reproducibility is not established.
+Issue #3888 tracks explicit checkout attributes for these two inputs and a
+regression check of their byte digests across checkout configurations.
 
 Report schema version 3 adds categories, counts, blocking counts and evidence
 decisions; consumers requiring version 2 need to account for these additions.
