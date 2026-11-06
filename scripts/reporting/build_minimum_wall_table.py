@@ -23,10 +23,8 @@ import inspect
 import io
 import json
 import math
-import os
 from pathlib import Path
 import re
-import subprocess
 
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode, DesignFactors, DesignLoads, PipeGeometry, PipeMaterial,
@@ -124,6 +122,8 @@ REVISION_HISTORY = [
      "change": "Preserve per-check coefficient references and unresolved qualification gaps for stock trials"},
     {"revision": 2, "date": "2026-11-03",
      "change": "Refresh source pin after solver fixes; retain collapse suppression pending review and isolate Git reads"},
+    {"revision": 3, "date": "2026-11-06",
+     "change": "Record current source digests without requiring Git history and omit unapplied suppressed criteria"},
 ]
 
 
@@ -217,7 +217,7 @@ def pressure_minimum(cfg, code, pressure_mpa):
     """Enumerate the first passing nominal wall on the existing 0.1 mm grid.
 
     The reference search is build_riser_pipe_comparison._minimum_wall at the
-    pinned source commit. Its integer ticks avoid accumulated floating steps;
+    recorded comparison source. Its integer ticks avoid accumulated floating steps;
     its strict half-diameter bound and exhaustive ordering are preserved here.
     Only the chosen check set and corrosion handling differ.
     """
@@ -290,22 +290,16 @@ def rows_for(cfg, code, pressure_mpa):
     return rows
 
 
-def source_digests(commit):
-    """Fail closed if the running strategy bytes differ from the pinned commit."""
+def source_digests():
+    """Record current source bytes so regeneration can accompany source edits."""
     analysis = ROOT / "src/digitalmodel/structural/analysis"
     sources = [analysis / "wall_thickness.py", *sorted((analysis / "wall_thickness_codes").glob("*.py"))]
     sources.append(ROOT / "scripts/reporting/build_riser_pipe_comparison.py")
     sources.append(CRITERIA)
     digests = {}
-    env = {key: value for key, value in os.environ.items()
-           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
     for source in sources:
         relative = source.relative_to(ROOT).as_posix()
-        pinned = subprocess.check_output(
-            ["git", "show", f"{commit}:{relative}"], cwd=ROOT, env=env)
-        if source.read_bytes() != pinned:
-            raise ValueError(f"Source digest mismatch: {relative}")
-        digests[relative] = {"sha256": hashlib.sha256(pinned).hexdigest()}
+        digests[relative] = {"sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
     return digests
 
 
@@ -348,20 +342,21 @@ def _check_provenance(code, name, strategy, entry, criteria):
     reference = entry.get("checks", {}).get(native, {})
     prefix = "Unqualified repository metadata: "
     symbols = list(COEFFICIENTS[code][name]) if available else []
+    evaluated = status == "evaluated"
     return {
         "coefficient_symbols": symbols,
         "coefficient_sources": _coefficient_sources(symbols, strategy),
         "implementation_method": "_check_" + native if available else None,
         "source_reference": {
             "standard": code.value, "title": entry.get("title", code.value),
-            "edition": prefix + entry.get("reference_edition", entry.get("revision", "Not established")) if available else None,
-            "clause": prefix + reference.get("section", "Clause number and title not established") if available else None,
-            "metadata_source": entry.get("metadata_source") if available else None,
+            "edition": prefix + entry.get("reference_edition", entry.get("revision", "Not established")) if evaluated else None,
+            "clause": prefix + reference.get("section", "Clause number and title not established") if evaluated else None,
+            "metadata_source": entry.get("metadata_source") if evaluated else None,
             "basis": "Repository metadata only; publisher source not consulted",
         },
-        "criterion": reference.get("criterion", "Returned utilisation <= unity") if available else None,
-        "limit": 1.0 if available else None,
-        "criterion_applied": status == "evaluated",
+        "criterion": reference.get("criterion", "Returned utilisation <= unity") if evaluated else None,
+        "limit": 1.0 if evaluated else None,
+        "criterion_applied": evaluated,
         "evaluation_status": status, "qualification": "unqualified", "qualification_gaps": gaps,
     }
 
@@ -395,7 +390,7 @@ def build(input_path=INPUT, output_dir=OUTPUT):
     input_path, output_dir = Path(input_path), Path(output_dir)
     cfg = json.loads(input_path.read_text(encoding="utf-8"))
     validate(cfg)
-    digests = source_digests(cfg["source_commit"])
+    digests = source_digests()
     provenance = check_provenance(digests)
     rows = [row for code in DesignCode for pressure in cfg["pressures_mpa"]
             for row in rows_for(cfg, code, pressure)]
@@ -408,6 +403,7 @@ def build(input_path=INPUT, output_dir=OUTPUT):
     payload = buffer.getvalue().encode()
     manifest = {
         "schema_version": 2, "source_commit": cfg["source_commit"],
+        "source_basis": "Current file SHA-256 digests bind reproduction; source_commit is informational only",
         "strategy_sources": digests, "inputs": cfg,
         "criteria_source": provenance["source"], "criteria_revision": provenance["criteria_revision"],
         "check_provenance": provenance["routes"],

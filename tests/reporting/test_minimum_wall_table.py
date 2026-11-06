@@ -1,7 +1,7 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Check grid sizing independently, then reproduce the pinned table cells."""
+"""Check grid sizing independently, then reproduce the recorded table cells."""
 
 import ast
 import csv
@@ -21,6 +21,8 @@ from digitalmodel.structural.analysis.wall_thickness import DesignCode
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "docs/reports/minimum-wall-table"
 REBUILD = "Rebuild with PYTHONPATH=src python scripts/reporting/build_minimum_wall_table.py"
+GIT_ENV = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
 
 
 def config():
@@ -110,6 +112,23 @@ def test_b31_4_ignores_external_pressure_and_fixed_factors():
     assert table.pressure_checks(cfg, DesignCode.ASME_B31_4, 20, 20) == a
 
 
+@pytest.mark.parametrize("code", list(DesignCode))
+def test_external_wall_labels_match_corrosion_sensitivity(code):
+    cfg = config()
+    row = table.rows_for(cfg, code, 20)[-1]
+    corroded = table.external_checks(cfg, code, 22, 20)
+    cfg["pipe"]["corrosion_allowance_mm"] = 0
+    nominal = table.external_checks(cfg, code, 22, 20)
+    if row["external_wall_basis"] == "corroded wall":
+        assert corroded and corroded.keys() == nominal.keys()
+        assert all(corroded[name] > nominal[name] for name in corroded)
+    elif row["external_wall_basis"] == "nominal wall":
+        assert corroded and corroded == nominal
+    else:
+        assert row["external_wall_basis"] == "not implemented"
+        assert corroded == nominal == {}
+
+
 def test_stock_search_steps_until_collapse_and_propagation_pass(monkeypatch):
     """An independent discrete oracle makes collapse and propagation govern."""
     cfg = config()
@@ -183,14 +202,11 @@ def test_invalid_input_fails_before_writing(tmp_path, field, value):
     assert not (tmp_path / "output").exists()
 
 
-def test_pinned_sources_and_every_table_value_reproduce(tmp_path):
+def test_recorded_sources_and_every_table_value_reproduce(tmp_path):
     manifest = json.loads((DATA / "minimum-wall.manifest.json").read_text(encoding="utf-8"))
-    # Verify the source bytes against git, then recompute with those same bytes.
+    # Verify current source bytes, including edits not yet present in Git history.
     for path, evidence in manifest["strategy_sources"].items():
-        pinned = subprocess.check_output([
-            "git", "show", f'{manifest["source_commit"]}:{path}'], cwd=ROOT)
-        assert hashlib.sha256(pinned).hexdigest() == evidence["sha256"], REBUILD
-        assert (ROOT / path).read_bytes() == pinned, REBUILD
+        assert hashlib.sha256((ROOT / path).read_bytes()).hexdigest() == evidence["sha256"], REBUILD
     table.build(table.INPUT, tmp_path)
     for name in ("minimum-wall.csv", "minimum-wall.manifest.json"):
         assert (tmp_path / name).read_bytes() == (DATA / name).read_bytes(), REBUILD
@@ -202,36 +218,46 @@ def test_pinned_sources_and_every_table_value_reproduce(tmp_path):
     assert {float(row["design_pressure_mpa"]) for row in rows} == set(config()["pressures_mpa"])
 
 
-def test_source_digest_mismatch_rejects_generation(tmp_path, monkeypatch):
-    monkeypatch.setattr(table.subprocess, "check_output", lambda *a, **kw: b"changed source bytes")
-    with pytest.raises(ValueError, match="Source digest mismatch"):
-        table.build(table.INPUT, tmp_path / "output")
-    assert not (tmp_path / "output").exists()
+def test_uncommitted_source_edit_refreshes_digest_without_git_object(tmp_path, monkeypatch):
+    cfg = config()
+    cfg["source_commit"] = "0" * 40  # Informational; no corresponding Git object exists.
+    source = tmp_path / "input.json"
+    source.write_text(json.dumps(cfg), encoding="utf-8", newline="\n")
+    module = ROOT / "src/digitalmodel/structural/analysis/wall_thickness.py"
+    original = module.read_bytes()
+    changed = original + b"\n# Documentation-only source change.\n"
+    read_bytes = Path.read_bytes
+    monkeypatch.setattr(Path, "read_bytes", lambda path: changed if path == module else read_bytes(path))
+    manifest = table.build(source, tmp_path / "output")
+    assert manifest["source_commit"] == cfg["source_commit"]
+    assert manifest["strategy_sources"][module.relative_to(ROOT).as_posix()] == {
+        "sha256": hashlib.sha256(changed).hexdigest()}
+    assert (tmp_path / "output/minimum-wall.csv").read_bytes() == (DATA / "minimum-wall.csv").read_bytes()
+    assert table.build(source, tmp_path / "repeat") == manifest
 
 
 @pytest.mark.parametrize("binding", [
     "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
 ])
-def test_source_digests_ignore_inherited_git_bindings(tmp_path, monkeypatch, binding):
+def test_source_digests_and_ignore_check_ignore_inherited_git_bindings(tmp_path, monkeypatch, binding):
     other = tmp_path / "other-repository"
-    clean_env = {key: value for key, value in os.environ.items()
-                 if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
-    subprocess.run(["git", "init", "--quiet", str(other)], env=clean_env, check=True)
+    subprocess.run(["git", "init", "--quiet", str(other)], env=GIT_ENV, check=True)
     marker = other / "caller.txt"
     marker.write_text("caller content\n", encoding="utf-8", newline="\n")
     files = [marker, other / ".git/HEAD", other / ".git/config"]
     before = {path: path.read_bytes() for path in files}
     target = other / ".git" if binding in {"GIT_DIR", "GIT_COMMON_DIR"} else other
     monkeypatch.setenv(binding, str(target))
-    check_output = subprocess.check_output
+    run = subprocess.run
 
-    def checked_output(*args, **kwargs):
+    def checked_run(*args, **kwargs):
         assert not {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}.intersection(
             kwargs.get("env", os.environ))
-        return check_output(*args, **kwargs)
+        return run(*args, **kwargs)
 
-    monkeypatch.setattr(table.subprocess, "check_output", checked_output)
-    digests = table.source_digests(config()["source_commit"])
+    monkeypatch.setattr(subprocess, "run", checked_run)
+    test_all_deliverables_are_not_ignored()
+    digests = table.source_digests()
     manifest = json.loads((DATA / "minimum-wall.manifest.json").read_text(encoding="utf-8"))
     assert digests == manifest["strategy_sources"], REBUILD
     assert {path: path.read_bytes() for path in files} == before
@@ -241,7 +267,7 @@ def test_source_digests_ignore_inherited_git_bindings(tmp_path, monkeypatch, bin
 def test_all_deliverables_are_not_ignored():
     for path in (table.INPUT, Path(table.__file__), DATA / "minimum-wall.csv",
                  DATA / "minimum-wall.manifest.json", Path(__file__)):
-        result = subprocess.run(["git", "check-ignore", "-q", str(path)], cwd=ROOT)
+        result = subprocess.run(["git", "check-ignore", "-q", str(path)], cwd=ROOT, env=GIT_ENV)
         assert result.returncode == 1
 
 
@@ -274,7 +300,7 @@ def test_stock_trials_resolve_all_check_citations_and_gaps(rebuilt_manifest, cod
         assert check["qualification_gaps"]
         assert check["source_reference"]["standard"] == code.value
         assert check["criterion_applied"] == (check["evaluation_status"] == "evaluated")
-        if check["evaluation_status"] == "not implemented":
+        if check["evaluation_status"] != "evaluated":
             assert check["source_reference"]["edition"] is None
             assert check["source_reference"]["clause"] is None
             assert check["criterion"] is None and check["limit"] is None
@@ -336,6 +362,9 @@ def test_suppression_reason_matches_rows_and_provenance(rebuilt_manifest):
         collapse = rebuilt_manifest["check_provenance"][code]["checks"]["collapse"]
         assert reason in collapse["qualification_gaps"]
         assert not collapse["criterion_applied"]
+        assert collapse["criterion"] is None and collapse["limit"] is None
+        assert collapse["source_reference"]["edition"] is None
+        assert collapse["source_reference"]["clause"] is None
         for row in rebuilt_manifest["rows"]:
             if row["code"] == code:
                 assert row["collapse_status"] == reason
@@ -352,10 +381,10 @@ def test_citation_inventory_is_bound_to_pinned_criteria(rebuilt_manifest):
 
 @pytest.mark.parametrize("code", [DesignCode.API_RP_1111, DesignCode.API_RP_2RD, DesignCode.API_STD_2RD])
 def test_stale_criteria_module_digest_rejects_output(tmp_path, monkeypatch, code):
-    digests = table.source_digests(config()["source_commit"])
+    digests = table.source_digests()
     source = Path(inspect.getfile(table.CODE_REGISTRY[code])).relative_to(ROOT).as_posix()
     digests[source] = {"sha256": "0" * 64}
-    monkeypatch.setattr(table, "source_digests", lambda commit: digests)
+    monkeypatch.setattr(table, "source_digests", lambda: digests)
     with pytest.raises(ValueError, match="Criterion module digest mismatch"):
         table.build(table.INPUT, tmp_path / "output")
     assert not (tmp_path / "output").exists()

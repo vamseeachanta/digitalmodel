@@ -1,6 +1,7 @@
 {
   "schema_version": 2,
   "source_commit": "6e88ab33e957cc354fedc678968c51200695adeb",
+  "source_basis": "Current file SHA-256 digests bind reproduction; source_commit is informational only",
   "strategy_sources": {
     "src/digitalmodel/structural/analysis/wall_thickness.py": {
       "sha256": "dfd51063a999edb00b914c5aaac0112c8565759dd13eb1ae492ed01148c6da54"
@@ -913,13 +914,13 @@
           "source_reference": {
             "standard": "PD-8010-2",
             "title": "PD-8010-2",
-            "edition": "Unqualified repository metadata: Not established",
-            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "edition": null,
+            "clause": null,
             "metadata_source": null,
             "basis": "Repository metadata only; publisher source not consulted"
           },
-          "criterion": "Returned utilisation <= unity",
-          "limit": 1.0,
+          "criterion": null,
+          "limit": null,
           "criterion_applied": false,
           "evaluation_status": "suppressed (#1920)",
           "qualification": "unqualified",
@@ -1176,13 +1177,13 @@
           "source_reference": {
             "standard": "ISO-13623",
             "title": "ISO-13623",
-            "edition": "Unqualified repository metadata: Not established",
-            "clause": "Unqualified repository metadata: Clause number and title not established",
+            "edition": null,
+            "clause": null,
             "metadata_source": null,
             "basis": "Repository metadata only; publisher source not consulted"
           },
-          "criterion": "Returned utilisation <= unity",
-          "limit": 1.0,
+          "criterion": null,
+          "limit": null,
           "criterion_applied": false,
           "evaluation_status": "suppressed (#1920)",
           "qualification": "unqualified",
@@ -1374,7 +1375,7 @@
   },
   "input_sha256": "8f2fdd4c1bb70eb21b4844f8aebafd0ce1240cd995160d566cb44ecf39b6316b",
   "generator": "scripts/reporting/build_minimum_wall_table.py",
-  "generator_sha256": "dd56dd5ce725f7cf3bae0ff95da24774f2999f014f95c8d89f2d49f00948064d",
+  "generator_sha256": "374731b0b598e31d8253088f1700d8cffc8fd7bdfcef396c1917ae83e30113b9",
   "csv_sha256": "c37abea0e006dba3cf6a5ae1cd5f175090648f0ac6a9e8d57367852cbbcf7037",
   "rows": [
     {
@@ -6180,6 +6181,11 @@
       "revision": 2,
       "date": "2026-11-03",
       "change": "Refresh source pin after solver fixes; retain collapse suppression pending review and isolate Git reads"
+    },
+    {
+      "revision": 3,
+      "date": "2026-11-06",
+      "change": "Record current source digests without requiring Git history and omit unapplied suppressed criteria"
     }
   ]
 }
