@@ -11,6 +11,7 @@ This invented platform demonstrates geometry only; it supplies no site or code e
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-11-05 | Demonstrate constant-rate forecasts and their limits. |
+| 1 | 2026-11-06 | Clarify numerical equality and use evaluated subsidence in both tables. |
 
 ## Invented basis
 
@@ -52,6 +53,9 @@ The water levels, crest and required clearance stay fixed throughout this exampl
 | 2038 | 6.0 | -1.0 | -2.0 | No |
 
 First sampled breach: 2035. Equality meets the supplied minimum.
+The comparison uses raw margin >= -1e-9 m, an absolute numerical rounding
+tolerance only; clearance and margin are retained without adjustment.
+This tolerance supplies no engineering allowance or general error bound.
 
 ## Engineering inputs to three options
 

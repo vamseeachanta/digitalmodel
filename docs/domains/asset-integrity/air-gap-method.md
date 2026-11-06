@@ -13,6 +13,7 @@ complete fixed-platform assessment or select design-basis criteria.
 | --- | --- | --- |
 | Initial | 2026-10-28 | Define supplied-data subtraction and sampled comparisons with independent arithmetic checks. |
 | 1 | 2026-11-05 | Add constant-rate annual forecasts, catalog discovery and a reproducible synthetic capability example. |
+| 2 | 2026-11-06 | Define absolute numerical comparison tolerance and retain evaluated subsidence for consistent reporting. |
 
 ## API and datum contract
 
@@ -29,23 +30,33 @@ Crest height is measured upward from the supplied still-water elevation.
 ```text
 clearance = deck underside - subsidence - still water - crest height
 margin = clearance - required clearance
-meets_required_clearance = clearance >= required clearance
+meets_required_clearance = margin >= -1e-9 m
 ```
 
 All quantities are in metres. Subsidence, crest height and required clearance
 must be nonnegative; elevations may be negative. Missing, nonnumeric and
 nonfinite quantities are rejected, including nonfinite derived results.
-Equality meets the supplied minimum. Translating both elevations by the same
-offset leaves the subtraction unchanged in exact arithmetic; results use binary
-floating-point arithmetic and carry its rounding limits.
+Equality and deficits up to 1e-9 m meet the supplied minimum under this absolute
+numerical comparison convention. `CLEARANCE_COMPARISON_TOLERANCE_M` defines the
+tolerance; it is not a design allowance or a standard-derived criterion. No
+relative tolerance is applied. Clearance and margin retain their raw values,
+including negative margins within the comparison tolerance.
+Translating both elevations by the same offset leaves the subtraction unchanged
+in exact arithmetic; binary floating-point results carry rounding limits.
+The absolute tolerance is not a general error bound at arbitrarily large
+magnitudes or datum offsets; compatible local elevation references remain necessary.
 
 `evaluate_sampled_air_gap(basis, samples)` accepts a nonempty sequence of
 `SubsidenceSample(date_label, subsidence_m)` records. Each annual date label is
 an integer paired with its value. Labels must strictly increase; duplicates and
 unordered inputs raise `ValueError`. Inputs are never sorted. Subsidence values
 need not increase. The result contains ordered `samples` and
-`first_sampled_breach`, the first supplied label with clearance below the minimum,
-or `None` if no supplied sample breaches it.
+`first_sampled_breach`, the first supplied label with margin below -1e-9 m,
+or `None` if no supplied sample breaches that comparison boundary.
+Each engine-produced `SampledAirGapResult` retains the evaluated `subsidence_m`.
+The added field is keyword-only and excluded from record equality to preserve
+legacy two-argument construction and comparison; only manually constructed legacy
+records may leave it as `None`. No missing movement is inferred or replaced by zero.
 
 ## Supplied constant-rate forecast
 

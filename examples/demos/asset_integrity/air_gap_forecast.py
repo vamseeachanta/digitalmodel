@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Print a reproducible capability page for an invented air-gap example."""
@@ -43,6 +46,7 @@ def render() -> str:
         "| Revision | Date | Change and reason |",
         "| --- | --- | --- |",
         "| Initial | 2026-11-05 | Demonstrate constant-rate forecasts and their limits. |",
+        "| 1 | 2026-11-06 | Clarify numerical equality and use evaluated subsidence in both tables. |",
         "",
         "## Invented basis",
         "",
@@ -62,9 +66,9 @@ def render() -> str:
         "| Year | Subsidence (m) | Clearance (m) |",
         "| --- | --- | --- |",
     ]
-    for supplied, sample in zip(history_inputs, history.samples, strict=True):
+    for sample in history.samples:
         lines.append(
-            f"| {sample.date_label} | {supplied.subsidence_m:.1f} | "
+            f"| {sample.date_label} | {sample.subsidence_m:.1f} | "
             f"{sample.air_gap.clearance_m:.1f} |"
         )
     lines.extend([
@@ -80,17 +84,17 @@ def render() -> str:
     ])
     for sample in forecast.samples:
         gap = sample.air_gap
-        subsidence = forecast_input.subsidence_m + forecast_input.rate_m_per_year * (
-            sample.date_label - forecast_input.reference_year
-        )
         meets = "Yes" if gap.meets_required_clearance else "No"
         lines.append(
-            f"| {sample.date_label} | {subsidence:.1f} | {gap.clearance_m:.1f} | "
+            f"| {sample.date_label} | {sample.subsidence_m:.1f} | {gap.clearance_m:.1f} | "
             f"{gap.margin_m:.1f} | {meets} |"
         )
     lines.extend([
         "",
         f"First sampled breach: {forecast.first_sampled_breach}. Equality meets the supplied minimum.",
+        "The comparison uses raw margin >= -1e-9 m, an absolute numerical rounding",
+        "tolerance only; clearance and margin are retained without adjustment.",
+        "This tolerance supplies no engineering allowance or general error bound.",
         "",
         "## Engineering inputs to three options",
         "",

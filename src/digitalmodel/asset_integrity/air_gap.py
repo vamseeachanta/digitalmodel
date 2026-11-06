@@ -1,19 +1,26 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Supplied-data air-gap arithmetic, without environmental or code criteria.
 
 Method: docs/domains/asset-integrity/air-gap-method.md. Clearance is
 deck underside minus downward subsidence minus still water minus crest height;
-margin subtracts the supplied minimum. Zero is the algebraic comparison boundary,
-not a selected engineering criterion. Forecasts use a supplied constant annual
+margin subtracts the supplied minimum. Comparison allows a 1e-9 m absolute
+rounding tolerance, not an engineering allowance. Forecasts use a supplied constant annual
 rate; annual labels identify samples only, never a continuous crossing date.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from math import isfinite
 from typing import Sequence
+
+
+# Numerical comparison convention only; no relative or design allowance.
+CLEARANCE_COMPARISON_TOLERANCE_M = 1e-9
 
 
 @dataclass(frozen=True)
@@ -67,10 +74,15 @@ class SubsidenceForecast:
 
 @dataclass(frozen=True)
 class SampledAirGapResult:
-    """A supplied date label and its arithmetic result."""
+    """A date, arithmetic result and evaluated movement in metres.
+
+    Engine results always retain finite movement. None is reserved for legacy
+    two-argument construction; movement metadata does not change legacy equality.
+    """
 
     date_label: int
     air_gap: AirGapResult
+    subsidence_m: float | None = field(default=None, kw_only=True, compare=False)
 
 
 @dataclass(frozen=True)
@@ -94,7 +106,7 @@ def _finite_number(value: float, name: str, *, nonnegative: bool = False) -> Non
 
 
 def calculate_air_gap(basis: AirGapBasis, subsidence_m: float) -> AirGapResult:
-    """Subtract supplied quantities and compare clearance >= supplied minimum.
+    """Subtract supplied quantities and compare margin >= -1e-9 m.
 
     Args:
         basis: Deck and still-water elevations sharing exactly the same nonblank
@@ -102,7 +114,8 @@ def calculate_air_gap(basis: AirGapBasis, subsidence_m: float) -> AirGapResult:
         subsidence_m: Nonnegative supplied downward deck movement in metres.
 
     Returns:
-        Clearance and margin in metres; equality meets the supplied minimum.
+        Raw clearance and margin in metres. Equality and deficits up to the
+        1e-9 m absolute rounding tolerance meet the supplied minimum.
 
     Raises:
         ValueError: Datum labels conflict or are missing, a magnitude is invalid,
@@ -128,7 +141,7 @@ def calculate_air_gap(basis: AirGapBasis, subsidence_m: float) -> AirGapResult:
         datum=basis.deck_underside.datum,
         clearance_m=clearance,
         margin_m=margin,
-        meets_required_clearance=clearance >= basis.required_clearance_m,
+        meets_required_clearance=margin >= -CLEARANCE_COMPARISON_TOLERANCE_M,
     )
 
 
@@ -143,7 +156,8 @@ def evaluate_sampled_air_gap(
             Labels must strictly increase. Values need not increase.
 
     Returns:
-        Ordered results and the first supplied label below the minimum, if any.
+        Ordered results with evaluated subsidence and the first supplied label
+        with margin below -1e-9 m, if any.
 
     Raises:
         ValueError: Samples are empty, labels are invalid, duplicated or unordered,
@@ -161,7 +175,7 @@ def evaluate_sampled_air_gap(
         if previous is not None and label <= previous:
             raise ValueError("Date labels must strictly increase without duplicates")
         result = calculate_air_gap(basis, sample.subsidence_m)
-        rows.append(SampledAirGapResult(label, result))
+        rows.append(SampledAirGapResult(label, result, subsidence_m=sample.subsidence_m))
         if first_breach is None and not result.meets_required_clearance:
             first_breach = label
         previous = label
@@ -183,7 +197,8 @@ def forecast_air_gap(
         end_year: Last sampled year, at or after the reference year.
 
     Returns:
-        Annual geometry and the first sampled year below the supplied minimum.
+        Annual geometry, evaluated subsidence and the first sampled year with
+        margin below -1e-9 m under the absolute rounding convention.
         None means no breach at these samples within this horizon only.
 
     Raises:
